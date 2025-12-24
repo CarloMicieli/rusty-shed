@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/CarloMicieli/rusty-shed)
+[![CI](https://github.com/CarloMicieli/rusty-shed/actions/workflows/ci.yml/badge.svg)](https://github.com/CarloMicieli/rusty-shed/actions/workflows/ci.yml)
 
 Rusty Shed helps model railway enthusiasts manage their collections, rolling stock, layouts, and metadata with a native desktop UI powered by Tauri (Rust) and a SvelteKit frontend.
 
