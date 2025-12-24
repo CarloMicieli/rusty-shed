@@ -15,6 +15,26 @@ Rusty Shed helps model railway enthusiasts manage their collections, rolling sto
 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
 
+**`.vscode/mcp.json`**
+```json
+{
+    "servers": {
+        "github-mcp": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp"
+        },
+        "rust-mcp-server": {
+            "type": "stdio",
+            "command": "${HOME}/.cargo/bin/rust-mcp-server",
+            "args": [
+                "--log-file",
+                "log/folder/rust-mcp-server.log"
+            ],
+        }
+    }
+}
+```
+
 ## Running on Ubuntu (prerequisites)
 
 You need Node (pnpm recommended), the Rust toolchain (`rustup`, `cargo`) and the Tauri CLI if you prefer to use it. On Ubuntu, this project required a few additional system packages to compile GTK / webview dependencies — install these before building:
