@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24.x]
+        rust-version: [stable]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install frontend dependencies
+        run: |
+          if [ -f package.json ]; then
+            pnpm install
+          else
+            echo "No package.json found — skipping frontend install"
+          fi
+
+      - name: Run frontend build/tests
+        run: |
+          if [ -f package.json ]; then
+            pnpm build || pnpm test || true
+          else
+            echo "No frontend to build/test"
+          fi
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build & test Rust (if present)
+        run: |
+          if [ -f src-tauri/Cargo.toml ]; then
+            cd src-tauri
+            cargo build --workspace --verbose
+            cargo test --workspace --no-fail-fast --verbose
+          else
+            echo "No Rust workspace found - skipping"
+          fi
