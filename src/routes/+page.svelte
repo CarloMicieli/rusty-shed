@@ -1,13 +1,27 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { invoke } from '@tauri-apps/api/core';
+  import { fetch } from '@tauri-apps/plugin-http';
 
   let name = $state("");
   let greetMsg = $state("");
 
   async function greet(event: Event) {
     event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+    try {
+      const port = await invoke("get_server_port");
+      
+      const url = `http://localhost:${port}/greet?name=${encodeURIComponent(name)}`;
+      
+      const res = await fetch(url, { method: 'GET' });
+      if (res.ok) {
+        greetMsg = await res.text();
+      } else {
+        greetMsg = `Error: ${res.status}`;
+      }
+    } catch (e) {
+      console.error("Error:", e); // Debug logging
+      greetMsg = `Error: ${String(e)}`;
+    }
   }
 </script>
 

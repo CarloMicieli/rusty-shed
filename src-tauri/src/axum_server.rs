@@ -1,0 +1,69 @@
+use axum::{routing::get, Router, extract::Query, response::IntoResponse, http::StatusCode};
+use std::collections::HashMap;
+use tokio::sync::oneshot;
+use std::sync::{Arc, Mutex};
+
+use crate::AXUM_SERVER_PORT;
+use crate::AXUM_SHUTDOWN_SENDER;
+
+pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let (tx, rx) = oneshot::channel();
+
+    // Create shutdown channel
+    let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+    AXUM_SHUTDOWN_SENDER.set(Arc::new(Mutex::new(Some(shutdown_tx)))).ok();
+
+    // 1. Spawn the Axum server in a background OS thread with its own Tokio runtime
+    std::thread::spawn(move || {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("failed to build tokio runtime for axum server");
+
+        runtime.block_on(async move {
+            let app = Router::new()
+                .route("/ping", get(|| async { "pong" }))
+                .route("/greet", get(greet_handler));
+
+            // Bind to port 0 to let the OS assign a random available port
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let port = listener.local_addr().unwrap().port();
+
+            // Send the port back to the main thread
+            let _ = tx.send(port);
+
+            println!("Axum server running on http://127.0.0.1:{}", port);
+            // Serve with graceful shutdown
+            axum::serve(listener, app)
+                .with_graceful_shutdown(async {
+                    let _ = shutdown_rx.await;
+                })
+                .await
+                .expect("Axum server error");
+        });
+    });
+
+    // 2. Wait briefly for the port to be assigned before starting the UI
+    let port = tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(rx)
+        .expect("Failed to get port from Axum");
+
+    // Store the chosen port
+    AXUM_SERVER_PORT.set(port).ok();
+   
+    Ok(())
+}
+
+pub fn stop_axum_server() {
+    if let Some(m) = AXUM_SHUTDOWN_SENDER.get() {
+        if let Some(tx) = m.lock().unwrap().take() {
+            let _ = tx.send(());
+        }
+    }
+}
+
+async fn greet_handler(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+    let name = params.get("name").map(|s| s.as_str()).unwrap_or("World");
+    (StatusCode::OK, format!("Hello, {}", name))
+}
