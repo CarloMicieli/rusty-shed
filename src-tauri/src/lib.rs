@@ -8,6 +8,9 @@ pub static AXUM_SHUTDOWN_SENDER: OnceCell<Arc<Mutex<Option<tokio::sync::oneshot:
     OnceCell::new();
 
 mod axum_server;
+mod db;
+
+use db::{DB_POOL, MIGRATOR, init_db_pool};
 
 #[tauri::command]
 async fn get_server_config() -> Result<(u16, String), String> {
@@ -29,12 +32,30 @@ pub fn run() {
         eprintln!("Failed to start axum server: {e}");
     }
 
+    // Initialize DB and run migrations before starting the Tauri runtime.
+    // Migrations failing should abort app startup.
+    if let Err(e) = tauri::async_runtime::block_on(async {
+        // create pool
+        let pool = init_db_pool().await.map_err(|e| anyhow::anyhow!(e))?;
+        // run migrations
+        MIGRATOR.run(&pool).await.map_err(|e| anyhow::anyhow!(e))?;
+        // store pool globally
+        DB_POOL
+            .set(pool)
+            .map_err(|_| anyhow::anyhow!("Failed to set DB_POOL"))?;
+        Ok::<(), anyhow::Error>(())
+    }) {
+        eprintln!("Database initialization failed: {e}");
+        // Abort startup
+        std::process::exit(1);
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![get_server_config])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Error while running tauri application");
 
     // run() returns when the app exits — stop the axum server gracefully
     axum_server::stop_axum_server();
