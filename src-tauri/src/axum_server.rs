@@ -70,8 +70,7 @@ pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync
     });
 
     // Wait briefly for the port to be assigned before starting the UI
-    let port = tokio::runtime::Runtime::new()
-        .unwrap()
+    let port = tokio::runtime::Runtime::new()?
         .block_on(rx)
         .expect("Failed to get port from Axum");
 
@@ -83,10 +82,10 @@ pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync
 }
 
 pub fn stop_axum_server() {
-    if let Some(m) = AXUM_SHUTDOWN_SENDER.get() {
-        if let Some(tx) = m.lock().unwrap().take() {
-            let _ = tx.send(());
-        }
+    if let Some(m) = AXUM_SHUTDOWN_SENDER.get()
+        && let Some(tx) = m.lock().unwrap().take()
+    {
+        let _ = tx.send(());
     }
 }
 

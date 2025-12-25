@@ -100,6 +100,7 @@ pnpm run rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
 pnpm run rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
+pnpm run rust:lint    # runs `cargo clippy --manifest-path src-tauri/Cargo.toml`
 ```
 
 Pass extra Cargo flags after `--`, for example:
