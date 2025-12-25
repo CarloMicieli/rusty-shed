@@ -3591,6 +3591,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-http",
  "tauri-plugin-opener",
+ "thiserror 1.0.69",
  "tokio",
  "xdg",
 ]

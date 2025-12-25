@@ -19,7 +19,7 @@ pub fn generate_token() -> String {
     Alphanumeric.sample_string(&mut rand::rng(), 32)
 }
 
-pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub fn start_axum_server() -> Result<(), anyhow::Error> {
     let (tx, rx) = oneshot::channel();
 
     // Generate a secure random token
