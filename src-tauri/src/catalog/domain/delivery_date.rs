@@ -62,12 +62,12 @@ impl fmt::Display for DeliveryDate {
 }
 
 // Regular expressions used by the parser. Compiled once for efficiency.
-static RE_YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(?P<year>\d{4})$").unwrap());
+static RE_YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(?P<year>\d{4})$").expect("invalid RE_YEAR regex"));
 static RE_YM: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^(?P<year>\d{4})/(?P<month>\d{1,2})$").unwrap());
+    Lazy::new(|| Regex::new(r"^(?P<year>\d{4})/(?P<month>\d{1,2})$").expect("invalid RE_YM regex"));
 // Case-insensitive quarter match (e.g. Q1 or q1)
 static RE_YQ: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)^(?P<year>\d{4})/Q(?P<q>[1-4])$").unwrap());
+    Lazy::new(|| Regex::new(r"(?i)^(?P<year>\d{4})/Q(?P<q>[1-4])$").expect("invalid RE_YQ regex"));
 
 impl DeliveryDate {
     /// Parse a delivery date from a string. Accepted formats:
