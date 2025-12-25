@@ -10,8 +10,8 @@ pub static AXUM_SHUTDOWN_SENDER: OnceCell<Arc<Mutex<Option<tokio::sync::oneshot:
 mod axum_server;
 mod db;
 
-mod catalog;
-mod collecting;
+pub mod catalog;
+pub mod collecting;
 
 use db::{DB_POOL, MIGRATOR, init_db_pool};
 

@@ -92,7 +92,7 @@ impl TryFrom<&str> for Scale {
         let s = value.trim();
         // Try direct short label match first
         let short = s;
-        
+
         if let Ok(scale) = Self::from_short(short) {
             return Ok(scale);
         }
@@ -100,7 +100,7 @@ impl TryFrom<&str> for Scale {
         // If not matched, attempt to extract the leading label from Display-like input
         // e.g. "H0 (1:87)" or "1 (1:32)" -> take the substring before first space or '('
         let leading = s.split([' ', '(']).next().unwrap_or("").trim();
-        
+
         Self::from_short(leading)
     }
 }

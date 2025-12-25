@@ -181,7 +181,8 @@ impl CollectionRepository for SqliteCollectionRepository {
                 power_method,
                 scale,
                 epoch: Epoch(row.get("epoch")),
-                delivery_date: DeliveryDate(row.get("delivery_date")),
+                delivery_date: DeliveryDate::parse(&row.get::<String, _>("delivery_date"))
+                    .unwrap_or(DeliveryDate::Year(0)),
                 rolling_stocks,
                 purchase_info,
             });
