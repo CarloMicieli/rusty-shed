@@ -46,7 +46,7 @@ pub async fn init_db_pool() -> Result<SqlitePool, SqliteDbError> {
 pub enum SqliteDbError {
     #[error("database error: {0}")]
     SqlxError(#[from] sqlx::Error),
-    
+
     #[error("migration error: {0}")]
     MigrationError(#[from] sqlx::migrate::MigrateError),
 }

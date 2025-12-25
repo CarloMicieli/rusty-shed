@@ -1,4 +1,3 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use once_cell::sync::OnceCell;
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
@@ -10,6 +9,9 @@ pub static AXUM_SHUTDOWN_SENDER: OnceCell<Arc<Mutex<Option<tokio::sync::oneshot:
 
 mod axum_server;
 mod db;
+
+mod catalog;
+mod collecting;
 
 use db::{DB_POOL, MIGRATOR, init_db_pool};
 
@@ -73,10 +75,10 @@ pub fn run() {
                 }
 
                 // Show the main window
-                if let Some(window) = handle.get_webview_window("main") {
-                    if let Err(e) = window.show() {
-                        eprintln!("Failed to show main window: {e}");
-                    }
+                if let Some(window) = handle.get_webview_window("main")
+                    && let Err(e) = window.show()
+                {
+                    eprintln!("Failed to show main window: {e}");
                 }
             });
             Ok(())

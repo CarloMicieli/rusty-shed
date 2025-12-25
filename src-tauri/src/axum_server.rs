@@ -49,6 +49,10 @@ pub fn start_axum_server() -> Result<tokio::sync::oneshot::Receiver<u16>, anyhow
             let app = Router::new()
                 .with_state(config.clone())
                 .route("/greet", get(greet_handler))
+                .route(
+                    "/api/my-collection",
+                    get(crate::collecting::interface::http_handlers::get_collection_handler),
+                )
                 .layer(axum::middleware::from_fn_with_state(
                     config.clone(),
                     auth_middleware,
