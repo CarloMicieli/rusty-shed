@@ -8,7 +8,6 @@ mod railway_model;
 mod rolling_stock;
 mod scale;
 mod service_level;
-mod sub_category;
 
 pub use category::Category;
 pub use delivery_date::DeliveryDate;
@@ -20,4 +19,3 @@ pub use railway_model::RailwayModel;
 pub use rolling_stock::RollingStock;
 pub use scale::Scale;
 pub use service_level::ServiceLevel;
-pub use sub_category::SubCategory;

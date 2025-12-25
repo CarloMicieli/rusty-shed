@@ -1,4 +1,4 @@
-use crate::catalog::domain::{Category, RailwayCompany, ServiceLevel, SubCategory};
+use crate::catalog::domain::{Category, RailwayCompany, ServiceLevel};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10,7 +10,6 @@ pub struct RollingStock {
     pub series: Option<String>,
     pub railway: RailwayCompany,
     pub category: Category,
-    pub sub_category: Option<SubCategory>,
     pub depot: Option<String>,
     pub length: Option<f64>,
     pub livery: Option<String>,
