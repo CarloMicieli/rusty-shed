@@ -1,4 +1,4 @@
-mod category;
+pub mod category;
 mod delivery_date;
 mod epoch;
 mod power_method;

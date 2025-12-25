@@ -1,7 +1,9 @@
 pub mod currency;
 pub mod error;
+pub mod length;
+mod measure_units;
 pub mod monetary_amount;
-mod trn;
+pub mod trn;
 
 pub use currency::Currency;
 pub use error::Error;
