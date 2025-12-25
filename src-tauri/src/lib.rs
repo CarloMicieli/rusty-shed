@@ -3,7 +3,8 @@ use once_cell::sync::OnceCell;
 use std::sync::{Arc, Mutex};
 
 pub static AXUM_SERVER_PORT: OnceCell<u16> = OnceCell::new();
-pub static AXUM_SHUTDOWN_SENDER: OnceCell<Arc<Mutex<Option<tokio::sync::oneshot::Sender<()>>>>> = OnceCell::new();
+pub static AXUM_SHUTDOWN_SENDER: OnceCell<Arc<Mutex<Option<tokio::sync::oneshot::Sender<()>>>>> =
+    OnceCell::new();
 
 mod axum_server;
 

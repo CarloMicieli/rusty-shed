@@ -1,7 +1,7 @@
-use axum::{routing::get, Router, extract::Query, response::IntoResponse, http::StatusCode};
+use axum::{Router, extract::Query, http::StatusCode, response::IntoResponse, routing::get};
 use std::collections::HashMap;
-use tokio::sync::oneshot;
 use std::sync::{Arc, Mutex};
+use tokio::sync::oneshot;
 
 use crate::AXUM_SERVER_PORT;
 use crate::AXUM_SHUTDOWN_SENDER;
@@ -11,7 +11,9 @@ pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync
 
     // Create shutdown channel
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-    AXUM_SHUTDOWN_SENDER.set(Arc::new(Mutex::new(Some(shutdown_tx)))).ok();
+    AXUM_SHUTDOWN_SENDER
+        .set(Arc::new(Mutex::new(Some(shutdown_tx))))
+        .ok();
 
     // 1. Spawn the Axum server in a background OS thread with its own Tokio runtime
     std::thread::spawn(move || {
@@ -51,7 +53,7 @@ pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync
 
     // Store the chosen port
     AXUM_SERVER_PORT.set(port).ok();
-   
+
     Ok(())
 }
 
