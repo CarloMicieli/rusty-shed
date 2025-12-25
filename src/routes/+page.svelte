@@ -1,170 +1,90 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
-  import { fetch } from '@tauri-apps/plugin-http';
-
-  let name = $state("");
-  let greetMsg = $state("");
-
-  async function greet(event: Event) {
-    event.preventDefault();
-    try {
-      const [port, token] = await invoke<[number, string]>('get_server_config');
-      
-      const url = `http://localhost:${port}/greet?name=${encodeURIComponent(name)}`;
-      
-      const res = await fetch(url, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) {
-        greetMsg = await res.text();
-      } else {
-        greetMsg = `Error: ${res.status}`;
-      }
-    } catch (e) {
-      console.error("Error:", e); // Debug logging
-      greetMsg = `Error: ${String(e)}`;
-    }
-  }
+	import { stats, quickActions, recentItems, depotData } from '$lib/data/mock';
+	import StatsCard from '$lib/components/StatsCard.svelte';
+	import QuickActionButton from '$lib/components/QuickActionButton.svelte';
+	import RecentItemCard from '$lib/components/RecentItemCard.svelte';
+	import DepotView from '$lib/components/DepotView.svelte';
+	import { _ } from 'svelte-i18n';
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<svelte:head>
+	<title>{$_('app.name')} | {$_('app.dashboard')}</title>
+</svelte:head>
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
+<!-- Stats Grid -->
+<section>
+	<h3 class="mb-4 h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+		{$_('dashboard.yard_statistics')}
+	</h3>
+	<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+		{#each stats as stat}
+			<StatsCard {stat} />
+		{/each}
+	</div>
+</section>
 
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
-</main>
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+	<!-- Main Content Area: Recent Items & Depot -->
+	<div class="space-y-8 lg:col-span-2">
+		<!-- Recent Items -->
+		<section>
+			<div class="mb-4 flex items-center justify-between">
+				<h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+					{$_('dashboard.recently_added')}
+				</h3>
+				<a href="/activity" class="text-accent-500 text-sm font-bold hover:underline"
+					>{$_('dashboard.view_all')}</a
+				>
+			</div>
 
-<style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
+			<!-- Mobile: Swipe Scroll -->
+			<div
+				class="hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-2 lg:pb-0"
+			>
+				{#each recentItems as item}
+					<div class="min-w-[80%] snap-center lg:min-w-0">
+						<RecentItemCard {item} />
+					</div>
+				{/each}
+			</div>
+		</section>
 
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
+		<!-- The Depot -->
+		<section>
+			<div class="mb-4 flex items-center justify-between">
+				<h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+					{$_('dashboard.the_depot')}
+				</h3>
+				<button class="variant-ghost-surface btn btn-sm">{$_('dashboard.filter')}</button>
+			</div>
+			<DepotView data={depotData} />
+		</section>
+	</div>
 
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+	<!-- Sidebar Area: Quick Actions -->
+	<div class="lg:col-start-3">
+		<section class="sticky top-24">
+			<h3
+				class="mb-4 hidden h3 text-sm font-bold tracking-wider text-surface-300 uppercase lg:block"
+			>
+				{$_('dashboard.quick_actions')}
+			</h3>
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+			<!-- Desktop: Vertical List -->
+			<div class="hidden flex-col gap-3 lg:flex">
+				{#each quickActions as action}
+					<QuickActionButton {action} />
+				{/each}
+			</div>
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
-</style>
+			<!-- Mobile: FAB / Horizontal Row (Floating above content on mobile, usually? Or just inline?) -->
+			<!-- User requested: "Mobile: FAB or horizontal icon row" -->
+			<!-- I'll implement a horizontal row for now as FAB blocks content often -->
+			<div class="mb-8 grid grid-cols-2 gap-2 lg:hidden">
+				{#each quickActions as action}
+					<QuickActionButton {action} />
+				{/each}
+			</div>
+		</section>
+	</div>
+</div>

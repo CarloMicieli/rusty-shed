@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* Skeleton styles (import after Tailwind directives) */
+@import '@skeletonlabs/skeleton';
