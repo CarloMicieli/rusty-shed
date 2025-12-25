@@ -1,6 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use once_cell::sync::OnceCell;
 use std::sync::{Arc, Mutex};
+use tauri::Manager;
 
 pub static AXUM_SERVER_PORT: OnceCell<u16> = OnceCell::new();
 pub static AXUM_SERVER_TOKEN: OnceCell<String> = OnceCell::new();
@@ -27,33 +28,59 @@ async fn get_server_config() -> Result<(u16, String), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // start axum server early so the UI can query the port
-    if let Err(e) = axum_server::start_axum_server() {
-        eprintln!("Failed to start axum server: {e}");
-    }
-
-    // Initialize DB and run migrations before starting the Tauri runtime.
-    // Migrations failing should abort app startup.
-    if let Err(e) = tauri::async_runtime::block_on(async {
-        // create pool
-        let pool = init_db_pool().await.map_err(|e| anyhow::anyhow!(e))?;
-        // run migrations
-        MIGRATOR.run(&pool).await.map_err(|e| anyhow::anyhow!(e))?;
-        // store pool globally
-        DB_POOL
-            .set(pool)
-            .map_err(|_| anyhow::anyhow!("Failed to set DB_POOL"))?;
-        Ok::<(), anyhow::Error>(())
-    }) {
-        eprintln!("Database initialization failed: {e}");
-        // Abort startup
-        std::process::exit(1);
-    }
-
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![get_server_config])
+        .setup(|app| {
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                // start axum server early (non-blocking)
+                // start axum server early (non-blocking)
+                match axum_server::start_axum_server() {
+                    Ok(rx) => match rx.await {
+                        Ok(port) => {
+                            AXUM_SERVER_PORT.set(port).ok();
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to receive port from axum server: {e}");
+                            return;
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("Failed to start axum server: {e}");
+                        return;
+                    }
+                }
+
+                // Initialize DB and run migrations
+                if let Err(e) = async {
+                    // create pool
+                    let pool = init_db_pool().await.map_err(|e| anyhow::anyhow!(e))?;
+                    // run migrations
+                    MIGRATOR.run(&pool).await.map_err(|e| anyhow::anyhow!(e))?;
+                    // store pool globally
+                    DB_POOL
+                        .set(pool)
+                        .map_err(|_| anyhow::anyhow!("Failed to set DB_POOL"))?;
+                    Ok::<(), anyhow::Error>(())
+                }
+                .await
+                {
+                    eprintln!("Database initialization failed: {e}");
+                    // Abort startup or show error
+                    std::process::exit(1);
+                }
+
+                // Show the main window
+                if let Some(window) = handle.get_webview_window("main") {
+                    if let Err(e) = window.show() {
+                        eprintln!("Failed to show main window: {e}");
+                    }
+                }
+            });
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 

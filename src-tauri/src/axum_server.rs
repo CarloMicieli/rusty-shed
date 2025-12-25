@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
 
-use crate::AXUM_SERVER_PORT;
 use crate::AXUM_SERVER_TOKEN;
 use crate::AXUM_SHUTDOWN_SENDER;
 
@@ -19,7 +18,7 @@ pub fn generate_token() -> String {
     Alphanumeric.sample_string(&mut rand::rng(), 32)
 }
 
-pub fn start_axum_server() -> Result<(), anyhow::Error> {
+pub fn start_axum_server() -> Result<tokio::sync::oneshot::Receiver<u16>, anyhow::Error> {
     let (tx, rx) = oneshot::channel();
 
     // Generate a secure random token
@@ -35,6 +34,9 @@ pub fn start_axum_server() -> Result<(), anyhow::Error> {
     let config = AuthConfig {
         token: shared_token.clone(),
     };
+
+    // Store the token immediately
+    AXUM_SERVER_TOKEN.set(shared_token).ok();
 
     // Spawn the Axum server in a background OS thread with its own Tokio runtime
     std::thread::spawn(move || {
@@ -70,16 +72,7 @@ pub fn start_axum_server() -> Result<(), anyhow::Error> {
         });
     });
 
-    // Wait briefly for the port to be assigned before starting the UI
-    let port = tokio::runtime::Runtime::new()?
-        .block_on(rx)
-        .expect("Failed to get port from Axum");
-
-    // Store the chosen port
-    AXUM_SERVER_PORT.set(port).ok();
-    AXUM_SERVER_TOKEN.set(shared_token).ok();
-
-    Ok(())
+    Ok(rx)
 }
 
 pub fn stop_axum_server() {
@@ -110,5 +103,28 @@ async fn auth_middleware(
     match auth_header {
         Some(value) if value == format!("Bearer {}", token) => Ok(next.run(req).await),
         _ => Err(StatusCode::UNAUTHORIZED),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_server_startup_non_blocking() {
+        let start = std::time::Instant::now();
+        let rx = start_axum_server().expect("Failed to start server");
+        let duration = start.elapsed();
+
+        // Should return almost instantly (e.g., < 100ms), definitely not block for server init
+        assert!(
+            duration.as_millis() < 100,
+            "Startup took too long: {:?}",
+            duration
+        );
+
+        let port = rx.await.expect("Failed to receive port");
+        assert!(port > 0, "Port should be non-zero");
+        println!("Server started on port {}", port);
     }
 }
