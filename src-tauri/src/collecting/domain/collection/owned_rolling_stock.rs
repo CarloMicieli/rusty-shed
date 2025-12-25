@@ -1,4 +1,4 @@
-use crate::catalog::domain::{Epoch, RailwayCompany};
+use crate::catalog::domain::Epoch;
 use serde::{Deserialize, Serialize};
 
 /// A lightweight view of rolling stock that references catalog model data.
@@ -15,12 +15,12 @@ pub struct OwnedRollingStock {
     /// Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
     pub rolling_stock_id: String,
 
-    /// Free-form notes associated with this owned instance (previously `description`).
+    /// Free-form notes associated with this owned instance.
     /// Use this for short owner notes or a brief textual label.
     pub notes: String,
 
-    /// The railway company that operates or is represented by this vehicle.
-    pub railway: RailwayCompany,
+    /// Identifier for the railway company.
+    pub railway_id: String,
 
     /// Historical epoch for this owned vehicle (copied from the catalog model).
     pub epoch: Epoch,

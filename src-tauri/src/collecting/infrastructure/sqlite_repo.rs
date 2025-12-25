@@ -1,4 +1,4 @@
-use crate::catalog::domain::{Epoch, PowerMethod, ProductCode, RailwayCompany, Scale};
+use crate::catalog::domain::{Epoch, PowerMethod, ProductCode, Scale};
 use crate::collecting::domain::collection::{
     Collection, CollectionItem, CollectionRepository, OwnedRollingStock, PurchaseInfo,
 };
@@ -93,7 +93,7 @@ impl CollectionRepository for SqliteCollectionRepository {
             // Fetch rolling stocks
             let rolling_stock_rows = sqlx::query(
                 r#"
-                SELECT id, notes, railway_name, railway_registered_name, railway_country_code
+                SELECT id, notes, railway_id
                 FROM owned_rolling_stocks
                 WHERE item_id = ?
                 "#,
@@ -111,11 +111,7 @@ impl CollectionRepository for SqliteCollectionRepository {
                         id: rs_row.get("id"),
                         rolling_stock_id: rs_row.get("id"),
                         notes: rs_row.get("notes"),
-                        railway: RailwayCompany {
-                            name: rs_row.get("railway_name"),
-                            registered_company_name: rs_row.get("railway_registered_name"),
-                            country_code: rs_row.get("railway_country_code"),
-                        },
+                        railway_id: rs_row.get("railway_id"),
                         epoch: Epoch(row.get("epoch")),
                     }
                 })
@@ -253,7 +249,7 @@ mod tests {
 
         sqlx::query(
             r#"
-            INSERT INTO owned_rolling_stocks (id, item_id, notes, railway_name) 
+            INSERT INTO owned_rolling_stocks (id, item_id, notes, railway_id) 
             VALUES ('rs1', 'item1', 'Caimano', 'FS');
             "#,
         )
@@ -277,7 +273,7 @@ mod tests {
         assert_eq!(collection.items[0].scale, Scale::H0);
 
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
-        assert_eq!(collection.items[0].rolling_stocks[0].railway.name, "FS");
+        assert_eq!(collection.items[0].rolling_stocks[0].railway_id, "FS");
         assert_eq!(
             collection.items[0].rolling_stocks[0].rolling_stock_id,
             "rs1"
