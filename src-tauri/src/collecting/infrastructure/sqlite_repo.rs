@@ -1,6 +1,4 @@
 use crate::catalog::domain::{
-    Category,
-    DeliveryDate,
     Epoch,
     PowerMethod,
     ProductCode,
@@ -119,32 +117,17 @@ impl CollectionRepository for SqliteCollectionRepository {
             let rolling_stocks = rolling_stock_rows
                 .into_iter()
                 .map(|rs_row| {
-                    let category_str: Option<String> = rs_row.get("category");
-                    // Simplified mapping for brevity - ideally use TryFrom or strict parsing
-                    let category = match category_str.as_deref() {
-                        Some("LOCOMOTIVE") => Category::Locomotive,
-                        Some("PASSENGER_CAR") => Category::PassengerCar,
-                        Some("FREIGHT_CAR") => Category::FreightCar,
-                        _ => Category::Locomotive, // Fallback
-                    };
-
+                    // Only keep minimal view fields for OwnedRollingStock: id, rolling_stock_id, railway, epoch, description
                     OwnedRollingStock {
                         id: rs_row.get("id"),
-                        item_id: item_id.clone(),
-                        road_number: rs_row.get("road_number"),
-                        type_name: rs_row.get("type_name"),
-                        series: rs_row.get("series"),
+                        rolling_stock_id: rs_row.get("id"),
+                        description: rs_row.get("type_name"),
                         railway: RailwayCompany {
                             name: rs_row.get("railway_name"),
                             registered_company_name: rs_row.get("railway_registered_name"),
                             country_code: rs_row.get("railway_country_code"),
                         },
-                        category,
-                        sub_category: None, // Need mapping logic or complex string parsing if enum
-                        depot: rs_row.get("depot"),
-                        length: rs_row.get("length"),
-                        livery: rs_row.get("livery"),
-                        service_level: None, // Need mapping logic
+                        epoch: Epoch(row.get("epoch")),
                     }
                 })
                 .collect();
@@ -173,16 +156,14 @@ impl CollectionRepository for SqliteCollectionRepository {
             });
 
             items.push(CollectionItem {
-                id: item_id,
-                collection_id: collection_id.clone(),
+                id: item_id.clone(),
+                railway_model_id: item_id.clone(),
                 manufacturer: row.get("manufacturer"),
                 product_code: ProductCode(product_code_str),
                 description: row.get("description"),
                 power_method,
                 scale,
                 epoch: Epoch(row.get("epoch")),
-                delivery_date: DeliveryDate::parse(&row.get::<String, _>("delivery_date"))
-                    .unwrap_or(DeliveryDate::Year(0)),
                 rolling_stocks,
                 purchase_info,
             });
@@ -282,9 +263,7 @@ mod tests {
 
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
         assert_eq!(collection.items[0].rolling_stocks[0].railway.name, "FS");
-        assert_eq!(
-            collection.items[0].rolling_stocks[0].category,
-            Category::Locomotive
-        );
+        assert_eq!(collection.items[0].rolling_stocks[0].rolling_stock_id, "rs1");
+        assert_eq!(collection.items[0].rolling_stocks[0].epoch, Epoch("IV".to_string()));
     }
 }

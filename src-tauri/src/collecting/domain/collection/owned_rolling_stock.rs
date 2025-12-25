@@ -1,18 +1,26 @@
-use crate::catalog::domain::{Category, RailwayCompany, ServiceLevel, SubCategory};
+use crate::catalog::domain::{Epoch, RailwayCompany};
 use serde::{Deserialize, Serialize};
 
+/// A lightweight view of rolling stock that references catalog model data.
+///
+/// This struct intentionally contains only the minimal information needed by
+/// the collecting domain to reference a catalog `RailwayModel` and basic
+/// provenance (railway and epoch). Detailed model information lives in the
+/// catalog domain and should not be duplicated here.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OwnedRollingStock {
+    /// Unique identifier for this owned rolling stock record (e.g. UUID in the DB).
     pub id: String,
-    pub item_id: String,
-    pub road_number: String,
-    pub type_name: String,
-    pub series: Option<String>,
+
+    /// Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
+    pub rolling_stock_id: String,
+
+    /// A short textual description associated with this owned instance (e.g. type name or brief note).
+    pub description: String,
+
+    /// The railway company that operates or is represented by this vehicle.
     pub railway: RailwayCompany,
-    pub category: Category,
-    pub sub_category: Option<SubCategory>,
-    pub depot: Option<String>,
-    pub length: Option<f64>,
-    pub livery: Option<String>,
-    pub service_level: Option<ServiceLevel>,
+
+    /// Historical epoch for this owned vehicle (copied from the catalog model).
+    pub epoch: Epoch,
 }
