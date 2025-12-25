@@ -8,11 +8,11 @@
   async function greet(event: Event) {
     event.preventDefault();
     try {
-      const port = await invoke("get_server_port");
+      const [port, token] = await invoke<[number, string]>('get_server_config');
       
       const url = `http://localhost:${port}/greet?name=${encodeURIComponent(name)}`;
       
-      const res = await fetch(url, { method: 'GET' });
+      const res = await fetch(url, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         greetMsg = await res.text();
       } else {
