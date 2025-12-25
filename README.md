@@ -4,7 +4,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/CarloMicieli/rusty-shed)
 [![CI](https://github.com/CarloMicieli/rusty-shed/actions/workflows/ci.yml/badge.svg)](https://github.com/CarloMicieli/rusty-shed/actions/workflows/ci.yml)
 
-Rusty Shed helps model railway enthusiasts manage their collections, rolling stock, layouts, and metadata with a native desktop UI powered by Tauri (Rust) and a SvelteKit frontend.
+Rusty Shed helps model railway enthusiasts manage their collections, their wish lists, their railway model maintenance with a native desktop UI powered by Tauri (Rust) and a SvelteKit frontend.
 
 ## Quick Overview
 
