@@ -13,6 +13,10 @@ on:
       - 'src-tauri/**'
   workflow_dispatch:
 
+env:
+    CARGO_TERM_COLOR: always
+    SQLX_OFFLINE: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -65,6 +69,13 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-version }}
           override: true
+          components: clippy, rustfmt
+
+      - name: Toolchain info
+        run: |
+          rustc --version
+          cargo --version --verbose
+          cargo make --version
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -74,11 +85,38 @@ jobs:
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build & test Rust (if present)
+      - name: Run cargo check
         run: |
           if [ -f src-tauri/Cargo.toml ]; then
             cd src-tauri
-            cargo build --workspace --verbose
+            cargo check --workspace
+          else
+            echo "No Rust workspace found - skipping"
+          fi
+
+      - name: Run rustfmt
+        run: |
+          if [ -f src-tauri/Cargo.toml ]; then
+            cd src-tauri
+            cargo fmt --workspace --all --check
+          else
+            echo "No Rust workspace found - skipping"
+          fi          
+
+      - name: Run Clippy
+        run: |
+          if [ -f src-tauri/Cargo.toml ]; then
+            cd src-tauri
+            cargo clippy --workspace --all-targets --all-features -- -D warnings
+          else
+            echo "No Rust workspace found - skipping"
+          fi
+
+      - name: Run cargo build and tests
+        run: |
+          if [ -f src-tauri/Cargo.toml ]; then
+            cd src-tauri
+            cargo build --workspace
             cargo test --workspace --no-fail-fast --verbose
           else
             echo "No Rust workspace found - skipping"
