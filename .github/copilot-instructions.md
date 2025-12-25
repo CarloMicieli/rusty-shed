@@ -102,6 +102,33 @@ Security note: prefer IPC (`invoke`) for privileged/native actions; if you expos
 - Frontend: `svelte-check`, TypeScript (`pnpm build` covers type checks).
 - Recommended CI steps: `pnpm install --frozen-lockfile`, `pnpm build`, `cargo build --release`, `cargo clippy`.
 
+Additional npm script helpers (run these after any Rust code changes):
+
+- `pnpm rust:fmt` — run Rust formatter (delegates to `cargo fmt`) to keep code style consistent.
+- `pnpm rust:lint` — run Rust linter (delegates to `cargo clippy`) to catch common mistakes and enforce idioms.
+- `pnpm rust:test` — run the Rust test suite (`cargo test --lib`) to validate behavior.
+
+Run these three commands after any change to Rust code. If errors or warnings appear, fix them before committing. Typical workflow after editing Rust code:
+
+```bash
+# format
+pnpm rust:fmt
+
+# lint and fix issues reported by clippy (address warnings/errors)
+pnpm rust:lint
+
+# run tests
+pnpm rust:test
+```
+
+If `pnpm rust:lint` reports warnings that can be fixed automatically by `cargo fix`, consider running:
+
+```bash
+cargo fix --allow-dirty --allow-staged
+```
+
+Note: the project already includes `cargo fmt` and `cargo clippy` guidance; these `pnpm` helper scripts wrap those commands and make them easy to run from the repository root.
+
 ## Formatting & conventions
 
 - Use `rustfmt` config via `rustfmt.toml` when present. Run `cargo fmt` before commits.
