@@ -97,7 +97,7 @@ jobs:
         run: |
           if [ -f src-tauri/Cargo.toml ]; then
             cd src-tauri
-            cargo fmt --workspace --all --check
+            cargo fmt --all --check
           else
             echo "No Rust workspace found - skipping"
           fi          
@@ -106,7 +106,7 @@ jobs:
         run: |
           if [ -f src-tauri/Cargo.toml ]; then
             cd src-tauri
-            cargo clippy --workspace --all-targets --all-features -- -D warnings
+            cargo clippy --all-targets --all-features -- -D warnings
           else
             echo "No Rust workspace found - skipping"
           fi
