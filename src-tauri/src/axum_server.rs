@@ -1,7 +1,7 @@
 use axum::extract::State;
 use axum::{Router, extract::Query, http::StatusCode, response::IntoResponse, routing::get};
 use axum::{extract::Request, middleware::Next, response::Response};
-use rand::{Rng, distributions::Alphanumeric};
+use rand::{distr::Alphanumeric, distr::SampleString};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
@@ -15,15 +15,16 @@ struct AuthConfig {
     token: String,
 }
 
+pub fn generate_token() -> String {
+    Alphanumeric.sample_string(&mut rand::rng(), 32)
+}
+
 pub fn start_axum_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let (tx, rx) = oneshot::channel();
 
     // Generate a secure random token
-    let shared_token: String = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect();
+    let shared_token = generate_token();
+    eprintln!("Generated Axum server token: {}", shared_token);
 
     // Create shutdown channel
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
