@@ -50,12 +50,7 @@ impl CollectionRepository for SqliteCollectionRepository {
                 return Ok(Collection {
                     id: "".to_string(),
                     name: "My Collection".to_string(),
-                    locomotives_count: 0,
-                    passenger_cars_count: 0,
-                    freight_cars_count: 0,
-                    train_sets_count: 0,
-                    railcars_count: 0,
-                    electric_multiple_units_count: 0,
+                    summary: crate::collecting::domain::collection::CollectionSummary::default(),
                     total_value: None,
                     items: vec![],
                 });
@@ -181,12 +176,14 @@ impl CollectionRepository for SqliteCollectionRepository {
         Ok(Collection {
             id: collection_id,
             name: collection_rec.get("name"),
-            locomotives_count: collection_rec.get("locomotives_count"),
-            passenger_cars_count: collection_rec.get("passenger_cars_count"),
-            freight_cars_count: collection_rec.get("freight_cars_count"),
-            train_sets_count: collection_rec.get("train_sets_count"),
-            railcars_count: collection_rec.get("railcars_count"),
-            electric_multiple_units_count: collection_rec.get("electric_multiple_units_count"),
+            summary: crate::collecting::domain::collection::CollectionSummary {
+                locomotives_count: collection_rec.get("locomotives_count"),
+                passenger_cars_count: collection_rec.get("passenger_cars_count"),
+                freight_cars_count: collection_rec.get("freight_cars_count"),
+                train_sets_count: collection_rec.get("train_sets_count"),
+                railcars_count: collection_rec.get("railcars_count"),
+                electric_multiple_units_count: collection_rec.get("electric_multiple_units_count"),
+            },
             total_value: MonetaryAmount::from_db(
                 collection_rec.get("total_value_amount"),
                 collection_rec
@@ -271,7 +268,7 @@ mod tests {
             .expect("Failed to get collection");
 
         assert_eq!(collection.id, "col1");
-        assert_eq!(collection.locomotives_count, 1);
+        assert_eq!(collection.summary.locomotives_count, 1u16);
         assert_eq!(collection.items.len(), 1);
         assert_eq!(collection.items[0].product_code.0, "12345");
         // Check power method enum mapping
