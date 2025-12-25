@@ -16,32 +16,26 @@ CREATE TABLE IF NOT EXISTS collections (
 CREATE TABLE IF NOT EXISTS collection_items (
     id TEXT PRIMARY KEY,
     collection_id TEXT NOT NULL,
+    railway_model_id TEXT,
     manufacturer TEXT NOT NULL,
     product_code TEXT NOT NULL,
     description TEXT,
     power_method TEXT,
     scale TEXT,
     epoch TEXT,
-    delivery_date TEXT,
     FOREIGN KEY(collection_id) REFERENCES collections(id) ON DELETE CASCADE
 );
 
--- Create owned_rolling_stocks table
+-- Create owned_rolling_stocks table (trimmed to only fields used by the collecting view)
 CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
     id TEXT PRIMARY KEY,
     item_id TEXT NOT NULL,
-    road_number TEXT,
-    type_name TEXT,
-    series TEXT,
+    catalog_rolling_stock_id TEXT,
+    notes TEXT,
     railway_name TEXT,
     railway_registered_name TEXT,
     railway_country_code TEXT,
-    category TEXT,
-    sub_category TEXT,
-    depot TEXT,
-    length REAL,
-    livery TEXT,
-    service_level TEXT,
+    epoch TEXT,
     FOREIGN KEY(item_id) REFERENCES collection_items(id) ON DELETE CASCADE
 );
 

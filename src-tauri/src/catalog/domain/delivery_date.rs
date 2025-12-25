@@ -62,7 +62,8 @@ impl fmt::Display for DeliveryDate {
 }
 
 // Regular expressions used by the parser. Compiled once for efficiency.
-static RE_YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(?P<year>\d{4})$").expect("invalid RE_YEAR regex"));
+static RE_YEAR: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(?P<year>\d{4})$").expect("invalid RE_YEAR regex"));
 static RE_YM: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^(?P<year>\d{4})/(?P<month>\d{1,2})$").expect("invalid RE_YM regex"));
 // Case-insensitive quarter match (e.g. Q1 or q1)
@@ -91,8 +92,14 @@ impl DeliveryDate {
 
         // Year/Quarter (case-insensitive Q)
         if let Some(caps) = RE_YQ.captures(s) {
-            let year_str = caps.name("year").expect("regex matched but 'year' capture missing").as_str();
-            let q_str = caps.name("q").expect("regex matched but 'q' capture missing").as_str();
+            let year_str = caps
+                .name("year")
+                .expect("regex matched but 'year' capture missing")
+                .as_str();
+            let q_str = caps
+                .name("q")
+                .expect("regex matched but 'q' capture missing")
+                .as_str();
             if let Ok(year) = year_str.parse::<i32>()
                 && let Ok(qn) = q_str.parse::<u8>()
             {
@@ -109,8 +116,14 @@ impl DeliveryDate {
 
         // Year/Month
         if let Some(caps) = RE_YM.captures(s) {
-            let year_str = caps.name("year").expect("regex matched but 'year' capture missing").as_str();
-            let month_str = caps.name("month").expect("regex matched but 'month' capture missing").as_str();
+            let year_str = caps
+                .name("year")
+                .expect("regex matched but 'year' capture missing")
+                .as_str();
+            let month_str = caps
+                .name("month")
+                .expect("regex matched but 'month' capture missing")
+                .as_str();
             if let Ok(year) = year_str.parse::<i32>()
                 && let Ok(month) = month_str.parse::<u8>()
                 && (1..=12).contains(&month)

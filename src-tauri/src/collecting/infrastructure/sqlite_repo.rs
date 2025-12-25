@@ -72,7 +72,7 @@ impl CollectionRepository for SqliteCollectionRepository {
         // Fetch items
         let item_rows = sqlx::query(
             r#"
-            SELECT id, manufacturer, product_code, description, power_method, scale, epoch, delivery_date
+            SELECT id, manufacturer, product_code, description, power_method, scale, epoch
             FROM collection_items
             WHERE collection_id = ?
             "#,
@@ -103,8 +103,7 @@ impl CollectionRepository for SqliteCollectionRepository {
             // Fetch rolling stocks
             let rolling_stock_rows = sqlx::query(
                 r#"
-                SELECT id, road_number, type_name, series, railway_name, railway_registered_name, 
-                       railway_country_code, category, sub_category, depot, length, livery, service_level
+                SELECT id, notes, railway_name, railway_registered_name, railway_country_code
                 FROM owned_rolling_stocks
                 WHERE item_id = ?
                 "#,
@@ -117,11 +116,11 @@ impl CollectionRepository for SqliteCollectionRepository {
             let rolling_stocks = rolling_stock_rows
                 .into_iter()
                 .map(|rs_row| {
-                    // Only keep minimal view fields for OwnedRollingStock: id, rolling_stock_id, railway, epoch, description
+                    // Only keep minimal view fields for OwnedRollingStock: id, rolling_stock_id, railway, epoch, notes
                     OwnedRollingStock {
                         id: rs_row.get("id"),
                         rolling_stock_id: rs_row.get("id"),
-                        description: rs_row.get("type_name"),
+                        notes: rs_row.get("notes"),
                         railway: RailwayCompany {
                             name: rs_row.get("railway_name"),
                             registered_company_name: rs_row.get("railway_registered_name"),
@@ -234,17 +233,20 @@ mod tests {
 
         sqlx::query(
             r#"
-            INSERT INTO collection_items (id, collection_id, manufacturer, product_code, description, power_method, scale, epoch, delivery_date) 
-            VALUES ('item1', 'col1', 'ACME', '12345', 'Test Loc', 'DC', 'H0', 'IV', '2020');
+            INSERT INTO collection_items (id, collection_id, manufacturer, product_code, description, power_method, scale, epoch, railway_model_id) 
+            VALUES ('item1', 'col1', 'ACME', '12345', 'Test Loc', 'DC', 'H0', 'IV', 'item1');
             "#
         ).execute(&pool).await.expect("Failed to seed item");
 
         sqlx::query(
             r#"
-            INSERT INTO owned_rolling_stocks (id, item_id, road_number, type_name, railway_name, category)
-            VALUES ('rs1', 'item1', 'E656', 'Caimano', 'FS', 'LOCOMOTIVE');
-            "#
-        ).execute(&pool).await.expect("Failed to seed rolling stock");
+            INSERT INTO owned_rolling_stocks (id, item_id, notes, railway_name) 
+            VALUES ('rs1', 'item1', 'Caimano', 'FS');
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to seed rolling stock");
 
         let repo = SqliteCollectionRepository::new(pool.clone());
         let collection = repo
@@ -263,7 +265,13 @@ mod tests {
 
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
         assert_eq!(collection.items[0].rolling_stocks[0].railway.name, "FS");
-        assert_eq!(collection.items[0].rolling_stocks[0].rolling_stock_id, "rs1");
-        assert_eq!(collection.items[0].rolling_stocks[0].epoch, Epoch("IV".to_string()));
+        assert_eq!(
+            collection.items[0].rolling_stocks[0].rolling_stock_id,
+            "rs1"
+        );
+        assert_eq!(
+            collection.items[0].rolling_stocks[0].epoch,
+            Epoch("IV".to_string())
+        );
     }
 }

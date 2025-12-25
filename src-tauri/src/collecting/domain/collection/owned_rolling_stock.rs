@@ -15,8 +15,9 @@ pub struct OwnedRollingStock {
     /// Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
     pub rolling_stock_id: String,
 
-    /// A short textual description associated with this owned instance (e.g. type name or brief note).
-    pub description: String,
+    /// Free-form notes associated with this owned instance (previously `description`).
+    /// Use this for short owner notes or a brief textual label.
+    pub notes: String,
 
     /// The railway company that operates or is represented by this vehicle.
     pub railway: RailwayCompany,
