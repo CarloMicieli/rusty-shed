@@ -1,16 +1,12 @@
-use crate::catalog::domain::{
-    Epoch,
-    PowerMethod,
-    ProductCode,
-    RailwayCompany,
-    Scale, // ServiceLevel, SubCategory removed
-};
+use crate::catalog::domain::{Epoch, PowerMethod, ProductCode, RailwayCompany, Scale};
 use crate::collecting::domain::collection::{
     Collection, CollectionItem, CollectionRepository, OwnedRollingStock, PurchaseInfo,
 };
-// use crate::db::DB_POOL; removed
+
 use anyhow::{Context, Result};
+use chrono::{Local, NaiveDate};
 use sqlx::{Row, SqlitePool};
+use std::convert::TryFrom;
 
 pub struct SqliteCollectionRepository {
     pool: SqlitePool,
@@ -88,17 +84,17 @@ impl CollectionRepository for SqliteCollectionRepository {
             let item_id: String = row.get("id");
             let product_code_str: String = row.get("product_code");
             let power_method_str: Option<String> = row.get("power_method");
-            let power_method = match power_method_str.as_deref() {
-                Some("AC") => PowerMethod::AC,
-                _ => PowerMethod::DC, // Default or handle error? Defaulting to DC for now
-            };
+            // Parse power method using TryFrom; fall back to DC when missing/invalid
+            let power_method = power_method_str
+                .as_deref()
+                .and_then(|s| PowerMethod::try_from(s).ok())
+                .unwrap_or(PowerMethod::DC);
             let scale_str: Option<String> = row.get("scale");
-            let scale = match scale_str.as_deref() {
-                Some("H0") => Scale::H0,
-                Some("N") => Scale::N,
-                // ... handle others as needed or map string
-                _ => Scale::H0, // Default
-            };
+            // Parse scale using TryFrom; fall back to H0 on missing/invalid
+            let scale = scale_str
+                .as_deref()
+                .and_then(|s| Scale::try_from(s).ok())
+                .unwrap_or(Scale::H0);
 
             // Fetch rolling stocks
             let rolling_stock_rows = sqlx::query(
@@ -134,7 +130,7 @@ impl CollectionRepository for SqliteCollectionRepository {
             // Fetch purchase info
             let purchase_info_row = sqlx::query(
                 r#"
-                SELECT id, date, price_amount, price_currency, seller
+                SELECT id, purchase_date, price_amount, price_currency, seller
                 FROM purchase_infos
                 WHERE item_id = ?
                 LIMIT 1
@@ -145,13 +141,19 @@ impl CollectionRepository for SqliteCollectionRepository {
             .await
             .context("Failed to fetch purchase info")?;
 
-            let purchase_info = purchase_info_row.map(|pi_row| PurchaseInfo {
-                id: pi_row.get("id"),
-                item_id: item_id.clone(),
-                date: pi_row.get("date"),
-                price_amount: pi_row.get("price_amount"),
-                price_currency: pi_row.get("price_currency"),
-                seller: pi_row.get("seller"),
+            let purchase_info = purchase_info_row.map(|pi_row| {
+                let pd_str: String = pi_row.get("purchase_date");
+                let purchase_date = NaiveDate::parse_from_str(&pd_str, "%Y-%m-%d")
+                    .unwrap_or_else(|_| Local::now().naive_local().date());
+
+                PurchaseInfo {
+                    id: pi_row.get("id"),
+                    item_id: item_id.clone(),
+                    purchase_date,
+                    price_amount: pi_row.get("price_amount"),
+                    price_currency: pi_row.get("price_currency"),
+                    seller: pi_row.get("seller"),
+                }
             });
 
             items.push(CollectionItem {

@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
 CREATE TABLE IF NOT EXISTS purchase_infos (
     id TEXT PRIMARY KEY,
     item_id TEXT NOT NULL,
-    date TEXT,
+    purchase_date TEXT NOT NULL,
     price_amount INTEGER,
     price_currency TEXT,
     seller TEXT,
