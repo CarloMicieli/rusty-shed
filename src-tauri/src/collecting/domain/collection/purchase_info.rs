@@ -1,3 +1,4 @@
+use crate::core::domain::MonetaryAmount;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
@@ -18,11 +19,9 @@ pub struct PurchaseInfo {
     /// Parsed from the database string (ISO 8601 `YYYY-MM-DD` expected).
     pub purchase_date: NaiveDate,
 
-    /// Price amount in the smallest currency unit (e.g. cents).
-    pub price_amount: i64, // in cents
-
-    /// ISO currency code for the price (e.g. "EUR", "USD").
-    pub price_currency: String,
+    /// Price represented as an optional `MonetaryAmount`. `None` means the currency
+    /// was not present in the DB (NULL) or price is unknown.
+    pub price: Option<MonetaryAmount>,
 
     /// Seller name or vendor identifier.
     pub seller: String,

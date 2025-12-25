@@ -12,6 +12,7 @@ mod db;
 
 pub mod catalog;
 pub mod collecting;
+pub mod core;
 
 use db::{DB_POOL, MIGRATOR, init_db_pool};
 

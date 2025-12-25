@@ -1,4 +1,5 @@
 use crate::collecting::domain::collection::CollectionItem;
+use crate::core::domain::MonetaryAmount;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,8 +16,7 @@ pub struct Collection {
     pub electric_multiple_units_count: i32,
 
     // Total Value
-    pub total_value_amount: i64, // in cents
-    pub total_value_currency: String,
+    pub total_value: Option<MonetaryAmount>,
 
     pub items: Vec<CollectionItem>,
 }

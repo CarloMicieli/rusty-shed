@@ -2,8 +2,8 @@ use crate::catalog::domain::{Epoch, PowerMethod, ProductCode, RailwayCompany, Sc
 use crate::collecting::domain::collection::{
     Collection, CollectionItem, CollectionRepository, OwnedRollingStock, PurchaseInfo,
 };
-
-use anyhow::{Context, Result};
+use crate::core::domain::MonetaryAmount;
+use anyhow::{Context, Result, anyhow};
 use chrono::{Local, NaiveDate};
 use sqlx::{Row, SqlitePool};
 use std::convert::TryFrom;
@@ -56,8 +56,7 @@ impl CollectionRepository for SqliteCollectionRepository {
                     train_sets_count: 0,
                     railcars_count: 0,
                     electric_multiple_units_count: 0,
-                    total_value_amount: 0,
-                    total_value_currency: "EUR".to_string(),
+                    total_value: None,
                     items: vec![],
                 });
             }
@@ -141,20 +140,29 @@ impl CollectionRepository for SqliteCollectionRepository {
             .await
             .context("Failed to fetch purchase info")?;
 
-            let purchase_info = purchase_info_row.map(|pi_row| {
-                let pd_str: String = pi_row.get("purchase_date");
-                let purchase_date = NaiveDate::parse_from_str(&pd_str, "%Y-%m-%d")
-                    .unwrap_or_else(|_| Local::now().naive_local().date());
+            let purchase_info = match purchase_info_row {
+                Some(pi_row) => {
+                    let pd_str: String = pi_row.get("purchase_date");
+                    let purchase_date = NaiveDate::parse_from_str(&pd_str, "%Y-%m-%d")
+                        .unwrap_or_else(|_| Local::now().naive_local().date());
 
-                PurchaseInfo {
-                    id: pi_row.get("id"),
-                    item_id: item_id.clone(),
-                    purchase_date,
-                    price_amount: pi_row.get("price_amount"),
-                    price_currency: pi_row.get("price_currency"),
-                    seller: pi_row.get("seller"),
+                    // Build optional MonetaryAmount from DB parts: price_amount (i64) and price_currency (nullable TEXT)
+                    let price_amount: i64 = pi_row.get("price_amount");
+                    let price_currency: Option<String> = pi_row.get("price_currency");
+                    let price = MonetaryAmount::from_db(price_amount, price_currency.as_deref())
+                        .map_err(|e| anyhow!(e.to_string()))
+                        .context("Failed to parse purchase price from DB")?;
+
+                    Some(PurchaseInfo {
+                        id: pi_row.get("id"),
+                        item_id: item_id.clone(),
+                        purchase_date,
+                        price,
+                        seller: pi_row.get("seller"),
+                    })
                 }
-            });
+                None => None,
+            };
 
             items.push(CollectionItem {
                 id: item_id.clone(),
@@ -179,8 +187,14 @@ impl CollectionRepository for SqliteCollectionRepository {
             train_sets_count: collection_rec.get("train_sets_count"),
             railcars_count: collection_rec.get("railcars_count"),
             electric_multiple_units_count: collection_rec.get("electric_multiple_units_count"),
-            total_value_amount: collection_rec.get("total_value_amount"),
-            total_value_currency: collection_rec.get("total_value_currency"),
+            total_value: MonetaryAmount::from_db(
+                collection_rec.get("total_value_amount"),
+                collection_rec
+                    .get::<Option<String>, _>("total_value_currency")
+                    .as_deref(),
+            )
+            .map_err(|e| anyhow!(e.to_string()))
+            .context("Failed to parse collection total value from DB")?,
             items,
         })
     }
