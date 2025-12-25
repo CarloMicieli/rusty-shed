@@ -87,3 +87,26 @@ pnpm commit
 ```
 
 This will launch the interactive Commitizen prompt which enforces the allowed commit prefixes (eg. `feat`, `fix`, `docs`, `chore`, etc.).
+
+## Rust Commands
+
+You can run common Cargo commands for the Tauri/Rust crate located in `src-tauri` using the `pnpm` scripts added to `package.json`.
+
+Examples:
+
+```bash
+pnpm run rust:fmt     # runs `cargo fmt --manifest-path src-tauri/Cargo.toml`
+pnpm run rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
+pnpm run rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
+pnpm run rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
+pnpm run rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
+```
+
+Pass extra Cargo flags after `--`, for example:
+
+```bash
+pnpm run rust:build -- --release
+pnpm run rust:run -- --bin <binary-name>
+```
+
+These commands let you invoke Cargo for the `src-tauri` crate without changing directories.

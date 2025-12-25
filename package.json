@@ -9,7 +9,12 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "rust:build": "cargo build --manifest-path src-tauri/Cargo.toml",
+    "rust:run": "cargo run --manifest-path src-tauri/Cargo.toml",
+    "rust:test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "rust:clean": "cargo clean --manifest-path src-tauri/Cargo.toml"
   },
   "license": "MIT",
   "dependencies": {
