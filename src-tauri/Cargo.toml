@@ -17,32 +17,32 @@ name = "rusty_shed_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build            = { version = "2", features = [] }
 
 [dependencies]
-anyhow = "1"
-async-trait = "0.1.89"
-axum = "0.8.8"
-chrono = { version = "0.4", features = ["serde"] }
-once_cell = "1"
-log = "0.4"
-rand = "0.9"
-regex = "1"
-rust_decimal = { version = "1.36.0", features = ["serde-with-float"] }
-rust_decimal_macros = "1.36.0"
-serde = { version = "1.0.228", features = ["derive"] }
-sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls", "macros"] }
-tauri = { version = "2", features = [] }
-tauri-plugin-http = "2"
-tauri-plugin-log = "2"
-tauri-plugin-opener = "2"
-thiserror = "2"
-tokio = { version = "1.48", features = ["rt-multi-thread", "macros"] }
-uuid = { version = "1", features = ["v4", "serde", "fast-rng"] }
-xdg = "3.0.0"
+anyhow                 = "1"
+async-trait            = "0.1.89"
+axum                   = "0.8.8"
+chrono                 = { version = "0.4", features = ["serde"] }
+log                    = "0.4"
+once_cell              = "1"
+rand                   = "0.9"
+regex                  = "1"
+rust_decimal           = { version = "1.36.0", features = ["serde-with-float"] }
+rust_decimal_macros    = "1.36.0"
+serde                  = { version = "1.0.228", features = ["derive"] }
+sqlx                   = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls", "macros"] }
+tauri                  = { version = "2", features = [] }
+tauri-plugin-http      = "2"
+tauri-plugin-log       = "2"
+tauri-plugin-opener    = "2"
+thiserror              = "2"
+tokio                  = { version = "1.48", features = ["rt-multi-thread", "macros"] }
+uuid                   = { version = "1", features = ["v4", "serde", "fast-rng"] }
+xdg                    = "3.0.0"
 
 [dev-dependencies]
-pretty_assertions = "1.4.1"
-rstest = "0.26"
-serde_derive = "1.0.228"
-serde_json = "1.0"
+pretty_assertions    = "1.4.1"
+rstest               = "0.26"
+serde_derive         = "1.0.228"
+serde_json           = "1.0"
