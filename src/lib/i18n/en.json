@@ -1,39 +1,39 @@
 {
-    "app": {
-        "name": "Rusty Shed",
-        "dashboard": "Dashboard",
-        "collection": "Collection",
-        "wishlists": "Wish Lists",
-        "depot": "Depot",
-        "settings": "Settings",
-        "search_placeholder": "Search database...",
-        "search_mobile_placeholder": "Search...",
-        "search_instruction": "Start typing to search"
-    },
-    "dashboard": {
-        "yard_statistics": "Yard Statistics",
-        "recently_added": "Recently Added",
-        "view_all": "View All",
-        "the_depot": "The Depot",
-        "filter": "Filter",
-        "quick_actions": "Quick Actions"
-    },
-    "stats": {
-        "total_collection_value": "Total Collection Value",
-        "rolling_stocks": "Rolling Stocks",
-        "maintenance_alerts": "Maintenance Alerts"
-    },
-    "actions": {
-        "add_railway_model": "Add Railway Model",
-        "schedule_maintenance": "Schedule Maintenance",
-        "generate_report": "Generate Report"
-    },
-    "depot": {
-        "manufacturer": "Manufacturer",
-        "product_code": "Product Code",
-        "category": "Category",
-        "scale": "Scale",
-        "company": "Company",
-        "description": "Description"
-    }
+	"app": {
+		"name": "Rusty Shed",
+		"dashboard": "Dashboard",
+		"collection": "Collection",
+		"wishlists": "Wish Lists",
+		"depot": "Depot",
+		"settings": "Settings",
+		"search_placeholder": "Search database...",
+		"search_mobile_placeholder": "Search...",
+		"search_instruction": "Start typing to search"
+	},
+	"dashboard": {
+		"yard_statistics": "Yard Statistics",
+		"recently_added": "Recently Added",
+		"view_all": "View All",
+		"the_depot": "The Depot",
+		"filter": "Filter",
+		"quick_actions": "Quick Actions"
+	},
+	"stats": {
+		"total_collection_value": "Total Collection Value",
+		"rolling_stocks": "Rolling Stocks",
+		"maintenance_alerts": "Maintenance Alerts"
+	},
+	"actions": {
+		"add_railway_model": "Add Railway Model",
+		"schedule_maintenance": "Schedule Maintenance",
+		"generate_report": "Generate Report"
+	},
+	"depot": {
+		"manufacturer": "Manufacturer",
+		"product_code": "Product Code",
+		"category": "Category",
+		"scale": "Scale",
+		"company": "Company",
+		"description": "Description"
+	}
 }

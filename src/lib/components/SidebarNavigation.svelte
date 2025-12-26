@@ -68,7 +68,7 @@
 			<span class="font-medium tracking-wide">{$_('app.settings')}</span>
 		</a>
 		<div class="px-4 py-2 text-center text-xs tracking-widest text-surface-400 uppercase">
-			v. { $appVersion || '—' }
+			v. {$appVersion || '—'}
 		</div>
 	</div>
 </nav>

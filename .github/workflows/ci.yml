@@ -2,20 +2,20 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'src/**'
       - 'src-tauri/**'
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'src/**'
       - 'src-tauri/**'
   workflow_dispatch:
 
 env:
-    CARGO_TERM_COLOR: always
-    SQLX_OFFLINE: true
+  CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: true
 
 jobs:
   build:
@@ -100,7 +100,7 @@ jobs:
             cargo fmt --all --check
           else
             echo "No Rust workspace found - skipping"
-          fi          
+          fi
 
       - name: Run Clippy
         run: |

@@ -2,9 +2,10 @@
 
 ## Summary
 
-Rusty Shed is a single-user collection manager for model railway items. The app stores one user collection, supports zero-to-many wish lists, and tracks maintenance and service history for individual items. 
+Rusty Shed is a single-user collection manager for model railway items. The app stores one user collection, supports zero-to-many wish lists, and tracks maintenance and service history for individual items.
 
 Key design choices:
+
 - Primary identifiers: UUID for all entities.
 - Prices: canonical numeric value + ISO currency code (e.g., `35.00 EUR`).
 - Measures: numeric value + unit; `length` uses millimetres (`mm`).
@@ -16,8 +17,8 @@ Key design choices:
 3. Edit an RailwayModel or any nested RollingStock entry (change quantity, livery, depot, service status).
 4. Maintain multiple wish lists: create, add items (by `itemNumber` or search), remove, and reorder entries.
 5. Record maintenance events for a RollingStock (date, description, cost, performed-by, next-due date).
-7. Generate simple reports and filters: total collection value, items by epoch/scale, DCC-capable items, maintenance history per item.
-8. Backup and restore the entire collection data (local-first, exportable file).
+6. Generate simple reports and filters: total collection value, items by epoch/scale, DCC-capable items, maintenance history per item.
+7. Backup and restore the entire collection data (local-first, exportable file).
 
 ## Domain model dictionary
 

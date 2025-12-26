@@ -16,31 +16,26 @@ Rusty Shed helps model railway enthusiasts manage their collections, their wish 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
 
 **`.vscode/mcp.json`**
+
 ```json
 {
-  "servers": {
-    "github-mcp": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp"
-    },
-    "rust-mcp-server": {
-      "type": "stdio",
-      "command": "${HOME}/.cargo/bin/rust-mcp-server",
-      "args": [
-        "--log-file",
-        "log/folder/rust-mcp-server.log"
-      ]
-    },
-    "svelte": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@sveltejs/mcp"
-      ]
-    }
-  },
-  "inputs": []
+	"servers": {
+		"github-mcp": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp"
+		},
+		"rust-mcp-server": {
+			"type": "stdio",
+			"command": "${HOME}/.cargo/bin/rust-mcp-server",
+			"args": ["--log-file", "log/folder/rust-mcp-server.log"]
+		},
+		"svelte": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@sveltejs/mcp"]
+		}
+	},
+	"inputs": []
 }
 ```
 

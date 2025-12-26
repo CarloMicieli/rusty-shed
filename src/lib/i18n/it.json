@@ -1,39 +1,39 @@
 {
-    "app": {
-        "name": "Rusty Shed",
-        "dashboard": "Dashboard",
-        "collection": "Collezione",
-        "wishlists": "Liste Desideri",
-        "depot": "Deposito",
-        "settings": "Impostazioni",
-        "search_placeholder": "Cerca nel database...",
-        "search_mobile_placeholder": "Cerca...",
-        "search_instruction": "Inizia a scrivere per cercare"
-    },
-    "dashboard": {
-        "yard_statistics": "Statistiche Deposito",
-        "recently_added": "Aggiunti di Recente",
-        "view_all": "Vedi Tutti",
-        "the_depot": "Il Deposito",
-        "filter": "Filtra",
-        "quick_actions": "Azioni Rapide"
-    },
-    "stats": {
-        "total_collection_value": "Valore Totale Collezione",
-        "rolling_stocks": "Rotabili",
-        "maintenance_alerts": "Avvisi Manutenzione"
-    },
-    "actions": {
-        "add_railway_model": "Aggiungi Modello",
-        "schedule_maintenance": "Programma Manutenzione",
-        "generate_report": "Genera Report"
-    },
-    "depot": {
-        "manufacturer": "Produttore",
-        "product_code": "Codice Prodotto",
-        "category": "Categoria",
-        "scale": "Scala",
-        "company": "Compagnia",
-        "description": "Descrizione"
-    }
+	"app": {
+		"name": "Rusty Shed",
+		"dashboard": "Dashboard",
+		"collection": "Collezione",
+		"wishlists": "Liste Desideri",
+		"depot": "Deposito",
+		"settings": "Impostazioni",
+		"search_placeholder": "Cerca nel database...",
+		"search_mobile_placeholder": "Cerca...",
+		"search_instruction": "Inizia a scrivere per cercare"
+	},
+	"dashboard": {
+		"yard_statistics": "Statistiche Deposito",
+		"recently_added": "Aggiunti di Recente",
+		"view_all": "Vedi Tutti",
+		"the_depot": "Il Deposito",
+		"filter": "Filtra",
+		"quick_actions": "Azioni Rapide"
+	},
+	"stats": {
+		"total_collection_value": "Valore Totale Collezione",
+		"rolling_stocks": "Rotabili",
+		"maintenance_alerts": "Avvisi Manutenzione"
+	},
+	"actions": {
+		"add_railway_model": "Aggiungi Modello",
+		"schedule_maintenance": "Programma Manutenzione",
+		"generate_report": "Genera Report"
+	},
+	"depot": {
+		"manufacturer": "Produttore",
+		"product_code": "Codice Prodotto",
+		"category": "Categoria",
+		"scale": "Scala",
+		"company": "Compagnia",
+		"description": "Descrizione"
+	}
 }

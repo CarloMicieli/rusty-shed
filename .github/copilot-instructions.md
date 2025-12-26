@@ -53,11 +53,11 @@ Notes: the Vite dev server is configured to use port `1420` and the Tauri `devUr
 Frontend (Svelte) example using the official API:
 
 ```ts
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri';
 
 async function greet(name: string) {
-  const message = await invoke<string>('greet', { name })
-  return message
+	const message = await invoke<string>('greet', { name });
+	return message;
 }
 ```
 
@@ -145,17 +145,17 @@ This repository uses Conventional Commits. A Commitizen configuration is present
 
 Allowed commit types (from `.cz.toml`):
 
-- `fix`:      Bug fix (correlates with PATCH in SemVer)
-- `feat`:     New feature (correlates with MINOR in SemVer)
-- `docs`:     Changes to documentation
-- `style`:    Changes that do not affect the meaning of the code (whitespace, formatting, etc.)
+- `fix`: Bug fix (correlates with PATCH in SemVer)
+- `feat`: New feature (correlates with MINOR in SemVer)
+- `docs`: Changes to documentation
+- `style`: Changes that do not affect the meaning of the code (whitespace, formatting, etc.)
 - `refactor`: Changes that neither fix a bug nor add a feature
-- `perf`:     Changes that improve performance
-- `test`:     Adding or refactoring tests
-- `build`:    Changes that affect the build system or external dependencies
-- `ci`:       Changes to CI config files and scripts
-- `chore`:    Other changes that don't modify src or test files
-- `revert`:   Reverts a previous commit
+- `perf`: Changes that improve performance
+- `test`: Adding or refactoring tests
+- `build`: Changes that affect the build system or external dependencies
+- `ci`: Changes to CI config files and scripts
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
 
 Commit message format (template from `.cz.toml`):
 
@@ -184,6 +184,7 @@ If you use Commitizen, run the configured tool (e.g. `pnpm commit` or `cz`) to c
 This file is intended to live at the repo root as `copilot-instructions.md` and to guide GitHub Copilot suggestions and completions for contributors working on this Tauri + SvelteKit project.
 
 ---
+
 If you'd like, I can now:
 
 - add a small example `axum` server file under `src-tauri/src/` and update `Cargo.toml`, or

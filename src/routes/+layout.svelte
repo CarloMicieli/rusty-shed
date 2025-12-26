@@ -30,7 +30,9 @@
 			// Dynamically import the Tauri API in a way that avoids Vite's static
 			// import analysis (which fails when running Vite-only dev). Using
 			// `new Function` prevents Vite from seeing the string at build time.
-			const tauriModule = await (new Function("return import('@tauri-apps/api/tauri')"))().catch(() => null);
+			const tauriModule = await new Function("return import('@tauri-apps/api/tauri')")().catch(
+				() => null
+			);
 			if (tauriModule && typeof tauriModule.invoke === 'function') {
 				const v = await tauriModule.invoke<string>('get_app_version');
 				setAppVersion(v);
