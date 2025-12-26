@@ -10,17 +10,34 @@ pub mod core;
 use crate::state::AppState;
 use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
+use specta_typescript::{BigIntExportBehavior, Typescript};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
+use tauri_specta::{Builder, collect_commands};
 
 #[tauri::command]
+#[specta::specta]
 fn is_db_initialized(state: tauri::State<'_, AppState>) -> bool {
     state.is_initialized()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Determine log level based on build type
-    let level = if cfg!(debug_assertions) {
+    let is_dev_build = cfg!(debug_assertions);
+
+    let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
+        is_db_initialized,
+        crate::collecting::interface::command_handlers::get_collection
+    ]);
+
+    let ts_config = Typescript::default().bigint(BigIntExportBehavior::BigInt);
+
+    // 2. Export the bindings (This creates the TS file)
+    #[cfg(debug_assertions)] // Only export during development
+    builder
+        .export(ts_config, "../src/lib/bindings.ts")
+        .expect("Failed to export typescript bindings");
+
+    let level = if is_dev_build {
         LevelFilter::Debug
     } else {
         LevelFilter::Info
@@ -40,10 +57,7 @@ pub fn run() {
                 ])
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![
-            is_db_initialized,
-            crate::collecting::interface::command_handlers::get_collection
-        ])
+        .invoke_handler(builder.invoke_handler())
         .setup(|app| {
             // 1. Initialize the pool
             let pool = tauri::async_runtime::block_on(async {

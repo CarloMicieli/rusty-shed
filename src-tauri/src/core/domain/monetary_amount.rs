@@ -41,7 +41,7 @@ use crate::core::domain::currency::Currency;
 /// let none = MonetaryAmount::from_db(0, None).unwrap();
 /// assert!(none.is_none());
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct MonetaryAmount {
     /// Amount stored in the smallest unit (e.g. cents for EUR/USD/GBP).
     pub amount: u64,

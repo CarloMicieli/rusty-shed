@@ -7,5 +7,6 @@ use serde::{Deserialize, Serialize};
 /// type-safety and to allow attaching trait impls specific to product codes.
 ///
 /// It derives `Serialize`/`Deserialize` for easy (de)serialization with Serde.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[specta(transparent)]
 pub struct ProductCode(pub String);

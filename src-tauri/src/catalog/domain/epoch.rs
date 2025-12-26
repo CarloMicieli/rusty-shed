@@ -7,7 +7,8 @@ use std::str::FromStr;
 ///
 /// This preserves the original `Epoch(pub String)` API while providing
 /// conversions to the structured `EpochKind` for validation and richer handling.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[specta(transparent)]
 pub struct Epoch(pub String);
 
 impl From<&str> for Epoch {

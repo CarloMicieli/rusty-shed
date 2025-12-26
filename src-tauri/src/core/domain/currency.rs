@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// The enum uses a small, explicit set of currencies for now. Use
 /// `Currency::from_code` to obtain a `Currency` value from an ISO-style
 /// currency code (case-insensitive).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 pub enum Currency {
     /// Euro
     EUR,

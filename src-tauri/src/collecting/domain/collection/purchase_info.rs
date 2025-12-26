@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This structure stores details about the acquisition of a collection item,
 /// including an identifier, purchase date, price and seller.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct PurchaseInfo {
     /// Unique identifier for the purchase record (e.g. UUID).
     pub id: String,

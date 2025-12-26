@@ -8,7 +8,7 @@ use std::fmt;
 /// `1:`). Use `Scale::ratio()` to retrieve the numeric value (e.g. `87.0` for H0).
 /// The `Display` implementation formats the scale including the ratio, for
 /// example: `H0 (1:87)` or `G (1:22.5)`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 pub enum Scale {
     H0,
     H0m,

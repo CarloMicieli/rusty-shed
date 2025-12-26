@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// infrastructure and domain code straightforward. Prefer constructing
 /// `CommandError::DatabaseError` when an underlying DB call fails, and
 /// `CommandError::Unknown` for unexpected failures.
-#[derive(thiserror::Error, Debug, Serialize, Deserialize)]
+#[derive(thiserror::Error, Debug, Serialize, Deserialize, specta::Type)]
 pub enum CommandError {
     /// Represents an error coming from the database layer.
     ///

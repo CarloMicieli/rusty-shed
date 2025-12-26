@@ -5,7 +5,9 @@ use strum_macros::{Display, EnumString};
 ///
 /// This enum represents how a model locomotive obtains electrical power.
 /// The `Display` implementation returns a human-friendly name for each variant.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[derive(
+    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

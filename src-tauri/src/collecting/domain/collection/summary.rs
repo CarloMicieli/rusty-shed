@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Summary counters for a `Collection` domain object.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct CollectionSummary {
     /// Number of locomotives in the collection.
     pub locomotives_count: u16,

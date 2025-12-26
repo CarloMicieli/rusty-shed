@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// the collecting domain to reference a catalog `RailwayModel` and basic
 /// provenance (railway and epoch). Detailed model information lives in the
 /// catalog domain and should not be duplicated here.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct OwnedRollingStock {
     /// Unique identifier for this owned rolling stock record (e.g. UUID in the DB).
     pub id: String,

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// the collector and purchase information. It is intentionally a lightweight
 /// entity that is meaningful only inside the context of its parent
 /// `Collection` (the aggregate root).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct CollectionItem {
     /// Unique identifier for this collection item (e.g. UUID).
     pub id: String,
