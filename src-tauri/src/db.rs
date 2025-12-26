@@ -5,14 +5,14 @@
 //! compile time and can be run by code that uses the provided
 //! `MIGRATOR` value.
 
+use log::error;
 use sqlx::migrate::Migrator;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use sqlx::{Sqlite, migrate::MigrateDatabase};
 use std::path::PathBuf;
-use log::error;
 use thiserror::Error;
-use xdg::BaseDirectories;
 use uuid::Uuid;
+use xdg::BaseDirectories;
 
 /// Embedded SQL migrations for the application.
 ///
@@ -137,7 +137,10 @@ mod tests {
         let pool = init_in_memory_db_pool().await.expect("init in-memory pool");
 
         // Run a simple query to ensure the pool is usable.
-        let row = sqlx::query("SELECT 1 as v").fetch_one(&pool).await.expect("select 1");
+        let row = sqlx::query("SELECT 1 as v")
+            .fetch_one(&pool)
+            .await
+            .expect("select 1");
         let v: i64 = row.get("v");
         assert_eq!(v, 1);
     }

@@ -15,3 +15,26 @@ pub async fn get_collection(
         Err(e) => Err(e.to_string()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::init_in_memory_db_pool;
+    use pretty_assertions::assert_eq;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn command_get_collection_returns_empty() {
+        // Create an isolated in-memory DB and run migrations
+        let pool = init_in_memory_db_pool().await.expect("init in-memory pool");
+
+        // Create repository and use case directly (bypass tauri::State wrapper)
+        let repo = SqliteCollectionRepository::new(pool.clone());
+        let use_case = GetCollectionUseCase::new(Arc::new(repo));
+
+        let found_collection = use_case.execute().await.expect("get_collection");
+
+        assert_eq!(found_collection.name, "My Collection");
+        assert_eq!(found_collection.items.len(), 0);
+    }
+}
