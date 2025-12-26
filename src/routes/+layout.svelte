@@ -6,8 +6,40 @@
 	import BottomNavigation from '$lib/components/BottomNavigation.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { Bell, TrainFront } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { setAppVersion } from '$lib/stores/app';
 
 	let { children } = $props();
+
+	onMount(async () => {
+		// Prefer generated bindings if available (tauri-specta). Fallback to direct invoke.
+		try {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore: generated bindings may not exist during Vite-only dev
+			const bindings = await import('$lib/bindings');
+			if (bindings && bindings.commands && typeof bindings.commands.getAppVersion === 'function') {
+				const v = await bindings.commands.getAppVersion();
+				setAppVersion(v as string);
+				return;
+			}
+		} catch (e) {
+			// ignore and fallback
+		}
+
+		try {
+			// Dynamically import the Tauri API in a way that avoids Vite's static
+			// import analysis (which fails when running Vite-only dev). Using
+			// `new Function` prevents Vite from seeing the string at build time.
+			const tauriModule = await (new Function("return import('@tauri-apps/api/tauri')"))().catch(() => null);
+			if (tauriModule && typeof tauriModule.invoke === 'function') {
+				const v = await tauriModule.invoke<string>('get_app_version');
+				setAppVersion(v);
+			}
+		} catch (e) {
+			// Not running under Tauri or other error — leave default/fallback version
+			// Optionally set a dev fallback like 'dev'
+		}
+	});
 </script>
 
 {#if $isLoading}

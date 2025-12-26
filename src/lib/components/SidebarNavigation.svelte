@@ -2,6 +2,7 @@
 	import { LayoutDashboard, Library, Heart, Box, Settings, TrainFront } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { _ } from 'svelte-i18n';
+	import { appVersion } from '$lib/stores/app';
 </script>
 
 <nav class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex">
@@ -67,7 +68,7 @@
 			<span class="font-medium tracking-wide">{$_('app.settings')}</span>
 		</a>
 		<div class="px-4 py-2 text-center text-xs tracking-widest text-surface-400 uppercase">
-			v1.0.0
+			v. { $appVersion || '—' }
 		</div>
 	</div>
 </nav>

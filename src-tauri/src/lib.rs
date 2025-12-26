@@ -20,13 +20,21 @@ fn is_db_initialized(state: tauri::State<'_, AppState>) -> bool {
     state.is_initialized()
 }
 
+#[tauri::command]
+#[specta::specta]
+fn get_app_version() -> String {
+    // Use the crate package version set at compile time
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let is_dev_build = cfg!(debug_assertions);
 
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         is_db_initialized,
-        crate::collecting::interface::command_handlers::get_collection
+        crate::collecting::interface::command_handlers::get_collection,
+        get_app_version
     ]);
 
     let ts_config = Typescript::default().bigint(BigIntExportBehavior::BigInt);

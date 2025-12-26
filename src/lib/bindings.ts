@@ -30,6 +30,9 @@ async getCollection() : Promise<Result<Collection, CommandError>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getAppVersion() : Promise<string> {
+    return await TAURI_INVOKE("get_app_version");
 }
 }
 
