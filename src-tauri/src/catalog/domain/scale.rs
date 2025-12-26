@@ -2,15 +2,15 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 
-// bring Gauge into scope so Scale::gauge can return it
+use crate::catalog::domain::ratio::Ratio;
 use crate::catalog::domain::scale_gauge::Gauge;
 
 /// Model railway scales supported by the application.
 ///
 /// Each variant corresponds to a commonly used hobbyist scale name (for example
 /// `H0` or `00`). Use `Scale::ratio()` to obtain the numeric ratio that follows
-/// the `1:` notation (e.g. `Scale::H0` -> `87.0` meaning `1:87`). The `Display`
-/// implementation produces a human-friendly string such as `H0 (1:87)`.
+/// the `1:` notation (e.g. `Scale::H0` -> `1:87`). The `Display` implementation
+/// produces a human-friendly string such as `H0 (1:87)`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 pub enum Scale {
     /// H0 scale (1:87)
@@ -36,21 +36,21 @@ pub enum Scale {
 }
 
 impl Scale {
-    /// Returns the numeric ratio (the denominator in `1:ratio`).
+    /// Returns the scale `Ratio` (the denominator in `1:ratio`).
     ///
-    /// Examples: `Scale::H0` -> `87.0`, `Scale::G` -> `22.5`.
-    pub fn ratio(&self) -> f32 {
+    /// Examples: `Scale::H0` -> `1:87`, `Scale::G` -> `1:22.5`.
+    pub fn ratio(&self) -> Ratio {
         match self {
-            Scale::H0 => 87.0,
-            Scale::H0m => 87.0,
-            Scale::H0e => 87.0,
-            Scale::N => 160.0,
-            Scale::TT => 120.0,
-            Scale::Z => 220.0,
-            Scale::G => 22.5,
-            Scale::Scale1 => 32.0,
-            Scale::Scale0 => 43.5,
-            Scale::Scale00 => 76.2,
+            Scale::H0 => Ratio::r87(),
+            Scale::H0m => Ratio::r87(),
+            Scale::H0e => Ratio::r87(),
+            Scale::N => Ratio::r160(),
+            Scale::TT => Ratio::r120(),
+            Scale::Z => Ratio::r220(),
+            Scale::G => Ratio::r22_5(),
+            Scale::Scale1 => Ratio::r32(),
+            Scale::Scale0 => Ratio::r43_5(),
+            Scale::Scale00 => Ratio::r76_2(),
         }
     }
 
@@ -92,16 +92,8 @@ impl fmt::Display for Scale {
             Scale::Scale00 => "00",
         };
 
-        let ratio = self.ratio();
-        // Format ratio without trailing `.0` when it's an integer, otherwise with 1 decimal
-        let ratio_str = if (ratio - ratio.trunc()).abs() < f32::EPSILON {
-            format!("{}", ratio as i32)
-        } else {
-            // show one decimal place for common fractions like 22.5 or 43.5
-            format!("{:.1}", ratio)
-        };
-
-        write!(f, "{} (1:{})", label, ratio_str)
+        // Delegate the numeric ratio formatting to `Ratio`'s Display implementation.
+        write!(f, "{} ({})", label, self.ratio())
     }
 }
 

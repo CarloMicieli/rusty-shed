@@ -23,6 +23,7 @@ pub mod feature_flag;
 pub mod radius;
 pub mod railway_id;
 mod railway_model_id;
+pub mod ratio;
 pub mod rolling_stock_railway;
 pub mod scale_gauge;
 pub mod track_gauge;
