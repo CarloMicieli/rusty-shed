@@ -271,23 +271,13 @@ impl CollectionRepository for SqliteCollectionRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::infrastructure::testing::CatalogTestDb;
+    use crate::collecting::infrastructure::testing::CollectingTestDb;
     use crate::core::domain::currency::Currency;
-    use crate::db::MIGRATOR;
-    use sqlx::sqlite::SqlitePoolOptions;
+    use pretty_assertions::assert_eq;
 
-    #[tokio::test]
-    async fn test_get_collection_empty() {
-        let pool = SqlitePoolOptions::new()
-            .max_connections(1)
-            .connect("sqlite::memory:")
-            .await
-            .expect("Failed to create in-memory pool");
-
-        MIGRATOR.run(&pool).await.expect("Failed to run migrations");
-
-        // Seed empty collection ? Or assumes code handles it.
-        // The current code fetches "LIMIT 1". If empty, it returns a default empty object.
-
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_collection_empty(pool: SqlitePool) {
         let repo = SqliteCollectionRepository::new(pool.clone());
         let collection = repo
             .get_collection()
@@ -299,113 +289,22 @@ mod tests {
         assert_eq!(collection.items.len(), 0);
     }
 
-    #[tokio::test]
-    async fn test_get_collection_with_data() {
-        let pool = SqlitePoolOptions::new()
-            .max_connections(1)
-            .connect("sqlite::memory:")
-            .await
-            .expect("Failed to create in-memory pool");
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_collection_with_data(pool: SqlitePool) -> Result<()> {
+        let catalog_db = CatalogTestDb::new(pool.clone());
+        let catalog_test_data = catalog_db.setup_railway_model().await?;
 
-        MIGRATOR.run(&pool).await.expect("Failed to run migrations");
-
-        // Seed data
-        sqlx::query(
-            r#"
-            INSERT INTO collections (id, name, locomotives_count) VALUES ('col1', 'Test Collection', 1);
-            "#
-        ).execute(&pool).await.expect("Failed to seed collection");
-
-        // Insert minimal manufacturer and railway model needed by FK constraints
-        sqlx::query(
-            r#"
-            INSERT INTO manufacturers (id, name) VALUES ('man1', 'ACME');
-            "#,
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to seed manufacturer");
-
-        sqlx::query(
-            r#"
-            INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category)
-            VALUES ('item1', 'man1', '12345', 'Test Loc', 'DC', 'H0', 'IV', 'locomotive');
-            "#,
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to seed railway_model");
-
-        // Debug: ensure required rows are present before inserting collection_item
-        let col_count: i64 =
-            sqlx::query_scalar("SELECT COUNT(1) FROM collections WHERE id = 'col1';")
-                .fetch_one(&pool)
-                .await
-                .expect("Failed to query collections count");
-        let man_count: i64 =
-            sqlx::query_scalar("SELECT COUNT(1) FROM manufacturers WHERE id = 'man1';")
-                .fetch_one(&pool)
-                .await
-                .expect("Failed to query manufacturers count");
-        let rm_count: i64 =
-            sqlx::query_scalar("SELECT COUNT(1) FROM railway_models WHERE id = 'item1';")
-                .fetch_one(&pool)
-                .await
-                .expect("Failed to query railway_models count");
-
-        println!(
-            "DEBUG COUNTS: collections={}, manufacturers={}, railway_models={}",
-            col_count, man_count, rm_count
-        );
-
-        // Debug: print columns for collection_items table to verify migration schema
-        let mut cols = Vec::new();
-        let col_rows = sqlx::query("PRAGMA table_info(collection_items);")
-            .fetch_all(&pool)
-            .await
-            .expect("Failed to fetch pragma table_info");
-        for r in col_rows {
-            let name: String = r.get("name");
-            let typ: String = r.get("type");
-            cols.push(format!("{}:{}", name, typ));
-        }
-        println!("collection_items columns: {:?}", cols);
-
-        sqlx::query(
-            r#"
-            INSERT INTO collection_items (id, collection_id, railway_model_id, conditions, notes) 
-            VALUES ('item1', 'col1', 'item1', 'mint', 'Owner notes');
-            "#,
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to seed item");
-
-        sqlx::query(
-            r#"
-            INSERT INTO owned_rolling_stocks (id, collection_item_id, rolling_stock_id, notes) 
-            VALUES ('rs1', 'item1', NULL, 'Caimano');
-            "#,
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to seed rolling stock");
-
-        sqlx::query(
-            r#"
-            INSERT INTO purchase_infos (purchase_id, collection_item_id, purchase_type, purchase_date, seller_id, buyer_id, 
-                                       sale_date, purchased_price_amount, purchased_price_currency, 
-                                       sale_price_amount, sale_price_currency, deposit_amount, deposit_currency, 
-                                       preorder_total_amount, preorder_total_currency, expected_date)
-            VALUES ('pur1', 'item1', 'purchased', '2023-10-01', 'seller1', NULL, 
-                    NULL, 1000, 'USD', 
-                    NULL, NULL, NULL, NULL, 
-                    NULL, NULL, NULL);
-            "#
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to seed purchase info");
+        let collecting_db = CollectingTestDb::new(pool.clone());
+        let railway_model_id = &catalog_test_data.railway_model_id;
+        let rolling_stock_ids: Vec<&str> = catalog_test_data
+            .rolling_stock_ids
+            .iter()
+            .map(|s| s.as_str()) // or .map(|s| &**s)
+            .collect();
+        let collection_test_data = collecting_db
+            .setup_minimal_collection(railway_model_id, rolling_stock_ids.clone())
+            .await?;
+        let collection_id = collection_test_data.collection_id;
 
         let repo = SqliteCollectionRepository::new(pool.clone());
         let collection = repo
@@ -413,30 +312,39 @@ mod tests {
             .await
             .expect("Failed to get collection");
 
-        assert_eq!(collection.id, "col1");
-        assert_eq!(collection.summary.locomotives_count, 1u16);
+        assert_eq!(collection.id, collection_id);
+        assert_eq!(collection.summary.locomotives_count, 0);
+        assert_eq!(collection.summary.passenger_cars_count, 0);
+        assert_eq!(collection.summary.freight_cars_count, 0);
+        assert_eq!(collection.summary.train_sets_count, 0);
+        assert_eq!(collection.summary.railcars_count, 0);
+        assert_eq!(collection.summary.electric_multiple_units_count, 0);
+        assert!(collection.total_value.is_some());
         assert_eq!(collection.items.len(), 1);
-        assert_eq!(collection.items[0].railway_model_id, "item1");
-        assert_eq!(collection.items[0].conditions.as_deref(), Some("mint"));
-        assert_eq!(collection.items[0].notes.as_deref(), Some("Owner notes"));
+        assert_eq!(
+            collection.items[0].railway_model_id,
+            railway_model_id.to_string()
+        );
 
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
         assert_eq!(
             collection.items[0].rolling_stocks[0].rolling_stock_id,
-            "rs1"
+            rolling_stock_ids[0].to_string()
         );
 
         assert!(collection.items[0].purchase_info.is_some());
         let purchase_info = collection.items[0].purchase_info.as_ref().unwrap();
         match purchase_info {
             PurchaseInfo::Purchased(purchased_info) => {
-                assert_eq!(purchased_info.id, "pur1");
+                assert_eq!(purchased_info.id, collection_test_data.purchase_info_id);
                 let price = purchased_info.price.as_ref().expect("price present");
-                assert_eq!(price.amount, 1000);
-                assert_eq!(price.currency, Currency::USD);
-                assert_eq!(purchased_info.seller.as_deref(), Some("seller1"));
+                assert_eq!(price.amount, 0);
+                assert_eq!(price.currency, Currency::EUR);
+                assert_eq!(purchased_info.seller, None);
             }
             other => panic!("Expected purchase info to be Purchased, got: {:?}", other),
         }
+
+        Ok(())
     }
 }
