@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS collections (
     railcars_count INTEGER NOT NULL DEFAULT 0,
     electric_multiple_units_count INTEGER NOT NULL DEFAULT 0,
     total_value_amount INTEGER NOT NULL DEFAULT 0,
-    total_value_currency TEXT NOT NULL DEFAULT 'EUR'
+    total_value_currency TEXT NOT NULL DEFAULT 'EUR',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS collection_items (
@@ -18,6 +20,7 @@ CREATE TABLE IF NOT EXISTS collection_items (
     manufacturer TEXT NOT NULL,
     product_code TEXT NOT NULL,
     description TEXT,
+    conditions TEXT,
     power_method TEXT,
     scale TEXT,
     epoch TEXT,
