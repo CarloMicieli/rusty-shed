@@ -38,11 +38,24 @@ CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
 );
 
 CREATE TABLE IF NOT EXISTS purchase_infos (
-    id TEXT PRIMARY KEY,
-    item_id TEXT NOT NULL,
-    purchase_date TEXT NOT NULL,
-    price_amount INTEGER,
-    price_currency TEXT,
-    seller TEXT,
-    FOREIGN KEY(item_id) REFERENCES collection_items(id) ON DELETE CASCADE
+     purchase_id TEXT PRIMARY KEY,
+     collection_item_id TEXT NOT NULL,
+     purchase_type TEXT,
+     purchase_date TEXT NOT NULL,
+     seller_id TEXT,
+     buyer_id TEXT,
+     sale_date TEXT,
+     purchased_price_amount INTEGER,
+     purchased_price_currency TEXT,
+     sale_price_amount INTEGER,
+     sale_price_currency TEXT,
+     deposit_amount INTEGER,
+     deposit_currency TEXT,
+     preorder_total_amount INTEGER,
+     preorder_total_currency TEXT,
+     expected_date TEXT,
+     FOREIGN KEY(collection_item_id) REFERENCES collection_items(id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_purchase_infos_collection_item ON purchase_infos(collection_item_id);
+CREATE INDEX IF NOT EXISTS idx_purchase_infos_type ON purchase_infos(purchase_type);

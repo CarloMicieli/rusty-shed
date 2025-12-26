@@ -93,7 +93,7 @@ impl CollectionRepository for SqliteCollectionRepository {
             // Fetch rolling stocks
             let rolling_stock_rows = sqlx::query(
                 r#"
-                SELECT id, notes, railway_id
+                SELECT id, notes, railway_id, epoch
                 FROM owned_rolling_stocks
                 WHERE item_id = ?
                 "#,
@@ -103,26 +103,45 @@ impl CollectionRepository for SqliteCollectionRepository {
             .await
             .context("Failed to fetch rolling stocks")?;
 
+            // Capture item epoch early to use as fallback for rolling stocks with no epoch
+            let item_epoch_str: String = row.get("epoch");
+            // DEBUG: print epoch values when running tests to diagnose mapping issues
+            #[cfg(test)]
+            println!(
+                "DEBUG: item_id={} item_epoch_str='{}'",
+                item_id, item_epoch_str
+            );
+
             let rolling_stocks = rolling_stock_rows
                 .into_iter()
                 .map(|rs_row| {
                     // Only keep minimal view fields for OwnedRollingStock: id, rolling_stock_id, railway, epoch, notes
+                    let rs_epoch: Option<String> = rs_row.get("epoch");
+                    #[cfg(test)]
+                    println!(
+                        "DEBUG: rs_id={} rs_epoch={:?}",
+                        rs_row.get::<String, _>("id"),
+                        rs_epoch
+                    );
                     OwnedRollingStock {
                         id: rs_row.get("id"),
                         rolling_stock_id: rs_row.get("id"),
                         notes: rs_row.get("notes"),
                         railway_id: rs_row.get("railway_id"),
-                        epoch: Epoch(row.get("epoch")),
+                        epoch: Epoch(rs_epoch.unwrap_or_else(|| item_epoch_str.clone())),
                     }
                 })
                 .collect();
 
-            // Fetch purchase info
+            // Fetch purchase info from dedicated table
             let purchase_info_row = sqlx::query(
                 r#"
-                SELECT id, purchase_date, price_amount, price_currency, seller
+                SELECT purchase_id, purchase_type, purchase_date, seller_id, buyer_id,
+                       sale_date, purchased_price_amount, purchased_price_currency,
+                       sale_price_amount, sale_price_currency, deposit_amount, deposit_currency,
+                       preorder_total_amount, preorder_total_currency, expected_date
                 FROM purchase_infos
-                WHERE item_id = ?
+                WHERE collection_item_id = ?
                 LIMIT 1
                 "#,
             )
@@ -131,28 +150,114 @@ impl CollectionRepository for SqliteCollectionRepository {
             .await
             .context("Failed to fetch purchase info")?;
 
-            let purchase_info = match purchase_info_row {
+            let purchase_info: Option<PurchaseInfo> = match purchase_info_row {
+                None => None,
                 Some(pi_row) => {
+                    let ptype: Option<String> = pi_row.get("purchase_type");
+                    // purchase_date is required in the table; fall back to today if parse fails
                     let pd_str: String = pi_row.get("purchase_date");
                     let purchase_date = NaiveDate::parse_from_str(&pd_str, "%Y-%m-%d")
                         .unwrap_or_else(|_| Local::now().naive_local().date());
 
-                    // Build optional MonetaryAmount from DB parts: price_amount (i64) and price_currency (nullable TEXT)
-                    let price_amount: i64 = pi_row.get("price_amount");
-                    let price_currency: Option<String> = pi_row.get("price_currency");
-                    let price = MonetaryAmount::from_db(price_amount, price_currency.as_deref())
-                        .map_err(|e| anyhow!(e.to_string()))
-                        .context("Failed to parse purchase price from DB")?;
+                    match ptype.as_deref() {
+                        Some("purchased") => {
+                            let price_amount: i64 = pi_row.get("purchased_price_amount");
+                            let price_currency: Option<String> =
+                                pi_row.get("purchased_price_currency");
+                            let price =
+                                MonetaryAmount::from_db(price_amount, price_currency.as_deref())
+                                    .map_err(|e| anyhow!(e.to_string()))
+                                    .context("Failed to parse purchased price from DB")?;
 
-                    Some(PurchaseInfo {
-                        id: pi_row.get("id"),
-                        item_id: item_id.clone(),
-                        purchase_date,
-                        price,
-                        seller: pi_row.get("seller"),
-                    })
+                            Some(PurchaseInfo::Purchased(crate::collecting::domain::collection::purchase_info::PurchasedInfo {
+                                id: pi_row.get("purchase_id"),
+                                purchase_date,
+                                price,
+                                seller: pi_row.get::<Option<String>, _>("seller_id"),
+                            }))
+                        }
+                        Some("sold") => {
+                            let sale_date_str: Option<String> = pi_row.get("sale_date");
+                            let sale_date = sale_date_str
+                                .as_deref()
+                                .and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
+                                .unwrap_or_else(|| Local::now().naive_local().date());
+
+                            // original purchase price (optional)
+                            let purchase_amount: i64 = pi_row.get("purchased_price_amount");
+                            let purchase_currency: Option<String> =
+                                pi_row.get("purchased_price_currency");
+                            let purchase_price = MonetaryAmount::from_db(
+                                purchase_amount,
+                                purchase_currency.as_deref(),
+                            )
+                            .map_err(|e| anyhow!(e.to_string()))
+                            .context("Failed to parse original purchase price from DB")?;
+
+                            let sale_amount: i64 = pi_row.get("sale_price_amount");
+                            let sale_currency: Option<String> = pi_row.get("sale_price_currency");
+                            let sale_price =
+                                MonetaryAmount::from_db(sale_amount, sale_currency.as_deref())
+                                    .map_err(|e| anyhow!(e.to_string()))
+                                    .context("Failed to parse sale price from DB")?
+                                    .ok_or_else(|| anyhow!("Missing sale price for sold item"))?;
+
+                            Some(PurchaseInfo::Sold(
+                                crate::collecting::domain::collection::purchase_info::SoldInfo {
+                                    id: pi_row.get("purchase_id"),
+                                    purchase_date,
+                                    purchase_price,
+                                    sale_date,
+                                    sale_price,
+                                    buyer: pi_row.get::<Option<String>, _>("buyer_id"),
+                                    seller: pi_row.get::<Option<String>, _>("seller_id"),
+                                },
+                            ))
+                        }
+                        Some("preorder") => {
+                            let deposit_amount: i64 = pi_row.get("deposit_amount");
+                            let deposit_currency: Option<String> = pi_row.get("deposit_currency");
+                            let deposit = MonetaryAmount::from_db(
+                                deposit_amount,
+                                deposit_currency.as_deref(),
+                            )
+                            .map_err(|e| anyhow!(e.to_string()))
+                            .context("Failed to parse deposit from DB")?
+                            .ok_or_else(|| anyhow!("Missing deposit for preorder"))?;
+
+                            let total_amount: i64 = pi_row.get("preorder_total_amount");
+                            let total_currency: Option<String> =
+                                pi_row.get("preorder_total_currency");
+                            let total_price =
+                                MonetaryAmount::from_db(total_amount, total_currency.as_deref())
+                                    .map_err(|e| anyhow!(e.to_string()))
+                                    .context("Failed to parse preorder total price from DB")?
+                                    .ok_or_else(|| anyhow!("Missing preorder total price"))?;
+
+                            // ensure currencies match
+                            if deposit.currency != total_price.currency {
+                                return Err(anyhow!(
+                                    "Preorder deposit and total price have different currencies"
+                                ));
+                            }
+
+                            let expected_date_str: Option<String> = pi_row.get("expected_date");
+                            let expected_date = expected_date_str
+                                .as_deref()
+                                .and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok());
+
+                            Some(PurchaseInfo::PreOrdered(crate::collecting::domain::collection::purchase_info::PreOrderInfo {
+                                id: pi_row.get("purchase_id"),
+                                order_date: purchase_date,
+                                deposit,
+                                total_price,
+                                seller: pi_row.get::<Option<String>, _>("seller_id"),
+                                expected_date,
+                            }))
+                        }
+                        _ => None,
+                    }
                 }
-                None => None,
             };
 
             items.push(CollectionItem {
@@ -196,6 +301,7 @@ impl CollectionRepository for SqliteCollectionRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::domain::currency::Currency;
     use crate::db::MIGRATOR;
     use sqlx::sqlite::SqlitePoolOptions;
 
@@ -257,6 +363,22 @@ mod tests {
         .await
         .expect("Failed to seed rolling stock");
 
+        sqlx::query(
+            r#"
+            INSERT INTO purchase_infos (purchase_id, collection_item_id, purchase_type, purchase_date, seller_id, buyer_id, 
+                                       sale_date, purchased_price_amount, purchased_price_currency, 
+                                       sale_price_amount, sale_price_currency, deposit_amount, deposit_currency, 
+                                       preorder_total_amount, preorder_total_currency, expected_date)
+            VALUES ('pur1', 'item1', 'purchased', '2023-10-01', 'seller1', NULL, 
+                    NULL, 1000, 'USD', 
+                    NULL, NULL, NULL, NULL, 
+                    NULL, NULL, NULL);
+            "#
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to seed purchase info");
+
         let repo = SqliteCollectionRepository::new(pool.clone());
         let collection = repo
             .get_collection()
@@ -282,5 +404,18 @@ mod tests {
             collection.items[0].rolling_stocks[0].epoch,
             Epoch("IV".to_string())
         );
+
+        assert!(collection.items[0].purchase_info.is_some());
+        let purchase_info = collection.items[0].purchase_info.as_ref().unwrap();
+        match purchase_info {
+            PurchaseInfo::Purchased(purchased_info) => {
+                assert_eq!(purchased_info.id, "pur1");
+                let price = purchased_info.price.as_ref().expect("price present");
+                assert_eq!(price.amount, 1000);
+                assert_eq!(price.currency, Currency::USD);
+                assert_eq!(purchased_info.seller.as_deref(), Some("seller1"));
+            }
+            other => panic!("Expected purchase info to be Purchased, got: {:?}", other),
+        }
     }
 }

@@ -1,7 +1,7 @@
 mod collection_item;
 mod collection_struct;
 mod owned_rolling_stock;
-mod purchase_info;
+pub mod purchase_info;
 mod repository;
 mod summary;
 
