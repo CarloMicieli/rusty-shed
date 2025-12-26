@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
+use strum_macros::{Display, EnumString};
 
 /// The enumeration of the model categories.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Category {
     /// The steam locomotives category
     Locomotives,
@@ -26,7 +30,10 @@ pub enum Category {
 }
 
 /// The enumeration of the rolling stock categories.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RollingStockCategory {
     /// The steam locomotives category
     Locomotive,
@@ -45,7 +52,10 @@ pub enum RollingStockCategory {
 }
 
 /// The different kind of freight cars
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum FreightCarType {
     AutoTransportCars,
     BrakeWagon,
@@ -69,7 +79,10 @@ pub enum FreightCarType {
 }
 
 /// The different kinds of locomotives
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LocomotiveType {
     /// The steam locomotives category
     SteamLocomotive,
@@ -82,7 +95,10 @@ pub enum LocomotiveType {
 }
 
 /// The types for passenger car rolling stocks
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PassengerCarType {
     /// The baggage car is a car that was normally placed between the train's motive power and the
     /// remainder of the passenger train. The car's interior is normally wide open and is used to
@@ -133,7 +149,10 @@ pub enum PassengerCarType {
 /// power car, motor car, driving car, and trailer car.
 ///
 /// Each car can have more than one function, such as a motor-driving car or power-driving car.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ElectricMultipleUnitType {
     /// Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
     /// An EMU will usually have two driving cars at its outer ends.
@@ -171,7 +190,10 @@ pub enum ElectricMultipleUnitType {
 ///
 /// In its simplest form, a "railcar" may also be little more than a motorized railway handcar
 /// or draisine.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RailcarType {
     /// A self-propelled passenger vehicles also capable of hauling a train.
     PowerCar,
