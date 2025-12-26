@@ -343,7 +343,7 @@ export type PurchaseInfo = {
  * The `Display` implementation formats the scale including the ratio, for
  * example: `H0 (1:87)` or `G (1:22.5)`.
  */
-export type Scale = 'H0' | 'H0m' | 'H0e' | 'N' | 'TT' | 'Z' | 'G' | 'Scale1' | 'Scale0';
+export type Scale = 'H0' | 'H0m' | 'H0e' | 'N' | 'TT' | 'Z' | 'G' | 'Scale1' | 'Scale0' | 'Scale00';
 
 /** tauri-specta globals **/
 

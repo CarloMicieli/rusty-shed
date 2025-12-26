@@ -19,6 +19,7 @@ pub enum Scale {
     G,
     Scale1,
     Scale0,
+    Scale00,
 }
 
 impl Scale {
@@ -34,6 +35,7 @@ impl Scale {
             Scale::G => 22.5,
             Scale::Scale1 => 32.0,
             Scale::Scale0 => 43.5,
+            Scale::Scale00 => 76.2,
         }
     }
 }
@@ -50,6 +52,7 @@ impl fmt::Display for Scale {
             Scale::G => "G",
             Scale::Scale1 => "1",
             Scale::Scale0 => "0",
+            Scale::Scale00 => "00",
         };
 
         let ratio = self.ratio();
@@ -80,6 +83,7 @@ impl Scale {
             "G" => Ok(Scale::G),
             "1" => Ok(Scale::Scale1),
             "0" => Ok(Scale::Scale0),
+            "00" => Ok(Scale::Scale00),
             _ => Err(anyhow::anyhow!(INVALID_SCALE)),
         }
     }
@@ -120,6 +124,7 @@ mod tests {
     #[case(Scale::G, "G (1:22.5)")]
     #[case(Scale::Scale1, "1 (1:32)")]
     #[case(Scale::Scale0, "0 (1:43.5)")]
+    #[case(Scale::Scale00, "00 (1:76.2)")]
     fn display_variants(#[case] scale: Scale, #[case] expected: &str) {
         assert_eq!(scale.to_string(), expected);
     }
@@ -134,6 +139,7 @@ mod tests {
     #[case("G", Scale::G)]
     #[case("1", Scale::Scale1)]
     #[case("0", Scale::Scale0)]
+    #[case("00", Scale::Scale00)]
     // also accept the Display output forms
     #[case("H0 (1:87)", Scale::H0)]
     #[case("H0m (1:87)", Scale::H0m)]
@@ -144,6 +150,7 @@ mod tests {
     #[case("G (1:22.5)", Scale::G)]
     #[case("1 (1:32)", Scale::Scale1)]
     #[case("0 (1:43.5)", Scale::Scale0)]
+    #[case("00 (1:76.2)", Scale::Scale00)]
     fn try_from_valid_values(#[case] input: &str, #[case] expected: Scale) {
         let parsed = Scale::try_from(input).expect("should parse");
         assert_eq!(parsed, expected);
