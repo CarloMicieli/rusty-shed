@@ -99,6 +99,7 @@ impl CatalogTestDb {
     /// - `category`: model category (NOT NULL)
     ///
     /// Returns: `Ok(id)` on success.
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_railway_model(
         &self,
         id: &str,
