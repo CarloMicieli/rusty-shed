@@ -32,7 +32,7 @@ use thiserror::Error;
 ///   input without panicking.
 /// - Equality and ordering compare values after converting to the left-hand
 ///   side's unit (so comparisons are unit-agnostic but deterministic).
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, specta::Type)]
 pub enum Length {
     /// A length expressed in inches.
     Inches(Decimal),
