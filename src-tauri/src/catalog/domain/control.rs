@@ -29,10 +29,6 @@ use strum_macros::{Display, EnumString};
 /// - `DccSound`: A DCC decoder with a sound module is installed.
 /// - `NoDcc`: The model does not support DCC (no standard interface present);
 ///   installation may require model-specific wiring or a hardwired decoder.
-///
-/// Note: keep the `serde(rename_all ...)` and `strum(serialize_all ...)`
-/// attributes aligned so textual parsing and JSON serialization remain
-/// stable across refactors.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
@@ -49,4 +45,30 @@ pub enum Control {
 
     /// The model has no dcc support (like no standard decoder plug)
     NoDcc,
+}
+
+impl Control {
+    /// Returns true if this `Control` value represents a fitted decoder.
+    ///
+    /// Specifically, this method returns `true` for `Control::DccFitted` and
+    /// `Control::DccSound`, and `false` for other variants such as
+    /// `Control::DccReady` and `Control::NoDcc`.
+    pub fn has_decoder(&self) -> bool {
+        *self == Control::DccFitted || *self == Control::DccSound
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(Control::DccFitted, true)]
+    #[case(Control::DccSound, true)]
+    #[case(Control::DccReady, false)]
+    #[case(Control::NoDcc, false)]
+    fn has_decoder_cases(#[case] input: Control, #[case] expected: bool) {
+        assert_eq!(expected, input.has_decoder());
+    }
 }

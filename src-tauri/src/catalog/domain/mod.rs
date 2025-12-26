@@ -20,6 +20,8 @@ pub mod coupling;
 pub mod coupling_socket;
 pub mod feature_flag;
 pub mod radius;
+pub mod railway_id;
+pub mod rolling_stock_railway;
 
 pub use category::Category;
 pub use delivery_date::DeliveryDate;
