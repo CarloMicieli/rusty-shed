@@ -1,17 +1,25 @@
 pub mod category;
 pub mod control;
 pub mod dcc_interface;
-mod delivery_date;
-mod epoch;
+pub mod delivery_date;
+pub mod epoch;
 pub mod length_over_buffers;
-mod power_method;
-mod product_code;
-mod railway_company;
-mod railway_model;
-mod rolling_stock;
+pub mod power_method;
+pub mod product_code;
+pub mod railway_company;
+pub mod railway_model;
+pub mod rolling_stock;
 pub mod rolling_stock_id;
-mod scale;
-mod service_level;
+pub mod scale;
+pub mod service_level;
+pub mod technical_specifications;
+
+pub mod body_shell_type;
+pub mod chassis_type;
+pub mod coupling;
+pub mod coupling_socket;
+pub mod feature_flag;
+pub mod radius;
 
 pub use category::Category;
 pub use delivery_date::DeliveryDate;
@@ -23,3 +31,10 @@ pub use railway_model::RailwayModel;
 pub use rolling_stock::RollingStock;
 pub use scale::Scale;
 pub use service_level::ServiceLevel;
+
+pub use body_shell_type::BodyShellType;
+pub use chassis_type::ChassisType;
+pub use coupling::Coupling;
+pub use coupling_socket::CouplingSocket;
+pub use feature_flag::FeatureFlag;
+pub use radius::Radius;
