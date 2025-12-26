@@ -1,3 +1,19 @@
+//! Types and helpers for representing physical lengths.
+//!
+//! This module provides the `Length` value object used across the domain
+//! to represent a physical length together with its measure unit.
+//!
+//! Key points:
+//! - `Length` is a simple tagged enum that stores a decimal quantity and
+//!   the associated unit (inches, millimetres, meters, miles, kilometers).
+//! - Instances are always non-negative; construction via `try_new` will
+//!   return an error for negative values, while `new` will panic on
+//!   invalid input.
+//! - Conversions between units are available via `get_value_as` which
+//!   uses the `MeasureUnit` conversion utilities.
+//! - The module also provides `serde` helpers to (de)serialize `Length`
+//!   and optional `Length` values in a unit-aware way.
+
 use crate::core::domain::measure_units::MeasureUnit;
 use ::serde::{Deserialize, Serialize};
 use rust_decimal::Decimal;
@@ -6,20 +22,27 @@ use std::fmt::Formatter;
 use std::{cmp, fmt, ops};
 use thiserror::Error;
 
-/// It represents a length.
+/// A physical length value paired with its measure unit.
 ///
-/// Lengths are defined by a non-negative value and a measure unit.
+/// The `Length` enum is the canonical representation for lengths in the
+/// domain. Each variant stores a `Decimal` quantity for a specific unit.
+///
+/// Invariants:
+/// - Quantities must be non-negative. Use `Length::try_new` to validate
+///   input without panicking.
+/// - Equality and ordering compare values after converting to the left-hand
+///   side's unit (so comparisons are unit-agnostic but deterministic).
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Length {
-    /// a length expressed in Inches
+    /// A length expressed in inches.
     Inches(Decimal),
-    /// a length expressed in Kilometers
+    /// A length expressed in kilometers.
     Kilometers(Decimal),
-    /// a length expressed in Meters
+    /// A length expressed in meters.
     Meters(Decimal),
-    /// a length expressed in Miles
+    /// A length expressed in miles.
     Miles(Decimal),
-    /// a length expressed in Millimeters
+    /// A length expressed in millimeters.
     Millimeters(Decimal),
 }
 
