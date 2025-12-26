@@ -7,6 +7,9 @@ pub mod catalog;
 pub mod collecting;
 pub mod core;
 
+#[cfg(test)]
+pub mod test_utils;
+
 use crate::state::AppState;
 use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
