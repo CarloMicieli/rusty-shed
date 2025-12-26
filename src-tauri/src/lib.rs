@@ -15,6 +15,8 @@ pub mod collecting;
 pub mod core;
 
 use db::{DB_POOL, MIGRATOR, init_db_pool};
+use log::{error, LevelFilter};
+use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 
 #[tauri::command]
 async fn get_server_config() -> Result<(u16, String), String> {
@@ -31,9 +33,27 @@ async fn get_server_config() -> Result<(u16, String), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Determine log level based on build type
+    let level = if cfg!(debug_assertions) {
+        LevelFilter::Debug
+    } else {
+        LevelFilter::Info
+    };
+    
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(level)
+                .max_file_size(50000)
+                .rotation_strategy(RotationStrategy::KeepOne)
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::LogDir { file_name: None }),
+                ])
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![get_server_config])
         .setup(|app| {
             let handle = app.handle().clone();
@@ -46,12 +66,12 @@ pub fn run() {
                             AXUM_SERVER_PORT.set(port).ok();
                         }
                         Err(e) => {
-                            eprintln!("Failed to receive port from axum server: {e}");
+                            error!("Failed to receive port from axum server: {e}");
                             return;
                         }
                     },
                     Err(e) => {
-                        eprintln!("Failed to start axum server: {e}");
+                        error!("Failed to start axum server: {e}");
                         return;
                     }
                 }
@@ -70,7 +90,7 @@ pub fn run() {
                 }
                 .await
                 {
-                    eprintln!("Database initialization failed: {e}");
+                    error!("Database initialization failed: {e}");
                     // Abort startup or show error
                     std::process::exit(1);
                 }
@@ -79,7 +99,7 @@ pub fn run() {
                 if let Some(window) = handle.get_webview_window("main")
                     && let Err(e) = window.show()
                 {
-                    eprintln!("Failed to show main window: {e}");
+                    error!("Failed to show main window: {e}");
                 }
             });
             Ok(())
