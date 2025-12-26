@@ -1,12 +1,9 @@
-use once_cell::sync::OnceCell;
 use sqlx::migrate::Migrator;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use sqlx::{Sqlite, migrate::MigrateDatabase};
 use std::path::PathBuf;
 use thiserror::Error;
 use xdg::BaseDirectories;
-
-pub static DB_POOL: OnceCell<SqlitePool> = OnceCell::new();
 
 // Embed migrations at compile time
 // The path is relative to Cargo.toml of this crate
