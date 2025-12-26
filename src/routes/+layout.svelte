@@ -44,9 +44,16 @@
 	});
 </script>
 
+<!-- Immediate render to prevent blank screen -->
 {#if $isLoading}
-	<div class="bg-background flex h-screen w-full items-center justify-center text-surface-50">
-		Loading...
+	<div
+		class="bg-background flex h-screen w-full items-center justify-center text-surface-50"
+		style="font-family: system-ui, -apple-system, sans-serif;"
+	>
+		<div class="flex flex-col items-center gap-4">
+			<div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+			<p class="text-sm opacity-70">Loading application...</p>
+		</div>
 	</div>
 {:else}
 	<div

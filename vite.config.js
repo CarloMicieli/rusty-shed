@@ -10,6 +10,22 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 
+	// Optimize bundle size and loading
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					// Split large icon library into separate chunk
+					'lucide': ['lucide-svelte'],
+					// Split i18n into separate chunk
+					'i18n': ['svelte-i18n']
+				}
+			}
+		},
+		// Reduce chunk size warning threshold
+		chunkSizeWarningLimit: 600
+	},
+
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
 	// 1. prevent Vite from obscuring rust errors

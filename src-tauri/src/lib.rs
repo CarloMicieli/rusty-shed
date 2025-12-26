@@ -75,9 +75,17 @@ pub fn run() {
             // 2. Initial management of state
             app.manage(AppState::new(pool.clone()));
 
+            // 3. Show the main window IMMEDIATELY to avoid blank screen
+            // The UI can handle the "not initialized" state gracefully
+            if let Some(window) = app.get_webview_window("main")
+                && let Err(e) = window.show()
+            {
+                error!("Failed to show main window: {e}");
+            }
+
             let handle = app.handle().clone();
 
-            // 4. Run migrations in an async task
+            // 4. Run migrations in an async task (non-blocking)
             tauri::async_runtime::spawn(async move {
                 let state_ref = handle.state::<AppState>();
                 let _ = MIGRATOR
@@ -87,14 +95,6 @@ pub fn run() {
 
                 state_ref.set_initialized();
             });
-
-            // Show the main window
-            let handle = app.handle().clone();
-            if let Some(window) = handle.get_webview_window("main")
-                && let Err(e) = window.show()
-            {
-                error!("Failed to show main window: {e}");
-            }
 
             Ok(())
         })
