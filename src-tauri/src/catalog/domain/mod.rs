@@ -14,6 +14,7 @@ pub mod scale;
 pub mod service_level;
 pub mod technical_specifications;
 
+mod availability_status;
 pub mod body_shell_type;
 pub mod chassis_type;
 pub mod coupling;
@@ -21,6 +22,7 @@ pub mod coupling_socket;
 pub mod feature_flag;
 pub mod radius;
 pub mod railway_id;
+mod railway_model_id;
 pub mod rolling_stock_railway;
 
 pub use category::Category;

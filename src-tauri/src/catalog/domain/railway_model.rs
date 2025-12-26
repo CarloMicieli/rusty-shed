@@ -1,4 +1,6 @@
 use crate::catalog::domain::RollingStock;
+use crate::catalog::domain::availability_status::AvailabilityStatus;
+use crate::catalog::domain::railway_model_id::RailwayModelId;
 use crate::catalog::domain::{Category, DeliveryDate, Epoch, PowerMethod, ProductCode, Scale};
 use serde::{Deserialize, Serialize};
 
@@ -9,8 +11,8 @@ use serde::{Deserialize, Serialize};
 /// to specific owned or catalogued items of this model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RailwayModel {
-    /// Unique identifier for the railway model (e.g. UUID).
-    pub id: String,
+    /// Unique identifier for the railway model.
+    pub id: RailwayModelId,
 
     /// The manufacturer of the model (e.g. Bachmann, Märklin).
     pub manufacturer: String,
@@ -38,6 +40,9 @@ pub struct RailwayModel {
 
     /// Delivery or release date information for the product.
     pub delivery_date: Option<DeliveryDate>,
+
+    /// the availability status
+    pub availability_status: Option<AvailabilityStatus>,
 
     /// Rolling stock instances (specific vehicles) that correspond to this model.
     pub rolling_stocks: Vec<RollingStock>,
