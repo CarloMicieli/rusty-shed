@@ -1,4 +1,3 @@
-use crate::catalog::domain::{Epoch, PowerMethod, ProductCode, Scale};
 use crate::collecting::domain::collection::{
     Collection, CollectionItem, CollectionRepository, OwnedRollingStock, PurchaseInfo,
 };
@@ -6,7 +5,6 @@ use crate::core::domain::MonetaryAmount;
 use anyhow::{Context, Result, anyhow};
 use chrono::{Local, NaiveDate};
 use sqlx::{Row, SqlitePool};
-use std::convert::TryFrom;
 
 pub struct SqliteCollectionRepository {
     pool: SqlitePool,
@@ -62,7 +60,7 @@ impl CollectionRepository for SqliteCollectionRepository {
         // Fetch items
         let item_rows = sqlx::query(
             r#"
-            SELECT id, manufacturer, product_code, description, power_method, scale, epoch
+            SELECT id, railway_model_id, conditions, notes
             FROM collection_items
             WHERE collection_id = ?
             "#,
@@ -76,26 +74,13 @@ impl CollectionRepository for SqliteCollectionRepository {
 
         for row in item_rows {
             let item_id: String = row.get("id");
-            let product_code_str: String = row.get("product_code");
-            let power_method_str: Option<String> = row.get("power_method");
-            // Parse power method using TryFrom; fall back to DC when missing/invalid
-            let power_method = power_method_str
-                .as_deref()
-                .and_then(|s| PowerMethod::try_from(s).ok())
-                .unwrap_or(PowerMethod::DC);
-            let scale_str: Option<String> = row.get("scale");
-            // Parse scale using TryFrom; fall back to H0 on missing/invalid
-            let scale = scale_str
-                .as_deref()
-                .and_then(|s| Scale::try_from(s).ok())
-                .unwrap_or(Scale::H0);
 
             // Fetch rolling stocks
             let rolling_stock_rows = sqlx::query(
                 r#"
-                SELECT id, notes, railway_id, epoch
+                SELECT id, rolling_stock_id, notes
                 FROM owned_rolling_stocks
-                WHERE item_id = ?
+                WHERE collection_item_id = ?
                 "#,
             )
             .bind(&item_id)
@@ -103,32 +88,21 @@ impl CollectionRepository for SqliteCollectionRepository {
             .await
             .context("Failed to fetch rolling stocks")?;
 
-            // Capture item epoch early to use as fallback for rolling stocks with no epoch
-            let item_epoch_str: String = row.get("epoch");
-            // DEBUG: print epoch values when running tests to diagnose mapping issues
-            #[cfg(test)]
-            println!(
-                "DEBUG: item_id={} item_epoch_str='{}'",
-                item_id, item_epoch_str
-            );
-
             let rolling_stocks = rolling_stock_rows
                 .into_iter()
                 .map(|rs_row| {
-                    // Only keep minimal view fields for OwnedRollingStock: id, rolling_stock_id, railway, epoch, notes
-                    let rs_epoch: Option<String> = rs_row.get("epoch");
                     #[cfg(test)]
                     println!(
-                        "DEBUG: rs_id={} rs_epoch={:?}",
+                        "DEBUG: rs_id={} rs_notes={:?}",
                         rs_row.get::<String, _>("id"),
-                        rs_epoch
+                        rs_row.get::<Option<String>, _>("notes")
                     );
                     OwnedRollingStock {
                         id: rs_row.get("id"),
-                        rolling_stock_id: rs_row.get("id"),
+                        rolling_stock_id: rs_row
+                            .get::<Option<String>, _>("rolling_stock_id")
+                            .unwrap_or_else(|| rs_row.get("id")),
                         notes: rs_row.get("notes"),
-                        railway_id: rs_row.get("railway_id"),
-                        epoch: Epoch(rs_epoch.unwrap_or_else(|| item_epoch_str.clone())),
                     }
                 })
                 .collect();
@@ -262,13 +236,9 @@ impl CollectionRepository for SqliteCollectionRepository {
 
             items.push(CollectionItem {
                 id: item_id.clone(),
-                railway_model_id: item_id.clone(),
-                manufacturer: row.get("manufacturer"),
-                product_code: ProductCode(product_code_str),
-                description: row.get("description"),
-                power_method,
-                scale,
-                epoch: Epoch(row.get("epoch")),
+                railway_model_id: row.get("railway_model_id"),
+                conditions: row.get::<Option<String>, _>("conditions"),
+                notes: row.get::<Option<String>, _>("notes"),
                 rolling_stocks,
                 purchase_info,
             });
@@ -346,17 +316,75 @@ mod tests {
             "#
         ).execute(&pool).await.expect("Failed to seed collection");
 
+        // Insert minimal manufacturer and railway model needed by FK constraints
         sqlx::query(
             r#"
-            INSERT INTO collection_items (id, collection_id, manufacturer, product_code, description, power_method, scale, epoch, railway_model_id) 
-            VALUES ('item1', 'col1', 'ACME', '12345', 'Test Loc', 'DC', 'H0', 'IV', 'item1');
-            "#
-        ).execute(&pool).await.expect("Failed to seed item");
+            INSERT INTO manufacturers (id, name) VALUES ('man1', 'ACME');
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to seed manufacturer");
 
         sqlx::query(
             r#"
-            INSERT INTO owned_rolling_stocks (id, item_id, notes, railway_id) 
-            VALUES ('rs1', 'item1', 'Caimano', 'FS');
+            INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category)
+            VALUES ('item1', 'man1', '12345', 'Test Loc', 'DC', 'H0', 'IV', 'locomotive');
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to seed railway_model");
+
+        // Debug: ensure required rows are present before inserting collection_item
+        let col_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM collections WHERE id = 'col1';")
+                .fetch_one(&pool)
+                .await
+                .expect("Failed to query collections count");
+        let man_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM manufacturers WHERE id = 'man1';")
+                .fetch_one(&pool)
+                .await
+                .expect("Failed to query manufacturers count");
+        let rm_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(1) FROM railway_models WHERE id = 'item1';")
+                .fetch_one(&pool)
+                .await
+                .expect("Failed to query railway_models count");
+
+        println!(
+            "DEBUG COUNTS: collections={}, manufacturers={}, railway_models={}",
+            col_count, man_count, rm_count
+        );
+
+        // Debug: print columns for collection_items table to verify migration schema
+        let mut cols = Vec::new();
+        let col_rows = sqlx::query("PRAGMA table_info(collection_items);")
+            .fetch_all(&pool)
+            .await
+            .expect("Failed to fetch pragma table_info");
+        for r in col_rows {
+            let name: String = r.get("name");
+            let typ: String = r.get("type");
+            cols.push(format!("{}:{}", name, typ));
+        }
+        println!("collection_items columns: {:?}", cols);
+
+        sqlx::query(
+            r#"
+            INSERT INTO collection_items (id, collection_id, railway_model_id, conditions, notes) 
+            VALUES ('item1', 'col1', 'item1', 'mint', 'Owner notes');
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to seed item");
+
+        sqlx::query(
+            r#"
+            INSERT INTO owned_rolling_stocks (id, collection_item_id, rolling_stock_id, notes) 
+            VALUES ('rs1', 'item1', NULL, 'Caimano');
             "#,
         )
         .execute(&pool)
@@ -388,21 +416,14 @@ mod tests {
         assert_eq!(collection.id, "col1");
         assert_eq!(collection.summary.locomotives_count, 1u16);
         assert_eq!(collection.items.len(), 1);
-        assert_eq!(collection.items[0].product_code.0, "12345");
-        // Check power method enum mapping
-        assert_eq!(collection.items[0].power_method, PowerMethod::DC);
-        // Check scale enum mapping
-        assert_eq!(collection.items[0].scale, Scale::H0);
+        assert_eq!(collection.items[0].railway_model_id, "item1");
+        assert_eq!(collection.items[0].conditions.as_deref(), Some("mint"));
+        assert_eq!(collection.items[0].notes.as_deref(), Some("Owner notes"));
 
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
-        assert_eq!(collection.items[0].rolling_stocks[0].railway_id, "FS");
         assert_eq!(
             collection.items[0].rolling_stocks[0].rolling_stock_id,
             "rs1"
-        );
-        assert_eq!(
-            collection.items[0].rolling_stocks[0].epoch,
-            Epoch("IV".to_string())
         );
 
         assert!(collection.items[0].purchase_info.is_some());

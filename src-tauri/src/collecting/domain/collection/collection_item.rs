@@ -1,4 +1,3 @@
-use crate::catalog::domain::{Epoch, PowerMethod, ProductCode, Scale};
 use crate::collecting::domain::collection::{OwnedRollingStock, PurchaseInfo};
 use serde::{Deserialize, Serialize};
 
@@ -20,23 +19,11 @@ pub struct CollectionItem {
     /// to look up full catalog details (manufacturer, product codes, etc.).
     pub railway_model_id: String,
 
-    /// Manufacturer name of the model (copied or stored for quick access).
-    pub manufacturer: String,
+    /// Condition of the item as recorded by the owner (e.g. "mint", "used").
+    pub conditions: Option<String>,
 
-    /// Manufacturer product code for the model (kept as a value object).
-    pub product_code: ProductCode,
-
-    /// Human-readable description of this item or model.
-    pub description: String,
-
-    /// The power method for the model (e.g. AC, DC, None).
-    pub power_method: PowerMethod,
-
-    /// The scale of the model (e.g. H0, N).
-    pub scale: Scale,
-
-    /// The historical epoch associated with the model.
-    pub epoch: Epoch,
+    /// Free-form notes provided by the owner for this collection item.
+    pub notes: Option<String>,
 
     /// The specific rolling stock instances owned that correspond to this model.
     pub rolling_stocks: Vec<OwnedRollingStock>,

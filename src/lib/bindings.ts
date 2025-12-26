@@ -97,29 +97,13 @@ id: string;
  */
 railway_model_id: string; 
 /**
- * Manufacturer name of the model (copied or stored for quick access).
+ * Condition of the item as recorded by the owner (e.g. "mint", "used").
  */
-manufacturer: string; 
+conditions: string | null; 
 /**
- * Manufacturer product code for the model (kept as a value object).
+ * Free-form notes provided by the owner for this collection item.
  */
-product_code: ProductCode; 
-/**
- * Human-readable description of this item or model.
- */
-description: string; 
-/**
- * The power method for the model (e.g. AC, DC, None).
- */
-power_method: PowerMethod; 
-/**
- * The scale of the model (e.g. H0, N).
- */
-scale: Scale; 
-/**
- * The historical epoch associated with the model.
- */
-epoch: Epoch; 
+notes: string | null; 
 /**
  * The specific rolling stock instances owned that correspond to this model.
  */
@@ -204,13 +188,6 @@ export type Currency =
  */
 "JPY"
 /**
- * Backwards-compatible wrapper used across the codebase and DB rows.
- * 
- * This preserves the original `Epoch(pub String)` API while providing
- * conversions to the structured `EpochKind` for validation and richer handling.
- */
-export type Epoch = string
-/**
  * A monetary amount in the smallest currency unit together with its currency.
  * 
  * `MonetaryAmount` stores the raw integer amount (e.g. cents) in `amount` and
@@ -250,9 +227,11 @@ currency: Currency }
  * A lightweight view of rolling stock that references catalog model data.
  * 
  * This struct intentionally contains only the minimal information needed by
- * the collecting domain to reference a catalog `RailwayModel` and basic
- * provenance (railway and epoch). Detailed model information lives in the
- * catalog domain and should not be duplicated here.
+ * the collecting domain to reference a catalog `RollingStock` and basic
+ * provenance. Detailed model information lives in the catalog domain and
+ * should not be duplicated here. Fields like railway and epoch are no longer
+ * stored on the owned_rolling_stocks table and should be obtained from the
+ * catalog when needed.
  */
 export type OwnedRollingStock = { 
 /**
@@ -267,34 +246,7 @@ rolling_stock_id: string;
  * Free-form notes associated with this owned instance.
  * Use this for short owner notes or a brief textual label.
  */
-notes: string; 
-/**
- * Identifier for the railway company.
- */
-railway_id: string; 
-/**
- * Historical epoch for this owned vehicle (copied from the catalog model).
- */
-epoch: Epoch }
-/**
- * Power method used by rolling stocks.
- * 
- * This enum represents how a model locomotive obtains electrical power.
- * The `Display` implementation returns a human-friendly name for each variant.
- */
-export type PowerMethod = 
-/**
- * Alternating current (AC) power collection.
- */
-"AC" | 
-/**
- * Direct current (DC) power collection.
- */
-"DC" | 
-/**
- * Trix Express three-rail power pickup system.
- */
-"TRIX_EXPRESS"
+notes: string }
 /**
  * Details for a pre-order entry.
  * 
@@ -327,16 +279,6 @@ seller: string | null;
  * Optional expected delivery date (ETA) for the preorder.
  */
 expected_date: string | null }
-/**
- * A product identifier (manufacturer model/code) used to uniquely identify
- * a rolling stock model or catalogue item.
- * 
- * This is a thin newtype wrapper around `String` to provide domain-level
- * type-safety and to allow attaching trait impls specific to product codes.
- * 
- * It derives `Serialize`/`Deserialize` for easy (de)serialization with Serde.
- */
-export type ProductCode = string
 /**
  * Purchase information associated with a `CollectionItem`.
  * 
@@ -392,55 +334,6 @@ price: MonetaryAmount | null;
  * Optional seller identifier or human-friendly name.
  */
 seller: string | null }
-/**
- * Model railway scales supported by the application.
- * 
- * Each variant corresponds to a commonly used hobbyist scale name (for example
- * `H0` or `00`). Use `Scale::ratio()` to obtain the numeric ratio that follows
- * the `1:` notation (e.g. `Scale::H0` -> `1:87`). The `Display` implementation
- * produces a human-friendly string such as `H0 (1:87)`.
- */
-export type Scale = 
-/**
- * H0 scale (1:87)
- */
-"H0" | 
-/**
- * H0 narrow/metric (1:87)
- */
-"H0m" | 
-/**
- * H0e (1:87)
- */
-"H0e" | 
-/**
- * N scale (1:160)
- */
-"N" | 
-/**
- * TT scale (1:120)
- */
-"TT" | 
-/**
- * Z scale (1:220)
- */
-"Z" | 
-/**
- * G scale (garden) (1:22.5)
- */
-"G" | 
-/**
- * 1 scale (1:32)
- */
-"Scale1" | 
-/**
- * 0 scale (1:43.5)
- */
-"Scale0" | 
-/**
- * 00 (double-zero) scale (1:76.2)
- */
-"Scale00"
 /**
  * Details for an item that was sold.
  * 

@@ -16,25 +16,20 @@ CREATE TABLE IF NOT EXISTS collections (
 CREATE TABLE IF NOT EXISTS collection_items (
     id TEXT PRIMARY KEY,
     collection_id TEXT NOT NULL,
-    railway_model_id TEXT,
-    manufacturer TEXT NOT NULL,
-    product_code TEXT NOT NULL,
-    description TEXT,
+    railway_model_id TEXT NOT NULL,
     conditions TEXT,
-    power_method TEXT,
-    scale TEXT,
-    epoch TEXT,
-    FOREIGN KEY(collection_id) REFERENCES collections(id) ON DELETE CASCADE
+    notes TEXT,
+    FOREIGN KEY(collection_id) REFERENCES collections(id) ON DELETE CASCADE,
+    FOREIGN KEY(railway_model_id) REFERENCES railway_models(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
     id TEXT PRIMARY KEY,
-    item_id TEXT NOT NULL,
-    catalog_rolling_stock_id TEXT,
+    collection_item_id TEXT NOT NULL,
+    rolling_stock_id TEXT,
     notes TEXT,
-    railway_id TEXT NOT NULL,
-    epoch TEXT,
-    FOREIGN KEY(item_id) REFERENCES collection_items(id) ON DELETE CASCADE
+    FOREIGN KEY(collection_item_id) REFERENCES collection_items(id) ON DELETE CASCADE,
+    FOREIGN KEY(rolling_stock_id) REFERENCES rolling_stocks(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS purchase_infos (
