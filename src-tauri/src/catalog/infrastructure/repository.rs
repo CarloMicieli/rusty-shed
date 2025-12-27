@@ -196,8 +196,8 @@ mod tests {
 
             // Case 1: no rolling stocks -> should return model with empty list
             let res = get_railway_model_by_id(
-                &mut *conn,
-                &crate::catalog::domain::railway_model_id::RailwayModelId::try_from("RM-1")
+                &mut conn,
+                &RailwayModelId::try_from("RM-1")
                     .unwrap(),
             )
             .await
@@ -219,8 +219,8 @@ mod tests {
 
             // Case 2: with rolling stocks
             let res2 = get_railway_model_by_id(
-                &mut *conn,
-                &crate::catalog::domain::railway_model_id::RailwayModelId::try_from("RM-1")
+                &mut conn,
+                &RailwayModelId::try_from("RM-1")
                     .unwrap(),
             )
             .await
