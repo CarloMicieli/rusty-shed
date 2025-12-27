@@ -4,6 +4,7 @@
 //! domain to represent operating or owning railway companies. Fields are kept
 //! minimal and optional where the underlying database allows null values.
 
+use crate::catalog::domain::period_of_activity::PeriodOfActivity;
 use serde::{Deserialize, Serialize};
 
 /// A railway company (operator or owner).
@@ -21,4 +22,7 @@ pub struct RailwayCompany {
     /// The ISO 3166-1 alpha-2 country code where the company is registered
     /// (nullable). Example: `"IT"` for Italy.
     pub country_code: Option<String>,
+
+    /// The period of activity of the railway company (nullable).
+    pub period_of_activity: Option<PeriodOfActivity>,
 }
