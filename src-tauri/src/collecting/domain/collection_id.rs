@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
 
+pub const DEFAULT_COLLECTION_ID: &str = "052cb8be-cc5c-460d-b72c-6cec595b91d7";
+
 /// Identifier for a collection.
 ///
 /// This newtype wraps a `Uuid` to provide a distinct domain type for collection
@@ -11,9 +13,10 @@ use uuid::Uuid;
 /// # Requirements
 /// - `TryFrom<&str>` / `TryFrom<String>` will return an error if the provided
 ///   string is not a valid UUID.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
+#[sqlx(transparent)]
 pub struct CollectionId(pub Uuid);
 
 /// Errors that can occur when creating a `CollectionId` from a string.
@@ -63,7 +66,7 @@ impl From<Uuid> for CollectionId {
 impl Default for CollectionId {
     /// Generate a new `CollectionId` with a random v4 UUID.
     fn default() -> Self {
-        CollectionId(Uuid::new_v4())
+        CollectionId(Uuid::try_from(DEFAULT_COLLECTION_ID).expect("invalid UUID"))
     }
 }
 
@@ -115,9 +118,9 @@ mod tests {
     }
 
     #[test]
-    fn default_generates_unique_uuid() {
+    fn default_generates_same_uuid() {
         let a = CollectionId::default();
         let b = CollectionId::default();
-        assert_ne!(a, b, "Two generated UUIDs should not be equal");
+        assert_eq!(a, b, "Two generated UUIDs should not be equal");
     }
 }

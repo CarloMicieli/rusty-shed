@@ -7,7 +7,7 @@
 use chrono::{NaiveDate, NaiveDateTime};
 
 /// Row mapping for the `collections` table.
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct CollectionRow {
     pub id: String,
     pub name: String,
@@ -24,7 +24,7 @@ pub struct CollectionRow {
 }
 
 /// Row mapping for the `collection_items` table.
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct CollectionItemRow {
     pub id: String,
     pub collection_id: String,
@@ -34,7 +34,7 @@ pub struct CollectionItemRow {
 }
 
 /// Row mapping for the `owned_rolling_stocks` table.
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct OwnedRollingStockRow {
     pub id: String,
     pub collection_item_id: String,
@@ -43,7 +43,7 @@ pub struct OwnedRollingStockRow {
 }
 
 /// Row mapping for the `purchase_infos` table.
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 pub struct PurchaseInfoRow {
     pub purchase_id: String,
     pub collection_item_id: String,

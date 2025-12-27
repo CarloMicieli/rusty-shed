@@ -1,8 +1,4 @@
+pub mod database;
 pub mod entities;
-
-pub mod sqlite;
-
-pub mod sqlite_repo;
-
-#[cfg(test)]
-pub mod testing;
+pub mod mappers;
+pub mod repositories;

@@ -7,7 +7,7 @@
 //! `anyhow::Error` with added context.
 
 use anyhow::{Context, Result};
-use sqlx::SqlitePool;
+use sqlx::pool::PoolConnection;
 use uuid::Uuid;
 
 /// Collected ids for test data created by `CatalogTestDb::setup_railway_model`.
@@ -31,16 +31,9 @@ pub struct CatalogTestData {
 /// the insertion succeeds.
 ///
 /// Errors are returned as `anyhow::Error` with contextual messages.
-pub struct CatalogTestDb {
-    db_pool: SqlitePool,
-}
+pub struct CatalogTestDb;
 
 impl CatalogTestDb {
-    /// Create a new test db helper from an existing connection pool.
-    pub fn new(db_pool: SqlitePool) -> Self {
-        Self { db_pool }
-    }
-
     /// Insert a manufacturer record.
     ///
     /// Parameters:
@@ -49,12 +42,16 @@ impl CatalogTestDb {
     ///
     /// Returns: `Ok(id.to_string())` on success, or an `anyhow::Error` with
     /// context on failure.
-    pub async fn insert_manufacturer(&self, id: &str, name: &str) -> Result<String> {
+    pub async fn insert_manufacturer(
+        conn: &mut PoolConnection<sqlx::Sqlite>,
+        id: &str,
+        name: &str,
+    ) -> Result<String> {
         let sql = format!("INSERT INTO {} (id, name) VALUES (?1, ?2)", "manufacturers");
         sqlx::query(&sql)
             .bind(id)
             .bind(name)
-            .execute(&self.db_pool)
+            .execute(&mut **conn)
             .await
             .with_context(|| format!("inserting manufacturer id={} name={}", id, name))?;
 
@@ -68,7 +65,11 @@ impl CatalogTestDb {
     /// - `name`: company name (NOT NULL)
     ///
     /// Returns: `Ok(id)` on success.
-    pub async fn insert_railway_company(&self, id: &str, name: &str) -> Result<String> {
+    pub async fn insert_railway_company(
+        conn: &mut PoolConnection<sqlx::Sqlite>,
+        id: &str,
+        name: &str,
+    ) -> Result<String> {
         let sql = format!(
             "INSERT INTO {} (id, name) VALUES (?1, ?2)",
             "railway_companies"
@@ -76,7 +77,7 @@ impl CatalogTestDb {
         sqlx::query(&sql)
             .bind(id)
             .bind(name)
-            .execute(&self.db_pool)
+            .execute(&mut **conn)
             .await
             .with_context(|| format!("inserting railway_company id={} name={}", id, name))?;
 
@@ -101,7 +102,7 @@ impl CatalogTestDb {
     /// Returns: `Ok(id)` on success.
     #[allow(clippy::too_many_arguments)]
     pub async fn insert_railway_model(
-        &self,
+        conn: &mut PoolConnection<sqlx::Sqlite>,
         id: &str,
         manufacturer_id: &str,
         product_code: &str,
@@ -124,7 +125,7 @@ impl CatalogTestDb {
             .bind(scale)
             .bind(epoch)
             .bind(category)
-            .execute(&self.db_pool)
+            .execute(&mut **conn)
             .await
             .with_context(|| {
                 format!(
@@ -151,7 +152,7 @@ impl CatalogTestDb {
     ///
     /// Returns: `Ok(id)` on success.
     pub async fn insert_rolling_stock(
-        &self,
+        conn: &mut PoolConnection<sqlx::Sqlite>,
         id: &str,
         railway_model_id: &str,
         category: &str,
@@ -168,7 +169,7 @@ impl CatalogTestDb {
             .bind(category)
             .bind(railway_company_id)
             .bind(is_dummy)
-            .execute(&self.db_pool)
+            .execute(&mut **conn)
             .await
             .with_context(|| {
                 format!(
@@ -184,7 +185,9 @@ impl CatalogTestDb {
     /// stock using reasonable Italian electric locomotive test data.
     ///
     /// Returns the generated ids collected in `CatalogTestData`.
-    pub async fn setup_railway_model(&self) -> Result<CatalogTestData> {
+    pub async fn setup_railway_model(
+        conn: &mut PoolConnection<sqlx::Sqlite>,
+    ) -> Result<CatalogTestData> {
         // Generate ids
         let manufacturer_id = Uuid::new_v4().to_string();
         let railway_company_id = Uuid::new_v4().to_string();
@@ -192,9 +195,8 @@ impl CatalogTestDb {
         let rolling_stock_id = Uuid::new_v4().to_string();
 
         // Insert manufacturer and company
-        self.insert_manufacturer(&manufacturer_id, "ACME").await?;
-        self.insert_railway_company(&railway_company_id, "FS")
-            .await?;
+        Self::insert_manufacturer(conn, &manufacturer_id, "ACME").await?;
+        Self::insert_railway_company(conn, &railway_company_id, "FS").await?;
 
         // Insert a railway model describing an Italian electric locomotive
         let product_code = "E656";
@@ -204,7 +206,8 @@ impl CatalogTestDb {
         let epoch = "VI";
         let category = "locomotive";
 
-        self.insert_railway_model(
+        Self::insert_railway_model(
+            conn,
             &railway_model_id,
             &manufacturer_id,
             product_code,
@@ -217,7 +220,8 @@ impl CatalogTestDb {
         .await?;
 
         // Insert one rolling stock instance for the model
-        self.insert_rolling_stock(
+        Self::insert_rolling_stock(
+            conn,
             &rolling_stock_id,
             &railway_model_id,
             category,

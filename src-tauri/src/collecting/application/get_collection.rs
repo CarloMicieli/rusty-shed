@@ -1,18 +1,30 @@
 use crate::collecting::domain::collection::Collection;
-use crate::collecting::domain::repository::CollectionRepository;
-use anyhow::Result;
-use std::sync::Arc;
+use crate::collecting::infrastructure::repositories::CollectingUowExt;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 
-pub struct GetCollectionUseCase {
-    repo: Arc<dyn CollectionRepository>,
-}
+pub struct GetCollectionUseCase;
 
 impl GetCollectionUseCase {
-    pub fn new(repo: Arc<dyn CollectionRepository>) -> Self {
-        Self { repo }
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Self
     }
 
-    pub async fn execute(&self) -> Result<Collection> {
-        self.repo.get_collection().await
+    /// Executes the business logic within the context of a Unit of Work.
+    ///
+    /// By taking `SqliteUnitOfWork` as an argument, the Use Case can ensure
+    /// that all operations are part of the same transaction.
+    pub async fn execute(&self, uow: &mut SqliteUnitOfWork<'_>) -> anyhow::Result<Collection> {
+        // 1. Access the repository through the Extension Trait
+        // This re-borrows the transaction inside the UoW
+        let mut repo = uow.collection_repo();
+
+        // 2. Perform the domain logic
+        let collection = repo.get_collection().await?;
+
+        // 3. Return the result
+        // Note: The caller (usually a Controller or Service) typically
+        // decides when to call uow.commit()
+        Ok(collection)
     }
 }

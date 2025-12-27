@@ -7,15 +7,14 @@
 
 use crate::collecting::application::get_collection::GetCollectionUseCase;
 use crate::collecting::domain::collection::Collection;
-use crate::collecting::infrastructure::sqlite_repo::SqliteCollectionRepository;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
-use std::sync::Arc;
 
 /// Tauri command to retrieve the current collection.
 ///
 /// This handler constructs the repository and use-case, executes the use-case
-/// asynchronously and returns the `Collection` on success. On failure it
+/// asynchronously and returns the `Collection` on success. On failure, it
 /// converts the error into a `CommandError::Unknown` preserving the error
 /// message for logging/debugging.
 ///
@@ -28,11 +27,25 @@ use std::sync::Arc;
 #[tauri::command]
 #[specta::specta]
 pub async fn get_collection(state: tauri::State<'_, AppState>) -> Result<Collection, CommandError> {
-    let repo = SqliteCollectionRepository::new(state.db_pool());
-    let use_case = GetCollectionUseCase::new(Arc::new(repo));
+    // 1. Initialize the Unit of Work from the pool stored in AppState
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    match use_case.execute().await {
-        Ok(collection) => Ok(collection),
+    // 2. Initialize the stateless Use Case
+    let use_case = GetCollectionUseCase::new();
+
+    // 3. Execute the Use Case within the transaction context
+    match use_case.execute(&mut uow).await {
+        Ok(collection) => {
+            // Since this is a 'get' operation, committing is technically optional,
+            // but calling it ensures the transaction is closed cleanly.
+            uow.commit()
+                .await
+                .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+            Ok(collection)
+        }
         Err(e) => Err(CommandError::Unknown(e.to_string())),
     }
 }
@@ -40,22 +53,34 @@ pub async fn get_collection(state: tauri::State<'_, AppState>) -> Result<Collect
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::db::init_in_memory_db_pool;
     use pretty_assertions::assert_eq;
-    use std::sync::Arc;
 
     #[tokio::test]
     async fn command_get_collection_returns_empty() {
-        // Create an isolated in-memory DB and run migrations
+        // 1. Setup: Create the isolated in-memory DB
         let pool = init_in_memory_db_pool().await.expect("init in-memory pool");
 
-        // Create repository and use case directly (bypass tauri::State wrapper)
-        let repo = SqliteCollectionRepository::new(pool.clone());
-        let use_case = GetCollectionUseCase::new(Arc::new(repo));
+        // 2. Initialize the Use Case (now stateless)
+        let use_case = GetCollectionUseCase::new();
 
-        let found_collection = use_case.execute().await.expect("get_collection");
+        // 3. Start the Unit of Work (Transaction)
+        let mut uow = SqliteUnitOfWork::new(&pool)
+            .await
+            .expect("Failed to begin unit of work");
 
+        // 4. Execute the Use Case passing the UoW context
+        let found_collection = use_case
+            .execute(&mut uow)
+            .await
+            .expect("get_collection execution failed");
+
+        // 5. Assertions
         assert_eq!(found_collection.name, "My Collection");
         assert_eq!(found_collection.items.len(), 0);
+
+        // 6. Cleanup: Explicitly commit if changes were made (optional for read-only tests)
+        uow.commit().await.expect("commit failed");
     }
 }

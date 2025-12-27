@@ -4,8 +4,6 @@ use crate::collecting::domain::summary::CollectionSummary;
 use crate::core::domain::MonetaryAmount;
 use serde::{Deserialize, Serialize};
 
-pub const DEFAULT_COLLECTION_ID: &str = "052cb8be-cc5c-460d-b72c-6cec595b91d7";
-
 /// Represents a user-owned collection of items.
 ///
 /// A `Collection` contains identifying information, a few aggregated summary
@@ -41,7 +39,7 @@ impl Default for Collection {
     /// that expect a default when no collection is present in the database.
     fn default() -> Self {
         Collection {
-            id: CollectionId::try_from(DEFAULT_COLLECTION_ID).expect("Invalid collection ID"),
+            id: CollectionId::default(),
             name: "My Collection".to_string(),
             summary: CollectionSummary::default(),
             total_value: None,
