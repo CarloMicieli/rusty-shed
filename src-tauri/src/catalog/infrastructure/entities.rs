@@ -61,3 +61,55 @@ pub struct RailwayCompanyRow {
     /// Timestamp when the row was last updated.
     pub updated_at: NaiveDateTime,
 }
+
+/// Row mapping for the `railway_models` table.
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct RailwayModelRow {
+    pub id: String,
+    pub manufacturer_id: String,
+    pub product_code: String,
+    pub description: String,
+    pub details: Option<String>,
+    pub power_method: String,
+    pub scale: String,
+    pub epoch: String,
+    pub category: String,
+    pub delivery_date: Option<String>,
+    pub availability_status: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+/// Row mapping for the `rolling_stocks` table.
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct RollingStockRow {
+    pub id: String,
+    pub railway_model_id: String,
+    pub category: String,
+    pub railway_company_id: String,
+    pub livery: Option<String>,
+    pub length_inches: Option<f64>,
+    pub length_millimeters: Option<f64>,
+    pub technical_minimum_radius_mm: Option<f64>,
+    pub technical_coupling: Option<String>,
+    pub technical_flywheel_fitted: Option<String>,
+    pub technical_body_shell: Option<String>,
+    pub technical_chassis: Option<String>,
+    pub technical_interior_lights: Option<String>,
+    pub technical_lights: Option<String>,
+    pub technical_sprung_buffers: Option<String>,
+    pub type_name: Option<String>,
+    pub class_name: Option<String>,
+    pub road_number: Option<String>,
+    pub series: Option<String>,
+    pub depot: Option<String>,
+    pub electric_multiple_unit_type: Option<String>,
+    pub freight_car_type: Option<String>,
+    pub locomotive_type: Option<String>,
+    pub passenger_car_type: Option<String>,
+    pub railcar_type: Option<String>,
+    pub service_level: Option<String>,
+    pub dcc_interface: Option<String>,
+    pub control: Option<String>,
+    pub is_dummy: i64,
+}

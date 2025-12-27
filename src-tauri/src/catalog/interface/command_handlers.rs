@@ -6,6 +6,8 @@ use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompany;
 use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+use crate::catalog::domain::railway_model::RailwayModel;
+use crate::catalog::domain::railway_model_id::RailwayModelId;
 
 /// Retrieve a manufacturer by its identifier.
 ///
@@ -85,6 +87,30 @@ pub async fn get_railway_company_by_id(
 
     let result =
         crate::catalog::infrastructure::repository::get_railway_company_by_id(&mut conn, &id)
+            .await
+            .map_err(|e| CommandError::DatabaseError(format!("query failed: {}", e)))?;
+
+    Ok(result)
+}
+
+/// Retrieve a railway model by id. Returns the model even if it has no rolling stocks.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_railway_model_by_id(
+    state: State<'_, AppState>,
+    railway_model_id: String,
+) -> Result<Option<RailwayModel>, CommandError> {
+    let id = RailwayModelId::try_from(railway_model_id)
+        .map_err(|e| CommandError::Unknown(format!("invalid railway model id: {}", e)))?;
+
+    let pool = state.db_pool();
+    let mut conn = pool
+        .acquire()
+        .await
+        .map_err(|e| CommandError::DatabaseError(format!("db acquire failed: {}", e)))?;
+
+    let result =
+        crate::catalog::infrastructure::repository::get_railway_model_by_id(&mut conn, &id)
             .await
             .map_err(|e| CommandError::DatabaseError(format!("query failed: {}", e)))?;
 

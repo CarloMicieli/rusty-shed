@@ -38,6 +38,7 @@ pub fn run() {
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         is_db_initialized,
         catalog_command_handlers::get_manufacturer_by_id,
+        catalog_command_handlers::get_railway_model_by_id,
         catalog_command_handlers::get_railway_company_by_id,
         collecting_command_handlers::get_collection,
         get_app_version

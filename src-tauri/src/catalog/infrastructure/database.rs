@@ -1,5 +1,5 @@
-use crate::catalog::infrastructure::entities::ManufacturerRow;
 use crate::catalog::infrastructure::entities::RailwayCompanyRow;
+use crate::catalog::infrastructure::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use sqlx::sqlite::SqliteConnection;
 
 /// Fetch a manufacturer row by its ID.
@@ -24,7 +24,8 @@ pub async fn get_manufacturer_by_id(
     executor: &mut SqliteConnection,
     id: &str,
 ) -> Result<Option<ManufacturerRow>, sqlx::Error> {
-    let sql = "SELECT id, name, registered_company_name, status, country_code, created_at, updated_at FROM manufacturers WHERE id = ?1 LIMIT 1";
+    let sql = "SELECT id, name, registered_company_name, status, country_code, created_at, updated_at \
+        FROM manufacturers WHERE id = ?1 LIMIT 1";
 
     let row = sqlx::query_as::<_, ManufacturerRow>(sql)
         .bind(id)
@@ -56,7 +57,9 @@ pub async fn get_railway_company_by_id(
     executor: &mut SqliteConnection,
     id: &str,
 ) -> Result<Option<RailwayCompanyRow>, sqlx::Error> {
-    let sql = "SELECT id, name, registered_company_name, country_code, status, operating_since, operating_until, created_at, updated_at FROM railway_companies WHERE id = ?1 LIMIT 1";
+    let sql = "SELECT id, name, registered_company_name, country_code, status, operating_since, \
+        operating_until, created_at, updated_at \
+        FROM railway_companies WHERE id = ?1 LIMIT 1";
 
     let row = sqlx::query_as::<_, RailwayCompanyRow>(sql)
         .bind(id)
@@ -64,4 +67,41 @@ pub async fn get_railway_company_by_id(
         .await?;
 
     Ok(row)
+}
+
+/// Fetch a railway model row by its ID.
+pub async fn get_railway_model_by_id(
+    executor: &mut SqliteConnection,
+    id: &str,
+) -> Result<Option<RailwayModelRow>, sqlx::Error> {
+    let sql = "SELECT id, manufacturer_id, product_code, description, details, power_method, \
+        scale, epoch, category, delivery_date, availability_status, created_at, updated_at \
+        FROM railway_models WHERE id = ?1 LIMIT 1";
+
+    let row = sqlx::query_as::<_, RailwayModelRow>(sql)
+        .bind(id)
+        .fetch_optional(&mut *executor)
+        .await?;
+
+    Ok(row)
+}
+
+/// Fetch rolling stocks for a given railway model id.
+pub async fn get_rolling_stocks_by_railway_model_id(
+    executor: &mut SqliteConnection,
+    railway_model_id: &str,
+) -> Result<Vec<RollingStockRow>, sqlx::Error> {
+    let sql = "SELECT id, railway_model_id, category, railway_company_id, livery, length_inches, \
+        length_millimeters, technical_minimum_radius_mm, technical_coupling, technical_flywheel_fitted, \
+        technical_body_shell, technical_chassis, technical_interior_lights, technical_lights, technical_sprung_buffers, \
+        type_name, class_name, road_number, series, depot, electric_multiple_unit_type, freight_car_type, locomotive_type, \
+        passenger_car_type, railcar_type, service_level, dcc_interface, control, is_dummy \
+        FROM rolling_stocks WHERE railway_model_id = ?1";
+
+    let rows = sqlx::query_as::<_, RollingStockRow>(sql)
+        .bind(railway_model_id)
+        .fetch_all(&mut *executor)
+        .await?;
+
+    Ok(rows)
 }

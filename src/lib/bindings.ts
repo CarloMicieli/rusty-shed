@@ -35,6 +35,17 @@ async getManufacturerById(manufacturerId: string) : Promise<Result<Manufacturer 
 }
 },
 /**
+ * Retrieve a railway model by id. Returns the model even if it has no rolling stocks.
+ */
+async getRailwayModelById(railwayModelId: string) : Promise<Result<RailwayModel | null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_railway_model_by_id", { railwayModelId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Retrieve a railway company by its identifier.
  * 
  * Parses the provided `railway_company_id` into a domain `RailwayCompanyId`,
@@ -103,6 +114,105 @@ async getAppVersion() : Promise<string> {
 
 /** user-defined types **/
 
+/**
+ * Lifecycle availability status of a railway model.
+ * 
+ * The enum variants represent common product lifecycle states. When
+ * serialized via `serde` the variants use SCREAMING_SNAKE_CASE; likewise
+ * string parsing via `strum` expects SCREAMING_SNAKE_CASE but is
+ * case-insensitive.
+ */
+export type AvailabilityStatus = 
+/**
+ * The railway model is just announced and not yet available.
+ */
+"ANNOUNCED" | 
+/**
+ * The railway model is available for purchase.
+ */
+"AVAILABLE" | 
+/**
+ * The railway model production / release has been cancelled or delayed
+ * (not proceeding as previously announced).
+ */
+"CANCELLED" | 
+/**
+ * The railway model has been discontinued and is no longer produced.
+ */
+"DISCONTINUED"
+/**
+ * The construction type of rolling stock's body shell.
+ * 
+ * This enum describes the material / manufacturing technique used for the outer
+ * body shell of a model (for example, a plastic injection-moulded shell vs a
+ * metal die-cast shell). It is used in technical specifications to describe
+ * the build of the vehicle's exterior.
+ */
+export type BodyShellType = 
+/**
+ * Plastic body shell construction (typically injection moulded plastic).
+ */
+"PLASTIC" | 
+/**
+ * Metal die-cast body shell construction (heavier, metal cast components).
+ */
+"METAL_DIE_CAST"
+/**
+ * The enumeration of the railway model categories.
+ */
+export type Category = 
+/**
+ * Independent traction units powered by steam, diesel, or electricity
+ * used to pull unpowered vehicles.
+ */
+"LOCOMOTIVES" | 
+/**
+ * Pre-configured groups of permanently or semi-permanently coupled
+ * vehicles, such as high-speed trains.
+ */
+"TRAIN_SETS" | 
+/**
+ * All-in-one entry-level packages typically including a train,
+ * track, and a power controller.
+ */
+"STARTER_SETS" | 
+/**
+ * Vehicles designed for the transport of physical goods,
+ * raw materials, or equipment.
+ */
+"FREIGHT_CARS" | 
+/**
+ * Vehicles designed for the transport of people, typically
+ * including seating, lighting, and climate control.
+ */
+"PASSENGER_CARS" | 
+/**
+ * Self-propelled train sets consisting of multiple carriages
+ * using electricity as their motive power.
+ */
+"ELECTRIC_MULTIPLE_UNITS" | 
+/**
+ * Lightweight, self-propelled vehicles (usually a single unit)
+ * designed for passenger service on branch lines.
+ */
+"RAILCARS"
+/**
+ * The construction type of a rolling stock's chassis.
+ * 
+ * This enum indicates the material or manufacturing technique used for the
+ * chassis (the structural frame and underbody) of a model. It is part of
+ * the technical specifications describing the build quality and expected
+ * properties of the model's underframe.
+ */
+export type ChassisType = 
+/**
+ * Plastic chassis construction (typically injection-moulded plastic).
+ */
+"PLASTIC" | 
+/**
+ * Metal die-cast chassis construction (heavier, metal cast chassis parts).
+ */
+"METAL_DIE_CAST"
 /**
  * Represents a user-owned collection of items.
  * 
@@ -257,6 +367,82 @@ export type CommandError =
  */
 { Unknown: string }
 /**
+ * The control method for this railway model.
+ * 
+ * The `Control` enum captures whether a model is DCC-ready, has a decoder
+ * fitted, has a sound-equipped decoder, or has no DCC support at all.
+ * 
+ * Variants:
+ * - `DccReady`: The model is prepared for a DCC decoder (e.g. a standard
+ * decoder plug is present) but no decoder is installed.
+ * - `DccFitted`: A DCC decoder has been installed.
+ * - `DccSound`: A DCC decoder with a sound module is installed.
+ * - `NoDcc`: The model does not support DCC (no standard interface present);
+ * installation may require model-specific wiring or a hardwired decoder.
+ */
+export type Control = 
+/**
+ * The model can be fitted with a dcc decoder.
+ */
+"DCC_READY" | 
+/**
+ * The model has a dcc decoder installed.
+ */
+"DCC_FITTED" | 
+/**
+ * The model has a dcc decoder installed with the sound module.
+ */
+"DCC_SOUND" | 
+/**
+ * The model has no dcc support (like no standard decoder plug)
+ */
+"NO_DCC"
+/**
+ * It represents the coupling configuration for a rolling stock.
+ */
+export type Coupling = { 
+/**
+ * the rolling stock coupling socket
+ */
+socket: CouplingSocket | null; 
+/**
+ * the rolling stock has a close coupling mechanism
+ */
+close_couplers: FeatureFlag | null; 
+/**
+ * the rolling stock has a digital shunting couplers mechanism
+ */
+digital_shunting: FeatureFlag | null }
+export type CouplingSocket = "NONE" | 
+/**
+ * Receptacle for Replaceable Coupling Heads in Scales TT and N
+ */
+"NEM_355" | 
+/**
+ * Coupler Head for Scale N
+ */
+"NEM_356" | 
+/**
+ * Coupler Head for Scale N
+ */
+"NEM_357" | 
+/**
+ * Coupler Head for Scale TT
+ */
+"NEM_359" | 
+/**
+ * Standard Coupling for Scale H0
+ */
+"NEM_360" | 
+/**
+ * NEM shaft 362 with close coupling mechanism
+ */
+"NEM_362" | 
+/**
+ * Coupler Head for Scale 0
+ */
+"NEM_365"
+/**
  * Currency codes supported by the application.
  * 
  * The enum uses a small, explicit set of currencies for now. Use
@@ -280,6 +466,331 @@ export type Currency =
  * Japanese Yen
  */
 "JPY"
+/**
+ * The NMRA and NEM Connectors for digital control (DCC)
+ * 
+ * # Description
+ * The NMRA and NEM adopted standard mechanical and electrical interfaces to connect Multifunction
+ * Decoders to a locomotive's electrical system. These plugs and sockets make it simpler to install
+ * a decoder into a suitably equipped locomotive.
+ * 
+ * In many cases a blanking plug must be removed before installing the decoder. If a locomotive
+ * is not DCC-Ready it will lack an interface and must use a Hardwired Decoder or a drop-in
+ * replacement DCC control board (if available) for that specific model.
+ */
+export type DccInterface = 
+/**
+ * 6 Pin standard mechanical and electrical interfaces (NMRA Small)
+ */
+"NEM_651" | 
+/**
+ * 8 Pin standard mechanical and electrical interfaces (NMRA Medium)
+ */
+"NEM_652" | 
+/**
+ * 4 Pin standard mechanical and electrical interfaces (NMRA Large)
+ */
+"NEM_654" | 
+/**
+ * The PluX8 connector consists of two rows of 4 pins.
+ */
+"PLUX_8" | "PLUX_12" | 
+/**
+ * The PluX16 connector consists of two rows of 8 pins.
+ */
+"PLUX_16" | 
+/**
+ * The PluX22 connector consists of two rows of 11 pins.
+ */
+"PLUX_22" | 
+/**
+ * standard connector for extremely tight applications, such as TT and N scale locomotives (NEM 662)
+ */
+"NEXT_18" | "NEXT_18_S" | 
+/**
+ * 21MTC Connector interface is a standard adopted by both the NMRA and NEM (NEM 660).
+ * Its name comes from 21 pin Marklin/Trix Connector, developed by Marklin and ESU.
+ */
+"MTC_21"
+/**
+ * Represents the expected delivery timeframe for a railway model.
+ * 
+ * This enum allows for varying levels of precision depending on how
+ * much information the manufacturer has provided about the release schedule.
+ */
+export type DeliveryDate = 
+/**
+ * Delivery is expected within a specific calendar year.
+ */
+{ Year: number } | 
+/**
+ * Delivery is expected within a specific month of a year.
+ */
+{ YearMonth: { 
+/**
+ * The calendar year (e.g., 2024).
+ */
+year: number; 
+/**
+ * The month of the year (1 for January, 12 for December).
+ */
+month: number } } | 
+/**
+ * Delivery is expected within a specific fiscal or calendar quarter.
+ */
+{ YearQuarter: { 
+/**
+ * The calendar year (e.g., 2024).
+ */
+year: number; 
+/**
+ * The specific quarter of the year.
+ */
+quarter: Quarter } }
+/**
+ * The cars that form a complete EMU set can usually be separated by function into four types:
+ * power car, motor car, driving car, and trailer car.
+ * 
+ * Each car can have more than one function, such as a motor-driving car or power-driving car.
+ */
+export type ElectricMultipleUnitType = 
+/**
+ * Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
+ * An EMU will usually have two driving cars at its outer ends.
+ */
+"DRIVING_CAR" | 
+/**
+ * High-speed rail is a type of rail system that runs significantly faster than traditional
+ * rail, using an integrated system of specialised rolling stock and dedicated tracks.
+ */
+"HIGH_SPEED_TRAIN" | 
+/**
+ * Motor cars carry the traction motors to move the train, and are often combined with the
+ * power car to avoid high-voltage inter-car connections.
+ */
+"MOTOR_CAR" | 
+/**
+ * A power car carries the necessary equipment to draw power from the electrified
+ * infrastructure, such as pickup shoes for third rail systems and pantographs for
+ * overhead systems, and transformers.
+ */
+"POWER_CAR" | 
+/**
+ * Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
+ * traction or power related equipment, and are similar to passenger cars in a
+ * locomotive-hauled train.
+ */
+"TRAILER_CAR" | 
+/**
+ * A trainset is working as whole unit
+ */
+"TRAIN_SET"
+/**
+ * Backwards-compatible wrapper used across the codebase and DB rows.
+ * 
+ * This preserves the original `Epoch(pub String)` API while providing
+ * conversions to the structured `EpochKind` for validation and richer handling.
+ */
+export type Epoch = string
+/**
+ * Represents the availability or relevance of a specific model feature.
+ * 
+ * This is often used for technical specifications where a feature might
+ * exist, be intentionally absent, or simply not be relevant to that
+ * specific class of locomotive or rolling stock.
+ */
+export type FeatureFlag = 
+/**
+ * The feature is present and functional on the model.
+ */
+"YES" | 
+/**
+ * The feature is not present on the model, though it might be
+ * expected or available on similar models.
+ */
+"NO" | 
+/**
+ * The feature is not relevant for this type of equipment.
+ * 
+ * For example, a "Pantograph Type" flag would be `NotApplicable`
+ * for a Steam Locomotive.
+ */
+"NOT_APPLICABLE"
+/**
+ * Represents the various types of freight rolling stock used in rail transport.
+ * 
+ * These classifications are based on the physical design and the specific
+ * cargo requirements, such as climate control, weather protection, or
+ * specialized loading mechanisms.
+ */
+export type FreightCarType = 
+/**
+ * Specialized wagons for transporting motor vehicles, often multi-deck.
+ */
+"AUTO_TRANSPORT_CARS" | 
+/**
+ * A wagon equipped with a handbrake or a cabin for a brakeman,
+ * historically used to assist in braking the train.
+ */
+"BRAKE_WAGON" | 
+/**
+ * Flat or skeleton-framed wagons designed specifically to carry
+ * standardized shipping containers (ISO containers).
+ */
+"CONTAINER_CARS" | 
+/**
+ * Fully enclosed wagons used for goods that must be protected
+ * from weather and theft.
+ */
+"COVERED_FREIGHT_CARS" | 
+/**
+ * Wagons with a lowered center section designed to carry tall
+ * loads like intermodal trailers or containers within height clearances.
+ */
+"DEEP_WELL_FLAT_CARS" | 
+/**
+ * Open-top wagons with a mechanism to tilt the body to unload
+ * bulk materials like sand or gravel.
+ */
+"DUMP_CARS" | 
+/**
+ * Open-topped rail vehicles used for transporting loose bulk
+ * materials such as coal, ore, or scrap metal.
+ */
+"GONDOLA" | 
+/**
+ * Heavy-duty flat wagons designed for extremely heavy or
+ * oversized loads, often featuring many axles.
+ */
+"HEAVY_GOODS_WAGONS" | 
+/**
+ * Wagons with a roof that is hinged on one side, allowing
+ * for top-loading of weather-sensitive bulk goods.
+ */
+"HINGED_COVER_WAGONS" | 
+/**
+ * Wagons with a floor that slopes toward one or more discharge
+ * doors, used for the rapid unloading of bulk materials.
+ */
+"HOPPER_WAGON" | 
+/**
+ * Insulated wagons equipped with cooling systems for
+ * transporting perishable goods.
+ */
+"REFRIGERATOR_CARS" | 
+/**
+ * Specialized wagons for transporting pressurized or
+ * non-pressurized powders and granulated materials in silos.
+ */
+"SILO_CONTAINER_CARS" | 
+/**
+ * Wagons with a flexible tarpaulin cover that slides open
+ * for easy side-loading of palletized goods.
+ */
+"SLIDE_TARPAULIN_WAGON" | 
+/**
+ * Boxcars with large sliding doors that make up the entire
+ * side of the wagon, allowing for forklift access.
+ */
+"SLIDING_WALL_BOXCARS" | 
+/**
+ * Wagons designed for niche cargo that does not fit
+ * into standard classifications.
+ */
+"SPECIAL_TRANSPORT" | 
+/**
+ * Flat wagons equipped with vertical posts (stakes) along
+ * the sides to secure long loads like timber or pipes.
+ */
+"STAKE_WAGONS" | 
+/**
+ * Wagons with a roof that swings to the side to provide
+ * a wide opening for top-loading bulk cargo.
+ */
+"SWING_ROOF_WAGON" | 
+/**
+ * Enclosed pressurized or non-pressurized vessels for
+ * transporting liquids, gases, or chemicals.
+ */
+"TANK_CARS" | 
+/**
+ * Wagons with several overlapping "hoods" that slide
+ * over each other, used for protecting steel coils or heavy machinery.
+ */
+"TELESCOPE_HOOD_WAGONS"
+/**
+ * A physical length value paired with its measure unit.
+ * 
+ * The `Length` enum is the canonical representation for lengths in the
+ * domain. Each variant stores a `Decimal` quantity for a specific unit.
+ * 
+ * Invariants:
+ * - Quantities must be non-negative. Use `Length::try_new` to validate
+ * input without panicking.
+ * - Equality and ordering compare values after converting to the left-hand
+ * side's unit (so comparisons are unit-agnostic but deterministic).
+ */
+export type Length = 
+/**
+ * A length expressed in inches.
+ */
+{ Inches: string } | 
+/**
+ * A length expressed in kilometers.
+ */
+{ Kilometers: string } | 
+/**
+ * A length expressed in meters.
+ */
+{ Meters: string } | 
+/**
+ * A length expressed in miles.
+ */
+{ Miles: string } | 
+/**
+ * A length expressed in millimeters.
+ */
+{ Millimeters: string }
+/**
+ * The rail vehicle measurement method expressed as the length over buffers
+ * 
+ * `LengthOverBuffers` holds an optional length in both inches and
+ * millimeters. When both values are provided they must represent the same
+ * physical measure (the constructor will validate that). Values must be
+ * positive. The type implements `Copy`/`Clone` and (de)serializes with
+ * serde using the helpers in `crate::core::domain::length::serde`.
+ */
+export type LengthOverBuffers = { 
+/**
+ * the overall length in inches
+ */
+inches: Length | null; 
+/**
+ * the overall length in millimeters
+ */
+millimeters: Length | null }
+/**
+ * Specifies the primary motive power source for a locomotive.
+ * 
+ * This classification determines the operational requirements, such as
+ * fueling infrastructure or overhead electrification.
+ */
+export type LocomotiveType = 
+/**
+ * Locomotives powered by an external combustion engine, typically
+ * using a boiler to produce steam from coal, wood, or oil.
+ */
+"STEAM_LOCOMOTIVE" | 
+/**
+ * Locomotives powered by an internal combustion engine, usually
+ * driving an electric generator or a hydraulic transmission.
+ */
+"DIESEL_LOCOMOTIVE" | 
+/**
+ * Locomotives that draw power from external sources, such as
+ * overhead catenary wires or a third rail.
+ */
+"ELECTRIC_LOCOMOTIVE"
 /**
  * A manufacturer (maker of railway models).
  * 
@@ -376,6 +887,79 @@ rolling_stock_id: string;
  */
 notes: string }
 /**
+ * The types for passenger car rolling stocks
+ */
+export type PassengerCarType = 
+/**
+ * A car usually placed between the locomotive and the rest of the train,
+ * featuring a wide-open interior for carrying checked baggage.
+ */
+"BAGGAGE_CAR" | 
+/**
+ * A car providing limited food service (snacks/drinks) and a counter,
+ * smaller in scale than a full Dining Car.
+ */
+"BUFFET_CAR" | 
+/**
+ * A hybrid car containing separate sections for both passengers and
+ * freight or baggage.
+ */
+"COMBINE_CAR" | 
+/**
+ * A coach featuring a side corridor connecting individual private
+ * compartments, each with face-to-face seating rows.
+ */
+"COMPARTMENT_COACH" | 
+/**
+ * A car dedicated to full-service meal preparation and seating for passengers.
+ */
+"DINING_CAR" | 
+/**
+ * A car with two levels of passenger seating to increase capacity
+ * without increasing train length.
+ */
+"DOUBLE_DECKER" | 
+/**
+ * A car with a glass-roofed section raised above the normal roofline,
+ * allowing 360-degree views of the scenery.
+ */
+"DOME_CAR" | 
+/**
+ * A control car equipped with a driver's cab, allowing the locomotive
+ * to be operated from the opposite end in a push-pull configuration.
+ */
+"DRIVING_TRAILER" | 
+/**
+ * A car featuring a bar and informal public seating, often used
+ * as a social space.
+ */
+"LOUNGE" | 
+/**
+ * The final car of a train, often featuring large windows or an open
+ * rear platform for scenic viewing.
+ */
+"OBSERVATION" | 
+/**
+ * A coach with a central aisle and rows of seats similar to an
+ * airliner's cabin layout.
+ */
+"OPEN_COACH" | 
+/**
+ * A specialized car used for sorting mail while in transit to
+ * expedite delivery.
+ */
+"RAILWAY_POST_OFFICE" | 
+/**
+ * A car with berths or private rooms for overnight travel.
+ * Also known as a "Sleeper" or "Pullman car."
+ */
+"SLEEPING_CAR" | 
+/**
+ * A "couchette" or "Sleeperette" car, providing reclining seats or
+ * basic fold-down bunks for a more economical overnight option.
+ */
+"SLEEPERETTE"
+/**
  * It represents the period of activity for a railway company
  */
 export type PeriodOfActivity = { 
@@ -391,6 +975,25 @@ operating_until: string | null;
  * the railway status
  */
 status: RailwayStatus }
+/**
+ * Power method used by rolling stocks.
+ * 
+ * This enum represents how a model locomotive obtains electrical power.
+ * The `Display` implementation returns a human-friendly name for each variant.
+ */
+export type PowerMethod = 
+/**
+ * Alternating current (AC) power collection.
+ */
+"AC" | 
+/**
+ * Direct current (DC) power collection.
+ */
+"DC" | 
+/**
+ * Trix Express three-rail power pickup system.
+ */
+"TRIX_EXPRESS"
 /**
  * Details for a pre-order entry.
  * 
@@ -423,6 +1026,21 @@ seller: string | null;
  * Optional expected delivery date (ETA) for the preorder.
  */
 expected_date: string | null }
+/**
+ * A product identifier (manufacturer model/code) used to uniquely identify
+ * a rolling stock model or catalogue item.
+ * 
+ * This is a thin newtype wrapper around `String` to provide domain-level
+ * type-safety and to allow attaching trait impls specific to product codes.
+ * 
+ * It derives `Serialize`/`Deserialize` for easy (de)serialization with Serde.
+ * 
+ * Requirements
+ * - The product code MUST be a non-empty, non-blank string. Constructions via
+ * `TryFrom<&str>` / `TryFrom<String>` will return an error if the input is
+ * empty or contains only whitespace.
+ */
+export type ProductCode = string
 /**
  * Purchase information associated with a `CollectionItem`.
  * 
@@ -479,6 +1097,56 @@ price: MonetaryAmount | null;
  */
 seller: string | null }
 /**
+ * Represents one of the four three-month segments of a calendar year.
+ * 
+ * These quarters follow the standard calendar year, beginning in January.
+ */
+export type Quarter = 
+/**
+ * The first quarter: January, February, and March.
+ */
+"Q1" | 
+/**
+ * The second quarter: April, May, and June.
+ */
+"Q2" | 
+/**
+ * The third quarter: July, August, and September.
+ */
+"Q3" | 
+/**
+ * The fourth quarter: October, November, and December.
+ */
+"Q4"
+/**
+ * Domain types for handling minimum drivable radii.
+ * 
+ * A `Radius` wraps a `Length` expressed in millimeters and enforces
+ * that the value is non-negative.
+ */
+export type Radius = Length
+/**
+ * The types for railcar rolling stocks
+ * 
+ * A railcar is a self-propelled railway vehicle designed to transport passengers.
+ * The term _"railcar"_ is usually used in reference to a train consisting of a single coach
+ * (carriage, car), with a driver's cab at one or both ends.
+ * 
+ * In its simplest form, a "railcar" may also be little more than a motorized railway handcar
+ * or draisine.
+ */
+export type RailcarType = 
+/**
+ * A self-propelled passenger vehicles also capable of hauling a train.
+ */
+"POWER_CAR" | 
+/**
+ * Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
+ * traction or power related equipment, and are similar to passenger cars in a
+ * locomotive-hauled train.
+ */
+"TRAILER_CAR"
+/**
  * A railway company (operator or owner).
  * 
  * This struct models a real-world railway company. Some fields are optional
@@ -523,7 +1191,426 @@ period_of_activity: PeriodOfActivity | null }
  * empty or contains only whitespace.
  */
 export type RailwayCompanyId = string
+/**
+ * A `RailwayModel` represents a manufactured model product in the catalog.
+ * 
+ * It contains metadata about the product (manufacturer, product code,
+ * scale, epoch, etc.) and a list of `RollingStock` instances that correspond
+ * to specific owned or catalogued items of this model.
+ */
+export type RailwayModel = { 
+/**
+ * Unique identifier for the railway model.
+ */
+id: RailwayModelId; 
+/**
+ * The manufacturer of the model (e.g. Bachmann, Märklin).
+ */
+manufacturer: string; 
+/**
+ * Manufacturer-assigned product code.
+ */
+product_code: ProductCode; 
+/**
+ * Human-readable description of the model.
+ */
+description: string; 
+/**
+ * Additional details about the model (e.g. special features, variations).
+ */
+details: string | null; 
+/**
+ * The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
+ */
+power_method: PowerMethod; 
+/**
+ * The scale of the model (e.g. HO, N).
+ */
+scale: Scale; 
+/**
+ * The historical epoch the model belongs to.
+ */
+epoch: Epoch; 
+/**
+ * Classification category for the model (e.g. locomotive, freight car).
+ */
+category: Category; 
+/**
+ * Delivery or release date information for the product.
+ */
+delivery_date: DeliveryDate | null; 
+/**
+ * the availability status
+ */
+availability_status: AvailabilityStatus | null; 
+/**
+ * Rolling stock instances (specific vehicles) that correspond to this model.
+ */
+rolling_stocks: RollingStock[] }
+/**
+ * A strongly-typed identifier for a railway model.
+ * 
+ * This newtype wraps a `String` so that code dealing with railway model
+ * identifiers can use a distinct type instead of raw `String`s. It derives
+ * `Serialize` and `Deserialize` so it can be used directly with `serde`.
+ * 
+ * Requirements
+ * - The railway model id MUST be a non-empty, non-blank string. Constructions
+ * via `TryFrom<&str>` / `TryFrom<String>` will return an error if the input
+ * is empty or contains only whitespace.
+ */
+export type RailwayModelId = string
 export type RailwayStatus = "ACTIVE" | "INACTIVE"
+export type RollingStock = 
+/**
+ * an electric multiple unit rolling stock
+ */
+{ category: "ElectricMultipleUnit"; data: { 
+/**
+ * the unique identifier for this rolling stock
+ */
+id: RollingStockId; 
+/**
+ * the railway for this rolling stock
+ */
+railway: RollingStockRailway; 
+/**
+ * the livery description
+ */
+livery: string | null; 
+/**
+ * the overall length
+ */
+length_over_buffer: LengthOverBuffers | null; 
+/**
+ * the technical specifications
+ */
+technical_specifications: TechnicalSpecifications | null; 
+/**
+ * the electric multiple unit type name
+ */
+type_name: string; 
+/**
+ * the identification marking for this electric multiple unit
+ */
+road_number: string | null; 
+/**
+ * the prototype series information
+ */
+series: string | null; 
+/**
+ * the depot name
+ */
+depot: string | null; 
+/**
+ * the electric multiple unit type
+ */
+electric_multiple_unit_type: ElectricMultipleUnitType; 
+/**
+ * the dcc interface
+ */
+dcc_interface: DccInterface | null; 
+/**
+ * the control
+ */
+control: Control | null; 
+/**
+ * indicate whether the rolling stock has a motor or not
+ */
+is_dummy: boolean } } | 
+/**
+ * a freight car rolling stock
+ */
+{ category: "FreightCar"; data: { 
+/**
+ * the unique identifier for this rolling stock
+ */
+id: RollingStockId; 
+/**
+ * the railway for this rolling stock
+ */
+railway: RollingStockRailway; 
+/**
+ * the livery description
+ */
+livery: string | null; 
+/**
+ * the overall length
+ */
+length_over_buffer: LengthOverBuffers | null; 
+/**
+ * the technical specifications
+ */
+technical_specifications: TechnicalSpecifications | null; 
+/**
+ * the freight car type name
+ */
+type_name: string; 
+/**
+ * the identification marking for this freight car
+ */
+road_number: string | null; 
+/**
+ * the freight car type
+ */
+freight_car_type: FreightCarType | null } } | 
+/**
+ * a locomotive rolling stock
+ */
+{ category: "Locomotive"; data: { 
+/**
+ * the unique identifier for this rolling stock
+ */
+id: RollingStockId; 
+/**
+ * the railway for this rolling stock
+ */
+railway: RollingStockRailway; 
+/**
+ * the livery description
+ */
+livery: string | null; 
+/**
+ * the overall length
+ */
+length_over_buffer: LengthOverBuffers | null; 
+/**
+ * the technical specification
+ */
+technical_specifications: TechnicalSpecifications | null; 
+/**
+ * the class of locomotives. The class is a group of locomotives built to a common design,
+ * typically for a single railroad or railway
+ */
+class_name: string; 
+/**
+ * the identification marking for this locomotive
+ */
+road_number: string; 
+/**
+ * the prototype series information
+ */
+series: string | null; 
+/**
+ * the depot name
+ */
+depot: string | null; 
+/**
+ * the locomotive type
+ */
+locomotive_type: LocomotiveType; 
+/**
+ * the dcc interface
+ */
+dcc_interface: DccInterface | null; 
+/**
+ * the control
+ */
+control: Control | null; 
+/**
+ * indicate whether the rolling stock has a motor or not
+ */
+is_dummy: boolean } } | 
+/**
+ * a passenger car rolling stock
+ */
+{ category: "PassengerCar"; data: { 
+/**
+ * the unique identifier for this rolling stock
+ */
+id: RollingStockId; 
+/**
+ * the railway for this rolling stock
+ */
+railway: RollingStockRailway; 
+/**
+ * the livery description
+ */
+livery: string | null; 
+/**
+ * the overall length
+ */
+length_over_buffer: LengthOverBuffers | null; 
+/**
+ * the technical specifications
+ */
+technical_specifications: TechnicalSpecifications | null; 
+/**
+ * the passenger car type name
+ */
+type_name: string; 
+/**
+ * the identification marking for this passenger car
+ */
+road_number: string | null; 
+/**
+ * the prototype series information
+ */
+series: string | null; 
+/**
+ * the passenger car type
+ */
+passenger_car_type: PassengerCarType | null; 
+/**
+ * the travel class for this passenger car. Passenger cars can have multiple service
+ * levels (ie, '1st/2nd')
+ */
+service_level: ServiceLevel | null } } | 
+/**
+ * a railcar rolling stock
+ */
+{ category: "Railcar"; data: { 
+/**
+ * the unique identifier for this rolling stock
+ */
+id: RollingStockId; 
+/**
+ * the railway for this rolling stock
+ */
+railway: RollingStockRailway; 
+/**
+ * the livery description
+ */
+livery: string | null; 
+/**
+ * the overall length
+ */
+length_over_buffer: LengthOverBuffers | null; 
+/**
+ * the technical specifications
+ */
+technical_specifications: TechnicalSpecifications | null; 
+/**
+ * the railcar type name
+ */
+type_name: string; 
+/**
+ * the identification marking for this railcar
+ */
+road_number: string | null; 
+/**
+ * the railcar series
+ */
+series: string | null; 
+/**
+ * the depot name
+ */
+depot: string | null; 
+/**
+ * the railcar type
+ */
+railcar_type: RailcarType; 
+/**
+ * the dcc interface
+ */
+dcc_interface: DccInterface | null; 
+/**
+ * the control
+ */
+control: Control | null; 
+/**
+ * indicate whether the rolling stock has a motor or not
+ */
+is_dummy: boolean } }
+/**
+ * A unique identifier for a rolling stock.
+ * 
+ * This is a thin, domain-specific wrapper around `Uuid` that provides
+ * stronger typing in the codebase so rolling stock IDs are not confused
+ * with other UUIDs. It is `Copy` and `Clone` which makes it convenient
+ * to pass by value.
+ * 
+ * Persistence and serialization:
+ * - `#[sqlx(transparent)]` ensures the value is stored as a regular UUID
+ * column in SQLite/Postgres when using `sqlx`.
+ * - `Serialize`/`Deserialize` derive implementations allow easy JSON
+ * encoding for APIs or fixtures.
+ */
+export type RollingStockId = string
+/**
+ * A railway association for a rolling stock item.
+ * 
+ * `RollingStockRailway` ties a rolling stock to a specific railway by
+ * containing the railway's unique identifier and the display name used in
+ * user interfaces and listings. This is a lightweight DTO-like value used in
+ * domains where the rolling stock's owning or related railway must be shown
+ * or serialized.
+ */
+export type RollingStockRailway = { 
+/**
+ * the railway unique identifier
+ */
+railway_id: RailwayCompanyId; 
+/**
+ * the railway display name
+ */
+display: string }
+/**
+ * Model railway scales supported by the application.
+ * 
+ * Each variant corresponds to a commonly used hobbyist scale name (for example
+ * `H0` or `00`). Use `Scale::ratio()` to obtain the numeric ratio that follows
+ * the `1:` notation (e.g. `Scale::H0` -> `1:87`). The `Display` implementation
+ * produces a human-friendly string such as `H0 (1:87)`.
+ */
+export type Scale = 
+/**
+ * H0 scale (1:87)
+ */
+"H0" | 
+/**
+ * H0 narrow/metric (1:87)
+ */
+"H0m" | 
+/**
+ * H0e (1:87)
+ */
+"H0e" | 
+/**
+ * N scale (1:160)
+ */
+"N" | 
+/**
+ * TT scale (1:120)
+ */
+"TT" | 
+/**
+ * Z scale (1:220)
+ */
+"Z" | 
+/**
+ * G scale (garden) (1:22.5)
+ */
+"G" | 
+/**
+ * 1 scale (1:32)
+ */
+"Scale1" | 
+/**
+ * 0 scale (1:43.5)
+ */
+"Scale0" | 
+/**
+ * 00 (double-zero) scale (1:76.2)
+ */
+"Scale00"
+/**
+ * Represents the service class(es) for a rolling stock or service.
+ * 
+ * | **Variant**                      | **Description**           |
+ * |:---------------------------------|:--------------------------|
+ * | `ServiceLevel::First`            | `1st class`               |
+ * | `ServiceLevel::Second`           | `2nd class`               |
+ * | `ServiceLevel::Third`            | `3rd class`               |
+ * | `ServiceLevel::FirstSecond`      | `Mixed 1st/2nd class`     |
+ * | `ServiceLevel::SecondThird`      | `Mixed 2nd/3rd class`     |
+ * | `ServiceLevel::FirstSecondThird` | `Mixed 1st/2nd/3rd class` |
+ * 
+ * Parsing: `TryFrom<&str>` is implemented and accepts the string forms above
+ * (whitespace is trimmed). Formatting: `Display` is implemented and produces
+ * the corresponding string representation.
+ */
+export type ServiceLevel = "FIRST" | "SECOND" | "THIRD" | "FIRST_SECOND" | "SECOND_THIRD" | "FIRST_SECOND_THIRD"
 /**
  * Details for an item that was sold.
  * 
@@ -568,6 +1655,42 @@ buyer: string | null;
  * originally sold the item or the intermediary that handled the sale).
  */
 seller: string | null }
+/**
+ * The technical specification data for a rolling stock model
+ */
+export type TechnicalSpecifications = { 
+/**
+ * the minimum drivable radius
+ */
+minimum_radius: Radius | null; 
+/**
+ * the coupling
+ */
+coupling: Coupling | null; 
+/**
+ * has a flywheel fitted
+ */
+flywheel_fitted: FeatureFlag | null; 
+/**
+ * body shell type
+ */
+body_shell: BodyShellType | null; 
+/**
+ * chassis type
+ */
+chassis: ChassisType | null; 
+/**
+ * has interior lighting
+ */
+interior_lights: FeatureFlag | null; 
+/**
+ * has lights
+ */
+lights: FeatureFlag | null; 
+/**
+ * has sprung buffers
+ */
+sprung_buffers: FeatureFlag | null }
 
 /** tauri-specta globals **/
 
