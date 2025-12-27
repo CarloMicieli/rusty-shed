@@ -12,7 +12,7 @@ async isDbInitialized() : Promise<boolean> {
  * Tauri command to retrieve the current collection.
  * 
  * This handler constructs the repository and use-case, executes the use-case
- * asynchronously and returns the `Collection` on success. On failure it
+ * asynchronously and returns the `Collection` on success. On failure, it
  * converts the error into a `CommandError::Unknown` preserving the error
  * message for logging/debugging.
  * 
@@ -52,12 +52,18 @@ async getAppVersion() : Promise<string> {
  * A `Collection` contains identifying information, a few aggregated summary
  * values and the list of `CollectionItem` entries that make up the
  * collection. It is intentionally lightweight to keep IPC payloads small.
+ * 
+ * Default behaviour:
+ * - `Collection::default()` returns an empty collection with a generated id,
+ * the name "My Collection", a `CollectionSummary::default()` and no
+ * `total_value` (i.e. `None`). This mirrors previous code paths that
+ * returned a default when no database row existed.
  */
 export type Collection = { 
 /**
  * Unique identifier for the collection (typically a UUID stored as a string).
  */
-id: string; 
+id: CollectionId; 
 /**
  * Display name for this collection.
  */
@@ -76,6 +82,18 @@ total_value: MonetaryAmount | null;
  */
 items: CollectionItem[] }
 /**
+ * Identifier for a collection.
+ * 
+ * This newtype wraps a `Uuid` to provide a distinct domain type for collection
+ * identifiers. Construction from strings is fallible — the string must be
+ * a valid UUID representation (for example `"550e8400-e29b-41d4-a716-446655440000"`).
+ * 
+ * # Requirements
+ * - `TryFrom<&str>` / `TryFrom<String>` will return an error if the provided
+ * string is not a valid UUID.
+ */
+export type CollectionId = string
+/**
  * A single item within a user's collection.
  * 
  * A `CollectionItem` represents a reference to a catalog `RailwayModel` along
@@ -88,7 +106,7 @@ export type CollectionItem = {
 /**
  * Unique identifier for this collection item (e.g. UUID).
  */
-id: string; 
+id: CollectionItemId; 
 /**
  * Link to the corresponding catalog `RailwayModel` this item represents.
  * 
@@ -113,31 +131,49 @@ rolling_stocks: OwnedRollingStock[];
  */
 purchase_info: PurchaseInfo | null }
 /**
- * Summary counters for a `Collection` domain object.
+ * Identifier for a single item in a collection.
+ * 
+ * This newtype wraps a `Uuid` to provide a distinct domain type for collection
+ * item identifiers. Construction from strings is fallible — the string must be
+ * a valid UUID representation (for example `"550e8400-e29b-41d4-a716-446655440000"`).
+ * 
+ * # Requirements
+ * - `TryFrom<&str>` / `TryFrom<String>` will return an error if the provided
+ * string is not a valid UUID.
+ */
+export type CollectionItemId = string
+/**
+ * A statistical summary of a model railway collection.
+ * 
+ * This struct provides a high-level overview of the total quantities
+ * of different types of rolling stock within a specific inventory or sub-collection.
  */
 export type CollectionSummary = { 
 /**
- * Number of locomotives in the collection.
+ * The total number of independent traction units (Steam, Diesel, Electric).
  */
 locomotives_count: number; 
 /**
- * Number of passenger cars in the collection.
+ * The total number of individual passenger-carrying vehicles.
  */
 passenger_cars_count: number; 
 /**
- * Number of freight cars in the collection.
+ * The total number of individual goods-transporting vehicles.
  */
 freight_cars_count: number; 
 /**
- * Number of train sets in the collection.
+ * The number of complete train sets (e.g., starter sets or fixed formations).
+ * 
+ * Note: Depending on implementation, the individual cars within these sets
+ * may or may not be included in the other specific counts.
  */
 train_sets_count: number; 
 /**
- * Number of railcars in the collection.
+ * The number of self-propelled, typically single-unit passenger vehicles.
  */
 railcars_count: number; 
 /**
- * Number of electric multiple units (EMUs) in the collection.
+ * The number of self-propelled, multi-unit electric passenger formations.
  */
 electric_multiple_units_count: number }
 /**

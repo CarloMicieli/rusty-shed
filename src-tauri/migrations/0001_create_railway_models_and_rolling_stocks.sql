@@ -49,7 +49,6 @@ CREATE TABLE IF NOT EXISTS rolling_stocks
     railway_model_id            TEXT    NOT NULL,
     category                    TEXT    NOT NULL,
     railway_company_id          TEXT    NOT NULL,
-    railway_display             TEXT,
     livery                      TEXT,
     length_inches               REAL,
     length_millimeters          REAL,

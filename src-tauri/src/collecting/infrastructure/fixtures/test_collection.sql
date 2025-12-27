@@ -18,10 +18,10 @@ INSERT INTO railway_models (id, manufacturer_id, product_code, description, powe
 VALUES ('trn:railway-model:acme:60100', 'trn:manufacturer:acme', '60100', 'Locomotiva elettrica E.444.005 Tartaruga',
         'DC', 'H0', 'IV', 'Locomotives', 'Available');
 
-INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, railway_display,
+INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
                             livery, length_millimeters, technical_lights, class_name, road_number,
                             locomotive_type, dcc_interface, control, is_dummy)
-VALUES ('rs-001', 'trn:railway-model:acme:60100', 'Locomotive', 'trn:railway-company:fs', 'FS',
+VALUES ('rs-001', 'trn:railway-model:acme:60100', 'Locomotive', 'trn:railway-company:fs',
         'Grigio nebbia / Blu orientale', 195.0, 'White/Red directional', 'E.444', 'E.444.005',
         'Electric', 'MTC21', 'Analog', 0);
 
@@ -31,9 +31,9 @@ INSERT INTO railway_models (id, manufacturer_id, product_code, description, powe
 VALUES ('trn:railway-model:rivarossi:hr4315', 'trn:manufacturer:rivarossi', 'HR4315',
         'Carrozza passeggeri UIC-Z1 1a classe', 'DC', 'H0', 'V', 'Passenger_Cars', 'Available');
 
-INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, railway_display,
+INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
                             livery, length_millimeters, passenger_car_type, service_level, is_dummy)
-VALUES ('rs-002', 'trn:railway-model:rivarossi:hr4315', 'Passenger_Car', 'trn:railway-company:fs', 'FS',
+VALUES ('rs-002', 'trn:railway-model:rivarossi:hr4315', 'Passenger_Car', 'trn:railway-company:fs',
         'XMPR', 303.0, 'Express Train', 'First', 0);
 
 INSERT INTO collections(id, name)
@@ -45,5 +45,5 @@ VALUES('d20a1a95-1ae4-4970-9e87-b4c84676e730', '052cb8be-cc5c-460d-b72c-6cec595b
 INSERT INTO owned_rolling_stocks(id, collection_item_id, rolling_stock_id, notes)
 VALUES('d3606635-4c4e-462b-ae9f-02c7ce47bc770', 'd20a1a95-1ae4-4970-9e87-b4c84676e730', 'rs-001', 'My rolling stock notes go here');
 
-INSERT INTO purchase_infos(purchase_id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency)
+INSERT INTO purchase_infos(id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency)
 VALUES('59adc26d-0274-4d6b-8c14-61e598d3fe0e', 'd20a1a95-1ae4-4970-9e87-b4c84676e730', 'purchased', '2025-12-26', 17500, 'EUR');

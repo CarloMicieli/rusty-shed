@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
 );
 
 CREATE TABLE IF NOT EXISTS purchase_infos (
-     purchase_id TEXT PRIMARY KEY,
+     id TEXT PRIMARY KEY,
      collection_item_id TEXT NOT NULL,
      purchase_type TEXT,
      purchase_date TEXT NOT NULL,

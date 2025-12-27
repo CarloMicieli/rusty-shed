@@ -112,7 +112,7 @@ pub async fn get_purchase_infos(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
 ) -> Result<Vec<PurchaseInfoRow>> {
-    let sql = "SELECT pi.purchase_id, pi.collection_item_id, pi.purchase_type, pi.purchase_date, pi.seller_id, pi.buyer_id, pi.sale_date, pi.purchased_price_amount, pi.purchased_price_currency, pi.sale_price_amount, pi.sale_price_currency, pi.deposit_amount, pi.deposit_currency, pi.preorder_total_amount, pi.preorder_total_currency, pi.expected_date FROM purchase_infos pi JOIN collection_items ci ON ci.id = pi.collection_item_id WHERE ci.collection_id = ?1";
+    let sql = "SELECT pi.id, pi.collection_item_id, pi.purchase_type, pi.purchase_date, pi.seller_id, pi.buyer_id, pi.sale_date, pi.purchased_price_amount, pi.purchased_price_currency, pi.sale_price_amount, pi.sale_price_currency, pi.deposit_amount, pi.deposit_currency, pi.preorder_total_amount, pi.preorder_total_currency, pi.expected_date FROM purchase_infos pi JOIN collection_items ci ON ci.id = pi.collection_item_id WHERE ci.collection_id = ?1";
 
     let rows = sqlx::query_as::<_, PurchaseInfoRow>(sql)
         .bind(collection_id.to_string())
@@ -130,8 +130,8 @@ pub async fn get_purchase_infos(
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Result;
     use crate::collecting::domain::collection_id::CollectionId;
+    use anyhow::Result;
     use pretty_assertions::assert_eq;
     use sqlx::Sqlite;
     use sqlx::pool::PoolConnection;
@@ -184,10 +184,16 @@ mod tests {
 
         let ors = &result[0];
         assert_eq!(ors.id, "d3606635-4c4e-462b-ae9f-02c7ce47bc770");
-        assert_eq!(ors.collection_item_id, "d20a1a95-1ae4-4970-9e87-b4c84676e730");
+        assert_eq!(
+            ors.collection_item_id,
+            "d20a1a95-1ae4-4970-9e87-b4c84676e730"
+        );
         // rolling_stock_id and notes are optional in the entity mapping
         assert_eq!(ors.rolling_stock_id, Some("rs-001".to_string()));
-        assert_eq!(ors.notes, Some("My rolling stock notes go here".to_string()));
+        assert_eq!(
+            ors.notes,
+            Some("My rolling stock notes go here".to_string())
+        );
 
         Ok(())
     }
@@ -199,8 +205,11 @@ mod tests {
         assert_eq!(result.len(), 1);
 
         let pi = &result[0];
-        assert_eq!(pi.purchase_id, "59adc26d-0274-4d6b-8c14-61e598d3fe0e");
-        assert_eq!(pi.collection_item_id, "d20a1a95-1ae4-4970-9e87-b4c84676e730");
+        assert_eq!(pi.id, "59adc26d-0274-4d6b-8c14-61e598d3fe0e");
+        assert_eq!(
+            pi.collection_item_id,
+            "d20a1a95-1ae4-4970-9e87-b4c84676e730"
+        );
         assert_eq!(pi.purchase_type, Some("purchased".to_string()));
         // purchase_date is a NaiveDate; compare its string form to the fixture date
         assert_eq!(pi.purchase_date.to_string(), "2025-12-26");

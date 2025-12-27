@@ -45,7 +45,7 @@ pub struct OwnedRollingStockRow {
 /// Row mapping for the `purchase_infos` table.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct PurchaseInfoRow {
-    pub purchase_id: String,
+    pub id: String,
     pub collection_item_id: String,
     pub purchase_type: Option<String>,
     pub purchase_date: NaiveDate,

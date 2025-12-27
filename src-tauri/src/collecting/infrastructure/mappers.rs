@@ -16,7 +16,7 @@ use std::collections::HashMap;
 ///
 /// `CollectionMapper` is a zero-sized helper type that groups mapping-related
 /// functions.
-/// 
+///
 /// The mapping functions are intentionally pure (no DB access) and return
 /// `anyhow::Result` to allow the caller to surface parsing/validation errors
 /// (for example when UUIDs or monetary amounts are malformed).
@@ -143,7 +143,7 @@ impl CollectionMapper {
                 )?;
                 Ok(PurchaseInfo::Purchased(
                     crate::collecting::domain::purchase_info::PurchasedInfo {
-                        id: pi_row.purchase_id.clone(),
+                        id: pi_row.id.clone(),
                         purchase_date,
                         price,
                         seller: pi_row.seller_id.clone(),
@@ -161,7 +161,7 @@ impl CollectionMapper {
                 )?;
                 Ok(PurchaseInfo::Sold(
                     crate::collecting::domain::purchase_info::SoldInfo {
-                        id: pi_row.purchase_id.clone(),
+                        id: pi_row.id.clone(),
                         purchase_date,
                         purchase_price,
                         sale_date: pi_row.sale_date.unwrap_or(purchase_date),
@@ -182,7 +182,7 @@ impl CollectionMapper {
                 )?;
                 Ok(PurchaseInfo::PreOrdered(
                     crate::collecting::domain::purchase_info::PreOrderInfo {
-                        id: pi_row.purchase_id.clone(),
+                        id: pi_row.id.clone(),
                         order_date: purchase_date,
                         deposit: deposit.unwrap_or_default(),
                         total_price: total_price.unwrap_or_default(),
@@ -199,15 +199,15 @@ impl CollectionMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
-    use chrono::NaiveDate;
     use crate::collecting::domain::collection_id::CollectionId;
     use crate::collecting::domain::collection_item_id::CollectionItemId;
     use crate::collecting::infrastructure::entities::{
-        CollectionRow, CollectionItemRow, OwnedRollingStockRow, PurchaseInfoRow,
+        CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
     };
-    use std::collections::HashMap;
     use crate::core::domain::currency::Currency;
+    use chrono::NaiveDate;
+    use pretty_assertions::assert_eq;
+    use std::collections::HashMap;
 
     #[test]
     fn it_should_map_collection() {
@@ -223,11 +223,18 @@ mod tests {
             electric_multiple_units_count: 0,
             total_value_amount: 12345,
             total_value_currency: "EUR".to_string(),
-            created_at: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap().and_hms_opt(0, 0, 0).unwrap(),
-            updated_at: NaiveDate::from_ymd_opt(2025, 12, 27).unwrap().and_hms_opt(0, 0, 0).unwrap(),
+            created_at: NaiveDate::from_ymd_opt(2025, 12, 26)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+            updated_at: NaiveDate::from_ymd_opt(2025, 12, 27)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
         };
 
-        let mapped = CollectionMapper::row_to_collection(collection_row, vec![]).expect("mapping should succeed");
+        let mapped = CollectionMapper::row_to_collection(collection_row, vec![])
+            .expect("mapping should succeed");
 
         assert_eq!(mapped.id.to_string(), collection_id);
         assert_eq!(mapped.name, "My Test Collection");
@@ -253,16 +260,16 @@ mod tests {
             conditions: Some("new".to_string()),
             notes: Some("My notes go here".to_string()),
         };
-        
+
         let owned_rolling_stock = OwnedRollingStockRow {
             id: "d3606635-4c4e-462b-ae9f-02c7ce47bc770".to_string(),
             collection_item_id: item_id_str.clone(),
             rolling_stock_id: Some("rs-001".to_string()),
             notes: Some("My rolling stock notes go here".to_string()),
         };
-        
+
         let purchase_info = PurchaseInfoRow {
-            purchase_id: "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
+            id: "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
             collection_item_id: item_id_str.clone(),
             purchase_type: Some("purchased".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
@@ -281,14 +288,20 @@ mod tests {
         };
 
         let collection_item_id = CollectionItemId::try_from(&item_id_str).expect("valid uuid");
-        let mut owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> = HashMap::new();
+        let mut owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
+            HashMap::new();
         owned_rolling_stocks_map.insert(collection_item_id.clone(), vec![owned_rolling_stock]);
 
-        let mut purchase_infos_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = HashMap::new();
+        let mut purchase_infos_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> =
+            HashMap::new();
         purchase_infos_map.insert(collection_item_id.clone(), vec![purchase_info]);
 
-        let mapped_item = CollectionMapper::row_to_collection_item(collection_item, &owned_rolling_stocks_map, &purchase_infos_map)
-            .expect("mapping item should succeed");
+        let mapped_item = CollectionMapper::row_to_collection_item(
+            collection_item,
+            &owned_rolling_stocks_map,
+            &purchase_infos_map,
+        )
+        .expect("mapping item should succeed");
 
         assert_eq!(mapped_item.id.to_string(), item_id_str);
         assert_eq!(mapped_item.railway_model_id, "trn:railway-model:acme:60100");
@@ -318,7 +331,7 @@ mod tests {
     #[test]
     fn it_should_map_row_to_purchase_info_purchased() {
         let pi_row = PurchaseInfoRow {
-            purchase_id: "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
+            id: "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
             collection_item_id: "d20a1a95-1ae4-4970-9e87-b4c84676e730".to_string(),
             purchase_type: Some("purchased".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
@@ -353,7 +366,7 @@ mod tests {
     #[test]
     fn it_should_map_row_to_purchase_info_sold() {
         let pi_row = PurchaseInfoRow {
-            purchase_id: "sold-purchase-0000-0000-0000-000000000000".to_string(),
+            id: "sold-purchase-0000-0000-0000-000000000000".to_string(),
             collection_item_id: "00000000-0000-0000-0000-000000000001".to_string(),
             purchase_type: Some("sold".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2024, 5, 10).unwrap(),
@@ -374,7 +387,10 @@ mod tests {
         let pi = CollectionMapper::row_to_purchase_info(&pi_row).expect("mapping purchase info");
         match pi {
             PurchaseInfo::Sold(s) => {
-                assert_eq!(s.id, "sold-purchase-0000-0000-0000-000000000000".to_string());
+                assert_eq!(
+                    s.id,
+                    "sold-purchase-0000-0000-0000-000000000000".to_string()
+                );
                 assert_eq!(s.purchase_date.to_string(), "2024-05-10");
                 let purchase_price = s.purchase_price.expect("purchase price present");
                 assert_eq!(purchase_price.amount, 20000u64);
@@ -392,7 +408,7 @@ mod tests {
     #[test]
     fn it_should_map_row_to_purchase_info_preorder() {
         let pi_row = PurchaseInfoRow {
-            purchase_id: "preorder-purchase-0000-0000-0000-000000000000".to_string(),
+            id: "preorder-purchase-0000-0000-0000-000000000000".to_string(),
             collection_item_id: "00000000-0000-0000-0000-000000000002".to_string(),
             purchase_type: Some("preorder".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
@@ -413,14 +429,20 @@ mod tests {
         let pi = CollectionMapper::row_to_purchase_info(&pi_row).expect("mapping purchase info");
         match pi {
             PurchaseInfo::PreOrdered(po) => {
-                assert_eq!(po.id, "preorder-purchase-0000-0000-0000-000000000000".to_string());
+                assert_eq!(
+                    po.id,
+                    "preorder-purchase-0000-0000-0000-000000000000".to_string()
+                );
                 assert_eq!(po.order_date.to_string(), "2025-06-01");
                 assert_eq!(po.deposit.amount, 500u64);
                 assert_eq!(po.deposit.currency, Currency::EUR);
                 assert_eq!(po.total_price.amount, 1000u64);
                 assert_eq!(po.total_price.currency, Currency::EUR);
                 assert_eq!(po.seller, Some("preorder-shop".to_string()));
-                assert_eq!(po.expected_date.map(|d| d.to_string()), Some("2025-12-01".to_string()));
+                assert_eq!(
+                    po.expected_date.map(|d| d.to_string()),
+                    Some("2025-12-01".to_string())
+                );
             }
             _ => panic!("expected PreOrdered variant"),
         }
