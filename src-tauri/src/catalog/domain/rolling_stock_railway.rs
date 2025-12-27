@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_id::RailwayId;
+use crate::catalog::domain::railway_company_id::RailwayCompanyId;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -12,7 +12,7 @@ use std::fmt;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, specta::Type)]
 pub struct RollingStockRailway {
     /// the railway unique identifier
-    pub railway_id: RailwayId,
+    pub railway_id: RailwayCompanyId,
     /// the railway display name
     pub display: String,
 }
@@ -20,7 +20,7 @@ pub struct RollingStockRailway {
 impl RollingStockRailway {
     /// Creates a new `RollingStockRailway` with the given `railway_id` and
     /// human-friendly `display` text.
-    pub fn new(railway_id: RailwayId, display: &str) -> Self {
+    pub fn new(railway_id: RailwayCompanyId, display: &str) -> Self {
         RollingStockRailway {
             railway_id,
             display: display.to_owned(),
@@ -28,7 +28,7 @@ impl RollingStockRailway {
     }
 
     /// Returns this railway's unique identifier.
-    pub fn id(&self) -> &RailwayId {
+    pub fn id(&self) -> &RailwayCompanyId {
         &self.railway_id
     }
 

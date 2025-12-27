@@ -468,7 +468,7 @@ mod test {
     use super::*;
     use crate::catalog::domain::coupling::Coupling;
     use crate::catalog::domain::coupling_socket::CouplingSocket;
-    use crate::catalog::domain::railway_id::RailwayId;
+    use crate::catalog::domain::railway_company_id::RailwayCompanyId;
     use crate::core::domain::length::Length;
 
     mod locomotives {
@@ -482,7 +482,7 @@ mod test {
         fn it_should_create_new_locomotives() {
             let id = RollingStockId::new();
             let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(210)));
-            let fs = RollingStockRailway::new(RailwayId::new("fs"), "FS");
+            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
 
             let tech_specs = technical_specification();
 
@@ -517,7 +517,7 @@ mod test {
         fn it_should_create_new_electric_multiple_units() {
             let id = RollingStockId::new();
             let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayId::new("fs"), "FS");
+            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
 
             let tech_specs = technical_specification();
 
@@ -555,7 +555,7 @@ mod test {
         fn it_should_create_new_passenger_cars() {
             let id = RollingStockId::new();
             let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayId::new("fs"), "FS");
+            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
 
             let tech_specs = technical_specification();
 
@@ -587,7 +587,7 @@ mod test {
         fn it_should_create_new_railcars() {
             let id = RollingStockId::new();
             let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayId::new("fs"), "FS");
+            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
 
             let tech_specs = technical_specification();
 
@@ -622,7 +622,7 @@ mod test {
         fn it_should_create_new_freight_cars() {
             let id = RollingStockId::new();
             let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayId::new("fs"), "FS");
+            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
 
             let tech_specs = technical_specification();
 

@@ -5,6 +5,7 @@
 //! minimal and optional where the underlying database allows null values.
 
 use crate::catalog::domain::period_of_activity::PeriodOfActivity;
+use crate::catalog::domain::railway_company_id::RailwayCompanyId;
 use serde::{Deserialize, Serialize};
 
 /// A railway company (operator or owner).
@@ -13,6 +14,9 @@ use serde::{Deserialize, Serialize};
 /// because the corresponding database columns may be nullable.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RailwayCompany {
+    /// Unique identifier for the railway company.
+    pub id: RailwayCompanyId,
+
     /// The common name of the railway company (not null).
     pub name: String,
 

@@ -18,7 +18,7 @@ pub mod power_method;
 pub mod product_code;
 pub mod radius;
 pub mod railway_company;
-pub mod railway_id;
+pub mod railway_company_id;
 pub mod railway_model;
 pub mod railway_model_id;
 pub mod railway_status;
