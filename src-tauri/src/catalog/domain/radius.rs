@@ -1,3 +1,4 @@
+// src-tauri/src/catalog/domain/radius.rs
 use crate::core::domain::length::Length;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -5,12 +6,23 @@ use std::fmt;
 use std::fmt::Formatter;
 use thiserror::Error;
 
-/// The minimum drivable radius
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
+/// Domain types for handling minimum drivable radii.
+///
+/// A `Radius` wraps a `Length` expressed in millimeters and enforces
+/// that the value is non-negative.
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize, specta::Type)]
 pub struct Radius(#[serde(with = "crate::core::domain::length::serde::millimeters")] Length);
 
 impl Radius {
-    /// Returns a drivable radius expressed in millimeters
+    /// Create a new `Radius` from a millimeters value.
+    ///
+    /// The provided `value` is interpreted as millimeters. Returns
+    /// `Ok(Radius)` if `value` is positive, otherwise returns
+    /// `Err(RadiusError::NegativeRadius)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `RadiusError::NegativeRadius` when `value` is negative.
     pub fn from_millimeters(value: Decimal) -> Result<Self, RadiusError> {
         if value.is_sign_positive() {
             Ok(Radius(Length::Millimeters(value)))
@@ -19,7 +31,9 @@ impl Radius {
         }
     }
 
-    /// Returns the value for this radius
+    /// Return the underlying `Length` for this radius.
+    ///
+    /// The returned `Length` is expressed in millimeters.
     pub fn value(&self) -> Length {
         self.0
     }
@@ -31,6 +45,7 @@ impl fmt::Display for Radius {
     }
 }
 
+/// Errors that can occur when creating a `Radius`.
 #[derive(Debug, Eq, PartialEq, Error)]
 pub enum RadiusError {
     #[error("radius cannot be negative")]

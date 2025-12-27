@@ -1,12 +1,3 @@
-//! Utilities for representing and working with a length-over-buffers value.
-//!
-//! This module provides the `LengthOverBuffers` value object which stores a
-//! rail vehicle's overall length expressed both in inches and in
-//! millimeters. The type is careful to keep the two representations in
-//! sync and validates inputs via `LengthOverBuffers::new`. Use the
-//! convenience constructors `from_inches` and `from_millimeters` when you
-//! already have a `Length` value in the desired unit.
-
 use crate::core::domain::length::Length;
 use crate::core::domain::measure_units::MeasureUnit;
 use rust_decimal::Decimal;
@@ -20,7 +11,7 @@ use thiserror::Error;
 /// physical measure (the constructor will validate that). Values must be
 /// positive. The type implements `Copy`/`Clone` and (de)serializes with
 /// serde using the helpers in `crate::core::domain::length::serde`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, specta::Type)]
 #[serde(default)]
 pub struct LengthOverBuffers {
     /// the overall length in inches

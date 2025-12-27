@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// It contains metadata about the product (manufacturer, product code,
 /// scale, epoch, etc.) and a list of `RollingStock` instances that correspond
 /// to specific owned or catalogued items of this model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, specta::Type)]
 pub struct RailwayModel {
     /// Unique identifier for the railway model.
     pub id: RailwayModelId,

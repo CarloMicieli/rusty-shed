@@ -16,7 +16,7 @@ use std::fmt::{self, Display, Formatter};
 /// Parsing: `TryFrom<&str>` is implemented and accepts the string forms above
 /// (whitespace is trimmed). Formatting: `Display` is implemented and produces
 /// the corresponding string representation.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ServiceLevel {
     First,

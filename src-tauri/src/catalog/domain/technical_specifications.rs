@@ -8,7 +8,7 @@ pub use crate::catalog::domain::feature_flag::FeatureFlag;
 pub use crate::catalog::domain::radius::{Radius, RadiusError};
 
 /// The technical specification data for a rolling stock model
-#[derive(Debug, Eq, PartialEq, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Default, Serialize, Deserialize, specta::Type)]
 pub struct TechnicalSpecifications {
     /// the minimum drivable radius
     pub minimum_radius: Option<Radius>,

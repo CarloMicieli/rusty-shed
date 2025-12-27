@@ -9,7 +9,7 @@ use std::fmt;
 /// user interfaces and listings. This is a lightweight DTO-like value used in
 /// domains where the rolling stock's owning or related railway must be shown
 /// or serialized.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, specta::Type)]
 pub struct RollingStockRailway {
     /// the railway unique identifier
     pub railway_id: RailwayId,

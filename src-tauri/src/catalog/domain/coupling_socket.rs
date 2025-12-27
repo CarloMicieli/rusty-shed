@@ -2,7 +2,17 @@ use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, EnumString, Display, Default,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    EnumString,
+    Display,
+    Default,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
@@ -64,7 +74,6 @@ mod tests {
     #[case("NEM_360", Ok(CouplingSocket::Nem360))]
     #[case("NEM_362", Ok(CouplingSocket::Nem362))]
     #[case("NEM_365", Ok(CouplingSocket::Nem365))]
-    #[case("invalid", Err(ParseError::VariantNotFound))]
     fn it_should_parse_strings_as_couplings(
         #[case] input: &str,
         #[case] expected: Result<CouplingSocket, ParseError>,
@@ -84,5 +93,11 @@ mod tests {
     #[case(CouplingSocket::Nem365, "NEM_365")]
     fn it_should_display_couplings(#[case] input: CouplingSocket, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
+    }
+
+    #[test]
+    fn parse_invalid_returns_error() {
+        let result = "NOT_A_COUPLING".parse::<CouplingSocket>();
+        assert_eq!(Err(ParseError::VariantNotFound), result);
     }
 }

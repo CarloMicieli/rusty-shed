@@ -202,15 +202,32 @@ impl From<EpochKind> for Epoch {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use rstest::rstest;
 
     #[rstest]
     #[case("I", EpochKind::Single { epoch: BaseEpoch::I, half: None })]
     #[case("Ia", EpochKind::Single { epoch: BaseEpoch::I, half: Some(Half::A) })]
     #[case("Ib", EpochKind::Single { epoch: BaseEpoch::I, half: Some(Half::B) })]
+    #[case("II", EpochKind::Single { epoch: BaseEpoch::II, half: None })]
+    #[case("IIa", EpochKind::Single { epoch: BaseEpoch::II, half: Some(Half::A) })]
+    #[case("IIb", EpochKind::Single { epoch: BaseEpoch::II, half: Some(Half::B) })]
+    #[case("III", EpochKind::Single { epoch: BaseEpoch::III, half: None })]
+    #[case("IIIa", EpochKind::Single { epoch: BaseEpoch::III, half: Some(Half::A) })]
+    #[case("IIIb", EpochKind::Single { epoch: BaseEpoch::III, half: Some(Half::B) })]
+    #[case("IV", EpochKind::Single { epoch: BaseEpoch::IV, half: None })]
+    #[case("IVa", EpochKind::Single { epoch: BaseEpoch::IV, half: Some(Half::A) })]
+    #[case("IVb", EpochKind::Single { epoch: BaseEpoch::IV, half: Some(Half::B) })]
+    #[case("V", EpochKind::Single { epoch: BaseEpoch::V, half: None })]
+    #[case("Va", EpochKind::Single { epoch: BaseEpoch::V, half: Some(Half::A) })]
+    #[case("Vb", EpochKind::Single { epoch: BaseEpoch::V, half: Some(Half::B) })]
+    #[case("VI", EpochKind::Single { epoch: BaseEpoch::VI, half: None })]
     #[case("Vm", EpochKind::Museum)]
     #[case("I/II", EpochKind::Range { start: BaseEpoch::I, end: BaseEpoch::II })]
     #[case("II/III", EpochKind::Range { start: BaseEpoch::II, end: BaseEpoch::III })]
+    #[case("III/IV", EpochKind::Range { start: BaseEpoch::III, end: BaseEpoch::IV })]
+    #[case("IV/V", EpochKind::Range { start: BaseEpoch::IV, end: BaseEpoch::V })]
+    #[case("V/VI", EpochKind::Range { start: BaseEpoch::V, end: BaseEpoch::VI })]
     fn parse_valid(#[case] s: &str, #[case] expected: EpochKind) {
         let parsed = EpochKind::try_from(s).expect("should parse");
         assert_eq!(parsed, expected);

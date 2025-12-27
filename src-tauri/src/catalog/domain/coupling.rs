@@ -2,7 +2,7 @@ use crate::catalog::domain::{CouplingSocket, FeatureFlag};
 use serde::{Deserialize, Serialize};
 
 /// It represents the coupling configuration for a rolling stock.
-#[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 pub struct Coupling {
     /// the rolling stock coupling socket
     pub socket: Option<CouplingSocket>,

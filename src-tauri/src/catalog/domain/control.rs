@@ -1,17 +1,3 @@
-//! Control metadata for a railway model.
-//!
-//! This module defines the `Control` enum which describes the presence and
-//! state of DCC (Digital Command Control) fittings on a model locomotive.
-//!
-//! Serialization and parsing
-//! - The enum uses `serde` with `rename_all = "SCREAMING_SNAKE_CASE"`, so
-//!   JSON serialization will produce values like `"DCC_READY"` or
-//!   `"NO_DCC"`.
-//! - `strum_macros::EnumString` is also derived and configured to use
-//!   screaming snake case and ASCII case-insensitive parsing. This makes
-//!   `Control::try_from("dcc_ready")` and `Control::try_from("DCC_READY")`
-//!   both succeed.
-
 use serde::Deserialize;
 use serde::Serialize;
 use strum_macros;
@@ -29,7 +15,9 @@ use strum_macros::{Display, EnumString};
 /// - `DccSound`: A DCC decoder with a sound module is installed.
 /// - `NoDcc`: The model does not support DCC (no standard interface present);
 ///   installation may require model-specific wiring or a hardwired decoder.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize)]
+#[derive(
+    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -61,7 +49,9 @@ impl Control {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use rstest::rstest;
+    use strum::ParseError;
 
     #[rstest]
     #[case(Control::DccFitted, true)]
@@ -70,5 +60,26 @@ mod tests {
     #[case(Control::NoDcc, false)]
     fn has_decoder_cases(#[case] input: Control, #[case] expected: bool) {
         assert_eq!(expected, input.has_decoder());
+    }
+
+    #[rstest]
+    #[case("DCC_READY", Ok(Control::DccReady))]
+    #[case("DCC_FITTED", Ok(Control::DccFitted))]
+    #[case("DCC_SOUND", Ok(Control::DccSound))]
+    #[case("NO_DCC", Ok(Control::NoDcc))]
+    // verify ascii case-insensitive parsing
+    #[case("dcc_sound", Ok(Control::DccSound))]
+    fn parse_control(#[case] input: &str, #[case] expected: Result<Control, ParseError>) {
+        let result = input.parse::<Control>();
+        assert_eq!(expected, result);
+    }
+
+    #[rstest]
+    #[case(Control::DccReady, "DCC_READY")]
+    #[case(Control::DccFitted, "DCC_FITTED")]
+    #[case(Control::DccSound, "DCC_SOUND")]
+    #[case(Control::NoDcc, "NO_DCC")]
+    fn display_control(#[case] input: Control, #[case] expected: &str) {
+        assert_eq!(expected, input.to_string());
     }
 }

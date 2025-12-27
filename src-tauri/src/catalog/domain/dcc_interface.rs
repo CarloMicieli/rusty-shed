@@ -1,25 +1,5 @@
-//! NMRA / NEM DCC connector types for digital decoder interfaces.
-//!
-//! Overview
-//! --------
-//! These enums represent the common mechanical/electrical decoder connector
-//! standards (NMRA / NEM) used to attach multifunction DCC decoders to a
-//! locomotive's wiring. Each variant maps to a canonical external string
-//! used for serialization (see `serde(rename = "...")`) and for textual
-//! parsing via `strum`'s `EnumString` derive.
-//!
-//! Practical notes
-//! - Some locomotives include a blanking plug that must be removed before a
-//!   decoder can be installed. Others are not DCC-ready and require a
-//!   hardwired decoder or a model-specific control board replacement.
-//! - The enum values serialize to strings such as `"NEM_651"` or `"PLUX_8"`
-//!   (these values are defined by the `serde(rename = "...")` attributes).
-//! - Parsing from strings uses `str::FromStr` (provided by `strum_macros::EnumString`).
-//!   In the current setup parsing is case-sensitive; to support case-insensitive
-//!   parsing you can add the appropriate `strum` attributes.
-
 use serde::{Deserialize, Serialize};
-use strum_macros::EnumString;
+use strum_macros::{Display, EnumString};
 
 /// The NMRA and NEM Connectors for digital control (DCC)
 ///
@@ -31,7 +11,10 @@ use strum_macros::EnumString;
 /// In many cases a blanking plug must be removed before installing the decoder. If a locomotive
 /// is not DCC-Ready it will lack an interface and must use a Hardwired Decoder or a drop-in
 /// replacement DCC control board (if available) for that specific model.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, Serialize, Deserialize)]
+#[derive(
+    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+)]
+#[strum(ascii_case_insensitive)]
 pub enum DccInterface {
     /// 6 Pin standard mechanical and electrical interfaces (NMRA Small)
     #[serde(rename = "NEM_651")]
@@ -81,4 +64,59 @@ pub enum DccInterface {
     #[serde(rename = "MTC_21")]
     #[strum(serialize = "MTC_21")]
     Mtc21,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use rstest::rstest;
+    use strum::ParseError;
+
+    #[rstest]
+    #[case("NEM_651", Ok(DccInterface::Nem651))]
+    #[case("NEM_652", Ok(DccInterface::Nem652))]
+    #[case("NEM_654", Ok(DccInterface::Nem654))]
+    #[case("PLUX_8", Ok(DccInterface::Plux8))]
+    #[case("PLUX_12", Ok(DccInterface::Plux12))]
+    #[case("PLUX_16", Ok(DccInterface::Plux16))]
+    #[case("PLUX_22", Ok(DccInterface::Plux22))]
+    #[case("NEXT_18", Ok(DccInterface::Next18))]
+    #[case("NEXT_18_S", Ok(DccInterface::Next18S))]
+    #[case("MTC_21", Ok(DccInterface::Mtc21))]
+    fn parse_shouting_case(
+        #[case] input: &str,
+        #[case] expected: Result<DccInterface, ParseError>,
+    ) {
+        let result = input.parse::<DccInterface>();
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn parse_invalid_returns_error() {
+        let result = "NO_SUCH_INTERFACE".parse::<DccInterface>();
+        assert_eq!(Err(ParseError::VariantNotFound), result);
+    }
+
+    #[test]
+    fn parse_lowercase() {
+        // ascii_case_insensitive should accept lowercase
+        let result = "nem_651".parse::<DccInterface>();
+        assert_eq!(Ok(DccInterface::Nem651), result);
+    }
+
+    #[rstest]
+    #[case(DccInterface::Nem651, "NEM_651")]
+    #[case(DccInterface::Nem652, "NEM_652")]
+    #[case(DccInterface::Nem654, "NEM_654")]
+    #[case(DccInterface::Plux8, "PLUX_8")]
+    #[case(DccInterface::Plux12, "PLUX_12")]
+    #[case(DccInterface::Plux16, "PLUX_16")]
+    #[case(DccInterface::Plux22, "PLUX_22")]
+    #[case(DccInterface::Next18, "NEXT_18")]
+    #[case(DccInterface::Next18S, "NEXT_18_S")]
+    #[case(DccInterface::Mtc21, "MTC_21")]
+    fn display_variants(#[case] input: DccInterface, #[case] expected: &str) {
+        assert_eq!(expected, input.to_string());
+    }
 }

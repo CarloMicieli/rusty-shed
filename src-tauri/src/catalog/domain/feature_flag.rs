@@ -1,19 +1,39 @@
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
-/// A flag to indicate the presence/absence of a given technical specification feature
+/// Represents the availability or relevance of a specific model feature.
+///
+/// This is often used for technical specifications where a feature might
+/// exist, be intentionally absent, or simply not be relevant to that
+/// specific class of locomotive or rolling stock.
 #[derive(
-    Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize, EnumString, Display, Default,
+    Debug,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Serialize,
+    Deserialize,
+    EnumString,
+    Display,
+    Default,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum FeatureFlag {
-    /// Yes: the feature is present
+    /// The feature is present and functional on the model.
     Yes,
-    /// No: the feature is missing
+
+    /// The feature is not present on the model, though it might be
+    /// expected or available on similar models.
     No,
-    /// The feature is not applicable
+
+    /// The feature is not relevant for this type of equipment.
+    ///
+    /// For example, a "Pantograph Type" flag would be `NotApplicable`
+    /// for a Steam Locomotive.
     #[default]
     NotApplicable,
 }

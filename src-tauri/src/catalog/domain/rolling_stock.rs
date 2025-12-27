@@ -11,8 +11,9 @@ use crate::catalog::domain::rolling_stock_railway::RollingStockRailway;
 use crate::catalog::domain::technical_specifications::TechnicalSpecifications;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(tag = "category")]
+#[specta(tag = "category", content = "data")]
 pub enum RollingStock {
     /// an electric multiple unit rolling stock
     ElectricMultipleUnit {

@@ -22,7 +22,6 @@
 
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use sqlx::Type;
 use std::fmt;
 use std::fmt::Formatter;
 use std::str;
@@ -40,8 +39,9 @@ use uuid::Uuid;
 ///   column in SQLite/Postgres when using `sqlx`.
 /// - `Serialize`/`Deserialize` derive implementations allow easy JSON
 ///   encoding for APIs or fixtures.
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, Serialize, Deserialize, Type)]
-#[sqlx(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, Serialize, Deserialize, specta::Type)]
+#[serde(transparent)]
+#[specta(transparent)]
 pub struct RollingStockId(Uuid);
 
 impl RollingStockId {
