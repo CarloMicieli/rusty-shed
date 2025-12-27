@@ -3,6 +3,7 @@ pub mod collecting;
 pub mod core;
 pub mod db;
 pub mod state;
+pub mod wishlist;
 
 #[cfg(test)]
 pub mod test_utils;
@@ -10,6 +11,7 @@ pub mod test_utils;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::state::AppState;
+use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
 use specta_typescript::{BigIntExportBehavior, Typescript};
@@ -41,6 +43,7 @@ pub fn run() {
         catalog_command_handlers::get_railway_model_by_id,
         catalog_command_handlers::get_railway_company_by_id,
         collecting_command_handlers::get_collection,
+        wishlist_command_handlers::get_wishlist_by_id,
         get_app_version
     ]);
 
