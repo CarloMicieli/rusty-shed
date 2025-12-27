@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS railway_companies
     registered_company_name TEXT,
     country_code            TEXT,
     status                  TEXT,
+    operating_since         TEXT,
+    operating_until         TEXT,
     created_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

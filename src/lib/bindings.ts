@@ -9,6 +9,63 @@ async isDbInitialized() : Promise<boolean> {
     return await TAURI_INVOKE("is_db_initialized");
 },
 /**
+ * Retrieve a manufacturer by its identifier.
+ * 
+ * Parses the provided `manufacturer_id` into a domain `ManufacturerId`,
+ * acquires a database connection from the application state, and queries the
+ * repository for the matching `Manufacturer`.
+ * 
+ * # Arguments
+ * 
+ * * `state` - Tauri-managed application `AppState` (provides DB pool).
+ * * `manufacturer_id` - The manufacturer identifier as a `String`.
+ * 
+ * # Returns
+ * 
+ * Returns `Ok(Some(Manufacturer))` when a matching manufacturer exists,
+ * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
+ * ID cannot be parsed or a database error occurs.
+ */
+async getManufacturerById(manufacturerId: string) : Promise<Result<Manufacturer | null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_manufacturer_by_id", { manufacturerId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Retrieve a railway company by its identifier.
+ * 
+ * Parses the provided `railway_company_id` into a domain `RailwayCompanyId`,
+ * acquires a database connection from the application state, and queries the
+ * repository for the matching `RailwayCompany`.
+ * 
+ * # Arguments
+ * 
+ * * `state` - Tauri-managed application `AppState` (provides DB pool).
+ * * `railway_company_id` - The railway company identifier as a `String`.
+ * 
+ * # Returns
+ * 
+ * Returns `Ok(Some(RailwayCompany))` when a matching company exists,
+ * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
+ * ID cannot be parsed or a database error occurs.
+ * 
+ * # Errors
+ * 
+ * Parsing errors for the identifier and database errors are mapped to
+ * `CommandError` and returned to the caller.
+ */
+async getRailwayCompanyById(railwayCompanyId: string) : Promise<Result<RailwayCompany | null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_railway_company_by_id", { railwayCompanyId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Tauri command to retrieve the current collection.
  * 
  * This handler constructs the repository and use-case, executes the use-case
@@ -224,6 +281,41 @@ export type Currency =
  */
 "JPY"
 /**
+ * A manufacturer (maker of railway models).
+ * 
+ * Fields reflect the `manufacturers` table in the database. Optional fields
+ * correspond to nullable DB columns.
+ */
+export type Manufacturer = { 
+/**
+ * Unique identifier for the manufacturer.
+ */
+id: ManufacturerId; 
+/**
+ * The common name of the manufacturer (not null).
+ */
+name: string; 
+/**
+ * The legally registered company name (nullable).
+ */
+registered_company_name: string | null; 
+/**
+ * The ISO 3166-1 alpha-2 country code where the company is registered
+ * (nullable). Example: `"IT"` for Italy.
+ */
+country_code: string | null; 
+/**
+ * The lifecycle status of the manufacturer. Defaults to `Active`.
+ */
+status: ManufacturerStatus }
+export type ManufacturerId = string
+/**
+ * Status of a manufacturer lifecycle.
+ * 
+ * Serialized as SCREAMING_SNAKE_CASE; parsing is case-insensitive.
+ */
+export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS"
+/**
  * A monetary amount in the smallest currency unit together with its currency.
  * 
  * `MonetaryAmount` stores the raw integer amount (e.g. cents) in `amount` and
@@ -283,6 +375,22 @@ rolling_stock_id: string;
  * Use this for short owner notes or a brief textual label.
  */
 notes: string }
+/**
+ * It represents the period of activity for a railway company
+ */
+export type PeriodOfActivity = { 
+/**
+ * the date when the railway started its operation
+ */
+operating_since: string | null; 
+/**
+ * the date when the railway ended its operation, if not active anymore
+ */
+operating_until: string | null; 
+/**
+ * the railway status
+ */
+status: RailwayStatus }
 /**
  * Details for a pre-order entry.
  * 
@@ -370,6 +478,52 @@ price: MonetaryAmount | null;
  * Optional seller identifier or human-friendly name.
  */
 seller: string | null }
+/**
+ * A railway company (operator or owner).
+ * 
+ * This struct models a real-world railway company. Some fields are optional
+ * because the corresponding database columns may be nullable.
+ */
+export type RailwayCompany = { 
+/**
+ * Unique identifier for the railway company.
+ */
+id: RailwayCompanyId; 
+/**
+ * The common name of the railway company (not null).
+ */
+name: string; 
+/**
+ * The legally registered company name (nullable).
+ */
+registered_company_name: string | null; 
+/**
+ * The ISO 3166-1 alpha-2 country code where the company is registered
+ * (nullable). Example: `"IT"` for Italy.
+ */
+country_code: string | null; 
+/**
+ * The period of activity of the railway company (nullable).
+ */
+period_of_activity: PeriodOfActivity | null }
+/**
+ * Strongly-typed identifier for a railway in the catalog domain.
+ * 
+ * `RailwayId` wraps a string value and provides a distinct type instead of
+ * using plain strings everywhere. This improves type safety and makes intent
+ * explicit in function signatures and data structures.
+ * 
+ * The inner string is kept private to allow the crate to enforce invariants
+ * or to provide controlled constructors/parsers elsewhere. `RailwayId` also
+ * derives Serde traits so it serializes/deserializes as a plain string.
+ * 
+ * Requirements
+ * - The railway id MUST be a non-empty, non-blank string. Constructions via
+ * `TryFrom<&str>` / `TryFrom<String>` will return an error if the input is
+ * empty or contains only whitespace.
+ */
+export type RailwayCompanyId = string
+export type RailwayStatus = "ACTIVE" | "INACTIVE"
 /**
  * Details for an item that was sold.
  * 
