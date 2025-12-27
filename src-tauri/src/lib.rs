@@ -10,6 +10,7 @@ pub mod core;
 #[cfg(test)]
 pub mod test_utils;
 
+use crate::collecting::interface::command_handlers;
 use crate::state::AppState;
 use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
@@ -36,7 +37,7 @@ pub fn run() {
 
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         is_db_initialized,
-        crate::collecting::interface::command_handlers::get_collection,
+        command_handlers::get_collection,
         get_app_version
     ]);
 

@@ -54,33 +54,25 @@ pub async fn get_collection(state: tauri::State<'_, AppState>) -> Result<Collect
 mod tests {
     use super::*;
     use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-    use crate::db::init_in_memory_db_pool;
     use pretty_assertions::assert_eq;
+    use sqlx::SqlitePool;
 
-    #[tokio::test]
-    async fn command_get_collection_returns_empty() {
-        // 1. Setup: Create the isolated in-memory DB
-        let pool = init_in_memory_db_pool().await.expect("init in-memory pool");
-
-        // 2. Initialize the Use Case (now stateless)
+    #[sqlx::test]
+    async fn get_collection_use_case(pool: SqlitePool) {
         let use_case = GetCollectionUseCase::new();
 
-        // 3. Start the Unit of Work (Transaction)
         let mut uow = SqliteUnitOfWork::new(&pool)
             .await
             .expect("Failed to begin unit of work");
 
-        // 4. Execute the Use Case passing the UoW context
         let found_collection = use_case
             .execute(&mut uow)
             .await
             .expect("get_collection execution failed");
 
-        // 5. Assertions
         assert_eq!(found_collection.name, "My Collection");
         assert_eq!(found_collection.items.len(), 0);
 
-        // 6. Cleanup: Explicitly commit if changes were made (optional for read-only tests)
         uow.commit().await.expect("commit failed");
     }
 }

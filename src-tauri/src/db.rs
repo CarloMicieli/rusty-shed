@@ -1,17 +1,9 @@
-//! Database utilities for the Tauri backend.
-//!
-//! This module provides helpers to initialize a connection pool to a
-//! SQLite database used by the application. Migrations are embedded at
-//! compile time and can be run by code that uses the provided
-//! `MIGRATOR` value.
-
 use log::error;
 use sqlx::migrate::Migrator;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use sqlx::{Sqlite, migrate::MigrateDatabase};
 use std::path::PathBuf;
 use thiserror::Error;
-use uuid::Uuid;
 use xdg::BaseDirectories;
 
 /// Embedded SQL migrations for the application.
@@ -72,48 +64,6 @@ pub async fn init_db_pool() -> Result<SqlitePool, SqliteDbError> {
     Ok(pool)
 }
 
-/// Initialize and return an in-memory SQLite connection pool for tests.
-///
-/// This creates a unique, named in-memory database using a generated UUID
-/// (for example: `sqlite:file:memdb-<uuid>?mode=memory&cache=shared`).
-/// Because the database has a unique name each call returns an isolated
-/// database instance. `cache=shared` allows multiple connections from the
-/// returned pool to observe the same in-memory DB (so the pool's internal
-/// connections see a consistent state).
-///
-/// The function will:
-/// - generate a UUID-based name for the in-memory DB,
-/// - construct the named in-memory SQLite URL with `mode=memory&cache=shared`,
-/// - create a `SqlitePool` (max 5 connections),
-/// - run the embedded migrations (`MIGRATOR`) against that pool, and
-/// - return the migrated, ready-to-use pool.
-///
-/// This design avoids cross-test interference and migration races when
-/// multiple tests run in parallel because each call targets a separate
-/// in-memory database. Use this helper in tests that require an isolated
-/// transient database. Note that in-memory databases are scoped to the
-/// process — they are not shared across processes.
-///
-/// Returns `Ok(SqlitePool)` on success or a `SqliteDbError` on failure.
-#[allow(dead_code)]
-pub async fn init_in_memory_db_pool() -> Result<SqlitePool, SqliteDbError> {
-    // Use a per-call UUID-backed named in-memory database so multiple
-    // tests running in the same process get isolated databases while
-    // still allowing the pool's connections to share the same DB.
-    let id = Uuid::new_v4();
-    let db_url = format!("sqlite:file:memdb-{}?mode=memory&cache=shared", id);
-
-    let pool = SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(&db_url)
-        .await?;
-
-    // Run migrations against the in-memory database before returning.
-    MIGRATOR.run(&pool).await?;
-
-    Ok(pool)
-}
-
 /// Errors that can occur while preparing or working with the SQLite DB.
 #[derive(Error, Debug)]
 pub enum SqliteDbError {
@@ -124,24 +74,4 @@ pub enum SqliteDbError {
     /// Errors related to running embedded migrations.
     #[error("migration error: {0}")]
     MigrationError(#[from] sqlx::migrate::MigrateError),
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use sqlx::Row;
-
-    #[tokio::test]
-    async fn in_memory_db_pool_runs_migrations_and_queries() {
-        // Initialize an in-memory pool which will run migrations.
-        let pool = init_in_memory_db_pool().await.expect("init in-memory pool");
-
-        // Run a simple query to ensure the pool is usable.
-        let row = sqlx::query("SELECT 1 as v")
-            .fetch_one(&pool)
-            .await
-            .expect("select 1");
-        let v: i64 = row.get("v");
-        assert_eq!(v, 1);
-    }
 }
