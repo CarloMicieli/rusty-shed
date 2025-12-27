@@ -82,7 +82,7 @@ mod tests {
     fn deref_to_str() {
         let id = RailwayModelId::try_from("R-1").unwrap();
         // Deref should allow &*id to be &str
-        let s: &str = &*id;
+        let s: &str = &id;
         assert_eq!(s, "R-1");
     }
 

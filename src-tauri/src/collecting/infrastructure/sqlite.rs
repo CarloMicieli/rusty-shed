@@ -240,7 +240,7 @@ mod tests {
         let ors = get_owned_rolling_stocks(&pool, &collection_id).await?;
         assert_eq!(ors.len(), data.owned_rolling_stock_ids.len());
 
-        let first_owned_id = data.owned_rolling_stock_ids.get(0).unwrap().clone();
+        let first_owned_id = data.owned_rolling_stock_ids.first().unwrap().clone();
         let ors_row = get_owned_rolling_stock(&pool, first_owned_id.clone()).await?;
         assert!(ors_row.is_some());
         let ors_row = ors_row.unwrap();

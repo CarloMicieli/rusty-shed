@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn deref_to_str() {
         let id = RailwayId::try_from("R-1").unwrap();
-        let s: &str = &*id;
+        let s: &str = &id;
         assert_eq!(s, "R-1");
     }
 
