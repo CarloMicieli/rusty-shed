@@ -7,7 +7,8 @@ pub mod state;
 #[cfg(test)]
 pub mod test_utils;
 
-use crate::collecting::interface::command_handlers;
+use crate::catalog::interface::command_handlers as catalog_command_handlers;
+use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::state::AppState;
 use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
@@ -36,7 +37,8 @@ pub fn run() {
 
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         is_db_initialized,
-        command_handlers::get_collection,
+        catalog_command_handlers::get_manufacturer_by_id,
+        collecting_command_handlers::get_collection,
         get_app_version
     ]);
 
