@@ -1,5 +1,7 @@
-use crate::collecting::domain::collection::{OwnedRollingStock, PurchaseInfo};
+use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
+use crate::collecting::domain::purchase_info::PurchaseInfo;
 use serde::{Deserialize, Serialize};
+use crate::collecting::domain::collection_item_id::CollectionItemId;
 
 /// A single item within a user's collection.
 ///
@@ -11,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct CollectionItem {
     /// Unique identifier for this collection item (e.g. UUID).
-    pub id: String,
+    pub id: CollectionItemId,
 
     /// Link to the corresponding catalog `RailwayModel` this item represents.
     ///

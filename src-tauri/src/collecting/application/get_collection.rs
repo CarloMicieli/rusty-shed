@@ -1,4 +1,5 @@
-use crate::collecting::domain::collection::{Collection, CollectionRepository};
+use crate::collecting::domain::collection::Collection;
+use crate::collecting::domain::repository::CollectionRepository;
 use anyhow::Result;
 use std::sync::Arc;
 

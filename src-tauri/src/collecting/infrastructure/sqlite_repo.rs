@@ -1,6 +1,9 @@
-use crate::collecting::domain::collection::{
-    Collection, CollectionItem, CollectionRepository, OwnedRollingStock, PurchaseInfo,
-};
+use crate::collecting::domain::collection::Collection;
+use crate::collecting::domain::collection_item::CollectionItem;
+use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
+use crate::collecting::domain::purchase_info::PurchaseInfo;
+use crate::collecting::domain::repository::CollectionRepository;
+use crate::collecting::domain::summary::CollectionSummary;
 use crate::core::domain::MonetaryAmount;
 use anyhow::{Context, Result, anyhow};
 use chrono::{Local, NaiveDate};
@@ -48,7 +51,7 @@ impl CollectionRepository for SqliteCollectionRepository {
                 return Ok(Collection {
                     id: "".to_string(),
                     name: "My Collection".to_string(),
-                    summary: crate::collecting::domain::collection::CollectionSummary::default(),
+                    summary: CollectionSummary::default(),
                     total_value: None,
                     items: vec![],
                 });
@@ -143,12 +146,14 @@ impl CollectionRepository for SqliteCollectionRepository {
                                     .map_err(|e| anyhow!(e.to_string()))
                                     .context("Failed to parse purchased price from DB")?;
 
-                            Some(PurchaseInfo::Purchased(crate::collecting::domain::collection::purchase_info::PurchasedInfo {
-                                id: pi_row.get("purchase_id"),
-                                purchase_date,
-                                price,
-                                seller: pi_row.get::<Option<String>, _>("seller_id"),
-                            }))
+                            Some(PurchaseInfo::Purchased(
+                                crate::collecting::domain::purchase_info::PurchasedInfo {
+                                    id: pi_row.get("purchase_id"),
+                                    purchase_date,
+                                    price,
+                                    seller: pi_row.get::<Option<String>, _>("seller_id"),
+                                },
+                            ))
                         }
                         Some("sold") => {
                             let sale_date_str: Option<String> = pi_row.get("sale_date");
@@ -177,7 +182,7 @@ impl CollectionRepository for SqliteCollectionRepository {
                                     .ok_or_else(|| anyhow!("Missing sale price for sold item"))?;
 
                             Some(PurchaseInfo::Sold(
-                                crate::collecting::domain::collection::purchase_info::SoldInfo {
+                                crate::collecting::domain::purchase_info::SoldInfo {
                                     id: pi_row.get("purchase_id"),
                                     purchase_date,
                                     purchase_price,
@@ -220,14 +225,16 @@ impl CollectionRepository for SqliteCollectionRepository {
                                 .as_deref()
                                 .and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok());
 
-                            Some(PurchaseInfo::PreOrdered(crate::collecting::domain::collection::purchase_info::PreOrderInfo {
-                                id: pi_row.get("purchase_id"),
-                                order_date: purchase_date,
-                                deposit,
-                                total_price,
-                                seller: pi_row.get::<Option<String>, _>("seller_id"),
-                                expected_date,
-                            }))
+                            Some(PurchaseInfo::PreOrdered(
+                                crate::collecting::domain::purchase_info::PreOrderInfo {
+                                    id: pi_row.get("purchase_id"),
+                                    order_date: purchase_date,
+                                    deposit,
+                                    total_price,
+                                    seller: pi_row.get::<Option<String>, _>("seller_id"),
+                                    expected_date,
+                                },
+                            ))
                         }
                         _ => None,
                     }
@@ -247,7 +254,7 @@ impl CollectionRepository for SqliteCollectionRepository {
         Ok(Collection {
             id: collection_id,
             name: collection_rec.get("name"),
-            summary: crate::collecting::domain::collection::CollectionSummary {
+            summary: CollectionSummary {
                 locomotives_count: collection_rec.get("locomotives_count"),
                 passenger_cars_count: collection_rec.get("passenger_cars_count"),
                 freight_cars_count: collection_rec.get("freight_cars_count"),
