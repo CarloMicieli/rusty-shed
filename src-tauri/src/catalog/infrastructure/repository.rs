@@ -57,14 +57,12 @@ pub async fn get_railway_company_by_id(
         .context("querying railway_companies table")?;
 
     if let Some(row) = row_opt {
-        let rc = RailwayCompany::try_from(row).map_err(
-            |e| {
-                anyhow::anyhow!(format!(
-                    "mapping RailwayCompanyRow -> RailwayCompany: {}",
-                    e
-                ))
-            },
-        )?;
+        let rc = RailwayCompany::try_from(row).map_err(|e| {
+            anyhow::anyhow!(format!(
+                "mapping RailwayCompanyRow -> RailwayCompany: {}",
+                e
+            ))
+        })?;
         Ok(Some(rc))
     } else {
         Ok(None)
