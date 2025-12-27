@@ -34,6 +34,16 @@ impl TryFrom<&str> for CollectionId {
     }
 }
 
+impl TryFrom<&String> for CollectionId {
+    type Error = CollectionIdError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Uuid::parse_str(value)
+            .map(CollectionId)
+            .map_err(|_| CollectionIdError::InvalidUuid(value.to_string()))
+    }
+}
+
 impl TryFrom<String> for CollectionId {
     type Error = CollectionIdError;
 
@@ -80,7 +90,10 @@ mod tests {
     #[test]
     fn parse_invalid_uuid() {
         let err = CollectionId::try_from("not-a-uuid").expect_err("invalid uuid should fail");
-        assert_eq!(err, CollectionIdError::InvalidUuid("not-a-uuid".to_string()));
+        assert_eq!(
+            err,
+            CollectionIdError::InvalidUuid("not-a-uuid".to_string())
+        );
     }
 
     #[test]
@@ -108,4 +121,3 @@ mod tests {
         assert_ne!(a, b, "Two generated UUIDs should not be equal");
     }
 }
-

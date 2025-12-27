@@ -5,6 +5,7 @@
 //! purchase_infos). They are intended for use in tests where quickly setting up
 //! a collection and its items is useful.
 
+use crate::collecting::domain::collection::DEFAULT_COLLECTION_ID;
 use anyhow::{Context, Result};
 use chrono::Local;
 use sqlx::SqlitePool;
@@ -31,8 +32,10 @@ impl CollectingTestDb {
     ///
     /// Creates a row in `collections` with a generated TEXT id and the provided name.
     pub async fn insert_collection(&self, name: &str) -> Result<String> {
-        let id = Uuid::new_v4().to_string();
-        let sql = "INSERT INTO collections (id, name) VALUES (?1, ?2)";
+        let id = Uuid::parse_str(DEFAULT_COLLECTION_ID)
+            .unwrap_or_default()
+            .to_string();
+        let sql = "INSERT INTO collections (id, name, total_value_amount, total_value_currency) VALUES (?1, ?2, 0, 'EUR')";
         sqlx::query(sql)
             .bind(&id)
             .bind(name)

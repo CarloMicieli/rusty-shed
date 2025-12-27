@@ -50,6 +50,15 @@ pub struct MonetaryAmount {
     pub currency: Currency,
 }
 
+impl Default for MonetaryAmount {
+    fn default() -> Self {
+        Self {
+            amount: 0,
+            currency: Currency::USD,
+        }
+    }
+}
+
 impl MonetaryAmount {
     /// Create a new `MonetaryAmount` from a raw amount and currency.
     pub fn new(amount: u64, currency: Currency) -> Self {

@@ -1,7 +1,7 @@
+use crate::collecting::domain::collection_item_id::CollectionItemId;
 use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
 use crate::collecting::domain::purchase_info::PurchaseInfo;
 use serde::{Deserialize, Serialize};
-use crate::collecting::domain::collection_item_id::CollectionItemId;
 
 /// A single item within a user's collection.
 ///

@@ -11,7 +11,7 @@ use uuid::Uuid;
 /// # Requirements
 /// - `TryFrom<&str>` / `TryFrom<String>` will return an error if the provided
 ///   string is not a valid UUID.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, specta::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
 pub struct CollectionItemId(pub Uuid);
@@ -28,6 +28,16 @@ impl TryFrom<&str> for CollectionItemId {
     type Error = CollectionItemIdError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Uuid::parse_str(value)
+            .map(CollectionItemId)
+            .map_err(|_| CollectionItemIdError::InvalidUuid(value.to_string()))
+    }
+}
+
+impl TryFrom<&String> for CollectionItemId {
+    type Error = CollectionItemIdError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
         Uuid::parse_str(value)
             .map(CollectionItemId)
             .map_err(|_| CollectionItemIdError::InvalidUuid(value.to_string()))
