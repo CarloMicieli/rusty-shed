@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS manufacturers
     id                      TEXT PRIMARY KEY,
     name                    TEXT NOT NULL,
     registered_company_name TEXT,
+    status                  TEXT NOT NULL DEFAULT 'ACTIVE',
     country_code            TEXT,
     created_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -1,8 +1,9 @@
+-- noinspection SqlResolveForFile
 -- noinspection SqlNoDataSourceInspectionForFile
 -- noinspection SqlResolveInspectionForFile
 
-INSERT INTO manufacturers (id, name, registered_company_name, country_code, created_at, updated_at)
-VALUES ('trn:manufacturer:acme', 'ACME', null, 'IT', '2025-12-26T15:50:13.995315135+00:00', '2025-12-26 15:50:14');
+INSERT INTO manufacturers (id, name, registered_company_name, country_code, status, created_at, updated_at)
+VALUES ('trn:manufacturer:acme', 'ACME', null, 'IT',  'ACTIVE', '2025-12-26T15:50:13.995315135+00:00', '2025-12-26 15:50:14');
 
 INSERT INTO manufacturers (id, name, registered_company_name, country_code, created_at, updated_at)
 VALUES ('trn:manufacturer:rivarossi', 'Rivarossi', null, 'IT', '2025-12-26T15:50:13.995315135+00:00',
