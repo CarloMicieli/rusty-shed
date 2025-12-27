@@ -195,13 +195,10 @@ mod tests {
                 .expect("insert railway model");
 
             // Case 1: no rolling stocks -> should return model with empty list
-            let res = get_railway_model_by_id(
-                &mut conn,
-                &RailwayModelId::try_from("RM-1")
-                    .unwrap(),
-            )
-            .await
-            .expect("query failed");
+            let res =
+                get_railway_model_by_id(&mut conn, &RailwayModelId::try_from("RM-1").unwrap())
+                    .await
+                    .expect("query failed");
             assert!(res.is_some());
             let rm = res.unwrap();
             assert_eq!(&*rm.id, "RM-1");
@@ -218,13 +215,10 @@ mod tests {
                 .expect("insert rolling stock");
 
             // Case 2: with rolling stocks
-            let res2 = get_railway_model_by_id(
-                &mut conn,
-                &RailwayModelId::try_from("RM-1")
-                    .unwrap(),
-            )
-            .await
-            .expect("query failed");
+            let res2 =
+                get_railway_model_by_id(&mut conn, &RailwayModelId::try_from("RM-1").unwrap())
+                    .await
+                    .expect("query failed");
             assert!(res2.is_some());
             let rm2 = res2.unwrap();
             assert_eq!(rm2.rolling_stocks.len(), 1);
