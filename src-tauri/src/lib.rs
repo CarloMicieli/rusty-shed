@@ -1,11 +1,8 @@
-use tauri::Manager;
-
-mod db;
-mod state;
-
 pub mod catalog;
 pub mod collecting;
 pub mod core;
+pub mod db;
+pub mod state;
 
 #[cfg(test)]
 pub mod test_utils;
@@ -15,6 +12,8 @@ use crate::state::AppState;
 use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
 use specta_typescript::{BigIntExportBehavior, Typescript};
+use tauri::Manager;
+use tauri::path::BaseDirectory;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 
@@ -71,15 +70,20 @@ pub fn run() {
         )
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
-            // 1. Initialize the pool
+            // Compute DB path using tauri path helpers and init the pool
             let pool = tauri::async_runtime::block_on(async {
-                init_db_pool().await.map_err(|e| anyhow::anyhow!(e))
+                let handle = app.handle();
+                let db_path = handle
+                    .path()
+                    .resolve("database.sqlite", BaseDirectory::AppData)?;
+
+                init_db_pool(db_path).await.map_err(|e| anyhow::anyhow!(e))
             })?;
 
-            // 2. Initial management of state
+            // Initial management of state
             app.manage(AppState::new(pool.clone()));
 
-            // 3. Show the main window IMMEDIATELY to avoid blank screen
+            // Show the main window IMMEDIATELY to avoid blank screen
             // The UI can handle the "not initialized" state gracefully
             if let Some(window) = app.get_webview_window("main")
                 && let Err(e) = window.show()
@@ -89,7 +93,7 @@ pub fn run() {
 
             let handle = app.handle().clone();
 
-            // 4. Run migrations in an async task (non-blocking)
+            // Run migrations in an async task (non-blocking)
             tauri::async_runtime::spawn(async move {
                 let state_ref = handle.state::<AppState>();
                 let _ = MIGRATOR
