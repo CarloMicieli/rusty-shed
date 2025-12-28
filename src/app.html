@@ -9,7 +9,7 @@
 			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
 			rel="stylesheet"
 			media="print"
-			onload="this.media='all'"
+			onload="this.media = 'all'"
 		/>
 		<noscript>
 			<link
@@ -28,7 +28,11 @@
 				justify-content: center;
 				background-color: #1a1a1a;
 				color: #e5e5e5;
-				font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+				font-family:
+					system-ui,
+					-apple-system,
+					'Segoe UI',
+					sans-serif;
 				z-index: 9999;
 			}
 			#app-loading .spinner {
@@ -40,7 +44,9 @@
 				animation: spin 0.8s linear infinite;
 			}
 			@keyframes spin {
-				to { transform: rotate(360deg); }
+				to {
+					transform: rotate(360deg);
+				}
 			}
 			#app-loading .content {
 				display: flex;
@@ -65,13 +71,15 @@
 		<div style="display: contents">%sveltekit.body%</div>
 		<script>
 			// Remove loading screen once SvelteKit hydrates
-			document.addEventListener('DOMContentLoaded', function() {
-				setTimeout(function() {
+			document.addEventListener('DOMContentLoaded', function () {
+				setTimeout(function () {
 					const loader = document.getElementById('app-loading');
 					if (loader) {
 						loader.style.transition = 'opacity 0.3s ease-out';
 						loader.style.opacity = '0';
-						setTimeout(function() { loader.remove(); }, 300);
+						setTimeout(function () {
+							loader.remove();
+						}, 300);
 					}
 				}, 100);
 			});

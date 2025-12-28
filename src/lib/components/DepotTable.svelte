@@ -18,7 +18,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data as row}
+			{#each data as row (row.id)}
 				<tr>
 					<td class="font-bold">{row.manufacturer}</td>
 					<td class="font-mono text-primary-400">{row.productCode}</td>

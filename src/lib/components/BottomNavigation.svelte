@@ -1,7 +1,10 @@
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { LayoutDashboard, Library, Heart, Box, Settings } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { _ } from 'svelte-i18n';
+	import { link } from '$app/navigation';
 </script>
 
 <div
@@ -10,6 +13,7 @@
 	<div class="flex h-16 items-center justify-around">
 		<a
 			href="/"
+			use:link
 			class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
 			class:text-accent-500={($page.url.pathname as string) === '/'}
 			class:text-surface-400={($page.url.pathname as string) !== '/'}
@@ -19,6 +23,7 @@
 		</a>
 		<a
 			href="/collection"
+			use:link
 			class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
 			class:text-accent-500={($page.url.pathname as string) === '/collection'}
 			class:text-surface-400={($page.url.pathname as string) !== '/collection'}
@@ -28,6 +33,7 @@
 		</a>
 		<a
 			href="/wishlists"
+			use:link
 			class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
 			class:text-accent-500={($page.url.pathname as string) === '/wishlists'}
 			class:text-surface-400={($page.url.pathname as string) !== '/wishlists'}
@@ -37,6 +43,7 @@
 		</a>
 		<a
 			href="/depot"
+			use:link
 			class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
 			class:text-accent-500={($page.url.pathname as string) === '/depot'}
 			class:text-surface-400={($page.url.pathname as string) !== '/depot'}
@@ -46,6 +53,7 @@
 		</a>
 		<a
 			href="/settings"
+			use:link
 			class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
 			class:text-accent-500={($page.url.pathname as string) === '/settings'}
 			class:text-surface-400={($page.url.pathname as string) !== '/settings'}

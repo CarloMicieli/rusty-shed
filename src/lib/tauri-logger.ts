@@ -1,4 +1,5 @@
 // Lightweight Tauri-aware logger wrapper
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type */
 // Exports: debug, info, warn, error, trace (and `log` object)
 // Behavior:
 // - Tries to detect running inside Tauri and lazily import @tauri-apps/api/log

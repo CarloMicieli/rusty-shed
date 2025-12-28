@@ -16,9 +16,9 @@ export default defineConfig({
 			output: {
 				manualChunks: {
 					// Split large icon library into separate chunk
-					'lucide': ['lucide-svelte'],
+					lucide: ['lucide-svelte'],
 					// Split i18n into separate chunk
-					'i18n': ['svelte-i18n']
+					i18n: ['svelte-i18n']
 				}
 			}
 		},

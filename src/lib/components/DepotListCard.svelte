@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { DepotEntry } from '$lib/data/mock';
-	import { Tag, Building2, TrainFront } from 'lucide-svelte';
+	import { Building2, TrainFront } from 'lucide-svelte';
 
 	let { depot } = $props<{ depot: DepotEntry }>();
 </script>

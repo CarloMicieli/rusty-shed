@@ -1,7 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import '$lib/i18n'; // Initialize i18n
-	import { isLoading, _ } from 'svelte-i18n';
+	import { isLoading } from 'svelte-i18n';
 	import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
 	import BottomNavigation from '$lib/components/BottomNavigation.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
@@ -22,7 +22,7 @@
 				setAppVersion(v as string);
 				return;
 			}
-		} catch (e) {
+		} catch {
 			// ignore and fallback
 		}
 
@@ -37,7 +37,7 @@
 				const v = await tauriModule.invoke<string>('get_app_version');
 				setAppVersion(v);
 			}
-		} catch (e) {
+		} catch {
 			// Not running under Tauri or other error — leave default/fallback version
 			// Optionally set a dev fallback like 'dev'
 		}
@@ -51,7 +51,9 @@
 		style="font-family: system-ui, -apple-system, sans-serif;"
 	>
 		<div class="flex flex-col items-center gap-4">
-			<div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+			<div
+				class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"
+			></div>
 			<p class="text-sm opacity-70">Loading application...</p>
 		</div>
 	</div>

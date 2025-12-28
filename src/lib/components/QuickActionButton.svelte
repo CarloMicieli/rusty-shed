@@ -6,7 +6,8 @@
 	let { action } = $props<{ action: QuickAction }>();
 
 	// Dynamically resolve icon
-	let Icon = $derived((Lucide as any)[action.icon] || Lucide.HelpCircle);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let Icon = (Lucide as any)[action.icon] || Lucide.HelpCircle;
 </script>
 
 <button

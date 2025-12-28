@@ -1,8 +1,11 @@
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { LayoutDashboard, Library, Heart, Box, Settings, TrainFront } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { _ } from 'svelte-i18n';
 	import { appVersion } from '$lib/stores/app';
+	import { link } from '$app/navigation';
 </script>
 
 <nav class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex">
@@ -15,6 +18,7 @@
 		<li>
 			<a
 				href="/"
+				use:link
 				class="hover:variant-soft-primary btn w-full justify-start gap-3"
 				class:variant-filled-primary={($page.url.pathname as string) === '/'}
 				class:variant-ghost-surface={($page.url.pathname as string) !== '/'}
@@ -26,6 +30,7 @@
 		<li>
 			<a
 				href="/collection"
+				use:link
 				class="hover:variant-soft-primary btn w-full justify-start gap-3"
 				class:variant-filled-primary={($page.url.pathname as string) === '/collection'}
 				class:variant-ghost-surface={($page.url.pathname as string) !== '/collection'}
@@ -37,6 +42,7 @@
 		<li>
 			<a
 				href="/wishlists"
+				use:link
 				class="hover:variant-soft-primary btn w-full justify-start gap-3"
 				class:variant-filled-primary={($page.url.pathname as string) === '/wishlists'}
 				class:variant-ghost-surface={($page.url.pathname as string) !== '/wishlists'}
@@ -48,6 +54,7 @@
 		<li>
 			<a
 				href="/depot"
+				use:link
 				class="hover:variant-soft-primary btn w-full justify-start gap-3"
 				class:variant-filled-primary={($page.url.pathname as string) === '/depot'}
 				class:variant-ghost-surface={($page.url.pathname as string) !== '/depot'}
@@ -61,6 +68,7 @@
 	<div class="mt-auto space-y-2 border-t border-surface-700/50 pt-4">
 		<a
 			href="/settings"
+			use:link
 			class="hover:variant-soft-primary variant-ghost-surface btn w-full justify-start gap-3"
 			class:variant-filled-primary={($page.url.pathname as string) === '/settings'}
 		>

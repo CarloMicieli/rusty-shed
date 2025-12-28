@@ -1,10 +1,13 @@
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { stats, quickActions, recentItems, depotData } from '$lib/data/mock';
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import QuickActionButton from '$lib/components/QuickActionButton.svelte';
 	import RecentItemCard from '$lib/components/RecentItemCard.svelte';
 	import DepotView from '$lib/components/DepotView.svelte';
 	import { _ } from 'svelte-i18n';
+	import { link } from '$app/navigation';
 </script>
 
 <svelte:head>
@@ -17,7 +20,7 @@
 		{$_('dashboard.yard_statistics')}
 	</h3>
 	<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-		{#each stats as stat}
+		{#each stats as stat (stat.label)}
 			<StatsCard {stat} />
 		{/each}
 	</div>
@@ -32,7 +35,7 @@
 				<h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
 					{$_('dashboard.recently_added')}
 				</h3>
-				<a href="/activity" class="text-accent-500 text-sm font-bold hover:underline"
+				<a href="/activity" use:link class="text-accent-500 text-sm font-bold hover:underline"
 					>{$_('dashboard.view_all')}</a
 				>
 			</div>
@@ -41,7 +44,7 @@
 			<div
 				class="hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-2 lg:pb-0"
 			>
-				{#each recentItems as item}
+				{#each recentItems as item (item.id)}
 					<div class="min-w-[80%] snap-center lg:min-w-0">
 						<RecentItemCard {item} />
 					</div>
@@ -72,7 +75,7 @@
 
 			<!-- Desktop: Vertical List -->
 			<div class="hidden flex-col gap-3 lg:flex">
-				{#each quickActions as action}
+				{#each quickActions as action (action.id)}
 					<QuickActionButton {action} />
 				{/each}
 			</div>
@@ -81,7 +84,7 @@
 			<!-- User requested: "Mobile: FAB or horizontal icon row" -->
 			<!-- I'll implement a horizontal row for now as FAB blocks content often -->
 			<div class="mb-8 grid grid-cols-2 gap-2 lg:hidden">
-				{#each quickActions as action}
+				{#each quickActions as action (action.id)}
 					<QuickActionButton {action} />
 				{/each}
 			</div>

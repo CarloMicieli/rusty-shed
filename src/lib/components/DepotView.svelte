@@ -8,7 +8,7 @@
 
 <!-- Mobile View: Cards -->
 <div class="space-y-4 lg:hidden">
-	{#each data as depot}
+	{#each data as depot (depot.id)}
 		<DepotListCard {depot} />
 	{/each}
 </div>
