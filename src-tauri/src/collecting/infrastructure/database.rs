@@ -26,7 +26,22 @@ pub async fn get_collection(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
 ) -> Result<Option<CollectionRow>> {
-    let sql = "SELECT id, name, locomotives_count, passenger_cars_count, freight_cars_count, train_sets_count, railcars_count, electric_multiple_units_count, total_value_amount, total_value_currency, created_at, updated_at FROM collections WHERE id = ?1 LIMIT 1";
+    let sql = r#"SELECT
+             id,
+             name,
+             locomotives_count,
+             passenger_cars_count,
+             freight_cars_count,
+             train_sets_count,
+             railcars_count,
+             electric_multiple_units_count,
+             total_value_amount,
+             total_value_currency,
+             created_at,
+             updated_at
+   FROM collections
+   WHERE id = ?1
+   LIMIT 1"#;
 
     let row = sqlx::query_as::<_, CollectionRow>(sql)
         .bind(collection_id.to_string())
@@ -45,7 +60,14 @@ pub async fn get_collection_items(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
 ) -> Result<Vec<CollectionItemRow>> {
-    let sql = "SELECT id, collection_id, railway_model_id, conditions, notes FROM collection_items WHERE collection_id = ?1";
+    let sql = r#"SELECT
+             id,
+             collection_id,
+             railway_model_id,
+             conditions,
+             notes
+   FROM collection_items
+   WHERE collection_id = ?1"#;
 
     let rows = sqlx::query_as::<_, CollectionItemRow>(sql)
         .bind(collection_id.to_string())
@@ -69,7 +91,14 @@ pub async fn get_owned_rolling_stock(
     executor: &mut sqlx::SqliteConnection,
     owned_rolling_stock_id: String,
 ) -> Result<Option<OwnedRollingStockRow>> {
-    let sql = "SELECT id, collection_item_id, rolling_stock_id, notes FROM owned_rolling_stocks WHERE id = ?1 LIMIT 1";
+    let sql = r#"SELECT
+             id,
+             collection_item_id,
+             rolling_stock_id,
+             notes
+   FROM owned_rolling_stocks
+   WHERE id = ?1
+   LIMIT 1"#;
 
     let row = sqlx::query_as::<_, OwnedRollingStockRow>(sql)
         .bind(owned_rolling_stock_id)
@@ -88,7 +117,24 @@ pub async fn get_owned_rolling_stocks(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
 ) -> Result<Vec<OwnedRollingStockRow>> {
-    let sql = "SELECT ors.id, ors.collection_item_id, ors.rolling_stock_id, ors.notes FROM owned_rolling_stocks AS ors JOIN collection_items AS ci ON ci.id = ors.collection_item_id WHERE ci.collection_id = ?1";
+    // Select owned rolling stocks and LEFT JOIN decoders to include decoder master data
+    let sql = r#"SELECT
+             ors.id,
+             ors.collection_item_id,
+             ors.rolling_stock_id,
+             ors.notes,
+             ors.dcc_address,
+             ors.installed_decoder_id,
+             d.id AS decoder_id,
+             d.manufacturer_id AS decoder_manufacturer_id,
+             d.product_code AS decoder_product_code,
+             d.decoder_type AS decoder_type,
+             d.protocol AS decoder_protocol,
+             d.decoder_interface AS decoder_interface
+   FROM owned_rolling_stocks AS ors
+   JOIN collection_items AS ci ON ci.id = ors.collection_item_id
+   LEFT JOIN decoders d ON d.id = ors.installed_decoder_id
+   WHERE ci.collection_id = ?1"#;
 
     let rows = sqlx::query_as::<_, OwnedRollingStockRow>(sql)
         .bind(collection_id.to_string())
@@ -112,7 +158,26 @@ pub async fn get_purchase_infos(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
 ) -> Result<Vec<PurchaseInfoRow>> {
-    let sql = "SELECT pi.id, pi.collection_item_id, pi.purchase_type, pi.purchase_date, pi.seller_id, pi.buyer_id, pi.sale_date, pi.purchased_price_amount, pi.purchased_price_currency, pi.sale_price_amount, pi.sale_price_currency, pi.deposit_amount, pi.deposit_currency, pi.preorder_total_amount, pi.preorder_total_currency, pi.expected_date FROM purchase_infos pi JOIN collection_items ci ON ci.id = pi.collection_item_id WHERE ci.collection_id = ?1";
+    let sql = r#"SELECT
+             pi.id,
+             pi.collection_item_id,
+             pi.purchase_type,
+             pi.purchase_date,
+             pi.seller_id,
+             pi.buyer_id,
+             pi.sale_date,
+             pi.purchased_price_amount,
+             pi.purchased_price_currency,
+             pi.sale_price_amount,
+             pi.sale_price_currency,
+             pi.deposit_amount,
+             pi.deposit_currency,
+             pi.preorder_total_amount,
+             pi.preorder_total_currency,
+             pi.expected_date
+   FROM purchase_infos pi
+   JOIN collection_items ci ON ci.id = pi.collection_item_id
+   WHERE ci.collection_id = ?1"#;
 
     let rows = sqlx::query_as::<_, PurchaseInfoRow>(sql)
         .bind(collection_id.to_string())

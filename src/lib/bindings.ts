@@ -521,6 +521,13 @@ export type DccInterface =
  */
 "MTC_21"
 /**
+ * Strongly-typed identifier for a decoder (master record).
+ * 
+ * This newtype is `#[repr(transparent)]` and serializes as a plain string.
+ * URNs are of the form `trn:decoder:{manufacturer}:{product_code}`.
+ */
+export type DecoderId = string
+/**
  * Represents the expected delivery timeframe for a railway model.
  * 
  * This enum allows for varying levels of precision depending on how
@@ -555,6 +562,22 @@ year: number;
  * The specific quarter of the year.
  */
 quarter: Quarter } }
+/**
+ * Represents the installation of a decoder into a locomotive (owned rolling stock).
+ */
+export type DigitalSetup = { 
+/**
+ * The physical interface present on the locomotive (socket/plug type).
+ */
+interface: DccInterface; 
+/**
+ * The DCC address assigned to the decoder.
+ */
+dcc_address: number; 
+/**
+ * The installed decoder id (URN) referencing the `decoders` master table.
+ */
+installed_decoder_id: DecoderId }
 /**
  * The cars that form a complete EMU set can usually be separated by function into four types:
  * power car, motor car, driving car, and trailer car.
@@ -893,7 +916,11 @@ rolling_stock_id: string;
  * Free-form notes associated with this owned instance.
  * Use this for short owner notes or a brief textual label.
  */
-notes: string }
+notes: string; 
+/**
+ * Optional digital setup information if a decoder is installed.
+ */
+digital: DigitalSetup | null }
 /**
  * The types for passenger car rolling stocks
  */

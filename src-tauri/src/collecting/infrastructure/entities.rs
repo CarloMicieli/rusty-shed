@@ -40,6 +40,29 @@ pub struct OwnedRollingStockRow {
     pub collection_item_id: String,
     pub rolling_stock_id: Option<String>,
     pub notes: Option<String>,
+    // DCC address stored as INTEGER in DB; mapped to u16 in domain when present
+    pub dcc_address: Option<i64>,
+    // References decoders(id) when a decoder is installed
+    pub installed_decoder_id: Option<String>,
+    // When joined with `decoders`, the following fields are populated (all optional):
+    pub decoder_id: Option<String>,
+    pub decoder_manufacturer_id: Option<String>,
+    pub decoder_product_code: Option<String>,
+    pub decoder_type: Option<String>,
+    pub decoder_protocol: Option<String>,
+    pub decoder_interface: Option<String>,
+}
+
+/// Row mapping for the `decoders` table. Used when LEFT JOINing decoder data
+/// into collection queries and mapping the flat result into domain types.
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct DecoderRow {
+    pub id: String,
+    pub manufacturer_id: String,
+    pub product_code: Option<String>,
+    pub decoder_type: String,
+    pub protocol: String,
+    pub decoder_interface: String,
 }
 
 /// Row mapping for the `purchase_infos` table.

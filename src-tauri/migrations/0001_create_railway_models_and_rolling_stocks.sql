@@ -1,3 +1,7 @@
+-- noinspection SqlResolveForFile
+-- noinspection SqlNoDataSourceInspectionForFile
+-- noinspection SqlResolveInspectionForFile
+
 CREATE TABLE IF NOT EXISTS manufacturers
 (
     id                      TEXT PRIMARY KEY,

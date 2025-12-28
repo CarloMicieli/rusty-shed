@@ -93,13 +93,40 @@ impl CollectionMapper {
             .map(|owned_rs_list| {
                 owned_rs_list
                     .iter()
-                    .map(|rs_row| OwnedRollingStock {
-                        id: rs_row.id.clone(),
-                        rolling_stock_id: rs_row
-                            .rolling_stock_id
-                            .clone()
-                            .unwrap_or_else(|| rs_row.id.clone()),
-                        notes: rs_row.notes.clone().unwrap_or_default(),
+                    .map(|rs_row| {
+                        // Basic fields
+                        let mut ors = OwnedRollingStock {
+                            id: rs_row.id.clone(),
+                            rolling_stock_id: rs_row
+                                .rolling_stock_id
+                                .clone()
+                                .unwrap_or_else(|| rs_row.id.clone()),
+                            notes: rs_row.notes.clone().unwrap_or_default(),
+                            digital: None,
+                        };
+
+                        // If a decoder is installed (installed_decoder_id present), try to build DigitalSetup
+                        if let Some(installed_id) = &rs_row.installed_decoder_id {
+                            // Parse dcc_address if present
+                            if let Some(addr_i64) = rs_row.dcc_address {
+                                let addr_u16 = addr_i64 as u16;
+
+                                // decoder_interface must be present in the joined columns
+                                if let Some(dec_if) = &rs_row.decoder_interface {
+                                    // Parse interface string into DccInterface
+                                    let interface = dec_if.parse::<crate::catalog::domain::dcc_interface::DccInterface>();
+                                    if let Ok(interface) = interface {
+                                        ors.digital = Some(crate::collecting::domain::digital_setup::DigitalSetup {
+                                            interface,
+                                            dcc_address: addr_u16,
+                                            installed_decoder_id: installed_id.parse().unwrap_or_else(|_| crate::collecting::domain::decoder_id::DecoderId::new(installed_id.clone())),
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        ors
                     })
                     .collect()
             })
@@ -266,6 +293,14 @@ mod tests {
             collection_item_id: item_id_str.clone(),
             rolling_stock_id: Some("rs-001".to_string()),
             notes: Some("My rolling stock notes go here".to_string()),
+            dcc_address: None,
+            installed_decoder_id: None,
+            decoder_id: None,
+            decoder_manufacturer_id: None,
+            decoder_product_code: None,
+            decoder_type: None,
+            decoder_protocol: None,
+            decoder_interface: None,
         };
 
         let purchase_info = PurchaseInfoRow {
