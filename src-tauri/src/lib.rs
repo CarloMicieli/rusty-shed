@@ -1,6 +1,7 @@
 pub mod catalog;
 pub mod collecting;
 pub mod core;
+pub mod maintenance;
 pub mod state;
 pub mod wishlist;
 
@@ -10,6 +11,7 @@ pub mod test_utils;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::core::infrastructure::db::Database;
+use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use log::{LevelFilter, error};
@@ -43,6 +45,8 @@ pub fn run() {
         catalog_command_handlers::get_railway_company_by_id,
         collecting_command_handlers::get_collection,
         wishlist_command_handlers::get_wishlist_by_id,
+        maintenance_command_handlers::get_maintenance_dashboard,
+        maintenance_command_handlers::add_maintenance_record,
         get_app_version
     ]);
 
