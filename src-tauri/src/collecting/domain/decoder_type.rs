@@ -2,7 +2,18 @@ use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
 /// Decoder functional categories.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Display, EnumString, specta::Type, sqlx::Type)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumString,
+    specta::Type,
+    sqlx::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE", ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DecoderType {

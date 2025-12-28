@@ -2,7 +2,18 @@ use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
 /// Digital communication protocols supported by decoders.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Display, EnumString, specta::Type, sqlx::Type)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    Display,
+    EnumString,
+    specta::Type,
+    sqlx::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE", ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DigitalProtocol {
@@ -36,12 +47,23 @@ mod tests {
         assert_eq!(DigitalProtocol::from_str(expected).unwrap(), proto);
 
         // FromStr is ASCII case-insensitive as configured; ensure lowercase parses
-        assert_eq!(DigitalProtocol::from_str(&expected.to_lowercase()).unwrap(), proto);
+        assert_eq!(
+            DigitalProtocol::from_str(&expected.to_lowercase()).unwrap(),
+            proto
+        );
 
         // Also try mixed case just to be thorough
-        let mixed = expected.chars().enumerate().map(|(i, c)| {
-            if i % 2 == 0 { c.to_ascii_lowercase() } else { c }
-        }).collect::<String>();
+        let mixed = expected
+            .chars()
+            .enumerate()
+            .map(|(i, c)| {
+                if i % 2 == 0 {
+                    c.to_ascii_lowercase()
+                } else {
+                    c
+                }
+            })
+            .collect::<String>();
         assert_eq!(DigitalProtocol::from_str(&mixed).unwrap(), proto);
     }
 }
