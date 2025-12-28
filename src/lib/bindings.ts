@@ -99,6 +99,14 @@ async getCollection() : Promise<Result<Collection, CommandError>> {
     else return { status: "error", error: e  as any };
 }
 },
+async getWishlistById(id: string) : Promise<Result<Wishlist | null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_wishlist_by_id", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getAppVersion() : Promise<string> {
     return await TAURI_INVOKE("get_app_version");
 }
@@ -1691,6 +1699,30 @@ lights: FeatureFlag | null;
  * has sprung buffers
  */
 sprung_buffers: FeatureFlag | null }
+export type Wishlist = { id: string; name: string; notes: string | null; is_default: boolean; items: WishlistItem[] }
+export type WishlistItem = { id: string; railway_model_id: RailwayModelId; priority: WishlistPriority; status: WishlistStatus; added_date: string; removed_date: string | null; notes: string | null; desired_price: MonetaryAmount | null; purchased_price: MonetaryAmount | null }
+/**
+ * Priority assigned to a wishlist item.
+ * 
+ * Indicates how important or urgent an item is for the user. The enum is
+ * serialized as SCREAMING_SNAKE_CASE (e.g. `"LOW"`, `"NORMAL"`, `"HIGH"`)
+ * and supports case-insensitive parsing via `FromStr` thanks to
+ * `strum_macros::EnumString`.
+ * 
+ * The default variant is `Normal`.
+ */
+export type WishlistPriority = "LOW" | "NORMAL" | "HIGH"
+/**
+ * Status of a wishlist item.
+ * 
+ * Represents the current lifecycle state for an item on the wishlist. The
+ * enum is serialized as SCREAMING_SNAKE_CASE (e.g. `"WANTED"`,
+ * `"ON_ORDER"`, `"PURCHASED"`, `"IGNORED"`) and supports case-insensitive
+ * parsing via `FromStr` through `strum_macros::EnumString`.
+ * 
+ * The default variant is `Wanted`.
+ */
+export type WishlistStatus = "WANTED" | "ON_ORDER" | "PURCHASED" | "IGNORED"
 
 /** tauri-specta globals **/
 
