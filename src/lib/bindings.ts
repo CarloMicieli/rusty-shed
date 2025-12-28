@@ -1699,8 +1699,93 @@ lights: FeatureFlag | null;
  * has sprung buffers
  */
 sprung_buffers: FeatureFlag | null }
-export type Wishlist = { id: string; name: string; notes: string | null; is_default: boolean; items: WishlistItem[] }
-export type WishlistItem = { id: string; railway_model_id: RailwayModelId; priority: WishlistPriority; status: WishlistStatus; added_date: string; removed_date: string | null; notes: string | null; desired_price: MonetaryAmount | null; purchased_price: MonetaryAmount | null }
+/**
+ * Domain model representing a user's wishlist.
+ * 
+ * A `Wishlist` is a named collection of `WishlistItem`s. It carries
+ * optional notes, a flag indicating whether it is the default list, and
+ * a stable identifier used across the application. Business logic should
+ * operate on this aggregate root when mutating the contained items.
+ */
+export type Wishlist = { 
+/**
+ * Unique identifier for the wishlist.
+ */
+id: WishlistId; 
+/**
+ * Human-readable name for the wishlist.
+ */
+name: string; 
+/**
+ * Optional free-form notes attached to the wishlist.
+ */
+notes: string | null; 
+/**
+ * Whether this wishlist is the default for the user.
+ */
+is_default: boolean; 
+/**
+ * Items contained in this wishlist.
+ */
+items: WishlistItem[] }
+/**
+ * Strongly-typed identifier for a wishlist.
+ * 
+ * Wraps a `Uuid` to provide domain-level type safety for wishlist ids.
+ */
+export type WishlistId = string
+/**
+ * A single item within a `Wishlist`.
+ * 
+ * `WishlistItem` models the user-facing properties of an item the user
+ * wants to track or acquire. It intentionally does not carry a reference
+ * to its parent `Wishlist` as it is used as a value object inside the
+ * aggregate. Business operations that need the wishlist context should
+ * operate on the `Wishlist` aggregate.
+ */
+export type WishlistItem = { 
+/**
+ * Stable identifier for this wishlist item.
+ */
+id: WishlistItemId; 
+/**
+ * Identifier of the referenced railway model.
+ */
+railway_model_id: RailwayModelId; 
+/**
+ * The user's priority for this item.
+ */
+priority: WishlistPriority; 
+/**
+ * The current procurement/status lifecycle state for the item.
+ */
+status: WishlistStatus; 
+/**
+ * Date the item was added to the wishlist (YYYY-MM-DD).
+ */
+added_date: string; 
+/**
+ * Optional date when the item was removed from the wishlist.
+ */
+removed_date: string | null; 
+/**
+ * Optional free-form notes attached to the item.
+ */
+notes: string | null; 
+/**
+ * Desired price the user is willing to pay for the item (in cents).
+ */
+desired_price: MonetaryAmount | null; 
+/**
+ * Actual purchased price if available (in cents).
+ */
+purchased_price: MonetaryAmount | null }
+/**
+ * Strongly-typed identifier for a wishlist item.
+ * 
+ * Wraps a `Uuid` for domain-level safety.
+ */
+export type WishlistItemId = string
 /**
  * Priority assigned to a wishlist item.
  * 
