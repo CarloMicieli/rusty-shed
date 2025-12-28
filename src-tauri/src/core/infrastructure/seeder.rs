@@ -4,6 +4,8 @@ use csv::ReaderBuilder;
 use slug::slugify;
 use sqlx::{QueryBuilder, SqlitePool};
 
+use crate::collecting::domain::decoder_id::DecoderId;
+
 static MANUFACTURES: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/seed/manufacturers.csv"
@@ -12,6 +14,7 @@ static RAILWAY_COMPANIES: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/seed/railway_companies.csv"
 ));
+static DECODERS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/decoders.csv"));
 
 const CHUNK_SIZE: usize = 50;
 
@@ -216,6 +219,66 @@ pub async fn seed_railway_companies(pool: &SqlitePool) -> anyhow::Result<()> {
     Ok(())
 }
 
+pub async fn seed_decoders(pool: &SqlitePool) -> anyhow::Result<()> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(DECODERS.as_bytes());
+
+    let records: Vec<_> = rdr.records().collect::<Result<Vec<_>, _>>()?;
+
+    let mut tx = pool.begin().await.context("Failed to start transaction")?;
+
+    let insert_cmd = r#"
+        INSERT INTO decoders (
+            id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface
+        )
+    "#;
+
+    for chunk in records.chunks(CHUNK_SIZE) {
+        let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
+
+        query_builder.push_values(chunk, |mut b, record| {
+            let manufacturer = record.get(0).unwrap_or_default();
+            let product_code = record.get(1).unwrap_or_default();
+            let decoder_type = record.get(2).unwrap_or_default();
+            let protocol = record.get(3).unwrap_or_default();
+            let decoder_interface = record.get(4).unwrap_or_default();
+
+            // manufacturer id stored in DB references manufacturers.id which uses the
+            // `trn:manufacturer:{slug}` format. The CSV provides the slug-like short id
+            // (e.g. `esu`), so build the full TRN here.
+            let manufacturer_id = format!("trn:manufacturer:{}", slugify(manufacturer));
+
+            // Build decoder id using the same normalization as DecoderId::from_parts
+            let id = DecoderId::from_parts(manufacturer, product_code).to_string();
+
+            b.push_bind(id)
+                .push_bind(manufacturer_id)
+                .push_bind(product_code.to_string())
+                .push_bind(decoder_type.to_string())
+                .push_bind(protocol.to_string())
+                .push_bind(decoder_interface.to_string());
+        });
+
+        // Upsert logic: update fields when id already present
+        query_builder.push(" ON CONFLICT(id) DO UPDATE SET ");
+        query_builder.push("manufacturer_id = EXCLUDED.manufacturer_id, ");
+        query_builder.push("product_code = EXCLUDED.product_code, ");
+        query_builder.push("decoder_type = EXCLUDED.decoder_type, ");
+        query_builder.push("protocol = EXCLUDED.protocol, ");
+        query_builder.push("decoder_interface = EXCLUDED.decoder_interface");
+
+        let query = query_builder.build();
+        query
+            .execute(&mut *tx)
+            .await
+            .context("Failed to execute decoder upsert chunk")?;
+    }
+
+    tx.commit().await.context("Failed to commit transaction")?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -280,5 +343,41 @@ mod tests {
             "expected a seeded entry for id mfr:atlas-model-railroad-co"
         );
         assert_eq!(name.unwrap(), "Atlas Model Railroad Co.");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn seeds_decoders(pool: SqlitePool) {
+        // Ensure manufacturers exist (decoders have FK -> manufacturers)
+        seed_manufacturers(&pool)
+            .await
+            .expect("seed_manufacturers should run without errors");
+
+        // Run the decoders seeder
+        seed_decoders(&pool)
+            .await
+            .expect("seed_decoders should run without errors");
+
+        let mut conn = pool.acquire().await.expect("acquire conn");
+
+        // Ensure table has rows
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM decoders")
+            .fetch_one(&mut *conn)
+            .await
+            .expect("count query should succeed");
+        assert!(count > 0, "expected at least one seeded decoder");
+
+        // Check a concrete seeded entry exists (ESU 58410 -> id trn:decoder:esu:58410)
+        let product_code: Option<String> =
+            sqlx::query_scalar::<_, String>("SELECT product_code FROM decoders WHERE id = ?")
+                .bind("trn:decoder:esu:58410")
+                .fetch_optional(&mut *conn)
+                .await
+                .expect("select product_code query should succeed");
+
+        assert!(
+            product_code.is_some(),
+            "expected a seeded decoder for id trn:decoder:esu:58410"
+        );
+        assert_eq!(product_code.unwrap(), "58410");
     }
 }
