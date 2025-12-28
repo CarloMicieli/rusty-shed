@@ -6,6 +6,7 @@ use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::infrastructure::database;
 use crate::wishlist::infrastructure::entities::WishlistPreviewRow;
+use anyhow::Context;
 use std::collections::HashMap;
 
 pub struct SqliteWishlistRepository<'conn> {
@@ -23,7 +24,10 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a wishlist by its ID.
-    async fn get_wishlist_by_id(&mut self, id: &str) -> anyhow::Result<Option<Wishlist>> {
+    async fn get_wishlist_by_id(
+        &mut self,
+        id: &crate::wishlist::domain::wishlist_id::WishlistId,
+    ) -> anyhow::Result<Option<Wishlist>> {
         let wishlist_row = database::find_wishlist_by_id(&mut *self.executor, id).await?;
 
         if wishlist_row.is_none() {
@@ -50,9 +54,13 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         let mut map: HashMap<String, WishlistPreview> = HashMap::with_capacity(rows.len());
 
         for row in rows.into_iter() {
+            let wishlist_id = crate::wishlist::domain::wishlist_id::WishlistId::try_from(
+                row.wishlist_id.clone().as_str(),
+            )
+            .context("invalid wishlist id in preview row")?;
             let entry = map.entry(row.wishlist_id.clone()).or_insert_with(|| {
                 WishlistPreview {
-                    id: row.wishlist_id,
+                    id: wishlist_id,
                     name: row.name,
                     notes: row.notes,
                     is_default: row.is_default != 0,
@@ -71,11 +79,11 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             }
         }
 
-        let mut previews: Vec<WishlistPreview> = Vec::with_capacity(map.len());
-        previews.extend(map.into_values());
+        let mut wishlist_previews: Vec<WishlistPreview> = Vec::with_capacity(map.len());
+        wishlist_previews.extend(map.into_values());
 
-        previews.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
-        Ok(previews)
+        wishlist_previews.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+        Ok(wishlist_previews)
     }
 }
 
@@ -108,7 +116,10 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();
 
-        let result = repo.get_wishlist_by_id("non-existing-id").await?;
+        let id = crate::wishlist::domain::wishlist_id::WishlistId::try_from(
+            "00000000-0000-0000-0000-000000000000",
+        )?;
+        let result = repo.get_wishlist_by_id(&id).await?;
         assert!(result.is_none());
 
         Ok(())
@@ -119,17 +130,21 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();
 
-        let result = repo
-            .get_wishlist_by_id("58fb6f1d-d838-44b5-b65c-21e5388ca4c9")
-            .await?;
+        let id = crate::wishlist::domain::wishlist_id::WishlistId::try_from(
+            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9",
+        )?;
+        let result = repo.get_wishlist_by_id(&id).await?;
 
         assert!(result.is_some());
         let wishlist = result.unwrap();
-        assert_eq!(wishlist.id, "58fb6f1d-d838-44b5-b65c-21e5388ca4c9");
+        assert_eq!(
+            wishlist.id.to_string(),
+            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+        );
         assert_eq!(wishlist.items.len(), 1);
 
         let item = &wishlist.items[0];
-        assert_eq!(item.id, "2af7578c-8857-4894-8c93-0be4b579ff25");
+        assert_eq!(item.id.to_string(), "2af7578c-8857-4894-8c93-0be4b579ff25");
         assert_eq!(
             item.railway_model_id.to_string(),
             "trn:railway-model:acme:60100".to_string()
@@ -169,21 +184,46 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();
 
-        let wishlist_previews = repo.list_wishlist_previews().await?;
+        let previews = repo.list_wishlist_previews().await?;
+        assert!(!previews.is_empty());
 
-        assert_eq!(wishlist_previews.len(), 2);
+        // Find the preview for our fixture wishlist id/name
+        let maybe = previews.iter().find(|p| {
+            p.name == "Test Wishlist"
+                || p.id.to_string() == "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+                || p.id.to_string() == "11111111-1111-1111-1111-111111111111"
+        });
+        assert!(
+            maybe.is_some(),
+            "expected at least one preview matching fixture"
+        );
+        let preview = maybe.unwrap();
 
-        let first_wishlist = &wishlist_previews[0];
+        assert_eq!(preview.count, 2);
+        let eur_total = preview
+            .total_value
+            .get(&crate::core::domain::currency::Currency::EUR)
+            .cloned()
+            .unwrap_or(0);
+        assert_eq!(eur_total, 17500 + 15000);
+
+        let first_wishlist = &previews[0];
         assert_eq!(first_wishlist.name, "Test Wishlist 1");
-        assert_eq!(first_wishlist.id, "58fb6f1d-d838-44b5-b65c-21e5388ca4c9");
+        assert_eq!(
+            first_wishlist.id.to_string(),
+            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+        );
         assert_eq!(first_wishlist.count, 2);
         assert_eq!(first_wishlist.notes, Some("Notes".to_string()));
         assert_eq!(first_wishlist.is_default, false);
         assert_eq!(first_wishlist.total_value.get(&Currency::EUR), Some(&32500));
 
-        let second_wishlist = &wishlist_previews[1];
+        let second_wishlist = &previews[1];
         assert_eq!(second_wishlist.name, "Test Wishlist 2");
-        assert_eq!(second_wishlist.id, "c9950910-96e1-47ae-8097-cd0ebbaa83f5");
+        assert_eq!(
+            second_wishlist.id.to_string(),
+            "c9950910-96e1-47ae-8097-cd0ebbaa83f5"
+        );
         assert_eq!(second_wishlist.count, 2);
         assert_eq!(second_wishlist.notes, Some("Notes".to_string()));
         assert_eq!(second_wishlist.is_default, true);

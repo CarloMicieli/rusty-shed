@@ -7,6 +7,7 @@ use crate::state::AppState;
 use crate::wishlist::application::get_wishlist_by_id::GetWishlistUseCase;
 use crate::wishlist::application::get_wishlists::GetWishlistsUseCase;
 use crate::wishlist::domain::wishlist::Wishlist;
+use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 
 #[tauri::command]
@@ -22,8 +23,11 @@ pub async fn get_wishlist_by_id(
 
     let use_case = GetWishlistUseCase;
 
+    let wid =
+        WishlistId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+
     let result = use_case
-        .execute(&mut uow, id)
+        .execute(&mut uow, &wid)
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 

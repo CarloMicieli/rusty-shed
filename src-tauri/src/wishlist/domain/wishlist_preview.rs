@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::core::domain::currency::Currency;
+use crate::wishlist::domain::wishlist_id::WishlistId;
 
 /// Lightweight preview information for a wishlist.
 ///
@@ -12,7 +13,7 @@ use crate::core::domain::currency::Currency;
 /// cents) for the wishlist items in that currency.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct WishlistPreview {
-    pub id: String,
+    pub id: WishlistId,
     pub name: String,
     pub notes: Option<String>,
     pub is_default: bool,

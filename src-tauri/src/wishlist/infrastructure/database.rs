@@ -1,9 +1,10 @@
+use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::infrastructure::entities::{WishlistItemRow, WishlistPreviewRow, WishlistRow};
 use anyhow::{Context, Result};
 
 pub async fn find_wishlist_by_id(
     executor: &mut sqlx::SqliteConnection,
-    id: &str,
+    id: &WishlistId,
 ) -> Result<Option<WishlistRow>> {
     let sql = r#"
             SELECT id, name, notes, is_default, created_at, updated_at
@@ -11,18 +12,19 @@ pub async fn find_wishlist_by_id(
             WHERE id = ?
         "#;
 
+    let id_str = id.to_string();
     let res = sqlx::query_as::<_, WishlistRow>(sql)
-        .bind(id)
+        .bind(&id_str)
         .fetch_optional(executor)
         .await
-        .with_context(|| format!("querying wishlist id={}", id))?;
+        .with_context(|| format!("querying wishlist id={}", id_str))?;
 
     Ok(res)
 }
 
 pub async fn find_wishlist_items_by_id(
     executor: &mut sqlx::SqliteConnection,
-    wishlist_id: &str,
+    wishlist_id: &WishlistId,
 ) -> Result<Vec<WishlistItemRow>> {
     let sql = r#"
             SELECT
@@ -44,8 +46,9 @@ pub async fn find_wishlist_items_by_id(
             ORDER BY added_date ASC
         "#;
 
+    let id_str = wishlist_id.to_string();
     let rows = sqlx::query_as::<_, WishlistItemRow>(sql)
-        .bind(wishlist_id)
+        .bind(&id_str)
         .fetch_all(executor)
         .await
         .with_context(|| format!("querying wishlist items with id={}", wishlist_id))?;

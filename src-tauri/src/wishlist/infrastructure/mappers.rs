@@ -1,7 +1,9 @@
 use crate::catalog::domain::railway_model_id::RailwayModelId;
 use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist::Wishlist;
+use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
+use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use crate::wishlist::infrastructure::entities::{WishlistItemRow, WishlistRow};
@@ -13,8 +15,9 @@ impl TryFrom<WishlistRow> for Wishlist {
     type Error = anyhow::Error;
 
     fn try_from(row: WishlistRow) -> Result<Self, Self::Error> {
+        let id = WishlistId::try_from(row.id.as_str()).context("invalid wishlist id")?;
         Ok(Wishlist {
-            id: row.id,
+            id,
             name: row.name,
             notes: row.notes,
             is_default: row.is_default != 0,
@@ -41,8 +44,10 @@ impl TryFrom<WishlistItemRow> for WishlistItem {
 
         let railway_model_id = RailwayModelId::try_from(row.railway_model_id)?;
 
+        let id = WishlistItemId::try_from(row.id.as_str()).context("invalid wishlist item id")?;
+
         Ok(WishlistItem {
-            id: row.id,
+            id,
             priority,
             status,
             added_date: row.added_date,
@@ -78,8 +83,8 @@ mod tests {
     #[test]
     fn try_from_item_row_with_prices() {
         let row = WishlistItemRow {
-            id: "item-1".to_string(),
-            wishlist_id: "w-1".to_string(),
+            id: "550e8400-e29b-41d4-a716-446655440000".to_string(),
+            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "HIGH".to_string(),
             status: "WANTED".to_string(),
@@ -94,7 +99,7 @@ mod tests {
         };
 
         let item = WishlistItem::try_from(row).expect("mapping should succeed");
-        assert_eq!(item.id, "item-1");
+        assert_eq!(item.id.to_string(), "550e8400-e29b-41d4-a716-446655440000");
         assert_eq!(item.priority, WishlistPriority::High);
         assert_eq!(item.status, WishlistStatus::Wanted);
         assert!(item.desired_price.is_some());
@@ -107,8 +112,8 @@ mod tests {
     #[test]
     fn try_from_item_row_missing_price_parts_results_none() {
         let row = WishlistItemRow {
-            id: "item-2".to_string(),
-            wishlist_id: "w-1".to_string(),
+            id: "550e8400-e29b-41d4-a716-446655440001".to_string(),
+            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "NORMAL".to_string(),
             status: "ON_ORDER".to_string(),
@@ -130,8 +135,8 @@ mod tests {
     #[test]
     fn try_from_item_row_negative_amount_errors() {
         let row = WishlistItemRow {
-            id: "item-3".to_string(),
-            wishlist_id: "w-1".to_string(),
+            id: "550e8400-e29b-41d4-a716-446655440002".to_string(),
+            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "LOW".to_string(),
             status: "WANTED".to_string(),
@@ -152,8 +157,8 @@ mod tests {
     #[test]
     fn try_from_item_row_invalid_priority_or_status_errors() {
         let mut row = WishlistItemRow {
-            id: "item-4".to_string(),
-            wishlist_id: "w-1".to_string(),
+            id: "550e8400-e29b-41d4-a716-446655440003".to_string(),
+            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "NORMAL".to_string(),
             status: "WANTED".to_string(),

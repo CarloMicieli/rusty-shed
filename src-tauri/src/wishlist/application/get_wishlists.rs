@@ -33,57 +33,22 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations")]
+    #[sqlx::test(migrations = "./migrations", fixtures("test_wishlists"))]
     async fn list_wishlists_with_totals(conn: SqlitePool) -> Result<()> {
-        // seed a wishlist and items in USD and EUR
-        let wl_id = "test-wl-1";
-        sqlx::query(
-            "INSERT INTO wishlists (id, name, notes, is_default, created_at, updated_at) VALUES (?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-        )
-        .bind(wl_id)
-        .bind("Seeded WL")
-        .bind("notes")
-        .execute(&conn)
-        .await?;
+        let wishlist_id = "58fb6f1d-d838-44b5-b65c-21e5388ca4c9";
 
-        // items: USD 1000, USD 2500, EUR 750
-        sqlx::query("INSERT INTO wishlist_items (id, wishlist_id, railway_model_id, priority, status, desired_price_amount, desired_price_currency, added_date) VALUES (?, ?, ?, 'NORMAL', 'WANTED', ?, ?, '2025-12-26')")
-            .bind("it-1")
-            .bind(wl_id)
-            .bind(Option::<String>::None)
-            .bind(1000i64)
-            .bind("USD")
-            .execute(&conn)
-            .await?;
-
-        sqlx::query("INSERT INTO wishlist_items (id, wishlist_id, railway_model_id, priority, status, desired_price_amount, desired_price_currency, added_date) VALUES (?, ?, ?, 'NORMAL', 'WANTED', ?, ?, '2025-12-26')")
-            .bind("it-2")
-            .bind(wl_id)
-            .bind(Option::<String>::None)
-            .bind(2500i64)
-            .bind("USD")
-            .execute(&conn)
-            .await?;
-
-        sqlx::query("INSERT INTO wishlist_items (id, wishlist_id, railway_model_id, priority, status, desired_price_amount, desired_price_currency, added_date) VALUES (?, ?, ?, 'NORMAL', 'WANTED', ?, ?, '2025-12-26')")
-            .bind("it-3")
-            .bind(wl_id)
-            .bind(Option::<String>::None)
-            .bind(750i64)
-            .bind("EUR")
-            .execute(&conn)
-            .await?;
-
-        let mut uow = SqliteUnitOfWork::new(&conn).await?;
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let use_case = GetWishlistsUseCase;
-        let previews = use_case.execute(&mut uow).await?;
+        let previews = use_case.execute(&mut unit_of_work).await?;
 
         // find our wishlist
         let preview = previews
             .into_iter()
-            .find(|p| p.id == wl_id)
+            .find(|p| p.id.to_string() == wishlist_id)
             .expect("preview present");
-        assert_eq!(preview.count, 3);
+
+        // Fixture contains two items for this wishlist
+        assert_eq!(preview.count, 2);
         let usd = preview
             .total_value
             .get(&Currency::USD)
@@ -94,8 +59,9 @@ mod tests {
             .get(&Currency::EUR)
             .cloned()
             .unwrap_or(0);
-        assert_eq!(usd, 3500);
-        assert_eq!(eur, 750);
+
+        assert_eq!(usd, 0);
+        assert_eq!(eur, 17500 + 15000); // 32500
 
         Ok(())
     }
