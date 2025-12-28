@@ -1,7 +1,6 @@
 pub mod catalog;
 pub mod collecting;
 pub mod core;
-pub mod db;
 pub mod state;
 pub mod wishlist;
 
@@ -12,13 +11,13 @@ use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
-use db::{MIGRATOR, init_db_pool};
 use log::{LevelFilter, error};
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use tauri::Manager;
 use tauri::path::BaseDirectory;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
+use crate::core::infrastructure::db::Database;
 
 #[tauri::command]
 #[specta::specta]
@@ -84,7 +83,7 @@ pub fn run() {
                     .path()
                     .resolve("database.sqlite", BaseDirectory::AppData)?;
 
-                init_db_pool(db_path).await.map_err(|e| anyhow::anyhow!(e))
+                Database::new_sqlite_pool(&db_path).await.map_err(|e| anyhow::anyhow!(e))
             })?;
 
             // Initial management of state
@@ -103,8 +102,11 @@ pub fn run() {
             // Run migrations in an async task (non-blocking)
             tauri::async_runtime::spawn(async move {
                 let state_ref = handle.state::<AppState>();
-                let _ = MIGRATOR
-                    .run(&state_ref.db_pool())
+                let _ = Database::run_migrations(&state_ref.db_pool())
+                    .await
+                    .map_err(|e| anyhow::anyhow!(e));
+                
+                let _ = Database::run_initial_seed(&state_ref.db_pool())
                     .await
                     .map_err(|e| anyhow::anyhow!(e));
 
