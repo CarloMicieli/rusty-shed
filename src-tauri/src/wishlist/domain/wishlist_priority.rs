@@ -1,6 +1,14 @@
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumString;
 
+/// Priority assigned to a wishlist item.
+///
+/// Indicates how important or urgent an item is for the user. The enum is
+/// serialized as SCREAMING_SNAKE_CASE (e.g. `"LOW"`, `"NORMAL"`, `"HIGH"`)
+/// and supports case-insensitive parsing via `FromStr` thanks to
+/// `strum_macros::EnumString`.
+///
+/// The default variant is `Normal`.
 #[derive(
     Debug, Clone, PartialEq, Eq, Serialize, Deserialize, EnumString, Default, specta::Type,
 )]
@@ -18,6 +26,7 @@ pub enum WishlistPriority {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
     use serde_json;
     use std::str::FromStr;
 
@@ -26,75 +35,44 @@ mod tests {
         assert_eq!(WishlistPriority::default(), WishlistPriority::Normal);
     }
 
-    #[test]
-    fn test_serde_serialization_tokens() {
+    #[rstest]
+    #[case(WishlistPriority::Low, "\"LOW\"")]
+    #[case(WishlistPriority::Normal, "\"NORMAL\"")]
+    #[case(WishlistPriority::High, "\"HIGH\"")]
+    fn test_serde_serialization_tokens(#[case] input: WishlistPriority, #[case] expected: &str) {
+        assert_eq!(serde_json::to_string(&input).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("\"LOW\"", WishlistPriority::Low)]
+    #[case("\"NORMAL\"", WishlistPriority::Normal)]
+    #[case("\"HIGH\"", WishlistPriority::High)]
+    fn test_serde_deserialization_tokens(#[case] input: &str, #[case] expected: WishlistPriority) {
         assert_eq!(
-            serde_json::to_string(&WishlistPriority::Low).unwrap(),
-            "\"LOW\""
-        );
-        assert_eq!(
-            serde_json::to_string(&WishlistPriority::Normal).unwrap(),
-            "\"NORMAL\""
-        );
-        assert_eq!(
-            serde_json::to_string(&WishlistPriority::High).unwrap(),
-            "\"HIGH\""
+            serde_json::from_str::<WishlistPriority>(input).unwrap(),
+            expected
         );
     }
 
-    #[test]
-    fn test_serde_deserialization_tokens() {
-        assert_eq!(
-            serde_json::from_str::<WishlistPriority>("\"LOW\"").unwrap(),
-            WishlistPriority::Low
-        );
-        assert_eq!(
-            serde_json::from_str::<WishlistPriority>("\"NORMAL\"").unwrap(),
-            WishlistPriority::Normal
-        );
-        assert_eq!(
-            serde_json::from_str::<WishlistPriority>("\"HIGH\"").unwrap(),
-            WishlistPriority::High
-        );
+    #[rstest]
+    #[case("LOW", WishlistPriority::Low)]
+    #[case("low", WishlistPriority::Low)]
+    #[case("LoW", WishlistPriority::Low)]
+    #[case("NORMAL", WishlistPriority::Normal)]
+    #[case("normal", WishlistPriority::Normal)]
+    #[case("HIGH", WishlistPriority::High)]
+    #[case("high", WishlistPriority::High)]
+    fn test_fromstr_ascii_case_insensitive(
+        #[case] input: &str,
+        #[case] expected: WishlistPriority,
+    ) {
+        assert_eq!(WishlistPriority::from_str(input).unwrap(), expected);
     }
 
-    #[test]
-    fn test_fromstr_ascii_case_insensitive() {
-        assert_eq!(
-            WishlistPriority::from_str("LOW").unwrap(),
-            WishlistPriority::Low
-        );
-        assert_eq!(
-            WishlistPriority::from_str("low").unwrap(),
-            WishlistPriority::Low
-        );
-        assert_eq!(
-            WishlistPriority::from_str("LoW").unwrap(),
-            WishlistPriority::Low
-        );
-
-        assert_eq!(
-            WishlistPriority::from_str("NORMAL").unwrap(),
-            WishlistPriority::Normal
-        );
-        assert_eq!(
-            WishlistPriority::from_str("normal").unwrap(),
-            WishlistPriority::Normal
-        );
-
-        assert_eq!(
-            WishlistPriority::from_str("HIGH").unwrap(),
-            WishlistPriority::High
-        );
-        assert_eq!(
-            WishlistPriority::from_str("high").unwrap(),
-            WishlistPriority::High
-        );
-    }
-
-    #[test]
-    fn test_fromstr_invalid() {
-        assert!(WishlistPriority::from_str("NOT_A_PRIORITY").is_err());
-        assert!(WishlistPriority::from_str("medium").is_err());
+    #[rstest]
+    #[case("NOT_A_PRIORITY")]
+    #[case("medium")]
+    fn test_fromstr_invalid(#[case] input: &str) {
+        assert!(WishlistPriority::from_str(input).is_err());
     }
 }

@@ -1,5 +1,9 @@
 use chrono::{NaiveDate, NaiveDateTime};
 
+/// Database row representation for the `wishlists` table.
+///
+/// This struct is used with `sqlx::FromRow` to map query results to a typed
+/// representation. Fields correspond to the `wishlists` table columns.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct WishlistRow {
     pub id: String,
@@ -10,6 +14,11 @@ pub struct WishlistRow {
     pub updated_at: NaiveDateTime,
 }
 
+/// Database row representation for the `wishlist_items` table.
+///
+/// Represents a single wishlist item returned from the database. Monetary
+/// fields are stored as separate amount/currency columns and are mapped to
+/// domain `MonetaryAmount` when converting rows to domain types.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct WishlistItemRow {
     pub id: String,

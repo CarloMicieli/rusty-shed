@@ -38,7 +38,7 @@ pub async fn find_wishlist_items_by_id(
                 notes,
                 purchased_at,
                 purchased_price_amount,
-                purchased_price_currency,
+                purchased_price_currency
             FROM wishlist_items
             WHERE wishlist_id = ?
             ORDER BY added_date ASC

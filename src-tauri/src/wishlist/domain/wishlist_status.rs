@@ -7,6 +7,14 @@ use strum_macros::EnumString;
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+/// Status of a wishlist item.
+///
+/// Represents the current lifecycle state for an item on the wishlist. The
+/// enum is serialized as SCREAMING_SNAKE_CASE (e.g. `"WANTED"`,
+/// `"ON_ORDER"`, `"PURCHASED"`, `"IGNORED"`) and supports case-insensitive
+/// parsing via `FromStr` through `strum_macros::EnumString`.
+///
+/// The default variant is `Wanted`.
 pub enum WishlistStatus {
     #[default]
     Wanted,
@@ -19,6 +27,7 @@ pub enum WishlistStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
     use serde_json;
     use std::str::FromStr;
 
@@ -27,84 +36,43 @@ mod tests {
         assert_eq!(WishlistStatus::default(), WishlistStatus::Wanted);
     }
 
-    #[test]
-    fn test_serde_serialization_tokens() {
+    #[rstest]
+    #[case(WishlistStatus::Wanted, "\"WANTED\"")]
+    #[case(WishlistStatus::OnOrder, "\"ON_ORDER\"")]
+    #[case(WishlistStatus::Purchased, "\"PURCHASED\"")]
+    #[case(WishlistStatus::Ignored, "\"IGNORED\"")]
+    fn test_serde_serialization_tokens(#[case] input: WishlistStatus, #[case] expected: &str) {
+        assert_eq!(serde_json::to_string(&input).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("\"WANTED\"", WishlistStatus::Wanted)]
+    #[case("\"ON_ORDER\"", WishlistStatus::OnOrder)]
+    #[case("\"PURCHASED\"", WishlistStatus::Purchased)]
+    #[case("\"IGNORED\"", WishlistStatus::Ignored)]
+    fn test_serde_deserialization_tokens(#[case] input: &str, #[case] expected: WishlistStatus) {
         assert_eq!(
-            serde_json::to_string(&WishlistStatus::Wanted).unwrap(),
-            "\"WANTED\""
-        );
-        assert_eq!(
-            serde_json::to_string(&WishlistStatus::OnOrder).unwrap(),
-            "\"ON_ORDER\""
-        );
-        assert_eq!(
-            serde_json::to_string(&WishlistStatus::Purchased).unwrap(),
-            "\"PURCHASED\""
-        );
-        assert_eq!(
-            serde_json::to_string(&WishlistStatus::Ignored).unwrap(),
-            "\"IGNORED\""
+            serde_json::from_str::<WishlistStatus>(input).unwrap(),
+            expected
         );
     }
 
-    #[test]
-    fn test_serde_deserialization_tokens() {
-        assert_eq!(
-            serde_json::from_str::<WishlistStatus>("\"WANTED\"").unwrap(),
-            WishlistStatus::Wanted
-        );
-        assert_eq!(
-            serde_json::from_str::<WishlistStatus>("\"ON_ORDER\"").unwrap(),
-            WishlistStatus::OnOrder
-        );
-        assert_eq!(
-            serde_json::from_str::<WishlistStatus>("\"PURCHASED\"").unwrap(),
-            WishlistStatus::Purchased
-        );
-        assert_eq!(
-            serde_json::from_str::<WishlistStatus>("\"IGNORED\"").unwrap(),
-            WishlistStatus::Ignored
-        );
+    #[rstest]
+    #[case("WANTED", WishlistStatus::Wanted)]
+    #[case("wanted", WishlistStatus::Wanted)]
+    #[case("WanTeD", WishlistStatus::Wanted)]
+    #[case("ON_ORDER", WishlistStatus::OnOrder)]
+    #[case("on_order", WishlistStatus::OnOrder)]
+    #[case("On_Order", WishlistStatus::OnOrder)]
+    #[case("oN_oRdEr", WishlistStatus::OnOrder)]
+    fn test_fromstr_ascii_case_insensitive(#[case] input: &str, #[case] expected: WishlistStatus) {
+        assert_eq!(WishlistStatus::from_str(input).unwrap(), expected);
     }
 
-    #[test]
-    fn test_fromstr_ascii_case_insensitive() {
-        // various casings should parse
-        assert_eq!(
-            WishlistStatus::from_str("WANTED").unwrap(),
-            WishlistStatus::Wanted
-        );
-        assert_eq!(
-            WishlistStatus::from_str("wanted").unwrap(),
-            WishlistStatus::Wanted
-        );
-        assert_eq!(
-            WishlistStatus::from_str("WanTeD").unwrap(),
-            WishlistStatus::Wanted
-        );
-
-        assert_eq!(
-            WishlistStatus::from_str("ON_ORDER").unwrap(),
-            WishlistStatus::OnOrder
-        );
-        assert_eq!(
-            WishlistStatus::from_str("on_order").unwrap(),
-            WishlistStatus::OnOrder
-        );
-        assert_eq!(
-            WishlistStatus::from_str("On_Order").unwrap(),
-            WishlistStatus::OnOrder
-        );
-        assert_eq!(
-            WishlistStatus::from_str("oN_oRdEr").unwrap(),
-            WishlistStatus::OnOrder
-        );
-    }
-
-    #[test]
-    fn test_fromstr_invalid() {
-        assert!(WishlistStatus::from_str("NOT_A_STATUS").is_err());
-        // missing underscore should not match
-        assert!(WishlistStatus::from_str("ONORDER").is_err());
+    #[rstest]
+    #[case("NOT_A_STATUS")]
+    #[case("ONORDER")]
+    fn test_fromstr_invalid(#[case] input: &str) {
+        assert!(WishlistStatus::from_str(input).is_err());
     }
 }

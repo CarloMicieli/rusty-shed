@@ -53,3 +53,63 @@ impl<'conn> WishlistUowExt for SqliteUnitOfWork<'conn> {
         Box::new(SqliteWishlistRepository::new(&mut self.tx))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::domain::Currency;
+    use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+    use crate::wishlist::domain::wishlist_status::WishlistStatus;
+    use anyhow::Result;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_wishlist_repo_returns_none(conn: SqlitePool) -> Result<()> {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let mut repo = unit_of_work.wishlist_repo();
+
+        let result = repo.get_wishlist_by_id("non-existing-id").await?;
+        assert!(result.is_none());
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("test_wishlist"))]
+    async fn get_wishlist_repo_returns_some(conn: SqlitePool) -> Result<()> {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let mut repo = unit_of_work.wishlist_repo();
+
+        let result = repo
+            .get_wishlist_by_id("58fb6f1d-d838-44b5-b65c-21e5388ca4c9")
+            .await?;
+
+        assert!(result.is_some());
+        let wishlist = result.unwrap();
+        assert_eq!(wishlist.id, "58fb6f1d-d838-44b5-b65c-21e5388ca4c9");
+        assert_eq!(wishlist.items.len(), 1);
+
+        let item = &wishlist.items[0];
+        pretty_assertions::assert_eq!(item.id, "2af7578c-8857-4894-8c93-0be4b579ff25");
+        pretty_assertions::assert_eq!(
+            item.railway_model_id.to_string(),
+            "trn:railway-model:acme:60100".to_string()
+        );
+        pretty_assertions::assert_eq!(
+            item.desired_price.as_ref().map(|p| p.amount),
+            Some(12345u64)
+        );
+        pretty_assertions::assert_eq!(
+            item.desired_price.as_ref().map(|p| p.currency),
+            Some(Currency::EUR)
+        );
+        pretty_assertions::assert_eq!(item.priority, WishlistPriority::Normal);
+        pretty_assertions::assert_eq!(item.status, WishlistStatus::Wanted);
+        pretty_assertions::assert_eq!(item.notes, Some("Fixture item notes".to_string()));
+        pretty_assertions::assert_eq!(
+            item.added_date,
+            chrono::NaiveDate::from_ymd_opt(2025, 12, 26).unwrap()
+        );
+
+        Ok(())
+    }
+}
