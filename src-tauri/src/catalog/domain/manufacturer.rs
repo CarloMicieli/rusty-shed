@@ -1,6 +1,7 @@
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
 use crate::catalog::domain::manufacturer_status::ManufacturerStatus;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 /// A manufacturer (maker of railway models).
 ///
@@ -23,4 +24,7 @@ pub struct Manufacturer {
 
     /// The lifecycle status of the manufacturer. Defaults to `Active`.
     pub status: ManufacturerStatus,
+
+    /// Optional website URL for the manufacturer.
+    pub website_url: Option<Url>,
 }

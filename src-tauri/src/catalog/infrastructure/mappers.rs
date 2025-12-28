@@ -25,6 +25,7 @@ use crate::catalog::domain::rolling_stock_railway::RollingStockRailway;
 use crate::catalog::domain::scale::Scale;
 use anyhow::anyhow;
 use chrono::NaiveDate;
+use url::Url;
 
 /// Convert a `ManufacturerRow` (database representation) into the domain
 /// `Manufacturer` type.
@@ -55,12 +56,24 @@ impl TryFrom<ManufacturerRow> for Manufacturer {
             .parse::<ManufacturerStatus>()
             .map_err(|e| anyhow!("invalid manufacturer status: {}", e))?;
 
+        let website_url: Option<Url> = match row.website_url {
+            Some(s) => {
+                if s.trim().is_empty() {
+                    None
+                } else {
+                    Some(Url::parse(&s).map_err(|e| anyhow!("invalid website_url: {}", e))?)
+                }
+            }
+            None => None,
+        };
+
         Ok(Manufacturer {
             id,
             name: row.name,
             registered_company_name: row.registered_company_name,
             country_code: row.country_code,
             status,
+            website_url,
         })
     }
 }
@@ -334,6 +347,7 @@ mod tests {
         use chrono::DateTime;
         use pretty_assertions::assert_eq;
         use std::convert::TryFrom;
+        use url::Url;
 
         #[test]
         fn mapper_converts_row_to_domain() {
@@ -347,6 +361,7 @@ mod tests {
                 registered_company_name: Some("ACME Corporation".to_string()),
                 status: "ACTIVE".to_string(),
                 country_code: Some("IT".to_string()),
+                website_url: Some("https://www.acmetreni.com".to_string()),
                 created_at: utc_timestamp,
                 updated_at: utc_timestamp,
             };
@@ -358,6 +373,10 @@ mod tests {
             assert_eq!(
                 domain.registered_company_name.as_deref(),
                 Some("ACME Corporation")
+            );
+            assert_eq!(
+                domain.website_url,
+                Some(Url::parse("https://www.acmetreni.com").unwrap())
             );
         }
 

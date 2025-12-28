@@ -21,6 +21,9 @@ pub struct ManufacturerRow {
     /// Optional ISO 3166-1 alpha-2 country code for the manufacturer's country.
     pub country_code: Option<String>,
 
+    /// Optional website URL (stored as TEXT in the DB).
+    pub website_url: Option<String>,
+
     /// Timestamp when the row was created.
     pub created_at: NaiveDateTime,
 

@@ -1295,7 +1295,7 @@ rolling_stocks: RollingStock[] }
  * is empty or contains only whitespace.
  */
 export type RailwayModelId = string
-export type RailwayStatus = "ACTIVE" | "INACTIVE"
+export type RailwayStatus = "ACTIVE" | "INACTIVE" | "MERGED"
 export type RollingStock = 
 /**
  * an electric multiple unit rolling stock

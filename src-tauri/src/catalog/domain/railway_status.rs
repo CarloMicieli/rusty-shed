@@ -21,6 +21,7 @@ pub enum RailwayStatus {
     #[default]
     Active,
     Inactive,
+    Merged,
 }
 
 #[cfg(test)]
@@ -33,6 +34,7 @@ mod tests {
     #[rstest]
     #[case("ACTIVE", Ok(RailwayStatus::Active))]
     #[case("INACTIVE", Ok(RailwayStatus::Inactive))]
+    #[case("MERGED", Ok(RailwayStatus::Merged))]
     #[case("invalid", Err(ParseError::VariantNotFound))]
     fn it_should_parse_string_as_railway_status(
         #[case] input: &str,
@@ -45,6 +47,7 @@ mod tests {
     #[rstest]
     #[case(RailwayStatus::Active, "ACTIVE")]
     #[case(RailwayStatus::Inactive, "INACTIVE")]
+    #[case(RailwayStatus::Merged, "MERGED")]
     fn it_should_display_railway_status(#[case] input: RailwayStatus, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
     }

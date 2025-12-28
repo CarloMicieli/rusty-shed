@@ -1,8 +1,11 @@
-use std::path::PathBuf;
+use crate::core::infrastructure::seeder;
 use log::debug;
-use sqlx::{Sqlite, SqlitePool};
-use sqlx::migrate::{MigrateDatabase, Migrator};
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::SqlitePool;
+use sqlx::migrate::Migrator;
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
+use std::path::Path;
+use std::str::FromStr;
+use std::time::Duration;
 use thiserror::Error;
 
 /// Embedded SQL migrations for the application.
@@ -32,24 +35,25 @@ impl Database {
     ///   embedded migrations, and return the pool.
     ///
     /// Returns `Ok(SqlitePool)` on success or a `SqliteDbError` on failure.
-    pub async fn new_sqlite_pool(db_path: &PathBuf) -> Result<SqlitePool, SqliteDbError> {
-        // Ensure parent directory exists so SQLite can create the file
-        //if let Some(parent) = db_path.parent() {
-        //    std::fs::create_dir_all(parent).map_err(sqlx::Error::Io)?;
-        //}
-
+    pub async fn new_sqlite_pool(db_path: &Path) -> Result<SqlitePool, SqliteDbError> {
         let db_url = format!("sqlite:{}", db_path.display());
         debug!("Opening SQLite DB at {}", db_url);
 
-        if !Sqlite::database_exists(&db_url).await.unwrap_or(false) {
-            Sqlite::create_database(&db_url).await?;
-        }
+        // 1. Create the connection options
+        let options = SqliteConnectOptions::from_str(&db_url)?
+            .create_if_missing(true)
+            // --- PERFORMANCE & CONCURRENCY ---
+            // Sets WAL mode so reads don't block writes
+            .journal_mode(SqliteJournalMode::Wal)
+            // Optimization: In WAL mode, 'Normal' is safe and much faster than 'Full'
+            .synchronous(SqliteSynchronous::Normal)
+            // --- RELIABILITY ---
+            // If the DB is locked, wait 5 seconds before giving up (prevents crashes)
+            .busy_timeout(Duration::from_secs(5))
+            // Ensures database-level data integrity
+            .foreign_keys(true);
 
-        let pool = SqlitePoolOptions::new()
-            .max_connections(5)
-            .connect(&db_url)
-            .await?;
-
+        let pool = SqlitePool::connect_with(options).await?;
         Ok(pool)
     }
 
@@ -69,9 +73,9 @@ impl Database {
     /// This function is a placeholder for any one-time insertions or default
     /// data the application requires after a fresh database is created or
     /// after migrations. Implement seeding logic here as needed.
-    pub async fn run_initial_seed(_pool: &SqlitePool) -> Result<(), SqliteDbError> {
-        debug!("Running initial data seeding...");
-        // Implement initial seeding logic here if needed
+    pub async fn run_initial_seed(pool: &SqlitePool) -> Result<(), anyhow::Error> {
+        seeder::seed_railway_companies(pool).await?;
+        seeder::seed_manufacturers(pool).await?;
         Ok(())
     }
 }

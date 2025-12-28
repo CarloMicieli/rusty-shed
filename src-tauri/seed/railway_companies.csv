@@ -1,0 +1,29 @@
+name,registered_company_name,country_code,status,operating_since,operating_until
+BDZ,Balgarski darzhavni zheleznitsi,BG,Active,1888-01-01,
+BR,British Railways,GB,INACTIVE,1948-01-01,1997-03-31
+CFR,Compania Națională de Căi Ferate CFR SA,RO,Active,1880-04-01,
+DB,Deutsche Bahn AG,DE,Active,1994-01-01,
+DR,Deutsche Reichsbahn,DD,Merged,1949-04-01,1993-12-31
+DRG,Deutsche Reichsbahn-Gesellschaft,DE,Merged,1920-04-01,1945-05-23
+DSB,Danske Statsbaner,DK,Active,1885-01-01,
+FS,Ferrovie dello Stato Italiane S.p.A.,IT,Active,1905-07-01,
+GWR,Great Western Railway,GB,Merged,1835-08-31,1947-12-31
+LMS,London, Midland and Scottish Railway,GB,Merged,1923-01-01,1947-12-31
+LNER,London and North Eastern Railway,GB,Merged,1923-01-01,1947-12-31
+MÁV,Magyar Államvasutak,HU,Active,1868-07-01,
+NMBS/SNCB,Nationale Maatschappij der Belgische Spoorwegen,BE,Active,1926-07-23,
+NSB,Norges Statsbaner,NO,Merged,1883-03-01,2019-03-22
+Network Rail,Network Rail Limited,GB,Active,2002-10-03,
+PKP,Polskie Koleje Państwowe,PL,Active,1918-11-01,
+RENFE,Red Nacional de los Ferrocarriles Españoles,ES,Active,1941-01-24,
+RhB,Rhätische Bahn AG,CH,Active,1888-02-07,
+SBB CFF FFS,Schweizerische Bundesbahnen,CH,Active,1902-01-01,
+SJ,Statens Järnvägar,SE,Active,1856-12-01,
+SNCF,Société Nationale des Chemins de fer Français,FR,Active,1938-01-01,
+SR,Southern Railway,GB,Merged,1923-01-01,1947-12-31
+VR,VR-Yhtymä Oyj,FI,Active,1862-03-17,
+Vy,Vygruppen AS,NO,Active,2019-03-22,
+ZSSK,Železničná spoločnosť Slovensko,SK,Active,2005-01-01,
+ÖBB,Österreichische Bundesbahnen,AT,Active,1923-07-19,
+ČD,České dráhy,CZ,Active,1993-01-01,
+ČSD,Československé státní dráhy,CZ,INACTIVE,1918-10-28,1992-12-31

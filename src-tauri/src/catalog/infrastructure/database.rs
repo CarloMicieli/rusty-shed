@@ -24,7 +24,7 @@ pub async fn get_manufacturer_by_id(
     executor: &mut SqliteConnection,
     id: &str,
 ) -> Result<Option<ManufacturerRow>, sqlx::Error> {
-    let sql = "SELECT id, name, registered_company_name, status, country_code, created_at, updated_at \
+    let sql = "SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at \
         FROM manufacturers WHERE id = ?1 LIMIT 1";
 
     let row = sqlx::query_as::<_, ManufacturerRow>(sql)

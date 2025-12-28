@@ -9,6 +9,7 @@ pub mod test_utils;
 
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
+use crate::core::infrastructure::db::Database;
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use log::{LevelFilter, error};
@@ -17,7 +18,6 @@ use tauri::Manager;
 use tauri::path::BaseDirectory;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
-use crate::core::infrastructure::db::Database;
 
 #[tauri::command]
 #[specta::specta]
@@ -83,7 +83,9 @@ pub fn run() {
                     .path()
                     .resolve("database.sqlite", BaseDirectory::AppData)?;
 
-                Database::new_sqlite_pool(&db_path).await.map_err(|e| anyhow::anyhow!(e))
+                Database::new_sqlite_pool(&db_path)
+                    .await
+                    .map_err(|e| anyhow::anyhow!(e))
             })?;
 
             // Initial management of state
@@ -105,7 +107,7 @@ pub fn run() {
                 let _ = Database::run_migrations(&state_ref.db_pool())
                     .await
                     .map_err(|e| anyhow::anyhow!(e));
-                
+
                 let _ = Database::run_initial_seed(&state_ref.db_pool())
                     .await
                     .map_err(|e| anyhow::anyhow!(e));
