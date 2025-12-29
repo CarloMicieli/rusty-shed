@@ -4,5 +4,5 @@ import { writable } from 'svelte/store';
 export const appVersion = writable<string>('');
 
 export function setAppVersion(v: string) {
-	appVersion.set(v);
+  appVersion.set(v);
 }

@@ -26,10 +26,10 @@ jobs:
         rust-version: [stable]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: 📂 Checkout
+        uses: actions/checkout@v5
 
-      - name: Install system packages (Ubuntu)
+      - name: 🛠️ Install system packages (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -40,43 +40,42 @@ jobs:
             libwebkit2gtk-4.1-dev \
             librsvg2-dev
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: 📦 Install frontend dependencies
+        run: pnpm install
 
-      - name: Install frontend dependencies
+      - name: 🎨 Check Formatting (Prettier)
+        run: pnpm exec prettier --check .
+
+      - name: 🧹 Linting (ESLint)
+        run: pnpm run lint
+
+      - name: 🧪 Type Check (TypeScript)
+        run: pnpm run check
+
+      - name: 🎭 Run frontend build/tests
         run: |
-          if [ -f package.json ]; then
-            pnpm install
-          else
-            echo "No package.json found — skipping frontend install"
-          fi
+            pnpm build
+            pnpm test
 
-      - name: Run frontend build/tests
-        run: |
-          if [ -f package.json ]; then
-            pnpm build || pnpm test || true
-          else
-            echo "No frontend to build/test"
-          fi
-
-      - name: Setup Rust toolchain
+      - name: 🦀 Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.rust-version }}
           override: true
           components: clippy, rustfmt
 
-      - name: Toolchain info
+      - name: 🦀 Toolchain info
         run: |
           rustc --version
           cargo --version --verbose
 
-      - name: Cache cargo registry
+      - name: ⚡ Cache cargo registry
         uses: actions/cache@v4
         with:
           path: |
@@ -84,39 +83,20 @@ jobs:
             ~/.cargo/git
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run cargo check
-        run: |
-          if [ -f src-tauri/Cargo.toml ]; then
-            cd src-tauri
-            cargo check --workspace
-          else
-            echo "No Rust workspace found - skipping"
-          fi
+      - name: 🦀 Run cargo check
+        run: cargo check --workspace
+        working-directory: src-tauri
 
-      - name: Run rustfmt
-        run: |
-          if [ -f src-tauri/Cargo.toml ]; then
-            cd src-tauri
-            cargo fmt --all --check
-          else
-            echo "No Rust workspace found - skipping"
-          fi
+      - name: 🦀 Run rustfmt
+        run: cargo fmt --all --check
+        working-directory: src-tauri
 
-      - name: Run Clippy
-        run: |
-          if [ -f src-tauri/Cargo.toml ]; then
-            cd src-tauri
-            cargo clippy --all-targets --all-features -- -D warnings
-          else
-            echo "No Rust workspace found - skipping"
-          fi
+      - name: 🦀 Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: src-tauri
 
-      - name: Run cargo build and tests
+      - name: 🦀 Run cargo build and tests
         run: |
-          if [ -f src-tauri/Cargo.toml ]; then
-            cd src-tauri
-            cargo build --workspace
-            cargo test --workspace --no-fail-fast --verbose
-          else
-            echo "No Rust workspace found - skipping"
-          fi
+          cargo build --workspace
+          cargo test --workspace --no-fail-fast --verbose
+        working-directory: src-tauri

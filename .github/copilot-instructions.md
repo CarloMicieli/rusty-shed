@@ -56,8 +56,8 @@ Frontend (Svelte) example using the official API:
 import { invoke } from '@tauri-apps/api/tauri';
 
 async function greet(name: string) {
-	const message = await invoke<string>('greet', { name });
-	return message;
+  const message = await invoke<string>('greet', { name });
+  return message;
 }
 ```
 

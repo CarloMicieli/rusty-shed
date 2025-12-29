@@ -3,82 +3,83 @@ import { defineConfig } from 'vite';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 
-// @ts-expect-error process is a nodejs global
-const host = process.env.TAURI_DEV_HOST;
+const host = typeof process !== 'undefined' ? process.env?.TAURI_DEV_HOST : undefined;
 
 // https://vite.dev/config/
+/** @type {import('vite').UserConfigExport & { test?: any }} */
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+  plugins: [tailwindcss(), sveltekit()],
 
-	// Optimize bundle size and loading
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					// Split large icon library into separate chunk
-					lucide: ['lucide-svelte'],
-					// Split i18n into separate chunk
-					i18n: ['svelte-i18n']
-				}
-			}
-		},
-		// Reduce chunk size warning threshold
-		chunkSizeWarningLimit: 600
-	},
+  // Optimize bundle size and loading
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split large icon library into separate chunk
+          lucide: ['lucide-svelte'],
+          // Split i18n into separate chunk
+          i18n: ['svelte-i18n']
+        }
+      }
+    },
+    // Reduce chunk size warning threshold
+    chunkSizeWarningLimit: 600
+  },
 
-	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-	//
-	// 1. prevent Vite from obscuring rust errors
-	clearScreen: false,
-	// 2. tauri expects a fixed port, fail if that port is not available
-	server: {
-		port: 1420,
-		strictPort: true,
-		host: host || false,
-		hmr: host
-			? {
-					protocol: 'ws',
-					host,
-					port: 1421
-				}
-			: undefined,
-		watch: {
-			// 3. tell Vite to ignore watching `src-tauri`
-			ignored: ['**/src-tauri/**']
-		}
-	},
+  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+  //
+  // 1. prevent Vite from obscuring rust errors
+  clearScreen: false,
+  // 2. tauri expects a fixed port, fail if that port is not available
+  server: {
+    port: 1420,
+    strictPort: true,
+    host: host || false,
+    hmr: host
+      ? {
+          protocol: 'ws',
+          host,
+          port: 1421
+        }
+      : undefined,
+    watch: {
+      // 3. tell Vite to ignore watching `src-tauri`
+      ignored: ['**/src-tauri/**']
+    }
+  },
 
-	test: {
-		expect: { requireAssertions: true },
+  // @ts-expect-error -- vitest test config (not part of Vite's strict UserConfigExport typings)
+  test: {
+    expect: { requireAssertions: true },
 
-		projects: [
-			{
-				extends: './vite.config.ts',
+    projects: [
+      {
+        extends: './vite.config.js',
 
-				test: {
-					name: 'client',
+        test: {
+          name: 'client',
 
-					browser: {
-						enabled: true,
-						provider: playwright(),
-						instances: [{ browser: 'chromium', headless: true }]
-					},
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium', headless: true }]
+          },
 
-					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-					exclude: ['src/lib/server/**']
-				}
-			},
+          include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+          exclude: ['src/lib/server/**']
+        }
+      },
 
-			{
-				extends: './vite.config.ts',
+      {
+        extends: './vite.config.js',
 
-				test: {
-					name: 'server',
-					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-				}
-			}
-		]
-	}
+        test: {
+          name: 'server',
+          environment: 'node',
+          include: ['src/**/*.{test,spec}.{js,ts}'],
+          exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+        }
+      }
+    ]
+  }
 });

@@ -4,148 +4,148 @@
 /** user-defined commands **/
 
 export const commands = {
-	async isDbInitialized(): Promise<boolean> {
-		return await TAURI_INVOKE('is_db_initialized');
-	},
-	/**
-	 * Retrieve a manufacturer by its identifier.
-	 *
-	 * Parses the provided `manufacturer_id` into a domain `ManufacturerId`,
-	 * acquires a database connection from the application state, and queries the
-	 * repository for the matching `Manufacturer`.
-	 *
-	 * # Arguments
-	 *
-	 * * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 * * `manufacturer_id` - The manufacturer identifier as a `String`.
-	 *
-	 * # Returns
-	 *
-	 * Returns `Ok(Some(Manufacturer))` when a matching manufacturer exists,
-	 * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
-	 * ID cannot be parsed or a database error occurs.
-	 */
-	async getManufacturerById(
-		manufacturerId: string
-	): Promise<Result<Manufacturer | null, CommandError>> {
-		try {
-			return {
-				status: 'ok',
-				data: await TAURI_INVOKE('get_manufacturer_by_id', { manufacturerId })
-			};
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	/**
-	 * Retrieve a railway model by id. Returns the model even if it has no rolling stocks.
-	 */
-	async getRailwayModelById(
-		railwayModelId: string
-	): Promise<Result<RailwayModel | null, CommandError>> {
-		try {
-			return {
-				status: 'ok',
-				data: await TAURI_INVOKE('get_railway_model_by_id', { railwayModelId })
-			};
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	/**
-	 * Retrieve a railway company by its identifier.
-	 *
-	 * Parses the provided `railway_company_id` into a domain `RailwayCompanyId`,
-	 * acquires a database connection from the application state, and queries the
-	 * repository for the matching `RailwayCompany`.
-	 *
-	 * # Arguments
-	 *
-	 * * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 * * `railway_company_id` - The railway company identifier as a `String`.
-	 *
-	 * # Returns
-	 *
-	 * Returns `Ok(Some(RailwayCompany))` when a matching company exists,
-	 * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
-	 * ID cannot be parsed or a database error occurs.
-	 *
-	 * # Errors
-	 *
-	 * Parsing errors for the identifier and database errors are mapped to
-	 * `CommandError` and returned to the caller.
-	 */
-	async getRailwayCompanyById(
-		railwayCompanyId: string
-	): Promise<Result<RailwayCompany | null, CommandError>> {
-		try {
-			return {
-				status: 'ok',
-				data: await TAURI_INVOKE('get_railway_company_by_id', { railwayCompanyId })
-			};
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	/**
-	 * Tauri command to retrieve the current collection.
-	 *
-	 * This handler constructs the repository and use-case, executes the use-case
-	 * asynchronously and returns the `Collection` on success. On failure, it
-	 * converts the error into a `CommandError::Unknown` preserving the error
-	 * message for logging/debugging.
-	 *
-	 * Parameters:
-	 * - `state`: Tauri-managed application state which provides a database pool.
-	 *
-	 * Returns:
-	 * - `Ok(Collection)` when retrieval succeeds.
-	 * - `Err(CommandError)` when the use-case returns an error.
-	 */
-	async getCollection(): Promise<Result<Collection, CommandError>> {
-		try {
-			return { status: 'ok', data: await TAURI_INVOKE('get_collection') };
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	async getWishlistById(id: string): Promise<Result<Wishlist | null, CommandError>> {
-		try {
-			return { status: 'ok', data: await TAURI_INVOKE('get_wishlist_by_id', { id }) };
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	/**
-	 * Retrieve maintenance cards that are due or overdue.
-	 */
-	async getMaintenanceDashboard(): Promise<Result<MaintenanceCard[], CommandError>> {
-		try {
-			return { status: 'ok', data: await TAURI_INVOKE('get_maintenance_dashboard') };
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	/**
-	 * Add a maintenance record and update the card.
-	 */
-	async addMaintenanceRecord(input: AddMaintenanceInput): Promise<Result<null, CommandError>> {
-		try {
-			return { status: 'ok', data: await TAURI_INVOKE('add_maintenance_record', { input }) };
-		} catch (e) {
-			if (e instanceof Error) throw e;
-			else return { status: 'error', error: e as any };
-		}
-	},
-	async getAppVersion(): Promise<string> {
-		return await TAURI_INVOKE('get_app_version');
-	}
+  async isDbInitialized(): Promise<boolean> {
+    return await TAURI_INVOKE('is_db_initialized');
+  },
+  /**
+   * Retrieve a manufacturer by its identifier.
+   *
+   * Parses the provided `manufacturer_id` into a domain `ManufacturerId`,
+   * acquires a database connection from the application state, and queries the
+   * repository for the matching `Manufacturer`.
+   *
+   * # Arguments
+   *
+   * * `state` - Tauri-managed application `AppState` (provides DB pool).
+   * * `manufacturer_id` - The manufacturer identifier as a `String`.
+   *
+   * # Returns
+   *
+   * Returns `Ok(Some(Manufacturer))` when a matching manufacturer exists,
+   * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
+   * ID cannot be parsed or a database error occurs.
+   */
+  async getManufacturerById(
+    manufacturerId: string
+  ): Promise<Result<Manufacturer | null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('get_manufacturer_by_id', { manufacturerId })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Retrieve a railway model by id. Returns the model even if it has no rolling stocks.
+   */
+  async getRailwayModelById(
+    railwayModelId: string
+  ): Promise<Result<RailwayModel | null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('get_railway_model_by_id', { railwayModelId })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Retrieve a railway company by its identifier.
+   *
+   * Parses the provided `railway_company_id` into a domain `RailwayCompanyId`,
+   * acquires a database connection from the application state, and queries the
+   * repository for the matching `RailwayCompany`.
+   *
+   * # Arguments
+   *
+   * * `state` - Tauri-managed application `AppState` (provides DB pool).
+   * * `railway_company_id` - The railway company identifier as a `String`.
+   *
+   * # Returns
+   *
+   * Returns `Ok(Some(RailwayCompany))` when a matching company exists,
+   * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
+   * ID cannot be parsed or a database error occurs.
+   *
+   * # Errors
+   *
+   * Parsing errors for the identifier and database errors are mapped to
+   * `CommandError` and returned to the caller.
+   */
+  async getRailwayCompanyById(
+    railwayCompanyId: string
+  ): Promise<Result<RailwayCompany | null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('get_railway_company_by_id', { railwayCompanyId })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to retrieve the current collection.
+   *
+   * This handler constructs the repository and use-case, executes the use-case
+   * asynchronously and returns the `Collection` on success. On failure, it
+   * converts the error into a `CommandError::Unknown` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * - `state`: Tauri-managed application state which provides a database pool.
+   *
+   * Returns:
+   * - `Ok(Collection)` when retrieval succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
+  async getCollection(): Promise<Result<Collection, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_collection') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  async getWishlistById(id: string): Promise<Result<Wishlist | null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_wishlist_by_id', { id }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Retrieve maintenance cards that are due or overdue.
+   */
+  async getMaintenanceDashboard(): Promise<Result<MaintenanceCard[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_maintenance_dashboard') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Add a maintenance record and update the card.
+   */
+  async addMaintenanceRecord(input: AddMaintenanceInput): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('add_maintenance_record', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  async getAppVersion(): Promise<string> {
+    return await TAURI_INVOKE('get_app_version');
+  }
 };
 
 /** user-defined events **/
@@ -158,11 +158,11 @@ export const commands = {
  * Input DTO for adding a maintenance record over IPC.
  */
 export type AddMaintenanceInput = {
-	id: string;
-	maintenance_card_id: string;
-	date_performed: string;
-	maintenance_type: string | null;
-	notes: string | null;
+  id: string;
+  maintenance_card_id: string;
+  date_performed: string;
+  maintenance_type: string | null;
+  notes: string | null;
 };
 /**
  * Lifecycle availability status of a railway model.
@@ -173,23 +173,23 @@ export type AddMaintenanceInput = {
  * case-insensitive.
  */
 export type AvailabilityStatus =
-	/**
-	 * The railway model is just announced and not yet available.
-	 */
-	| 'ANNOUNCED'
-	/**
-	 * The railway model is available for purchase.
-	 */
-	| 'AVAILABLE'
-	/**
-	 * The railway model production / release has been cancelled or delayed
-	 * (not proceeding as previously announced).
-	 */
-	| 'CANCELLED'
-	/**
-	 * The railway model has been discontinued and is no longer produced.
-	 */
-	| 'DISCONTINUED';
+  /**
+   * The railway model is just announced and not yet available.
+   */
+  | 'ANNOUNCED'
+  /**
+   * The railway model is available for purchase.
+   */
+  | 'AVAILABLE'
+  /**
+   * The railway model production / release has been cancelled or delayed
+   * (not proceeding as previously announced).
+   */
+  | 'CANCELLED'
+  /**
+   * The railway model has been discontinued and is no longer produced.
+   */
+  | 'DISCONTINUED';
 /**
  * The construction type of rolling stock's body shell.
  *
@@ -199,53 +199,53 @@ export type AvailabilityStatus =
  * the build of the vehicle's exterior.
  */
 export type BodyShellType =
-	/**
-	 * Plastic body shell construction (typically injection moulded plastic).
-	 */
-	| 'PLASTIC'
-	/**
-	 * Metal die-cast body shell construction (heavier, metal cast components).
-	 */
-	| 'METAL_DIE_CAST';
+  /**
+   * Plastic body shell construction (typically injection moulded plastic).
+   */
+  | 'PLASTIC'
+  /**
+   * Metal die-cast body shell construction (heavier, metal cast components).
+   */
+  | 'METAL_DIE_CAST';
 /**
  * The enumeration of the railway model categories.
  */
 export type Category =
-	/**
-	 * Independent traction units powered by steam, diesel, or electricity
-	 * used to pull unpowered vehicles.
-	 */
-	| 'LOCOMOTIVES'
-	/**
-	 * Pre-configured groups of permanently or semi-permanently coupled
-	 * vehicles, such as high-speed trains.
-	 */
-	| 'TRAIN_SETS'
-	/**
-	 * All-in-one entry-level packages typically including a train,
-	 * track, and a power controller.
-	 */
-	| 'STARTER_SETS'
-	/**
-	 * Vehicles designed for the transport of physical goods,
-	 * raw materials, or equipment.
-	 */
-	| 'FREIGHT_CARS'
-	/**
-	 * Vehicles designed for the transport of people, typically
-	 * including seating, lighting, and climate control.
-	 */
-	| 'PASSENGER_CARS'
-	/**
-	 * Self-propelled train sets consisting of multiple carriages
-	 * using electricity as their motive power.
-	 */
-	| 'ELECTRIC_MULTIPLE_UNITS'
-	/**
-	 * Lightweight, self-propelled vehicles (usually a single unit)
-	 * designed for passenger service on branch lines.
-	 */
-	| 'RAILCARS';
+  /**
+   * Independent traction units powered by steam, diesel, or electricity
+   * used to pull unpowered vehicles.
+   */
+  | 'LOCOMOTIVES'
+  /**
+   * Pre-configured groups of permanently or semi-permanently coupled
+   * vehicles, such as high-speed trains.
+   */
+  | 'TRAIN_SETS'
+  /**
+   * All-in-one entry-level packages typically including a train,
+   * track, and a power controller.
+   */
+  | 'STARTER_SETS'
+  /**
+   * Vehicles designed for the transport of physical goods,
+   * raw materials, or equipment.
+   */
+  | 'FREIGHT_CARS'
+  /**
+   * Vehicles designed for the transport of people, typically
+   * including seating, lighting, and climate control.
+   */
+  | 'PASSENGER_CARS'
+  /**
+   * Self-propelled train sets consisting of multiple carriages
+   * using electricity as their motive power.
+   */
+  | 'ELECTRIC_MULTIPLE_UNITS'
+  /**
+   * Lightweight, self-propelled vehicles (usually a single unit)
+   * designed for passenger service on branch lines.
+   */
+  | 'RAILCARS';
 /**
  * The construction type of a rolling stock's chassis.
  *
@@ -255,14 +255,14 @@ export type Category =
  * properties of the model's underframe.
  */
 export type ChassisType =
-	/**
-	 * Plastic chassis construction (typically injection-moulded plastic).
-	 */
-	| 'PLASTIC'
-	/**
-	 * Metal die-cast chassis construction (heavier, metal cast chassis parts).
-	 */
-	| 'METAL_DIE_CAST';
+  /**
+   * Plastic chassis construction (typically injection-moulded plastic).
+   */
+  | 'PLASTIC'
+  /**
+   * Metal die-cast chassis construction (heavier, metal cast chassis parts).
+   */
+  | 'METAL_DIE_CAST';
 /**
  * Represents a user-owned collection of items.
  *
@@ -277,27 +277,27 @@ export type ChassisType =
  * returned a default when no database row existed.
  */
 export type Collection = {
-	/**
-	 * Unique identifier for the collection (typically a UUID stored as a string).
-	 */
-	id: CollectionId;
-	/**
-	 * Display name for this collection.
-	 */
-	name: string;
-	/**
-	 * Precomputed summary counts (e.g. total items, tracked vs untracked).
-	 */
-	summary: CollectionSummary;
-	/**
-	 * Optional total monetary value of the collection. Use `MonetaryAmount`
-	 * to preserve currency and decimal precision.
-	 */
-	total_value: MonetaryAmount | null;
-	/**
-	 * The list of items contained in this collection.
-	 */
-	items: CollectionItem[];
+  /**
+   * Unique identifier for the collection (typically a UUID stored as a string).
+   */
+  id: CollectionId;
+  /**
+   * Display name for this collection.
+   */
+  name: string;
+  /**
+   * Precomputed summary counts (e.g. total items, tracked vs untracked).
+   */
+  summary: CollectionSummary;
+  /**
+   * Optional total monetary value of the collection. Use `MonetaryAmount`
+   * to preserve currency and decimal precision.
+   */
+  total_value: MonetaryAmount | null;
+  /**
+   * The list of items contained in this collection.
+   */
+  items: CollectionItem[];
 };
 /**
  * Identifier for a collection.
@@ -321,33 +321,33 @@ export type CollectionId = string;
  * `Collection` (the aggregate root).
  */
 export type CollectionItem = {
-	/**
-	 * Unique identifier for this collection item (e.g. UUID).
-	 */
-	id: CollectionItemId;
-	/**
-	 * Link to the corresponding catalog `RailwayModel` this item represents.
-	 *
-	 * This is a reference to the canonical model in the catalog; use this
-	 * to look up full catalog details (manufacturer, product codes, etc.).
-	 */
-	railway_model_id: string;
-	/**
-	 * Condition of the item as recorded by the owner (e.g. "mint", "used").
-	 */
-	conditions: string | null;
-	/**
-	 * Free-form notes provided by the owner for this collection item.
-	 */
-	notes: string | null;
-	/**
-	 * The specific rolling stock instances owned that correspond to this model.
-	 */
-	rolling_stocks: OwnedRollingStock[];
-	/**
-	 * Optional purchase information associated with this collection item.
-	 */
-	purchase_info: PurchaseInfo | null;
+  /**
+   * Unique identifier for this collection item (e.g. UUID).
+   */
+  id: CollectionItemId;
+  /**
+   * Link to the corresponding catalog `RailwayModel` this item represents.
+   *
+   * This is a reference to the canonical model in the catalog; use this
+   * to look up full catalog details (manufacturer, product codes, etc.).
+   */
+  railway_model_id: string;
+  /**
+   * Condition of the item as recorded by the owner (e.g. "mint", "used").
+   */
+  conditions: string | null;
+  /**
+   * Free-form notes provided by the owner for this collection item.
+   */
+  notes: string | null;
+  /**
+   * The specific rolling stock instances owned that correspond to this model.
+   */
+  rolling_stocks: OwnedRollingStock[];
+  /**
+   * Optional purchase information associated with this collection item.
+   */
+  purchase_info: PurchaseInfo | null;
 };
 /**
  * Identifier for a single item in a collection.
@@ -368,33 +368,33 @@ export type CollectionItemId = string;
  * of different types of rolling stock within a specific inventory or sub-collection.
  */
 export type CollectionSummary = {
-	/**
-	 * The total number of independent traction units (Steam, Diesel, Electric).
-	 */
-	locomotives_count: number;
-	/**
-	 * The total number of individual passenger-carrying vehicles.
-	 */
-	passenger_cars_count: number;
-	/**
-	 * The total number of individual goods-transporting vehicles.
-	 */
-	freight_cars_count: number;
-	/**
-	 * The number of complete train sets (e.g., starter sets or fixed formations).
-	 *
-	 * Note: Depending on implementation, the individual cars within these sets
-	 * may or may not be included in the other specific counts.
-	 */
-	train_sets_count: number;
-	/**
-	 * The number of self-propelled, typically single-unit passenger vehicles.
-	 */
-	railcars_count: number;
-	/**
-	 * The number of self-propelled, multi-unit electric passenger formations.
-	 */
-	electric_multiple_units_count: number;
+  /**
+   * The total number of independent traction units (Steam, Diesel, Electric).
+   */
+  locomotives_count: number;
+  /**
+   * The total number of individual passenger-carrying vehicles.
+   */
+  passenger_cars_count: number;
+  /**
+   * The total number of individual goods-transporting vehicles.
+   */
+  freight_cars_count: number;
+  /**
+   * The number of complete train sets (e.g., starter sets or fixed formations).
+   *
+   * Note: Depending on implementation, the individual cars within these sets
+   * may or may not be included in the other specific counts.
+   */
+  train_sets_count: number;
+  /**
+   * The number of self-propelled, typically single-unit passenger vehicles.
+   */
+  railcars_count: number;
+  /**
+   * The number of self-propelled, multi-unit electric passenger formations.
+   */
+  electric_multiple_units_count: number;
 };
 /**
  * Application-level error returned by command handlers in the core infrastructure.
@@ -405,20 +405,20 @@ export type CollectionSummary = {
  * `CommandError::Unknown` for unexpected failures.
  */
 export type CommandError =
-	/**
-	 * Represents an error coming from the database layer.
-	 *
-	 * The inner `String` should contain a concise, non-sensitive description
-	 * of the underlying database failure.
-	 */
-	| { DatabaseError: string }
-	/**
-	 * A catch-all for unexpected errors that don't map to a specific variant.
-	 *
-	 * The inner `String` can include a short debug message suitable for
-	 * logging; avoid placing secrets here.
-	 */
-	| { Unknown: string };
+  /**
+   * Represents an error coming from the database layer.
+   *
+   * The inner `String` should contain a concise, non-sensitive description
+   * of the underlying database failure.
+   */
+  | { DatabaseError: string }
+  /**
+   * A catch-all for unexpected errors that don't map to a specific variant.
+   *
+   * The inner `String` can include a short debug message suitable for
+   * logging; avoid placing secrets here.
+   */
+  | { Unknown: string };
 /**
  * The control method for this railway model.
  *
@@ -434,69 +434,69 @@ export type CommandError =
  * installation may require model-specific wiring or a hardwired decoder.
  */
 export type Control =
-	/**
-	 * The model can be fitted with a dcc decoder.
-	 */
-	| 'DCC_READY'
-	/**
-	 * The model has a dcc decoder installed.
-	 */
-	| 'DCC_FITTED'
-	/**
-	 * The model has a dcc decoder installed with the sound module.
-	 */
-	| 'DCC_SOUND'
-	/**
-	 * The model has no dcc support (like no standard decoder plug)
-	 */
-	| 'NO_DCC';
+  /**
+   * The model can be fitted with a dcc decoder.
+   */
+  | 'DCC_READY'
+  /**
+   * The model has a dcc decoder installed.
+   */
+  | 'DCC_FITTED'
+  /**
+   * The model has a dcc decoder installed with the sound module.
+   */
+  | 'DCC_SOUND'
+  /**
+   * The model has no dcc support (like no standard decoder plug)
+   */
+  | 'NO_DCC';
 /**
  * It represents the coupling configuration for a rolling stock.
  */
 export type Coupling = {
-	/**
-	 * the rolling stock coupling socket
-	 */
-	socket: CouplingSocket | null;
-	/**
-	 * the rolling stock has a close coupling mechanism
-	 */
-	close_couplers: FeatureFlag | null;
-	/**
-	 * the rolling stock has a digital shunting couplers mechanism
-	 */
-	digital_shunting: FeatureFlag | null;
+  /**
+   * the rolling stock coupling socket
+   */
+  socket: CouplingSocket | null;
+  /**
+   * the rolling stock has a close coupling mechanism
+   */
+  close_couplers: FeatureFlag | null;
+  /**
+   * the rolling stock has a digital shunting couplers mechanism
+   */
+  digital_shunting: FeatureFlag | null;
 };
 export type CouplingSocket =
-	| 'NONE'
-	/**
-	 * Receptacle for Replaceable Coupling Heads in Scales TT and N
-	 */
-	| 'NEM_355'
-	/**
-	 * Coupler Head for Scale N
-	 */
-	| 'NEM_356'
-	/**
-	 * Coupler Head for Scale N
-	 */
-	| 'NEM_357'
-	/**
-	 * Coupler Head for Scale TT
-	 */
-	| 'NEM_359'
-	/**
-	 * Standard Coupling for Scale H0
-	 */
-	| 'NEM_360'
-	/**
-	 * NEM shaft 362 with close coupling mechanism
-	 */
-	| 'NEM_362'
-	/**
-	 * Coupler Head for Scale 0
-	 */
-	| 'NEM_365';
+  | 'NONE'
+  /**
+   * Receptacle for Replaceable Coupling Heads in Scales TT and N
+   */
+  | 'NEM_355'
+  /**
+   * Coupler Head for Scale N
+   */
+  | 'NEM_356'
+  /**
+   * Coupler Head for Scale N
+   */
+  | 'NEM_357'
+  /**
+   * Coupler Head for Scale TT
+   */
+  | 'NEM_359'
+  /**
+   * Standard Coupling for Scale H0
+   */
+  | 'NEM_360'
+  /**
+   * NEM shaft 362 with close coupling mechanism
+   */
+  | 'NEM_362'
+  /**
+   * Coupler Head for Scale 0
+   */
+  | 'NEM_365';
 /**
  * Currency codes supported by the application.
  *
@@ -505,22 +505,22 @@ export type CouplingSocket =
  * currency code (case-insensitive).
  */
 export type Currency =
-	/**
-	 * Euro
-	 */
-	| 'EUR'
-	/**
-	 * United States Dollar
-	 */
-	| 'USD'
-	/**
-	 * Great Britain Pound
-	 */
-	| 'GBP'
-	/**
-	 * Japanese Yen
-	 */
-	| 'JPY';
+  /**
+   * Euro
+   */
+  | 'EUR'
+  /**
+   * United States Dollar
+   */
+  | 'USD'
+  /**
+   * Great Britain Pound
+   */
+  | 'GBP'
+  /**
+   * Japanese Yen
+   */
+  | 'JPY';
 /**
  * The NMRA and NEM Connectors for digital control (DCC)
  *
@@ -534,41 +534,41 @@ export type Currency =
  * replacement DCC control board (if available) for that specific model.
  */
 export type DccInterface =
-	/**
-	 * 6 Pin standard mechanical and electrical interfaces (NMRA Small)
-	 */
-	| 'NEM_651'
-	/**
-	 * 8 Pin standard mechanical and electrical interfaces (NMRA Medium)
-	 */
-	| 'NEM_652'
-	/**
-	 * 4 Pin standard mechanical and electrical interfaces (NMRA Large)
-	 */
-	| 'NEM_654'
-	/**
-	 * The PluX8 connector consists of two rows of 4 pins.
-	 */
-	| 'PLUX_8'
-	| 'PLUX_12'
-	/**
-	 * The PluX16 connector consists of two rows of 8 pins.
-	 */
-	| 'PLUX_16'
-	/**
-	 * The PluX22 connector consists of two rows of 11 pins.
-	 */
-	| 'PLUX_22'
-	/**
-	 * standard connector for extremely tight applications, such as TT and N scale locomotives (NEM 662)
-	 */
-	| 'NEXT_18'
-	| 'NEXT_18_S'
-	/**
-	 * 21MTC Connector interface is a standard adopted by both the NMRA and NEM (NEM 660).
-	 * Its name comes from 21 pin Marklin/Trix Connector, developed by Marklin and ESU.
-	 */
-	| 'MTC_21';
+  /**
+   * 6 Pin standard mechanical and electrical interfaces (NMRA Small)
+   */
+  | 'NEM_651'
+  /**
+   * 8 Pin standard mechanical and electrical interfaces (NMRA Medium)
+   */
+  | 'NEM_652'
+  /**
+   * 4 Pin standard mechanical and electrical interfaces (NMRA Large)
+   */
+  | 'NEM_654'
+  /**
+   * The PluX8 connector consists of two rows of 4 pins.
+   */
+  | 'PLUX_8'
+  | 'PLUX_12'
+  /**
+   * The PluX16 connector consists of two rows of 8 pins.
+   */
+  | 'PLUX_16'
+  /**
+   * The PluX22 connector consists of two rows of 11 pins.
+   */
+  | 'PLUX_22'
+  /**
+   * standard connector for extremely tight applications, such as TT and N scale locomotives (NEM 662)
+   */
+  | 'NEXT_18'
+  | 'NEXT_18_S'
+  /**
+   * 21MTC Connector interface is a standard adopted by both the NMRA and NEM (NEM 660).
+   * Its name comes from 21 pin Marklin/Trix Connector, developed by Marklin and ESU.
+   */
+  | 'MTC_21';
 /**
  * Strongly-typed identifier for a decoder (master record).
  *
@@ -583,56 +583,56 @@ export type DecoderId = string;
  * much information the manufacturer has provided about the release schedule.
  */
 export type DeliveryDate =
-	/**
-	 * Delivery is expected within a specific calendar year.
-	 */
-	| { Year: number }
-	/**
-	 * Delivery is expected within a specific month of a year.
-	 */
-	| {
-			YearMonth: {
-				/**
-				 * The calendar year (e.g., 2024).
-				 */
-				year: number;
-				/**
-				 * The month of the year (1 for January, 12 for December).
-				 */
-				month: number;
-			};
-	  }
-	/**
-	 * Delivery is expected within a specific fiscal or calendar quarter.
-	 */
-	| {
-			YearQuarter: {
-				/**
-				 * The calendar year (e.g., 2024).
-				 */
-				year: number;
-				/**
-				 * The specific quarter of the year.
-				 */
-				quarter: Quarter;
-			};
-	  };
+  /**
+   * Delivery is expected within a specific calendar year.
+   */
+  | { Year: number }
+  /**
+   * Delivery is expected within a specific month of a year.
+   */
+  | {
+      YearMonth: {
+        /**
+         * The calendar year (e.g., 2024).
+         */
+        year: number;
+        /**
+         * The month of the year (1 for January, 12 for December).
+         */
+        month: number;
+      };
+    }
+  /**
+   * Delivery is expected within a specific fiscal or calendar quarter.
+   */
+  | {
+      YearQuarter: {
+        /**
+         * The calendar year (e.g., 2024).
+         */
+        year: number;
+        /**
+         * The specific quarter of the year.
+         */
+        quarter: Quarter;
+      };
+    };
 /**
  * Represents the installation of a decoder into a locomotive (owned rolling stock).
  */
 export type DigitalSetup = {
-	/**
-	 * The physical interface present on the locomotive (socket/plug type).
-	 */
-	interface: DccInterface;
-	/**
-	 * The DCC address assigned to the decoder.
-	 */
-	dcc_address: number;
-	/**
-	 * The installed decoder id (URN) referencing the `decoders` master table.
-	 */
-	installed_decoder_id: DecoderId;
+  /**
+   * The physical interface present on the locomotive (socket/plug type).
+   */
+  interface: DccInterface;
+  /**
+   * The DCC address assigned to the decoder.
+   */
+  dcc_address: number;
+  /**
+   * The installed decoder id (URN) referencing the `decoders` master table.
+   */
+  installed_decoder_id: DecoderId;
 };
 /**
  * The cars that form a complete EMU set can usually be separated by function into four types:
@@ -641,37 +641,37 @@ export type DigitalSetup = {
  * Each car can have more than one function, such as a motor-driving car or power-driving car.
  */
 export type ElectricMultipleUnitType =
-	/**
-	 * Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
-	 * An EMU will usually have two driving cars at its outer ends.
-	 */
-	| 'DRIVING_CAR'
-	/**
-	 * High-speed rail is a type of rail system that runs significantly faster than traditional
-	 * rail, using an integrated system of specialised rolling stock and dedicated tracks.
-	 */
-	| 'HIGH_SPEED_TRAIN'
-	/**
-	 * Motor cars carry the traction motors to move the train, and are often combined with the
-	 * power car to avoid high-voltage inter-car connections.
-	 */
-	| 'MOTOR_CAR'
-	/**
-	 * A power car carries the necessary equipment to draw power from the electrified
-	 * infrastructure, such as pickup shoes for third rail systems and pantographs for
-	 * overhead systems, and transformers.
-	 */
-	| 'POWER_CAR'
-	/**
-	 * Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
-	 * traction or power related equipment, and are similar to passenger cars in a
-	 * locomotive-hauled train.
-	 */
-	| 'TRAILER_CAR'
-	/**
-	 * A trainset is working as whole unit
-	 */
-	| 'TRAIN_SET';
+  /**
+   * Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
+   * An EMU will usually have two driving cars at its outer ends.
+   */
+  | 'DRIVING_CAR'
+  /**
+   * High-speed rail is a type of rail system that runs significantly faster than traditional
+   * rail, using an integrated system of specialised rolling stock and dedicated tracks.
+   */
+  | 'HIGH_SPEED_TRAIN'
+  /**
+   * Motor cars carry the traction motors to move the train, and are often combined with the
+   * power car to avoid high-voltage inter-car connections.
+   */
+  | 'MOTOR_CAR'
+  /**
+   * A power car carries the necessary equipment to draw power from the electrified
+   * infrastructure, such as pickup shoes for third rail systems and pantographs for
+   * overhead systems, and transformers.
+   */
+  | 'POWER_CAR'
+  /**
+   * Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
+   * traction or power related equipment, and are similar to passenger cars in a
+   * locomotive-hauled train.
+   */
+  | 'TRAILER_CAR'
+  /**
+   * A trainset is working as whole unit
+   */
+  | 'TRAIN_SET';
 /**
  * Backwards-compatible wrapper used across the codebase and DB rows.
  *
@@ -687,22 +687,22 @@ export type Epoch = string;
  * specific class of locomotive or rolling stock.
  */
 export type FeatureFlag =
-	/**
-	 * The feature is present and functional on the model.
-	 */
-	| 'YES'
-	/**
-	 * The feature is not present on the model, though it might be
-	 * expected or available on similar models.
-	 */
-	| 'NO'
-	/**
-	 * The feature is not relevant for this type of equipment.
-	 *
-	 * For example, a "Pantograph Type" flag would be `NotApplicable`
-	 * for a Steam Locomotive.
-	 */
-	| 'NOT_APPLICABLE';
+  /**
+   * The feature is present and functional on the model.
+   */
+  | 'YES'
+  /**
+   * The feature is not present on the model, though it might be
+   * expected or available on similar models.
+   */
+  | 'NO'
+  /**
+   * The feature is not relevant for this type of equipment.
+   *
+   * For example, a "Pantograph Type" flag would be `NotApplicable`
+   * for a Steam Locomotive.
+   */
+  | 'NOT_APPLICABLE';
 /**
  * Represents the various types of freight rolling stock used in rail transport.
  *
@@ -711,100 +711,100 @@ export type FeatureFlag =
  * specialized loading mechanisms.
  */
 export type FreightCarType =
-	/**
-	 * Specialized wagons for transporting motor vehicles, often multi-deck.
-	 */
-	| 'AUTO_TRANSPORT_CARS'
-	/**
-	 * A wagon equipped with a handbrake or a cabin for a brakeman,
-	 * historically used to assist in braking the train.
-	 */
-	| 'BRAKE_WAGON'
-	/**
-	 * Flat or skeleton-framed wagons designed specifically to carry
-	 * standardized shipping containers (ISO containers).
-	 */
-	| 'CONTAINER_CARS'
-	/**
-	 * Fully enclosed wagons used for goods that must be protected
-	 * from weather and theft.
-	 */
-	| 'COVERED_FREIGHT_CARS'
-	/**
-	 * Wagons with a lowered center section designed to carry tall
-	 * loads like intermodal trailers or containers within height clearances.
-	 */
-	| 'DEEP_WELL_FLAT_CARS'
-	/**
-	 * Open-top wagons with a mechanism to tilt the body to unload
-	 * bulk materials like sand or gravel.
-	 */
-	| 'DUMP_CARS'
-	/**
-	 * Open-topped rail vehicles used for transporting loose bulk
-	 * materials such as coal, ore, or scrap metal.
-	 */
-	| 'GONDOLA'
-	/**
-	 * Heavy-duty flat wagons designed for extremely heavy or
-	 * oversized loads, often featuring many axles.
-	 */
-	| 'HEAVY_GOODS_WAGONS'
-	/**
-	 * Wagons with a roof that is hinged on one side, allowing
-	 * for top-loading of weather-sensitive bulk goods.
-	 */
-	| 'HINGED_COVER_WAGONS'
-	/**
-	 * Wagons with a floor that slopes toward one or more discharge
-	 * doors, used for the rapid unloading of bulk materials.
-	 */
-	| 'HOPPER_WAGON'
-	/**
-	 * Insulated wagons equipped with cooling systems for
-	 * transporting perishable goods.
-	 */
-	| 'REFRIGERATOR_CARS'
-	/**
-	 * Specialized wagons for transporting pressurized or
-	 * non-pressurized powders and granulated materials in silos.
-	 */
-	| 'SILO_CONTAINER_CARS'
-	/**
-	 * Wagons with a flexible tarpaulin cover that slides open
-	 * for easy side-loading of palletized goods.
-	 */
-	| 'SLIDE_TARPAULIN_WAGON'
-	/**
-	 * Boxcars with large sliding doors that make up the entire
-	 * side of the wagon, allowing for forklift access.
-	 */
-	| 'SLIDING_WALL_BOXCARS'
-	/**
-	 * Wagons designed for niche cargo that does not fit
-	 * into standard classifications.
-	 */
-	| 'SPECIAL_TRANSPORT'
-	/**
-	 * Flat wagons equipped with vertical posts (stakes) along
-	 * the sides to secure long loads like timber or pipes.
-	 */
-	| 'STAKE_WAGONS'
-	/**
-	 * Wagons with a roof that swings to the side to provide
-	 * a wide opening for top-loading bulk cargo.
-	 */
-	| 'SWING_ROOF_WAGON'
-	/**
-	 * Enclosed pressurized or non-pressurized vessels for
-	 * transporting liquids, gases, or chemicals.
-	 */
-	| 'TANK_CARS'
-	/**
-	 * Wagons with several overlapping "hoods" that slide
-	 * over each other, used for protecting steel coils or heavy machinery.
-	 */
-	| 'TELESCOPE_HOOD_WAGONS';
+  /**
+   * Specialized wagons for transporting motor vehicles, often multi-deck.
+   */
+  | 'AUTO_TRANSPORT_CARS'
+  /**
+   * A wagon equipped with a handbrake or a cabin for a brakeman,
+   * historically used to assist in braking the train.
+   */
+  | 'BRAKE_WAGON'
+  /**
+   * Flat or skeleton-framed wagons designed specifically to carry
+   * standardized shipping containers (ISO containers).
+   */
+  | 'CONTAINER_CARS'
+  /**
+   * Fully enclosed wagons used for goods that must be protected
+   * from weather and theft.
+   */
+  | 'COVERED_FREIGHT_CARS'
+  /**
+   * Wagons with a lowered center section designed to carry tall
+   * loads like intermodal trailers or containers within height clearances.
+   */
+  | 'DEEP_WELL_FLAT_CARS'
+  /**
+   * Open-top wagons with a mechanism to tilt the body to unload
+   * bulk materials like sand or gravel.
+   */
+  | 'DUMP_CARS'
+  /**
+   * Open-topped rail vehicles used for transporting loose bulk
+   * materials such as coal, ore, or scrap metal.
+   */
+  | 'GONDOLA'
+  /**
+   * Heavy-duty flat wagons designed for extremely heavy or
+   * oversized loads, often featuring many axles.
+   */
+  | 'HEAVY_GOODS_WAGONS'
+  /**
+   * Wagons with a roof that is hinged on one side, allowing
+   * for top-loading of weather-sensitive bulk goods.
+   */
+  | 'HINGED_COVER_WAGONS'
+  /**
+   * Wagons with a floor that slopes toward one or more discharge
+   * doors, used for the rapid unloading of bulk materials.
+   */
+  | 'HOPPER_WAGON'
+  /**
+   * Insulated wagons equipped with cooling systems for
+   * transporting perishable goods.
+   */
+  | 'REFRIGERATOR_CARS'
+  /**
+   * Specialized wagons for transporting pressurized or
+   * non-pressurized powders and granulated materials in silos.
+   */
+  | 'SILO_CONTAINER_CARS'
+  /**
+   * Wagons with a flexible tarpaulin cover that slides open
+   * for easy side-loading of palletized goods.
+   */
+  | 'SLIDE_TARPAULIN_WAGON'
+  /**
+   * Boxcars with large sliding doors that make up the entire
+   * side of the wagon, allowing for forklift access.
+   */
+  | 'SLIDING_WALL_BOXCARS'
+  /**
+   * Wagons designed for niche cargo that does not fit
+   * into standard classifications.
+   */
+  | 'SPECIAL_TRANSPORT'
+  /**
+   * Flat wagons equipped with vertical posts (stakes) along
+   * the sides to secure long loads like timber or pipes.
+   */
+  | 'STAKE_WAGONS'
+  /**
+   * Wagons with a roof that swings to the side to provide
+   * a wide opening for top-loading bulk cargo.
+   */
+  | 'SWING_ROOF_WAGON'
+  /**
+   * Enclosed pressurized or non-pressurized vessels for
+   * transporting liquids, gases, or chemicals.
+   */
+  | 'TANK_CARS'
+  /**
+   * Wagons with several overlapping "hoods" that slide
+   * over each other, used for protecting steel coils or heavy machinery.
+   */
+  | 'TELESCOPE_HOOD_WAGONS';
 /**
  * A physical length value paired with its measure unit.
  *
@@ -818,26 +818,26 @@ export type FreightCarType =
  * side's unit (so comparisons are unit-agnostic but deterministic).
  */
 export type Length =
-	/**
-	 * A length expressed in inches.
-	 */
-	| { Inches: string }
-	/**
-	 * A length expressed in kilometers.
-	 */
-	| { Kilometers: string }
-	/**
-	 * A length expressed in meters.
-	 */
-	| { Meters: string }
-	/**
-	 * A length expressed in miles.
-	 */
-	| { Miles: string }
-	/**
-	 * A length expressed in millimeters.
-	 */
-	| { Millimeters: string };
+  /**
+   * A length expressed in inches.
+   */
+  | { Inches: string }
+  /**
+   * A length expressed in kilometers.
+   */
+  | { Kilometers: string }
+  /**
+   * A length expressed in meters.
+   */
+  | { Meters: string }
+  /**
+   * A length expressed in miles.
+   */
+  | { Miles: string }
+  /**
+   * A length expressed in millimeters.
+   */
+  | { Millimeters: string };
 /**
  * The rail vehicle measurement method expressed as the length over buffers
  *
@@ -848,14 +848,14 @@ export type Length =
  * serde using the helpers in `crate::core::domain::length::serde`.
  */
 export type LengthOverBuffers = {
-	/**
-	 * the overall length in inches
-	 */
-	inches: Length | null;
-	/**
-	 * the overall length in millimeters
-	 */
-	millimeters: Length | null;
+  /**
+   * the overall length in inches
+   */
+  inches: Length | null;
+  /**
+   * the overall length in millimeters
+   */
+  millimeters: Length | null;
 };
 /**
  * Specifies the primary motive power source for a locomotive.
@@ -864,21 +864,21 @@ export type LengthOverBuffers = {
  * fueling infrastructure or overhead electrification.
  */
 export type LocomotiveType =
-	/**
-	 * Locomotives powered by an external combustion engine, typically
-	 * using a boiler to produce steam from coal, wood, or oil.
-	 */
-	| 'STEAM_LOCOMOTIVE'
-	/**
-	 * Locomotives powered by an internal combustion engine, usually
-	 * driving an electric generator or a hydraulic transmission.
-	 */
-	| 'DIESEL_LOCOMOTIVE'
-	/**
-	 * Locomotives that draw power from external sources, such as
-	 * overhead catenary wires or a third rail.
-	 */
-	| 'ELECTRIC_LOCOMOTIVE';
+  /**
+   * Locomotives powered by an external combustion engine, typically
+   * using a boiler to produce steam from coal, wood, or oil.
+   */
+  | 'STEAM_LOCOMOTIVE'
+  /**
+   * Locomotives powered by an internal combustion engine, usually
+   * driving an electric generator or a hydraulic transmission.
+   */
+  | 'DIESEL_LOCOMOTIVE'
+  /**
+   * Locomotives that draw power from external sources, such as
+   * overhead catenary wires or a third rail.
+   */
+  | 'ELECTRIC_LOCOMOTIVE';
 /**
  * Domain model representing a maintenance card for owned rolling stock.
  *
@@ -886,30 +886,30 @@ export type LocomotiveType =
  * application logic and for returning to the frontend via Specta.
  */
 export type MaintenanceCard = {
-	/**
-	 * Unique identifier for the maintenance card.
-	 */
-	id: string;
-	/**
-	 * FK referencing the owned rolling stock.
-	 */
-	owned_rolling_stock_id: string;
-	/**
-	 * The date the last maintenance was performed, if any.
-	 */
-	last_maintenance_date: string | null;
-	/**
-	 * The scheduled next maintenance date, if any.
-	 */
-	next_maintenance_date: string | null;
-	/**
-	 * Created timestamp parsed from the database (if present).
-	 */
-	created_at: string | null;
-	/**
-	 * Updated timestamp parsed from the database (if present).
-	 */
-	updated_at: string | null;
+  /**
+   * Unique identifier for the maintenance card.
+   */
+  id: string;
+  /**
+   * FK referencing the owned rolling stock.
+   */
+  owned_rolling_stock_id: string;
+  /**
+   * The date the last maintenance was performed, if any.
+   */
+  last_maintenance_date: string | null;
+  /**
+   * The scheduled next maintenance date, if any.
+   */
+  next_maintenance_date: string | null;
+  /**
+   * Created timestamp parsed from the database (if present).
+   */
+  created_at: string | null;
+  /**
+   * Updated timestamp parsed from the database (if present).
+   */
+  updated_at: string | null;
 };
 /**
  * A manufacturer (maker of railway models).
@@ -918,31 +918,31 @@ export type MaintenanceCard = {
  * correspond to nullable DB columns.
  */
 export type Manufacturer = {
-	/**
-	 * Unique identifier for the manufacturer.
-	 */
-	id: ManufacturerId;
-	/**
-	 * The common name of the manufacturer (not null).
-	 */
-	name: string;
-	/**
-	 * The legally registered company name (nullable).
-	 */
-	registered_company_name: string | null;
-	/**
-	 * The ISO 3166-1 alpha-2 country code where the company is registered
-	 * (nullable). Example: `"IT"` for Italy.
-	 */
-	country_code: string | null;
-	/**
-	 * The lifecycle status of the manufacturer. Defaults to `Active`.
-	 */
-	status: ManufacturerStatus;
-	/**
-	 * Optional website URL for the manufacturer.
-	 */
-	website_url: string | null;
+  /**
+   * Unique identifier for the manufacturer.
+   */
+  id: ManufacturerId;
+  /**
+   * The common name of the manufacturer (not null).
+   */
+  name: string;
+  /**
+   * The legally registered company name (nullable).
+   */
+  registered_company_name: string | null;
+  /**
+   * The ISO 3166-1 alpha-2 country code where the company is registered
+   * (nullable). Example: `"IT"` for Italy.
+   */
+  country_code: string | null;
+  /**
+   * The lifecycle status of the manufacturer. Defaults to `Active`.
+   */
+  status: ManufacturerStatus;
+  /**
+   * Optional website URL for the manufacturer.
+   */
+  website_url: string | null;
 };
 export type ManufacturerId = string;
 /**
@@ -979,14 +979,14 @@ export type ManufacturerStatus = 'ACTIVE' | 'MERGED' | 'OUT_OF_BUSINESS';
  * ```
  */
 export type MonetaryAmount = {
-	/**
-	 * Amount stored in the smallest unit (e.g. cents for EUR/USD/GBP).
-	 */
-	amount: bigint;
-	/**
-	 * Currency of the amount.
-	 */
-	currency: Currency;
+  /**
+   * Amount stored in the smallest unit (e.g. cents for EUR/USD/GBP).
+   */
+  amount: bigint;
+  /**
+   * Currency of the amount.
+   */
+  currency: Currency;
 };
 /**
  * A lightweight view of rolling stock that references catalog model data.
@@ -999,113 +999,113 @@ export type MonetaryAmount = {
  * catalog when needed.
  */
 export type OwnedRollingStock = {
-	/**
-	 * Unique identifier for this owned rolling stock record (e.g. UUID in the DB).
-	 */
-	id: string;
-	/**
-	 * Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
-	 */
-	rolling_stock_id: string;
-	/**
-	 * Free-form notes associated with this owned instance.
-	 * Use this for short owner notes or a brief textual label.
-	 */
-	notes: string;
-	/**
-	 * Optional digital setup information if a decoder is installed.
-	 */
-	digital: DigitalSetup | null;
+  /**
+   * Unique identifier for this owned rolling stock record (e.g. UUID in the DB).
+   */
+  id: string;
+  /**
+   * Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
+   */
+  rolling_stock_id: string;
+  /**
+   * Free-form notes associated with this owned instance.
+   * Use this for short owner notes or a brief textual label.
+   */
+  notes: string;
+  /**
+   * Optional digital setup information if a decoder is installed.
+   */
+  digital: DigitalSetup | null;
 };
 /**
  * The types for passenger car rolling stocks
  */
 export type PassengerCarType =
-	/**
-	 * A car usually placed between the locomotive and the rest of the train,
-	 * featuring a wide-open interior for carrying checked baggage.
-	 */
-	| 'BAGGAGE_CAR'
-	/**
-	 * A car providing limited food service (snacks/drinks) and a counter,
-	 * smaller in scale than a full Dining Car.
-	 */
-	| 'BUFFET_CAR'
-	/**
-	 * A hybrid car containing separate sections for both passengers and
-	 * freight or baggage.
-	 */
-	| 'COMBINE_CAR'
-	/**
-	 * A coach featuring a side corridor connecting individual private
-	 * compartments, each with face-to-face seating rows.
-	 */
-	| 'COMPARTMENT_COACH'
-	/**
-	 * A car dedicated to full-service meal preparation and seating for passengers.
-	 */
-	| 'DINING_CAR'
-	/**
-	 * A car with two levels of passenger seating to increase capacity
-	 * without increasing train length.
-	 */
-	| 'DOUBLE_DECKER'
-	/**
-	 * A car with a glass-roofed section raised above the normal roofline,
-	 * allowing 360-degree views of the scenery.
-	 */
-	| 'DOME_CAR'
-	/**
-	 * A control car equipped with a driver's cab, allowing the locomotive
-	 * to be operated from the opposite end in a push-pull configuration.
-	 */
-	| 'DRIVING_TRAILER'
-	/**
-	 * A car featuring a bar and informal public seating, often used
-	 * as a social space.
-	 */
-	| 'LOUNGE'
-	/**
-	 * The final car of a train, often featuring large windows or an open
-	 * rear platform for scenic viewing.
-	 */
-	| 'OBSERVATION'
-	/**
-	 * A coach with a central aisle and rows of seats similar to an
-	 * airliner's cabin layout.
-	 */
-	| 'OPEN_COACH'
-	/**
-	 * A specialized car used for sorting mail while in transit to
-	 * expedite delivery.
-	 */
-	| 'RAILWAY_POST_OFFICE'
-	/**
-	 * A car with berths or private rooms for overnight travel.
-	 * Also known as a "Sleeper" or "Pullman car."
-	 */
-	| 'SLEEPING_CAR'
-	/**
-	 * A "couchette" or "Sleeperette" car, providing reclining seats or
-	 * basic fold-down bunks for a more economical overnight option.
-	 */
-	| 'SLEEPERETTE';
+  /**
+   * A car usually placed between the locomotive and the rest of the train,
+   * featuring a wide-open interior for carrying checked baggage.
+   */
+  | 'BAGGAGE_CAR'
+  /**
+   * A car providing limited food service (snacks/drinks) and a counter,
+   * smaller in scale than a full Dining Car.
+   */
+  | 'BUFFET_CAR'
+  /**
+   * A hybrid car containing separate sections for both passengers and
+   * freight or baggage.
+   */
+  | 'COMBINE_CAR'
+  /**
+   * A coach featuring a side corridor connecting individual private
+   * compartments, each with face-to-face seating rows.
+   */
+  | 'COMPARTMENT_COACH'
+  /**
+   * A car dedicated to full-service meal preparation and seating for passengers.
+   */
+  | 'DINING_CAR'
+  /**
+   * A car with two levels of passenger seating to increase capacity
+   * without increasing train length.
+   */
+  | 'DOUBLE_DECKER'
+  /**
+   * A car with a glass-roofed section raised above the normal roofline,
+   * allowing 360-degree views of the scenery.
+   */
+  | 'DOME_CAR'
+  /**
+   * A control car equipped with a driver's cab, allowing the locomotive
+   * to be operated from the opposite end in a push-pull configuration.
+   */
+  | 'DRIVING_TRAILER'
+  /**
+   * A car featuring a bar and informal public seating, often used
+   * as a social space.
+   */
+  | 'LOUNGE'
+  /**
+   * The final car of a train, often featuring large windows or an open
+   * rear platform for scenic viewing.
+   */
+  | 'OBSERVATION'
+  /**
+   * A coach with a central aisle and rows of seats similar to an
+   * airliner's cabin layout.
+   */
+  | 'OPEN_COACH'
+  /**
+   * A specialized car used for sorting mail while in transit to
+   * expedite delivery.
+   */
+  | 'RAILWAY_POST_OFFICE'
+  /**
+   * A car with berths or private rooms for overnight travel.
+   * Also known as a "Sleeper" or "Pullman car."
+   */
+  | 'SLEEPING_CAR'
+  /**
+   * A "couchette" or "Sleeperette" car, providing reclining seats or
+   * basic fold-down bunks for a more economical overnight option.
+   */
+  | 'SLEEPERETTE';
 /**
  * It represents the period of activity for a railway company
  */
 export type PeriodOfActivity = {
-	/**
-	 * the date when the railway started its operation
-	 */
-	operating_since: string | null;
-	/**
-	 * the date when the railway ended its operation, if not active anymore
-	 */
-	operating_until: string | null;
-	/**
-	 * the railway status
-	 */
-	status: RailwayStatus;
+  /**
+   * the date when the railway started its operation
+   */
+  operating_since: string | null;
+  /**
+   * the date when the railway ended its operation, if not active anymore
+   */
+  operating_until: string | null;
+  /**
+   * the railway status
+   */
+  status: RailwayStatus;
 };
 /**
  * Power method used by rolling stocks.
@@ -1114,18 +1114,18 @@ export type PeriodOfActivity = {
  * The `Display` implementation returns a human-friendly name for each variant.
  */
 export type PowerMethod =
-	/**
-	 * Alternating current (AC) power collection.
-	 */
-	| 'AC'
-	/**
-	 * Direct current (DC) power collection.
-	 */
-	| 'DC'
-	/**
-	 * Trix Express three-rail power pickup system.
-	 */
-	| 'TRIX_EXPRESS';
+  /**
+   * Alternating current (AC) power collection.
+   */
+  | 'AC'
+  /**
+   * Direct current (DC) power collection.
+   */
+  | 'DC'
+  /**
+   * Trix Express three-rail power pickup system.
+   */
+  | 'TRIX_EXPRESS';
 /**
  * Details for a pre-order entry.
  *
@@ -1134,30 +1134,30 @@ export type PowerMethod =
  * `validate_currencies_match` helper to assert that condition.
  */
 export type PreOrderInfo = {
-	/**
-	 * Unique identifier for this preorder record.
-	 */
-	id: string;
-	/**
-	 * Date when the preorder was placed (ISO `YYYY-MM-DD`).
-	 */
-	order_date: string;
-	/**
-	 * Amount paid as deposit (in smallest unit + currency).
-	 */
-	deposit: MonetaryAmount;
-	/**
-	 * Total price for the pre-ordered item (in smallest unit + currency).
-	 */
-	total_price: MonetaryAmount;
-	/**
-	 * Optional seller identifier or shop name.
-	 */
-	seller: string | null;
-	/**
-	 * Optional expected delivery date (ETA) for the preorder.
-	 */
-	expected_date: string | null;
+  /**
+   * Unique identifier for this preorder record.
+   */
+  id: string;
+  /**
+   * Date when the preorder was placed (ISO `YYYY-MM-DD`).
+   */
+  order_date: string;
+  /**
+   * Amount paid as deposit (in smallest unit + currency).
+   */
+  deposit: MonetaryAmount;
+  /**
+   * Total price for the pre-ordered item (in smallest unit + currency).
+   */
+  total_price: MonetaryAmount;
+  /**
+   * Optional seller identifier or shop name.
+   */
+  seller: string | null;
+  /**
+   * Optional expected delivery date (ETA) for the preorder.
+   */
+  expected_date: string | null;
 };
 /**
  * A product identifier (manufacturer model/code) used to uniquely identify
@@ -1190,19 +1190,19 @@ export type ProductCode = string;
  * have paid a deposit and the full total price is known as well.
  */
 export type PurchaseInfo =
-	/**
-	 * A standard purchase record.
-	 */
-	| { kind: 'purchased'; data: PurchasedInfo }
-	/**
-	 * A sold item record that preserves original purchase data and the
-	 * subsequent sale information.
-	 */
-	| { kind: 'sold'; data: SoldInfo }
-	/**
-	 * A preorder record with deposit and total price information.
-	 */
-	| { kind: 'preordered'; data: PreOrderInfo };
+  /**
+   * A standard purchase record.
+   */
+  | { kind: 'purchased'; data: PurchasedInfo }
+  /**
+   * A sold item record that preserves original purchase data and the
+   * subsequent sale information.
+   */
+  | { kind: 'sold'; data: SoldInfo }
+  /**
+   * A preorder record with deposit and total price information.
+   */
+  | { kind: 'preordered'; data: PreOrderInfo };
 /**
  * Details for a purchased item.
  *
@@ -1211,24 +1211,24 @@ export type PurchaseInfo =
  * monetary amount or currency was not stored.
  */
 export type PurchasedInfo = {
-	/**
-	 * Unique identifier for this purchase record (for example a UUID).
-	 */
-	id: string;
-	/**
-	 * Date when the item was purchased (ISO `YYYY-MM-DD`).
-	 */
-	purchase_date: string;
-	/**
-	 * The price paid when purchasing the item, if known.
-	 *
-	 * Represented as a domain `MonetaryAmount` (amount in smallest unit + currency).
-	 */
-	price: MonetaryAmount | null;
-	/**
-	 * Optional seller identifier or human-friendly name.
-	 */
-	seller: string | null;
+  /**
+   * Unique identifier for this purchase record (for example a UUID).
+   */
+  id: string;
+  /**
+   * Date when the item was purchased (ISO `YYYY-MM-DD`).
+   */
+  purchase_date: string;
+  /**
+   * The price paid when purchasing the item, if known.
+   *
+   * Represented as a domain `MonetaryAmount` (amount in smallest unit + currency).
+   */
+  price: MonetaryAmount | null;
+  /**
+   * Optional seller identifier or human-friendly name.
+   */
+  seller: string | null;
 };
 /**
  * Represents one of the four three-month segments of a calendar year.
@@ -1236,22 +1236,22 @@ export type PurchasedInfo = {
  * These quarters follow the standard calendar year, beginning in January.
  */
 export type Quarter =
-	/**
-	 * The first quarter: January, February, and March.
-	 */
-	| 'Q1'
-	/**
-	 * The second quarter: April, May, and June.
-	 */
-	| 'Q2'
-	/**
-	 * The third quarter: July, August, and September.
-	 */
-	| 'Q3'
-	/**
-	 * The fourth quarter: October, November, and December.
-	 */
-	| 'Q4';
+  /**
+   * The first quarter: January, February, and March.
+   */
+  | 'Q1'
+  /**
+   * The second quarter: April, May, and June.
+   */
+  | 'Q2'
+  /**
+   * The third quarter: July, August, and September.
+   */
+  | 'Q3'
+  /**
+   * The fourth quarter: October, November, and December.
+   */
+  | 'Q4';
 /**
  * Domain types for handling minimum drivable radii.
  *
@@ -1270,16 +1270,16 @@ export type Radius = Length;
  * or draisine.
  */
 export type RailcarType =
-	/**
-	 * A self-propelled passenger vehicles also capable of hauling a train.
-	 */
-	| 'POWER_CAR'
-	/**
-	 * Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
-	 * traction or power related equipment, and are similar to passenger cars in a
-	 * locomotive-hauled train.
-	 */
-	| 'TRAILER_CAR';
+  /**
+   * A self-propelled passenger vehicles also capable of hauling a train.
+   */
+  | 'POWER_CAR'
+  /**
+   * Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no
+   * traction or power related equipment, and are similar to passenger cars in a
+   * locomotive-hauled train.
+   */
+  | 'TRAILER_CAR';
 /**
  * A railway company (operator or owner).
  *
@@ -1287,27 +1287,27 @@ export type RailcarType =
  * because the corresponding database columns may be nullable.
  */
 export type RailwayCompany = {
-	/**
-	 * Unique identifier for the railway company.
-	 */
-	id: RailwayCompanyId;
-	/**
-	 * The common name of the railway company (not null).
-	 */
-	name: string;
-	/**
-	 * The legally registered company name (nullable).
-	 */
-	registered_company_name: string | null;
-	/**
-	 * The ISO 3166-1 alpha-2 country code where the company is registered
-	 * (nullable). Example: `"IT"` for Italy.
-	 */
-	country_code: string | null;
-	/**
-	 * The period of activity of the railway company (nullable).
-	 */
-	period_of_activity: PeriodOfActivity | null;
+  /**
+   * Unique identifier for the railway company.
+   */
+  id: RailwayCompanyId;
+  /**
+   * The common name of the railway company (not null).
+   */
+  name: string;
+  /**
+   * The legally registered company name (nullable).
+   */
+  registered_company_name: string | null;
+  /**
+   * The ISO 3166-1 alpha-2 country code where the company is registered
+   * (nullable). Example: `"IT"` for Italy.
+   */
+  country_code: string | null;
+  /**
+   * The period of activity of the railway company (nullable).
+   */
+  period_of_activity: PeriodOfActivity | null;
 };
 /**
  * Strongly-typed identifier for a railway in the catalog domain.
@@ -1334,54 +1334,54 @@ export type RailwayCompanyId = string;
  * to specific owned or catalogued items of this model.
  */
 export type RailwayModel = {
-	/**
-	 * Unique identifier for the railway model.
-	 */
-	id: RailwayModelId;
-	/**
-	 * The manufacturer of the model (e.g. Bachmann, Märklin).
-	 */
-	manufacturer: string;
-	/**
-	 * Manufacturer-assigned product code.
-	 */
-	product_code: ProductCode;
-	/**
-	 * Human-readable description of the model.
-	 */
-	description: string;
-	/**
-	 * Additional details about the model (e.g. special features, variations).
-	 */
-	details: string | null;
-	/**
-	 * The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
-	 */
-	power_method: PowerMethod;
-	/**
-	 * The scale of the model (e.g. HO, N).
-	 */
-	scale: Scale;
-	/**
-	 * The historical epoch the model belongs to.
-	 */
-	epoch: Epoch;
-	/**
-	 * Classification category for the model (e.g. locomotive, freight car).
-	 */
-	category: Category;
-	/**
-	 * Delivery or release date information for the product.
-	 */
-	delivery_date: DeliveryDate | null;
-	/**
-	 * the availability status
-	 */
-	availability_status: AvailabilityStatus | null;
-	/**
-	 * Rolling stock instances (specific vehicles) that correspond to this model.
-	 */
-	rolling_stocks: RollingStock[];
+  /**
+   * Unique identifier for the railway model.
+   */
+  id: RailwayModelId;
+  /**
+   * The manufacturer of the model (e.g. Bachmann, Märklin).
+   */
+  manufacturer: string;
+  /**
+   * Manufacturer-assigned product code.
+   */
+  product_code: ProductCode;
+  /**
+   * Human-readable description of the model.
+   */
+  description: string;
+  /**
+   * Additional details about the model (e.g. special features, variations).
+   */
+  details: string | null;
+  /**
+   * The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
+   */
+  power_method: PowerMethod;
+  /**
+   * The scale of the model (e.g. HO, N).
+   */
+  scale: Scale;
+  /**
+   * The historical epoch the model belongs to.
+   */
+  epoch: Epoch;
+  /**
+   * Classification category for the model (e.g. locomotive, freight car).
+   */
+  category: Category;
+  /**
+   * Delivery or release date information for the product.
+   */
+  delivery_date: DeliveryDate | null;
+  /**
+   * the availability status
+   */
+  availability_status: AvailabilityStatus | null;
+  /**
+   * Rolling stock instances (specific vehicles) that correspond to this model.
+   */
+  rolling_stocks: RollingStock[];
 };
 /**
  * A strongly-typed identifier for a railway model.
@@ -1398,276 +1398,276 @@ export type RailwayModel = {
 export type RailwayModelId = string;
 export type RailwayStatus = 'ACTIVE' | 'INACTIVE' | 'MERGED';
 export type RollingStock =
-	/**
-	 * an electric multiple unit rolling stock
-	 */
-	| {
-			category: 'ElectricMultipleUnit';
-			data: {
-				/**
-				 * the unique identifier for this rolling stock
-				 */
-				id: RollingStockId;
-				/**
-				 * the railway for this rolling stock
-				 */
-				railway: RollingStockRailway;
-				/**
-				 * the livery description
-				 */
-				livery: string | null;
-				/**
-				 * the overall length
-				 */
-				length_over_buffer: LengthOverBuffers | null;
-				/**
-				 * the technical specifications
-				 */
-				technical_specifications: TechnicalSpecifications | null;
-				/**
-				 * the electric multiple unit type name
-				 */
-				type_name: string;
-				/**
-				 * the identification marking for this electric multiple unit
-				 */
-				road_number: string | null;
-				/**
-				 * the prototype series information
-				 */
-				series: string | null;
-				/**
-				 * the depot name
-				 */
-				depot: string | null;
-				/**
-				 * the electric multiple unit type
-				 */
-				electric_multiple_unit_type: ElectricMultipleUnitType;
-				/**
-				 * the dcc interface
-				 */
-				dcc_interface: DccInterface | null;
-				/**
-				 * the control
-				 */
-				control: Control | null;
-				/**
-				 * indicate whether the rolling stock has a motor or not
-				 */
-				is_dummy: boolean;
-			};
-	  }
-	/**
-	 * a freight car rolling stock
-	 */
-	| {
-			category: 'FreightCar';
-			data: {
-				/**
-				 * the unique identifier for this rolling stock
-				 */
-				id: RollingStockId;
-				/**
-				 * the railway for this rolling stock
-				 */
-				railway: RollingStockRailway;
-				/**
-				 * the livery description
-				 */
-				livery: string | null;
-				/**
-				 * the overall length
-				 */
-				length_over_buffer: LengthOverBuffers | null;
-				/**
-				 * the technical specifications
-				 */
-				technical_specifications: TechnicalSpecifications | null;
-				/**
-				 * the freight car type name
-				 */
-				type_name: string;
-				/**
-				 * the identification marking for this freight car
-				 */
-				road_number: string | null;
-				/**
-				 * the freight car type
-				 */
-				freight_car_type: FreightCarType | null;
-			};
-	  }
-	/**
-	 * a locomotive rolling stock
-	 */
-	| {
-			category: 'Locomotive';
-			data: {
-				/**
-				 * the unique identifier for this rolling stock
-				 */
-				id: RollingStockId;
-				/**
-				 * the railway for this rolling stock
-				 */
-				railway: RollingStockRailway;
-				/**
-				 * the livery description
-				 */
-				livery: string | null;
-				/**
-				 * the overall length
-				 */
-				length_over_buffer: LengthOverBuffers | null;
-				/**
-				 * the technical specification
-				 */
-				technical_specifications: TechnicalSpecifications | null;
-				/**
-				 * the class of locomotives. The class is a group of locomotives built to a common design,
-				 * typically for a single railroad or railway
-				 */
-				class_name: string;
-				/**
-				 * the identification marking for this locomotive
-				 */
-				road_number: string;
-				/**
-				 * the prototype series information
-				 */
-				series: string | null;
-				/**
-				 * the depot name
-				 */
-				depot: string | null;
-				/**
-				 * the locomotive type
-				 */
-				locomotive_type: LocomotiveType;
-				/**
-				 * the dcc interface
-				 */
-				dcc_interface: DccInterface | null;
-				/**
-				 * the control
-				 */
-				control: Control | null;
-				/**
-				 * indicate whether the rolling stock has a motor or not
-				 */
-				is_dummy: boolean;
-			};
-	  }
-	/**
-	 * a passenger car rolling stock
-	 */
-	| {
-			category: 'PassengerCar';
-			data: {
-				/**
-				 * the unique identifier for this rolling stock
-				 */
-				id: RollingStockId;
-				/**
-				 * the railway for this rolling stock
-				 */
-				railway: RollingStockRailway;
-				/**
-				 * the livery description
-				 */
-				livery: string | null;
-				/**
-				 * the overall length
-				 */
-				length_over_buffer: LengthOverBuffers | null;
-				/**
-				 * the technical specifications
-				 */
-				technical_specifications: TechnicalSpecifications | null;
-				/**
-				 * the passenger car type name
-				 */
-				type_name: string;
-				/**
-				 * the identification marking for this passenger car
-				 */
-				road_number: string | null;
-				/**
-				 * the prototype series information
-				 */
-				series: string | null;
-				/**
-				 * the passenger car type
-				 */
-				passenger_car_type: PassengerCarType | null;
-				/**
-				 * the travel class for this passenger car. Passenger cars can have multiple service
-				 * levels (ie, '1st/2nd')
-				 */
-				service_level: ServiceLevel | null;
-			};
-	  }
-	/**
-	 * a railcar rolling stock
-	 */
-	| {
-			category: 'Railcar';
-			data: {
-				/**
-				 * the unique identifier for this rolling stock
-				 */
-				id: RollingStockId;
-				/**
-				 * the railway for this rolling stock
-				 */
-				railway: RollingStockRailway;
-				/**
-				 * the livery description
-				 */
-				livery: string | null;
-				/**
-				 * the overall length
-				 */
-				length_over_buffer: LengthOverBuffers | null;
-				/**
-				 * the technical specifications
-				 */
-				technical_specifications: TechnicalSpecifications | null;
-				/**
-				 * the railcar type name
-				 */
-				type_name: string;
-				/**
-				 * the identification marking for this railcar
-				 */
-				road_number: string | null;
-				/**
-				 * the railcar series
-				 */
-				series: string | null;
-				/**
-				 * the depot name
-				 */
-				depot: string | null;
-				/**
-				 * the railcar type
-				 */
-				railcar_type: RailcarType;
-				/**
-				 * the dcc interface
-				 */
-				dcc_interface: DccInterface | null;
-				/**
-				 * the control
-				 */
-				control: Control | null;
-				/**
-				 * indicate whether the rolling stock has a motor or not
-				 */
-				is_dummy: boolean;
-			};
-	  };
+  /**
+   * an electric multiple unit rolling stock
+   */
+  | {
+      category: 'ElectricMultipleUnit';
+      data: {
+        /**
+         * the unique identifier for this rolling stock
+         */
+        id: RollingStockId;
+        /**
+         * the railway for this rolling stock
+         */
+        railway: RollingStockRailway;
+        /**
+         * the livery description
+         */
+        livery: string | null;
+        /**
+         * the overall length
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * the technical specifications
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * the electric multiple unit type name
+         */
+        type_name: string;
+        /**
+         * the identification marking for this electric multiple unit
+         */
+        road_number: string | null;
+        /**
+         * the prototype series information
+         */
+        series: string | null;
+        /**
+         * the depot name
+         */
+        depot: string | null;
+        /**
+         * the electric multiple unit type
+         */
+        electric_multiple_unit_type: ElectricMultipleUnitType;
+        /**
+         * the dcc interface
+         */
+        dcc_interface: DccInterface | null;
+        /**
+         * the control
+         */
+        control: Control | null;
+        /**
+         * indicate whether the rolling stock has a motor or not
+         */
+        is_dummy: boolean;
+      };
+    }
+  /**
+   * a freight car rolling stock
+   */
+  | {
+      category: 'FreightCar';
+      data: {
+        /**
+         * the unique identifier for this rolling stock
+         */
+        id: RollingStockId;
+        /**
+         * the railway for this rolling stock
+         */
+        railway: RollingStockRailway;
+        /**
+         * the livery description
+         */
+        livery: string | null;
+        /**
+         * the overall length
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * the technical specifications
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * the freight car type name
+         */
+        type_name: string;
+        /**
+         * the identification marking for this freight car
+         */
+        road_number: string | null;
+        /**
+         * the freight car type
+         */
+        freight_car_type: FreightCarType | null;
+      };
+    }
+  /**
+   * a locomotive rolling stock
+   */
+  | {
+      category: 'Locomotive';
+      data: {
+        /**
+         * the unique identifier for this rolling stock
+         */
+        id: RollingStockId;
+        /**
+         * the railway for this rolling stock
+         */
+        railway: RollingStockRailway;
+        /**
+         * the livery description
+         */
+        livery: string | null;
+        /**
+         * the overall length
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * the technical specification
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * the class of locomotives. The class is a group of locomotives built to a common design,
+         * typically for a single railroad or railway
+         */
+        class_name: string;
+        /**
+         * the identification marking for this locomotive
+         */
+        road_number: string;
+        /**
+         * the prototype series information
+         */
+        series: string | null;
+        /**
+         * the depot name
+         */
+        depot: string | null;
+        /**
+         * the locomotive type
+         */
+        locomotive_type: LocomotiveType;
+        /**
+         * the dcc interface
+         */
+        dcc_interface: DccInterface | null;
+        /**
+         * the control
+         */
+        control: Control | null;
+        /**
+         * indicate whether the rolling stock has a motor or not
+         */
+        is_dummy: boolean;
+      };
+    }
+  /**
+   * a passenger car rolling stock
+   */
+  | {
+      category: 'PassengerCar';
+      data: {
+        /**
+         * the unique identifier for this rolling stock
+         */
+        id: RollingStockId;
+        /**
+         * the railway for this rolling stock
+         */
+        railway: RollingStockRailway;
+        /**
+         * the livery description
+         */
+        livery: string | null;
+        /**
+         * the overall length
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * the technical specifications
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * the passenger car type name
+         */
+        type_name: string;
+        /**
+         * the identification marking for this passenger car
+         */
+        road_number: string | null;
+        /**
+         * the prototype series information
+         */
+        series: string | null;
+        /**
+         * the passenger car type
+         */
+        passenger_car_type: PassengerCarType | null;
+        /**
+         * the travel class for this passenger car. Passenger cars can have multiple service
+         * levels (ie, '1st/2nd')
+         */
+        service_level: ServiceLevel | null;
+      };
+    }
+  /**
+   * a railcar rolling stock
+   */
+  | {
+      category: 'Railcar';
+      data: {
+        /**
+         * the unique identifier for this rolling stock
+         */
+        id: RollingStockId;
+        /**
+         * the railway for this rolling stock
+         */
+        railway: RollingStockRailway;
+        /**
+         * the livery description
+         */
+        livery: string | null;
+        /**
+         * the overall length
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * the technical specifications
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * the railcar type name
+         */
+        type_name: string;
+        /**
+         * the identification marking for this railcar
+         */
+        road_number: string | null;
+        /**
+         * the railcar series
+         */
+        series: string | null;
+        /**
+         * the depot name
+         */
+        depot: string | null;
+        /**
+         * the railcar type
+         */
+        railcar_type: RailcarType;
+        /**
+         * the dcc interface
+         */
+        dcc_interface: DccInterface | null;
+        /**
+         * the control
+         */
+        control: Control | null;
+        /**
+         * indicate whether the rolling stock has a motor or not
+         */
+        is_dummy: boolean;
+      };
+    };
 /**
  * A unique identifier for a rolling stock.
  *
@@ -1693,14 +1693,14 @@ export type RollingStockId = string;
  * or serialized.
  */
 export type RollingStockRailway = {
-	/**
-	 * the railway unique identifier
-	 */
-	railway_id: RailwayCompanyId;
-	/**
-	 * the railway display name
-	 */
-	display: string;
+  /**
+   * the railway unique identifier
+   */
+  railway_id: RailwayCompanyId;
+  /**
+   * the railway display name
+   */
+  display: string;
 };
 /**
  * Model railway scales supported by the application.
@@ -1711,46 +1711,46 @@ export type RollingStockRailway = {
  * produces a human-friendly string such as `H0 (1:87)`.
  */
 export type Scale =
-	/**
-	 * H0 scale (1:87)
-	 */
-	| 'H0'
-	/**
-	 * H0 narrow/metric (1:87)
-	 */
-	| 'H0m'
-	/**
-	 * H0e (1:87)
-	 */
-	| 'H0e'
-	/**
-	 * N scale (1:160)
-	 */
-	| 'N'
-	/**
-	 * TT scale (1:120)
-	 */
-	| 'TT'
-	/**
-	 * Z scale (1:220)
-	 */
-	| 'Z'
-	/**
-	 * G scale (garden) (1:22.5)
-	 */
-	| 'G'
-	/**
-	 * 1 scale (1:32)
-	 */
-	| 'Scale1'
-	/**
-	 * 0 scale (1:43.5)
-	 */
-	| 'Scale0'
-	/**
-	 * 00 (double-zero) scale (1:76.2)
-	 */
-	| 'Scale00';
+  /**
+   * H0 scale (1:87)
+   */
+  | 'H0'
+  /**
+   * H0 narrow/metric (1:87)
+   */
+  | 'H0m'
+  /**
+   * H0e (1:87)
+   */
+  | 'H0e'
+  /**
+   * N scale (1:160)
+   */
+  | 'N'
+  /**
+   * TT scale (1:120)
+   */
+  | 'TT'
+  /**
+   * Z scale (1:220)
+   */
+  | 'Z'
+  /**
+   * G scale (garden) (1:22.5)
+   */
+  | 'G'
+  /**
+   * 1 scale (1:32)
+   */
+  | 'Scale1'
+  /**
+   * 0 scale (1:43.5)
+   */
+  | 'Scale0'
+  /**
+   * 00 (double-zero) scale (1:76.2)
+   */
+  | 'Scale00';
 /**
  * Represents the service class(es) for a rolling stock or service.
  *
@@ -1768,12 +1768,12 @@ export type Scale =
  * the corresponding string representation.
  */
 export type ServiceLevel =
-	| 'FIRST'
-	| 'SECOND'
-	| 'THIRD'
-	| 'FIRST_SECOND'
-	| 'SECOND_THIRD'
-	| 'FIRST_SECOND_THIRD';
+  | 'FIRST'
+  | 'SECOND'
+  | 'THIRD'
+  | 'FIRST_SECOND'
+  | 'SECOND_THIRD'
+  | 'FIRST_SECOND_THIRD';
 /**
  * Details for an item that was sold.
  *
@@ -1783,78 +1783,78 @@ export type ServiceLevel =
  * aggregations once sold.
  */
 export type SoldInfo = {
-	/**
-	 * Unique identifier for the original purchase record (or the sale record,
-	 * depending on how you model identifiers). This is the canonical id for
-	 * the persisted purchase_info row.
-	 */
-	id: string;
-	/**
-	 * Date when the item was originally purchased (ISO `YYYY-MM-DD`).
-	 */
-	purchase_date: string;
-	/**
-	 * Original purchase price, if available.
-	 *
-	 * Use `None` to indicate the original price is unknown or not stored.
-	 */
-	purchase_price: MonetaryAmount | null;
-	/**
-	 * Date when the item was sold (ISO `YYYY-MM-DD`).
-	 */
-	sale_date: string;
-	/**
-	 * Price obtained when the item was sold. This value is required for
-	 * `Sold` records because a sale without a price is not meaningful for
-	 * financial reporting.
-	 */
-	sale_price: MonetaryAmount;
-	/**
-	 * Optional buyer identifier (when the buyer is a tracked entity).
-	 */
-	buyer: string | null;
-	/**
-	 * Optional seller identifier for completeness (may be the shop that
-	 * originally sold the item or the intermediary that handled the sale).
-	 */
-	seller: string | null;
+  /**
+   * Unique identifier for the original purchase record (or the sale record,
+   * depending on how you model identifiers). This is the canonical id for
+   * the persisted purchase_info row.
+   */
+  id: string;
+  /**
+   * Date when the item was originally purchased (ISO `YYYY-MM-DD`).
+   */
+  purchase_date: string;
+  /**
+   * Original purchase price, if available.
+   *
+   * Use `None` to indicate the original price is unknown or not stored.
+   */
+  purchase_price: MonetaryAmount | null;
+  /**
+   * Date when the item was sold (ISO `YYYY-MM-DD`).
+   */
+  sale_date: string;
+  /**
+   * Price obtained when the item was sold. This value is required for
+   * `Sold` records because a sale without a price is not meaningful for
+   * financial reporting.
+   */
+  sale_price: MonetaryAmount;
+  /**
+   * Optional buyer identifier (when the buyer is a tracked entity).
+   */
+  buyer: string | null;
+  /**
+   * Optional seller identifier for completeness (may be the shop that
+   * originally sold the item or the intermediary that handled the sale).
+   */
+  seller: string | null;
 };
 /**
  * The technical specification data for a rolling stock model
  */
 export type TechnicalSpecifications = {
-	/**
-	 * the minimum drivable radius
-	 */
-	minimum_radius: Radius | null;
-	/**
-	 * the coupling
-	 */
-	coupling: Coupling | null;
-	/**
-	 * has a flywheel fitted
-	 */
-	flywheel_fitted: FeatureFlag | null;
-	/**
-	 * body shell type
-	 */
-	body_shell: BodyShellType | null;
-	/**
-	 * chassis type
-	 */
-	chassis: ChassisType | null;
-	/**
-	 * has interior lighting
-	 */
-	interior_lights: FeatureFlag | null;
-	/**
-	 * has lights
-	 */
-	lights: FeatureFlag | null;
-	/**
-	 * has sprung buffers
-	 */
-	sprung_buffers: FeatureFlag | null;
+  /**
+   * the minimum drivable radius
+   */
+  minimum_radius: Radius | null;
+  /**
+   * the coupling
+   */
+  coupling: Coupling | null;
+  /**
+   * has a flywheel fitted
+   */
+  flywheel_fitted: FeatureFlag | null;
+  /**
+   * body shell type
+   */
+  body_shell: BodyShellType | null;
+  /**
+   * chassis type
+   */
+  chassis: ChassisType | null;
+  /**
+   * has interior lighting
+   */
+  interior_lights: FeatureFlag | null;
+  /**
+   * has lights
+   */
+  lights: FeatureFlag | null;
+  /**
+   * has sprung buffers
+   */
+  sprung_buffers: FeatureFlag | null;
 };
 /**
  * Domain model representing a user's wishlist.
@@ -1865,26 +1865,26 @@ export type TechnicalSpecifications = {
  * operate on this aggregate root when mutating the contained items.
  */
 export type Wishlist = {
-	/**
-	 * Unique identifier for the wishlist.
-	 */
-	id: WishlistId;
-	/**
-	 * Human-readable name for the wishlist.
-	 */
-	name: string;
-	/**
-	 * Optional free-form notes attached to the wishlist.
-	 */
-	notes: string | null;
-	/**
-	 * Whether this wishlist is the default for the user.
-	 */
-	is_default: boolean;
-	/**
-	 * Items contained in this wishlist.
-	 */
-	items: WishlistItem[];
+  /**
+   * Unique identifier for the wishlist.
+   */
+  id: WishlistId;
+  /**
+   * Human-readable name for the wishlist.
+   */
+  name: string;
+  /**
+   * Optional free-form notes attached to the wishlist.
+   */
+  notes: string | null;
+  /**
+   * Whether this wishlist is the default for the user.
+   */
+  is_default: boolean;
+  /**
+   * Items contained in this wishlist.
+   */
+  items: WishlistItem[];
 };
 /**
  * Strongly-typed identifier for a wishlist.
@@ -1902,42 +1902,42 @@ export type WishlistId = string;
  * operate on the `Wishlist` aggregate.
  */
 export type WishlistItem = {
-	/**
-	 * Stable identifier for this wishlist item.
-	 */
-	id: WishlistItemId;
-	/**
-	 * Identifier of the referenced railway model.
-	 */
-	railway_model_id: RailwayModelId;
-	/**
-	 * The user's priority for this item.
-	 */
-	priority: WishlistPriority;
-	/**
-	 * The current procurement/status lifecycle state for the item.
-	 */
-	status: WishlistStatus;
-	/**
-	 * Date the item was added to the wishlist (YYYY-MM-DD).
-	 */
-	added_date: string;
-	/**
-	 * Optional date when the item was removed from the wishlist.
-	 */
-	removed_date: string | null;
-	/**
-	 * Optional free-form notes attached to the item.
-	 */
-	notes: string | null;
-	/**
-	 * Desired price the user is willing to pay for the item (in cents).
-	 */
-	desired_price: MonetaryAmount | null;
-	/**
-	 * Actual purchased price if available (in cents).
-	 */
-	purchased_price: MonetaryAmount | null;
+  /**
+   * Stable identifier for this wishlist item.
+   */
+  id: WishlistItemId;
+  /**
+   * Identifier of the referenced railway model.
+   */
+  railway_model_id: RailwayModelId;
+  /**
+   * The user's priority for this item.
+   */
+  priority: WishlistPriority;
+  /**
+   * The current procurement/status lifecycle state for the item.
+   */
+  status: WishlistStatus;
+  /**
+   * Date the item was added to the wishlist (YYYY-MM-DD).
+   */
+  added_date: string;
+  /**
+   * Optional date when the item was removed from the wishlist.
+   */
+  removed_date: string | null;
+  /**
+   * Optional free-form notes attached to the item.
+   */
+  notes: string | null;
+  /**
+   * Desired price the user is willing to pay for the item (in cents).
+   */
+  desired_price: MonetaryAmount | null;
+  /**
+   * Actual purchased price if available (in cents).
+   */
+  purchased_price: MonetaryAmount | null;
 };
 /**
  * Strongly-typed identifier for a wishlist item.
@@ -1975,44 +1975,44 @@ import * as TAURI_API_EVENT from '@tauri-apps/api/event';
 import { type WebviewWindow as __WebviewWindow__ } from '@tauri-apps/api/webviewWindow';
 
 type __EventObj__<T> = {
-	listen: (cb: TAURI_API_EVENT.EventCallback<T>) => ReturnType<typeof TAURI_API_EVENT.listen<T>>;
-	once: (cb: TAURI_API_EVENT.EventCallback<T>) => ReturnType<typeof TAURI_API_EVENT.once<T>>;
-	emit: null extends T
-		? (payload?: T) => ReturnType<typeof TAURI_API_EVENT.emit>
-		: (payload: T) => ReturnType<typeof TAURI_API_EVENT.emit>;
+  listen: (cb: TAURI_API_EVENT.EventCallback<T>) => ReturnType<typeof TAURI_API_EVENT.listen<T>>;
+  once: (cb: TAURI_API_EVENT.EventCallback<T>) => ReturnType<typeof TAURI_API_EVENT.once<T>>;
+  emit: null extends T
+    ? (payload?: T) => ReturnType<typeof TAURI_API_EVENT.emit>
+    : (payload: T) => ReturnType<typeof TAURI_API_EVENT.emit>;
 };
 
 export type Result<T, E> = { status: 'ok'; data: T } | { status: 'error'; error: E };
 
 function __makeEvents__<T extends Record<string, any>>(mappings: Record<keyof T, string>) {
-	return new Proxy(
-		{} as unknown as {
-			[K in keyof T]: __EventObj__<T[K]> & {
-				(handle: __WebviewWindow__): __EventObj__<T[K]>;
-			};
-		},
-		{
-			get: (_, event) => {
-				const name = mappings[event as keyof T];
+  return new Proxy(
+    {} as unknown as {
+      [K in keyof T]: __EventObj__<T[K]> & {
+        (handle: __WebviewWindow__): __EventObj__<T[K]>;
+      };
+    },
+    {
+      get: (_, event) => {
+        const name = mappings[event as keyof T];
 
-				return new Proxy((() => {}) as any, {
-					apply: (_, __, [window]: [__WebviewWindow__]) => ({
-						listen: (arg: any) => window.listen(name, arg),
-						once: (arg: any) => window.once(name, arg),
-						emit: (arg: any) => window.emit(name, arg)
-					}),
-					get: (_, command: keyof __EventObj__<any>) => {
-						switch (command) {
-							case 'listen':
-								return (arg: any) => TAURI_API_EVENT.listen(name, arg);
-							case 'once':
-								return (arg: any) => TAURI_API_EVENT.once(name, arg);
-							case 'emit':
-								return (arg: any) => TAURI_API_EVENT.emit(name, arg);
-						}
-					}
-				});
-			}
-		}
-	);
+        return new Proxy((() => {}) as any, {
+          apply: (_, __, [window]: [__WebviewWindow__]) => ({
+            listen: (arg: any) => window.listen(name, arg),
+            once: (arg: any) => window.once(name, arg),
+            emit: (arg: any) => window.emit(name, arg)
+          }),
+          get: (_, command: keyof __EventObj__<any>) => {
+            switch (command) {
+              case 'listen':
+                return (arg: any) => TAURI_API_EVENT.listen(name, arg);
+              case 'once':
+                return (arg: any) => TAURI_API_EVENT.once(name, arg);
+              case 'emit':
+                return (arg: any) => TAURI_API_EVENT.emit(name, arg);
+            }
+          }
+        });
+      }
+    }
+  );
 }
