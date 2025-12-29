@@ -22,10 +22,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [24.x]
-        rust-version: [stable]
 
     steps:
       - name: 📂 Checkout
@@ -48,9 +44,9 @@ jobs:
           version: 'latest'
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 'lts/*'
           cache: 'pnpm'
 
       - name: 📦 Install frontend dependencies
@@ -73,7 +69,7 @@ jobs:
       - name: 🦀 Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust-version }}
+          toolchain: stable
           override: true
           components: clippy, rustfmt
 
