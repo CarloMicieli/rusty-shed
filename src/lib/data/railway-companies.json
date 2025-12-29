@@ -1,0 +1,245 @@
+[
+  {
+    "id": "bdz",
+    "name": "BDZ",
+    "registered_company_name": "Balgarski darzhavni zheleznitsi",
+    "country_code": "BG",
+    "status": "Active",
+    "operating_since": "1888-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "br",
+    "name": "BR",
+    "registered_company_name": "British Railways",
+    "country_code": "GB",
+    "status": "INACTIVE",
+    "operating_since": "1948-01-01",
+    "operating_until": "1997-03-31"
+  },
+  {
+    "id": "cfr",
+    "name": "CFR",
+    "registered_company_name": "Compania Națională de Căi Ferate CFR SA",
+    "country_code": "RO",
+    "status": "Active",
+    "operating_since": "1880-04-01",
+    "operating_until": null
+  },
+  {
+    "id": "db",
+    "name": "DB",
+    "registered_company_name": "Deutsche Bahn AG",
+    "country_code": "DE",
+    "status": "Active",
+    "operating_since": "1994-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "dr",
+    "name": "DR",
+    "registered_company_name": "Deutsche Reichsbahn",
+    "country_code": "DD",
+    "status": "Merged",
+    "operating_since": "1949-04-01",
+    "operating_until": "1993-12-31"
+  },
+  {
+    "id": "drg",
+    "name": "DRG",
+    "registered_company_name": "Deutsche Reichsbahn-Gesellschaft",
+    "country_code": "DE",
+    "status": "Merged",
+    "operating_since": "1920-04-01",
+    "operating_until": "1945-05-23"
+  },
+  {
+    "id": "dsb",
+    "name": "DSB",
+    "registered_company_name": "Danske Statsbaner",
+    "country_code": "DK",
+    "status": "Active",
+    "operating_since": "1885-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "fs",
+    "name": "FS",
+    "registered_company_name": "Ferrovie dello Stato Italiane S.p.A.",
+    "country_code": "IT",
+    "status": "Active",
+    "operating_since": "1905-07-01",
+    "operating_until": null
+  },
+  {
+    "id": "gwr",
+    "name": "GWR",
+    "registered_company_name": "Great Western Railway",
+    "country_code": "GB",
+    "status": "Merged",
+    "operating_since": "1835-08-31",
+    "operating_until": "1947-12-31"
+  },
+  {
+    "id": "lner",
+    "name": "LNER",
+    "registered_company_name": "London and North Eastern Railway",
+    "country_code": "GB",
+    "status": "Merged",
+    "operating_since": "1923-01-01",
+    "operating_until": "1947-12-31"
+  },
+  {
+    "id": "mv",
+    "name": "MÁV",
+    "registered_company_name": "Magyar Államvasutak",
+    "country_code": "HU",
+    "status": "Active",
+    "operating_since": "1868-07-01",
+    "operating_until": null
+  },
+  {
+    "id": "nmbssncb",
+    "name": "NMBS/SNCB",
+    "registered_company_name": "Nationale Maatschappij der Belgische Spoorwegen",
+    "country_code": "BE",
+    "status": "Active",
+    "operating_since": "1926-07-23",
+    "operating_until": null
+  },
+  {
+    "id": "nsb",
+    "name": "NSB",
+    "registered_company_name": "Norges Statsbaner",
+    "country_code": "NO",
+    "status": "Merged",
+    "operating_since": "1883-03-01",
+    "operating_until": "2019-03-22"
+  },
+  {
+    "id": "network-rail",
+    "name": "Network Rail",
+    "registered_company_name": "Network Rail Limited",
+    "country_code": "GB",
+    "status": "Active",
+    "operating_since": "2002-10-03",
+    "operating_until": null
+  },
+  {
+    "id": "pkp",
+    "name": "PKP",
+    "registered_company_name": "Polskie Koleje Państwowe",
+    "country_code": "PL",
+    "status": "Active",
+    "operating_since": "1918-11-01",
+    "operating_until": null
+  },
+  {
+    "id": "renfe",
+    "name": "RENFE",
+    "registered_company_name": "Red Nacional de los Ferrocarriles Españoles",
+    "country_code": "ES",
+    "status": "Active",
+    "operating_since": "1941-01-24",
+    "operating_until": null
+  },
+  {
+    "id": "rhb",
+    "name": "RhB",
+    "registered_company_name": "Rhätische Bahn AG",
+    "country_code": "CH",
+    "status": "Active",
+    "operating_since": "1888-02-07",
+    "operating_until": null
+  },
+  {
+    "id": "sbb-cff-ffs",
+    "name": "SBB CFF FFS",
+    "registered_company_name": "Schweizerische Bundesbahnen",
+    "country_code": "CH",
+    "status": "Active",
+    "operating_since": "1902-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "sj",
+    "name": "SJ",
+    "registered_company_name": "Statens Järnvägar",
+    "country_code": "SE",
+    "status": "Active",
+    "operating_since": "1856-12-01",
+    "operating_until": null
+  },
+  {
+    "id": "sncf",
+    "name": "SNCF",
+    "registered_company_name": "Société Nationale des Chemins de fer Français",
+    "country_code": "FR",
+    "status": "Active",
+    "operating_since": "1938-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "sr",
+    "name": "SR",
+    "registered_company_name": "Southern Railway",
+    "country_code": "GB",
+    "status": "Merged",
+    "operating_since": "1923-01-01",
+    "operating_until": "1947-12-31"
+  },
+  {
+    "id": "vr",
+    "name": "VR",
+    "registered_company_name": "VR-Yhtymä Oyj",
+    "country_code": "FI",
+    "status": "Active",
+    "operating_since": "1862-03-17",
+    "operating_until": null
+  },
+  {
+    "id": "vy",
+    "name": "Vy",
+    "registered_company_name": "Vygruppen AS",
+    "country_code": "NO",
+    "status": "Active",
+    "operating_since": "2019-03-22",
+    "operating_until": null
+  },
+  {
+    "id": "zssk",
+    "name": "ZSSK",
+    "registered_company_name": "Železničná spoločnosť Slovensko",
+    "country_code": "SK",
+    "status": "Active",
+    "operating_since": "2005-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "bb",
+    "name": "ÖBB",
+    "registered_company_name": "Österreichische Bundesbahnen",
+    "country_code": "AT",
+    "status": "Active",
+    "operating_since": "1923-07-19",
+    "operating_until": null
+  },
+  {
+    "id": "d",
+    "name": "ČD",
+    "registered_company_name": "České dráhy",
+    "country_code": "CZ",
+    "status": "Active",
+    "operating_since": "1993-01-01",
+    "operating_until": null
+  },
+  {
+    "id": "sd",
+    "name": "ČSD",
+    "registered_company_name": "Československé státní dráhy",
+    "country_code": "CZ",
+    "status": "INACTIVE",
+    "operating_since": "1918-10-28",
+    "operating_until": "1992-12-31"
+  }
+]

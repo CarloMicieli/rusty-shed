@@ -2,5 +2,15 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-/* Skeleton styles (import after Tailwind directives) */
+/* 1. Define the theme breakpoints for Tailwind v4 */
+@theme {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* 2. Skeleton styles (now @variant md will work) */
 @import '@skeletonlabs/skeleton';
+@import "@skeletonlabs/skeleton/themes/cerberus";

@@ -35,5 +35,134 @@
     "scale": "Scala",
     "company": "Compagnia",
     "description": "Descrizione"
+  },
+  "enums": {
+    "power_method": {
+      "AC": "CA",
+      "DC": "CC",
+      "TRIX_EXPRESS": "Trix Express"
+    },
+    "scale": {
+      "H0": "H0 (1:87)",
+      "H0m": "H0m",
+      "H0e": "H0e",
+      "N": "N (1:160)",
+      "TT": "TT (1:120)",
+      "Z": "Z (1:220)",
+      "G": "G (1:22.5)",
+      "Scale1": "1 (1:32)",
+      "Scale0": "0 (1:45)",
+      "Scale00": "00 (1:76)"
+    },
+    "category": {
+      "LOCOMOTIVES": "Locomotive",
+      "TRAIN_SETS": "Set Treni",
+      "STARTER_SETS": "Set Base",
+      "FREIGHT_CARS": "Carri Merci",
+      "PASSENGER_CARS": "Carrozze Passeggeri",
+      "ELECTRIC_MULTIPLE_UNITS": "Elettrotreni",
+      "RAILCARS": "Automotrici"
+    },
+    "availability_status": {
+      "ANNOUNCED": "Annunciato",
+      "AVAILABLE": "Disponibile",
+      "CANCELLED": "Annullato",
+      "DISCONTINUED": "Fuori Produzione"
+    },
+    "control": {
+      "DCC_READY": "Predisposto DCC",
+      "DCC_FITTED": "DCC Installato",
+      "DCC_SOUND": "DCC con Suono",
+      "NO_DCC": "Senza DCC"
+    },
+    "locomotive_type": {
+      "STEAM_LOCOMOTIVE": "Locomotiva a Vapore",
+      "DIESEL_LOCOMOTIVE": "Locomotiva Diesel",
+      "ELECTRIC_LOCOMOTIVE": "Locomotiva Elettrica"
+    },
+    "passenger_car_type": {
+      "BAGGAGE_CAR": "Bagagliaio",
+      "BUFFET_CAR": "Carrozza Buffet",
+      "COMBINE_CAR": "Carrozza Mista",
+      "COMPARTMENT_COACH": "Carrozza a Compartimenti",
+      "DINING_CAR": "Carrozza Ristorante",
+      "DOUBLE_DECKER": "Carrozza a Due Piani",
+      "DOME_CAR": "Carrozza Panoramica",
+      "DRIVING_TRAILER": "Pilota",
+      "LOUNGE": "Carrozza Lounge",
+      "OBSERVATION": "Carrozza Belvedere",
+      "OPEN_COACH": "Carrozza a Piano Aperto",
+      "RAILWAY_POST_OFFICE": "Carrozza Postale",
+      "SLEEPING_CAR": "Carrozza Letti",
+      "SLEEPERETTE": "Carrozza Cuccette"
+    },
+    "freight_car_type": {
+      "AUTO_TRANSPORT_CARS": "Trasporto Auto",
+      "BRAKE_WAGON": "Carro Frenato",
+      "CONTAINER_CARS": "Carro Container",
+      "COVERED_FREIGHT_CARS": "Carro Coperto",
+      "DEEP_WELL_FLAT_CARS": "Carro Pianale Ribassato",
+      "DUMP_CARS": "Carro Ribaltabile",
+      "GONDOLA": "Gondola",
+      "HEAVY_GOODS_WAGONS": "Carro per Merci Pesanti",
+      "HINGED_COVER_WAGONS": "Carro a Tetto Apribile",
+      "HOPPER_WAGON": "Tramoggia",
+      "REFRIGERATOR_CARS": "Carro Frigo",
+      "SILO_CONTAINER_CARS": "Carro Silo",
+      "SLIDE_TARPAULIN_WAGON": "Carro Telonato Scorrevole",
+      "SLIDING_WALL_BOXCARS": "Carro a Pareti Scorrevoli",
+      "SPECIAL_TRANSPORT": "Trasporto Speciale",
+      "STAKE_WAGONS": "Carro a Sponde",
+      "SWING_ROOF_WAGON": "Carro a Tetto Basculante",
+      "TANK_CARS": "Carro Cisterna",
+      "TELESCOPE_HOOD_WAGONS": "Carro a Cappotta Telescopica"
+    },
+    "electric_multiple_unit_type": {
+      "DRIVING_CAR": "Carrozza Pilota",
+      "HIGH_SPEED_TRAIN": "Treno ad Alta Velocità",
+      "MOTOR_CAR": "Carrozza Motrice",
+      "POWER_CAR": "Carrozza di Alimentazione",
+      "TRAILER_CAR": "Carrozza Rimorchiata",
+      "TRAIN_SET": "Convoglio"
+    },
+    "service_level": {
+      "FIRST": "1ª Classe",
+      "SECOND": "2ª Classe",
+      "THIRD": "3ª Classe",
+      "FIRST_SECOND": "1ª/2ª Classe",
+      "SECOND_THIRD": "2ª/3ª Classe",
+      "FIRST_SECOND_THIRD": "1ª/2ª/3ª Classe"
+    },
+    "dcc_interface": {
+      "NEM_651": "NEM 651 (6 Pin)",
+      "NEM_652": "NEM 652 (8 Pin)",
+      "NEM_654": "NEM 654 (21 Pin)",
+      "PLUX_8": "PluX 8",
+      "PLUX_12": "PluX 12",
+      "PLUX_16": "PluX 16",
+      "PLUX_22": "PluX 22",
+      "NEXT_18": "Next 18",
+      "NEXT_18_S": "Next 18S",
+      "MTC_21": "21MTC"
+    },
+    "coupling_socket": {
+      "NONE": "Nessuno",
+      "NEM_355": "NEM 355",
+      "NEM_356": "NEM 356",
+      "NEM_357": "NEM 357",
+      "NEM_359": "NEM 359",
+      "NEM_360": "NEM 360",
+      "NEM_362": "NEM 362",
+      "NEM_365": "NEM 365"
+    },
+    "feature_flag": {
+      "YES": "Sì",
+      "NO": "No",
+      "NOT_APPLICABLE": "N/D"
+    },
+    "body_shell_chassis_type": {
+      "PLASTIC": "Plastica",
+      "METAL_DIE_CAST": "Metallo (Pressofuso)"
+    }
   }
 }

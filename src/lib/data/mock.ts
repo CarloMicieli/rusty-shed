@@ -9,6 +9,7 @@ export interface QuickAction {
   id: string;
   label: string;
   icon: string; // lucide icon name
+  url?: string; // optional URL for navigation
 }
 
 export interface RecentItem {
@@ -35,7 +36,7 @@ export const stats: Stat[] = [
 ];
 
 export const quickActions: QuickAction[] = [
-  { id: '1', label: 'add_railway_model', icon: 'Plus' },
+  { id: '1', label: 'add_railway_model', icon: 'Plus', url: '/models/new' },
   { id: '2', label: 'schedule_maintenance', icon: 'Wrench' },
   { id: '3', label: 'generate_report', icon: 'FileText' }
 ];

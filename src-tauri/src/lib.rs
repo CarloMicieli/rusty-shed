@@ -43,6 +43,7 @@ pub fn run() {
         catalog_command_handlers::get_manufacturer_by_id,
         catalog_command_handlers::get_railway_model_by_id,
         catalog_command_handlers::get_railway_company_by_id,
+        catalog_command_handlers::create_railway_model,
         collecting_command_handlers::get_collection,
         wishlist_command_handlers::get_wishlist_by_id,
         maintenance_command_handlers::get_maintenance_dashboard,

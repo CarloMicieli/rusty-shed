@@ -1,0 +1,466 @@
+[
+  {
+    "id": "acme",
+    "name": "A.C.M.E.",
+    "registered_company_name": "Anonima Costruzioni Modellistiche Esatte S.r.l.",
+    "status": "ACTIVE",
+    "country_code": "IT",
+    "website_url": "https://www.acmetreni.com"
+  },
+  {
+    "id": "atm-antonini",
+    "name": "ATM Antonini",
+    "registered_company_name": "Antonini Modellismo S.r.l.",
+    "status": "ACTIVE",
+    "country_code": "IT",
+    "website_url": "http://www.atmonline.it"
+  },
+  {
+    "id": "accurascale",
+    "name": "Accurascale",
+    "registered_company_name": "Accurascale Ltd",
+    "status": "ACTIVE",
+    "country_code": "IE",
+    "website_url": "https://www.accurascale.com"
+  },
+  {
+    "id": "aimx-models",
+    "name": "AiMX Models",
+    "registered_company_name": "AIMX Company Limited",
+    "status": "ACTIVE",
+    "country_code": "IT",
+    "website_url": "https://aimx-hk.com"
+  },
+  {
+    "id": "albert-model",
+    "name": "Albert Model",
+    "registered_company_name": "Albert Modell Kft.",
+    "status": "Active",
+    "country_code": "HU",
+    "website_url": "https://albertmodell.com"
+  },
+  {
+    "id": "amintiri-feroviare",
+    "name": "Amintiri Feroviare",
+    "registered_company_name": "Amintiri Feroviare S.R.L.",
+    "status": "Active",
+    "country_code": "RO",
+    "website_url": "https://www.amintiriferoviare.com"
+  },
+  {
+    "id": "arnold",
+    "name": "Arnold",
+    "registered_company_name": "Hornby Hobbies Ltd",
+    "status": "Active",
+    "country_code": "GB",
+    "website_url": "https://uk.arnoldmodel.com"
+  },
+  {
+    "id": "athearn",
+    "name": "Athearn",
+    "registered_company_name": "Athearn Trains",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.athearn.com"
+  },
+  {
+    "id": "atlas-model-railroad-co",
+    "name": "Atlas Model Railroad Co.",
+    "registered_company_name": "Atlas Model Railroad Co. Inc.",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://shop.atlasrr.com"
+  },
+  {
+    "id": "b-models",
+    "name": "B-Models",
+    "registered_company_name": "Van Biervliet NV",
+    "status": "Active",
+    "country_code": "BE",
+    "website_url": "https://www.vanbiervliet.com"
+  },
+  {
+    "id": "bachmann-europe",
+    "name": "Bachmann Europe",
+    "registered_company_name": "Bachmann Europe Plc",
+    "status": "ACTIVE",
+    "country_code": "GB",
+    "website_url": "https://www.bachmann.co.uk"
+  },
+  {
+    "id": "bachmann-industries",
+    "name": "Bachmann Industries",
+    "registered_company_name": "Bachmann Industries Inc.",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.bachmanntrains.com"
+  },
+  {
+    "id": "bemo",
+    "name": "Bemo",
+    "registered_company_name": "Bemo Modelleisenbahnen GmbH u. Co. KG",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.bemo-modellbahn.de"
+  },
+  {
+    "id": "brawa",
+    "name": "Brawa",
+    "registered_company_name": "Brawa Artur Braun Modellspielwarenfabrik GmbH & Co. KG",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.brawa.de"
+  },
+  {
+    "id": "broadway-limited-imports",
+    "name": "Broadway Limited Imports",
+    "registered_company_name": "Broadway Limited Imports LLC",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.broadway-limited.com"
+  },
+  {
+    "id": "dapol",
+    "name": "Dapol",
+    "registered_company_name": "Dapol Ltd",
+    "status": "ACTIVE",
+    "country_code": "GB",
+    "website_url": "https://www.dapol.co.uk"
+  },
+  {
+    "id": "dekas",
+    "name": "Dekas",
+    "registered_company_name": "Dekas ApS",
+    "status": "Active",
+    "country_code": "DK",
+    "website_url": "https://dekas.dk"
+  },
+  {
+    "id": "esu",
+    "name": "ESU",
+    "registered_company_name": "ESU electronic solutions ulm GmbH & Co. KG",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.esu.eu"
+  },
+  {
+    "id": "electrotren",
+    "name": "Electrotren",
+    "registered_company_name": "Electrotren S.A.",
+    "status": "ACTIVE",
+    "country_code": "ES",
+    "website_url": "https://www.electrotren.com"
+  },
+  {
+    "id": "exact-trains",
+    "name": "Exact Trains",
+    "registered_company_name": "Exact-train B.V.",
+    "status": "Active",
+    "country_code": "NL",
+    "website_url": "https://www.exact-train.com"
+  },
+  {
+    "id": "fleischmann",
+    "name": "Fleischmann",
+    "registered_company_name": "Modelleisenbahn München GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.fleischmann.de"
+  },
+  {
+    "id": "heljan",
+    "name": "Heljan",
+    "registered_company_name": "Heljan A/S",
+    "status": "ACTIVE",
+    "country_code": "DK",
+    "website_url": "https://www.heljan.dk"
+  },
+  {
+    "id": "hornby-railways",
+    "name": "Hornby Railways",
+    "registered_company_name": "Hornby Hobbies Ltd",
+    "status": "ACTIVE",
+    "country_code": "GB",
+    "website_url": "https://www.hornby.com"
+  },
+  {
+    "id": "intermountain-railway-co",
+    "name": "InterMountain Railway Co.",
+    "registered_company_name": "InterMountain Railway Company",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.intermountain-railway.com"
+  },
+  {
+    "id": "jaegerndorfer",
+    "name": "Jaegerndorfer",
+    "registered_company_name": "Jägerndorfer Ges.m.b.H.",
+    "status": "Active",
+    "country_code": "AT",
+    "website_url": "https://www.jaegerndorfer.at"
+  },
+  {
+    "id": "jouef",
+    "name": "Jouef",
+    "registered_company_name": "Jouef SAS",
+    "status": "ACTIVE",
+    "country_code": "FR",
+    "website_url": "https://www.jouef.com"
+  },
+  {
+    "id": "kadee-quality-products",
+    "name": "Kadee Quality Products",
+    "registered_company_name": "Kadee Quality Products Co.",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.kadee.com"
+  },
+  {
+    "id": "kato-precision-railroad-models",
+    "name": "Kato Precision Railroad Models",
+    "registered_company_name": "Seki-Sui Kinzoku Co. Ltd",
+    "status": "ACTIVE",
+    "country_code": "JP",
+    "website_url": "https://www.katomodels.com"
+  },
+  {
+    "id": "lgb",
+    "name": "LGB",
+    "registered_company_name": "Gebr. Märklin & Cie. GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.lgb.de"
+  },
+  {
+    "id": "ls-models",
+    "name": "LS Models",
+    "registered_company_name": "LS Models Sprl",
+    "status": "ACTIVE",
+    "country_code": "BE",
+    "website_url": "http://www.lsmodels.com"
+  },
+  {
+    "id": "lematec",
+    "name": "Lematec",
+    "registered_company_name": "Lematec Prestige Models SA",
+    "status": "Active",
+    "country_code": "CH",
+    "website_url": "https://www.lematec.ch"
+  },
+  {
+    "id": "lenz",
+    "name": "Lenz",
+    "registered_company_name": "Lenz Elektronik GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.lenz-elektronik.de"
+  },
+  {
+    "id": "liliput",
+    "name": "Liliput",
+    "registered_company_name": "Bachmann Europe Plc",
+    "status": "Active",
+    "country_code": "DE",
+    "website_url": "https://www.liliput.de"
+  },
+  {
+    "id": "lionel",
+    "name": "Lionel",
+    "registered_company_name": "Lionel LLC",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.lionel.com"
+  },
+  {
+    "id": "mth-electric-trains",
+    "name": "MTH Electric Trains",
+    "registered_company_name": "MTH Electric Trains",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.mthtrains.com"
+  },
+  {
+    "id": "micro-ace",
+    "name": "Micro Ace",
+    "registered_company_name": "Micro Ace Co. Ltd",
+    "status": "ACTIVE",
+    "country_code": "JP",
+    "website_url": "http://www.microace-arii.co.jp"
+  },
+  {
+    "id": "mrklin",
+    "name": "Märklin",
+    "registered_company_name": "Gebr. Märklin & Cie. GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.maerklin.de"
+  },
+  {
+    "id": "oskar",
+    "name": "Os.Kar",
+    "registered_company_name": "Os.kar S.r.l.",
+    "status": "ACTIVE",
+    "country_code": "IT",
+    "website_url": "https://www.oskartrains.eu"
+  },
+  {
+    "id": "peco",
+    "name": "Peco",
+    "registered_company_name": "Pritchard Patent Product Co. Ltd",
+    "status": "ACTIVE",
+    "country_code": "GB",
+    "website_url": "https://peco-uk.com"
+  },
+  {
+    "id": "piko",
+    "name": "Piko",
+    "registered_company_name": "PIKO Spielwaren GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.piko.de"
+  },
+  {
+    "id": "ree-modeles",
+    "name": "REE Modeles",
+    "registered_company_name": "Rails Europ Express",
+    "status": "Active",
+    "country_code": "FR",
+    "website_url": "https://www.ree-modeles.com"
+  },
+  {
+    "id": "rapido-trains",
+    "name": "Rapido Trains",
+    "registered_company_name": "Rapido Trains Inc.",
+    "status": "ACTIVE",
+    "country_code": "CA",
+    "website_url": "https://rapidotrains.com"
+  },
+  {
+    "id": "revolution-trains",
+    "name": "Revolution Trains",
+    "registered_company_name": "Revolution Trains Ltd",
+    "status": "ACTIVE",
+    "country_code": "GB",
+    "website_url": "https://www.revolutiontrains.com"
+  },
+  {
+    "id": "rivarossi",
+    "name": "Rivarossi",
+    "registered_company_name": "Rivarossi S.p.A.",
+    "status": "ACTIVE",
+    "country_code": "IT",
+    "website_url": "https://www.rivarossi.com"
+  },
+  {
+    "id": "roco",
+    "name": "Roco",
+    "registered_company_name": "Modelleisenbahn München GmbH",
+    "status": "ACTIVE",
+    "country_code": "AT",
+    "website_url": "https://www.roco.cc"
+  },
+  {
+    "id": "rokuhan",
+    "name": "Rokuhan",
+    "registered_company_name": "Toytec Co. Ltd",
+    "status": "ACTIVE",
+    "country_code": "JP",
+    "website_url": "https://www.rokuhan.com"
+  },
+  {
+    "id": "scaletrains",
+    "name": "ScaleTrains",
+    "registered_company_name": "ScaleTrains.com Inc.",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.scaletrains.com"
+  },
+  {
+    "id": "sudexpress",
+    "name": "Sudexpress",
+    "registered_company_name": "Ginger SAS",
+    "status": "Active",
+    "country_code": "FR",
+    "website_url": "https://www.sudexpress.com"
+  },
+  {
+    "id": "tillig",
+    "name": "Tillig",
+    "registered_company_name": "TILLIG Modellbahnen GmbH & Co. KG",
+    "status": "Active",
+    "country_code": "DE",
+    "website_url": "https://www.tillig.com"
+  },
+  {
+    "id": "tomix",
+    "name": "Tomix",
+    "registered_company_name": "Tomytec Co. Ltd",
+    "status": "ACTIVE",
+    "country_code": "JP",
+    "website_url": "https://www.tomytec.co.jp"
+  },
+  {
+    "id": "trix",
+    "name": "Trix",
+    "registered_company_name": "Gebr. Märklin & Cie. GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://www.trix.de"
+  },
+  {
+    "id": "vitrains",
+    "name": "ViTrains",
+    "registered_company_name": "ViTrains S.r.l.",
+    "status": "ACTIVE",
+    "country_code": "IT",
+    "website_url": "https://www.vitrains.it"
+  },
+  {
+    "id": "viessmann",
+    "name": "Viessmann",
+    "registered_company_name": "Viessmann Modelltechnik GmbH",
+    "status": "ACTIVE",
+    "country_code": "DE",
+    "website_url": "https://viessmann-modell.com"
+  },
+  {
+    "id": "walthers",
+    "name": "Walthers",
+    "registered_company_name": "Wm. K. Walthers Inc.",
+    "status": "ACTIVE",
+    "country_code": "US",
+    "website_url": "https://www.walthers.com"
+  },
+  {
+    "id": "hag",
+    "name": "hag",
+    "registered_company_name": "HAG Modelleisenbahnen GmbH",
+    "status": "Active",
+    "country_code": "CH",
+    "website_url": "https://www.hag.ch"
+  },
+  {
+    "id": "igra-models",
+    "name": "igra models",
+    "registered_company_name": "Igra Model s.r.o.",
+    "status": "Active",
+    "country_code": "CZ",
+    "website_url": "https://igramodel.cz"
+  },
+  {
+    "id": "mtb",
+    "name": "mtb",
+    "registered_company_name": "mtb-model s.r.o.",
+    "status": "Active",
+    "country_code": "CZ",
+    "website_url": "https://mtb-model.com"
+  },
+  {
+    "id": "nme",
+    "name": "nme",
+    "registered_company_name": "NME Nürnberger Modell-Eisenbahnen GmbH",
+    "status": "Active",
+    "country_code": "DE",
+    "website_url": "https://www.nme-online.de"
+  }
+]
