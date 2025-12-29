@@ -6,11 +6,13 @@ on:
     paths:
       - 'src/**'
       - 'src-tauri/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
     paths:
       - 'src/**'
       - 'src-tauri/**'
+      - '.github/workflows/ci.yml'
   workflow_dispatch:
 
 env:
@@ -39,6 +41,11 @@ jobs:
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
             librsvg2-dev
+
+      - name: 📦 Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 'latest'
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
