@@ -21,7 +21,7 @@
   let query = $state('');
 
   $effect(() => {
-    query = filters.query;
+    query = filters.query ?? '';
   });
 
   function handleSearch(value: string) {

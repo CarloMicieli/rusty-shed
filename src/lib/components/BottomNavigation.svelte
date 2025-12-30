@@ -46,10 +46,10 @@
       {/if}
     </a>
     <a
-      href="/depot"
+      href="/my-depot"
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/depot'}
-      class:text-surface-400={($page.url.pathname as string) !== '/depot'}
+      class:text-accent-500={($page.url.pathname as string) === '/my-depot'}
+      class:text-surface-400={($page.url.pathname as string) !== '/my-depot'}
     >
       <Box size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_depot()}</span>

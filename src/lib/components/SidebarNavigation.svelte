@@ -57,10 +57,10 @@
     </li>
     <li>
       <a
-        href="/depot"
+        href="/my-depot"
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
-        class:variant-filled-primary={(page.url.pathname as string) === '/depot'}
-        class:variant-ghost-surface={(page.url.pathname as string) !== '/depot'}
+        class:variant-filled-primary={(page.url.pathname as string) === '/my-depot'}
+        class:variant-ghost-surface={(page.url.pathname as string) !== '/my-depot'}
       >
         <Box size={20} />
         <span class="font-medium tracking-wide">{m.app_depot()}</span>
