@@ -89,7 +89,7 @@ async function fetchCollection(query?: string) {
     filters.update((f) => ({ ...f, query }));
   }
   try {
-    const response = await commands.listCollectionItems(query ?? undefined);
+    const response = await commands.listCollectionItems(query ?? null);
     if (response.status === 'ok') {
       rawItems.set(response.data ?? []);
     } else {
@@ -129,7 +129,7 @@ async function createItem(input: CreateCollectionItemInput) {
   const snapshot = get(rawItems);
   const tempItem: CollectionItemLite = {
     id: `temp-${toastId}`,
-    createdAt: Date.now(),
+    createdAt: new Date().toISOString(),
     description: input.description ?? null,
     tags: input.tags ?? [],
     brand: input.brand,
