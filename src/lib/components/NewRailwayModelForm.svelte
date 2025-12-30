@@ -193,7 +193,7 @@
   >
     <Accordion>
       <!-- Section 1: Basic Information -->
-      <AccordionItem open>
+      <AccordionItem value="basic-info">
         <svelte:fragment slot="summary">
           <h3 class="h4">Basic Information</h3>
         </svelte:fragment>
@@ -312,7 +312,7 @@
       </AccordionItem>
 
       <!-- Section 2: Delivery & Availability -->
-      <AccordionItem>
+      <AccordionItem value="delivery-availability">
         <svelte:fragment slot="summary">
           <h3 class="h4">Delivery & Availability</h3>
         </svelte:fragment>
@@ -367,7 +367,7 @@
       </AccordionItem>
 
       <!-- Section 3: Rolling Stock -->
-      <AccordionItem>
+      <AccordionItem value="rolling-stock">
         <svelte:fragment slot="summary">
           <h3 class="h4">
             Rolling Stock <span class="variant-soft-primary badge"
