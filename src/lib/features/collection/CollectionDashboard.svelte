@@ -3,17 +3,32 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { collectionStore, availableScales } from '$lib/stores/collectionStore';
-  import type { CollectionItemLite, CreateCollectionItemInput } from '$lib/bindings';
+  import type {
+    CollectionItemLite,
+    CollectionSummary as CollectionSummaryType,
+    CreateCollectionItemInput
+  } from '$lib/bindings';
   import ItemCard from './components/ItemCard.svelte';
   import FilterSidebar from './components/FilterSidebar.svelte';
   import ItemDrawer from './components/ItemDrawer.svelte';
   import DeleteModal from './components/DeleteModal.svelte';
+  import CollectionSummary from './components/CollectionSummary.svelte';
 
   type SubmitDetail = { form: CreateCollectionItemInput; editingId: string | null };
 
   let showDrawer = $state(false);
   let editing = $state<CollectionItemLite | null>(null);
   let confirmDeleteId = $state<string | null>(null);
+  const defaultSummary = $state<CollectionSummaryType>({
+    locomotives_count: 0,
+    passenger_cars_count: 0,
+    freight_cars_count: 0,
+    train_sets_count: 0,
+    railcars_count: 0,
+    electric_multiple_units_count: 0
+  });
+  const summaryData = $derived(defaultSummary);
+  const totalValue = $state('--');
 
   const rawItemsStore = collectionStore.rawItems;
   const filteredItemsStore = collectionStore.filteredItems;
@@ -95,6 +110,8 @@
       </button>
     </div>
   </div>
+
+  <CollectionSummary summary={summaryData} {totalValue} />
 
   <div class="grid gap-4 lg:grid-cols-[280px,1fr]">
     <FilterSidebar
