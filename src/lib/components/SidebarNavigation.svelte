@@ -4,10 +4,10 @@
   import { page } from '$app/state';
   import * as m from '$lib/paraglide/messages.js';
   import { appVersion } from '$lib/stores/app';
-  import { collectionStore } from '$lib/stores/collectionStore';
+  import { collectionStore } from '$lib/stores/collectionStore.svelte';
   import { wishlistStore } from '$lib/stores/wishlistStore';
 
-  const { totalCount } = collectionStore;
+  const totalCount = $derived(collectionStore.totalCount);
   const { defaultWishlist } = wishlistStore;
 </script>
 
@@ -38,7 +38,7 @@
       >
         <Library size={20} />
         <span class="font-medium tracking-wide">{m.app_collection()}</span>
-        <span class="variant-soft-surface ml-auto badge">{$totalCount}</span>
+        <span class="variant-soft-surface ml-auto badge">{totalCount}</span>
       </a>
     </li>
     <li>

@@ -45,6 +45,9 @@ async getRailwayModelById(railwayModelId: string) : Promise<Result<RailwayModel 
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Retrieve multiple railway models by their identifiers.
+ */
 async getRailwayModelsByIds(railwayModelIds: string[]) : Promise<Result<RailwayModel[], CommandError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_railway_models_by_ids", { railwayModelIds }) };
@@ -135,6 +138,9 @@ async getCollection() : Promise<Result<Collection, CommandError>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Tauri command to retrieve depot data (alias of `get_collection`).
+ */
 async getDepot() : Promise<Result<Collection, CommandError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_depot") };

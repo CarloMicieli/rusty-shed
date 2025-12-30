@@ -8,7 +8,7 @@
   import { Bell, TrainFront } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { setAppVersion } from '$lib/stores/app';
-  import { collectionStore } from '$lib/stores/collectionStore';
+  import { collectionStore } from '$lib/stores/collectionStore.svelte';
   import { wishlistStore } from '$lib/stores/wishlistStore';
   import ToastHost from '$lib/components/ToastHost.svelte';
 

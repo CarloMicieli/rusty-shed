@@ -3,10 +3,10 @@
   import { LayoutDashboard, Library, Heart, Box, Settings } from 'lucide-svelte';
   import { page } from '$app/stores';
   import * as m from '$lib/paraglide/messages.js';
-  import { collectionStore } from '$lib/stores/collectionStore';
+  import { collectionStore } from '$lib/stores/collectionStore.svelte';
   import { wishlistStore } from '$lib/stores/wishlistStore';
 
-  const { totalCount } = collectionStore;
+  const totalCount = $derived(collectionStore.totalCount);
   const { defaultWishlist } = wishlistStore;
 </script>
 
@@ -31,7 +31,7 @@
     >
       <Library size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_collection()}</span>
-      <span class="variant-soft-surface badge">{$totalCount}</span>
+      <span class="variant-soft-surface badge">{totalCount}</span>
     </a>
     <a
       href="/my-wishlists"

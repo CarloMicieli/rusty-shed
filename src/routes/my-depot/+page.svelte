@@ -136,7 +136,7 @@
         railwayCompany: railway,
         livery,
         category: rolling.category === 'PassengerCar' ? 'passenger' : 'freight',
-        serviceLevel: 'service_level' in data ? data.service_level ?? null : null,
+        serviceLevel: 'service_level' in data ? (data.service_level ?? null) : null,
         dccAddress
       });
     }
@@ -243,17 +243,21 @@
   {#if loading}
     <div class="flex items-center gap-3 rounded-xl border border-surface-700/60 bg-surface-900 p-4">
       <div
-        class="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent"
+        class="border-accent-400 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
         aria-hidden="true"
       ></div>
       <p class="text-sm text-surface-300">Loading depot…</p>
     </div>
   {:else if error}
-    <div class="flex flex-col gap-3 rounded-xl border border-amber-500/50 bg-amber-950/50 p-4 text-amber-100">
+    <div
+      class="flex flex-col gap-3 rounded-xl border border-amber-500/50 bg-amber-950/50 p-4 text-amber-100"
+    >
       <p class="text-sm font-semibold">{error}</p>
       <div class="flex gap-2">
         <button class="variant-filled-primary btn btn-sm" onclick={loadDepot}>Retry</button>
-        <button class="variant-ghost-surface btn btn-sm" onclick={clearSearch}>{m.depot_clear_search()}</button>
+        <button class="variant-ghost-surface btn btn-sm" onclick={clearSearch}
+          >{m.depot_clear_search()}</button
+        >
       </div>
     </div>
   {:else if totalFiltered === 0}
