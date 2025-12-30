@@ -30,6 +30,69 @@
   import { resolveLabel } from '../../utils/resolveLabel';
   import type { ConstantItem } from '$lib/types/constant_item';
 
+  const formLabels: Record<string, ConstantItem> = {
+    title: { id: 'add-new-railway-model', labelKey: 'form_new_model_title' },
+    basicInfo: { id: 'basic-information', labelKey: 'form_new_model_basic_info' },
+    manufacturer: { id: 'manufacturer', labelKey: 'form_new_model_manufacturer' },
+    productCode: { id: 'product-code', labelKey: 'form_new_model_product_code' },
+    productCodePlaceholder: {
+      id: 'product-code-placeholder',
+      labelKey: 'form_new_model_product_code_placeholder'
+    },
+    description: { id: 'description', labelKey: 'form_new_model_description' },
+    descriptionPlaceholder: {
+      id: 'description-placeholder',
+      labelKey: 'form_new_model_description_placeholder'
+    },
+    category: { id: 'category', labelKey: 'form_new_model_category' },
+    scale: { id: 'scale', labelKey: 'form_new_model_scale' },
+    powerMethod: { id: 'power-method', labelKey: 'form_new_model_power_method' },
+    epoch: { id: 'epoch', labelKey: 'form_new_model_epoch' },
+    selectPlaceholder: { id: 'select-placeholder', labelKey: 'form_new_model_select_placeholder' },
+    deliveryAvailability: {
+      id: 'delivery-availability',
+      labelKey: 'form_new_model_delivery_availability'
+    },
+    deliveryDate: { id: 'delivery-date', labelKey: 'form_new_model_delivery_date' },
+    deliveryDatePlaceholder: {
+      id: 'delivery-date-placeholder',
+      labelKey: 'form_new_model_delivery_date_placeholder'
+    },
+    availabilityStatus: { id: 'availability-status', labelKey: 'form_new_model_availability_status' },
+    additionalDetails: { id: 'additional-details', labelKey: 'form_new_model_additional_details' },
+    detailsPlaceholder: {
+      id: 'details-placeholder',
+      labelKey: 'form_new_model_details_placeholder'
+    },
+    rollingStock: { id: 'rolling-stock', labelKey: 'form_new_model_rolling_stock' },
+    railwayCompany: { id: 'railway-company', labelKey: 'form_new_model_railway_company' },
+    rollingStockCategory: {
+      id: 'rolling-stock-category',
+      labelKey: 'form_new_model_rolling_stock_category'
+    },
+    livery: { id: 'livery', labelKey: 'form_new_model_livery' },
+    liveryPlaceholder: { id: 'livery-placeholder', labelKey: 'form_new_model_livery_placeholder' },
+    className: { id: 'class-name', labelKey: 'form_new_model_class_name' },
+    roadNumber: { id: 'road-number', labelKey: 'form_new_model_road_number' },
+    series: { id: 'series', labelKey: 'form_new_model_series' },
+    depot: { id: 'depot', labelKey: 'form_new_model_depot' },
+    type: { id: 'type', labelKey: 'form_new_model_type' },
+    typeName: { id: 'type-name', labelKey: 'form_new_model_type_name' },
+    passengerCarType: { id: 'passenger-car-type', labelKey: 'form_new_model_passenger_car_type' },
+    freightCarType: { id: 'freight-car-type', labelKey: 'form_new_model_freight_car_type' },
+    emuType: { id: 'emu-type', labelKey: 'form_new_model_emu_type' },
+    isDummy: { id: 'is-dummy', labelKey: 'form_new_model_is_dummy' },
+    technicalDetails: { id: 'technical-details', labelKey: 'form_new_model_technical_details' },
+    control: { id: 'control', labelKey: 'form_new_model_control' },
+    dccInterface: { id: 'dcc-interface', labelKey: 'form_new_model_dcc_interface' },
+    serviceLevel: { id: 'service-level', labelKey: 'form_new_model_service_level' },
+    duplicate: { id: 'duplicate', labelKey: 'form_new_model_duplicate' },
+    delete: { id: 'delete', labelKey: 'form_new_model_delete' },
+    addRollingStock: { id: 'add-rolling-stock', labelKey: 'form_new_model_add_rolling_stock' },
+    create: { id: 'create-railway-model', labelKey: 'form_new_model_create' },
+    cancel: { id: 'cancel', labelKey: 'form_new_model_cancel' }
+  };
+
   type NullableEnum<T extends string = string> = T | '';
 
   type RollingStockForm = {
@@ -188,7 +251,7 @@
 </script>
 
 <div class="container mx-auto p-8">
-  <h1 class="mb-8 h2">Add New Railway Model</h1>
+  <h1 class="mb-8 h2">{resolveLabel(formLabels.title)}</h1>
   {#if errors.general}
     <div class="variant-filled-error mb-4 card p-4">{errors.general}</div>
   {/if}
@@ -208,7 +271,7 @@
     >
       <AccordionItem value="basic-info" class="rounded-lg border border-surface-600">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="mb-0 h4">Basic Information</h3>
+          <h3 class="mb-0 h4">{resolveLabel(formLabels.basicInfo)}</h3>
           <AccordionItemIndicator class="text-muted text-sm" />
         </AccordionItemTrigger>
 
@@ -216,13 +279,13 @@
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Manufacturer *</span
+                >{resolveLabel(formLabels.manufacturer)} *</span
               >
               <select
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.manufacturer_id}
               >
-                <option value="">-- Select --</option>
+                <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                 {#each manufacturersData as m (m.id)}
                   <option value={m.id}>{m.name}</option>
                 {/each}
@@ -234,13 +297,13 @@
 
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Product Code *</span
+                >{resolveLabel(formLabels.productCode)} *</span
               >
               <input
                 class="input border-surface-600 bg-surface-800 font-mono"
                 type="text"
                 bind:value={formData.product_code}
-                placeholder="e.g., 37858"
+                placeholder={resolveLabel(formLabels.productCodePlaceholder)}
               />
               {#if errors.product_code}
                 <span class="text-sm text-error-500">{errors.product_code}</span>
@@ -249,13 +312,13 @@
 
             <label class="label lg:col-span-2">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Description *</span
+                >{resolveLabel(formLabels.description)} *</span
               >
               <input
                 class="input border-surface-600 bg-surface-800"
                 type="text"
                 bind:value={formData.description}
-                placeholder="e.g., Class 218 Diesel Locomotive"
+                placeholder={resolveLabel(formLabels.descriptionPlaceholder)}
               />
               {#if errors.description}
                 <span class="text-sm text-error-500">{errors.description}</span>
@@ -264,13 +327,13 @@
 
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Category *</span
+                >{resolveLabel(formLabels.category)} *</span
               >
               <select
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.category}
               >
-                <option value="">-- Select --</option>
+                <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                 {#each categoriesData as cat (cat.id)}
                   <option value={cat.id}>{resolveLabel(cat as ConstantItem)}</option>
                 {/each}
@@ -279,10 +342,10 @@
 
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Scale *</span
+                >{resolveLabel(formLabels.scale)} *</span
               >
               <select class="select border-surface-600 bg-surface-800" bind:value={formData.scale}>
-                <option value="">-- Select --</option>
+                <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                 {#each scalesData as s (s.id)}
                   <option value={s.id}>{resolveLabel(s as ConstantItem)}</option>
                 {/each}
@@ -291,13 +354,13 @@
 
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Power Method *</span
+                >{resolveLabel(formLabels.powerMethod)} *</span
               >
               <select
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.power_method}
               >
-                <option value="">-- Select --</option>
+                <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                 {#each powerMethodsData as pm (pm.id)}
                   <option value={pm.id}>{resolveLabel(pm as ConstantItem)}</option>
                 {/each}
@@ -306,10 +369,10 @@
 
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Epoch *</span
+                >{resolveLabel(formLabels.epoch)} *</span
               >
               <select class="select border-surface-600 bg-surface-800" bind:value={formData.epoch}>
-                <option value="">-- Select --</option>
+                <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                 {#each epochsData as ep (ep.id)}
                   <option value={ep.id}>{resolveLabel(ep as ConstantItem)}</option>
                 {/each}
@@ -324,7 +387,7 @@
 
       <AccordionItem value="delivery-availability" class="rounded-lg border border-surface-600">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="mb-0 h4">Delivery & Availability</h3>
+          <h3 class="mb-0 h4">{resolveLabel(formLabels.deliveryAvailability)}</h3>
           <AccordionItemIndicator class="text-muted text-sm" />
         </AccordionItemTrigger>
 
@@ -332,13 +395,13 @@
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Delivery Date</span
+                >{resolveLabel(formLabels.deliveryDate)}</span
               >
               <input
                 class="input border-surface-600 bg-surface-800"
                 type="text"
                 bind:value={formData.delivery_date}
-                placeholder="2025, 2025/06, or 2025/Q2"
+                placeholder={resolveLabel(formLabels.deliveryDatePlaceholder)}
               />
               {#if errors.delivery_date}
                 <span class="text-sm text-error-500">{errors.delivery_date}</span>
@@ -347,13 +410,13 @@
 
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Availability Status</span
+                >{resolveLabel(formLabels.availabilityStatus)}</span
               >
               <select
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.availability_status}
               >
-                <option value="">-- Select --</option>
+                <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                 {#each availabilityStatusesData as status (status.id)}
                   <option value={status.id}>{resolveLabel(status as ConstantItem)}</option>
                 {/each}
@@ -362,13 +425,13 @@
 
             <label class="label lg:col-span-2">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                >Additional Details</span
+                >{resolveLabel(formLabels.additionalDetails)}</span
               >
               <textarea
                 class="textarea border-surface-600 bg-surface-800"
                 rows="3"
                 bind:value={formData.details}
-                placeholder="Optional notes about this model..."
+                placeholder={resolveLabel(formLabels.detailsPlaceholder)}
               ></textarea>
             </label>
           </div>
@@ -378,9 +441,8 @@
       <AccordionItem value="rolling-stock" class="rounded-lg border border-surface-600">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="mb-0 h4">
-            Rolling Stock <span class="variant-soft-primary badge"
-              >{formData.rolling_stocks.length}</span
-            >
+            {resolveLabel(formLabels.rollingStock)}
+            <span class="variant-soft-primary badge">{formData.rolling_stocks.length}</span>
           </h3>
           <AccordionItemIndicator class="text-muted text-sm" />
         </AccordionItemTrigger>
@@ -390,13 +452,13 @@
             {#each formData.rolling_stocks as rs, index (index)}
               <div class="variant-filled-surface card p-4">
                 <div class="mb-4 flex items-center justify-between">
-                  <h4 class="h5">Rolling Stock #{index + 1}</h4>
+                  <h4 class="h5">{resolveLabel(formLabels.rollingStock)} #{index + 1}</h4>
                   <div class="flex gap-2">
                     <button
                       type="button"
                       class="variant-ghost-surface btn-icon btn-sm"
                       onclick={() => duplicateRollingStock(index)}
-                      title="Duplicate"
+                      title={resolveLabel(formLabels.duplicate)}
                     >
                       <span>📋</span>
                     </button>
@@ -404,7 +466,7 @@
                       type="button"
                       class="variant-ghost-surface btn-icon btn-sm"
                       onclick={() => deleteRollingStock(index)}
-                      title="Delete"
+                      title={resolveLabel(formLabels.delete)}
                     >
                       <span>🗑️</span>
                     </button>
@@ -414,13 +476,13 @@
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <label class="label lg:col-span-2">
                     <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                      >Railway Company *</span
+                      >{resolveLabel(formLabels.railwayCompany)} *</span
                     >
                     <select
                       class="select border-surface-600 bg-surface-800"
                       bind:value={rs.railway_company_id}
                     >
-                      <option value="">-- Select --</option>
+                      <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                       {#each railwayCompaniesData as r (r.id)}
                         <option value={r.id}>{r.name}</option>
                       {/each}
@@ -429,13 +491,13 @@
 
                   <label class="label lg:col-span-2">
                     <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                      >Rolling Stock Category *</span
+                      >{resolveLabel(formLabels.rollingStockCategory)} *</span
                     >
                     <select
                       class="select border-surface-600 bg-surface-800"
                       bind:value={rs.category}
                     >
-                      <option value="">-- Select --</option>
+                      <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                       {#each rollingStockCategoriesData as option (option.id)}
                         <option value={option.id}>{resolveLabel(option as ConstantItem)}</option>
                       {/each}
@@ -444,20 +506,20 @@
 
                   <label class="label lg:col-span-2">
                     <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                      >Livery</span
+                      >{resolveLabel(formLabels.livery)}</span
                     >
                     <input
                       class="input border-surface-600 bg-surface-800"
                       type="text"
                       bind:value={rs.livery}
-                      placeholder="E.g., Deutsche Bahn AG"
+                      placeholder={resolveLabel(formLabels.liveryPlaceholder)}
                     />
                   </label>
 
                   {#if rs.category === 'Locomotive'}
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Class Name *</span
+                        >{resolveLabel(formLabels.className)} *</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -468,7 +530,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Road Number *</span
+                        >{resolveLabel(formLabels.roadNumber)} *</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -479,7 +541,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Series</span
+                        >{resolveLabel(formLabels.series)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -490,7 +552,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Depot</span
+                        >{resolveLabel(formLabels.depot)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -501,13 +563,13 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Type *</span
+                        >{resolveLabel(formLabels.type)} *</span
                       >
                       <select
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.locomotive_type}
                       >
-                        <option value="">-- Select --</option>
+                        <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                         {#each locomotiveTypesData as type (type.id)}
                           <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
@@ -517,7 +579,7 @@
                     <label class="label flex items-center gap-2">
                       <input class="checkbox" type="checkbox" bind:checked={rs.is_dummy} />
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Is Dummy</span
+                        >{resolveLabel(formLabels.isDummy)}</span
                       >
                     </label>
 
@@ -527,7 +589,9 @@
                           <AccordionItemTrigger
                             class="flex w-full items-center justify-between px-2 py-1 text-left"
                           >
-                            <span class="text-sm font-semibold">Technical Details</span>
+                            <span class="text-sm font-semibold"
+                              >{resolveLabel(formLabels.technicalDetails)}</span
+                            >
                             <AccordionItemIndicator class="text-muted text-xs" />
                           </AccordionItemTrigger>
                           <AccordionItemContent class="px-2 pt-1 pb-2">
@@ -535,13 +599,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >Control</span
+                                  >{resolveLabel(formLabels.control)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each controlsData as control (control.id)}
                                     <option value={control.id}
                                       >{resolveLabel(control as ConstantItem)}</option
@@ -553,13 +617,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >DCC Interface</span
+                                  >{resolveLabel(formLabels.dccInterface)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each dccInterfacesData as dccInterface (dccInterface.id)}
                                     <option value={dccInterface.id}
                                       >{resolveLabel(dccInterface as ConstantItem)}</option
@@ -575,7 +639,7 @@
                   {:else if rs.category === 'PassengerCar'}
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Type Name *</span
+                        >{resolveLabel(formLabels.typeName)} *</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -586,13 +650,13 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Passenger Car Type *</span
+                        >{resolveLabel(formLabels.passengerCarType)} *</span
                       >
                       <select
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.passenger_car_type}
                       >
-                        <option value="">-- Select --</option>
+                        <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                         {#each passengerCarTypesData as type (type.id)}
                           <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
@@ -601,7 +665,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Road Number</span
+                        >{resolveLabel(formLabels.roadNumber)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -612,7 +676,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Series</span
+                        >{resolveLabel(formLabels.series)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -623,7 +687,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Depot</span
+                        >{resolveLabel(formLabels.depot)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -638,7 +702,9 @@
                           <AccordionItemTrigger
                             class="flex w-full items-center justify-between px-2 py-1 text-left"
                           >
-                            <span class="text-sm font-semibold">Technical Details</span>
+                            <span class="text-sm font-semibold"
+                              >{resolveLabel(formLabels.technicalDetails)}</span
+                            >
                             <AccordionItemIndicator class="text-muted text-xs" />
                           </AccordionItemTrigger>
                           <AccordionItemContent class="px-2 pt-1 pb-2">
@@ -646,13 +712,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >Service Level</span
+                                  >{resolveLabel(formLabels.serviceLevel)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.service_level}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each serviceLevelsData as level (level.id)}
                                     <option value={level.id}
                                       >{resolveLabel(level as ConstantItem)}</option
@@ -668,7 +734,7 @@
                   {:else if rs.category === 'FreightCar'}
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Type Name *</span
+                        >{resolveLabel(formLabels.typeName)} *</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -679,13 +745,13 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Freight Car Type</span
+                        >{resolveLabel(formLabels.freightCarType)}</span
                       >
                       <select
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.freight_car_type}
                       >
-                        <option value="">-- Select --</option>
+                        <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                         {#each freightCarTypesData as type (type.id)}
                           <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
@@ -694,7 +760,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Road Number</span
+                        >{resolveLabel(formLabels.roadNumber)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -705,7 +771,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Series</span
+                        >{resolveLabel(formLabels.series)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -716,7 +782,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Depot</span
+                        >{resolveLabel(formLabels.depot)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -727,7 +793,7 @@
                   {:else if rs.category === 'Railcar'}
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Type Name *</span
+                        >{resolveLabel(formLabels.typeName)} *</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -738,7 +804,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Road Number</span
+                        >{resolveLabel(formLabels.roadNumber)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -749,7 +815,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Series</span
+                        >{resolveLabel(formLabels.series)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -760,7 +826,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Depot</span
+                        >{resolveLabel(formLabels.depot)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -775,7 +841,9 @@
                           <AccordionItemTrigger
                             class="flex w-full items-center justify-between px-2 py-1 text-left"
                           >
-                            <span class="text-sm font-semibold">Technical Details</span>
+                            <span class="text-sm font-semibold"
+                              >{resolveLabel(formLabels.technicalDetails)}</span
+                            >
                             <AccordionItemIndicator class="text-muted text-xs" />
                           </AccordionItemTrigger>
                           <AccordionItemContent class="px-2 pt-1 pb-2">
@@ -783,13 +851,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >Control</span
+                                  >{resolveLabel(formLabels.control)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each controlsData as control (control.id)}
                                     <option value={control.id}
                                       >{resolveLabel(control as ConstantItem)}</option
@@ -801,13 +869,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >DCC Interface</span
+                                  >{resolveLabel(formLabels.dccInterface)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each dccInterfacesData as dccInterface (dccInterface.id)}
                                     <option value={dccInterface.id}
                                       >{resolveLabel(dccInterface as ConstantItem)}</option
@@ -823,7 +891,7 @@
                   {:else if rs.category === 'ElectricMultipleUnit'}
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Type Name *</span
+                        >{resolveLabel(formLabels.typeName)} *</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -834,13 +902,13 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >EMU Type *</span
+                        >{resolveLabel(formLabels.emuType)} *</span
                       >
                       <select
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.electric_multiple_unit_type}
                       >
-                        <option value="">-- Select --</option>
+                        <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                         {#each electricMultipleUnitTypesData as type (type.id)}
                           <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
@@ -849,7 +917,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Road Number</span
+                        >{resolveLabel(formLabels.roadNumber)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -860,7 +928,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Series</span
+                        >{resolveLabel(formLabels.series)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -871,7 +939,7 @@
 
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Depot</span
+                        >{resolveLabel(formLabels.depot)}</span
                       >
                       <input
                         class="input border-surface-600 bg-surface-800"
@@ -883,7 +951,7 @@
                     <label class="label flex items-center gap-2">
                       <input class="checkbox" type="checkbox" bind:checked={rs.is_dummy} />
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                        >Is Dummy</span
+                        >{resolveLabel(formLabels.isDummy)}</span
                       >
                     </label>
 
@@ -893,7 +961,9 @@
                           <AccordionItemTrigger
                             class="flex w-full items-center justify-between px-2 py-1 text-left"
                           >
-                            <span class="text-sm font-semibold">Technical Details</span>
+                            <span class="text-sm font-semibold"
+                              >{resolveLabel(formLabels.technicalDetails)}</span
+                            >
                             <AccordionItemIndicator class="text-muted text-xs" />
                           </AccordionItemTrigger>
                           <AccordionItemContent class="px-2 pt-1 pb-2">
@@ -901,13 +971,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >Control</span
+                                  >{resolveLabel(formLabels.control)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each controlsData as control (control.id)}
                                     <option value={control.id}
                                       >{resolveLabel(control as ConstantItem)}</option
@@ -919,13 +989,13 @@
                               <label class="label">
                                 <span
                                   class="text-sm font-bold tracking-wider text-surface-300 uppercase"
-                                  >DCC Interface</span
+                                  >{resolveLabel(formLabels.dccInterface)}</span
                                 >
                                 <select
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value="">-- Select --</option>
+                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
                                   {#each dccInterfacesData as dccInterface (dccInterface.id)}
                                     <option value={dccInterface.id}
                                       >{resolveLabel(dccInterface as ConstantItem)}</option
@@ -944,7 +1014,7 @@
             {/each}
 
             <button type="button" class="cta-btn cta-primary btn" onclick={addRollingStock}>
-              + Add Rolling Stock
+              + {resolveLabel(formLabels.addRollingStock)}
             </button>
           </div>
         </AccordionItemContent>
@@ -953,10 +1023,12 @@
 
     <div class="mt-8 flex gap-4">
       <button type="submit" class="cta-btn cta-primary btn" disabled={isSubmitting}>
-        {isSubmitting ? 'Creating...' : 'Create Railway Model'}
+        {isSubmitting
+          ? `${resolveLabel(formLabels.create)}...`
+          : resolveLabel(formLabels.create)}
       </button>
       <button type="button" class="cta-btn cta-secondary btn" onclick={() => navigate('/')}>
-        Cancel
+        {resolveLabel(formLabels.cancel)}
       </button>
     </div>
   </form>
