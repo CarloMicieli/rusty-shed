@@ -9,7 +9,7 @@
   import { onMount } from 'svelte';
   import { setAppVersion } from '$lib/stores/app';
   import { collectionStore } from '$lib/stores/collectionStore.svelte';
-  import { wishlistStore } from '$lib/stores/wishlistStore';
+  import { wishlistService } from '$lib/stores/WishlistService.svelte';
   import ToastHost from '$lib/components/ToastHost.svelte';
 
   let { children } = $props();
@@ -17,11 +17,10 @@
   onMount(async () => {
     // Preload collection for nav badges
     void collectionStore.fetchCollection();
-    void wishlistStore.fetchWishlists();
+    void wishlistService.fetchWishlists();
 
     // Prefer generated bindings if available (tauri-specta). Fallback to direct invoke.
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: generated bindings may not exist during Vite-only dev
       const bindings = await import('$lib/bindings');
       if (bindings && bindings.commands && typeof bindings.commands.getAppVersion === 'function') {

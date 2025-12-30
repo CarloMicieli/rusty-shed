@@ -1,13 +1,15 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
   import { LayoutDashboard, Library, Heart, Box, Settings } from 'lucide-svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
+  import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
   import { collectionStore } from '$lib/stores/collectionStore.svelte';
-  import { wishlistStore } from '$lib/stores/wishlistStore';
+  import { wishlistService } from '$lib/stores/WishlistService.svelte';
 
   const totalCount = $derived(collectionStore.totalCount);
-  const { defaultWishlist } = wishlistStore;
+  const defaultWishlist = $derived(wishlistService.defaultWishlist);
+  const pathname = $derived(page.url.pathname as string);
 </script>
 
 <div
@@ -15,41 +17,41 @@
 >
   <div class="flex h-16 items-center justify-around">
     <a
-      href="/"
+      href={resolve('/')}
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/'}
-      class:text-surface-400={($page.url.pathname as string) !== '/'}
+      class:text-accent-500={pathname === '/'}
+      class:text-surface-400={pathname !== '/'}
     >
       <LayoutDashboard size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_dashboard()}</span>
     </a>
     <a
-      href="/my-collection"
+      href={resolve('/my-collection')}
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/my-collection'}
-      class:text-surface-400={($page.url.pathname as string) !== '/my-collection'}
+      class:text-accent-500={pathname === '/my-collection'}
+      class:text-surface-400={pathname !== '/my-collection'}
     >
       <Library size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_collection()}</span>
       <span class="variant-soft-surface badge">{totalCount}</span>
     </a>
     <a
-      href="/my-wishlists"
+      href={resolve('/my-wishlists')}
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/my-wishlists'}
-      class:text-surface-400={($page.url.pathname as string) !== '/my-wishlists'}
+      class:text-accent-500={pathname === '/my-wishlists'}
+      class:text-surface-400={pathname !== '/my-wishlists'}
     >
       <Heart size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_wishlists()}</span>
-      {#if $defaultWishlist}
-        <span class="variant-soft-surface badge">{$defaultWishlist.count}</span>
+      {#if defaultWishlist}
+        <span class="variant-soft-surface badge">{defaultWishlist.count}</span>
       {/if}
     </a>
     <a
-      href="/my-depot"
+      href={resolve('/my-depot')}
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/my-depot'}
-      class:text-surface-400={($page.url.pathname as string) !== '/my-depot'}
+      class:text-accent-500={pathname === '/my-depot'}
+      class:text-surface-400={pathname !== '/my-depot'}
     >
       <Box size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_depot()}</span>
@@ -57,8 +59,8 @@
     <a
       href="/settings"
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/settings'}
-      class:text-surface-400={($page.url.pathname as string) !== '/settings'}
+      class:text-accent-500={pathname === '/settings'}
+      class:text-surface-400={pathname !== '/settings'}
     >
       <Settings size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_settings()}</span>

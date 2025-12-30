@@ -2,13 +2,14 @@
 <script lang="ts">
   import { LayoutDashboard, Library, Heart, Box, Settings, TrainFront } from 'lucide-svelte';
   import { page } from '$app/state';
+  import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
   import { appVersion } from '$lib/stores/app';
   import { collectionStore } from '$lib/stores/collectionStore.svelte';
-  import { wishlistStore } from '$lib/stores/wishlistStore';
+  import { wishlistService } from '$lib/stores/WishlistService.svelte';
 
   const totalCount = $derived(collectionStore.totalCount);
-  const { defaultWishlist } = wishlistStore;
+  const defaultWishlist = $derived(wishlistService.defaultWishlist);
 </script>
 
 <nav class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex">
@@ -20,7 +21,7 @@
   <ul class="space-y-2">
     <li>
       <a
-        href="/"
+        href={resolve('/')}
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
         class:variant-filled-primary={(page.url.pathname as string) === '/'}
         class:variant-ghost-surface={(page.url.pathname as string) !== '/'}
@@ -31,7 +32,7 @@
     </li>
     <li>
       <a
-        href="/my-collection"
+        href={resolve('/my-collection')}
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
         class:variant-filled-primary={(page.url.pathname as string) === '/my-collection'}
         class:variant-ghost-surface={(page.url.pathname as string) !== '/my-collection'}
@@ -43,21 +44,21 @@
     </li>
     <li>
       <a
-        href="/my-wishlists"
+        href={resolve('/my-wishlists')}
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
         class:variant-filled-primary={(page.url.pathname as string) === '/my-wishlists'}
         class:variant-ghost-surface={(page.url.pathname as string) !== '/my-wishlists'}
       >
         <Heart size={20} />
         <span class="font-medium tracking-wide">{m.app_wishlists()}</span>
-        {#if $defaultWishlist}
-          <span class="variant-soft-surface ml-auto badge">{$defaultWishlist.count}</span>
+        {#if defaultWishlist}
+          <span class="variant-soft-surface ml-auto badge">{defaultWishlist.count}</span>
         {/if}
       </a>
     </li>
     <li>
       <a
-        href="/my-depot"
+        href={resolve('/my-depot')}
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
         class:variant-filled-primary={(page.url.pathname as string) === '/my-depot'}
         class:variant-ghost-surface={(page.url.pathname as string) !== '/my-depot'}
