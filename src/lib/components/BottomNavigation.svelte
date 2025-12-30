@@ -1,6 +1,5 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  /* eslint-disable svelte/no-navigation-without-resolve */
   import { LayoutDashboard, Library, Heart, Box, Settings } from 'lucide-svelte';
   import { page } from '$app/stores';
   import { _ } from 'svelte-i18n';

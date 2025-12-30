@@ -1,6 +1,5 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  /* eslint-disable svelte/no-navigation-without-resolve */
   import { stats, quickActions, recentItems, depotData } from '$lib/data/mock';
   import StatsCard from '$lib/components/StatsCard.svelte';
   import QuickActionButton from '$lib/components/QuickActionButton.svelte';

@@ -3,6 +3,7 @@
   import * as Lucide from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import { goto } from '$app/navigation';
+  import { resolveRoute } from '$app/paths';
 
   let { action } = $props<{ action: QuickAction }>();
 
@@ -12,7 +13,7 @@
 
   function handleClick() {
     if (action.url) {
-      goto(action.url);
+      goto(resolveRoute(action.url));
     }
   }
 </script>

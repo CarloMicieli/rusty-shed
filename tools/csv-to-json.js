@@ -2,7 +2,7 @@
 
 /**
  * CSV to JSON Converter
- * 
+ *
  * Converts seed CSV files (manufacturers.csv, railway_companies.csv) to JSON
  * for frontend consumption in the SvelteKit application.
  */
@@ -23,8 +23,8 @@ function generateSlug(name) {
   return name
     .toLowerCase()
     .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-')     // Replace spaces with hyphens
-    .replace(/-+/g, '-')      // Replace multiple hyphens with single hyphen
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .trim();
 }
 
@@ -36,17 +36,17 @@ function generateSlug(name) {
  */
 function parseCsv(csvPath, mapper) {
   const content = fs.readFileSync(csvPath, 'utf-8');
-  const lines = content.split('\n').filter(line => line.trim());
-  
+  const lines = content.split('\n').filter((line) => line.trim());
+
   if (lines.length === 0) {
     throw new Error(`CSV file is empty: ${csvPath}`);
   }
 
-  const headers = lines[0].split(',').map(h => h.trim());
+  const headers = lines[0].split(',').map((h) => h.trim());
   const data = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim());
+    const values = lines[i].split(',').map((v) => v.trim());
     if (values.length !== headers.length) {
       console.warn(`Skipping malformed line ${i + 1}: ${lines[i]}`);
       continue;
