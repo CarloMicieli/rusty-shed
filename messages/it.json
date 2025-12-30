@@ -1,6 +1,13 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "example_message": "Ciao mondo {username}",
+  "app_name": "Rusty Shed",
+  "app_dashboard": "Dashboard",
+  "app_collection": "Collezione",
+  "app_wishlists": "Liste Desideri",
+  "app_depot": "Deposito",
+  "app_settings": "Impostazioni",
+  "app_version_prefix": "v.",
   "form_new_model_title": "Aggiungi nuovo modello ferroviario",
   "form_new_model_basic_info": "Informazioni di base",
   "form_new_model_manufacturer": "Produttore",
