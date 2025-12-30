@@ -147,8 +147,9 @@
             <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
               {m.dashboard_recently_added()}
             </h3>
-            <a href={resolve('/my-collection')} class="text-accent-500 text-sm font-bold hover:underline"
-              >{m.dashboard_view_all()}</a
+            <a
+              href={resolve('/my-collection')}
+              class="text-accent-500 text-sm font-bold hover:underline">{m.dashboard_view_all()}</a
             >
           </div>
 

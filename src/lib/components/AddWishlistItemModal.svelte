@@ -81,7 +81,10 @@
 
     <div class="space-y-4 p-4">
       <div class="space-y-2">
-        <label for="wishlist-select" class="text-xs font-semibold tracking-wide text-surface-300 uppercase">
+        <label
+          for="wishlist-select"
+          class="text-xs font-semibold tracking-wide text-surface-300 uppercase"
+        >
           {$_('wishlist_modal.choose_or_create')}
         </label>
         <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -113,7 +116,10 @@
       </div>
 
       <div class="space-y-2">
-        <label for="model-id" class="text-xs font-semibold tracking-wide text-surface-300 uppercase">
+        <label
+          for="model-id"
+          class="text-xs font-semibold tracking-wide text-surface-300 uppercase"
+        >
           {$_('wishlist_modal.item_id_label')}
         </label>
         <input
@@ -126,7 +132,10 @@
       </div>
 
       <div class="space-y-2">
-        <label for="wishlist-notes" class="text-xs font-semibold tracking-wide text-surface-300 uppercase">
+        <label
+          for="wishlist-notes"
+          class="text-xs font-semibold tracking-wide text-surface-300 uppercase"
+        >
           {$_('wishlist_modal.notes_label')}
         </label>
         <textarea
