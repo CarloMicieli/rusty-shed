@@ -28,6 +28,7 @@
   ];
   const availabilityStatuses = ['ANNOUNCED', 'AVAILABLE', 'CANCELLED', 'DISCONTINUED'];
   const controls = ['DCC_READY', 'DCC_FITTED', 'DCC_SOUND', 'NO_DCC'];
+  const epochs = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   const locomotiveTypes = ['STEAM_LOCOMOTIVE', 'DIESEL_LOCOMOTIVE', 'ELECTRIC_LOCOMOTIVE'];
   const passengerCarTypes = [
     'BAGGAGE_CAR',
@@ -293,12 +294,14 @@
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Epoch *</span
               >
-              <input
-                class="input border-surface-600 bg-surface-800"
-                type="text"
+              <select
+                class="select border-surface-600 bg-surface-800"
                 bind:value={formData.epoch}
-                placeholder="e.g., III, IV, V"
-              />
+              >
+                {#each epochs as ep (ep)}
+                  <option value={ep}>{ep}</option>
+                {/each}
+              </select>
               {#if errors.epoch}
                 <span class="text-sm text-error-500">{errors.epoch}</span>
               {/if}
@@ -927,7 +930,7 @@
 
             <button
               type="button"
-              class="variant-filled-primary btn w-full"
+              class="btn cta-btn cta-primary"
               onclick={addRollingStock}
             >
               + Add Rolling Stock
@@ -938,12 +941,56 @@
     </Accordion>
 
     <div class="mt-8 flex gap-4">
-      <button type="submit" class="variant-filled-primary btn flex-1" disabled={isSubmitting}>
+      <button
+        type="submit"
+        class="btn cta-btn cta-primary"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? 'Creating...' : 'Create Railway Model'}
       </button>
-      <button type="button" class="variant-ghost-surface btn" onclick={() => navigate('/')}>
+      <button
+        type="button"
+        class="btn cta-btn cta-secondary"
+        onclick={() => navigate('/')}
+      >
         Cancel
       </button>
     </div>
   </form>
 </div>
+
+<style>
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+
+  .cta-primary {
+    background-color: var(--primary-500, #2563eb);
+    color: var(--on-primary, #0b1224);
+    border-color: var(--primary-600, #1d4ed8);
+  }
+
+  .cta-primary:hover {
+    background-color: var(--primary-600, #1d4ed8);
+  }
+
+  .cta-secondary {
+    background-color: var(--surface-700, #2d2f36);
+    color: var(--on-surface, #f8fafc);
+    border-color: var(--surface-500, #3f4148);
+  }
+
+  .cta-secondary:hover {
+    background-color: var(--surface-600, #32343b);
+  }
+
+</style>
