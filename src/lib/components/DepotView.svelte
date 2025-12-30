@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { DashboardDepotEntry } from '$lib/stores/dashboardStore.svelte';
-  import { _ } from 'svelte-i18n';
+  import * as m from '$lib/paraglide/messages.js';
   import DepotTable from './DepotTable.svelte';
   import DepotListCard from './DepotListCard.svelte';
   import { PackageOpen, Plus } from 'lucide-svelte';
@@ -12,9 +12,6 @@
     data?: DashboardDepotEntry[];
     isLoading?: boolean;
   }>();
-
-  // Use the reactive $ prefix for the i18n store to satisfy the linter
-  const t = $derived($_);
 </script>
 
 {#if isLoading}
@@ -45,18 +42,17 @@
       <PackageOpen size={32} class="opacity-50" />
     </div>
     <h4 class="h4 font-bold opacity-80">
-      {t('dashboard.empty_depot_title') || 'Your Depot is Empty'}
+      {m.dashboard_empty_depot_title()}
     </h4>
     <p class="mt-2 max-w-xs text-sm text-surface-400">
-      {t('dashboard.empty_depot_message') ||
-        'Start building your collection by adding your first railway model.'}
+      {m.dashboard_empty_depot_message()}
     </p>
     <button
       class="variant-filled-primary mt-6 btn"
       onclick={() => goto(resolve('/catalogue/new-model'))}
     >
       <Plus size={18} class="mr-2" />
-      {t('dashboard.add_first_model') || 'Add Model'}
+      {m.dashboard_add_first_model()}
     </button>
   </div>
 {:else}

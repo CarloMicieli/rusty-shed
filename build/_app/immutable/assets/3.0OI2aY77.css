@@ -1,0 +1,31 @@
+.cta-btn.svelte-kffwxd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.cta-primary.svelte-kffwxd {
+  background-color: var(--primary-500, #2563eb);
+  color: var(--on-primary, #0b1224);
+  border-color: var(--primary-600, #1d4ed8);
+}
+.cta-primary.svelte-kffwxd:hover {
+  background-color: var(--primary-600, #1d4ed8);
+}
+.cta-secondary.svelte-kffwxd {
+  background-color: var(--surface-700, #2d2f36);
+  color: var(--on-surface, #f8fafc);
+  border-color: var(--surface-500, #3f4148);
+}
+.cta-secondary.svelte-kffwxd:hover {
+  background-color: var(--surface-600, #32343b);
+}

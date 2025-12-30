@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { DashboardDepotEntry } from '$lib/stores/dashboardStore.svelte';
-  import { _ } from 'svelte-i18n';
+  import * as m from '$lib/paraglide/messages.js';
 
   let { data } = $props<{ data: DashboardDepotEntry[] }>();
 </script>
@@ -9,12 +9,12 @@
   <table class="table-hover table">
     <thead>
       <tr>
-        <th>{$_('depot.manufacturer')}</th>
-        <th>{$_('depot.product_code')}</th>
-        <th>{$_('depot.category')}</th>
-        <th>{$_('depot.scale')}</th>
-        <th>{$_('depot.company')}</th>
-        <th>{$_('depot.description')}</th>
+        <th>{m.depot_manufacturer()}</th>
+        <th>{m.depot_product_code()}</th>
+        <th>{m.depot_category()}</th>
+        <th>{m.depot_scale()}</th>
+        <th>{m.depot_company()}</th>
+        <th>{m.depot_description()}</th>
       </tr>
     </thead>
     <tbody>

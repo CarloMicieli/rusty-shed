@@ -13,8 +13,8 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
   {
-    // Ignore auto-generated Tauri bindings
-    ignores: ['src/lib/bindings.ts']
+    // Ignore auto-generated Tauri bindings and build output
+    ignores: ['src/lib/bindings.ts', 'build/**']
   },
   js.configs.recommended,
   ...ts.configs.recommended,

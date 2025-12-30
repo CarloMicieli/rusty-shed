@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Search, X } from 'lucide-svelte';
-  import { _ } from 'svelte-i18n';
+  import * as m from '$lib/paraglide/messages.js';
 
   let isExpanded = $state(false);
 
@@ -14,7 +14,7 @@
   <Search class="pointer-events-none absolute left-3 text-surface-400" size={18} />
   <input
     type="text"
-    placeholder={$_('app.search_placeholder')}
+    placeholder={m.app_search_placeholder()}
     class="input rounded-full border-surface-600 bg-surface-800 py-2 pl-10 text-sm transition-colors focus:border-primary-500"
   />
 </div>
@@ -37,13 +37,13 @@
         <!-- svelte-ignore a11y_autofocus -->
         <input
           type="text"
-          placeholder={$_('app.search_mobile_placeholder')}
+          placeholder={m.app_search_mobile_placeholder()}
           class="input rounded-xl border-primary-500 bg-surface-900 py-4 pl-12 text-lg shadow-xl"
           autoFocus
         />
       </div>
       <div class="mt-8 text-center text-sm tracking-widest text-surface-400 uppercase">
-        {$_('app.search_instruction')}
+        {m.app_search_instruction()}
       </div>
     </div>
   {/if}

@@ -1,0 +1,32 @@
+import { g as t } from './8AwhvTxk.js';
+const n = () => 'Collection',
+  o = () => 'Collezione',
+  m = (l = {}, e = {}) => ((e.locale ?? t()) === 'en' ? n() : o()),
+  i = () => 'Steam',
+  a = () => 'Vapore',
+  H = (l = {}, e = {}) => ((e.locale ?? t()) === 'en' ? i() : a()),
+  s = () => 'Diesel',
+  r = () => 'Diesel',
+  h = (l = {}, e = {}) => ((e.locale ?? t()) === 'en' ? s() : r()),
+  _ = () => 'Electric',
+  u = () => 'Elettrico',
+  S = (l = {}, e = {}) => ((e.locale ?? t()) === 'en' ? _() : u()),
+  p = () => 'Passenger',
+  g = () => 'Passeggeri',
+  T = (l = {}, e = {}) => ((e.locale ?? t()) === 'en' ? p() : g()),
+  d = () => 'Freight',
+  f = () => 'Merci',
+  D = (l = {}, e = {}) => ((e.locale ?? t()) === 'en' ? d() : f()),
+  C = [
+    { id: 'H0', display: 'H0 (1:87)' },
+    { id: 'Scale00', display: '00 (1:76)' },
+    { id: 'H0m', display: 'H0m (1:87)' },
+    { id: 'H0e', display: 'H0e (1:87)' },
+    { id: 'N', display: 'N (1:160)' },
+    { id: 'TT', display: 'TT (1:120)' },
+    { id: 'Z', display: 'Z (1:220)' },
+    { id: 'G', display: 'G (1:22.5)' },
+    { id: 'Scale1', display: '1 (1:32)' },
+    { id: 'Scale0', display: '0 (1:43.5)' }
+  ];
+export { T as a, S as b, D as c, h as d, H as e, m as f, C as s };
