@@ -2,8 +2,9 @@
   import { _ } from 'svelte-i18n';
   import { Accordion } from '@skeletonlabs/skeleton-svelte';
   const AccordionItem = Accordion.Item;
-  import { goto } from '$app/navigation';
-  import { resolveRoute } from '$app/paths';
+  const AccordionItemTrigger = Accordion.ItemTrigger;
+  const AccordionItemContent = Accordion.ItemContent;
+  const AccordionItemIndicator = Accordion.ItemIndicator;
   import { commands } from '$lib/bindings';
   import {
     createRailwayModelSchema,
@@ -11,29 +12,9 @@
   } from '$lib/schemas/railway-model';
   import type { ZodError } from 'zod';
 
-  // Import JSON data
   import manufacturersData from '$lib/data/manufacturers.json';
   import railwayCompaniesData from '$lib/data/railway-companies.json';
 
-  // Reactive form state
-  let formData = $state<CreateRailwayModelInput>({
-    manufacturer_id: '',
-    product_code: '',
-    description: '',
-    details: null,
-    power_method: 'DC',
-    scale: 'H0',
-    epoch: 'III',
-    category: 'LOCOMOTIVES',
-    delivery_date: null,
-    availability_status: null,
-    rolling_stocks: []
-  });
-
-  let errors = $state<Record<string, string>>({});
-  let isSubmitting = $state(false);
-
-  // Enum options
   const powerMethods = ['AC', 'DC', 'TRIX_EXPRESS'];
   const scales = ['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', 'G', 'Scale1', 'Scale0', 'Scale00'];
   const categories = [
@@ -114,21 +95,40 @@
     'TRAIN_SET'
   ];
 
+  let accordionValues = $state<string[]>(['basic-info', 'delivery-availability', 'rolling-stock']);
+
+  let formData = $state<CreateRailwayModelInput>({
+    manufacturer_id: '',
+    product_code: '',
+    description: '',
+    details: null,
+    power_method: 'DC',
+    scale: 'H0',
+    epoch: 'III',
+    category: 'LOCOMOTIVES',
+    delivery_date: null,
+    availability_status: null,
+    rolling_stocks: []
+  });
+
+  let errors = $state<Record<string, string>>({});
+  let isSubmitting = $state(false);
+
   function addRollingStock() {
     formData.rolling_stocks.push({
       category: 'Locomotive',
       railway_company_id: '',
       class_name: '',
       road_number: '',
-      series: undefined,
-      depot: undefined,
-      livery: undefined,
+      series: null,
+      depot: null,
+      livery: null,
       locomotive_type: 'DIESEL_LOCOMOTIVE',
       is_dummy: false,
-      control: undefined,
-      dcc_interface: undefined,
-      length_over_buffers: undefined,
-      technical_specifications: undefined
+      control: null,
+      dcc_interface: null,
+      length_over_buffers: null,
+      technical_specifications: null
     });
   }
 
@@ -141,34 +141,33 @@
     formData.rolling_stocks.push(copy);
   }
 
+  function navigate(path: string) {
+    window.location.assign(path);
+  }
+
   async function handleSubmit() {
     isSubmitting = true;
     errors = {};
 
     try {
-      // Validate with Zod
       const validated = createRailwayModelSchema.parse(formData);
-
-      // Submit to backend
       const result = await commands.createRailwayModel(validated);
 
       if (result.status === 'ok') {
-        // Navigate to model detail page
-
-        await goto(`/models/${result.data}`);
+        navigate(`/models/${result.data}`);
       } else {
-        errors.general = result.error;
+        errors.general =
+          typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
       }
     } catch (err) {
       if ((err as ZodError).issues) {
-        // Zod validation errors
         const zodErr = err as ZodError;
         zodErr.issues.forEach((issue) => {
           const path = issue.path.join('.');
           errors[path] = issue.message;
         });
       } else {
-        errors.general = 'An unexpected error occurred';
+        errors.general = typeof err === 'string' ? err : 'An unexpected error occurred';
       }
     } finally {
       isSubmitting = false;
@@ -178,11 +177,8 @@
 
 <div class="container mx-auto p-8">
   <h1 class="mb-8 h2">Add New Railway Model</h1>
-
   {#if errors.general}
-    <div class="variant-filled-error mb-4 card p-4">
-      {errors.general}
-    </div>
+    <div class="variant-filled-error mb-4 card p-4">{errors.general}</div>
   {/if}
 
   <form
@@ -191,15 +187,21 @@
       handleSubmit();
     }}
   >
-    <Accordion>
-      <!-- Section 1: Basic Information -->
-      <AccordionItem value="basic-info">
-        <svelte:fragment slot="summary">
-          <h3 class="h4">Basic Information</h3>
-        </svelte:fragment>
-        <svelte:fragment slot="content">
+    <Accordion
+      value={accordionValues}
+      onValueChange={(details) => (accordionValues = details.value)}
+      multiple
+      collapsible
+      class="space-y-3"
+    >
+      <AccordionItem value="basic-info" class="rounded-lg border border-surface-600">
+        <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+          <h3 class="mb-0 h4">Basic Information</h3>
+          <AccordionItemIndicator class="text-muted text-sm" />
+        </AccordionItemTrigger>
+
+        <AccordionItemContent class="px-3 pt-1 pb-4">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <!-- Manufacturer -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Manufacturer *</span
@@ -218,7 +220,6 @@
               {/if}
             </label>
 
-            <!-- Product Code -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Product Code *</span
@@ -234,7 +235,6 @@
               {/if}
             </label>
 
-            <!-- Description -->
             <label class="label lg:col-span-2">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Description *</span
@@ -250,7 +250,6 @@
               {/if}
             </label>
 
-            <!-- Category -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Category *</span
@@ -265,7 +264,6 @@
               </select>
             </label>
 
-            <!-- Scale -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Scale *</span
@@ -277,7 +275,6 @@
               </select>
             </label>
 
-            <!-- Power Method -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Power Method *</span
@@ -292,7 +289,6 @@
               </select>
             </label>
 
-            <!-- Epoch -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Epoch *</span
@@ -308,17 +304,17 @@
               {/if}
             </label>
           </div>
-        </svelte:fragment>
+        </AccordionItemContent>
       </AccordionItem>
 
-      <!-- Section 2: Delivery & Availability -->
-      <AccordionItem value="delivery-availability">
-        <svelte:fragment slot="summary">
-          <h3 class="h4">Delivery & Availability</h3>
-        </svelte:fragment>
-        <svelte:fragment slot="content">
+      <AccordionItem value="delivery-availability" class="rounded-lg border border-surface-600">
+        <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+          <h3 class="mb-0 h4">Delivery & Availability</h3>
+          <AccordionItemIndicator class="text-muted text-sm" />
+        </AccordionItemTrigger>
+
+        <AccordionItemContent class="px-3 pt-1 pb-4">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <!-- Delivery Date -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Delivery Date</span
@@ -334,7 +330,6 @@
               {/if}
             </label>
 
-            <!-- Availability Status -->
             <label class="label">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Availability Status</span
@@ -350,7 +345,6 @@
               </select>
             </label>
 
-            <!-- Details -->
             <label class="label lg:col-span-2">
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Additional Details</span
@@ -363,19 +357,20 @@
               ></textarea>
             </label>
           </div>
-        </svelte:fragment>
+        </AccordionItemContent>
       </AccordionItem>
 
-      <!-- Section 3: Rolling Stock -->
-      <AccordionItem value="rolling-stock">
-        <svelte:fragment slot="summary">
-          <h3 class="h4">
+      <AccordionItem value="rolling-stock" class="rounded-lg border border-surface-600">
+        <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+          <h3 class="mb-0 h4">
             Rolling Stock <span class="variant-soft-primary badge"
               >{formData.rolling_stocks.length}</span
             >
           </h3>
-        </svelte:fragment>
-        <svelte:fragment slot="content">
+          <AccordionItemIndicator class="text-muted text-sm" />
+        </AccordionItemTrigger>
+
+        <AccordionItemContent class="px-3 pt-1 pb-4">
           <div class="space-y-4">
             {#each formData.rolling_stocks as rs, index (index)}
               <div class="variant-filled-surface card p-4">
@@ -402,7 +397,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <!-- Railway Company -->
                   <label class="label lg:col-span-2">
                     <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                       >Railway Company *</span
@@ -418,7 +412,6 @@
                     </select>
                   </label>
 
-                  <!-- Category Selector -->
                   <label class="label lg:col-span-2">
                     <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                       >Rolling Stock Category *</span
@@ -435,7 +428,6 @@
                     </select>
                   </label>
 
-                  <!-- Livery (common to all types) -->
                   <label class="label lg:col-span-2">
                     <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                       >Livery</span
@@ -448,7 +440,6 @@
                     />
                   </label>
 
-                  <!-- Category-specific fields -->
                   {#if rs.category === 'Locomotive'}
                     <label class="label">
                       <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
@@ -515,14 +506,16 @@
                       >
                     </label>
 
-                    <!-- Technical Details Accordion -->
                     <div class="lg:col-span-2">
-                      <Accordion>
-                        <AccordionItem>
-                          <svelte:fragment slot="summary">
-                            <span class="text-sm font-semibold">🔧 Technical Details</span>
-                          </svelte:fragment>
-                          <svelte:fragment slot="content">
+                      <Accordion collapsible>
+                        <AccordionItem value={`technical-${index}-locomotive`}>
+                          <AccordionItemTrigger
+                            class="flex w-full items-center justify-between px-2 py-1 text-left"
+                          >
+                            <span class="text-sm font-semibold">Technical Details</span>
+                            <AccordionItemIndicator class="text-muted text-xs" />
+                          </AccordionItemTrigger>
+                          <AccordionItemContent class="px-2 pt-1 pb-2">
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                               <label class="label">
                                 <span
@@ -559,7 +552,7 @@
                                 </select>
                               </label>
                             </div>
-                          </svelte:fragment>
+                          </AccordionItemContent>
                         </AccordionItem>
                       </Accordion>
                     </div>
@@ -622,14 +615,16 @@
                       />
                     </label>
 
-                    <!-- Technical Details Accordion -->
                     <div class="lg:col-span-2">
-                      <Accordion>
-                        <AccordionItem>
-                          <svelte:fragment slot="summary">
-                            <span class="text-sm font-semibold">🔧 Technical Details</span>
-                          </svelte:fragment>
-                          <svelte:fragment slot="content">
+                      <Accordion collapsible>
+                        <AccordionItem value={`technical-${index}-passenger`}>
+                          <AccordionItemTrigger
+                            class="flex w-full items-center justify-between px-2 py-1 text-left"
+                          >
+                            <span class="text-sm font-semibold">Technical Details</span>
+                            <AccordionItemIndicator class="text-muted text-xs" />
+                          </AccordionItemTrigger>
+                          <AccordionItemContent class="px-2 pt-1 pb-2">
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                               <label class="label">
                                 <span
@@ -649,7 +644,7 @@
                                 </select>
                               </label>
                             </div>
-                          </svelte:fragment>
+                          </AccordionItemContent>
                         </AccordionItem>
                       </Accordion>
                     </div>
@@ -757,14 +752,16 @@
                       />
                     </label>
 
-                    <!-- Technical Details Accordion -->
                     <div class="lg:col-span-2">
-                      <Accordion>
-                        <AccordionItem>
-                          <svelte:fragment slot="summary">
-                            <span class="text-sm font-semibold">🔧 Technical Details</span>
-                          </svelte:fragment>
-                          <svelte:fragment slot="content">
+                      <Accordion collapsible>
+                        <AccordionItem value={`technical-${index}-railcar`}>
+                          <AccordionItemTrigger
+                            class="flex w-full items-center justify-between px-2 py-1 text-left"
+                          >
+                            <span class="text-sm font-semibold">Technical Details</span>
+                            <AccordionItemIndicator class="text-muted text-xs" />
+                          </AccordionItemTrigger>
+                          <AccordionItemContent class="px-2 pt-1 pb-2">
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                               <label class="label">
                                 <span
@@ -801,7 +798,7 @@
                                 </select>
                               </label>
                             </div>
-                          </svelte:fragment>
+                          </AccordionItemContent>
                         </AccordionItem>
                       </Accordion>
                     </div>
@@ -873,14 +870,16 @@
                       >
                     </label>
 
-                    <!-- Technical Details Accordion -->
                     <div class="lg:col-span-2">
-                      <Accordion>
-                        <AccordionItem>
-                          <svelte:fragment slot="summary">
-                            <span class="text-sm font-semibold">🔧 Technical Details</span>
-                          </svelte:fragment>
-                          <svelte:fragment slot="content">
+                      <Accordion collapsible>
+                        <AccordionItem value={`technical-${index}-emu`}>
+                          <AccordionItemTrigger
+                            class="flex w-full items-center justify-between px-2 py-1 text-left"
+                          >
+                            <span class="text-sm font-semibold">Technical Details</span>
+                            <AccordionItemIndicator class="text-muted text-xs" />
+                          </AccordionItemTrigger>
+                          <AccordionItemContent class="px-2 pt-1 pb-2">
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                               <label class="label">
                                 <span
@@ -917,7 +916,7 @@
                                 </select>
                               </label>
                             </div>
-                          </svelte:fragment>
+                          </AccordionItemContent>
                         </AccordionItem>
                       </Accordion>
                     </div>
@@ -934,20 +933,15 @@
               + Add Rolling Stock
             </button>
           </div>
-        </svelte:fragment>
+        </AccordionItemContent>
       </AccordionItem>
     </Accordion>
 
-    <!-- Form Actions -->
     <div class="mt-8 flex gap-4">
       <button type="submit" class="variant-filled-primary btn flex-1" disabled={isSubmitting}>
         {isSubmitting ? 'Creating...' : 'Create Railway Model'}
       </button>
-      <button
-        type="button"
-        class="variant-ghost-surface btn"
-        onclick={() => goto(resolveRoute('/'))}
-      >
+      <button type="button" class="variant-ghost-surface btn" onclick={() => navigate('/')}>
         Cancel
       </button>
     </div>

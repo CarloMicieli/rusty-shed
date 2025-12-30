@@ -142,19 +142,19 @@ export const bodyShellChassisTypeSchema = z.enum(['PLASTIC', 'METAL_DIE_CAST']);
 
 const couplingSchema = z.object({
   socket: couplingSocketSchema,
-  close_couplers: featureFlagSchema.optional(),
-  digital_shunting: featureFlagSchema.optional()
+  close_couplers: featureFlagSchema.nullable(),
+  digital_shunting: featureFlagSchema.nullable()
 });
 
 const technicalSpecificationsSchema = z.object({
-  minimum_radius: z.number().positive().optional(),
-  coupling: couplingSchema.optional(),
-  flywheel_fitted: featureFlagSchema.optional(),
-  body_shell: bodyShellChassisTypeSchema.optional(),
-  chassis: bodyShellChassisTypeSchema.optional(),
-  interior_lights: featureFlagSchema.optional(),
-  lights: featureFlagSchema.optional(),
-  sprung_buffers: featureFlagSchema.optional()
+  minimum_radius: z.number().positive().nullable(),
+  coupling: couplingSchema.nullable(),
+  flywheel_fitted: featureFlagSchema.nullable(),
+  body_shell: bodyShellChassisTypeSchema.nullable(),
+  chassis: bodyShellChassisTypeSchema.nullable(),
+  interior_lights: featureFlagSchema.nullable(),
+  lights: featureFlagSchema.nullable(),
+  sprung_buffers: featureFlagSchema.nullable()
 });
 
 // ============================================================================
@@ -162,8 +162,8 @@ const technicalSpecificationsSchema = z.object({
 // ============================================================================
 
 const lengthOverBuffersSchema = z.object({
-  millimeters: z.number().positive().optional(),
-  inches: z.number().positive().optional()
+  millimeters: z.number().positive().nullable(),
+  inches: z.number().positive().nullable()
 });
 
 // ============================================================================
@@ -172,9 +172,9 @@ const lengthOverBuffersSchema = z.object({
 
 const baseRollingStockSchema = z.object({
   railway_company_id: z.string().min(1, 'Railway company is required'),
-  livery: z.string().optional(),
-  length_over_buffers: lengthOverBuffersSchema.optional(),
-  technical_specifications: technicalSpecificationsSchema.optional()
+  livery: z.string().nullable(),
+  length_over_buffers: lengthOverBuffersSchema.nullable(),
+  technical_specifications: technicalSpecificationsSchema.nullable()
 });
 
 // Locomotive variant
@@ -182,57 +182,57 @@ const locomotiveSchema = baseRollingStockSchema.extend({
   category: z.literal('Locomotive'),
   class_name: z.string().min(1, 'Class name is required for locomotives'),
   road_number: z.string().min(1, 'Road number is required for locomotives'),
-  series: z.string().optional(),
-  depot: z.string().optional(),
+  series: z.string().nullable(),
+  depot: z.string().nullable(),
   locomotive_type: locomotiveTypeSchema,
-  is_dummy: z.boolean().default(false),
-  control: controlSchema.optional(),
-  dcc_interface: dccInterfaceSchema.optional()
+  is_dummy: z.boolean().default(false).nullable(),
+  control: controlSchema.nullable(),
+  dcc_interface: dccInterfaceSchema.nullable()
 });
 
 // Passenger Car variant
 const passengerCarSchema = baseRollingStockSchema.extend({
   category: z.literal('PassengerCar'),
   type_name: z.string().min(1, 'Type name is required for passenger cars'),
-  road_number: z.string().optional(),
-  series: z.string().optional(),
-  depot: z.string().optional(),
+  road_number: z.string().nullable(),
+  series: z.string().nullable(),
+  depot: z.string().nullable(),
   passenger_car_type: passengerCarTypeSchema,
-  service_level: serviceLevelSchema.optional()
+  service_level: serviceLevelSchema.nullable()
 });
 
 // Freight Car variant
 const freightCarSchema = baseRollingStockSchema.extend({
   category: z.literal('FreightCar'),
   type_name: z.string().min(1, 'Type name is required for freight cars'),
-  road_number: z.string().optional(),
-  series: z.string().optional(),
-  depot: z.string().optional(),
-  freight_car_type: freightCarTypeSchema
+  road_number: z.string().nullable(),
+  series: z.string().nullable(),
+  depot: z.string().nullable(),
+  freight_car_type: freightCarTypeSchema.nullable()
 });
 
 // Railcar variant
 const railcarSchema = baseRollingStockSchema.extend({
   category: z.literal('Railcar'),
   type_name: z.string().min(1, 'Type name is required for railcars'),
-  road_number: z.string().optional(),
-  series: z.string().optional(),
-  depot: z.string().optional(),
-  control: controlSchema.optional(),
-  dcc_interface: dccInterfaceSchema.optional()
+  road_number: z.string().nullable(),
+  series: z.string().nullable(),
+  depot: z.string().nullable(),
+  control: controlSchema.nullable(),
+  dcc_interface: dccInterfaceSchema.nullable()
 });
 
 // Electric Multiple Unit variant
 const electricMultipleUnitSchema = baseRollingStockSchema.extend({
   category: z.literal('ElectricMultipleUnit'),
   type_name: z.string().min(1, 'Type name is required for EMUs'),
-  road_number: z.string().optional(),
-  series: z.string().optional(),
-  depot: z.string().optional(),
+  road_number: z.string().nullable(),
+  series: z.string().nullable(),
+  depot: z.string().nullable(),
   electric_multiple_unit_type: electricMultipleUnitTypeSchema,
-  is_dummy: z.boolean().default(false),
-  control: controlSchema.optional(),
-  dcc_interface: dccInterfaceSchema.optional()
+  is_dummy: z.boolean().default(false).nullable(),
+  control: controlSchema.nullable(),
+  dcc_interface: dccInterfaceSchema.nullable()
 });
 
 // Discriminated union of all rolling stock variants
@@ -257,7 +257,7 @@ const deliveryDateSchema = z
   .regex(/^\d{4}(\/\d{2}|\/Q[1-4])?$/, {
     message: 'Invalid format. Use: 2025, 2025/06, or 2025/Q2'
   })
-  .optional();
+  .nullable();
 
 export const createRailwayModelSchema = z.object({
   // Basic Information
@@ -274,7 +274,7 @@ export const createRailwayModelSchema = z.object({
 
   // Availability
   delivery_date: deliveryDateSchema,
-  availability_status: availabilityStatusSchema.optional(),
+  availability_status: availabilityStatusSchema.nullable(),
 
   // Rolling Stock (array of variants)
   rolling_stocks: z.array(rollingStockSchema).min(1, 'At least one rolling stock is required')
