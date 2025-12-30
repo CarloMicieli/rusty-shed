@@ -8,7 +8,8 @@
   import { commands } from '$lib/bindings';
   import {
     createRailwayModelSchema,
-    type CreateRailwayModelInput
+    type CreateRailwayModelInput,
+    type RollingStockInput
   } from '$lib/schemas/railway-model';
   import type { ZodError } from 'zod';
 
@@ -96,17 +97,60 @@
     'TRAIN_SET'
   ];
 
+  type NullableEnum<T extends string> = T | '';
+
+  type RollingStockForm = {
+    category:
+      | ''
+      | 'Locomotive'
+      | 'PassengerCar'
+      | 'FreightCar'
+      | 'Railcar'
+      | 'ElectricMultipleUnit';
+    railway_company_id: string;
+    class_name?: string;
+    road_number?: string;
+    series: string | null;
+    depot: string | null;
+    livery: string | null;
+    locomotive_type?: NullableEnum<(typeof locomotiveTypes)[number]>;
+    passenger_car_type?: NullableEnum<(typeof passengerCarTypes)[number]>;
+    freight_car_type?: NullableEnum<(typeof freightCarTypes)[number]>;
+    electric_multiple_unit_type?: NullableEnum<(typeof electricMultipleUnitTypes)[number]>;
+    type_name?: string;
+    service_level?: NullableEnum<(typeof serviceLevels)[number]>;
+    is_dummy?: boolean;
+    control: NullableEnum<(typeof controls)[number]> | null;
+    dcc_interface: NullableEnum<(typeof dccInterfaces)[number]> | null;
+    length_over_buffers: CreateRailwayModelInput['rolling_stocks'][number]['length_over_buffers'];
+    technical_specifications: CreateRailwayModelInput['rolling_stocks'][number]['technical_specifications'];
+  };
+
+  type FormState = {
+    manufacturer_id: string;
+    product_code: string;
+    description: string;
+    details: string | null;
+    power_method: NullableEnum<(typeof powerMethods)[number]>;
+    scale: NullableEnum<(typeof scales)[number]>;
+    epoch: string | '';
+    category: NullableEnum<(typeof categories)[number]>;
+    delivery_date: string | null;
+    availability_status: NullableEnum<(typeof availabilityStatuses)[number]> | null;
+    rolling_stocks: RollingStockForm[];
+  };
+
   let accordionValues = $state<string[]>(['basic-info', 'delivery-availability', 'rolling-stock']);
 
-  let formData = $state<CreateRailwayModelInput>({
+  let formData = $state<FormState>({
     manufacturer_id: '',
     product_code: '',
     description: '',
     details: null,
-    power_method: 'DC',
-    scale: 'H0',
-    epoch: 'III',
-    category: 'LOCOMOTIVES',
+    power_method: '',
+    scale: '',
+    epoch: '',
+    category: '',
     delivery_date: null,
     availability_status: null,
     rolling_stocks: []
@@ -117,17 +161,22 @@
 
   function addRollingStock() {
     formData.rolling_stocks.push({
-      category: 'Locomotive',
+      category: '',
       railway_company_id: '',
       class_name: '',
       road_number: '',
       series: null,
       depot: null,
       livery: null,
-      locomotive_type: 'DIESEL_LOCOMOTIVE',
+      locomotive_type: '',
+      passenger_car_type: '',
+      freight_car_type: '',
+      electric_multiple_unit_type: '',
+      type_name: '',
+      service_level: '',
       is_dummy: false,
-      control: null,
-      dcc_interface: null,
+      control: '',
+      dcc_interface: '',
       length_over_buffers: null,
       technical_specifications: null
     });
@@ -146,12 +195,45 @@
     window.location.assign(path);
   }
 
+  function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
+    return {
+      ...rs,
+      control: rs.control || null,
+      dcc_interface: rs.dcc_interface || null,
+      livery: rs.livery || null,
+      series: rs.series || null,
+      depot: rs.depot || null,
+      service_level: rs.service_level || null,
+      freight_car_type: rs.freight_car_type || null,
+      electric_multiple_unit_type: rs.electric_multiple_unit_type || null,
+      length_over_buffers: rs.length_over_buffers ?? null,
+      technical_specifications: rs.technical_specifications ?? null
+    } as RollingStockInput;
+  }
+
   async function handleSubmit() {
     isSubmitting = true;
     errors = {};
 
     try {
-      const validated = createRailwayModelSchema.parse(formData);
+      const payload: CreateRailwayModelInput = {
+        manufacturer_id: formData.manufacturer_id,
+        product_code: formData.product_code,
+        description: formData.description,
+        details: formData.details,
+        power_method: formData.power_method as CreateRailwayModelInput['power_method'],
+        scale: formData.scale as CreateRailwayModelInput['scale'],
+        epoch: formData.epoch,
+        category: formData.category as CreateRailwayModelInput['category'],
+        delivery_date: formData.delivery_date,
+        availability_status:
+          formData.availability_status === ''
+            ? null
+            : (formData.availability_status as CreateRailwayModelInput['availability_status']),
+        rolling_stocks: formData.rolling_stocks.map(normalizeRollingStock)
+      };
+
+      const validated = createRailwayModelSchema.parse(payload);
       const result = await commands.createRailwayModel(validated);
 
       if (result.status === 'ok') {
@@ -211,7 +293,7 @@
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.manufacturer_id}
               >
-                <option value="">-- Select Manufacturer --</option>
+                <option value="">-- Select --</option>
                 {#each manufacturersData as m (m.id)}
                   <option value={m.id}>{m.name}</option>
                 {/each}
@@ -259,6 +341,7 @@
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.category}
               >
+                <option value="">-- Select --</option>
                 {#each categories as cat (cat)}
                   <option value={cat}>{$_(`enums.category.${cat}`)}</option>
                 {/each}
@@ -270,6 +353,7 @@
                 >Scale *</span
               >
               <select class="select border-surface-600 bg-surface-800" bind:value={formData.scale}>
+                <option value="">-- Select --</option>
                 {#each scales as s (s)}
                   <option value={s}>{$_(`enums.scale.${s}`)}</option>
                 {/each}
@@ -284,6 +368,7 @@
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.power_method}
               >
+                <option value="">-- Select --</option>
                 {#each powerMethods as pm (pm)}
                   <option value={pm}>{$_(`enums.power_method.${pm}`)}</option>
                 {/each}
@@ -294,10 +379,8 @@
               <span class="text-sm font-bold tracking-wider text-surface-300 uppercase"
                 >Epoch *</span
               >
-              <select
-                class="select border-surface-600 bg-surface-800"
-                bind:value={formData.epoch}
-              >
+              <select class="select border-surface-600 bg-surface-800" bind:value={formData.epoch}>
+                <option value="">-- Select --</option>
                 {#each epochs as ep (ep)}
                   <option value={ep}>{ep}</option>
                 {/each}
@@ -341,7 +424,7 @@
                 class="select border-surface-600 bg-surface-800"
                 bind:value={formData.availability_status}
               >
-                <option value={null}>-- Select --</option>
+                <option value="">-- Select --</option>
                 {#each availabilityStatuses as status (status)}
                   <option value={status}>{$_(`enums.availability_status.${status}`)}</option>
                 {/each}
@@ -408,7 +491,7 @@
                       class="select border-surface-600 bg-surface-800"
                       bind:value={rs.railway_company_id}
                     >
-                      <option value="">-- Select Railway Company --</option>
+                      <option value="">-- Select --</option>
                       {#each railwayCompaniesData as r (r.id)}
                         <option value={r.id}>{r.name}</option>
                       {/each}
@@ -423,6 +506,7 @@
                       class="select border-surface-600 bg-surface-800"
                       bind:value={rs.category}
                     >
+                      <option value="">-- Select --</option>
                       <option value="Locomotive">Locomotive</option>
                       <option value="PassengerCar">Passenger Car</option>
                       <option value="FreightCar">Freight Car</option>
@@ -496,6 +580,7 @@
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.locomotive_type}
                       >
+                        <option value="">-- Select --</option>
                         {#each locomotiveTypes as type (type)}
                           <option value={type}>{$_(`enums.locomotive_type.${type}`)}</option>
                         {/each}
@@ -529,7 +614,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value={null}>Select control...</option>
+                                  <option value="">-- Select --</option>
                                   {#each controls as control (control)}
                                     <option value={control}>{$_(`enums.control.${control}`)}</option
                                     >
@@ -546,7 +631,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value={null}>Select DCC interface...</option>
+                                  <option value="">-- Select --</option>
                                   {#each dccInterfaces as dccInterface (dccInterface)}
                                     <option value={dccInterface}
                                       >{$_(`enums.dcc_interface.${dccInterface}`)}</option
@@ -579,6 +664,7 @@
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.passenger_car_type}
                       >
+                        <option value="">-- Select --</option>
                         {#each passengerCarTypes as type (type)}
                           <option value={type}>{$_(`enums.passenger_car_type.${type}`)}</option>
                         {/each}
@@ -638,7 +724,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.service_level}
                                 >
-                                  <option value={null}>Select service level...</option>
+                                  <option value="">-- Select --</option>
                                   {#each serviceLevels as level (level)}
                                     <option value={level}
                                       >{$_(`enums.service_level.${level}`)}</option
@@ -671,7 +757,7 @@
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.freight_car_type}
                       >
-                        <option value={null}>Select freight car type...</option>
+                        <option value="">-- Select --</option>
                         {#each freightCarTypes as type (type)}
                           <option value={type}>{$_(`enums.freight_car_type.${type}`)}</option>
                         {/each}
@@ -775,7 +861,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value={null}>Select control...</option>
+                                  <option value="">-- Select --</option>
                                   {#each controls as control (control)}
                                     <option value={control}>{$_(`enums.control.${control}`)}</option
                                     >
@@ -792,7 +878,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value={null}>Select DCC interface...</option>
+                                  <option value="">-- Select --</option>
                                   {#each dccInterfaces as dccInterface (dccInterface)}
                                     <option value={dccInterface}
                                       >{$_(`enums.dcc_interface.${dccInterface}`)}</option
@@ -825,6 +911,7 @@
                         class="select border-surface-600 bg-surface-800"
                         bind:value={rs.electric_multiple_unit_type}
                       >
+                        <option value="">-- Select --</option>
                         {#each electricMultipleUnitTypes as type (type)}
                           <option value={type}
                             >{$_(`enums.electric_multiple_unit_type.${type}`)}</option
@@ -893,7 +980,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value={null}>Select control...</option>
+                                  <option value="">-- Select --</option>
                                   {#each controls as control (control)}
                                     <option value={control}>{$_(`enums.control.${control}`)}</option
                                     >
@@ -910,7 +997,7 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value={null}>Select DCC interface...</option>
+                                  <option value="">-- Select --</option>
                                   {#each dccInterfaces as dccInterface (dccInterface)}
                                     <option value={dccInterface}
                                       >{$_(`enums.dcc_interface.${dccInterface}`)}</option
@@ -928,11 +1015,7 @@
               </div>
             {/each}
 
-            <button
-              type="button"
-              class="btn cta-btn cta-primary"
-              onclick={addRollingStock}
-            >
+            <button type="button" class="cta-btn cta-primary btn" onclick={addRollingStock}>
               + Add Rolling Stock
             </button>
           </div>
@@ -941,18 +1024,10 @@
     </Accordion>
 
     <div class="mt-8 flex gap-4">
-      <button
-        type="submit"
-        class="btn cta-btn cta-primary"
-        disabled={isSubmitting}
-      >
+      <button type="submit" class="cta-btn cta-primary btn" disabled={isSubmitting}>
         {isSubmitting ? 'Creating...' : 'Create Railway Model'}
       </button>
-      <button
-        type="button"
-        class="btn cta-btn cta-secondary"
-        onclick={() => navigate('/')}
-      >
+      <button type="button" class="cta-btn cta-secondary btn" onclick={() => navigate('/')}>
         Cancel
       </button>
     </div>
@@ -970,7 +1045,10 @@
     font-weight: 700;
     text-decoration: none;
     border: 1px solid transparent;
-    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease;
   }
 
   .cta-primary {
@@ -992,5 +1070,4 @@
   .cta-secondary:hover {
     background-color: var(--surface-600, #32343b);
   }
-
 </style>
