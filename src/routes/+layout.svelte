@@ -21,7 +21,6 @@
 
     // Prefer generated bindings if available (tauri-specta). Fallback to direct invoke.
     try {
-      // @ts-ignore: generated bindings may not exist during Vite-only dev
       const bindings = await import('$lib/bindings');
       if (bindings && bindings.commands && typeof bindings.commands.getAppVersion === 'function') {
         const v = await bindings.commands.getAppVersion();

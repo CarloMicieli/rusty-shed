@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { ComponentType } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   type WithId = { id: string };
@@ -15,8 +14,8 @@
   } = $props<{
     title: string;
     items: WithId[];
-    icon: ComponentType | any;
-    card: ComponentType | any;
+    icon: any;
+    card: any;
     toneClass?: string;
     stickyOffset?: string;
     emptyMessage: string;

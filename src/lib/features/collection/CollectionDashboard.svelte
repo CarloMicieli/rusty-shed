@@ -122,7 +122,7 @@
 
 {#snippet LoadingSkeleton()}
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-    {#each Array(6) as _, i (i)}
+    {#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
       <div
         class="h-56 animate-pulse rounded-xl bg-surface-800/80"
         aria-label={`loading-card-${i}`}

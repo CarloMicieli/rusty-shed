@@ -1,9 +1,7 @@
-type AnyFn = (...args: any[]) => any;
-
-export function debounce<T extends AnyFn>(fn: T, delay = 150) {
+export function debounce<Args extends unknown[]>(fn: (...args: Args) => void, delay = 150) {
   let timer: ReturnType<typeof setTimeout> | null = null;
 
-  return (...args: Parameters<T>) => {
+  return (...args: Args) => {
     if (timer) {
       clearTimeout(timer);
     }

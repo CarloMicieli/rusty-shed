@@ -1,5 +1,5 @@
 <script lang="ts">
-  import NewRailwayModelForm from '$lib/components/NewRailwayModelForm.svelte';
+  import CreateRailwayModel from '$lib/features/catalogue/CreateRailwayModel.svelte';
 </script>
 
-<NewRailwayModelForm />
+<CreateRailwayModel />

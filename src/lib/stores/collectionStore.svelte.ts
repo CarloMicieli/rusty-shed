@@ -2,6 +2,7 @@ import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
 import scales from '$lib/data/constants/scales.json';
 import { FIXED_TAG_META, sortAvailableTags, tagIcon } from '$lib/config/tags';
+import { SvelteSet } from 'svelte/reactivity';
 import {
   commands,
   type CollectionItemLite,
@@ -12,7 +13,7 @@ import {
 export type FilterState = {
   query: string;
   scale: string | null;
-  tags: Set<string>;
+  tags: SvelteSet<string>;
 };
 
 export const availableScales = scales as { id: string; display: string }[];
@@ -54,13 +55,13 @@ function toastError(id: string, retry?: () => void) {
 
 class CollectionStore {
   rawItems = $state<CollectionItemLite[]>([]);
-  filters = $state<FilterState>({ query: '', scale: null, tags: new Set() });
+  filters = $state<FilterState>({ query: '', scale: null, tags: new SvelteSet() });
   isLoading = $state(false);
 
   availableTags = $derived.by(() => {
-    const dynamic = new Set<string>();
+    const dynamic = new SvelteSet<string>();
     this.rawItems.forEach((item) => item.tags?.forEach((tag) => dynamic.add(tag)));
-    const combined = new Set<string>([...Object.keys(FIXED_TAG_META), ...dynamic]);
+    const combined = new SvelteSet<string>([...Object.keys(FIXED_TAG_META), ...dynamic]);
     return sortAvailableTags([...combined]);
   });
 
@@ -111,7 +112,7 @@ class CollectionStore {
   };
 
   toggleTag = (tag: string) => {
-    const next = new Set(this.filters.tags);
+    const next = new SvelteSet(this.filters.tags);
     if (next.has(tag)) next.delete(tag);
     else next.add(tag);
     this.filters.tags = next;
@@ -122,7 +123,7 @@ class CollectionStore {
   };
 
   clearFilters = () => {
-    this.filters = { query: '', scale: null, tags: new Set() };
+    this.filters = { query: '', scale: null, tags: new SvelteSet() };
   };
 
   createItem = async (input: CreateCollectionItemInput) => {

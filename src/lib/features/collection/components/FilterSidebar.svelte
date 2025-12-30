@@ -28,7 +28,7 @@
     query = value;
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      onSearch?.(query);
+      onSearch?.(value);
     }, debounceMs);
   }
 
@@ -63,7 +63,7 @@
     <input
       class="input-md input w-full bg-surface-900"
       placeholder={m.collection_search_placeholder()}
-      bind:value={query}
+      value={query}
       oninput={(e) => handleSearch((e.target as HTMLInputElement).value)}
     />
   </div>
