@@ -2,7 +2,10 @@
 <script lang="ts">
   import { LayoutDashboard, Library, Heart, Box, Settings } from 'lucide-svelte';
   import { page } from '$app/stores';
-  import { _ } from 'svelte-i18n';
+  import * as m from '$lib/paraglide/messages.js';
+  import { collectionStore } from '$lib/stores/collectionStore';
+
+  const { totalCount } = collectionStore;
 </script>
 
 <div
@@ -16,16 +19,17 @@
       class:text-surface-400={($page.url.pathname as string) !== '/'}
     >
       <LayoutDashboard size={20} />
-      <span class="text-[10px] font-bold tracking-wider uppercase">{$_('app.dashboard')}</span>
+      <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_dashboard()}</span>
     </a>
     <a
-      href="/collection"
+      href="/my-collection"
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/collection'}
-      class:text-surface-400={($page.url.pathname as string) !== '/collection'}
+      class:text-accent-500={($page.url.pathname as string) === '/my-collection'}
+      class:text-surface-400={($page.url.pathname as string) !== '/my-collection'}
     >
       <Library size={20} />
-      <span class="text-[10px] font-bold tracking-wider uppercase">{$_('app.collection')}</span>
+      <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_collection()}</span>
+      <span class="variant-soft-surface badge">{$totalCount}</span>
     </a>
     <a
       href="/wishlists"
@@ -34,7 +38,7 @@
       class:text-surface-400={($page.url.pathname as string) !== '/wishlists'}
     >
       <Heart size={20} />
-      <span class="text-[10px] font-bold tracking-wider uppercase">{$_('app.wishlists')}</span>
+      <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_wishlists()}</span>
     </a>
     <a
       href="/depot"
@@ -43,7 +47,7 @@
       class:text-surface-400={($page.url.pathname as string) !== '/depot'}
     >
       <Box size={20} />
-      <span class="text-[10px] font-bold tracking-wider uppercase">{$_('app.depot')}</span>
+      <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_depot()}</span>
     </a>
     <a
       href="/settings"
@@ -52,7 +56,7 @@
       class:text-surface-400={($page.url.pathname as string) !== '/settings'}
     >
       <Settings size={20} />
-      <span class="text-[10px] font-bold tracking-wider uppercase">{$_('app.settings')}</span>
+      <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_settings()}</span>
     </a>
   </div>
 </div>

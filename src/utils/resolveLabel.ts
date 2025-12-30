@@ -7,9 +7,11 @@ import type { ConstantItem } from '$lib/types/constant_item';
  */
 export function resolveLabel(item: ConstantItem): string {
   if (item.labelKey) {
-    // This assumes your labelKey in JSON matches the function name in m
-    // e.g., "constants_categories_locomotives"
-    return (m as any)[item.labelKey]?.() ?? item.id;
+    const fn = m[item.labelKey as keyof typeof m];
+    if (typeof fn === 'function') {
+      return (fn as () => string)();
+    }
+    return item.id;
   }
   return item.display ?? item.id;
 }

@@ -58,7 +58,10 @@
       id: 'delivery-date-placeholder',
       labelKey: 'form_new_model_delivery_date_placeholder'
     },
-    availabilityStatus: { id: 'availability-status', labelKey: 'form_new_model_availability_status' },
+    availabilityStatus: {
+      id: 'availability-status',
+      labelKey: 'form_new_model_availability_status'
+    },
     additionalDetails: { id: 'additional-details', labelKey: 'form_new_model_additional_details' },
     detailsPlaceholder: {
       id: 'details-placeholder',
@@ -605,7 +608,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each controlsData as control (control.id)}
                                     <option value={control.id}
                                       >{resolveLabel(control as ConstantItem)}</option
@@ -623,7 +628,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each dccInterfacesData as dccInterface (dccInterface.id)}
                                     <option value={dccInterface.id}
                                       >{resolveLabel(dccInterface as ConstantItem)}</option
@@ -718,7 +725,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.service_level}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each serviceLevelsData as level (level.id)}
                                     <option value={level.id}
                                       >{resolveLabel(level as ConstantItem)}</option
@@ -857,7 +866,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each controlsData as control (control.id)}
                                     <option value={control.id}
                                       >{resolveLabel(control as ConstantItem)}</option
@@ -875,7 +886,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each dccInterfacesData as dccInterface (dccInterface.id)}
                                     <option value={dccInterface.id}
                                       >{resolveLabel(dccInterface as ConstantItem)}</option
@@ -977,7 +990,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.control}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each controlsData as control (control.id)}
                                     <option value={control.id}
                                       >{resolveLabel(control as ConstantItem)}</option
@@ -995,7 +1010,9 @@
                                   class="select border-surface-600 bg-surface-800"
                                   bind:value={rs.dcc_interface}
                                 >
-                                  <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
+                                  <option value=""
+                                    >{resolveLabel(formLabels.selectPlaceholder)}</option
+                                  >
                                   {#each dccInterfacesData as dccInterface (dccInterface.id)}
                                     <option value={dccInterface.id}
                                       >{resolveLabel(dccInterface as ConstantItem)}</option
@@ -1023,9 +1040,7 @@
 
     <div class="mt-8 flex gap-4">
       <button type="submit" class="cta-btn cta-primary btn" disabled={isSubmitting}>
-        {isSubmitting
-          ? `${resolveLabel(formLabels.create)}...`
-          : resolveLabel(formLabels.create)}
+        {isSubmitting ? `${resolveLabel(formLabels.create)}...` : resolveLabel(formLabels.create)}
       </button>
       <button type="button" class="cta-btn cta-secondary btn" onclick={() => navigate('/')}>
         {resolveLabel(formLabels.cancel)}

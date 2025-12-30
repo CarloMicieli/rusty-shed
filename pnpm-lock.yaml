@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@floating-ui/dom':
+        specifier: ^1.7.4
+        version: 1.7.4
+      '@skeletonlabs/skeleton-common':
+        specifier: ^4.8.0
+        version: 4.8.0
       '@skeletonlabs/skeleton-svelte':
         specifier: ^4.8.0
         version: 4.8.0(svelte@5.46.1)

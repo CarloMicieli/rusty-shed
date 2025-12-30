@@ -1,4 +1,5 @@
 pub mod catalog;
+pub mod collection;
 pub mod collecting;
 pub mod core;
 pub mod maintenance;
@@ -45,6 +46,10 @@ pub fn run() {
         catalog_command_handlers::get_railway_company_by_id,
         catalog_command_handlers::create_railway_model,
         collecting_command_handlers::get_collection,
+        collection::list_collection_items,
+        collection::create_collection_item,
+        collection::update_collection_item,
+        collection::delete_collection_item,
         wishlist_command_handlers::get_wishlist_by_id,
         maintenance_command_handlers::get_maintenance_dashboard,
         maintenance_command_handlers::add_maintenance_record,

@@ -8,10 +8,15 @@
   import { Bell, TrainFront } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { setAppVersion } from '$lib/stores/app';
+  import { collectionStore } from '$lib/stores/collectionStore';
+  import ToastHost from '$lib/components/ToastHost.svelte';
 
   let { children } = $props();
 
   onMount(async () => {
+    // Preload collection for nav badges
+    void collectionStore.fetchCollection();
+
     // Prefer generated bindings if available (tauri-specta). Fallback to direct invoke.
     try {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -107,6 +112,7 @@
 
       <!-- Footer / Bottom Nav -->
       <BottomNavigation />
+      <ToastHost />
     </div>
   </div>
 {/if}

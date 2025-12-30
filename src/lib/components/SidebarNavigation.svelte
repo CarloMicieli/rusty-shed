@@ -4,6 +4,9 @@
   import { page } from '$app/state';
   import * as m from '$lib/paraglide/messages.js';
   import { appVersion } from '$lib/stores/app';
+  import { collectionStore } from '$lib/stores/collectionStore';
+
+  const { totalCount } = collectionStore;
 </script>
 
 <nav class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex">
@@ -26,13 +29,14 @@
     </li>
     <li>
       <a
-        href="/collection"
+        href="/my-collection"
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
-        class:variant-filled-primary={(page.url.pathname as string) === '/collection'}
-        class:variant-ghost-surface={(page.url.pathname as string) !== '/collection'}
+        class:variant-filled-primary={(page.url.pathname as string) === '/my-collection'}
+        class:variant-ghost-surface={(page.url.pathname as string) !== '/my-collection'}
       >
         <Library size={20} />
         <span class="font-medium tracking-wide">{m.app_collection()}</span>
+        <span class="variant-soft-surface ml-auto badge">{$totalCount}</span>
       </a>
     </li>
     <li>
@@ -69,7 +73,8 @@
       <span class="font-medium tracking-wide">{m.app_settings()}</span>
     </a>
     <div class="px-4 py-2 text-center text-xs tracking-widest text-surface-400 uppercase">
-      {m.app_version_prefix()} {$appVersion || '—'}
+      {m.app_version_prefix()}
+      {$appVersion || '—'}
     </div>
   </div>
 </nav>
