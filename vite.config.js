@@ -1,3 +1,4 @@
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import { playwright } from '@vitest/browser-playwright';
@@ -8,7 +9,11 @@ const host = typeof process !== 'undefined' ? process.env?.TAURI_DEV_HOST : unde
 // https://vite.dev/config/
 /** @type {import('vite').UserConfigExport & { test?: any }} */
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: [
+    paraglideVitePlugin({ project: './project.inlang', outdir: './src/paraglide' }),
+    tailwindcss(),
+    sveltekit()
+  ],
 
   // Optimize bundle size and loading
   build: {
