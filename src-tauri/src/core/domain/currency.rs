@@ -58,6 +58,16 @@ impl Currency {
             Currency::JPY => "¥",
         }
     }
+
+    /// Return the ISO-style code for this currency.
+    pub fn to_code(&self) -> &'static str {
+        match self {
+            Currency::EUR => "EUR",
+            Currency::USD => "USD",
+            Currency::GBP => "GBP",
+            Currency::JPY => "JPY",
+        }
+    }
 }
 
 #[cfg(test)]

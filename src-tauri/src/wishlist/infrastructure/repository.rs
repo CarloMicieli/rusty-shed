@@ -3,10 +3,12 @@ use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::repository::WishlistRepository;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
+use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::infrastructure::database;
 use crate::wishlist::infrastructure::entities::WishlistPreviewRow;
 use anyhow::Context;
+use chrono::Utc;
 use std::collections::HashMap;
 
 pub struct SqliteWishlistRepository<'conn> {
@@ -84,6 +86,132 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
         wishlist_previews.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
         Ok(wishlist_previews)
+    }
+
+    async fn create_wishlist(&mut self, wishlist: &Wishlist) -> anyhow::Result<()> {
+        let now = Utc::now().naive_utc();
+        let row = crate::wishlist::infrastructure::entities::WishlistRow {
+            id: wishlist.id.to_string(),
+            name: wishlist.name.clone(),
+            notes: wishlist.notes.clone(),
+            is_default: if wishlist.is_default { 1 } else { 0 },
+            created_at: now,
+            updated_at: now,
+        };
+
+        database::insert_wishlist(&mut *self.executor, row).await?;
+        // If creating as default, ensure exclusivity after insert
+        if wishlist.is_default {
+            database::set_default_wishlist(&mut *self.executor, &wishlist.id).await?;
+        }
+        Ok(())
+    }
+
+    async fn rename_wishlist(
+        &mut self,
+        id: &crate::wishlist::domain::wishlist_id::WishlistId,
+        name: &str,
+    ) -> anyhow::Result<()> {
+        let affected = database::update_wishlist_name(&mut *self.executor, id, name).await?;
+        if affected == 0 {
+            anyhow::bail!("wishlist not found");
+        }
+        Ok(())
+    }
+
+    async fn delete_wishlist(
+        &mut self,
+        id: &crate::wishlist::domain::wishlist_id::WishlistId,
+    ) -> anyhow::Result<()> {
+        let affected = database::delete_wishlist(&mut *self.executor, id).await?;
+        if affected == 0 {
+            anyhow::bail!("wishlist not found");
+        }
+        Ok(())
+    }
+
+    async fn set_default_wishlist(
+        &mut self,
+        id: &crate::wishlist::domain::wishlist_id::WishlistId,
+    ) -> anyhow::Result<()> {
+        database::set_default_wishlist(&mut *self.executor, id).await?;
+        Ok(())
+    }
+
+    async fn add_item(
+        &mut self,
+        wishlist_id: &crate::wishlist::domain::wishlist_id::WishlistId,
+        item: &WishlistItem,
+    ) -> anyhow::Result<()> {
+        let (desired_amount, desired_currency) = item
+            .desired_price
+            .as_ref()
+            .map(|p| {
+                (
+                    Some(p.amount as i64),
+                    Some(p.currency.to_code().to_string()),
+                )
+            })
+            .unwrap_or((None, None));
+
+        let (purchased_amount, purchased_currency) = item
+            .purchased_price
+            .as_ref()
+            .map(|p| {
+                (
+                    Some(p.amount as i64),
+                    Some(p.currency.to_code().to_string()),
+                )
+            })
+            .unwrap_or((None, None));
+
+        let priority_str = serde_json::to_string(&item.priority)?
+            .trim_matches('"')
+            .to_string();
+        let status_str = serde_json::to_string(&item.status)?
+            .trim_matches('"')
+            .to_string();
+
+        let row = crate::wishlist::infrastructure::entities::WishlistItemRow {
+            id: item.id.to_string(),
+            wishlist_id: wishlist_id.to_string(),
+            railway_model_id: item.railway_model_id.to_string(),
+            priority: priority_str,
+            status: status_str,
+            desired_price_amount: desired_amount,
+            desired_price_currency: desired_currency,
+            added_date: item.added_date,
+            removed_date: item.removed_date,
+            notes: item.notes.clone(),
+            purchased_at: None,
+            purchased_price_amount: purchased_amount,
+            purchased_price_currency: purchased_currency,
+        };
+
+        database::insert_wishlist_item(&mut *self.executor, row).await?;
+        Ok(())
+    }
+
+    async fn remove_item(&mut self, item_id: &WishlistItemId) -> anyhow::Result<()> {
+        let affected = database::delete_wishlist_item(&mut *self.executor, item_id).await?;
+        if affected == 0 {
+            anyhow::bail!("wishlist item not found");
+        }
+        Ok(())
+    }
+
+    async fn move_item(
+        &mut self,
+        item_id: &WishlistItemId,
+        destination_wishlist: &crate::wishlist::domain::wishlist_id::WishlistId,
+    ) -> anyhow::Result<()> {
+        let affected =
+            database::move_wishlist_item(&mut *self.executor, item_id, destination_wishlist)
+                .await?;
+        if affected == 0 {
+            anyhow::bail!("wishlist item not found");
+        }
+        Ok(())
     }
 }
 

@@ -82,3 +82,163 @@ pub async fn find_wishlist_previews(
 
     Ok(rows)
 }
+
+pub async fn insert_wishlist(
+    executor: &mut sqlx::SqliteConnection,
+    row: WishlistRow,
+) -> Result<()> {
+    let sql = r#"
+        INSERT INTO wishlists (id, name, notes, is_default, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    "#;
+
+    sqlx::query(sql)
+        .bind(row.id)
+        .bind(row.name)
+        .bind(row.notes)
+        .bind(row.is_default)
+        .bind(row.created_at)
+        .bind(row.updated_at)
+        .execute(executor)
+        .await
+        .with_context(|| "inserting wishlist")?;
+
+    Ok(())
+}
+
+pub async fn update_wishlist_name(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistId,
+    name: &str,
+) -> Result<u64> {
+    let sql = r#"
+        UPDATE wishlists
+        SET name = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    "#;
+
+    let res = sqlx::query(sql)
+        .bind(name)
+        .bind(id.to_string())
+        .execute(executor)
+        .await
+        .with_context(|| "renaming wishlist")?;
+
+    Ok(res.rows_affected())
+}
+
+pub async fn delete_wishlist(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistId,
+) -> Result<u64> {
+    let sql = r#"
+        DELETE FROM wishlists
+        WHERE id = ?
+    "#;
+
+    let res = sqlx::query(sql)
+        .bind(id.to_string())
+        .execute(executor)
+        .await
+        .with_context(|| "deleting wishlist")?;
+
+    Ok(res.rows_affected())
+}
+
+pub async fn set_default_wishlist(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistId,
+) -> Result<()> {
+    // Clear existing defaults, then set the target as default within the same transaction.
+    sqlx::query("UPDATE wishlists SET is_default = 0")
+        .execute(&mut *executor)
+        .await
+        .with_context(|| "clearing default wishlists")?;
+
+    sqlx::query("UPDATE wishlists SET is_default = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(id.to_string())
+        .execute(executor)
+        .await
+        .with_context(|| "setting default wishlist")?;
+
+    Ok(())
+}
+
+pub async fn insert_wishlist_item(
+    executor: &mut sqlx::SqliteConnection,
+    row: WishlistItemRow,
+) -> Result<()> {
+    let sql = r#"
+        INSERT INTO wishlist_items (
+            id,
+            wishlist_id,
+            railway_model_id,
+            priority,
+            status,
+            desired_price_amount,
+            desired_price_currency,
+            added_date,
+            removed_date,
+            notes,
+            purchased_at,
+            purchased_price_amount,
+            purchased_price_currency
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    "#;
+
+    sqlx::query(sql)
+        .bind(row.id)
+        .bind(row.wishlist_id)
+        .bind(row.railway_model_id)
+        .bind(row.priority)
+        .bind(row.status)
+        .bind(row.desired_price_amount)
+        .bind(row.desired_price_currency)
+        .bind(row.added_date)
+        .bind(row.removed_date)
+        .bind(row.notes)
+        .bind(row.purchased_at)
+        .bind(row.purchased_price_amount)
+        .bind(row.purchased_price_currency)
+        .execute(executor)
+        .await
+        .with_context(|| "inserting wishlist item")?;
+
+    Ok(())
+}
+
+pub async fn delete_wishlist_item(
+    executor: &mut sqlx::SqliteConnection,
+    id: &crate::wishlist::domain::wishlist_item_id::WishlistItemId,
+) -> Result<u64> {
+    let sql = "DELETE FROM wishlist_items WHERE id = ?";
+
+    let res = sqlx::query(sql)
+        .bind(id.to_string())
+        .execute(executor)
+        .await
+        .with_context(|| "deleting wishlist item")?;
+
+    Ok(res.rows_affected())
+}
+
+pub async fn move_wishlist_item(
+    executor: &mut sqlx::SqliteConnection,
+    id: &crate::wishlist::domain::wishlist_item_id::WishlistItemId,
+    destination: &WishlistId,
+) -> Result<u64> {
+    let sql = r#"
+        UPDATE wishlist_items
+        SET wishlist_id = ?
+        WHERE id = ?
+    "#;
+
+    let res = sqlx::query(sql)
+        .bind(destination.to_string())
+        .bind(id.to_string())
+        .execute(executor)
+        .await
+        .with_context(|| "moving wishlist item")?;
+
+    Ok(res.rows_affected())
+}

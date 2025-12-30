@@ -1,4 +1,4 @@
-import { Flame, Fuel, PackageOpen, Tag as TagIcon, TrainFront, Zap } from 'lucide-svelte';
+import { Flame, Fuel, Heart, PackageOpen, Tag as TagIcon, TrainFront, Zap } from 'lucide-svelte';
 
 // Lucide exports Svelte components; use a representative type alias.
 export type IconComponent = typeof Flame;
@@ -9,6 +9,7 @@ export const iconMap: Record<string, IconComponent> = {
   electric: Zap,
   passenger: TrainFront,
   freight: PackageOpen,
+  heart: Heart,
   default: TagIcon
 };
 

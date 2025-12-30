@@ -4,8 +4,10 @@
   import { page } from '$app/stores';
   import * as m from '$lib/paraglide/messages.js';
   import { collectionStore } from '$lib/stores/collectionStore';
+  import { wishlistStore } from '$lib/stores/wishlistStore';
 
   const { totalCount } = collectionStore;
+  const { defaultWishlist } = wishlistStore;
 </script>
 
 <div
@@ -32,13 +34,16 @@
       <span class="variant-soft-surface badge">{$totalCount}</span>
     </a>
     <a
-      href="/wishlists"
+      href="/my-wishlists"
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={($page.url.pathname as string) === '/wishlists'}
-      class:text-surface-400={($page.url.pathname as string) !== '/wishlists'}
+      class:text-accent-500={($page.url.pathname as string) === '/my-wishlists'}
+      class:text-surface-400={($page.url.pathname as string) !== '/my-wishlists'}
     >
       <Heart size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_wishlists()}</span>
+      {#if $defaultWishlist}
+        <span class="variant-soft-surface badge">{$defaultWishlist.count}</span>
+      {/if}
     </a>
     <a
       href="/depot"

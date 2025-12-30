@@ -64,8 +64,12 @@ fn to_command_error(message: impl Into<String>) -> CommandError {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn list_collection_items(search: Option<String>) -> Result<Vec<CollectionItemLite>, CommandError> {
-    let guard = store().lock().map_err(|_| to_command_error("collection store poisoned"))?;
+pub async fn list_collection_items(
+    search: Option<String>,
+) -> Result<Vec<CollectionItemLite>, CommandError> {
+    let guard = store()
+        .lock()
+        .map_err(|_| to_command_error("collection store poisoned"))?;
     let items = guard.clone();
 
     if let Some(query) = search.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
@@ -96,7 +100,9 @@ pub async fn list_collection_items(search: Option<String>) -> Result<Vec<Collect
 pub async fn create_collection_item(
     input: CreateCollectionItemInput,
 ) -> Result<CollectionItemLite, CommandError> {
-    let mut guard = store().lock().map_err(|_| to_command_error("collection store poisoned"))?;
+    let mut guard = store()
+        .lock()
+        .map_err(|_| to_command_error("collection store poisoned"))?;
 
     let item = CollectionItemLite {
         id: Uuid::new_v4().to_string(),
@@ -119,7 +125,9 @@ pub async fn create_collection_item(
 pub async fn update_collection_item(
     input: UpdateCollectionItemInput,
 ) -> Result<CollectionItemLite, CommandError> {
-    let mut guard = store().lock().map_err(|_| to_command_error("collection store poisoned"))?;
+    let mut guard = store()
+        .lock()
+        .map_err(|_| to_command_error("collection store poisoned"))?;
     let pos = guard
         .iter()
         .position(|item| item.id == input.id)
@@ -144,7 +152,9 @@ pub async fn update_collection_item(
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_collection_item(id: String) -> Result<(), CommandError> {
-    let mut guard = store().lock().map_err(|_| to_command_error("collection store poisoned"))?;
+    let mut guard = store()
+        .lock()
+        .map_err(|_| to_command_error("collection store poisoned"))?;
     let len_before = guard.len();
     guard.retain(|item| item.id != id);
 

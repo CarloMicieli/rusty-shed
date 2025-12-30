@@ -1,6 +1,6 @@
 pub mod catalog;
-pub mod collection;
 pub mod collecting;
+pub mod collection;
 pub mod core;
 pub mod maintenance;
 pub mod state;
@@ -50,7 +50,15 @@ pub fn run() {
         collection::create_collection_item,
         collection::update_collection_item,
         collection::delete_collection_item,
+        wishlist_command_handlers::get_wishlists,
         wishlist_command_handlers::get_wishlist_by_id,
+        wishlist_command_handlers::create_wishlist,
+        wishlist_command_handlers::rename_wishlist,
+        wishlist_command_handlers::delete_wishlist,
+        wishlist_command_handlers::set_default_wishlist,
+        wishlist_command_handlers::add_to_wishlist,
+        wishlist_command_handlers::remove_from_wishlist,
+        wishlist_command_handlers::move_item_to_list,
         maintenance_command_handlers::get_maintenance_dashboard,
         maintenance_command_handlers::add_maintenance_record,
         get_app_version

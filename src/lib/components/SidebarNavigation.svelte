@@ -5,8 +5,10 @@
   import * as m from '$lib/paraglide/messages.js';
   import { appVersion } from '$lib/stores/app';
   import { collectionStore } from '$lib/stores/collectionStore';
+  import { wishlistStore } from '$lib/stores/wishlistStore';
 
   const { totalCount } = collectionStore;
+  const { defaultWishlist } = wishlistStore;
 </script>
 
 <nav class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex">
@@ -41,13 +43,16 @@
     </li>
     <li>
       <a
-        href="/wishlists"
+        href="/my-wishlists"
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
-        class:variant-filled-primary={(page.url.pathname as string) === '/wishlists'}
-        class:variant-ghost-surface={(page.url.pathname as string) !== '/wishlists'}
+        class:variant-filled-primary={(page.url.pathname as string) === '/my-wishlists'}
+        class:variant-ghost-surface={(page.url.pathname as string) !== '/my-wishlists'}
       >
         <Heart size={20} />
         <span class="font-medium tracking-wide">{m.app_wishlists()}</span>
+        {#if $defaultWishlist}
+          <span class="variant-soft-surface ml-auto badge">{$defaultWishlist.count}</span>
+        {/if}
       </a>
     </li>
     <li>
