@@ -15,11 +15,15 @@
     renameWishlist,
     deleteWishlist,
     setDefaultWishlist,
-    removeItem
+    removeItem,
+    moveItemToList
   } = wishlistStore;
 
   let isEditing = false;
   let nameDraft = '';
+  let moveTargets: Record<string, string> = {};
+
+  $: otherTargets = $wishlists.filter((w) => w.id !== $activeWishlistId);
 
   $: if ($activeWishlist && !isEditing) {
     nameDraft = $activeWishlist.name;
@@ -61,6 +65,17 @@
 
   async function handleDeleteList(id: string) {
     await deleteWishlist(id);
+  }
+
+  function handleMoveSelect(itemId: string, destId: string) {
+    moveTargets = { ...moveTargets, [itemId]: destId };
+  }
+
+  async function handleMoveItem(itemId: string) {
+    if (!$activeWishlist) return;
+    const destination = moveTargets[itemId] ?? otherTargets[0]?.id;
+    if (!destination) return;
+    await moveItemToList(itemId, $activeWishlist.id, destination);
   }
 
   function iconForItem() {
@@ -191,6 +206,30 @@
                 >
                   Delete
                 </button>
+                <div class="flex flex-1 items-center gap-2">
+                  <select
+                    class="select select-sm variant-ghost-surface w-full"
+                    disabled={otherTargets.length === 0}
+                    value={moveTargets[item.id] ?? otherTargets[0]?.id ?? ''}
+                    on:change={(event) =>
+                      handleMoveSelect(item.id, (event.currentTarget as HTMLSelectElement).value)}
+                  >
+                    {#if otherTargets.length === 0}
+                      <option value="" disabled selected>Create another list to move</option>
+                    {:else}
+                      {#each otherTargets as target}
+                        <option value={target.id}>{target.name}</option>
+                      {/each}
+                    {/if}
+                  </select>
+                  <button
+                    class="variant-soft-primary btn btn-sm"
+                    disabled={otherTargets.length === 0}
+                    on:click={() => void handleMoveItem(item.id)}
+                  >
+                    Move
+                  </button>
+                </div>
               </div>
             </div>
           {/each}
