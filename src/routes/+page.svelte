@@ -1,8 +1,8 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { stats, quickActions, recentItems, depotData } from '$lib/data/mock';
+  import { stats, recentItems, depotData } from '$lib/data/mock';
   import StatsCard from '$lib/components/StatsCard.svelte';
-  import QuickActionButton from '$lib/components/QuickActionButton.svelte';
+  import QuickActionButtons from '$lib/components/QuickActionButtons.svelte';
   import RecentItemCard from '$lib/components/RecentItemCard.svelte';
   import DepotView from '$lib/components/DepotView.svelte';
   import { _ } from 'svelte-i18n';
@@ -73,18 +73,14 @@
 
       <!-- Desktop: Vertical List -->
       <div class="hidden flex-col gap-3 lg:flex">
-        {#each quickActions as action (action.id)}
-          <QuickActionButton {action} />
-        {/each}
+        <QuickActionButtons />
       </div>
 
       <!-- Mobile: FAB / Horizontal Row (Floating above content on mobile, usually? Or just inline?) -->
       <!-- User requested: "Mobile: FAB or horizontal icon row" -->
       <!-- I'll implement a horizontal row for now as FAB blocks content often -->
       <div class="mb-8 grid grid-cols-2 gap-2 lg:hidden">
-        {#each quickActions as action (action.id)}
-          <QuickActionButton {action} />
-        {/each}
+        <QuickActionButtons />
       </div>
     </section>
   </div>

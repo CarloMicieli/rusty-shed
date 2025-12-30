@@ -35,12 +35,6 @@ export const stats: Stat[] = [
   { label: 'maintenance_alerts', value: '3', trend: 'down', trendValue: '-1' }
 ];
 
-export const quickActions: QuickAction[] = [
-  { id: '1', label: 'add_railway_model', icon: 'Plus', url: '/models/new' },
-  { id: '2', label: 'schedule_maintenance', icon: 'Wrench' },
-  { id: '3', label: 'generate_report', icon: 'FileText' }
-];
-
 export const recentItems: RecentItem[] = [
   {
     id: '1',
