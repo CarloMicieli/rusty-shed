@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { DepotEntry } from '$lib/data/mock';
+  import type { DashboardDepotEntry } from '$lib/stores/dashboardStore.svelte';
   import { _ } from 'svelte-i18n';
 
-  let { data } = $props<{ data: DepotEntry[] }>();
+  let { data } = $props<{ data: DashboardDepotEntry[] }>();
 </script>
 
 <div class="table-container">
@@ -20,24 +20,24 @@
     <tbody>
       {#each data as row (row.id)}
         <tr>
-          <td class="font-bold">{row.manufacturer}</td>
-          <td class="font-mono text-primary-400">{row.productCode}</td>
+          <td class="font-bold">{row.manufacturer ?? '—'}</td>
+          <td class="font-mono text-primary-400">{row.productCode ?? '—'}</td>
           <td>
             <span class="variant-soft-surface badge">
-              {row.category}
+              {row.category ?? '—'}
             </span>
           </td>
           <td>
             <span class="variant-soft-secondary badge font-bold">
-              {row.scale}
+              {row.scale ?? '—'}
             </span>
           </td>
           <td>
             <span class="variant-filled-surface badge font-bold tracking-wider">
-              {row.railwayCompany}
+              {row.railwayCompany ?? '—'}
             </span>
           </td>
-          <td class="text-surface-300">{row.description}</td>
+          <td class="text-surface-300">{row.description ?? '—'}</td>
         </tr>
       {/each}
     </tbody>

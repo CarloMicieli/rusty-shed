@@ -16,7 +16,10 @@
     "view_all": "View All",
     "the_depot": "The Depot",
     "filter": "Filter",
-    "quick_actions": "Quick Actions"
+    "quick_actions": "Quick Actions",
+    "due_soon": "due soon",
+    "empty_recent": "No recent items yet.",
+    "empty_depot": "No depot items yet."
   },
   "stats": {
     "total_collection_value": "Total Collection Value",
@@ -25,8 +28,33 @@
   },
   "actions": {
     "add_railway_model": "Add Railway Model",
+    "add_wishlist_item": "Add Wishlist Item",
     "schedule_maintenance": "Schedule Maintenance",
     "generate_report": "Generate Report"
+  },
+  "errors": {
+    "dashboard_title": "Something went wrong on our end.",
+    "dashboard_message": "Please try again or return to a safe page.",
+    "retry_page": "Retry Page",
+    "return_dashboard": "Return to Dashboard"
+  },
+  "wishlist_modal": {
+    "title": "Add to wishlist",
+    "close": "Close",
+    "choose_or_create": "Pick a wishlist or create one",
+    "select_placeholder": "Select a wishlist",
+    "new_list_placeholder": "New wishlist name (optional)",
+    "item_id_label": "Item ID",
+    "item_id_placeholder": "Paste railway model id",
+    "notes_label": "Notes",
+    "notes_placeholder": "Any quick notes (optional)",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "missing_model": "Please provide the railway model id.",
+    "create_failed": "Could not create the wishlist.",
+    "select_list": "Select a wishlist",
+    "add_failed": "Could not add the item."
   },
   "depot": {
     "manufacturer": "Manufacturer",

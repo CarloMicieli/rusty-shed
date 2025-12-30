@@ -5,6 +5,7 @@ pub mod core;
 pub mod maintenance;
 pub mod state;
 pub mod wishlist;
+pub mod dashboard;
 
 #[cfg(test)]
 pub mod test_utils;
@@ -15,6 +16,7 @@ use crate::core::infrastructure::db::Database;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
+use crate::dashboard::dashboard_summary;
 use log::{LevelFilter, error};
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use tauri::Manager;
@@ -63,6 +65,7 @@ pub fn run() {
         wishlist_command_handlers::move_item_to_list,
         maintenance_command_handlers::get_maintenance_dashboard,
         maintenance_command_handlers::add_maintenance_record,
+        dashboard_summary,
         get_app_version
     ]);
 

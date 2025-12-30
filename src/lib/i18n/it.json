@@ -16,7 +16,10 @@
     "view_all": "Vedi Tutti",
     "the_depot": "Il Deposito",
     "filter": "Filtra",
-    "quick_actions": "Azioni Rapide"
+    "quick_actions": "Azioni Rapide",
+    "due_soon": "in scadenza",
+    "empty_recent": "Nessun elemento recente.",
+    "empty_depot": "Nessun elemento in deposito."
   },
   "stats": {
     "total_collection_value": "Valore Totale Collezione",
@@ -25,8 +28,33 @@
   },
   "actions": {
     "add_railway_model": "Aggiungi Modello",
+    "add_wishlist_item": "Aggiungi alla Wishlist",
     "schedule_maintenance": "Programma Manutenzione",
     "generate_report": "Genera Report"
+  },
+  "errors": {
+    "dashboard_title": "Qualcosa è andato storto da parte nostra.",
+    "dashboard_message": "Riprova oppure torna a una pagina sicura.",
+    "retry_page": "Riprova",
+    "return_dashboard": "Torna alla Dashboard"
+  },
+  "wishlist_modal": {
+    "title": "Aggiungi alla wishlist",
+    "close": "Chiudi",
+    "choose_or_create": "Scegli o crea una wishlist",
+    "select_placeholder": "Seleziona una wishlist",
+    "new_list_placeholder": "Nome nuova wishlist (opzionale)",
+    "item_id_label": "ID Modello",
+    "item_id_placeholder": "Incolla l'ID del modello",
+    "notes_label": "Note",
+    "notes_placeholder": "Eventuali note (opzionale)",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "saving": "Salvataggio...",
+    "missing_model": "Inserisci l'ID del modello.",
+    "create_failed": "Impossibile creare la wishlist.",
+    "select_list": "Seleziona una wishlist",
+    "add_failed": "Impossibile aggiungere l'elemento."
   },
   "depot": {
     "manufacturer": "Produttore",
