@@ -1,0 +1,24 @@
+[
+  { "id": "AUTO_TRANSPORT_CARS", "labelKey": "constants_freight_car_types_auto_transport_cars" },
+  { "id": "BRAKE_WAGON", "labelKey": "constants_freight_car_types_brake_wagon" },
+  { "id": "CONTAINER_CARS", "labelKey": "constants_freight_car_types_container_cars" },
+  { "id": "COVERED_FREIGHT_CARS", "labelKey": "constants_freight_car_types_covered_freight_cars" },
+  { "id": "DEEP_WELL_FLAT_CARS", "labelKey": "constants_freight_car_types_deep_well_flat_cars" },
+  { "id": "DUMP_CARS", "labelKey": "constants_freight_car_types_dump_cars" },
+  { "id": "GONDOLA", "labelKey": "constants_freight_car_types_gondola" },
+  { "id": "HEAVY_GOODS_WAGONS", "labelKey": "constants_freight_car_types_heavy_goods_wagons" },
+  { "id": "HINGED_COVER_WAGONS", "labelKey": "constants_freight_car_types_hinged_cover_wagons" },
+  { "id": "HOPPER_WAGON", "labelKey": "constants_freight_car_types_hopper_wagon" },
+  { "id": "REFRIGERATOR_CARS", "labelKey": "constants_freight_car_types_refrigerator_cars" },
+  { "id": "SILO_CONTAINER_CARS", "labelKey": "constants_freight_car_types_silo_container_cars" },
+  {
+    "id": "SLIDE_TARPAULIN_WAGON",
+    "labelKey": "constants_freight_car_types_slide_tarpaulin_wagon"
+  },
+  { "id": "SLIDING_WALL_BOXCARS", "labelKey": "constants_freight_car_types_sliding_wall_boxcars" },
+  { "id": "SPECIAL_TRANSPORT", "labelKey": "constants_freight_car_types_special_transport" },
+  { "id": "STAKE_WAGONS", "labelKey": "constants_freight_car_types_stake_wagons" },
+  { "id": "SWING_ROOF_WAGON", "labelKey": "constants_freight_car_types_swing_roof_wagon" },
+  { "id": "TANK_CARS", "labelKey": "constants_freight_car_types_tank_cars" },
+  { "id": "TELESCOPE_HOOD_WAGONS", "labelKey": "constants_freight_car_types_telescope_hood_wagons" }
+]

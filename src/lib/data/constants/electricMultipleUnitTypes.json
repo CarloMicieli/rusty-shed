@@ -1,0 +1,11 @@
+[
+  { "id": "DRIVING_CAR", "labelKey": "constants_electric_multiple_unit_types_driving_car" },
+  {
+    "id": "HIGH_SPEED_TRAIN",
+    "labelKey": "constants_electric_multiple_unit_types_high_speed_train"
+  },
+  { "id": "MOTOR_CAR", "labelKey": "constants_electric_multiple_unit_types_motor_car" },
+  { "id": "POWER_CAR", "labelKey": "constants_electric_multiple_unit_types_power_car" },
+  { "id": "TRAILER_CAR", "labelKey": "constants_electric_multiple_unit_types_trailer_car" },
+  { "id": "TRAIN_SET", "labelKey": "constants_electric_multiple_unit_types_train_set" }
+]

@@ -1,0 +1,6 @@
+[
+  { "id": "ANNOUNCED", "labelKey": "constants_availability_status_announced" },
+  { "id": "AVAILABLE", "labelKey": "constants_availability_status_available" },
+  { "id": "CANCELLED", "labelKey": "constants_availability_status_cancelled" },
+  { "id": "DISCONTINUED", "labelKey": "constants_availability_status_discontinued" }
+]

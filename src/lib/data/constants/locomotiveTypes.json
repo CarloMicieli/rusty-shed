@@ -1,0 +1,5 @@
+[
+  { "id": "STEAM_LOCOMOTIVE", "labelKey": "constants_locomotive_types_steam_locomotive" },
+  { "id": "DIESEL_LOCOMOTIVE", "labelKey": "constants_locomotive_types_diesel_locomotive" },
+  { "id": "ELECTRIC_LOCOMOTIVE", "labelKey": "constants_locomotive_types_electric_locomotive" }
+]

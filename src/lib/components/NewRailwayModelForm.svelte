@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { _ } from 'svelte-i18n';
   import { Accordion } from '@skeletonlabs/skeleton-svelte';
   const AccordionItem = Accordion.Item;
   const AccordionItemTrigger = Accordion.ItemTrigger;
@@ -15,113 +14,43 @@
 
   import manufacturersData from '$lib/data/manufacturers.json';
   import railwayCompaniesData from '$lib/data/railway-companies.json';
+  import availabilityStatusesData from '$lib/data/constants/availabilityStatuses.json';
+  import categoriesData from '$lib/data/constants/categories.json';
+  import controlsData from '$lib/data/constants/controls.json';
+  import dccInterfacesData from '$lib/data/constants/dccInterfaces.json';
+  import electricMultipleUnitTypesData from '$lib/data/constants/electricMultipleUnitTypes.json';
+  import epochsData from '$lib/data/constants/epochs.json';
+  import freightCarTypesData from '$lib/data/constants/freightCarTypes.json';
+  import locomotiveTypesData from '$lib/data/constants/locomotiveTypes.json';
+  import passengerCarTypesData from '$lib/data/constants/passengerCarTypes.json';
+  import powerMethodsData from '$lib/data/constants/powerMethods.json';
+  import rollingStockCategoriesData from '$lib/data/constants/rollingStockCategories.json';
+  import scalesData from '$lib/data/constants/scales.json';
+  import serviceLevelsData from '$lib/data/constants/serviceLevels.json';
+  import { resolveLabel } from '../../utils/resolveLabel';
+  import type { ConstantItem } from '$lib/types/constant_item';
 
-  const powerMethods = ['AC', 'DC', 'TRIX_EXPRESS'];
-  const scales = ['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', 'G', 'Scale1', 'Scale0', 'Scale00'];
-  const categories = [
-    'LOCOMOTIVES',
-    'TRAIN_SETS',
-    'STARTER_SETS',
-    'FREIGHT_CARS',
-    'PASSENGER_CARS',
-    'ELECTRIC_MULTIPLE_UNITS',
-    'RAILCARS'
-  ];
-  const availabilityStatuses = ['ANNOUNCED', 'AVAILABLE', 'CANCELLED', 'DISCONTINUED'];
-  const controls = ['DCC_READY', 'DCC_FITTED', 'DCC_SOUND', 'NO_DCC'];
-  const epochs = ['I', 'II', 'III', 'IV', 'V', 'VI'];
-  const locomotiveTypes = ['STEAM_LOCOMOTIVE', 'DIESEL_LOCOMOTIVE', 'ELECTRIC_LOCOMOTIVE'];
-  const passengerCarTypes = [
-    'BAGGAGE_CAR',
-    'BUFFET_CAR',
-    'COMBINE_CAR',
-    'COMPARTMENT_COACH',
-    'DINING_CAR',
-    'DOUBLE_DECKER',
-    'DOME_CAR',
-    'DRIVING_TRAILER',
-    'LOUNGE',
-    'OBSERVATION',
-    'OPEN_COACH',
-    'RAILWAY_POST_OFFICE',
-    'SLEEPING_CAR',
-    'SLEEPERETTE'
-  ];
-  const freightCarTypes = [
-    'AUTO_TRANSPORT_CARS',
-    'BRAKE_WAGON',
-    'CONTAINER_CARS',
-    'COVERED_FREIGHT_CARS',
-    'DEEP_WELL_FLAT_CARS',
-    'DUMP_CARS',
-    'GONDOLA',
-    'HEAVY_GOODS_WAGONS',
-    'HINGED_COVER_WAGONS',
-    'HOPPER_WAGON',
-    'REFRIGERATOR_CARS',
-    'SILO_CONTAINER_CARS',
-    'SLIDE_TARPAULIN_WAGON',
-    'SLIDING_WALL_BOXCARS',
-    'SPECIAL_TRANSPORT',
-    'STAKE_WAGONS',
-    'SWING_ROOF_WAGON',
-    'TANK_CARS',
-    'TELESCOPE_HOOD_WAGONS'
-  ];
-  const serviceLevels = [
-    'FIRST',
-    'SECOND',
-    'THIRD',
-    'FIRST_SECOND',
-    'SECOND_THIRD',
-    'FIRST_SECOND_THIRD'
-  ];
-  const dccInterfaces = [
-    'NEM_651',
-    'NEM_652',
-    'NEM_654',
-    'PLUX_8',
-    'PLUX_12',
-    'PLUX_16',
-    'PLUX_22',
-    'NEXT_18',
-    'NEXT_18_S',
-    'MTC_21'
-  ];
-  const electricMultipleUnitTypes = [
-    'DRIVING_CAR',
-    'HIGH_SPEED_TRAIN',
-    'MOTOR_CAR',
-    'POWER_CAR',
-    'TRAILER_CAR',
-    'TRAIN_SET'
-  ];
-
-  type NullableEnum<T extends string> = T | '';
+  type NullableEnum<T extends string = string> = T | '';
 
   type RollingStockForm = {
-    category:
-      | ''
-      | 'Locomotive'
-      | 'PassengerCar'
-      | 'FreightCar'
-      | 'Railcar'
-      | 'ElectricMultipleUnit';
+    category: '' | (typeof rollingStockCategoriesData)[number]['id'];
     railway_company_id: string;
     class_name?: string;
     road_number?: string;
     series: string | null;
     depot: string | null;
     livery: string | null;
-    locomotive_type?: NullableEnum<(typeof locomotiveTypes)[number]>;
-    passenger_car_type?: NullableEnum<(typeof passengerCarTypes)[number]>;
-    freight_car_type?: NullableEnum<(typeof freightCarTypes)[number]>;
-    electric_multiple_unit_type?: NullableEnum<(typeof electricMultipleUnitTypes)[number]>;
+    locomotive_type?: NullableEnum<(typeof locomotiveTypesData)[number]['id']>;
+    passenger_car_type?: NullableEnum<(typeof passengerCarTypesData)[number]['id']>;
+    freight_car_type?: NullableEnum<(typeof freightCarTypesData)[number]['id']>;
+    electric_multiple_unit_type?: NullableEnum<
+      (typeof electricMultipleUnitTypesData)[number]['id']
+    >;
     type_name?: string;
-    service_level?: NullableEnum<(typeof serviceLevels)[number]>;
+    service_level?: NullableEnum<(typeof serviceLevelsData)[number]['id']>;
     is_dummy?: boolean;
-    control: NullableEnum<(typeof controls)[number]> | null;
-    dcc_interface: NullableEnum<(typeof dccInterfaces)[number]> | null;
+    control: NullableEnum<(typeof controlsData)[number]['id']> | null;
+    dcc_interface: NullableEnum<(typeof dccInterfacesData)[number]['id']> | null;
     length_over_buffers: CreateRailwayModelInput['rolling_stocks'][number]['length_over_buffers'];
     technical_specifications: CreateRailwayModelInput['rolling_stocks'][number]['technical_specifications'];
   };
@@ -131,12 +60,12 @@
     product_code: string;
     description: string;
     details: string | null;
-    power_method: NullableEnum<(typeof powerMethods)[number]>;
-    scale: NullableEnum<(typeof scales)[number]>;
-    epoch: string | '';
-    category: NullableEnum<(typeof categories)[number]>;
+    power_method: NullableEnum<(typeof powerMethodsData)[number]['id']>;
+    scale: NullableEnum<(typeof scalesData)[number]['id']>;
+    epoch: NullableEnum<(typeof epochsData)[number]['id']>;
+    category: NullableEnum<(typeof categoriesData)[number]['id']>;
     delivery_date: string | null;
-    availability_status: NullableEnum<(typeof availabilityStatuses)[number]> | null;
+    availability_status: NullableEnum<(typeof availabilityStatusesData)[number]['id']> | null;
     rolling_stocks: RollingStockForm[];
   };
 
@@ -342,8 +271,8 @@
                 bind:value={formData.category}
               >
                 <option value="">-- Select --</option>
-                {#each categories as cat (cat)}
-                  <option value={cat}>{$_(`enums.category.${cat}`)}</option>
+                {#each categoriesData as cat (cat.id)}
+                  <option value={cat.id}>{resolveLabel(cat as ConstantItem)}</option>
                 {/each}
               </select>
             </label>
@@ -354,8 +283,8 @@
               >
               <select class="select border-surface-600 bg-surface-800" bind:value={formData.scale}>
                 <option value="">-- Select --</option>
-                {#each scales as s (s)}
-                  <option value={s}>{$_(`enums.scale.${s}`)}</option>
+                {#each scalesData as s (s.id)}
+                  <option value={s.id}>{resolveLabel(s as ConstantItem)}</option>
                 {/each}
               </select>
             </label>
@@ -369,8 +298,8 @@
                 bind:value={formData.power_method}
               >
                 <option value="">-- Select --</option>
-                {#each powerMethods as pm (pm)}
-                  <option value={pm}>{$_(`enums.power_method.${pm}`)}</option>
+                {#each powerMethodsData as pm (pm.id)}
+                  <option value={pm.id}>{resolveLabel(pm as ConstantItem)}</option>
                 {/each}
               </select>
             </label>
@@ -381,8 +310,8 @@
               >
               <select class="select border-surface-600 bg-surface-800" bind:value={formData.epoch}>
                 <option value="">-- Select --</option>
-                {#each epochs as ep (ep)}
-                  <option value={ep}>{ep}</option>
+                {#each epochsData as ep (ep.id)}
+                  <option value={ep.id}>{resolveLabel(ep as ConstantItem)}</option>
                 {/each}
               </select>
               {#if errors.epoch}
@@ -425,8 +354,8 @@
                 bind:value={formData.availability_status}
               >
                 <option value="">-- Select --</option>
-                {#each availabilityStatuses as status (status)}
-                  <option value={status}>{$_(`enums.availability_status.${status}`)}</option>
+                {#each availabilityStatusesData as status (status.id)}
+                  <option value={status.id}>{resolveLabel(status as ConstantItem)}</option>
                 {/each}
               </select>
             </label>
@@ -507,11 +436,9 @@
                       bind:value={rs.category}
                     >
                       <option value="">-- Select --</option>
-                      <option value="Locomotive">Locomotive</option>
-                      <option value="PassengerCar">Passenger Car</option>
-                      <option value="FreightCar">Freight Car</option>
-                      <option value="Railcar">Railcar</option>
-                      <option value="ElectricMultipleUnit">Electric Multiple Unit</option>
+                      {#each rollingStockCategoriesData as option (option.id)}
+                        <option value={option.id}>{resolveLabel(option as ConstantItem)}</option>
+                      {/each}
                     </select>
                   </label>
 
@@ -581,8 +508,8 @@
                         bind:value={rs.locomotive_type}
                       >
                         <option value="">-- Select --</option>
-                        {#each locomotiveTypes as type (type)}
-                          <option value={type}>{$_(`enums.locomotive_type.${type}`)}</option>
+                        {#each locomotiveTypesData as type (type.id)}
+                          <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
                       </select>
                     </label>
@@ -615,8 +542,9 @@
                                   bind:value={rs.control}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each controls as control (control)}
-                                    <option value={control}>{$_(`enums.control.${control}`)}</option
+                                  {#each controlsData as control (control.id)}
+                                    <option value={control.id}
+                                      >{resolveLabel(control as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>
@@ -632,9 +560,9 @@
                                   bind:value={rs.dcc_interface}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each dccInterfaces as dccInterface (dccInterface)}
-                                    <option value={dccInterface}
-                                      >{$_(`enums.dcc_interface.${dccInterface}`)}</option
+                                  {#each dccInterfacesData as dccInterface (dccInterface.id)}
+                                    <option value={dccInterface.id}
+                                      >{resolveLabel(dccInterface as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>
@@ -665,8 +593,8 @@
                         bind:value={rs.passenger_car_type}
                       >
                         <option value="">-- Select --</option>
-                        {#each passengerCarTypes as type (type)}
-                          <option value={type}>{$_(`enums.passenger_car_type.${type}`)}</option>
+                        {#each passengerCarTypesData as type (type.id)}
+                          <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
                       </select>
                     </label>
@@ -725,9 +653,9 @@
                                   bind:value={rs.service_level}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each serviceLevels as level (level)}
-                                    <option value={level}
-                                      >{$_(`enums.service_level.${level}`)}</option
+                                  {#each serviceLevelsData as level (level.id)}
+                                    <option value={level.id}
+                                      >{resolveLabel(level as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>
@@ -758,8 +686,8 @@
                         bind:value={rs.freight_car_type}
                       >
                         <option value="">-- Select --</option>
-                        {#each freightCarTypes as type (type)}
-                          <option value={type}>{$_(`enums.freight_car_type.${type}`)}</option>
+                        {#each freightCarTypesData as type (type.id)}
+                          <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
                       </select>
                     </label>
@@ -862,8 +790,9 @@
                                   bind:value={rs.control}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each controls as control (control)}
-                                    <option value={control}>{$_(`enums.control.${control}`)}</option
+                                  {#each controlsData as control (control.id)}
+                                    <option value={control.id}
+                                      >{resolveLabel(control as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>
@@ -879,9 +808,9 @@
                                   bind:value={rs.dcc_interface}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each dccInterfaces as dccInterface (dccInterface)}
-                                    <option value={dccInterface}
-                                      >{$_(`enums.dcc_interface.${dccInterface}`)}</option
+                                  {#each dccInterfacesData as dccInterface (dccInterface.id)}
+                                    <option value={dccInterface.id}
+                                      >{resolveLabel(dccInterface as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>
@@ -912,10 +841,8 @@
                         bind:value={rs.electric_multiple_unit_type}
                       >
                         <option value="">-- Select --</option>
-                        {#each electricMultipleUnitTypes as type (type)}
-                          <option value={type}
-                            >{$_(`enums.electric_multiple_unit_type.${type}`)}</option
-                          >
+                        {#each electricMultipleUnitTypesData as type (type.id)}
+                          <option value={type.id}>{resolveLabel(type as ConstantItem)}</option>
                         {/each}
                       </select>
                     </label>
@@ -981,8 +908,9 @@
                                   bind:value={rs.control}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each controls as control (control)}
-                                    <option value={control}>{$_(`enums.control.${control}`)}</option
+                                  {#each controlsData as control (control.id)}
+                                    <option value={control.id}
+                                      >{resolveLabel(control as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>
@@ -998,9 +926,9 @@
                                   bind:value={rs.dcc_interface}
                                 >
                                   <option value="">-- Select --</option>
-                                  {#each dccInterfaces as dccInterface (dccInterface)}
-                                    <option value={dccInterface}
-                                      >{$_(`enums.dcc_interface.${dccInterface}`)}</option
+                                  {#each dccInterfacesData as dccInterface (dccInterface.id)}
+                                    <option value={dccInterface.id}
+                                      >{resolveLabel(dccInterface as ConstantItem)}</option
                                     >
                                   {/each}
                                 </select>

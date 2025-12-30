@@ -1,0 +1,6 @@
+[
+  { "id": "DCC_READY", "display": "DCC Ready" },
+  { "id": "DCC_FITTED", "display": "DCC Fitted" },
+  { "id": "DCC_SOUND", "display": "DCC Sound" },
+  { "id": "NO_DCC", "display": "No DCC" }
+]

@@ -1,0 +1,14 @@
+[
+  { "id": "I", "display": "I" },
+  { "id": "I/II", "display": "I/II" },
+  { "id": "II", "display": "II" },
+  { "id": "II/III", "display": "II/III" },
+  { "id": "III", "display": "III" },
+  { "id": "III/IV", "display": "III/IV" },
+  { "id": "IV", "display": "IV" },
+  { "id": "IV/V", "display": "IV/V" },
+  { "id": "V", "display": "V" },
+  { "id": "V/VI", "display": "V/VI" },
+  { "id": "VI", "display": "VI" },
+  { "id": "Vm", "display": "Vm" }
+]

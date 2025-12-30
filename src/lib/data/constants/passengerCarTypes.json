@@ -1,0 +1,16 @@
+[
+  { "id": "BAGGAGE_CAR", "labelKey": "constants_passenger_car_types_baggage_car" },
+  { "id": "BUFFET_CAR", "labelKey": "constants_passenger_car_types_buffet_car" },
+  { "id": "COMBINE_CAR", "labelKey": "constants_passenger_car_types_combine_car" },
+  { "id": "COMPARTMENT_COACH", "labelKey": "constants_passenger_car_types_compartment_coach" },
+  { "id": "DINING_CAR", "labelKey": "constants_passenger_car_types_dining_car" },
+  { "id": "DOUBLE_DECKER", "labelKey": "constants_passenger_car_types_double_decker" },
+  { "id": "DOME_CAR", "labelKey": "constants_passenger_car_types_dome_car" },
+  { "id": "DRIVING_TRAILER", "labelKey": "constants_passenger_car_types_driving_trailer" },
+  { "id": "LOUNGE", "labelKey": "constants_passenger_car_types_lounge" },
+  { "id": "OBSERVATION", "labelKey": "constants_passenger_car_types_observation" },
+  { "id": "OPEN_COACH", "labelKey": "constants_passenger_car_types_open_coach" },
+  { "id": "RAILWAY_POST_OFFICE", "labelKey": "constants_passenger_car_types_railway_post_office" },
+  { "id": "SLEEPING_CAR", "labelKey": "constants_passenger_car_types_sleeping_car" },
+  { "id": "SLEEPERETTE", "labelKey": "constants_passenger_car_types_sleeperette" }
+]

@@ -1,0 +1,8 @@
+[
+  { "id": "1", "display": "I cl" },
+  { "id": "2", "display": "II cl" },
+  { "id": "3", "display": "III cl" },
+  { "id": "1/2", "display": "I cl / II cl" },
+  { "id": "2/3", "display": "II cl / III cl" },
+  { "id": "1/2/3", "display": "I cl / II cl / III cl" }
+]

@@ -6,4 +6,3 @@ export type ConstantItem = {
   labelKey?: string;
   // ...other fields may exist in real data
 };
-
