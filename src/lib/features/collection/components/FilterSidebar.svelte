@@ -18,6 +18,7 @@
 
   const debounceMs = 300;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  // eslint-disable-next-line svelte/prefer-writable-derived
   let query = $state('');
 
   $effect(() => {

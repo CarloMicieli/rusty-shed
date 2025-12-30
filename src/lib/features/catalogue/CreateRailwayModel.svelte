@@ -275,7 +275,8 @@
               formData.availability_status ?? '',
               availabilityStatusesData,
               (next) =>
-                (formData.availability_status = (next || null) as CreateRailwayModelInput['availability_status'])
+                (formData.availability_status = (next ||
+                  null) as CreateRailwayModelInput['availability_status'])
             )}
 
             <FormField label={formLabels.additionalDetails} error={errors.details}>
