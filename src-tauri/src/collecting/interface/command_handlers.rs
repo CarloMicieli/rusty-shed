@@ -50,6 +50,13 @@ pub async fn get_collection(state: tauri::State<'_, AppState>) -> Result<Collect
     }
 }
 
+/// Tauri command to retrieve depot data (alias of `get_collection`).
+#[tauri::command]
+#[specta::specta]
+pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<Collection, CommandError> {
+    get_collection(state).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

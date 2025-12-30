@@ -1,12 +1,22 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { Box as BoxIcon, Search, TrainFront, TramFront, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
   import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
   import TrainCard from '$lib/features/depot/components/TrainCard.svelte';
   import CarCard from '$lib/features/depot/components/CarCard.svelte';
-  import { cars, locomotives, trains } from '$lib/features/depot/depot-data';
+  import type { Car, Locomotive, TrainSet } from '$lib/features/depot/types';
+  import { commands } from '$lib/bindings';
+  import type { Collection, RailwayModel, RollingStock } from '$lib/bindings';
   import { debounce } from '$lib/utils/debounce';
+
+  let loading = $state(true);
+  let error = $state<string | null>(null);
+
+  let depotLocomotives = $state<Locomotive[]>([]);
+  let depotTrains = $state<TrainSet[]>([]);
+  let depotCars = $state<Car[]>([]);
 
   let searchInput = $state('');
   let query = $state('');
@@ -28,33 +38,174 @@
 
   const normalizedQuery = $derived(query);
 
-  const filterMatch = (value?: string) => {
+  const filterMatch = (value?: string | number | null) => {
     if (!normalizedQuery) return true;
-    const text = (value ?? '').toLowerCase();
-    return text.includes(normalizedQuery);
+    const text = value === null || value === undefined ? '' : String(value);
+    return text.toLowerCase().includes(normalizedQuery);
   };
 
   const filteredLocomotives = $derived(
     normalizedQuery
-      ? locomotives.filter((item) => filterMatch(item.roadNumber) || filterMatch(item.dccAddress))
-      : locomotives
+      ? depotLocomotives.filter(
+          (item) =>
+            filterMatch(item.roadNumber) ||
+            filterMatch(item.railwayCompany) ||
+            filterMatch(item.group) ||
+            filterMatch(item.livery) ||
+            filterMatch(item.dccAddress)
+        )
+      : depotLocomotives
   );
 
   const filteredTrains = $derived(
     normalizedQuery
-      ? trains.filter((item) => filterMatch(item.roadNumber) || filterMatch(item.dccAddress))
-      : trains
+      ? depotTrains.filter(
+          (item) =>
+            filterMatch(item.roadNumber) ||
+            filterMatch(item.railwayCompany) ||
+            filterMatch(item.group) ||
+            filterMatch(item.livery) ||
+            filterMatch(item.dccAddress)
+        )
+      : depotTrains
   );
 
   const filteredCars = $derived(
     normalizedQuery
-      ? cars.filter((item) => filterMatch(item.roadNumber) || filterMatch(item.dccAddress))
-      : cars
+      ? depotCars.filter(
+          (item) =>
+            filterMatch(item.roadNumber) ||
+            filterMatch(item.railwayCompany) ||
+            filterMatch(item.type) ||
+            filterMatch(item.livery) ||
+            filterMatch(item.serviceLevel)
+        )
+      : depotCars
   );
 
   const totalFiltered = $derived(
     filteredLocomotives.length + filteredTrains.length + filteredCars.length
   );
+
+  function pushRollingStock(
+    model: RailwayModel,
+    rolling: RollingStock,
+    dccAddress: number | null,
+    collections: {
+      locomotives: Locomotive[];
+      trains: TrainSet[];
+      cars: Car[];
+    }
+  ) {
+    const baseGroup = model.description || model.product_code;
+    const railway = rolling.data.railway?.display ?? null;
+    const livery = rolling.data.livery ?? null;
+
+    if (rolling.category === 'Locomotive') {
+      const data = rolling.data;
+      collections.locomotives.push({
+        id: data.id,
+        group: baseGroup,
+        roadNumber: data.road_number ?? null,
+        railwayCompany: railway,
+        livery,
+        dccAddress
+      });
+      return;
+    }
+
+    if (rolling.category === 'ElectricMultipleUnit' || rolling.category === 'Railcar') {
+      const data = rolling.data;
+      collections.trains.push({
+        id: data.id,
+        group: baseGroup,
+        roadNumber: data.road_number ?? null,
+        railwayCompany: railway,
+        livery,
+        dccAddress
+      });
+      return;
+    }
+
+    if (rolling.category === 'PassengerCar' || rolling.category === 'FreightCar') {
+      const data = rolling.data;
+      collections.cars.push({
+        id: data.id,
+        type: data.type_name,
+        roadNumber: data.road_number ?? null,
+        railwayCompany: railway,
+        livery,
+        category: rolling.category === 'PassengerCar' ? 'passenger' : 'freight',
+        serviceLevel: 'service_level' in data ? data.service_level ?? null : null,
+        dccAddress
+      });
+    }
+  }
+
+  function buildDepotView(collection: Collection, models: RailwayModel[]) {
+    const modelMap = new Map(models.map((model) => [model.id, model]));
+
+    const buckets = {
+      locomotives: [] as Locomotive[],
+      trains: [] as TrainSet[],
+      cars: [] as Car[]
+    };
+
+    for (const item of collection.items) {
+      const model = modelMap.get(item.railway_model_id);
+      if (!model) continue;
+
+      for (const owned of item.rolling_stocks) {
+        const rolling = model.rolling_stocks.find(
+          (rs) => rs.data.id === owned.rolling_stock_id || rs.data.id === owned.id
+        );
+
+        if (!rolling) continue;
+
+        const dccAddress = owned.digital?.dcc_address ?? null;
+        pushRollingStock(model, rolling, dccAddress, buckets);
+      }
+    }
+
+    depotLocomotives = buckets.locomotives;
+    depotTrains = buckets.trains;
+    depotCars = buckets.cars;
+  }
+
+  async function loadDepot() {
+    loading = true;
+    error = null;
+    depotLocomotives = [];
+    depotTrains = [];
+    depotCars = [];
+
+    try {
+      const collectionResult = await commands.getDepot();
+      if (collectionResult.status === 'error') {
+        throw new Error(String(collectionResult.error ?? 'Failed to load depot'));
+      }
+
+      const collection = collectionResult.data as Collection;
+      const modelIds = Array.from(new Set(collection.items.map((item) => item.railway_model_id)));
+
+      if (modelIds.length === 0) {
+        return;
+      }
+
+      const modelsResult = await commands.getRailwayModelsByIds(modelIds);
+      if (modelsResult.status === 'error') {
+        throw new Error(String(modelsResult.error ?? 'Failed to load catalog models'));
+      }
+
+      buildDepotView(collection, modelsResult.data as RailwayModel[]);
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Unknown error loading depot';
+    } finally {
+      loading = false;
+    }
+  }
+
+  onMount(loadDepot);
 </script>
 
 <svelte:head>
@@ -89,7 +240,23 @@
     </div>
   </div>
 
-  {#if totalFiltered === 0}
+  {#if loading}
+    <div class="flex items-center gap-3 rounded-xl border border-surface-700/60 bg-surface-900 p-4">
+      <div
+        class="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent"
+        aria-hidden="true"
+      ></div>
+      <p class="text-sm text-surface-300">Loading depot…</p>
+    </div>
+  {:else if error}
+    <div class="flex flex-col gap-3 rounded-xl border border-amber-500/50 bg-amber-950/50 p-4 text-amber-100">
+      <p class="text-sm font-semibold">{error}</p>
+      <div class="flex gap-2">
+        <button class="variant-filled-primary btn btn-sm" onclick={loadDepot}>Retry</button>
+        <button class="variant-ghost-surface btn btn-sm" onclick={clearSearch}>{m.depot_clear_search()}</button>
+      </div>
+    </div>
+  {:else if totalFiltered === 0}
     <div
       class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-surface-700/50 bg-surface-900 p-8 text-center"
     >

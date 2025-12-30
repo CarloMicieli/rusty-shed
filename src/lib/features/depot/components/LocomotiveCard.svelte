@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Cpu, TrainFront } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import type { Locomotive } from '../depot-data';
+  import type { Locomotive } from '../types';
 
   let { item: locomotive } = $props<{ item: Locomotive }>();
 </script>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Box } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import type { Car } from '../depot-data';
+  import type { Car } from '../types';
 
   let { item: car } = $props<{ item: Car }>();
 </script>

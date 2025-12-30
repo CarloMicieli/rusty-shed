@@ -121,6 +121,33 @@ pub async fn get_railway_model_by_id(
     Ok(result)
 }
 
+/// Retrieve multiple railway models by their identifiers.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_railway_models_by_ids(
+    state: State<'_, AppState>,
+    railway_model_ids: Vec<String>,
+) -> Result<Vec<RailwayModel>, CommandError> {
+    let ids: Vec<RailwayModelId> = railway_model_ids
+        .into_iter()
+        .map(RailwayModelId::try_from)
+        .collect::<Result<_, _>>()
+        .map_err(|e| CommandError::Unknown(format!("invalid railway model id: {}", e)))?;
+
+    let pool = state.db_pool();
+    let mut conn = pool
+        .acquire()
+        .await
+        .map_err(|e| CommandError::DatabaseError(format!("db acquire failed: {}", e)))?;
+
+    let result =
+        crate::catalog::infrastructure::repository::get_railway_models_by_ids(&mut conn, &ids)
+            .await
+            .map_err(|e| CommandError::DatabaseError(format!("query failed: {}", e)))?;
+
+    Ok(result)
+}
+
 /// Create a new railway model with rolling stocks.
 ///
 /// This command follows the Unit of Work + Use Case pattern:

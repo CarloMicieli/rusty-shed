@@ -9,6 +9,7 @@ use crate::catalog::domain::rolling_stock_id::RollingStockId;
 use crate::catalog::domain::{RailwayModel, RollingStock};
 use anyhow::Context;
 use sqlx::sqlite::SqliteConnection;
+use std::collections::HashMap;
 
 /// Retrieve a `Manufacturer` from the database by its `ManufacturerId`.
 ///
@@ -109,6 +110,55 @@ pub async fn get_railway_model_by_id(
     } else {
         Ok(None)
     }
+}
+
+/// Retrieve multiple `RailwayModel`s by their ids with rolling stocks loaded.
+pub async fn get_railway_models_by_ids(
+    executor: &mut SqliteConnection,
+    ids: &[RailwayModelId],
+) -> anyhow::Result<Vec<RailwayModel>> {
+    if ids.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let id_strings: Vec<String> = ids.iter().map(|id| id.to_string()).collect();
+
+    let rows = database::get_railway_models_by_ids(executor, &id_strings)
+        .await
+        .context("querying railway_models table")?;
+
+    let mut models: HashMap<String, RailwayModel> = HashMap::with_capacity(rows.len());
+    for row in rows {
+        let mut model = RailwayModel::try_from(row).map_err(|e| {
+            anyhow::anyhow!(format!("mapping RailwayModelRow -> RailwayModel: {}", e))
+        })?;
+        model.rolling_stocks = Vec::new();
+        models.insert(model.id.to_string(), model);
+    }
+
+    let child_rows = database::get_rolling_stocks_by_railway_model_ids(executor, &id_strings)
+        .await
+        .context("querying rolling_stocks table")?;
+
+    for cr in child_rows {
+        let rs = RollingStock::try_from(cr.clone()).map_err(|e| {
+            anyhow::anyhow!(format!("mapping RollingStockRow -> RollingStock: {}", e))
+        })?;
+
+        if let Some(model) = models.get_mut(&cr.railway_model_id) {
+            model.rolling_stocks.push(rs);
+        }
+    }
+
+    // Preserve caller order
+    let mut result = Vec::with_capacity(ids.len());
+    for id in ids {
+        if let Some(model) = models.remove(&id.to_string()) {
+            result.push(model);
+        }
+    }
+
+    Ok(result)
 }
 
 /// Insert a new railway model into the database.
