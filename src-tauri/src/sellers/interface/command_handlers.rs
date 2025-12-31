@@ -1,0 +1,194 @@
+use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::sellers::application::create_seller::{CreateSellerInput, CreateSellerUseCase};
+use crate::sellers::application::delete_seller::DeleteSellerUseCase;
+use crate::sellers::application::get_seller_by_id::GetSellerByIdUseCase;
+use crate::sellers::application::get_sellers::GetSellersUseCase;
+use crate::sellers::application::update_seller::{UpdateSellerInput, UpdateSellerUseCase};
+use crate::sellers::domain::seller::Seller;
+use crate::sellers::domain::seller_id::SellerId;
+use crate::sellers::domain::seller_type::SellerType;
+use crate::state::AppState;
+use tauri::State;
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_sellers(state: State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    let use_case = GetSellersUseCase::new();
+    let result = use_case
+        .execute(&mut uow)
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    Ok(result)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_seller_by_id(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<Option<Seller>, CommandError> {
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    let sid = SellerId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    let use_case = GetSellerByIdUseCase::new();
+    let result = use_case
+        .execute(&mut uow, &sid)
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    Ok(result)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateSellerPayload {
+    pub name: String,
+    pub r#type: SellerType,
+    pub url: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub website_url: Option<String>,
+    pub street: Option<String>,
+    pub house_number: Option<String>,
+    pub city: Option<String>,
+    pub state_region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country_code: Option<String>,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn create_seller(
+    state: State<'_, AppState>,
+    payload: CreateSellerPayload,
+) -> Result<Seller, CommandError> {
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    let use_case = CreateSellerUseCase::new();
+    let input = CreateSellerInput {
+        name: payload.name,
+        r#type: payload.r#type,
+        url: payload.url,
+        email: payload.email,
+        phone: payload.phone,
+        website_url: payload.website_url,
+        street: payload.street,
+        house_number: payload.house_number,
+        city: payload.city,
+        state_region: payload.state_region,
+        postal_code: payload.postal_code,
+        country_code: payload.country_code,
+    };
+    let result = use_case
+        .execute(&mut uow, input)
+        .await
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    Ok(result)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSellerPayload {
+    pub id: String,
+    pub name: String,
+    pub r#type: SellerType,
+    pub url: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub website_url: Option<String>,
+    pub street: Option<String>,
+    pub house_number: Option<String>,
+    pub city: Option<String>,
+    pub state_region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country_code: Option<String>,
+    pub created_at: Option<String>,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_seller(
+    state: State<'_, AppState>,
+    payload: UpdateSellerPayload,
+) -> Result<Seller, CommandError> {
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    let sid = SellerId::try_from(payload.id.as_str())
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    let use_case = UpdateSellerUseCase::new();
+    let input = UpdateSellerInput {
+        id: sid,
+        name: payload.name,
+        r#type: payload.r#type,
+        url: payload.url,
+        email: payload.email,
+        phone: payload.phone,
+        website_url: payload.website_url,
+        street: payload.street,
+        house_number: payload.house_number,
+        city: payload.city,
+        state_region: payload.state_region,
+        postal_code: payload.postal_code,
+        country_code: payload.country_code,
+        created_at: payload.created_at,
+    };
+    let result = use_case
+        .execute(&mut uow, input)
+        .await
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    Ok(result)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_seller(state: State<'_, AppState>, id: String) -> Result<u64, CommandError> {
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    let sid = SellerId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    let use_case = DeleteSellerUseCase::new();
+    let result = use_case
+        .execute(&mut uow, &sid)
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    Ok(result)
+}
