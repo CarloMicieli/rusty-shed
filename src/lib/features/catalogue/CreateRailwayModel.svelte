@@ -1,36 +1,36 @@
 <script lang="ts">
-  import { Accordion } from '@skeletonlabs/skeleton-svelte';
-  const AccordionItem = Accordion.Item;
-  const AccordionItemTrigger = Accordion.ItemTrigger;
-  const AccordionItemContent = Accordion.ItemContent;
-  const AccordionItemIndicator = Accordion.ItemIndicator;
-  import { commands } from '$lib/bindings';
-  import {
-    createRailwayModelSchema,
-    type CreateRailwayModelInput
-  } from '$lib/schemas/railway-model';
-  import { formLabels } from './constants';
-  import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
-  import FormField from '$lib/components/ui/FormField.svelte';
-  import manufacturersData from '$lib/data/manufacturers.json';
-  import railwayCompaniesData from '$lib/data/railway-companies.json';
-  import availabilityStatusesData from '$lib/data/constants/availabilityStatuses.json';
-  import categoriesData from '$lib/data/constants/categories.json';
-  import controlsData from '$lib/data/constants/controls.json';
-  import dccInterfacesData from '$lib/data/constants/dccInterfaces.json';
-  import electricMultipleUnitTypesData from '$lib/data/constants/electricMultipleUnitTypes.json';
-  import epochsData from '$lib/data/constants/epochs.json';
-  import freightCarTypesData from '$lib/data/constants/freightCarTypes.json';
-  import locomotiveTypesData from '$lib/data/constants/locomotiveTypes.json';
-  import passengerCarTypesData from '$lib/data/constants/passengerCarTypes.json';
-  import powerMethodsData from '$lib/data/constants/powerMethods.json';
-  import rollingStockCategoriesData from '$lib/data/constants/rollingStockCategories.json';
-  import scalesData from '$lib/data/constants/scales.json';
-  import serviceLevelsData from '$lib/data/constants/serviceLevels.json';
-  import { resolveLabel } from '../../../utils/resolveLabel';
-  import type { ConstantItem } from './constants';
-  import RollingStockSection from './components/RollingStockSection.svelte';
-  import type { ZodError } from 'zod';
+	import { Accordion } from '@skeletonlabs/skeleton-svelte';
+	const AccordionItem = Accordion.Item;
+	const AccordionItemTrigger = Accordion.ItemTrigger;
+	const AccordionItemContent = Accordion.ItemContent;
+	const AccordionItemIndicator = Accordion.ItemIndicator;
+	import { safeInvoke, getErrorMessage, isValidationError } from '$lib/services';
+	import {
+		createRailwayModelSchema,
+		type CreateRailwayModelInput
+	} from '$lib/schemas/railway-model';
+	import { formLabels } from './constants';
+	import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
+	import FormField from '$lib/components/ui/FormField.svelte';
+	import manufacturersData from '$lib/data/manufacturers.json';
+	import railwayCompaniesData from '$lib/data/railway-companies.json';
+	import availabilityStatusesData from '$lib/data/constants/availabilityStatuses.json';
+	import categoriesData from '$lib/data/constants/categories.json';
+	import controlsData from '$lib/data/constants/controls.json';
+	import dccInterfacesData from '$lib/data/constants/dccInterfaces.json';
+	import electricMultipleUnitTypesData from '$lib/data/constants/electricMultipleUnitTypes.json';
+	import epochsData from '$lib/data/constants/epochs.json';
+	import freightCarTypesData from '$lib/data/constants/freightCarTypes.json';
+	import locomotiveTypesData from '$lib/data/constants/locomotiveTypes.json';
+	import passengerCarTypesData from '$lib/data/constants/passengerCarTypes.json';
+	import powerMethodsData from '$lib/data/constants/powerMethods.json';
+	import rollingStockCategoriesData from '$lib/data/constants/rollingStockCategories.json';
+	import scalesData from '$lib/data/constants/scales.json';
+	import serviceLevelsData from '$lib/data/constants/serviceLevels.json';
+	import { resolveLabel } from '../../../utils/resolveLabel';
+	import type { ConstantItem } from './constants';
+	import RollingStockSection from './components/RollingStockSection.svelte';
+	import type { ZodError } from 'zod';
 
   type FormState = {
     manufacturer_id: string;
@@ -88,51 +88,55 @@
     return resolveLabel(option as ConstantItem);
   }
 
-  async function handleSubmit() {
-    isSubmitting = true;
-    errors = {};
+	async function handleSubmit() {
+		isSubmitting = true;
+		errors = {};
 
-    try {
-      const payload: CreateRailwayModelInput = {
-        manufacturer_id: formData.manufacturer_id,
-        product_code: formData.product_code,
-        description: formData.description,
-        details: formData.details,
-        power_method: formData.power_method as CreateRailwayModelInput['power_method'],
-        scale: formData.scale as CreateRailwayModelInput['scale'],
-        epoch: formData.epoch,
-        category: formData.category as CreateRailwayModelInput['category'],
-        delivery_date: formData.delivery_date,
-        availability_status:
-          formData.availability_status === ''
-            ? null
-            : (formData.availability_status as CreateRailwayModelInput['availability_status']),
-        rolling_stocks: formData.rolling_stocks.map(normalizeRollingStock)
-      } as CreateRailwayModelInput;
+		try {
+			const payload: CreateRailwayModelInput = {
+				manufacturer_id: formData.manufacturer_id,
+				product_code: formData.product_code,
+				description: formData.description,
+				details: formData.details,
+				power_method: formData.power_method as CreateRailwayModelInput['power_method'],
+				scale: formData.scale as CreateRailwayModelInput['scale'],
+				epoch: formData.epoch,
+				category: formData.category as CreateRailwayModelInput['category'],
+				delivery_date: formData.delivery_date,
+				availability_status:
+					formData.availability_status === ''
+						? null
+						: (formData.availability_status as CreateRailwayModelInput['availability_status']),
+				rolling_stocks: formData.rolling_stocks.map(normalizeRollingStock)
+			} as CreateRailwayModelInput;
 
-      const validated = createRailwayModelSchema.parse(payload);
-      const result = await commands.createRailwayModel(validated);
+			const validated = createRailwayModelSchema.parse(payload);
+			const result = await safeInvoke<string>('create_railway_model', { input: validated });
 
-      if (result.status === 'ok') {
-        navigate(`/models/${result.data}`);
-      } else {
-        errors.general =
-          typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
-      }
-    } catch (err) {
-      if ((err as ZodError).issues) {
-        const zodErr = err as ZodError;
-        zodErr.issues.forEach((issue) => {
-          const path = issue.path.join('.');
-          errors[path] = issue.message;
-        });
-      } else {
-        errors.general = typeof err === 'string' ? err : 'An unexpected error occurred';
-      }
-    } finally {
-      isSubmitting = false;
-    }
-  }
+			if (result.ok) {
+				navigate(`/models/${result.data}`);
+			} else {
+				// Handle validation errors by mapping to form fields
+				if (isValidationError(result.error)) {
+					errors = { ...result.error.fields };
+				}
+				// Always set a general error message
+				errors.general = getErrorMessage(result.error);
+			}
+		} catch (err) {
+			if ((err as ZodError).issues) {
+				const zodErr = err as ZodError;
+				zodErr.issues.forEach((issue) => {
+					const path = issue.path.join('.');
+					errors[path] = issue.message;
+				});
+			} else {
+				errors.general = typeof err === 'string' ? err : 'An unexpected error occurred';
+			}
+		} finally {
+			isSubmitting = false;
+		}
+	}
 </script>
 
 {#snippet selectField(

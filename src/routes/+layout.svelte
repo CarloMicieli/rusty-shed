@@ -1,50 +1,33 @@
 <script lang="ts">
-  import './layout.css';
-  import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
-  import BottomNavigation from '$lib/components/BottomNavigation.svelte';
-  import SearchBar from '$lib/components/SearchBar.svelte';
-  import { Bell, TrainFront } from 'lucide-svelte';
-  import { onMount } from 'svelte';
-  import { setAppVersion } from '$lib/stores/app';
-  import { collectionStore } from '$lib/stores/collectionStore.svelte';
-  import { wishlistService } from '$lib/stores/WishlistService.svelte';
-  import ToastHost from '$lib/components/ToastHost.svelte';
+	import './layout.css';
+	import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
+	import BottomNavigation from '$lib/components/BottomNavigation.svelte';
+	import SearchBar from '$lib/components/SearchBar.svelte';
+	import { Bell, TrainFront } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { setAppVersion } from '$lib/stores/app';
+	import { collectionStore } from '$lib/stores/collectionStore.svelte';
+	import { wishlistService } from '$lib/stores/WishlistService.svelte';
+	import ToastHost from '$lib/components/ToastHost.svelte';
+	import { safeInvoke } from '$lib/services';
 
-  let { children } = $props();
+	let { children } = $props();
 
-  onMount(async () => {
-    // Preload collection for nav badges
-    void collectionStore.fetchCollection();
-    void wishlistService.fetchWishlists();
+	onMount(async () => {
+		// Preload collection for nav badges
+		void collectionStore.fetchCollection();
+		void wishlistService.fetchWishlists();
 
-    // Prefer generated bindings if available (tauri-specta). Fallback to direct invoke.
-    try {
-      const bindings = await import('$lib/bindings');
-      if (bindings && bindings.commands && typeof bindings.commands.getAppVersion === 'function') {
-        const v = await bindings.commands.getAppVersion();
-        setAppVersion(v as string);
-        return;
-      }
-    } catch {
-      // ignore and fallback
-    }
-
-    try {
-      // Dynamically import the Tauri API in a way that avoids Vite's static
-      // import analysis (which fails when running Vite-only dev). Using
-      // `new Function` prevents Vite from seeing the string at build time.
-      const tauriModule = await new Function("return import('@tauri-apps/api/tauri')")().catch(
-        () => null
-      );
-      if (tauriModule && typeof tauriModule.invoke === 'function') {
-        const v = (await tauriModule.invoke('get_app_version')) as string;
-        setAppVersion(v);
-      }
-    } catch {
-      // Not running under Tauri or other error — leave default/fallback version
-      // Optionally set a dev fallback like 'dev'
-    }
-  });
+		// Fetch app version using service layer
+		try {
+			const result = await safeInvoke<string>('get_app_version');
+			if (result.ok) {
+				setAppVersion(result.data);
+			}
+		} catch {
+			// Ignore version fetch errors silently
+		}
+	});
 </script>
 
 <!-- Immediate render to prevent blank screen -->

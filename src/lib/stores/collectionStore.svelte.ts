@@ -4,11 +4,11 @@ import scales from '$lib/data/constants/scales.json';
 import { FIXED_TAG_META, sortAvailableTags, tagIcon } from '$lib/config/tags';
 import { SvelteSet } from 'svelte/reactivity';
 import {
-  commands,
   type CollectionItemLite,
   type CreateCollectionItemInput,
   type UpdateCollectionItemInput
 } from '$lib/bindings';
+import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 export type FilterState = {
   query: string;
@@ -39,10 +39,10 @@ function toastSuccess(id: string) {
   });
 }
 
-function toastError(id: string, retry?: () => void) {
+function toastError(id: string, message?: string, retry?: () => void) {
   toaster.error({
     id,
-    title: m.collection_toast_error(),
+    title: message || m.collection_toast_error(),
     duration: 5000,
     action: retry
       ? {
@@ -93,15 +93,17 @@ class CollectionStore {
     }
 
     try {
-      const response = await commands.listCollectionItems(query ?? null);
-      if (response.status === 'ok') {
-        this.rawItems = response.data ?? [];
-      } else {
-        toastError(randomId());
+      const result = await safeInvoke<CollectionItemLite[]>('list_collection_items', {
+        query: query ?? null
+      });
+
+      if (!result.ok) {
+        console.error('Failed to fetch collection items:', result.error);
+        toastError(randomId(), getErrorMessage(result.error));
+        return;
       }
-    } catch (e) {
-      console.error(e);
-      toastError(randomId());
+
+      this.rawItems = result.data ?? [];
     } finally {
       this.isLoading = false;
     }
@@ -144,8 +146,8 @@ class CollectionStore {
     this.rawItems = [...this.rawItems, tempItem];
     toastLoading(toastId);
 
-    try {
-      const response = await commands.createCollectionItem({
+    const result = await safeInvoke<CollectionItemLite>('create_collection_item', {
+      input: {
         brand: input.brand,
         catalogNumber: input.catalogNumber,
         title: input.title,
@@ -153,25 +155,25 @@ class CollectionStore {
         powerSystem: input.powerSystem,
         description: input.description ?? null,
         tags: input.tags ?? []
-      });
-
-      if (response.status === 'ok') {
-        const created = response.data;
-        this.rawItems = this.rawItems.map((item) => (item.id === tempItem.id ? created : item));
-        toastSuccess(toastId);
-        return created;
       }
+    });
 
-      throw response.error;
-    } catch (e) {
-      console.error(e);
+    if (!result.ok) {
+      console.error('Failed to create collection item:', result.error);
       this.rawItems = snapshot;
-      toastError(toastId, () => {
-        this.rawItems = snapshot;
-        void this.createItem(input);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.rawItems = snapshot;
+            void this.createItem(input);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
       return null;
     }
+
+    this.rawItems = this.rawItems.map((item) => (item.id === tempItem.id ? result.data : item));
+    toastSuccess(toastId);
+    return result.data;
   };
 
   updateItem = async (input: UpdateCollectionItemInput) => {
@@ -194,21 +196,21 @@ class CollectionStore {
     this.rawItems = this.rawItems.map((i) => (i.id === input.id ? optimistic : i));
     toastLoading(toastId);
 
-    try {
-      const response = await commands.updateCollectionItem(input);
-      if (response.status === 'ok') {
-        this.rawItems = this.rawItems.map((i) => (i.id === input.id ? response.data : i));
-        toastSuccess(toastId);
-        return response.data;
-      }
+    const result = await safeInvoke<CollectionItemLite>('update_collection_item', { input });
 
-      throw response.error;
-    } catch (e) {
-      console.error(e);
+    if (!result.ok) {
+      console.error('Failed to update collection item:', result.error);
       this.rawItems = snapshot;
-      toastError(toastId, () => void this.updateItem(input));
+      const retry = isRetryableError(result.error)
+        ? () => void this.updateItem(input)
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
       return null;
     }
+
+    this.rawItems = this.rawItems.map((i) => (i.id === input.id ? result.data : i));
+    toastSuccess(toastId);
+    return result.data;
   };
 
   deleteItem = async (id: string) => {
@@ -218,20 +220,20 @@ class CollectionStore {
     this.rawItems = this.rawItems.filter((i) => i.id !== id);
     toastLoading(toastId);
 
-    try {
-      const response = await commands.deleteCollectionItem(id);
-      if (response.status === 'ok') {
-        toastSuccess(toastId);
-        return true;
-      }
+    const result = await safeInvoke<void>('delete_collection_item', { id });
 
-      throw response.error;
-    } catch (e) {
-      console.error(e);
+    if (!result.ok) {
+      console.error('Failed to delete collection item:', result.error);
       this.rawItems = snapshot;
-      toastError(toastId, () => void this.deleteItem(id));
+      const retry = isRetryableError(result.error)
+        ? () => void this.deleteItem(id)
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
       return false;
     }
+
+    toastSuccess(toastId);
+    return true;
   };
 }
 

@@ -1,54 +1,49 @@
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
 import type { Wishlist, WishlistItem } from '$lib/bindings';
+import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 export type WishlistPreviewLite = {
-  id: string;
-  name: string;
-  notes: string | null;
-  is_default: boolean;
-  count: number;
-  updated_at: string;
-  total_value: Record<string, number>;
+	id: string;
+	name: string;
+	notes: string | null;
+	is_default: boolean;
+	count: number;
+	updated_at: string;
+	total_value: Record<string, number>;
 };
 
 export type WishlistStateSnapshot = {
-  wishlists: WishlistPreviewLite[];
-  itemsByWishlist: Record<string, WishlistItem[]>;
-  activeWishlistId: string | null;
+	wishlists: WishlistPreviewLite[];
+	itemsByWishlist: Record<string, WishlistItem[]>;
+	activeWishlistId: string | null;
 };
 
-// Helper to invoke Tauri commands without relying on generated bindings being up-to-date.
-async function invokeCommand<T>(cmd: string, payload?: Record<string, unknown>): Promise<T> {
-  const { invoke } = await import('@tauri-apps/api/core');
-  return invoke(cmd, payload ?? {}) as Promise<T>;
-}
-
 function randomId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  return Math.random().toString(36).slice(2);
+	if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+	return Math.random().toString(36).slice(2);
 }
 
 function toastLoading(id: string) {
-  toaster.loading({ id, title: m.collection_toast_loading(), duration: 4000 });
+	toaster.loading({ id, title: m.collection_toast_loading(), duration: 4000 });
 }
 
 function toastSuccess(id: string) {
-  toaster.success({ id, title: m.collection_toast_success(), duration: 2000 });
+	toaster.success({ id, title: m.collection_toast_success(), duration: 2000 });
 }
 
-function toastError(id: string, retry?: () => void) {
-  toaster.error({
-    id,
-    title: m.collection_toast_error(),
-    duration: 5000,
-    action: retry
-      ? {
-          label: m.collection_toast_retry(),
-          onClick: retry
-        }
-      : undefined
-  });
+function toastError(id: string, message?: string, retry?: () => void) {
+	toaster.error({
+		id,
+		title: message || m.collection_toast_error(),
+		duration: 5000,
+		action: retry
+			? {
+					label: m.collection_toast_retry(),
+					onClick: retry
+				}
+			: undefined
+	});
 }
 
 class WishlistService {
@@ -114,46 +109,42 @@ class WishlistService {
     this.#activeWishlistId = this.#snapshot.activeWishlistId;
   }
 
-  async fetchWishlists() {
-    this.#isLoading = true;
-    try {
-      const response = await invokeCommand<WishlistPreviewLite[]>('get_wishlists');
-      this.#wishlists = response ?? [];
+	async fetchWishlists() {
+		this.#isLoading = true;
+		try {
+			const result = await safeInvoke<WishlistPreviewLite[]>('get_wishlists');
 
-      const defaultList = this.#wishlists.find((w) => w.is_default);
-      if (!this.#activeWishlistId && defaultList) {
-        this.#activeWishlistId = defaultList.id;
-      }
-    } catch (e) {
-      console.error(e);
-      toastError(randomId());
-    } finally {
-      this.#isLoading = false;
-    }
-  }
+			if (!result.ok) {
+				console.error('Failed to fetch wishlists:', result.error);
+				toastError(randomId(), getErrorMessage(result.error));
+				return;
+			}
 
-  async loadWishlistItems(wishlistId: string) {
-    try {
-      const response = await invokeCommand<
-        Wishlist | { status: 'ok'; data: Wishlist | null } | null
-      >('get_wishlist_by_id', { id: wishlistId });
+			this.#wishlists = result.data ?? [];
 
-      let wishlist: Wishlist | null = null;
-      if (response && typeof response === 'object' && 'status' in response) {
-        wishlist = response.status === 'ok' ? response.data : null;
-      } else {
-        wishlist = response as Wishlist | null;
-      }
+			const defaultList = this.#wishlists.find((w) => w.is_default);
+			if (!this.#activeWishlistId && defaultList) {
+				this.#activeWishlistId = defaultList.id;
+			}
+		} finally {
+			this.#isLoading = false;
+		}
+	}
 
-      this.#itemsByWishlist = {
-        ...this.#itemsByWishlist,
-        [wishlistId]: wishlist?.items ?? []
-      };
-    } catch (e) {
-      console.error(e);
-      toastError(randomId());
-    }
-  }
+	async loadWishlistItems(wishlistId: string) {
+		const result = await safeInvoke<Wishlist | null>('get_wishlist_by_id', { id: wishlistId });
+
+		if (!result.ok) {
+			console.error('Failed to load wishlist items:', result.error);
+			toastError(randomId(), getErrorMessage(result.error));
+			return;
+		}
+
+		this.#itemsByWishlist = {
+			...this.#itemsByWishlist,
+			[wishlistId]: result.data?.items ?? []
+		};
+	}
 
   async selectWishlist(id: string) {
     this.#activeWishlistId = id;
@@ -184,24 +175,27 @@ class WishlistService {
     if (isDefault) this.#activeWishlistId = tempId;
     toastLoading(toastId);
 
-    try {
-      const created = await invokeCommand<WishlistPreviewLite>('create_wishlist', {
-        input: { name, notes: null, is_default: isDefault }
-      });
+    const result = await safeInvoke<WishlistPreviewLite>('create_wishlist', {
+      input: { name, notes: null, is_default: isDefault }
+    });
 
-      this.#wishlists = this.#wishlists.map((w) => (w.id === tempId ? created : w));
-      if (created.is_default) this.#activeWishlistId = created.id;
-      toastSuccess(toastId);
-      return created;
-    } catch (e) {
-      console.error(e);
+    if (!result.ok) {
+      console.error('Failed to create wishlist:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.createWishlist(name, isDefault);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.createWishlist(name, isDefault);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
       return null;
     }
+
+    this.#wishlists = this.#wishlists.map((w) => (w.id === tempId ? result.data : w));
+    if (result.data.is_default) this.#activeWishlistId = result.data.id;
+    toastSuccess(toastId);
+    return result.data;
   }
 
   async renameWishlist(id: string, name: string) {
@@ -210,17 +204,22 @@ class WishlistService {
     this.#wishlists = this.#wishlists.map((w) => (w.id === id ? { ...w, name } : w));
     toastLoading(toastId);
 
-    try {
-      await invokeCommand('rename_wishlist', { input: { id, name } });
-      toastSuccess(toastId);
-    } catch (e) {
-      console.error(e);
+    const result = await safeInvoke('rename_wishlist', { input: { id, name } });
+
+    if (!result.ok) {
+      console.error('Failed to rename wishlist:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.renameWishlist(id, name);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.renameWishlist(id, name);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
+      return;
     }
+
+    toastSuccess(toastId);
   }
 
   async deleteWishlist(id: string) {
@@ -234,17 +233,22 @@ class WishlistService {
     if (this.#activeWishlistId === id) this.#activeWishlistId = null;
     toastLoading(toastId);
 
-    try {
-      await invokeCommand('delete_wishlist', { id });
-      toastSuccess(toastId);
-    } catch (e) {
-      console.error(e);
+    const result = await safeInvoke('delete_wishlist', { id });
+
+    if (!result.ok) {
+      console.error('Failed to delete wishlist:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.deleteWishlist(id);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.deleteWishlist(id);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
+      return;
     }
+
+    toastSuccess(toastId);
   }
 
   async setDefaultWishlist(id: string) {
@@ -254,17 +258,22 @@ class WishlistService {
     this.#activeWishlistId = id;
     toastLoading(toastId);
 
-    try {
-      await invokeCommand('set_default_wishlist', { id });
-      toastSuccess(toastId);
-    } catch (e) {
-      console.error(e);
+    const result = await safeInvoke('set_default_wishlist', { id });
+
+    if (!result.ok) {
+      console.error('Failed to set default wishlist:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.setDefaultWishlist(id);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.setDefaultWishlist(id);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
+      return;
     }
+
+    toastSuccess(toastId);
   }
 
   async addItem(wishlistId: string, modelId: string) {
@@ -289,27 +298,30 @@ class WishlistService {
     );
     toastLoading(toastId);
 
-    try {
-      const created = await invokeCommand<WishlistItem>('add_to_wishlist', {
-        input: { wishlist_id: wishlistId, railway_model_id: modelId }
-      });
+    const result = await safeInvoke<WishlistItem>('add_to_wishlist', {
+      input: { wishlist_id: wishlistId, railway_model_id: modelId }
+    });
 
-      const current = this.#itemsByWishlist[wishlistId] ?? [];
-      this.#itemsByWishlist = {
-        ...this.#itemsByWishlist,
-        [wishlistId]: current.map((item) => (item.id === optimistic.id ? created : item))
-      };
-      toastSuccess(toastId);
-      return created;
-    } catch (e) {
-      console.error(e);
+    if (!result.ok) {
+      console.error('Failed to add item to wishlist:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.addItem(wishlistId, modelId);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.addItem(wishlistId, modelId);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
       return null;
     }
+
+    const current = this.#itemsByWishlist[wishlistId] ?? [];
+    this.#itemsByWishlist = {
+      ...this.#itemsByWishlist,
+      [wishlistId]: current.map((item) => (item.id === optimistic.id ? result.data : item))
+    };
+    toastSuccess(toastId);
+    return result.data;
   }
 
   async removeItem(wishlistId: string, itemId: string) {
@@ -326,17 +338,22 @@ class WishlistService {
     );
     toastLoading(toastId);
 
-    try {
-      await invokeCommand('remove_from_wishlist', { item_id: itemId });
-      toastSuccess(toastId);
-    } catch (e) {
-      console.error(e);
+    const result = await safeInvoke('remove_from_wishlist', { item_id: itemId });
+
+    if (!result.ok) {
+      console.error('Failed to remove item from wishlist:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.removeItem(wishlistId, itemId);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.removeItem(wishlistId, itemId);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
+      return;
     }
+
+    toastSuccess(toastId);
   }
 
   async moveItemToList(itemId: string, fromWishlistId: string, toWishlistId: string) {
@@ -361,21 +378,25 @@ class WishlistService {
     });
     toastLoading(toastId);
 
-    try {
-      await invokeCommand('move_item_to_list', {
-        input: { item_id: itemId, destination_wishlist_id: toWishlistId }
-      });
-      toastSuccess(toastId);
-    } catch (e) {
-      console.error(e);
+    const result = await safeInvoke('move_item_to_list', {
+      input: { item_id: itemId, destination_wishlist_id: toWishlistId }
+    });
+
+    if (!result.ok) {
+      console.error('Failed to move item to list:', result.error);
       this.revertSnapshot();
-      toastError(toastId, () => {
-        this.revertSnapshot();
-        void this.moveItemToList(itemId, fromWishlistId, toWishlistId);
-      });
+      const retry = isRetryableError(result.error)
+        ? () => {
+            this.revertSnapshot();
+            void this.moveItemToList(itemId, fromWishlistId, toWishlistId);
+          }
+        : undefined;
+      toastError(toastId, getErrorMessage(result.error), retry);
+      return;
     }
+
+    toastSuccess(toastId);
   }
 }
 
 export const wishlistService = new WishlistService();
-export { invokeCommand };

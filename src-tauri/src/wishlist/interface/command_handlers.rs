@@ -25,23 +25,16 @@ pub async fn get_wishlist_by_id(
     id: String,
 ) -> Result<Option<Wishlist>, CommandError> {
     // Start a unit of work (transaction)
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let use_case = GetWishlistUseCase;
 
-    let wid =
-        WishlistId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+    let wid = WishlistId::try_from(id.as_str())
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
-    let result = use_case
-        .execute(&mut uow, &wid)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let result = use_case.execute(&mut uow, &wid).await?;
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(result)
 }
@@ -51,20 +44,13 @@ pub async fn get_wishlist_by_id(
 pub async fn get_wishlists(
     state: State<'_, AppState>,
 ) -> Result<Vec<WishlistPreview>, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let use_case = GetWishlistsUseCase;
 
-    let result = use_case
-        .execute(&mut uow)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let result = use_case.execute(&mut uow).await?;
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(result)
 }
@@ -83,9 +69,7 @@ pub async fn create_wishlist(
     state: State<'_, AppState>,
     input: CreateWishlistInput,
 ) -> Result<WishlistPreview, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let wishlist = Wishlist {
         id: WishlistId::default(),
@@ -97,23 +81,16 @@ pub async fn create_wishlist(
 
     {
         let mut repo = uow.wishlist_repo();
-        repo.create_wishlist(&wishlist)
-            .await
-            .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        repo.create_wishlist(&wishlist).await?;
     }
 
     // Return previews to keep UI in sync
     let mut repo = uow.wishlist_repo();
-    let previews = repo
-        .list_wishlist_previews()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let previews = repo.list_wishlist_previews().await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     let preview = previews
         .into_iter()
@@ -144,23 +121,17 @@ pub async fn rename_wishlist(
     state: State<'_, AppState>,
     input: RenameWishlistInput,
 ) -> Result<(), CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let wid = WishlistId::try_from(input.id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
     let mut repo = uow.wishlist_repo();
-    repo.rename_wishlist(&wid, &input.name)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    repo.rename_wishlist(&wid, &input.name).await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(())
 }
@@ -168,23 +139,17 @@ pub async fn rename_wishlist(
 #[tauri::command]
 #[specta]
 pub async fn delete_wishlist(state: State<'_, AppState>, id: String) -> Result<(), CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
-    let wid =
-        WishlistId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+    let wid = WishlistId::try_from(id.as_str())
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
     let mut repo = uow.wishlist_repo();
-    repo.delete_wishlist(&wid)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    repo.delete_wishlist(&wid).await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(())
 }
@@ -195,23 +160,17 @@ pub async fn set_default_wishlist(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<(), CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
-    let wid =
-        WishlistId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+    let wid = WishlistId::try_from(id.as_str())
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
     let mut repo = uow.wishlist_repo();
-    repo.set_default_wishlist(&wid)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    repo.set_default_wishlist(&wid).await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(())
 }
@@ -235,19 +194,19 @@ pub async fn add_to_wishlist(
     state: State<'_, AppState>,
     input: AddToWishlistInput,
 ) -> Result<WishlistItem, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let wishlist_id = WishlistId::try_from(input.wishlist_id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("wishlist_id", e.to_string()))?;
     let railway_model_id = RailwayModelId::try_from(input.railway_model_id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("railway_model_id", e.to_string()))?;
 
     let desired_price = match (input.desired_price_amount, input.desired_price_currency) {
         (Some(amount), Some(code)) => {
-            let currency = crate::core::domain::currency::Currency::from_code(&code)
-                .map_err(|e| CommandError::Unknown(e.to_string()))?;
+            let currency =
+                crate::core::domain::currency::Currency::from_code(&code).map_err(|e| {
+                    CommandError::validation_field("desired_price_currency", e.to_string())
+                })?;
             Some(crate::core::domain::MonetaryAmount::new(
                 amount as u64,
                 currency,
@@ -258,7 +217,7 @@ pub async fn add_to_wishlist(
 
     let added_date = if let Some(s) = input.added_date {
         NaiveDate::parse_from_str(&s, "%Y-%m-%d")
-            .map_err(|e| CommandError::Unknown(format!("invalid date: {e}")))?
+            .map_err(|e| CommandError::validation_field("added_date", e.to_string()))?
     } else {
         chrono::Utc::now().date_naive()
     };
@@ -276,15 +235,11 @@ pub async fn add_to_wishlist(
     };
 
     let mut repo = uow.wishlist_repo();
-    repo.add_item(&wishlist_id, &item)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    repo.add_item(&wishlist_id, &item).await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(item)
 }
@@ -295,23 +250,17 @@ pub async fn remove_from_wishlist(
     state: State<'_, AppState>,
     item_id: String,
 ) -> Result<(), CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let iid = WishlistItemId::try_from(item_id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("item_id", e.to_string()))?;
 
     let mut repo = uow.wishlist_repo();
-    repo.remove_item(&iid)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    repo.remove_item(&iid).await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(())
 }
@@ -329,25 +278,19 @@ pub async fn move_item_to_list(
     state: State<'_, AppState>,
     input: MoveWishlistItemInput,
 ) -> Result<(), CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let item_id = WishlistItemId::try_from(input.item_id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("item_id", e.to_string()))?;
     let dest_id = WishlistId::try_from(input.destination_wishlist_id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("destination_wishlist_id", e.to_string()))?;
 
     let mut repo = uow.wishlist_repo();
-    repo.move_item(&item_id, &dest_id)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    repo.move_item(&item_id, &dest_id).await?;
 
     drop(repo);
 
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    uow.commit().await?;
 
     Ok(())
 }

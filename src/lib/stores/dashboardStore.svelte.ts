@@ -1,4 +1,5 @@
 import { toaster } from '$lib/toaster';
+import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 // Types remain the same as they are static definitions
 export type DashboardTotals = {
@@ -30,45 +31,17 @@ export type DashboardSummary = {
   depot_items: DashboardDepotEntry[];
 };
 
-/**
- * Internal helper for Tauri/Backend invocation
- */
-async function invokeDashboardSummary(): Promise<DashboardSummary> {
-  try {
-    const bindings = await import('$lib/bindings');
-    if (bindings?.commands?.dashboardSummary) {
-      const result = await bindings.commands.dashboardSummary();
-      if (result.status === 'ok') {
-        // Convert camelCase bindings to snake_case store types
-        const data = result.data;
-        return {
-          totals: {
-            collection_items: data.totals.collectionItems,
-            wishlists: data.totals.wishlists,
-            maintenance_due: data.totals.maintenanceDue,
-            total_value: data.totals.totalValue
-              ? {
-                  amount: Number(data.totals.totalValue.amount),
-                  currency: data.totals.totalValue.currency
-                }
-              : null
-          },
-          recent_items: data.recentItems,
-          depot_items: data.depotItems
-        };
-      }
-      throw new Error('Failed to fetch dashboard summary');
-    }
-  } catch {
-    /* fallthrough */
-  }
-
-  const { invoke } = await import('@tauri-apps/api/core');
-  return invoke<DashboardSummary>('dashboard_summary');
+function toastError(message?: string) {
+  toaster.error({
+    id: 'dashboard-error',
+    title: message || 'Dashboard failed to load',
+    description: 'Please check your connection or try again.',
+    duration: 4000
+  });
 }
 
 /**
- * Svelte 5 Rune-based Dashboard Store
+ * Loads dashboard data and handles state transitions
  */
 class DashboardStore {
   // 1. Reactive State
@@ -94,30 +67,28 @@ class DashboardStore {
   /**
    * Loads dashboard data and handles state transitions
    */
-  async load() {
-    // Prevent double-loading if already in progress
-    if (this.#isLoading) return;
+	async load() {
+		// Prevent double-loading if already in progress
+		if (this.#isLoading) return;
 
-    this.#isLoading = true;
-    this.#error = null;
+		this.#isLoading = true;
+		this.#error = null;
 
-    try {
-      const summary = await invokeDashboardSummary();
-      this.#data = summary;
-    } catch (e) {
-      console.error('Dashboard Store Error:', e);
-      this.#error = 'dashboard_load_failed';
+		const result = await safeInvoke<DashboardSummary>('dashboard_summary');
 
-      toaster.error({
-        id: 'dashboard-load',
-        title: 'Dashboard failed to load',
-        description: 'Please check your connection or try again.',
-        duration: 4000
-      });
-    } finally {
-      this.#isLoading = false;
-    }
-  }
+		if (result.ok) {
+			// Data is already in snake_case from bindings
+			this.#data = result.data;
+		} else {
+			console.error('Dashboard Store Error:', result.error);
+			this.#error = 'dashboard_load_failed';
+
+			const errorMsg = getErrorMessage(result.error);
+			toastError(errorMsg);
+		}
+
+		this.#isLoading = false;
+	}
 
   /**
    * Public alias for load to be used in UI retry buttons
