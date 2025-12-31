@@ -1,8 +1,6 @@
-<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import { getLocale, localizeUrl, setLocale } from '$lib/paraglide/runtime.js';
+  import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
   import {
     fetchSettings,
@@ -61,16 +59,6 @@
     await setLocale(nextLocale, { reload: false });
     setActiveLocale(nextLocale);
 
-    if (typeof window !== 'undefined') {
-      const localizedUrl = localizeUrl(window.location.href, { locale: nextLocale });
-      const target = new URL(localizedUrl);
-      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      const targetPath = `${target.pathname}${target.search}${target.hash}`;
-
-      if (currentPath !== targetPath) {
-        await goto(targetPath, { replaceState: true, keepFocus: true, noScroll: true });
-      }
-    }
   }
 </script>
 
