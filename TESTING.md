@@ -66,12 +66,11 @@ const result = await collectionStore.fetchCollection();
 All stores and components use `safeInvoke<T>(command, args)` which returns `SafeResult<T>`:
 
 ```typescript
-type SafeResult<T> = 
-  | { ok: true; data: T } 
-  | { ok: false; error: NormalizedError };
+type SafeResult<T> = { ok: true; data: T } | { ok: false; error: NormalizedError };
 ```
 
 **Benefits:**
+
 - Consistent error shape across all Tauri commands
 - Easy to test success/failure paths
 - Type-safe responses
@@ -104,7 +103,7 @@ class CollectionStore {
   filters = $state({ query: '', scale: null });
 
   filteredItems = $derived.by(() => {
-    return this.rawItems.filter(item => {
+    return this.rawItems.filter((item) => {
       // filtering logic
     });
   });
@@ -145,9 +144,7 @@ createItem = async (input: Input) => {
   }
 
   // Replace temp with real item
-  this.rawItems = this.rawItems.map(i => 
-    i.id === tempItem.id ? result.data : i
-  );
+  this.rawItems = this.rawItems.map((i) => (i.id === tempItem.id ? result.data : i));
   return result.data;
 };
 ```
@@ -246,11 +243,13 @@ it('should update UI after async operation', async () => {
 ```
 
 **Prefer:**
+
 - `await user.click(...)` over `fireEvent.click(...)`
 - `waitFor(() => expect(...))` for async DOM updates
 - Direct assertions for synchronous state changes in stores
 
 **Avoid:**
+
 - Manual `flushSync()` calls (use `waitFor` instead)
 - `fireEvent` (use `userEvent` for better browser simulation)
 
@@ -288,7 +287,7 @@ import { page } from '$app/stores';
 
 page.set({
   url: new URL('http://localhost/collection?scale=H0'),
-  params: { id: '123' },
+  params: { id: '123' }
   // ... other fields
 });
 ```
@@ -300,9 +299,7 @@ import { toaster } from '$lib/toaster';
 
 await collectionStore.createItem(input);
 
-expect(toaster.success).toHaveBeenCalledWith(
-  expect.objectContaining({ title: 'Success' })
-);
+expect(toaster.success).toHaveBeenCalledWith(expect.objectContaining({ title: 'Success' }));
 ```
 
 ## Best Practices

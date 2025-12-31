@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { Box as BoxIcon, Search, TrainFront, TramFront, X } from 'lucide-svelte';
-	import * as m from '$lib/paraglide/messages.js';
-	import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
-	import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
-	import TrainCard from '$lib/features/depot/components/TrainCard.svelte';
-	import CarCard from '$lib/features/depot/components/CarCard.svelte';
-	import type { Car, Locomotive, TrainSet } from '$lib/features/depot/types';
-	import { safeInvoke, getErrorMessage } from '$lib/services';
-	import type { Collection, RailwayModel, RollingStock } from '$lib/bindings';
-	import { debounce } from '$lib/utils/debounce';
+  import { onMount } from 'svelte';
+  import { Box as BoxIcon, Search, TrainFront, TramFront, X } from 'lucide-svelte';
+  import * as m from '$lib/paraglide/messages.js';
+  import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
+  import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
+  import TrainCard from '$lib/features/depot/components/TrainCard.svelte';
+  import CarCard from '$lib/features/depot/components/CarCard.svelte';
+  import type { Car, Locomotive, TrainSet } from '$lib/features/depot/types';
+  import { safeInvoke, getErrorMessage } from '$lib/services';
+  import type { Collection, RailwayModel, RollingStock } from '$lib/bindings';
+  import { debounce } from '$lib/utils/debounce';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
@@ -172,40 +172,40 @@
     depotCars = buckets.cars;
   }
 
-	async function loadDepot() {
-		loading = true;
-		error = null;
-		depotLocomotives = [];
-		depotTrains = [];
-		depotCars = [];
+  async function loadDepot() {
+    loading = true;
+    error = null;
+    depotLocomotives = [];
+    depotTrains = [];
+    depotCars = [];
 
-		try {
-			const collectionResult = await safeInvoke<Collection>('get_depot');
-			if (!collectionResult.ok) {
-				throw new Error(getErrorMessage(collectionResult.error));
-			}
+    try {
+      const collectionResult = await safeInvoke<Collection>('get_depot');
+      if (!collectionResult.ok) {
+        throw new Error(getErrorMessage(collectionResult.error));
+      }
 
-			const collection = collectionResult.data;
-			const modelIds = Array.from(new Set(collection.items.map((item) => item.railway_model_id)));
+      const collection = collectionResult.data;
+      const modelIds = Array.from(new Set(collection.items.map((item) => item.railway_model_id)));
 
-			if (modelIds.length === 0) {
-				return;
-			}
+      if (modelIds.length === 0) {
+        return;
+      }
 
-			const modelsResult = await safeInvoke<RailwayModel[]>('get_railway_models_by_ids', {
-				ids: modelIds
-			});
-			if (!modelsResult.ok) {
-				throw new Error(getErrorMessage(modelsResult.error));
-			}
+      const modelsResult = await safeInvoke<RailwayModel[]>('get_railway_models_by_ids', {
+        ids: modelIds
+      });
+      if (!modelsResult.ok) {
+        throw new Error(getErrorMessage(modelsResult.error));
+      }
 
-			buildDepotView(collection, modelsResult.data);
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'Unknown error loading depot';
-		} finally {
-			loading = false;
-		}
-	}
+      buildDepotView(collection, modelsResult.data);
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Unknown error loading depot';
+    } finally {
+      loading = false;
+    }
+  }
 
   onMount(loadDepot);
 </script>

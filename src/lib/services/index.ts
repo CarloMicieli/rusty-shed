@@ -8,9 +8,9 @@
 export { safeInvoke, invokeOrThrow } from './tauri';
 export type { NormalizedError, SafeResult, ErrorKind } from './errors';
 export {
-	getErrorMessage,
-	getToastMessage,
-	isValidationError,
-	isNotFoundError,
-	isRetryableError
+  getErrorMessage,
+  getToastMessage,
+  isValidationError,
+  isNotFoundError,
+  isRetryableError
 } from './errors';

@@ -1,24 +1,43 @@
 import { vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
+type TauriInternals = {
+  invoke: ReturnType<typeof vi.fn>;
+  convertFileSrc: ReturnType<typeof vi.fn>;
+  transformCallback: ReturnType<typeof vi.fn>;
+  metadata: {
+    windows: unknown[];
+    webviews: unknown[];
+    currentWindow: { label: string };
+    currentWebview: { label: string };
+  };
+};
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __TAURI_INTERNALS__: TauriInternals;
+}
+
+const globalWithTauri = globalThis as typeof globalThis & { __TAURI_INTERNALS__: TauriInternals };
+
 // Mock Tauri globals
-globalThis.__TAURI_INTERNALS__ = {
-	invoke: vi.fn(),
-	convertFileSrc: vi.fn((filePath: string) => `asset://localhost/${filePath}`),
-	transformCallback: vi.fn(),
-	metadata: {
-		windows: [],
-		webviews: [],
-		currentWindow: { label: 'main' },
-		currentWebview: { label: 'main' }
-	}
+globalWithTauri.__TAURI_INTERNALS__ = {
+  invoke: vi.fn(),
+  convertFileSrc: vi.fn((filePath: string) => `asset://localhost/${filePath}`),
+  transformCallback: vi.fn(),
+  metadata: {
+    windows: [],
+    webviews: [],
+    currentWindow: { label: 'main' },
+    currentWebview: { label: 'main' }
+  }
 };
 
 // Reset all mocks between tests
 beforeEach(() => {
-	vi.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {
-	vi.restoreAllMocks();
+  vi.restoreAllMocks();
 });

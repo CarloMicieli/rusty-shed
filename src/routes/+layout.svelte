@@ -1,33 +1,33 @@
 <script lang="ts">
-	import './layout.css';
-	import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
-	import BottomNavigation from '$lib/components/BottomNavigation.svelte';
-	import SearchBar from '$lib/components/SearchBar.svelte';
-	import { Bell, TrainFront } from 'lucide-svelte';
-	import { onMount } from 'svelte';
-	import { setAppVersion } from '$lib/stores/app';
-	import { collectionStore } from '$lib/stores/collectionStore.svelte';
-	import { wishlistService } from '$lib/stores/WishlistService.svelte';
-	import ToastHost from '$lib/components/ToastHost.svelte';
-	import { safeInvoke } from '$lib/services';
+  import './layout.css';
+  import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
+  import BottomNavigation from '$lib/components/BottomNavigation.svelte';
+  import SearchBar from '$lib/components/SearchBar.svelte';
+  import { Bell, TrainFront } from 'lucide-svelte';
+  import { onMount } from 'svelte';
+  import { setAppVersion } from '$lib/stores/app';
+  import { collectionStore } from '$lib/stores/collectionStore.svelte';
+  import { wishlistService } from '$lib/stores/WishlistService.svelte';
+  import ToastHost from '$lib/components/ToastHost.svelte';
+  import { safeInvoke } from '$lib/services';
 
-	let { children } = $props();
+  let { children } = $props();
 
-	onMount(async () => {
-		// Preload collection for nav badges
-		void collectionStore.fetchCollection();
-		void wishlistService.fetchWishlists();
+  onMount(async () => {
+    // Preload collection for nav badges
+    void collectionStore.fetchCollection();
+    void wishlistService.fetchWishlists();
 
-		// Fetch app version using service layer
-		try {
-			const result = await safeInvoke<string>('get_app_version');
-			if (result.ok) {
-				setAppVersion(result.data);
-			}
-		} catch {
-			// Ignore version fetch errors silently
-		}
-	});
+    // Fetch app version using service layer
+    try {
+      const result = await safeInvoke<string>('get_app_version');
+      if (result.ok) {
+        setAppVersion(result.data);
+      }
+    } catch {
+      // Ignore version fetch errors silently
+    }
+  });
 </script>
 
 <!-- Immediate render to prevent blank screen -->

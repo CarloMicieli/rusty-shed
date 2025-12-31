@@ -201,9 +201,7 @@ class CollectionStore {
     if (!result.ok) {
       console.error('Failed to update collection item:', result.error);
       this.rawItems = snapshot;
-      const retry = isRetryableError(result.error)
-        ? () => void this.updateItem(input)
-        : undefined;
+      const retry = isRetryableError(result.error) ? () => void this.updateItem(input) : undefined;
       toastError(toastId, getErrorMessage(result.error), retry);
       return null;
     }
@@ -225,9 +223,7 @@ class CollectionStore {
     if (!result.ok) {
       console.error('Failed to delete collection item:', result.error);
       this.rawItems = snapshot;
-      const retry = isRetryableError(result.error)
-        ? () => void this.deleteItem(id)
-        : undefined;
+      const retry = isRetryableError(result.error) ? () => void this.deleteItem(id) : undefined;
       toastError(toastId, getErrorMessage(result.error), retry);
       return false;
     }

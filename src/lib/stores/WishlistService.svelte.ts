@@ -4,46 +4,46 @@ import type { Wishlist, WishlistItem } from '$lib/bindings';
 import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 export type WishlistPreviewLite = {
-	id: string;
-	name: string;
-	notes: string | null;
-	is_default: boolean;
-	count: number;
-	updated_at: string;
-	total_value: Record<string, number>;
+  id: string;
+  name: string;
+  notes: string | null;
+  is_default: boolean;
+  count: number;
+  updated_at: string;
+  total_value: Record<string, number>;
 };
 
 export type WishlistStateSnapshot = {
-	wishlists: WishlistPreviewLite[];
-	itemsByWishlist: Record<string, WishlistItem[]>;
-	activeWishlistId: string | null;
+  wishlists: WishlistPreviewLite[];
+  itemsByWishlist: Record<string, WishlistItem[]>;
+  activeWishlistId: string | null;
 };
 
 function randomId() {
-	if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-	return Math.random().toString(36).slice(2);
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Math.random().toString(36).slice(2);
 }
 
 function toastLoading(id: string) {
-	toaster.loading({ id, title: m.collection_toast_loading(), duration: 4000 });
+  toaster.loading({ id, title: m.collection_toast_loading(), duration: 4000 });
 }
 
 function toastSuccess(id: string) {
-	toaster.success({ id, title: m.collection_toast_success(), duration: 2000 });
+  toaster.success({ id, title: m.collection_toast_success(), duration: 2000 });
 }
 
 function toastError(id: string, message?: string, retry?: () => void) {
-	toaster.error({
-		id,
-		title: message || m.collection_toast_error(),
-		duration: 5000,
-		action: retry
-			? {
-					label: m.collection_toast_retry(),
-					onClick: retry
-				}
-			: undefined
-	});
+  toaster.error({
+    id,
+    title: message || m.collection_toast_error(),
+    duration: 5000,
+    action: retry
+      ? {
+          label: m.collection_toast_retry(),
+          onClick: retry
+        }
+      : undefined
+  });
 }
 
 class WishlistService {
@@ -109,42 +109,42 @@ class WishlistService {
     this.#activeWishlistId = this.#snapshot.activeWishlistId;
   }
 
-	async fetchWishlists() {
-		this.#isLoading = true;
-		try {
-			const result = await safeInvoke<WishlistPreviewLite[]>('get_wishlists');
+  async fetchWishlists() {
+    this.#isLoading = true;
+    try {
+      const result = await safeInvoke<WishlistPreviewLite[]>('get_wishlists');
 
-			if (!result.ok) {
-				console.error('Failed to fetch wishlists:', result.error);
-				toastError(randomId(), getErrorMessage(result.error));
-				return;
-			}
+      if (!result.ok) {
+        console.error('Failed to fetch wishlists:', result.error);
+        toastError(randomId(), getErrorMessage(result.error));
+        return;
+      }
 
-			this.#wishlists = result.data ?? [];
+      this.#wishlists = result.data ?? [];
 
-			const defaultList = this.#wishlists.find((w) => w.is_default);
-			if (!this.#activeWishlistId && defaultList) {
-				this.#activeWishlistId = defaultList.id;
-			}
-		} finally {
-			this.#isLoading = false;
-		}
-	}
+      const defaultList = this.#wishlists.find((w) => w.is_default);
+      if (!this.#activeWishlistId && defaultList) {
+        this.#activeWishlistId = defaultList.id;
+      }
+    } finally {
+      this.#isLoading = false;
+    }
+  }
 
-	async loadWishlistItems(wishlistId: string) {
-		const result = await safeInvoke<Wishlist | null>('get_wishlist_by_id', { id: wishlistId });
+  async loadWishlistItems(wishlistId: string) {
+    const result = await safeInvoke<Wishlist | null>('get_wishlist_by_id', { id: wishlistId });
 
-		if (!result.ok) {
-			console.error('Failed to load wishlist items:', result.error);
-			toastError(randomId(), getErrorMessage(result.error));
-			return;
-		}
+    if (!result.ok) {
+      console.error('Failed to load wishlist items:', result.error);
+      toastError(randomId(), getErrorMessage(result.error));
+      return;
+    }
 
-		this.#itemsByWishlist = {
-			...this.#itemsByWishlist,
-			[wishlistId]: result.data?.items ?? []
-		};
-	}
+    this.#itemsByWishlist = {
+      ...this.#itemsByWishlist,
+      [wishlistId]: result.data?.items ?? []
+    };
+  }
 
   async selectWishlist(id: string) {
     this.#activeWishlistId = id;

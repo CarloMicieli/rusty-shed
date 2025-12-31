@@ -1,5 +1,5 @@
 import { toaster } from '$lib/toaster';
-import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
+import { safeInvoke, getErrorMessage } from '$lib/services';
 
 // Types remain the same as they are static definitions
 export type DashboardTotals = {
@@ -67,28 +67,28 @@ class DashboardStore {
   /**
    * Loads dashboard data and handles state transitions
    */
-	async load() {
-		// Prevent double-loading if already in progress
-		if (this.#isLoading) return;
+  async load() {
+    // Prevent double-loading if already in progress
+    if (this.#isLoading) return;
 
-		this.#isLoading = true;
-		this.#error = null;
+    this.#isLoading = true;
+    this.#error = null;
 
-		const result = await safeInvoke<DashboardSummary>('dashboard_summary');
+    const result = await safeInvoke<DashboardSummary>('dashboard_summary');
 
-		if (result.ok) {
-			// Data is already in snake_case from bindings
-			this.#data = result.data;
-		} else {
-			console.error('Dashboard Store Error:', result.error);
-			this.#error = 'dashboard_load_failed';
+    if (result.ok) {
+      // Data is already in snake_case from bindings
+      this.#data = result.data;
+    } else {
+      console.error('Dashboard Store Error:', result.error);
+      this.#error = 'dashboard_load_failed';
 
-			const errorMsg = getErrorMessage(result.error);
-			toastError(errorMsg);
-		}
+      const errorMsg = getErrorMessage(result.error);
+      toastError(errorMsg);
+    }
 
-		this.#isLoading = false;
-	}
+    this.#isLoading = false;
+  }
 
   /**
    * Public alias for load to be used in UI retry buttons
