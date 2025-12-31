@@ -17,10 +17,10 @@
 >
   <div class="flex h-16 items-center justify-around">
     <a
-      href={resolve('/')}
+      href={resolve('/my-dashboard')}
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={pathname === '/'}
-      class:text-surface-400={pathname !== '/'}
+      class:text-accent-500={pathname === '/my-dashboard'}
+      class:text-surface-400={pathname !== '/my-dashboard'}
     >
       <LayoutDashboard size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_dashboard()}</span>
