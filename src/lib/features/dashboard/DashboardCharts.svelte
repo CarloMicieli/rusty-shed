@@ -101,7 +101,7 @@
         innerRadius={0.62}
         padAngle={0.015}
         props={{
-          arc: { stroke: 'transparent', track: { fill: '#e5e7eb' } },
+          arc: { stroke: 'transparent', track: { fill: 'rgb(63 63 70)' } },
           svg: { class: 'w-full h-full', style: 'background: transparent' },
           tooltip: {
             header: {
@@ -146,18 +146,30 @@
         y={(d: MonthlySpendingPoint) => d.amount}
         yDomain={[0, monthlyYMax * 1.1]}
         bandPadding={0.25}
+        padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
         props={{
           svg: { class: 'h-full w-full', style: 'background: transparent' },
           bars: { fill: '#3b82f6' },
-          grid: { y: true, x: false },
-          xAxis: { format: (value: number) => formatMonthIndex(Number(value)) },
-          yAxis: { format: (value: number) => formatCurrency(Number(value)) },
+          grid: {
+            y: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' },
+            x: false
+          },
+          xAxis: {
+            format: formatMonthIndex,
+            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
+            label: m.dashboard_chart_spending_label()
+          },
+          yAxis: {
+            format: (value: number) => formatCurrency(value),
+            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
+            label: currencyCode
+          },
           tooltip: {
             header: {
-              format: (value: number) => formatMonthIndex(Number(value))
+              format: (value: unknown) => formatMonthIndex(Number(value))
             },
             item: {
-              format: (value: number) => formatCurrency(Number(value)),
+              format: (value: unknown) => formatCurrency(Number(value)),
               valueAlign: 'right'
             }
           }
@@ -182,22 +194,34 @@
         r={(d: HistoryPoint) => d.value}
         rDomain={[0, historyValueMax]}
         rRange={[4, 16]}
+        padding={{ top: 10, right: 10, bottom: 30, left: 40 }}
         props={{
           svg: { class: 'h-full w-full', style: 'background: transparent' },
-          grid: { x: true, y: true },
+          grid: {
+            x: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' },
+            y: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' }
+          },
           points: {
             fill: '#10b981',
             fillOpacity: 0.32,
             stroke: '#10b981'
           },
-          xAxis: { format: (value: number) => formatMonthNumber(Number(value)) },
-          yAxis: { format: (value: number) => `${value}` },
+          xAxis: {
+            format: formatMonthNumber,
+            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
+            label: m.dashboard_chart_punchcard_label()
+          },
+          yAxis: {
+            format: (value: number) => String(value),
+            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
+            label: String(currentYear)
+          },
           tooltip: {
             header: {
-              format: (value: number) => `${formatMonthNumber(Number(value))}`
+              format: (value: unknown) => formatMonthNumber(Number(value))
             },
             item: {
-              format: (value: number) => formatCurrency(Number(value)),
+              format: (value: unknown) => String(value),
               valueAlign: 'right'
             }
           }
