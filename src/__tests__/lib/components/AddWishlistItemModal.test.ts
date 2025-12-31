@@ -41,15 +41,55 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   collection_toast_retry: () => 'Retry'
 }));
 
+let activeService: ReturnType<
+  typeof import('$lib/stores/WishlistService.svelte').createWishlistService
+>;
+
+vi.mock('$lib/stores/WishlistService.svelte', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/stores/WishlistService.svelte')>();
+  return {
+    ...actual,
+    get wishlistService() {
+      return activeService;
+    }
+  };
+});
+
 // Now import after mocks
 import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
-import type { WishlistPreviewLite } from '$lib/stores/WishlistService.svelte';
+import {
+  createWishlistService,
+  type WishlistPreviewLite
+} from '$lib/stores/WishlistService.svelte';
 import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
 
 const mockInvoke = vi.mocked(invoke);
 type InvokeArgType = InvokeArgs | undefined;
 type InvokeOptionType = InvokeOptions | undefined;
 type Handler = (args?: InvokeArgType) => unknown;
+
+activeService = createWishlistService();
+
+const wishlistFixtures: WishlistPreviewLite[] = [
+  {
+    id: 'wishlist-1',
+    name: 'My Wishlist',
+    notes: null,
+    is_default: true,
+    count: 0,
+    updated_at: '2024-01-01T00:00:00Z',
+    total_value: {}
+  },
+  {
+    id: 'wishlist-2',
+    name: 'Future Purchases',
+    notes: null,
+    is_default: false,
+    count: 0,
+    updated_at: '2024-01-02T00:00:00Z',
+    total_value: {}
+  }
+];
 
 // Helper for Tauri mock
 const tauriMock = {
@@ -113,18 +153,14 @@ mockInvoke.mockImplementation(
   }
 );
 
-// TODO: Component tests need WishlistService to be properly mocked or have a reset() method
-// The service uses private fields with getters, so we can't directly set state in tests
-// For now, these tests are skipped. To fix:
-// 1. Add a reset() or setState() method to WishlistService for testing
-// 2. Or mock the entire WishlistService module
-describe.skip('AddWishlistItemModal', () => {
-  beforeEach(() => {
-    tauriMock.reset();
+describe('AddWishlistItemModal', () => {
+  beforeEach(async () => {
+    activeService = createWishlistService();
     vi.clearAllMocks();
+    tauriMock.reset();
 
-    // TODO: Reset wishlistService state - currently not possible due to private fields
-    // wishlistService needs a reset() method for testing
+    tauriMock.mockCommand('get_wishlists', wishlistFixtures);
+    await activeService.fetchWishlists();
   });
 
   it('should render modal with title and form fields', () => {
@@ -136,14 +172,16 @@ describe.skip('AddWishlistItemModal', () => {
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
   });
 
-  it('should display available wishlists in dropdown', () => {
+  it('should display available wishlists in dropdown', async () => {
     render(AddWishlistItemModal);
 
-    const select = screen.getByLabelText('Select Wishlist') as HTMLSelectElement;
-    const options = Array.from(select.options).map((opt) => opt.textContent?.trim());
+    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
 
-    expect(options).toContain('My Wishlist (default)');
-    expect(options).toContain('Future Purchases');
+    await waitFor(() => {
+      const options = Array.from(select.options).map((opt) => opt.textContent?.trim());
+      expect(options).toContain('My Wishlist (default)');
+      expect(options).toContain('Future Purchases');
+    });
   });
 
   it('should show validation error when model ID is missing', async () => {
@@ -160,31 +198,32 @@ describe.skip('AddWishlistItemModal', () => {
 
   it('should add item to existing wishlist', async () => {
     const user = userEvent.setup();
-    const onSaved = vi.fn();
-    const onClose = vi.fn();
 
     const mockAddedItem = {
       id: 'item-1',
-      wishlist_id: 'wishlist-1',
       railway_model_id: '79894',
+      priority: 'NORMAL',
+      status: 'WANTED',
+      added_date: '2024-01-01',
+      removed_date: null,
       notes: null,
-      purchase_status: 'not_purchased',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
+      desired_price: null,
+      purchased_price: null
     };
 
-    tauriMock.mockCommand('add_wishlist_item', mockAddedItem);
+    tauriMock.mockCommand('add_to_wishlist', mockAddedItem);
 
-    render(AddWishlistItemModal as any, {
-      props: {},
-      on: {
+    const onSaved = vi.fn();
+    const onClose = vi.fn();
+    render(AddWishlistItemModal, {
+      events: {
         saved: onSaved,
         close: onClose
       }
-    } as any);
+    });
 
     // Select wishlist
-    const select = screen.getByLabelText('Select Wishlist') as HTMLSelectElement;
+    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
     await user.selectOptions(select, 'wishlist-1');
 
     // Enter model ID
@@ -226,7 +265,7 @@ describe.skip('AddWishlistItemModal', () => {
     };
 
     tauriMock.mockCommand('create_wishlist', mockCreatedWishlist);
-    tauriMock.mockCommand('add_wishlist_item', mockAddedItem);
+    tauriMock.mockCommand('add_to_wishlist', mockAddedItem);
 
     render(AddWishlistItemModal);
 
@@ -245,8 +284,8 @@ describe.skip('AddWishlistItemModal', () => {
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('create_wishlist', expect.any(Object));
       expect(mockInvoke).toHaveBeenCalledWith(
-        'add_wishlist_item',
-        expect.objectContaining({ railway_model_id: '79894' })
+        'add_to_wishlist',
+        expect.objectContaining({ input: expect.objectContaining({ railway_model_id: '79894' }) })
       );
     });
   });
@@ -277,11 +316,11 @@ describe.skip('AddWishlistItemModal', () => {
     const user = userEvent.setup();
     const error = { NotFound: 'Railway model not found' };
 
-    tauriMock.mockCommandError('add_wishlist_item', error);
+    tauriMock.mockCommandError('add_to_wishlist', error);
 
     render(AddWishlistItemModal);
 
-    const select = screen.getByLabelText('Select Wishlist') as HTMLSelectElement;
+    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
     await user.selectOptions(select, 'wishlist-1');
 
     const modelIdInput = screen.getByLabelText('Model ID');
@@ -299,19 +338,21 @@ describe.skip('AddWishlistItemModal', () => {
     const user = userEvent.setup();
 
     // Mock with delay to observe loading state
-    tauriMock.mockCommandWithDelay('add_wishlist_item', 100, {
+    tauriMock.mockCommandWithDelay('add_to_wishlist', 100, {
       id: 'item-1',
-      wishlist_id: 'wishlist-1',
       railway_model_id: '79894',
+      priority: 'NORMAL',
+      status: 'WANTED',
+      added_date: '2024-01-01',
+      removed_date: null,
       notes: null,
-      purchase_status: 'not_purchased',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
+      desired_price: null,
+      purchased_price: null
     });
 
     render(AddWishlistItemModal);
 
-    const select = screen.getByLabelText('Select Wishlist') as HTMLSelectElement;
+    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
     await user.selectOptions(select, 'wishlist-1');
 
     const modelIdInput = screen.getByLabelText('Model ID');
@@ -329,10 +370,9 @@ describe.skip('AddWishlistItemModal', () => {
   it('should close modal and reset form on close button click', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-
-    render(AddWishlistItemModal as any, {
-      on: { close: onClose }
-    } as any);
+    render(AddWishlistItemModal, {
+      events: { close: onClose }
+    });
 
     const modelIdInput = screen.getByLabelText('Model ID');
     await user.type(modelIdInput, 'test-value');

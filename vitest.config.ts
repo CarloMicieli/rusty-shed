@@ -9,6 +9,12 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
     include: ['src/**/*.{test,spec}.{js,ts}'],
+    server: {
+      deps: {
+        // Ensure we use the browser build of Svelte in tests so lifecycle APIs are present
+        inline: ['svelte']
+      }
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -26,6 +32,7 @@ export default defineConfig({
     alias: {
       $lib: resolve(__dirname, './src/lib'),
       $app: resolve(__dirname, './src/__tests__/mocks/sveltekit')
-    }
+    },
+    conditions: ['browser', 'module', 'import', 'default']
   }
 });

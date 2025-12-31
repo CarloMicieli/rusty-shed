@@ -46,7 +46,7 @@ function toastError(id: string, message?: string, retry?: () => void) {
   });
 }
 
-class WishlistService {
+export class WishlistService {
   #wishlists = $state<WishlistPreviewLite[]>([]);
   #itemsByWishlist = $state<Record<string, WishlistItem[]>>({});
   #activeWishlistId = $state<string | null>(null);
@@ -95,9 +95,17 @@ class WishlistService {
   }
 
   #captureSnapshot() {
+    const clonedWishlists = this.#wishlists.map((w) => ({ ...w }));
+    const clonedItems = Object.fromEntries(
+      Object.entries(this.#itemsByWishlist).map(([key, items]) => [
+        key,
+        items.map((item) => ({ ...item }))
+      ])
+    );
+
     this.#snapshot = {
-      wishlists: structuredClone(this.#wishlists),
-      itemsByWishlist: structuredClone(this.#itemsByWishlist),
+      wishlists: clonedWishlists,
+      itemsByWishlist: clonedItems,
       activeWishlistId: this.#activeWishlistId
     };
   }
@@ -164,6 +172,7 @@ class WishlistService {
       notes: null,
       is_default: isDefault,
       count: 0,
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity
       updated_at: new Date().toISOString(),
       total_value: {}
     };
@@ -284,6 +293,7 @@ class WishlistService {
       railway_model_id: modelId,
       priority: 'NORMAL',
       status: 'WANTED',
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity
       added_date: new Date().toISOString().slice(0, 10),
       removed_date: null,
       notes: null,
@@ -399,4 +409,6 @@ class WishlistService {
   }
 }
 
-export const wishlistService = new WishlistService();
+export const createWishlistService = () => new WishlistService();
+
+export const wishlistService = createWishlistService();
