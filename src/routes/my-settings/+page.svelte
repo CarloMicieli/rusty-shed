@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import { getLocale, localizeUrl, setLocale } from '$lib/paraglide/runtime.js';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
   import {
@@ -64,10 +63,9 @@
       const target = new URL(localizedUrl);
       const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
       const targetPath = `${target.pathname}${target.search}${target.hash}`;
-      const resolvedTarget = resolve(targetPath as any);
 
       if (currentPath !== targetPath) {
-        await goto(resolvedTarget as any, { replaceState: true, keepFocus: true, noScroll: true });
+        await goto(targetPath, { replaceState: true, keepFocus: true, noScroll: true });
       }
     }
   }
@@ -88,7 +86,7 @@
     </div>
     <a
       class="text-accent-500 text-sm font-semibold hover:underline"
-      href={resolve('/my-dashboard')}
+      href="/my-dashboard"
     >
       {m.settings_back_to_dashboard()}
     </a>
