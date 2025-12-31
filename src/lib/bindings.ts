@@ -349,6 +349,22 @@ async getImagePath(id: string, category: string) : Promise<Result<string, Comman
 },
 async getAppVersion() : Promise<string> {
     return await TAURI_INVOKE("get_app_version");
+},
+async getSettings() : Promise<Result<SettingsDto, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_settings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateSettings(payload: UpdateSettingsPayload) : Promise<Result<SettingsDto, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_settings", { payload }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -1181,6 +1197,7 @@ export type ManufacturerId = string
  * Serialized as SCREAMING_SNAKE_CASE; parsing is case-insensitive.
  */
 export type ManufacturerStatus = "ACTIVE" | "MERGED" | "OUT_OF_BUSINESS"
+export type MeasureUnit = "Millimeters" | "Inches" | "Meters" | "Miles" | "Kilometers"
 /**
  * A monetary amount in the smallest currency unit together with its currency.
  * 
@@ -1979,6 +1996,7 @@ export type SellerType = "SHOP" | "PRIVATE" | "MARKETPLACE" | "DISTRIBUTOR"
  * the corresponding string representation.
  */
 export type ServiceLevel = "FIRST" | "SECOND" | "THIRD" | "FIRST_SECOND" | "SECOND_THIRD" | "FIRST_SECOND_THIRD"
+export type SettingsDto = { id: bigint; currency: Currency; lengthUnit: MeasureUnit; favoriteScale: Scale; favoritePowerMethod: PowerMethod; languageCode: string }
 /**
  * Details for an item that was sold.
  * 
@@ -2065,6 +2083,7 @@ export type TechnicalSpecificationsInput = { minimum_radius: number | null; coup
  */
 export type UpdateCollectionItemInput = { id: string; brand: string; catalogNumber: string; title: string; scale: string; powerSystem: string; description: string | null; tags: string[] }
 export type UpdateSellerPayload = { id: string; name: string; type: SellerType; url: string | null; email: string | null; phone: string | null; websiteUrl: string | null; street: string | null; houseNumber: string | null; city: string | null; stateRegion: string | null; postalCode: string | null; countryCode: string | null; createdAt: string | null }
+export type UpdateSettingsPayload = { currency: Currency; lengthUnit: MeasureUnit; favoriteScale: Scale; favoritePowerMethod: PowerMethod; languageCode: string }
 /**
  * Domain model representing a user's wishlist.
  * 

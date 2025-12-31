@@ -104,13 +104,7 @@
     width: 100%;
     height: 100%;
     border-radius: 0.5rem;
-    background: repeating-linear-gradient(
-      45deg,
-      #262626,
-      #262626 10px,
-      #1f1f1f 10px,
-      #1f1f1f 20px
-    );
+    background: repeating-linear-gradient(45deg, #262626, #262626 10px, #1f1f1f 10px, #1f1f1f 20px);
     color: #c7c7c7;
     font-size: 0.875rem;
     text-align: center;

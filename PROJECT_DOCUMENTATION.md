@@ -1,9 +1,11 @@
 # Rusty Shed — Project Documentation
 
 ## Executive Summary
+
 Rusty Shed is a Tauri 2 desktop application with a SvelteKit (Vite) frontend for managing model railway collections, wishlists, maintenance schedules, sellers, and catalog data. The Rust backend exposes IPC commands over the Tauri bridge and persists domain data in a SQLite database located in the app’s data directory. The UI redirects to the dashboard route at startup ([src/routes/+page.svelte](src/routes/+page.svelte#L1-L6)).
 
 ## Functional Requirements
+
 Functional requirements are derived from the Tauri command surface exposed to the frontend (see registrations in [src-tauri/src/lib.rs](src-tauri/src/lib.rs#L29-L121)). Commands return domain DTOs or errors mapped to `CommandError` and often follow a Unit of Work + Use Case pattern.
 
 - **App lifecycle**

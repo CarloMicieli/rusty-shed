@@ -20,13 +20,15 @@
     try {
       const initResult = await safeInvoke<void>('init_database');
       if (!initResult.ok) {
-        const message = initResult.error?.message ?? String(initResult.error ?? 'Database initialization failed');
+        const message =
+          initResult.error?.message ?? String(initResult.error ?? 'Database initialization failed');
         throw new Error(message);
       }
 
       const showResult = await safeInvoke<void>('show_main_window');
       if (!showResult.ok) {
-        const message = showResult.error?.message ?? String(showResult.error ?? 'Failed to show main window');
+        const message =
+          showResult.error?.message ?? String(showResult.error ?? 'Failed to show main window');
         throw new Error(message);
       }
     } catch (err) {
@@ -50,6 +52,7 @@
     }
   });
 </script>
+
 {#if loading}
   <div
     class="bg-background flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans text-surface-50 selection:bg-primary-500/30"
@@ -58,7 +61,9 @@
   >
     <div class="flex flex-col items-center gap-4">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 animate-spin rounded-full border-2 border-accent-500 border-t-transparent"></div>
+        <div
+          class="border-accent-500 h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
+        ></div>
         <div class="flex items-center gap-2">
           <TrainFront class="text-accent-500" size={28} />
           <span class="text-lg font-semibold tracking-wide">Rusty Shed</span>

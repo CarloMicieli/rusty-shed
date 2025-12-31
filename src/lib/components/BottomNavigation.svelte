@@ -57,10 +57,10 @@
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_depot()}</span>
     </a>
     <a
-      href="/settings"
+      href={resolve('/my-settings')}
       class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-      class:text-accent-500={pathname === '/settings'}
-      class:text-surface-400={pathname !== '/settings'}
+      class:text-accent-500={pathname === '/my-settings'}
+      class:text-surface-400={pathname !== '/my-settings'}
     >
       <Settings size={20} />
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_settings()}</span>

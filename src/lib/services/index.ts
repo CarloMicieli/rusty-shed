@@ -14,3 +14,13 @@ export {
   isNotFoundError,
   isRetryableError
 } from './errors';
+export { fetchSettings, saveSettings } from './settings';
+export type {
+  SettingsDto,
+  UpdateSettingsPayload,
+  Currency,
+  MeasureUnit,
+  PowerMethod,
+  Scale,
+  LanguageCode
+} from './settings';

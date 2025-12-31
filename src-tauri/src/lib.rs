@@ -4,6 +4,7 @@ pub mod collection;
 pub mod core;
 pub mod dashboard;
 pub mod maintenance;
+pub mod settings;
 pub mod sellers;
 pub mod state;
 pub mod wishlist;
@@ -17,6 +18,7 @@ use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::dashboard::dashboard_summary;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
+use crate::settings::{ensure_default_settings, get_settings, update_settings};
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
@@ -97,6 +99,10 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
         .await
         .map_err(|e| CommandError::Unknown(e.to_string()))?;
 
+    ensure_default_settings(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+
     state.set_initialized();
     Ok(())
 }
@@ -150,7 +156,9 @@ pub fn run() {
         sellers_command_handlers::delete_seller,
         dashboard_summary,
         get_image_path,
-        get_app_version
+        get_app_version,
+        get_settings,
+        update_settings
     ]);
 
     let ts_config = Typescript::default().bigint(BigIntExportBehavior::BigInt);

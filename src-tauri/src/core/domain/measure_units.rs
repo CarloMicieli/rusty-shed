@@ -5,6 +5,7 @@ use rust_decimal_macros::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Formatter;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct MeasureUnitConverter {
@@ -43,7 +44,7 @@ impl fmt::Display for MeasureUnitConverter {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, specta::Type)]
 pub enum MeasureUnit {
     Millimeters,
     Inches,
@@ -132,6 +133,34 @@ impl MeasureUnit {
 impl fmt::Display for MeasureUnit {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.symbol())
+    }
+}
+
+impl MeasureUnit {
+    /// Return a stable code representation for persistence and IPC.
+    pub fn code(&self) -> &'static str {
+        match self {
+            MeasureUnit::Millimeters => "MILLIMETERS",
+            MeasureUnit::Inches => "INCHES",
+            MeasureUnit::Meters => "METERS",
+            MeasureUnit::Miles => "MILES",
+            MeasureUnit::Kilometers => "KILOMETERS",
+        }
+    }
+}
+
+impl FromStr for MeasureUnit {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_uppercase().as_str() {
+            "MILLIMETERS" | "MM" | "METRIC" => Ok(MeasureUnit::Millimeters),
+            "INCHES" | "IN" | "IMPERIAL" => Ok(MeasureUnit::Inches),
+            "METERS" | "METER" | "M" => Ok(MeasureUnit::Meters),
+            "MILES" | "MI" => Ok(MeasureUnit::Miles),
+            "KILOMETERS" | "KILOMETRES" | "KM" => Ok(MeasureUnit::Kilometers),
+            other => Err(format!("unsupported measure unit '{other}'")),
+        }
     }
 }
 

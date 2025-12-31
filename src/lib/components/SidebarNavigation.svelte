@@ -71,9 +71,9 @@
 
   <div class="mt-auto space-y-2 border-t border-surface-700/50 pt-4">
     <a
-      href="/settings"
+      href={resolve('/my-settings')}
       class="hover:variant-soft-primary variant-ghost-surface btn w-full justify-start gap-3"
-      class:variant-filled-primary={(page.url.pathname as string) === '/settings'}
+      class:variant-filled-primary={(page.url.pathname as string) === '/my-settings'}
     >
       <Settings size={20} />
       <span class="font-medium tracking-wide">{m.app_settings()}</span>
