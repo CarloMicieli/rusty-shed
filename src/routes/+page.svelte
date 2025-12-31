@@ -11,6 +11,7 @@
   import RecentItemCard from '$lib/components/RecentItemCard.svelte';
   import DepotView from '$lib/components/DepotView.svelte';
   import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
+  import DashboardCharts from '$lib/features/dashboard/DashboardCharts.svelte';
 
   // Stores
   import { dashboardStore } from '$lib/stores/dashboardStore.svelte';
@@ -137,6 +138,10 @@
             <StatsCard {stat} />
           {/each}
         {/if}
+      </div>
+
+      <div class="mt-6">
+        <DashboardCharts />
       </div>
     </section>
 

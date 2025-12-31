@@ -30,6 +30,9 @@
     "@tauri-apps/plugin-http": "^2",
     "@tauri-apps/plugin-log": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",
+    "d3-array": "^3.2.4",
+    "d3-scale": "^4.0.2",
+    "layerchart": "^1.0.12",
     "zod": "^4.2.1"
   },
   "devDependencies": {
