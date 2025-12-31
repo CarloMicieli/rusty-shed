@@ -21,10 +21,10 @@
   <ul class="space-y-2">
     <li>
       <a
-        href={resolve('/')}
+        href={resolve('/my-dashboard')}
         class="hover:variant-soft-primary btn w-full justify-start gap-3"
-        class:variant-filled-primary={(page.url.pathname as string) === '/'}
-        class:variant-ghost-surface={(page.url.pathname as string) !== '/'}
+        class:variant-filled-primary={(page.url.pathname as string) === '/my-dashboard'}
+        class:variant-ghost-surface={(page.url.pathname as string) !== '/my-dashboard'}
       >
         <LayoutDashboard size={20} />
         <span class="font-medium tracking-wide">{m.app_dashboard()}</span>
