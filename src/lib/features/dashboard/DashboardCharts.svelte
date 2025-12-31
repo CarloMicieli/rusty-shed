@@ -70,15 +70,17 @@
     Math.max(...monthlySpending.map((d: MonthlySpendingPoint) => d.amount), 1)
   );
   const historyValueMax = $derived(Math.max(...historyData.map((d: HistoryPoint) => d.value), 1));
+  const chartCardClass =
+    'variant-filled-surface card border border-surface-700/60 p-4 transition-colors duration-200 backdrop-blur-sm';
 </script>
 
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-  <div class="rounded-xl border border-surface-200/60 bg-white p-4 shadow-sm">
-    <div class="mb-3">
-      <p class="text-xs font-semibold tracking-wide text-surface-400 uppercase">
+  <div class={chartCardClass}>
+    <div class="mb-3 space-y-1">
+      <p class="text-xs font-semibold tracking-wide uppercase opacity-80">
         {m.dashboard_chart_budget_label()}
       </p>
-      <p class="text-lg font-bold text-surface-900">{m.dashboard_chart_budget_title()}</p>
+      <p class="text-lg font-bold">{m.dashboard_chart_budget_title()}</p>
     </div>
 
     <div class="relative h-64">
@@ -100,7 +102,7 @@
         padAngle={0.015}
         props={{
           arc: { stroke: 'transparent', track: { fill: '#e5e7eb' } },
-          svg: { class: 'w-full h-full' },
+          svg: { class: 'w-full h-full', style: 'background: transparent' },
           tooltip: {
             header: {
               format: (value: number) => `${Math.round(Number(value ?? 0) * 100)}%`
@@ -123,18 +125,18 @@
       </PieChart>
 
       <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span class="text-3xl font-extrabold text-surface-900">{budgetPercent}%</span>
-        <span class="text-xs text-surface-500">{m.dashboard_chart_budget_remaining()}</span>
+        <span class="text-3xl font-extrabold">{budgetPercent}%</span>
+        <span class="text-xs opacity-80">{m.dashboard_chart_budget_remaining()}</span>
       </div>
     </div>
   </div>
 
-  <div class="rounded-xl border border-surface-200/60 bg-white p-4 shadow-sm">
-    <div class="mb-3">
-      <p class="text-xs font-semibold tracking-wide text-surface-400 uppercase">
+  <div class={chartCardClass}>
+    <div class="mb-3 space-y-1">
+      <p class="text-xs font-semibold tracking-wide uppercase opacity-80">
         {m.dashboard_chart_spending_label()}
       </p>
-      <p class="text-lg font-bold text-surface-900">{m.dashboard_chart_spending_title()}</p>
+      <p class="text-lg font-bold">{m.dashboard_chart_spending_title()}</p>
     </div>
 
     <div class="h-64">
@@ -145,6 +147,7 @@
         yDomain={[0, monthlyYMax * 1.1]}
         bandPadding={0.25}
         props={{
+          svg: { class: 'h-full w-full', style: 'background: transparent' },
           bars: { fill: '#3b82f6' },
           grid: { y: true, x: false },
           xAxis: { format: (value: number) => formatMonthIndex(Number(value)) },
@@ -163,12 +166,12 @@
     </div>
   </div>
 
-  <div class="rounded-xl border border-surface-200/60 bg-white p-4 shadow-sm">
-    <div class="mb-3">
-      <p class="text-xs font-semibold tracking-wide text-surface-400 uppercase">
+  <div class={chartCardClass}>
+    <div class="mb-3 space-y-1">
+      <p class="text-xs font-semibold tracking-wide uppercase opacity-80">
         {m.dashboard_chart_punchcard_label()}
       </p>
-      <p class="text-lg font-bold text-surface-900">{m.dashboard_chart_punchcard_title()}</p>
+      <p class="text-lg font-bold">{m.dashboard_chart_punchcard_title()}</p>
     </div>
 
     <div class="h-64">
@@ -180,6 +183,7 @@
         rDomain={[0, historyValueMax]}
         rRange={[4, 16]}
         props={{
+          svg: { class: 'h-full w-full', style: 'background: transparent' },
           grid: { x: true, y: true },
           points: {
             fill: '#10b981',

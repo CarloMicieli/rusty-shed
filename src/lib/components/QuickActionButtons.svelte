@@ -11,12 +11,12 @@
   let { actions = [] } = $props<{ actions: QuickAction[] }>();
 </script>
 
-<div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+<div class="grid grid-cols-1 gap-3">
   {#each actions as action (action.id)}
     {@const Icon = action.icon}
     <button
       type="button"
-      class="variant-ghost-surface hover:variant-filled-primary group btn justify-start border border-surface-700/50 p-4 transition-all duration-200"
+      class="variant-ghost-surface hover:variant-filled-primary group btn w-full justify-start border border-surface-700/50 p-4 transition-all duration-200"
       onclick={() => action.onClick?.()}
     >
       <Icon
