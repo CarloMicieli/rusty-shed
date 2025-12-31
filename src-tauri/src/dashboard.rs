@@ -61,20 +61,20 @@ pub async fn dashboard_summary(
 ) -> Result<DashboardSummary, CommandError> {
     let pool = state.db_pool();
 
-    // Collection snapshot
+    // Collection snapshot - always return a collection (either existing or default empty)
     let mut collecting_uow = SqliteUnitOfWork::new(&pool)
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     let collection = GetCollectionUseCase::new()
         .execute(&mut collecting_uow)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     collecting_uow
         .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    // Wishlists snapshot
+    // Wishlists snapshot - can be empty array
     let mut wishlist_uow = SqliteUnitOfWork::new(&pool)
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
@@ -94,7 +94,7 @@ pub async fn dashboard_summary(
     let maintenance_cards = GetMaintenanceDashboardUseCase::new()
         .execute(&mut maintenance_uow)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     maintenance_uow
         .commit()
         .await

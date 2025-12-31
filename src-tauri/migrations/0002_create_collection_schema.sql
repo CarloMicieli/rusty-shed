@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS purchase_infos (
   preorder_total_currency    TEXT,
   expected_date              TEXT,
   FOREIGN KEY (collection_item_id) REFERENCES collection_items(id) ON DELETE CASCADE,
-  FOREIGN KEY (seller_id)          REFERENCES sellers(seller_id)   ON DELETE SET NULL,
+  FOREIGN KEY (seller_id)          REFERENCES sellers(seller_id)   ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_purchase_infos_collection_item ON purchase_infos(collection_item_id);

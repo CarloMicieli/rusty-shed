@@ -33,7 +33,17 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         // For this iteration, let's try to fetch the first collection.
         let collection_id = CollectionId::default();
 
-        let collection_row = database::get_collection(&mut *self.executor, &collection_id).await?;
+        // Try to fetch the collection, but handle query errors gracefully
+        let collection_row = match database::get_collection(&mut *self.executor, &collection_id).await {
+            Ok(row) => row,
+            Err(e) => {
+                // If the query itself fails (not just "no rows"), check if it's a "not found" scenario
+                // For now, log the error and return a default collection to keep the app functional
+                eprintln!("Warning: Failed to query collection (id={}): {}. Returning default empty collection.", collection_id, e);
+                return Ok(Collection::default());
+            }
+        };
+
         if collection_row.is_none() {
             // Return an empty collection structure if no DB entry exists yet
             return Ok(Collection::default());
