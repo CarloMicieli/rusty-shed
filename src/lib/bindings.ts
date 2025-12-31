@@ -8,6 +8,22 @@ export const commands = {
 async isDbInitialized() : Promise<boolean> {
     return await TAURI_INVOKE("is_db_initialized");
 },
+async initDatabase() : Promise<Result<null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("init_database") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async showMainWindow() : Promise<Result<null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("show_main_window") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 /**
  * Retrieve a manufacturer by its identifier.
  * 

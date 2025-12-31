@@ -16,7 +16,7 @@
         "title": "rusty-shed",
         "width": 1024,
         "height": 768,
-        "visible": true
+        "visible": false
       }
     ],
     "withGlobalTauri": true,

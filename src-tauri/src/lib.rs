@@ -20,7 +20,7 @@ use crate::maintenance::interface::command_handlers as maintenance_command_handl
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
-use log::{LevelFilter, error};
+use log::LevelFilter;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
 use std::path::{Component, Path};
@@ -86,12 +86,41 @@ fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+#[tauri::command]
+#[specta::specta]
+async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
+    Database::run_migrations(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    Database::run_initial_seed(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+
+    state.set_initialized();
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
+    window
+        .show()
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+    window
+        .set_focus()
+        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let is_dev_build = cfg!(debug_assertions);
 
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         is_db_initialized,
+        init_database,
+        show_main_window,
         catalog_command_handlers::get_manufacturer_by_id,
         catalog_command_handlers::get_railway_model_by_id,
         catalog_command_handlers::get_railway_models_by_ids,
@@ -180,30 +209,6 @@ pub fn run() {
 
             // Initial management of state
             app.manage(AppState::new(pool.clone(), models_dir));
-
-            // Show the main window IMMEDIATELY to avoid blank screen
-            // The UI can handle the "not initialized" state gracefully
-            if let Some(window) = app.get_webview_window("main")
-                && let Err(e) = window.show()
-            {
-                error!("Failed to show main window: {e}");
-            }
-
-            let handle = app.handle().clone();
-
-            // Run migrations in an async task (non-blocking)
-            tauri::async_runtime::spawn(async move {
-                let state_ref = handle.state::<AppState>();
-                let _ = Database::run_migrations(&state_ref.db_pool())
-                    .await
-                    .map_err(|e| anyhow::anyhow!(e));
-
-                let _ = Database::run_initial_seed(&state_ref.db_pool())
-                    .await
-                    .map_err(|e| anyhow::anyhow!(e));
-
-                state_ref.set_initialized();
-            });
 
             Ok(())
         })
