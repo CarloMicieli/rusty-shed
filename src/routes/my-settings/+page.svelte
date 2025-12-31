@@ -1,3 +1,4 @@
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -13,6 +14,7 @@
   import { toaster } from '$lib/toaster';
   import { getToastMessage } from '$lib/services/errors';
   import * as m from '$lib/paraglide/messages.js';
+  import { setActiveLocale } from '$lib/stores/locale';
 
   let settings: SettingsDto | null = $state(null);
   let loading = $state(true);
@@ -57,6 +59,7 @@
     if (nextLocale === current) return;
 
     await setLocale(nextLocale, { reload: false });
+    setActiveLocale(nextLocale);
 
     if (typeof window !== 'undefined') {
       const localizedUrl = localizeUrl(window.location.href, { locale: nextLocale });

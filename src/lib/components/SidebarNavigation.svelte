@@ -7,11 +7,13 @@
   import { appVersion } from '$lib/stores/app';
   import { collectionStore } from '$lib/stores/collectionStore.svelte';
   import { wishlistService } from '$lib/stores/WishlistService.svelte';
+  import { localeStore } from '$lib/stores/locale';
 
   const totalCount = $derived(collectionStore.totalCount);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
+  const locale = $derived($localeStore);
 </script>
-
+{#key locale}
 <nav class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex">
   <div class="mb-8 flex items-center gap-3 px-4">
     <TrainFront class="text-accent-500" size={32} />
@@ -84,3 +86,4 @@
     </div>
   </div>
 </nav>
+{/key}

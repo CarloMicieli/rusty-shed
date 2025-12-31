@@ -6,15 +6,18 @@
   import * as m from '$lib/paraglide/messages.js';
   import { collectionStore } from '$lib/stores/collectionStore.svelte';
   import { wishlistService } from '$lib/stores/WishlistService.svelte';
+  import { localeStore } from '$lib/stores/locale';
 
   const totalCount = $derived(collectionStore.totalCount);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const pathname = $derived(page.url.pathname as string);
+  const locale = $derived($localeStore);
 </script>
 
 <div
   class="pb-safe-area fixed right-0 bottom-0 left-0 z-50 border-t border-surface-700/50 bg-surface-900 lg:hidden"
 >
+  {#key locale}
   <div class="flex h-16 items-center justify-around">
     <a
       href={resolve('/my-dashboard')}
@@ -66,4 +69,5 @@
       <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_settings()}</span>
     </a>
   </div>
+  {/key}
 </div>
