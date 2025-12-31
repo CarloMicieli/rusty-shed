@@ -14,6 +14,7 @@ pub mod test_utils;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::core::infrastructure::db::Database;
+use crate::core::infrastructure::error::CommandError;
 use crate::dashboard::dashboard_summary;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
@@ -21,10 +22,56 @@ use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use log::{LevelFilter, error};
 use specta_typescript::{BigIntExportBehavior, Typescript};
+use std::fs;
+use std::path::{Component, Path};
 use tauri::Manager;
 use tauri::path::BaseDirectory;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
+
+#[tauri::command]
+#[specta::specta]
+async fn get_image_path(
+    state: tauri::State<'_, AppState>,
+    id: String,
+    category: String,
+) -> Result<String, CommandError> {
+    match category.as_str() {
+        "static" => Ok(id),
+        "railway_model" => {
+            // Prevent path traversal by rejecting any component that isn't normal
+            let id_path = Path::new(&id);
+            let valid = id_path
+                .components()
+                .all(|c| matches!(c, Component::Normal(_)));
+
+            if !valid {
+                return Err(CommandError::validation_field(
+                    "id",
+                    "Invalid image id; must be a file name",
+                ));
+            }
+
+            let mut full_path = state.models_dir();
+            full_path.push(id_path);
+
+            // Ensure the file exists before returning the absolute path
+            match tokio::fs::metadata(&full_path).await {
+                Ok(meta) if meta.is_file() => Ok(full_path
+                    .to_str()
+                    .map(|s| s.to_string())
+                    .ok_or_else(|| CommandError::Unknown("Non-Unicode path".into()))?),
+                _ => Err(CommandError::NotFound(format!(
+                    "No image found for railway model {id}"
+                ))),
+            }
+        }
+        other => Err(CommandError::validation_field(
+            "category",
+            format!("Unsupported category '{other}'"),
+        )),
+    }
+}
 
 #[tauri::command]
 #[specta::specta]
@@ -73,6 +120,7 @@ pub fn run() {
         sellers_command_handlers::update_seller,
         sellers_command_handlers::delete_seller,
         dashboard_summary,
+        get_image_path,
         get_app_version
     ]);
 
@@ -91,6 +139,7 @@ pub fn run() {
     };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
         .plugin(
@@ -118,8 +167,19 @@ pub fn run() {
                     .map_err(|e| anyhow::anyhow!(e))
             })?;
 
+            // Ensure the models directory exists under AppLocalData
+            let models_dir = app.path().resolve("models", BaseDirectory::AppLocalData)?;
+
+            if let Err(e) = fs::create_dir_all(&models_dir) {
+                return Err(anyhow::anyhow!(format!(
+                    "failed to create models directory {}: {e}",
+                    models_dir.display()
+                ))
+                .into());
+            }
+
             // Initial management of state
-            app.manage(AppState::new(pool.clone()));
+            app.manage(AppState::new(pool.clone(), models_dir));
 
             // Show the main window IMMEDIATELY to avoid blank screen
             // The UI can handle the "not initialized" state gracefully

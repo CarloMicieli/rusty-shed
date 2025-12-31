@@ -3892,6 +3892,7 @@ dependencies = [
  "strum_macros",
  "tauri",
  "tauri-build",
+ "tauri-plugin-fs",
  "tauri-plugin-http",
  "tauri-plugin-log",
  "tauri-plugin-opener",

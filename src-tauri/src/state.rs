@@ -1,4 +1,5 @@
 use sqlx::sqlite::SqlitePool;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Application-wide state managed by Tauri.
@@ -20,6 +21,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 pub struct AppState {
     initialized: AtomicBool,
     db_pool: SqlitePool,
+    models_dir: PathBuf,
 }
 
 impl AppState {
@@ -28,10 +30,11 @@ impl AppState {
     /// The `initialized` flag will start as `false`; call
     /// `set_initialized()` after the application has completed any necessary
     /// startup steps (migrations, seeding, etc.).
-    pub fn new(db_pool: SqlitePool) -> Self {
+    pub fn new(db_pool: SqlitePool, models_dir: PathBuf) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             db_pool,
+            models_dir,
         }
     }
 
@@ -58,5 +61,10 @@ impl AppState {
     /// pool directly for database operations.
     pub fn db_pool(&self) -> SqlitePool {
         self.db_pool.clone()
+    }
+
+    /// Return the configured models directory path.
+    pub fn models_dir(&self) -> PathBuf {
+        self.models_dir.clone()
     }
 }

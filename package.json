@@ -29,6 +29,7 @@
     "@skeletonlabs/skeleton-common": "^4.8.0",
     "@skeletonlabs/skeleton-svelte": "^4.8.0",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-fs": "~2.4.4",
     "@tauri-apps/plugin-http": "^2",
     "@tauri-apps/plugin-log": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",

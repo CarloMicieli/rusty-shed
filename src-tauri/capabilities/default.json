@@ -2,12 +2,22 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "core:webview:allow-internal-toggle-devtools",
+    "core:webview:allow-set-webview-zoom",
     "log:default",
     "http:default",
+    "fs:default",
+    "fs:allow-applocaldata-read-recursive",
+    "fs:allow-applocaldata-write-recursive",
+    {
+      "identifier": "fs:scope-applocaldata-recursive",
+      "allow": [{ "path": "models/**" }]
+    },
     {
       "identifier": "http:allow-fetch",
       "allow": [
