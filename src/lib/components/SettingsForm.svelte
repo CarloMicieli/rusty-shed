@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
   import { Check } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import type {
@@ -12,26 +11,35 @@
     LanguageCode
   } from '$lib/services';
 
-  const dispatch = createEventDispatcher<{ submit: UpdateSettingsPayload }>();
+  let { settings: initialSettings, saving = false, onsubmit } = $props<{
+    settings: SettingsDto;
+    saving?: boolean;
+    onsubmit: (payload: UpdateSettingsPayload) => void;
+  }>();
 
-  let { settings, saving = false } = $props<{ settings: SettingsDto; saving?: boolean }>();
+  const initialForm = $derived.by((): UpdateSettingsPayload => ({
+    currency: initialSettings.currency,
+    lengthUnit: initialSettings.lengthUnit,
+    favoriteScale: initialSettings.favoriteScale,
+    favoritePowerMethod: initialSettings.favoritePowerMethod,
+    languageCode: initialSettings.languageCode
+  }));
 
   let form = $state<UpdateSettingsPayload>({
     currency: 'EUR',
     lengthUnit: 'MILLIMETERS',
     favoriteScale: 'H0',
-    favoritePowerMethod: 'DC',
+    favoritePowerMethod: 'AC',
     languageCode: 'en'
   });
 
-  onMount(() => {
-    form = {
-      currency: settings.currency,
-      lengthUnit: settings.lengthUnit,
-      favoriteScale: settings.favoriteScale,
-      favoritePowerMethod: settings.favoritePowerMethod,
-      languageCode: settings.languageCode
-    };
+  $effect(() => {
+    const next = initialForm;
+    form.currency = next.currency;
+    form.lengthUnit = next.lengthUnit;
+    form.favoriteScale = next.favoriteScale;
+    form.favoritePowerMethod = next.favoritePowerMethod;
+    form.languageCode = next.languageCode;
   });
 
   const currencyOptions: { label: string; value: Currency }[] = [
@@ -76,7 +84,7 @@
 
   function handleSubmit(event: Event) {
     event.preventDefault();
-    dispatch('submit', form);
+    onsubmit(form);
   }
 </script>
 

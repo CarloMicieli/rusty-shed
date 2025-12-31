@@ -36,9 +36,9 @@
     loading = false;
   }
 
-  async function handleSubmit(event: CustomEvent<UpdateSettingsPayload>) {
+  async function handleSubmit(payload: UpdateSettingsPayload) {
     saving = true;
-    const result = await saveSettings(event.detail);
+    const result = await saveSettings(payload);
     if (result.ok) {
       settings = result.data;
       await syncLocale(result.data.languageCode);
@@ -104,7 +104,7 @@
     </div>
   {:else if settings}
     {#key `${settings.languageCode}-${settings.currency}-${settings.lengthUnit}-${settings.favoriteScale}-${settings.favoritePowerMethod}`}
-      <SettingsForm {settings} {saving} on:submit={handleSubmit} />
+      <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
     {/key}
   {/if}
 </div>

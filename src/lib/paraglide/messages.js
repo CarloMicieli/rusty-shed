@@ -1,5 +1,4 @@
-// This file re-exports the auto-generated paraglide runtime so imports using
-// `$lib/paraglide/messages.js` keep working. The actual generated files live at
-// `src/paraglide/messages.js` (created by the paraglide plugin).
-export * as m from '../../paraglide/messages.js';
-export * from '../../paraglide/messages.js';
+/* eslint-disable */
+export * from './messages/_index.js'
+// enabling auto-import by exposing all messages as m
+export * as m from './messages/_index.js'
