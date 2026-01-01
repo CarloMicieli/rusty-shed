@@ -52,13 +52,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🎨 Check Formatting (Prettier)
-        run: pnpm exec prettier --check .
+        run: pnpm format:check
 
       - name: 🧹 Linting (ESLint)
-        run: pnpm run lint
+        run: pnpm lint
 
       - name: 🧪 Type Check (TypeScript)
-        run: pnpm run check
+        run: pnpm check
 
       - name: 🎭 Run frontend build
         run: pnpm build
