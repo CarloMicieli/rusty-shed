@@ -58,7 +58,6 @@
 
     await setLocale(nextLocale, { reload: false });
     setActiveLocale(nextLocale);
-
   }
 </script>
 
@@ -75,10 +74,7 @@
       <h1 class="h2 font-bold text-surface-50">{m.settings_heading()}</h1>
       <p class="text-surface-300">{m.settings_description()}</p>
     </div>
-    <a
-      class="text-accent-500 text-sm font-semibold hover:underline"
-      href="/my-dashboard"
-    >
+    <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
       {m.settings_back_to_dashboard()}
     </a>
   </div>

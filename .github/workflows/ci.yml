@@ -73,7 +73,7 @@ jobs:
       - name: ⚡ Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "src-tauri -> target"
+          workspaces: 'src-tauri -> target'
 
       - name: 🦀 Run rustfmt
         run: cargo fmt --all --check

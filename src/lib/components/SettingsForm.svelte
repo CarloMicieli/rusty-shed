@@ -11,19 +11,25 @@
     LanguageCode
   } from '$lib/services';
 
-  let { settings: initialSettings, saving = false, onsubmit } = $props<{
+  let {
+    settings: initialSettings,
+    saving = false,
+    onsubmit
+  } = $props<{
     settings: SettingsDto;
     saving?: boolean;
     onsubmit: (payload: UpdateSettingsPayload) => void;
   }>();
 
-  const initialForm = $derived.by((): UpdateSettingsPayload => ({
-    currency: initialSettings.currency,
-    lengthUnit: initialSettings.lengthUnit,
-    favoriteScale: initialSettings.favoriteScale,
-    favoritePowerMethod: initialSettings.favoritePowerMethod,
-    languageCode: initialSettings.languageCode
-  }));
+  const initialForm = $derived.by(
+    (): UpdateSettingsPayload => ({
+      currency: initialSettings.currency,
+      lengthUnit: initialSettings.lengthUnit,
+      favoriteScale: initialSettings.favoriteScale,
+      favoritePowerMethod: initialSettings.favoritePowerMethod,
+      languageCode: initialSettings.languageCode
+    })
+  );
 
   let form = $state<UpdateSettingsPayload>({
     currency: 'EUR',
