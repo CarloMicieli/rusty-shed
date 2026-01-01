@@ -13,6 +13,7 @@ dist
 /.vite
 .turbo
 .parcel-cache
+build
 
 # SvelteKit
 .svelte-kit
