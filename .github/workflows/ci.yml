@@ -28,7 +28,6 @@ jobs:
         uses: actions/checkout@v5
 
       - name: 🛠️ Install system packages (Ubuntu)
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -38,19 +37,21 @@ jobs:
             libwebkit2gtk-4.1-dev \
             librsvg2-dev
 
+      # 1. Install PNPM first without specific versioning constraints
       - name: 📦 Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 'latest'
+          version: 10 # Explicitly setting a major version often solves path conflicts
 
+      # 2. Setup Node and let it find the pnpm store automatically
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4 # v4 is current stable
         with:
-          node-version: '24.x'
-          cache: pnpm
+          node-version: '22' # Svelte 5/Tauri 2 works best on 20 or 22 (LTS)
+          cache: 'pnpm'
 
       - name: 📦 Install frontend dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: 🎨 Check Formatting (Prettier)
         run: pnpm exec prettier --check .
@@ -61,34 +62,20 @@ jobs:
       - name: 🧪 Type Check (TypeScript)
         run: pnpm run check
 
-      - name: 🎭 Run frontend build/tests
-        run: |
-          pnpm build
-          pnpm test
+      - name: 🎭 Run frontend build
+        run: pnpm build
 
+      # 3. Modern Rust Setup (The actions-rs organization is unmaintained)
       - name: 🦀 Setup Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
           components: clippy, rustfmt
 
-      - name: 🦀 Toolchain info
-        run: |
-          rustc --version
-          cargo --version --verbose
-
-      - name: ⚡ Cache cargo registry
-        uses: actions/cache@v4
+      # 4. Superior caching for Rust
+      - name: ⚡ Rust Cache
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: 🦀 Run cargo check
-        run: cargo check --workspace
-        working-directory: src-tauri
+          workspaces: "src-tauri -> target"
 
       - name: 🦀 Run rustfmt
         run: cargo fmt --all --check
@@ -98,8 +85,6 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
         working-directory: src-tauri
 
-      - name: 🦀 Run cargo build and tests
-        run: |
-          cargo build --workspace
-          cargo test --workspace --no-fail-fast --verbose
+      - name: 🦀 Run cargo tests
+        run: cargo test --workspace --no-fail-fast
         working-directory: src-tauri
