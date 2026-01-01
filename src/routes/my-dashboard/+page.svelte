@@ -14,10 +14,10 @@
   import DashboardCharts from '$lib/features/dashboard/DashboardCharts.svelte';
 
   // Stores
-  import { dashboardStore } from '$lib/stores/dashboardStore.svelte';
-  import { wishlistService } from '$lib/stores/WishlistService.svelte';
+  import { dashboardService } from '$lib/features/dashboard/service.svelte';
+  import { wishlistService } from '$lib/features/wishlists/service.svelte';
 
-  const dashboard = dashboardStore;
+  const dashboard = dashboardService;
 
   // Data derived from store
   const totals = $derived(dashboard.data?.totals ?? null);
@@ -218,5 +218,8 @@
 {/if}
 
 {#if showWishlistModal}
-  <AddWishlistItemModal on:close={() => (showWishlistModal = false)} />
+  <AddWishlistItemModal
+    onClose={() => (showWishlistModal = false)}
+    onSaved={() => (showWishlistModal = false)}
+  />
 {/if}

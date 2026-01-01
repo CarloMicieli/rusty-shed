@@ -12,15 +12,15 @@ This reference enumerates the IPC commands exposed from Rust to the SvelteKit fr
 
 ### App & System
 
-| Command             | Params | Returns  | Notes                                                                                                       |
-| ------------------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------- |
+| Command             | Params | Returns  | Notes                                                                                                          |
+| ------------------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------- |
 | `is_db_initialized` | none   | `bool`   | Checks `AppState.initialized` after migrations/seed ([src-tauri/src/lib.rs](../src-tauri/src/lib.rs#L29-L34)). |
 | `get_app_version`   | none   | `String` | Crate version from `CARGO_PKG_VERSION` ([src-tauri/src/lib.rs](../src-tauri/src/lib.rs#L36-L40)).              |
 
 ### Catalog
 
-| Command                     | Params                           | Returns                  | Notes                                                                                                                                                         |
-| --------------------------- | -------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Command                     | Params                           | Returns                  | Notes                                                                                                                                                            |
+| --------------------------- | -------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_manufacturer_by_id`    | `manufacturer_id: String`        | `Option<Manufacturer>`   | Validates `ManufacturerId`; DB fetch ([src-tauri/src/catalog/interface/command_handlers.rs](../src-tauri/src/catalog/interface/command_handlers.rs#L18-L56)).    |
 | `get_railway_company_by_id` | `railway_company_id: String`     | `Option<RailwayCompany>` | Validates `RailwayCompanyId`; DB fetch ([src-tauri/src/catalog/interface/command_handlers.rs](../src-tauri/src/catalog/interface/command_handlers.rs#L60-L101)). |
 | `get_railway_model_by_id`   | `railway_model_id: String`       | `Option<RailwayModel>`   | Validates `RailwayModelId`; DB fetch ([src-tauri/src/catalog/interface/command_handlers.rs](../src-tauri/src/catalog/interface/command_handlers.rs#L103-L139)).  |
@@ -29,21 +29,21 @@ This reference enumerates the IPC commands exposed from Rust to the SvelteKit fr
 
 ### Collecting / Depot
 
-| Command          | Params | Returns      | Notes                                                                                                                                                             |
-| ---------------- | ------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Command          | Params | Returns      | Notes                                                                                                                                                                |
+| ---------------- | ------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_collection` | none   | `Collection` | Uses `GetCollectionUseCase` in DB UoW ([src-tauri/src/collecting/interface/command_handlers.rs](../src-tauri/src/collecting/interface/command_handlers.rs#L22-L66)). |
 | `get_depot`      | none   | `Collection` | Alias of `get_collection` ([src-tauri/src/collecting/interface/command_handlers.rs](../src-tauri/src/collecting/interface/command_handlers.rs#L68-L74)).             |
 
 ### Dashboard
 
-| Command             | Params | Returns            | Notes                                                                                                                        |
-| ------------------- | ------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Command             | Params | Returns            | Notes                                                                                                                           |
+| ------------------- | ------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
 | `dashboard_summary` | none   | `DashboardSummary` | Aggregates collection, wishlists, maintenance snapshots ([src-tauri/src/dashboard.rs](../src-tauri/src/dashboard.rs#L40-L115)). |
 
 ### Collection (In-Memory Demo)
 
-| Command                  | Params                             | Returns                   | Notes                                                                                                                         |
-| ------------------------ | ---------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Command                  | Params                             | Returns                   | Notes                                                                                                                            |
+| ------------------------ | ---------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `list_collection_items`  | `search?: String`                  | `Vec<CollectionItemLite>` | In-memory mutex store; optional case-insensitive search ([src-tauri/src/collection.rs](../src-tauri/src/collection.rs#L43-L78)). |
 | `create_collection_item` | `input: CreateCollectionItemInput` | `CollectionItemLite`      | Adds item to in-memory store ([src-tauri/src/collection.rs](../src-tauri/src/collection.rs#L80-L104)).                           |
 | `update_collection_item` | `input: UpdateCollectionItemInput` | `CollectionItemLite`      | Updates item by ID; errors if not found ([src-tauri/src/collection.rs](../src-tauri/src/collection.rs#L106-L136)).               |
@@ -51,8 +51,8 @@ This reference enumerates the IPC commands exposed from Rust to the SvelteKit fr
 
 ### Wishlists
 
-| Command                | Params                         | Returns                | Notes                                                                                                                                                                                         |
-| ---------------------- | ------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Command                | Params                         | Returns                | Notes                                                                                                                                                                                            |
+| ---------------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `get_wishlists`        | none                           | `Vec<WishlistPreview>` | Lists wishlists ([src-tauri/src/wishlist/interface/command_handlers.rs](../src-tauri/src/wishlist/interface/command_handlers.rs#L31-L47)).                                                       |
 | `get_wishlist_by_id`   | `id: String`                   | `Option<Wishlist>`     | Validates `WishlistId`; returns wishlist with items ([src-tauri/src/wishlist/interface/command_handlers.rs](../src-tauri/src/wishlist/interface/command_handlers.rs#L19-L29)).                   |
 | `create_wishlist`      | `input: CreateWishlistInput`   | `WishlistPreview`      | Creates wishlist (optional `is_default`) and returns preview ([src-tauri/src/wishlist/interface/command_handlers.rs](../src-tauri/src/wishlist/interface/command_handlers.rs#L49-L102)).         |
@@ -65,15 +65,15 @@ This reference enumerates the IPC commands exposed from Rust to the SvelteKit fr
 
 ### Maintenance
 
-| Command                     | Params                       | Returns                | Notes                                                                                                                                                                                  |
-| --------------------------- | ---------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Command                     | Params                       | Returns                | Notes                                                                                                                                                                                     |
+| --------------------------- | ---------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_maintenance_dashboard` | none                         | `Vec<MaintenanceCard>` | Lists due/overdue cards ([src-tauri/src/maintenance/interface/command_handlers.rs](../src-tauri/src/maintenance/interface/command_handlers.rs#L15-L43)).                                  |
 | `add_maintenance_record`    | `input: AddMaintenanceInput` | `()`                   | Parses UUIDs and `YYYY-MM-DD`, updates card and persists ([src-tauri/src/maintenance/interface/command_handlers.rs](../src-tauri/src/maintenance/interface/command_handlers.rs#L45-L93)). |
 
 ### Sellers
 
-| Command            | Params                         | Returns               | Notes                                                                                                                                                                             |
-| ------------------ | ------------------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Command            | Params                         | Returns               | Notes                                                                                                                                                                                |
+| ------------------ | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `get_sellers`      | none                           | `Vec<Seller>`         | Lists sellers ([src-tauri/src/sellers/interface/command_handlers.rs](../src-tauri/src/sellers/interface/command_handlers.rs#L12-L32)).                                               |
 | `get_seller_by_id` | `id: String`                   | `Option<Seller>`      | Validates `SellerId`; fetches seller ([src-tauri/src/sellers/interface/command_handlers.rs](../src-tauri/src/sellers/interface/command_handlers.rs#L34-L61)).                        |
 | `create_seller`    | `payload: CreateSellerPayload` | `Seller`              | Creates seller via use-case ([src-tauri/src/sellers/interface/command_handlers.rs](../src-tauri/src/sellers/interface/command_handlers.rs#L63-L105)).                                |

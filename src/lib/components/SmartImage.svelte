@@ -1,7 +1,17 @@
 <script lang="ts">
-  import { convertFileSrc, invoke } from '@tauri-apps/api/core';
+  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { imageService } from '$lib/services/image.service.svelte';
 
   type ImageCategory = 'static' | 'railway_model';
+
+  interface Props {
+    id: string;
+    category: ImageCategory;
+    alt?: string;
+    class?: string;
+    placeholder?: import('svelte').Snippet;
+    error?: import('svelte').Snippet;
+  }
 
   let {
     id,
@@ -10,21 +20,11 @@
     class: className = '',
     placeholder,
     error: errorSlot
-  } = $props<{
-    id: string;
-    category: ImageCategory;
-    alt?: string;
-    class?: string;
-    placeholder?: () => unknown;
-    error?: () => unknown;
-  }>();
+  }: Props = $props();
 
   let resolvedSrc = $state<string | null>(null);
   let error = $state<string | null>(null);
   let loading = $state(false);
-
-  const renderPlaceholder = () => (placeholder ? placeholder() : 'Loading image...');
-  const renderError = () => (errorSlot ? errorSlot() : 'Image unavailable');
 
   async function resolveImageSource() {
     if (!id) {
@@ -46,8 +46,12 @@
     resolvedSrc = null;
 
     try {
-      const path = await invoke<string>('get_image_path', { id, category });
-      resolvedSrc = convertFileSrc(path);
+      const path = await imageService.resolveImagePath(id, category);
+      if (path) {
+        resolvedSrc = convertFileSrc(path);
+      } else {
+        error = 'Unable to load image';
+      }
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unable to load image';
     } finally {
@@ -56,18 +60,26 @@
   }
 
   $effect(() => {
-    resolveImageSource();
+    void resolveImageSource();
   });
 </script>
 
 <div class="smart-image">
   {#if loading}
     <div class="smart-image__placeholder" aria-busy="true">
-      {@render renderPlaceholder()}
+      {#if placeholder}
+        {@render placeholder()}
+      {:else}
+        Loading image...
+      {/if}
     </div>
   {:else if error}
     <div class="smart-image__fallback" role="img" aria-label={alt || 'Image unavailable'}>
-      {@render renderError()}
+      {#if errorSlot}
+        {@render errorSlot()}
+      {:else}
+        Image unavailable
+      {/if}
     </div>
   {:else if resolvedSrc}
     <img
@@ -77,7 +89,11 @@
     />
   {:else}
     <div class="smart-image__fallback" role="img" aria-label={alt || id}>
-      {@render renderError()}
+      {#if errorSlot}
+        {@render errorSlot()}
+      {:else}
+        Image unavailable
+      {/if}
     </div>
   {/if}
 </div>

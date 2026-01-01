@@ -23,10 +23,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }));
 
 // Now import after mocks
-import { collectionStore } from '$lib/stores/collectionStore.svelte';
+import { collectionService } from '$lib/features/collection/service.svelte';
 import type { CollectionItemLite, CreateCollectionItemInput } from '$lib/bindings';
 import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
-import { SvelteSet } from 'svelte/reactivity';
 
 const mockInvoke = vi.mocked(invoke);
 type InvokeArgType = InvokeArgs | undefined;
@@ -100,14 +99,14 @@ mockInvoke.mockImplementation(
   }
 );
 
-describe('CollectionStore', () => {
-  beforeEach(() => {
+describe('CollectionService', () => {
+  beforeEach(async () => {
     tauriMock.reset();
     vi.clearAllMocks();
-    // Reset store state
-    collectionStore.rawItems = [];
-    collectionStore.filters = { query: '', scale: null, tags: new SvelteSet<string>() };
-    collectionStore.isLoading = false;
+    // Ensure we start with empty state by mocking an empty fetch
+    tauriMock.mockCommand('list_collection_items', []);
+    collectionService.clearFilters();
+    await collectionService.fetchCollection();
   });
 
   const mockItems: CollectionItemLite[] = [
@@ -150,94 +149,92 @@ describe('CollectionStore', () => {
     it('should load collection items successfully', async () => {
       tauriMock.mockCommand('list_collection_items', mockItems);
 
-      await collectionStore.fetchCollection();
+      await collectionService.fetchCollection();
 
-      // Assert synchronously - $state updates immediately
-      expect(collectionStore.rawItems).toEqual(mockItems);
-      expect(collectionStore.isLoading).toBe(false);
+      expect(collectionService.rawItems).toEqual(mockItems);
+      expect(collectionService.isLoading).toBe(false);
     });
 
     it('should set loading state during fetch', async () => {
       tauriMock.mockCommandWithDelay('list_collection_items', 50, mockItems);
 
-      const fetchPromise = collectionStore.fetchCollection();
+      const fetchPromise = collectionService.fetchCollection();
 
-      // Loading state updates synchronously
-      expect(collectionStore.isLoading).toBe(true);
+      expect(collectionService.isLoading).toBe(true);
 
       await fetchPromise;
 
-      expect(collectionStore.isLoading).toBe(false);
+      expect(collectionService.isLoading).toBe(false);
     });
 
     it('should handle fetch errors gracefully', async () => {
       const error = { DatabaseError: 'Connection failed' };
       tauriMock.mockCommandError('list_collection_items', error);
 
-      await collectionStore.fetchCollection();
+      await collectionService.fetchCollection();
 
-      expect(collectionStore.rawItems).toEqual([]);
-      expect(collectionStore.isLoading).toBe(false);
+      expect(collectionService.rawItems).toEqual([]);
+      expect(collectionService.isLoading).toBe(false);
     });
 
     it('should update query filter when provided', async () => {
       tauriMock.mockCommand('list_collection_items', mockItems);
 
-      await collectionStore.fetchCollection('BR 185');
+      await collectionService.fetchCollection('BR 185');
 
-      expect(collectionStore.filters.query).toBe('BR 185');
+      expect(collectionService.filters.query).toBe('BR 185');
     });
   });
 
   describe('filtering', () => {
     beforeEach(async () => {
-      collectionStore.rawItems = mockItems;
+      tauriMock.mockCommand('list_collection_items', mockItems);
+      await collectionService.fetchCollection();
     });
 
     it('should filter by query text', () => {
-      collectionStore.setQuery('ICE');
+      collectionService.setQuery('ICE');
 
-      // $derived updates synchronously
-      expect(collectionStore.filteredItems).toHaveLength(1);
-      expect(collectionStore.filteredItems[0].title).toBe('ICE 3');
+      expect(collectionService.filteredItems).toHaveLength(1);
+      expect(collectionService.filteredItems[0].title).toBe('ICE 3');
     });
 
     it('should filter by scale', () => {
-      collectionStore.setScale('N');
+      collectionService.setScale('N');
 
-      expect(collectionStore.filteredItems).toHaveLength(1);
-      expect(collectionStore.filteredItems[0].scale).toBe('N');
+      expect(collectionService.filteredItems).toHaveLength(1);
+      expect(collectionService.filteredItems[0].scale).toBe('N');
     });
 
     it('should filter by tags', () => {
-      collectionStore.toggleTag('electric');
+      collectionService.toggleTag('electric');
 
-      expect(collectionStore.filteredItems).toHaveLength(2);
-      expect(collectionStore.filteredItems.every((item) => item.tags.includes('electric'))).toBe(
+      expect(collectionService.filteredItems).toHaveLength(2);
+      expect(collectionService.filteredItems.every((item) => item.tags.includes('electric'))).toBe(
         true
       );
     });
 
     it('should combine multiple filters', () => {
-      collectionStore.setQuery('Roco');
-      collectionStore.setScale('H0');
-      collectionStore.toggleTag('electric');
+      collectionService.setQuery('Roco');
+      collectionService.setScale('H0');
+      collectionService.toggleTag('electric');
 
-      expect(collectionStore.filteredItems).toHaveLength(1);
-      expect(collectionStore.filteredItems[0].id).toBe('1');
+      expect(collectionService.filteredItems).toHaveLength(1);
+      expect(collectionService.filteredItems[0].id).toBe('1');
     });
 
     it('should clear all filters', () => {
-      collectionStore.setQuery('test');
-      collectionStore.setScale('H0');
-      collectionStore.toggleTag('electric');
+      collectionService.setQuery('test');
+      collectionService.setScale('H0');
+      collectionService.toggleTag('electric');
 
-      collectionStore.clearFilters();
+      collectionService.clearFilters();
 
-      expect(collectionStore.filters.query).toBe('');
-      expect(collectionStore.filters.scale).toBeNull();
-      expect(collectionStore.filters.tags.size).toBe(0);
-      expect(collectionStore.filteredItems).toEqual(mockItems);
+      expect(collectionService.filters.query).toBe('');
+      expect(collectionService.filters.scale).toBeNull();
+      expect(collectionService.filters.tags.size).toBe(0);
+      expect(collectionService.filteredItems).toEqual(mockItems);
     });
   });
 
@@ -253,7 +250,6 @@ describe('CollectionStore', () => {
         tags: ['test']
       };
 
-      // Mock with delay to observe optimistic state
       const createdItem: CollectionItemLite = {
         id: 'real-id-123',
         createdAt: '2024-01-04T00:00:00Z',
@@ -262,19 +258,17 @@ describe('CollectionStore', () => {
       };
       tauriMock.mockCommandWithDelay('create_collection_item', 50, createdItem);
 
-      const createPromise = collectionStore.createItem(input);
+      const createPromise = collectionService.createItem(input);
 
-      // Assert optimistic state immediately - should have temp item
-      expect(collectionStore.rawItems.length).toBe(1);
-      expect(collectionStore.rawItems[0].id).toMatch(/^temp-/);
-      expect(collectionStore.rawItems[0].title).toBe('New Loco');
+      expect(collectionService.rawItems.length).toBe(1);
+      expect(collectionService.rawItems[0].id).toMatch(/^temp-/);
+      expect(collectionService.rawItems[0].title).toBe('New Loco');
 
       await createPromise;
 
-      // After completion, temp item should be replaced with real item
-      expect(collectionStore.rawItems.length).toBe(1);
-      expect(collectionStore.rawItems[0].id).toBe('real-id-123');
-      expect(collectionStore.rawItems[0].title).toBe('New Loco');
+      expect(collectionService.rawItems.length).toBe(1);
+      expect(collectionService.rawItems[0].id).toBe('real-id-123');
+      expect(collectionService.rawItems[0].title).toBe('New Loco');
     });
 
     it('should revert optimistic update on error', async () => {
@@ -291,22 +285,21 @@ describe('CollectionStore', () => {
       const error = { ValidationError: { catalogNumber: 'Already exists' } };
       tauriMock.mockCommandErrorWithDelay('create_collection_item', 50, error);
 
-      const createPromise = collectionStore.createItem(input);
+      const createPromise = collectionService.createItem(input);
 
-      // Assert optimistic state
-      expect(collectionStore.rawItems.length).toBe(1);
+      expect(collectionService.rawItems.length).toBe(1);
 
       const result = await createPromise;
 
-      // After error, should revert to empty
       expect(result).toBeNull();
-      expect(collectionStore.rawItems).toEqual([]);
+      expect(collectionService.rawItems).toEqual([]);
     });
   });
 
   describe('updateItem - optimistic updates', () => {
-    beforeEach(() => {
-      collectionStore.rawItems = [mockItems[0]];
+    beforeEach(async () => {
+      tauriMock.mockCommand('list_collection_items', [mockItems[0]]);
+      await collectionService.fetchCollection();
     });
 
     it('should optimistically update item before backend confirmation', async () => {
@@ -317,7 +310,7 @@ describe('CollectionStore', () => {
 
       tauriMock.mockCommandWithDelay('update_collection_item', 50, updatedItem);
 
-      const updatePromise = collectionStore.updateItem({
+      const updatePromise = collectionService.updateItem({
         id: '1',
         brand: mockItems[0].brand,
         catalogNumber: mockItems[0].catalogNumber,
@@ -328,13 +321,11 @@ describe('CollectionStore', () => {
         tags: mockItems[0].tags
       });
 
-      // Assert optimistic state
-      expect(collectionStore.rawItems[0].title).toBe('Updated Title');
+      expect(collectionService.rawItems[0].title).toBe('Updated Title');
 
       await updatePromise;
 
-      // Should still have updated title after backend confirms
-      expect(collectionStore.rawItems[0].title).toBe('Updated Title');
+      expect(collectionService.rawItems[0].title).toBe('Updated Title');
     });
 
     it('should revert to snapshot on update error', async () => {
@@ -343,7 +334,7 @@ describe('CollectionStore', () => {
 
       tauriMock.mockCommandErrorWithDelay('update_collection_item', 50, error);
 
-      const updatePromise = collectionStore.updateItem({
+      const updatePromise = collectionService.updateItem({
         id: '1',
         brand: mockItems[0].brand,
         catalogNumber: mockItems[0].catalogNumber,
@@ -354,35 +345,33 @@ describe('CollectionStore', () => {
         tags: mockItems[0].tags
       });
 
-      // Assert optimistic state
-      expect(collectionStore.rawItems[0].title).toBe('Failed Update');
+      expect(collectionService.rawItems[0].title).toBe('Failed Update');
 
       const result = await updatePromise;
 
-      // After error, should revert
       expect(result).toBeNull();
-      expect(collectionStore.rawItems[0].title).toBe(originalTitle);
+      expect(collectionService.rawItems[0].title).toBe(originalTitle);
     });
   });
 
   describe('deleteItem - optimistic updates', () => {
-    beforeEach(() => {
-      collectionStore.rawItems = [mockItems[0], mockItems[1]];
+    beforeEach(async () => {
+      tauriMock.mockCommand('list_collection_items', [mockItems[0], mockItems[1]]);
+      await collectionService.fetchCollection();
     });
 
     it('should optimistically remove item before backend confirmation', async () => {
       tauriMock.mockCommandWithDelay('delete_collection_item', 50, undefined);
 
-      const deletePromise = collectionStore.deleteItem('1');
+      const deletePromise = collectionService.deleteItem('1');
 
-      // Assert optimistic state - item removed immediately
-      expect(collectionStore.rawItems).toHaveLength(1);
-      expect(collectionStore.rawItems[0].id).toBe('2');
+      expect(collectionService.rawItems).toHaveLength(1);
+      expect(collectionService.rawItems[0].id).toBe('2');
 
       const result = await deletePromise;
 
       expect(result).toBe(true);
-      expect(collectionStore.rawItems).toHaveLength(1);
+      expect(collectionService.rawItems).toHaveLength(1);
     });
 
     it('should revert delete on error', async () => {
@@ -390,31 +379,31 @@ describe('CollectionStore', () => {
 
       tauriMock.mockCommandErrorWithDelay('delete_collection_item', 50, error);
 
-      const deletePromise = collectionStore.deleteItem('1');
+      const deletePromise = collectionService.deleteItem('1');
 
-      // Assert optimistic state
-      expect(collectionStore.rawItems).toHaveLength(1);
+      expect(collectionService.rawItems).toHaveLength(1);
 
       const result = await deletePromise;
 
-      // After error, should restore item
       expect(result).toBe(false);
-      expect(collectionStore.rawItems).toHaveLength(2);
-      expect(collectionStore.rawItems.find((i) => i.id === '1')).toBeDefined();
+      expect(collectionService.rawItems).toHaveLength(2);
+      expect(collectionService.rawItems.find((i) => i.id === '1')).toBeDefined();
     });
   });
 
   describe('derived values', () => {
-    it('should compute totalCount', () => {
-      collectionStore.rawItems = mockItems;
+    it('should compute totalCount', async () => {
+      tauriMock.mockCommand('list_collection_items', mockItems);
+      await collectionService.fetchCollection();
 
-      expect(collectionStore.totalCount).toBe(3);
+      expect(collectionService.totalCount).toBe(3);
     });
 
-    it('should compute availableTags from items', () => {
-      collectionStore.rawItems = mockItems;
+    it('should compute availableTags from items', async () => {
+      tauriMock.mockCommand('list_collection_items', mockItems);
+      await collectionService.fetchCollection();
 
-      const tags = collectionStore.availableTags;
+      const tags = collectionService.availableTags;
       expect(tags).toContain('electric');
       expect(tags).toContain('freight');
       expect(tags).toContain('passenger');

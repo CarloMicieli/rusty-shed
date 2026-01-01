@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DashboardDepotEntry } from '$lib/stores/dashboardStore.svelte';
+  import type { DashboardDepotEntry } from '$lib/features/dashboard/service.svelte';
   import { Building2, TrainFront } from 'lucide-svelte';
 
   let { depot } = $props<{ depot: DashboardDepotEntry }>();

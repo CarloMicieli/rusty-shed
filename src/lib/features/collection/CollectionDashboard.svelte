@@ -2,7 +2,7 @@
   import { Plus, Tag, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
-  import { collectionStore, availableScales } from '$lib/stores/collectionStore.svelte';
+  import { collectionService, availableScales } from './service.svelte';
   import type {
     CollectionItemLite,
     CollectionSummary as CollectionSummaryType,
@@ -75,47 +75,47 @@
   const summaryData = $derived(defaultSummary);
   const totalValue = $state('--');
 
-  const rawItems = $derived(collectionStore.rawItems);
-  const filteredItems = $derived(collectionStore.filteredItems);
-  const filters = $derived(collectionStore.filters);
-  const availableTags = $derived(collectionStore.availableTags);
-  const isLoading = $derived(collectionStore.isLoading);
+  const rawItems = $derived(collectionService.rawItems);
+  const filteredItems = $derived(collectionService.filteredItems);
+  const filters = $derived(collectionService.filters);
+  const availableTags = $derived(collectionService.availableTags);
+  const isLoading = $derived(collectionService.isLoading);
 
   onMount(() => {
-    void collectionStore.fetchCollection();
+    void collectionService.fetchCollection();
   });
 
   async function handleSubmit(detail: SubmitDetail) {
     const { form, editingId } = detail;
     if (editingId) {
-      await collectionStore.updateItem({ id: editingId, ...form });
+      await collectionService.updateItem({ id: editingId, ...form });
     } else {
-      await collectionStore.createItem(form);
+      await collectionService.createItem(form);
     }
     ui.closeDrawer();
   }
 
   function handleSearch(query: string) {
-    collectionStore.setQuery(query);
-    void collectionStore.fetchCollection(query);
+    collectionService.setQuery(query);
+    void collectionService.fetchCollection(query);
   }
 
   function handleScale(scale: string | null) {
-    collectionStore.setScale(scale);
+    collectionService.setScale(scale);
   }
 
   function handleTag(tag: string) {
-    collectionStore.toggleTag(tag);
+    collectionService.toggleTag(tag);
   }
 
   function handleClear() {
-    collectionStore.clearFilters();
-    void collectionStore.fetchCollection('');
+    collectionService.clearFilters();
+    void collectionService.fetchCollection('');
   }
 
   async function handleDeleteConfirm() {
     if (!ui.confirmDeleteId) return;
-    await collectionStore.deleteItem(ui.confirmDeleteId);
+    await collectionService.deleteItem(ui.confirmDeleteId);
     ui.clearDelete();
   }
 </script>

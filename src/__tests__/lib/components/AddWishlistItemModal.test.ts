@@ -42,11 +42,11 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }));
 
 let activeService: ReturnType<
-  typeof import('$lib/stores/WishlistService.svelte').createWishlistService
+  typeof import('$lib/features/wishlists/service.svelte').createWishlistService
 >;
 
-vi.mock('$lib/stores/WishlistService.svelte', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('$lib/stores/WishlistService.svelte')>();
+vi.mock('$lib/features/wishlists/service.svelte', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/features/wishlists/service.svelte')>();
   return {
     ...actual,
     get wishlistService() {
@@ -60,7 +60,7 @@ import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
 import {
   createWishlistService,
   type WishlistPreviewLite
-} from '$lib/stores/WishlistService.svelte';
+} from '$lib/features/wishlists/service.svelte';
 import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
 
 const mockInvoke = vi.mocked(invoke);
@@ -154,6 +154,11 @@ mockInvoke.mockImplementation(
 );
 
 describe('AddWishlistItemModal', () => {
+  const defaultProps = {
+    onClose: vi.fn(),
+    onSaved: vi.fn()
+  };
+
   beforeEach(async () => {
     activeService = createWishlistService();
     vi.clearAllMocks();
@@ -164,7 +169,7 @@ describe('AddWishlistItemModal', () => {
   });
 
   it('should render modal with title and form fields', () => {
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
     expect(screen.getByLabelText('Model ID')).toBeInTheDocument();
@@ -173,7 +178,7 @@ describe('AddWishlistItemModal', () => {
   });
 
   it('should display available wishlists in dropdown', async () => {
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
 
@@ -186,7 +191,7 @@ describe('AddWishlistItemModal', () => {
 
   it('should show validation error when model ID is missing', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
@@ -216,9 +221,9 @@ describe('AddWishlistItemModal', () => {
     const onSaved = vi.fn();
     const onClose = vi.fn();
     render(AddWishlistItemModal, {
-      events: {
-        saved: onSaved,
-        close: onClose
+      props: {
+        onSaved: onSaved,
+        onClose: onClose
       }
     });
 
@@ -267,7 +272,7 @@ describe('AddWishlistItemModal', () => {
     tauriMock.mockCommand('create_wishlist', mockCreatedWishlist);
     tauriMock.mockCommand('add_to_wishlist', mockAddedItem);
 
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     // Enter new list name
     const newListInput = screen.getByPlaceholderText('Or create new list');
@@ -296,7 +301,7 @@ describe('AddWishlistItemModal', () => {
 
     tauriMock.mockCommandError('create_wishlist', error);
 
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     const newListInput = screen.getByPlaceholderText('Or create new list');
     await user.type(newListInput, 'Duplicate Name');
@@ -318,7 +323,7 @@ describe('AddWishlistItemModal', () => {
 
     tauriMock.mockCommandError('add_to_wishlist', error);
 
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
     await user.selectOptions(select, 'wishlist-1');
@@ -350,7 +355,7 @@ describe('AddWishlistItemModal', () => {
       purchased_price: null
     });
 
-    render(AddWishlistItemModal);
+    render(AddWishlistItemModal, { props: defaultProps });
 
     const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
     await user.selectOptions(select, 'wishlist-1');
@@ -371,7 +376,7 @@ describe('AddWishlistItemModal', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(AddWishlistItemModal, {
-      events: { close: onClose }
+      props: { ...defaultProps, onClose: onClose }
     });
 
     const modelIdInput = screen.getByLabelText('Model ID');

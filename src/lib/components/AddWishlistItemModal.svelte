@@ -1,9 +1,13 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { wishlistService } from '$lib/stores/WishlistService.svelte';
+  import { wishlistService } from '$lib/features/wishlists/service.svelte';
 
-  const dispatch = createEventDispatcher<{ close: void; saved: void }>();
+  interface Props {
+    onClose: () => void;
+    onSaved: () => void;
+  }
+
+  let { onClose, onSaved }: Props = $props();
 
   const wishlists = $derived(wishlistService.wishlists);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
@@ -52,7 +56,7 @@
         return;
       }
 
-      dispatch('saved');
+      onSaved();
       close();
     } finally {
       isSubmitting = false;
@@ -60,7 +64,7 @@
   }
 
   function close() {
-    dispatch('close');
+    onClose();
     newListName = '';
     modelId = '';
     notes = '';

@@ -53,23 +53,23 @@ function toastError(id: string, message?: string, retry?: () => void) {
   });
 }
 
-class CollectionStore {
-  rawItems = $state<CollectionItemLite[]>([]);
-  filters = $state<FilterState>({ query: '', scale: null, tags: new SvelteSet() });
-  isLoading = $state(false);
+export class CollectionService {
+  #rawItems = $state<CollectionItemLite[]>([]);
+  #filters = $state<FilterState>({ query: '', scale: null, tags: new SvelteSet() });
+  #isLoading = $state(false);
 
   availableTags = $derived.by(() => {
     const dynamic = new SvelteSet<string>();
-    this.rawItems.forEach((item) => item.tags?.forEach((tag) => dynamic.add(tag)));
+    this.#rawItems.forEach((item) => item.tags?.forEach((tag) => dynamic.add(tag)));
     const combined = new SvelteSet<string>([...Object.keys(FIXED_TAG_META), ...dynamic]);
     return sortAvailableTags([...combined]);
   });
 
   filteredItems = $derived.by(() => {
-    const { query, scale, tags } = this.filters;
+    const { query, scale, tags } = this.#filters;
     const q = query.trim().toLowerCase();
 
-    return this.rawItems.filter((item) => {
+    return this.#rawItems.filter((item) => {
       if (scale && item.scale !== scale) return false;
       if (tags.size) {
         const hasTag = item.tags.some((tag) => tags.has(tag));
@@ -84,12 +84,24 @@ class CollectionStore {
     });
   });
 
-  totalCount = $derived(this.rawItems.length);
+  totalCount = $derived(this.#rawItems.length);
+
+  get rawItems() {
+    return this.#rawItems;
+  }
+
+  get filters() {
+    return this.#filters;
+  }
+
+  get isLoading() {
+    return this.#isLoading;
+  }
 
   fetchCollection = async (query?: string) => {
-    this.isLoading = true;
+    this.#isLoading = true;
     if (query !== undefined) {
-      this.filters.query = query;
+      this.#filters.query = query;
     }
 
     try {
@@ -103,36 +115,37 @@ class CollectionStore {
         return;
       }
 
-      this.rawItems = result.data ?? [];
+      this.#rawItems = result.data ?? [];
     } finally {
-      this.isLoading = false;
+      this.#isLoading = false;
     }
   };
 
   setQuery = (query: string) => {
-    this.filters.query = query;
+    this.#filters.query = query;
   };
 
   toggleTag = (tag: string) => {
-    const next = new SvelteSet(this.filters.tags);
+    const next = new SvelteSet(this.#filters.tags);
     if (next.has(tag)) next.delete(tag);
     else next.add(tag);
-    this.filters.tags = next;
+    this.#filters.tags = next;
   };
 
   setScale = (scale: string | null) => {
-    this.filters.scale = scale;
+    this.#filters.scale = scale;
   };
 
   clearFilters = () => {
-    this.filters = { query: '', scale: null, tags: new SvelteSet() };
+    this.#filters = { query: '', scale: null, tags: new SvelteSet() };
   };
 
   createItem = async (input: CreateCollectionItemInput) => {
     const toastId = randomId();
-    const snapshot = [...this.rawItems];
+    const snapshot = [...this.#rawItems];
     const tempItem: CollectionItemLite = {
       id: `temp-${toastId}`,
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity
       createdAt: new Date().toISOString(),
       description: input.description ?? null,
       tags: input.tags ?? [],
@@ -143,7 +156,7 @@ class CollectionStore {
       powerSystem: input.powerSystem
     };
 
-    this.rawItems = [...this.rawItems, tempItem];
+    this.#rawItems = [...this.#rawItems, tempItem];
     toastLoading(toastId);
 
     const result = await safeInvoke<CollectionItemLite>('create_collection_item', {
@@ -160,10 +173,10 @@ class CollectionStore {
 
     if (!result.ok) {
       console.error('Failed to create collection item:', result.error);
-      this.rawItems = snapshot;
+      this.#rawItems = snapshot;
       const retry = isRetryableError(result.error)
         ? () => {
-            this.rawItems = snapshot;
+            this.#rawItems = snapshot;
             void this.createItem(input);
           }
         : undefined;
@@ -171,15 +184,15 @@ class CollectionStore {
       return null;
     }
 
-    this.rawItems = this.rawItems.map((item) => (item.id === tempItem.id ? result.data : item));
+    this.#rawItems = this.#rawItems.map((item) => (item.id === tempItem.id ? result.data : item));
     toastSuccess(toastId);
     return result.data;
   };
 
   updateItem = async (input: UpdateCollectionItemInput) => {
     const toastId = randomId();
-    const snapshot = [...this.rawItems];
-    const prev = this.rawItems.find((i) => i.id === input.id);
+    const snapshot = [...this.#rawItems];
+    const prev = this.#rawItems.find((i) => i.id === input.id);
     if (!prev) return null;
 
     const optimistic: CollectionItemLite = {
@@ -193,36 +206,36 @@ class CollectionStore {
       tags: input.tags ?? []
     };
 
-    this.rawItems = this.rawItems.map((i) => (i.id === input.id ? optimistic : i));
+    this.#rawItems = this.#rawItems.map((i) => (i.id === input.id ? optimistic : i));
     toastLoading(toastId);
 
     const result = await safeInvoke<CollectionItemLite>('update_collection_item', { input });
 
     if (!result.ok) {
       console.error('Failed to update collection item:', result.error);
-      this.rawItems = snapshot;
+      this.#rawItems = snapshot;
       const retry = isRetryableError(result.error) ? () => void this.updateItem(input) : undefined;
       toastError(toastId, getErrorMessage(result.error), retry);
       return null;
     }
 
-    this.rawItems = this.rawItems.map((i) => (i.id === input.id ? result.data : i));
+    this.#rawItems = this.#rawItems.map((i) => (i.id === input.id ? result.data : i));
     toastSuccess(toastId);
     return result.data;
   };
 
   deleteItem = async (id: string) => {
     const toastId = randomId();
-    const snapshot = [...this.rawItems];
+    const snapshot = [...this.#rawItems];
 
-    this.rawItems = this.rawItems.filter((i) => i.id !== id);
+    this.#rawItems = this.#rawItems.filter((i) => i.id !== id);
     toastLoading(toastId);
 
     const result = await safeInvoke<void>('delete_collection_item', { id });
 
     if (!result.ok) {
       console.error('Failed to delete collection item:', result.error);
-      this.rawItems = snapshot;
+      this.#rawItems = snapshot;
       const retry = isRetryableError(result.error) ? () => void this.deleteItem(id) : undefined;
       toastError(toastId, getErrorMessage(result.error), retry);
       return false;
@@ -233,5 +246,5 @@ class CollectionStore {
   };
 }
 
-export const collectionStore = new CollectionStore();
+export const collectionService = new CollectionService();
 export { tagIcon };

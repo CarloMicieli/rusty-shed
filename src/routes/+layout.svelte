@@ -7,8 +7,8 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { setAppVersion } from '$lib/stores/app';
-  import { collectionStore } from '$lib/stores/collectionStore.svelte';
-  import { wishlistService } from '$lib/stores/WishlistService.svelte';
+  import { collectionService } from '$lib/features/collection/service.svelte';
+  import { wishlistService } from '$lib/features/wishlists/service.svelte';
   import ToastHost from '$lib/components/ToastHost.svelte';
   import { safeInvoke } from '$lib/services';
 
@@ -38,7 +38,7 @@
     }
 
     // Preload collection for nav badges
-    void collectionStore.fetchCollection();
+    void collectionService.fetchCollection();
     void wishlistService.fetchWishlists();
 
     // Fetch app version using service layer

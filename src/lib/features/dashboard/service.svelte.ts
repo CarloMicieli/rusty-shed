@@ -43,7 +43,7 @@ function toastError(message?: string) {
 /**
  * Loads dashboard data and handles state transitions
  */
-class DashboardStore {
+export class DashboardService {
   // 1. Reactive State
   #data = $state<DashboardSummary | null>(null);
   #isLoading = $state(false);
@@ -100,4 +100,4 @@ class DashboardStore {
 }
 
 // Export a single instance to be used across the app
-export const dashboardStore = new DashboardStore();
+export const dashboardService = new DashboardService();
