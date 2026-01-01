@@ -131,7 +131,8 @@ impl SettingsRepository {
 }
 
 fn parse_currency(code: &str) -> Result<Currency, CommandError> {
-    Currency::from_code(code).map_err(|err| CommandError::validation_field("currency", err.to_string()))
+    Currency::from_code(code)
+        .map_err(|err| CommandError::validation_field("currency", err.to_string()))
 }
 
 fn parse_length_unit(value: &str) -> Result<MeasureUnit, CommandError> {
@@ -139,7 +140,8 @@ fn parse_length_unit(value: &str) -> Result<MeasureUnit, CommandError> {
 }
 
 fn parse_scale(value: &str) -> Result<Scale, CommandError> {
-    Scale::try_from(value).map_err(|err| CommandError::validation_field("favoriteScale", err.to_string()))
+    Scale::try_from(value)
+        .map_err(|err| CommandError::validation_field("favoriteScale", err.to_string()))
 }
 
 fn parse_power_method(value: &str) -> Result<PowerMethod, CommandError> {
