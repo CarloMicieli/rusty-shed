@@ -63,6 +63,9 @@ jobs:
       - name: 🎭 Run frontend build
         run: pnpm build
 
+      - name: 🔬 Run frontend tests
+        run: pnpm test
+
       # 3. Modern Rust Setup (The actions-rs organization is unmaintained)
       - name: 🦀 Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
