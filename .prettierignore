@@ -9,4 +9,4 @@ bun.lockb
 /static/
 
 # Paraglide specific
-src/paraglide/
+src/lib/paraglide/**
