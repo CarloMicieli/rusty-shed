@@ -44,12 +44,13 @@ jobs:
           version: 'latest'
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
+          node-version: '24.x'
+          cache: pnpm
 
       - name: 📦 Install frontend dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install
 
       - name: 🎨 Check Formatting (Prettier)
         run: pnpm exec prettier --check .
