@@ -15,6 +15,7 @@ static RAILWAY_COMPANIES: &str = include_str!(concat!(
     "/seed/railway_companies.csv"
 ));
 static DECODERS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/decoders.csv"));
+static SELLERS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/sellers.csv"));
 
 const CHUNK_SIZE: usize = 50;
 
@@ -279,6 +280,58 @@ pub async fn seed_decoders(pool: &SqlitePool) -> anyhow::Result<()> {
     Ok(())
 }
 
+pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(SELLERS.as_bytes());
+
+    let records: Vec<_> = rdr
+        .records()
+        .collect::<Result<Vec<_>, _>>()
+        .context("Failed to parse sellers CSV records")?;
+
+    let now = Utc::now().to_rfc3339();
+    let mut tx = pool.begin().await.context("Failed to start transaction")?;
+
+    let insert_cmd = r#"
+        INSERT INTO sellers (
+            seller_id, name, type, created_at, updated_at
+        )
+    "#;
+
+    for chunk in records.chunks(CHUNK_SIZE) {
+        let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
+
+        query_builder.push_values(chunk, |mut b, record| {
+            let name = record.get(0).unwrap_or_default();
+            let seller_type = record.get(1).unwrap_or("SHOP");
+
+            // Seller id is derived via slug from the name using slugify
+            let seller_id = format!("trn:seller:{}", slugify(name));
+
+            b.push_bind(seller_id)
+                .push_bind(name.to_string())
+                .push_bind(seller_type.to_string())
+                .push_bind(&now)
+                .push_bind(&now);
+        });
+
+        query_builder.push(" ON CONFLICT(seller_id) DO UPDATE SET ");
+        query_builder.push("name = EXCLUDED.name, ");
+        query_builder.push("type = EXCLUDED.type, ");
+        query_builder.push("updated_at = EXCLUDED.updated_at");
+
+        let query = query_builder.build();
+        query
+            .execute(&mut *tx)
+            .await
+            .context("Failed to execute seller upsert chunk")?;
+    }
+
+    tx.commit().await.context("Failed to commit transaction")?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -379,5 +432,33 @@ mod tests {
             "expected a seeded decoder for id trn:decoder:esu:58410"
         );
         assert_eq!(product_code.unwrap(), "58410");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn seeds_sellers(pool: SqlitePool) {
+        seed_sellers(&pool)
+            .await
+            .expect("seed_sellers should run without errors");
+
+        let mut conn = pool.acquire().await.expect("acquire conn");
+
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sellers")
+            .fetch_one(&mut *conn)
+            .await
+            .expect("count query should succeed");
+        assert!(count > 0, "expected at least one seeded seller");
+
+        let seller_type: Option<String> =
+            sqlx::query_scalar("SELECT type FROM sellers WHERE seller_id = ?")
+                .bind("trn:seller:model-center")
+                .fetch_optional(&mut *conn)
+                .await
+                .expect("select type query should succeed");
+
+        assert!(
+            seller_type.is_some(),
+            "expected a seeded seller for id trn:seller:model-center"
+        );
+        assert_eq!(seller_type.unwrap(), "SHOP");
     }
 }
