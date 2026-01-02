@@ -91,18 +91,31 @@ fn get_app_version() -> String {
 #[tauri::command]
 #[specta::specta]
 async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
+    log::info!("init_database: starting migrations");
     Database::run_migrations(&state.db_pool())
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| {
+            log::error!("init_database: migrations failed: {}", e);
+            CommandError::Unknown(e.to_string())
+        })?;
 
+    log::info!("init_database: starting seeding");
     Database::run_initial_seed(&state.db_pool())
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| {
+            log::error!("init_database: seeding failed: {}", e);
+            CommandError::Unknown(e.to_string())
+        })?;
 
+    log::info!("init_database: ensuring default settings");
     ensure_default_settings(&state.db_pool())
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| {
+            log::error!("init_database: settings failed: {}", e);
+            CommandError::Unknown(e.to_string())
+        })?;
 
+    log::info!("init_database: initialization complete");
     state.set_initialized();
     Ok(())
 }
@@ -110,6 +123,7 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
 #[tauri::command]
 #[specta::specta]
 fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
+    log::info!("show_main_window: calling window.show()");
     window
         .show()
         .map_err(|e| CommandError::Unknown(e.to_string()))?;
