@@ -1,0 +1,141 @@
+<script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
+  import * as sellerService from '$lib/services/sellerService';
+  import type { FormSeller } from '$lib/services/sellerAdapter';
+  import type { SellerType } from '$lib/bindings';
+
+  interface Props {
+    onClose?: () => void;
+    onSaved?: (seller: FormSeller) => void;
+    initial?: FormSeller | null;
+  }
+
+  let { onClose = () => {}, onSaved = () => {}, initial = null }: Props = $props();
+
+  let id = $state<string | null>(null);
+  let name = $state('');
+  let sellerType = $state<SellerType>('SHOP' as SellerType);
+  let email = $state('');
+  let phone = $state('');
+  let websiteUrl = $state('');
+
+  let streetAddress = $state('');
+  let extendedAddress = $state('');
+  let city = $state('');
+  let stateRegion = $state('');
+  let postalCode = $state('');
+  let countryCode = $state('');
+
+  $effect(() => {
+    if (initial) {
+      id = initial.id ?? null;
+      name = initial.name ?? '';
+      sellerType = initial.sellerType ?? ('SHOP' as SellerType);
+      email = initial.email ?? '';
+      phone = initial.phone ?? '';
+      websiteUrl = initial.websiteUrl ?? '';
+
+      streetAddress = initial.streetAddress ?? '';
+      extendedAddress = initial.extendedAddress ?? '';
+      city = initial.city ?? '';
+      stateRegion = initial.stateRegion ?? '';
+      postalCode = initial.postalCode ?? '';
+      countryCode = initial.countryCode ?? '';
+    }
+  });
+
+  let isSubmitting = $state(false);
+  let formError = $state<string | null>(null);
+
+  function toForm(): FormSeller {
+    return {
+      id: id ?? undefined,
+      name,
+      sellerType,
+      email: email || null,
+      phone: phone || null,
+      websiteUrl: websiteUrl || null,
+      streetAddress: streetAddress || null,
+      extendedAddress: extendedAddress || null,
+      city: city || null,
+      stateRegion: stateRegion || null,
+      postalCode: postalCode || null,
+      countryCode: countryCode || null
+    } as FormSeller;
+  }
+
+  async function handleSubmit() {
+    formError = null;
+    if (!name.trim()) {
+      formError = m.form_new_model_basic_info();
+      return;
+    }
+
+    isSubmitting = true;
+    try {
+      const form = toForm();
+      let res;
+      if (form.id) {
+        res = await sellerService.updateSeller(form);
+      } else {
+        res = await sellerService.createSeller(form);
+      }
+
+      if (res.status === 'ok') {
+        onSaved(res.data);
+        onClose();
+      } else {
+        formError = 'Failed to save seller';
+      }
+    } finally {
+      isSubmitting = false;
+    }
+  }
+
+  function close() {
+    onClose();
+  }
+</script>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="text-base font-semibold">{id ? 'Edit Seller' : 'New Seller'}</h3>
+    <button class="btn-ghost btn" onclick={close}>×</button>
+  </div>
+
+  <div class="card-body space-y-3">
+    <input class="input" placeholder="Name" bind:value={name} />
+
+    <select class="select" bind:value={sellerType}>
+      <option value="SHOP">Shop</option>
+      <option value="INDIVIDUAL">Individual</option>
+      <option value="OTHER">Other</option>
+    </select>
+
+    <input class="input" placeholder="Email" bind:value={email} />
+    <input class="input" placeholder="Phone" bind:value={phone} />
+    <input class="input" placeholder="Website" bind:value={websiteUrl} />
+
+    <input class="input" placeholder="Street address" bind:value={streetAddress} />
+    <input class="input" placeholder="Extended address" bind:value={extendedAddress} />
+    <div class="grid grid-cols-3 gap-2">
+      <input class="input" placeholder="City" bind:value={city} />
+      <input class="input" placeholder="Region" bind:value={stateRegion} />
+      <input class="input" placeholder="Postal code" bind:value={postalCode} />
+    </div>
+    <input class="input" placeholder="Country code" bind:value={countryCode} />
+
+    {#if formError}
+      <div class="text-error">{formError}</div>
+    {/if}
+  </div>
+
+  <div class="card-footer flex justify-end gap-2">
+    <button class="btn-ghost btn" onclick={close} disabled={isSubmitting}
+      >{m.form_new_model_cancel()}</button
+    >
+    <button class="btn-primary btn" onclick={handleSubmit} disabled={isSubmitting}>
+      {isSubmitting ? m.wishlist_modal_saving() : m.form_new_model_create()}
+    </button>
+  </div>
+</div>

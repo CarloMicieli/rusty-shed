@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import type { InvokeArgs, InvokeOptions } from '@tauri-apps/api/core';
+import type { Seller } from '$lib/bindings';
 
 export type MockInvokeResponse = {
   success: boolean;
@@ -100,4 +101,43 @@ export function createMockError(
     error.fields = fields;
   }
   return error;
+}
+
+// Helpers for seller mocks
+export function makeMockSeller(overrides?: Partial<Seller>) {
+  const base: Partial<Seller> = {
+    id: 'trn:seller:example',
+    name: 'Example Seller',
+    sellerType: 'SHOP',
+    email: null,
+    phone: null,
+    websiteUrl: null,
+    address: {
+      street_address: '',
+      extended_address: '',
+      city: '',
+      region: '',
+      postal_code: '',
+      country: ''
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  return { ...base, ...(overrides ?? {}) };
+}
+
+export function mockGetSellersResponse(sellers: unknown[]) {
+  tauriMock.mockCommand('get_sellers', { status: 'ok', data: sellers });
+}
+
+export function mockGetSellerByIdResponse(seller: unknown | null) {
+  tauriMock.mockCommand('get_seller_by_id', { status: 'ok', data: seller });
+}
+
+export function mockCreateSellerResponse(seller: unknown) {
+  tauriMock.mockCommand('create_seller', { status: 'ok', data: seller });
+}
+
+export function mockUpdateSellerResponse(seller: unknown) {
+  tauriMock.mockCommand('update_seller', { status: 'ok', data: seller });
 }

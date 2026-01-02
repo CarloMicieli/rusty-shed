@@ -14,7 +14,15 @@ export default defineConfig(
   includeIgnoreFile(gitignorePath),
   {
     // Ignore auto-generated Tauri bindings and build output
-    ignores: ['src/lib/bindings.ts', 'build/**']
+    ignores: [
+      'src/lib/bindings.ts',
+      'build/**',
+      // Generated paraglide message files (many contain eslint-disable comments)
+      'src/lib/paraglide/server.js',
+      'src/lib/paraglide/messages.js',
+      'src/lib/paraglide/messages/**',
+      'src/paraglide/messages/**'
+    ]
   },
   js.configs.recommended,
   ...ts.configs.recommended,
