@@ -215,6 +215,7 @@
   "constants_freight_car_types_swing_roof_wagon": "Swing roof wagon",
   "constants_freight_car_types_tank_cars": "Tank cars",
   "constants_freight_car_types_telescope_hood_wagons": "Telescope hood wagons",
+  "constants_freight_car_types_closed_cargo_vehicle": "Closed cargo cars",
   "constants_electric_multiple_unit_types_driving_car": "Driving car",
   "constants_electric_multiple_unit_types_high_speed_train": "High-speed train",
   "constants_electric_multiple_unit_types_motor_car": "Motor car",

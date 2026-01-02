@@ -71,6 +71,7 @@ export const passengerCarTypeSchema = z.enum([
 export const freightCarTypeSchema = z.enum([
   'AUTO_TRANSPORT_CARS',
   'BRAKE_WAGON',
+  'CLOSED_CARGO_VEHICLE',
   'CONTAINER_CARS',
   'COVERED_FREIGHT_CARS',
   'DEEP_WELL_FLAT_CARS',

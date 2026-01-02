@@ -1150,6 +1150,11 @@ export type FreightCarType =
    */
   | 'BRAKE_WAGON'
   /**
+   * Wagons designed specifically for carrying cargo that
+   * requires full enclosure and protection from the elements.
+   */
+  | 'CLOSED_CARGO_VEHICLE'
+  /**
    * Flat or skeleton-framed wagons designed specifically to carry
    * standardized shipping containers (ISO containers).
    */

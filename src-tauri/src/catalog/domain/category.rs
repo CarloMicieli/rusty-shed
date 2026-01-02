@@ -89,6 +89,10 @@ pub enum FreightCarType {
     /// historically used to assist in braking the train.
     BrakeWagon,
 
+    /// Wagons designed specifically for carrying cargo that
+    /// requires full enclosure and protection from the elements.
+    ClosedCargoVehicle,
+
     /// Flat or skeleton-framed wagons designed specifically to carry
     /// standardized shipping containers (ISO containers).
     ContainerCars,
@@ -409,6 +413,7 @@ mod tests {
         #[rstest]
         #[case("AUTO_TRANSPORT_CARS", Ok(FreightCarType::AutoTransportCars))]
         #[case("BRAKE_WAGON", Ok(FreightCarType::BrakeWagon))]
+        #[case("CLOSED_CARGO_VEHICLE", Ok(FreightCarType::ClosedCargoVehicle))]
         #[case("CONTAINER_CARS", Ok(FreightCarType::ContainerCars))]
         #[case("COVERED_FREIGHT_CARS", Ok(FreightCarType::CoveredFreightCars))]
         #[case("DEEP_WELL_FLAT_CARS", Ok(FreightCarType::DeepWellFlatCars))]
@@ -443,6 +448,7 @@ mod tests {
         #[rstest]
         #[case(FreightCarType::AutoTransportCars, "AUTO_TRANSPORT_CARS")]
         #[case(FreightCarType::BrakeWagon, "BRAKE_WAGON")]
+        #[case(FreightCarType::ClosedCargoVehicle, "CLOSED_CARGO_VEHICLE")]
         #[case(FreightCarType::ContainerCars, "CONTAINER_CARS")]
         #[case(FreightCarType::CoveredFreightCars, "COVERED_FREIGHT_CARS")]
         #[case(FreightCarType::DeepWellFlatCars, "DEEP_WELL_FLAT_CARS")]
