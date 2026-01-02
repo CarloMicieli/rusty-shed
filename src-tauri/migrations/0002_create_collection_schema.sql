@@ -6,16 +6,15 @@ CREATE TABLE IF NOT EXISTS sellers (
   seller_id    TEXT PRIMARY KEY NOT NULL,
   name         TEXT NOT NULL,
   type         TEXT NOT NULL,
-  url          TEXT,
   email        TEXT,
   phone        TEXT,
   website_url  TEXT,
-  street       TEXT,
-  house_number TEXT,
+  street_address TEXT,
+  extended_address TEXT,
   city         TEXT,
   state_region TEXT,
   postal_code  TEXT,
-  country_code TEXT, -- Recommended: ISO 3166-1 alpha-2 format
+  country_code TEXT,
   created_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

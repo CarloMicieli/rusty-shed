@@ -1,7 +1,7 @@
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
-use crate::sellers::domain::seller_type::SellerType;
+use crate::sellers::infrastructure::entities::SellerRow;
 use anyhow::Context;
 use chrono::Utc;
 
@@ -19,13 +19,12 @@ impl<'conn> SqliteSellersRepository<'conn> {
         SELECT
           seller_id,
           name,
-          type,
-          url,
+          type AS seller_type,
           email,
           phone,
           website_url,
-          street,
-          house_number,
+          street_address,
+          extended_address,
           city,
           state_region,
           postal_code,
@@ -47,13 +46,12 @@ impl<'conn> SqliteSellersRepository<'conn> {
         SELECT
           seller_id,
           name,
-          type,
-          url,
+          type AS seller_type,
           email,
           phone,
           website_url,
-          street,
-          house_number,
+          street_address,
+          extended_address,
           city,
           state_region,
           postal_code,
@@ -80,24 +78,38 @@ impl<'conn> SqliteSellersRepository<'conn> {
                 .await
                 .with_context(|| format!("fetching seller created_at for {}", seller.id))?;
 
-        let created_at_to_use = existing_created_at.unwrap_or_else(|| seller.created_at.clone());
+        let created_at_to_use =
+            existing_created_at.unwrap_or_else(|| seller.created_at.to_rfc3339());
         let updated_at = Utc::now().to_rfc3339();
+
+        // Extract address components for DB binding
+        let (street_address, extended_address, city, state_region, postal_code, country_code) =
+            match &seller.address {
+                Some(addr) => (
+                    Some(addr.street_address().to_string()),
+                    addr.extended_address().map(|s| s.to_string()),
+                    Some(addr.city().to_string()),
+                    addr.region().map(|s| s.to_string()),
+                    Some(addr.postal_code().to_string()),
+                    Some(addr.country_code().to_string()),
+                ),
+                None => (None, None, None, None, None, None),
+            };
 
         let sql = r#"
             INSERT INTO sellers (
-              seller_id, name, type, url, email, phone, website_url,
-              street, house_number, city, state_region, postal_code, country_code,
+              seller_id, name, type, email, phone, website_url,
+              street_address, extended_address, city, state_region, postal_code, country_code,
               created_at, updated_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(seller_id) DO UPDATE SET
               name = excluded.name,
               type = excluded.type,
-              url = excluded.url,
               email = excluded.email,
               phone = excluded.phone,
               website_url = excluded.website_url,
-              street = excluded.street,
-              house_number = excluded.house_number,
+              street_address = excluded.street_address,
+              extended_address = excluded.extended_address,
               city = excluded.city,
               state_region = excluded.state_region,
               postal_code = excluded.postal_code,
@@ -107,17 +119,16 @@ impl<'conn> SqliteSellersRepository<'conn> {
         sqlx::query(sql)
             .bind(&seller.id.0)
             .bind(&seller.name)
-            .bind(&seller.r#type)
-            .bind(&seller.url)
+            .bind(&seller.seller_type)
             .bind(&seller.email)
             .bind(&seller.phone)
             .bind(&seller.website_url)
-            .bind(&seller.street)
-            .bind(&seller.house_number)
-            .bind(&seller.city)
-            .bind(&seller.state_region)
-            .bind(&seller.postal_code)
-            .bind(&seller.country_code)
+            .bind(&street_address)
+            .bind(&extended_address)
+            .bind(&city)
+            .bind(&state_region)
+            .bind(&postal_code)
+            .bind(&country_code)
             .bind(&created_at_to_use)
             .bind(&updated_at)
             .execute(&mut *self.executor)
@@ -144,46 +155,5 @@ pub trait SellersUowExt {
 impl<'conn> SellersUowExt for SqliteUnitOfWork<'conn> {
     fn sellers_repo(&mut self) -> SqliteSellersRepository<'_> {
         SqliteSellersRepository::new(&mut self.tx)
-    }
-}
-
-#[derive(Debug, Clone, sqlx::FromRow)]
-pub struct SellerRow {
-    pub seller_id: String,
-    pub name: String,
-    pub r#type: SellerType,
-    pub url: Option<String>,
-    pub email: Option<String>,
-    pub phone: Option<String>,
-    pub website_url: Option<String>,
-    pub street: Option<String>,
-    pub house_number: Option<String>,
-    pub city: Option<String>,
-    pub state_region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country_code: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
-}
-
-impl From<SellerRow> for Seller {
-    fn from(row: SellerRow) -> Self {
-        Seller {
-            id: SellerId(row.seller_id),
-            name: row.name,
-            r#type: row.r#type,
-            url: row.url,
-            email: row.email,
-            phone: row.phone,
-            website_url: row.website_url,
-            street: row.street,
-            house_number: row.house_number,
-            city: row.city,
-            state_region: row.state_region,
-            postal_code: row.postal_code,
-            country_code: row.country_code,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-        }
     }
 }

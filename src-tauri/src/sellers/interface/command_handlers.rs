@@ -60,13 +60,12 @@ pub async fn get_seller_by_id(
 #[serde(rename_all = "camelCase")]
 pub struct CreateSellerPayload {
     pub name: String,
-    pub r#type: SellerType,
-    pub url: Option<String>,
+    pub seller_type: SellerType,
     pub email: Option<String>,
     pub phone: Option<String>,
     pub website_url: Option<String>,
-    pub street: Option<String>,
-    pub house_number: Option<String>,
+    pub street_address: Option<String>,
+    pub extended_address: Option<String>,
     pub city: Option<String>,
     pub state_region: Option<String>,
     pub postal_code: Option<String>,
@@ -86,13 +85,12 @@ pub async fn create_seller(
     let use_case = CreateSellerUseCase::new();
     let input = CreateSellerInput {
         name: payload.name,
-        r#type: payload.r#type,
-        url: payload.url,
+        seller_type: payload.seller_type,
         email: payload.email,
         phone: payload.phone,
         website_url: payload.website_url,
-        street: payload.street,
-        house_number: payload.house_number,
+        street_address: payload.street_address,
+        extended_address: payload.extended_address,
         city: payload.city,
         state_region: payload.state_region,
         postal_code: payload.postal_code,
@@ -115,13 +113,12 @@ pub async fn create_seller(
 pub struct UpdateSellerPayload {
     pub id: String,
     pub name: String,
-    pub r#type: SellerType,
-    pub url: Option<String>,
+    pub seller_type: SellerType,
     pub email: Option<String>,
     pub phone: Option<String>,
     pub website_url: Option<String>,
-    pub street: Option<String>,
-    pub house_number: Option<String>,
+    pub street_address: Option<String>,
+    pub extended_address: Option<String>,
     pub city: Option<String>,
     pub state_region: Option<String>,
     pub postal_code: Option<String>,
@@ -142,22 +139,30 @@ pub async fn update_seller(
     let sid = SellerId::try_from(payload.id.as_str())
         .map_err(|e| CommandError::Unknown(e.to_string()))?;
 
+    let created_at_dt = if let Some(created_at_str) = payload.created_at.as_deref() {
+        match chrono::DateTime::parse_from_rfc3339(created_at_str) {
+            Ok(dt) => Some(dt.with_timezone(&chrono::Utc)),
+            Err(e) => return Err(CommandError::Unknown(e.to_string())),
+        }
+    } else {
+        None
+    };
+
     let use_case = UpdateSellerUseCase::new();
     let input = UpdateSellerInput {
         id: sid,
         name: payload.name,
-        r#type: payload.r#type,
-        url: payload.url,
+        seller_type: payload.seller_type,
         email: payload.email,
         phone: payload.phone,
         website_url: payload.website_url,
-        street: payload.street,
-        house_number: payload.house_number,
+        street_address: payload.street_address,
+        extended_address: payload.extended_address,
         city: payload.city,
         state_region: payload.state_region,
         postal_code: payload.postal_code,
         country_code: payload.country_code,
-        created_at: payload.created_at,
+        created_at: created_at_dt,
     };
     let result = use_case
         .execute(&mut uow, input)

@@ -40,3 +40,43 @@ impl std::fmt::Display for SellerId {
         write!(f, "{}", self.0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use slug::slugify;
+
+    #[test]
+    fn new_from_name_creates_expected_slug() {
+        let id = SellerId::new_from_name("My Shop");
+        let expected = format!("trn:seller:{}", slugify("My Shop"));
+        assert_eq!(id.0, expected);
+    }
+
+    #[test]
+    fn try_from_str_empty_fails() {
+        let res = SellerId::try_from("");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn try_from_str_ok() {
+        let s = "trn:seller:foo";
+        let id = SellerId::try_from(s).unwrap();
+        assert_eq!(id.0, s);
+    }
+
+    #[test]
+    fn try_from_string_ok() {
+        let s = "trn:seller:bar".to_string();
+        let id = SellerId::try_from(s.clone()).unwrap();
+        assert_eq!(id.to_string(), s);
+    }
+
+    #[test]
+    fn display_outputs_inner() {
+        let id = SellerId("trn:seller:baz".to_string());
+        assert_eq!(format!("{}", id), "trn:seller:baz");
+    }
+}

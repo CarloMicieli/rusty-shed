@@ -1,3 +1,4 @@
+use crate::core::domain::address::{Address, AddressFields};
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
@@ -9,13 +10,12 @@ use chrono::Utc;
 #[serde(rename_all = "camelCase")]
 pub struct CreateSellerInput {
     pub name: String,
-    pub r#type: SellerType,
-    pub url: Option<String>,
+    pub seller_type: SellerType,
     pub email: Option<String>,
     pub phone: Option<String>,
     pub website_url: Option<String>,
-    pub street: Option<String>,
-    pub house_number: Option<String>,
+    pub street_address: Option<String>,
+    pub extended_address: Option<String>,
     pub city: Option<String>,
     pub state_region: Option<String>,
     pub postal_code: Option<String>,
@@ -35,22 +35,26 @@ impl CreateSellerUseCase {
         uow: &mut SqliteUnitOfWork<'_>,
         input: CreateSellerInput,
     ) -> anyhow::Result<Seller> {
-        let now = Utc::now().to_rfc3339();
+        let now = Utc::now();
+        let address_fields = AddressFields {
+            street: input.street_address.clone(),
+            extended: input.extended_address.clone(),
+            city: input.city.clone(),
+            region: input.state_region.clone(),
+            postal: input.postal_code.clone(),
+            country: input.country_code.clone(),
+        };
+        let address = Address::try_from(address_fields).ok();
+
         let seller = Seller {
             id: SellerId::new_from_name(&input.name),
             name: input.name,
-            r#type: input.r#type,
-            url: input.url,
+            seller_type: input.seller_type,
             email: input.email,
             phone: input.phone,
             website_url: input.website_url,
-            street: input.street,
-            house_number: input.house_number,
-            city: input.city,
-            state_region: input.state_region,
-            postal_code: input.postal_code,
-            country_code: input.country_code,
-            created_at: now.clone(),
+            address,
+            created_at: now,
             updated_at: now,
         };
 

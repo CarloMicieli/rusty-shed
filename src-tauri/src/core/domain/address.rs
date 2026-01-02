@@ -178,6 +178,39 @@ pub enum AddressBuilderError {
     MissingCountry,
 }
 
+pub struct AddressFields {
+    pub street: Option<String>,
+    pub extended: Option<String>,
+    pub city: Option<String>,
+    pub region: Option<String>,
+    pub postal: Option<String>,
+    pub country: Option<String>,
+}
+
+impl TryFrom<AddressFields> for Address {
+    type Error = anyhow::Error;
+
+    fn try_from(fields: AddressFields) -> Result<Self, Self::Error> {
+        // Since your Address struct has non-optional fields (like city and street),
+        // you must handle the case where they are missing.
+        Ok(Self {
+            street_address: fields
+                .street
+                .ok_or_else(|| anyhow::anyhow!("Missing street"))?,
+            extended_address: fields.extended,
+            city: fields.city.ok_or_else(|| anyhow::anyhow!("Missing city"))?,
+            region: fields.region,
+            postal_code: fields
+                .postal
+                .ok_or_else(|| anyhow::anyhow!("Missing postal code"))?,
+            country: fields
+                .country
+                .and_then(|c| CountryCode::for_alpha2(&c).ok()) // Assuming CountryCode implements FromStr
+                .ok_or_else(|| anyhow::anyhow!("Invalid country"))?,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
