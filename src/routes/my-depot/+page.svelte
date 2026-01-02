@@ -129,9 +129,30 @@
 
     if (rolling.category === 'PassengerCar' || rolling.category === 'FreightCar') {
       const data = rolling.data;
+
+      // Build a safe, typed view of the data without using `any` so we can inspect fields
+      const d = data as Record<string, unknown> & {
+        id: string;
+        friendly_name?: string;
+        freight_car_type?: string | null;
+        passenger_car_type?: string | null;
+        road_number?: string | null;
+        service_level?: string | null;
+      };
+
+      // compute a string label for the car type: prefer the typed enum field, fallback to friendly_name
+      let typeLabel: string;
+      if (d.freight_car_type && typeof d.freight_car_type === 'string') {
+        typeLabel = d.freight_car_type;
+      } else if (d.passenger_car_type && typeof d.passenger_car_type === 'string') {
+        typeLabel = d.passenger_car_type;
+      } else {
+        typeLabel = d.friendly_name ?? '';
+      }
+
       collections.cars.push({
         id: data.id,
-        type: data.type_name,
+        type: typeLabel,
         roadNumber: data.road_number ?? null,
         railwayCompany: railway,
         livery,

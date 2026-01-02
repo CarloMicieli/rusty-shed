@@ -20,7 +20,7 @@ VALUES ('trn:railway-model:acme:60100', 'trn:manufacturer:acme', '60100', 'Locom
         'DC', 'H0', 'IV', 'Locomotives', 'Available');
 
 INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
-                            livery, length_millimeters, technical_lights, class_name, road_number,
+                            livery, length_millimeters, technical_lights, series_code, road_number,
                             locomotive_type, dcc_interface, control, is_dummy)
 VALUES ('rs-001', 'trn:railway-model:acme:60100', 'Locomotive', 'trn:railway-company:fs',
         'Grigio nebbia / Blu orientale', 195.0, 'White/Red directional', 'E.444', 'E.444.005',

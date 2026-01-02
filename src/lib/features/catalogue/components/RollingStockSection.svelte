@@ -41,7 +41,7 @@
     locomotiveTypesData,
     passengerCarTypesData,
     freightCarTypesData,
-    electricMultipleUnitTypesData,
+    electricMultipleUnitTypesData: _electricMultipleUnitTypesData,
     controlsData,
     dccInterfacesData,
     serviceLevelsData,
@@ -76,8 +76,19 @@
 {/snippet}
 
 {#snippet passengerFields()}
-  <FormField label={formLabels.typeName} error={fieldError('type_name')} required>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.type_name} />
+  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.friendly_name}
+    />
+  </FormField>
+  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.series_code}
+    />
   </FormField>
 
   {@render selectField(
@@ -126,8 +137,20 @@
 {/snippet}
 
 {#snippet freightFields()}
-  <FormField label={formLabels.typeName} error={fieldError('type_name')} required>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.type_name} />
+  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.friendly_name}
+    />
+  </FormField>
+
+  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.series_code}
+    />
   </FormField>
 
   {@render selectField(formLabels.freightCarType, 'freight_car_type', false, freightCarTypesData)}
@@ -150,8 +173,20 @@
 {/snippet}
 
 {#snippet railcarFields()}
-  <FormField label={formLabels.typeName} error={fieldError('type_name')} required>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.type_name} />
+  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.friendly_name}
+    />
+  </FormField>
+
+  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.series_code}
+    />
   </FormField>
 
   <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
@@ -194,16 +229,21 @@
 {/snippet}
 
 {#snippet emuFields()}
-  <FormField label={formLabels.typeName} error={fieldError('type_name')} required>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.type_name} />
+  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.friendly_name}
+    />
   </FormField>
 
-  {@render selectField(
-    formLabels.emuType,
-    'electric_multiple_unit_type',
-    true,
-    electricMultipleUnitTypesData
-  )}
+  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.series_code}
+    />
+  </FormField>
 
   <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
     <input
@@ -252,8 +292,20 @@
 {/snippet}
 
 {#snippet locomotiveFields()}
-  <FormField label={formLabels.className} error={fieldError('class_name')} required>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.class_name} />
+  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.friendly_name}
+    />
+  </FormField>
+
+  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
+    <input
+      class="input border-surface-600 bg-surface-800"
+      type="text"
+      bind:value={rs.series_code}
+    />
   </FormField>
 
   <FormField label={formLabels.roadNumber} error={fieldError('road_number')} required>

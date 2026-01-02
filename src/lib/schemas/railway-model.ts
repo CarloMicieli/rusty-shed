@@ -181,7 +181,8 @@ const baseRollingStockSchema = z.object({
 // Locomotive variant
 const locomotiveSchema = baseRollingStockSchema.extend({
   category: z.literal('Locomotive'),
-  class_name: z.string().min(1, 'Class name is required for locomotives'),
+  friendly_name: z.string().min(1, 'Friendly name is required for locomotives'),
+  series_code: z.string().min(1, 'Series code is required for locomotives'),
   road_number: z.string().min(1, 'Road number is required for locomotives'),
   series: z.string().nullable(),
   depot: z.string().nullable(),
@@ -194,7 +195,8 @@ const locomotiveSchema = baseRollingStockSchema.extend({
 // Passenger Car variant
 const passengerCarSchema = baseRollingStockSchema.extend({
   category: z.literal('PassengerCar'),
-  type_name: z.string().min(1, 'Type name is required for passenger cars'),
+  friendly_name: z.string().min(1, 'Friendly name is required for passenger cars'),
+  series_code: z.string().min(1, 'Series code is required for passenger cars'),
   road_number: z.string().nullable(),
   series: z.string().nullable(),
   depot: z.string().nullable(),
@@ -205,7 +207,8 @@ const passengerCarSchema = baseRollingStockSchema.extend({
 // Freight Car variant
 const freightCarSchema = baseRollingStockSchema.extend({
   category: z.literal('FreightCar'),
-  type_name: z.string().min(1, 'Type name is required for freight cars'),
+  friendly_name: z.string().min(1, 'Friendly name is required for freight cars'),
+  series_code: z.string().min(1, 'Series code is required for freight cars'),
   road_number: z.string().nullable(),
   series: z.string().nullable(),
   depot: z.string().nullable(),
@@ -215,7 +218,8 @@ const freightCarSchema = baseRollingStockSchema.extend({
 // Railcar variant
 const railcarSchema = baseRollingStockSchema.extend({
   category: z.literal('Railcar'),
-  type_name: z.string().min(1, 'Type name is required for railcars'),
+  friendly_name: z.string().min(1, 'Friendly name is required for railcars'),
+  series_code: z.string().min(1, 'Series code is required for railcars'),
   road_number: z.string().nullable(),
   series: z.string().nullable(),
   depot: z.string().nullable(),
@@ -226,7 +230,8 @@ const railcarSchema = baseRollingStockSchema.extend({
 // Electric Multiple Unit variant
 const electricMultipleUnitSchema = baseRollingStockSchema.extend({
   category: z.literal('ElectricMultipleUnit'),
-  type_name: z.string().min(1, 'Type name is required for EMUs'),
+  friendly_name: z.string().min(1, 'Friendly name is required for EMUs'),
+  series_code: z.string().min(1, 'Series code is required for EMUs'),
   road_number: z.string().nullable(),
   series: z.string().nullable(),
   depot: z.string().nullable(),

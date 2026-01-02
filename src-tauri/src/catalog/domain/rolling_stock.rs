@@ -27,8 +27,10 @@ pub enum RollingStock {
         length_over_buffer: Option<LengthOverBuffers>,
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
-        /// the electric multiple unit type name
-        type_name: String,
+        /// the electric multiple unit friendly name
+        friendly_name: String,
+        /// the series code (eg. a short code identifying the series)
+        series_code: Option<String>,
         /// the identification marking for this electric multiple unit
         road_number: Option<String>,
         /// the prototype series information
@@ -56,8 +58,10 @@ pub enum RollingStock {
         length_over_buffer: Option<LengthOverBuffers>,
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
-        /// the freight car type name
-        type_name: String,
+        /// the freight car friendly name
+        friendly_name: String,
+        /// the series code
+        series_code: Option<String>,
         /// the identification marking for this freight car
         road_number: Option<String>,
         /// the freight car type
@@ -75,9 +79,10 @@ pub enum RollingStock {
         length_over_buffer: Option<LengthOverBuffers>,
         /// the technical specification
         technical_specifications: Option<TechnicalSpecifications>,
-        /// the class of locomotives. The class is a group of locomotives built to a common design,
-        /// typically for a single railroad or railway
-        class_name: String,
+        /// the locomotive friendly name
+        friendly_name: String,
+        /// the series code
+        series_code: Option<String>,
         /// the identification marking for this locomotive
         road_number: String,
         /// the prototype series information
@@ -105,8 +110,10 @@ pub enum RollingStock {
         length_over_buffer: Option<LengthOverBuffers>,
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
-        /// the passenger car type name
-        type_name: String,
+        /// the passenger car friendly name
+        friendly_name: String,
+        /// the series code
+        series_code: Option<String>,
         /// the identification marking for this passenger car
         road_number: Option<String>,
         /// the prototype series information
@@ -129,8 +136,10 @@ pub enum RollingStock {
         length_over_buffer: Option<LengthOverBuffers>,
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
-        /// the railcar type name
-        type_name: String,
+        /// the railcar friendly name
+        friendly_name: String,
+        /// the series code
+        series_code: Option<String>,
         /// the identification marking for this railcar
         road_number: Option<String>,
         /// the railcar series
@@ -153,7 +162,8 @@ impl RollingStock {
     #[allow(clippy::too_many_arguments)]
     pub fn new_electric_multiple_unit(
         id: RollingStockId,
-        type_name: &str,
+        friendly_name: &str,
+        series_code: Option<&str>,
         road_number: Option<&str>,
         series: Option<&str>,
         railway: RollingStockRailway,
@@ -172,7 +182,8 @@ impl RollingStock {
             livery: livery.map(str::to_string),
             length_over_buffer,
             technical_specifications,
-            type_name: String::from(type_name),
+            friendly_name: String::from(friendly_name),
+            series_code: series_code.map(str::to_string),
             road_number: road_number.map(str::to_string),
             series: series.map(str::to_string),
             depot: depot.map(str::to_string),
@@ -187,7 +198,8 @@ impl RollingStock {
     #[allow(clippy::too_many_arguments)]
     pub fn new_freight_car(
         id: RollingStockId,
-        type_name: &str,
+        friendly_name: &str,
+        series_code: Option<&str>,
         road_number: Option<&str>,
         railway: RollingStockRailway,
         freight_car_type: Option<FreightCarType>,
@@ -201,7 +213,8 @@ impl RollingStock {
             livery: livery.map(str::to_string),
             length_over_buffer,
             technical_specifications,
-            type_name: String::from(type_name),
+            friendly_name: String::from(friendly_name),
+            series_code: series_code.map(str::to_string),
             road_number: road_number.map(str::to_string),
             freight_car_type,
         }
@@ -211,7 +224,8 @@ impl RollingStock {
     #[allow(clippy::too_many_arguments)]
     pub fn new_locomotive(
         id: RollingStockId,
-        class_name: &str,
+        friendly_name: &str,
+        series_code: Option<&str>,
         road_number: &str,
         series: Option<&str>,
         railway: RollingStockRailway,
@@ -230,7 +244,8 @@ impl RollingStock {
             livery: livery.map(str::to_string),
             length_over_buffer,
             technical_specifications,
-            class_name: String::from(class_name),
+            friendly_name: String::from(friendly_name),
+            series_code: series_code.map(str::to_string),
             road_number: String::from(road_number),
             series: series.map(str::to_string),
             depot: depot.map(str::to_string),
@@ -245,7 +260,8 @@ impl RollingStock {
     #[allow(clippy::too_many_arguments)]
     pub fn new_passenger_car(
         id: RollingStockId,
-        type_name: &str,
+        friendly_name: &str,
+        series_code: Option<&str>,
         road_number: Option<&str>,
         series: Option<&str>,
         railway: RollingStockRailway,
@@ -261,7 +277,8 @@ impl RollingStock {
             livery: livery.map(str::to_string),
             length_over_buffer,
             technical_specifications,
-            type_name: String::from(type_name),
+            friendly_name: String::from(friendly_name),
+            series_code: series_code.map(str::to_string),
             road_number: road_number.map(str::to_string),
             series: series.map(str::to_string),
             passenger_car_type,
@@ -273,7 +290,8 @@ impl RollingStock {
     #[allow(clippy::too_many_arguments)]
     pub fn new_railcar(
         id: RollingStockId,
-        type_name: &str,
+        friendly_name: &str,
+        series_code: Option<&str>,
         road_number: Option<&str>,
         series: Option<&str>,
         railway: RollingStockRailway,
@@ -292,7 +310,8 @@ impl RollingStock {
             livery: livery.map(str::to_string),
             length_over_buffer,
             technical_specifications,
-            type_name: String::from(type_name),
+            friendly_name: String::from(friendly_name),
+            series_code: series_code.map(str::to_string),
             road_number: road_number.map(str::to_string),
             series: series.map(str::to_string),
             depot: depot.map(str::to_string),
@@ -489,6 +508,7 @@ mod test {
             let locomotive = RollingStock::new_locomotive(
                 id,
                 "E.656",
+                None,
                 "E.656 077",
                 Some("I serie"),
                 fs.clone(),
@@ -524,6 +544,7 @@ mod test {
             let power_car = RollingStock::new_electric_multiple_unit(
                 id,
                 "ALe 801",
+                Some("003"),
                 Some("ALe 801 003"),
                 None,
                 fs.clone(),
@@ -562,6 +583,7 @@ mod test {
             let passenger_car = RollingStock::new_passenger_car(
                 id,
                 "UIC-Z1",
+                None,
                 Some("61 83 19-90 105-3 A"),
                 None,
                 fs.clone(),
@@ -594,6 +616,7 @@ mod test {
             let power_car = RollingStock::new_railcar(
                 id,
                 "ALn 668",
+                None,
                 Some("ALn 668 1449"),
                 None,
                 fs.clone(),
@@ -629,6 +652,7 @@ mod test {
             let freight_car = RollingStock::new_freight_car(
                 id,
                 "Fals",
+                None,
                 Some("31 83 665 0 150-6"),
                 fs.clone(),
                 Some(FreightCarType::Gondola),

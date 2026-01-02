@@ -825,7 +825,8 @@ export type CreateRollingStockInput =
   | {
       category: 'Locomotive';
       railway_company_id: string;
-      class_name: string;
+      friendly_name: string;
+      series_code: string;
       road_number: string;
       series: string | null;
       depot: string | null;
@@ -840,7 +841,8 @@ export type CreateRollingStockInput =
   | {
       category: 'PassengerCar';
       railway_company_id: string;
-      type_name: string;
+      friendly_name: string;
+      series_code: string;
       road_number: string | null;
       series: string | null;
       depot: string | null;
@@ -853,7 +855,8 @@ export type CreateRollingStockInput =
   | {
       category: 'FreightCar';
       railway_company_id: string;
-      type_name: string;
+      friendly_name: string;
+      series_code: string;
       road_number: string | null;
       series: string | null;
       depot: string | null;
@@ -865,7 +868,8 @@ export type CreateRollingStockInput =
   | {
       category: 'Railcar';
       railway_company_id: string;
-      type_name: string;
+      friendly_name: string;
+      series_code: string;
       road_number: string | null;
       series: string | null;
       depot: string | null;
@@ -878,7 +882,8 @@ export type CreateRollingStockInput =
   | {
       category: 'ElectricMultipleUnit';
       railway_company_id: string;
-      type_name: string;
+      friendly_name: string;
+      series_code: string;
       road_number: string | null;
       series: string | null;
       depot: string | null;
@@ -1864,9 +1869,13 @@ export type RollingStock =
          */
         technical_specifications: TechnicalSpecifications | null;
         /**
-         * the electric multiple unit type name
+         * the electric multiple unit friendly name
          */
-        type_name: string;
+        friendly_name: string;
+        /**
+         * the series code (eg. a short code identifying the series)
+         */
+        series_code: string | null;
         /**
          * the identification marking for this electric multiple unit
          */
@@ -1924,9 +1933,13 @@ export type RollingStock =
          */
         technical_specifications: TechnicalSpecifications | null;
         /**
-         * the freight car type name
+         * the freight car friendly name
          */
-        type_name: string;
+        friendly_name: string;
+        /**
+         * the series code
+         */
+        series_code: string | null;
         /**
          * the identification marking for this freight car
          */
@@ -1964,10 +1977,13 @@ export type RollingStock =
          */
         technical_specifications: TechnicalSpecifications | null;
         /**
-         * the class of locomotives. The class is a group of locomotives built to a common design,
-         * typically for a single railroad or railway
+         * the locomotive friendly name
          */
-        class_name: string;
+        friendly_name: string;
+        /**
+         * the series code
+         */
+        series_code: string | null;
         /**
          * the identification marking for this locomotive
          */
@@ -2025,9 +2041,13 @@ export type RollingStock =
          */
         technical_specifications: TechnicalSpecifications | null;
         /**
-         * the passenger car type name
+         * the passenger car friendly name
          */
-        type_name: string;
+        friendly_name: string;
+        /**
+         * the series code
+         */
+        series_code: string | null;
         /**
          * the identification marking for this passenger car
          */
@@ -2074,9 +2094,13 @@ export type RollingStock =
          */
         technical_specifications: TechnicalSpecifications | null;
         /**
-         * the railcar type name
+         * the railcar friendly name
          */
-        type_name: string;
+        friendly_name: string;
+        /**
+         * the series code
+         */
+        series_code: string | null;
         /**
          * the identification marking for this railcar
          */

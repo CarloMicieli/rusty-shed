@@ -47,7 +47,9 @@ export const formLabels: Record<string, ConstantItem> = {
   },
   livery: { id: 'livery', labelKey: 'form_new_model_livery' },
   liveryPlaceholder: { id: 'livery-placeholder', labelKey: 'form_new_model_livery_placeholder' },
-  className: { id: 'class-name', labelKey: 'form_new_model_class_name' },
+  // className removed per request
+  friendlyName: { id: 'friendly-name', labelKey: 'form_new_model_friendly_name' },
+  seriesCode: { id: 'series-code', labelKey: 'form_new_model_series_code' },
   roadNumber: { id: 'road-number', labelKey: 'form_new_model_road_number' },
   series: { id: 'series', labelKey: 'form_new_model_series' },
   depot: { id: 'depot', labelKey: 'form_new_model_depot' },

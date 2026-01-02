@@ -68,8 +68,8 @@ CREATE TABLE IF NOT EXISTS rolling_stocks
     technical_interior_lights   TEXT,
     technical_lights            TEXT,
     technical_sprung_buffers    TEXT,
-    type_name                   TEXT,
-    class_name                  TEXT,
+    series_code                 TEXT,
+    friendly_name               TEXT,
     road_number                 TEXT,
     series                      TEXT,
     depot                       TEXT,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS rolling_stocks
     service_level               TEXT,
     dcc_interface               TEXT,
     control                     TEXT,
-    is_dummy                    INTEGER NOT NULL DEFAULT 0,
+    is_dummy                    INTEGER NOT NULL CHECK (is_dummy IN (0, 1)) DEFAULT 0,
     FOREIGN KEY (railway_model_id) REFERENCES railway_models (id) ON DELETE CASCADE,
     FOREIGN KEY (railway_company_id) REFERENCES railway_companies (id) ON DELETE CASCADE
 );

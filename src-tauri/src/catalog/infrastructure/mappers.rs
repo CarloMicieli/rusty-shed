@@ -165,12 +165,15 @@ impl TryFrom<RollingStockRow> for RollingStock {
                     .and_then(|s| LocomotiveType::try_from(s).ok())
                     .unwrap_or(LocomotiveType::DieselLocomotive);
 
-                let class_name = row.class_name.as_deref().unwrap_or("");
+                // Map: previously class_name -> now series_code and friendly_name used where appropriate
+                let friendly = row.friendly_name.as_deref().unwrap_or("");
                 let road_number = row.road_number.as_deref().unwrap_or("");
 
+                // Supply explicitly typed None values for ambiguous Option<> parameters
                 Ok(RollingStock::new_locomotive(
                     id,
-                    class_name,
+                    friendly,
+                    Some(row.series_code.as_str()),
                     road_number,
                     row.series.as_deref(),
                     railway,
@@ -178,10 +181,10 @@ impl TryFrom<RollingStockRow> for RollingStock {
                     row.depot.as_deref(),
                     row.livery.as_deref(),
                     is_dummy,
-                    None,
-                    None,
-                    None,
-                    None,
+                    None::<crate::catalog::domain::length_over_buffers::LengthOverBuffers>,
+                    None::<crate::catalog::domain::control::Control>,
+                    None::<crate::catalog::domain::dcc_interface::DccInterface>,
+                    None::<crate::catalog::domain::technical_specifications::TechnicalSpecifications>,
                 ))
             }
             RollingStockCategory::FreightCar => {
@@ -190,9 +193,11 @@ impl TryFrom<RollingStockRow> for RollingStock {
                     .as_deref()
                     .and_then(|s| FreightCarType::try_from(s).ok());
 
+                // Map: previously type_name -> friendly_name
                 Ok(RollingStock::new_freight_car(
                     id,
-                    row.type_name.as_deref().unwrap_or(""),
+                    row.friendly_name.as_deref().unwrap_or(""),
+                    Some(row.series_code.as_str()),
                     row.road_number.as_deref(),
                     railway,
                     freight_type,
@@ -209,7 +214,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
 
                 Ok(RollingStock::new_passenger_car(
                     id,
-                    row.type_name.as_deref().unwrap_or(""),
+                    row.friendly_name.as_deref().unwrap_or(""),
+                    Some(row.series_code.as_str()),
                     row.road_number.as_deref(),
                     row.series.as_deref(),
                     railway,
@@ -229,7 +235,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
 
                 Ok(RollingStock::new_electric_multiple_unit(
                     id,
-                    row.type_name.as_deref().unwrap_or(""),
+                    row.friendly_name.as_deref().unwrap_or(""),
+                    Some(row.series_code.as_str()),
                     row.road_number.as_deref(),
                     row.series.as_deref(),
                     railway,
@@ -252,7 +259,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
 
                 Ok(RollingStock::new_railcar(
                     id,
-                    row.type_name.as_deref().unwrap_or(""),
+                    row.friendly_name.as_deref().unwrap_or(""),
+                    Some(row.series_code.as_str()),
                     row.road_number.as_deref(),
                     row.series.as_deref(),
                     railway,
@@ -477,8 +485,8 @@ mod tests {
                 technical_interior_lights: None,
                 technical_lights: None,
                 technical_sprung_buffers: None,
-                type_name: Some("Class X".to_string()),
-                class_name: Some("Class X".to_string()),
+                friendly_name: Some("Class X".to_string()),
+                series_code: "123".to_string(),
                 road_number: Some("123".to_string()),
                 series: None,
                 depot: None,
@@ -519,8 +527,8 @@ mod tests {
                 technical_interior_lights: None,
                 technical_lights: None,
                 technical_sprung_buffers: None,
-                type_name: Some("Freight Type".to_string()),
-                class_name: None,
+                friendly_name: Some("Freight Type".to_string()),
+                series_code: "".to_string(),
                 road_number: None,
                 series: None,
                 depot: None,
@@ -560,8 +568,8 @@ mod tests {
                 technical_interior_lights: None,
                 technical_lights: None,
                 technical_sprung_buffers: None,
-                type_name: Some("Coach Type".to_string()),
-                class_name: None,
+                friendly_name: Some("Coach Type".to_string()),
+                series_code: "C1".to_string(),
                 road_number: Some("C1".to_string()),
                 series: None,
                 depot: None,
@@ -601,8 +609,8 @@ mod tests {
                 technical_interior_lights: None,
                 technical_lights: None,
                 technical_sprung_buffers: None,
-                type_name: Some("EMU Type".to_string()),
-                class_name: None,
+                friendly_name: Some("EMU Type".to_string()),
+                series_code: "EMU1".to_string(),
                 road_number: Some("EMU1".to_string()),
                 series: None,
                 depot: None,
@@ -642,8 +650,8 @@ mod tests {
                 technical_interior_lights: None,
                 technical_lights: None,
                 technical_sprung_buffers: None,
-                type_name: Some("Railcar Type".to_string()),
-                class_name: None,
+                friendly_name: Some("Railcar Type".to_string()),
+                series_code: "RC-01".to_string(),
                 road_number: Some("RC-01".to_string()),
                 series: None,
                 depot: None,

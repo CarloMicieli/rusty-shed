@@ -204,15 +204,15 @@ pub async fn insert_rolling_stock(
     let sql = "INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, livery, \
         length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling, \
         technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights, \
-        technical_lights, technical_sprung_buffers, type_name, class_name, road_number, series, depot, \
+        technical_lights, technical_sprung_buffers, series_code, friendly_name, road_number, series, depot, \
         electric_multiple_unit_type, freight_car_type, locomotive_type, passenger_car_type, railcar_type, \
         service_level, dcc_interface, control, is_dummy) \
         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29)";
 
     let (
         category,
-        type_name,
-        class_name,
+        friendly_name,
+        series_code,
         road_number,
         series,
         depot,
@@ -239,7 +239,8 @@ pub async fn insert_rolling_stock(
     ) = match input {
         CreateRollingStockInput::Locomotive {
             railway_company_id,
-            class_name,
+            friendly_name,
+            series_code,
             road_number,
             series,
             depot,
@@ -252,8 +253,8 @@ pub async fn insert_rolling_stock(
             technical_specifications,
         } => (
             "LOCOMOTIVE",
-            None,
-            Some(class_name),
+            Some(friendly_name),
+            series_code,
             Some(road_number),
             series,
             depot,
@@ -298,7 +299,8 @@ pub async fn insert_rolling_stock(
         ),
         CreateRollingStockInput::PassengerCar {
             railway_company_id,
-            type_name,
+            friendly_name,
+            series_code,
             road_number,
             series,
             depot,
@@ -309,8 +311,8 @@ pub async fn insert_rolling_stock(
             technical_specifications,
         } => (
             "PASSENGER_CAR",
-            Some(type_name),
-            None,
+            Some(friendly_name),
+            series_code,
             road_number,
             series,
             depot,
@@ -355,7 +357,8 @@ pub async fn insert_rolling_stock(
         ),
         CreateRollingStockInput::FreightCar {
             railway_company_id,
-            type_name,
+            friendly_name,
+            series_code,
             road_number,
             series,
             depot,
@@ -365,8 +368,8 @@ pub async fn insert_rolling_stock(
             technical_specifications,
         } => (
             "FREIGHT_CAR",
-            Some(type_name),
-            None,
+            Some(friendly_name),
+            series_code,
             road_number,
             series,
             depot,
@@ -411,7 +414,8 @@ pub async fn insert_rolling_stock(
         ),
         CreateRollingStockInput::Railcar {
             railway_company_id,
-            type_name,
+            friendly_name,
+            series_code,
             road_number,
             series,
             depot,
@@ -422,8 +426,8 @@ pub async fn insert_rolling_stock(
             technical_specifications,
         } => (
             "RAILCAR",
-            Some(type_name),
-            None,
+            Some(friendly_name),
+            series_code,
             road_number,
             series,
             depot,
@@ -468,7 +472,8 @@ pub async fn insert_rolling_stock(
         ),
         CreateRollingStockInput::ElectricMultipleUnit {
             railway_company_id,
-            type_name,
+            friendly_name,
+            series_code,
             road_number,
             series,
             depot,
@@ -481,8 +486,8 @@ pub async fn insert_rolling_stock(
             technical_specifications,
         } => (
             "ELECTRIC_MULTIPLE_UNIT",
-            Some(type_name),
-            None,
+            Some(friendly_name),
+            series_code,
             road_number,
             series,
             depot,
@@ -543,8 +548,8 @@ pub async fn insert_rolling_stock(
         .bind(interior_lights)
         .bind(lights)
         .bind(sprung_buffers)
-        .bind(type_name)
-        .bind(class_name)
+        .bind(series_code)
+        .bind(friendly_name)
         .bind(road_number)
         .bind(series)
         .bind(depot)
@@ -662,7 +667,7 @@ mod tests {
             // insert a rolling stock
             let rs_id = uuid::Uuid::new_v4().to_string();
             let insert_rs = format!(
-                "INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, type_name, class_name, road_number, locomotive_type, is_dummy) VALUES ('{}','RM-1','LOCOMOTIVE','RC-1','T','C','1','DIESEL_LOCOMOTIVE',0)",
+                "INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, series_code, friendly_name, road_number, locomotive_type, is_dummy) VALUES ('{}','RM-1','LOCOMOTIVE','RC-1','123','Class X','1','DIESEL_LOCOMOTIVE',0)",
                 rs_id
             );
             conn.execute(insert_rs.as_str())

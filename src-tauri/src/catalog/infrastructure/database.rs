@@ -95,7 +95,7 @@ pub async fn get_rolling_stocks_by_railway_model_id(
     let sql = "SELECT id, railway_model_id, category, railway_company_id, livery, length_inches, \
         length_millimeters, technical_minimum_radius_mm, technical_coupling, technical_flywheel_fitted, \
         technical_body_shell, technical_chassis, technical_interior_lights, technical_lights, technical_sprung_buffers, \
-        type_name, class_name, road_number, series, depot, electric_multiple_unit_type, freight_car_type, locomotive_type, \
+        series_code, friendly_name, road_number, series, depot, electric_multiple_unit_type, freight_car_type, locomotive_type, \
         passenger_car_type, railcar_type, service_level, dcc_interface, control, is_dummy \
         FROM rolling_stocks WHERE railway_model_id = ?1";
 
@@ -148,7 +148,7 @@ pub async fn get_rolling_stocks_by_railway_model_ids(
         "SELECT id, railway_model_id, category, railway_company_id, livery, length_inches, \
         length_millimeters, technical_minimum_radius_mm, technical_coupling, technical_flywheel_fitted, \
         technical_body_shell, technical_chassis, technical_interior_lights, technical_lights, technical_sprung_buffers, \
-        type_name, class_name, road_number, series, depot, electric_multiple_unit_type, freight_car_type, locomotive_type, \
+        series_code, friendly_name, road_number, series, depot, electric_multiple_unit_type, freight_car_type, locomotive_type, \
         passenger_car_type, railcar_type, service_level, dcc_interface, control, is_dummy \
         FROM rolling_stocks WHERE railway_model_id IN (",
     );

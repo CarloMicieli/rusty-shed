@@ -5,7 +5,8 @@ export type NullableEnum<T extends string | null = string> = T | '' | null;
 export type RollingStockForm = {
   category: '' | RollingStockInput['category'];
   railway_company_id: string;
-  class_name?: string;
+  friendly_name?: string;
+  series_code?: string | null;
   road_number?: string;
   series: string | null;
   depot: string | null;
@@ -22,7 +23,6 @@ export type RollingStockForm = {
   electric_multiple_unit_type?: NullableEnum<
     Extract<RollingStockInput, { category: 'ElectricMultipleUnit' }>['electric_multiple_unit_type']
   >;
-  type_name?: string;
   service_level?: NullableEnum<
     Extract<RollingStockInput, { category: 'PassengerCar' }>['service_level']
   >;
@@ -47,7 +47,8 @@ export function createDefaultRollingStock(): RollingStockForm {
   return {
     category: '',
     railway_company_id: '',
-    class_name: '',
+    friendly_name: '',
+    series_code: '',
     road_number: '',
     series: null,
     depot: null,
@@ -56,7 +57,6 @@ export function createDefaultRollingStock(): RollingStockForm {
     passenger_car_type: '',
     freight_car_type: '',
     electric_multiple_unit_type: '',
-    type_name: '',
     service_level: '',
     is_dummy: false,
     control: '',
@@ -80,7 +80,8 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
       return {
         ...base,
         category: 'Locomotive',
-        class_name: rs.class_name ?? '',
+        friendly_name: rs.friendly_name ?? '',
+        series_code: rs.series_code ?? '',
         road_number: rs.road_number ?? '',
         series: rs.series || null,
         depot: rs.depot || null,
@@ -93,8 +94,9 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
       return {
         ...base,
         category: 'PassengerCar',
-        type_name: rs.type_name ?? '',
-        road_number: rs.road_number || null,
+        friendly_name: rs.friendly_name ?? '',
+        series_code: rs.series_code ?? '',
+        road_number: rs.road_number ?? null,
         series: rs.series || null,
         depot: rs.depot || null,
         passenger_car_type: rs.passenger_car_type || '',
@@ -104,8 +106,9 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
       return {
         ...base,
         category: 'FreightCar',
-        type_name: rs.type_name ?? '',
-        road_number: rs.road_number || null,
+        friendly_name: rs.friendly_name ?? '',
+        series_code: rs.series_code ?? '',
+        road_number: rs.road_number ?? null,
         series: rs.series || null,
         depot: rs.depot || null,
         freight_car_type: rs.freight_car_type || null
@@ -114,10 +117,11 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
       return {
         ...base,
         category: 'Railcar',
-        type_name: rs.type_name ?? '',
-        road_number: rs.road_number || null,
+        friendly_name: rs.friendly_name ?? '',
+        series_code: rs.series_code ?? '',
+        road_number: rs.road_number ?? null,
         series: rs.series || null,
-        depot: rs.depot || null,
+        depot: rs.depot ?? null,
         control: rs.control || null,
         dcc_interface: rs.dcc_interface || null
       } as RollingStockInput;
@@ -125,10 +129,11 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
       return {
         ...base,
         category: 'ElectricMultipleUnit',
-        type_name: rs.type_name ?? '',
-        road_number: rs.road_number || null,
+        friendly_name: rs.friendly_name ?? '',
+        series_code: rs.series_code ?? '',
+        road_number: rs.road_number ?? null,
         series: rs.series || null,
-        depot: rs.depot || null,
+        depot: rs.depot ?? null,
         electric_multiple_unit_type: rs.electric_multiple_unit_type || '',
         is_dummy: rs.is_dummy ?? false,
         control: rs.control || null,

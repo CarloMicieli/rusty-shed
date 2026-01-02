@@ -35,7 +35,8 @@ pub struct CreateRailwayModelInput {
 pub enum CreateRollingStockInput {
     Locomotive {
         railway_company_id: String,
-        class_name: String,
+        friendly_name: String,
+        series_code: String,
         road_number: String,
         series: Option<String>,
         depot: Option<String>,
@@ -49,7 +50,8 @@ pub enum CreateRollingStockInput {
     },
     PassengerCar {
         railway_company_id: String,
-        type_name: String,
+        friendly_name: String,
+        series_code: String,
         road_number: Option<String>,
         series: Option<String>,
         depot: Option<String>,
@@ -61,7 +63,8 @@ pub enum CreateRollingStockInput {
     },
     FreightCar {
         railway_company_id: String,
-        type_name: String,
+        friendly_name: String,
+        series_code: String,
         road_number: Option<String>,
         series: Option<String>,
         depot: Option<String>,
@@ -72,7 +75,8 @@ pub enum CreateRollingStockInput {
     },
     Railcar {
         railway_company_id: String,
-        type_name: String,
+        friendly_name: String,
+        series_code: String,
         road_number: Option<String>,
         series: Option<String>,
         depot: Option<String>,
@@ -84,7 +88,8 @@ pub enum CreateRollingStockInput {
     },
     ElectricMultipleUnit {
         railway_company_id: String,
-        type_name: String,
+        friendly_name: String,
+        series_code: String,
         road_number: Option<String>,
         series: Option<String>,
         depot: Option<String>,
