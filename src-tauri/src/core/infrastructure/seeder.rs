@@ -295,7 +295,9 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
 
     let insert_cmd = r#"
         INSERT INTO sellers (
-            seller_id, name, type, created_at, updated_at
+            seller_id, name, type, email, phone, website_url,
+            street_address, city, state_region, postal_code, country_code,
+            created_at, updated_at
         )
     "#;
 
@@ -306,12 +308,62 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
             let name = record.get(0).unwrap_or_default();
             let seller_type = record.get(1).unwrap_or("SHOP");
 
+            // Optional fields (convert empty strings to None)
+            let email = record
+                .get(2)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let phone = record
+                .get(3)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let website_url = record
+                .get(4)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let street_address = record
+                .get(5)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let city = record
+                .get(6)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            // Map CSV `region` -> DB `state_region` (Option A)
+            let state_region = record
+                .get(7)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let postal_code = record
+                .get(8)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            let country_code = record
+                .get(9)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
             // Seller id is derived via slug from the name using slugify
             let seller_id = format!("trn:seller:{}", slugify(name));
 
             b.push_bind(seller_id)
                 .push_bind(name.to_string())
                 .push_bind(seller_type.to_string())
+                .push_bind(email)
+                .push_bind(phone)
+                .push_bind(website_url)
+                .push_bind(street_address)
+                .push_bind(city)
+                .push_bind(state_region)
+                .push_bind(postal_code)
+                .push_bind(country_code)
                 .push_bind(&now)
                 .push_bind(&now);
         });
@@ -319,6 +371,14 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
         query_builder.push(" ON CONFLICT(seller_id) DO UPDATE SET ");
         query_builder.push("name = EXCLUDED.name, ");
         query_builder.push("type = EXCLUDED.type, ");
+        query_builder.push("email = EXCLUDED.email, ");
+        query_builder.push("phone = EXCLUDED.phone, ");
+        query_builder.push("website_url = EXCLUDED.website_url, ");
+        query_builder.push("street_address = EXCLUDED.street_address, ");
+        query_builder.push("city = EXCLUDED.city, ");
+        query_builder.push("state_region = EXCLUDED.state_region, ");
+        query_builder.push("postal_code = EXCLUDED.postal_code, ");
+        query_builder.push("country_code = EXCLUDED.country_code, ");
         query_builder.push("updated_at = EXCLUDED.updated_at");
 
         let query = query_builder.build();
