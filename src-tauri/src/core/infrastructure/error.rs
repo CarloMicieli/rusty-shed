@@ -8,8 +8,8 @@ use std::collections::HashMap;
 
 use super::db::SqliteDbError;
 use crate::core::application::validation::ValidationError;
-use serde::Serialize;
 use crate::core::domain::domain_error::DomainError;
+use serde::Serialize;
 
 /// Application-level error returned by command handlers in the core infrastructure.
 ///
@@ -55,8 +55,8 @@ pub enum CommandError {
 }
 
 impl From<DomainError> for CommandError {
-    fn from(err: DomainError) -> Self {
-        todo!()
+    fn from(error: DomainError) -> Self {
+        CommandError::Unknown(format!("{}", error))
     }
 }
 

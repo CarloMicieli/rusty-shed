@@ -206,6 +206,7 @@ pub enum FreightCarType {
     PartialEq,
     Eq,
     EnumString,
+    Default,
     Display,
     Serialize,
     Deserialize,
@@ -227,6 +228,7 @@ pub enum LocomotiveType {
 
     /// Locomotives that draw power from external sources, such as
     /// overhead catenary wires or a third rail.
+    #[default]
     ElectricLocomotive,
 }
 
@@ -317,6 +319,7 @@ pub enum PassengerCarType {
     Eq,
     EnumString,
     Display,
+    Default,
     Serialize,
     Deserialize,
     sqlx::Type,
@@ -329,6 +332,7 @@ pub enum PassengerCarType {
 pub enum ElectricMultipleUnitType {
     /// Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
     /// An EMU will usually have two driving cars at its outer ends.
+    #[default]
     DrivingCar,
 
     /// High-speed rail is a type of rail system that runs significantly faster than traditional
@@ -368,6 +372,7 @@ pub enum ElectricMultipleUnitType {
     PartialEq,
     Eq,
     EnumString,
+    Default,
     Display,
     Serialize,
     Deserialize,
@@ -380,6 +385,7 @@ pub enum ElectricMultipleUnitType {
 #[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RailcarType {
     /// A self-propelled passenger vehicles also capable of hauling a train.
+    #[default]
     PowerCar,
 
     /// Trailer cars are any cars (sometimes semi-permanently coupled) that carry little or no

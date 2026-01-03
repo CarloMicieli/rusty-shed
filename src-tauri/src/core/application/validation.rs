@@ -1,7 +1,7 @@
+use crate::core::domain::domain_error::DomainError;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use crate::core::domain::domain_error::DomainError;
 
 /// A validation error returned by application use-cases.
 ///
@@ -97,7 +97,6 @@ impl ValidationContext {
 mod tests {
     use super::*;
     use serde_json::json;
-    use crate::core::infrastructure::error::CommandError;
 
     #[test]
     fn it_should_serialize_validation_error_with_params() {

@@ -80,7 +80,7 @@ pub enum RollingStock {
         /// the technical specification
         technical_specifications: Option<TechnicalSpecifications>,
         /// the locomotive friendly name
-        friendly_name: String,
+        friendly_name: Option<String>,
         /// the series code
         series_code: Option<String>,
         /// the identification marking for this locomotive
@@ -224,7 +224,7 @@ impl RollingStock {
     #[allow(clippy::too_many_arguments)]
     pub fn new_locomotive(
         id: RollingStockId,
-        friendly_name: &str,
+        friendly_name: Option<&str>,
         series_code: Option<&str>,
         road_number: &str,
         series: Option<&str>,
@@ -244,7 +244,7 @@ impl RollingStock {
             livery: livery.map(str::to_string),
             length_over_buffer,
             technical_specifications,
-            friendly_name: String::from(friendly_name),
+            friendly_name: friendly_name.map(str::to_string),
             series_code: series_code.map(str::to_string),
             road_number: String::from(road_number),
             series: series.map(str::to_string),
@@ -507,7 +507,7 @@ mod test {
 
             let locomotive = RollingStock::new_locomotive(
                 id.clone(),
-                "E.656",
+                Some("Caimano"),
                 None,
                 "E.656 077",
                 Some("I serie"),

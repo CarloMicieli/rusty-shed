@@ -4,7 +4,7 @@ use crate::catalog::domain::category::Category;
 use crate::catalog::domain::delivery_date::DeliveryDate;
 use crate::catalog::domain::epoch::Epoch;
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
-use crate::catalog::domain::params::RailwayModelParams;
+use crate::catalog::domain::params::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::power_method::PowerMethod;
 use crate::catalog::domain::product_code::ProductCode;
 use crate::catalog::domain::railway_model_id::RailwayModelId;
@@ -31,18 +31,18 @@ impl CreateRailwayModelUseCase {
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: CreateRailwayModelInput,
     ) -> Result<RailwayModelId, DomainError> {
-        let mut repository = unit_of_work.catalog_repository();
+        let mut repository = unit_of_work.railway_models();
         let mut validation_context = ValidationContext::default();
 
-        let manufacturer_id = ManufacturerId::new(&input.manufacturer_id);
-
         // Collect all potential failures
-        let railway_model_id = validation_context.collect(
-            "railway_model_id",
-            RailwayModelId::new(&manufacturer_id, &input.product_code),
+        let manufacturer_id = validation_context.collect(
+            "manufacturer_id",
+            ManufacturerId::try_from(&input.manufacturer_id),
         );
-        let product_code = validation_context.collect("product_code", ProductCode::try_from(input.product_code));
-        let power_method = validation_context.collect("power_method", input.power_method.parse::<PowerMethod>());
+        let product_code =
+            validation_context.collect("product_code", ProductCode::try_from(input.product_code));
+        let power_method =
+            validation_context.collect("power_method", input.power_method.parse::<PowerMethod>());
         let scale = validation_context.collect("scale", Scale::try_from(input.scale.as_str()));
         let category = validation_context.collect("category", input.category.parse::<Category>());
 
@@ -51,17 +51,22 @@ impl CreateRailwayModelUseCase {
             .as_ref()
             .and_then(|s| validation_context.collect("delivery_date", DeliveryDate::parse(s)));
 
-        let availability_status = input
-            .availability_status
-            .as_ref()
-            .and_then(|s| validation_context.collect("availability_status", s.parse::<AvailabilityStatus>()));
+        let availability_status = input.availability_status.as_ref().and_then(|s| {
+            validation_context.collect("availability_status", s.parse::<AvailabilityStatus>())
+        });
 
         // Checkpoint: Stop if validation failed
         validation_context.finish()?;
 
+        let rolling_stocks = input
+            .rolling_stocks
+            .into_iter()
+            .map(RollingStockParams::try_from)
+            .collect::<Result<Vec<RollingStockParams>, DomainError>>()?;
+
         // Final Assembly (Safe unwraps because ctx.finish() passed)
         let railway_model_params = RailwayModelParams {
-            manufacturer_id,
+            manufacturer_id: manufacturer_id.unwrap(),
             product_code: product_code.unwrap(),
             power_method: power_method.unwrap(),
             scale: scale.unwrap(),
@@ -71,12 +76,10 @@ impl CreateRailwayModelUseCase {
             availability_status,
             description: input.description,
             details: input.details,
-            rolling_stocks: vec![],
+            rolling_stocks,
         };
 
-        repository
-            .create(&railway_model_params)
-            .await
+        repository.create(&railway_model_params).await
     }
 }
 
@@ -86,7 +89,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_create_railway_model_use_case(pool: sqlx::SqlitePool) {
+    async fn it_should_validate_railway_model_inputs(pool: sqlx::SqlitePool) {
         let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.unwrap();
 
         let input = CreateRailwayModelInput {

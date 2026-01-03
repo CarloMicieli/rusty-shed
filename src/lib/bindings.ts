@@ -54,7 +54,24 @@ export const commands = {
     }
   },
   /**
-   * Retrieve a railway model by id. Returns the model even if it has no rolling stocks.
+   * Retrieve a railway model by its identifier.
+   *
+   * Parses the provided `railway_model_id` into a domain `RailwayModelId`,
+   * acquires a database connection from the application state, and queries the
+   * repository for the matching `RailwayModel`.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` (provides DB pool).
+   * * `railway_model_id` - The railway model identifier as a `String`.
+   *
+   * # Returns
+   * * `Ok(Some(RailwayModel))` when a matching model exists,
+   * * `Ok(None)` when no matching row is found
+   * * `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
+   *
+   * # Errors
+   * Parsing errors for the identifier and database errors are mapped to
+   * `CommandError` and returned to the caller.
    */
   async getRailwayModelById(
     railwayModelId: string
@@ -122,28 +139,38 @@ export const commands = {
     }
   },
   /**
-   * Create a new railway model with rolling stocks.
+   * Create a new railway model together with its rolling stocks.
    *
-   * This command follows the Unit of Work + Use Case pattern:
-   * 1. Creates a SqliteUnitOfWork (transaction)
-   * 2. Instantiates the CreateRailwayModelUseCase
-   * 3. Executes the use case with validated input
-   * 4. Commits the transaction on success
-   * 5. Returns the created railway model ID
+   * Performs the creation inside a database transaction using a `SqliteUnitOfWork`.
+   * The handler:
+   * 1. Opens a `SqliteUnitOfWork` (begins a transaction).
+   * 2. Instantiates and executes the `CreateRailwayModelUseCase` with validated input.
+   * 3. Commits the transaction on success; on error the transaction is rolled back when the unit of work is dropped.
+   * 4. Returns the created railway model identifier.
    *
    * # Arguments
    *
-   * * `state` - Tauri-managed application `AppState` (provides DB pool).
-   * * `input` - The railway model creation input data.
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `new_railway_model` - The validated input for creating the railway model (`CreateRailwayModelInput`).
    *
    * # Returns
    *
-   * Returns `Ok(String)` with the newly created railway model ID on success,
-   * or `Err(CommandError)` if validation, database, or business logic fails.
+   * Returns `Result<RailwayModelId, CommandError>`:
+   * * `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
+   * * `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
+   *
+   * # Errors
+   *
+   * Errors are mapped to `CommandError` and may represent validation, repository, or unit-of-work failures.
    */
-  async createRailwayModel(input: CreateRailwayModelInput): Promise<Result<string, CommandError>> {
+  async createRailwayModel(
+    newRailwayModel: CreateRailwayModelInput
+  ): Promise<Result<RailwayModelId, CommandError>> {
     try {
-      return { status: 'ok', data: await TAURI_INVOKE('create_railway_model', { input }) };
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('create_railway_model', { newRailwayModel })
+      };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -714,7 +741,7 @@ export type CommandError =
    * This allows the frontend to display validation errors next to the appropriate form fields.
    * Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
    */
-  | { ValidationError: Partial<{ [key in string]: string }> }
+  | { ValidationError: Partial<{ [key in string]: ValidationError[] }> }
   /**
    * Permission denied for the requested operation.
    *
@@ -776,9 +803,21 @@ export type Coupling = {
    */
   digital_shunting: FeatureFlag | null;
 };
+/**
+ * Coupling configuration details for a rolling stock item.
+ */
 export type CouplingInput = {
+  /**
+   * The coupling socket/type (for example: "NEM", "Kadee", "Generic").
+   */
   socket: string;
+  /**
+   * Whether close couplers are fitted or supported (free-text).
+   */
   close_couplers: string | null;
+  /**
+   * Digital shunting capability details (if any).
+   */
   digital_shunting: string | null;
 };
 export type CouplingSocket =
@@ -841,8 +880,15 @@ export type CreateRailwayModelInput = {
 };
 /**
  * Input for creating a rolling stock (tagged union by category).
+ *
+ * This enum is a tagged union where each variant contains the fields
+ * relevant to that rolling stock category. Consumers should supply the
+ * variant matching the `category` of the rolling stock being created.
  */
 export type CreateRollingStockInput =
+  /**
+   * Locomotive-specific input fields.
+   */
   | {
       category: 'Locomotive';
       railway_company_id: string;
@@ -859,6 +905,9 @@ export type CreateRollingStockInput =
       length_over_buffers: LengthOverBuffersInput | null;
       technical_specifications: TechnicalSpecificationsInput | null;
     }
+  /**
+   * Passenger car-specific input fields.
+   */
   | {
       category: 'PassengerCar';
       railway_company_id: string;
@@ -866,13 +915,15 @@ export type CreateRollingStockInput =
       series_code: string;
       road_number: string | null;
       series: string | null;
-      depot: string | null;
       livery: string | null;
       passenger_car_type: string;
       service_level: string | null;
       length_over_buffers: LengthOverBuffersInput | null;
       technical_specifications: TechnicalSpecificationsInput | null;
     }
+  /**
+   * Freight car-specific input fields.
+   */
   | {
       category: 'FreightCar';
       railway_company_id: string;
@@ -880,12 +931,14 @@ export type CreateRollingStockInput =
       series_code: string;
       road_number: string | null;
       series: string | null;
-      depot: string | null;
       livery: string | null;
       freight_car_type: string | null;
       length_over_buffers: LengthOverBuffersInput | null;
       technical_specifications: TechnicalSpecificationsInput | null;
     }
+  /**
+   * Railcar-specific input fields.
+   */
   | {
       category: 'Railcar';
       railway_company_id: string;
@@ -895,11 +948,16 @@ export type CreateRollingStockInput =
       series: string | null;
       depot: string | null;
       livery: string | null;
+      railcar_type: string | null;
+      is_dummy: boolean | null;
       control: string | null;
       dcc_interface: string | null;
       length_over_buffers: LengthOverBuffersInput | null;
       technical_specifications: TechnicalSpecificationsInput | null;
     }
+  /**
+   * Electric multiple unit-specific input fields.
+   */
   | {
       category: 'ElectricMultipleUnit';
       railway_company_id: string;
@@ -1316,7 +1374,23 @@ export type LengthOverBuffers = {
    */
   millimeters: Length | null;
 };
-export type LengthOverBuffersInput = { millimeters: number | null; inches: number | null };
+/**
+ * Length measurements over buffers for a rolling stock item.
+ *
+ * Both measurements are optional; callers may provide either or both
+ * depending on the available data. Values are represented as floating
+ * point numbers (millimeters and inches respectively).
+ */
+export type LengthOverBuffersInput = {
+  /**
+   * Length in millimeters.
+   */
+  millimeters: number | null;
+  /**
+   * Length in inches.
+   */
+  inches: number | null;
+};
 /**
  * Specifies the primary motive power source for a locomotive.
  *
@@ -1882,16 +1956,28 @@ export type RailwayModel = {
   rolling_stocks: RollingStock[];
 };
 /**
- * A strongly-typed identifier for a railway model.
+ * Strongly-typed railway model identifier.
  *
- * This newtype wraps a `String` so that code dealing with railway model
- * identifiers can use a distinct type instead of raw `String`s. It derives
- * `Serialize` and `Deserialize` so it can be used directly with `serde`.
+ * `RailwayModelId` is a thin newtype over `String` used to represent railway
+ * model identifiers across the domain. Values created with the provided
+ * constructor follow a TRN-like pattern and include the manufacturer namespace
+ * and the product code. The canonical form produced by `RailwayModelId::new`
+ * is:
  *
- * Requirements
- * - The railway model id MUST be a non-empty, non-blank string. Constructions
- * via `TryFrom<&str>` / `TryFrom<String>` will return an error if the input
- * is empty or contains only whitespace.
+ * trn:railway-model:{manufacturer_nss}:{product_code}
+ *
+ * where `{manufacturer_nss}` is the namespace-specific part (NSS) of a
+ * `ManufacturerId` TRN (for example the `mn-acme` part of
+ * `trn:manufacturer:mn-acme`). The module-level constant `TRN_PREFIX` holds
+ * the `trn:railway-model:` prefix used by the constructor.
+ *
+ * Notes on construction:
+ * - `TryFrom<&str>` and `TryFrom<String>` perform only a non-empty/blank
+ * check and will accept any non-blank string (they do not parse or validate
+ * TRN structure).
+ * - Use `RailwayModelId::new(manufacturer_id, product_code)` to create an
+ * instance from a `ManufacturerId`; this validates the manufacturer and
+ * returns a `RailwayModelIdError` on failure.
  */
 export type RailwayModelId = string;
 export type RailwayStatus = 'ACTIVE' | 'INACTIVE' | 'MERGED';
@@ -2034,7 +2120,7 @@ export type RollingStock =
         /**
          * the locomotive friendly name
          */
-        friendly_name: string;
+        friendly_name: string | null;
         /**
          * the series code
          */
@@ -2449,14 +2535,45 @@ export type TechnicalSpecifications = {
    */
   sprung_buffers: FeatureFlag | null;
 };
+/**
+ * Optional technical specifications for a rolling stock item.
+ *
+ * Each field is optional and represents a small piece of technical
+ * metadata such as minimum recommended curve radius, coupling details,
+ * or whether a flywheel is fitted.
+ */
 export type TechnicalSpecificationsInput = {
+  /**
+   * Minimum recommended curve radius in millimetres (if known).
+   */
   minimum_radius: number | null;
+  /**
+   * Coupling details (socket type and optional behaviours).
+   */
   coupling: CouplingInput | null;
+  /**
+   * Whether a flywheel is fitted (free-text or a small enum encoded as string).
+   */
   flywheel_fitted: string | null;
+  /**
+   * Information about the body shell (material / construction hints).
+   */
   body_shell: string | null;
+  /**
+   * Chassis description or notes.
+   */
   chassis: string | null;
+  /**
+   * Interior lighting details.
+   */
   interior_lights: string | null;
+  /**
+   * Exterior lighting details.
+   */
   lights: string | null;
+  /**
+   * Whether buffers are sprung (if applicable).
+   */
   sprung_buffers: string | null;
 };
 /**
@@ -2494,6 +2611,53 @@ export type UpdateSettingsPayload = {
   favoritePowerMethod: PowerMethod;
   languageCode: string;
 };
+/**
+ * A validation error returned by application use-cases.
+ *
+ * The structure contains:
+ * - `code`: a stable machine-readable identifier for the kind of validation error.
+ * - `message`: an optional human-facing message (ideally localized at the caller).
+ * - `params`: a map of parameter names to `ValidationErrorParam` values used to
+ * provide structured additional data about the failure (for example, an
+ * invalid numeric range or the name of a missing field).
+ *
+ * Usage notes:
+ * - `ValidationError.code` should be a stable machine identifier (for
+ * example `required_field`, `invalid_format`, ...).
+ * - `ValidationError.message` is an optional, human-facing text (localized
+ * on the caller side when possible).
+ * - `ValidationError.params` contains structured values that provide extra
+ * details about the validation failure (numbers or text).
+ */
+export type ValidationError = {
+  /**
+   * A stable machine-readable code identifying the validation error type.
+   */
+  code: string;
+  /**
+   * An optional human-facing message describing the validation error.
+   */
+  message: string | null;
+  /**
+   * A map of parameter names to values providing additional context.
+   */
+  params: Partial<{ [key in string]: ValidationErrorParam }>;
+};
+/**
+ * Parameter values for a validation error.
+ *
+ * The enum is tagged via serde so it serializes as an object with `type` and
+ * `value` keys (useful for interop with TypeScript and the frontend).
+ */
+export type ValidationErrorParam =
+  /**
+   * A numeric parameter (for example: a failing boundary value).
+   */
+  | { type: 'Number'; value: bigint }
+  /**
+   * A textual parameter (for example: a field name or explanatory text).
+   */
+  | { type: 'Text'; value: string };
 /**
  * Domain model representing a user's wishlist.
  *

@@ -1,18 +1,15 @@
 use super::entities::RailwayCompanyRow;
 use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
-use crate::catalog::domain::availability_status::AvailabilityStatus;
-use crate::catalog::domain::category::Category;
-use crate::catalog::domain::category::{
-    ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
-    RollingStockCategory,
-};
+use crate::catalog::domain::category::RollingStockCategory;
+use crate::catalog::domain::control::Control;
+use crate::catalog::domain::dcc_interface::DccInterface;
 use crate::catalog::domain::delivery_date::DeliveryDate;
 use crate::catalog::domain::epoch::{Epoch, EpochKind};
+use crate::catalog::domain::length_over_buffers::LengthOverBuffers;
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
 use crate::catalog::domain::manufacturer_status::ManufacturerStatus;
 use crate::catalog::domain::period_of_activity::PeriodOfActivity;
-use crate::catalog::domain::power_method::PowerMethod;
 use crate::catalog::domain::product_code::ProductCode;
 use crate::catalog::domain::railway_company::RailwayCompany;
 use crate::catalog::domain::railway_company_id::RailwayCompanyId;
@@ -23,6 +20,7 @@ use crate::catalog::domain::rolling_stock::RollingStock;
 use crate::catalog::domain::rolling_stock_id::RollingStockId;
 use crate::catalog::domain::rolling_stock_railway::RollingStockRailway;
 use crate::catalog::domain::scale::Scale;
+use crate::catalog::domain::technical_specifications::TechnicalSpecifications;
 use anyhow::anyhow;
 use chrono::NaiveDate;
 use url::Url;
@@ -88,20 +86,12 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
         let product_code = ProductCode::try_from(row.product_code)
             .map_err(|e| anyhow!("invalid product code: {}", e))?;
 
-        let power_method = PowerMethod::try_from(row.power_method.as_str())
-            .map_err(|e| anyhow!("invalid power method: {}", e))?;
-
         let scale =
             Scale::try_from(row.scale.as_str()).map_err(|e| anyhow!("invalid scale: {}", e))?;
 
         let epoch_kind =
             EpochKind::try_from(row.epoch.as_str()).map_err(|e| anyhow!("invalid epoch: {}", e))?;
         let epoch = Epoch::from(epoch_kind);
-
-        let category = row
-            .category
-            .parse::<Category>()
-            .map_err(|e| anyhow!("invalid category: {}", e))?;
 
         let delivery_date = match row.delivery_date {
             Some(s) => {
@@ -110,24 +100,18 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
             None => None,
         };
 
-        let availability_status = row
-            .availability_status
-            .map(|s| s.parse::<AvailabilityStatus>())
-            .transpose()
-            .map_err(|e| anyhow!("invalid availability_status: {}", e))?;
-
         Ok(RailwayModel {
             id,
             manufacturer: row.manufacturer_id,
             product_code,
             description: row.description,
             details: row.details,
-            power_method,
+            power_method: row.power_method,
             scale,
             epoch,
-            category,
+            category: row.category,
             delivery_date,
-            availability_status,
+            availability_status: row.availability_status,
             rolling_stocks: Vec::new(),
         })
     }
@@ -149,50 +133,32 @@ impl TryFrom<RollingStockRow> for RollingStock {
             .map_err(|e| anyhow!("invalid railway company id: {}", e))?;
 
         let railway = RollingStockRailway::new(railway_company_id, &row.railway_company_id);
-
-        let category = row
-            .category
-            .parse::<RollingStockCategory>()
-            .map_err(|e| anyhow!("invalid rolling stock category: {}", e))?;
+        let category = row.category;
 
         let is_dummy = row.is_dummy != 0;
 
         match category {
             RollingStockCategory::Locomotive => {
-                let loco_type = row
-                    .locomotive_type
-                    .as_deref()
-                    .and_then(|s| LocomotiveType::try_from(s).ok())
-                    .unwrap_or(LocomotiveType::DieselLocomotive);
-
-                // Map: previously class_name -> now series_code and friendly_name used where appropriate
-                let friendly = row.friendly_name.as_deref().unwrap_or("");
                 let road_number = row.road_number.as_deref().unwrap_or("");
 
-                // Supply explicitly typed None values for ambiguous Option<> parameters
                 Ok(RollingStock::new_locomotive(
                     id,
-                    friendly,
+                    row.friendly_name.as_deref(),
                     Some(row.series_code.as_str()),
                     road_number,
                     row.series.as_deref(),
                     railway,
-                    loco_type,
+                    row.locomotive_type.unwrap_or_default(),
                     row.depot.as_deref(),
                     row.livery.as_deref(),
                     is_dummy,
-                    None::<crate::catalog::domain::length_over_buffers::LengthOverBuffers>,
-                    None::<crate::catalog::domain::control::Control>,
-                    None::<crate::catalog::domain::dcc_interface::DccInterface>,
-                    None::<crate::catalog::domain::technical_specifications::TechnicalSpecifications>,
+                    None::<LengthOverBuffers>,
+                    None::<Control>,
+                    None::<DccInterface>,
+                    None::<TechnicalSpecifications>,
                 ))
             }
             RollingStockCategory::FreightCar => {
-                let freight_type = row
-                    .freight_car_type
-                    .as_deref()
-                    .and_then(|s| FreightCarType::try_from(s).ok());
-
                 // Map: previously type_name -> friendly_name
                 Ok(RollingStock::new_freight_car(
                     id,
@@ -200,39 +166,26 @@ impl TryFrom<RollingStockRow> for RollingStock {
                     Some(row.series_code.as_str()),
                     row.road_number.as_deref(),
                     railway,
-                    freight_type,
+                    row.freight_car_type,
                     row.livery.as_deref(),
                     None,
                     None,
                 ))
             }
-            RollingStockCategory::PassengerCar => {
-                let passenger_type = row
-                    .passenger_car_type
-                    .as_deref()
-                    .and_then(|s| PassengerCarType::try_from(s).ok());
-
-                Ok(RollingStock::new_passenger_car(
-                    id,
-                    row.friendly_name.as_deref().unwrap_or(""),
-                    Some(row.series_code.as_str()),
-                    row.road_number.as_deref(),
-                    row.series.as_deref(),
-                    railway,
-                    passenger_type,
-                    None,
-                    row.livery.as_deref(),
-                    None,
-                    None,
-                ))
-            }
+            RollingStockCategory::PassengerCar => Ok(RollingStock::new_passenger_car(
+                id,
+                row.friendly_name.as_deref().unwrap_or(""),
+                Some(row.series_code.as_str()),
+                row.road_number.as_deref(),
+                row.series.as_deref(),
+                railway,
+                row.passenger_car_type,
+                None,
+                row.livery.as_deref(),
+                None,
+                None,
+            )),
             RollingStockCategory::ElectricMultipleUnit => {
-                let emu_type = row
-                    .electric_multiple_unit_type
-                    .as_deref()
-                    .and_then(|s| ElectricMultipleUnitType::try_from(s).ok())
-                    .unwrap_or(ElectricMultipleUnitType::DrivingCar);
-
                 Ok(RollingStock::new_electric_multiple_unit(
                     id,
                     row.friendly_name.as_deref().unwrap_or(""),
@@ -240,7 +193,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
                     row.road_number.as_deref(),
                     row.series.as_deref(),
                     railway,
-                    emu_type,
+                    row.electric_multiple_unit_type.unwrap_or_default(),
                     row.depot.as_deref(),
                     row.livery.as_deref(),
                     is_dummy,
@@ -250,30 +203,22 @@ impl TryFrom<RollingStockRow> for RollingStock {
                     None,
                 ))
             }
-            RollingStockCategory::Railcar => {
-                let railcar_type = row
-                    .railcar_type
-                    .as_deref()
-                    .and_then(|s| RailcarType::try_from(s).ok())
-                    .unwrap_or(RailcarType::TrailerCar);
-
-                Ok(RollingStock::new_railcar(
-                    id,
-                    row.friendly_name.as_deref().unwrap_or(""),
-                    Some(row.series_code.as_str()),
-                    row.road_number.as_deref(),
-                    row.series.as_deref(),
-                    railway,
-                    railcar_type,
-                    row.depot.as_deref(),
-                    row.livery.as_deref(),
-                    is_dummy,
-                    None,
-                    None,
-                    None,
-                    None,
-                ))
-            }
+            RollingStockCategory::Railcar => Ok(RollingStock::new_railcar(
+                id,
+                row.friendly_name.as_deref().unwrap_or(""),
+                Some(row.series_code.as_str()),
+                row.road_number.as_deref(),
+                row.series.as_deref(),
+                railway,
+                row.railcar_type.unwrap_or_default(),
+                row.depot.as_deref(),
+                row.livery.as_deref(),
+                is_dummy,
+                None,
+                None,
+                None,
+                None,
+            )),
         }
     }
 }
@@ -432,6 +377,11 @@ mod tests {
 
     mod railway_model_mapper_tests {
         use super::*;
+        use crate::catalog::domain::availability_status::AvailabilityStatus;
+        use crate::catalog::domain::category::{
+            ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
+        };
+        use crate::catalog::domain::{Category, PowerMethod};
         use chrono::DateTime;
         use pretty_assertions::assert_eq;
 
@@ -447,12 +397,12 @@ mod tests {
                 product_code: "ACME-100".to_string(),
                 description: "Test model".to_string(),
                 details: None,
-                power_method: "DC".to_string(),
+                power_method: PowerMethod::DC,
                 scale: "H0".to_string(),
                 epoch: "III".to_string(),
-                category: "LOCOMOTIVES".to_string(),
+                category: Category::Locomotives,
                 delivery_date: Some("2025".to_string()),
-                availability_status: Some("AVAILABLE".to_string()),
+                availability_status: Some(AvailabilityStatus::Available),
                 created_at: utc_timestamp,
                 updated_at: utc_timestamp,
             };
@@ -470,13 +420,15 @@ mod tests {
             let row = RollingStockRow {
                 id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
-                category: "LOCOMOTIVE".to_string(),
+                category: RollingStockCategory::Locomotive,
                 railway_company_id: "RC-1".to_string(),
                 livery: Some("red".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
-                technical_coupling: None,
+                technical_coupling_close_couplers: None,
+                technical_coupling_socket: None,
+                technical_coupling_digital_shunting: None,
                 technical_flywheel_fitted: None,
                 technical_body_shell: None,
                 technical_chassis: None,
@@ -490,7 +442,7 @@ mod tests {
                 depot: None,
                 electric_multiple_unit_type: None,
                 freight_car_type: None,
-                locomotive_type: Some("DIESEL_LOCOMOTIVE".to_string()),
+                locomotive_type: Some(LocomotiveType::DieselLocomotive),
                 passenger_car_type: None,
                 railcar_type: None,
                 service_level: None,
@@ -509,13 +461,15 @@ mod tests {
             let row = RollingStockRow {
                 id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
-                category: "FREIGHT_CAR".to_string(),
+                category: RollingStockCategory::FreightCar,
                 railway_company_id: "RC-1".to_string(),
                 livery: None,
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
-                technical_coupling: None,
+                technical_coupling_close_couplers: None,
+                technical_coupling_socket: None,
+                technical_coupling_digital_shunting: None,
                 technical_flywheel_fitted: None,
                 technical_body_shell: None,
                 technical_chassis: None,
@@ -528,7 +482,7 @@ mod tests {
                 series: None,
                 depot: None,
                 electric_multiple_unit_type: None,
-                freight_car_type: Some("CONTAINER_CARS".to_string()),
+                freight_car_type: Some(FreightCarType::AutoTransportCars),
                 locomotive_type: None,
                 passenger_car_type: None,
                 railcar_type: None,
@@ -548,13 +502,15 @@ mod tests {
             let row = RollingStockRow {
                 id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
-                category: "PASSENGER_CAR".to_string(),
+                category: RollingStockCategory::PassengerCar,
                 railway_company_id: "RC-1".to_string(),
                 livery: Some("blue".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
-                technical_coupling: None,
+                technical_coupling_close_couplers: None,
+                technical_coupling_socket: None,
+                technical_coupling_digital_shunting: None,
                 technical_flywheel_fitted: None,
                 technical_body_shell: None,
                 technical_chassis: None,
@@ -569,7 +525,7 @@ mod tests {
                 electric_multiple_unit_type: None,
                 freight_car_type: None,
                 locomotive_type: None,
-                passenger_car_type: Some("OPEN_COACH".to_string()),
+                passenger_car_type: Some(PassengerCarType::BaggageCar),
                 railcar_type: None,
                 service_level: None,
                 dcc_interface: None,
@@ -587,13 +543,15 @@ mod tests {
             let row = RollingStockRow {
                 id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
-                category: "ELECTRIC_MULTIPLE_UNIT".to_string(),
+                category: RollingStockCategory::ElectricMultipleUnit,
                 railway_company_id: "RC-1".to_string(),
                 livery: None,
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
-                technical_coupling: None,
+                technical_coupling_close_couplers: None,
+                technical_coupling_socket: None,
+                technical_coupling_digital_shunting: None,
                 technical_flywheel_fitted: None,
                 technical_body_shell: None,
                 technical_chassis: None,
@@ -605,7 +563,7 @@ mod tests {
                 road_number: Some("EMU1".to_string()),
                 series: None,
                 depot: None,
-                electric_multiple_unit_type: Some("DRIVING_CAR".to_string()),
+                electric_multiple_unit_type: Some(ElectricMultipleUnitType::DrivingCar),
                 freight_car_type: None,
                 locomotive_type: None,
                 passenger_car_type: None,
@@ -626,13 +584,15 @@ mod tests {
             let row = RollingStockRow {
                 id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
-                category: "RAILCAR".to_string(),
+                category: RollingStockCategory::Railcar,
                 railway_company_id: "RC-1".to_string(),
                 livery: None,
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
-                technical_coupling: None,
+                technical_coupling_close_couplers: None,
+                technical_coupling_socket: None,
+                technical_coupling_digital_shunting: None,
                 technical_flywheel_fitted: None,
                 technical_body_shell: None,
                 technical_chassis: None,
@@ -648,7 +608,7 @@ mod tests {
                 freight_car_type: None,
                 locomotive_type: None,
                 passenger_car_type: None,
-                railcar_type: Some("TRAILER_CAR".to_string()),
+                railcar_type: Some(RailcarType::TrailerCar),
                 service_level: None,
                 dcc_interface: None,
                 control: None,

@@ -1,4 +1,14 @@
+use crate::catalog::domain::availability_status::AvailabilityStatus;
+use crate::catalog::domain::category::{
+    ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
+    RollingStockCategory,
+};
+use crate::catalog::domain::control::Control;
+use crate::catalog::domain::dcc_interface::DccInterface;
+use crate::catalog::domain::{BodyShellType, Category, ChassisType, PowerMethod, ServiceLevel};
 use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
+use sqlx::types::Text;
 
 /// Row mapping for the `manufacturers` table.
 ///
@@ -73,12 +83,12 @@ pub struct RailwayModelRow {
     pub product_code: String,
     pub description: String,
     pub details: Option<String>,
-    pub power_method: String,
+    pub power_method: PowerMethod,
     pub scale: String,
     pub epoch: String,
-    pub category: String,
+    pub category: Category,
     pub delivery_date: Option<String>,
-    pub availability_status: Option<String>,
+    pub availability_status: Option<AvailabilityStatus>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -88,16 +98,18 @@ pub struct RailwayModelRow {
 pub struct RollingStockRow {
     pub id: String,
     pub railway_model_id: String,
-    pub category: String,
+    pub category: RollingStockCategory,
     pub railway_company_id: String,
     pub livery: Option<String>,
-    pub length_inches: Option<f64>,
-    pub length_millimeters: Option<f64>,
-    pub technical_minimum_radius_mm: Option<f64>,
-    pub technical_coupling: Option<String>,
+    pub length_inches: Option<Text<Decimal>>,
+    pub length_millimeters: Option<Text<Decimal>>,
+    pub technical_minimum_radius_mm: Option<Text<Decimal>>,
+    pub technical_coupling_socket: Option<String>,
+    pub technical_coupling_close_couplers: Option<String>,
+    pub technical_coupling_digital_shunting: Option<String>,
     pub technical_flywheel_fitted: Option<String>,
-    pub technical_body_shell: Option<String>,
-    pub technical_chassis: Option<String>,
+    pub technical_body_shell: Option<BodyShellType>,
+    pub technical_chassis: Option<ChassisType>,
     pub technical_interior_lights: Option<String>,
     pub technical_lights: Option<String>,
     pub technical_sprung_buffers: Option<String>,
@@ -106,13 +118,13 @@ pub struct RollingStockRow {
     pub road_number: Option<String>,
     pub series: Option<String>,
     pub depot: Option<String>,
-    pub electric_multiple_unit_type: Option<String>,
-    pub freight_car_type: Option<String>,
-    pub locomotive_type: Option<String>,
-    pub passenger_car_type: Option<String>,
-    pub railcar_type: Option<String>,
-    pub service_level: Option<String>,
-    pub dcc_interface: Option<String>,
-    pub control: Option<String>,
+    pub electric_multiple_unit_type: Option<ElectricMultipleUnitType>,
+    pub freight_car_type: Option<FreightCarType>,
+    pub locomotive_type: Option<LocomotiveType>,
+    pub passenger_car_type: Option<PassengerCarType>,
+    pub railcar_type: Option<RailcarType>,
+    pub service_level: Option<ServiceLevel>,
+    pub dcc_interface: Option<DccInterface>,
+    pub control: Option<Control>,
     pub is_dummy: i64,
 }

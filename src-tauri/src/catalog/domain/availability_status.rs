@@ -8,16 +8,29 @@ use strum_macros::{Display, EnumString};
 /// string parsing via `strum` expects SCREAMING_SNAKE_CASE but is
 /// case-insensitive.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Default,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AvailabilityStatus {
     /// The railway model is just announced and not yet available.
     Announced,
 
     /// The railway model is available for purchase.
+    #[default]
     Available,
 
     /// The railway model production / release has been cancelled or delayed

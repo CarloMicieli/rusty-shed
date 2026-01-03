@@ -13,6 +13,7 @@ pub mod length_over_buffers;
 pub mod manufacturer;
 pub mod manufacturer_id;
 pub mod manufacturer_status;
+pub mod params;
 pub mod period_of_activity;
 pub mod power_method;
 pub mod product_code;
@@ -32,7 +33,6 @@ pub mod scale_gauge;
 pub mod service_level;
 pub mod technical_specifications;
 pub mod track_gauge;
-pub mod params;
 
 pub use body_shell_type::BodyShellType;
 pub use category::Category;

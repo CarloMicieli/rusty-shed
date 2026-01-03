@@ -50,3 +50,14 @@ VALUES ('trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8',
         'DCC_READY',
         0);
 
+INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category,
+                            availability_status)
+VALUES ('trn:railway-model:acme:1234',
+        'trn:manufacturer:acme',
+        '1234',
+        'Test Train Set',
+        'DC',
+        'H0',
+        'IV',
+        'TRAIN_SETS',
+        'AVAILABLE');

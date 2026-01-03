@@ -8,11 +8,22 @@ use strum_macros::{Display, EnumString};
 /// metal die-cast shell). It is used in technical specifications to describe
 /// the build of the vehicle's exterior.
 #[derive(
-    Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize, EnumString, Display, specta::Type,
+    Debug,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Serialize,
+    Deserialize,
+    EnumString,
+    Display,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum BodyShellType {
     /// Plastic body shell construction (typically injection moulded plastic).
     Plastic,

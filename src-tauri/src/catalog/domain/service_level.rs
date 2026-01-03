@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::{self, Display, Formatter};
+use std::str::FromStr;
 
 /// Represents the service class(es) for a rolling stock or service.
 ///
@@ -16,8 +17,9 @@ use std::fmt::{self, Display, Formatter};
 /// Parsing: `TryFrom<&str>` is implemented and accepts the string forms above
 /// (whitespace is trimmed). Formatting: `Display` is implemented and produces
 /// the corresponding string representation.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, specta::Type)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ServiceLevel {
     First,
     Second,
@@ -56,6 +58,14 @@ impl TryFrom<&str> for ServiceLevel {
             "1/2/3" => Ok(ServiceLevel::FirstSecondThird),
             _ => Err(anyhow::anyhow!(INVALID_SERVICE_LEVEL)),
         }
+    }
+}
+
+impl FromStr for ServiceLevel {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        ServiceLevel::try_from(s)
     }
 }
 

@@ -96,7 +96,24 @@ pub async fn get_railway_company_by_id(
     Ok(result)
 }
 
-/// Retrieve a railway model by id. Returns the model even if it has no rolling stocks.
+/// Retrieve a railway model by its identifier.
+///
+/// Parses the provided `railway_model_id` into a domain `RailwayModelId`,
+/// acquires a database connection from the application state, and queries the
+/// repository for the matching `RailwayModel`.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` (provides DB pool).
+/// * `railway_model_id` - The railway model identifier as a `String`.
+///
+/// # Returns
+/// * `Ok(Some(RailwayModel))` when a matching model exists,
+/// * `Ok(None)` when no matching row is found
+/// * `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
+///
+/// # Errors
+/// Parsing errors for the identifier and database errors are mapped to
+/// `CommandError` and returned to the caller.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_railway_model_by_id(
