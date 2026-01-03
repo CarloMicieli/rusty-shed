@@ -4,16 +4,16 @@ use uuid::Uuid;
 
 /// Strongly-typed identifier for a wishlist item.
 ///
-/// Wraps a `Uuid` for domain-level safety.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::Type)]
+/// Wraps a formatted `String` of the form `trn:wishlist-item:{uuid}`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[sqlx(transparent)]
 #[serde(transparent)]
 #[specta(transparent)]
-pub struct WishlistItemId(pub Uuid);
+pub struct WishlistItemId(pub String);
 
 impl Default for WishlistItemId {
     fn default() -> Self {
-        WishlistItemId(Uuid::new_v4())
+        WishlistItemId(format!("trn:wishlist-item:{}", Uuid::new_v4()))
     }
 }
 
@@ -21,8 +21,13 @@ impl TryFrom<&str> for WishlistItemId {
     type Error = anyhow::Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let parsed = Uuid::parse_str(value).map_err(|e| anyhow!("invalid uuid: {}", e))?;
-        Ok(WishlistItemId(parsed))
+        let uuid_str = if let Some(s) = value.strip_prefix("trn:wishlist-item:") {
+            s
+        } else {
+            value
+        };
+        let parsed = Uuid::parse_str(uuid_str).map_err(|e| anyhow!("invalid uuid: {}", e))?;
+        Ok(WishlistItemId(format!("trn:wishlist-item:{}", parsed)))
     }
 }
 
@@ -49,7 +54,7 @@ mod tests {
     fn try_from_str_success() {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let id = WishlistItemId::try_from(uuid).expect("expected valid id");
-        assert_eq!(id.to_string(), uuid);
+        assert_eq!(id.to_string(), format!("trn:wishlist-item:{}", uuid));
     }
 
     #[test]
@@ -72,19 +77,22 @@ mod tests {
     fn try_from_string_success() {
         let uuid = String::from("550e8400-e29b-41d4-a716-446655440000");
         let id = WishlistItemId::try_from(uuid).expect("expected valid id from String");
-        assert_eq!(id.to_string(), "550e8400-e29b-41d4-a716-446655440000");
+        assert_eq!(
+            id.to_string(),
+            "trn:wishlist-item:550e8400-e29b-41d4-a716-446655440000"
+        );
     }
 
     #[test]
     fn default_generates_random_uuid() {
         let id = WishlistItemId::default();
-        assert_ne!(id.0, uuid::Uuid::nil());
+        assert_ne!(id.0, format!("trn:wishlist-item:{}", uuid::Uuid::nil()));
     }
 
     #[test]
     fn display_outputs_uuid() {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let id = WishlistItemId::try_from(uuid).unwrap();
-        assert_eq!(format!("{}", id), uuid);
+        assert_eq!(format!("{}", id), format!("trn:wishlist-item:{}", uuid));
     }
 }

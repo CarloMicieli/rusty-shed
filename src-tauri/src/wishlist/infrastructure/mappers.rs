@@ -83,9 +83,9 @@ mod tests {
     #[test]
     fn try_from_item_row_with_prices() {
         let row = WishlistItemRow {
-            id: "550e8400-e29b-41d4-a716-446655440000".to_string(),
-            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
-            railway_model_id: "RM-1".to_string(),
+            id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
+            wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
+            railway_model_id: "trn:railway-model:acme:123456".to_string(),
             priority: "HIGH".to_string(),
             status: "WANTED".to_string(),
             desired_price_amount: Some(1234),
@@ -99,7 +99,10 @@ mod tests {
         };
 
         let item = WishlistItem::try_from(row).expect("mapping should succeed");
-        assert_eq!(item.id.to_string(), "550e8400-e29b-41d4-a716-446655440000");
+        assert_eq!(
+            item.id.to_string(),
+            "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840"
+        );
         assert_eq!(item.priority, WishlistPriority::High);
         assert_eq!(item.status, WishlistStatus::Wanted);
         assert!(item.desired_price.is_some());
@@ -112,8 +115,8 @@ mod tests {
     #[test]
     fn try_from_item_row_missing_price_parts_results_none() {
         let row = WishlistItemRow {
-            id: "550e8400-e29b-41d4-a716-446655440001".to_string(),
-            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
+            id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
+            wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "NORMAL".to_string(),
             status: "ON_ORDER".to_string(),
@@ -135,8 +138,8 @@ mod tests {
     #[test]
     fn try_from_item_row_negative_amount_errors() {
         let row = WishlistItemRow {
-            id: "550e8400-e29b-41d4-a716-446655440002".to_string(),
-            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
+            id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
+            wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "LOW".to_string(),
             status: "WANTED".to_string(),
@@ -157,8 +160,8 @@ mod tests {
     #[test]
     fn try_from_item_row_invalid_priority_or_status_errors() {
         let mut row = WishlistItemRow {
-            id: "550e8400-e29b-41d4-a716-446655440003".to_string(),
-            wishlist_id: "11111111-1111-1111-1111-111111111111".to_string(),
+            id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
+            wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             railway_model_id: "RM-1".to_string(),
             priority: "NORMAL".to_string(),
             status: "WANTED".to_string(),

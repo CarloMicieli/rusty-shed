@@ -24,13 +24,13 @@ VALUES ('rs-001', 'trn:railway-model:acme:60100', 'Locomotive', 'trn:railway-com
 
 
 INSERT INTO wishlists(id, name, notes, is_default, created_at, updated_at)
-VALUES ('58fb6f1d-d838-44b5-b65c-21e5388ca4c9', 'Test Wishlist 1', 'Notes', 0, '2025-12-12T00:00:00Z', '2025-12-27T00:00:00Z');
+VALUES ('trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9', 'Test Wishlist 1', 'Notes', 0, '2025-12-12T00:00:00Z', '2025-12-27T00:00:00Z');
 
 INSERT INTO wishlist_items(
     id, wishlist_id, railway_model_id, priority, status, desired_price_amount, desired_price_currency, added_date, notes
 ) VALUES (
-    '2af7578c-8857-4894-8c93-0be4b579ff25',
-    '58fb6f1d-d838-44b5-b65c-21e5388ca4c9',
+    'trn:wishlist-item:2af7578c-8857-4894-8c93-0be4b579ff25',
+    'trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9',
     'trn:railway-model:acme:60100',
     'NORMAL',
     'WANTED',
@@ -43,8 +43,8 @@ INSERT INTO wishlist_items(
 INSERT INTO wishlist_items(
     id, wishlist_id, railway_model_id, priority, status, desired_price_amount, desired_price_currency, added_date, notes
 ) VALUES (
-     'd3aae962-b6da-45a2-addd-9f58dee5951b',
-     '58fb6f1d-d838-44b5-b65c-21e5388ca4c9',
+     'trn:wishlist-item:d3aae962-b6da-45a2-addd-9f58dee5951b',
+     'trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9',
      'trn:railway-model:acme:60100',
      'NORMAL',
      'WANTED',

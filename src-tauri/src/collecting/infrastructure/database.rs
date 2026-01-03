@@ -251,13 +251,19 @@ mod tests {
         assert_eq!(result.len(), 1);
 
         let ors = &result[0];
-        assert_eq!(ors.id, "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-02c7ce47bc770");
+        assert_eq!(
+            ors.id,
+            "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-02c7ce47bc770"
+        );
         assert_eq!(
             ors.collection_item_id,
             "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730"
         );
         // rolling_stock_id and notes are optional in the entity mapping
-        assert_eq!(ors.rolling_stock_id, Some("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string()));
+        assert_eq!(
+            ors.rolling_stock_id,
+            Some("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string())
+        );
         assert_eq!(
             ors.notes,
             Some("My rolling stock notes go here".to_string())

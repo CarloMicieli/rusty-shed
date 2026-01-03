@@ -233,6 +233,7 @@ impl<'conn> WishlistUowExt for SqliteUnitOfWork<'conn> {
 mod tests {
     use super::*;
     use crate::core::domain::Currency;
+    use crate::wishlist::domain::wishlist_id::WishlistId;
     use crate::wishlist::domain::wishlist_priority::WishlistPriority;
     use crate::wishlist::domain::wishlist_status::WishlistStatus;
     use anyhow::Result;
@@ -244,9 +245,7 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();
 
-        let id = crate::wishlist::domain::wishlist_id::WishlistId::try_from(
-            "00000000-0000-0000-0000-000000000000",
-        )?;
+        let id = WishlistId::default();
         let result = repo.get_wishlist_by_id(&id).await?;
         assert!(result.is_none());
 
@@ -258,21 +257,22 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();
 
-        let id = crate::wishlist::domain::wishlist_id::WishlistId::try_from(
-            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9",
-        )?;
+        let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
         let result = repo.get_wishlist_by_id(&id).await?;
 
         assert!(result.is_some());
         let wishlist = result.unwrap();
         assert_eq!(
             wishlist.id.to_string(),
-            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+            "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
         );
         assert_eq!(wishlist.items.len(), 1);
 
         let item = &wishlist.items[0];
-        assert_eq!(item.id.to_string(), "2af7578c-8857-4894-8c93-0be4b579ff25");
+        assert_eq!(
+            item.id.to_string(),
+            "trn:wishlist-item:2af7578c-8857-4894-8c93-0be4b579ff25"
+        );
         assert_eq!(
             item.railway_model_id.to_string(),
             "trn:railway-model:acme:60100".to_string()
@@ -318,8 +318,8 @@ mod tests {
         // Find the preview for our fixture wishlist id/name
         let maybe = previews.iter().find(|p| {
             p.name == "Test Wishlist"
-                || p.id.to_string() == "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
-                || p.id.to_string() == "11111111-1111-1111-1111-111111111111"
+                || p.id.to_string() == "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+                || p.id.to_string() == "trn:wishlist:11111111-1111-1111-1111-111111111111"
         });
         assert!(
             maybe.is_some(),
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(first_wishlist.name, "Test Wishlist 1");
         assert_eq!(
             first_wishlist.id.to_string(),
-            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+            "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
         );
         assert_eq!(first_wishlist.count, 2);
         assert_eq!(first_wishlist.notes, Some("Notes".to_string()));
@@ -350,7 +350,7 @@ mod tests {
         assert_eq!(second_wishlist.name, "Test Wishlist 2");
         assert_eq!(
             second_wishlist.id.to_string(),
-            "c9950910-96e1-47ae-8097-cd0ebbaa83f5"
+            "trn:wishlist:c9950910-96e1-47ae-8097-cd0ebbaa83f5"
         );
         assert_eq!(second_wishlist.count, 2);
         assert_eq!(second_wishlist.notes, Some("Notes".to_string()));

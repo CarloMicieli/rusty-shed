@@ -50,14 +50,14 @@ mod tests {
             crate::core::infrastructure::unit_of_work::SqliteUnitOfWork::new(&conn).await?;
 
         let uc = GetWishlistUseCase;
-        let id = WishlistId::try_from("58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
+        let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
         let res = uc.execute(&mut uow, &id).await?;
 
         assert!(res.is_some());
         let wishlist = res.unwrap();
         assert_eq!(
             wishlist.id.to_string(),
-            "58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
+            "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
         );
         assert_eq!(wishlist.items.len(), 1);
 
