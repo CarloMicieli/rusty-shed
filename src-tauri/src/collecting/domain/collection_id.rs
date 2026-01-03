@@ -1,39 +1,40 @@
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::fmt;
-use uuid::Uuid;
+use std::ops::Deref;
 
-pub const DEFAULT_COLLECTION_ID: &str = "052cb8be-cc5c-460d-b72c-6cec595b91d7";
+pub const TRN_PREFIX: &str = "trn:collection:";
+pub const DEFAULT_COLLECTION_ID: &str = "1";
 
 /// Identifier for a collection.
 ///
-/// This newtype wraps a `Uuid` to provide a distinct domain type for collection
-/// identifiers. Construction from strings is fallible — the string must be
-/// a valid UUID representation (for example `"550e8400-e29b-41d4-a716-446655440000"`).
-///
-/// # Requirements
-/// - `TryFrom<&str>` / `TryFrom<String>` will return an error if the provided
-///   string is not a valid UUID.
+/// This newtype wraps a `String` containing a TRN of the form
+/// `trn:collection:1`. Construction from strings is fallible — the string must
+/// exactly match the enforced TRN for the single-supported collection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
 #[sqlx(transparent)]
-pub struct CollectionId(pub Uuid);
+pub struct CollectionId(String);
 
 /// Errors that can occur when creating a `CollectionId` from a string.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum CollectionIdError {
-    /// The provided string was not a valid UUID.
-    #[error("invalid UUID: {0}")]
-    InvalidUuid(String),
+    /// The provided string was not a valid collection TRN.
+    #[error("invalid collection trn: {0}")]
+    InvalidTrn(String),
 }
 
 impl TryFrom<&str> for CollectionId {
     type Error = CollectionIdError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Uuid::parse_str(value)
-            .map(CollectionId)
-            .map_err(|_| CollectionIdError::InvalidUuid(value.to_string()))
+        let expected = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        if value == expected {
+            Ok(CollectionId(value.to_string()))
+        } else {
+            Err(CollectionIdError::InvalidTrn(value.to_string()))
+        }
     }
 }
 
@@ -41,9 +42,7 @@ impl TryFrom<&String> for CollectionId {
     type Error = CollectionIdError;
 
     fn try_from(value: &String) -> Result<Self, Self::Error> {
-        Uuid::parse_str(value)
-            .map(CollectionId)
-            .map_err(|_| CollectionIdError::InvalidUuid(value.to_string()))
+        CollectionId::try_from(value.as_str())
     }
 }
 
@@ -51,28 +50,28 @@ impl TryFrom<String> for CollectionId {
     type Error = CollectionIdError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        Uuid::parse_str(&value)
-            .map(CollectionId)
-            .map_err(|_| CollectionIdError::InvalidUuid(value))
-    }
-}
-
-impl From<Uuid> for CollectionId {
-    fn from(u: Uuid) -> Self {
-        CollectionId(u)
+        CollectionId::try_from(value.as_str())
     }
 }
 
 impl Default for CollectionId {
-    /// Generate a new `CollectionId` with a random v4 UUID.
+    /// Return the constant TRN-based collection id `trn:collection:1`.
     fn default() -> Self {
-        CollectionId(Uuid::try_from(DEFAULT_COLLECTION_ID).expect("invalid UUID"))
+        CollectionId(format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID))
     }
 }
 
 impl fmt::Display for CollectionId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Use the inner string for display; inner field is private but accessible here
         write!(f, "{}", self.0)
+    }
+}
+
+impl Deref for CollectionId {
+    type Target = String;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -82,45 +81,41 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn parse_valid_uuid() {
-        let u = Uuid::new_v4();
-        let s = u.to_string();
-        let id = CollectionId::try_from(s.as_str()).expect("should parse uuid");
-        assert_eq!(id.0, u);
+    fn parse_valid_trn() {
+        let s = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let id = CollectionId::try_from(s.as_str()).expect("should parse trn");
         assert_eq!(id.to_string(), s);
     }
 
     #[test]
-    fn parse_invalid_uuid() {
-        let err = CollectionId::try_from("not-a-uuid").expect_err("invalid uuid should fail");
-        assert_eq!(
-            err,
-            CollectionIdError::InvalidUuid("not-a-uuid".to_string())
-        );
+    fn parse_invalid_trn() {
+        let bad = "not-a-trn";
+        let err = CollectionId::try_from(bad).expect_err("invalid trn should fail");
+        assert_eq!(err, CollectionIdError::InvalidTrn(bad.to_string()));
     }
 
     #[test]
-    fn from_uuid_and_display() {
-        let u = Uuid::new_v4();
-        let id = CollectionId::from(u);
-        assert_eq!(id.to_string(), u.to_string());
+    fn from_str_and_display() {
+        let s = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let id = CollectionId::try_from(s.as_str()).expect("should parse");
+        assert_eq!(id.to_string(), s);
     }
 
     #[test]
     fn serde_roundtrip() {
-        let u = Uuid::new_v4();
-        let id = CollectionId::from(u);
-        let s = serde_json::to_string(&id).expect("serialize");
+        let s = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let id = CollectionId::try_from(s.as_str()).expect("should parse");
+        let ser = serde_json::to_string(&id).expect("serialize");
         // serde(transparent) -> serialized as plain string
-        assert_eq!(s, format!("\"{}\"", u));
-        let de: CollectionId = serde_json::from_str(&s).expect("deserialize");
+        assert_eq!(ser, format!("\"{}\"", s));
+        let de: CollectionId = serde_json::from_str(&ser).expect("deserialize");
         assert_eq!(de, id);
     }
 
     #[test]
-    fn default_generates_same_uuid() {
+    fn default_is_constant_trn() {
         let a = CollectionId::default();
         let b = CollectionId::default();
-        assert_eq!(a, b, "Two generated UUIDs should not be equal");
+        assert_eq!(a, b, "Default collection id should be constant");
     }
 }
