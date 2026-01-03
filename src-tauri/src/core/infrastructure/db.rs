@@ -92,3 +92,46 @@ pub enum SqliteDbError {
     #[error("migration error: {0}")]
     MigrationError(#[from] sqlx::migrate::MigrateError),
 }
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+
+    #[sqlx::test]
+    async fn test_ensure_foreign_keys_are_enabled(pool: sqlx::SqlitePool) {
+        let is_enabled: i32 = sqlx::query_scalar("PRAGMA foreign_keys")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to query PRAGMA");
+
+        assert_eq!(
+            is_enabled, 1,
+            "Foreign keys are DISABLED. Check your connection string or options."
+        );
+    }
+
+    #[sqlx::test]
+    async fn test_fk_constraint_behavior(pool: sqlx::SqlitePool) {
+        let insert_cmd = r#"
+        INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id) 
+        VALUES ('id1', 'non_existent_model_id', 'locomotive', 'non_existent_company_id');"#;
+
+        let result = sqlx::query(insert_cmd).execute(&pool).await;
+
+        // The test passes if the insertion fails with a Database error
+        assert!(
+            result.is_err(),
+            "The database should have blocked the orphaned record"
+        );
+
+        // Optional: Check if the error is specifically an FK violation
+        let err = result.unwrap_err();
+        if let Some(sqlite_err) = err.as_database_error() {
+            assert!(
+                sqlite_err
+                    .message()
+                    .contains("FOREIGN KEY constraint failed")
+            );
+        }
+    }
+}
