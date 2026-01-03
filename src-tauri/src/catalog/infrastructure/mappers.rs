@@ -466,11 +466,9 @@ mod tests {
 
         #[test]
         fn rolling_stock_row_maps_to_domain_locomotive() {
-            use uuid::Uuid;
-
-            let id = Uuid::new_v4().to_string();
+            let id = RollingStockId::default();
             let row = RollingStockRow {
-                id: id.clone(),
+                id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
                 category: "LOCOMOTIVE".to_string(),
                 railway_company_id: "RC-1".to_string(),
@@ -502,17 +500,14 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            // check id roundtrip
-            assert_eq!(domain.id().to_string(), id);
+            assert_eq!(domain.id(), &id);
         }
 
         #[test]
         fn rolling_stock_row_maps_to_domain_freight_car() {
-            use uuid::Uuid;
-
-            let id = Uuid::new_v4().to_string();
+            let id = RollingStockId::default();
             let row = RollingStockRow {
-                id: id.clone(),
+                id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
                 category: "FREIGHT_CAR".to_string(),
                 railway_company_id: "RC-1".to_string(),
@@ -544,16 +539,14 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id().to_string(), id);
+            assert_eq!(domain.id(), &id);
         }
 
         #[test]
         fn rolling_stock_row_maps_to_domain_passenger_car() {
-            use uuid::Uuid;
-
-            let id = Uuid::new_v4().to_string();
+            let id = RollingStockId::default();
             let row = RollingStockRow {
-                id: id.clone(),
+                id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
                 category: "PASSENGER_CAR".to_string(),
                 railway_company_id: "RC-1".to_string(),
@@ -585,16 +578,14 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id().to_string(), id);
+            assert_eq!(domain.id(), &id);
         }
 
         #[test]
         fn rolling_stock_row_maps_to_domain_emu() {
-            use uuid::Uuid;
-
-            let id = Uuid::new_v4().to_string();
+            let id = RollingStockId::default();
             let row = RollingStockRow {
-                id: id.clone(),
+                id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
                 category: "ELECTRIC_MULTIPLE_UNIT".to_string(),
                 railway_company_id: "RC-1".to_string(),
@@ -626,16 +617,14 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id().to_string(), id);
+            assert_eq!(domain.id(), &id);
         }
 
         #[test]
         fn rolling_stock_row_maps_to_domain_railcar() {
-            use uuid::Uuid;
-
-            let id = Uuid::new_v4().to_string();
+            let id = RollingStockId::default();
             let row = RollingStockRow {
-                id: id.clone(),
+                id: id.to_string(),
                 railway_model_id: "RM-1".to_string(),
                 category: "RAILCAR".to_string(),
                 railway_company_id: "RC-1".to_string(),
@@ -667,7 +656,7 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id().to_string(), id);
+            assert_eq!(domain.id(), &id);
         }
     }
 }

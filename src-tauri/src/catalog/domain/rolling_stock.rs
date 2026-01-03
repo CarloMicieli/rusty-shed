@@ -334,13 +334,13 @@ impl RollingStock {
     }
 
     /// The unique identifier for this rolling stock
-    pub fn id(&self) -> RollingStockId {
+    pub fn id(&self) -> &RollingStockId {
         match self {
-            RollingStock::ElectricMultipleUnit { id, .. } => *id,
-            RollingStock::Locomotive { id, .. } => *id,
-            RollingStock::FreightCar { id, .. } => *id,
-            RollingStock::PassengerCar { id, .. } => *id,
-            RollingStock::Railcar { id, .. } => *id,
+            RollingStock::ElectricMultipleUnit { id, .. } => id,
+            RollingStock::Locomotive { id, .. } => id,
+            RollingStock::FreightCar { id, .. } => id,
+            RollingStock::PassengerCar { id, .. } => id,
+            RollingStock::Railcar { id, .. } => id,
         }
     }
 
@@ -506,7 +506,7 @@ mod test {
             let tech_specs = technical_specification();
 
             let locomotive = RollingStock::new_locomotive(
-                id,
+                id.clone(),
                 "E.656",
                 None,
                 "E.656 077",
@@ -522,7 +522,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(id, locomotive.id());
+            assert_eq!(&id, locomotive.id());
             assert_eq!(RollingStockCategory::Locomotive, locomotive.category());
             assert_eq!(Some("blu/grigio"), locomotive.livery());
             assert_eq!(Some(&length), locomotive.length_over_buffer());
@@ -542,7 +542,7 @@ mod test {
             let tech_specs = technical_specification();
 
             let power_car = RollingStock::new_electric_multiple_unit(
-                id,
+                id.clone(),
                 "ALe 801",
                 Some("003"),
                 Some("ALe 801 003"),
@@ -558,7 +558,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(id, power_car.id());
+            assert_eq!(&id, power_car.id());
             assert_eq!(
                 RollingStockCategory::ElectricMultipleUnit,
                 power_car.category()
@@ -581,7 +581,7 @@ mod test {
             let tech_specs = technical_specification();
 
             let passenger_car = RollingStock::new_passenger_car(
-                id,
+                id.clone(),
                 "UIC-Z1",
                 None,
                 Some("61 83 19-90 105-3 A"),
@@ -594,7 +594,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(id, passenger_car.id());
+            assert_eq!(&id, passenger_car.id());
             assert_eq!(RollingStockCategory::PassengerCar, passenger_car.category());
             assert_eq!(Some("XMPR"), passenger_car.livery());
             assert_eq!(Some(&length), passenger_car.length_over_buffer());
@@ -614,7 +614,7 @@ mod test {
             let tech_specs = technical_specification();
 
             let power_car = RollingStock::new_railcar(
-                id,
+                id.clone(),
                 "ALn 668",
                 None,
                 Some("ALn 668 1449"),
@@ -630,7 +630,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(id, power_car.id());
+            assert_eq!(&id, power_car.id());
             assert_eq!(RollingStockCategory::Railcar, power_car.category());
             assert_eq!(Some("verde lichene/giallo coloniale"), power_car.livery());
             assert_eq!(Some(&length), power_car.length_over_buffer());
@@ -650,7 +650,7 @@ mod test {
             let tech_specs = technical_specification();
 
             let freight_car = RollingStock::new_freight_car(
-                id,
+                id.clone(),
                 "Fals",
                 None,
                 Some("31 83 665 0 150-6"),
@@ -661,7 +661,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(id, freight_car.id());
+            assert_eq!(&id, freight_car.id());
             assert_eq!(RollingStockCategory::FreightCar, freight_car.category());
             assert_eq!(Some("castano"), freight_car.livery());
             assert_eq!(Some(&length), freight_car.length_over_buffer());

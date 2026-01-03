@@ -1,9 +1,3 @@
-//! Database row representations for the `collecting` feature.
-//!
-//! These structs mirror the columns defined in the `0002_create_collection_schema` migration
-//! and are intended only as a thin database representation (FromRow). Conversion to rich
-//! domain types should happen in the repository layer.
-
 use chrono::{NaiveDate, NaiveDateTime};
 
 /// Row mapping for the `collections` table.

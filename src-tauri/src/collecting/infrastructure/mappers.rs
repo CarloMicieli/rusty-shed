@@ -1,7 +1,10 @@
+use crate::catalog::domain::dcc_interface::DccInterface;
 use crate::collecting::domain::collection::Collection;
 use crate::collecting::domain::collection_id::CollectionId;
 use crate::collecting::domain::collection_item::CollectionItem;
 use crate::collecting::domain::collection_item_id::CollectionItemId;
+use crate::collecting::domain::decoder_id::DecoderId;
+use crate::collecting::domain::digital_setup::DigitalSetup;
 use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
 use crate::collecting::domain::purchase_info::PurchaseInfo;
 use crate::collecting::domain::summary::CollectionSummary;
@@ -96,7 +99,7 @@ impl CollectionMapper {
                     .map(|rs_row| {
                         // Basic fields
                         let mut ors = OwnedRollingStock {
-                            id: rs_row.id.clone(),
+                            id: crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId::new(rs_row.id.clone()),
                             rolling_stock_id: rs_row
                                 .rolling_stock_id
                                 .clone()
@@ -114,12 +117,12 @@ impl CollectionMapper {
                                 // decoder_interface must be present in the joined columns
                                 if let Some(dec_if) = &rs_row.decoder_interface {
                                     // Parse interface string into DccInterface
-                                    let interface = dec_if.parse::<crate::catalog::domain::dcc_interface::DccInterface>();
+                                    let interface = dec_if.parse::<DccInterface>();
                                     if let Ok(interface) = interface {
-                                        ors.digital = Some(crate::collecting::domain::digital_setup::DigitalSetup {
+                                        ors.digital = Some(DigitalSetup {
                                             interface,
                                             dcc_address: addr_u16,
-                                            installed_decoder_id: installed_id.parse().unwrap_or_else(|_| crate::collecting::domain::decoder_id::DecoderId::new(installed_id.clone())),
+                                            installed_decoder_id: installed_id.parse().unwrap_or_else(|_| DecoderId::new(installed_id.clone())),
                                         });
                                     }
                                 }
@@ -349,7 +352,10 @@ mod tests {
 
         assert_eq!(mapped_item.rolling_stocks.len(), 1);
         let ors = &mapped_item.rolling_stocks[0];
-        assert_eq!(ors.id, "d3606635-4c4e-462b-ae9f-02c7ce47bc770".to_string());
+        assert_eq!(
+            ors.id.to_string(),
+            "d3606635-4c4e-462b-ae9f-02c7ce47bc770".to_string()
+        );
         assert_eq!(ors.rolling_stock_id, "rs-001".to_string());
         assert_eq!(ors.notes, "My rolling stock notes go here".to_string());
 

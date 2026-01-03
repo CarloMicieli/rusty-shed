@@ -8,6 +8,7 @@ pub mod decoder_type;
 mod digital_protocol;
 pub mod digital_setup;
 pub mod owned_rolling_stock;
+pub mod owned_rolling_stock_id;
 pub mod purchase_info;
 pub mod repository;
 pub mod summary;

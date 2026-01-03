@@ -112,7 +112,7 @@ mod tests {
     fn from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = CollectionItemId::from(u);
-        let expected = format!("{}{}", TRN_ITEM_PREFIX, u.to_string());
+        let expected = format!("{}{}", TRN_ITEM_PREFIX, u);
         assert_eq!(id.to_string(), expected);
     }
 

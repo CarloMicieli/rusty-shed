@@ -1,5 +1,6 @@
 use crate::catalog::domain::dcc_interface::DccInterface;
 use crate::collecting::domain::digital_setup::DigitalSetup;
+use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -14,7 +15,7 @@ use specta::Type;
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct OwnedRollingStock {
     /// Unique identifier for this owned rolling stock record (e.g. UUID in the DB).
-    pub id: String,
+    pub id: OwnedRollingStockId,
 
     /// Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
     pub rolling_stock_id: String,
@@ -83,11 +84,12 @@ mod tests {
     use crate::collecting::domain::decoder_id::DecoderId;
     use crate::collecting::domain::decoder_type::DecoderType;
     use crate::collecting::domain::digital_protocol::DigitalProtocol;
+    use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
 
     #[test]
     fn install_decoder_validates_address_and_interface() {
         let mut ors = OwnedRollingStock {
-            id: "ors-1".to_string(),
+            id: OwnedRollingStockId::new("ors-1"),
             rolling_stock_id: "rs-1".to_string(),
             notes: "".to_string(),
             digital: None,
