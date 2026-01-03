@@ -164,14 +164,17 @@ mod tests {
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
         assert_eq!(
             collection.items[0].rolling_stocks[0].rolling_stock_id,
-            "rs-001".to_string()
+            "trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string()
         );
 
         assert!(collection.items[0].purchase_info.is_some());
         let purchase_info = collection.items[0].purchase_info.as_ref().unwrap();
         match purchase_info {
             PurchaseInfo::Purchased(purchased_info) => {
-                assert_eq!(purchased_info.id, "59adc26d-0274-4d6b-8c14-61e598d3fe0e");
+                assert_eq!(
+                    purchased_info.id.to_string(),
+                    "trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e"
+                );
                 let price = purchased_info.price.as_ref().expect("price present");
                 assert_eq!(price.amount, 17500);
                 assert_eq!(price.currency, Currency::EUR);

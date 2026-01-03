@@ -7,6 +7,7 @@ use crate::collecting::domain::decoder_id::DecoderId;
 use crate::collecting::domain::digital_setup::DigitalSetup;
 use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
 use crate::collecting::domain::purchase_info::PurchaseInfo;
+use crate::collecting::domain::purchase_info_id::PurchaseInfoId;
 use crate::collecting::domain::summary::CollectionSummary;
 use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
@@ -163,8 +164,18 @@ impl CollectionMapper {
     /// - If currency/amount conversions fail, the underlying `MonetaryAmount`
     ///   parsing error is propagated.
     fn row_to_purchase_info(pi_row: &PurchaseInfoRow) -> anyhow::Result<PurchaseInfo> {
-        let purchase_type = pi_row.purchase_type.as_deref();
+        // Normalize purchase_type to lowercase for case-insensitive matching.
+        // Keep the owned lowercase String in scope so `as_deref()` yields a
+        // stable reference for pattern matching.
+        let purchase_type_lower: Option<String> =
+            pi_row.purchase_type.clone().map(|s| s.to_ascii_lowercase());
+        let purchase_type = purchase_type_lower.as_deref();
         let purchase_date = pi_row.purchase_date;
+        // debug: log purchase row fields to understand failures in mapping from fixtures
+        eprintln!(
+            "DEBUG: pi_row.id={}, purchase_type={:?}, purchased_currency={:?}",
+            pi_row.id, pi_row.purchase_type, pi_row.purchased_price_currency
+        );
         match purchase_type {
             Some("purchased") => {
                 let price = MonetaryAmount::from_db(
@@ -173,7 +184,7 @@ impl CollectionMapper {
                 )?;
                 Ok(PurchaseInfo::Purchased(
                     crate::collecting::domain::purchase_info::PurchasedInfo {
-                        id: pi_row.id.clone(),
+                        id: PurchaseInfoId::new(pi_row.id.clone()),
                         purchase_date,
                         price,
                         seller: pi_row.seller_id.clone(),
@@ -191,7 +202,7 @@ impl CollectionMapper {
                 )?;
                 Ok(PurchaseInfo::Sold(
                     crate::collecting::domain::purchase_info::SoldInfo {
-                        id: pi_row.id.clone(),
+                        id: PurchaseInfoId::new(pi_row.id.clone()),
                         purchase_date,
                         purchase_price,
                         sale_date: pi_row.sale_date.unwrap_or(purchase_date),
@@ -212,7 +223,7 @@ impl CollectionMapper {
                 )?;
                 Ok(PurchaseInfo::PreOrdered(
                     crate::collecting::domain::purchase_info::PreOrderInfo {
-                        id: pi_row.id.clone(),
+                        id: PurchaseInfoId::new(pi_row.id.clone()),
                         order_date: purchase_date,
                         deposit: deposit.unwrap_or_default(),
                         total_price: total_price.unwrap_or_default(),
@@ -362,7 +373,10 @@ mod tests {
         let pi = mapped_item.purchase_info.expect("purchase info present");
         match pi {
             PurchaseInfo::Purchased(p) => {
-                assert_eq!(p.id, "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string());
+                assert_eq!(
+                    p.id.to_string(),
+                    "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string()
+                );
                 assert_eq!(p.purchase_date.to_string(), "2025-12-26");
                 let price = p.price.expect("price present");
                 assert_eq!(price.amount, 17500u64);
@@ -397,7 +411,10 @@ mod tests {
         let pi = CollectionMapper::row_to_purchase_info(&pi_row).expect("mapping purchase info");
         match pi {
             PurchaseInfo::Purchased(p) => {
-                assert_eq!(p.id, "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string());
+                assert_eq!(
+                    p.id.to_string(),
+                    "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string()
+                );
                 assert_eq!(p.purchase_date.to_string(), "2025-12-26");
                 let price = p.price.expect("price present");
                 assert_eq!(price.amount, 17500u64);
@@ -433,7 +450,7 @@ mod tests {
         match pi {
             PurchaseInfo::Sold(s) => {
                 assert_eq!(
-                    s.id,
+                    s.id.to_string(),
                     "sold-purchase-0000-0000-0000-000000000000".to_string()
                 );
                 assert_eq!(s.purchase_date.to_string(), "2024-05-10");
@@ -475,7 +492,7 @@ mod tests {
         match pi {
             PurchaseInfo::PreOrdered(po) => {
                 assert_eq!(
-                    po.id,
+                    po.id.to_string(),
                     "preorder-purchase-0000-0000-0000-000000000000".to_string()
                 );
                 assert_eq!(po.order_date.to_string(), "2025-06-01");

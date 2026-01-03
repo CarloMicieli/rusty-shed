@@ -376,7 +376,7 @@ mod tests {
 
             let domain = Manufacturer::try_from(row).expect("mapping should succeed");
 
-            assert_eq!(&*domain.id, "MN-1");
+            assert_eq!(&*domain.id, "trn:manufacturer:mn-1");
             assert_eq!(domain.name, "ACME Models");
             assert_eq!(
                 domain.registered_company_name.as_deref(),

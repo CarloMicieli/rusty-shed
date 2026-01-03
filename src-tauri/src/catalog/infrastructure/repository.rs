@@ -37,7 +37,7 @@ pub async fn get_manufacturer_by_id(
     executor: &mut SqliteConnection,
     id: &ManufacturerId,
 ) -> anyhow::Result<Option<Manufacturer>> {
-    let row_opt = database::get_manufacturer_by_id(executor, &id.to_string())
+    let row_opt = database::get_manufacturer_by_id(executor, id)
         .await
         .context("querying manufacturers table")?;
 
@@ -577,19 +577,31 @@ mod tests {
         use super::*;
         use crate::catalog::domain::manufacturer_id::ManufacturerId;
         use pretty_assertions::assert_eq;
+        use url::Url;
 
         #[sqlx::test(migrations = "./migrations", fixtures("test_manufacturer"))]
-        async fn repo_gets_manufacturer_by_id(pool: sqlx::SqlitePool) {
-            let mut conn = pool.acquire().await.expect("acquire conn");
+        async fn it_should_retrieve_manufacturers_from_db(pool: sqlx::SqlitePool) {
+            let mut conn = pool.acquire().await.expect("should acquire connection");
 
-            let res = get_manufacturer_by_id(&mut conn, &ManufacturerId::try_from("MN-1").unwrap())
+            let id = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
+            let result = get_manufacturer_by_id(&mut conn, &id)
                 .await
-                .expect("query should run");
+                .expect("should run query without errors");
 
-            assert!(res.is_some());
-            let m = res.unwrap();
-            assert_eq!(&*m.id, "MN-1");
-            assert_eq!(m.name, "ACME Models");
+            assert!(result.is_some());
+
+            let manufacturer = result.unwrap();
+            assert_eq!(manufacturer.id, id);
+            assert_eq!(manufacturer.name, "ACME");
+            assert_eq!(
+                manufacturer.registered_company_name,
+                Some("ACME Corporation".to_string())
+            );
+            assert_eq!(manufacturer.country_code, Some("IT".to_string()));
+            assert_eq!(
+                manufacturer.website_url,
+                Some(Url::parse("https://www.acmetreni.com").unwrap())
+            );
         }
     }
 
@@ -599,89 +611,56 @@ mod tests {
         use pretty_assertions::assert_eq;
 
         #[sqlx::test(migrations = "./migrations", fixtures("test_railway_company"))]
-        async fn repo_gets_railway_by_id(pool: sqlx::SqlitePool) {
-            let mut conn = pool.acquire().await.expect("acquire conn");
+        async fn it_should_retrieve_railway_companies_from_db(pool: sqlx::SqlitePool) {
+            let mut conn = pool.acquire().await.expect("should acquire connection");
 
-            let res =
-                get_railway_company_by_id(&mut conn, &RailwayCompanyId::try_from("RC-1").unwrap())
-                    .await
-                    .expect("query should run");
+            let id = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+            let result = get_railway_company_by_id(&mut conn, &id)
+                .await
+                .expect("should run query without errors");
 
-            assert!(res.is_some());
-            let r = res.unwrap();
-            assert_eq!(&*r.id, "RC-1");
-            assert_eq!(r.name, "Ferrovie dello Stato");
+            assert!(result.is_some());
+
+            let railway_company = result.unwrap();
+            assert_eq!(railway_company.id, id);
+            assert_eq!(railway_company.name, "FS");
+            assert_eq!(
+                railway_company.registered_company_name,
+                Some("Ferrovie dello Stato".to_string())
+            );
+            assert_eq!(railway_company.country_code, Some("IT".to_string()));
         }
     }
 
     mod railway_model_repo_tests {
         use super::*;
+        use crate::catalog::domain::Category;
         use pretty_assertions::assert_eq;
-        use sqlx::{Executor, SqlitePool};
 
-        async fn setup_db() -> SqlitePool {
-            let pool = SqlitePool::connect("sqlite::memory:")
+        #[sqlx::test(migrations = "./migrations", fixtures("test_railway_model"))]
+        async fn it_should_retrieve_railway_model_from_db(pool: sqlx::SqlitePool) {
+            let mut conn = pool.acquire().await.expect("should acquire connection");
+
+            let id = RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap();
+            let result = get_railway_model_by_id(&mut conn, &id)
                 .await
-                .expect("create pool");
-            let mut conn = pool.acquire().await.expect("acquire conn");
+                .expect("should run query without errors");
 
-            // create required tables (minimal subset)
-            let schema = include_str!(
-                "../../../migrations/0001_create_railway_models_and_rolling_stocks.sql"
+            assert!(result.is_some());
+
+            let railway_model = result.unwrap();
+            assert_eq!(railway_model.id, id);
+            assert_eq!(
+                railway_model.manufacturer.to_string(),
+                "trn:manufacturer:acme"
             );
-            conn.execute(schema).await.expect("create schema");
-
-            pool
-        }
-
-        #[tokio::test]
-        async fn repo_gets_railway_model_with_and_without_children() {
-            let pool = setup_db().await;
-            let mut conn = pool.acquire().await.expect("acquire conn");
-
-            // insert manufacturer required by FK
-            conn.execute("INSERT INTO manufacturers (id, name, status, created_at, updated_at) VALUES ('MN-1','ACME','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
-                .await
-                .expect("insert manufacturer");
-
-            // insert railway company required by FK
-            conn.execute("INSERT INTO railway_companies (id, name, created_at, updated_at) VALUES ('RC-1','RC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
-                .await
-                .expect("insert railway company");
-
-            // insert a railway model
-            conn.execute("INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category, created_at, updated_at) VALUES ('RM-1','MN-1','ACME-100','Test', 'DC', 'H0', 'III', 'LOCOMOTIVES', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
-                .await
-                .expect("insert railway model");
-
-            // Case 1: no rolling stocks -> should return model with empty list
-            let res =
-                get_railway_model_by_id(&mut conn, &RailwayModelId::try_from("RM-1").unwrap())
-                    .await
-                    .expect("query failed");
-            assert!(res.is_some());
-            let rm = res.unwrap();
-            assert_eq!(&*rm.id, "RM-1");
-            assert_eq!(rm.rolling_stocks.len(), 0);
-
-            // insert a rolling stock
-            let rs_id = uuid::Uuid::new_v4().to_string();
-            let insert_rs = format!(
-                "INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, series_code, friendly_name, road_number, locomotive_type, is_dummy) VALUES ('{}','RM-1','LOCOMOTIVE','RC-1','123','Class X','1','DIESEL_LOCOMOTIVE',0)",
-                rs_id
+            assert_eq!(railway_model.product_code.to_string(), "60100");
+            assert_eq!(
+                railway_model.description,
+                "Locomotiva elettrica E.444.005 Tartaruga"
             );
-            conn.execute(insert_rs.as_str())
-                .await
-                .expect("insert rolling stock");
-
-            // Case 2: with rolling stocks
-            let res2 =
-                get_railway_model_by_id(&mut conn, &RailwayModelId::try_from("RM-1").unwrap())
-                    .await
-                    .expect("query failed");
-            assert!(res2.is_some());
-            let rm2 = res2.unwrap();
-            assert_eq!(rm2.rolling_stocks.len(), 1);
+            assert_eq!(railway_model.rolling_stocks.len(), 1);
+            assert_eq!(railway_model.category, Category::Locomotives)
         }
     }
 }

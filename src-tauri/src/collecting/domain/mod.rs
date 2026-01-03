@@ -10,5 +10,6 @@ pub mod digital_setup;
 pub mod owned_rolling_stock;
 pub mod owned_rolling_stock_id;
 pub mod purchase_info;
+pub mod purchase_info_id;
 pub mod repository;
 pub mod summary;

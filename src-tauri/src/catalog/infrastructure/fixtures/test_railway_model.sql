@@ -14,7 +14,7 @@ VALUES ('trn:manufacturer:acme',
 INSERT INTO railway_companies (id, name, registered_company_name, country_code, status, created_at, updated_at)
 VALUES ('trn:railway-company:fs',
         'FS',
-        'Ferrovie dello Stato Italiane (Trenitalia)',
+        'Ferrovie dello Stato',
         'IT',
         'ACTIVE',
         '2025-12-26T15:50:13.995410967+00:00',
@@ -50,25 +50,3 @@ VALUES ('trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8',
         'DCC_READY',
         0);
 
-
-INSERT INTO wishlists(id, name, notes, is_default, created_at, updated_at)
-VALUES ('58fb6f1d-d838-44b5-b65c-21e5388ca4c9',
-        'Test Wishlist',
-        'Notes',
-        0,
-        '2025-12-26T00:00:00Z',
-        '2025-12-26T00:00:00Z');
-
-INSERT INTO wishlist_items(
-    id, wishlist_id, railway_model_id, priority, status, desired_price_amount, desired_price_currency, added_date, notes
-) VALUES (
-    '2af7578c-8857-4894-8c93-0be4b579ff25',
-    '58fb6f1d-d838-44b5-b65c-21e5388ca4c9',
-    'trn:railway-model:acme:60100',
-    'NORMAL',
-    'WANTED',
-    12345,
-    'EUR',
-    '2025-12-26',
-    'Fixture item notes'
-);

@@ -2,6 +2,7 @@ use crate::catalog::infrastructure::entities::RailwayCompanyRow;
 use crate::catalog::infrastructure::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use sqlx::sqlite::SqliteConnection;
 use sqlx::{QueryBuilder, Sqlite};
+use crate::catalog::domain::manufacturer_id::ManufacturerId;
 
 /// Fetch a manufacturer row by its ID.
 ///
@@ -23,7 +24,7 @@ use sqlx::{QueryBuilder, Sqlite};
 /// Errors from `sqlx` (preparing or executing the query) are propagated to the caller.
 pub async fn get_manufacturer_by_id(
     executor: &mut SqliteConnection,
-    id: &str,
+    id: &ManufacturerId,
 ) -> Result<Option<ManufacturerRow>, sqlx::Error> {
     let sql = "SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at \
         FROM manufacturers WHERE id = ?1 LIMIT 1";

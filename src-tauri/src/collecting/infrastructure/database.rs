@@ -238,7 +238,7 @@ mod tests {
         assert_eq!(item.collection_id, CollectionId::default().to_string());
         assert_eq!(item.railway_model_id, "trn:railway-model:acme:60100");
         // `conditions` and `notes` are Option<String> in the row mapping
-        assert_eq!(item.conditions, Some("new".to_string()));
+        assert_eq!(item.conditions, Some("NEW".to_string()));
         assert_eq!(item.notes, Some("My notes go here".to_string()));
 
         Ok(())
@@ -251,13 +251,13 @@ mod tests {
         assert_eq!(result.len(), 1);
 
         let ors = &result[0];
-        assert_eq!(ors.id, "d3606635-4c4e-462b-ae9f-02c7ce47bc770");
+        assert_eq!(ors.id, "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-02c7ce47bc770");
         assert_eq!(
             ors.collection_item_id,
             "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730"
         );
         // rolling_stock_id and notes are optional in the entity mapping
-        assert_eq!(ors.rolling_stock_id, Some("rs-001".to_string()));
+        assert_eq!(ors.rolling_stock_id, Some("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string()));
         assert_eq!(
             ors.notes,
             Some("My rolling stock notes go here".to_string())
@@ -273,12 +273,12 @@ mod tests {
         assert_eq!(result.len(), 1);
 
         let pi = &result[0];
-        assert_eq!(pi.id, "59adc26d-0274-4d6b-8c14-61e598d3fe0e");
+        assert_eq!(pi.id, "trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e");
         assert_eq!(
             pi.collection_item_id,
             "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730"
         );
-        assert_eq!(pi.purchase_type, Some("purchased".to_string()));
+        assert_eq!(pi.purchase_type, Some("PURCHASED".to_string()));
         // purchase_date is a NaiveDate; compare its string form to the fixture date
         assert_eq!(pi.purchase_date.to_string(), "2025-12-26");
         assert_eq!(pi.purchased_price_amount, Some(17500));

@@ -1,3 +1,4 @@
+use crate::collecting::domain::purchase_info_id::PurchaseInfoId;
 use crate::core::domain::MonetaryAmount;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -62,7 +63,7 @@ impl PurchaseInfo {
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct PurchasedInfo {
     /// Unique identifier for this purchase record (for example a UUID).
-    pub id: String,
+    pub id: PurchaseInfoId,
 
     /// Date when the item was purchased (ISO `YYYY-MM-DD`).
     pub purchase_date: NaiveDate,
@@ -87,7 +88,7 @@ pub struct SoldInfo {
     /// Unique identifier for the original purchase record (or the sale record,
     /// depending on how you model identifiers). This is the canonical id for
     /// the persisted purchase_info row.
-    pub id: String,
+    pub id: PurchaseInfoId,
 
     /// Date when the item was originally purchased (ISO `YYYY-MM-DD`).
     pub purchase_date: NaiveDate,
@@ -121,7 +122,7 @@ pub struct SoldInfo {
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct PreOrderInfo {
     /// Unique identifier for this preorder record.
-    pub id: String,
+    pub id: PurchaseInfoId,
 
     /// Date when the preorder was placed (ISO `YYYY-MM-DD`).
     pub order_date: NaiveDate,
@@ -156,6 +157,7 @@ impl PreOrderInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::collecting::domain::purchase_info_id::PurchaseInfoId;
     use crate::core::domain::MonetaryAmount;
     use crate::core::domain::currency::Currency;
     use chrono::NaiveDate;
@@ -163,7 +165,7 @@ mod tests {
     #[test]
     fn purchased_id_and_seller_accessor() {
         let p = PurchasedInfo {
-            id: "p1".to_string(),
+            id: PurchaseInfoId::new("p1"),
             purchase_date: NaiveDate::from_ymd_opt(2023, 10, 1).unwrap(),
             price: Some(MonetaryAmount::new(1500, Currency::EUR)),
             seller: Some("shop-1".to_string()),
@@ -176,7 +178,7 @@ mod tests {
     #[test]
     fn sold_id_and_seller_accessor() {
         let s = SoldInfo {
-            id: "s1".to_string(),
+            id: PurchaseInfoId::new("s1"),
             purchase_date: NaiveDate::from_ymd_opt(2020, 5, 10).unwrap(),
             purchase_price: Some(MonetaryAmount::new(2000, Currency::USD)),
             sale_date: NaiveDate::from_ymd_opt(2024, 1, 15).unwrap(),
@@ -192,7 +194,7 @@ mod tests {
     #[test]
     fn preorder_seller_none_and_validate_currency_mismatch() {
         let preorder = PreOrderInfo {
-            id: "pre1".to_string(),
+            id: PurchaseInfoId::new("pre1"),
             order_date: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
             deposit: MonetaryAmount::new(500, Currency::EUR),
             total_price: MonetaryAmount::new(1000, Currency::USD), // mismatched currency
