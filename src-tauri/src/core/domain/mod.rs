@@ -5,6 +5,7 @@ pub mod length;
 pub mod measure_units;
 pub mod monetary_amount;
 pub mod trn;
+pub mod domain_error;
 
 pub use currency::Currency;
 pub use error::Error;

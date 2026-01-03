@@ -334,7 +334,7 @@ impl RollingStock {
     }
 
     /// The unique identifier for this rolling stock
-    pub fn id(&self) -> &RollingStockId {
+    pub fn id_as_ref(&self) -> &RollingStockId {
         match self {
             RollingStock::ElectricMultipleUnit { id, .. } => id,
             RollingStock::Locomotive { id, .. } => id,
@@ -522,7 +522,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(&id, locomotive.id());
+            assert_eq!(&id, locomotive.id_as_ref());
             assert_eq!(RollingStockCategory::Locomotive, locomotive.category());
             assert_eq!(Some("blu/grigio"), locomotive.livery());
             assert_eq!(Some(&length), locomotive.length_over_buffer());
@@ -558,7 +558,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(&id, power_car.id());
+            assert_eq!(&id, power_car.id_as_ref());
             assert_eq!(
                 RollingStockCategory::ElectricMultipleUnit,
                 power_car.category()
@@ -594,7 +594,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(&id, passenger_car.id());
+            assert_eq!(&id, passenger_car.id_as_ref());
             assert_eq!(RollingStockCategory::PassengerCar, passenger_car.category());
             assert_eq!(Some("XMPR"), passenger_car.livery());
             assert_eq!(Some(&length), passenger_car.length_over_buffer());
@@ -630,7 +630,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(&id, power_car.id());
+            assert_eq!(&id, power_car.id_as_ref());
             assert_eq!(RollingStockCategory::Railcar, power_car.category());
             assert_eq!(Some("verde lichene/giallo coloniale"), power_car.livery());
             assert_eq!(Some(&length), power_car.length_over_buffer());
@@ -661,7 +661,7 @@ mod test {
                 Some(tech_specs.clone()),
             );
 
-            assert_eq!(&id, freight_car.id());
+            assert_eq!(&id, freight_car.id_as_ref());
             assert_eq!(RollingStockCategory::FreightCar, freight_car.category());
             assert_eq!(Some("castano"), freight_car.livery());
             assert_eq!(Some(&length), freight_car.length_over_buffer());

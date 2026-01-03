@@ -3,11 +3,22 @@ use strum_macros::{Display, EnumString};
 
 /// The enumeration of the railway model categories.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Category {
     /// Independent traction units powered by steam, diesel, or electricity
     /// used to pull unpowered vehicles.
@@ -43,11 +54,22 @@ pub enum Category {
 /// This categorization distinguishes between traction units, hauled vehicles,
 /// and self-propelled passenger units.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RollingStockCategory {
     /// Independent traction units used to haul unpowered vehicles.
     /// Includes steam, diesel, and electric motive power.
@@ -76,11 +98,22 @@ pub enum RollingStockCategory {
 /// cargo requirements, such as climate control, weather protection, or
 /// specialized loading mechanisms.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum FreightCarType {
     /// Specialized wagons for transporting motor vehicles, often multi-deck.
     AutoTransportCars,
@@ -167,11 +200,22 @@ pub enum FreightCarType {
 /// This classification determines the operational requirements, such as
 /// fueling infrastructure or overhead electrification.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LocomotiveType {
     /// Locomotives powered by an external combustion engine, typically
     /// using a boiler to produce steam from coal, wood, or oil.
@@ -188,11 +232,22 @@ pub enum LocomotiveType {
 
 /// The types for passenger car rolling stocks
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PassengerCarType {
     /// A car usually placed between the locomotive and the rest of the train,
     /// featuring a wide-open interior for carrying checked baggage.
@@ -255,11 +310,22 @@ pub enum PassengerCarType {
 ///
 /// Each car can have more than one function, such as a motor-driving car or power-driving car.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ElectricMultipleUnitType {
     /// Driving cars are similar to a cab car, containing a driver's cab for controlling the train.
     /// An EMU will usually have two driving cars at its outer ends.
@@ -296,11 +362,22 @@ pub enum ElectricMultipleUnitType {
 /// In its simplest form, a "railcar" may also be little more than a motorized railway handcar
 /// or draisine.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, EnumString, Display, Serialize, Deserialize, specta::Type,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    EnumString,
+    Display,
+    Serialize,
+    Deserialize,
+    sqlx::Type,
+    specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RailcarType {
     /// A self-propelled passenger vehicles also capable of hauling a train.
     PowerCar,

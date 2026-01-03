@@ -1,15 +1,200 @@
 use super::database;
-use crate::catalog::application::create_railway_model_input::CreateRollingStockInput;
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompany;
 use crate::catalog::domain::railway_company_id::RailwayCompanyId;
 use crate::catalog::domain::railway_model_id::RailwayModelId;
-use crate::catalog::domain::rolling_stock_id::RollingStockId;
+use crate::catalog::domain::repository::CatalogRepository;
 use crate::catalog::domain::{RailwayModel, RollingStock};
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use anyhow::Context;
 use sqlx::sqlite::SqliteConnection;
 use std::collections::HashMap;
+
+/// An SQLite-specific implementation of the `CollectionRepository`.
+///
+/// It holds a mutable reference to a connection, which in this architecture
+/// is provided by the `SqliteUnitOfWork`'s active transaction.
+pub struct SqliteCatalogRepository<'conn> {
+    /// A mutable reference to the database connection/executor.
+    executor: &'conn mut SqliteConnection,
+}
+
+impl<'conn> SqliteCatalogRepository<'conn> {
+    /// Creates a new repository instance using the provided executor.
+    pub fn new(executor: &'conn mut SqliteConnection) -> Self {
+        Self { executor }
+    }
+}
+
+#[async_trait::async_trait]
+impl<'conn> CatalogRepository for SqliteCatalogRepository<'conn> {
+    async fn insert_railway_model(&mut self, railway_model: &RailwayModel) -> anyhow::Result<()> {
+        let insert_cmd = r#"
+        INSERT INTO railway_models (
+            id, manufacturer_id, product_code, description, details, \
+            power_method, scale, epoch, category, delivery_date, availability_status, created_at, updated_at) \
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        "#;
+
+        sqlx::query(insert_cmd)
+            .bind(railway_model.id.to_string())
+            .bind(&railway_model.manufacturer)
+            .bind(railway_model.product_code.to_string())
+            .bind(&railway_model.description)
+            .bind(&railway_model.details)
+            .bind(railway_model.power_method.to_string())
+            .bind(railway_model.scale.to_string())
+            .bind(&railway_model.epoch.0) // Access inner String
+            .bind(railway_model.category.to_string())
+            .bind(railway_model.delivery_date.as_ref().map(|d| d.to_string()))
+            .bind(
+                railway_model
+                    .availability_status
+                    .as_ref()
+                    .map(|s| s.to_string()),
+            )
+            .execute(&mut *self.executor)
+            .await
+            .context("inserting railway model")?;
+
+        Ok(())
+    }
+
+    async fn insert_rolling_stock(
+        &mut self,
+        railway_model_id: &RailwayModelId,
+        rolling_stock: &RollingStock,
+    ) -> anyhow::Result<()> {
+        // Bind parameters and execute the insert command here...
+        match rolling_stock {
+            RollingStock::ElectricMultipleUnit { id, .. } => {
+                let insert_cmd = r#"                
+                    INSERT INTO rolling_stocks (
+                        id, railway_model_id, category, railway_company_id, livery,
+                        length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling,
+                        technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights,
+                        technical_lights, technical_sprung_buffers, series_code, friendly_name,
+                        road_number, series, depot, electric_multiple_unit_type, dcc_interface, control, is_dummy
+                    ) VALUES (
+                        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24
+                    );"#;
+                sqlx::query(insert_cmd)
+                    .bind(id)
+                    .bind(railway_model_id)
+                    .bind(rolling_stock.category())
+                    // Bind other parameters...
+                    .execute(&mut *self.executor)
+                    .await
+                    .context("inserting electric multiple unit rolling stock")?;
+            }
+            RollingStock::Locomotive { id, .. } => {
+                let insert_cmd = r#"
+                    INSERT INTO rolling_stocks (
+                        id, railway_model_id, category, railway_company_id, livery,
+                        length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling,
+                        technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights,
+                        technical_lights, technical_sprung_buffers, series_code, friendly_name,
+                        road_number, series, depot, locomotive_type, dcc_interface, control, is_dummy
+                    ) VALUES (
+                        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24
+                    );"#;
+                sqlx::query(insert_cmd)
+                    .bind(id)
+                    .bind(railway_model_id)
+                    .bind(rolling_stock.category())
+                    // Bind other parameters...
+                    .execute(&mut *self.executor)
+                    .await
+                    .context("inserting locomotive rolling stock")?;
+            }
+            RollingStock::PassengerCar { id, .. } => {
+                let insert_cmd = r#"
+                    INSERT INTO rolling_stocks (
+                        id, railway_model_id, category, railway_company_id, livery,
+                        length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling,
+                        technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights,
+                        technical_lights, technical_sprung_buffers, series_code, friendly_name,
+                        road_number, series, depot, passenger_car_type, service_level, is_dummy
+                    ) VALUES (
+                        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23
+                    );"#;
+                sqlx::query(insert_cmd)
+                    .bind(id)
+                    .bind(railway_model_id)
+                    .bind(rolling_stock.category())
+                    // Bind other parameters...
+                    .execute(&mut *self.executor)
+                    .await
+                    .context("inserting passenger car rolling stock")?;
+            }
+            RollingStock::FreightCar { id, .. } => {
+                let insert_cmd = r#"
+                    INSERT INTO rolling_stocks (
+                        id, railway_model_id, category, railway_company_id, livery,
+                        length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling,
+                        technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights,
+                        technical_lights, technical_sprung_buffers, series_code, friendly_name,
+                        road_number, series, depot, freight_car_type, is_dummy
+                    ) VALUES (
+                        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22
+                    );"#;
+                sqlx::query(insert_cmd)
+                    .bind(id)
+                    .bind(railway_model_id)
+                    .bind(rolling_stock.category())
+                    // Bind other parameters...
+                    .execute(&mut *self.executor)
+                    .await
+                    .context("inserting freight car stock")?;
+            }
+            RollingStock::Railcar { id, .. } => {
+                let insert_cmd = r#"
+                INSERT INTO rolling_stocks (
+                    id, railway_model_id, category, railway_company_id, livery,
+                    length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling,
+                    technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights,
+                    technical_lights, technical_sprung_buffers, series_code, friendly_name,
+                    road_number, series, depot, dcc_interface, control, is_dummy
+                ) VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23
+                );"#;
+                sqlx::query(insert_cmd)
+                    .bind(id)
+                    .bind(railway_model_id)
+                    .bind(rolling_stock.category())
+                    // Bind other parameters...
+                    .execute(&mut *self.executor)
+                    .await
+                    .context("inserting railcar stock")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// An extension trait that provides access to the `CollectionRepository`.
+///
+/// This follows the **Interface Segregation Principle**. By using extension traits,
+/// we avoid a "God Object" where one struct knows about every repository in the
+/// system. Instead, repositories are grouped by domain logic.
+pub trait CatalogUowExt {
+    /// Returns a trait object for interacting with collection data.
+    ///
+    /// The repository is bound to the lifetime of the Unit of Work to ensure
+    /// it cannot outlive the transaction it relies on.
+    fn catalog_repository(&mut self) -> Box<dyn CatalogRepository + '_>;
+}
+
+impl<'conn> CatalogUowExt for SqliteUnitOfWork<'conn> {
+    /// Links the SQLite-specific repository to the Unit of Work.
+    ///
+    /// It re-borrows the internal transaction (`&mut *self.tx`) to provide
+    /// the repository with a mutable executor without transferring ownership.
+    fn catalog_repository(&mut self) -> Box<dyn CatalogRepository + '_> {
+        Box::new(SqliteCatalogRepository::new(&mut self.tx))
+    }
+}
 
 /// Retrieve a `Manufacturer` from the database by its `ManufacturerId`.
 ///
@@ -159,414 +344,6 @@ pub async fn get_railway_models_by_ids(
     }
 
     Ok(result)
-}
-
-/// Insert a new railway model into the database.
-pub async fn insert_railway_model(
-    executor: &mut SqliteConnection,
-    railway_model: &RailwayModel,
-) -> anyhow::Result<()> {
-    let sql = "INSERT INTO railway_models (id, manufacturer_id, product_code, description, details, \
-        power_method, scale, epoch, category, delivery_date, availability_status, created_at, updated_at) \
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-
-    sqlx::query(sql)
-        .bind(railway_model.id.to_string())
-        .bind(&railway_model.manufacturer)
-        .bind(railway_model.product_code.to_string())
-        .bind(&railway_model.description)
-        .bind(&railway_model.details)
-        .bind(railway_model.power_method.to_string())
-        .bind(railway_model.scale.to_string())
-        .bind(&railway_model.epoch.0) // Access inner String
-        .bind(railway_model.category.to_string())
-        .bind(railway_model.delivery_date.as_ref().map(|d| d.to_string()))
-        .bind(
-            railway_model
-                .availability_status
-                .as_ref()
-                .map(|s| s.to_string()),
-        )
-        .execute(&mut *executor)
-        .await
-        .context("inserting railway model")?;
-
-    Ok(())
-}
-
-/// Insert a new rolling stock into the database.
-pub async fn insert_rolling_stock(
-    executor: &mut SqliteConnection,
-    railway_model_id: &RailwayModelId,
-    rolling_stock_id: &RollingStockId,
-    input: CreateRollingStockInput,
-) -> anyhow::Result<()> {
-    let sql = "INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, livery, \
-        length_inches, length_millimeters, technical_minimum_radius_mm, technical_coupling, \
-        technical_flywheel_fitted, technical_body_shell, technical_chassis, technical_interior_lights, \
-        technical_lights, technical_sprung_buffers, series_code, friendly_name, road_number, series, depot, \
-        electric_multiple_unit_type, freight_car_type, locomotive_type, passenger_car_type, railcar_type, \
-        service_level, dcc_interface, control, is_dummy) \
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29)";
-
-    let (
-        category,
-        friendly_name,
-        series_code,
-        road_number,
-        series,
-        depot,
-        livery,
-        locomotive_type,
-        passenger_car_type,
-        freight_car_type,
-        electric_multiple_unit_type,
-        service_level,
-        control,
-        dcc_interface,
-        is_dummy,
-        length_inches,
-        length_millimeters,
-        minimum_radius,
-        coupling,
-        flywheel_fitted,
-        body_shell,
-        chassis,
-        interior_lights,
-        lights,
-        sprung_buffers,
-        railway_company_id,
-    ) = match input {
-        CreateRollingStockInput::Locomotive {
-            railway_company_id,
-            friendly_name,
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            locomotive_type,
-            is_dummy,
-            control,
-            dcc_interface,
-            length_over_buffers,
-            technical_specifications,
-        } => (
-            "LOCOMOTIVE",
-            Some(friendly_name),
-            series_code,
-            Some(road_number),
-            series,
-            depot,
-            livery,
-            Some(locomotive_type),
-            None,
-            None,
-            None,
-            None,
-            control,
-            dcc_interface,
-            is_dummy.unwrap_or(false),
-            length_over_buffers.as_ref().and_then(|l| l.inches),
-            length_over_buffers.as_ref().and_then(|l| l.millimeters),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.minimum_radius),
-            technical_specifications.as_ref().and_then(|t| {
-                t.coupling
-                    .as_ref()
-                    .map(|c| format!("{{\"socket\":\"{}\"}}", c.socket))
-            }),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.flywheel_fitted.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.body_shell.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.chassis.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.interior_lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.sprung_buffers.clone()),
-            railway_company_id,
-        ),
-        CreateRollingStockInput::PassengerCar {
-            railway_company_id,
-            friendly_name,
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            passenger_car_type,
-            service_level,
-            length_over_buffers,
-            technical_specifications,
-        } => (
-            "PASSENGER_CAR",
-            Some(friendly_name),
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            None,
-            Some(passenger_car_type),
-            None,
-            None,
-            service_level,
-            None,
-            None,
-            false,
-            length_over_buffers.as_ref().and_then(|l| l.inches),
-            length_over_buffers.as_ref().and_then(|l| l.millimeters),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.minimum_radius),
-            technical_specifications.as_ref().and_then(|t| {
-                t.coupling
-                    .as_ref()
-                    .map(|c| format!("{{\"socket\":\"{}\"}}", c.socket))
-            }),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.flywheel_fitted.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.body_shell.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.chassis.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.interior_lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.sprung_buffers.clone()),
-            railway_company_id,
-        ),
-        CreateRollingStockInput::FreightCar {
-            railway_company_id,
-            friendly_name,
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            freight_car_type,
-            length_over_buffers,
-            technical_specifications,
-        } => (
-            "FREIGHT_CAR",
-            Some(friendly_name),
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            None,
-            None,
-            freight_car_type,
-            None,
-            None,
-            None,
-            None,
-            false,
-            length_over_buffers.as_ref().and_then(|l| l.inches),
-            length_over_buffers.as_ref().and_then(|l| l.millimeters),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.minimum_radius),
-            technical_specifications.as_ref().and_then(|t| {
-                t.coupling
-                    .as_ref()
-                    .map(|c| format!("{{\"socket\":\"{}\"}}", c.socket))
-            }),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.flywheel_fitted.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.body_shell.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.chassis.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.interior_lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.sprung_buffers.clone()),
-            railway_company_id,
-        ),
-        CreateRollingStockInput::Railcar {
-            railway_company_id,
-            friendly_name,
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            control,
-            dcc_interface,
-            length_over_buffers,
-            technical_specifications,
-        } => (
-            "RAILCAR",
-            Some(friendly_name),
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            None,
-            None,
-            None,
-            None,
-            None,
-            control,
-            dcc_interface,
-            false,
-            length_over_buffers.as_ref().and_then(|l| l.inches),
-            length_over_buffers.as_ref().and_then(|l| l.millimeters),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.minimum_radius),
-            technical_specifications.as_ref().and_then(|t| {
-                t.coupling
-                    .as_ref()
-                    .map(|c| format!("{{\"socket\":\"{}\"}}", c.socket))
-            }),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.flywheel_fitted.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.body_shell.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.chassis.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.interior_lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.sprung_buffers.clone()),
-            railway_company_id,
-        ),
-        CreateRollingStockInput::ElectricMultipleUnit {
-            railway_company_id,
-            friendly_name,
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            electric_multiple_unit_type,
-            is_dummy,
-            control,
-            dcc_interface,
-            length_over_buffers,
-            technical_specifications,
-        } => (
-            "ELECTRIC_MULTIPLE_UNIT",
-            Some(friendly_name),
-            series_code,
-            road_number,
-            series,
-            depot,
-            livery,
-            None,
-            None,
-            None,
-            Some(electric_multiple_unit_type),
-            None,
-            control,
-            dcc_interface,
-            is_dummy.unwrap_or(false),
-            length_over_buffers.as_ref().and_then(|l| l.inches),
-            length_over_buffers.as_ref().and_then(|l| l.millimeters),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.minimum_radius),
-            technical_specifications.as_ref().and_then(|t| {
-                t.coupling
-                    .as_ref()
-                    .map(|c| format!("{{\"socket\":\"{}\"}}", c.socket))
-            }),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.flywheel_fitted.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.body_shell.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.chassis.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.interior_lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.lights.clone()),
-            technical_specifications
-                .as_ref()
-                .and_then(|t| t.sprung_buffers.clone()),
-            railway_company_id,
-        ),
-    };
-
-    sqlx::query(sql)
-        .bind(rolling_stock_id.to_string())
-        .bind(railway_model_id.to_string())
-        .bind(category)
-        .bind(railway_company_id)
-        .bind(livery)
-        .bind(length_inches)
-        .bind(length_millimeters)
-        .bind(minimum_radius)
-        .bind(coupling)
-        .bind(flywheel_fitted)
-        .bind(body_shell)
-        .bind(chassis)
-        .bind(interior_lights)
-        .bind(lights)
-        .bind(sprung_buffers)
-        .bind(series_code)
-        .bind(friendly_name)
-        .bind(road_number)
-        .bind(series)
-        .bind(depot)
-        .bind(electric_multiple_unit_type)
-        .bind(freight_car_type)
-        .bind(locomotive_type)
-        .bind(passenger_car_type)
-        .bind(None::<String>) // railcar_type placeholder
-        .bind(service_level)
-        .bind(dcc_interface)
-        .bind(control)
-        .bind(is_dummy as i32)
-        .execute(&mut *executor)
-        .await
-        .context("inserting rolling stock")?;
-
-    Ok(())
 }
 
 #[cfg(test)]

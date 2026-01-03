@@ -9,6 +9,7 @@ use crate::catalog::domain::railway_model_id::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
+use log::{error, info};
 use tauri::State;
 
 /// Retrieve a manufacturer by its identifier.
@@ -146,44 +147,53 @@ pub async fn get_railway_models_by_ids(
     Ok(result)
 }
 
-/// Create a new railway model with rolling stocks.
+/// Create a new railway model together with its rolling stocks.
 ///
-/// This command follows the Unit of Work + Use Case pattern:
-/// 1. Creates a SqliteUnitOfWork (transaction)
-/// 2. Instantiates the CreateRailwayModelUseCase
-/// 3. Executes the use case with validated input
-/// 4. Commits the transaction on success
-/// 5. Returns the created railway model ID
+/// Performs the creation inside a database transaction using a `SqliteUnitOfWork`.
+/// The handler:
+/// 1. Opens a `SqliteUnitOfWork` (begins a transaction).
+/// 2. Instantiates and executes the `CreateRailwayModelUseCase` with validated input.
+/// 3. Commits the transaction on success; on error the transaction is rolled back when the unit of work is dropped.
+/// 4. Returns the created railway model identifier.
 ///
 /// # Arguments
 ///
-/// * `state` - Tauri-managed application `AppState` (provides DB pool).
-/// * `input` - The railway model creation input data.
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `new_railway_model` - The validated input for creating the railway model (`CreateRailwayModelInput`).
 ///
 /// # Returns
 ///
-/// Returns `Ok(String)` with the newly created railway model ID on success,
-/// or `Err(CommandError)` if validation, database, or business logic fails.
+/// Returns `Result<RailwayModelId, CommandError>`:
+/// * `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
+/// * `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
+///
+/// # Errors
+///
+/// Errors are mapped to `CommandError` and may represent validation, repository, or unit-of-work failures.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_railway_model(
     state: State<'_, AppState>,
-    input: CreateRailwayModelInput,
-) -> Result<String, CommandError> {
-    // Create Unit of Work (transaction)
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+    new_railway_model: CreateRailwayModelInput,
+) -> Result<RailwayModelId, CommandError> {
+    info!("Creating railway model: {:?}", new_railway_model);
+
+    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    // Execute use case
-    match CreateRailwayModelUseCase::execute(&mut uow, input).await {
+    match CreateRailwayModelUseCase::execute(&mut unit_of_work, new_railway_model).await {
         Ok(model_id) => {
             // Commit transaction
-            uow.commit()
+            unit_of_work
+                .commit()
                 .await
                 .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
             Ok(model_id)
         }
-        Err(e) => Err(CommandError::Unknown(e)),
+        Err(e) => {
+            error!("Failed to create railway model: {:?}", e);
+            Err(e.into())
+        }
     }
 }

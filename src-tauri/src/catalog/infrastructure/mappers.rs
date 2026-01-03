@@ -500,7 +500,7 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id(), &id);
+            assert_eq!(domain.id_as_ref(), &id);
         }
 
         #[test]
@@ -539,7 +539,7 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id(), &id);
+            assert_eq!(domain.id_as_ref(), &id);
         }
 
         #[test]
@@ -578,7 +578,7 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id(), &id);
+            assert_eq!(domain.id_as_ref(), &id);
         }
 
         #[test]
@@ -617,7 +617,7 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id(), &id);
+            assert_eq!(domain.id_as_ref(), &id);
         }
 
         #[test]
@@ -656,7 +656,7 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id(), &id);
+            assert_eq!(domain.id_as_ref(), &id);
         }
     }
 }

@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use crate::core::domain::domain_error::DomainError;
 
 /// A validation error returned by application use-cases.
 ///
@@ -10,7 +11,7 @@ use std::collections::HashMap;
 /// - `params`: a map of parameter names to `ValidationErrorParam` values used to
 ///   provide structured additional data about the failure (for example, an
 ///   invalid numeric range or the name of a missing field).
-/// 
+///
 /// Usage notes:
 /// - `ValidationError.code` should be a stable machine identifier (for
 ///   example `required_field`, `invalid_format`, ...).
@@ -42,18 +43,66 @@ pub enum ValidationErrorParam {
     Text(Cow<'static, str>),
 }
 
+/// Context for collecting validation errors during input processing.
+///     
+/// This struct allows accumulating multiple validation errors associated
+/// with different fields. It provides methods to collect results and add errors,
+/// and finally to convert the collected errors into a `CommandError` if any exist.
+#[derive(Debug, Default)]
+pub struct ValidationContext {
+    errors: HashMap<String, Vec<ValidationError>>,
+}
+
+impl ValidationContext {
+    /// Collects a Result, adding an `invalid_format` error to the context if it is Err.
+    /// Returns Some(T) if Ok, None if Err.
+    pub fn collect<T, E: ToString>(&mut self, field: &str, res: Result<T, E>) -> Option<T> {
+        match res {
+            Ok(val) => Some(val),
+            Err(e) => {
+                self.push_error(field, "invalid_format", e.to_string());
+                None
+            }
+        }
+    }
+
+    /// Adds a validation error for a specific field.
+    pub fn push_error(
+        &mut self,
+        field: &str,
+        code: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
+    ) {
+        let err = ValidationError {
+            code: code.into(),
+            message: Some(message.into()),
+            params: HashMap::new(),
+        };
+
+        self.errors.entry(field.to_string()).or_default().push(err);
+    }
+
+    /// Converts the context into a Result.
+    /// If errors exist, returns Err(CommandError::ValidationError).
+    pub fn finish(self) -> Result<(), DomainError> {
+        if self.errors.is_empty() {
+            Ok(())
+        } else {
+            Err(DomainError::ValidationError(self.errors))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
+    use crate::core::infrastructure::error::CommandError;
 
     #[test]
     fn it_should_serialize_validation_error_with_params() {
         let mut params = HashMap::new();
-        params.insert(
-            Cow::Borrowed("min_value"),
-            ValidationErrorParam::Number(10),
-        );
+        params.insert(Cow::Borrowed("min_value"), ValidationErrorParam::Number(10));
         params.insert(
             Cow::Borrowed("field_name"),
             ValidationErrorParam::Text(Cow::Borrowed("age")),
@@ -76,5 +125,25 @@ mod tests {
         });
 
         assert_eq!(serialized, expected);
+    }
+
+    #[test]
+    fn validation_context_collect_and_finish() {
+        let mut validation_context = ValidationContext::default();
+
+        let value: Option<i32> = validation_context.collect("age", "not a number".parse::<i32>());
+
+        assert!(value.is_none());
+
+        let result = validation_context.finish();
+        assert!(result.is_err());
+        if let Err(DomainError::ValidationError(errors)) = result {
+            assert!(errors.contains_key("age"));
+            let age_errors = &errors["age"];
+            assert_eq!(age_errors.len(), 1);
+            assert_eq!(age_errors[0].code, "invalid_format");
+        } else {
+            panic!("Expected ValidationError");
+        }
     }
 }

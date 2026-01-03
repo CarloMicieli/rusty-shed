@@ -22,9 +22,10 @@ use uuid::Uuid;
 pub const TRN_RS_PREFIX: &str = "trn:rolling-stock:";
 
 /// A unique identifier for a rolling stock represented as a TRN string.
-#[derive(Debug, PartialEq, Eq, Clone, Hash, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash, Serialize, Deserialize, sqlx::Type, specta::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
+#[sqlx(transparent)]
 pub struct RollingStockId(String);
 
 impl RollingStockId {

@@ -6,16 +6,17 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-
 use super::db::SqliteDbError;
+use crate::core::application::validation::ValidationError;
+use serde::Serialize;
+use crate::core::domain::domain_error::DomainError;
 
 /// Application-level error returned by command handlers in the core infrastructure.
 ///
 /// This enum provides structured error variants that allow the frontend to react
 /// intelligently to different error conditions. Each variant is serializable and
 /// includes enough context for appropriate UI rendering.
-#[derive(thiserror::Error, Debug, Serialize, Deserialize, specta::Type)]
+#[derive(thiserror::Error, Debug, Serialize, specta::Type)]
 pub enum CommandError {
     /// Represents an error coming from the database layer.
     ///
@@ -37,7 +38,7 @@ pub enum CommandError {
     /// This allows the frontend to display validation errors next to the appropriate form fields.
     /// Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
     #[error("validation error: {0:?}")]
-    ValidationError(HashMap<String, String>),
+    ValidationError(HashMap<String, Vec<ValidationError>>),
 
     /// Permission denied for the requested operation.
     ///
@@ -51,6 +52,12 @@ pub enum CommandError {
     /// logging; avoid placing secrets here.
     #[error("unknown error: {0}")]
     Unknown(String),
+}
+
+impl From<DomainError> for CommandError {
+    fn from(err: DomainError) -> Self {
+        todo!()
+    }
 }
 
 /// Automatic conversion from database errors.
@@ -88,9 +95,9 @@ impl CommandError {
     /// use rusty_shed_lib::core::infrastructure::error::CommandError;
     /// let err = CommandError::validation_field("email", "Invalid email format");
     /// ```
-    pub fn validation_field(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn validation_field(field: impl Into<String>, _error: impl Into<String>) -> Self {
         let mut fields = HashMap::new();
-        fields.insert(field.into(), message.into());
+        fields.insert(field.into(), Vec::new());
         CommandError::ValidationError(fields)
     }
 
@@ -112,7 +119,7 @@ impl CommandError {
     {
         let map = fields
             .into_iter()
-            .map(|(k, v)| (k.into(), v.into()))
+            .map(|(k, _v)| (k.into(), Vec::new()))
             .collect();
         CommandError::ValidationError(map)
     }

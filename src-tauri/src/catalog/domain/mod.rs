@@ -23,6 +23,7 @@ pub mod railway_model;
 pub mod railway_model_id;
 pub mod railway_status;
 pub mod ratio;
+pub mod repository;
 pub mod rolling_stock;
 pub mod rolling_stock_id;
 pub mod rolling_stock_railway;
@@ -31,6 +32,7 @@ pub mod scale_gauge;
 pub mod service_level;
 pub mod technical_specifications;
 pub mod track_gauge;
+pub mod params;
 
 pub use body_shell_type::BodyShellType;
 pub use category::Category;
