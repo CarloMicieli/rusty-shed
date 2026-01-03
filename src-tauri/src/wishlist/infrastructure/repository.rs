@@ -6,7 +6,7 @@ use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::infrastructure::database;
-use crate::wishlist::infrastructure::entities::WishlistPreviewRow;
+use crate::wishlist::infrastructure::entities::WishlistPreviewProjection;
 use anyhow::Context;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -50,7 +50,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     }
 
     async fn list_wishlist_previews(&mut self) -> anyhow::Result<Vec<WishlistPreview>> {
-        let rows: Vec<WishlistPreviewRow> =
+        let rows: Vec<WishlistPreviewProjection> =
             database::find_wishlist_previews(&mut *self.executor).await?;
 
         let mut map: HashMap<String, WishlistPreview> = HashMap::with_capacity(rows.len());

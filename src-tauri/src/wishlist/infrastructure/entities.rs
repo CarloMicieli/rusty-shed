@@ -4,7 +4,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 ///
 /// This struct is used with `sqlx::FromRow` to map query results to a typed
 /// representation. Fields correspond to the `wishlists` table columns.
-#[derive(Debug, Clone, sqlx::FromRow)]
+#[derive(Debug, Clone, PartialEq, Eq, sqlx::FromRow)]
 pub struct WishlistRow {
     pub id: String,
     pub name: String,
@@ -38,7 +38,7 @@ pub struct WishlistItemRow {
 
 /// Flat row used to build wishlist previews grouped by wishlist and currency.
 #[derive(Debug, Clone, sqlx::FromRow)]
-pub struct WishlistPreviewRow {
+pub struct WishlistPreviewProjection {
     pub wishlist_id: String,
     pub name: String,
     pub notes: Option<String>,

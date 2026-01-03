@@ -1,5 +1,7 @@
 use crate::wishlist::domain::wishlist_id::WishlistId;
-use crate::wishlist::infrastructure::entities::{WishlistItemRow, WishlistPreviewRow, WishlistRow};
+use crate::wishlist::infrastructure::entities::{
+    WishlistItemRow, WishlistPreviewProjection, WishlistRow,
+};
 use anyhow::{Context, Result};
 
 pub async fn find_wishlist_by_id(
@@ -58,7 +60,7 @@ pub async fn find_wishlist_items_by_id(
 
 pub async fn find_wishlist_previews(
     executor: &mut sqlx::SqliteConnection,
-) -> Result<Vec<WishlistPreviewRow>> {
+) -> Result<Vec<WishlistPreviewProjection>> {
     let sql = r#"
         SELECT
             w.id as wishlist_id,
@@ -75,7 +77,7 @@ pub async fn find_wishlist_previews(
         ORDER BY w.updated_at DESC
     "#;
 
-    let rows = sqlx::query_as::<_, WishlistPreviewRow>(sql)
+    let rows = sqlx::query_as::<_, WishlistPreviewProjection>(sql)
         .fetch_all(executor)
         .await
         .with_context(|| "querying wishlist previews")?;
@@ -241,4 +243,36 @@ pub async fn move_wishlist_item(
         .with_context(|| "moving wishlist item")?;
 
     Ok(res.rows_affected())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn list_wishlist_previews_returns_empty(conn: SqlitePool) -> Result<()> {
+        let mut conn = conn.acquire().await?;
+
+        let id = WishlistId::default();
+        let wishlist_row = WishlistRow {
+            id: id.to_string(),
+            name: "Test Wishlist".to_string(),
+            notes: Some("Some notes".to_string()),
+            is_default: 1,
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: chrono::Utc::now().naive_utc(),
+        };
+
+        let insert_res = insert_wishlist(&mut conn, wishlist_row.clone()).await;
+        assert!(insert_res.is_ok());
+
+        let query_res = find_wishlist_by_id(&mut conn, &id).await?;
+        assert!(query_res.is_some());
+
+        let fetched = query_res.unwrap();
+        assert_eq!(fetched, wishlist_row);
+
+        Ok(())
+    }
 }
