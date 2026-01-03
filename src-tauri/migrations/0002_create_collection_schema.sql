@@ -2,21 +2,31 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 -- noinspection SqlResolveInspectionForFile
 
+CREATE TABLE IF NOT EXISTS decoders (
+  id                TEXT PRIMARY KEY,
+  manufacturer_id   TEXT NOT NULL,
+  product_code      TEXT,
+  decoder_type      TEXT NOT NULL,
+  protocol          TEXT NOT NULL,
+  decoder_interface TEXT NOT NULL,
+  FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS sellers (
-  seller_id    TEXT PRIMARY KEY NOT NULL,
-  name         TEXT NOT NULL,
-  type         TEXT NOT NULL,
-  email        TEXT,
-  phone        TEXT,
-  website_url  TEXT,
-  street_address TEXT,
-  extended_address TEXT,
-  city         TEXT,
-  state_region TEXT,
-  postal_code  TEXT,
-  country_code TEXT,
-  created_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  seller_id         TEXT PRIMARY KEY NOT NULL,
+  name              TEXT NOT NULL,
+  type              TEXT NOT NULL,
+  email             TEXT,
+  phone             TEXT,
+  website_url       TEXT,
+  street_address    TEXT,
+  extended_address  TEXT,
+  city              TEXT,
+  state_region      TEXT,
+  postal_code       TEXT,
+  country_code      TEXT,
+  created_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS collections (
@@ -45,12 +55,15 @@ CREATE TABLE IF NOT EXISTS collection_items (
 );
 
 CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
-  id                 TEXT PRIMARY KEY,
-  collection_item_id TEXT NOT NULL,
-  rolling_stock_id   TEXT,
-  notes              TEXT,
+  id                   TEXT PRIMARY KEY,
+  collection_item_id   TEXT NOT NULL,
+  rolling_stock_id     TEXT,
+  notes                TEXT,
+  dcc_address          INTEGER,
+  installed_decoder_id TEXT,
   FOREIGN KEY (collection_item_id) REFERENCES collection_items(id) ON DELETE CASCADE,
-  FOREIGN KEY (rolling_stock_id)   REFERENCES rolling_stocks(id)   ON DELETE SET NULL
+  FOREIGN KEY (rolling_stock_id)   REFERENCES rolling_stocks(id)   ON DELETE SET NULL,
+  FOREIGN KEY (installed_decoder_id) REFERENCES decoders(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS purchase_infos (
