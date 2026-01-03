@@ -1,5 +1,5 @@
 use super::database;
-use crate::catalog::application::create_railway_model::CreateRollingStockInput;
+use crate::catalog::application::create_railway_model_input::CreateRollingStockInput;
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompany;

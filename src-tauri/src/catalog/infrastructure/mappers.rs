@@ -442,7 +442,7 @@ mod tests {
                 .naive_utc();
 
             let row = RailwayModelRow {
-                id: "RM-1".to_string(),
+                id: "trn:railway-model:mn-1:ACME-100".to_string(),
                 manufacturer_id: "MN-1".to_string(),
                 product_code: "ACME-100".to_string(),
                 description: "Test model".to_string(),
@@ -458,7 +458,7 @@ mod tests {
             };
 
             let domain = RailwayModel::try_from(row).expect("mapping should succeed");
-            assert_eq!(&*domain.id, "RM-1");
+            assert_eq!(&*domain.id, "trn:railway-model:mn-1:ACME-100");
             assert_eq!(domain.product_code.0, "ACME-100");
             assert_eq!(domain.description, "Test model");
             assert_eq!(domain.rolling_stocks.len(), 0);

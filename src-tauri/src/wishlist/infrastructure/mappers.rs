@@ -117,7 +117,7 @@ mod tests {
         let row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
-            railway_model_id: "RM-1".to_string(),
+            railway_model_id: "trn:railway-model:mn-1:ACME-100".to_string(),
             priority: "NORMAL".to_string(),
             status: "ON_ORDER".to_string(),
             desired_price_amount: Some(0),
@@ -140,7 +140,7 @@ mod tests {
         let row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
-            railway_model_id: "RM-1".to_string(),
+            railway_model_id: "trn:railway-model:mn-1:ACME-100".to_string(),
             priority: "LOW".to_string(),
             status: "WANTED".to_string(),
             desired_price_amount: Some(-100),
@@ -162,7 +162,7 @@ mod tests {
         let mut row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
-            railway_model_id: "RM-1".to_string(),
+            railway_model_id: "trn:railway-model:mn-1:ACME-100".to_string(),
             priority: "NORMAL".to_string(),
             status: "WANTED".to_string(),
             desired_price_amount: None,

@@ -1,17 +1,15 @@
-use crate::catalog::application::create_railway_model::{
-    CreateRailwayModelInput, CreateRailwayModelUseCase,
-};
-use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::state::AppState;
-use tauri::State;
-
+use crate::catalog::application::create_railway_model::CreateRailwayModelUseCase;
+use crate::catalog::application::create_railway_model_input::CreateRailwayModelInput;
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::manufacturer_id::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompany;
 use crate::catalog::domain::railway_company_id::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model_id::RailwayModelId;
+use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::state::AppState;
+use tauri::State;
 
 /// Retrieve a manufacturer by its identifier.
 ///
@@ -177,11 +175,8 @@ pub async fn create_railway_model(
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    // Instantiate use case
-    let use_case = CreateRailwayModelUseCase::new();
-
     // Execute use case
-    match use_case.execute(&mut uow, input).await {
+    match CreateRailwayModelUseCase::execute(&mut uow, input).await {
         Ok(model_id) => {
             // Commit transaction
             uow.commit()
