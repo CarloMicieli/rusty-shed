@@ -279,7 +279,11 @@ mod tests {
 
     #[test]
     fn it_should_map_collection_item_with_owned_and_purchase_info() {
-        let item_id_str = "d20a1a95-1ae4-4970-9e87-b4c84676e730".to_string();
+        let item_id_str = format!(
+            "{}{}",
+            crate::collecting::domain::collection_item_id::TRN_ITEM_PREFIX,
+            "d20a1a95-1ae4-4970-9e87-b4c84676e730"
+        );
         let collection_item = CollectionItemRow {
             id: item_id_str.clone(),
             collection_id: CollectionId::default().to_string(),
