@@ -1,0 +1,50 @@
+name: Weekly Dependency Update
+
+on:
+  schedule:
+    # Runs at 00:00 every Sunday (Saturday night)
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📂 Checkout
+        uses: actions/checkout@v5
+
+      - name: 📦 Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 🦀 Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Svelte 5/Tauri 2 works best on 20 or 22 (LTS)
+          cache: 'pnpm'
+
+      - name: Update Rust dependencies
+        run: |
+          # Updates Cargo.lock within semver ranges
+          cargo update 
+
+      - name: 🦀 Update Node.js dependencies
+        run: |
+          # pnpm update will refresh the pnpm-lock.yaml
+          # Use 'pnpm update --latest' if you want to ignore ranges in package.json
+          pnpm update
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: weekly pnpm and cargo update"
+          title: "Scheduled Dependency Update"
+          body: |
+            Automated weekly dependency updates for Tauri 2 project.
+            - Updated `Cargo.lock`
+            - Updated `pnpm-lock.yaml`
+          branch: automated-dep-update
+          delete-branch: true
