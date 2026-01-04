@@ -1,65 +1,16 @@
 use crate::catalog::application::create_railway_model_input::{
     CouplingInput, CreateRollingStockInput, LengthOverBuffersInput, TechnicalSpecificationsInput,
 };
-use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::{
-    AvailabilityStatus, Category, Control, Coupling, CouplingSocket, DccInterface, DeliveryDate,
-    ElectricMultipleUnitType, Epoch, FreightCarType, LengthOverBuffers, LocomotiveType,
-    PassengerCarType, PowerMethod, ProductCode, Radius, RailcarType, ServiceLevel,
+    Control, Coupling, CouplingSocket, DccInterface, ElectricMultipleUnitType, FreightCarType,
+    LengthOverBuffers, LocomotiveType, PassengerCarType, Radius, RailcarType, ServiceLevel,
     TechnicalSpecifications,
 };
-use crate::catalog::domain::scale::Scale;
 use crate::core::application::validation::ValidationContext;
 use crate::core::domain::domain_error::DomainError;
+use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
-
-/// Represents the data required to create a new Railway model within the system.
-///
-/// In Clean Architecture, this acts as the "NewData" input for the
-/// [`CatalogRepository`](crate::catalog::domain::repository::RailwayModelRepository).
-///
-/// ### Business Rules
-///
-/// ### Lifecycle
-/// This struct is typically mapped from an [`create_railway_model`](crate::catalog::interface::command_handlers::create_railway_model)
-/// after the raw input strings have been validated and converted into
-/// Domain Value Objects.
-#[derive(Debug, Clone)]
-pub struct RailwayModelParams {
-    /// The manufacturer of the model (e.g. Bachmann, Märklin).
-    pub manufacturer_id: ManufacturerId,
-
-    /// Manufacturer-assigned product code.
-    pub product_code: ProductCode,
-
-    /// Human-readable description of the model.
-    pub description: String,
-
-    /// Additional details about the model (e.g. special features, variations).
-    pub details: Option<String>,
-
-    /// The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
-    pub power_method: PowerMethod,
-
-    /// The scale of the model (e.g. HO, N).
-    pub scale: Scale,
-
-    /// The historical epoch the model belongs to.
-    pub epoch: Epoch,
-
-    /// Classification category for the model (e.g. locomotive, freight car).
-    pub category: Category,
-
-    /// Delivery or release date information for the product.
-    pub delivery_date: Option<DeliveryDate>,
-
-    /// the availability status
-    pub availability_status: Option<AvailabilityStatus>,
-
-    /// Rolling stock instances (specific vehicles) that correspond to this model.
-    pub rolling_stocks: Vec<RollingStockParams>,
-}
 
 #[derive(Debug, Clone)]
 pub enum RollingStockParams {
@@ -489,8 +440,8 @@ fn validate_length(
     lob: Option<LengthOverBuffersInput>,
 ) -> Option<LengthOverBuffers> {
     lob.and_then(|l| {
-        let mm = l.millimeters.and_then(rust_decimal::Decimal::from_f64);
-        let inches = l.inches.and_then(rust_decimal::Decimal::from_f64);
+        let mm = l.millimeters.and_then(Decimal::from_f64);
+        let inches = l.inches.and_then(Decimal::from_f64);
         ctx.collect("length_over_buffers", LengthOverBuffers::new(inches, mm))
     })
 }
@@ -502,7 +453,7 @@ fn validate_specs(
 ) -> Option<TechnicalSpecifications> {
     specs.map(|ts| {
         let min_radius = ts.minimum_radius.and_then(|v| {
-            rust_decimal::Decimal::from_f64(v)
+            Decimal::from_f64(v)
                 .map(|d| {
                     ctx.collect(
                         "technical_specifications.minimum_radius",

@@ -1,14 +1,14 @@
 use super::database;
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::params::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::railway_company::RailwayCompany;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::RailwayModelRepository;
 use crate::catalog::domain::railway_model::RollingStockCategory;
 use crate::catalog::domain::railway_model::RollingStockId;
 use crate::catalog::domain::railway_model::{RailwayModel, RollingStock};
-use crate::catalog::domain::repository::RailwayModelRepository;
+use crate::catalog::domain::railway_model::{RailwayModelParams, RollingStockParams};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use anyhow::Context;

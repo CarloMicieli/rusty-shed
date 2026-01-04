@@ -106,9 +106,9 @@ impl TechnicalSpecificationsBuilder {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::catalog::domain::railway_model::CouplingSocket;
     use pretty_assertions::assert_eq;
     use rust_decimal_macros::dec;
-    use crate::catalog::domain::railway_model::CouplingSocket;
 
     #[test]
     fn it_should_create_tech_specs() {

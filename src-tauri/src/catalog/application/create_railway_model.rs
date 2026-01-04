@@ -1,6 +1,5 @@
 use crate::catalog::application::create_railway_model_input::CreateRailwayModelInput;
 use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::params::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::railway_model::AvailabilityStatus;
 use crate::catalog::domain::railway_model::Category;
 use crate::catalog::domain::railway_model::DeliveryDate;
@@ -8,6 +7,7 @@ use crate::catalog::domain::railway_model::Epoch;
 use crate::catalog::domain::railway_model::PowerMethod;
 use crate::catalog::domain::railway_model::ProductCode;
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::repository::CatalogUowExt;
 use crate::core::application::validation::ValidationContext;
