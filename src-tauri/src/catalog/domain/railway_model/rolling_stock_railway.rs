@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+use crate::catalog::domain::railway_company::RailwayCompanyId;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 

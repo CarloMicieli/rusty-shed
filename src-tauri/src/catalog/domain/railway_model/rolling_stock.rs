@@ -1,14 +1,14 @@
-use crate::catalog::domain::ServiceLevel;
-use crate::catalog::domain::category::{
+use crate::catalog::domain::railway_model::ServiceLevel;
+use crate::catalog::domain::railway_model::category::{
     ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
     RollingStockCategory,
 };
-use crate::catalog::domain::control::Control;
-use crate::catalog::domain::dcc_interface::DccInterface;
-use crate::catalog::domain::length_over_buffers::LengthOverBuffers;
-use crate::catalog::domain::rolling_stock_id::RollingStockId;
-use crate::catalog::domain::rolling_stock_railway::RollingStockRailway;
-use crate::catalog::domain::technical_specifications::TechnicalSpecifications;
+use crate::catalog::domain::railway_model::control::Control;
+use crate::catalog::domain::railway_model::dcc_interface::DccInterface;
+use crate::catalog::domain::railway_model::length_over_buffers::LengthOverBuffers;
+use crate::catalog::domain::railway_model::rolling_stock_id::RollingStockId;
+use crate::catalog::domain::railway_model::rolling_stock_railway::RollingStockRailway;
+use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecifications;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, specta::Type)]
@@ -485,15 +485,15 @@ impl RollingStock {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::catalog::domain::coupling::Coupling;
-    use crate::catalog::domain::coupling_socket::CouplingSocket;
-    use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+    use crate::catalog::domain::railway_model::coupling::Coupling;
+    use crate::catalog::domain::railway_model::coupling_socket::CouplingSocket;
     use crate::core::domain::length::Length;
 
     mod locomotives {
         use super::*;
-        use crate::catalog::domain::Radius;
-        use crate::catalog::domain::technical_specifications::TechnicalSpecificationsBuilder;
+        use crate::catalog::domain::railway_company::RailwayCompanyId;
+        use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecificationsBuilder;
+        use crate::catalog::domain::railway_model::{Radius, ServiceLevel};
         use pretty_assertions::assert_eq;
         use rust_decimal_macros::dec;
 

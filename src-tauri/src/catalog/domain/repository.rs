@@ -1,5 +1,5 @@
 use crate::catalog::domain::params::RailwayModelParams;
-use crate::catalog::domain::railway_model_id::RailwayModelId;
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::domain::domain_error::DomainError;
 
 /// A domain-agnostic interface for railway models data access.

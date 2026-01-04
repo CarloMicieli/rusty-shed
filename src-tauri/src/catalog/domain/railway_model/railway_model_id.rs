@@ -1,4 +1,4 @@
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
+use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::Trn;
 use serde::{Deserialize, Serialize};
 use std::fmt;

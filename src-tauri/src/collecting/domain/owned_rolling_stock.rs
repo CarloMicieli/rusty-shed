@@ -1,4 +1,4 @@
-use crate::catalog::domain::dcc_interface::DccInterface;
+use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::digital_setup::DigitalSetup;
 use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
 use serde::{Deserialize, Serialize};
@@ -79,7 +79,7 @@ impl OwnedRollingStock {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::manufacturer_id::ManufacturerId;
+    use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::collecting::domain::decoder::Decoder;
     use crate::collecting::domain::decoder_id::DecoderId;
     use crate::collecting::domain::decoder_type::DecoderType;

@@ -1,5 +1,5 @@
-use crate::catalog::domain::dcc_interface::DccInterface;
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::decoder_id::DecoderId;
 use crate::collecting::domain::decoder_type::DecoderType;
 use crate::collecting::domain::digital_protocol::DigitalProtocol;

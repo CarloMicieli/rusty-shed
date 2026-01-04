@@ -1,5 +1,4 @@
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
-use crate::catalog::domain::manufacturer_status::ManufacturerStatus;
+use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
 use serde::{Deserialize, Serialize};
 use url::Url;
 

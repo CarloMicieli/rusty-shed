@@ -1,26 +1,26 @@
 use super::entities::RailwayCompanyRow;
 use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
-use crate::catalog::domain::category::RollingStockCategory;
-use crate::catalog::domain::control::Control;
-use crate::catalog::domain::dcc_interface::DccInterface;
-use crate::catalog::domain::delivery_date::DeliveryDate;
-use crate::catalog::domain::epoch::{Epoch, EpochKind};
-use crate::catalog::domain::length_over_buffers::LengthOverBuffers;
 use crate::catalog::domain::manufacturer::Manufacturer;
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
-use crate::catalog::domain::manufacturer_status::ManufacturerStatus;
-use crate::catalog::domain::period_of_activity::PeriodOfActivity;
-use crate::catalog::domain::product_code::ProductCode;
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::catalog::domain::manufacturer::ManufacturerStatus;
+use crate::catalog::domain::railway_company::PeriodOfActivity;
 use crate::catalog::domain::railway_company::RailwayCompany;
-use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+use crate::catalog::domain::railway_company::RailwayCompanyId;
+use crate::catalog::domain::railway_company::RailwayStatus;
+use crate::catalog::domain::railway_model::Control;
+use crate::catalog::domain::railway_model::DccInterface;
+use crate::catalog::domain::railway_model::DeliveryDate;
+use crate::catalog::domain::railway_model::LengthOverBuffers;
+use crate::catalog::domain::railway_model::ProductCode;
 use crate::catalog::domain::railway_model::RailwayModel;
-use crate::catalog::domain::railway_model_id::RailwayModelId;
-use crate::catalog::domain::railway_status::RailwayStatus;
-use crate::catalog::domain::rolling_stock::RollingStock;
-use crate::catalog::domain::rolling_stock_id::RollingStockId;
-use crate::catalog::domain::rolling_stock_railway::RollingStockRailway;
+use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::RollingStock;
+use crate::catalog::domain::railway_model::RollingStockCategory;
+use crate::catalog::domain::railway_model::RollingStockId;
+use crate::catalog::domain::railway_model::RollingStockRailway;
+use crate::catalog::domain::railway_model::TechnicalSpecifications;
+use crate::catalog::domain::railway_model::{Epoch, EpochKind};
 use crate::catalog::domain::scale::Scale;
-use crate::catalog::domain::technical_specifications::TechnicalSpecifications;
 use anyhow::anyhow;
 use chrono::NaiveDate;
 use url::Url;
@@ -126,10 +126,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
             .parse::<RollingStockId>()
             .map_err(|e| anyhow!("invalid rolling stock id: {}", e))?;
 
-        let railway_company_id =
-            crate::catalog::domain::railway_company_id::RailwayCompanyId::try_from(
-                row.railway_company_id.clone(),
-            )
+        let railway_company_id = RailwayCompanyId::try_from(row.railway_company_id.clone())
             .map_err(|e| anyhow!("invalid railway company id: {}", e))?;
 
         let railway = RollingStockRailway::new(railway_company_id, &row.railway_company_id);
@@ -377,11 +374,11 @@ mod tests {
 
     mod railway_model_mapper_tests {
         use super::*;
-        use crate::catalog::domain::availability_status::AvailabilityStatus;
-        use crate::catalog::domain::category::{
+        use crate::catalog::domain::railway_model::AvailabilityStatus;
+        use crate::catalog::domain::railway_model::{Category, PowerMethod};
+        use crate::catalog::domain::railway_model::{
             ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
         };
-        use crate::catalog::domain::{Category, PowerMethod};
         use chrono::DateTime;
         use pretty_assertions::assert_eq;
 

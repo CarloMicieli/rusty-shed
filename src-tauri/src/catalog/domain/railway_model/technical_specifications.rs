@@ -1,11 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-pub use crate::catalog::domain::body_shell_type::BodyShellType;
-pub use crate::catalog::domain::chassis_type::ChassisType;
-pub use crate::catalog::domain::coupling::Coupling;
-pub use crate::catalog::domain::coupling_socket::CouplingSocket;
-pub use crate::catalog::domain::feature_flag::FeatureFlag;
-pub use crate::catalog::domain::radius::{Radius, RadiusError};
+pub use crate::catalog::domain::railway_model::body_shell_type::BodyShellType;
+pub use crate::catalog::domain::railway_model::chassis_type::ChassisType;
+pub use crate::catalog::domain::railway_model::coupling::Coupling;
+pub use crate::catalog::domain::railway_model::feature_flag::FeatureFlag;
+pub use crate::catalog::domain::railway_model::radius::Radius;
 
 /// The technical specification data for a rolling stock model
 #[derive(Debug, Eq, PartialEq, Clone, Default, Serialize, Deserialize, specta::Type)]
@@ -109,6 +108,7 @@ mod test {
     use super::*;
     use pretty_assertions::assert_eq;
     use rust_decimal_macros::dec;
+    use crate::catalog::domain::railway_model::CouplingSocket;
 
     #[test]
     fn it_should_create_tech_specs() {

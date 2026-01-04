@@ -1,4 +1,4 @@
-use crate::catalog::domain::{CouplingSocket, FeatureFlag};
+use crate::catalog::domain::railway_model::{CouplingSocket, FeatureFlag};
 use serde::{Deserialize, Serialize};
 
 /// It represents the coupling configuration for a rolling stock.

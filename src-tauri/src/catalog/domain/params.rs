@@ -1,19 +1,15 @@
 use crate::catalog::application::create_railway_model_input::{
     CouplingInput, CreateRollingStockInput, LengthOverBuffersInput, TechnicalSpecificationsInput,
 };
-use crate::catalog::domain::availability_status::AvailabilityStatus;
-use crate::catalog::domain::category::{
-    ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::catalog::domain::railway_company::RailwayCompanyId;
+use crate::catalog::domain::railway_model::{
+    AvailabilityStatus, Category, Control, Coupling, CouplingSocket, DccInterface, DeliveryDate,
+    ElectricMultipleUnitType, Epoch, FreightCarType, LengthOverBuffers, LocomotiveType,
+    PassengerCarType, PowerMethod, ProductCode, Radius, RailcarType, ServiceLevel,
+    TechnicalSpecifications,
 };
-use crate::catalog::domain::control::Control;
-use crate::catalog::domain::dcc_interface::DccInterface;
-use crate::catalog::domain::length_over_buffers::LengthOverBuffers;
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
-use crate::catalog::domain::railway_company_id::RailwayCompanyId;
-use crate::catalog::domain::technical_specifications::TechnicalSpecifications;
-use crate::catalog::domain::{
-    Category, DeliveryDate, Epoch, PowerMethod, ProductCode, Radius, Scale, ServiceLevel,
-};
+use crate::catalog::domain::scale::Scale;
 use crate::core::application::validation::ValidationContext;
 use crate::core::domain::domain_error::DomainError;
 use rust_decimal::prelude::FromPrimitive;
@@ -553,13 +549,12 @@ fn validate_specs(
 fn validate_coupling(
     ctx: &mut ValidationContext,
     coupling_input: Option<CouplingInput>,
-) -> Option<crate::catalog::domain::coupling::Coupling> {
+) -> Option<Coupling> {
     coupling_input.and_then(|c| {
         // 1. Mandatory field for a coupling: The Socket
         let socket = ctx.collect(
             "technical_specifications.coupling.socket",
-            c.socket
-                .parse::<crate::catalog::domain::coupling_socket::CouplingSocket>(),
+            c.socket.parse::<CouplingSocket>(),
         );
 
         // 2. Optional Feature Flags
@@ -575,7 +570,7 @@ fn validate_coupling(
         );
 
         // 3. We only return the Coupling object if the mandatory socket was valid
-        socket.map(|s| crate::catalog::domain::coupling::Coupling {
+        socket.map(|s| Coupling {
             socket: Some(s),
             close_couplers: close,
             digital_shunting: digital,

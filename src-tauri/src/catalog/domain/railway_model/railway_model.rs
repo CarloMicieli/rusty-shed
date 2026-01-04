@@ -1,7 +1,8 @@
-use crate::catalog::domain::RollingStock;
-use crate::catalog::domain::availability_status::AvailabilityStatus;
-use crate::catalog::domain::railway_model_id::RailwayModelId;
-use crate::catalog::domain::{Category, DeliveryDate, Epoch, PowerMethod, ProductCode, Scale};
+use crate::catalog::domain::railway_model::{
+    AvailabilityStatus, Category, DeliveryDate, Epoch, PowerMethod, ProductCode, RailwayModelId,
+    RollingStock,
+};
+use crate::catalog::domain::scale::Scale;
 use serde::{Deserialize, Serialize};
 
 /// A `RailwayModel` represents a manufactured model product in the catalog.

@@ -1,4 +1,4 @@
-use crate::catalog::domain::track_gauge::TrackGauge;
+use crate::catalog::domain::scale::TrackGauge;
 use crate::core::domain::length::Length;
 use crate::core::domain::measure_units::MeasureUnit;
 use rust_decimal::Decimal;

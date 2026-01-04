@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::catalog::domain::power_method::PowerMethod;
+use crate::catalog::domain::railway_model::PowerMethod;
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::currency::Currency;
 use crate::core::domain::measure_units::MeasureUnit;

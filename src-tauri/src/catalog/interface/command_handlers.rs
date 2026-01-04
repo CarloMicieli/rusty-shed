@@ -1,11 +1,11 @@
 use crate::catalog::application::create_railway_model::CreateRailwayModelUseCase;
 use crate::catalog::application::create_railway_model_input::CreateRailwayModelInput;
 use crate::catalog::domain::manufacturer::Manufacturer;
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
+use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompany;
-use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModel;
-use crate::catalog::domain::railway_model_id::RailwayModelId;
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;

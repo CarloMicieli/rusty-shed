@@ -1,14 +1,14 @@
 use super::database;
-use crate::catalog::domain::category::RollingStockCategory;
 use crate::catalog::domain::manufacturer::Manufacturer;
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
+use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::params::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::railway_company::RailwayCompany;
-use crate::catalog::domain::railway_company_id::RailwayCompanyId;
-use crate::catalog::domain::railway_model_id::RailwayModelId;
+use crate::catalog::domain::railway_company::RailwayCompanyId;
+use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::RollingStockCategory;
+use crate::catalog::domain::railway_model::RollingStockId;
+use crate::catalog::domain::railway_model::{RailwayModel, RollingStock};
 use crate::catalog::domain::repository::RailwayModelRepository;
-use crate::catalog::domain::rolling_stock_id::RollingStockId;
-use crate::catalog::domain::{RailwayModel, RollingStock};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use anyhow::Context;
@@ -583,7 +583,7 @@ mod tests {
 
     mod manufacturer_repo_tests {
         use super::*;
-        use crate::catalog::domain::manufacturer_id::ManufacturerId;
+        use crate::catalog::domain::manufacturer::ManufacturerId;
         use pretty_assertions::assert_eq;
         use url::Url;
 
@@ -615,7 +615,7 @@ mod tests {
 
     mod railway_repo_tests {
         use super::*;
-        use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+        use crate::catalog::domain::railway_company::RailwayCompanyId;
         use pretty_assertions::assert_eq;
 
         #[sqlx::test(migrations = "./migrations", fixtures("test_railway_company"))]
@@ -642,7 +642,7 @@ mod tests {
 
     mod railway_model_repo_tests {
         use super::*;
-        use crate::catalog::domain::Category;
+        use crate::catalog::domain::railway_model::Category;
         use pretty_assertions::assert_eq;
 
         #[sqlx::test(migrations = "./migrations", fixtures("test_railway_model"))]
@@ -675,16 +675,17 @@ mod tests {
 
     mod model_railway_repository {
         use super::*;
-        use crate::catalog::domain::availability_status::AvailabilityStatus;
-        use crate::catalog::domain::category::{
+        use crate::catalog::domain::railway_model::AvailabilityStatus;
+        use crate::catalog::domain::railway_model::Control;
+        use crate::catalog::domain::railway_model::DccInterface;
+        use crate::catalog::domain::railway_model::RailwayModelId;
+        use crate::catalog::domain::railway_model::{
+            Category, DeliveryDate, Epoch, PowerMethod, ProductCode, ServiceLevel,
+        };
+        use crate::catalog::domain::railway_model::{
             ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
         };
-        use crate::catalog::domain::control::Control;
-        use crate::catalog::domain::dcc_interface::DccInterface;
-        use crate::catalog::domain::railway_model_id::RailwayModelId;
-        use crate::catalog::domain::{
-            Category, DeliveryDate, Epoch, PowerMethod, ProductCode, Scale, ServiceLevel,
-        };
+        use crate::catalog::domain::scale::Scale;
         use pretty_assertions::assert_eq;
         use sqlx::Row;
 

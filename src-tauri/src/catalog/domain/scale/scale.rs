@@ -1,9 +1,7 @@
+use crate::catalog::domain::scale::{Gauge, Ratio};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
-
-use crate::catalog::domain::ratio::Ratio;
-use crate::catalog::domain::scale_gauge::Gauge;
 
 /// Model railway scales supported by the application.
 ///

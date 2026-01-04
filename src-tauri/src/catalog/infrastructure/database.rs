@@ -1,4 +1,4 @@
-use crate::catalog::domain::manufacturer_id::ManufacturerId;
+use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::infrastructure::entities::RailwayCompanyRow;
 use crate::catalog::infrastructure::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use sqlx::sqlite::SqliteConnection;

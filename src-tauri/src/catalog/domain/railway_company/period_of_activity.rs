@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_status::RailwayStatus;
+use crate::catalog::domain::railway_company::RailwayStatus;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 

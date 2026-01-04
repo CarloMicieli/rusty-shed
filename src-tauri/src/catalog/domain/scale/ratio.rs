@@ -1,4 +1,3 @@
-use once_cell::sync::Lazy;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize, Serializer};
@@ -142,20 +141,6 @@ impl Ratio {
         Ratio(dec!(76.2))
     }
 }
-
-/// Common, shared `Ratio` values as thread-safe statics.
-///
-/// We expose these as `Lazy<Ratio>` statics because `Decimal` cannot be
-/// constructed in a `const` context. These are cheap to initialize and safe
-/// for concurrent access.
-pub static R87: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(87)));
-pub static R160: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(160)));
-pub static R120: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(120)));
-pub static R220: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(220)));
-pub static R22_5: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(22.5)));
-pub static R32: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(32)));
-pub static R43_5: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(43.5)));
-pub static R76_2: Lazy<Ratio> = Lazy::new(|| Ratio(dec!(76.2)));
 
 #[cfg(test)]
 mod tests {

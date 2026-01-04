@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model_id::RailwayModelId;
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;

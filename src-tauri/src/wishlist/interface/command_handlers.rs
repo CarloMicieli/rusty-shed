@@ -1,7 +1,7 @@
 use specta::specta;
 use tauri::State;
 
-use crate::catalog::domain::railway_model_id::RailwayModelId;
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;

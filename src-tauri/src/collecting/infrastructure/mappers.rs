@@ -1,4 +1,4 @@
-use crate::catalog::domain::dcc_interface::DccInterface;
+use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::collection::Collection;
 use crate::collecting::domain::collection_id::CollectionId;
 use crate::collecting::domain::collection_item::CollectionItem;

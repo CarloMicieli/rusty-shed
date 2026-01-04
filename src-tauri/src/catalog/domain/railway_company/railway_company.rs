@@ -4,8 +4,7 @@
 //! domain to represent operating or owning railway companies. Fields are kept
 //! minimal and optional where the underlying database allows null values.
 
-use crate::catalog::domain::period_of_activity::PeriodOfActivity;
-use crate::catalog::domain::railway_company_id::RailwayCompanyId;
+use crate::catalog::domain::railway_company::{PeriodOfActivity, RailwayCompanyId};
 use serde::{Deserialize, Serialize};
 
 /// A railway company (operator or owner).

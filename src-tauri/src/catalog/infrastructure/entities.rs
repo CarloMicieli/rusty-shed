@@ -1,11 +1,8 @@
-use crate::catalog::domain::availability_status::AvailabilityStatus;
-use crate::catalog::domain::category::{
-    ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
-    RollingStockCategory,
+use crate::catalog::domain::railway_model::{
+    AvailabilityStatus, BodyShellType, Category, ChassisType, Control, DccInterface,
+    ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, PowerMethod,
+    RailcarType, RollingStockCategory, ServiceLevel,
 };
-use crate::catalog::domain::control::Control;
-use crate::catalog::domain::dcc_interface::DccInterface;
-use crate::catalog::domain::{BodyShellType, Category, ChassisType, PowerMethod, ServiceLevel};
 use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
 use sqlx::types::Text;

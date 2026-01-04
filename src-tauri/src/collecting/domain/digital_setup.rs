@@ -1,4 +1,4 @@
-use crate::catalog::domain::dcc_interface::DccInterface;
+use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::decoder_id::DecoderId;
 use serde::{Deserialize, Serialize};
 
