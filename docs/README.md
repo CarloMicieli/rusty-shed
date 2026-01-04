@@ -70,3 +70,11 @@ Keep track of future purchases.
 - **Service Layer:** All Tauri `invoke` calls must be wrapped in a `service.ts` file.
 - **State Management:** Use Class-based **Runes** to handle Loading and Error states.
 - **Localization:** Use **Paraglide** to map Rust error codes to user-friendly, localized messages.
+
+## Architecture Documentation
+
+- [Feature Implementation](FEATURE_IMPLEMENTATION.md)
+- [Query System](QUERY_SYSTEM.md)
+- [API Reference](API_REFERENCE.md)
+
+---
