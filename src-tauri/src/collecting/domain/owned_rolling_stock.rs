@@ -1,6 +1,7 @@
 use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::digital_setup::DigitalSetup;
 use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
+use crate::dcc_inventory::domain::Decoder;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -53,7 +54,7 @@ impl OwnedRollingStock {
         &mut self,
         interface: DccInterface,
         address: u16,
-        decoder: &crate::collecting::domain::decoder::Decoder,
+        decoder: &Decoder,
     ) -> Result<(), InstallError> {
         if address == 0 || address > 9999 {
             return Err(InstallError::InvalidAddress(address));
@@ -80,11 +81,8 @@ impl OwnedRollingStock {
 mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
-    use crate::collecting::domain::decoder::Decoder;
-    use crate::collecting::domain::decoder_id::DecoderId;
-    use crate::collecting::domain::decoder_type::DecoderType;
-    use crate::collecting::domain::digital_protocol::DigitalProtocol;
     use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
+    use crate::dcc_inventory::domain::{Decoder, DecoderId, DecoderType, DigitalProtocol};
 
     #[test]
     fn install_decoder_validates_address_and_interface() {

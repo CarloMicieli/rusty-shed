@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::DccInterface;
-use crate::collecting::domain::decoder_id::DecoderId;
+use crate::dcc_inventory::domain::DecoderId;
 use serde::{Deserialize, Serialize};
 
 /// Represents the installation of a decoder into a locomotive (owned rolling stock).

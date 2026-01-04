@@ -10,13 +10,16 @@ use strum_macros::{Display, EnumString};
     Serialize,
     Deserialize,
     Display,
+    Default,
     EnumString,
     specta::Type,
     sqlx::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE", ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DecoderType {
+    #[default]
     Plain,
     Sound,
     Function,

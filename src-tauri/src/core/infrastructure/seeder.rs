@@ -1,10 +1,9 @@
+use crate::dcc_inventory::domain::DecoderId;
 use anyhow::Context;
 use chrono::Utc;
 use csv::ReaderBuilder;
 use slug::slugify;
 use sqlx::{QueryBuilder, SqlitePool};
-
-use crate::collecting::domain::decoder_id::DecoderId;
 
 static MANUFACTURES: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),

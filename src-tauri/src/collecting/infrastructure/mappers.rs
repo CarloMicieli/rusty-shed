@@ -3,7 +3,6 @@ use crate::collecting::domain::collection::Collection;
 use crate::collecting::domain::collection_id::CollectionId;
 use crate::collecting::domain::collection_item::CollectionItem;
 use crate::collecting::domain::collection_item_id::CollectionItemId;
-use crate::collecting::domain::decoder_id::DecoderId;
 use crate::collecting::domain::digital_setup::DigitalSetup;
 use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
 use crate::collecting::domain::purchase_info::PurchaseInfo;
@@ -13,6 +12,7 @@ use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
 use crate::core::domain::MonetaryAmount;
+use crate::dcc_inventory::domain::DecoderId;
 use anyhow::{Context, anyhow};
 use std::collections::HashMap;
 

@@ -3,6 +3,7 @@ pub mod collecting;
 pub mod collection;
 pub mod core;
 pub mod dashboard;
+pub mod dcc_inventory;
 pub mod maintenance;
 pub mod sellers;
 pub mod settings;
