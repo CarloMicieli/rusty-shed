@@ -28,7 +28,7 @@ jobs:
       - name: Update Rust dependencies
         run: |
           # Updates Cargo.lock within semver ranges
-          cargo update 
+          cargo update
 
       - name: 🦀 Update Node.js dependencies
         run: |
@@ -40,8 +40,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: weekly pnpm and cargo update"
-          title: "Scheduled Dependency Update"
+          commit-message: 'chore: weekly pnpm and cargo update'
+          title: 'Scheduled Dependency Update'
           body: |
             Automated weekly dependency updates for Tauri 2 project.
             - Updated `Cargo.lock`
