@@ -1,3 +1,4 @@
+use crate::catalog::application::GetRailwayModelByIdQuery;
 use crate::catalog::application::railway_model_use_case::CreateRailwayModelUseCase;
 use crate::catalog::application::railway_model_use_case_input::CreateRailwayModelInput;
 use crate::catalog::domain::railway_model::RailwayModel;
@@ -30,50 +31,23 @@ use tauri::State;
 #[specta::specta]
 pub async fn get_railway_model_by_id(
     state: State<'_, AppState>,
-    railway_model_id: String,
+    railway_model_id: RailwayModelId,
 ) -> Result<Option<RailwayModel>, CommandError> {
-    let id = RailwayModelId::try_from(railway_model_id)
-        .map_err(|e| CommandError::Unknown(format!("invalid railway model id: {}", e)))?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
-    let pool = state.db_pool();
-    let mut conn = pool
-        .acquire()
-        .await
-        .map_err(|e| CommandError::DatabaseError(format!("db acquire failed: {}", e)))?;
+    match GetRailwayModelByIdQuery::execute(&mut unit_of_work, railway_model_id).await {
+        Ok(railway_model) => {
+            // Since this is a 'get' operation, committing is technically optional,
+            // but calling it ensures the transaction is closed cleanly.
+            unit_of_work
+                .commit()
+                .await
+                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
 
-    let result =
-        crate::catalog::infrastructure::repository::get_railway_model_by_id(&mut conn, &id)
-            .await
-            .map_err(|e| CommandError::DatabaseError(format!("query failed: {}", e)))?;
-
-    Ok(result)
-}
-
-/// Retrieve multiple railway models by their identifiers.
-#[tauri::command]
-#[specta::specta]
-pub async fn get_railway_models_by_ids(
-    state: State<'_, AppState>,
-    railway_model_ids: Vec<String>,
-) -> Result<Vec<RailwayModel>, CommandError> {
-    let ids: Vec<RailwayModelId> = railway_model_ids
-        .into_iter()
-        .map(RailwayModelId::try_from)
-        .collect::<Result<_, _>>()
-        .map_err(|e| CommandError::Unknown(format!("invalid railway model id: {}", e)))?;
-
-    let pool = state.db_pool();
-    let mut conn = pool
-        .acquire()
-        .await
-        .map_err(|e| CommandError::DatabaseError(format!("db acquire failed: {}", e)))?;
-
-    let result =
-        crate::catalog::infrastructure::repository::get_railway_models_by_ids(&mut conn, &ids)
-            .await
-            .map_err(|e| CommandError::DatabaseError(format!("query failed: {}", e)))?;
-
-    Ok(result)
+            Ok(railway_model)
+        }
+        Err(e) => Err(e.into()),
+    }
 }
 
 /// Create a new railway model together with its rolling stocks.

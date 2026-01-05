@@ -136,7 +136,6 @@ pub fn run() {
         manufacturers_command_handlers::get_manufacturers,
         manufacturers_command_handlers::get_manufacturer_by_id,
         catalog_command_handlers::get_railway_model_by_id,
-        catalog_command_handlers::get_railway_models_by_ids,
         railway_companies_command_handlers::get_railway_companies,
         railway_companies_command_handlers::get_railway_company_by_id,
         catalog_command_handlers::create_railway_model,

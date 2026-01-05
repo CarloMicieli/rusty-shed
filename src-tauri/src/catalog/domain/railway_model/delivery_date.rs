@@ -1,9 +1,13 @@
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
-use std::str::FromStr;
-
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use sqlx::encode::IsNull;
+use sqlx::error::BoxDynError;
+use sqlx::sqlite::SqliteArgumentValue;
+use sqlx::{Decode, Encode, Sqlite, Type};
+use std::fmt;
+use std::str;
+use std::str::FromStr;
 
 /// Represents the expected delivery timeframe for a railway model.
 ///
@@ -31,6 +35,36 @@ pub enum DeliveryDate {
     },
 }
 
+// Manually link this type to the SQLite TEXT type info
+impl Type<Sqlite> for DeliveryDate {
+    fn type_info() -> <Sqlite as sqlx::Database>::TypeInfo {
+        <String as Type<Sqlite>>::type_info()
+    }
+}
+
+// Manual Encode (Enum -> DB String)
+impl<'q> Encode<'q, Sqlite> for DeliveryDate {
+    fn encode_by_ref(
+        &self,
+        args: &mut Vec<SqliteArgumentValue<'q>>,
+    ) -> Result<IsNull, BoxDynError> {
+        let s = match self {
+            Self::Year(y) => format!("{}", y),
+            Self::YearMonth { year, month } => format!("{}-{:02}", year, month),
+            Self::YearQuarter { year, quarter } => format!("{}-{}", year, quarter),
+        };
+        <String as Encode<Sqlite>>::encode(s, args)
+    }
+}
+
+// Manual Decode (DB String -> Enum)
+impl<'r> Decode<'r, Sqlite> for DeliveryDate {
+    fn decode(value: sqlx::sqlite::SqliteValueRef<'r>) -> Result<Self, BoxDynError> {
+        let s = <String as Decode<Sqlite>>::decode(value)?;
+        Self::from_str(&s).map_err(|e| e.into())
+    }
+}
+
 impl fmt::Display for DeliveryDate {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -38,6 +72,14 @@ impl fmt::Display for DeliveryDate {
             DeliveryDate::YearMonth { year, month } => write!(f, "{:04}/{:02}", year, month),
             DeliveryDate::YearQuarter { year, quarter } => write!(f, "{:04}/{}", year, quarter),
         }
+    }
+}
+
+impl FromStr for DeliveryDate {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        DeliveryDate::parse(s)
     }
 }
 

@@ -3,23 +3,11 @@ use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::railway_company::PeriodOfActivity;
 use crate::catalog::domain::railway_company::RailwayCompany;
-use crate::catalog::domain::railway_company::RailwayCompanyId;
-use crate::catalog::domain::railway_model::Control;
-use crate::catalog::domain::railway_model::DccInterface;
-use crate::catalog::domain::railway_model::DeliveryDate;
-use crate::catalog::domain::railway_model::LengthOverBuffers;
-use crate::catalog::domain::railway_model::ProductCode;
-use crate::catalog::domain::railway_model::RailwayModel;
-use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
-use crate::catalog::domain::railway_model::RollingStockId;
 use crate::catalog::domain::railway_model::RollingStockRailway;
-use crate::catalog::domain::railway_model::TechnicalSpecifications;
-use crate::catalog::domain::railway_model::{Epoch, EpochKind};
-use crate::catalog::domain::scale::Scale;
+use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelManufacturer};
 use crate::core::domain::domain_error::DomainError;
-use anyhow::anyhow;
 use url::Url;
 
 /// Convert a `ManufacturerRow` (database representation) into the domain
@@ -66,40 +54,25 @@ impl TryFrom<ManufacturerRow> for Manufacturer {
 }
 
 impl TryFrom<RailwayModelRow> for RailwayModel {
-    type Error = anyhow::Error;
+    type Error = DomainError;
 
     fn try_from(row: RailwayModelRow) -> Result<Self, Self::Error> {
-        let id = RailwayModelId::try_from(row.id)
-            .map_err(|e| anyhow!("invalid railway model id: {}", e))?;
-
-        let product_code = ProductCode::try_from(row.product_code)
-            .map_err(|e| anyhow!("invalid product code: {}", e))?;
-
-        let scale =
-            Scale::try_from(row.scale.as_str()).map_err(|e| anyhow!("invalid scale: {}", e))?;
-
-        let epoch_kind =
-            EpochKind::try_from(row.epoch.as_str()).map_err(|e| anyhow!("invalid epoch: {}", e))?;
-        let epoch = Epoch::from(epoch_kind);
-
-        let delivery_date = match row.delivery_date {
-            Some(s) => {
-                Some(DeliveryDate::parse(&s).map_err(|e| anyhow!("invalid delivery_date: {}", e))?)
-            }
-            None => None,
+        let manufacturer = RailwayModelManufacturer {
+            manufacturer_id: row.manufacturer_id,
+            display: row.manufacturer_name,
         };
 
         Ok(RailwayModel {
-            id,
-            manufacturer: row.manufacturer_id,
-            product_code,
+            id: row.id,
+            manufacturer,
+            product_code: row.product_code,
             description: row.description,
             details: row.details,
             power_method: row.power_method,
-            scale,
-            epoch,
+            scale: row.scale,
+            epoch: row.epoch,
             category: row.category,
-            delivery_date,
+            delivery_date: row.delivery_date,
             availability_status: row.availability_status,
             rolling_stocks: Vec::new(),
         })
@@ -107,104 +80,89 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
 }
 
 impl TryFrom<RollingStockRow> for RollingStock {
-    type Error = anyhow::Error;
+    type Error = DomainError;
 
     fn try_from(row: RollingStockRow) -> Result<Self, Self::Error> {
-        let id = row
-            .id
-            .parse::<RollingStockId>()
-            .map_err(|e| anyhow!("invalid rolling stock id: {}", e))?;
-
-        let railway_company_id = RailwayCompanyId::try_from(row.railway_company_id.clone())
-            .map_err(|e| anyhow!("invalid railway company id: {}", e))?;
-
-        let railway = RollingStockRailway::new(railway_company_id, &row.railway_company_id);
         let category = row.category;
 
-        let is_dummy = row.is_dummy != 0;
+        let railway = RollingStockRailway {
+            railway_company_id: row.railway_company_id,
+            display: row.railway_company_name,
+        };
 
         match category {
-            RollingStockCategory::Locomotive => {
-                let road_number = row.road_number.as_deref().unwrap_or("");
-
-                Ok(RollingStock::new_locomotive(
-                    id,
-                    row.friendly_name.as_deref(),
-                    Some(row.series_code.as_str()),
-                    road_number,
-                    row.series.as_deref(),
-                    railway,
-                    row.locomotive_type.unwrap_or_default(),
-                    row.depot.as_deref(),
-                    row.livery.as_deref(),
-                    is_dummy,
-                    None::<LengthOverBuffers>,
-                    None::<Control>,
-                    None::<DccInterface>,
-                    None::<TechnicalSpecifications>,
-                ))
-            }
-            RollingStockCategory::FreightCar => {
-                // Map: previously type_name -> friendly_name
-                Ok(RollingStock::new_freight_car(
-                    id,
-                    row.friendly_name.as_deref().unwrap_or(""),
-                    Some(row.series_code.as_str()),
-                    row.road_number.as_deref(),
-                    railway,
-                    row.freight_car_type,
-                    row.livery.as_deref(),
-                    None,
-                    None,
-                ))
-            }
-            RollingStockCategory::PassengerCar => Ok(RollingStock::new_passenger_car(
-                id,
-                row.friendly_name.as_deref().unwrap_or(""),
-                Some(row.series_code.as_str()),
-                row.road_number.as_deref(),
-                row.series.as_deref(),
+            RollingStockCategory::Locomotive => Ok(RollingStock::Locomotive {
+                id: row.id,
+                friendly_name: row.friendly_name,
+                series: row.series,
+                series_code: row.series_code,
+                road_number: row.road_number,
                 railway,
-                row.passenger_car_type,
-                None,
-                row.livery.as_deref(),
-                None,
-                None,
-            )),
-            RollingStockCategory::ElectricMultipleUnit => {
-                Ok(RollingStock::new_electric_multiple_unit(
-                    id,
-                    row.friendly_name.as_deref().unwrap_or(""),
-                    Some(row.series_code.as_str()),
-                    row.road_number.as_deref(),
-                    row.series.as_deref(),
-                    railway,
-                    row.electric_multiple_unit_type.unwrap_or_default(),
-                    row.depot.as_deref(),
-                    row.livery.as_deref(),
-                    is_dummy,
-                    None,
-                    None,
-                    None,
-                    None,
-                ))
-            }
-            RollingStockCategory::Railcar => Ok(RollingStock::new_railcar(
-                id,
-                row.friendly_name.as_deref().unwrap_or(""),
-                Some(row.series_code.as_str()),
-                row.road_number.as_deref(),
-                row.series.as_deref(),
+                locomotive_type: row.locomotive_type.unwrap_or_default(),
+                depot: row.depot,
+                livery: row.livery,
+                is_dummy: row.is_dummy,
+                length_over_buffer: None,
+                technical_specifications: None,
+                dcc_interface: row.dcc_interface,
+                control: row.control,
+            }),
+            RollingStockCategory::FreightCar => Ok(RollingStock::FreightCar {
+                id: row.id,
+                friendly_name: row.friendly_name,
+                series_code: row.series_code,
+                road_number: row.road_number,
                 railway,
-                row.railcar_type.unwrap_or_default(),
-                row.depot.as_deref(),
-                row.livery.as_deref(),
-                is_dummy,
-                None,
-                None,
-                None,
-                None,
-            )),
+                freight_car_type: row.freight_car_type,
+                livery: row.livery,
+                length_over_buffer: None,
+                technical_specifications: None,
+            }),
+            RollingStockCategory::PassengerCar => Ok(RollingStock::PassengerCar {
+                id: row.id,
+                friendly_name: row.friendly_name,
+                series_code: row.series_code,
+                series: row.series,
+                road_number: row.road_number,
+                railway,
+                passenger_car_type: row.passenger_car_type,
+                service_level: row.service_level,
+                livery: row.livery,
+                length_over_buffer: None,
+                technical_specifications: None,
+            }),
+            RollingStockCategory::ElectricMultipleUnit => Ok(RollingStock::ElectricMultipleUnit {
+                id: row.id,
+                friendly_name: row.friendly_name,
+                series: row.series,
+                series_code: row.series_code,
+                road_number: row.road_number,
+                railway,
+                electric_multiple_unit_type: row.electric_multiple_unit_type.unwrap_or_default(),
+                depot: row.depot,
+                livery: row.livery,
+                is_dummy: row.is_dummy,
+                length_over_buffer: None,
+                technical_specifications: None,
+                dcc_interface: row.dcc_interface,
+                control: row.control,
+            }),
+            RollingStockCategory::Railcar => Ok(RollingStock::Railcar {
+                id: row.id,
+                friendly_name: row.friendly_name,
+                series: row.series,
+                series_code: row.series_code,
+                road_number: row.road_number,
+                railway,
+                railcar_type: row.railcar_type.unwrap_or_default(),
+                depot: row.depot,
+                livery: row.livery,
+                is_dummy: row.is_dummy,
+                length_over_buffer: None,
+                technical_specifications: None,
+                dcc_interface: row.dcc_interface,
+                control: row.control,
+            }),
         }
     }
 }
@@ -300,7 +258,7 @@ mod tests {
 
         mod railway_mapper_tests {
             use super::*;
-            use crate::catalog::domain::railway_company::RailwayStatus;
+            use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayStatus};
             use crate::catalog::infrastructure::entities::RailwayCompanyRow;
             use chrono::DateTime;
             use pretty_assertions::assert_eq;
@@ -346,11 +304,16 @@ mod tests {
 
     mod railway_model_mapper_tests {
         use super::*;
-        use crate::catalog::domain::railway_model::AvailabilityStatus;
+        use crate::catalog::domain::manufacturer::ManufacturerId;
+        use crate::catalog::domain::railway_company::RailwayCompanyId;
+        use crate::catalog::domain::railway_model::{
+            AvailabilityStatus, DeliveryDate, ProductCode, RailwayModelId, RollingStockId,
+        };
         use crate::catalog::domain::railway_model::{Category, PowerMethod};
         use crate::catalog::domain::railway_model::{
             ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
         };
+        use crate::catalog::domain::scale::Scale;
         use chrono::DateTime;
         use pretty_assertions::assert_eq;
 
@@ -360,25 +323,36 @@ mod tests {
                 .expect("invalid timestamp")
                 .naive_utc();
 
+            let id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
+                .expect("invalid railway model id");
+            let manufacturer_id =
+                ManufacturerId::try_from("trn:manufacturer:acme").expect("invalid manufacturer id");
+            let product_code = ProductCode::try_from("ACME-100").expect("invalid product code");
             let row = RailwayModelRow {
-                id: "trn:railway-model:mn-1:ACME-100".to_string(),
-                manufacturer_id: "MN-1".to_string(),
-                product_code: "ACME-100".to_string(),
+                id: id.clone(),
+                manufacturer_id: manufacturer_id.clone(),
+                manufacturer_name: "ACME Models".to_string(),
+                product_code: product_code.clone(),
                 description: "Test model".to_string(),
                 details: None,
                 power_method: PowerMethod::DC,
-                scale: "H0".to_string(),
-                epoch: "III".to_string(),
+                scale: Scale::H0,
+                epoch: "III".into(),
                 category: Category::Locomotives,
-                delivery_date: Some("2025".to_string()),
+                delivery_date: Some(DeliveryDate::Year(2023)),
                 availability_status: Some(AvailabilityStatus::Available),
                 created_at: utc_timestamp,
                 updated_at: utc_timestamp,
             };
 
             let domain = RailwayModel::try_from(row).expect("mapping should succeed");
-            assert_eq!(&*domain.id, "trn:railway-model:mn-1:ACME-100");
-            assert_eq!(domain.product_code.0, "ACME-100");
+            let manufacturer = RailwayModelManufacturer {
+                manufacturer_id: manufacturer_id.clone(),
+                display: "ACME Models".to_string(),
+            };
+            assert_eq!(domain.id, id);
+            assert_eq!(domain.manufacturer, manufacturer);
+            assert_eq!(domain.product_code, product_code);
             assert_eq!(domain.description, "Test model");
             assert_eq!(domain.rolling_stocks.len(), 0);
         }
@@ -386,11 +360,16 @@ mod tests {
         #[test]
         fn rolling_stock_row_maps_to_domain_locomotive() {
             let id = RollingStockId::default();
+            let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
+                .expect("invalid railway model id");
+            let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs")
+                .expect("invalid railway model id");
             let row = RollingStockRow {
-                id: id.to_string(),
-                railway_model_id: "RM-1".to_string(),
+                id: id.clone(),
+                railway_model_id: railway_model_id.clone(),
                 category: RollingStockCategory::Locomotive,
-                railway_company_id: "RC-1".to_string(),
+                railway_company_id: railway_company_id.clone(),
+                railway_company_name: "Ferrovie dello Stato".to_string(),
                 livery: Some("red".to_string()),
                 length_inches: None,
                 length_millimeters: None,
@@ -417,7 +396,7 @@ mod tests {
                 service_level: None,
                 dcc_interface: None,
                 control: None,
-                is_dummy: 0,
+                is_dummy: false,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
@@ -427,11 +406,16 @@ mod tests {
         #[test]
         fn rolling_stock_row_maps_to_domain_freight_car() {
             let id = RollingStockId::default();
+            let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
+                .expect("invalid railway model id");
+            let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs")
+                .expect("invalid railway model id");
             let row = RollingStockRow {
-                id: id.to_string(),
-                railway_model_id: "RM-1".to_string(),
+                id: id.clone(),
+                railway_model_id: railway_model_id.clone(),
                 category: RollingStockCategory::FreightCar,
-                railway_company_id: "RC-1".to_string(),
+                railway_company_id: railway_company_id.clone(),
+                railway_company_name: "Ferrovie dello Stato".to_string(),
                 livery: None,
                 length_inches: None,
                 length_millimeters: None,
@@ -458,7 +442,7 @@ mod tests {
                 service_level: None,
                 dcc_interface: None,
                 control: None,
-                is_dummy: 0,
+                is_dummy: true,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
@@ -468,11 +452,16 @@ mod tests {
         #[test]
         fn rolling_stock_row_maps_to_domain_passenger_car() {
             let id = RollingStockId::default();
+            let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
+                .expect("invalid railway model id");
+            let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs")
+                .expect("invalid railway model id");
             let row = RollingStockRow {
-                id: id.to_string(),
-                railway_model_id: "RM-1".to_string(),
+                id: id.clone(),
+                railway_model_id: railway_model_id.clone(),
                 category: RollingStockCategory::PassengerCar,
-                railway_company_id: "RC-1".to_string(),
+                railway_company_id: railway_company_id.clone(),
+                railway_company_name: "Ferrovie dello Stato".to_string(),
                 livery: Some("blue".to_string()),
                 length_inches: None,
                 length_millimeters: None,
@@ -499,7 +488,7 @@ mod tests {
                 service_level: None,
                 dcc_interface: None,
                 control: None,
-                is_dummy: 0,
+                is_dummy: true,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
@@ -509,11 +498,16 @@ mod tests {
         #[test]
         fn rolling_stock_row_maps_to_domain_emu() {
             let id = RollingStockId::default();
+            let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
+                .expect("invalid railway model id");
+            let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs")
+                .expect("invalid railway model id");
             let row = RollingStockRow {
-                id: id.to_string(),
-                railway_model_id: "RM-1".to_string(),
+                id: id.clone(),
+                railway_model_id: railway_model_id.clone(),
                 category: RollingStockCategory::ElectricMultipleUnit,
-                railway_company_id: "RC-1".to_string(),
+                railway_company_id: railway_company_id.clone(),
+                railway_company_name: "Ferrovie dello Stato".to_string(),
                 livery: None,
                 length_inches: None,
                 length_millimeters: None,
@@ -540,7 +534,7 @@ mod tests {
                 service_level: None,
                 dcc_interface: None,
                 control: None,
-                is_dummy: 0,
+                is_dummy: false,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
@@ -550,11 +544,16 @@ mod tests {
         #[test]
         fn rolling_stock_row_maps_to_domain_railcar() {
             let id = RollingStockId::default();
+            let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
+                .expect("invalid railway model id");
+            let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs")
+                .expect("invalid railway model id");
             let row = RollingStockRow {
-                id: id.to_string(),
-                railway_model_id: "RM-1".to_string(),
+                id: id.clone(),
+                railway_model_id: railway_model_id.clone(),
                 category: RollingStockCategory::Railcar,
-                railway_company_id: "RC-1".to_string(),
+                railway_company_id: railway_company_id.clone(),
+                railway_company_name: "Ferrovie dello Stato".to_string(),
                 livery: None,
                 length_inches: None,
                 length_millimeters: None,
@@ -581,7 +580,7 @@ mod tests {
                 service_level: None,
                 dcc_interface: None,
                 control: None,
-                is_dummy: 0,
+                is_dummy: false,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");

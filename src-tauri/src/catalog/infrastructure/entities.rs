@@ -1,10 +1,11 @@
 use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
 use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayStatus};
 use crate::catalog::domain::railway_model::{
-    AvailabilityStatus, BodyShellType, Category, ChassisType, Control, DccInterface,
-    ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, PowerMethod,
-    RailcarType, RollingStockCategory, ServiceLevel,
+    AvailabilityStatus, BodyShellType, Category, ChassisType, Control, DccInterface, DeliveryDate,
+    ElectricMultipleUnitType, Epoch, FreightCarType, LocomotiveType, PassengerCarType, PowerMethod,
+    ProductCode, RailcarType, RailwayModelId, RollingStockCategory, RollingStockId, ServiceLevel,
 };
+use crate::catalog::domain::scale::Scale;
 use chrono::{NaiveDate, NaiveDateTime};
 use rust_decimal::Decimal;
 use sqlx::types::Text;
@@ -77,16 +78,17 @@ pub struct RailwayCompanyRow {
 /// Row mapping for the `railway_models` table.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct RailwayModelRow {
-    pub id: String,
-    pub manufacturer_id: String,
-    pub product_code: String,
+    pub id: RailwayModelId,
+    pub manufacturer_id: ManufacturerId,
+    pub manufacturer_name: String,
+    pub product_code: ProductCode,
     pub description: String,
     pub details: Option<String>,
     pub power_method: PowerMethod,
-    pub scale: String,
-    pub epoch: String,
+    pub scale: Scale,
+    pub epoch: Epoch,
     pub category: Category,
-    pub delivery_date: Option<String>,
+    pub delivery_date: Option<DeliveryDate>,
     pub availability_status: Option<AvailabilityStatus>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
@@ -95,10 +97,11 @@ pub struct RailwayModelRow {
 /// Row mapping for the `rolling_stocks` table.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct RollingStockRow {
-    pub id: String,
-    pub railway_model_id: String,
+    pub id: RollingStockId,
+    pub railway_model_id: RailwayModelId,
     pub category: RollingStockCategory,
-    pub railway_company_id: String,
+    pub railway_company_id: RailwayCompanyId,
+    pub railway_company_name: String,
     pub livery: Option<String>,
     pub length_inches: Option<Text<Decimal>>,
     pub length_millimeters: Option<Text<Decimal>>,
@@ -125,5 +128,5 @@ pub struct RollingStockRow {
     pub service_level: Option<ServiceLevel>,
     pub dcc_interface: Option<DccInterface>,
     pub control: Option<Control>,
-    pub is_dummy: i64,
+    pub is_dummy: bool,
 }

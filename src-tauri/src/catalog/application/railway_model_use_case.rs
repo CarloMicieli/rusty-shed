@@ -1,15 +1,14 @@
 use crate::catalog::application::railway_model_use_case_input::CreateRailwayModelInput;
 use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::railway_model::AvailabilityStatus;
 use crate::catalog::domain::railway_model::Category;
 use crate::catalog::domain::railway_model::DeliveryDate;
 use crate::catalog::domain::railway_model::Epoch;
 use crate::catalog::domain::railway_model::PowerMethod;
 use crate::catalog::domain::railway_model::ProductCode;
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::{AvailabilityStatus, RailwayModelUowExt};
 use crate::catalog::domain::railway_model::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
-use crate::catalog::infrastructure::repository::CatalogUowExt;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
@@ -31,7 +30,7 @@ impl CreateRailwayModelUseCase {
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: CreateRailwayModelInput,
     ) -> Result<RailwayModelId, DomainError> {
-        let mut repository = unit_of_work.railway_models();
+        let mut repository = unit_of_work.railway_model_repository();
         let mut validation_context = ValidationContext::default();
 
         // Collect all potential failures

@@ -14,10 +14,11 @@ use std::ops::Deref;
 /// - The product code MUST be a non-empty, non-blank string. Constructions via
 ///   `TryFrom<&str>` / `TryFrom<String>` will return an error if the input is
 ///   empty or contains only whitespace.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, specta::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
-pub struct ProductCode(pub String);
+#[sqlx(transparent)]
+pub struct ProductCode(String);
 
 impl Deref for ProductCode {
     type Target = str;

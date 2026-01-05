@@ -1,6 +1,6 @@
 use crate::catalog::domain::railway_model::{
     AvailabilityStatus, Category, DeliveryDate, Epoch, PowerMethod, ProductCode, RailwayModelId,
-    RollingStock,
+    RailwayModelManufacturer, RollingStock,
 };
 use crate::catalog::domain::scale::Scale;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ pub struct RailwayModel {
     pub id: RailwayModelId,
 
     /// The manufacturer of the model (e.g. Bachmann, Märklin).
-    pub manufacturer: String,
+    pub manufacturer: RailwayModelManufacturer,
 
     /// Manufacturer-assigned product code.
     pub product_code: ProductCode,

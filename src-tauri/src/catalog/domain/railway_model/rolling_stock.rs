@@ -28,9 +28,9 @@ pub enum RollingStock {
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
         /// the electric multiple unit friendly name
-        friendly_name: String,
+        friendly_name: Option<String>,
         /// the series code (eg. a short code identifying the series)
-        series_code: Option<String>,
+        series_code: String,
         /// the identification marking for this electric multiple unit
         road_number: Option<String>,
         /// the prototype series information
@@ -59,9 +59,9 @@ pub enum RollingStock {
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
         /// the freight car friendly name
-        friendly_name: String,
+        friendly_name: Option<String>,
         /// the series code
-        series_code: Option<String>,
+        series_code: String,
         /// the identification marking for this freight car
         road_number: Option<String>,
         /// the freight car type
@@ -82,9 +82,9 @@ pub enum RollingStock {
         /// the locomotive friendly name
         friendly_name: Option<String>,
         /// the series code
-        series_code: Option<String>,
+        series_code: String,
         /// the identification marking for this locomotive
-        road_number: String,
+        road_number: Option<String>,
         /// the prototype series information
         series: Option<String>,
         /// the depot name
@@ -111,9 +111,9 @@ pub enum RollingStock {
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
         /// the passenger car friendly name
-        friendly_name: String,
+        friendly_name: Option<String>,
         /// the series code
-        series_code: Option<String>,
+        series_code: String,
         /// the identification marking for this passenger car
         road_number: Option<String>,
         /// the prototype series information
@@ -137,9 +137,9 @@ pub enum RollingStock {
         /// the technical specifications
         technical_specifications: Option<TechnicalSpecifications>,
         /// the railcar friendly name
-        friendly_name: String,
+        friendly_name: Option<String>,
         /// the series code
-        series_code: Option<String>,
+        series_code: String,
         /// the identification marking for this railcar
         road_number: Option<String>,
         /// the railcar series
@@ -158,170 +158,6 @@ pub enum RollingStock {
 }
 
 impl RollingStock {
-    /// Creates a new electric multiple unit rolling stock
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_electric_multiple_unit(
-        id: RollingStockId,
-        friendly_name: &str,
-        series_code: Option<&str>,
-        road_number: Option<&str>,
-        series: Option<&str>,
-        railway: RollingStockRailway,
-        electric_multiple_unit_type: ElectricMultipleUnitType,
-        depot: Option<&str>,
-        livery: Option<&str>,
-        is_dummy: bool,
-        length_over_buffer: Option<LengthOverBuffers>,
-        control: Option<Control>,
-        dcc_interface: Option<DccInterface>,
-        technical_specifications: Option<TechnicalSpecifications>,
-    ) -> Self {
-        RollingStock::ElectricMultipleUnit {
-            id,
-            railway,
-            livery: livery.map(str::to_string),
-            length_over_buffer,
-            technical_specifications,
-            friendly_name: String::from(friendly_name),
-            series_code: series_code.map(str::to_string),
-            road_number: road_number.map(str::to_string),
-            series: series.map(str::to_string),
-            depot: depot.map(str::to_string),
-            electric_multiple_unit_type,
-            dcc_interface,
-            control,
-            is_dummy,
-        }
-    }
-
-    /// Creates a new freight car rolling stock
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_freight_car(
-        id: RollingStockId,
-        friendly_name: &str,
-        series_code: Option<&str>,
-        road_number: Option<&str>,
-        railway: RollingStockRailway,
-        freight_car_type: Option<FreightCarType>,
-        livery: Option<&str>,
-        length_over_buffer: Option<LengthOverBuffers>,
-        technical_specifications: Option<TechnicalSpecifications>,
-    ) -> Self {
-        RollingStock::FreightCar {
-            id,
-            railway,
-            livery: livery.map(str::to_string),
-            length_over_buffer,
-            technical_specifications,
-            friendly_name: String::from(friendly_name),
-            series_code: series_code.map(str::to_string),
-            road_number: road_number.map(str::to_string),
-            freight_car_type,
-        }
-    }
-
-    /// Creates a new locomotive rolling stock
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_locomotive(
-        id: RollingStockId,
-        friendly_name: Option<&str>,
-        series_code: Option<&str>,
-        road_number: &str,
-        series: Option<&str>,
-        railway: RollingStockRailway,
-        locomotive_type: LocomotiveType,
-        depot: Option<&str>,
-        livery: Option<&str>,
-        is_dummy: bool,
-        length_over_buffer: Option<LengthOverBuffers>,
-        control: Option<Control>,
-        dcc_interface: Option<DccInterface>,
-        technical_specifications: Option<TechnicalSpecifications>,
-    ) -> Self {
-        RollingStock::Locomotive {
-            id,
-            railway,
-            livery: livery.map(str::to_string),
-            length_over_buffer,
-            technical_specifications,
-            friendly_name: friendly_name.map(str::to_string),
-            series_code: series_code.map(str::to_string),
-            road_number: String::from(road_number),
-            series: series.map(str::to_string),
-            depot: depot.map(str::to_string),
-            locomotive_type,
-            dcc_interface,
-            control,
-            is_dummy,
-        }
-    }
-
-    /// Creates a new passenger car rolling stock
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_passenger_car(
-        id: RollingStockId,
-        friendly_name: &str,
-        series_code: Option<&str>,
-        road_number: Option<&str>,
-        series: Option<&str>,
-        railway: RollingStockRailway,
-        passenger_car_type: Option<PassengerCarType>,
-        service_level: Option<ServiceLevel>,
-        livery: Option<&str>,
-        length_over_buffer: Option<LengthOverBuffers>,
-        technical_specifications: Option<TechnicalSpecifications>,
-    ) -> Self {
-        RollingStock::PassengerCar {
-            id,
-            railway,
-            livery: livery.map(str::to_string),
-            length_over_buffer,
-            technical_specifications,
-            friendly_name: String::from(friendly_name),
-            series_code: series_code.map(str::to_string),
-            road_number: road_number.map(str::to_string),
-            series: series.map(str::to_string),
-            passenger_car_type,
-            service_level,
-        }
-    }
-
-    /// Creates a new railcar rolling stock
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_railcar(
-        id: RollingStockId,
-        friendly_name: &str,
-        series_code: Option<&str>,
-        road_number: Option<&str>,
-        series: Option<&str>,
-        railway: RollingStockRailway,
-        railcar_type: RailcarType,
-        depot: Option<&str>,
-        livery: Option<&str>,
-        is_dummy: bool,
-        length_over_buffer: Option<LengthOverBuffers>,
-        control: Option<Control>,
-        dcc_interface: Option<DccInterface>,
-        technical_specifications: Option<TechnicalSpecifications>,
-    ) -> Self {
-        RollingStock::Railcar {
-            id,
-            railway,
-            livery: livery.map(str::to_string),
-            length_over_buffer,
-            technical_specifications,
-            friendly_name: String::from(friendly_name),
-            series_code: series_code.map(str::to_string),
-            road_number: road_number.map(str::to_string),
-            series: series.map(str::to_string),
-            depot: depot.map(str::to_string),
-            railcar_type,
-            dcc_interface,
-            control,
-            is_dummy,
-        }
-    }
-
     /// The category for this rolling stock
     pub fn category(&self) -> RollingStockCategory {
         match self {
@@ -391,7 +227,7 @@ impl RollingStock {
     pub fn road_number(&self) -> Option<&str> {
         match self {
             RollingStock::ElectricMultipleUnit { road_number, .. } => road_number.as_deref(),
-            RollingStock::Locomotive { road_number, .. } => Some(road_number),
+            RollingStock::Locomotive { road_number, .. } => road_number.as_deref(),
             RollingStock::FreightCar { road_number, .. } => road_number.as_deref(),
             RollingStock::PassengerCar { road_number, .. } => road_number.as_deref(),
             RollingStock::Railcar { road_number, .. } => road_number.as_deref(),
@@ -478,207 +314,6 @@ impl RollingStock {
                 ..
             } => control.has_decoder(),
             _ => false,
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::catalog::domain::railway_model::coupling::Coupling;
-    use crate::catalog::domain::railway_model::coupling_socket::CouplingSocket;
-    use crate::core::domain::length::Length;
-
-    mod locomotives {
-        use super::*;
-        use crate::catalog::domain::railway_company::RailwayCompanyId;
-        use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecificationsBuilder;
-        use crate::catalog::domain::railway_model::{Radius, ServiceLevel};
-        use pretty_assertions::assert_eq;
-        use rust_decimal_macros::dec;
-
-        #[test]
-        fn it_should_create_new_locomotives() {
-            let id = RollingStockId::new();
-            let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(210)));
-            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
-
-            let tech_specs = technical_specification();
-
-            let locomotive = RollingStock::new_locomotive(
-                id.clone(),
-                Some("Caimano"),
-                None,
-                "E.656 077",
-                Some("I serie"),
-                fs.clone(),
-                LocomotiveType::ElectricLocomotive,
-                Some("Milano Centrale"),
-                Some("blu/grigio"),
-                false,
-                Some(length),
-                Some(Control::DccReady),
-                Some(DccInterface::Nem652),
-                Some(tech_specs.clone()),
-            );
-
-            assert_eq!(&id, locomotive.id_as_ref());
-            assert_eq!(RollingStockCategory::Locomotive, locomotive.category());
-            assert_eq!(Some("blu/grigio"), locomotive.livery());
-            assert_eq!(Some(&length), locomotive.length_over_buffer());
-            assert_eq!(&fs, locomotive.railway());
-            assert_eq!(Some("E.656 077"), locomotive.road_number());
-            assert_eq!(Some(DccInterface::Nem652), locomotive.dcc_interface());
-            assert_eq!(Some(Control::DccReady), locomotive.control());
-            assert_eq!(Some(&tech_specs), locomotive.technical_specifications());
-        }
-
-        #[test]
-        fn it_should_create_new_electric_multiple_units() {
-            let id = RollingStockId::new();
-            let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
-
-            let tech_specs = technical_specification();
-
-            let power_car = RollingStock::new_electric_multiple_unit(
-                id.clone(),
-                "ALe 801",
-                Some("003"),
-                Some("ALe 801 003"),
-                None,
-                fs.clone(),
-                ElectricMultipleUnitType::PowerCar,
-                Some("Milano Centrale"),
-                Some("livrea originale giallo/arancio"),
-                false,
-                Some(length),
-                Some(Control::DccReady),
-                Some(DccInterface::Nem652),
-                Some(tech_specs.clone()),
-            );
-
-            assert_eq!(&id, power_car.id_as_ref());
-            assert_eq!(
-                RollingStockCategory::ElectricMultipleUnit,
-                power_car.category()
-            );
-            assert_eq!(Some("livrea originale giallo/arancio"), power_car.livery());
-            assert_eq!(Some(&length), power_car.length_over_buffer());
-            assert_eq!(&fs, power_car.railway());
-            assert_eq!(Some("ALe 801 003"), power_car.road_number());
-            assert_eq!(Some(DccInterface::Nem652), power_car.dcc_interface());
-            assert_eq!(Some(Control::DccReady), power_car.control());
-            assert_eq!(Some(&tech_specs), power_car.technical_specifications());
-        }
-
-        #[test]
-        fn it_should_create_new_passenger_cars() {
-            let id = RollingStockId::new();
-            let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
-
-            let tech_specs = technical_specification();
-
-            let passenger_car = RollingStock::new_passenger_car(
-                id.clone(),
-                "UIC-Z1",
-                None,
-                Some("61 83 19-90 105-3 A"),
-                None,
-                fs.clone(),
-                Some(PassengerCarType::CompartmentCoach),
-                Some(ServiceLevel::First),
-                Some("XMPR"),
-                Some(length),
-                Some(tech_specs.clone()),
-            );
-
-            assert_eq!(&id, passenger_car.id_as_ref());
-            assert_eq!(RollingStockCategory::PassengerCar, passenger_car.category());
-            assert_eq!(Some("XMPR"), passenger_car.livery());
-            assert_eq!(Some(&length), passenger_car.length_over_buffer());
-            assert_eq!(&fs, passenger_car.railway());
-            assert_eq!(Some("61 83 19-90 105-3 A"), passenger_car.road_number());
-            assert_eq!(None, passenger_car.dcc_interface());
-            assert_eq!(None, passenger_car.control());
-            assert_eq!(Some(&tech_specs), passenger_car.technical_specifications());
-        }
-
-        #[test]
-        fn it_should_create_new_railcars() {
-            let id = RollingStockId::new();
-            let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
-
-            let tech_specs = technical_specification();
-
-            let power_car = RollingStock::new_railcar(
-                id.clone(),
-                "ALn 668",
-                None,
-                Some("ALn 668 1449"),
-                None,
-                fs.clone(),
-                RailcarType::PowerCar,
-                Some("Milano Centrale"),
-                Some("verde lichene/giallo coloniale"),
-                false,
-                Some(length),
-                Some(Control::DccReady),
-                Some(DccInterface::Nem652),
-                Some(tech_specs.clone()),
-            );
-
-            assert_eq!(&id, power_car.id_as_ref());
-            assert_eq!(RollingStockCategory::Railcar, power_car.category());
-            assert_eq!(Some("verde lichene/giallo coloniale"), power_car.livery());
-            assert_eq!(Some(&length), power_car.length_over_buffer());
-            assert_eq!(&fs, power_car.railway());
-            assert_eq!(Some("ALn 668 1449"), power_car.road_number());
-            assert_eq!(Some(DccInterface::Nem652), power_car.dcc_interface());
-            assert_eq!(Some(Control::DccReady), power_car.control());
-            assert_eq!(Some(&tech_specs), power_car.technical_specifications());
-        }
-
-        #[test]
-        fn it_should_create_new_freight_cars() {
-            let id = RollingStockId::new();
-            let length = LengthOverBuffers::from_millimeters(Length::Millimeters(dec!(303)));
-            let fs = RollingStockRailway::new(RailwayCompanyId::new("fs"), "FS");
-
-            let tech_specs = technical_specification();
-
-            let freight_car = RollingStock::new_freight_car(
-                id.clone(),
-                "Fals",
-                None,
-                Some("31 83 665 0 150-6"),
-                fs.clone(),
-                Some(FreightCarType::Gondola),
-                Some("castano"),
-                Some(length),
-                Some(tech_specs.clone()),
-            );
-
-            assert_eq!(&id, freight_car.id_as_ref());
-            assert_eq!(RollingStockCategory::FreightCar, freight_car.category());
-            assert_eq!(Some("castano"), freight_car.livery());
-            assert_eq!(Some(&length), freight_car.length_over_buffer());
-            assert_eq!(&fs, freight_car.railway());
-            assert_eq!(Some("31 83 665 0 150-6"), freight_car.road_number());
-            assert_eq!(None, freight_car.dcc_interface());
-            assert_eq!(None, freight_car.control());
-            assert_eq!(Some(&tech_specs), freight_car.technical_specifications());
-        }
-
-        fn technical_specification() -> TechnicalSpecifications {
-            let radius = Radius::from_millimeters(dec!(360.0)).unwrap();
-            let coupling = Coupling::with_close_couplers(CouplingSocket::Nem362);
-            TechnicalSpecificationsBuilder::default()
-                .with_coupling(coupling)
-                .with_minimum_radius(radius)
-                .build()
         }
     }
 }

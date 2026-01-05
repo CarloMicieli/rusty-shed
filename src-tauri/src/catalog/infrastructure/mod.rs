@@ -1,6 +1,5 @@
-pub mod database;
 pub mod entities;
 pub mod manufacturer;
 pub mod mappers;
 pub mod railway_company;
-pub mod repository;
+mod railway_model;

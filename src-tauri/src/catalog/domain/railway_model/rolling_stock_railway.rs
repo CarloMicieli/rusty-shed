@@ -12,7 +12,7 @@ use std::fmt;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, specta::Type)]
 pub struct RollingStockRailway {
     /// the railway unique identifier
-    pub railway_id: RailwayCompanyId,
+    pub railway_company_id: RailwayCompanyId,
     /// the railway display name
     pub display: String,
 }
@@ -22,14 +22,14 @@ impl RollingStockRailway {
     /// human-friendly `display` text.
     pub fn new(railway_id: RailwayCompanyId, display: &str) -> Self {
         RollingStockRailway {
-            railway_id,
+            railway_company_id: railway_id,
             display: display.to_owned(),
         }
     }
 
     /// Returns this railway's unique identifier.
     pub fn id(&self) -> &RailwayCompanyId {
-        &self.railway_id
+        &self.railway_company_id
     }
 
     /// Returns this railway's display text.
