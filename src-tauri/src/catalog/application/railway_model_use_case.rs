@@ -10,7 +10,7 @@ use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::{RailwayModelParams, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::repository::CatalogUowExt;
-use crate::core::application::validation::ValidationContext;
+use crate::core::domain::validation::ValidationContext;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 

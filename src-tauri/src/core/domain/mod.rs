@@ -5,6 +5,7 @@ pub mod length;
 pub mod measure_units;
 pub mod monetary_amount;
 pub mod trn;
+pub mod validation;
 
 pub use currency::Currency;
 pub use monetary_amount::MonetaryAmount;

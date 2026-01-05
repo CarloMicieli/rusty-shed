@@ -1,4 +1,4 @@
-use crate::core::application::validation::ValidationError;
+use crate::core::domain::validation::ValidationError;
 use std::collections::HashMap;
 
 /// This enum categorizes errors to help the Interface layer decide

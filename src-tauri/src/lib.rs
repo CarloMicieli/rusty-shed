@@ -13,6 +13,7 @@ pub mod wishlist;
 #[cfg(test)]
 pub mod test_utils;
 
+use crate::core::interface::command_handlers as core_command_handlers;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::catalog::interface::manufacturers as manufacturers_command_handlers;
 use crate::catalog::interface::railway_companies as railway_companies_command_handlers;
@@ -80,19 +81,6 @@ async fn get_image_path(
 
 #[tauri::command]
 #[specta::specta]
-fn is_db_initialized(state: tauri::State<'_, AppState>) -> bool {
-    state.is_initialized()
-}
-
-#[tauri::command]
-#[specta::specta]
-fn get_app_version() -> String {
-    // Use the crate package version set at compile time
-    env!("CARGO_PKG_VERSION").to_string()
-}
-
-#[tauri::command]
-#[specta::specta]
 async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
     log::info!("init_database: starting migrations");
     Database::run_migrations(&state.db_pool())
@@ -141,7 +129,8 @@ pub fn run() {
     let is_dev_build = cfg!(debug_assertions);
 
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
-        is_db_initialized,
+        core_command_handlers::is_db_initialized,
+        core_command_handlers::get_app_version,
         init_database,
         show_main_window,
         manufacturers_command_handlers::get_manufacturers,
@@ -175,7 +164,6 @@ pub fn run() {
         sellers_command_handlers::delete_seller,
         dashboard_summary,
         get_image_path,
-        get_app_version,
         get_settings,
         update_settings
     ]);

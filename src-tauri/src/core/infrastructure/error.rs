@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 use super::db::SqliteDbError;
-use crate::core::application::validation::ValidationError;
+use crate::core::domain::validation::ValidationError;
 use crate::core::domain::domain_error::DomainError;
 use serde::Serialize;
 
