@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::{Category, Control, Epoch};
+use crate::catalog::domain::railway_model::{Category, Control, Epoch, RailwayModelId};
 use crate::catalog::domain::scale::Scale;
 use serde::{Deserialize, Serialize};
 
@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 /// for displaying in a collection context, omitting extraneous catalog information.
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize, specta::Type)]
 pub struct CollectionRailwayModel {
+    /// The unique identifier of the railway model.
+    pub railway_model_id: RailwayModelId,
     /// The manufacturer of the railway model.
     pub manufacturer: String,
     /// The product code of the railway model.

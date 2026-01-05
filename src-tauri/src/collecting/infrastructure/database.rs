@@ -64,7 +64,11 @@ pub async fn get_collection_items(
              id,
              collection_id,
              railway_model_id,
-             conditions,
+             added_date,
+             removed_date,
+             purchase_condition,
+             model_condition,
+             box_condition,
              notes
    FROM collection_items
    WHERE collection_id = ?1"#;
@@ -195,7 +199,9 @@ pub async fn get_purchase_infos(
 
 #[cfg(test)]
 mod tests {
-    use crate::collecting::domain::CollectionId;
+    use crate::collecting::domain::{
+        BoxCondition, CollectionId, ModelCondition, PurchaseCondition,
+    };
     use anyhow::Result;
     use pretty_assertions::assert_eq;
     use sqlx::Sqlite;
@@ -244,8 +250,18 @@ mod tests {
             collection_item_row.railway_model_id,
             expected_railway_model_id
         );
-        // `conditions` and `notes` are Option<String> in the row mapping
-        assert_eq!(collection_item_row.conditions, Some("NEW".to_string()));
+        assert_eq!(
+            collection_item_row.purchase_condition,
+            Some(PurchaseCondition::New)
+        );
+        assert_eq!(
+            collection_item_row.box_condition,
+            Some(BoxCondition::OriginalMint)
+        );
+        assert_eq!(
+            collection_item_row.model_condition,
+            Some(ModelCondition::Mint)
+        );
         assert_eq!(
             collection_item_row.notes,
             Some("My notes go here".to_string())

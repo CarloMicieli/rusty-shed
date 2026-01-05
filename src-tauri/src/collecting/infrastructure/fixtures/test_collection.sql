@@ -42,7 +42,7 @@ VALUES ('trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8',
         'DCC_READY',
         0);
 
--- 2. Insert an FS UIC-Z1 Passenger Coach (Biglietto proiettile style)
+-- 2. Insert an FS UIC-Z1 Passenger Coach
 INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category,
                             availability_status)
 VALUES ('trn:railway-model:rivarossi:hr4315',
@@ -70,11 +70,14 @@ VALUES ('trn:rolling-stock:a709c07f-3458-40f8-8659-0d70250c0b70',
 INSERT INTO collections(id, name)
 VALUES ('trn:collection:1', 'Test Collection');
 
-INSERT INTO collection_items(id, collection_id, railway_model_id, conditions, notes)
+INSERT INTO collection_items(id, collection_id, railway_model_id, added_date, purchase_condition, box_condition, model_condition, notes)
 VALUES('trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730',
        'trn:collection:1',
        'trn:railway-model:acme:60100',
+       '2025-12-26',
        'NEW',
+       'ORIGINAL_MINT',
+       'MINT',
        'My notes go here');
 
 INSERT INTO owned_rolling_stocks(id, collection_item_id, rolling_stock_id, notes)

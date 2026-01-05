@@ -1,9 +1,9 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_model::{DccInterface, RailwayModelId, RollingStockId};
-use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::collecting::domain::PurchaseInfoId;
+use crate::collecting::domain::{BoxCondition, CollectionId, ModelCondition, PurchaseCondition};
 use crate::dcc_inventory::domain::{DecoderId, DecoderType, DigitalProtocol};
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::{NaiveDate, NaiveDateTime};
@@ -31,7 +31,11 @@ pub struct CollectionItemRow {
     pub id: CollectionItemId,
     pub collection_id: CollectionId,
     pub railway_model_id: RailwayModelId,
-    pub conditions: Option<String>,
+    pub added_date: NaiveDate,
+    pub removed_date: Option<NaiveDate>,
+    pub purchase_condition: Option<PurchaseCondition>,
+    pub model_condition: Option<ModelCondition>,
+    pub box_condition: Option<BoxCondition>,
     pub notes: Option<String>,
 }
 

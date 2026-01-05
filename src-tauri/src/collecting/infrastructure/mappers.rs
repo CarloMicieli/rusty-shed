@@ -127,17 +127,23 @@ impl CollectionMapper {
             })
             .unwrap_or_default();
 
+        let purchase_info = purchase_info_map
+            .get(&collection_item_id)
+            .and_then(|pi_list| pi_list.first())
+            .and_then(|pi_row| Self::row_to_purchase_info(pi_row).ok());
+
         Ok(CollectionItem {
-            id: collection_item_id.clone(),
-            railway_model_id: row.railway_model_id.clone(),
-            conditions: row.conditions.clone(),
+            id: collection_item_id,
+            railway_model_id: row.railway_model_id,
+            purchase_condition: row.purchase_condition,
+            model_condition: row.model_condition,
+            box_condition: row.box_condition,
+            added_date: row.added_date,
+            removed_date: row.removed_date,
             railway_model: None,
-            notes: row.notes.clone(),
+            notes: row.notes,
             rolling_stocks: owned_rolling_stocks,
-            purchase_info: purchase_info_map
-                .get(&collection_item_id)
-                .and_then(|pi_list| pi_list.first())
-                .and_then(|pi_row| Self::row_to_purchase_info(pi_row).ok()),
+            purchase_info,
         })
     }
 
@@ -231,10 +237,12 @@ impl CollectionMapper {
 mod tests {
     use super::*;
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
-    use crate::collecting::domain::CollectionId;
     use crate::collecting::domain::CollectionItemId;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::collecting::domain::PurchaseInfoId;
+    use crate::collecting::domain::{
+        BoxCondition, CollectionId, ModelCondition, PurchaseCondition,
+    };
     use crate::collecting::infrastructure::entities::{
         CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
     };
@@ -293,7 +301,11 @@ mod tests {
             id: item_id.clone(),
             collection_id: CollectionId::default(),
             railway_model_id: railway_model_id.clone(),
-            conditions: Some("new".to_string()),
+            added_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            removed_date: None,
+            purchase_condition: Some(PurchaseCondition::New),
+            model_condition: Some(ModelCondition::Mint),
+            box_condition: Some(BoxCondition::OriginalMint),
             notes: Some("My notes go here".to_string()),
         };
 
@@ -356,7 +368,9 @@ mod tests {
 
         assert_eq!(mapped_item.id, collection_item_id);
         assert_eq!(mapped_item.railway_model_id, railway_model_id);
-        assert_eq!(mapped_item.conditions, Some("new".to_string()));
+        assert_eq!(mapped_item.purchase_condition, Some(PurchaseCondition::New));
+        assert_eq!(mapped_item.model_condition, Some(ModelCondition::Mint));
+        assert_eq!(mapped_item.box_condition, Some(BoxCondition::OriginalMint));
         assert_eq!(mapped_item.notes, Some("My notes go here".to_string()));
 
         assert_eq!(mapped_item.rolling_stocks.len(), 1);

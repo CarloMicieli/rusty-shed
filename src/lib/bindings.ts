@@ -518,6 +518,33 @@ export type BodyShellType =
    */
   | 'METAL_DIE_CAST';
 /**
+ * The condition of the original packaging box for a collectible item.
+ *
+ * ### Notes
+ * In the railway hobby, the box can sometimes represent 30%–50% of the total value, especially for vintage brands like Hornby Dublo or Lionel.
+ */
+export type BoxCondition =
+  /**
+   * Box is crisp, no tears, no "shelf wear."
+   */
+  | 'ORIGINAL_MINT'
+  /**
+   * Some corner scuffing or minor creases.
+   */
+  | 'ORIGINAL_GOOD'
+  /**
+   * Significant tears, tape repairs, or faded colors.
+   */
+  | 'ORIGINAL_WORN'
+  /**
+   * Not the original box, but a suitable storage box.
+   */
+  | 'REPLACEMENT_BOX'
+  /**
+   * "Loose" model with no packaging at all.
+   */
+  | 'NO_BOX';
+/**
  * The enumeration of the railway model categories.
  */
 export type Category =
@@ -637,11 +664,31 @@ export type CollectionItem = {
    * This is a reference to the canonical model in the catalog; use this
    * to look up full catalog details (manufacturer, product codes, etc.).
    */
-  railway_model_id: string;
+  railway_model_id: RailwayModelId;
+  /**
+   * A lightweight view of the railway model details
+   */
+  railway_model: CollectionRailwayModel | null;
+  /**
+   * Date when this item was added to the collection.
+   */
+  added_date: string;
+  /**
+   * Date when this item was removed from the collection, if applicable.
+   */
+  removed_date: string | null;
   /**
    * Condition of the item as recorded by the owner (e.g. "mint", "used").
    */
-  conditions: string | null;
+  purchase_condition: PurchaseCondition | null;
+  /**
+   * Physical and mechanical condition of the model as recorded by the owner.
+   */
+  model_condition: ModelCondition | null;
+  /**
+   * Condition of the original packaging box for this item.
+   */
+  box_condition: BoxCondition | null;
   /**
    * Free-form notes provided by the owner for this collection item.
    */
@@ -676,6 +723,42 @@ export type CollectionItemLite = {
   description: string | null;
   tags: string[];
   createdAt: string;
+};
+/**
+ * A lightweight representation of a railway model for collection display purposes.
+ *
+ * This struct captures the essential details of a railway model as needed
+ * for displaying in a collection context, omitting extraneous catalog information.
+ */
+export type CollectionRailwayModel = {
+  /**
+   * The manufacturer of the railway model.
+   */
+  manufacturer: string;
+  /**
+   * The product code of the railway model.
+   */
+  product_code: string;
+  /**
+   * The scale of the railway model.
+   */
+  scale: Scale;
+  /**
+   * The epoch of the railway model.
+   */
+  epoch: Epoch;
+  /**
+   * A brief description of the railway model.
+   */
+  description: string;
+  /**
+   * The control type of the railway model, if specified.
+   */
+  control: Control | null;
+  /**
+   * The category of the railway model, if specified.
+   */
+  category: Category | null;
 };
 /**
  * A statistical summary of a model railway collection.
@@ -1499,6 +1582,42 @@ export type ManufacturerId = string;
 export type ManufacturerStatus = 'ACTIVE' | 'MERGED' | 'OUT_OF_BUSINESS';
 export type MeasureUnit = 'Millimeters' | 'Inches' | 'Meters' | 'Miles' | 'Kilometers';
 /**
+ * This represents the physical and mechanical state of the locomotive or rolling stock.
+ */
+export type ModelCondition =
+  /**
+   * Brand new, no signs of use, factory fresh.
+   */
+  | 'MINT'
+  /**
+   * Almost like new, with only very minor signs of handling.
+   */
+  | 'NEAR_MINT'
+  /**
+   * Clean, very light use, no missing detail parts.
+   */
+  | 'EXCELLENT'
+  /**
+   * Minor wear from use; paint is still strong.
+   */
+  | 'VERY_GOOD'
+  /**
+   * Visible wear, small scratches, but functional.
+   */
+  | 'GOOD'
+  /**
+   * Significant wear, missing small parts (couplers, buffers).
+   */
+  | 'FAIR'
+  /**
+   * Heavy damage, non-functional, or heavily modified.
+   */
+  | 'POOR'
+  /**
+   * Not a runner; only useful for salvaging components.
+   */
+  | 'FOR_PARTS';
+/**
  * A monetary amount in the smallest currency unit together with its currency.
  *
  * `MonetaryAmount` stores the raw integer amount (e.g. cents) in `amount` and
@@ -1555,7 +1674,7 @@ export type OwnedRollingStock = {
   /**
    * Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
    */
-  rolling_stock_id: string;
+  rolling_stock_id: RollingStockId;
   /**
    * Free-form notes associated with this owned instance.
    * Use this for short owner notes or a brief textual label.
@@ -1717,7 +1836,7 @@ export type PreOrderInfo = {
   /**
    * Optional seller identifier or shop name.
    */
-  seller: string | null;
+  seller: SellerId | null;
   /**
    * Optional expected delivery date (ETA) for the preorder.
    */
@@ -1738,6 +1857,18 @@ export type PreOrderInfo = {
  * empty or contains only whitespace.
  */
 export type ProductCode = string;
+/**
+ * The condition under which a collectible item was purchased.
+ */
+export type PurchaseCondition =
+  /**
+   * The item was purchased brand new from a retailer.
+   */
+  | 'NEW'
+  /**
+   * The item was purchased second-hand from another collector or seller.
+   */
+  | 'PRE_OWNED';
 /**
  * Purchase information associated with a `CollectionItem`.
  *
@@ -1800,7 +1931,7 @@ export type PurchasedInfo = {
   /**
    * Optional seller identifier or human-friendly name.
    */
-  seller: string | null;
+  seller: SellerId | null;
 };
 /**
  * Represents one of the four three-month segments of a calendar year.
@@ -2496,7 +2627,7 @@ export type SoldInfo = {
    * Optional seller identifier for completeness (may be the shop that
    * originally sold the item or the intermediary that handled the sale).
    */
-  seller: string | null;
+  seller: SellerId | null;
 };
 /**
  * The technical specification data for a rolling stock model
