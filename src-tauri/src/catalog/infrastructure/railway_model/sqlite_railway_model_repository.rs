@@ -556,7 +556,10 @@ mod tests {
                 WHERE railway_model_id = ?1
             "#;
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../../fixtures/test_railway_model.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn it_should_insert_railway_models(pool: sqlx::SqlitePool) {
         let mut conn = pool.acquire().await.expect("should acquire connection");
 
@@ -607,7 +610,10 @@ mod tests {
         assert_eq!(availability_status, Some("AVAILABLE".to_string()));
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../../fixtures/test_railway_model.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn it_should_insert_locomotive_rolling_stocks(pool: sqlx::SqlitePool) {
         let railway_model_id =
             RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
@@ -665,7 +671,10 @@ mod tests {
         assert_eq!(control, Some("DCC_READY".to_string()));
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../../fixtures/test_railway_model.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn it_should_insert_freight_car_rolling_stocks(pool: sqlx::SqlitePool) {
         let railway_model_id =
             RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
@@ -713,7 +722,10 @@ mod tests {
         assert_eq!(is_dummy, 0);
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../../fixtures/test_railway_model.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn it_should_insert_passenger_car_rolling_stocks(pool: sqlx::SqlitePool) {
         let railway_model_id =
             RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
@@ -765,7 +777,10 @@ mod tests {
         assert_eq!(is_dummy, 0);
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../../fixtures/test_railway_model.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn it_should_insert_railcar_rolling_stocks(pool: sqlx::SqlitePool) {
         let railway_model_id =
             RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
@@ -823,7 +838,10 @@ mod tests {
         assert_eq!(control, Some("DCC_READY".to_string()));
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../../fixtures/test_railway_model.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
     async fn it_should_insert_emu_rolling_stocks(pool: sqlx::SqlitePool) {
         let railway_model_id =
             RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");

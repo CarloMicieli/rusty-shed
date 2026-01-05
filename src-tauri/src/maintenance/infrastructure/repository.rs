@@ -230,7 +230,10 @@ mod tests {
     use crate::maintenance::infrastructure::repository::{MaintenanceUowExt, NewMaintenanceEvent};
 
     #[ignore]
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_maintenance.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
     async fn repo_get_card_by_stock_id_found(pool: SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
         let mut repo = uow.maintenance_repo();
@@ -249,7 +252,10 @@ mod tests {
     }
 
     #[ignore]
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_maintenance.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
     async fn repo_list_events_order(pool: SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
         let mut repo = uow.maintenance_repo();
@@ -268,7 +274,10 @@ mod tests {
     }
 
     #[ignore]
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_maintenance.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
     async fn repo_list_due_cards(pool: SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
         let mut repo = uow.maintenance_repo();
@@ -281,7 +290,10 @@ mod tests {
     }
 
     #[ignore]
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_maintenance.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
     async fn repo_record_event_transaction_via_repo(pool: SqlitePool) {
         let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
         let mut repo = uow.maintenance_repo();

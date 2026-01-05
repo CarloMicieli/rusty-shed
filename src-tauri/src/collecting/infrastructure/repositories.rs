@@ -128,7 +128,10 @@ mod tests {
         assert_eq!(collection.items.len(), 0);
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_collection.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
     async fn it_should_return_the_collection_data(conn: sqlx::SqlitePool) {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn)
             .await

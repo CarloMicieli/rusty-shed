@@ -202,7 +202,10 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_collection.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
     async fn get_collection_returns_some(mut conn: PoolConnection<Sqlite>) -> Result<()> {
         let result = super::get_collection(&mut conn, &CollectionId::default()).await?;
 
@@ -216,7 +219,10 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_collection.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
     async fn get_collection_items(mut conn: PoolConnection<Sqlite>) -> Result<()> {
         let result = super::get_collection_items(&mut conn, &CollectionId::default()).await?;
 
@@ -263,7 +269,10 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_collection.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
     async fn get_owned_rolling_stocks(mut conn: PoolConnection<Sqlite>) -> Result<()> {
         let result = super::get_owned_rolling_stocks(&mut conn, &CollectionId::default()).await?;
 
@@ -300,7 +309,10 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_collection.sql"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
     async fn get_purchase_infos(mut conn: PoolConnection<Sqlite>) -> Result<()> {
         let result = super::get_purchase_infos(&mut conn, &CollectionId::default()).await?;
 
