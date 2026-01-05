@@ -18,12 +18,12 @@
     "test:ci": "vitest --run --environment happy-dom",
     "test:coverage": "vitest --run --environment happy-dom --coverage",
     "tauri": "tauri",
-    "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
     "rust:build": "cargo build --manifest-path src-tauri/Cargo.toml",
     "rust:run": "cargo run --manifest-path src-tauri/Cargo.toml",
     "rust:test": "cargo test --manifest-path src-tauri/Cargo.toml",
     "rust:clean": "cargo clean --manifest-path src-tauri/Cargo.toml",
-    "rust:lint": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings"
+    "rust:lint": "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings"
   },
   "license": "MIT",
   "dependencies": {
