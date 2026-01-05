@@ -549,6 +549,8 @@ mod tests {
 
     mod model_railway_repository {
         use super::*;
+        use crate::catalog::domain::manufacturer::ManufacturerId;
+        use crate::catalog::domain::railway_company::RailwayCompanyId;
         use crate::catalog::domain::railway_model::AvailabilityStatus;
         use crate::catalog::domain::railway_model::Control;
         use crate::catalog::domain::railway_model::DccInterface;
@@ -562,8 +564,6 @@ mod tests {
         use crate::catalog::domain::scale::Scale;
         use pretty_assertions::assert_eq;
         use sqlx::Row;
-        use crate::catalog::domain::manufacturer::ManufacturerId;
-        use crate::catalog::domain::railway_company::RailwayCompanyId;
 
         const TEST_RAILWAY_MODEL_ID: &str = "trn:railway-model:acme:1234";
         const RAILWAY_MODEL_QUERY: &str = r#"

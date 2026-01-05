@@ -1,7 +1,5 @@
 use crate::catalog::application::{GetRailwayCompaniesQuery, GetRailwayCompanyByIdQuery};
-use crate::catalog::domain::railway_company::{
-    RailwayCompany, RailwayCompanyId,
-};
+use crate::catalog::domain::railway_company::{RailwayCompany, RailwayCompanyId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use tauri::State;

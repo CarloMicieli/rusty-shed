@@ -1,9 +1,9 @@
-pub mod create_railway_model;
-pub mod create_railway_model_input;
-mod get_manufacturers_query;
-mod get_railway_companies_query;
+mod manufacturer_query;
+mod railway_company_query;
+pub mod railway_model_use_case;
+pub mod railway_model_use_case_input;
 
-pub use get_manufacturers_query::GetManufacturerByIdQuery;
-pub use get_manufacturers_query::GetManufacturersQuery;
-pub use get_railway_companies_query::GetRailwayCompaniesQuery;
-pub use get_railway_companies_query::GetRailwayCompanyByIdQuery;
+pub use manufacturer_query::GetManufacturerByIdQuery;
+pub use manufacturer_query::GetManufacturersQuery;
+pub use railway_company_query::GetRailwayCompaniesQuery;
+pub use railway_company_query::GetRailwayCompanyByIdQuery;

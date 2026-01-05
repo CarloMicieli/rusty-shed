@@ -1,4 +1,4 @@
-use crate::catalog::application::create_railway_model_input::{
+use crate::catalog::application::railway_model_use_case_input::{
     CouplingInput, CreateRollingStockInput, LengthOverBuffersInput, TechnicalSpecificationsInput,
 };
 use crate::catalog::domain::railway_company::RailwayCompanyId;

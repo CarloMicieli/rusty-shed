@@ -1,5 +1,5 @@
-use crate::catalog::application::create_railway_model::CreateRailwayModelUseCase;
-use crate::catalog::application::create_railway_model_input::CreateRailwayModelInput;
+use crate::catalog::application::railway_model_use_case::CreateRailwayModelUseCase;
+use crate::catalog::application::railway_model_use_case_input::CreateRailwayModelInput;
 use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
