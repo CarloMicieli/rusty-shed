@@ -10,9 +10,10 @@ pub const TRN_ITEM_PREFIX: &str = "trn:collection-item:";
 /// This newtype wraps a `String` containing a TRN of the form
 /// `trn:collection-item:{uuid}`. Construction from strings is fallible — the
 /// string must start with the TRN prefix and the suffix must be a valid UUID.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, sqlx::Type, specta::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
+#[sqlx(transparent)]
 pub struct CollectionItemId(String);
 
 /// Errors that can occur when creating a `CollectionItemId` from a string.

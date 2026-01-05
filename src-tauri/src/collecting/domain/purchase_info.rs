@@ -1,5 +1,6 @@
-use crate::collecting::domain::purchase_info_id::PurchaseInfoId;
-use crate::core::domain::MonetaryAmount;
+use crate::collecting::domain::PurchaseInfoId;
+use crate::core::domain::{Error, MonetaryAmount};
+use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
@@ -74,7 +75,7 @@ pub struct PurchasedInfo {
     pub price: Option<MonetaryAmount>,
 
     /// Optional seller identifier or human-friendly name.
-    pub seller: Option<String>,
+    pub seller: Option<SellerId>,
 }
 
 /// Details for an item that was sold.
@@ -111,7 +112,7 @@ pub struct SoldInfo {
 
     /// Optional seller identifier for completeness (may be the shop that
     /// originally sold the item or the intermediary that handled the sale).
-    pub seller: Option<String>,
+    pub seller: Option<SellerId>,
 }
 
 /// Details for a pre-order entry.
@@ -134,7 +135,7 @@ pub struct PreOrderInfo {
     pub total_price: MonetaryAmount,
 
     /// Optional seller identifier or shop name.
-    pub seller: Option<String>,
+    pub seller: Option<SellerId>,
 
     /// Optional expected delivery date (ETA) for the preorder.
     pub expected_date: Option<NaiveDate>,
@@ -146,9 +147,9 @@ impl PreOrderInfo {
     ///
     /// Returns `Ok(())` when currencies match, otherwise returns
     /// `crate::core::domain::error::Error::CurrencyMismatch`.
-    pub fn validate_currencies_match(&self) -> Result<(), crate::core::domain::error::Error> {
+    pub fn validate_currencies_match(&self) -> Result<(), Error> {
         if self.deposit.currency != self.total_price.currency {
-            return Err(crate::core::domain::error::Error::CurrencyMismatch);
+            return Err(Error::CurrencyMismatch);
         }
         Ok(())
     }
@@ -168,7 +169,7 @@ mod tests {
             id: PurchaseInfoId::new("p1"),
             purchase_date: NaiveDate::from_ymd_opt(2023, 10, 1).unwrap(),
             price: Some(MonetaryAmount::new(1500, Currency::EUR)),
-            seller: Some("shop-1".to_string()),
+            seller: Some(SellerId::try_from("shop-1").unwrap()),
         };
         let pi = PurchaseInfo::Purchased(p.clone());
         assert_eq!(pi.id(), "p1");
@@ -184,7 +185,7 @@ mod tests {
             sale_date: NaiveDate::from_ymd_opt(2024, 1, 15).unwrap(),
             sale_price: MonetaryAmount::new(2500, Currency::USD),
             buyer: Some("buyer-1".to_string()),
-            seller: Some("seller-shop".to_string()),
+            seller: Some(SellerId::try_from("seller-shop").unwrap()),
         };
         let pi = PurchaseInfo::Sold(s.clone());
         assert_eq!(pi.id(), "s1");

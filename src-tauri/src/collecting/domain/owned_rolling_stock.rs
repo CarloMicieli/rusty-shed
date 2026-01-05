@@ -1,6 +1,6 @@
-use crate::catalog::domain::railway_model::DccInterface;
-use crate::collecting::domain::digital_setup::DigitalSetup;
-use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
+use crate::catalog::domain::railway_model::{DccInterface, RollingStockId};
+use crate::collecting::domain::DigitalSetup;
+use crate::collecting::domain::OwnedRollingStockId;
 use crate::dcc_inventory::domain::Decoder;
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -19,7 +19,7 @@ pub struct OwnedRollingStock {
     pub id: OwnedRollingStockId,
 
     /// Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
-    pub rolling_stock_id: String,
+    pub rolling_stock_id: RollingStockId,
 
     /// Free-form notes associated with this owned instance.
     /// Use this for short owner notes or a brief textual label.
@@ -86,9 +86,10 @@ mod tests {
 
     #[test]
     fn install_decoder_validates_address_and_interface() {
+        let rolling_stock_id = RollingStockId::new();
         let mut ors = OwnedRollingStock {
             id: OwnedRollingStockId::new("ors-1"),
-            rolling_stock_id: "rs-1".to_string(),
+            rolling_stock_id,
             notes: "".to_string(),
             digital: None,
         };

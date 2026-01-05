@@ -78,7 +78,7 @@ VALUES('trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730',
        'My notes go here');
 
 INSERT INTO owned_rolling_stocks(id, collection_item_id, rolling_stock_id, notes)
-VALUES('trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-02c7ce47bc770',
+VALUES('trn:owned-rolling-stock:77122924-783e-4f3c-a6b5-f4caec9e695d',
        'trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730',
        'trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8',
        'My rolling stock notes go here');

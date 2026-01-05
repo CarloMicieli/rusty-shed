@@ -1,5 +1,5 @@
 use crate::collecting::application::get_collection::GetCollectionUseCase;
-use crate::collecting::domain::collection::Collection;
+use crate::collecting::domain::Collection;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
@@ -136,7 +136,7 @@ fn pick_recent_items(collection: &Collection) -> Vec<DashboardRecentItem> {
                 id: item.id.to_string(),
                 title: product_code
                     .clone()
-                    .unwrap_or_else(|| item.railway_model_id.clone()),
+                    .unwrap_or_else(|| item.railway_model_id.to_string()),
                 subtitle: manufacturer,
             }
         })

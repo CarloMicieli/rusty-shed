@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Deref;
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// TRN prefix used for purchase identifiers.
@@ -12,9 +13,10 @@ pub const TRN_PURCHASE_PREFIX: &str = "trn:purchase:";
 /// The inner string is private. Use `TryFrom<&str>` to validate TRN inputs or
 /// `From<Uuid>` / `Default` to generate new ids. The type derefs to `str` for
 /// ergonomic access to the underlying string.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, specta::Type, sqlx::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
+#[sqlx(transparent)]
 pub struct PurchaseInfoId(String);
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -87,6 +89,14 @@ impl Default for PurchaseInfoId {
 impl fmt::Display for PurchaseInfoId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl FromStr for PurchaseInfoId {
+    type Err = PurchaseInfoIdError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        PurchaseInfoId::try_from(s)
     }
 }
 

@@ -6,7 +6,7 @@
 //! for returning over the IPC boundary.
 
 use crate::collecting::application::get_collection::GetCollectionUseCase;
-use crate::collecting::domain::collection::Collection;
+use crate::collecting::domain::Collection;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;

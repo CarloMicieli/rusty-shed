@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Formatter;
 use std::str;
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// TRN prefix for rolling stock identifiers.
@@ -90,6 +91,14 @@ impl From<Uuid> for RollingStockId {
     /// Convert a `Uuid` into a `RollingStockId` TRN.
     fn from(id: Uuid) -> Self {
         RollingStockId(format!("{}{}", TRN_RS_PREFIX, id))
+    }
+}
+
+impl TryFrom<&str> for RollingStockId {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        RollingStockId::from_str(value)
     }
 }
 

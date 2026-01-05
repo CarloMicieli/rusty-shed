@@ -1,6 +1,6 @@
-use crate::collecting::domain::collection_id::CollectionId;
-use crate::collecting::domain::collection_item::CollectionItem;
-use crate::collecting::domain::summary::CollectionSummary;
+use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::CollectionItem;
+use crate::collecting::domain::CollectionSummary;
 use crate::core::domain::MonetaryAmount;
 use serde::{Deserialize, Serialize};
 

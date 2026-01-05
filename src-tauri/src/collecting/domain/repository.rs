@@ -1,4 +1,4 @@
-use crate::collecting::domain::collection::Collection;
+use crate::collecting::domain::Collection;
 
 /// A domain-agnostic interface for collection data access.
 ///

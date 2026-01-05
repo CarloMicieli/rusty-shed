@@ -1,7 +1,8 @@
-use crate::collecting::domain::collection::Collection;
+use crate::collecting::domain::Collection;
 use crate::collecting::infrastructure::repositories::CollectingUowExt;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 
+#[derive(Debug, Default)]
 pub struct GetCollectionUseCase;
 
 impl GetCollectionUseCase {

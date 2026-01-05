@@ -1,6 +1,8 @@
-use crate::collecting::domain::collection_item_id::CollectionItemId;
-use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
-use crate::collecting::domain::purchase_info::PurchaseInfo;
+use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::collecting::domain::CollectionItemId;
+use crate::collecting::domain::CollectionRailwayModel;
+use crate::collecting::domain::OwnedRollingStock;
+use crate::collecting::domain::PurchaseInfo;
 use serde::{Deserialize, Serialize};
 
 /// A single item within a user's collection.
@@ -19,7 +21,9 @@ pub struct CollectionItem {
     ///
     /// This is a reference to the canonical model in the catalog; use this
     /// to look up full catalog details (manufacturer, product codes, etc.).
-    pub railway_model_id: String,
+    pub railway_model_id: RailwayModelId,
+
+    pub railway_model: Option<CollectionRailwayModel>,
 
     /// Condition of the item as recorded by the owner (e.g. "mint", "used").
     pub conditions: Option<String>,

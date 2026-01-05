@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use slug::slugify;
+use std::ops::Deref;
 
 /// Strongly-typed identifier for a seller. Format: `trn:seller:{slug}`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::Type)]
@@ -8,6 +9,14 @@ use slug::slugify;
 #[serde(transparent)]
 #[specta(transparent)]
 pub struct SellerId(pub String);
+
+impl Deref for SellerId {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl SellerId {
     pub fn new_from_name(name: &str) -> Self {

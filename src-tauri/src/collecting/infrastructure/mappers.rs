@@ -1,13 +1,10 @@
-use crate::catalog::domain::railway_model::DccInterface;
-use crate::collecting::domain::collection::Collection;
-use crate::collecting::domain::collection_id::CollectionId;
-use crate::collecting::domain::collection_item::CollectionItem;
-use crate::collecting::domain::collection_item_id::CollectionItemId;
-use crate::collecting::domain::digital_setup::DigitalSetup;
-use crate::collecting::domain::owned_rolling_stock::OwnedRollingStock;
-use crate::collecting::domain::purchase_info::PurchaseInfo;
-use crate::collecting::domain::purchase_info_id::PurchaseInfoId;
-use crate::collecting::domain::summary::CollectionSummary;
+use crate::collecting::domain::Collection;
+use crate::collecting::domain::CollectionItem;
+use crate::collecting::domain::CollectionItemId;
+use crate::collecting::domain::CollectionSummary;
+use crate::collecting::domain::DigitalSetup;
+use crate::collecting::domain::OwnedRollingStock;
+use crate::collecting::domain::PurchaseInfo;
 use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
@@ -47,10 +44,8 @@ impl CollectionMapper {
         row: CollectionRow,
         items: Vec<CollectionItem>,
     ) -> anyhow::Result<Collection> {
-        let collection_id = CollectionId::try_from(row.id).map_err(|e| anyhow!(e))?;
-
         Ok(Collection {
-            id: collection_id,
+            id: row.id,
             name: row.name,
             summary: CollectionSummary {
                 locomotives_count: row.locomotives_count as u16,
@@ -81,7 +76,7 @@ impl CollectionMapper {
     /// - `purchase_info_map`: Map from `CollectionItemId` to the rows of
     ///   `purchase_infos` related to that item. When multiple purchase info
     ///   rows are present only the first is considered (matching existing
-    ///   repository behaviour).
+    ///   repository behavior).
     ///
     /// Returns the mapped `CollectionItem` or an error when the item's id
     /// cannot be parsed.
@@ -90,7 +85,7 @@ impl CollectionMapper {
         owned_rolling_stocks_map: &HashMap<CollectionItemId, Vec<OwnedRollingStockRow>>,
         purchase_info_map: &HashMap<CollectionItemId, Vec<PurchaseInfoRow>>,
     ) -> anyhow::Result<CollectionItem> {
-        let collection_item_id = CollectionItemId::try_from(&row.id).map_err(|e| anyhow!(e))?;
+        let collection_item_id = row.id;
 
         let owned_rolling_stocks = owned_rolling_stocks_map
             .get(&collection_item_id)
@@ -100,11 +95,8 @@ impl CollectionMapper {
                     .map(|rs_row| {
                         // Basic fields
                         let mut ors = OwnedRollingStock {
-                            id: crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId::new(rs_row.id.clone()),
-                            rolling_stock_id: rs_row
-                                .rolling_stock_id
-                                .clone()
-                                .unwrap_or_else(|| rs_row.id.clone()),
+                            id: rs_row.id.clone(),
+                            rolling_stock_id: rs_row.rolling_stock_id.clone().unwrap(),
                             notes: rs_row.notes.clone().unwrap_or_default(),
                             digital: None,
                         };
@@ -116,16 +108,15 @@ impl CollectionMapper {
                                 let addr_u16 = addr_i64 as u16;
 
                                 // decoder_interface must be present in the joined columns
-                                if let Some(dec_if) = &rs_row.decoder_interface {
-                                    // Parse interface string into DccInterface
-                                    let interface = dec_if.parse::<DccInterface>();
-                                    if let Ok(interface) = interface {
-                                        ors.digital = Some(DigitalSetup {
-                                            interface,
-                                            dcc_address: addr_u16,
-                                            installed_decoder_id: installed_id.parse().unwrap_or_else(|_| DecoderId::new(installed_id.clone())),
-                                        });
-                                    }
+                                if let Some(interface) = &rs_row.decoder_interface {
+                                    ors.digital = Some(DigitalSetup {
+                                        // `DccInterface` implements `Copy` so avoid cloning
+                                        interface: *interface,
+                                        dcc_address: addr_u16,
+                                        installed_decoder_id: installed_id.parse().unwrap_or_else(
+                                            |_| DecoderId::new(installed_id.clone()),
+                                        ),
+                                    });
                                 }
                             }
                         }
@@ -138,8 +129,9 @@ impl CollectionMapper {
 
         Ok(CollectionItem {
             id: collection_item_id.clone(),
-            railway_model_id: row.railway_model_id,
+            railway_model_id: row.railway_model_id.clone(),
             conditions: row.conditions.clone(),
+            railway_model: None,
             notes: row.notes.clone(),
             rolling_stocks: owned_rolling_stocks,
             purchase_info: purchase_info_map
@@ -152,7 +144,7 @@ impl CollectionMapper {
     /// Convert a single `PurchaseInfoRow` into the domain `PurchaseInfo`
     /// enum.
     ///
-    /// The function recognises the purchase types: `purchased`, `sold` and
+    /// The function recognizes the purchase types: `purchased`, `sold` and
     /// `preorder`. For each supported type the corresponding domain variant
     /// is returned. When optional numeric/currency fields are absent the
     /// function uses the domain helpers (`MonetaryAmount::from_db`) which may
@@ -160,7 +152,7 @@ impl CollectionMapper {
     /// invalid.
     ///
     /// Errors
-    /// - If the `purchase_type` is not recognised an error is returned.
+    /// - If the `purchase_type` is not recognized an error is returned.
     /// - If currency/amount conversions fail, the underlying `MonetaryAmount`
     ///   parsing error is propagated.
     fn row_to_purchase_info(pi_row: &PurchaseInfoRow) -> anyhow::Result<PurchaseInfo> {
@@ -183,8 +175,8 @@ impl CollectionMapper {
                     pi_row.purchased_price_currency.as_deref(),
                 )?;
                 Ok(PurchaseInfo::Purchased(
-                    crate::collecting::domain::purchase_info::PurchasedInfo {
-                        id: PurchaseInfoId::new(pi_row.id.clone()),
+                    crate::collecting::domain::PurchasedInfo {
+                        id: pi_row.id.clone(),
                         purchase_date,
                         price,
                         seller: pi_row.seller_id.clone(),
@@ -200,17 +192,15 @@ impl CollectionMapper {
                     pi_row.sale_price_amount.unwrap_or(0),
                     pi_row.sale_price_currency.as_deref(),
                 )?;
-                Ok(PurchaseInfo::Sold(
-                    crate::collecting::domain::purchase_info::SoldInfo {
-                        id: PurchaseInfoId::new(pi_row.id.clone()),
-                        purchase_date,
-                        purchase_price,
-                        sale_date: pi_row.sale_date.unwrap_or(purchase_date),
-                        sale_price: sale_price.unwrap_or_default(),
-                        buyer: pi_row.buyer_id.clone(),
-                        seller: pi_row.seller_id.clone(),
-                    },
-                ))
+                Ok(PurchaseInfo::Sold(crate::collecting::domain::SoldInfo {
+                    id: pi_row.id.clone(),
+                    purchase_date,
+                    purchase_price,
+                    sale_date: pi_row.sale_date.unwrap_or(purchase_date),
+                    sale_price: sale_price.unwrap_or_default(),
+                    buyer: pi_row.buyer_id.clone(),
+                    seller: pi_row.seller_id.clone(),
+                }))
             }
             Some("preorder") => {
                 let deposit = MonetaryAmount::from_db(
@@ -222,8 +212,8 @@ impl CollectionMapper {
                     pi_row.preorder_total_currency.as_deref(),
                 )?;
                 Ok(PurchaseInfo::PreOrdered(
-                    crate::collecting::domain::purchase_info::PreOrderInfo {
-                        id: PurchaseInfoId::new(pi_row.id.clone()),
+                    crate::collecting::domain::PreOrderInfo {
+                        id: pi_row.id.clone(),
                         order_date: purchase_date,
                         deposit: deposit.unwrap_or_default(),
                         total_price: total_price.unwrap_or_default(),
@@ -240,19 +230,23 @@ impl CollectionMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collecting::domain::collection_id::CollectionId;
-    use crate::collecting::domain::collection_item_id::CollectionItemId;
+    use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
+    use crate::collecting::domain::CollectionId;
+    use crate::collecting::domain::CollectionItemId;
+    use crate::collecting::domain::OwnedRollingStockId;
+    use crate::collecting::domain::PurchaseInfoId;
     use crate::collecting::infrastructure::entities::{
         CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
     };
     use crate::core::domain::currency::Currency;
+    use crate::sellers::domain::seller_id::SellerId;
     use chrono::NaiveDate;
     use pretty_assertions::assert_eq;
     use std::collections::HashMap;
 
     #[test]
     fn it_should_map_collection() {
-        let collection_id = CollectionId::default().to_string();
+        let collection_id = CollectionId::default();
         let collection_row = CollectionRow {
             id: collection_id.clone(),
             name: "My Test Collection".to_string(),
@@ -277,7 +271,7 @@ mod tests {
         let mapped = CollectionMapper::row_to_collection(collection_row, vec![])
             .expect("mapping should succeed");
 
-        assert_eq!(mapped.id.to_string(), collection_id);
+        assert_eq!(mapped.id, collection_id);
         assert_eq!(mapped.name, "My Test Collection");
         assert_eq!(mapped.summary.locomotives_count, 2);
         assert_eq!(mapped.summary.passenger_cars_count, 3);
@@ -293,23 +287,24 @@ mod tests {
 
     #[test]
     fn it_should_map_collection_item_with_owned_and_purchase_info() {
-        let item_id_str = format!(
-            "{}{}",
-            crate::collecting::domain::collection_item_id::TRN_ITEM_PREFIX,
-            "d20a1a95-1ae4-4970-9e87-b4c84676e730"
-        );
+        let item_id = CollectionItemId::default();
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap();
         let collection_item = CollectionItemRow {
-            id: item_id_str.clone(),
-            collection_id: CollectionId::default().to_string(),
-            railway_model_id: "trn:railway-model:acme:60100".to_string(),
+            id: item_id.clone(),
+            collection_id: CollectionId::default(),
+            railway_model_id: railway_model_id.clone(),
             conditions: Some("new".to_string()),
             notes: Some("My notes go here".to_string()),
         };
 
+        let owned_item_id = OwnedRollingStockId::new(
+            "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string(),
+        );
+        let rolling_stock_id = RollingStockId::new();
         let owned_rolling_stock = OwnedRollingStockRow {
-            id: "d3606635-4c4e-462b-ae9f-02c7ce47bc770".to_string(),
-            collection_item_id: item_id_str.clone(),
-            rolling_stock_id: Some("rs-001".to_string()),
+            id: owned_item_id,
+            collection_item_id: item_id.clone(),
+            rolling_stock_id: Some(rolling_stock_id),
             notes: Some("My rolling stock notes go here".to_string()),
             dcc_address: None,
             installed_decoder_id: None,
@@ -321,12 +316,16 @@ mod tests {
             decoder_interface: None,
         };
 
+        let purchase_id =
+            PurchaseInfoId::try_from("trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e").unwrap();
+        let seller_id = SellerId::new_from_name("shop-1");
+        let collection_item_id = item_id.clone();
         let purchase_info = PurchaseInfoRow {
-            id: "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
-            collection_item_id: item_id_str.clone(),
+            id: purchase_id,
+            collection_item_id: collection_item_id.clone(),
             purchase_type: Some("purchased".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
-            seller_id: Some("shop-1".to_string()),
+            seller_id: Some(seller_id.clone()),
             buyer_id: None,
             sale_date: None,
             purchased_price_amount: Some(17500),
@@ -340,7 +339,6 @@ mod tests {
             expected_date: None,
         };
 
-        let collection_item_id = CollectionItemId::try_from(&item_id_str).expect("valid uuid");
         let mut owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
             HashMap::new();
         owned_rolling_stocks_map.insert(collection_item_id.clone(), vec![owned_rolling_stock]);
@@ -356,8 +354,8 @@ mod tests {
         )
         .expect("mapping item should succeed");
 
-        assert_eq!(mapped_item.id.to_string(), item_id_str);
-        assert_eq!(mapped_item.railway_model_id, "trn:railway-model:acme:60100");
+        assert_eq!(mapped_item.id, collection_item_id);
+        assert_eq!(mapped_item.railway_model_id, railway_model_id);
         assert_eq!(mapped_item.conditions, Some("new".to_string()));
         assert_eq!(mapped_item.notes, Some("My notes go here".to_string()));
 
@@ -365,9 +363,13 @@ mod tests {
         let ors = &mapped_item.rolling_stocks[0];
         assert_eq!(
             ors.id.to_string(),
-            "d3606635-4c4e-462b-ae9f-02c7ce47bc770".to_string()
+            "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string()
         );
-        assert_eq!(ors.rolling_stock_id, "rs-001".to_string());
+        assert!(
+            ors.rolling_stock_id
+                .to_string()
+                .starts_with("trn:rolling-stock")
+        );
         assert_eq!(ors.notes, "My rolling stock notes go here".to_string());
 
         let pi = mapped_item.purchase_info.expect("purchase info present");
@@ -375,13 +377,13 @@ mod tests {
             PurchaseInfo::Purchased(p) => {
                 assert_eq!(
                     p.id.to_string(),
-                    "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string()
+                    "trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string()
                 );
                 assert_eq!(p.purchase_date.to_string(), "2025-12-26");
                 let price = p.price.expect("price present");
                 assert_eq!(price.amount, 17500u64);
                 assert_eq!(price.currency, Currency::EUR);
-                assert_eq!(p.seller, Some("shop-1".to_string()));
+                assert_eq!(p.seller, Some(seller_id));
             }
             _ => panic!("expected Purchased variant"),
         }
@@ -390,11 +392,14 @@ mod tests {
     #[test]
     fn it_should_map_row_to_purchase_info_purchased() {
         let pi_row = PurchaseInfoRow {
-            id: "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
-            collection_item_id: "d20a1a95-1ae4-4970-9e87-b4c84676e730".to_string(),
+            id: PurchaseInfoId::new("59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string()),
+            collection_item_id: CollectionItemId::try_from(
+                "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730",
+            )
+            .unwrap(),
             purchase_type: Some("purchased".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
-            seller_id: Some("shop-1".to_string()),
+            seller_id: Some(SellerId::try_from("shop-1").unwrap()),
             buyer_id: None,
             sale_date: None,
             purchased_price_amount: Some(17500),
@@ -419,7 +424,7 @@ mod tests {
                 let price = p.price.expect("price present");
                 assert_eq!(price.amount, 17500u64);
                 assert_eq!(price.currency, Currency::EUR);
-                assert_eq!(p.seller, Some("shop-1".to_string()));
+                assert_eq!(p.seller, Some(SellerId::try_from("shop-1").unwrap()));
             }
             _ => panic!("expected Purchased variant"),
         }
@@ -427,12 +432,20 @@ mod tests {
 
     #[test]
     fn it_should_map_row_to_purchase_info_sold() {
+        let purchase_info_id =
+            PurchaseInfoId::try_from("trn:purchase:e647e791-c56b-4018-acdb-5d7891f17c34")
+                .expect("should parse purchase info id");
+        let seller_id = SellerId::try_from("trn:seller:8d3cf2ec-ae2b-46ba-8f7d-cce3969d78b8")
+            .expect("should parse seller id");
+        let collection_item_id =
+            CollectionItemId::try_from("trn:collection-item:1d1ad112-6080-4d3c-8c03-d694d30e2786")
+                .expect("should parse collection item id");
         let pi_row = PurchaseInfoRow {
-            id: "sold-purchase-0000-0000-0000-000000000000".to_string(),
-            collection_item_id: "00000000-0000-0000-0000-000000000001".to_string(),
+            id: purchase_info_id.clone(),
+            collection_item_id: collection_item_id.clone(),
             purchase_type: Some("sold".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2024, 5, 10).unwrap(),
-            seller_id: Some("original-seller".to_string()),
+            seller_id: Some(seller_id.clone()),
             buyer_id: Some("buyer-1".to_string()),
             sale_date: Some(NaiveDate::from_ymd_opt(2025, 1, 1).unwrap()),
             purchased_price_amount: Some(20000),
@@ -449,10 +462,7 @@ mod tests {
         let pi = CollectionMapper::row_to_purchase_info(&pi_row).expect("mapping purchase info");
         match pi {
             PurchaseInfo::Sold(s) => {
-                assert_eq!(
-                    s.id.to_string(),
-                    "sold-purchase-0000-0000-0000-000000000000".to_string()
-                );
+                assert_eq!(s.id, purchase_info_id);
                 assert_eq!(s.purchase_date.to_string(), "2024-05-10");
                 let purchase_price = s.purchase_price.expect("purchase price present");
                 assert_eq!(purchase_price.amount, 20000u64);
@@ -461,7 +471,7 @@ mod tests {
                 assert_eq!(s.sale_price.currency, Currency::EUR);
                 assert_eq!(s.sale_date.to_string(), "2025-01-01");
                 assert_eq!(s.buyer, Some("buyer-1".to_string()));
-                assert_eq!(s.seller, Some("original-seller".to_string()));
+                assert_eq!(s.seller, Some(seller_id));
             }
             _ => panic!("expected Sold variant"),
         }
@@ -469,12 +479,20 @@ mod tests {
 
     #[test]
     fn it_should_map_row_to_purchase_info_preorder() {
+        let purchase_info_id =
+            PurchaseInfoId::try_from("trn:purchase:e647e791-c56b-4018-acdb-5d7891f17c34")
+                .expect("should parse purchase info id");
+        let seller_id = SellerId::try_from("trn:seller:8d3cf2ec-ae2b-46ba-8f7d-cce3969d78b8")
+            .expect("should parse seller id");
+        let collection_item_id =
+            CollectionItemId::try_from("trn:collection-item:1d1ad112-6080-4d3c-8c03-d694d30e2786")
+                .expect("should parse collection item id");
         let pi_row = PurchaseInfoRow {
-            id: "preorder-purchase-0000-0000-0000-000000000000".to_string(),
-            collection_item_id: "00000000-0000-0000-0000-000000000002".to_string(),
+            id: purchase_info_id.clone(),
+            collection_item_id: collection_item_id.clone(),
             purchase_type: Some("preorder".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
-            seller_id: Some("preorder-shop".to_string()),
+            seller_id: Some(seller_id.clone()),
             buyer_id: None,
             sale_date: None,
             purchased_price_amount: None,
@@ -488,21 +506,19 @@ mod tests {
             expected_date: Some(NaiveDate::from_ymd_opt(2025, 12, 1).unwrap()),
         };
 
-        let pi = CollectionMapper::row_to_purchase_info(&pi_row).expect("mapping purchase info");
-        match pi {
-            PurchaseInfo::PreOrdered(po) => {
+        let purchase_info =
+            CollectionMapper::row_to_purchase_info(&pi_row).expect("mapping purchase info");
+        match purchase_info {
+            PurchaseInfo::PreOrdered(pre_order_info) => {
+                assert_eq!(pre_order_info.id, purchase_info_id);
+                assert_eq!(pre_order_info.order_date.to_string(), "2025-06-01");
+                assert_eq!(pre_order_info.deposit.amount, 500u64);
+                assert_eq!(pre_order_info.deposit.currency, Currency::EUR);
+                assert_eq!(pre_order_info.total_price.amount, 1000u64);
+                assert_eq!(pre_order_info.total_price.currency, Currency::EUR);
+                assert_eq!(pre_order_info.seller, Some(seller_id));
                 assert_eq!(
-                    po.id.to_string(),
-                    "preorder-purchase-0000-0000-0000-000000000000".to_string()
-                );
-                assert_eq!(po.order_date.to_string(), "2025-06-01");
-                assert_eq!(po.deposit.amount, 500u64);
-                assert_eq!(po.deposit.currency, Currency::EUR);
-                assert_eq!(po.total_price.amount, 1000u64);
-                assert_eq!(po.total_price.currency, Currency::EUR);
-                assert_eq!(po.seller, Some("preorder-shop".to_string()));
-                assert_eq!(
-                    po.expected_date.map(|d| d.to_string()),
+                    pre_order_info.expected_date.map(|d| d.to_string()),
                     Some("2025-12-01".to_string())
                 );
             }

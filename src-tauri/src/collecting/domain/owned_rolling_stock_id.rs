@@ -17,9 +17,10 @@ pub const TRN_ORS_PREFIX: &str = "trn:owned-rolling-stock:";
 /// validate the TRN format or `From<Uuid>` / `Default` to generate a fresh id.
 /// The type derives `Serialize`/`Deserialize` and is `#[serde(transparent)]` so
 /// it appears as a simple string in serialized forms.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash, sqlx::Type, specta::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
+#[sqlx(transparent)]
 pub struct OwnedRollingStockId(String);
 
 /// Errors that may occur while parsing an `OwnedRollingStockId` from a string.

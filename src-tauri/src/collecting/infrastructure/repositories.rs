@@ -1,11 +1,10 @@
-use crate::collecting::domain::collection::Collection;
-use crate::collecting::domain::collection_id::CollectionId;
-use crate::collecting::domain::collection_item_id::CollectionItemId;
-use crate::collecting::domain::repository::CollectionRepository;
+use crate::collecting::domain::Collection;
+use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::CollectionItemId;
+use crate::collecting::domain::CollectionRepository;
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::mappers::CollectionMapper;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use anyhow::anyhow;
 use itertools::Itertools;
 
 /// An SQLite-specific implementation of the `CollectionRepository`.
@@ -56,32 +55,28 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
         let collection_row =
             collection_row.expect("Expect collection row to be present after None check");
-        let collection_id = CollectionId::try_from(&collection_row.id).map_err(|e| anyhow!(e))?;
+        let collection_id = collection_row.id.clone();
         let collection_item_rows =
             database::get_collection_items(&mut *self.executor, &collection_id).await?;
 
         let owned_rolling_stock_rows =
             database::get_owned_rolling_stocks(&mut *self.executor, &collection_id).await?;
-        let owned_rolling_stocks_map = owned_rolling_stock_rows
+        let owned_rolling_stocks_map: std::collections::HashMap<
+            CollectionItemId,
+            Vec<crate::collecting::infrastructure::entities::OwnedRollingStockRow>,
+        > = owned_rolling_stock_rows
             .into_iter()
-            .map(|owned_rs| {
-                (
-                    CollectionItemId::try_from(&owned_rs.collection_item_id).unwrap(),
-                    owned_rs,
-                )
-            })
+            .map(|owned_rs| (owned_rs.collection_item_id.clone(), owned_rs))
             .into_group_map();
 
         let purchase_info_rows =
             database::get_purchase_infos(&mut *self.executor, &collection_id).await?;
-        let purchase_info_map = purchase_info_rows
+        let purchase_info_map: std::collections::HashMap<
+            CollectionItemId,
+            Vec<crate::collecting::infrastructure::entities::PurchaseInfoRow>,
+        > = purchase_info_rows
             .into_iter()
-            .map(|purchase_info| {
-                (
-                    CollectionItemId::try_from(&purchase_info.collection_item_id).unwrap(),
-                    purchase_info,
-                )
-            })
+            .map(|purchase_info| (purchase_info.collection_item_id.clone(), purchase_info))
             .into_group_map();
 
         let mut collection_items = Vec::new();
@@ -124,7 +119,7 @@ impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collecting::domain::purchase_info::PurchaseInfo;
+    use crate::collecting::domain::PurchaseInfo;
     use crate::core::domain::Currency;
 
     #[sqlx::test(migrations = "./migrations")]
@@ -157,13 +152,15 @@ mod tests {
         assert!(collection.total_value.is_some());
         assert_eq!(collection.items.len(), 1);
         assert_eq!(
-            collection.items[0].railway_model_id,
+            collection.items[0].railway_model_id.to_string(),
             "trn:railway-model:acme:60100".to_string()
         );
 
         assert_eq!(collection.items[0].rolling_stocks.len(), 1);
         assert_eq!(
-            collection.items[0].rolling_stocks[0].rolling_stock_id,
+            collection.items[0].rolling_stocks[0]
+                .rolling_stock_id
+                .to_string(),
             "trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string()
         );
 
