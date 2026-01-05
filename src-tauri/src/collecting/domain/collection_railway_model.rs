@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::{Category, Control, Epoch, RailwayModelId};
+use crate::catalog::domain::railway_model::{Category, Epoch, RailwayModelId};
 use crate::catalog::domain::scale::Scale;
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +20,6 @@ pub struct CollectionRailwayModel {
     pub epoch: Epoch,
     /// A brief description of the railway model.
     pub description: String,
-    /// The control type of the railway model, if specified.
-    pub control: Option<Control>,
     /// The category of the railway model, if specified.
-    pub category: Option<Category>,
+    pub category: Category,
 }

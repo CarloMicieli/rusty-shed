@@ -1,10 +1,10 @@
-use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionSummary;
 use crate::collecting::domain::DigitalSetup;
 use crate::collecting::domain::OwnedRollingStock;
 use crate::collecting::domain::PurchaseInfo;
+use crate::collecting::domain::{Collection, CollectionRailwayModel};
 use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
@@ -134,15 +134,24 @@ impl CollectionMapper {
             .and_then(|pi_list| pi_list.first())
             .and_then(|pi_row| Self::row_to_purchase_info(pi_row).ok());
 
+        let railway_model = CollectionRailwayModel {
+            category: row.category,
+            scale: row.scale,
+            epoch: row.epoch,
+            description: row.description,
+            product_code: row.product_code,
+            manufacturer: row.manufacturer,
+            railway_model_id: row.railway_model_id,
+        };
+
         Ok(CollectionItem {
             id: collection_item_id,
-            railway_model_id: row.railway_model_id,
+            railway_model,
             purchase_condition: row.purchase_condition,
             model_condition: row.model_condition,
             box_condition: row.box_condition,
             added_date: row.added_date,
             removed_date: row.removed_date,
-            railway_model: None,
             notes: row.notes,
             rolling_stocks: owned_rolling_stocks,
             purchase_info,
@@ -238,7 +247,8 @@ impl CollectionMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
+    use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
+    use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::CollectionItemId;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::collecting::domain::PurchaseInfoId;
@@ -302,6 +312,12 @@ mod tests {
         let collection_item = CollectionItemRow {
             id: item_id.clone(),
             collection_id: CollectionId::default(),
+            category: Category::Locomotives,
+            scale: Scale::H0,
+            epoch: "VI".into(),
+            description: "Some description".to_string(),
+            product_code: "60100".to_string(),
+            manufacturer: "Acme".to_string(),
             railway_model_id: railway_model_id.clone(),
             added_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
             removed_date: None,
@@ -369,11 +385,22 @@ mod tests {
         .expect("mapping item should succeed");
 
         assert_eq!(mapped_item.id, collection_item_id);
-        assert_eq!(mapped_item.railway_model_id, railway_model_id);
         assert_eq!(mapped_item.purchase_condition, Some(PurchaseCondition::New));
         assert_eq!(mapped_item.model_condition, Some(ModelCondition::Mint));
         assert_eq!(mapped_item.box_condition, Some(BoxCondition::OriginalMint));
         assert_eq!(mapped_item.notes, Some("My notes go here".to_string()));
+
+        let mapped_railway_model = &mapped_item.railway_model;
+        assert_eq!(mapped_railway_model.railway_model_id, railway_model_id);
+        assert_eq!(mapped_railway_model.category, Category::Locomotives);
+        assert_eq!(mapped_railway_model.scale, Scale::H0);
+        assert_eq!(mapped_railway_model.epoch, "VI".into());
+        assert_eq!(
+            mapped_railway_model.description,
+            "Some description".to_string()
+        );
+        assert_eq!(mapped_railway_model.product_code, "60100".to_string());
+        assert_eq!(mapped_railway_model.manufacturer, "Acme".to_string());
 
         assert_eq!(mapped_item.rolling_stocks.len(), 1);
         let ors = &mapped_item.rolling_stocks[0];

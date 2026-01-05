@@ -53,17 +53,25 @@ pub async fn get_collection_items(
     collection_id: &CollectionId,
 ) -> Result<Vec<CollectionItemRow>, DomainError> {
     let sql = r#"SELECT
-             id,
-             collection_id,
-             railway_model_id,
-             added_date,
-             removed_date,
-             purchase_condition,
-             model_condition,
-             box_condition,
-             notes
-   FROM collection_items
-   WHERE collection_id = ?1"#;
+             ci.id,
+             ci.collection_id,
+             ci.railway_model_id,
+             ci.added_date,
+             ci.removed_date,
+             ci.purchase_condition,
+             ci.model_condition,
+             ci.box_condition,
+             ci.notes,
+             rm.category,
+             rm.product_code,
+             rm.scale,
+             rm.epoch,
+             rm.description,
+             m.name AS manufacturer
+   FROM collection_items ci
+   JOIN railway_models rm ON rm.id = ci.railway_model_id
+   JOIN manufacturers m ON m.id = rm.manufacturer_id
+   WHERE ci.collection_id = ?1"#;
 
     let rows = sqlx::query_as::<_, CollectionItemRow>(sql)
         .bind(collection_id.to_string())
@@ -176,6 +184,7 @@ pub async fn get_purchase_infos(
 
 #[cfg(test)]
 mod tests {
+    use crate::catalog::domain::railway_model::Category;
     use crate::collecting::domain::{
         BoxCondition, CollectionId, ModelCondition, PurchaseCondition,
     };
@@ -243,6 +252,13 @@ mod tests {
             collection_item_row.notes,
             Some("My notes go here".to_string())
         );
+        assert_eq!(collection_item_row.category, Category::Locomotives);
+        assert_eq!(
+            collection_item_row.description,
+            "Locomotiva elettrica E.444.005 Tartaruga"
+        );
+        assert_eq!(collection_item_row.epoch, "IV".try_into().unwrap());
+        assert_eq!(collection_item_row.scale, "H0".try_into().unwrap());
 
         Ok(())
     }

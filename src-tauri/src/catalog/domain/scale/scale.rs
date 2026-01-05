@@ -9,7 +9,8 @@ use std::fmt;
 /// `H0` or `00`). Use `Scale::ratio()` to obtain the numeric ratio that follows
 /// the `1:` notation (e.g. `Scale::H0` -> `1:87`). The `Display` implementation
 /// produces a human-friendly string such as `H0 (1:87)`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, specta::Type)]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Scale {
     /// H0 scale (1:87)
     H0,

@@ -1,4 +1,3 @@
-use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::collecting::domain::CollectionRailwayModel;
 use crate::collecting::domain::OwnedRollingStock;
 use crate::collecting::domain::PurchaseInfo;
@@ -21,14 +20,8 @@ pub struct CollectionItem {
     /// Unique identifier for this collection item.
     pub id: CollectionItemId,
 
-    /// Link to the corresponding catalog `RailwayModel` this item represents.
-    ///
-    /// This is a reference to the canonical model in the catalog; use this
-    /// to look up full catalog details (manufacturer, product codes, etc.).
-    pub railway_model_id: RailwayModelId,
-
     /// A lightweight view of the railway model details
-    pub railway_model: Option<CollectionRailwayModel>,
+    pub railway_model: CollectionRailwayModel,
 
     /// Date when this item was added to the collection.
     pub added_date: NaiveDate,

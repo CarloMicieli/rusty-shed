@@ -124,52 +124,43 @@ fn monetary_summary(m: &MonetaryAmount) -> MonetaryAmountSummary {
     }
 }
 
-fn pick_recent_items(collection: &Collection) -> Vec<DashboardRecentItem> {
-    collection
-        .items
-        .iter()
-        .rev()
-        .take(3)
-        .map(|item| {
-            let (manufacturer, product_code) = parse_railway_model_id(&item.railway_model_id);
-            DashboardRecentItem {
-                id: item.id.to_string(),
-                title: product_code
-                    .clone()
-                    .unwrap_or_else(|| item.railway_model_id.to_string()),
-                subtitle: manufacturer,
-            }
-        })
-        .collect()
+fn pick_recent_items(_collection: &Collection) -> Vec<DashboardRecentItem> {
+    todo!()
+    // collection
+    //     .items
+    //     .iter()
+    //     .rev()
+    //     .take(3)
+    //     .map(|item| {
+    //         let (manufacturer, product_code) = parse_railway_model_id(&item.railway_model_id);
+    //         DashboardRecentItem {
+    //             id: item.id.to_string(),
+    //             title: product_code
+    //                 .clone()
+    //                 .unwrap_or_else(|| "foo".to_string()),
+    //             subtitle: manufacturer,
+    //         }
+    //     })
+    //     .collect()
 }
 
-fn pick_depot_entries(collection: &Collection) -> Vec<DashboardDepotEntry> {
-    collection
-        .items
-        .iter()
-        .take(5)
-        .map(|item| {
-            let (manufacturer, product_code) = parse_railway_model_id(&item.railway_model_id);
-            DashboardDepotEntry {
-                id: item.id.to_string(),
-                manufacturer,
-                product_code,
-                category: None,
-                scale: None,
-                railway_company: None,
-                description: item.notes.clone(),
-            }
-        })
-        .collect()
-}
-
-fn parse_railway_model_id(id: &str) -> (Option<String>, Option<String>) {
-    let parts: Vec<&str> = id.split(':').collect();
-    if parts.len() >= 4 {
-        let manufacturer = parts.get(2).map(|s| s.to_string());
-        let product_code = parts.get(3).map(|s| s.to_string());
-        (manufacturer, product_code)
-    } else {
-        (None, None)
-    }
+fn pick_depot_entries(_collection: &Collection) -> Vec<DashboardDepotEntry> {
+    todo!()
+    // collection
+    //     .items
+    //     .iter()
+    //     .take(5)
+    //     .map(|item| {
+    //         let (manufacturer, product_code) = parse_railway_model_id(&item.railway_model_id);
+    //         DashboardDepotEntry {
+    //             id: item.id.to_string(),
+    //             manufacturer,
+    //             product_code,
+    //             category: None,
+    //             scale: None,
+    //             railway_company: None,
+    //             description: item.notes.clone(),
+    //         }
+    //     })
+    //     .collect()
 }

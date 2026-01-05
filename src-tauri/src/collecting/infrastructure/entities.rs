@@ -1,5 +1,8 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::railway_model::{DccInterface, RailwayModelId, RollingStockId};
+use crate::catalog::domain::railway_model::{
+    Category, DccInterface, Epoch, RailwayModelId, RollingStockId,
+};
+use crate::catalog::domain::scale::Scale;
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::collecting::domain::PurchaseInfoId;
@@ -37,6 +40,13 @@ pub struct CollectionItemRow {
     pub model_condition: Option<ModelCondition>,
     pub box_condition: Option<BoxCondition>,
     pub notes: Option<String>,
+
+    pub category: Category,
+    pub manufacturer: String,
+    pub product_code: String,
+    pub scale: Scale,
+    pub epoch: Epoch,
+    pub description: String,
 }
 
 /// Row mapping for the `owned_rolling_stocks` table.

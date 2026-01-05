@@ -103,6 +103,7 @@ impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
 mod tests {
     use super::*;
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
+    use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::{
         BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
     };
@@ -154,7 +155,6 @@ mod tests {
         let expected_railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
             .expect("valid railway model id");
         let collection_item = &collection.items[0];
-        assert_eq!(collection_item.railway_model_id, expected_railway_model_id);
         assert_eq!(collection_item.model_condition, Some(ModelCondition::Mint));
         assert_eq!(
             collection_item.box_condition,
@@ -168,6 +168,13 @@ mod tests {
             collection_item.notes,
             Some(String::from("My notes go here"))
         );
+
+        let railway_model = &collection_item.railway_model;
+        assert_eq!(railway_model.railway_model_id, expected_railway_model_id);
+        assert_eq!(railway_model.manufacturer, "ACME");
+        assert_eq!(railway_model.product_code, "60100");
+        assert_eq!(railway_model.scale, Scale::H0);
+        assert_eq!(railway_model.epoch, "IV".into());
 
         assert_eq!(collection_item.rolling_stocks.len(), 1);
         let rolling_stocks = &collection_item.rolling_stocks[0];
