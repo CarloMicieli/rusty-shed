@@ -1,11 +1,14 @@
--- Settings table to persist user preferences
+-- noinspection SqlResolveForFile
+-- noinspection SqlNoDataSourceInspectionForFile
+-- noinspection SqlResolveInspectionForFile
+
 CREATE TABLE IF NOT EXISTS settings (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  currency TEXT NOT NULL,
-  length_unit TEXT NOT NULL,
-  favorite_scale TEXT NOT NULL,
-  favorite_power_method TEXT NOT NULL,
-  language_code TEXT NOT NULL
+  id                                    INTEGER PRIMARY KEY CHECK (id = 1),
+  currency                              TEXT NOT NULL,
+  length_unit                           TEXT NOT NULL,
+  favorite_scale                        TEXT NOT NULL,
+  favorite_power_method                 TEXT NOT NULL,
+  language_code                         TEXT NOT NULL
 );
 
 -- Seed a single default row if it does not exist
