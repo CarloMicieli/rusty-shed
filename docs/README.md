@@ -75,6 +75,5 @@ Keep track of future purchases.
 
 - [Feature Implementation](FEATURE_IMPLEMENTATION.md)
 - [Query System](QUERY_SYSTEM.md)
-- [API Reference](API_REFERENCE.md)
 
 ---

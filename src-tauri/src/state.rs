@@ -1,3 +1,5 @@
+use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use sqlx::sqlite::SqlitePool;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -66,5 +68,14 @@ impl AppState {
     /// Return the configured models directory path.
     pub fn models_dir(&self) -> PathBuf {
         self.models_dir.clone()
+    }
+
+    /// Create a new `SqliteUnitOfWork` using the internal database pool.
+    ///
+    /// Returns a `CommandError` if the unit of work cannot be created.
+    pub async fn unit_of_work<'conn>(&'conn self) -> Result<SqliteUnitOfWork<'conn>, CommandError> {
+        SqliteUnitOfWork::new(&self.db_pool())
+            .await
+            .map_err(|e| CommandError::DatabaseError(e.to_string()))
     }
 }

@@ -15,11 +15,13 @@ use strum_macros::{Display, EnumString};
     Display,
     Serialize,
     Deserialize,
+    sqlx::Type,
     specta::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ManufacturerStatus {
     #[default]
     Active,

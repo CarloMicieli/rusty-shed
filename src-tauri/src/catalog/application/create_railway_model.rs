@@ -26,7 +26,7 @@ impl CreateRailwayModelUseCase {
     ///
     /// # Returns
     /// * `Ok(RailwayModelId)` containing the new railway model ID on success,
-    /// * `Err(CommandError)` with an error message on failure.
+    /// * `Err(DomainError)` with an error message on failure.
     pub async fn execute(
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: CreateRailwayModelInput,

@@ -1,4 +1,6 @@
--- fixture for railway_company
+-- noinspection SqlResolveForFile
+-- noinspection SqlNoDataSourceInspectionForFile
+-- noinspection SqlResolveInspectionForFile
 
 INSERT INTO railway_companies (id, name, registered_company_name, country_code, status, created_at, updated_at)
 VALUES ('trn:railway-company:fs', 

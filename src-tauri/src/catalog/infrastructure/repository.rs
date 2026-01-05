@@ -1,8 +1,4 @@
 use super::database;
-use crate::catalog::domain::manufacturer::Manufacturer;
-use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::railway_company::RailwayCompany;
-use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelRepository;
 use crate::catalog::domain::railway_model::RollingStockCategory;
@@ -427,69 +423,6 @@ impl<'conn> CatalogUowExt for SqliteUnitOfWork<'conn> {
     }
 }
 
-/// Retrieve a `Manufacturer` from the database by its `ManufacturerId`.
-///
-/// This function queries the `manufacturers` table for the provided `id`, maps
-/// the resulting row into the domain `Manufacturer` and returns it if found.
-///
-/// # Arguments
-///
-/// * `executor` - A mutable reference to an active `SqliteConnection` used to
-///   execute the query.
-/// * `id` - The domain `ManufacturerId` to look up.
-///
-/// # Returns
-///
-/// Returns `Ok(Some(Manufacturer))` when a matching manufacturer was found and
-/// successfully mapped, `Ok(None)` when no row matches the given `id`, or
-/// `Err(anyhow::Error)` if the query or mapping fails.
-///
-/// # Errors
-///
-/// Any errors from the underlying database query (`sqlx`) or from mapping the
-/// database row into the domain model are propagated and wrapped in an
-/// `anyhow::Error` with additional context.
-pub async fn get_manufacturer_by_id(
-    executor: &mut SqliteConnection,
-    id: &ManufacturerId,
-) -> anyhow::Result<Option<Manufacturer>> {
-    let row_opt = database::get_manufacturer_by_id(executor, id)
-        .await
-        .context("querying manufacturers table")?;
-
-    if let Some(row) = row_opt {
-        let manufacturer = Manufacturer::try_from(row)
-            .map_err(|e| anyhow::anyhow!("mapping ManufacturerRow -> Manufacturer: {}", e))?;
-        Ok(Some(manufacturer))
-    } else {
-        Ok(None)
-    }
-}
-
-/// Retrieve a `RailwayCompany` from the database by its `RailwayCompanyId`.
-///
-/// This mirrors `get_manufacturer_by_id` but for the `railway_companies` table.
-pub async fn get_railway_company_by_id(
-    executor: &mut SqliteConnection,
-    id: &RailwayCompanyId,
-) -> anyhow::Result<Option<RailwayCompany>> {
-    let row_opt = database::get_railway_company_by_id(executor, &id.to_string())
-        .await
-        .context("querying railway_companies table")?;
-
-    if let Some(row) = row_opt {
-        let rc = RailwayCompany::try_from(row).map_err(|e| {
-            anyhow::anyhow!(format!(
-                "mapping RailwayCompanyRow -> RailwayCompany: {}",
-                e
-            ))
-        })?;
-        Ok(Some(rc))
-    } else {
-        Ok(None)
-    }
-}
-
 /// Retrieve a `RailwayModel` by its `RailwayModelId` using a two-query strategy.
 ///
 /// Query 1: load parent `railway_models` row. Query 2: load child `rolling_stocks` rows.
@@ -581,65 +514,6 @@ pub async fn get_railway_models_by_ids(
 mod tests {
     use super::*;
 
-    mod manufacturer_repo_tests {
-        use super::*;
-        use crate::catalog::domain::manufacturer::ManufacturerId;
-        use pretty_assertions::assert_eq;
-        use url::Url;
-
-        #[sqlx::test(migrations = "./migrations", fixtures("test_manufacturer"))]
-        async fn it_should_retrieve_manufacturers_from_db(pool: sqlx::SqlitePool) {
-            let mut conn = pool.acquire().await.expect("should acquire connection");
-
-            let id = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
-            let result = get_manufacturer_by_id(&mut conn, &id)
-                .await
-                .expect("should run query without errors");
-
-            assert!(result.is_some());
-
-            let manufacturer = result.unwrap();
-            assert_eq!(manufacturer.id, id);
-            assert_eq!(manufacturer.name, "ACME");
-            assert_eq!(
-                manufacturer.registered_company_name,
-                Some("ACME Corporation".to_string())
-            );
-            assert_eq!(manufacturer.country_code, Some("IT".to_string()));
-            assert_eq!(
-                manufacturer.website_url,
-                Some(Url::parse("https://www.acmetreni.com").unwrap())
-            );
-        }
-    }
-
-    mod railway_repo_tests {
-        use super::*;
-        use crate::catalog::domain::railway_company::RailwayCompanyId;
-        use pretty_assertions::assert_eq;
-
-        #[sqlx::test(migrations = "./migrations", fixtures("test_railway_company"))]
-        async fn it_should_retrieve_railway_companies_from_db(pool: sqlx::SqlitePool) {
-            let mut conn = pool.acquire().await.expect("should acquire connection");
-
-            let id = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
-            let result = get_railway_company_by_id(&mut conn, &id)
-                .await
-                .expect("should run query without errors");
-
-            assert!(result.is_some());
-
-            let railway_company = result.unwrap();
-            assert_eq!(railway_company.id, id);
-            assert_eq!(railway_company.name, "FS");
-            assert_eq!(
-                railway_company.registered_company_name,
-                Some("Ferrovie dello Stato".to_string())
-            );
-            assert_eq!(railway_company.country_code, Some("IT".to_string()));
-        }
-    }
-
     mod railway_model_repo_tests {
         use super::*;
         use crate::catalog::domain::railway_model::Category;
@@ -688,6 +562,8 @@ mod tests {
         use crate::catalog::domain::scale::Scale;
         use pretty_assertions::assert_eq;
         use sqlx::Row;
+        use crate::catalog::domain::manufacturer::ManufacturerId;
+        use crate::catalog::domain::railway_company::RailwayCompanyId;
 
         const TEST_RAILWAY_MODEL_ID: &str = "trn:railway-model:acme:1234";
         const RAILWAY_MODEL_QUERY: &str = r#"

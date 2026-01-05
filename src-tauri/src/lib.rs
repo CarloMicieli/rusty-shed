@@ -14,6 +14,8 @@ pub mod wishlist;
 pub mod test_utils;
 
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
+use crate::catalog::interface::manufacturers as manufacturers_command_handlers;
+use crate::catalog::interface::railway_companies as railway_companies_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
@@ -142,10 +144,12 @@ pub fn run() {
         is_db_initialized,
         init_database,
         show_main_window,
-        catalog_command_handlers::get_manufacturer_by_id,
+        manufacturers_command_handlers::get_manufacturers,
+        manufacturers_command_handlers::get_manufacturer_by_id,
         catalog_command_handlers::get_railway_model_by_id,
         catalog_command_handlers::get_railway_models_by_ids,
-        catalog_command_handlers::get_railway_company_by_id,
+        railway_companies_command_handlers::get_railway_companies,
+        railway_companies_command_handlers::get_railway_company_by_id,
         catalog_command_handlers::create_railway_model,
         collecting_command_handlers::get_collection,
         collecting_command_handlers::get_depot,

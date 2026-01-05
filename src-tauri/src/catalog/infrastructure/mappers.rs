@@ -1,12 +1,9 @@
 use super::entities::RailwayCompanyRow;
 use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use crate::catalog::domain::manufacturer::Manufacturer;
-use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::manufacturer::ManufacturerStatus;
 use crate::catalog::domain::railway_company::PeriodOfActivity;
 use crate::catalog::domain::railway_company::RailwayCompany;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
-use crate::catalog::domain::railway_company::RailwayStatus;
 use crate::catalog::domain::railway_model::Control;
 use crate::catalog::domain::railway_model::DccInterface;
 use crate::catalog::domain::railway_model::DeliveryDate;
@@ -21,8 +18,8 @@ use crate::catalog::domain::railway_model::RollingStockRailway;
 use crate::catalog::domain::railway_model::TechnicalSpecifications;
 use crate::catalog::domain::railway_model::{Epoch, EpochKind};
 use crate::catalog::domain::scale::Scale;
+use crate::core::domain::domain_error::DomainError;
 use anyhow::anyhow;
-use chrono::NaiveDate;
 use url::Url;
 
 /// Convert a `ManufacturerRow` (database representation) into the domain
@@ -36,41 +33,33 @@ use url::Url;
 /// # Returns
 ///
 /// Returns `Ok(Manufacturer)` when conversion and validation succeed, or
-/// `Err(anyhow::Error)` when validation fails (invalid id or status).
+/// `Err(DomainError)` when validation fails (invalid id or status).
 ///
 /// # Errors
 ///
 /// Errors produced by underlying parsers/validators are propagated and wrapped
-/// into an `anyhow::Error`.
+/// into a `DomainError`.
 impl TryFrom<ManufacturerRow> for Manufacturer {
-    type Error = anyhow::Error;
+    type Error = DomainError;
 
     fn try_from(row: ManufacturerRow) -> Result<Self, Self::Error> {
-        let id = ManufacturerId::try_from(row.id)
-            .map_err(|e| anyhow!("invalid manufacturer id: {}", e))?;
-
-        let status = row
-            .status
-            .parse::<ManufacturerStatus>()
-            .map_err(|e| anyhow!("invalid manufacturer status: {}", e))?;
-
         let website_url: Option<Url> = match row.website_url {
             Some(s) => {
                 if s.trim().is_empty() {
                     None
                 } else {
-                    Some(Url::parse(&s).map_err(|e| anyhow!("invalid website_url: {}", e))?)
+                    Some(Url::parse(&s).map_err(|e| DomainError::Validation(e.to_string()))?)
                 }
             }
             None => None,
         };
 
         Ok(Manufacturer {
-            id,
+            id: row.id,
             name: row.name,
             registered_company_name: row.registered_company_name,
             country_code: row.country_code,
-            status,
+            status: row.status,
             website_url,
         })
     }
@@ -231,54 +220,30 @@ impl TryFrom<RollingStockRow> for RollingStock {
 /// # Returns
 ///
 /// Returns `Ok(RailwayCompany)` when conversion and validation succeed, or
-/// `Err(anyhow::Error)` when validation fails (invalid id or period of activity).
+/// `Err(DomainError)` when validation fails (invalid id or period of activity).
 ///
 /// # Errors
 ///
 /// Errors produced by underlying parsers/validators are propagated and wrapped
-/// into an `anyhow::Error`.
+/// into a `DomainError`.
 impl TryFrom<RailwayCompanyRow> for RailwayCompany {
-    type Error = anyhow::Error;
+    type Error = DomainError;
 
     fn try_from(row: RailwayCompanyRow) -> Result<Self, Self::Error> {
-        let id = RailwayCompanyId::try_from(row.id)
-            .map_err(|e| anyhow!("invalid railway company id: {e}"))?;
-
-        // 1. Capture presence flags before moving row fields
         let has_status = row.status.is_some();
         let has_since = row.operating_since.is_some();
         let has_until = row.operating_until.is_some();
 
-        // 2. Parse values
-        let status = row
-            .status
-            .map(|s| s.parse::<RailwayStatus>())
-            .transpose()
-            .map_err(|e| anyhow!("invalid railway status: {e}"))?
-            .unwrap_or(RailwayStatus::Active);
-
-        let operating_since = row
-            .operating_since
-            .map(|s| NaiveDate::parse_from_str(&s, "%Y-%m-%d"))
-            .transpose()
-            .map_err(|e| anyhow!("invalid operating_since date: {e}"))?;
-
-        let operating_until = row
-            .operating_until
-            .map(|s| NaiveDate::parse_from_str(&s, "%Y-%m-%d"))
-            .transpose()
-            .map_err(|e| anyhow!("invalid operating_until date: {e}"))?;
-
         // 3. Build the period only if at least one field existed in the DB
         let period_of_activity =
             (has_status || has_since || has_until).then_some(PeriodOfActivity {
-                status,
-                operating_since,
-                operating_until,
+                status: row.status.unwrap_or_default(),
+                operating_since: row.operating_since,
+                operating_until: row.operating_until,
             });
 
         Ok(RailwayCompany {
-            id,
+            id: row.id,
             name: row.name,
             registered_company_name: row.registered_company_name,
             country_code: row.country_code,
@@ -293,6 +258,7 @@ mod tests {
 
     mod manufacturer_mapper_tests {
         use super::*;
+        use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
         use crate::catalog::infrastructure::entities::ManufacturerRow;
         use chrono::DateTime;
         use pretty_assertions::assert_eq;
@@ -304,12 +270,13 @@ mod tests {
             let utc_timestamp = DateTime::from_timestamp(0, 0)
                 .expect("invalid timestamp")
                 .naive_utc();
-
+            let id =
+                ManufacturerId::try_from("trn:manufacturer:mn-1").expect("invalid manufacturer id");
             let row = ManufacturerRow {
-                id: "MN-1".to_string(),
+                id: id.clone(),
                 name: "ACME Models".to_string(),
                 registered_company_name: Some("ACME Corporation".to_string()),
-                status: "ACTIVE".to_string(),
+                status: ManufacturerStatus::Active,
                 country_code: Some("IT".to_string()),
                 website_url: Some("https://www.acmetreni.com".to_string()),
                 created_at: utc_timestamp,
@@ -318,8 +285,9 @@ mod tests {
 
             let domain = Manufacturer::try_from(row).expect("mapping should succeed");
 
-            assert_eq!(&*domain.id, "trn:manufacturer:mn-1");
+            assert_eq!(domain.id, id);
             assert_eq!(domain.name, "ACME Models");
+            assert_eq!(domain.status, ManufacturerStatus::Active);
             assert_eq!(
                 domain.registered_company_name.as_deref(),
                 Some("ACME Corporation")
@@ -332,6 +300,7 @@ mod tests {
 
         mod railway_mapper_tests {
             use super::*;
+            use crate::catalog::domain::railway_company::RailwayStatus;
             use crate::catalog::infrastructure::entities::RailwayCompanyRow;
             use chrono::DateTime;
             use pretty_assertions::assert_eq;
@@ -343,12 +312,15 @@ mod tests {
                     .expect("invalid timestamp")
                     .naive_utc();
 
+                let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs")
+                    .expect("invalid railway company id");
+
                 let row = RailwayCompanyRow {
-                    id: "RC-1".to_string(),
+                    id: railway_company_id.clone(),
                     name: "Ferrovie dello Stato".to_string(),
                     registered_company_name: Some("FS S.p.A.".to_string()),
                     country_code: Some("IT".to_string()),
-                    status: Some("ACTIVE".to_string()),
+                    status: Some(RailwayStatus::Active),
                     operating_since: None,
                     operating_until: None,
                     created_at: utc_timestamp,
@@ -357,7 +329,7 @@ mod tests {
 
                 let domain = RailwayCompany::try_from(row).expect("mapping should succeed");
 
-                assert_eq!(&*domain.id, "RC-1");
+                assert_eq!(domain.id, railway_company_id);
                 assert_eq!(domain.name, "Ferrovie dello Stato");
                 assert_eq!(domain.registered_company_name.as_deref(), Some("FS S.p.A."));
                 assert_eq!(

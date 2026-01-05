@@ -1,0 +1,3 @@
+mod sqlite_manufacturer_repository;
+
+pub use sqlite_manufacturer_repository::SqliteManufacturerRepository;

@@ -1,9 +1,11 @@
+use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
+use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayStatus};
 use crate::catalog::domain::railway_model::{
     AvailabilityStatus, BodyShellType, Category, ChassisType, Control, DccInterface,
     ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, PowerMethod,
     RailcarType, RollingStockCategory, ServiceLevel,
 };
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use rust_decimal::Decimal;
 use sqlx::types::Text;
 
@@ -14,7 +16,7 @@ use sqlx::types::Text;
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct ManufacturerRow {
     /// Primary identifier for the manufacturer (e.g. UUID or database ID).
-    pub id: String,
+    pub id: ManufacturerId,
 
     /// Human-friendly name of the manufacturer.
     pub name: String,
@@ -23,7 +25,7 @@ pub struct ManufacturerRow {
     pub registered_company_name: Option<String>,
 
     /// Status of the manufacturer (for example: "active", "inactive").
-    pub status: String,
+    pub status: ManufacturerStatus,
 
     /// Optional ISO 3166-1 alpha-2 country code for the manufacturer's country.
     pub country_code: Option<String>,
@@ -45,7 +47,7 @@ pub struct ManufacturerRow {
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct RailwayCompanyRow {
     /// Primary identifier for the railway company.
-    pub id: String,
+    pub id: RailwayCompanyId,
 
     /// Human-friendly name of the railway company.
     pub name: String,
@@ -57,13 +59,13 @@ pub struct RailwayCompanyRow {
     pub country_code: Option<String>,
 
     /// Optional status field (kept as a string in the DB).
-    pub status: Option<String>,
+    pub status: Option<RailwayStatus>,
 
     /// Date when the railway began operation (YYYY-MM-DD string).
-    pub operating_since: Option<String>,
+    pub operating_since: Option<NaiveDate>,
 
     /// Date when the railway ended operation (YYYY-MM-DD string).
-    pub operating_until: Option<String>,
+    pub operating_until: Option<NaiveDate>,
 
     /// Timestamp when the row was created.
     pub created_at: NaiveDateTime,
