@@ -1,3 +1,3 @@
-mod get_collection_query;
+mod collection_query;
 
-pub use get_collection_query::GetCollectionQuery;
+pub use collection_query::GetCollectionQuery;
