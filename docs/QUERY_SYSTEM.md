@@ -6,10 +6,10 @@ The Query System is designed to provide a fast, read-only path for fetching data
 
 ### Core Components
 
-* **Domain Layer (Read Models):** Contains DTOs (Data Transfer Objects) and specialized Query Repository interfaces. These represent the data as the UI needs to see it, rather than how it is stored.
-* **Application Layer (Query Handlers):** Orchestrates the retrieval process. These handlers apply necessary filters, sorting, or pagination logic.
-* **Infrastructure Layer:** Implements the Query Repository interfaces using optimized SQL queries (often involving JOINs or views) that bypass complex domain entity reconstruction.
-* **Interface Layer:** Tauri commands that serve as the entry point for the frontend to request data.
+- **Domain Layer (Read Models):** Contains DTOs (Data Transfer Objects) and specialized Query Repository interfaces. These represent the data as the UI needs to see it, rather than how it is stored.
+- **Application Layer (Query Handlers):** Orchestrates the retrieval process. These handlers apply necessary filters, sorting, or pagination logic.
+- **Infrastructure Layer:** Implements the Query Repository interfaces using optimized SQL queries (often involving JOINs or views) that bypass complex domain entity reconstruction.
+- **Interface Layer:** Tauri commands that serve as the entry point for the frontend to request data.
 
 ---
 
@@ -25,8 +25,8 @@ Complex filters (e.g., search strings, date ranges, tags) are encapsulated into 
 
 ### Result Pagination & Projection
 
-* **Projection:** Only the fields required by the UI are fetched from the database.
-* **Pagination:** Uses a standardized `PaginatedResult<T>` wrapper to provide the frontend with total counts and current page offsets.
+- **Projection:** Only the fields required by the UI are fetched from the database.
+- **Pagination:** Uses a standardized `PaginatedResult<T>` wrapper to provide the frontend with total counts and current page offsets.
 
 ### Unit of Work pattern
 
@@ -34,9 +34,9 @@ While queries are read-only, using the Unit of Work (UoW) pattern for them ensur
 
 #### Why use UoW for Queries?
 
-* **Snapshot Isolation**: If you run two different queries within the same execute method, you are guaranteed that the data didn't change between the first and second query.
-* **Developer Experience**: Developers don't have to remember two different patterns. Whether they are writing a "Create" feature or a "List" feature, the entry point is always execute(&mut uow, ...).
-* **Easy Mocking**: You can mock the entire UoW in your Application Layer tests to return specific query results without touching a real SQLite database.
+- **Snapshot Isolation**: If you run two different queries within the same execute method, you are guaranteed that the data didn't change between the first and second query.
+- **Developer Experience**: Developers don't have to remember two different patterns. Whether they are writing a "Create" feature or a "List" feature, the entry point is always execute(&mut uow, ...).
+- **Easy Mocking**: You can mock the entire UoW in your Application Layer tests to return specific query results without touching a real SQLite database.
 
 ---
 
@@ -54,13 +54,13 @@ The lifecycle of a query follows a streamlined path from the UI to the database:
 
 ## 4. Module Structure Reference
 
-| Module | Responsibility | Key Structs/Traits |
-| --- | --- | --- |
-| **`domain`** | Data Projections | `RailwayModelReadModel`, `ModelFilter` |
-| **`application`** | Query Logic | `GetRailwayModelsHandler` |
-| **`infrastructure`** | Optimized SQL | `SqliteRailwayModelQueryRepository` |
-| **`interface`** | Tauri Read Bridge | `get_railway_models` (Command) |
-| **`core`** | Shared Read Utils | `PaginationParams`, `SortDirection` |
+| Module               | Responsibility    | Key Structs/Traits                     |
+| -------------------- | ----------------- | -------------------------------------- |
+| **`domain`**         | Data Projections  | `RailwayModelReadModel`, `ModelFilter` |
+| **`application`**    | Query Logic       | `GetRailwayModelsHandler`              |
+| **`infrastructure`** | Optimized SQL     | `SqliteRailwayModelQueryRepository`    |
+| **`interface`**      | Tauri Read Bridge | `get_railway_models` (Command)         |
+| **`core`**           | Shared Read Utils | `PaginationParams`, `SortDirection`    |
 
 ---
 
@@ -139,7 +139,7 @@ impl GetRailwayModelsQuery {
 
         let items = repo.list_all().await?;
 
-        // You can perform additional orchestration here, 
+        // You can perform additional orchestration here,
         // like combining data from multiple query repositories
 
         Ok(items)
@@ -176,16 +176,14 @@ pub async fn get_railway_models(
 ) -> Result<Vec<RailwayModelListItem>, CommandError> {
     // 1. Initialize UoW (Starts a read-only transaction)
     let mut uow = SqliteUnitOfWork::new(&state.db_pool).await?;
-    
+
     // 2. Execute the Query
     let result = GetRailwayModelsQuery::execute(&mut uow).await?;
-    
-    // 3. Optional: Commit is usually a no-op for reads, 
+
+    // 3. Optional: Commit is usually a no-op for reads,
     // but ensures the transaction closes cleanly.
     uow.commit().await?;
-    
+
     Ok(result)
 }
 ```
-
-
