@@ -7,8 +7,8 @@
 use std::collections::HashMap;
 
 use super::db::SqliteDbError;
-use crate::core::domain::validation::ValidationError;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::validation::ValidationError;
 use serde::Serialize;
 
 /// Application-level error returned by command handlers in the core infrastructure.

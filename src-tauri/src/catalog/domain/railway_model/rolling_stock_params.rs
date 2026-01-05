@@ -7,8 +7,8 @@ use crate::catalog::domain::railway_model::{
     LengthOverBuffers, LocomotiveType, PassengerCarType, Radius, RailcarType, ServiceLevel,
     TechnicalSpecifications,
 };
-use crate::core::domain::validation::ValidationContext;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::validation::ValidationContext;
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 

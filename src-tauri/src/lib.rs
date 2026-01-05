@@ -13,13 +13,13 @@ pub mod wishlist;
 #[cfg(test)]
 pub mod test_utils;
 
-use crate::core::interface::command_handlers as core_command_handlers;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::catalog::interface::manufacturers as manufacturers_command_handlers;
 use crate::catalog::interface::railway_companies as railway_companies_command_handlers;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::dashboard_summary;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
