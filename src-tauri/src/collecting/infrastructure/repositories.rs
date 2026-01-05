@@ -3,9 +3,12 @@ use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRepository;
 use crate::collecting::infrastructure::database;
+use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use itertools::Itertools;
+use std::collections::HashMap;
 
 /// An SQLite-specific implementation of the `CollectionRepository`.
 ///
@@ -26,59 +29,39 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a collection.
-    async fn get_collection(&mut self) -> anyhow::Result<Collection> {
+    async fn get_collection(&mut self) -> Result<Collection, DomainError> {
         // For simplicity and matching the use case "get collection", we assume a single user collection for now
         // or getting the first one found. If none exists, we might need to return a default or error.
         // For this iteration, let's try to fetch the first collection.
         let collection_id = CollectionId::default();
 
         // Try to fetch the collection, but handle query errors gracefully
-        let collection_row = match database::get_collection(&mut *self.executor, &collection_id)
-            .await
-        {
-            Ok(row) => row,
-            Err(e) => {
-                // If the query itself fails (not just "no rows"), check if it's a "not found" scenario
-                // For now, log the error and return a default collection to keep the app functional
-                eprintln!(
-                    "Warning: Failed to query collection (id={}): {}. Returning default empty collection.",
-                    collection_id, e
-                );
-                return Ok(Collection::default());
-            }
-        };
-
+        let collection_row = database::get_collection(&mut *self.executor, &collection_id).await?;
         if collection_row.is_none() {
-            // Return an empty collection structure if no DB entry exists yet
+            // If no collection exists, return a default empty collection
             return Ok(Collection::default());
         }
 
         let collection_row =
             collection_row.expect("Expect collection row to be present after None check");
-        let collection_id = collection_row.id.clone();
-        let collection_item_rows =
-            database::get_collection_items(&mut *self.executor, &collection_id).await?;
 
         let owned_rolling_stock_rows =
-            database::get_owned_rolling_stocks(&mut *self.executor, &collection_id).await?;
-        let owned_rolling_stocks_map: std::collections::HashMap<
-            CollectionItemId,
-            Vec<crate::collecting::infrastructure::entities::OwnedRollingStockRow>,
-        > = owned_rolling_stock_rows
-            .into_iter()
-            .map(|owned_rs| (owned_rs.collection_item_id.clone(), owned_rs))
-            .into_group_map();
+            database::get_owned_rolling_stocks(&mut *self.executor, &collection_row.id).await?;
+        let owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
+            owned_rolling_stock_rows
+                .into_iter()
+                .map(|owned_rs| (owned_rs.collection_item_id.clone(), owned_rs))
+                .into_group_map();
 
         let purchase_info_rows =
-            database::get_purchase_infos(&mut *self.executor, &collection_id).await?;
-        let purchase_info_map: std::collections::HashMap<
-            CollectionItemId,
-            Vec<crate::collecting::infrastructure::entities::PurchaseInfoRow>,
-        > = purchase_info_rows
+            database::get_purchase_infos(&mut *self.executor, &collection_row.id).await?;
+        let purchase_info_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = purchase_info_rows
             .into_iter()
             .map(|purchase_info| (purchase_info.collection_item_id.clone(), purchase_info))
             .into_group_map();
 
+        let collection_item_rows =
+            database::get_collection_items(&mut *self.executor, &collection_row.id).await?;
         let mut collection_items = Vec::new();
         for collection_item_row in collection_item_rows {
             let item = CollectionMapper::row_to_collection_item(
@@ -119,28 +102,42 @@ impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collecting::domain::PurchaseInfo;
-    use crate::core::domain::Currency;
+    use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
+    use crate::collecting::domain::{
+        BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
+    };
+    use crate::core::domain::{Currency, MonetaryAmount};
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_collection_empty(conn: sqlx::SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&conn).await.unwrap();
+    async fn it_should_return_the_default_collection_when_not_found(conn: sqlx::SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
 
-        let collection = uow.collection_repo().get_collection().await.unwrap();
+        let collection = unit_of_work
+            .collection_repo()
+            .get_collection()
+            .await
+            .expect("should get collection");
 
-        uow.commit().await.unwrap();
+        unit_of_work.commit().await.unwrap();
 
+        assert_eq!(collection.id, CollectionId::default());
         assert_eq!(collection.name, "My Collection");
         assert_eq!(collection.items.len(), 0);
     }
 
     #[sqlx::test(migrations = "./migrations", fixtures("test_collection"))]
-    async fn it_should_get_collection_with_data(conn: sqlx::SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&conn).await.unwrap();
+    async fn it_should_return_the_collection_data(conn: sqlx::SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
 
-        let collection = uow.collection_repo().get_collection().await.unwrap();
-
-        uow.commit().await.unwrap();
+        let collection = unit_of_work
+            .collection_repo()
+            .get_collection()
+            .await
+            .expect("should get collection");
 
         assert_eq!(collection.id, CollectionId::default());
         assert_eq!(collection.summary.locomotives_count, 0);
@@ -149,23 +146,51 @@ mod tests {
         assert_eq!(collection.summary.train_sets_count, 0);
         assert_eq!(collection.summary.railcars_count, 0);
         assert_eq!(collection.summary.electric_multiple_units_count, 0);
-        assert!(collection.total_value.is_some());
+
+        let expected_total_value = MonetaryAmount::new(0, Currency::EUR);
+        assert_eq!(collection.total_value, Some(expected_total_value));
+
         assert_eq!(collection.items.len(), 1);
+        let expected_railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid railway model id");
+        let collection_item = &collection.items[0];
+        assert_eq!(collection_item.railway_model_id, expected_railway_model_id);
+        assert_eq!(collection_item.model_condition, Some(ModelCondition::Mint));
         assert_eq!(
-            collection.items[0].railway_model_id.to_string(),
-            "trn:railway-model:acme:60100".to_string()
+            collection_item.box_condition,
+            Some(BoxCondition::OriginalMint)
+        );
+        assert_eq!(
+            collection_item.purchase_condition,
+            Some(PurchaseCondition::New)
+        );
+        assert_eq!(
+            collection_item.notes,
+            Some(String::from("My notes go here"))
         );
 
-        assert_eq!(collection.items[0].rolling_stocks.len(), 1);
+        assert_eq!(collection_item.rolling_stocks.len(), 1);
+        let rolling_stocks = &collection_item.rolling_stocks[0];
+
+        let expected_owned_rolling_stock_id = OwnedRollingStockId::try_from(
+            "trn:owned-rolling-stock:77122924-783e-4f3c-a6b5-f4caec9e695d",
+        )
+        .expect("valid owned rolling stock id");
+        let expected_rolling_stock_id =
+            RollingStockId::try_from("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8")
+                .expect("valid rolling stock id");
+        assert_eq!(rolling_stocks.id, expected_owned_rolling_stock_id);
+        assert_eq!(rolling_stocks.rolling_stock_id, expected_rolling_stock_id);
         assert_eq!(
-            collection.items[0].rolling_stocks[0]
-                .rolling_stock_id
-                .to_string(),
-            "trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string()
+            rolling_stocks.notes,
+            Some(String::from("My rolling stock notes go here"))
         );
 
-        assert!(collection.items[0].purchase_info.is_some());
-        let purchase_info = collection.items[0].purchase_info.as_ref().unwrap();
+        assert!(collection_item.purchase_info.is_some());
+        let purchase_info = collection_item
+            .purchase_info
+            .as_ref()
+            .expect("should be present");
         match purchase_info {
             PurchaseInfo::Purchased(purchased_info) => {
                 assert_eq!(

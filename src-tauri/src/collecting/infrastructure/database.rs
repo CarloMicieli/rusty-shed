@@ -1,17 +1,9 @@
-//! SQLite helper functions (crate-internal) used to read collecting-related rows.
-//!
-//! These helpers return typed row representations defined in
-//! `crate::collecting::infrastructure::entities` and intentionally keep SQL and
-//! mapping logic separate from domain conversion. All queries use parameter
-//! binding via `sqlx::query_as(...).bind(...)` to avoid string interpolation.
-
-use anyhow::{Context, Result};
-
 use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
 
 use crate::collecting::domain::CollectionId;
+use crate::core::domain::domain_error::DomainError;
 
 /// Fetch a single collection row by id.
 ///
@@ -25,7 +17,7 @@ use crate::collecting::domain::CollectionId;
 pub async fn get_collection(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
-) -> Result<Option<CollectionRow>> {
+) -> Result<Option<CollectionRow>, DomainError> {
     let sql = r#"SELECT
              id,
              name,
@@ -47,7 +39,7 @@ pub async fn get_collection(
         .bind(collection_id.to_string())
         .fetch_optional(executor)
         .await
-        .with_context(|| format!("querying collection id={}", collection_id))?;
+        .map_err(DomainError::Infrastructure)?;
 
     Ok(row)
 }
@@ -59,7 +51,7 @@ pub async fn get_collection(
 pub async fn get_collection_items(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
-) -> Result<Vec<CollectionItemRow>> {
+) -> Result<Vec<CollectionItemRow>, DomainError> {
     let sql = r#"SELECT
              id,
              collection_id,
@@ -77,12 +69,7 @@ pub async fn get_collection_items(
         .bind(collection_id.to_string())
         .fetch_all(executor)
         .await
-        .with_context(|| {
-            format!(
-                "querying collection_items for collection_id={}",
-                collection_id
-            )
-        })?;
+        .map_err(DomainError::Infrastructure)?;
 
     Ok(rows)
 }
@@ -94,7 +81,7 @@ pub async fn get_collection_items(
 pub async fn get_owned_rolling_stock(
     executor: &mut sqlx::SqliteConnection,
     owned_rolling_stock_id: String,
-) -> Result<Option<OwnedRollingStockRow>> {
+) -> Result<Option<OwnedRollingStockRow>, DomainError> {
     let sql = r#"SELECT
              id,
              collection_item_id,
@@ -108,7 +95,7 @@ pub async fn get_owned_rolling_stock(
         .bind(owned_rolling_stock_id)
         .fetch_optional(executor)
         .await
-        .context("querying owned_rolling_stock by id")?;
+        .map_err(DomainError::Infrastructure)?;
 
     Ok(row)
 }
@@ -120,7 +107,7 @@ pub async fn get_owned_rolling_stock(
 pub async fn get_owned_rolling_stocks(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
-) -> Result<Vec<OwnedRollingStockRow>> {
+) -> Result<Vec<OwnedRollingStockRow>, DomainError> {
     // Select owned rolling stocks and LEFT JOIN decoders to include decoder master data
     let sql = r#"SELECT
              ors.id,
@@ -144,12 +131,7 @@ pub async fn get_owned_rolling_stocks(
         .bind(collection_id.to_string())
         .fetch_all(executor)
         .await
-        .with_context(|| {
-            format!(
-                "querying owned_rolling_stocks for collection_id={}",
-                collection_id
-            )
-        })?;
+        .map_err(DomainError::Infrastructure)?;
 
     Ok(rows)
 }
@@ -161,7 +143,7 @@ pub async fn get_owned_rolling_stocks(
 pub async fn get_purchase_infos(
     executor: &mut sqlx::SqliteConnection,
     collection_id: &CollectionId,
-) -> Result<Vec<PurchaseInfoRow>> {
+) -> Result<Vec<PurchaseInfoRow>, DomainError> {
     let sql = r#"SELECT
              pi.id,
              pi.collection_item_id,
@@ -187,12 +169,7 @@ pub async fn get_purchase_infos(
         .bind(collection_id.to_string())
         .fetch_all(executor)
         .await
-        .with_context(|| {
-            format!(
-                "querying purchase_infos for collection_id={}",
-                collection_id
-            )
-        })?;
+        .map_err(DomainError::Infrastructure)?;
 
     Ok(rows)
 }

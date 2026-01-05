@@ -1,9 +1,3 @@
-//! Core currency types used across the application.
-//!
-//! This module provides the `Currency` enum for a small set of supported
-//! currencies and helpers to parse and format currency codes and symbols.
-
-use crate::core::domain::error::Error;
 use serde::{Deserialize, Serialize};
 
 /// Currency codes supported by the application.
@@ -28,21 +22,13 @@ impl Currency {
     ///
     /// Returns `Ok(Currency)` for known codes (`"EUR"`, `"USD"`, `"GBP"`,
     /// `"JPY"`) or an error for unsupported/unknown codes.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use rusty_shed_lib::core::domain::Currency;
-    /// let c = Currency::from_code("eur").unwrap();
-    /// assert_eq!(c, Currency::EUR);
-    /// ```
-    pub fn from_code(code: &str) -> Result<Currency, Error> {
+    pub fn from_code(code: &str) -> Result<Currency, CurrencyError> {
         match code.to_uppercase().as_str() {
             "EUR" => Ok(Currency::EUR),
             "USD" => Ok(Currency::USD),
             "GBP" => Ok(Currency::GBP),
             "JPY" => Ok(Currency::JPY),
-            other => Err(Error::UnsupportedCurrency(other.to_string())),
+            other => Err(CurrencyError::UnsupportedCurrency(other.to_string())),
         }
     }
 
@@ -68,6 +54,12 @@ impl Currency {
             Currency::JPY => "JPY",
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum CurrencyError {
+    #[error("Unsupported currency code: {0}")]
+    UnsupportedCurrency(String),
 }
 
 #[cfg(test)]

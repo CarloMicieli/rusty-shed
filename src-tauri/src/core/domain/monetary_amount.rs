@@ -1,20 +1,9 @@
-//! Monetary amount utilities used in domain models.
-//!
-//! This module defines `MonetaryAmount`, a small value object that stores an
-//! amount in the smallest unit (for example cents for EUR/USD/GBP, integer
-//! yen for JPY) together with a `Currency`.
-//!
-//! The module provides helpers to build an instance from database parts
-//! (`MonetaryAmount::from_db`), to add values when currencies match
-//! (`add_same_currency`) and to format the value for display.
-
-use crate::core::domain::error::Error;
-type Result<T> = std::result::Result<T, Error>;
+type Result<T> = std::result::Result<T, MonetaryAmountError>;
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use crate::core::domain::currency::Currency;
+use crate::core::domain::currency::{Currency, CurrencyError};
 
 /// A monetary amount in the smallest currency unit together with its currency.
 ///
@@ -22,26 +11,10 @@ use crate::core::domain::currency::Currency;
 /// the `currency` that the amount is denominated in. Prefer using the provided
 /// constructors rather than populating fields directly.
 ///
-/// # Examples
-///
-/// Basic construction and display:
-///
-/// ```rust
-/// # use rusty_shed_lib::core::domain::{Currency, MonetaryAmount};
-/// let m = MonetaryAmount::new(1050, Currency::EUR);
-/// assert_eq!(m.to_string(), "10.50 €");
-/// ```
-///
-/// Constructing from DB parts (nullable currency):
-///
-/// ```rust
-/// # use rusty_shed_lib::core::domain::{Currency, MonetaryAmount};
-/// let m = MonetaryAmount::from_db(1234, Some("USD")).unwrap();
-/// assert_eq!(m.unwrap().currency, Currency::USD);
-/// let none = MonetaryAmount::from_db(0, None).unwrap();
-/// assert!(none.is_none());
-/// ```
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+/// `MonetaryAmount` provides helpers to build an instance from database parts
+/// (`MonetaryAmount::from_db`), to add values when currencies match
+/// (`add_same_currency`) and to format the value for display.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, specta::Type)]
 pub struct MonetaryAmount {
     /// Amount stored in the smallest unit (e.g. cents for EUR/USD/GBP).
     pub amount: u64,
@@ -82,9 +55,8 @@ impl MonetaryAmount {
             None => Ok(None),
             Some(code) => {
                 if amount_i64 < 0 {
-                    return Err(Error::NegativeAmount(amount_i64));
+                    return Err(MonetaryAmountError::NegativeAmount(amount_i64));
                 }
-                // Currency::from_code already returns a domain Error, propagate it
                 let currency = Currency::from_code(code)?;
                 Ok(Some(MonetaryAmount::new(amount_i64 as u64, currency)))
             }
@@ -97,12 +69,12 @@ impl MonetaryAmount {
     /// overflow the `u64` range.
     pub fn add_same_currency(&self, other: &MonetaryAmount) -> Result<MonetaryAmount> {
         if self.currency != other.currency {
-            return Err(Error::CurrencyMismatch);
+            return Err(MonetaryAmountError::CurrencyMismatch);
         }
         let sum = self
             .amount
             .checked_add(other.amount)
-            .ok_or(Error::Overflow)?;
+            .ok_or(MonetaryAmountError::Overflow)?;
         Ok(MonetaryAmount::new(sum, self.currency))
     }
 
@@ -147,6 +119,25 @@ impl fmt::Display for MonetaryAmount {
     }
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum MonetaryAmountError {
+    /// Unsupported or unknown currency code.
+    #[error("{0}")]
+    UnsupportedCurrency(#[from] CurrencyError),
+
+    /// Negative amount read from the database where only non-negative values are allowed.
+    #[error("Negative monetary amount: {0}")]
+    NegativeAmount(i64),
+
+    /// Attempt to combine amounts with different currencies.
+    #[error("Cannot add MonetaryAmount with different currencies")]
+    CurrencyMismatch,
+
+    /// Arithmetic overflow while adding monetary amounts.
+    #[error("Monetary amount overflow when adding")]
+    Overflow,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,15 +158,38 @@ mod tests {
         assert_eq!(m.to_string(), expected);
     }
 
-    #[rstest]
+    #[test]
     fn monetary_from_db_none() {
-        let m = MonetaryAmount::from_db(0, None).unwrap();
-        assert!(m.is_none());
+        let monetary_amount = MonetaryAmount::from_db(0, None).unwrap();
+        assert!(monetary_amount.is_none());
     }
 
-    #[rstest]
+    #[test]
     fn monetary_from_db_negative() {
-        assert!(MonetaryAmount::from_db(-1, Some("EUR")).is_err());
+        let result = MonetaryAmount::from_db(-1, Some("EUR"));
+        assert!(result.is_err());
+        let err = result.err().unwrap();
+        match err {
+            MonetaryAmountError::NegativeAmount(_) => {
+                assert_eq!(err.to_string(), "Negative monetary amount: -1");
+            }
+            _ => panic!("Expected UnsupportedCurrency error"),
+        }
+    }
+
+    #[test]
+    fn monetary_from_db_invalid_currency() {
+        let result = MonetaryAmount::from_db(100, Some("INVALID"));
+        assert!(result.is_err());
+
+        let err = result.err().unwrap();
+        match err {
+            MonetaryAmountError::UnsupportedCurrency(ref code) => {
+                assert_eq!(err.to_string(), "Unsupported currency code: INVALID");
+                assert_eq!(code.to_string(), "Unsupported currency code: INVALID");
+            }
+            _ => panic!("Expected UnsupportedCurrency error"),
+        }
     }
 
     #[rstest]

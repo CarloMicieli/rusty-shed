@@ -23,7 +23,7 @@ pub struct OwnedRollingStock {
 
     /// Free-form notes associated with this owned instance.
     /// Use this for short owner notes or a brief textual label.
-    pub notes: String,
+    pub notes: Option<String>,
 
     /// Optional digital setup information if a decoder is installed.
     pub digital: Option<DigitalSetup>,
@@ -90,7 +90,7 @@ mod tests {
         let mut ors = OwnedRollingStock {
             id: OwnedRollingStockId::new("ors-1"),
             rolling_stock_id,
-            notes: "".to_string(),
+            notes: None,
             digital: None,
         };
 

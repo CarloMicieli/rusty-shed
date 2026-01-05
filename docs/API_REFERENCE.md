@@ -12,10 +12,19 @@ This reference enumerates the IPC commands exposed from Rust to the SvelteKit fr
 
 ### App & System
 
-| Command             | Params | Returns  | Notes                                                                                                          |
-| ------------------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `is_db_initialized` | none   | `bool`   | Checks `AppState.initialized` after migrations/seed ([src-tauri/src/lib.rs](../src-tauri/src/lib.rs#L29-L34)). |
-| `get_app_version`   | none   | `String` | Crate version from `CARGO_PKG_VERSION` ([src-tauri/src/lib.rs](../src-tauri/src/lib.rs#L36-L40)).              |
+| Command             | Params | Returns  | Notes                                                |
+| ------------------- | ------ | -------- |------------------------------------------------------|
+| `is_db_initialized` | none   | `bool`   | Checks `AppState.initialized` after migrations/seed. |
+| `get_app_version`   | none   | `String` | Crate version from `CARGO_PKG_VERSION`.              |
+
+## Queries
+
+| Query             | Params                       | Returns               | Notes                                                  |
+|-------------------| ---------------------------- |-----------------------|--------------------------------------------------------|
+| `get_collection`  | none                         | `Collection`          | Returns the collection. Users have one collection only |
+
+
+## Commands (OLD)
 
 ### Catalog
 

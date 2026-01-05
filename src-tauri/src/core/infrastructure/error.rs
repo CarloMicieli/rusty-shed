@@ -52,11 +52,30 @@ pub enum CommandError {
     /// logging; avoid placing secrets here.
     #[error("unknown error: {0}")]
     Unknown(String),
+
+    /// Indicates a violation of a specific business invariant.
+    ///
+    /// **Source:** Triggered by Domain Entities or Use Cases (e.g.,
+    /// "Cannot cancel an invoice that has already been paid").
+    #[error("Business rule violation: {0}")]
+    BusinessRule(String),
 }
 
 impl From<DomainError> for CommandError {
     fn from(error: DomainError) -> Self {
-        CommandError::Unknown(format!("{}", error))
+        match error {
+            DomainError::NotFound {
+                resource,
+                identifier,
+            } => CommandError::NotFound(format!(
+                "{} with identifier '{}' not found",
+                resource, identifier
+            )),
+            DomainError::Validation(_) => CommandError::ValidationError(HashMap::new()),
+            DomainError::Infrastructure(inner) => CommandError::DatabaseError(inner.to_string()),
+            DomainError::BusinessRule(msg) => CommandError::BusinessRule(msg),
+            DomainError::ValidationError(errors) => CommandError::ValidationError(errors),
+        }
     }
 }
 
@@ -89,12 +108,6 @@ impl From<anyhow::Error> for CommandError {
 
 impl CommandError {
     /// Helper to create a validation error for a single field.
-    ///
-    /// # Example
-    /// ```
-    /// use rusty_shed_lib::core::infrastructure::error::CommandError;
-    /// let err = CommandError::validation_field("email", "Invalid email format");
-    /// ```
     pub fn validation_field(field: impl Into<String>, _error: impl Into<String>) -> Self {
         let mut fields = HashMap::new();
         fields.insert(field.into(), Vec::new());
@@ -102,15 +115,6 @@ impl CommandError {
     }
 
     /// Helper to create a validation error from multiple field errors.
-    ///
-    /// # Example
-    /// ```
-    /// use rusty_shed_lib::core::infrastructure::error::CommandError;
-    /// let err = CommandError::validation_fields([
-    ///     ("email", "Invalid email format"),
-    ///     ("age", "Must be at least 18"),
-    /// ]);
-    /// ```
     pub fn validation_fields<I, K, V>(fields: I) -> Self
     where
         I: IntoIterator<Item = (K, V)>,
@@ -122,5 +126,62 @@ impl CommandError {
             .map(|(k, _v)| (k.into(), Vec::new()))
             .collect();
         CommandError::ValidationError(map)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_domain_error_to_command_error_not_found() {
+        let domain_error = DomainError::NotFound {
+            resource: "Wishlist".to_string(),
+            identifier: "123".to_string(),
+        };
+        let command_error: CommandError = domain_error.into();
+        match command_error {
+            CommandError::NotFound(msg) => {
+                assert_eq!(msg, "Wishlist with identifier '123' not found");
+            }
+            _ => panic!("Expected NotFound variant"),
+        }
+    }
+
+    #[test]
+    fn test_command_error_validation_field() {
+        let command_error = CommandError::validation_field("email", "Invalid format");
+        match command_error {
+            CommandError::ValidationError(map) => {
+                assert!(map.contains_key("email"));
+            }
+            _ => panic!("Expected ValidationError variant"),
+        }
+    }
+
+    #[test]
+    fn test_command_error_validation_fields() {
+        let fields = vec![("email", "Invalid format"), ("age", "Must be at least 18")];
+        let command_error = CommandError::validation_fields(fields);
+        match command_error {
+            CommandError::ValidationError(map) => {
+                assert!(map.contains_key("email"));
+                assert!(map.contains_key("age"));
+            }
+            _ => panic!("Expected ValidationError variant"),
+        }
+    }
+
+    #[test]
+    fn test_domain_error_to_command_error_business_rule() {
+        let domain_error = DomainError::BusinessRule("Cannot delete paid invoice".to_string());
+        let command_error: CommandError = domain_error.into();
+        match command_error {
+            CommandError::BusinessRule(msg) => {
+                assert_eq!(msg, "Cannot delete paid invoice");
+            }
+            _ => panic!("Expected BusinessRule variant"),
+        }
     }
 }

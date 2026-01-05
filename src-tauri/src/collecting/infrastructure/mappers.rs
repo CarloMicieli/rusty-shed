@@ -9,8 +9,9 @@ use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
 use crate::core::domain::MonetaryAmount;
+use crate::core::domain::domain_error::DomainError;
 use crate::dcc_inventory::domain::DecoderId;
-use anyhow::{Context, anyhow};
+use anyhow::anyhow;
 use std::collections::HashMap;
 
 /// Converts infrastructure row types into collecting domain types.
@@ -43,24 +44,25 @@ impl CollectionMapper {
     pub fn row_to_collection(
         row: CollectionRow,
         items: Vec<CollectionItem>,
-    ) -> anyhow::Result<Collection> {
+    ) -> Result<Collection, DomainError> {
+        let total_value =
+            MonetaryAmount::from_db(row.total_value_amount, Some(&row.total_value_currency))
+                .map_err(|err| DomainError::Validation(err.to_string()))?;
+
+        let summary = CollectionSummary {
+            locomotives_count: row.locomotives_count as u16,
+            passenger_cars_count: row.passenger_cars_count as u16,
+            freight_cars_count: row.freight_cars_count as u16,
+            train_sets_count: row.train_sets_count as u16,
+            railcars_count: row.railcars_count as u16,
+            electric_multiple_units_count: row.electric_multiple_units_count as u16,
+        };
+
         Ok(Collection {
             id: row.id,
             name: row.name,
-            summary: CollectionSummary {
-                locomotives_count: row.locomotives_count as u16,
-                passenger_cars_count: row.passenger_cars_count as u16,
-                freight_cars_count: row.freight_cars_count as u16,
-                train_sets_count: row.train_sets_count as u16,
-                railcars_count: row.railcars_count as u16,
-                electric_multiple_units_count: row.electric_multiple_units_count as u16,
-            },
-            total_value: MonetaryAmount::from_db(
-                row.total_value_amount,
-                Some(&row.total_value_currency),
-            )
-            .map_err(|e| anyhow!(e.to_string()))
-            .context("Failed to parse collection total value from DB")?,
+            summary,
+            total_value,
             items,
         })
     }
@@ -84,7 +86,7 @@ impl CollectionMapper {
         row: CollectionItemRow,
         owned_rolling_stocks_map: &HashMap<CollectionItemId, Vec<OwnedRollingStockRow>>,
         purchase_info_map: &HashMap<CollectionItemId, Vec<PurchaseInfoRow>>,
-    ) -> anyhow::Result<CollectionItem> {
+    ) -> Result<CollectionItem, DomainError> {
         let collection_item_id = row.id;
 
         let owned_rolling_stocks = owned_rolling_stocks_map
@@ -97,7 +99,7 @@ impl CollectionMapper {
                         let mut ors = OwnedRollingStock {
                             id: rs_row.id.clone(),
                             rolling_stock_id: rs_row.rolling_stock_id.clone().unwrap(),
-                            notes: rs_row.notes.clone().unwrap_or_default(),
+                            notes: rs_row.notes.clone(),
                             digital: None,
                         };
 
@@ -384,7 +386,10 @@ mod tests {
                 .to_string()
                 .starts_with("trn:rolling-stock")
         );
-        assert_eq!(ors.notes, "My rolling stock notes go here".to_string());
+        assert_eq!(
+            ors.notes,
+            Some("My rolling stock notes go here".to_string())
+        );
 
         let pi = mapped_item.purchase_info.expect("purchase info present");
         match pi {

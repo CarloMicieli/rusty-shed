@@ -1,5 +1,6 @@
 use crate::collecting::domain::PurchaseInfoId;
-use crate::core::domain::{Error, MonetaryAmount};
+use crate::core::domain::MonetaryAmount;
+use crate::core::domain::monetary_amount::MonetaryAmountError;
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -147,9 +148,9 @@ impl PreOrderInfo {
     ///
     /// Returns `Ok(())` when currencies match, otherwise returns
     /// `crate::core::domain::error::Error::CurrencyMismatch`.
-    pub fn validate_currencies_match(&self) -> Result<(), Error> {
+    pub fn validate_currencies_match(&self) -> Result<(), MonetaryAmountError> {
         if self.deposit.currency != self.total_price.currency {
-            return Err(Error::CurrencyMismatch);
+            return Err(MonetaryAmountError::CurrencyMismatch);
         }
         Ok(())
     }
