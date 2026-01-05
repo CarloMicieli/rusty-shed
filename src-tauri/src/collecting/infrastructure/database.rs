@@ -257,8 +257,8 @@ mod tests {
             collection_item_row.description,
             "Locomotiva elettrica E.444.005 Tartaruga"
         );
-        assert_eq!(collection_item_row.epoch, "IV".try_into().unwrap());
-        assert_eq!(collection_item_row.scale, "H0".try_into().unwrap());
+        assert_eq!(collection_item_row.epoch, "IV".into());
+        assert_eq!(collection_item_row.scale, "H0".try_into()?);
 
         Ok(())
     }
