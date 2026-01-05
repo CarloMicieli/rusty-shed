@@ -252,7 +252,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("test_wishlist"))]
+    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_wishlist.sql"))]
     async fn get_wishlist_repo_returns_some(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();
@@ -307,7 +307,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("test_wishlists"))]
+    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_wishlists.sql"))]
     async fn list_wishlist_previews_returns_preview(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repo();

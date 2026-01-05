@@ -44,7 +44,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("test_wishlist"))]
+    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_wishlist.sql"))]
     async fn get_wishlist_returns_some(conn: SqlitePool) -> Result<()> {
         let mut uow =
             crate::core::infrastructure::unit_of_work::SqliteUnitOfWork::new(&conn).await?;

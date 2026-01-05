@@ -33,7 +33,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("test_wishlists"))]
+    #[sqlx::test(migrations = "./migrations", fixtures("../../../fixtures/test_wishlists.sql"))]
     async fn list_wishlists_with_totals(conn: SqlitePool) -> Result<()> {
         let wishlist_id = "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9";
 
