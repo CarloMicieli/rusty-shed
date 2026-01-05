@@ -1,4 +1,4 @@
-use crate::collecting::application::get_collection::GetCollectionUseCase;
+use crate::collecting::application::GetCollectionQuery;
 use crate::collecting::domain::Collection;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::error::CommandError;
@@ -65,8 +65,7 @@ pub async fn dashboard_summary(
     let mut collecting_uow = SqliteUnitOfWork::new(&pool)
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
-    let collection = GetCollectionUseCase::new()
-        .execute(&mut collecting_uow)
+    let collection = GetCollectionQuery::execute(&mut collecting_uow)
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     collecting_uow
