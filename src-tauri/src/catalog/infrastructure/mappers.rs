@@ -224,7 +224,7 @@ mod tests {
         use url::Url;
 
         #[test]
-        fn mapper_converts_row_to_domain() {
+        fn it_should_convert_row_to_domain() {
             let utc_timestamp = DateTime::from_timestamp(0, 0)
                 .expect("invalid timestamp")
                 .naive_utc();
@@ -254,18 +254,19 @@ mod tests {
                 domain.website_url,
                 Some(Url::parse("https://www.acmetreni.com").unwrap())
             );
+            assert_eq!(domain.country_code, Some("IT".to_string()));
         }
 
         mod railway_mapper_tests {
             use super::*;
             use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayStatus};
             use crate::catalog::infrastructure::entities::RailwayCompanyRow;
-            use chrono::DateTime;
+            use chrono::{DateTime, NaiveDate};
             use pretty_assertions::assert_eq;
             use std::convert::TryFrom;
 
             #[test]
-            fn railway_mapper_converts_row_to_domain() {
+            fn it_should_convert_row_to_domain() {
                 let utc_timestamp = DateTime::from_timestamp(0, 0)
                     .expect("invalid timestamp")
                     .naive_utc();
@@ -275,12 +276,12 @@ mod tests {
 
                 let row = RailwayCompanyRow {
                     id: railway_company_id.clone(),
-                    name: "Ferrovie dello Stato".to_string(),
-                    registered_company_name: Some("FS S.p.A.".to_string()),
+                    name: "Name".to_string(),
+                    registered_company_name: Some("Registered Company Name".to_string()),
                     country_code: Some("IT".to_string()),
-                    status: Some(RailwayStatus::Active),
-                    operating_since: None,
-                    operating_until: None,
+                    status: Some(RailwayStatus::Merged),
+                    operating_since: Some(NaiveDate::from_ymd_opt(1905, 1, 1).unwrap()),
+                    operating_until: Some(NaiveDate::from_ymd_opt(1925, 2, 1).unwrap()),
                     created_at: utc_timestamp,
                     updated_at: utc_timestamp,
                 };
@@ -288,16 +289,20 @@ mod tests {
                 let domain = RailwayCompany::try_from(row).expect("mapping should succeed");
 
                 assert_eq!(domain.id, railway_company_id);
-                assert_eq!(domain.name, "Ferrovie dello Stato");
-                assert_eq!(domain.registered_company_name.as_deref(), Some("FS S.p.A."));
+                assert_eq!(domain.name, "Name");
+                assert_eq!(
+                    domain.registered_company_name.as_deref(),
+                    Some("Registered Company Name")
+                );
                 assert_eq!(
                     domain.period_of_activity,
                     Some(PeriodOfActivity {
-                        operating_since: None,
-                        operating_until: None,
-                        status: RailwayStatus::Active,
+                        operating_since: Some(NaiveDate::from_ymd_opt(1905, 1, 1).unwrap()),
+                        operating_until: Some(NaiveDate::from_ymd_opt(1925, 2, 1).unwrap()),
+                        status: RailwayStatus::Merged,
                     })
                 );
+                assert_eq!(domain.country_code, Some("IT".to_string()));
             }
         }
     }
@@ -307,7 +312,8 @@ mod tests {
         use crate::catalog::domain::manufacturer::ManufacturerId;
         use crate::catalog::domain::railway_company::RailwayCompanyId;
         use crate::catalog::domain::railway_model::{
-            AvailabilityStatus, DeliveryDate, ProductCode, RailwayModelId, RollingStockId,
+            AvailabilityStatus, Control, DccInterface, DeliveryDate, ProductCode, RailwayModelId,
+            RollingStockId, ServiceLevel,
         };
         use crate::catalog::domain::railway_model::{Category, PowerMethod};
         use crate::catalog::domain::railway_model::{
@@ -318,7 +324,7 @@ mod tests {
         use pretty_assertions::assert_eq;
 
         #[test]
-        fn railway_model_row_maps_to_domain() {
+        fn it_should_convert_railway_model_row_to_domain() {
             let utc_timestamp = DateTime::from_timestamp(0, 0)
                 .expect("invalid timestamp")
                 .naive_utc();
@@ -334,7 +340,7 @@ mod tests {
                 manufacturer_name: "ACME Models".to_string(),
                 product_code: product_code.clone(),
                 description: "Test model".to_string(),
-                details: None,
+                details: Some("Detailed description".to_string()),
                 power_method: PowerMethod::DC,
                 scale: Scale::H0,
                 epoch: "III".into(),
@@ -354,11 +360,21 @@ mod tests {
             assert_eq!(domain.manufacturer, manufacturer);
             assert_eq!(domain.product_code, product_code);
             assert_eq!(domain.description, "Test model");
+            assert_eq!(domain.details.as_deref(), Some("Detailed description"));
+            assert_eq!(domain.power_method, PowerMethod::DC);
+            assert_eq!(domain.scale, Scale::H0);
+            assert_eq!(domain.epoch, "III".into());
+            assert_eq!(domain.category, Category::Locomotives);
+            assert_eq!(domain.delivery_date, Some(DeliveryDate::Year(2023)));
+            assert_eq!(
+                domain.availability_status,
+                Some(AvailabilityStatus::Available)
+            );
             assert_eq!(domain.rolling_stocks.len(), 0);
         }
 
         #[test]
-        fn rolling_stock_row_maps_to_domain_locomotive() {
+        fn it_should_convert_locomotive_rolling_stock_row_to_domain() {
             let id = RollingStockId::default();
             let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
                 .expect("invalid railway model id");
@@ -370,7 +386,7 @@ mod tests {
                 category: RollingStockCategory::Locomotive,
                 railway_company_id: railway_company_id.clone(),
                 railway_company_name: "Ferrovie dello Stato".to_string(),
-                livery: Some("red".to_string()),
+                livery: Some("Livery".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
@@ -386,25 +402,59 @@ mod tests {
                 friendly_name: Some("Class X".to_string()),
                 series_code: "123".to_string(),
                 road_number: Some("123".to_string()),
-                series: None,
-                depot: None,
+                series: Some("Series 1".to_string()),
+                depot: Some("Depot".to_string()),
                 electric_multiple_unit_type: None,
                 freight_car_type: None,
                 locomotive_type: Some(LocomotiveType::DieselLocomotive),
                 passenger_car_type: None,
                 railcar_type: None,
                 service_level: None,
-                dcc_interface: None,
-                control: None,
+                dcc_interface: Some(DccInterface::Nem652),
+                control: Some(Control::DccReady),
                 is_dummy: false,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id_as_ref(), &id);
+            match domain {
+                RollingStock::Locomotive {
+                    id,
+                    railway,
+                    livery,
+                    length_over_buffer,
+                    technical_specifications,
+                    friendly_name,
+                    series_code,
+                    road_number,
+                    series,
+                    depot,
+                    locomotive_type,
+                    dcc_interface,
+                    control,
+                    is_dummy,
+                } => {
+                    assert_eq!(id, id);
+                    assert_eq!(railway.railway_company_id, railway_company_id);
+                    assert_eq!(railway.display, "Ferrovie dello Stato");
+                    assert_eq!(livery.as_deref(), Some("Livery"));
+                    assert_eq!(friendly_name.as_deref(), Some("Class X"));
+                    assert_eq!(series_code, "123");
+                    assert_eq!(road_number.as_deref(), Some("123"));
+                    assert_eq!(series.as_deref(), Some("Series 1"));
+                    assert_eq!(depot.as_deref(), Some("Depot"));
+                    assert_eq!(locomotive_type, LocomotiveType::DieselLocomotive);
+                    assert_eq!(dcc_interface, Some(DccInterface::Nem652));
+                    assert_eq!(control, Some(Control::DccReady));
+                    assert_eq!(is_dummy, false);
+                    assert_eq!(technical_specifications, None);
+                    assert_eq!(length_over_buffer, None);
+                }
+                _ => panic!("expected locomotive variant"),
+            };
         }
 
         #[test]
-        fn rolling_stock_row_maps_to_domain_freight_car() {
+        fn it_should_convert_freight_car_rolling_stock_row_to_domain() {
             let id = RollingStockId::default();
             let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
                 .expect("invalid railway model id");
@@ -416,7 +466,7 @@ mod tests {
                 category: RollingStockCategory::FreightCar,
                 railway_company_id: railway_company_id.clone(),
                 railway_company_name: "Ferrovie dello Stato".to_string(),
-                livery: None,
+                livery: Some("livery".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
@@ -430,7 +480,7 @@ mod tests {
                 technical_lights: None,
                 technical_sprung_buffers: None,
                 friendly_name: Some("Freight Type".to_string()),
-                series_code: "".to_string(),
+                series_code: "Eaos".to_string(),
                 road_number: None,
                 series: None,
                 depot: None,
@@ -446,11 +496,29 @@ mod tests {
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id_as_ref(), &id);
+            match domain {
+                RollingStock::FreightCar {
+                    id,
+                    friendly_name,
+                    series_code,
+                    road_number,
+                    freight_car_type,
+                    livery,
+                    ..
+                } => {
+                    assert_eq!(id, id);
+                    assert_eq!(friendly_name.as_deref(), Some("Freight Type"));
+                    assert_eq!(series_code, "Eaos");
+                    assert_eq!(road_number, None);
+                    assert_eq!(freight_car_type, Some(FreightCarType::AutoTransportCars));
+                    assert_eq!(livery, Some("livery".to_string()));
+                }
+                _ => panic!("expected freight car variant"),
+            }
         }
 
         #[test]
-        fn rolling_stock_row_maps_to_domain_passenger_car() {
+        fn it_should_convert_passenger_car_rolling_stock_row_to_domain() {
             let id = RollingStockId::default();
             let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
                 .expect("invalid railway model id");
@@ -462,7 +530,7 @@ mod tests {
                 category: RollingStockCategory::PassengerCar,
                 railway_company_id: railway_company_id.clone(),
                 railway_company_name: "Ferrovie dello Stato".to_string(),
-                livery: Some("blue".to_string()),
+                livery: Some("Livery".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
@@ -485,18 +553,38 @@ mod tests {
                 locomotive_type: None,
                 passenger_car_type: Some(PassengerCarType::BaggageCar),
                 railcar_type: None,
-                service_level: None,
+                service_level: Some(ServiceLevel::First),
                 dcc_interface: None,
                 control: None,
                 is_dummy: true,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id_as_ref(), &id);
+            match domain {
+                RollingStock::PassengerCar {
+                    id,
+                    friendly_name,
+                    series_code,
+                    road_number,
+                    passenger_car_type,
+                    livery,
+                    service_level,
+                    ..
+                } => {
+                    assert_eq!(id, id);
+                    assert_eq!(friendly_name.as_deref(), Some("Coach Type"));
+                    assert_eq!(series_code, "C1");
+                    assert_eq!(road_number.as_deref(), Some("C1"));
+                    assert_eq!(passenger_car_type, Some(PassengerCarType::BaggageCar));
+                    assert_eq!(livery.as_deref(), Some("Livery"));
+                    assert_eq!(service_level, Some(ServiceLevel::First));
+                }
+                _ => panic!("expected passenger car variant"),
+            }
         }
 
         #[test]
-        fn rolling_stock_row_maps_to_domain_emu() {
+        fn it_should_convert_emu_rolling_stock_row_to_domain() {
             let id = RollingStockId::default();
             let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
                 .expect("invalid railway model id");
@@ -508,7 +596,7 @@ mod tests {
                 category: RollingStockCategory::ElectricMultipleUnit,
                 railway_company_id: railway_company_id.clone(),
                 railway_company_name: "Ferrovie dello Stato".to_string(),
-                livery: None,
+                livery: Some("Livery".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
@@ -524,25 +612,56 @@ mod tests {
                 friendly_name: Some("EMU Type".to_string()),
                 series_code: "EMU1".to_string(),
                 road_number: Some("EMU1".to_string()),
-                series: None,
-                depot: None,
+                series: Some("Series".to_string()),
+                depot: Some("Depot".to_string()),
                 electric_multiple_unit_type: Some(ElectricMultipleUnitType::DrivingCar),
                 freight_car_type: None,
                 locomotive_type: None,
                 passenger_car_type: None,
                 railcar_type: None,
                 service_level: None,
-                dcc_interface: None,
-                control: None,
+                dcc_interface: Some(DccInterface::Nem652),
+                control: Some(Control::DccReady),
                 is_dummy: false,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id_as_ref(), &id);
+            match domain {
+                RollingStock::ElectricMultipleUnit {
+                    id,
+                    friendly_name,
+                    series_code,
+                    series,
+                    road_number,
+                    depot,
+                    electric_multiple_unit_type,
+                    livery,
+                    control,
+                    dcc_interface,
+                    is_dummy,
+                    ..
+                } => {
+                    assert_eq!(id, id);
+                    assert_eq!(friendly_name.as_deref(), Some("EMU Type"));
+                    assert_eq!(series_code, "EMU1");
+                    assert_eq!(series.as_deref(), Some("Series"));
+                    assert_eq!(depot.as_deref(), Some("Depot"));
+                    assert_eq!(road_number.as_deref(), Some("EMU1"));
+                    assert_eq!(
+                        electric_multiple_unit_type,
+                        ElectricMultipleUnitType::DrivingCar
+                    );
+                    assert_eq!(livery.as_deref(), Some("Livery"));
+                    assert_eq!(control, Some(Control::DccReady));
+                    assert_eq!(dcc_interface, Some(DccInterface::Nem652));
+                    assert_eq!(is_dummy, false);
+                }
+                _ => panic!("expected electric multiple unit variant"),
+            }
         }
 
         #[test]
-        fn rolling_stock_row_maps_to_domain_railcar() {
+        fn it_should_convert_railcar_rolling_stock_row_to_domain() {
             let id = RollingStockId::default();
             let railway_model_id = RailwayModelId::try_from("trn:railway-model:mn-1:ACME-100")
                 .expect("invalid railway model id");
@@ -554,7 +673,7 @@ mod tests {
                 category: RollingStockCategory::Railcar,
                 railway_company_id: railway_company_id.clone(),
                 railway_company_name: "Ferrovie dello Stato".to_string(),
-                livery: None,
+                livery: Some("Livery".to_string()),
                 length_inches: None,
                 length_millimeters: None,
                 technical_minimum_radius_mm: None,
@@ -570,21 +689,49 @@ mod tests {
                 friendly_name: Some("Railcar Type".to_string()),
                 series_code: "RC-01".to_string(),
                 road_number: Some("RC-01".to_string()),
-                series: None,
-                depot: None,
+                series: Some("Series".to_string()),
+                depot: Some("Depot".to_string()),
                 electric_multiple_unit_type: None,
                 freight_car_type: None,
                 locomotive_type: None,
                 passenger_car_type: None,
                 railcar_type: Some(RailcarType::TrailerCar),
                 service_level: None,
-                dcc_interface: None,
-                control: None,
+                dcc_interface: Some(DccInterface::Nem652),
+                control: Some(Control::DccReady),
                 is_dummy: false,
             };
 
             let domain = RollingStock::try_from(row).expect("mapping should succeed");
-            assert_eq!(domain.id_as_ref(), &id);
+            match domain {
+                RollingStock::Railcar {
+                    id,
+                    friendly_name,
+                    series_code,
+                    series,
+                    depot,
+                    road_number,
+                    railcar_type,
+                    livery,
+                    control,
+                    dcc_interface,
+                    is_dummy,
+                    ..
+                } => {
+                    assert_eq!(id, id);
+                    assert_eq!(friendly_name.as_deref(), Some("Railcar Type"));
+                    assert_eq!(series_code, "RC-01");
+                    assert_eq!(road_number.as_deref(), Some("RC-01"));
+                    assert_eq!(railcar_type, RailcarType::TrailerCar);
+                    assert_eq!(series.as_deref(), Some("Series"));
+                    assert_eq!(depot.as_deref(), Some("Depot"));
+                    assert_eq!(livery.as_deref(), Some("Livery"));
+                    assert_eq!(control, Some(Control::DccReady));
+                    assert_eq!(dcc_interface, Some(DccInterface::Nem652));
+                    assert_eq!(is_dummy, false);
+                }
+                _ => panic!("expected railcar variant"),
+            }
         }
     }
 }
