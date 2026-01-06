@@ -55,12 +55,13 @@ VALUES ('trn:railway-model:rivarossi:hr4315',
         'PASSENGER_CARS',
         'AVAILABLE');
 
-INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
+INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, series_code,
                             livery, length_millimeters, passenger_car_type, service_level, is_dummy)
 VALUES ('trn:rolling-stock:a709c07f-3458-40f8-8659-0d70250c0b70',
         'trn:railway-model:rivarossi:hr4315',
         'PASSENGER_CAR',
         'trn:railway-company:fs',
+        'UIC-Z1',
         'XMPR',
         303.0,
         'OPEN_COACH',

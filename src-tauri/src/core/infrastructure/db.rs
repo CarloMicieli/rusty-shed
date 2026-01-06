@@ -113,8 +113,8 @@ mod tests {
     #[sqlx::test]
     async fn test_fk_constraint_behavior(pool: sqlx::SqlitePool) {
         let insert_cmd = r#"
-        INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id) 
-        VALUES ('id1', 'non_existent_model_id', 'locomotive', 'non_existent_company_id');"#;
+        INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, series_code) 
+        VALUES ('id1', 'non_existent_model_id', 'LOCOMOTIVE', 'non_existent_company_id', 'series');"#;
 
         let result = sqlx::query(insert_cmd).execute(&pool).await;
 
@@ -127,11 +127,7 @@ mod tests {
         // Optional: Check if the error is specifically an FK violation
         let err = result.unwrap_err();
         if let Some(sqlite_err) = err.as_database_error() {
-            assert!(
-                sqlite_err
-                    .message()
-                    .contains("FOREIGN KEY constraint failed")
-            );
+            assert_eq!(sqlite_err.message(), "FOREIGN KEY constraint failed");
         }
     }
 }

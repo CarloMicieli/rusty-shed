@@ -6,6 +6,9 @@ export const commands = {
   async isDbInitialized(): Promise<boolean> {
     return await TAURI_INVOKE('is_db_initialized');
   },
+  async getAppVersion(): Promise<string> {
+    return await TAURI_INVOKE('get_app_version');
+  },
   async initDatabase(): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('init_database') };
@@ -17,6 +20,24 @@ export const commands = {
   async showMainWindow(): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('show_main_window') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Retrieve all manufacturers from the database.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` (provides DB pool).
+   *
+   * # Returns
+   * - `Ok(Vec<Manufacturer>)` when manufacturers exist, the vector is empty when no manufacturers are found.
+   * - `Err(CommandError)` when an error occurs.
+   */
+  async getManufacturers(): Promise<Result<Manufacturer[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_manufacturers') };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -41,7 +62,7 @@ export const commands = {
    * ID cannot be parsed or a database error occurs.
    */
   async getManufacturerById(
-    manufacturerId: string
+    manufacturerId: ManufacturerId
   ): Promise<Result<Manufacturer | null, CommandError>> {
     try {
       return {
@@ -74,7 +95,7 @@ export const commands = {
    * `CommandError` and returned to the caller.
    */
   async getRailwayModelById(
-    railwayModelId: string
+    railwayModelId: RailwayModelId
   ): Promise<Result<RailwayModel | null, CommandError>> {
     try {
       return {
@@ -87,16 +108,18 @@ export const commands = {
     }
   },
   /**
-   * Retrieve multiple railway models by their identifiers.
+   * Retrieve all railway companies from the database.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` (provides DB pool).
+   *
+   * # Returns
+   * - `Ok(Vec<Manufacturer>)` when railway companies exist, the vector is empty when no railway companies are found.
+   * - `Err(CommandError)` when an error occurs.
    */
-  async getRailwayModelsByIds(
-    railwayModelIds: string[]
-  ): Promise<Result<RailwayModel[], CommandError>> {
+  async getRailwayCompanies(): Promise<Result<RailwayCompany[], CommandError>> {
     try {
-      return {
-        status: 'ok',
-        data: await TAURI_INVOKE('get_railway_models_by_ids', { railwayModelIds })
-      };
+      return { status: 'ok', data: await TAURI_INVOKE('get_railway_companies') };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -126,7 +149,7 @@ export const commands = {
    * `CommandError` and returned to the caller.
    */
   async getRailwayCompanyById(
-    railwayCompanyId: string
+    railwayCompanyId: RailwayCompanyId
   ): Promise<Result<RailwayCompany | null, CommandError>> {
     try {
       return {
@@ -179,9 +202,9 @@ export const commands = {
   /**
    * Tauri command to retrieve the current collection.
    *
-   * This handler constructs the repository and use-case, executes the use-case
+   * This handler constructs the repository and query handler, executes the query
    * asynchronously and returns the `Collection` on success. On failure, it
-   * converts the error into a `CommandError::Unknown` preserving the error
+   * converts the error into a `CommandError` preserving the error
    * message for logging/debugging.
    *
    * Parameters:
@@ -397,9 +420,6 @@ export const commands = {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
     }
-  },
-  async getAppVersion(): Promise<string> {
-    return await TAURI_INVOKE('get_app_version');
   },
   async getSettings(): Promise<Result<SettingsDto, CommandError>> {
     try {
@@ -649,26 +669,20 @@ export type CollectionId = string;
  *
  * A `CollectionItem` represents a reference to a catalog `RailwayModel` along
  * with ownership-specific data such as the rolling stock instances owned by
- * the collector and purchase information. It is intentionally a lightweight
- * entity that is meaningful only inside the context of its parent
- * `Collection` (the aggregate root).
+ * the collector and purchase information.
+ *
+ * It captures the state and details of a specific model as it exists within
+ * the collector's personal collection.
  */
 export type CollectionItem = {
   /**
-   * Unique identifier for this collection item (e.g. UUID).
+   * Unique identifier for this collection item.
    */
   id: CollectionItemId;
   /**
-   * Link to the corresponding catalog `RailwayModel` this item represents.
-   *
-   * This is a reference to the canonical model in the catalog; use this
-   * to look up full catalog details (manufacturer, product codes, etc.).
-   */
-  railway_model_id: RailwayModelId;
-  /**
    * A lightweight view of the railway model details
    */
-  railway_model: CollectionRailwayModel | null;
+  railway_model: CollectionRailwayModel;
   /**
    * Date when this item was added to the collection.
    */
@@ -732,6 +746,10 @@ export type CollectionItemLite = {
  */
 export type CollectionRailwayModel = {
   /**
+   * The unique identifier of the railway model.
+   */
+  railway_model_id: RailwayModelId;
+  /**
    * The manufacturer of the railway model.
    */
   manufacturer: string;
@@ -752,13 +770,9 @@ export type CollectionRailwayModel = {
    */
   description: string;
   /**
-   * The control type of the railway model, if specified.
-   */
-  control: Control | null;
-  /**
    * The category of the railway model, if specified.
    */
-  category: Category | null;
+  category: Category;
 };
 /**
  * A statistical summary of a model railway collection.
@@ -837,7 +851,14 @@ export type CommandError =
    * The inner `String` can include a short debug message suitable for
    * logging; avoid placing secrets here.
    */
-  | { Unknown: string };
+  | { Unknown: string }
+  /**
+   * Indicates a violation of a specific business invariant.
+   *
+   * **Source:** Triggered by Domain Entities or Use Cases (e.g.,
+   * "Cannot cancel an invoice that has already been paid").
+   */
+  | { BusinessRule: string };
 /**
  * The control method for this railway model.
  *
@@ -1624,25 +1645,9 @@ export type ModelCondition =
  * the `currency` that the amount is denominated in. Prefer using the provided
  * constructors rather than populating fields directly.
  *
- * # Examples
- *
- * Basic construction and display:
- *
- * ```rust
- * # use rusty_shed_lib::core::domain::{Currency, MonetaryAmount};
- * let m = MonetaryAmount::new(1050, Currency::EUR);
- * assert_eq!(m.to_string(), "10.50 €");
- * ```
- *
- * Constructing from DB parts (nullable currency):
- *
- * ```rust
- * # use rusty_shed_lib::core::domain::{Currency, MonetaryAmount};
- * let m = MonetaryAmount::from_db(1234, Some("USD")).unwrap();
- * assert_eq!(m.unwrap().currency, Currency::USD);
- * let none = MonetaryAmount::from_db(0, None).unwrap();
- * assert!(none.is_none());
- * ```
+ * `MonetaryAmount` provides helpers to build an instance from database parts
+ * (`MonetaryAmount::from_db`), to add values when currencies match
+ * (`add_same_currency`) and to format the value for display.
  */
 export type MonetaryAmount = {
   /**
@@ -1679,7 +1684,7 @@ export type OwnedRollingStock = {
    * Free-form notes associated with this owned instance.
    * Use this for short owner notes or a brief textual label.
    */
-  notes: string;
+  notes: string | null;
   /**
    * Optional digital setup information if a decoder is installed.
    */
@@ -2044,7 +2049,7 @@ export type RailwayModel = {
   /**
    * The manufacturer of the model (e.g. Bachmann, Märklin).
    */
-  manufacturer: string;
+  manufacturer: RailwayModelManufacturer;
   /**
    * Manufacturer-assigned product code.
    */
@@ -2111,6 +2116,20 @@ export type RailwayModel = {
  * returns a `RailwayModelIdError` on failure.
  */
 export type RailwayModelId = string;
+/**
+ * A `RailwayModelManufacturer` represents the manufacturer of a railway model.
+ * It contains the unique identifier and display name of the manufacturer.
+ */
+export type RailwayModelManufacturer = {
+  /**
+   * The unique identifier of the manufacturer.
+   */
+  manufacturer_id: ManufacturerId;
+  /**
+   * The manufacturer of the model (e.g. Bachmann, Märklin).
+   */
+  display: string;
+};
 export type RailwayStatus = 'ACTIVE' | 'INACTIVE' | 'MERGED';
 export type RenameWishlistInput = { id: string; name: string };
 export type RollingStock =
@@ -2143,11 +2162,11 @@ export type RollingStock =
         /**
          * the electric multiple unit friendly name
          */
-        friendly_name: string;
+        friendly_name: string | null;
         /**
          * the series code (eg. a short code identifying the series)
          */
-        series_code: string | null;
+        series_code: string;
         /**
          * the identification marking for this electric multiple unit
          */
@@ -2207,11 +2226,11 @@ export type RollingStock =
         /**
          * the freight car friendly name
          */
-        friendly_name: string;
+        friendly_name: string | null;
         /**
          * the series code
          */
-        series_code: string | null;
+        series_code: string;
         /**
          * the identification marking for this freight car
          */
@@ -2255,11 +2274,11 @@ export type RollingStock =
         /**
          * the series code
          */
-        series_code: string | null;
+        series_code: string;
         /**
          * the identification marking for this locomotive
          */
-        road_number: string;
+        road_number: string | null;
         /**
          * the prototype series information
          */
@@ -2315,11 +2334,11 @@ export type RollingStock =
         /**
          * the passenger car friendly name
          */
-        friendly_name: string;
+        friendly_name: string | null;
         /**
          * the series code
          */
-        series_code: string | null;
+        series_code: string;
         /**
          * the identification marking for this passenger car
          */
@@ -2368,11 +2387,11 @@ export type RollingStock =
         /**
          * the railcar friendly name
          */
-        friendly_name: string;
+        friendly_name: string | null;
         /**
          * the series code
          */
-        series_code: string | null;
+        series_code: string;
         /**
          * the identification marking for this railcar
          */
@@ -2420,7 +2439,7 @@ export type RollingStockRailway = {
   /**
    * the railway unique identifier
    */
-  railway_id: RailwayCompanyId;
+  railway_company_id: RailwayCompanyId;
   /**
    * the railway display name
    */
