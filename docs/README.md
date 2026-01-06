@@ -75,5 +75,6 @@ Keep track of future purchases.
 
 - [Feature Implementation](FEATURE_IMPLEMENTATION.md)
 - [Query System](QUERY_SYSTEM.md)
+- [Frontend Architecture](FRONTEND_ARCHITECTURE.md)
 
 ---
