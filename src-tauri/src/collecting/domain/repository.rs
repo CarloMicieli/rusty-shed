@@ -1,4 +1,4 @@
-use crate::collecting::domain::Collection;
+use crate::collecting::domain::collection_view::CollectionView;
 use crate::core::domain::domain_error::DomainError;
 
 /// A domain-agnostic interface for collection data access.
@@ -13,5 +13,5 @@ pub trait CollectionRepository: Send + Sync {
     /// created and returned. Therefore, on success this function will return a
     /// `Collection` value. Database errors (I/O, query failures, etc.) are not
     /// swallowed and will be returned as `Err`.
-    async fn find_collection(&mut self) -> Result<Collection, DomainError>;
+    async fn find_view(&mut self) -> Result<CollectionView, DomainError>;
 }

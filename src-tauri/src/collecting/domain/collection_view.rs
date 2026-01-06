@@ -1,7 +1,7 @@
-use crate::collecting::domain::CollectionId;
-use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionSummary;
+use crate::collecting::domain::{CollectionId, CollectionItemView};
 use crate::core::domain::MonetaryAmount;
+use serde::Serialize;
 
 /// Represents a user-owned collection of items.
 ///
@@ -14,8 +14,8 @@ use crate::core::domain::MonetaryAmount;
 ///   the name "My Collection", a `CollectionSummary::default()` and no
 ///   `total_value` (i.e. `None`). This mirrors previous code paths that
 ///   returned a default when no database row existed.
-#[derive(Debug, Clone)]
-pub struct Collection {
+#[derive(Debug, Clone, Serialize, specta::Type)]
+pub struct CollectionView {
     /// Unique identifier for the collection (typically a UUID stored as a string).
     pub id: CollectionId,
 
@@ -30,14 +30,14 @@ pub struct Collection {
     pub total_value: Option<MonetaryAmount>,
 
     /// The list of items contained in this collection.
-    pub items: Vec<CollectionItem>,
+    pub items: Vec<CollectionItemView>,
 }
 
-impl Default for Collection {
+impl Default for CollectionView {
     /// Returns a sensible default `Collection` matching existing code paths
     /// that expect a default when no collection is present in the database.
     fn default() -> Self {
-        Collection {
+        CollectionView {
             id: CollectionId::default(),
             name: "My Collection".to_string(),
             summary: CollectionSummary::default(),
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn default_collection_has_expected_values() {
-        let d = Collection::default();
+        let d = CollectionView::default();
 
         assert_eq!(d.name, "My Collection");
         assert!(d.items.is_empty());

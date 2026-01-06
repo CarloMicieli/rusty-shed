@@ -1,7 +1,7 @@
-use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRepository;
+use crate::collecting::domain::CollectionView;
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
@@ -29,7 +29,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a collection.
-    async fn find_collection(&mut self) -> Result<Collection, DomainError> {
+    async fn find_view(&mut self) -> Result<CollectionView, DomainError> {
         // For simplicity and matching the use case "get collection", we assume a single user collection for now
         // or getting the first one found. If none exists, we might need to return a default or error.
         // For this iteration, let's try to fetch the first collection.
@@ -39,7 +39,7 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         let collection_row = database::get_collection(&mut *self.executor, &collection_id).await?;
         if collection_row.is_none() {
             // If no collection exists, return a default empty collection
-            return Ok(Collection::default());
+            return Ok(CollectionView::default());
         }
 
         let collection_row =
@@ -86,7 +86,7 @@ pub trait CollectingUowExt {
     ///
     /// The repository is bound to the lifetime of the Unit of Work to ensure
     /// it cannot outlive the transaction it relies on.
-    fn collection_repo(&mut self) -> Box<dyn CollectionRepository + '_>;
+    fn collection_repository(&mut self) -> Box<dyn CollectionRepository + '_>;
 }
 
 impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
@@ -94,7 +94,7 @@ impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
     ///
     /// It re-borrows the internal transaction (`&mut *self.tx`) to provide
     /// the repository with a mutable executor without transferring ownership.
-    fn collection_repo(&mut self) -> Box<dyn CollectionRepository + '_> {
+    fn collection_repository(&mut self) -> Box<dyn CollectionRepository + '_> {
         Box::new(SqliteCollectionRepository::new(&mut self.tx))
     }
 }
@@ -116,8 +116,8 @@ mod tests {
             .expect("should create unit of work");
 
         let collection = unit_of_work
-            .collection_repo()
-            .find_collection()
+            .collection_repository()
+            .find_view()
             .await
             .expect("should get collection");
 
@@ -138,8 +138,8 @@ mod tests {
             .expect("should create unit of work");
 
         let collection = unit_of_work
-            .collection_repo()
-            .find_collection()
+            .collection_repository()
+            .find_view()
             .await
             .expect("should get collection");
 

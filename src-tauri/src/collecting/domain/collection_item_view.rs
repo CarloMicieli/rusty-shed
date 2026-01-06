@@ -1,26 +1,27 @@
-use crate::catalog::domain::railway_model::RailwayModelId;
-use crate::collecting::domain::OwnedRollingStock;
+use crate::collecting::domain::CollectionRailwayModel;
+use crate::collecting::domain::OwnedRollingStockView;
 use crate::collecting::domain::PurchaseInfo;
 use crate::collecting::domain::{
     BoxCondition, CollectionItemId, ModelCondition, PurchaseCondition,
 };
 use chrono::NaiveDate;
+use serde::Serialize;
 
-/// A single item within a user's collection.
+/// A single item view within a user's collection.
 ///
-/// A `CollectionItem` represents a reference to a catalog `RailwayModel` along
+/// A `CollectionItemView` represents a reference to a catalog `RailwayModel` along
 /// with ownership-specific data such as the rolling stock instances owned by
 /// the collector and purchase information.
 ///
 /// It captures the state and details of a specific model as it exists within
 /// the collector's personal collection.
-#[derive(Debug, Clone)]
-pub struct CollectionItem {
+#[derive(Debug, Clone, Serialize, specta::Type)]
+pub struct CollectionItemView {
     /// Unique identifier for this collection item.
     pub id: CollectionItemId,
 
-    /// Identifier of the railway model this collection item refers to.
-    pub railway_model_id: RailwayModelId,
+    /// A lightweight view of the railway model details
+    pub railway_model: CollectionRailwayModel,
 
     /// Date when this item was added to the collection.
     pub added_date: NaiveDate,
@@ -41,7 +42,7 @@ pub struct CollectionItem {
     pub notes: Option<String>,
 
     /// The specific rolling stock instances owned that correspond to this model.
-    pub rolling_stocks: Vec<OwnedRollingStock>,
+    pub rolling_stocks: Vec<OwnedRollingStockView>,
 
     /// Optional purchase information associated with this collection item.
     pub purchase_info: Option<PurchaseInfo>,

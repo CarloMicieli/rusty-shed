@@ -1,10 +1,9 @@
-use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionItemId;
+use crate::collecting::domain::CollectionRailwayModel;
 use crate::collecting::domain::CollectionSummary;
 use crate::collecting::domain::DigitalSetup;
-use crate::collecting::domain::OwnedRollingStock;
 use crate::collecting::domain::PurchaseInfo;
-use crate::collecting::domain::{Collection, CollectionRailwayModel};
+use crate::collecting::domain::{CollectionItemView, CollectionView, OwnedRollingStockView};
 use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
@@ -43,8 +42,8 @@ impl CollectionMapper {
     ///   unsupported or the amount is negative).
     pub fn row_to_collection(
         row: CollectionRow,
-        items: Vec<CollectionItem>,
-    ) -> Result<Collection, DomainError> {
+        items: Vec<CollectionItemView>,
+    ) -> Result<CollectionView, DomainError> {
         let total_value =
             MonetaryAmount::from_db(row.total_value_amount, Some(&row.total_value_currency))
                 .map_err(|err| DomainError::Validation(err.to_string()))?;
@@ -58,7 +57,7 @@ impl CollectionMapper {
             electric_multiple_units_count: row.electric_multiple_units_count as u16,
         };
 
-        Ok(Collection {
+        Ok(CollectionView {
             id: row.id,
             name: row.name,
             summary,
@@ -86,7 +85,7 @@ impl CollectionMapper {
         row: CollectionItemRow,
         owned_rolling_stocks_map: &HashMap<CollectionItemId, Vec<OwnedRollingStockRow>>,
         purchase_info_map: &HashMap<CollectionItemId, Vec<PurchaseInfoRow>>,
-    ) -> Result<CollectionItem, DomainError> {
+    ) -> Result<CollectionItemView, DomainError> {
         let collection_item_id = row.id;
 
         let owned_rolling_stocks = owned_rolling_stocks_map
@@ -96,7 +95,7 @@ impl CollectionMapper {
                     .iter()
                     .map(|rs_row| {
                         // Basic fields
-                        let mut ors = OwnedRollingStock {
+                        let mut ors = OwnedRollingStockView {
                             id: rs_row.id.clone(),
                             rolling_stock_id: rs_row.rolling_stock_id.clone().unwrap(),
                             notes: rs_row.notes.clone(),
@@ -144,7 +143,7 @@ impl CollectionMapper {
             railway_model_id: row.railway_model_id,
         };
 
-        Ok(CollectionItem {
+        Ok(CollectionItemView {
             id: collection_item_id,
             railway_model,
             purchase_condition: row.purchase_condition,

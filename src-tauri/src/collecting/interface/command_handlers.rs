@@ -1,12 +1,5 @@
-//! Command handlers exposed to the Tauri frontend for the `collecting` feature.
-//!
-//! These functions act as a thin adapter between the Tauri IPC layer and the
-//! application/use-case layer. They translate incoming requests into use-case
-//! invocations and map application errors into `CommandError` values suitable
-//! for returning over the IPC boundary.
-
 use crate::collecting::application::GetCollectionQuery;
-use crate::collecting::domain::Collection;
+use crate::collecting::domain::CollectionView;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
@@ -26,7 +19,9 @@ use crate::state::AppState;
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_collection(state: tauri::State<'_, AppState>) -> Result<Collection, CommandError> {
+pub async fn get_collection(
+    state: tauri::State<'_, AppState>,
+) -> Result<CollectionView, CommandError> {
     let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
@@ -49,6 +44,6 @@ pub async fn get_collection(state: tauri::State<'_, AppState>) -> Result<Collect
 /// Tauri command to retrieve depot data (alias of `get_collection`).
 #[tauri::command]
 #[specta::specta]
-pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<Collection, CommandError> {
+pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
     todo!()
 }
