@@ -1,6 +1,5 @@
 pub mod catalog;
 pub mod collecting;
-pub mod collection;
 pub mod core;
 pub mod dashboard;
 pub mod dcc_inventory;
@@ -141,10 +140,6 @@ pub fn run() {
         catalog_command_handlers::create_railway_model,
         collecting_command_handlers::get_collection,
         collecting_command_handlers::get_depot,
-        collection::list_collection_items,
-        collection::create_collection_item,
-        collection::update_collection_item,
-        collection::delete_collection_item,
         wishlist_command_handlers::get_wishlists,
         wishlist_command_handlers::get_wishlist_by_id,
         wishlist_command_handlers::create_wishlist,
