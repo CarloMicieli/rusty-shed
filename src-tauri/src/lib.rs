@@ -1,7 +1,6 @@
 pub mod catalog;
 pub mod collecting;
 pub mod core;
-pub mod dashboard;
 pub mod dcc_inventory;
 pub mod maintenance;
 pub mod sellers;
@@ -19,7 +18,6 @@ use crate::collecting::interface::command_handlers as collecting_command_handler
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::interface::command_handlers as core_command_handlers;
-use crate::dashboard::dashboard_summary;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
@@ -156,7 +154,6 @@ pub fn run() {
         sellers_command_handlers::create_seller,
         sellers_command_handlers::update_seller,
         sellers_command_handlers::delete_seller,
-        dashboard_summary,
         get_image_path,
         get_settings,
         update_settings
