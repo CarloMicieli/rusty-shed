@@ -12,6 +12,7 @@ use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use log::info;
 
 /// Use case for creating a new railway model.
 pub struct CreateRailwayModelUseCase;
@@ -30,6 +31,8 @@ impl CreateRailwayModelUseCase {
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: CreateRailwayModelInput,
     ) -> Result<RailwayModelId, DomainError> {
+        info!("Creating a new railway model with input: {:?}", input);
+
         let mut repository = unit_of_work.railway_model_repository();
         let mut validation_context = ValidationContext::default();
 

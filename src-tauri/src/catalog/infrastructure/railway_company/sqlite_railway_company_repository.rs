@@ -30,13 +30,13 @@ impl<'conn> SqliteRailwayCompanyRepository<'conn> {
 
 #[async_trait::async_trait]
 impl<'conn> RailwayCompanyRepository for SqliteRailwayCompanyRepository<'conn> {
-    /// Retrieves all Railway Model manufacturers from the database.
+    /// Retrieves all Railway company from the database.
     ///
     /// # Arguments
-    /// - none
+    /// * none
     ///
     /// # Returns
-    /// - Returns the list of all [`Manufacturer`]s in the database.
+    /// - Returns the list of all [`RailwayCompany`]s in the database.
     /// - Returns a [`DomainError::DatabaseError`] if the query fails.
     async fn find_all(&mut self) -> Result<Vec<RailwayCompany>, DomainError> {
         let sql = r#"
@@ -60,7 +60,7 @@ impl<'conn> RailwayCompanyRepository for SqliteRailwayCompanyRepository<'conn> {
     /// and returns the matching `RailwayCompanyRow` if present.
     ///
     /// # Arguments
-    /// - `id` - The railway company identifier to look up.
+    /// * `id` - The railway company identifier to look up.
     ///
     /// # Returns
     /// - `Ok(Some(RailwayCompanyRow))` when a matching row is found

@@ -9,7 +9,7 @@ use log::info;
 pub struct GetRailwayCompaniesQuery;
 
 impl GetRailwayCompaniesQuery {
-    /// Execute the query to get all railway companies.
+    /// Execute the query to retrieve all railway companies.
     ///
     /// # Arguments
     /// * `unit_of_work` - The unit of work managing the database transaction.
@@ -20,7 +20,7 @@ impl GetRailwayCompaniesQuery {
     pub async fn execute(
         unit_of_work: &mut SqliteUnitOfWork<'_>,
     ) -> Result<Vec<RailwayCompany>, DomainError> {
-        info!("Getting railway companies");
+        info!("Retrieving railway companies");
         let mut repository = unit_of_work.railway_companies_repo();
         repository.find_all().await
     }
@@ -37,13 +37,14 @@ impl GetRailwayCompanyByIdQuery {
     /// * `railway_company_id` - The identifier of the railway company to retrieve.
     ///
     /// # Returns
-    /// - `Ok(Vec<RailwayCompany>)` containing all railway companies on success.
+    /// - `Ok(Some(RailwayCompany))` when the railway company is found.
+    /// - `Ok(None)` when the railway company is not found.
     /// - `Err(DomainError)` with an error message on failure.
     pub async fn execute(
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         railway_company_id: RailwayCompanyId,
     ) -> Result<Option<RailwayCompany>, DomainError> {
-        info!("Getting railway companies");
+        info!("Retrieving railway company with id: {}", railway_company_id);
         let mut repository = unit_of_work.railway_companies_repo();
         repository.find_by_id(&railway_company_id).await
     }

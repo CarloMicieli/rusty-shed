@@ -29,7 +29,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
     }
 
     /// Fetch a railway model row by its ID.
-    pub async fn select_railway_model_by_id(
+    async fn select_railway_model_by_id(
         &mut self,
         id: &RailwayModelId,
     ) -> Result<Option<RailwayModelRow>, DomainError> {
@@ -64,7 +64,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
     }
 
     /// Fetch rolling stocks for a given railway model id.
-    pub async fn select_rolling_stocks_by_id(
+    async fn select_rolling_stocks_by_id(
         &mut self,
         railway_model_id: &RailwayModelId,
     ) -> Result<Vec<RollingStockRow>, DomainError> {
@@ -115,7 +115,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         Ok(rows)
     }
 
-    pub async fn insert_railway_model(
+    /// Inserts a new railway model into the database.
+    async fn insert_railway_model(
         &mut self,
         railway_model: &RailwayModelParams,
     ) -> Result<RailwayModelId, DomainError> {
@@ -154,7 +155,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         Ok(id)
     }
 
-    pub async fn insert_rolling_stock(
+    /// Inserts a new rolling stock into the database.
+    async fn insert_rolling_stock(
         &mut self,
         railway_model_id: &RailwayModelId,
         rolling_stock: &RollingStockParams,
