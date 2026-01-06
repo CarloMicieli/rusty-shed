@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 /// The enum uses a small, explicit set of currencies for now. Use
 /// `Currency::from_code` to obtain a `Currency` value from an ISO-style
 /// currency code (case-insensitive).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, specta::Type)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type, specta::Type,
+)]
+#[sqlx(type_name = "TEXT", rename_all = "UPPERCASE")]
 pub enum Currency {
     /// Euro
     EUR,
