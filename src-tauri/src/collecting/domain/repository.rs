@@ -1,3 +1,4 @@
+use crate::collecting::domain::Collection;
 use crate::collecting::domain::collection_view::CollectionView;
 use crate::core::domain::domain_error::DomainError;
 
@@ -14,4 +15,12 @@ pub trait CollectionRepository: Send + Sync {
     /// `Collection` value. Database errors (I/O, query failures, etc.) are not
     /// swallowed and will be returned as `Err`.
     async fn find_view(&mut self) -> Result<CollectionView, DomainError>;
+
+    /// Persists the current state of the collection to the data store.
+    ///
+    /// # Arguments
+    /// * `collection` - The `Collection` instance to be saved.
+    ///
+    /// If the save operation fails, a `DomainError` is returned.
+    async fn save(&mut self, collection: &mut Collection) -> Result<(), DomainError>;
 }

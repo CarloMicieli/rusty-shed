@@ -1,12 +1,19 @@
-use crate::collecting::domain::CollectionId;
+use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRepository;
 use crate::collecting::domain::CollectionView;
+use crate::collecting::domain::{
+    BoxCondition, Collection, CollectionEvent, CollectionId, ModelCondition, OwnedRollingStockId,
+    PurchaseCondition, PurchaseInfoId,
+};
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
+use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::sellers::domain::seller_id::SellerId;
+use chrono::NaiveDate;
 use itertools::Itertools;
 use std::collections::HashMap;
 
@@ -23,6 +30,118 @@ impl<'conn> SqliteCollectionRepository<'conn> {
     /// Creates a new repository instance using the provided executor.
     pub fn new(executor: &'conn mut sqlx::SqliteConnection) -> Self {
         Self { executor }
+    }
+
+    async fn insert_collection(&mut self, collection_id: &CollectionId, name: &str) -> Result<(), DomainError> {
+        let insert_cmd = r#"
+            INSERT INTO collections (id, name)
+            VALUES (?1, ?2)
+        "#;
+
+        sqlx::query(insert_cmd)
+            .bind(collection_id)
+            .bind(name)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn insert_collection_item(
+        &mut self,
+        collection_id: &CollectionId,
+        collection_item_id: &CollectionItemId,
+        railway_model_id: &RailwayModelId,
+        added_date: &NaiveDate,
+        purchase_condition: Option<PurchaseCondition>,
+        model_condition: Option<ModelCondition>,
+        box_condition: Option<BoxCondition>,
+        notes: Option<&str>,
+    ) -> Result<(), DomainError> {
+        let insert_cmd = r#"
+            INSERT INTO collection_items (
+                id, collection_id, railway_model_id, added_date, 
+                purchase_condition, model_condition, box_condition, notes)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);
+        "#;
+
+        sqlx::query(insert_cmd)
+            .bind(collection_id)
+            .bind(collection_item_id)
+            .bind(railway_model_id)
+            .bind(added_date)
+            .bind(purchase_condition)
+            .bind(model_condition)
+            .bind(box_condition)
+            .bind(notes)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    async fn insert_owned_rolling_stocks(
+        &mut self,
+        owned_rolling_stock_id: &OwnedRollingStockId,
+        collection_item_id: &CollectionItemId,
+        rolling_stock_id: &RollingStockId,
+        notes: Option<&str>,
+    ) -> Result<(), DomainError> {
+        let insert_cmd = r#"
+            INSERT INTO owned_rolling_stocks (
+                id, collection_item_id, rolling_stock_id, notes)
+            VALUES (?1, ?2, ?3, ?4);
+        "#;
+
+        sqlx::query(insert_cmd)
+            .bind(owned_rolling_stock_id)
+            .bind(collection_item_id)
+            .bind(rolling_stock_id)
+            .bind(notes)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
+    }
+
+    async fn insert_purchase_info(
+        &mut self,
+        purchase_info_id: &PurchaseInfoId,
+        collection_item_id: &CollectionItemId,
+        price: Option<&MonetaryAmount>,
+        seller_id: Option<&SellerId>,
+        purchase_date: &NaiveDate,
+    ) -> Result<(), DomainError> {
+        let insert_cmd = r#"
+            INSERT INTO purchase_infos (
+                id, collection_item_id, price_amount, price_currency, seller_id, purchase_date)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6);
+        "#;
+
+        let (price_amount, price_currency) = match price {
+            Some(monetary_amount) => (
+                Some(monetary_amount.amount as i64),
+                Some(monetary_amount.currency),
+            ),
+            None => (None, None),
+        };
+
+        sqlx::query(insert_cmd)
+            .bind(purchase_info_id)
+            .bind(collection_item_id)
+            .bind(price_amount)
+            .bind(price_currency)
+            .bind(seller_id)
+            .bind(purchase_date)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(())
     }
 }
 
@@ -73,6 +192,69 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         }
 
         CollectionMapper::row_to_collection(collection_row, collection_items)
+    }
+
+    /// Saves the current state of the collection.
+    async fn save(&mut self, collection: &mut Collection) -> Result<(), DomainError> {
+        for event in collection.pending_events.iter() {
+            match event {
+                CollectionEvent::CollectionCreated { aggregate_id, .. } => {
+                    self.insert_collection(aggregate_id, &collection.name).await?;
+                }
+                CollectionEvent::RailwayModelAdded {
+                    aggregate_id,
+                    collection_item_id,
+                    railway_model_id,
+                    rolling_stock,
+                    price,
+                    seller_id,
+                    added_date,
+                    purchase_info_id,
+                    purchase_date,
+                    purchase_condition,
+                    model_condition,
+                    box_condition,
+                    notes,
+                    ..
+                } => {
+                    self.insert_collection_item(
+                        aggregate_id,
+                        collection_item_id,
+                        railway_model_id,
+                        added_date,
+                        *purchase_condition,
+                        *model_condition,
+                        *box_condition,
+                        notes.as_deref(),
+                    )
+                    .await?;
+
+                    for owned_rs in rolling_stock {
+                        self.insert_owned_rolling_stocks(
+                            &owned_rs.owned_rolling_stock_id,
+                            collection_item_id,
+                            &owned_rs.rolling_stock_id,
+                            None,
+                        )
+                        .await?;
+                    }
+
+                    self.insert_purchase_info(
+                        purchase_info_id,
+                        collection_item_id,
+                        Some(price),
+                        seller_id.as_ref(),
+                        purchase_date,
+                    )
+                    .await?
+                }
+                CollectionEvent::RailwayModelRemoved { .. } => {}
+                CollectionEvent::RailwayModelSold { .. } => {}
+            }
+        }
+
+        collection.pending_events = Vec::new();
+        Ok(())
     }
 }
 

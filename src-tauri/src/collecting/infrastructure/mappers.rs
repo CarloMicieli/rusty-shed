@@ -55,6 +55,7 @@ impl CollectionMapper {
             train_sets_count: row.train_sets_count as u16,
             railcars_count: row.railcars_count as u16,
             electric_multiple_units_count: row.electric_multiple_units_count as u16,
+            starter_sets_count: 0u16, //TODO: add to CollectionRow and mapping
         };
 
         Ok(CollectionView {
