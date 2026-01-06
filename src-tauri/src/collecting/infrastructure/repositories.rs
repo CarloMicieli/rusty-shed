@@ -29,7 +29,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a collection.
-    async fn get_collection(&mut self) -> Result<Collection, DomainError> {
+    async fn find_collection(&mut self) -> Result<Collection, DomainError> {
         // For simplicity and matching the use case "get collection", we assume a single user collection for now
         // or getting the first one found. If none exists, we might need to return a default or error.
         // For this iteration, let's try to fetch the first collection.
@@ -117,7 +117,7 @@ mod tests {
 
         let collection = unit_of_work
             .collection_repo()
-            .get_collection()
+            .find_collection()
             .await
             .expect("should get collection");
 
@@ -139,7 +139,7 @@ mod tests {
 
         let collection = unit_of_work
             .collection_repo()
-            .get_collection()
+            .find_collection()
             .await
             .expect("should get collection");
 

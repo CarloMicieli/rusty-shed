@@ -13,5 +13,5 @@ pub trait CollectionRepository: Send + Sync {
     /// created and returned. Therefore, on success this function will return a
     /// `Collection` value. Database errors (I/O, query failures, etc.) are not
     /// swallowed and will be returned as `Err`.
-    async fn get_collection(&mut self) -> Result<Collection, DomainError>;
+    async fn find_collection(&mut self) -> Result<Collection, DomainError>;
 }
