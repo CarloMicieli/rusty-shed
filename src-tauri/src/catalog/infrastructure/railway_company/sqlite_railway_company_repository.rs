@@ -101,28 +101,126 @@ impl<'conn> RailwayCompanyUowExt for SqliteUnitOfWork<'conn> {
 
 #[cfg(test)]
 mod railway_repo_tests {
-    // use super::*;
-    // use crate::catalog::domain::railway_company::RailwayCompanyId;
-    // use pretty_assertions::assert_eq;
+    use super::*;
+    use crate::catalog::domain::railway_company::{
+        PeriodOfActivity, RailwayCompanyId, RailwayStatus,
+    };
+    use chrono::NaiveDate;
+    use pretty_assertions::assert_eq;
 
-    // #[sqlx::test(migrations = "./migrations", fixtures("test_railway_company"))]
-    // async fn it_should_retrieve_railway_companies_from_db(pool: sqlx::SqlitePool) {
-    //     let mut conn = pool.acquire().await.expect("should acquire connection");
-    //
-    //     let id = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
-    //     let result = get_railway_company_by_id(&mut conn, &id)
-    //         .await
-    //         .expect("should run query without errors");
-    //
-    //     assert!(result.is_some());
-    //
-    //     let railway_company = result.unwrap();
-    //     assert_eq!(railway_company.id, id);
-    //     assert_eq!(railway_company.name, "FS");
-    //     assert_eq!(
-    //         railway_company.registered_company_name,
-    //         Some("Ferrovie dello Stato".to_string())
-    //     );
-    //     assert_eq!(railway_company.country_code, Some("IT".to_string()));
-    // }
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_company.sql")
+    )]
+    async fn it_should_find_railway_company_by_id(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteRailwayCompanyRepository::new(&mut conn);
+
+        let id = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+        let result = repository
+            .find_by_id(&id)
+            .await
+            .expect("should run query without errors");
+
+        assert!(result.is_some());
+
+        let railway_company = result.unwrap();
+        assert_eq!(railway_company.id, id);
+        assert_eq!(railway_company.name, "FS");
+        assert_eq!(
+            railway_company.registered_company_name,
+            Some("Ferrovie dello Stato".to_string())
+        );
+        assert_eq!(railway_company.country_code, Some("IT".to_string()));
+
+        assert_eq!(
+            railway_company.period_of_activity,
+            Some(PeriodOfActivity {
+                status: RailwayStatus::Active,
+                operating_since: Some(NaiveDate::from_ymd_opt(1905, 7, 1).unwrap()),
+                operating_until: None,
+            })
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_find_no_railway_company_when_id_is_not_found(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteRailwayCompanyRepository::new(&mut conn);
+
+        let id = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+        let result = repository
+            .find_by_id(&id)
+            .await
+            .expect("should run query without errors");
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_company.sql")
+    )]
+    async fn it_should_find_all_railway_companies(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteRailwayCompanyRepository::new(&mut conn);
+
+        let result = repository
+            .find_all()
+            .await
+            .expect("should run query without errors");
+
+        assert_eq!(result.len(), 2);
+
+        let railway_company_1 = result.first().expect("should find railway company");
+        let id_1 = RailwayCompanyId::try_from("trn:railway-company:drg").unwrap();
+        assert_eq!(railway_company_1.id, id_1);
+        assert_eq!(railway_company_1.name, "DRG");
+        assert_eq!(
+            railway_company_1.registered_company_name,
+            Some("Deutsche Reichsbahn-Gesellschaft".to_string())
+        );
+        assert_eq!(railway_company_1.country_code, Some("DE".to_string()));
+
+        assert_eq!(
+            railway_company_1.period_of_activity,
+            Some(PeriodOfActivity {
+                status: RailwayStatus::Merged,
+                operating_since: Some(NaiveDate::from_ymd_opt(1920, 4, 1).unwrap()),
+                operating_until: Some(NaiveDate::from_ymd_opt(1945, 5, 23).unwrap()),
+            })
+        );
+
+        let railway_company_2 = result.get(1).expect("should find railway company");
+        let id_2 = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+        assert_eq!(railway_company_2.id, id_2);
+        assert_eq!(railway_company_2.name, "FS");
+        assert_eq!(
+            railway_company_2.registered_company_name,
+            Some("Ferrovie dello Stato".to_string())
+        );
+        assert_eq!(railway_company_2.country_code, Some("IT".to_string()));
+
+        assert_eq!(
+            railway_company_2.period_of_activity,
+            Some(PeriodOfActivity {
+                status: RailwayStatus::Active,
+                operating_since: Some(NaiveDate::from_ymd_opt(1905, 7, 1).unwrap()),
+                operating_until: None,
+            })
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_find_no_railway_company_when_table_is_empty(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteRailwayCompanyRepository::new(&mut conn);
+
+        let result = repository
+            .find_all()
+            .await
+            .expect("should run query without errors");
+
+        assert_eq!(result.len(), 0);
+    }
 }

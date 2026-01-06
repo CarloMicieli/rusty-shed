@@ -103,35 +103,115 @@ impl<'conn> ManufacturerUowExt for SqliteUnitOfWork<'conn> {
 
 #[cfg(test)]
 mod tests {
-    /*
-        use super::*;
-        use crate::catalog::domain::manufacturer::ManufacturerId;
-        use pretty_assertions::assert_eq;
-        use url::Url;
+    use super::*;
+    use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
+    use pretty_assertions::assert_eq;
+    use url::Url;
 
-        #[sqlx::test(migrations = "./migrations", fixtures("test_manufacturer"))]
-        async fn it_should_retrieve_manufacturers_from_db(pool: sqlx::SqlitePool) {
-            let mut conn = pool.acquire().await.expect("should acquire connection");
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_manufacturer.sql")
+    )]
+    async fn it_should_find_manufacturer_by_id(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
 
-            let id = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
-            let result = get_manufacturer_by_id(&mut conn, &id)
-                .await
-                .expect("should run query without errors");
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
 
-            assert!(result.is_some());
+        let id = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
+        let result = repository
+            .find_by_id(&id)
+            .await
+            .expect("should run query without errors");
 
-            let manufacturer = result.unwrap();
-            assert_eq!(manufacturer.id, id);
-            assert_eq!(manufacturer.name, "ACME");
-            assert_eq!(
-                manufacturer.registered_company_name,
-                Some("ACME Corporation".to_string())
-            );
-            assert_eq!(manufacturer.country_code, Some("IT".to_string()));
-            assert_eq!(
-                manufacturer.website_url,
-                Some(Url::parse("https://www.acmetreni.com").unwrap())
-            );
-        }
-    */
+        assert!(result.is_some());
+
+        let manufacturer = result.expect("should find a manufacturer");
+        assert_eq!(manufacturer.id, id);
+        assert_eq!(manufacturer.name, "ACME");
+        assert_eq!(
+            manufacturer.registered_company_name,
+            Some("Anonima Costruzioni Modellistiche Esatte S.r.l.".to_string())
+        );
+        assert_eq!(manufacturer.country_code, Some("IT".to_string()));
+        assert_eq!(
+            manufacturer.website_url,
+            Some(Url::parse("https://www.acmetreni.com").unwrap())
+        );
+        assert_eq!(manufacturer.status, ManufacturerStatus::Active);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_find_no_manufacturer_when_id_is_not_found(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+
+        let id = ManufacturerId::try_from("trn:manufacturer:not-found").unwrap();
+        let result = repository
+            .find_by_id(&id)
+            .await
+            .expect("should run query without errors");
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_manufacturer.sql")
+    )]
+    async fn it_should_find_all_manufacturers(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+
+        let result = repository
+            .find_all()
+            .await
+            .expect("should run query without errors");
+
+        assert_eq!(result.len(), 2);
+
+        let manufacturer_1 = result.first().expect("should find a manufacturer");
+        let id_1 = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
+        assert_eq!(manufacturer_1.id, id_1);
+        assert_eq!(manufacturer_1.name, "ACME");
+        assert_eq!(
+            manufacturer_1.registered_company_name,
+            Some("Anonima Costruzioni Modellistiche Esatte S.r.l.".to_string())
+        );
+        assert_eq!(manufacturer_1.country_code, Some("IT".to_string()));
+        assert_eq!(
+            manufacturer_1.website_url,
+            Some(Url::parse("https://www.acmetreni.com").unwrap())
+        );
+        assert_eq!(manufacturer_1.status, ManufacturerStatus::Active);
+
+        let manufacturer_2 = result.get(1).expect("should find a manufacturer");
+        let id_2 = ManufacturerId::try_from("trn:manufacturer:roco").unwrap();
+        assert_eq!(manufacturer_2.id, id_2);
+        assert_eq!(manufacturer_2.name, "Roco");
+        assert_eq!(
+            manufacturer_2.registered_company_name,
+            Some("Modelleisenbahn München GmbH".to_string())
+        );
+        assert_eq!(manufacturer_2.country_code, Some("AT".to_string()));
+        assert_eq!(
+            manufacturer_2.website_url,
+            Some(Url::parse("https://www.roco.cc").unwrap())
+        );
+        assert_eq!(manufacturer_2.status, ManufacturerStatus::Active);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_find_no_manufacturers_when_table_is_empty(pool: sqlx::SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+        let mut repository = SqliteManufacturerRepository::new(&mut conn);
+
+        let result = repository
+            .find_all()
+            .await
+            .expect("should run query without errors");
+
+        assert_eq!(result.len(), 0);
+    }
 }
