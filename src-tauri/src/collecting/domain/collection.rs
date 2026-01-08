@@ -6,6 +6,7 @@ use crate::collecting::domain::{
     OwnedRollingStockId, PurchaseInfo, PurchaseInfoId, PurchasedInfo,
 };
 use crate::core::domain::MonetaryAmount;
+use crate::core::domain::metadata::Metadata;
 
 /// Represents a user-owned collection of items.
 ///
@@ -38,6 +39,9 @@ pub struct Collection {
 
     /// Pending events that have occurred in this collection but not yet processed.
     pub pending_events: Vec<CollectionEvent>,
+
+    /// Metadata about the collection (creation date, last modified, etc.).
+    pub metadata: Metadata,
 }
 
 impl Collection {
@@ -178,6 +182,7 @@ impl Default for Collection {
             total_value: None,
             items: Vec::new(),
             pending_events: vec![create_collection_event],
+            metadata: Metadata::default(),
         }
     }
 }

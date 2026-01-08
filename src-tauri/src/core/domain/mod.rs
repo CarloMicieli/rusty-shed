@@ -4,6 +4,7 @@ pub mod domain_error;
 mod domain_event;
 pub mod length;
 pub mod measure_units;
+pub mod metadata;
 pub mod monetary_amount;
 pub mod trn;
 pub mod validation;

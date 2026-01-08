@@ -146,6 +146,26 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         Ok(())
     }
 
+    async fn update_collection_metadata(
+        &mut self,
+        collection_id: &CollectionId,
+    ) -> Result<(), DomainError> {
+        let update_cmd = r#"
+            UPDATE collections
+            SET version = version + 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?1;
+        "#;
+
+        sqlx::query(update_cmd)
+            .bind(collection_id)
+            .execute(&mut *self.executor)
+            .await
+            .with_domain_context("Error inserting the collection summary")?;
+
+        Ok(())
+    }
+
     async fn update_collection_summary(
         &mut self,
         collection_id: &CollectionId,
@@ -303,6 +323,8 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                 CollectionEvent::RailwayModelSold { .. } => {}
             }
         }
+
+        self.update_collection_metadata(&collection.id).await?;
 
         collection.pending_events = Vec::new();
         Ok(())
