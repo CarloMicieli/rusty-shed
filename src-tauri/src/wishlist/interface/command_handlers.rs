@@ -207,10 +207,7 @@ pub async fn add_to_wishlist(
                 crate::core::domain::currency::Currency::from_code(&code).map_err(|e| {
                     CommandError::validation_field("desired_price_currency", e.to_string())
                 })?;
-            Some(crate::core::domain::MonetaryAmount::new(
-                amount as u64,
-                currency,
-            ))
+            Some(crate::core::domain::MonetaryAmount::new(amount, currency))
         }
         _ => None,
     };

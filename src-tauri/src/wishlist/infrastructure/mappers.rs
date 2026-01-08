@@ -108,7 +108,7 @@ mod tests {
         assert!(item.desired_price.is_some());
         assert!(item.purchased_price.is_some());
         let dp = item.desired_price.unwrap();
-        assert_eq!(dp.amount, 1234u64);
+        assert_eq!(dp.amount, 1234i64);
         assert_eq!(dp.currency, crate::core::domain::currency::Currency::EUR);
     }
 

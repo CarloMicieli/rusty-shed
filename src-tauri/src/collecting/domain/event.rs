@@ -1,7 +1,7 @@
 use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
 use crate::collecting::domain::{
-    BoxCondition, CollectionId, CollectionItemId, ModelCondition,
-    OwnedRollingStockId, PurchaseCondition, PurchaseInfoId,
+    BoxCondition, CollectionId, CollectionItemId, ModelCondition, OwnedRollingStockId,
+    PurchaseCondition, PurchaseInfoId,
 };
 use crate::core::domain::{DomainEvent, MonetaryAmount};
 use crate::dcc_inventory::domain::DecoderId;

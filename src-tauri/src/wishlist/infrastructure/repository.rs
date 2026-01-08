@@ -146,23 +146,13 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         let (desired_amount, desired_currency) = item
             .desired_price
             .as_ref()
-            .map(|p| {
-                (
-                    Some(p.amount as i64),
-                    Some(p.currency.to_code().to_string()),
-                )
-            })
+            .map(|p| (Some(p.amount), Some(p.currency.to_code().to_string())))
             .unwrap_or((None, None));
 
         let (purchased_amount, purchased_currency) = item
             .purchased_price
             .as_ref()
-            .map(|p| {
-                (
-                    Some(p.amount as i64),
-                    Some(p.currency.to_code().to_string()),
-                )
-            })
+            .map(|p| (Some(p.amount), Some(p.currency.to_code().to_string())))
             .unwrap_or((None, None));
 
         let priority_str = serde_json::to_string(&item.priority)?
@@ -282,7 +272,7 @@ mod tests {
         );
         assert_eq!(
             item.desired_price.as_ref().map(|p| p.amount),
-            Some(12345u64)
+            Some(12345i64)
         );
         assert_eq!(
             item.desired_price.as_ref().map(|p| p.currency),

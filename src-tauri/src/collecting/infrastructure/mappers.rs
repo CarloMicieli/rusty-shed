@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(mapped.summary.starter_sets_count, 0);
         assert_eq!(mapped.summary.train_sets_count, 0);
         let total_value = mapped.total_value.expect("total value present");
-        assert_eq!(total_value.amount, 12345u64);
+        assert_eq!(total_value.amount, 12345i64);
         assert_eq!(total_value.currency, Currency::EUR);
         assert!(mapped.items.is_empty());
     }
@@ -429,7 +429,7 @@ mod tests {
                 );
                 assert_eq!(p.purchase_date.to_string(), "2025-12-26");
                 let price = p.price.expect("price present");
-                assert_eq!(price.amount, 17500u64);
+                assert_eq!(price.amount, 17500i64);
                 assert_eq!(price.currency, Currency::EUR);
                 assert_eq!(p.seller, Some(seller_id));
             }
@@ -470,7 +470,7 @@ mod tests {
                 );
                 assert_eq!(p.purchase_date.to_string(), "2025-12-26");
                 let price = p.price.expect("price present");
-                assert_eq!(price.amount, 17500u64);
+                assert_eq!(price.amount, 17500i64);
                 assert_eq!(price.currency, Currency::EUR);
                 assert_eq!(p.seller, Some(SellerId::try_from("shop-1").unwrap()));
             }
@@ -513,9 +513,9 @@ mod tests {
                 assert_eq!(s.id, purchase_info_id);
                 assert_eq!(s.purchase_date.to_string(), "2024-05-10");
                 let purchase_price = s.purchase_price.expect("purchase price present");
-                assert_eq!(purchase_price.amount, 20000u64);
+                assert_eq!(purchase_price.amount, 20000i64);
                 assert_eq!(purchase_price.currency, Currency::EUR);
-                assert_eq!(s.sale_price.amount, 25000u64);
+                assert_eq!(s.sale_price.amount, 25000i64);
                 assert_eq!(s.sale_price.currency, Currency::EUR);
                 assert_eq!(s.sale_date.to_string(), "2025-01-01");
                 assert_eq!(s.buyer, Some("buyer-1".to_string()));
@@ -560,9 +560,9 @@ mod tests {
             PurchaseInfo::PreOrdered(pre_order_info) => {
                 assert_eq!(pre_order_info.id, purchase_info_id);
                 assert_eq!(pre_order_info.order_date.to_string(), "2025-06-01");
-                assert_eq!(pre_order_info.deposit.amount, 500u64);
+                assert_eq!(pre_order_info.deposit.amount, 500i64);
                 assert_eq!(pre_order_info.deposit.currency, Currency::EUR);
-                assert_eq!(pre_order_info.total_price.amount, 1000u64);
+                assert_eq!(pre_order_info.total_price.amount, 1000i64);
                 assert_eq!(pre_order_info.total_price.currency, Currency::EUR);
                 assert_eq!(pre_order_info.seller, Some(seller_id));
                 assert_eq!(

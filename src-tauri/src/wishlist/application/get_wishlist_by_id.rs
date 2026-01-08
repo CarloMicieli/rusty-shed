@@ -73,7 +73,7 @@ mod tests {
         );
         assert_eq!(
             item.desired_price.as_ref().map(|p| p.amount),
-            Some(12345u64)
+            Some(12345i64)
         );
         assert_eq!(
             item.desired_price.as_ref().map(|p| p.currency),

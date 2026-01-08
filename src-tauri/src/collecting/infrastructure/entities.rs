@@ -12,6 +12,9 @@ use crate::sellers::domain::seller_id::SellerId;
 use chrono::{NaiveDate, NaiveDateTime};
 
 /// Row mapping for the `collections` table.
+///
+/// Mirrors the database representation of a collection including counts and
+/// total valuation fields. Timestamps use `NaiveDateTime`.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct CollectionRow {
     pub id: CollectionId,
@@ -30,6 +33,9 @@ pub struct CollectionRow {
 }
 
 /// Row mapping for the `collection_items` table.
+///
+/// Represents a collection item joined with basic railway model metadata used
+/// by collection queries.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct CollectionItemRow {
     pub id: CollectionItemId,
@@ -51,6 +57,11 @@ pub struct CollectionItemRow {
 }
 
 /// Row mapping for the `owned_rolling_stocks` table.
+///
+/// Contains ownership-specific data for a rolling stock item. Fields that are
+/// populated when joining with other tables (decoders, etc.) are optional.
+/// Note: `dcc_address` is stored as INTEGER in the DB and mapped to a domain
+/// `u16` when present.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct OwnedRollingStockRow {
     pub id: OwnedRollingStockId,
@@ -70,8 +81,10 @@ pub struct OwnedRollingStockRow {
     pub decoder_interface: Option<DccInterface>,
 }
 
-/// Row mapping for the `decoders` table. Used when LEFT JOINing decoder data
-/// into collection queries and mapping the flat result into domain types.
+/// Row mapping for the `decoders` table.
+///
+/// Used when LEFT JOINing decoder data into collection queries and mapping the
+/// flat result into domain types.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct DecoderRow {
     pub id: DecoderId,
@@ -83,6 +96,9 @@ pub struct DecoderRow {
 }
 
 /// Row mapping for the `purchase_infos` table.
+///
+/// Represents purchase/sale and related financial fields for a collection item.
+/// Many fields are optional to reflect partial or historical data.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct PurchaseInfoRow {
     pub id: PurchaseInfoId,

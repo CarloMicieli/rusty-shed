@@ -127,10 +127,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         "#;
 
         let (price_amount, price_currency) = match price {
-            Some(monetary_amount) => (
-                Some(monetary_amount.amount as i64),
-                Some(monetary_amount.currency),
-            ),
+            Some(monetary_amount) => (Some(monetary_amount.amount), Some(monetary_amount.currency)),
             None => (None, None),
         };
 

@@ -16,8 +16,15 @@ use crate::core::domain::currency::{Currency, CurrencyError};
 /// (`add_same_currency`) and to format the value for display.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, specta::Type)]
 pub struct MonetaryAmount {
-    /// Amount stored in the smallest unit (e.g. cents for EUR/USD/GBP).
-    pub amount: u64,
+    /// The monetary amount stored in the minor unit of the currency (e.g., cents for USD).
+    ///
+    /// ### Why i64 over Decimal or Float?
+    /// - **Precision**: Prevents floating-point rounding errors inherent in `f64`.
+    /// - **Performance**: Integer arithmetic is natively supported and faster than `Numeric` types.
+    /// - **Range**: An `i64` handles up to ±92 quadrillion units. In USD, this covers
+    ///   amounts up to $922 trillion, exceeding global wealth scales.
+    /// - **Compatibility**: Maps directly to SQL `BIGINT` without extra crates or complex logic.
+    pub amount: i64,
 
     /// Currency of the amount.
     pub currency: Currency,
@@ -34,7 +41,7 @@ impl Default for MonetaryAmount {
 
 impl MonetaryAmount {
     /// Create a new `MonetaryAmount` from a raw amount and currency.
-    pub fn new(amount: u64, currency: Currency) -> Self {
+    pub fn new(amount: i64, currency: Currency) -> Self {
         Self { amount, currency }
     }
 
@@ -58,7 +65,7 @@ impl MonetaryAmount {
                     return Err(MonetaryAmountError::NegativeAmount(amount_i64));
                 }
                 let currency = Currency::from_code(code)?;
-                Ok(Some(MonetaryAmount::new(amount_i64 as u64, currency)))
+                Ok(Some(MonetaryAmount::new(amount_i64, currency)))
             }
         }
     }
@@ -150,7 +157,7 @@ mod tests {
     #[case(500, Currency::GBP, "£5.00")]
     #[case(1000, Currency::JPY, "¥1000")]
     fn monetary_display_formats(
-        #[case] amount: u64,
+        #[case] amount: i64,
         #[case] currency: Currency,
         #[case] expected: &str,
     ) {
@@ -195,10 +202,10 @@ mod tests {
     #[rstest]
     #[case(100, 250, Currency::EUR, 350)]
     fn add_same_currency_ok(
-        #[case] a: u64,
-        #[case] b: u64,
+        #[case] a: i64,
+        #[case] b: i64,
         #[case] currency: Currency,
-        #[case] expected: u64,
+        #[case] expected: i64,
     ) {
         let a = MonetaryAmount::new(a, currency);
         let b = MonetaryAmount::new(b, currency);

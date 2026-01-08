@@ -80,7 +80,7 @@ pub struct DashboardTotalsRow {
     pub collection_items: u32,
     pub wishlists: u32,
     pub maintenance_due: u32,
-    pub total_value_amount: Option<u64>,
+    pub total_value_amount: Option<i64>,
     pub total_value_currency: Option<Currency>,
 }
 
