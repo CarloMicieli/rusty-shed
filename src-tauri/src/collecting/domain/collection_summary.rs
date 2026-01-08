@@ -45,6 +45,34 @@ impl CollectionSummary {
         }
     }
 
+    /// Decrements the count for a specific category of rolling stock.
+    ///
+    /// This will saturate at zero to avoid underflow.
+    pub fn decrement_count(&mut self, category: Category, count: u16) {
+        match category {
+            Category::Locomotives => {
+                self.locomotives_count = self.locomotives_count.saturating_sub(count)
+            }
+            Category::PassengerCars => {
+                self.passenger_cars_count = self.passenger_cars_count.saturating_sub(count)
+            }
+            Category::FreightCars => {
+                self.freight_cars_count = self.freight_cars_count.saturating_sub(count)
+            }
+            Category::TrainSets => {
+                self.train_sets_count = self.train_sets_count.saturating_sub(count)
+            }
+            Category::Railcars => self.railcars_count = self.railcars_count.saturating_sub(count),
+            Category::ElectricMultipleUnits => {
+                self.electric_multiple_units_count =
+                    self.electric_multiple_units_count.saturating_sub(count)
+            }
+            Category::StarterSets => {
+                self.starter_sets_count = self.starter_sets_count.saturating_sub(count)
+            }
+        }
+    }
+
     /// Calculates the total number of rolling stock items in the collection.
     ///
     /// This sums up all categories of rolling stock to provide an overall count.

@@ -1,7 +1,13 @@
+use crate::catalog::domain::railway_model::Category;
 use crate::collecting::application::GetCollectionQuery;
+use crate::collecting::application::RemoveCollectionItemCommand;
+use crate::collecting::domain::CollectionItemId;
+use crate::collecting::domain::RemoveCollectionItem;
 use crate::collecting::domain::{CollectionView, DepotView};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
+use chrono::NaiveDate;
+use serde::Deserialize;
 
 /// Tauri command to retrieve the current collection.
 ///
@@ -65,6 +71,51 @@ pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<DepotView, 
                 .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
 
             Ok(depot)
+        }
+        Err(e) => Err(e.into()),
+    }
+}
+
+#[derive(Deserialize, specta::Type)]
+pub struct RemoveCollectionItemInput {
+    pub collection_item_id: String,
+    pub category: String,
+    pub removed_date: String,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn remove_collection_item(
+    state: tauri::State<'_, AppState>,
+    input: RemoveCollectionItemInput,
+) -> Result<CollectionView, CommandError> {
+    let collection_item_id = CollectionItemId::try_from(input.collection_item_id)
+        .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
+
+    let category = input
+        .category
+        .parse::<Category>()
+        .map_err(|_| CommandError::validation_field("category", "invalid"))?;
+
+    let removed_date = NaiveDate::parse_from_str(&input.removed_date, "%Y-%m-%d")
+        .map_err(|_| CommandError::validation_field("removed_date", "invalid"))?;
+
+    let domain_cmd = RemoveCollectionItem {
+        collection_item_id,
+        category,
+        removed_date,
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    match RemoveCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await {
+        Ok(view) => {
+            unit_of_work
+                .commit()
+                .await
+                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+
+            Ok(view)
         }
         Err(e) => Err(e.into()),
     }

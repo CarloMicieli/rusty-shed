@@ -45,6 +45,7 @@ pub enum CollectionEvent {
 
         collection_item_id: CollectionItemId,
         removed_date: NaiveDate,
+        category: Category,
     },
     /// A railway model was sold from the collection.
     RailwayModelSold {

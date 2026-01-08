@@ -32,6 +32,7 @@ pub use collection_railway_model::CollectionRailwayModel;
 pub use collection_summary::CollectionSummary;
 pub use collection_view::CollectionView;
 pub use command::AddCollectionItem;
+pub use command::RemoveCollectionItem;
 pub use depot_view::DepotRollingStockView;
 pub use depot_view::DepotView;
 pub use digital_setup::DigitalSetup;

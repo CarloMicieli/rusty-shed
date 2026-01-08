@@ -3,7 +3,7 @@ use crate::collecting::domain::CollectionSummary;
 use crate::collecting::domain::event::OwnedRollingStockIds;
 use crate::collecting::domain::{
     AddCollectionItem, CollectionEvent, CollectionId, CollectionItemId, OwnedRollingStock,
-    OwnedRollingStockId, PurchaseInfo, PurchaseInfoId, PurchasedInfo,
+    OwnedRollingStockId, PurchaseInfo, PurchaseInfoId, PurchasedInfo, RemoveCollectionItem,
 };
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::metadata::Metadata;
@@ -92,6 +92,24 @@ impl Collection {
         self.pending_events.push(event);
     }
 
+    /// Remove an item from the collection by marking it removed and emitting
+    /// a `RailwayModelRemoved` event. The event contains the item id and the
+    /// removed_date as provided by the caller.
+    pub fn remove_item(&mut self, remove_collection_item: RemoveCollectionItem) {
+        let event = CollectionEvent::RailwayModelRemoved {
+            event_id: uuid::Uuid::new_v4(),
+            aggregate_id: self.id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+
+            collection_item_id: remove_collection_item.collection_item_id,
+            removed_date: remove_collection_item.removed_date,
+            category: remove_collection_item.category,
+        };
+
+        self.apply(&event);
+        self.pending_events.push(event);
+    }
+
     /// Apply a `CollectionEvent` to the current state of the `Collection`.
     /// This method mutates the collection based on the event type.
     ///
@@ -159,6 +177,38 @@ impl Collection {
 
                 // --- 3. Final State Mutation ---
                 self.items.push(new_item);
+            }
+            CollectionEvent::RailwayModelRemoved {
+                collection_item_id,
+                removed_date,
+                category,
+                ..
+            } => {
+                // Set removed_date on the item, decrement the summary and
+                // subtract the purchase price from total_value when available.
+                if let Some(item) = self.items.iter_mut().find(|i| &i.id == collection_item_id) {
+                    item.removed_date = Some(*removed_date);
+
+                    // Decrement summary counts for the category
+                    self.summary.decrement_count(*category, 1u16);
+
+                    // Subtract purchase price from total_value when present
+                    if let Some(purchase_info) = &item.purchase_info
+                        && let crate::collecting::domain::PurchaseInfo::Purchased(pi) =
+                            purchase_info
+                        && let Some(price) = &pi.price
+                        && let Some(current_total) = self.total_value.take()
+                    {
+                        // Create a negative amount to subtract
+                        let neg = MonetaryAmount::new(-price.amount, price.currency);
+                        if let Ok(new_total) = current_total.add_same_currency(&neg) {
+                            self.total_value = Some(new_total);
+                        } else {
+                            // currency mismatch or overflow: restore old total
+                            self.total_value = Some(current_total);
+                        }
+                    }
+                }
             }
             _ => todo!("Handle other event types"),
         }
@@ -261,5 +311,67 @@ mod tests {
 
         let total_value = collection.total_value.expect("Total value should be set");
         assert_eq!(total_value, MonetaryAmount::new(1000, Currency::USD));
+    }
+
+    #[test]
+    fn remove_item_updates_collection_correctly() {
+        let mut collection = Collection::default();
+
+        let railway_model_id = crate::catalog::domain::railway_model::RailwayModelId::try_from(
+            "trn:railway-model:acme:60100",
+        )
+        .expect("valid railway model id");
+
+        let rolling_stock_ids = vec![
+            crate::catalog::domain::railway_model::RollingStockId::new(),
+            crate::catalog::domain::railway_model::RollingStockId::new(),
+        ];
+
+        let seller_id =
+            crate::sellers::domain::seller_id::SellerId::try_from("trn:seller:foo").unwrap();
+
+        let add_collection_item = super::AddCollectionItem {
+            railway_model_id: railway_model_id.clone(),
+            category: crate::catalog::domain::railway_model::Category::Locomotives,
+            rolling_stock_ids: rolling_stock_ids.clone(),
+            price: MonetaryAmount::new(1000, Currency::USD),
+            seller_id: Some(seller_id.clone()),
+            added_date: chrono::NaiveDate::from_ymd_opt(2024, 6, 15).unwrap(),
+            purchase_date: chrono::NaiveDate::from_ymd_opt(2024, 6, 10).unwrap(),
+            purchase_condition: Some(crate::collecting::domain::PurchaseCondition::New),
+            model_condition: Some(crate::collecting::domain::ModelCondition::Mint),
+            box_condition: Some(crate::collecting::domain::BoxCondition::OriginalMint),
+            notes: Some("Test addition".to_string()),
+        };
+
+        collection.add_item(add_collection_item);
+
+        assert_eq!(collection.items.len(), 1);
+        let item_id = collection.items[0].id.clone();
+
+        let removed_date = chrono::NaiveDate::from_ymd_opt(2025, 1, 2).unwrap();
+
+        let remove_cmd = crate::collecting::domain::RemoveCollectionItem {
+            collection_item_id: item_id.clone(),
+            category: crate::catalog::domain::railway_model::Category::Locomotives,
+            removed_date,
+        };
+
+        collection.remove_item(remove_cmd);
+
+        // The removed date was set on the item
+        let item = collection
+            .items
+            .iter()
+            .find(|i| i.id == item_id)
+            .expect("item present");
+        assert_eq!(item.removed_date, Some(removed_date));
+
+        // Summary decremented
+        assert_eq!(collection.summary.locomotives_count, 0);
+
+        // Total value decreased by the price amount (back to zero)
+        let total = collection.total_value.expect("total present");
+        assert_eq!(total.amount, 0);
     }
 }
