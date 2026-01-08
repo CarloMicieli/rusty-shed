@@ -60,11 +60,12 @@ pub async fn add_maintenance_record(
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
     // Parse inputs
-    let id = Uuid::parse_str(&input.id).map_err(|e| CommandError::Unknown(e.to_string()))?;
+    let id = Uuid::parse_str(&input.id)
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
     let card_id = Uuid::parse_str(&input.maintenance_card_id)
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("maintenance_card_id", e.to_string()))?;
     let date = NaiveDate::parse_from_str(&input.date_performed, "%Y-%m-%d")
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("date_performed", e.to_string()))?;
 
     let use_case = AddMaintenanceRecordUseCase::new();
 

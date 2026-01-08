@@ -41,7 +41,8 @@ pub async fn get_seller_by_id(
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    let sid = SellerId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+    let sid = SellerId::try_from(id.as_str())
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
     let use_case = GetSellerByIdUseCase::new();
     let result = use_case
@@ -137,7 +138,7 @@ pub async fn update_seller(
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
     let sid = SellerId::try_from(payload.id.as_str())
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
     let created_at_dt = if let Some(created_at_str) = payload.created_at.as_deref() {
         match chrono::DateTime::parse_from_rfc3339(created_at_str) {
@@ -183,7 +184,8 @@ pub async fn delete_seller(state: State<'_, AppState>, id: String) -> Result<u64
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    let sid = SellerId::try_from(id.as_str()).map_err(|e| CommandError::Unknown(e.to_string()))?;
+    let sid = SellerId::try_from(id.as_str())
+        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
     let use_case = DeleteSellerUseCase::new();
     let result = use_case

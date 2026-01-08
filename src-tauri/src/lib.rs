@@ -85,7 +85,7 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
         .await
         .map_err(|e| {
             log::error!("init_database: migrations failed: {}", e);
-            CommandError::Unknown(e.to_string())
+            CommandError::DatabaseError(e.to_string())
         })?;
 
     log::info!("init_database: starting seeding");
@@ -93,7 +93,7 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
         .await
         .map_err(|e| {
             log::error!("init_database: seeding failed: {}", e);
-            CommandError::Unknown(e.to_string())
+            CommandError::DatabaseError(e.to_string())
         })?;
 
     log::info!("init_database: ensuring default settings");
@@ -101,7 +101,7 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
         .await
         .map_err(|e| {
             log::error!("init_database: settings failed: {}", e);
-            CommandError::Unknown(e.to_string())
+            CommandError::DatabaseError(e.to_string())
         })?;
 
     log::info!("init_database: initialization complete");
