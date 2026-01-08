@@ -270,12 +270,13 @@ mod tests {
         let collection_row = CollectionRow {
             id: collection_id.clone(),
             name: "My Test Collection".to_string(),
+            electric_multiple_units_count: 0,
+            freight_cars_count: 4,
             locomotives_count: 2,
             passenger_cars_count: 3,
-            freight_cars_count: 4,
-            train_sets_count: 0,
             railcars_count: 1,
-            electric_multiple_units_count: 0,
+            starter_sets_count: 0,
+            train_sets_count: 0,
             total_value_amount: 12345,
             total_value_currency: "EUR".to_string(),
             created_at: NaiveDate::from_ymd_opt(2025, 12, 26)
@@ -293,12 +294,13 @@ mod tests {
 
         assert_eq!(mapped.id, collection_id);
         assert_eq!(mapped.name, "My Test Collection");
+        assert_eq!(mapped.summary.electric_multiple_units_count, 0);
+        assert_eq!(mapped.summary.freight_cars_count, 4);
         assert_eq!(mapped.summary.locomotives_count, 2);
         assert_eq!(mapped.summary.passenger_cars_count, 3);
-        assert_eq!(mapped.summary.freight_cars_count, 4);
-        assert_eq!(mapped.summary.train_sets_count, 0);
         assert_eq!(mapped.summary.railcars_count, 1);
-        assert_eq!(mapped.summary.electric_multiple_units_count, 0);
+        assert_eq!(mapped.summary.starter_sets_count, 0);
+        assert_eq!(mapped.summary.train_sets_count, 0);
         let total_value = mapped.total_value.expect("total value present");
         assert_eq!(total_value.amount, 12345u64);
         assert_eq!(total_value.currency, Currency::EUR);

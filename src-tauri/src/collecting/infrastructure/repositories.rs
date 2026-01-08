@@ -32,7 +32,11 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         Self { executor }
     }
 
-    async fn insert_collection(&mut self, collection_id: &CollectionId, name: &str) -> Result<(), DomainError> {
+    async fn insert_collection(
+        &mut self,
+        collection_id: &CollectionId,
+        name: &str,
+    ) -> Result<(), DomainError> {
         let insert_cmd = r#"
             INSERT INTO collections (id, name)
             VALUES (?1, ?2)
@@ -199,7 +203,8 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         for event in collection.pending_events.iter() {
             match event {
                 CollectionEvent::CollectionCreated { aggregate_id, .. } => {
-                    self.insert_collection(aggregate_id, &collection.name).await?;
+                    self.insert_collection(aggregate_id, &collection.name)
+                        .await?;
                 }
                 CollectionEvent::RailwayModelAdded {
                     aggregate_id,
