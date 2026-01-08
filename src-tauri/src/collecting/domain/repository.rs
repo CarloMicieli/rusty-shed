@@ -1,5 +1,6 @@
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::collection_view::CollectionView;
+use crate::collecting::domain::depot_view::DepotView;
 use crate::core::domain::domain_error::DomainError;
 
 /// A domain-agnostic interface for collection data access.
@@ -23,4 +24,8 @@ pub trait CollectionRepository: Send + Sync {
     ///
     /// If the save operation fails, a `DomainError` is returned.
     async fn save(&mut self, collection: &mut Collection) -> Result<(), DomainError>;
+
+    /// Retrieves a `DepotView` representation listing owned rolling stocks
+    /// suitable for the UI depot listing.
+    async fn find_depot_view(&mut self) -> Result<DepotView, DomainError>;
 }

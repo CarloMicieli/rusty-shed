@@ -242,6 +242,45 @@ impl CollectionMapper {
             _ => Err(anyhow!("Invalid purchase type")),
         }
     }
+
+    /// Build a `DepotRollingStockView` from a `CollectionItemView` and an
+    /// `OwnedRollingStockView` instance. This extracts the minimal display
+    /// information required by the depot UI.
+    pub fn collection_item_owned_to_depot(
+        collection_item: &CollectionItemView,
+        owned: &OwnedRollingStockView,
+    ) -> Result<crate::collecting::domain::DepotRollingStockView, DomainError> {
+        use crate::catalog::domain::railway_model::{Category, ProductCode, RollingStockCategory};
+
+        // Map catalog Category -> RollingStockCategory
+        let category = match collection_item.railway_model.category {
+            Category::Locomotives => RollingStockCategory::Locomotive,
+            Category::FreightCars => RollingStockCategory::FreightCar,
+            Category::PassengerCars => RollingStockCategory::PassengerCar,
+            Category::ElectricMultipleUnits => RollingStockCategory::ElectricMultipleUnit,
+            Category::Railcars => RollingStockCategory::Railcar,
+            // Fallback mapping for TrainSets/StarterSets
+            Category::TrainSets | Category::StarterSets => RollingStockCategory::PassengerCar,
+        };
+
+        // Convert product_code string into ProductCode newtype
+        let product_code =
+            ProductCode::try_from(collection_item.railway_model.product_code.clone())
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        Ok(crate::collecting::domain::DepotRollingStockView {
+            id: owned.id.clone(),
+            series_code: collection_item.railway_model.product_code.clone(),
+            road_number: None,
+            friendly_name: None,
+            depot: None,
+            category,
+            manufacturer_name: collection_item.railway_model.manufacturer.clone(),
+            product_code,
+            control: None,
+            livery: None,
+        })
+    }
 }
 
 #[cfg(test)]

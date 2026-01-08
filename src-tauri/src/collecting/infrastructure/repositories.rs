@@ -5,7 +5,7 @@ use crate::collecting::domain::{
     BoxCondition, Collection, CollectionEvent, CollectionId, ModelCondition, OwnedRollingStockId,
     PurchaseCondition, PurchaseInfoId,
 };
-use crate::collecting::domain::{CollectionItemId, CollectionSummary};
+use crate::collecting::domain::{CollectionItemId, CollectionSummary, DepotView};
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
@@ -255,6 +255,57 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         }
 
         CollectionMapper::row_to_collection(collection_row, collection_items)
+    }
+
+    /// Finds a compact depot view suitable for the UI by assembling owned
+    /// rolling stocks and related model metadata.
+    async fn find_depot_view(&mut self) -> Result<DepotView, DomainError> {
+        let collection_id = CollectionId::default();
+
+        let collection_row = database::get_collection(&mut *self.executor, &collection_id).await?;
+        if collection_row.is_none() {
+            return Ok(DepotView {
+                rolling_stocks: Vec::new(),
+            });
+        }
+
+        let collection_row = collection_row.expect("Expect collection row to be present");
+
+        let owned_rolling_stock_rows =
+            database::get_owned_rolling_stocks(&mut *self.executor, &collection_row.id).await?;
+        let owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
+            owned_rolling_stock_rows
+                .into_iter()
+                .map(|owned_rs| (owned_rs.collection_item_id.clone(), owned_rs))
+                .into_group_map();
+
+        let purchase_info_rows =
+            database::get_purchase_infos(&mut *self.executor, &collection_row.id).await?;
+        let purchase_info_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = purchase_info_rows
+            .into_iter()
+            .map(|purchase_info| (purchase_info.collection_item_id.clone(), purchase_info))
+            .into_group_map();
+
+        let collection_item_rows =
+            database::get_collection_items(&mut *self.executor, &collection_row.id).await?;
+
+        let mut depot_items = Vec::new();
+        for collection_item_row in collection_item_rows {
+            let item = CollectionMapper::row_to_collection_item(
+                collection_item_row,
+                &owned_rolling_stocks_map,
+                &purchase_info_map,
+            )?;
+
+            for owned in item.rolling_stocks.iter() {
+                let depot_rs = CollectionMapper::collection_item_owned_to_depot(&item, owned)?;
+                depot_items.push(depot_rs);
+            }
+        }
+
+        Ok(DepotView {
+            rolling_stocks: depot_items,
+        })
     }
 
     /// Saves the current state of the collection.
@@ -579,5 +630,32 @@ mod tests {
             .expect("query collection_items");
         assert!(!items.is_empty());
         assert_eq!(items[0].railway_model_id, railway_model_id);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_return_depot_view(conn: sqlx::SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let depot = unit_of_work
+            .collection_repository()
+            .find_depot_view()
+            .await
+            .expect("should get depot view");
+
+        unit_of_work.commit().await.unwrap();
+
+        assert_eq!(depot.rolling_stocks.len(), 1);
+        let rs = &depot.rolling_stocks[0];
+
+        // Expect the manufacturer and product code to match the fixture
+        assert_eq!(rs.manufacturer_name, "ACME");
+        assert_eq!(rs.product_code.to_string(), "60100");
+        // Owned rolling stock id should look like a trn:owned-rolling-stock
+        assert!(rs.id.to_string().starts_with("trn:owned-rolling-stock"));
     }
 }

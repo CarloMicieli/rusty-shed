@@ -1,5 +1,5 @@
 use crate::collecting::application::GetCollectionQuery;
-use crate::collecting::domain::CollectionView;
+use crate::collecting::domain::{CollectionView, DepotView};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 
@@ -38,9 +38,34 @@ pub async fn get_collection(
     }
 }
 
-/// Tauri command to retrieve depot data (alias of `get_collection`).
+/// Tauri command to retrieve the current depot view: which is the list
+/// of rolling stocks part of the collection.
+///
+/// This handler constructs the repository and query handler, executes the query
+/// asynchronously and returns the `DepotView` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// - `state`: Tauri-managed application state which provides a database pool.
+///
+/// Returns:
+/// - `Ok(DepotView)` when retrieval succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
-    todo!()
+pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<DepotView, CommandError> {
+    let mut unit_of_work = _state.unit_of_work().await?;
+
+    match crate::collecting::application::GetDepotQuery::execute(&mut unit_of_work).await {
+        Ok(depot) => {
+            unit_of_work
+                .commit()
+                .await
+                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+
+            Ok(depot)
+        }
+        Err(e) => Err(e.into()),
+    }
 }
