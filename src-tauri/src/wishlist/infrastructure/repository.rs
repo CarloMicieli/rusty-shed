@@ -2,11 +2,14 @@ use crate::core::domain::currency::Currency;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::repository::WishlistRepository;
 use crate::wishlist::domain::wishlist::Wishlist;
+use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::infrastructure::database;
-use crate::wishlist::infrastructure::entities::WishlistPreviewProjection;
+use crate::wishlist::infrastructure::entities::{
+    WishlistItemRow, WishlistPreviewProjection, WishlistRow,
+};
 use anyhow::Context;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -26,10 +29,7 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a wishlist by its ID.
-    async fn get_wishlist_by_id(
-        &mut self,
-        id: &crate::wishlist::domain::wishlist_id::WishlistId,
-    ) -> anyhow::Result<Option<Wishlist>> {
+    async fn get_wishlist_by_id(&mut self, id: &WishlistId) -> anyhow::Result<Option<Wishlist>> {
         let wishlist_row = database::find_wishlist_by_id(&mut *self.executor, id).await?;
 
         if wishlist_row.is_none() {
@@ -56,10 +56,8 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         let mut map: HashMap<String, WishlistPreview> = HashMap::with_capacity(rows.len());
 
         for row in rows.into_iter() {
-            let wishlist_id = crate::wishlist::domain::wishlist_id::WishlistId::try_from(
-                row.wishlist_id.clone().as_str(),
-            )
-            .context("invalid wishlist id in preview row")?;
+            let wishlist_id = WishlistId::try_from(row.wishlist_id.clone().as_str())
+                .context("invalid wishlist id in preview row")?;
             let entry = map.entry(row.wishlist_id.clone()).or_insert_with(|| {
                 WishlistPreview {
                     id: wishlist_id,
@@ -90,7 +88,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
     async fn create_wishlist(&mut self, wishlist: &Wishlist) -> anyhow::Result<()> {
         let now = Utc::now().naive_utc();
-        let row = crate::wishlist::infrastructure::entities::WishlistRow {
+        let row = WishlistRow {
             id: wishlist.id.to_string(),
             name: wishlist.name.clone(),
             notes: wishlist.notes.clone(),
@@ -107,11 +105,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         Ok(())
     }
 
-    async fn rename_wishlist(
-        &mut self,
-        id: &crate::wishlist::domain::wishlist_id::WishlistId,
-        name: &str,
-    ) -> anyhow::Result<()> {
+    async fn rename_wishlist(&mut self, id: &WishlistId, name: &str) -> anyhow::Result<()> {
         let affected = database::update_wishlist_name(&mut *self.executor, id, name).await?;
         if affected == 0 {
             anyhow::bail!("wishlist not found");
@@ -119,10 +113,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         Ok(())
     }
 
-    async fn delete_wishlist(
-        &mut self,
-        id: &crate::wishlist::domain::wishlist_id::WishlistId,
-    ) -> anyhow::Result<()> {
+    async fn delete_wishlist(&mut self, id: &WishlistId) -> anyhow::Result<()> {
         let affected = database::delete_wishlist(&mut *self.executor, id).await?;
         if affected == 0 {
             anyhow::bail!("wishlist not found");
@@ -130,17 +121,14 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         Ok(())
     }
 
-    async fn set_default_wishlist(
-        &mut self,
-        id: &crate::wishlist::domain::wishlist_id::WishlistId,
-    ) -> anyhow::Result<()> {
+    async fn set_default_wishlist(&mut self, id: &WishlistId) -> anyhow::Result<()> {
         database::set_default_wishlist(&mut *self.executor, id).await?;
         Ok(())
     }
 
     async fn add_item(
         &mut self,
-        wishlist_id: &crate::wishlist::domain::wishlist_id::WishlistId,
+        wishlist_id: &WishlistId,
         item: &WishlistItem,
     ) -> anyhow::Result<()> {
         let (desired_amount, desired_currency) = item
@@ -162,7 +150,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .trim_matches('"')
             .to_string();
 
-        let row = crate::wishlist::infrastructure::entities::WishlistItemRow {
+        let row = WishlistItemRow {
             id: item.id.to_string(),
             wishlist_id: wishlist_id.to_string(),
             railway_model_id: item.railway_model_id.to_string(),
@@ -193,7 +181,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     async fn move_item(
         &mut self,
         item_id: &WishlistItemId,
-        destination_wishlist: &crate::wishlist::domain::wishlist_id::WishlistId,
+        destination_wishlist: &WishlistId,
     ) -> anyhow::Result<()> {
         let affected =
             database::move_wishlist_item(&mut *self.executor, item_id, destination_wishlist)

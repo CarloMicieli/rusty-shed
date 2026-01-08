@@ -2,6 +2,7 @@ use specta::specta;
 use tauri::State;
 
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::core::domain::{Currency, MonetaryAmount};
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
@@ -203,11 +204,10 @@ pub async fn add_to_wishlist(
 
     let desired_price = match (input.desired_price_amount, input.desired_price_currency) {
         (Some(amount), Some(code)) => {
-            let currency =
-                crate::core::domain::currency::Currency::from_code(&code).map_err(|e| {
-                    CommandError::validation_field("desired_price_currency", e.to_string())
-                })?;
-            Some(crate::core::domain::MonetaryAmount::new(amount, currency))
+            let currency = Currency::from_code(&code).map_err(|e| {
+                CommandError::validation_field("desired_price_currency", e.to_string())
+            })?;
+            Some(MonetaryAmount::new(amount, currency))
         }
         _ => None,
     };

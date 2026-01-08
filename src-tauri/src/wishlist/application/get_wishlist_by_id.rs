@@ -1,4 +1,5 @@
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::infrastructure::repository::WishlistUowExt;
 
@@ -14,7 +15,7 @@ impl GetWishlistUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         id: &WishlistId,
-    ) -> anyhow::Result<Option<crate::wishlist::domain::wishlist::Wishlist>> {
+    ) -> anyhow::Result<Option<Wishlist>> {
         let mut repo = uow.wishlist_repo();
         let wishlist = repo.get_wishlist_by_id(id).await?;
         Ok(wishlist)
@@ -25,6 +26,7 @@ impl GetWishlistUseCase {
 mod tests {
     use super::GetWishlistUseCase;
     use crate::core::domain::currency::Currency;
+    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::wishlist::domain::wishlist_id::WishlistId;
     use anyhow::Result;
     use pretty_assertions::assert_eq;
@@ -32,8 +34,7 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn get_wishlist_returns_none(conn: SqlitePool) -> Result<()> {
-        let mut uow =
-            crate::core::infrastructure::unit_of_work::SqliteUnitOfWork::new(&conn).await?;
+        let mut uow = SqliteUnitOfWork::new(&conn).await?;
 
         let uc = GetWishlistUseCase;
         let id = WishlistId::default();
@@ -49,8 +50,7 @@ mod tests {
         fixtures("../../../fixtures/test_wishlist.sql")
     )]
     async fn get_wishlist_returns_some(conn: SqlitePool) -> Result<()> {
-        let mut uow =
-            crate::core::infrastructure::unit_of_work::SqliteUnitOfWork::new(&conn).await?;
+        let mut uow = SqliteUnitOfWork::new(&conn).await?;
 
         let uc = GetWishlistUseCase;
         let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;

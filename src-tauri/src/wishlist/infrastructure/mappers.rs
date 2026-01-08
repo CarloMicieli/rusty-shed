@@ -76,6 +76,7 @@ fn map_monetary_amount(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::domain::Currency;
     use crate::wishlist::infrastructure::entities::WishlistItemRow;
     use chrono::NaiveDate;
     use pretty_assertions::assert_eq;
@@ -109,7 +110,7 @@ mod tests {
         assert!(item.purchased_price.is_some());
         let dp = item.desired_price.unwrap();
         assert_eq!(dp.amount, 1234i64);
-        assert_eq!(dp.currency, crate::core::domain::currency::Currency::EUR);
+        assert_eq!(dp.currency, Currency::EUR);
     }
 
     #[test]
