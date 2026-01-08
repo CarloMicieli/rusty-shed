@@ -15,6 +15,54 @@ Patterns:
 
 ---
 
+## Preferred Use-Case Pattern
+
+We standardize on a stateless, canonical shape for application-level use-cases to keep call sites simple and consistent with Query patterns.
+
+Contract (canonical):
+
+- Use a unit struct as the type marker: `pub struct MyUseCase;`.
+- Expose a single associated (static) async entry point: `pub async fn execute(...) -> Result<T, DomainError>`.
+- Do not require callers to construct or hold an instance of the use-case. Example callers should use `MyUseCase::execute(&mut uow, input).await`.
+
+Rationale:
+
+- Stateless use-cases are clearer as pure operations; the unit struct acts only as a namespace.
+- Matches existing Query pattern (unit struct + associated `execute`) and reduces API surface area.
+- Simplifies testing and avoids unnecessary allocation or lifetime issues.
+
+Example use-case implementation:
+
+```rust
+pub struct CreateRailwayModelUseCase;
+
+impl CreateRailwayModelUseCase {
+    pub async fn execute(
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
+        input: CreateRailwayModelInput,
+    ) -> Result<RailwayModelId, DomainError> {
+        // business logic
+    }
+}
+```
+
+Example adapter usage (command handler):
+
+```rust
+let mut uow = state.unit_of_work().await?;
+let result = CreateRailwayModelUseCase::execute(&mut uow, input).await;
+match result {
+    Ok(id) => { uow.commit().await?; Ok(id) }
+    Err(e) => Err(e.into()),
+}
+```
+
+Exceptions:
+
+- If a use-case requires injected, long-lived dependencies (e.g., a client with connection pooling that must be stored on the use-case), document it explicitly and keep it as an instance-based use-case. Prefer refactoring to pass dependencies as function arguments where feasible.
+
+---
+
 ## Error Handling & Conversion
 
 Files:

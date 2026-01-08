@@ -14,8 +14,7 @@ use crate::state::AppState;
 pub async fn get_sellers(state: tauri::State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let use_case = GetSellersUseCase::new();
-    match use_case.execute(&mut unit_of_work).await {
+    match GetSellersUseCase::execute(&mut unit_of_work).await {
         Ok(sellers) => {
             unit_of_work
                 .commit()
@@ -33,18 +32,17 @@ pub async fn get_seller_by_id(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<Option<Seller>, CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     let sid = SellerId::try_from(id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
-    let use_case = GetSellerByIdUseCase::new();
-    let result = use_case
-        .execute(&mut uow, &sid)
+    let result = GetSellerByIdUseCase::execute(&mut unit_of_work, &sid)
         .await
         .map_err(CommandError::from)?;
 
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
@@ -73,9 +71,8 @@ pub async fn create_seller(
     state: tauri::State<'_, AppState>,
     payload: CreateSellerPayload,
 ) -> Result<Seller, CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
-    let use_case = CreateSellerUseCase::new();
     let input = CreateSellerInput {
         name: payload.name,
         seller_type: payload.seller_type,
@@ -89,12 +86,12 @@ pub async fn create_seller(
         postal_code: payload.postal_code,
         country_code: payload.country_code,
     };
-    let result = use_case
-        .execute(&mut uow, input)
+    let result = CreateSellerUseCase::execute(&mut unit_of_work, input)
         .await
         .map_err(CommandError::from)?;
 
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
@@ -125,7 +122,7 @@ pub async fn update_seller(
     state: tauri::State<'_, AppState>,
     payload: UpdateSellerPayload,
 ) -> Result<Seller, CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     let sid = SellerId::try_from(payload.id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
@@ -139,7 +136,6 @@ pub async fn update_seller(
         None
     };
 
-    let use_case = UpdateSellerUseCase::new();
     let input = UpdateSellerInput {
         id: sid,
         name: payload.name,
@@ -155,12 +151,12 @@ pub async fn update_seller(
         country_code: payload.country_code,
         created_at: created_at_dt,
     };
-    let result = use_case
-        .execute(&mut uow, input)
+    let result = UpdateSellerUseCase::execute(&mut unit_of_work, input)
         .await
         .map_err(CommandError::from)?;
 
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
@@ -173,18 +169,17 @@ pub async fn delete_seller(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<u64, CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     let sid = SellerId::try_from(id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
-    let use_case = DeleteSellerUseCase::new();
-    let result = use_case
-        .execute(&mut uow, &sid)
+    let result = DeleteSellerUseCase::execute(&mut unit_of_work, &sid)
         .await
         .map_err(CommandError::from)?;
 
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 

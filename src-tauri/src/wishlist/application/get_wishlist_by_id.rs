@@ -13,11 +13,10 @@ pub struct GetWishlistUseCase;
 
 impl GetWishlistUseCase {
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
         id: &WishlistId,
     ) -> Result<Option<Wishlist>, DomainError> {
-        let mut repo = uow.wishlist_repo();
+        let mut repo = unit_of_work.wishlist_repo();
         let wishlist = repo.get_wishlist_by_id(id).await?;
         Ok(wishlist)
     }
@@ -35,12 +34,10 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn get_wishlist_returns_none(conn: SqlitePool) -> Result<()> {
-        let mut uow = SqliteUnitOfWork::new(&conn).await?;
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
 
-        let uc = GetWishlistUseCase;
         let id = WishlistId::default();
-        let res = uc
-            .execute(&mut uow, &id)
+        let res = GetWishlistUseCase::execute(&mut unit_of_work, &id)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
@@ -54,12 +51,10 @@ mod tests {
         fixtures("../../../fixtures/test_wishlist.sql")
     )]
     async fn get_wishlist_returns_some(conn: SqlitePool) -> Result<()> {
-        let mut uow = SqliteUnitOfWork::new(&conn).await?;
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
 
-        let uc = GetWishlistUseCase;
         let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
-        let res = uc
-            .execute(&mut uow, &id)
+        let res = GetWishlistUseCase::execute(&mut unit_of_work, &id)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 

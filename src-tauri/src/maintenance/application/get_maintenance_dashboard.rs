@@ -7,21 +7,14 @@ use crate::maintenance::infrastructure::repository::MaintenanceUowExt;
 pub struct GetMaintenanceDashboardUseCase;
 
 impl GetMaintenanceDashboardUseCase {
-    /// Create a new instance of the use case.
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self {}
-    }
-
     /// Execute the use-case using the provided Unit of Work.
     ///
     /// Returns a vector of domain `MaintenanceCard` items converted from
     /// the infrastructure row mappers.
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
     ) -> Result<Vec<MaintenanceCard>, DomainError> {
-        let mut repo = uow.maintenance_repo();
+        let mut repo = unit_of_work.maintenance_repo();
 
         let rows = repo.list_due_cards().await?;
 

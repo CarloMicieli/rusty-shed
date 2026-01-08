@@ -7,17 +7,11 @@ use crate::sellers::infrastructure::repository::SellersUowExt;
 pub struct GetSellerByIdUseCase;
 
 impl GetSellerByIdUseCase {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self
-    }
-
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
         id: &SellerId,
     ) -> Result<Option<Seller>, DomainError> {
-        let mut repo = uow.sellers_repository();
+        let mut repo = unit_of_work.sellers_repository();
         repo.get(id).await
     }
 }

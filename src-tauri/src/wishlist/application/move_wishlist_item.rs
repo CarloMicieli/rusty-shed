@@ -6,9 +6,8 @@ pub struct MoveWishlistItemUseCase;
 
 impl MoveWishlistItemUseCase {
     pub async fn execute(
-        &self,
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: MoveWishlistItemCommand,
+        _uow: &mut SqliteUnitOfWork<'_>,
+        _cmd: MoveWishlistItemCommand,
     ) -> Result<(), DomainError> {
         // Implement move item logic
         unimplemented!()

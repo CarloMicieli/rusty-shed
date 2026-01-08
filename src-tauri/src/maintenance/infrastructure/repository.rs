@@ -242,8 +242,8 @@ mod tests {
         fixtures("../../../fixtures/test_maintenance.sql")
     )]
     async fn repo_get_card_by_stock_id_found(pool: SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = uow.maintenance_repo();
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repo();
 
         let maybe = repo
             .get_card_by_stock_id("d3606635-4c4e-462b-ae9f-02c7ce47bc770")
@@ -264,8 +264,8 @@ mod tests {
         fixtures("../../../fixtures/test_maintenance.sql")
     )]
     async fn repo_list_events_order(pool: SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = uow.maintenance_repo();
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repo();
 
         let events = repo
             .list_events_for_card("11111111-1111-1111-1111-111111111111")
@@ -286,8 +286,8 @@ mod tests {
         fixtures("../../../fixtures/test_maintenance.sql")
     )]
     async fn repo_list_due_cards(pool: SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = uow.maintenance_repo();
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repo();
 
         let due = repo.list_due_cards().await.expect("list due");
         // Given current date in test environment (2025-12-28), the fixture with next_maintenance_date 2025-07-01 should be due
@@ -302,8 +302,8 @@ mod tests {
         fixtures("../../../fixtures/test_maintenance.sql")
     )]
     async fn repo_record_event_transaction_via_repo(pool: SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = uow.maintenance_repo();
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repo();
 
         let new_event = NewMaintenanceEvent {
             id: Uuid::parse_str("66666666-6666-6666-6666-666666666666").unwrap(),

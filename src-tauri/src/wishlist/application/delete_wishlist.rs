@@ -6,9 +6,8 @@ pub struct DeleteWishlistUseCase;
 
 impl DeleteWishlistUseCase {
     pub async fn execute(
-        &self,
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: DeleteWishlistCommand,
+        _uow: &mut SqliteUnitOfWork<'_>,
+        _cmd: DeleteWishlistCommand,
     ) -> Result<(), DomainError> {
         // Implement delete logic
         unimplemented!()

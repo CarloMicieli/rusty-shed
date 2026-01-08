@@ -6,9 +6,8 @@ pub struct RenameWishlistUseCase;
 
 impl RenameWishlistUseCase {
     pub async fn execute(
-        &self,
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: RenameWishlistCommand,
+        _uow: &mut SqliteUnitOfWork<'_>,
+        _cmd: RenameWishlistCommand,
     ) -> Result<(), DomainError> {
         // Implement rename logic
         unimplemented!()

@@ -10,10 +10,9 @@ pub struct GetWishlistsUseCase;
 
 impl GetWishlistsUseCase {
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
     ) -> Result<Vec<WishlistPreview>, DomainError> {
-        let mut repo = uow.wishlist_repo();
+        let mut repo = unit_of_work.wishlist_repo();
         let previews = repo.list_wishlist_previews().await?;
         Ok(previews)
     }
@@ -30,10 +29,8 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn list_wishlists_empty(conn: SqlitePool) -> Result<()> {
-        let mut uow = SqliteUnitOfWork::new(&conn).await?;
-        let use_case = GetWishlistsUseCase;
-        let previews = use_case
-            .execute(&mut uow)
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let previews = GetWishlistsUseCase::execute(&mut unit_of_work)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
         assert!(previews.is_empty());
@@ -48,9 +45,7 @@ mod tests {
         let wishlist_id = "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9";
 
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let use_case = GetWishlistsUseCase;
-        let previews = use_case
-            .execute(&mut unit_of_work)
+        let previews = GetWishlistsUseCase::execute(&mut unit_of_work)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 

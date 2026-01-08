@@ -26,14 +26,8 @@ pub struct CreateSellerInput {
 pub struct CreateSellerUseCase;
 
 impl CreateSellerUseCase {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self
-    }
-
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: CreateSellerInput,
     ) -> Result<Seller, DomainError> {
         let now = Utc::now();
@@ -59,7 +53,7 @@ impl CreateSellerUseCase {
             updated_at: now,
         };
 
-        let mut repo = uow.sellers_repository();
+        let mut repo = unit_of_work.sellers_repository();
         repo.upsert(&seller).await?;
 
         Ok(seller)

@@ -6,9 +6,8 @@ pub struct SetDefaultWishlistUseCase;
 
 impl SetDefaultWishlistUseCase {
     pub async fn execute(
-        &self,
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: SetDefaultWishlistCommand,
+        _uow: &mut SqliteUnitOfWork<'_>,
+        _cmd: SetDefaultWishlistCommand,
     ) -> Result<(), DomainError> {
         // Implement set-default logic
         unimplemented!()

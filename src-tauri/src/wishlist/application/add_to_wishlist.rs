@@ -7,9 +7,8 @@ pub struct AddToWishlistUseCase;
 
 impl AddToWishlistUseCase {
     pub async fn execute(
-        &self,
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: AddToWishlistCommand,
+        _uow: &mut SqliteUnitOfWork<'_>,
+        _cmd: AddToWishlistCommand,
     ) -> Result<WishlistItem, DomainError> {
         // Implement add item logic
         unimplemented!()

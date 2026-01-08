@@ -10,14 +10,8 @@ use chrono::{DateTime, Utc};
 pub struct UpdateSellerUseCase;
 
 impl UpdateSellerUseCase {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self
-    }
-
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: UpdateSellerInput,
     ) -> Result<Seller, DomainError> {
         let now = Utc::now();
@@ -51,7 +45,7 @@ impl UpdateSellerUseCase {
             ));
         }
 
-        let mut repo = uow.sellers_repository();
+        let mut repo = unit_of_work.sellers_repository();
         repo.upsert(&seller).await?;
 
         Ok(seller)

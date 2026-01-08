@@ -15,15 +15,13 @@ use uuid::Uuid;
 pub async fn get_maintenance_dashboard(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<MaintenanceCard>, CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
-    let use_case = GetMaintenanceDashboardUseCase::new();
-
-    let cards = use_case
-        .execute(&mut uow)
+    let cards = GetMaintenanceDashboardUseCase::execute(&mut unit_of_work)
         .await
         .map_err(CommandError::from)?;
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(cards)
@@ -46,7 +44,7 @@ pub async fn add_maintenance_record(
     state: tauri::State<'_, AppState>,
     input: AddMaintenanceInput,
 ) -> Result<(), CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     // Parse inputs
     let id = Uuid::parse_str(&input.id)
@@ -55,8 +53,6 @@ pub async fn add_maintenance_record(
         .map_err(|e| CommandError::validation_field("maintenance_card_id", e.to_string()))?;
     let date = NaiveDate::parse_from_str(&input.date_performed, "%Y-%m-%d")
         .map_err(|e| CommandError::validation_field("date_performed", e.to_string()))?;
-
-    let use_case = AddMaintenanceRecordUseCase::new();
 
     let maintenance_type = match input.maintenance_type {
         Some(s) => s.parse::<MaintenanceType>().ok(),
@@ -71,11 +67,11 @@ pub async fn add_maintenance_record(
         notes: input.notes,
     };
 
-    use_case
-        .execute(&mut uow, use_case_input)
+    AddMaintenanceRecordUseCase::execute(&mut unit_of_work, use_case_input)
         .await
         .map_err(CommandError::from)?;
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(())

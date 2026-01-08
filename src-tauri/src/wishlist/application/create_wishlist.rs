@@ -7,9 +7,8 @@ pub struct CreateWishlistUseCase;
 
 impl CreateWishlistUseCase {
     pub async fn execute(
-        &self,
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: CreateWishlistCommand,
+        _uow: &mut SqliteUnitOfWork<'_>,
+        _cmd: CreateWishlistCommand,
     ) -> Result<WishlistPreview, DomainError> {
         // Implement business logic: create wishlist, fetch previews and return created preview.
         unimplemented!()

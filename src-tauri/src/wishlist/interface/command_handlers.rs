@@ -29,12 +29,10 @@ pub async fn get_wishlist_by_id(
 ) -> Result<Option<Wishlist>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let use_case = GetWishlistUseCase;
-
     let wid = WishlistId::try_from(id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
 
-    let result = use_case.execute(&mut unit_of_work, &wid).await?;
+    let result = GetWishlistUseCase::execute(&mut unit_of_work, &wid).await?;
 
     unit_of_work.commit().await?;
 
@@ -46,13 +44,11 @@ pub async fn get_wishlist_by_id(
 pub async fn get_wishlists(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<WishlistPreview>, CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
-    let use_case = GetWishlistsUseCase;
+    let result = GetWishlistsUseCase::execute(&mut unit_of_work).await?;
 
-    let result = use_case.execute(&mut uow).await?;
-
-    uow.commit().await?;
+    unit_of_work.commit().await?;
 
     Ok(result)
 }
@@ -75,10 +71,7 @@ pub async fn create_wishlist(
 
     let cmd = CreateWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let use_case = CreateWishlistUseCase;
-
-    let preview = use_case
-        .execute(&mut unit_of_work, cmd)
+    let preview = CreateWishlistUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 
@@ -107,10 +100,7 @@ pub async fn rename_wishlist(
 
     let cmd = RenameWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let use_case = RenameWishlistUseCase;
-
-    use_case
-        .execute(&mut unit_of_work, cmd)
+    RenameWishlistUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 
@@ -132,10 +122,7 @@ pub async fn delete_wishlist(
 
     let cmd = DeleteWishlistCommand::try_from(id).map_err(CommandError::from)?;
 
-    let use_case = DeleteWishlistUseCase;
-
-    use_case
-        .execute(&mut unit_of_work, cmd)
+    DeleteWishlistUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 
@@ -153,18 +140,16 @@ pub async fn set_default_wishlist(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<(), CommandError> {
-    let mut uow = state.unit_of_work().await?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = SetDefaultWishlistCommand::try_from(id).map_err(CommandError::from)?;
 
-    let use_case = SetDefaultWishlistUseCase;
-
-    use_case
-        .execute(&mut uow, cmd)
+    SetDefaultWishlistUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 
-    uow.commit()
+    unit_of_work
+        .commit()
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
@@ -194,10 +179,7 @@ pub async fn add_to_wishlist(
 
     let cmd = AddToWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let use_case = AddToWishlistUseCase;
-
-    let item = use_case
-        .execute(&mut unit_of_work, cmd)
+    let item = AddToWishlistUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 
@@ -219,10 +201,7 @@ pub async fn remove_from_wishlist(
 
     let cmd = RemoveWishlistItemCommand::try_from(item_id).map_err(CommandError::from)?;
 
-    let use_case = RemoveWishlistItemUseCase;
-
-    use_case
-        .execute(&mut unit_of_work, cmd)
+    RemoveWishlistItemUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 
@@ -251,10 +230,7 @@ pub async fn move_item_to_list(
 
     let cmd = MoveWishlistItemCommand::try_from(input).map_err(CommandError::from)?;
 
-    let use_case = MoveWishlistItemUseCase;
-
-    use_case
-        .execute(&mut unit_of_work, cmd)
+    MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd)
         .await
         .map_err(CommandError::from)?;
 

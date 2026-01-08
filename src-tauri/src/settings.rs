@@ -61,12 +61,12 @@ impl TryFrom<SettingsRow> for SettingsDto {
 pub struct SettingsRepository;
 
 impl SettingsRepository {
-    pub async fn get(uow: &mut SqliteUnitOfWork<'_>) -> Result<SettingsDto, CommandError> {
+    pub async fn get(unit_of_work: &mut SqliteUnitOfWork<'_>) -> Result<SettingsDto, CommandError> {
         let row = sqlx::query_as::<_, SettingsRow>(
             "SELECT id, currency, length_unit, favorite_scale, favorite_power_method, language_code FROM settings WHERE id = ?1 LIMIT 1",
         )
         .bind(SETTINGS_ID)
-        .fetch_optional(&mut *uow.tx)
+        .fetch_optional(&mut *unit_of_work.tx)
         .await?;
 
         match row {
@@ -76,7 +76,7 @@ impl SettingsRepository {
     }
 
     pub async fn upsert(
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
         payload: UpdateSettingsPayload,
     ) -> Result<SettingsDto, CommandError> {
         let row = sqlx::query_as::<_, SettingsRow>(
@@ -96,19 +96,19 @@ impl SettingsRepository {
         .bind(scale_code(&payload.favorite_scale))
         .bind(payload.favorite_power_method.to_string())
         .bind(payload.language_code)
-        .fetch_one(&mut *uow.tx)
+        .fetch_one(&mut *unit_of_work.tx)
         .await?;
 
         row.try_into()
     }
 
     pub async fn ensure_default(pool: &sqlx::SqlitePool) -> Result<(), CommandError> {
-        let mut uow = SqliteUnitOfWork::new(pool).await?;
+        let mut unit_of_work = SqliteUnitOfWork::new(pool).await?;
         let row = sqlx::query_as::<_, SettingsRow>(
             "SELECT id, currency, length_unit, favorite_scale, favorite_power_method, language_code FROM settings WHERE id = ?1 LIMIT 1",
         )
         .bind(SETTINGS_ID)
-        .fetch_optional(&mut *uow.tx)
+        .fetch_optional(&mut *unit_of_work.tx)
         .await?;
 
         if row.is_none() {
@@ -121,10 +121,10 @@ impl SettingsRepository {
             };
 
             // ignore returned value; just ensure presence
-            let _ = Self::upsert(&mut uow, default_payload).await?;
+            let _ = Self::upsert(&mut unit_of_work, default_payload).await?;
         }
 
-        uow.commit().await?;
+        unit_of_work.commit().await?;
         Ok(())
     }
 }
@@ -166,12 +166,12 @@ fn scale_code(scale: &Scale) -> &'static str {
 #[tauri::command]
 #[specta::specta]
 pub async fn get_settings(state: tauri::State<'_, AppState>) -> Result<SettingsDto, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(CommandError::from)?;
 
-    let result = SettingsRepository::get(&mut uow).await?;
-    uow.commit().await?;
+    let result = SettingsRepository::get(&mut unit_of_work).await?;
+    unit_of_work.commit().await?;
 
     Ok(result)
 }
@@ -182,12 +182,12 @@ pub async fn update_settings(
     state: tauri::State<'_, AppState>,
     payload: UpdateSettingsPayload,
 ) -> Result<SettingsDto, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(CommandError::from)?;
 
-    let updated = SettingsRepository::upsert(&mut uow, payload).await?;
-    uow.commit().await?;
+    let updated = SettingsRepository::upsert(&mut unit_of_work, payload).await?;
+    unit_of_work.commit().await?;
 
     Ok(updated)
 }

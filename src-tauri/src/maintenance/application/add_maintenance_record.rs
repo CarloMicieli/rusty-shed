@@ -29,19 +29,12 @@ pub struct AddMaintenanceRecordInput {
 pub struct AddMaintenanceRecordUseCase {}
 
 impl AddMaintenanceRecordUseCase {
-    /// Create a new instance of the use-case.
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self {}
-    }
-
     /// Execute the use-case within the provided Unit of Work using a typed input.
     pub async fn execute(
-        &self,
-        uow: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork<'_>,
         input: AddMaintenanceRecordInput,
     ) -> Result<(), DomainError> {
-        let mut repo = uow.maintenance_repo();
+        let mut repo = unit_of_work.maintenance_repo();
 
         let event = NewMaintenanceEvent {
             id: input.id,
