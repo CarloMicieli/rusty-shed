@@ -1,4 +1,5 @@
 use crate::core::domain::address::{Address, AddressFields};
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
@@ -34,7 +35,7 @@ impl CreateSellerUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         input: CreateSellerInput,
-    ) -> anyhow::Result<Seller> {
+    ) -> Result<Seller, DomainError> {
         let now = Utc::now();
         let address_fields = AddressFields {
             street: input.street_address.clone(),
@@ -58,7 +59,7 @@ impl CreateSellerUseCase {
             updated_at: now,
         };
 
-        let mut repo = uow.sellers_repo();
+        let mut repo = uow.sellers_repository();
         repo.upsert(&seller).await?;
 
         Ok(seller)

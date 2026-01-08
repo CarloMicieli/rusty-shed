@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct SellerRow {
-    pub seller_id: String,
+    pub id: String,
     pub name: String,
     pub seller_type: SellerType,
     pub email: Option<String>,
@@ -43,7 +43,7 @@ impl From<SellerRow> for Seller {
             .unwrap_or_else(|_| Utc::now());
 
         Seller {
-            id: SellerId(row.seller_id),
+            id: SellerId(row.id),
             name: row.name,
             seller_type: row.seller_type,
             email: row.email,

@@ -1,3 +1,4 @@
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
@@ -15,8 +16,8 @@ impl GetSellerByIdUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         id: &SellerId,
-    ) -> anyhow::Result<Option<Seller>> {
-        let mut repo = uow.sellers_repo();
+    ) -> Result<Option<Seller>, DomainError> {
+        let mut repo = uow.sellers_repository();
         repo.get(id).await
     }
 }

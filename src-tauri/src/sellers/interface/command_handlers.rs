@@ -14,21 +14,20 @@ use tauri::State;
 #[tauri::command]
 #[specta::specta]
 pub async fn get_sellers(state: State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
+    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
     let use_case = GetSellersUseCase::new();
-    let result = use_case
-        .execute(&mut uow)
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
-
-    uow.commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
-
-    Ok(result)
+    match use_case.execute(&mut unit_of_work).await {
+        Ok(sellers) => {
+            unit_of_work.commit()
+                .await
+                .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+            Ok(sellers)
+        }
+        Err(e) => Err(e.into()),
+    }
 }
 
 #[tauri::command]

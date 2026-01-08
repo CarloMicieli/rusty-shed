@@ -1,10 +1,10 @@
 use crate::core::domain::address::{Address, AddressFields};
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
 use crate::sellers::infrastructure::repository::SellersUowExt;
-use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 
 pub struct UpdateSellerUseCase;
@@ -19,7 +19,7 @@ impl UpdateSellerUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         input: UpdateSellerInput,
-    ) -> anyhow::Result<Seller> {
+    ) -> Result<Seller, DomainError> {
         let now = Utc::now();
         let created_at = input.created_at.unwrap_or(now);
         let address_fields = AddressFields {
@@ -46,10 +46,12 @@ impl UpdateSellerUseCase {
 
         let derived = SellerId::new_from_name(&seller.name);
         if seller.id != derived {
-            return Err(anyhow!("seller id is immutable and must match slug"));
+            return Err(DomainError::BusinessRule(
+                "seller id is immutable and must match slug".to_string(),
+            ));
         }
 
-        let mut repo = uow.sellers_repo();
+        let mut repo = uow.sellers_repository();
         repo.upsert(&seller).await?;
 
         Ok(seller)

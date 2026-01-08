@@ -1,3 +1,4 @@
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::infrastructure::repository::SellersUowExt;
@@ -14,8 +15,8 @@ impl DeleteSellerUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         id: &SellerId,
-    ) -> anyhow::Result<u64> {
-        let mut repo = uow.sellers_repo();
+    ) -> Result<u64, DomainError> {
+        let mut repo = uow.sellers_repository();
         repo.delete(id).await
     }
 }
