@@ -4,7 +4,6 @@ use crate::catalog::application::railway_model_use_case_input::CreateRailwayMode
 use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
 use log::{error, info};
 
@@ -80,9 +79,7 @@ pub async fn create_railway_model(
 ) -> Result<RailwayModelId, CommandError> {
     info!("Creating railway model: {:?}", new_railway_model);
 
-    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     match CreateRailwayModelUseCase::execute(&mut unit_of_work, new_railway_model).await {
         Ok(model_id) => {

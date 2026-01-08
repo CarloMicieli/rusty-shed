@@ -1,5 +1,3 @@
-
-
 ---
 
 ## DB Helpers & Mappers
@@ -32,9 +30,7 @@ Key patterns:
 Example adapter error handling (pattern used across repo):
 
 ```text
-let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-    .await
-    .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+let mut uow = state.unit_of_work().await?;
 let result = AddCollectionItemCommand::execute(&mut uow, domain_command).await;
 // commit only on success
 match result {
@@ -92,7 +88,7 @@ Adapter should map `TryFrom` errors to `CommandError` via the use-case and final
 
 ## Transaction & Commit Notes
 
-- Always create a `SqliteUnitOfWork` in the adapter for write commands. It creates a transaction-bound `SqliteUnitOfWork { tx: Transaction }`.
+- Always create a `SqliteUnitOfWork` in the adapter for write commands. Prefer obtaining it via `state.unit_of_work().await?`, which centralizes error mapping and keeps adapters concise. It creates a transaction-bound `SqliteUnitOfWork { tx: Transaction }`.
 - The repository implementations re-borrow the transaction via an extension trait (e.g., `CollectingUowExt::collection_repository`) and operate on `&mut self.tx` so all repo calls are within the same transaction.
 - On success: adapter calls `uow.commit().await.map_err(|e| CommandError::DatabaseError(e.to_string()))?`.
 - On error: dropping the `SqliteUnitOfWork` will roll back the transaction automatically (or you can explicitly `rollback()` depending on UoW implementation).
@@ -115,10 +111,8 @@ pub async fn add_collection_item(
     // map input -> domain
     let domain_cmd = AddCollectionItem::try_from(input).map_err(Into::into)?;
 
-    // create uow
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    // obtain uow via AppState helper (preferred)
+    let mut uow = state.unit_of_work().await?;
 
     // execute
     let result = AddCollectionItemCommand::execute(&mut uow, domain_cmd).await;

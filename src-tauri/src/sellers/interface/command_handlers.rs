@@ -1,5 +1,4 @@
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::application::create_seller::{CreateSellerInput, CreateSellerUseCase};
 use crate::sellers::application::delete_seller::DeleteSellerUseCase;
 use crate::sellers::application::get_seller_by_id::GetSellerByIdUseCase;
@@ -13,9 +12,7 @@ use crate::state::AppState;
 #[tauri::command]
 #[specta::specta]
 pub async fn get_sellers(state: tauri::State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
-    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     let use_case = GetSellersUseCase::new();
     match use_case.execute(&mut unit_of_work).await {
@@ -36,9 +33,7 @@ pub async fn get_seller_by_id(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<Option<Seller>, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = state.unit_of_work().await?;
 
     let sid = SellerId::try_from(id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
@@ -78,9 +73,7 @@ pub async fn create_seller(
     state: tauri::State<'_, AppState>,
     payload: CreateSellerPayload,
 ) -> Result<Seller, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = state.unit_of_work().await?;
 
     let use_case = CreateSellerUseCase::new();
     let input = CreateSellerInput {
@@ -132,9 +125,7 @@ pub async fn update_seller(
     state: tauri::State<'_, AppState>,
     payload: UpdateSellerPayload,
 ) -> Result<Seller, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = state.unit_of_work().await?;
 
     let sid = SellerId::try_from(payload.id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
@@ -182,9 +173,7 @@ pub async fn delete_seller(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<u64, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = state.unit_of_work().await?;
 
     let sid = SellerId::try_from(id.as_str())
         .map_err(|e| CommandError::validation_field("id", e.to_string()))?;

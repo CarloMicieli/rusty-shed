@@ -1,7 +1,6 @@
 use crate::collecting::application::GetCollectionQuery;
 use crate::collecting::domain::CollectionView;
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
 
 /// Tauri command to retrieve the current collection.
@@ -22,9 +21,7 @@ use crate::state::AppState;
 pub async fn get_collection(
     state: tauri::State<'_, AppState>,
 ) -> Result<CollectionView, CommandError> {
-    let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut unit_of_work = state.unit_of_work().await?;
 
     match GetCollectionQuery::execute(&mut unit_of_work).await {
         Ok(collection) => {

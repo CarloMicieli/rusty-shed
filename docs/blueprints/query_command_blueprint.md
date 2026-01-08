@@ -93,9 +93,11 @@ How to accept and validate query parameters in a command adapter:
 
 ```rust
 let page = if page <= 0 { return Err(CommandError::ValidationError(HashMap::new())) } else { page };
+
 let per_page = per_page.clamp(1, 100);
 
-let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await.map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+// Preferred: use the AppState helper which centralizes error mapping
+let mut uow = state.unit_of_work().await?;
 let result = GetItemsQuery::execute(&mut uow, page, per_page).await;
 uow.commit().await.map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 result.map_err(Into::into)
@@ -113,7 +115,8 @@ Notes:
 How DI works in this codebase:
 
 - `AppState` holds a `sqlx::SqlitePool` and helper constructors (`db_pool()`, `unit_of_work()`). See `src-tauri/src/state.rs`.
-- Command adapter calls `SqliteUnitOfWork::new(&state.db_pool()).await` or `state.unit_of_work().await` to obtain a transaction-bound `SqliteUnitOfWork`.
+- Preferred: command adapters should call `state.unit_of_work().await?` to obtain a transaction-bound `SqliteUnitOfWork`.
+  This centralizes the CommandError conversion and keeps adapters concise. Use `SqliteUnitOfWork::new(&state.db_pool()).await` only when the adapter needs explicit, custom error mapping.
 - The UnitOfWork exposes an extension trait (`CollectingUowExt`) which provides `fn collection_repository(&mut self) -> Box<dyn CollectionRepository + '_>`; this boxes a concrete `SqliteCollectionRepository` bound to the transaction/connection.
 
 This pattern ensures:
@@ -211,7 +214,8 @@ Pattern:
 Examples:
 
 ```rust
-let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool()).await.map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+// Preferred pattern: obtain UoW via `AppState::unit_of_work()` which returns a `Result<SqliteUnitOfWork, CommandError>`
+let mut unit_of_work = state.unit_of_work().await?;
 let result = GetCollectionQuery::execute(&mut unit_of_work).await;
 unit_of_work.commit().await.map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 ```
@@ -256,8 +260,8 @@ Use the templates below when implementing new Tauri queries (example: `get_wishl
 #[tauri::command]
 #[specta::specta]
 pub async fn get_<feature>(state: tauri::State<'_, AppState>) -> Result<<FeatureView>, CommandError> {
-    // create unit-of-work
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await.map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    // obtain unit-of-work via AppState helper (preferred)
+    let mut uow = state.unit_of_work().await?;
 
     // execute application query
     let result = Get<FeatureCamelCase>Query::execute(&mut uow).await;

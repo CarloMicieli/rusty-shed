@@ -1,11 +1,4 @@
-//! Tauri command handlers for the `maintenance` module.
-//!
-//! These functions follow the project's Unit of Work + Use Case pattern: they
-//! create a `SqliteUnitOfWork`, instantiate a use-case, execute it, commit the
-//! transaction, and map errors to `CommandError` for transmission over IPC.
-
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::maintenance::application::add_maintenance_record::AddMaintenanceRecordInput;
 use crate::maintenance::application::{
     AddMaintenanceRecordUseCase, GetMaintenanceDashboardUseCase,
@@ -22,9 +15,7 @@ use uuid::Uuid;
 pub async fn get_maintenance_dashboard(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<MaintenanceCard>, CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = state.unit_of_work().await?;
 
     let use_case = GetMaintenanceDashboardUseCase::new();
 
@@ -55,9 +46,7 @@ pub async fn add_maintenance_record(
     state: tauri::State<'_, AppState>,
     input: AddMaintenanceInput,
 ) -> Result<(), CommandError> {
-    let mut uow = SqliteUnitOfWork::new(&state.db_pool())
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    let mut uow = state.unit_of_work().await?;
 
     // Parse inputs
     let id = Uuid::parse_str(&input.id)
