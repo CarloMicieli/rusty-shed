@@ -2,7 +2,6 @@ use crate::catalog::application::{GetRailwayCompaniesQuery, GetRailwayCompanyByI
 use crate::catalog::domain::railway_company::{RailwayCompany, RailwayCompanyId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
-use tauri::State;
 
 /// Retrieve all railway companies from the database.
 ///
@@ -15,7 +14,7 @@ use tauri::State;
 #[tauri::command]
 #[specta::specta]
 pub async fn get_railway_companies(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
 ) -> Result<Vec<RailwayCompany>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
@@ -58,7 +57,7 @@ pub async fn get_railway_companies(
 #[tauri::command]
 #[specta::specta]
 pub async fn get_railway_company_by_id(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     railway_company_id: RailwayCompanyId,
 ) -> Result<Option<RailwayCompany>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;

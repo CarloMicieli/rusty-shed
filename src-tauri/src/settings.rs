@@ -9,7 +9,6 @@ use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use tauri::State;
 
 const SETTINGS_ID: i64 = 1;
 
@@ -166,7 +165,7 @@ fn scale_code(scale: &Scale) -> &'static str {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn get_settings(state: State<'_, AppState>) -> Result<SettingsDto, CommandError> {
+pub async fn get_settings(state: tauri::State<'_, AppState>) -> Result<SettingsDto, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(CommandError::from)?;
@@ -180,7 +179,7 @@ pub async fn get_settings(state: State<'_, AppState>) -> Result<SettingsDto, Com
 #[tauri::command]
 #[specta::specta]
 pub async fn update_settings(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     payload: UpdateSettingsPayload,
 ) -> Result<SettingsDto, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool())

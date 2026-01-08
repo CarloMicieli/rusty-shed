@@ -2,7 +2,6 @@ use crate::catalog::application::{GetManufacturerByIdQuery, GetManufacturersQuer
 use crate::catalog::domain::manufacturer::{Manufacturer, ManufacturerId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
-use tauri::State;
 
 /// Retrieve all manufacturers from the database.
 ///
@@ -15,7 +14,7 @@ use tauri::State;
 #[tauri::command]
 #[specta::specta]
 pub async fn get_manufacturers(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
 ) -> Result<Vec<Manufacturer>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
@@ -53,7 +52,7 @@ pub async fn get_manufacturers(
 #[tauri::command]
 #[specta::specta]
 pub async fn get_manufacturer_by_id(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     manufacturer_id: ManufacturerId,
 ) -> Result<Option<Manufacturer>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;

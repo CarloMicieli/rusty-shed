@@ -3,12 +3,11 @@ use crate::dashboard::application::GetDashboardSummaryQuery;
 use crate::dashboard::domain::DashboardSummary;
 use crate::state::AppState;
 use serde::Deserialize;
-use tauri::State;
 
 #[tauri::command]
 #[specta::specta]
 pub async fn get_dashboard_summary(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     params: Option<QueryParams>,
 ) -> Result<DashboardSummary, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;

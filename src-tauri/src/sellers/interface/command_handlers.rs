@@ -9,11 +9,10 @@ use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
 use crate::state::AppState;
-use tauri::State;
 
 #[tauri::command]
 #[specta::specta]
-pub async fn get_sellers(state: State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
+pub async fn get_sellers(state: tauri::State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
     let mut unit_of_work = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
@@ -34,7 +33,7 @@ pub async fn get_sellers(state: State<'_, AppState>) -> Result<Vec<Seller>, Comm
 #[tauri::command]
 #[specta::specta]
 pub async fn get_seller_by_id(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<Option<Seller>, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool())
@@ -76,7 +75,7 @@ pub struct CreateSellerPayload {
 #[tauri::command]
 #[specta::specta]
 pub async fn create_seller(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     payload: CreateSellerPayload,
 ) -> Result<Seller, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool())
@@ -130,7 +129,7 @@ pub struct UpdateSellerPayload {
 #[tauri::command]
 #[specta::specta]
 pub async fn update_seller(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     payload: UpdateSellerPayload,
 ) -> Result<Seller, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool())
@@ -179,7 +178,10 @@ pub async fn update_seller(
 
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_seller(state: State<'_, AppState>, id: String) -> Result<u64, CommandError> {
+pub async fn delete_seller(
+    state: tauri::State<'_, AppState>,
+    id: String,
+) -> Result<u64, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool())
         .await
         .map_err(|e| CommandError::DatabaseError(e.to_string()))?;

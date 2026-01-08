@@ -1,5 +1,4 @@
 use specta::specta;
-use tauri::State;
 
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::domain::{Currency, MonetaryAmount};
@@ -22,7 +21,7 @@ use serde::{Deserialize, Serialize};
 #[tauri::command]
 #[specta]
 pub async fn get_wishlist_by_id(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<Option<Wishlist>, CommandError> {
     // Start a unit of work (transaction)
@@ -43,7 +42,7 @@ pub async fn get_wishlist_by_id(
 #[tauri::command]
 #[specta]
 pub async fn get_wishlists(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
 ) -> Result<Vec<WishlistPreview>, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
@@ -67,7 +66,7 @@ pub struct CreateWishlistInput {
 #[tauri::command]
 #[specta]
 pub async fn create_wishlist(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     input: CreateWishlistInput,
 ) -> Result<WishlistPreview, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
@@ -119,7 +118,7 @@ pub struct RenameWishlistInput {
 #[tauri::command]
 #[specta]
 pub async fn rename_wishlist(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     input: RenameWishlistInput,
 ) -> Result<(), CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
@@ -139,7 +138,10 @@ pub async fn rename_wishlist(
 
 #[tauri::command]
 #[specta]
-pub async fn delete_wishlist(state: State<'_, AppState>, id: String) -> Result<(), CommandError> {
+pub async fn delete_wishlist(
+    state: tauri::State<'_, AppState>,
+    id: String,
+) -> Result<(), CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
 
     let wid = WishlistId::try_from(id.as_str())
@@ -158,7 +160,7 @@ pub async fn delete_wishlist(state: State<'_, AppState>, id: String) -> Result<(
 #[tauri::command]
 #[specta]
 pub async fn set_default_wishlist(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<(), CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
@@ -192,7 +194,7 @@ pub struct AddToWishlistInput {
 #[tauri::command]
 #[specta]
 pub async fn add_to_wishlist(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     input: AddToWishlistInput,
 ) -> Result<WishlistItem, CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
@@ -244,7 +246,7 @@ pub async fn add_to_wishlist(
 #[tauri::command]
 #[specta]
 pub async fn remove_from_wishlist(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     item_id: String,
 ) -> Result<(), CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;
@@ -272,7 +274,7 @@ pub struct MoveWishlistItemInput {
 #[tauri::command]
 #[specta]
 pub async fn move_item_to_list(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     input: MoveWishlistItemInput,
 ) -> Result<(), CommandError> {
     let mut uow = SqliteUnitOfWork::new(&state.db_pool()).await?;

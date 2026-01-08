@@ -7,7 +7,6 @@ use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
 use log::{error, info};
-use tauri::State;
 
 /// Retrieve a railway model by its identifier.
 ///
@@ -30,7 +29,7 @@ use tauri::State;
 #[tauri::command]
 #[specta::specta]
 pub async fn get_railway_model_by_id(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     railway_model_id: RailwayModelId,
 ) -> Result<Option<RailwayModel>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
@@ -76,7 +75,7 @@ pub async fn get_railway_model_by_id(
 #[tauri::command]
 #[specta::specta]
 pub async fn create_railway_model(
-    state: State<'_, AppState>,
+    state: tauri::State<'_, AppState>,
     new_railway_model: CreateRailwayModelInput,
 ) -> Result<RailwayModelId, CommandError> {
     info!("Creating railway model: {:?}", new_railway_model);
