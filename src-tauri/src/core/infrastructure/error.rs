@@ -133,6 +133,8 @@ impl CommandError {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
+    use std::collections::HashMap as StdHashMap;
 
     #[test]
     fn test_domain_error_to_command_error_not_found() {
@@ -182,6 +184,65 @@ mod tests {
                 assert_eq!(msg, "Cannot delete paid invoice");
             }
             _ => panic!("Expected BusinessRule variant"),
+        }
+    }
+
+    #[rstest]
+    #[case::not_found("not_found")]
+    #[case::validation("validation")]
+    #[case::infrastructure("infrastructure")]
+    #[case::business_rule("business_rule")]
+    #[case::validation_error("validation_error")]
+    fn parameterized_domain_to_command_conversion(#[case] case_name: &str) {
+        let domain_error = match case_name {
+            "not_found" => DomainError::NotFound {
+                resource: "Item".to_string(),
+                identifier: "id-42".to_string(),
+            },
+            "validation" => DomainError::Validation("bad input".to_string()),
+            "infrastructure" => DomainError::Infrastructure(sqlx::Error::RowNotFound),
+            "business_rule" => DomainError::BusinessRule("some rule".to_string()),
+            "validation_error" => {
+                let mut map: StdHashMap<String, Vec<ValidationError>> = StdHashMap::new();
+                map.insert(
+                    "field".to_string(),
+                    vec![ValidationError {
+                        code: std::borrow::Cow::Borrowed("required"),
+                        message: Some(std::borrow::Cow::Borrowed("is required")),
+                        params: std::collections::HashMap::new(),
+                    }],
+                );
+                DomainError::ValidationError(map)
+            }
+            _ => panic!("unknown case"),
+        };
+
+        let cmd: CommandError = domain_error.into();
+
+        match case_name {
+            "not_found" => match cmd {
+                CommandError::NotFound(msg) => {
+                    assert!(msg.contains("Item with identifier 'id-42' not found"))
+                }
+                _ => panic!("expected NotFound"),
+            },
+            "validation" => match cmd {
+                CommandError::ValidationError(map) => assert!(map.is_empty()),
+                _ => panic!("expected ValidationError"),
+            },
+            "infrastructure" => match cmd {
+                CommandError::DatabaseError(s) => assert!(!s.is_empty()),
+                _ => panic!("expected DatabaseError"),
+            },
+            "business_rule" => match cmd {
+                CommandError::BusinessRule(msg) => assert_eq!(msg, "some rule"),
+                _ => panic!("expected BusinessRule"),
+            },
+            "validation_error" => match cmd {
+                CommandError::ValidationError(map) => assert!(map.contains_key("field")),
+                _ => panic!("expected ValidationError"),
+            },
+            _ => unreachable!(),
         }
     }
 }
