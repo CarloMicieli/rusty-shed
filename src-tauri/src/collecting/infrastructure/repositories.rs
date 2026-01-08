@@ -1,16 +1,17 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
-use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRepository;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::{
     BoxCondition, Collection, CollectionEvent, CollectionId, ModelCondition, OwnedRollingStockId,
     PurchaseCondition, PurchaseInfoId,
 };
+use crate::collecting::domain::{CollectionItemId, CollectionSummary};
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
-use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{Currency, MonetaryAmount};
+use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
@@ -47,7 +48,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
             .bind(name)
             .execute(&mut *self.executor)
             .await
-            .map_err(DomainError::from)?;
+            .with_domain_context("Error inserting the collection")?;
 
         Ok(())
     }
@@ -72,8 +73,8 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         "#;
 
         sqlx::query(insert_cmd)
-            .bind(collection_id)
             .bind(collection_item_id)
+            .bind(collection_id)
             .bind(railway_model_id)
             .bind(added_date)
             .bind(purchase_condition)
@@ -82,7 +83,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
             .bind(notes)
             .execute(&mut *self.executor)
             .await
-            .map_err(DomainError::from)?;
+            .with_domain_context("Error inserting the collection item")?;
 
         Ok(())
     }
@@ -107,7 +108,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
             .bind(notes)
             .execute(&mut *self.executor)
             .await
-            .map_err(DomainError::from)?;
+            .with_domain_context("Error inserting the owned_rolling stock")?;
 
         Ok(())
     }
@@ -122,7 +123,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
     ) -> Result<(), DomainError> {
         let insert_cmd = r#"
             INSERT INTO purchase_infos (
-                id, collection_item_id, price_amount, price_currency, seller_id, purchase_date)
+                id, collection_item_id, purchased_price_amount, purchased_price_currency, seller_id, purchase_date)
             VALUES (?1, ?2, ?3, ?4, ?5, ?6);
         "#;
 
@@ -140,7 +141,48 @@ impl<'conn> SqliteCollectionRepository<'conn> {
             .bind(purchase_date)
             .execute(&mut *self.executor)
             .await
-            .map_err(DomainError::from)?;
+            .with_domain_context("Error inserting the purchase info")?;
+
+        Ok(())
+    }
+
+    async fn update_collection_summary(
+        &mut self,
+        collection_id: &CollectionId,
+        collection_summary: &CollectionSummary,
+        total_value: Option<&MonetaryAmount>,
+    ) -> Result<(), DomainError> {
+        let update_cmd = r#"
+            UPDATE collections
+            SET electric_multiple_units_count = ?1,
+                freight_cars_count = ?2,
+                locomotives_count = ?3,
+                passenger_cars_count = ?4,
+                railcars_count = ?5,
+                starter_sets_count = ?6,
+                train_sets_count = ?7,
+                total_value_amount = ?8,
+                total_value_currency = ?9
+            WHERE id = ?10;
+        "#;
+
+        let amount: Option<i64> = total_value.map(|mv| mv.amount);
+        let currency: Option<Currency> = total_value.map(|mv| mv.currency);
+
+        sqlx::query(update_cmd)
+            .bind(collection_summary.electric_multiple_units_count)
+            .bind(collection_summary.freight_cars_count)
+            .bind(collection_summary.locomotives_count)
+            .bind(collection_summary.passenger_cars_count)
+            .bind(collection_summary.railcars_count)
+            .bind(collection_summary.starter_sets_count)
+            .bind(collection_summary.train_sets_count)
+            .bind(amount)
+            .bind(currency)
+            .bind(collection_id)
+            .execute(&mut *self.executor)
+            .await
+            .with_domain_context("Error inserting the collection summary")?;
 
         Ok(())
     }
@@ -219,6 +261,13 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                     notes,
                     ..
                 } => {
+                    self.update_collection_summary(
+                        aggregate_id,
+                        &collection.summary,
+                        collection.total_value.as_ref(),
+                    )
+                    .await?;
+
                     self.insert_collection_item(
                         aggregate_id,
                         collection_item_id,
@@ -286,12 +335,16 @@ impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::Category;
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
     use crate::catalog::domain::scale::Scale;
+    use crate::collecting::domain::AddCollectionItem;
     use crate::collecting::domain::{
         BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
     };
     use crate::core::domain::{Currency, MonetaryAmount};
+    use crate::core::infrastructure::logging;
+    use crate::sellers::domain::seller_id::SellerId;
 
     #[sqlx::test(migrations = "./migrations")]
     async fn it_should_return_the_default_collection_when_not_found(conn: sqlx::SqlitePool) {
@@ -398,5 +451,111 @@ mod tests {
             }
             other => panic!("Expected purchase info to be Purchased, got: {:?}", other),
         }
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_insert_collection_row_on_save(conn: sqlx::SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let mut collection = Collection::default();
+
+        unit_of_work
+            .collection_repository()
+            .save(&mut collection)
+            .await
+            .expect("save should succeed");
+        unit_of_work.commit().await.expect("commit should succeed");
+
+        // Assert: query the DB directly to verify a row was inserted
+        let mut conn2 = conn.acquire().await.expect("acquire conn");
+        let saved = database::get_collection(&mut conn2, &collection.id)
+            .await
+            .expect("query should succeed");
+        assert!(saved.is_some());
+        let row = saved.unwrap();
+        assert_eq!(row.id, CollectionId::default());
+        assert_eq!(row.name, "My Collection");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures(
+            "../../../fixtures/test_railway_model.sql",
+            "../../../fixtures/test_seller.sql"
+        )
+    )]
+    async fn it_should_persist_collection_item_and_related_rows_on_save(conn: sqlx::SqlitePool) {
+        logging::test_helper::setup();
+
+        // Arrange
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let mut collection = Collection::default();
+
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid railway model id");
+        let rolling_stock_id =
+            RollingStockId::try_from("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8")
+                .expect("valid rolling stock id");
+        let seller = SellerId::try_from("trn:seller:model-train-shop").ok();
+
+        let add_collection_item = AddCollectionItem {
+            railway_model_id: railway_model_id.clone(),
+            rolling_stock_ids: vec![rolling_stock_id.clone()],
+            category: Category::Locomotives,
+            // Use USD here because Collection::apply uses MonetaryAmount::default() (USD)
+            // when total_value is None, and add_same_currency would otherwise fail.
+            price: MonetaryAmount::new(1234, Currency::USD),
+            seller_id: seller.clone(),
+            added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_condition: Some(PurchaseCondition::New),
+            model_condition: Some(ModelCondition::Mint),
+            box_condition: Some(BoxCondition::OriginalMint),
+            notes: Some("Inserted by test".to_string()),
+        };
+
+        collection.add_item(add_collection_item);
+
+        unit_of_work
+            .collection_repository()
+            .save(&mut collection)
+            .await
+            .expect("save should succeed");
+        unit_of_work.commit().await.expect("commit should succeed");
+
+        let mut conn2 = conn.acquire().await.expect("acquire conn");
+
+        let purchase_infos = database::get_purchase_infos(&mut conn2, &collection.id)
+            .await
+            .expect("query purchase_infos");
+        assert!(!purchase_infos.is_empty());
+        let pi = &purchase_infos[0];
+        assert_eq!(pi.purchased_price_amount.unwrap(), 1234);
+        assert_eq!(pi.purchased_price_currency.as_deref().unwrap(), "USD");
+
+        let owned_id = collection.items[0]
+            .rolling_stocks
+            .first()
+            .expect("owned rolling stock present")
+            .id
+            .to_string();
+
+        let ors = database::get_owned_rolling_stock(&mut conn2, owned_id)
+            .await
+            .expect("query owned rolling stock");
+        assert!(ors.is_some());
+        let ors_row = ors.unwrap();
+        assert_eq!(ors_row.rolling_stock_id.unwrap(), rolling_stock_id);
+
+        let items = database::get_collection_items(&mut conn2, &collection.id)
+            .await
+            .expect("query collection_items");
+        assert!(!items.is_empty());
+        assert_eq!(items[0].railway_model_id, railway_model_id);
     }
 }

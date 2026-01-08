@@ -294,7 +294,7 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
 
     let insert_cmd = r#"
         INSERT INTO sellers (
-            seller_id, name, type, email, phone, website_url,
+            id, name, type, email, phone, website_url,
             street_address, city, state_region, postal_code, country_code,
             created_at, updated_at
         )
@@ -367,7 +367,7 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
                 .push_bind(&now);
         });
 
-        query_builder.push(" ON CONFLICT(seller_id) DO UPDATE SET ");
+        query_builder.push(" ON CONFLICT(id) DO UPDATE SET ");
         query_builder.push("name = EXCLUDED.name, ");
         query_builder.push("type = EXCLUDED.type, ");
         query_builder.push("email = EXCLUDED.email, ");
@@ -508,7 +508,7 @@ mod tests {
         assert!(count > 0, "expected at least one seeded seller");
 
         let seller_type: Option<String> =
-            sqlx::query_scalar("SELECT type FROM sellers WHERE seller_id = ?")
+            sqlx::query_scalar("SELECT type FROM sellers WHERE id = ?")
                 .bind("trn:seller:model-center")
                 .fetch_optional(&mut *conn)
                 .await

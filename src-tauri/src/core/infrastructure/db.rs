@@ -94,6 +94,28 @@ pub enum SqliteDbError {
 }
 
 #[cfg(test)]
+pub async fn fk_violations(pool: &SqlitePool) -> Result<Vec<String>, anyhow::Error> {
+    let sql = r#"PRAGMA foreign_key_check;"#;
+    let violations = sqlx::query(sql).fetch_all(pool).await?;
+
+    let mut results = Vec::new();
+    use sqlx::Row;
+    for row in violations {
+        let table: String = row.get(0);
+        let row_id: i64 = row.get(1);
+        let target_table: String = row.get(2);
+        let fk_id: i32 = row.get(3);
+
+        results.push(format!(
+            "FK(id={}) violation in table '{}' at rowid {}. Points to '{}'",
+            fk_id, table, row_id, target_table
+        ));
+    }
+
+    Ok(results)
+}
+
+#[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
 

@@ -91,14 +91,24 @@ pub async fn get_owned_rolling_stock(
     executor: &mut sqlx::SqliteConnection,
     owned_rolling_stock_id: String,
 ) -> Result<Option<OwnedRollingStockRow>, DomainError> {
-    let sql = r#"SELECT
-             id,
-             collection_item_id,
-             rolling_stock_id,
-             notes
-   FROM owned_rolling_stocks
-   WHERE id = ?1
-   LIMIT 1"#;
+    let sql = r#"
+        SELECT
+            ors.id,
+            ors.collection_item_id,
+            ors.rolling_stock_id,
+            ors.notes,
+            ors.dcc_address,
+            ors.installed_decoder_id,
+            d.id AS decoder_id,
+            d.manufacturer_id AS decoder_manufacturer_id,
+            d.product_code AS decoder_product_code,
+            d.decoder_type AS decoder_type,
+            d.protocol AS decoder_protocol,
+            d.decoder_interface AS decoder_interface
+       FROM owned_rolling_stocks AS ors
+       LEFT JOIN decoders AS d ON d.id = ors.installed_decoder_id
+       WHERE ors.id = ?1
+   "#;
 
     let row = sqlx::query_as::<_, OwnedRollingStockRow>(sql)
         .bind(owned_rolling_stock_id)
