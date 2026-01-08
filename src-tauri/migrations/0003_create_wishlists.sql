@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS wishlists (
     notes                               TEXT,
     is_default                          INTEGER NOT NULL DEFAULT 0,
     created_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                             INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_wishlists_name ON wishlists (name);
 

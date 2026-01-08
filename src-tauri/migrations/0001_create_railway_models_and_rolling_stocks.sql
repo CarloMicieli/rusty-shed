@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS manufacturers
     country_code                         TEXT,
     website_url                          TEXT,
     created_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                              INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_manufacturers_name ON manufacturers (name);
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS railway_companies
     operating_since                      TEXT,
     operating_until                      TEXT,
     created_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                              INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_railway_companies_name ON railway_companies (name);
@@ -51,6 +53,7 @@ CREATE TABLE IF NOT EXISTS railway_models
     availability_status                  TEXT,
     created_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                              INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (manufacturer_id) REFERENCES manufacturers (id) ON DELETE CASCADE
 );
 

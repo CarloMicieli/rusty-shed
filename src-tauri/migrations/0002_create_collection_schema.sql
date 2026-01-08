@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS decoders (
   decoder_type                          TEXT NOT NULL,
   protocol                              TEXT NOT NULL,
   decoder_interface                     TEXT NOT NULL,
+  version                               INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(id) ON DELETE CASCADE
 );
 
@@ -26,7 +27,8 @@ CREATE TABLE IF NOT EXISTS sellers (
   postal_code                           TEXT,
   country_code                          TEXT,
   created_at                            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at                            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at                            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  version                               INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_sellers_name ON sellers(name);
 
@@ -42,13 +44,14 @@ CREATE TABLE IF NOT EXISTS collections (
   total_value_amount                    INTEGER NOT NULL DEFAULT 0,
   total_value_currency                  TEXT    NOT NULL DEFAULT 'EUR',
   created_at                            TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at                            TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at                            TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  version                               INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS collection_items (
   id                                    TEXT PRIMARY KEY,
   collection_id                         TEXT NOT NULL,
-  railway_model_id TEXT                 NOT NULL,
+  railway_model_id                      TEXT NOT NULL,
   added_date                            TEXT NOT NULL CHECK(added_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
   removed_date                          TEXT CHECK(removed_date IS NULL OR removed_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
   purchase_condition                    TEXT,
