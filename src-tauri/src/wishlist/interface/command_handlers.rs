@@ -73,11 +73,7 @@ pub async fn create_wishlist(
 ) -> Result<WishlistPreview, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = CreateWishlistCommand {
-        name: input.name,
-        notes: input.notes,
-        is_default: input.is_default.unwrap_or(false),
-    };
+    let cmd = CreateWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
     let use_case = CreateWishlistUseCase;
 
@@ -109,10 +105,7 @@ pub async fn rename_wishlist(
 ) -> Result<(), CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = RenameWishlistCommand {
-        id: input.id,
-        name: input.name,
-    };
+    let cmd = RenameWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
     let use_case = RenameWishlistUseCase;
 
@@ -137,7 +130,7 @@ pub async fn delete_wishlist(
 ) -> Result<(), CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = DeleteWishlistCommand { id };
+    let cmd = DeleteWishlistCommand::try_from(id).map_err(CommandError::from)?;
 
     let use_case = DeleteWishlistUseCase;
 
@@ -162,11 +155,14 @@ pub async fn set_default_wishlist(
 ) -> Result<(), CommandError> {
     let mut uow = state.unit_of_work().await?;
 
-    let cmd = SetDefaultWishlistCommand { id };
+    let cmd = SetDefaultWishlistCommand::try_from(id).map_err(CommandError::from)?;
 
     let use_case = SetDefaultWishlistUseCase;
 
-    use_case.execute(&mut uow, cmd).await.map_err(CommandError::from)?;
+    use_case
+        .execute(&mut uow, cmd)
+        .await
+        .map_err(CommandError::from)?;
 
     uow.commit()
         .await
@@ -196,16 +192,7 @@ pub async fn add_to_wishlist(
 ) -> Result<WishlistItem, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = AddToWishlistCommand {
-        wishlist_id: input.wishlist_id,
-        railway_model_id: input.railway_model_id,
-        priority: input.priority,
-        status: input.status,
-        desired_price_amount: input.desired_price_amount,
-        desired_price_currency: input.desired_price_currency,
-        notes: input.notes,
-        added_date: input.added_date,
-    };
+    let cmd = AddToWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
     let use_case = AddToWishlistUseCase;
 
@@ -230,7 +217,7 @@ pub async fn remove_from_wishlist(
 ) -> Result<(), CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = RemoveWishlistItemCommand { item_id };
+    let cmd = RemoveWishlistItemCommand::try_from(item_id).map_err(CommandError::from)?;
 
     let use_case = RemoveWishlistItemUseCase;
 
@@ -262,10 +249,7 @@ pub async fn move_item_to_list(
 ) -> Result<(), CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = MoveWishlistItemCommand {
-        item_id: input.item_id,
-        destination_wishlist_id: input.destination_wishlist_id,
-    };
+    let cmd = MoveWishlistItemCommand::try_from(input).map_err(CommandError::from)?;
 
     let use_case = MoveWishlistItemUseCase;
 
