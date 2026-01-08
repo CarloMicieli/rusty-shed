@@ -683,7 +683,7 @@ train_sets_count: number;
 /**
  * The number of self-propelled, typically single-unit passenger vehicles.
  */
-railcars_count: number; 
+railcars_count: number; starter_sets_count: number; 
 /**
  * The number of self-propelled, multi-unit electric passenger formations.
  */
@@ -1551,7 +1551,14 @@ export type ModelCondition =
  */
 export type MonetaryAmount = { 
 /**
- * Amount stored in the smallest unit (e.g. cents for EUR/USD/GBP).
+ * The monetary amount stored in the minor unit of the currency (e.g., cents for USD).
+ * 
+ * ### Why i64 over Decimal or Float?
+ * - **Precision**: Prevents floating-point rounding errors inherent in `f64`.
+ * - **Performance**: Integer arithmetic is natively supported and faster than `Numeric` types.
+ * - **Range**: An `i64` handles up to ±92 quadrillion units. In USD, this covers
+ * amounts up to $922 trillion, exceeding global wealth scales.
+ * - **Compatibility**: Maps directly to SQL `BIGINT` without extra crates or complex logic.
  */
 amount: bigint; 
 /**

@@ -175,6 +175,11 @@ pub fn run() {
         .setup(|app| {
             logging::init_logger(app)?;
 
+            let version = env!("CARGO_PKG_VERSION");
+
+            log::info!("{}", LOGO);
+            println!("  Crate v{}", version);
+
             // Compute DB path using tauri path helpers and init the pool
             let pool = tauri::async_runtime::block_on(async {
                 let handle = app.handle();
@@ -206,3 +211,14 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
+
+const LOGO: &str = r#"
+      _____             _              _____ _             _ 
+     |  __ \           | |            / ____| |           | |
+     | |__) |   _  ___ | |_ _   _    | (___ | |__   ___ __| |
+     |  _  / | | |/ __|| __| | | |    \___ \| '_ \ / _ \ _` |
+     | | \ \ |_| |\__ \| |_| |_| |    ____) | | | |  __/(_| |
+     |_|  \_\__,_||___/ \__|\__, |   |_____/|_| |_|\___|__,_|
+      ____  ____  ____  ____ __/ |_____________________________
+     \____\\____\\____\\____\___/ \____\\____\\____\\____\\___/
+"#;
