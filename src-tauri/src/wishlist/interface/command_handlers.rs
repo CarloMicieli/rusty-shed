@@ -1,14 +1,14 @@
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
-use crate::wishlist::application::add_to_wishlist::AddToWishlistUseCase;
-use crate::wishlist::application::create_wishlist::CreateWishlistUseCase;
-use crate::wishlist::application::delete_wishlist::DeleteWishlistUseCase;
-use crate::wishlist::application::get_wishlist_by_id::GetWishlistUseCase;
-use crate::wishlist::application::get_wishlists::GetWishlistsUseCase;
-use crate::wishlist::application::move_wishlist_item::MoveWishlistItemUseCase;
-use crate::wishlist::application::remove_wishlist_item::RemoveWishlistItemUseCase;
-use crate::wishlist::application::rename_wishlist::RenameWishlistUseCase;
-use crate::wishlist::application::set_default_wishlist::SetDefaultWishlistUseCase;
+use crate::wishlist::application::AddToWishlistUseCase;
+use crate::wishlist::application::CreateWishlistUseCase;
+use crate::wishlist::application::DeleteWishlistUseCase;
+use crate::wishlist::application::GetWishlistUseCase;
+use crate::wishlist::application::GetWishlistsUseCase;
+use crate::wishlist::application::MoveWishlistItemUseCase;
+use crate::wishlist::application::RemoveWishlistItemUseCase;
+use crate::wishlist::application::RenameWishlistUseCase;
+use crate::wishlist::application::SetDefaultWishlistUseCase;
 use crate::wishlist::domain::commands::{
     AddToWishlistCommand, CreateWishlistCommand, DeleteWishlistCommand, MoveWishlistItemCommand,
     RemoveWishlistItemCommand, RenameWishlistCommand, SetDefaultWishlistCommand,
