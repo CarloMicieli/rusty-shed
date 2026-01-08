@@ -1,3 +1,5 @@
+use crate::core::domain::domain_error::DomainError;
+use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
 use async_trait::async_trait;
@@ -61,19 +63,19 @@ pub trait MaintenanceRepository {
     async fn get_card_by_stock_id(
         &mut self,
         owned_rolling_stock_id: &str,
-    ) -> anyhow::Result<Option<MaintenanceCardRow>>;
+    ) -> Result<Option<MaintenanceCardRow>, DomainError>;
 
     /// Record an event and update the maintenance card within the same transaction.
     async fn record_event_transaction(
         &mut self,
         new_event: NewMaintenanceEvent,
-    ) -> anyhow::Result<()>;
+    ) -> Result<(), DomainError>;
 
     /// List events for a maintenance card.
     async fn list_events_for_card(
         &mut self,
         maintenance_card_id: &str,
-    ) -> anyhow::Result<Vec<MaintenanceEventRow>>;
+    ) -> Result<Vec<MaintenanceEventRow>, DomainError>;
 
     /// List maintenance cards that are due or overdue.
     ///
@@ -87,7 +89,7 @@ pub trait MaintenanceRepository {
     ///
     /// Returned rows are mapped to `MaintenanceCardRow`. Any database or mapping
     /// errors are returned as `anyhow::Error`.
-    async fn list_due_cards(&mut self) -> anyhow::Result<Vec<MaintenanceCardRow>>;
+    async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCardRow>, DomainError>;
 }
 
 /// SQLite-specific repository implementation.
@@ -107,7 +109,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
     async fn get_card_by_stock_id(
         &mut self,
         owned_rolling_stock_id: &str,
-    ) -> anyhow::Result<Option<MaintenanceCardRow>> {
+    ) -> Result<Option<MaintenanceCardRow>, DomainError> {
         let q = r#"SELECT
             id,
             owned_rolling_stock_id,
@@ -120,14 +122,15 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         let row = sqlx::query_as::<_, MaintenanceCardRow>(q)
             .bind(owned_rolling_stock_id)
             .fetch_optional(&mut *self.executor)
-            .await?;
+            .await
+            .with_domain_context("Error fetching maintenance card by stock id")?;
         Ok(row)
     }
 
     async fn record_event_transaction(
         &mut self,
         new_event: NewMaintenanceEvent,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), DomainError> {
         let insert_sql = r#"INSERT INTO maintenance_events (
             id,
             maintenance_card_id,
@@ -143,7 +146,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             .bind(new_event.maintenance_type.clone())
             .bind(new_event.notes.clone())
             .execute(&mut *self.executor)
-            .await?;
+            .await
+            .with_domain_context("Error inserting new maintenance event")?;
 
         let update_sql = r#"UPDATE maintenance_cards
             SET
@@ -155,7 +159,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             .bind(new_event.date_performed.format("%Y-%m-%d").to_string())
             .bind(new_event.maintenance_card_id.to_string())
             .execute(&mut *self.executor)
-            .await?;
+            .await
+            .with_domain_context("Error updating maintenance card last_maintenance_date")?;
 
         Ok(())
     }
@@ -163,7 +168,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
     async fn list_events_for_card(
         &mut self,
         maintenance_card_id: &str,
-    ) -> anyhow::Result<Vec<MaintenanceEventRow>> {
+    ) -> Result<Vec<MaintenanceEventRow>, DomainError> {
         let q = r#"SELECT
             id,
             maintenance_card_id,
@@ -177,12 +182,13 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         let rows = sqlx::query_as::<_, MaintenanceEventRow>(q)
             .bind(maintenance_card_id)
             .fetch_all(&mut *self.executor)
-            .await?;
+            .await
+            .with_domain_context("Error listing maintenance events for card")?;
 
         Ok(rows)
     }
 
-    async fn list_due_cards(&mut self) -> anyhow::Result<Vec<MaintenanceCardRow>> {
+    async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCardRow>, DomainError> {
         let q = r#"SELECT
             id,
             owned_rolling_stock_id,
@@ -200,7 +206,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
         let rows = sqlx::query_as::<_, MaintenanceCardRow>(q)
             .fetch_all(&mut *self.executor)
-            .await?;
+            .await
+            .with_domain_context("Error querying due maintenance cards")?;
 
         Ok(rows)
     }

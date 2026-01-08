@@ -148,6 +148,16 @@ impl<'conn> SqliteSellersRepository<'conn> {
     }
 }
 
+pub trait SellersUowExt {
+    fn sellers_repository(&mut self) -> SqliteSellersRepository<'_>;
+}
+
+impl<'conn> SellersUowExt for SqliteUnitOfWork<'conn> {
+    fn sellers_repository(&mut self) -> SqliteSellersRepository<'_> {
+        SqliteSellersRepository::new(&mut self.tx)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,26 +169,20 @@ mod tests {
         fixtures("../../../fixtures/test_seller.sql")
     )]
     async fn list_returns_seeded(pool: sqlx::SqlitePool) {
-        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.map_err(|e| e)
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
+            .await
             .expect("Couldn't create database connection");
         let mut repo = unit_of_work.sellers_repository();
 
         let sellers = repo.list().await.expect("list failed");
-        
+
         let first = sellers.first().expect("first failed");
-        
-        assert_eq!(first.id, SellerId::try_from("trn:seller:model-train-shop").unwrap());
+
+        assert_eq!(
+            first.id,
+            SellerId::try_from("trn:seller:model-train-shop").unwrap()
+        );
         assert_eq!(first.name, "Model Train Shop");
         assert_eq!(first.seller_type, SellerType::Shop);
-    }
-}
-
-pub trait SellersUowExt {
-    fn sellers_repository(&mut self) -> SqliteSellersRepository<'_>;
-}
-
-impl<'conn> SellersUowExt for SqliteUnitOfWork<'conn> {
-    fn sellers_repository(&mut self) -> SqliteSellersRepository<'_> {
-        SqliteSellersRepository::new(&mut self.tx)
     }
 }

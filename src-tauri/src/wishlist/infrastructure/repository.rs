@@ -1,4 +1,6 @@
 use crate::core::domain::currency::Currency;
+use crate::core::domain::domain_error::DomainError;
+use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::repository::WishlistRepository;
 use crate::wishlist::domain::wishlist::Wishlist;
@@ -10,9 +12,10 @@ use crate::wishlist::infrastructure::database;
 use crate::wishlist::infrastructure::entities::{
     WishlistItemRow, WishlistPreviewProjection, WishlistRow,
 };
-use anyhow::Context;
+use anyhow::Error as AnyhowError;
 use chrono::Utc;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 pub struct SqliteWishlistRepository<'conn> {
     /// A mutable reference to the database connection/executor.
@@ -29,35 +32,45 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a wishlist by its ID.
-    async fn get_wishlist_by_id(&mut self, id: &WishlistId) -> anyhow::Result<Option<Wishlist>> {
-        let wishlist_row = database::find_wishlist_by_id(&mut *self.executor, id).await?;
+    async fn get_wishlist_by_id(
+        &mut self,
+        id: &WishlistId,
+    ) -> Result<Option<Wishlist>, DomainError> {
+        let wishlist_row = database::find_wishlist_by_id(&mut *self.executor, id)
+            .await
+            .with_domain_context("Error finding wishlist by id")?;
 
         if wishlist_row.is_none() {
             return Ok(None);
         }
 
-        let wishlist_item_rows =
-            database::find_wishlist_items_by_id(&mut *self.executor, id).await?;
+        let wishlist_item_rows = database::find_wishlist_items_by_id(&mut *self.executor, id)
+            .await
+            .with_domain_context("Error finding wishlist items by wishlist id")?;
 
-        let mut wishlist = Wishlist::try_from(wishlist_row.unwrap())?;
+        let mut wishlist = Wishlist::try_from(wishlist_row.unwrap())
+            .map_err(|e: AnyhowError| DomainError::Validation(e.to_string()))?;
 
         for item_row in wishlist_item_rows {
-            let item = WishlistItem::try_from(item_row)?;
+            let item = WishlistItem::try_from(item_row)
+                .map_err(|e: AnyhowError| DomainError::Validation(e.to_string()))?;
             wishlist.add_item(item);
         }
 
         Ok(Some(wishlist))
     }
 
-    async fn list_wishlist_previews(&mut self) -> anyhow::Result<Vec<WishlistPreview>> {
+    async fn list_wishlist_previews(&mut self) -> Result<Vec<WishlistPreview>, DomainError> {
         let rows: Vec<WishlistPreviewProjection> =
-            database::find_wishlist_previews(&mut *self.executor).await?;
+            database::find_wishlist_previews(&mut *self.executor)
+                .await
+                .with_domain_context("Error fetching wishlist previews")?;
 
         let mut map: HashMap<String, WishlistPreview> = HashMap::with_capacity(rows.len());
 
         for row in rows.into_iter() {
             let wishlist_id = WishlistId::try_from(row.wishlist_id.clone().as_str())
-                .context("invalid wishlist id in preview row")?;
+                .map_err(|e: AnyhowError| DomainError::Validation(e.to_string()))?;
             let entry = map.entry(row.wishlist_id.clone()).or_insert_with(|| {
                 WishlistPreview {
                     id: wishlist_id,
@@ -72,7 +85,8 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
             entry.count += row.item_count;
 
-            if let (Some(total), Some(curr_str)) = (row.total_amount, row.currency)
+            if let Some(total) = row.total_amount
+                && let Some(curr_str) = row.currency.clone()
                 && let Ok(currency) = Currency::from_code(&curr_str)
             {
                 *entry.total_value.entry(currency).or_insert(0) += total;
@@ -86,7 +100,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         Ok(wishlist_previews)
     }
 
-    async fn create_wishlist(&mut self, wishlist: &Wishlist) -> anyhow::Result<()> {
+    async fn create_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError> {
         let now = Utc::now().naive_utc();
         let row = WishlistRow {
             id: wishlist.id.to_string(),
@@ -97,32 +111,48 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             updated_at: now,
         };
 
-        database::insert_wishlist(&mut *self.executor, row).await?;
+        database::insert_wishlist(&mut *self.executor, row)
+            .await
+            .with_domain_context("Error inserting wishlist")?;
         // If creating as default, ensure exclusivity after insert
         if wishlist.is_default {
-            database::set_default_wishlist(&mut *self.executor, &wishlist.id).await?;
+            database::set_default_wishlist(&mut *self.executor, &wishlist.id)
+                .await
+                .with_domain_context("Error setting default wishlist")?;
         }
         Ok(())
     }
 
-    async fn rename_wishlist(&mut self, id: &WishlistId, name: &str) -> anyhow::Result<()> {
-        let affected = database::update_wishlist_name(&mut *self.executor, id, name).await?;
+    async fn rename_wishlist(&mut self, id: &WishlistId, name: &str) -> Result<(), DomainError> {
+        let affected = database::update_wishlist_name(&mut *self.executor, id, name)
+            .await
+            .with_domain_context("Error renaming wishlist")?;
         if affected == 0 {
-            anyhow::bail!("wishlist not found");
+            return Err(DomainError::NotFound {
+                resource: "Wishlist".to_string(),
+                identifier: id.to_string(),
+            });
         }
         Ok(())
     }
 
-    async fn delete_wishlist(&mut self, id: &WishlistId) -> anyhow::Result<()> {
-        let affected = database::delete_wishlist(&mut *self.executor, id).await?;
+    async fn delete_wishlist(&mut self, id: &WishlistId) -> Result<(), DomainError> {
+        let affected = database::delete_wishlist(&mut *self.executor, id)
+            .await
+            .with_domain_context("Error deleting wishlist")?;
         if affected == 0 {
-            anyhow::bail!("wishlist not found");
+            return Err(DomainError::NotFound {
+                resource: "Wishlist".to_string(),
+                identifier: id.to_string(),
+            });
         }
         Ok(())
     }
 
-    async fn set_default_wishlist(&mut self, id: &WishlistId) -> anyhow::Result<()> {
-        database::set_default_wishlist(&mut *self.executor, id).await?;
+    async fn set_default_wishlist(&mut self, id: &WishlistId) -> Result<(), DomainError> {
+        database::set_default_wishlist(&mut *self.executor, id)
+            .await
+            .with_domain_context("Error setting default wishlist")?;
         Ok(())
     }
 
@@ -130,7 +160,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         &mut self,
         wishlist_id: &WishlistId,
         item: &WishlistItem,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), DomainError> {
         let (desired_amount, desired_currency) = item
             .desired_price
             .as_ref()
@@ -143,10 +173,12 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .map(|p| (Some(p.amount), Some(p.currency.to_code().to_string())))
             .unwrap_or((None, None));
 
-        let priority_str = serde_json::to_string(&item.priority)?
+        let priority_str = serde_json::to_string(&item.priority)
+            .map_err(|e| DomainError::Validation(e.to_string()))?
             .trim_matches('"')
             .to_string();
-        let status_str = serde_json::to_string(&item.status)?
+        let status_str = serde_json::to_string(&item.status)
+            .map_err(|e| DomainError::Validation(e.to_string()))?
             .trim_matches('"')
             .to_string();
 
@@ -166,14 +198,21 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             purchased_price_currency: purchased_currency,
         };
 
-        database::insert_wishlist_item(&mut *self.executor, row).await?;
+        database::insert_wishlist_item(&mut *self.executor, row)
+            .await
+            .with_domain_context("Error inserting wishlist item")?;
         Ok(())
     }
 
-    async fn remove_item(&mut self, item_id: &WishlistItemId) -> anyhow::Result<()> {
-        let affected = database::delete_wishlist_item(&mut *self.executor, item_id).await?;
+    async fn remove_item(&mut self, item_id: &WishlistItemId) -> Result<(), DomainError> {
+        let affected = database::delete_wishlist_item(&mut *self.executor, item_id)
+            .await
+            .with_domain_context("Error deleting wishlist item")?;
         if affected == 0 {
-            anyhow::bail!("wishlist item not found");
+            return Err(DomainError::NotFound {
+                resource: "WishlistItem".to_string(),
+                identifier: item_id.to_string(),
+            });
         }
         Ok(())
     }
@@ -182,12 +221,16 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         &mut self,
         item_id: &WishlistItemId,
         destination_wishlist: &WishlistId,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), DomainError> {
         let affected =
             database::move_wishlist_item(&mut *self.executor, item_id, destination_wishlist)
-                .await?;
+                .await
+                .with_domain_context("Error moving wishlist item")?;
         if affected == 0 {
-            anyhow::bail!("wishlist item not found");
+            return Err(DomainError::NotFound {
+                resource: "WishlistItem".to_string(),
+                identifier: item_id.to_string(),
+            });
         }
         Ok(())
     }

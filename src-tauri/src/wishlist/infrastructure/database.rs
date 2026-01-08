@@ -2,12 +2,11 @@ use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::infrastructure::entities::{
     WishlistItemRow, WishlistPreviewProjection, WishlistRow,
 };
-use anyhow::{Context, Result};
 
 pub async fn find_wishlist_by_id(
     executor: &mut sqlx::SqliteConnection,
     id: &WishlistId,
-) -> Result<Option<WishlistRow>> {
+) -> Result<Option<WishlistRow>, sqlx::Error> {
     let sql = r#"
             SELECT id, name, notes, is_default, created_at, updated_at
             FROM wishlists
@@ -18,8 +17,7 @@ pub async fn find_wishlist_by_id(
     let res = sqlx::query_as::<_, WishlistRow>(sql)
         .bind(&id_str)
         .fetch_optional(executor)
-        .await
-        .with_context(|| format!("querying wishlist id={}", id_str))?;
+        .await?;
 
     Ok(res)
 }
@@ -27,7 +25,7 @@ pub async fn find_wishlist_by_id(
 pub async fn find_wishlist_items_by_id(
     executor: &mut sqlx::SqliteConnection,
     wishlist_id: &WishlistId,
-) -> Result<Vec<WishlistItemRow>> {
+) -> Result<Vec<WishlistItemRow>, sqlx::Error> {
     let sql = r#"
             SELECT
                 id,
@@ -52,15 +50,14 @@ pub async fn find_wishlist_items_by_id(
     let rows = sqlx::query_as::<_, WishlistItemRow>(sql)
         .bind(&id_str)
         .fetch_all(executor)
-        .await
-        .with_context(|| format!("querying wishlist items with id={}", wishlist_id))?;
+        .await?;
 
     Ok(rows)
 }
 
 pub async fn find_wishlist_previews(
     executor: &mut sqlx::SqliteConnection,
-) -> Result<Vec<WishlistPreviewProjection>> {
+) -> Result<Vec<WishlistPreviewProjection>, sqlx::Error> {
     let sql = r#"
         SELECT
             w.id as wishlist_id,
@@ -79,8 +76,7 @@ pub async fn find_wishlist_previews(
 
     let rows = sqlx::query_as::<_, WishlistPreviewProjection>(sql)
         .fetch_all(executor)
-        .await
-        .with_context(|| "querying wishlist previews")?;
+        .await?;
 
     Ok(rows)
 }
@@ -88,7 +84,7 @@ pub async fn find_wishlist_previews(
 pub async fn insert_wishlist(
     executor: &mut sqlx::SqliteConnection,
     row: WishlistRow,
-) -> Result<()> {
+) -> Result<(), sqlx::Error> {
     let sql = r#"
         INSERT INTO wishlists (id, name, notes, is_default, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -102,8 +98,7 @@ pub async fn insert_wishlist(
         .bind(row.created_at)
         .bind(row.updated_at)
         .execute(executor)
-        .await
-        .with_context(|| "inserting wishlist")?;
+        .await?;
 
     Ok(())
 }
@@ -112,7 +107,7 @@ pub async fn update_wishlist_name(
     executor: &mut sqlx::SqliteConnection,
     id: &WishlistId,
     name: &str,
-) -> Result<u64> {
+) -> Result<u64, sqlx::Error> {
     let sql = r#"
         UPDATE wishlists
         SET name = ?, updated_at = CURRENT_TIMESTAMP
@@ -123,8 +118,7 @@ pub async fn update_wishlist_name(
         .bind(name)
         .bind(id.to_string())
         .execute(executor)
-        .await
-        .with_context(|| "renaming wishlist")?;
+        .await?;
 
     Ok(res.rows_affected())
 }
@@ -132,7 +126,7 @@ pub async fn update_wishlist_name(
 pub async fn delete_wishlist(
     executor: &mut sqlx::SqliteConnection,
     id: &WishlistId,
-) -> Result<u64> {
+) -> Result<u64, sqlx::Error> {
     let sql = r#"
         DELETE FROM wishlists
         WHERE id = ?
@@ -141,8 +135,7 @@ pub async fn delete_wishlist(
     let res = sqlx::query(sql)
         .bind(id.to_string())
         .execute(executor)
-        .await
-        .with_context(|| "deleting wishlist")?;
+        .await?;
 
     Ok(res.rows_affected())
 }
@@ -150,18 +143,16 @@ pub async fn delete_wishlist(
 pub async fn set_default_wishlist(
     executor: &mut sqlx::SqliteConnection,
     id: &WishlistId,
-) -> Result<()> {
+) -> Result<(), sqlx::Error> {
     // Clear existing defaults, then set the target as default within the same transaction.
     sqlx::query("UPDATE wishlists SET is_default = 0")
         .execute(&mut *executor)
-        .await
-        .with_context(|| "clearing default wishlists")?;
+        .await?;
 
     sqlx::query("UPDATE wishlists SET is_default = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
         .bind(id.to_string())
         .execute(executor)
-        .await
-        .with_context(|| "setting default wishlist")?;
+        .await?;
 
     Ok(())
 }
@@ -169,7 +160,7 @@ pub async fn set_default_wishlist(
 pub async fn insert_wishlist_item(
     executor: &mut sqlx::SqliteConnection,
     row: WishlistItemRow,
-) -> Result<()> {
+) -> Result<(), sqlx::Error> {
     let sql = r#"
         INSERT INTO wishlist_items (
             id,
@@ -203,8 +194,7 @@ pub async fn insert_wishlist_item(
         .bind(row.purchased_price_amount)
         .bind(row.purchased_price_currency)
         .execute(executor)
-        .await
-        .with_context(|| "inserting wishlist item")?;
+        .await?;
 
     Ok(())
 }
@@ -212,14 +202,13 @@ pub async fn insert_wishlist_item(
 pub async fn delete_wishlist_item(
     executor: &mut sqlx::SqliteConnection,
     id: &crate::wishlist::domain::wishlist_item_id::WishlistItemId,
-) -> Result<u64> {
+) -> Result<u64, sqlx::Error> {
     let sql = "DELETE FROM wishlist_items WHERE id = ?";
 
     let res = sqlx::query(sql)
         .bind(id.to_string())
         .execute(executor)
-        .await
-        .with_context(|| "deleting wishlist item")?;
+        .await?;
 
     Ok(res.rows_affected())
 }
@@ -228,7 +217,7 @@ pub async fn move_wishlist_item(
     executor: &mut sqlx::SqliteConnection,
     id: &crate::wishlist::domain::wishlist_item_id::WishlistItemId,
     destination: &WishlistId,
-) -> Result<u64> {
+) -> Result<u64, sqlx::Error> {
     let sql = r#"
         UPDATE wishlist_items
         SET wishlist_id = ?
@@ -239,8 +228,7 @@ pub async fn move_wishlist_item(
         .bind(destination.to_string())
         .bind(id.to_string())
         .execute(executor)
-        .await
-        .with_context(|| "moving wishlist item")?;
+        .await?;
 
     Ok(res.rows_affected())
 }
@@ -251,7 +239,7 @@ mod tests {
     use sqlx::SqlitePool;
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn list_wishlist_previews_returns_empty(conn: SqlitePool) -> Result<()> {
+    async fn list_wishlist_previews_returns_empty(conn: SqlitePool) -> Result<(), sqlx::Error> {
         let mut conn = conn.acquire().await?;
 
         let id = WishlistId::default();

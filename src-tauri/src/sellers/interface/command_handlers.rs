@@ -21,7 +21,8 @@ pub async fn get_sellers(state: State<'_, AppState>) -> Result<Vec<Seller>, Comm
     let use_case = GetSellersUseCase::new();
     match use_case.execute(&mut unit_of_work).await {
         Ok(sellers) => {
-            unit_of_work.commit()
+            unit_of_work
+                .commit()
                 .await
                 .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
             Ok(sellers)

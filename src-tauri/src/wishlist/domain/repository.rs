@@ -1,3 +1,4 @@
+use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
@@ -17,41 +18,44 @@ pub trait WishlistRepository: Send + Sync {
     /// Returns `Ok(Some(Wishlist))` when the wishlist exists, `Ok(None)` when no
     /// wishlist is found for the provided id, or an `Err` when the underlying
     /// repository fails.
-    async fn get_wishlist_by_id(&mut self, id: &WishlistId) -> anyhow::Result<Option<Wishlist>>;
+    async fn get_wishlist_by_id(
+        &mut self,
+        id: &WishlistId,
+    ) -> Result<Option<Wishlist>, DomainError>;
 
     /// List lightweight wishlist previews.
     ///
     /// Previews contain summary information (counts and total values) and are
     /// suitable for list views where the full wishlist aggregate is not
     /// required.
-    async fn list_wishlist_previews(&mut self) -> anyhow::Result<Vec<WishlistPreview>>;
+    async fn list_wishlist_previews(&mut self) -> Result<Vec<WishlistPreview>, DomainError>;
 
     /// Create a new wishlist.
-    async fn create_wishlist(&mut self, wishlist: &Wishlist) -> anyhow::Result<()>;
+    async fn create_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError>;
 
     /// Rename an existing wishlist.
-    async fn rename_wishlist(&mut self, id: &WishlistId, name: &str) -> anyhow::Result<()>;
+    async fn rename_wishlist(&mut self, id: &WishlistId, name: &str) -> Result<(), DomainError>;
 
     /// Delete a wishlist (and cascade its items).
-    async fn delete_wishlist(&mut self, id: &WishlistId) -> anyhow::Result<()>;
+    async fn delete_wishlist(&mut self, id: &WishlistId) -> Result<(), DomainError>;
 
     /// Set a single wishlist as default by clearing previous defaults and marking the target.
-    async fn set_default_wishlist(&mut self, id: &WishlistId) -> anyhow::Result<()>;
+    async fn set_default_wishlist(&mut self, id: &WishlistId) -> Result<(), DomainError>;
 
     /// Add a wishlist item to a given wishlist.
     async fn add_item(
         &mut self,
         wishlist_id: &WishlistId,
         item: &WishlistItem,
-    ) -> anyhow::Result<()>;
+    ) -> Result<(), DomainError>;
 
     /// Remove a wishlist item by id.
-    async fn remove_item(&mut self, item_id: &WishlistItemId) -> anyhow::Result<()>;
+    async fn remove_item(&mut self, item_id: &WishlistItemId) -> Result<(), DomainError>;
 
     /// Move a wishlist item to another wishlist.
     async fn move_item(
         &mut self,
         item_id: &WishlistItemId,
         destination_wishlist: &WishlistId,
-    ) -> anyhow::Result<()>;
+    ) -> Result<(), DomainError>;
 }
