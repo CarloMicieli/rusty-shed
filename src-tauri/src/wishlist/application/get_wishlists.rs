@@ -2,13 +2,17 @@ use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::infrastructure::repository::WishlistUowExt;
 use anyhow::Result;
 
+use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 
 /// Stateless use case to fetch wishlist previews.
 pub struct GetWishlistsUseCase;
 
 impl GetWishlistsUseCase {
-    pub async fn execute(&self, uow: &mut SqliteUnitOfWork<'_>) -> Result<Vec<WishlistPreview>> {
+    pub async fn execute(
+        &self,
+        uow: &mut SqliteUnitOfWork<'_>,
+    ) -> Result<Vec<WishlistPreview>, DomainError> {
         let mut repo = uow.wishlist_repo();
         let previews = repo.list_wishlist_previews().await?;
         Ok(previews)
@@ -28,7 +32,10 @@ mod tests {
     async fn list_wishlists_empty(conn: SqlitePool) -> Result<()> {
         let mut uow = SqliteUnitOfWork::new(&conn).await?;
         let use_case = GetWishlistsUseCase;
-        let previews = use_case.execute(&mut uow).await?;
+        let previews = use_case
+            .execute(&mut uow)
+            .await
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
         assert!(previews.is_empty());
         Ok(())
     }
@@ -42,7 +49,10 @@ mod tests {
 
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let use_case = GetWishlistsUseCase;
-        let previews = use_case.execute(&mut unit_of_work).await?;
+        let previews = use_case
+            .execute(&mut unit_of_work)
+            .await
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         // find our wishlist
         let preview = previews

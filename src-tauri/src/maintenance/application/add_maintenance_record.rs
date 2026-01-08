@@ -1,3 +1,4 @@
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::maintenance::domain::maintenance_type::MaintenanceType;
 use crate::maintenance::infrastructure::repository::{MaintenanceUowExt, NewMaintenanceEvent};
@@ -39,7 +40,7 @@ impl AddMaintenanceRecordUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         input: AddMaintenanceRecordInput,
-    ) -> Result<(), String> {
+    ) -> Result<(), DomainError> {
         let mut repo = uow.maintenance_repo();
 
         let event = NewMaintenanceEvent {
@@ -50,9 +51,7 @@ impl AddMaintenanceRecordUseCase {
             notes: input.notes,
         };
 
-        repo.record_event_transaction(event)
-            .await
-            .map_err(|e| e.to_string())?;
+        repo.record_event_transaction(event).await?;
 
         Ok(())
     }

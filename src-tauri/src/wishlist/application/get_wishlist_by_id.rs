@@ -1,3 +1,4 @@
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
@@ -15,7 +16,7 @@ impl GetWishlistUseCase {
         &self,
         uow: &mut SqliteUnitOfWork<'_>,
         id: &WishlistId,
-    ) -> anyhow::Result<Option<Wishlist>> {
+    ) -> Result<Option<Wishlist>, DomainError> {
         let mut repo = uow.wishlist_repo();
         let wishlist = repo.get_wishlist_by_id(id).await?;
         Ok(wishlist)
@@ -38,7 +39,10 @@ mod tests {
 
         let uc = GetWishlistUseCase;
         let id = WishlistId::default();
-        let res = uc.execute(&mut uow, &id).await?;
+        let res = uc
+            .execute(&mut uow, &id)
+            .await
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         assert!(res.is_none());
 
@@ -54,7 +58,10 @@ mod tests {
 
         let uc = GetWishlistUseCase;
         let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
-        let res = uc.execute(&mut uow, &id).await?;
+        let res = uc
+            .execute(&mut uow, &id)
+            .await
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         assert!(res.is_some());
         let wishlist = res.unwrap();

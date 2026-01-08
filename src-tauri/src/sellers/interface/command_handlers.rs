@@ -47,7 +47,7 @@ pub async fn get_seller_by_id(
     let result = use_case
         .execute(&mut uow, &sid)
         .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        .map_err(CommandError::from)?;
 
     uow.commit()
         .await
@@ -99,7 +99,7 @@ pub async fn create_seller(
     let result = use_case
         .execute(&mut uow, input)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(CommandError::from)?;
 
     uow.commit()
         .await
@@ -167,7 +167,7 @@ pub async fn update_seller(
     let result = use_case
         .execute(&mut uow, input)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(CommandError::from)?;
 
     uow.commit()
         .await
@@ -189,7 +189,7 @@ pub async fn delete_seller(state: State<'_, AppState>, id: String) -> Result<u64
     let result = use_case
         .execute(&mut uow, &sid)
         .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        .map_err(CommandError::from)?;
 
     uow.commit()
         .await

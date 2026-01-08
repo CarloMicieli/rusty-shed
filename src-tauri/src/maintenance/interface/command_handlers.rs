@@ -28,15 +28,14 @@ pub async fn get_maintenance_dashboard(
 
     let use_case = GetMaintenanceDashboardUseCase::new();
 
-    match use_case.execute(&mut uow).await {
-        Ok(cards) => {
-            uow.commit()
-                .await
-                .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
-            Ok(cards)
-        }
-        Err(e) => Err(CommandError::Unknown(e.to_string())),
-    }
+    let cards = use_case
+        .execute(&mut uow)
+        .await
+        .map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    Ok(cards)
 }
 
 /// Input DTO for adding a maintenance record over IPC.
@@ -82,13 +81,12 @@ pub async fn add_maintenance_record(
         notes: input.notes,
     };
 
-    match use_case.execute(&mut uow, use_case_input).await {
-        Ok(_) => {
-            uow.commit()
-                .await
-                .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
-            Ok(())
-        }
-        Err(e) => Err(CommandError::Unknown(e.to_string())),
-    }
+    use_case
+        .execute(&mut uow, use_case_input)
+        .await
+        .map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    Ok(())
 }
