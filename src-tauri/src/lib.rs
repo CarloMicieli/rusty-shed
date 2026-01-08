@@ -18,6 +18,7 @@ use crate::catalog::interface::railway_companies as railway_companies_command_ha
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::logging;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
@@ -25,13 +26,11 @@ use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
 use crate::state::AppState;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
-use log::LevelFilter;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
 use std::path::{Component, Path};
 use tauri::Manager;
 use tauri::path::BaseDirectory;
-use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 
 #[tauri::command]
@@ -125,8 +124,6 @@ fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let is_dev_build = cfg!(debug_assertions);
-
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         core_command_handlers::is_db_initialized,
         core_command_handlers::get_app_version,
@@ -170,29 +167,14 @@ pub fn run() {
         .export(ts_config, "../src/lib/bindings.ts")
         .expect("Failed to export typescript bindings");
 
-    let level = if is_dev_build {
-        LevelFilter::Debug
-    } else {
-        LevelFilter::Info
-    };
-
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .level(level)
-                .max_file_size(50000)
-                .rotation_strategy(RotationStrategy::KeepOne)
-                .targets([
-                    Target::new(TargetKind::Stdout),
-                    Target::new(TargetKind::LogDir { file_name: None }),
-                ])
-                .build(),
-        )
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
+            logging::init_logger(app)?;
+
             // Compute DB path using tauri path helpers and init the pool
             let pool = tauri::async_runtime::block_on(async {
                 let handle = app.handle();
