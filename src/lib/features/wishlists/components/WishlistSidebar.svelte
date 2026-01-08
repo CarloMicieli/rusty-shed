@@ -1,17 +1,9 @@
 <script lang="ts">
   import { Sparkles, Heart } from 'lucide-svelte';
-  type WishlistPreviewLite = {
-    id: string;
-    name: string;
-    notes: string | null;
-    is_default: boolean;
-    count: number;
-    updated_at: string;
-    total_value: Record<string, number>;
-  };
+  import type { WishlistPreview } from '$lib/bindings';
 
   const { wishlists, activeId, onSelect, onCreate, onDelete } = $props<{
-    wishlists: WishlistPreviewLite[];
+    wishlists: WishlistPreview[];
     activeId: string | null;
     onSelect?: (id: string) => void;
     onCreate?: () => void;

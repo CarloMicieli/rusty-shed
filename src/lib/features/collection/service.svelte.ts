@@ -3,12 +3,8 @@ import * as m from '$lib/paraglide/messages.js';
 import scales from '$lib/data/constants/scales.json';
 import { FIXED_TAG_META, sortAvailableTags, tagIcon } from '$lib/config/tags';
 import { SvelteSet } from 'svelte/reactivity';
-import {
-  type CollectionItemLite,
-  type CreateCollectionItemInput,
-  type UpdateCollectionItemInput
-} from '$lib/bindings';
-import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
+import type { CollectionView } from '$lib/bindings';
+import { safeInvoke, getErrorMessage } from '$lib/services';
 
 export type FilterState = {
   query: string;
@@ -23,71 +19,58 @@ function randomId() {
   return Math.random().toString(36).slice(2);
 }
 
-function toastLoading(id: string) {
-  toaster.loading({
-    id,
-    title: m.collection_toast_loading(),
-    duration: 4000
-  });
-}
-
-function toastSuccess(id: string) {
-  toaster.success({
-    id,
-    title: m.collection_toast_success(),
-    duration: 2000
-  });
-}
-
-function toastError(id: string, message?: string, retry?: () => void) {
+function toastError(id: string, message?: string) {
   toaster.error({
     id,
     title: message || m.collection_toast_error(),
-    duration: 5000,
-    action: retry
-      ? {
-          label: m.collection_toast_retry(),
-          onClick: retry
-        }
-      : undefined
+    duration: 5000
   });
 }
 
+/**
+ * Read-only CollectionService
+ *
+ * Currently only supports fetching the collection.
+ * CRUD operations will be added when backend commands are implemented.
+ */
 export class CollectionService {
-  #rawItems = $state<CollectionItemLite[]>([]);
+  #collection = $state<CollectionView | null>(null);
   #filters = $state<FilterState>({ query: '', scale: null, tags: new SvelteSet() });
   #isLoading = $state(false);
 
   availableTags = $derived.by(() => {
     const dynamic = new SvelteSet<string>();
-    this.#rawItems.forEach((item) => item.tags?.forEach((tag) => dynamic.add(tag)));
+    // Note: CollectionItemView doesn't have tags field in bindings
+    // This will need to be updated when the backend adds tag support
     const combined = new SvelteSet<string>([...Object.keys(FIXED_TAG_META), ...dynamic]);
     return sortAvailableTags([...combined]);
   });
 
   filteredItems = $derived.by(() => {
-    const { query, scale, tags } = this.#filters;
+    const items = this.#collection?.items ?? [];
+    const { query, scale } = this.#filters;
     const q = query.trim().toLowerCase();
 
-    return this.#rawItems.filter((item) => {
-      if (scale && item.scale !== scale) return false;
-      if (tags.size) {
-        const hasTag = item.tags.some((tag) => tags.has(tag));
-        if (!hasTag) return false;
-      }
+    return items.filter((item) => {
+      if (scale && item.railway_model.scale !== scale) return false;
+      // Tag filtering will be added when backend supports it
       if (q) {
         const haystack =
-          `${item.brand} ${item.catalogNumber} ${item.title} ${item.description ?? ''} ${item.tags.join(' ')}`.toLowerCase();
+          `${item.railway_model.manufacturer} ${item.railway_model.product_code} ${item.railway_model.description}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
     });
   });
 
-  totalCount = $derived(this.#rawItems.length);
+  totalCount = $derived(this.#collection?.items.length ?? 0);
+
+  get collection() {
+    return this.#collection;
+  }
 
   get rawItems() {
-    return this.#rawItems;
+    return this.#collection?.items ?? [];
   }
 
   get filters() {
@@ -98,24 +81,19 @@ export class CollectionService {
     return this.#isLoading;
   }
 
-  fetchCollection = async (query?: string) => {
+  fetchCollection = async () => {
     this.#isLoading = true;
-    if (query !== undefined) {
-      this.#filters.query = query;
-    }
 
     try {
-      const result = await safeInvoke<CollectionItemLite[]>('list_collection_items', {
-        query: query ?? null
-      });
+      const result = await safeInvoke<CollectionView>('get_collection');
 
       if (!result.ok) {
-        console.error('Failed to fetch collection items:', result.error);
+        console.error('Failed to fetch collection:', result.error);
         toastError(randomId(), getErrorMessage(result.error));
         return;
       }
 
-      this.#rawItems = result.data ?? [];
+      this.#collection = result.data;
     } finally {
       this.#isLoading = false;
     }
@@ -140,110 +118,20 @@ export class CollectionService {
     this.#filters = { query: '', scale: null, tags: new SvelteSet() };
   };
 
+  // CRUD operations commented out - will be implemented when backend commands are available
+  /*
   createItem = async (input: CreateCollectionItemInput) => {
-    const toastId = randomId();
-    const snapshot = [...this.#rawItems];
-    const tempItem: CollectionItemLite = {
-      id: `temp-${toastId}`,
-      // eslint-disable-next-line svelte/prefer-svelte-reactivity
-      createdAt: new Date().toISOString(),
-      description: input.description ?? null,
-      tags: input.tags ?? [],
-      brand: input.brand,
-      catalogNumber: input.catalogNumber,
-      title: input.title,
-      scale: input.scale,
-      powerSystem: input.powerSystem
-    };
-
-    this.#rawItems = [...this.#rawItems, tempItem];
-    toastLoading(toastId);
-
-    const result = await safeInvoke<CollectionItemLite>('create_collection_item', {
-      input: {
-        brand: input.brand,
-        catalogNumber: input.catalogNumber,
-        title: input.title,
-        scale: input.scale,
-        powerSystem: input.powerSystem,
-        description: input.description ?? null,
-        tags: input.tags ?? []
-      }
-    });
-
-    if (!result.ok) {
-      console.error('Failed to create collection item:', result.error);
-      this.#rawItems = snapshot;
-      const retry = isRetryableError(result.error)
-        ? () => {
-            this.#rawItems = snapshot;
-            void this.createItem(input);
-          }
-        : undefined;
-      toastError(toastId, getErrorMessage(result.error), retry);
-      return null;
-    }
-
-    this.#rawItems = this.#rawItems.map((item) => (item.id === tempItem.id ? result.data : item));
-    toastSuccess(toastId);
-    return result.data;
+    // TODO: Implement when add_collection_item command is available
   };
 
   updateItem = async (input: UpdateCollectionItemInput) => {
-    const toastId = randomId();
-    const snapshot = [...this.#rawItems];
-    const prev = this.#rawItems.find((i) => i.id === input.id);
-    if (!prev) return null;
-
-    const optimistic: CollectionItemLite = {
-      ...prev,
-      brand: input.brand,
-      catalogNumber: input.catalogNumber,
-      title: input.title,
-      scale: input.scale,
-      powerSystem: input.powerSystem,
-      description: input.description ?? null,
-      tags: input.tags ?? []
-    };
-
-    this.#rawItems = this.#rawItems.map((i) => (i.id === input.id ? optimistic : i));
-    toastLoading(toastId);
-
-    const result = await safeInvoke<CollectionItemLite>('update_collection_item', { input });
-
-    if (!result.ok) {
-      console.error('Failed to update collection item:', result.error);
-      this.#rawItems = snapshot;
-      const retry = isRetryableError(result.error) ? () => void this.updateItem(input) : undefined;
-      toastError(toastId, getErrorMessage(result.error), retry);
-      return null;
-    }
-
-    this.#rawItems = this.#rawItems.map((i) => (i.id === input.id ? result.data : i));
-    toastSuccess(toastId);
-    return result.data;
+    // TODO: Implement when update_collection_item command is available
   };
 
   deleteItem = async (id: string) => {
-    const toastId = randomId();
-    const snapshot = [...this.#rawItems];
-
-    this.#rawItems = this.#rawItems.filter((i) => i.id !== id);
-    toastLoading(toastId);
-
-    const result = await safeInvoke<void>('delete_collection_item', { id });
-
-    if (!result.ok) {
-      console.error('Failed to delete collection item:', result.error);
-      this.#rawItems = snapshot;
-      const retry = isRetryableError(result.error) ? () => void this.deleteItem(id) : undefined;
-      toastError(toastId, getErrorMessage(result.error), retry);
-      return false;
-    }
-
-    toastSuccess(toastId);
-    return true;
+    // TODO: Implement when delete_collection_item command is available
   };
+  */
 }
 
 export const collectionService = new CollectionService();

@@ -24,7 +24,7 @@
     void wishlistService.selectWishlist(id);
   }
 
-  function handleDelete(id: string) {
+  function _handleDelete(id: string) {
     void wishlistService.deleteWishlist(id);
   }
 
@@ -59,7 +59,6 @@
     activeId={activeWishlistId}
     onCreate={handleCreate}
     onSelect={handleSelect}
-    onDelete={handleDelete}
   />
 
   <section class="space-y-4 rounded-2xl border border-surface-700/50 bg-surface-900 p-6">

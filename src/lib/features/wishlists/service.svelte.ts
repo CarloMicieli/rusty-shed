@@ -1,20 +1,13 @@
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
-import type { Wishlist, WishlistItem } from '$lib/bindings';
+import type { Wishlist, WishlistItem, WishlistPreview } from '$lib/bindings';
 import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
-export type WishlistPreviewLite = {
-  id: string;
-  name: string;
-  notes: string | null;
-  is_default: boolean;
-  count: number;
-  updated_at: string;
-  total_value: Record<string, number>;
-};
+// Using WishlistPreview from bindings directly
+export type { WishlistPreview as WishlistPreviewLite };
 
 export type WishlistStateSnapshot = {
-  wishlists: WishlistPreviewLite[];
+  wishlists: WishlistPreview[];
   itemsByWishlist: Record<string, WishlistItem[]>;
   activeWishlistId: string | null;
 };
@@ -47,7 +40,7 @@ function toastError(id: string, message?: string, retry?: () => void) {
 }
 
 export class WishlistService {
-  #wishlists = $state<WishlistPreviewLite[]>([]);
+  #wishlists = $state<WishlistPreview[]>([]);
   #itemsByWishlist = $state<Record<string, WishlistItem[]>>({});
   #activeWishlistId = $state<string | null>(null);
   #isLoading = $state(false);
@@ -120,7 +113,7 @@ export class WishlistService {
   async fetchWishlists() {
     this.#isLoading = true;
     try {
-      const result = await safeInvoke<WishlistPreviewLite[]>('get_wishlists');
+      const result = await safeInvoke<WishlistPreview[]>('get_wishlists');
 
       if (!result.ok) {
         console.error('Failed to fetch wishlists:', result.error);
@@ -166,12 +159,12 @@ export class WishlistService {
     this.#captureSnapshot();
 
     const tempId = `temp-${toastId}`;
-    const optimistic: WishlistPreviewLite = {
+    const optimistic: WishlistPreview = {
       id: tempId,
       name,
       notes: null,
       is_default: isDefault,
-      count: 0,
+      count: 0n,
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
       updated_at: new Date().toISOString(),
       total_value: {}
@@ -184,8 +177,8 @@ export class WishlistService {
     if (isDefault) this.#activeWishlistId = tempId;
     toastLoading(toastId);
 
-    const result = await safeInvoke<WishlistPreviewLite>('create_wishlist', {
-      input: { name, notes: null, is_default: isDefault }
+    const result = await safeInvoke<WishlistPreview>('create_wishlist', {
+      input: { name, notes: null, isDefault }
     });
 
     if (!result.ok) {
@@ -304,12 +297,21 @@ export class WishlistService {
     const bucket = this.#itemsByWishlist[wishlistId] ?? [];
     this.#itemsByWishlist = { ...this.#itemsByWishlist, [wishlistId]: [...bucket, optimistic] };
     this.#wishlists = this.#wishlists.map((w) =>
-      w.id === wishlistId ? { ...w, count: w.count + 1 } : w
+      w.id === wishlistId ? { ...w, count: w.count + 1n } : w
     );
     toastLoading(toastId);
 
     const result = await safeInvoke<WishlistItem>('add_to_wishlist', {
-      input: { wishlist_id: wishlistId, railway_model_id: modelId }
+      input: {
+        wishlistId,
+        railwayModelId: modelId,
+        priority: null,
+        status: null,
+        desiredPriceAmount: null,
+        desiredPriceCurrency: null,
+        notes: null,
+        addedDate: null
+      }
     });
 
     if (!result.ok) {
@@ -344,11 +346,11 @@ export class WishlistService {
       [wishlistId]: bucket.filter((i) => i.id !== itemId)
     };
     this.#wishlists = this.#wishlists.map((w) =>
-      w.id === wishlistId ? { ...w, count: Math.max(0, w.count - 1) } : w
+      w.id === wishlistId ? { ...w, count: w.count > 0n ? w.count - 1n : 0n } : w
     );
     toastLoading(toastId);
 
-    const result = await safeInvoke('remove_from_wishlist', { item_id: itemId });
+    const result = await safeInvoke('remove_from_wishlist', { itemId });
 
     if (!result.ok) {
       console.error('Failed to remove item from wishlist:', result.error);
@@ -382,14 +384,14 @@ export class WishlistService {
     };
 
     this.#wishlists = this.#wishlists.map((w) => {
-      if (w.id === fromWishlistId) return { ...w, count: Math.max(0, w.count - 1) };
-      if (w.id === toWishlistId) return { ...w, count: w.count + 1 };
+      if (w.id === fromWishlistId) return { ...w, count: w.count > 0n ? w.count - 1n : 0n };
+      if (w.id === toWishlistId) return { ...w, count: w.count + 1n };
       return w;
     });
     toastLoading(toastId);
 
     const result = await safeInvoke('move_item_to_list', {
-      input: { item_id: itemId, destination_wishlist_id: toWishlistId }
+      input: { itemId, destinationWishlistId: toWishlistId }
     });
 
     if (!result.ok) {

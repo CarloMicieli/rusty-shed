@@ -1,35 +1,6 @@
 import { toaster } from '$lib/toaster';
 import { safeInvoke, getErrorMessage } from '$lib/services';
-
-// Types remain the same as they are static definitions
-export type DashboardTotals = {
-  collection_items: number;
-  wishlists: number;
-  maintenance_due: number;
-  total_value?: { amount: number; currency: string } | null;
-};
-
-export type DashboardRecentItem = {
-  id: string;
-  title: string;
-  subtitle?: string | null;
-};
-
-export type DashboardDepotEntry = {
-  id: string;
-  manufacturer?: string | null;
-  productCode?: string | null;
-  category?: string | null;
-  scale?: string | null;
-  railwayCompany?: string | null;
-  description?: string | null;
-};
-
-export type DashboardSummary = {
-  totals: DashboardTotals;
-  recent_items: DashboardRecentItem[];
-  depot_items: DashboardDepotEntry[];
-};
+import type { DashboardSummary, QueryParams } from '$lib/bindings';
 
 function toastError(message?: string) {
   toaster.error({
@@ -62,22 +33,21 @@ export class DashboardService {
 
   // 3. Derived Logic (equivalent to Svelte 4 derived stores)
   hasMaintenance = $derived((this.#data?.totals?.maintenance_due ?? 0) > 0);
-  recentItemsCount = $derived(this.#data?.recent_items.length ?? 0);
+  recentItemsCount = $derived(this.#data?.recentItems.length ?? 0);
 
   /**
    * Loads dashboard data and handles state transitions
    */
-  async load() {
+  async load(params: QueryParams | null = null) {
     // Prevent double-loading if already in progress
     if (this.#isLoading) return;
 
     this.#isLoading = true;
     this.#error = null;
 
-    const result = await safeInvoke<DashboardSummary>('dashboard_summary');
+    const result = await safeInvoke<DashboardSummary>('get_dashboard_summary', { params });
 
     if (result.ok) {
-      // Data is already in snake_case from bindings
       this.#data = result.data;
     } else {
       console.error('Dashboard Store Error:', result.error);

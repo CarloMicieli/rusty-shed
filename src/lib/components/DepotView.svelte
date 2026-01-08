@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DashboardDepotEntry } from '$lib/features/dashboard/service.svelte';
+  import type { DashboardDepotEntry } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import DepotTable from './DepotTable.svelte';
   import DepotListCard from './DepotListCard.svelte';

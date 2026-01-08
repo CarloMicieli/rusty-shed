@@ -1,17 +1,12 @@
 <script lang="ts">
   import { Heart } from 'lucide-svelte';
-  import type { WishlistItem } from '$lib/bindings';
+  import type { WishlistItem, WishlistPreview } from '$lib/bindings';
   import { resolveTagIcon } from '$lib/config/icons';
-
-  type WishlistPreviewLite = {
-    id: string;
-    name: string;
-  };
 
   const { items, activeWishlistId, otherTargets, onRemove, onMove } = $props<{
     items: WishlistItem[];
     activeWishlistId: string | null;
-    otherTargets: WishlistPreviewLite[];
+    otherTargets: WishlistPreview[];
     onRemove?: (detail: { itemId: string; wishlistId: string }) => void;
     onMove?: (detail: { itemId: string; fromId: string; toId: string }) => void;
   }>();

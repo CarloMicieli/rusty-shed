@@ -1,14 +1,9 @@
 <script lang="ts">
   import { Heart, Star } from 'lucide-svelte';
-
-  type WishlistPreviewLite = {
-    id: string;
-    name: string;
-    is_default: boolean;
-  };
+  import type { WishlistPreview } from '$lib/bindings';
 
   const { wishlist, onRename, onSetDefault } = $props<{
-    wishlist: WishlistPreviewLite | null;
+    wishlist: WishlistPreview | null;
     onRename?: (name: string) => void;
     onSetDefault?: () => void;
   }>();

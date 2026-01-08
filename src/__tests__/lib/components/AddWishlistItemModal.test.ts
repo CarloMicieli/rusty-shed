@@ -76,7 +76,7 @@ const wishlistFixtures: WishlistPreviewLite[] = [
     name: 'My Wishlist',
     notes: null,
     is_default: true,
-    count: 0,
+    count: 0n,
     updated_at: '2024-01-01T00:00:00Z',
     total_value: {}
   },
@@ -85,7 +85,7 @@ const wishlistFixtures: WishlistPreviewLite[] = [
     name: 'Future Purchases',
     notes: null,
     is_default: false,
-    count: 0,
+    count: 0n,
     updated_at: '2024-01-02T00:00:00Z',
     total_value: {}
   }
@@ -254,7 +254,7 @@ describe('AddWishlistItemModal', () => {
       name: 'New List',
       notes: null,
       is_default: false,
-      count: 0,
+      count: 0n,
       updated_at: '2024-01-03T00:00:00Z',
       total_value: {}
     };
@@ -290,7 +290,7 @@ describe('AddWishlistItemModal', () => {
       expect(mockInvoke).toHaveBeenCalledWith('create_wishlist', expect.any(Object));
       expect(mockInvoke).toHaveBeenCalledWith(
         'add_to_wishlist',
-        expect.objectContaining({ input: expect.objectContaining({ railway_model_id: '79894' }) })
+        expect.objectContaining({ input: expect.objectContaining({ railwayModelId: '79894' }) })
       );
     });
   });

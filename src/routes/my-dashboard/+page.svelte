@@ -22,8 +22,8 @@
   // Data derived from store
   const totals = $derived(dashboard.data?.totals ?? null);
   const stats = $derived(byStats(totals));
-  const recent = $derived(dashboard.data?.recent_items ?? []);
-  const depot = $derived(dashboard.data?.depot_items ?? []);
+  const recent = $derived(dashboard.data?.recentItems ?? []);
+  const depot = $derived(dashboard.data?.depotItems ?? []);
 
   let showWishlistModal = $state(false);
 
@@ -41,9 +41,9 @@
     goto(resolve('/'));
   }
 
-  function formatMoney(amount?: { amount: number; currency: string } | null) {
+  function formatMoney(amount?: { amount: bigint; currency: string } | null) {
     if (!amount) return '—';
-    const major = amount.amount / 100;
+    const major = Number(amount.amount) / 100;
     return `${amount.currency} ${major.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
