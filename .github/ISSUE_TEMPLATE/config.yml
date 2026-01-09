@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Maintainers
+    url: https://github.com/orgs/your-org/teams/maintainers
+    about: Use this link to notify maintainers about sensitive issues (security, PII)
+
+# optional: issue forms can be configured here in the future
+

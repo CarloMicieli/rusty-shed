@@ -12,6 +12,8 @@ Please read and follow the project's Code of Conduct: see [CODE_OF_CONDUCT.md](C
 - Use clear titles and provide a reproducible description with steps, expected vs actual behavior, and environment details.
 - For feature requests, explain the use case and possible approaches.
 
+> Use the GitHub templates when opening issues: Bug reports and Feature requests are available under `.github/ISSUE_TEMPLATE/`.
+
 ## Development Setup
 
 Prerequisites:
@@ -40,6 +42,8 @@ If the repository includes a `src-tauri` directory, run `cargo fmt` and `cargo c
 - Keep changes focused and small; one logical change per PR.
 - Include tests or screenshots where applicable.
 
+> Use the repository Pull Request template at `.github/PULL_REQUEST_TEMPLATE.md`. Start your PR title with a Conventional Commit-style summary (e.g. `feat(ui): add model details panel`).
+
 ## Commit Messages
 
 This project follows Conventional Commits. Commit messages should follow the format:
@@ -53,6 +57,11 @@ This project follows Conventional Commits. Commit messages should follow the for
 ```
 
 Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`.
+
+A few examples:
+- `feat(ui): add model details panel`
+- `fix: correct date parsing in exporter`
+- `docs: update contributing guide`
 
 ## Code Style & Tests
 
