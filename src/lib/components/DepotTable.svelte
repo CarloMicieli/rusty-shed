@@ -20,8 +20,8 @@
     <tbody>
       {#each data as row (row.id)}
         <tr>
-          <td class="font-bold">{row.manufacturer ?? '—'}</td>
-          <td class="font-mono text-primary-400">{row.productCode ?? '—'}</td>
+          <td class="font-bold">{row.manufacturer.name ?? '—'}</td>
+          <td class="font-mono text-primary-400">{row.product_code ?? '—'}</td>
           <td>
             <span class="variant-soft-surface badge">
               {row.category ?? '—'}
@@ -34,7 +34,7 @@
           </td>
           <td>
             <span class="variant-filled-surface badge font-bold tracking-wider">
-              {row.railwayCompany ?? '—'}
+              {row.railway_company.name ?? '—'}
             </span>
           </td>
           <td class="text-surface-300">{row.description ?? '—'}</td>

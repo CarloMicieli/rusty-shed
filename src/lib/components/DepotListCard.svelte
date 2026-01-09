@@ -11,9 +11,9 @@
   <div class="flex items-start justify-between">
     <div>
       <h4 class="h4 font-bold">
-        {depot.manufacturer ?? '—'}
-        {#if depot.productCode}
-          <span class="ml-1 font-mono text-primary-400">#{depot.productCode}</span>
+        {depot.manufacturer.name ?? '—'}
+        {#if depot.product_code}
+          <span class="ml-1 font-mono text-primary-400">#{depot.product_code}</span>
         {/if}
       </h4>
       <p class="line-clamp-2 pt-1 text-sm text-surface-300">
@@ -32,10 +32,10 @@
         {depot.category}
       </span>
     {/if}
-    {#if depot.railwayCompany}
+    {#if depot.railway_company}
       <span class="variant-soft-surface badge flex items-center gap-1">
         <Building2 size={12} />
-        {depot.railwayCompany}
+        {depot.railway_company.name}
       </span>
     {/if}
   </div>
