@@ -1,6 +1,6 @@
 use crate::catalog::domain::railway_model::Category;
 use crate::collecting::application::{
-    AddCollectionItemCommand, GetCollectionQuery, RemoveCollectionItemCommand,
+    AddCollectionItemCommand, GetCollectionQuery, GetDepotQuery, RemoveCollectionItemCommand,
 };
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::RemoveCollectionItem;
@@ -9,6 +9,7 @@ use crate::collecting::interface::{AddCollectionItemInput, RemoveCollectionItemI
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use chrono::NaiveDate;
+use log::info;
 use std::convert::TryFrom;
 
 /// Tauri command to retrieve the current collection.
@@ -19,7 +20,7 @@ use std::convert::TryFrom;
 /// message for logging/debugging.
 ///
 /// Parameters:
-/// - `state`: Tauri-managed application state which provides a database pool.
+/// * `state`: Tauri-managed application state which provides a database pool.
 ///
 /// Returns:
 /// - `Ok(Collection)` when retrieval succeeds.
@@ -29,21 +30,14 @@ use std::convert::TryFrom;
 pub async fn get_collection(
     state: tauri::State<'_, AppState>,
 ) -> Result<CollectionView, CommandError> {
+    info!("Fetching collection");
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match GetCollectionQuery::execute(&mut unit_of_work).await {
-        Ok(collection) => {
-            // Since this is a 'get' operation, committing is technically optional,
-            // but calling it ensures the transaction is closed cleanly.
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let collection = GetCollectionQuery::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(collection)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(collection)
 }
 
 /// Tauri command to retrieve the current depot view: which is the list
@@ -55,7 +49,7 @@ pub async fn get_collection(
 /// message for logging/debugging.
 ///
 /// Parameters:
-/// - `state`: Tauri-managed application state which provides a database pool.
+/// * `state`: Tauri-managed application state which provides a database pool.
 ///
 /// Returns:
 /// - `Ok(DepotView)` when retrieval succeeds.
@@ -63,19 +57,14 @@ pub async fn get_collection(
 #[tauri::command]
 #[specta::specta]
 pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, CommandError> {
+    info!("Fetching depot view");
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match crate::collecting::application::GetDepotQuery::execute(&mut unit_of_work).await {
-        Ok(depot) => {
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let depot_view = GetDepotQuery::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(depot)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(depot_view)
 }
 
 /// Tauri command to remove an item from the collection.
@@ -86,8 +75,8 @@ pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, C
 /// message for logging/debugging.
 ///
 /// Parameters:
-/// - `state`: Tauri-managed application state which provides a database pool.
-/// - `input`: Input parameters for removing the collection item.
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: Input parameters for removing the collection item.
 ///
 /// Returns:
 /// - `Ok(CollectionView)` when removal succeeds.
@@ -98,6 +87,8 @@ pub async fn remove_collection_item(
     state: tauri::State<'_, AppState>,
     input: RemoveCollectionItemInput,
 ) -> Result<CollectionView, CommandError> {
+    info!("Removing collection item: {:?}", input);
+
     let collection_item_id = CollectionItemId::try_from(input.collection_item_id)
         .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
 
@@ -117,17 +108,11 @@ pub async fn remove_collection_item(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match RemoveCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await {
-        Ok(view) => {
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let collection_view =
+        RemoveCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(view)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(collection_view)
 }
 
 /// Tauri command to add a new item to the collection.
@@ -138,8 +123,8 @@ pub async fn remove_collection_item(
 /// message for logging/debugging.
 ///
 /// Parameters:
-/// - `state`: Tauri-managed application state which provides a database pool.
-/// - `input`: Input parameters for adding the collection item.
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: Input parameters for adding the collection item.
 ///
 /// Returns:
 /// - `Ok(CollectionView)` when addition succeeds.
@@ -150,20 +135,14 @@ pub async fn add_collection_item(
     state: tauri::State<'_, AppState>,
     input: AddCollectionItemInput,
 ) -> Result<CollectionView, CommandError> {
-    // Strict validation happens in TryFrom implementation for the domain type
+    info!("Adding collection item: {:?}", input);
+
     let domain_cmd = AddCollectionItem::try_from(input).map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match AddCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await {
-        Ok(view) => {
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let collection_view = AddCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(view)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(collection_view)
 }

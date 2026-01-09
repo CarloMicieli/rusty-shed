@@ -51,15 +51,17 @@ export const commands = {
    * repository for the matching `Manufacturer`.
    *
    * # Arguments
-   *
    * * `state` - Tauri-managed application `AppState` (provides DB pool).
    * * `manufacturer_id` - The manufacturer identifier as a `String`.
    *
    * # Returns
+   * - `Ok(Some(Manufacturer))` when a matching manufacturer exists,
+   * - `Ok(None)` when no matching row is found
+   * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
    *
-   * Returns `Ok(Some(Manufacturer))` when a matching manufacturer exists,
-   * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
-   * ID cannot be parsed or a database error occurs.
+   * # Errors
+   * Parsing errors for the identifier and database errors are mapped to
+   * `CommandError` and returned to the caller.
    */
   async getManufacturerById(
     manufacturerId: ManufacturerId
@@ -86,9 +88,9 @@ export const commands = {
    * * `railway_model_id` - The railway model identifier as a `String`.
    *
    * # Returns
-   * * `Ok(Some(RailwayModel))` when a matching model exists,
-   * * `Ok(None)` when no matching row is found
-   * * `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
+   * - `Ok(Some(RailwayModel))` when a matching model exists,
+   * - `Ok(None)` when no matching row is found
+   * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
    *
    * # Errors
    * Parsing errors for the identifier and database errors are mapped to
@@ -138,13 +140,11 @@ export const commands = {
    * * `railway_company_id` - The railway company identifier as a `String`.
    *
    * # Returns
-   *
-   * Returns `Ok(Some(RailwayCompany))` when a matching company exists,
-   * `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
-   * ID cannot be parsed or a database error occurs.
+   * - `Ok(Some(RailwayCompany))` when a matching company exists
+   * - `Ok(None)` when no matching row is found
+   * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
    *
    * # Errors
-   *
    * Parsing errors for the identifier and database errors are mapped to
    * `CommandError` and returned to the caller.
    */
@@ -164,26 +164,15 @@ export const commands = {
   /**
    * Create a new railway model together with its rolling stocks.
    *
-   * Performs the creation inside a database transaction using a `SqliteUnitOfWork`.
-   * The handler:
-   * 1. Opens a `SqliteUnitOfWork` (begins a transaction).
-   * 2. Instantiates and executes the `CreateRailwayModelUseCase` with validated input.
-   * 3. Commits the transaction on success; on error the transaction is rolled back when the unit of work is dropped.
-   * 4. Returns the created railway model identifier.
-   *
    * # Arguments
-   *
    * * `state` - Tauri-managed application `AppState` providing the database pool.
    * * `new_railway_model` - The validated input for creating the railway model (`CreateRailwayModelInput`).
    *
    * # Returns
-   *
-   * Returns `Result<RailwayModelId, CommandError>`:
-   * * `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
-   * * `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
+   * - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
+   * - `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
    *
    * # Errors
-   *
    * Errors are mapped to `CommandError` and may represent validation, repository, or unit-of-work failures.
    */
   async createRailwayModel(
@@ -208,7 +197,7 @@ export const commands = {
    * message for logging/debugging.
    *
    * Parameters:
-   * - `state`: Tauri-managed application state which provides a database pool.
+   * * `state`: Tauri-managed application state which provides a database pool.
    *
    * Returns:
    * - `Ok(Collection)` when retrieval succeeds.
@@ -232,7 +221,7 @@ export const commands = {
    * message for logging/debugging.
    *
    * Parameters:
-   * - `state`: Tauri-managed application state which provides a database pool.
+   * * `state`: Tauri-managed application state which provides a database pool.
    *
    * Returns:
    * - `Ok(DepotView)` when retrieval succeeds.
@@ -246,6 +235,22 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to retrieve the dashboard summary.
+   *
+   * This handler constructs the repository and query handler, executes the query
+   * asynchronously and returns the `DashboardSummary` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `params`: Optional query parameters to customize the summary retrieval.
+   *
+   * Returns:
+   * - `Ok(DashboardSummary)` when retrieval succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async getDashboardSummary(
     params: QueryParams | null
   ): Promise<Result<DashboardSummary, CommandError>> {
@@ -256,6 +261,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to retrieve all wishlists.
+   *
+   * This handler constructs the repository and query handler, executes the query
+   * asynchronously and returns the list of `WishlistPreview` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   *
+   * Returns:
+   * - `Ok(Vec<WishlistPreview>)` when retrieval succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async getWishlists(): Promise<Result<WishlistPreview[], CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_wishlists') };
@@ -264,7 +284,24 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
-  async getWishlistById(id: string): Promise<Result<Wishlist | null, CommandError>> {
+  /**
+   * Tauri command to get a wishlist by its ID.
+   *
+   * This handler retrieves a wishlist using the provided ID. It constructs the necessary
+   * repository and query handler, executes the query asynchronously, and returns the
+   * `Wishlist` on success. On failure, it converts the error into a `CommandError
+   * preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `id`: The identifier of the wishlist to retrieve.
+   *
+   * Returns:
+   * - `Ok(Some(Wishlist))` when a matching wishlist exists,
+   * - `Ok(None)` when no matching row is found
+   * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
+   */
+  async getWishlistById(id: WishlistId): Promise<Result<Wishlist | null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_wishlist_by_id', { id }) };
     } catch (e) {
@@ -272,6 +309,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to create a new wishlist.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns the created `WishlistPreview` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `input`: The input data required to create a new wishlist (`CreateWishlistInput`).
+   *
+   * Returns:
+   * - `Ok(WishlistPreview)` when creation succeeds.
+   * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
+   */
   async createWishlist(input: CreateWishlistInput): Promise<Result<WishlistPreview, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('create_wishlist', { input }) };
@@ -280,6 +332,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to rename an existing wishlist.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns nothing on success. On failure, it converts the error
+   * into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `input`: The input data required to rename a wishlist (`RenameWishlistInput`).
+   *
+   * Returns:
+   * - `Ok(())` when renaming succeeds.
+   * - `Err(CommandError)` when validation fails, a database error occurs, or business logic
+   */
   async renameWishlist(input: RenameWishlistInput): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('rename_wishlist', { input }) };
@@ -288,6 +355,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to delete a wishlist by its ID.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns nothing on success. On failure, it converts the error
+   * into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `id`: The identifier of the wishlist to delete.
+   *
+   * Returns:
+   * - `Ok(())` when the deletion succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async deleteWishlist(id: string): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('delete_wishlist', { id }) };
@@ -296,6 +378,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to set a wishlist as the default wishlist.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns nothing on success. On failure, it converts the error
+   * into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `id`: The identifier of the wishlist to set as default.
+   *
+   * Returns:
+   * - `Ok(())` when the operation succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async setDefaultWishlist(id: string): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('set_default_wishlist', { id }) };
@@ -304,6 +401,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to add an item to a wishlist.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns the added `WishlistItem` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `input`: The input data required to add an item to a wishlist (`AddToWishlistInput`).
+   *
+   * Returns:
+   * - `Ok(WishlistItem)` when the addition succeeds.
+   * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
+   */
   async addToWishlist(input: AddToWishlistInput): Promise<Result<WishlistItem, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('add_to_wishlist', { input }) };
@@ -312,6 +424,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to remove an item from a wishlist.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns nothing on success. On failure, it converts the error
+   * into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `item_id`: The identifier of the wishlist item to remove.
+   *
+   * Returns:
+   * - `Ok(())` when removal succeeds.
+   * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
+   */
   async removeFromWishlist(itemId: string): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('remove_from_wishlist', { itemId }) };
@@ -320,6 +447,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to move an item from one wishlist to another.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns nothing on success. On failure, it converts the error
+   * into a `CommandError` preserving the error message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `input`: The input data required to move a wishlist item (`MoveWishlistItemInput`).
+   *
+   * Returns:
+   * - `Ok(())` when the move succeeds.
+   * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
+   */
   async moveItemToList(input: MoveWishlistItemInput): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('move_item_to_list', { input }) };
@@ -350,6 +492,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to retrieve all sellers.
+   *
+   * This handler constructs the repository and query handler, executes the query
+   * asynchronously and returns the list of `Seller` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   *
+   * Returns:
+   * - `Ok(Vec<Seller>)` when retrieval succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async getSellers(): Promise<Result<Seller[], CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_sellers') };
@@ -358,7 +515,24 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
-  async getSellerById(id: string): Promise<Result<Seller | null, CommandError>> {
+  /**
+   * Tauri command to retrieve a seller by its identifier.
+   *
+   * This handler constructs the repository and query handler, executes the query
+   * asynchronously and returns the `Seller` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `id`: The identifier of the seller to retrieve.
+   *
+   * Returns:
+   * - `Ok(Some(Seller))` when a matching seller exists,
+   * - `Ok(None)` when no matching row is found
+   * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
+   */
+  async getSellerById(id: SellerId): Promise<Result<Seller | null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_seller_by_id', { id }) };
     } catch (e) {
@@ -366,6 +540,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to create a new seller.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns the created `Seller` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `payload`: The payload containing new seller information.
+   *
+   * Returns:
+   * - `Ok(Seller)` when creation succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async createSeller(payload: CreateSellerPayload): Promise<Result<Seller, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('create_seller', { payload }) };
@@ -374,6 +563,23 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to update an existing seller.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns the updated `
+   * Seller` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `payload`: The payload containing updated seller information.
+   *
+   * Returns:
+   * - `Ok(Seller)` when the update succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
   async updateSeller(payload: UpdateSellerPayload): Promise<Result<Seller, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('update_seller', { payload }) };
@@ -382,7 +588,23 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
-  async deleteSeller(id: string): Promise<Result<bigint, CommandError>> {
+  /**
+   * Tauri command to delete a seller by ID.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns the number of deleted records on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `id`: The identifier of the seller to delete.
+   *
+   * Returns:
+   * - `Ok(())` when the deletion succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
+  async deleteSeller(id: SellerId): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('delete_seller', { id }) };
     } catch (e) {

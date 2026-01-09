@@ -1,7 +1,6 @@
 use crate::catalog::domain::manufacturer::{Manufacturer, ManufacturerId, ManufacturerUowExt};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use log::info;
 
 /// Query to retrieve all manufacturers from the database.
 pub struct GetManufacturersQuery;
@@ -18,7 +17,6 @@ impl GetManufacturersQuery {
     pub async fn execute(
         unit_of_work: &mut SqliteUnitOfWork<'_>,
     ) -> Result<Vec<Manufacturer>, DomainError> {
-        info!("Getting manufacturers");
         let mut repository = unit_of_work.manufacturers_repo();
         repository.find_all().await
     }
@@ -40,7 +38,6 @@ impl GetManufacturerByIdQuery {
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         manufacturer_id: ManufacturerId,
     ) -> Result<Option<Manufacturer>, DomainError> {
-        info!("Getting manufacturer by id");
         let mut repository = unit_of_work.manufacturers_repo();
         repository.find_by_id(&manufacturer_id).await
     }

@@ -2,6 +2,7 @@ use crate::catalog::application::{GetManufacturerByIdQuery, GetManufacturersQuer
 use crate::catalog::domain::manufacturer::{Manufacturer, ManufacturerId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
+use log::info;
 
 /// Retrieve all manufacturers from the database.
 ///
@@ -16,21 +17,14 @@ use crate::state::AppState;
 pub async fn get_manufacturers(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<Manufacturer>, CommandError> {
+    info!("Fetching all manufacturers from the database.");
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match GetManufacturersQuery::execute(&mut unit_of_work).await {
-        Ok(manufacturers) => {
-            // Since this is a 'get' operation, committing is technically optional,
-            // but calling it ensures the transaction is closed cleanly.
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let manufacturers = GetManufacturersQuery::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(manufacturers)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(manufacturers)
 }
 
 /// Retrieve a manufacturer by its identifier.
@@ -40,34 +34,33 @@ pub async fn get_manufacturers(
 /// repository for the matching `Manufacturer`.
 ///
 /// # Arguments
-///
 /// * `state` - Tauri-managed application `AppState` (provides DB pool).
 /// * `manufacturer_id` - The manufacturer identifier as a `String`.
 ///
 /// # Returns
+/// - `Ok(Some(Manufacturer))` when a matching manufacturer exists,
+/// - `Ok(None)` when no matching row is found
+/// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
 ///
-/// Returns `Ok(Some(Manufacturer))` when a matching manufacturer exists,
-/// `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
-/// ID cannot be parsed or a database error occurs.
+/// # Errors
+/// Parsing errors for the identifier and database errors are mapped to
+/// `CommandError` and returned to the caller.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_manufacturer_by_id(
     state: tauri::State<'_, AppState>,
     manufacturer_id: ManufacturerId,
 ) -> Result<Option<Manufacturer>, CommandError> {
+    info!(
+        "Fetching manufacturer {} from the database.",
+        manufacturer_id
+    );
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match GetManufacturerByIdQuery::execute(&mut unit_of_work, manufacturer_id).await {
-        Ok(manufacturer) => {
-            // Since this is a 'get' operation, committing is technically optional,
-            // but calling it ensures the transaction is closed cleanly.
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let manufacturer =
+        GetManufacturerByIdQuery::execute(&mut unit_of_work, manufacturer_id).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(manufacturer)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(manufacturer)
 }

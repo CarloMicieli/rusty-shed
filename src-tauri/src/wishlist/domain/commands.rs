@@ -3,13 +3,13 @@ use std::convert::TryFrom;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
-use crate::wishlist::command_handlers::{
-    AddToWishlistInput, CreateWishlistInput, MoveWishlistItemInput, RenameWishlistInput,
-};
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
+use crate::wishlist::interface::{
+    AddToWishlistInput, CreateWishlistInput, MoveWishlistItemInput, RenameWishlistInput,
+};
 use chrono::NaiveDate;
 
 #[derive(Debug, Clone)]
@@ -167,7 +167,7 @@ impl TryFrom<MoveWishlistItemInput> for MoveWishlistItemCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wishlist::command_handlers::CreateWishlistInput;
+    use crate::wishlist::interface::CreateWishlistInput;
     use pretty_assertions::assert_eq;
 
     #[test]

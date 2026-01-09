@@ -3,7 +3,6 @@ use crate::catalog::domain::railway_company::{
 };
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use log::info;
 
 /// Query to retrieve all railway companies from the database.
 pub struct GetRailwayCompaniesQuery;
@@ -20,7 +19,6 @@ impl GetRailwayCompaniesQuery {
     pub async fn execute(
         unit_of_work: &mut SqliteUnitOfWork<'_>,
     ) -> Result<Vec<RailwayCompany>, DomainError> {
-        info!("Retrieving railway companies");
         let mut repository = unit_of_work.railway_companies_repo();
         repository.find_all().await
     }
@@ -44,7 +42,6 @@ impl GetRailwayCompanyByIdQuery {
         unit_of_work: &mut SqliteUnitOfWork<'_>,
         railway_company_id: RailwayCompanyId,
     ) -> Result<Option<RailwayCompany>, DomainError> {
-        info!("Retrieving railway company with id: {}", railway_company_id);
         let mut repository = unit_of_work.railway_companies_repo();
         repository.find_by_id(&railway_company_id).await
     }

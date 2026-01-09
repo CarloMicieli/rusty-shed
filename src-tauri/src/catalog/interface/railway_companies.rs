@@ -2,6 +2,7 @@ use crate::catalog::application::{GetRailwayCompaniesQuery, GetRailwayCompanyByI
 use crate::catalog::domain::railway_company::{RailwayCompany, RailwayCompanyId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
+use log::info;
 
 /// Retrieve all railway companies from the database.
 ///
@@ -16,21 +17,14 @@ use crate::state::AppState;
 pub async fn get_railway_companies(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<RailwayCompany>, CommandError> {
+    info!("Fetching all railway companies from the database.");
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match GetRailwayCompaniesQuery::execute(&mut unit_of_work).await {
-        Ok(railway_companies) => {
-            // Since this is a 'get' operation, committing is technically optional,
-            // but calling it ensures the transaction is closed cleanly.
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let railway_companies = GetRailwayCompaniesQuery::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(railway_companies)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(railway_companies)
 }
 
 /// Retrieve a railway company by its identifier.
@@ -45,13 +39,11 @@ pub async fn get_railway_companies(
 /// * `railway_company_id` - The railway company identifier as a `String`.
 ///
 /// # Returns
-///
-/// Returns `Ok(Some(RailwayCompany))` when a matching company exists,
-/// `Ok(None)` when no matching row is found, or `Err(CommandError)` when the
-/// ID cannot be parsed or a database error occurs.
+/// - `Ok(Some(RailwayCompany))` when a matching company exists
+/// - `Ok(None)` when no matching row is found
+/// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
 ///
 /// # Errors
-///
 /// Parsing errors for the identifier and database errors are mapped to
 /// `CommandError` and returned to the caller.
 #[tauri::command]
@@ -60,19 +52,15 @@ pub async fn get_railway_company_by_id(
     state: tauri::State<'_, AppState>,
     railway_company_id: RailwayCompanyId,
 ) -> Result<Option<RailwayCompany>, CommandError> {
+    info!(
+        "Fetching railway company {} from the database.",
+        railway_company_id
+    );
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match GetRailwayCompanyByIdQuery::execute(&mut unit_of_work, railway_company_id).await {
-        Ok(railway_company) => {
-            // Since this is a 'get' operation, committing is technically optional,
-            // but calling it ensures the transaction is closed cleanly.
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+    let railway_company =
+        GetRailwayCompanyByIdQuery::execute(&mut unit_of_work, railway_company_id).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
-            Ok(railway_company)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(railway_company)
 }

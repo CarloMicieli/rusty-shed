@@ -6,72 +6,93 @@ use crate::sellers::application::get_sellers::GetSellersUseCase;
 use crate::sellers::application::update_seller::{UpdateSellerInput, UpdateSellerUseCase};
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
-use crate::sellers::domain::seller_type::SellerType;
+use crate::sellers::interface::{CreateSellerPayload, UpdateSellerPayload};
 use crate::state::AppState;
+use log::info;
 use std::convert::TryFrom;
 
+/// Tauri command to retrieve all sellers.
+///
+/// This handler constructs the repository and query handler, executes the query
+/// asynchronously and returns the list of `Seller` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+///
+/// Returns:
+/// - `Ok(Vec<Seller>)` when retrieval succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_sellers(state: tauri::State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
+    info!("Fetching all sellers");
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    match GetSellersUseCase::execute(&mut unit_of_work).await {
-        Ok(sellers) => {
-            unit_of_work
-                .commit()
-                .await
-                .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
-            Ok(sellers)
-        }
-        Err(e) => Err(e.into()),
-    }
+    let sellers = GetSellersUseCase::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(sellers)
 }
 
+/// Tauri command to retrieve a seller by its identifier.
+///
+/// This handler constructs the repository and query handler, executes the query
+/// asynchronously and returns the `Seller` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///    
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `id`: The identifier of the seller to retrieve.
+///         
+/// Returns:
+/// - `Ok(Some(Seller))` when a matching seller exists,
+/// - `Ok(None)` when no matching row is found
+/// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_seller_by_id(
     state: tauri::State<'_, AppState>,
-    id: String,
+    id: SellerId,
 ) -> Result<Option<Seller>, CommandError> {
+    info!("Fetching seller with ID: {}", id);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let sid = SellerId::try_from(id.as_str())
-        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
-
-    let result = GetSellerByIdUseCase::execute(&mut unit_of_work, &sid)
+    let result = GetSellerByIdUseCase::execute(&mut unit_of_work, &id)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(result)
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateSellerPayload {
-    pub name: String,
-    pub seller_type: SellerType,
-    pub email: Option<String>,
-    pub phone: Option<String>,
-    pub website_url: Option<String>,
-    pub street_address: Option<String>,
-    pub extended_address: Option<String>,
-    pub city: Option<String>,
-    pub state_region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country_code: Option<String>,
-}
-
+/// Tauri command to create a new seller.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the created `Seller` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `payload`: The payload containing new seller information.
+///
+/// Returns:
+/// - `Ok(Seller)` when creation succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_seller(
     state: tauri::State<'_, AppState>,
     payload: CreateSellerPayload,
 ) -> Result<Seller, CommandError> {
+    info!("Creating new seller {:?}", payload);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let input = CreateSellerInput {
@@ -91,121 +112,74 @@ pub async fn create_seller(
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(result)
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateSellerPayload {
-    pub id: String,
-    pub name: String,
-    pub seller_type: SellerType,
-    pub email: Option<String>,
-    pub phone: Option<String>,
-    pub website_url: Option<String>,
-    pub street_address: Option<String>,
-    pub extended_address: Option<String>,
-    pub city: Option<String>,
-    pub state_region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country_code: Option<String>,
-    pub created_at: Option<String>,
-}
-
-impl TryFrom<UpdateSellerPayload> for UpdateSellerInput {
-    type Error = CommandError;
-
-    fn try_from(payload: UpdateSellerPayload) -> Result<Self, Self::Error> {
-        let UpdateSellerPayload {
-            id,
-            name,
-            seller_type,
-            email,
-            phone,
-            website_url,
-            street_address,
-            extended_address,
-            city,
-            state_region,
-            postal_code,
-            country_code,
-            created_at,
-        } = payload;
-
-        let sid = SellerId::try_from(id.as_str())
-            .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
-
-        let created_at_dt = if let Some(created_at_str) = created_at {
-            match chrono::DateTime::parse_from_rfc3339(created_at_str.as_str()) {
-                Ok(dt) => Some(dt.with_timezone(&chrono::Utc)),
-                Err(e) => return Err(CommandError::validation_field("createdAt", e.to_string())),
-            }
-        } else {
-            None
-        };
-
-        Ok(UpdateSellerInput {
-            id: sid,
-            name,
-            seller_type,
-            email,
-            phone,
-            website_url,
-            street_address,
-            extended_address,
-            city,
-            state_region,
-            postal_code,
-            country_code,
-            created_at: created_at_dt,
-        })
-    }
-}
-
+/// Tauri command to update an existing seller.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the updated `
+/// Seller` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `payload`: The payload containing updated seller information.
+///
+/// Returns:
+/// - `Ok(Seller)` when the update succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn update_seller(
     state: tauri::State<'_, AppState>,
     payload: UpdateSellerPayload,
 ) -> Result<Seller, CommandError> {
+    info!("Updating seller: {:?}", payload);
+
     let mut unit_of_work = state.unit_of_work().await?;
     let input = UpdateSellerInput::try_from(payload)?;
     let result = UpdateSellerUseCase::execute(&mut unit_of_work, input)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(result)
 }
 
+/// Tauri command to delete a seller by ID.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the number of deleted records on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `id`: The identifier of the seller to delete.
+///         
+/// Returns:
+/// - `Ok(())` when the deletion succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_seller(
     state: tauri::State<'_, AppState>,
-    id: String,
-) -> Result<u64, CommandError> {
+    id: SellerId,
+) -> Result<(), CommandError> {
+    info!("Deleting seller with ID: {}", id);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let sid = SellerId::try_from(id.as_str())
-        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
-
-    let result = DeleteSellerUseCase::execute(&mut unit_of_work, &sid)
+    let _ = DeleteSellerUseCase::execute(&mut unit_of_work, &id)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
-    Ok(result)
+    Ok(())
 }

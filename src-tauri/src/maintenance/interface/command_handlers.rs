@@ -20,10 +20,7 @@ pub async fn get_maintenance_dashboard(
     let cards = GetMaintenanceDashboardUseCase::execute(&mut unit_of_work)
         .await
         .map_err(CommandError::from)?;
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
     Ok(cards)
 }
 
@@ -70,9 +67,6 @@ pub async fn add_maintenance_record(
     AddMaintenanceRecordUseCase::execute(&mut unit_of_work, use_case_input)
         .await
         .map_err(CommandError::from)?;
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
     Ok(())
 }

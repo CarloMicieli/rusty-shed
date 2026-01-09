@@ -165,7 +165,7 @@ mod tests {
         assert!(res.is_err());
         match res.err().unwrap() {
             crate::core::domain::domain_error::DomainError::ValidationError(errors) => {
-                assert!(errors.get("rolling_stock_ids").is_some());
+                assert!(errors.contains_key("rolling_stock_ids"));
             }
             _ => panic!("expected Validation error"),
         }

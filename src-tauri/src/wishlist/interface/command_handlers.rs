@@ -17,227 +17,290 @@ use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
-use crate::wishlist::domain::wishlist_priority::WishlistPriority;
-use crate::wishlist::domain::wishlist_status::WishlistStatus;
-use serde::{Deserialize, Serialize};
+use crate::wishlist::interface::{
+    AddToWishlistInput, CreateWishlistInput, MoveWishlistItemInput, RenameWishlistInput,
+};
+use log::info;
 
+/// Tauri command to get a wishlist by its ID.
+///
+/// This handler retrieves a wishlist using the provided ID. It constructs the necessary
+/// repository and query handler, executes the query asynchronously, and returns the
+/// `Wishlist` on success. On failure, it converts the error into a `CommandError
+/// preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `id`: The identifier of the wishlist to retrieve.
+///
+/// Returns:
+/// - `Ok(Some(Wishlist))` when a matching wishlist exists,
+/// - `Ok(None)` when no matching row is found
+/// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_wishlist_by_id(
     state: tauri::State<'_, AppState>,
-    id: String,
+    id: WishlistId,
 ) -> Result<Option<Wishlist>, CommandError> {
+    info!("Fetching wishlist with ID: {}", id);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let wid = WishlistId::try_from(id.as_str())
-        .map_err(|e| CommandError::validation_field("id", e.to_string()))?;
-
-    let result = GetWishlistUseCase::execute(&mut unit_of_work, &wid).await?;
-
+    let result = GetWishlistUseCase::execute(&mut unit_of_work, &id).await?;
     unit_of_work.commit().await?;
 
     Ok(result)
 }
 
+/// Tauri command to retrieve all wishlists.
+///
+/// This handler constructs the repository and query handler, executes the query
+/// asynchronously and returns the list of `WishlistPreview` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+///
+/// Returns:
+/// - `Ok(Vec<WishlistPreview>)` when retrieval succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_wishlists(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<WishlistPreview>, CommandError> {
+    info!("Fetching all wishlists");
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let result = GetWishlistsUseCase::execute(&mut unit_of_work).await?;
-
     unit_of_work.commit().await?;
 
     Ok(result)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateWishlistInput {
-    pub name: String,
-    pub notes: Option<String>,
-    pub is_default: Option<bool>,
-}
-
+/// Tauri command to create a new wishlist.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the created `WishlistPreview` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: The input data required to create a new wishlist (`CreateWishlistInput`).
+///
+/// Returns:
+/// - `Ok(WishlistPreview)` when creation succeeds.
+/// - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_wishlist(
     state: tauri::State<'_, AppState>,
     input: CreateWishlistInput,
 ) -> Result<WishlistPreview, CommandError> {
+    info!("Creating wishlist: {:?}", input);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = CreateWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let preview = CreateWishlistUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    let preview = CreateWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(preview)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct RenameWishlistInput {
-    pub id: String,
-    pub name: String,
-}
-
+/// Tauri command to rename an existing wishlist.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns nothing on success. On failure, it converts the error
+/// into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: The input data required to rename a wishlist (`RenameWishlistInput`).
+///
+/// Returns:
+/// - `Ok(())` when renaming succeeds.
+/// - `Err(CommandError)` when validation fails, a database error occurs, or business logic
 #[tauri::command]
 #[specta::specta]
 pub async fn rename_wishlist(
     state: tauri::State<'_, AppState>,
     input: RenameWishlistInput,
 ) -> Result<(), CommandError> {
+    info!("Renaming wishlist: {:?}", input);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = RenameWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    RenameWishlistUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    RenameWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }
 
+/// Tauri command to delete a wishlist by its ID.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns nothing on success. On failure, it converts the error
+/// into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `id`: The identifier of the wishlist to delete.
+///
+/// Returns:
+/// - `Ok(())` when the deletion succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_wishlist(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<(), CommandError> {
+    info!("Deleting wishlist with ID: {}", id);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = DeleteWishlistCommand::try_from(id).map_err(CommandError::from)?;
 
-    DeleteWishlistUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    DeleteWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }
 
+/// Tauri command to set a wishlist as the default wishlist.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns nothing on success. On failure, it converts the error
+/// into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `id`: The identifier of the wishlist to set as default.
+///
+/// Returns:
+/// - `Ok(())` when the operation succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn set_default_wishlist(
     state: tauri::State<'_, AppState>,
     id: String,
 ) -> Result<(), CommandError> {
+    info!("Setting default wishlist with ID: {}", id);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = SetDefaultWishlistCommand::try_from(id).map_err(CommandError::from)?;
 
-    SetDefaultWishlistUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    SetDefaultWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct AddToWishlistInput {
-    pub wishlist_id: String,
-    pub railway_model_id: String,
-    pub priority: Option<WishlistPriority>,
-    pub status: Option<WishlistStatus>,
-    pub desired_price_amount: Option<i64>,
-    pub desired_price_currency: Option<String>,
-    pub notes: Option<String>,
-    pub added_date: Option<String>,
-}
-
+/// Tauri command to add an item to a wishlist.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the added `WishlistItem` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: The input data required to add an item to a wishlist (`AddToWishlistInput`).
+///
+/// Returns:
+/// - `Ok(WishlistItem)` when the addition succeeds.
+/// - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
 #[tauri::command]
 #[specta::specta]
 pub async fn add_to_wishlist(
     state: tauri::State<'_, AppState>,
     input: AddToWishlistInput,
 ) -> Result<WishlistItem, CommandError> {
+    info!("Adding item to wishlist: {:?}", input);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = AddToWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let item = AddToWishlistUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    let item = AddToWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(item)
 }
 
+/// Tauri command to remove an item from a wishlist.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns nothing on success. On failure, it converts the error
+/// into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `item_id`: The identifier of the wishlist item to remove.
+///
+/// Returns:
+/// - `Ok(())` when removal succeeds.   
+/// - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
 #[tauri::command]
 #[specta::specta]
 pub async fn remove_from_wishlist(
     state: tauri::State<'_, AppState>,
     item_id: String,
 ) -> Result<(), CommandError> {
+    info!("Removing item from wishlist with ID: {}", item_id);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = RemoveWishlistItemCommand::try_from(item_id).map_err(CommandError::from)?;
 
-    RemoveWishlistItemUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    RemoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct MoveWishlistItemInput {
-    pub item_id: String,
-    pub destination_wishlist_id: String,
-}
-
+/// Tauri command to move an item from one wishlist to another.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns nothing on success. On failure, it converts the error
+/// into a `CommandError` preserving the error message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: The input data required to move a wishlist item (`MoveWishlistItemInput`).
+///
+/// Returns:
+/// - `Ok(())` when the move succeeds.
+/// - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
 #[tauri::command]
 #[specta::specta]
 pub async fn move_item_to_list(
     state: tauri::State<'_, AppState>,
     input: MoveWishlistItemInput,
 ) -> Result<(), CommandError> {
+    info!("Moving wishlist item: {:?}", input);
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = MoveWishlistItemCommand::try_from(input).map_err(CommandError::from)?;
 
-    MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd)
-        .await
-        .map_err(CommandError::from)?;
+    MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await?;
 
-    unit_of_work
-        .commit()
-        .await
-        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }
