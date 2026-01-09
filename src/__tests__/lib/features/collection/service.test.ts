@@ -141,7 +141,8 @@ describe('CollectionService (Read-Only)', () => {
           product_code: '79894',
           description: 'BR 185 Electric Locomotive',
           scale: 'H0',
-          epoch: 'VI'
+          epoch: 'VI',
+          category: 'LOCOMOTIVES'
         },
         added_date: '2024-01-01',
         removed_date: null,
@@ -160,7 +161,8 @@ describe('CollectionService (Read-Only)', () => {
           product_code: '37712',
           description: 'ICE 3 High Speed Train',
           scale: 'H0',
-          epoch: 'VI'
+          epoch: 'VI',
+          category: 'TRAIN_SETS'
         },
         added_date: '2024-01-02',
         removed_date: null,
@@ -179,7 +181,8 @@ describe('CollectionService (Read-Only)', () => {
           product_code: '4170',
           description: 'Tank Wagon',
           scale: 'N',
-          epoch: 'IV'
+          epoch: 'IV',
+          category: 'FREIGHT_CARS'
         },
         added_date: '2024-01-03',
         removed_date: null,

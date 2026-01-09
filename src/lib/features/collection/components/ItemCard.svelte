@@ -2,7 +2,18 @@
   import { fade } from 'svelte/transition';
   import { PencilLine, Trash2 } from 'lucide-svelte';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
-  import type { CollectionItemLite } from '$lib/bindings';
+  // Local lightweight type used by the card UI.
+  type CollectionItemLite = {
+    id: string;
+    brand?: string | null;
+    catalogNumber?: string | null;
+    title?: string | null;
+    scale?: string | null;
+    powerSystem?: string | null;
+    description?: string | null;
+    tags?: string[] | null;
+    createdAt?: string | null;
+  };
 
   const { item, onEdit, onDelete } = $props<{
     item: CollectionItemLite;

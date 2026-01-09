@@ -3,11 +3,29 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { collectionService, availableScales } from './service.svelte';
-  import type {
-    CollectionItemLite,
-    CollectionSummary as CollectionSummaryType,
-    CreateCollectionItemInput
-  } from '$lib/bindings';
+  import type { CollectionSummary as CollectionSummaryType } from '$lib/bindings';
+  // Local lightweight types used by the collection UI.
+  type CollectionItemLite = {
+    id: string;
+    brand?: string | null;
+    catalogNumber?: string | null;
+    title?: string | null;
+    scale?: string | null;
+    powerSystem?: string | null;
+    description?: string | null;
+    tags?: string[] | null;
+    createdAt?: string | null;
+  };
+
+  type CreateCollectionItemInput = {
+    brand: string;
+    catalogNumber: string;
+    title: string;
+    scale: string;
+    powerSystem: string;
+    description: string;
+    tags: string[];
+  };
   import ItemCard from './components/ItemCard.svelte';
   import FilterSidebar from './components/FilterSidebar.svelte';
   import ItemDrawer from './components/ItemDrawer.svelte';
@@ -70,7 +88,8 @@
     freight_cars_count: 0,
     train_sets_count: 0,
     railcars_count: 0,
-    electric_multiple_units_count: 0
+    electric_multiple_units_count: 0,
+    starter_sets_count: 0
   });
   const summaryData = $derived(defaultSummary);
   const totalValue = $state('--');

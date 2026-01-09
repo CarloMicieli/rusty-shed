@@ -8,7 +8,7 @@
   import CarCard from '$lib/features/depot/components/CarCard.svelte';
   import type { Car, Locomotive, TrainSet } from '$lib/features/depot/types';
   import { safeInvoke, getErrorMessage } from '$lib/services';
-  import type { Collection, RailwayModel, RollingStock } from '$lib/bindings';
+  import type { CollectionView as Collection, RailwayModel, RollingStock } from '$lib/bindings';
   import { debounce } from '$lib/utils/debounce';
 
   let loading = $state(true);
@@ -173,7 +173,7 @@
     };
 
     for (const item of collection.items) {
-      const model = modelMap.get(item.railway_model_id);
+      const model = modelMap.get(item.railway_model.railway_model_id);
       if (!model) continue;
 
       for (const owned of item.rolling_stocks) {
@@ -207,7 +207,9 @@
       }
 
       const collection = collectionResult.data;
-      const modelIds = Array.from(new Set(collection.items.map((item) => item.railway_model_id)));
+      const modelIds = Array.from(
+        new Set(collection.items.map((item) => item.railway_model.railway_model_id))
+      );
 
       if (modelIds.length === 0) {
         return;

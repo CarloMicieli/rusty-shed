@@ -1,6 +1,27 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
-  import type { CollectionItemLite, CreateCollectionItemInput } from '$lib/bindings';
+  // Local lightweight types matching expected shape used by this UI.
+  type CollectionItemLite = {
+    id: string;
+    brand?: string | null;
+    catalogNumber?: string | null;
+    title?: string | null;
+    scale?: string | null;
+    powerSystem?: string | null;
+    description?: string | null;
+    tags?: string[] | null;
+    createdAt?: string | null;
+  };
+
+  type CreateCollectionItemInput = {
+    brand: string;
+    catalogNumber: string;
+    title: string;
+    scale: string;
+    powerSystem: string;
+    description: string;
+    tags: string[];
+  };
 
   type ScaleOption = { id: string; display: string };
 

@@ -81,7 +81,7 @@ export class CollectionService {
     return this.#isLoading;
   }
 
-  fetchCollection = async () => {
+  fetchCollection = async (_query?: string) => {
     this.#isLoading = true;
 
     try {
@@ -132,6 +132,21 @@ export class CollectionService {
     // TODO: Implement when delete_collection_item command is available
   };
   */
+  // Placeholder CRUD methods (no-op) so UI can call them safely until backend is implemented
+  createItem = async (input: unknown) => {
+    console.warn('createItem not implemented yet', input);
+    return null;
+  };
+
+  updateItem = async (input: unknown) => {
+    console.warn('updateItem not implemented yet', input);
+    return null;
+  };
+
+  deleteItem = async (id: string) => {
+    console.warn('deleteItem not implemented yet', id);
+    return null;
+  };
 }
 
 export const collectionService = new CollectionService();
