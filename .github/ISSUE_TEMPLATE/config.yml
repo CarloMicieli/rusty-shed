@@ -1,8 +1,10 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Security
+    url: ../SECURITY.md
+    about: 'Guidance for reporting security vulnerabilities (private).'
   - name: Maintainers
-    url: https://github.com/orgs/your-org/teams/maintainers
-    about: Use this link to notify maintainers about sensitive issues (security, PII)
+    url: https://github.com/your-org/your-team
+    about: Use this link to notify maintainers about non-sensitive issues
 
 # optional: issue forms can be configured here in the future
-
