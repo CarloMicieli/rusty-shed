@@ -13,11 +13,24 @@
   import { safeInvoke } from '$lib/services';
 
   let loading = $state(true);
+  let error = $state<string | null>(null);
   let { children } = $props();
 
   onMount(async () => {
-    // Run native DB init before showing the main window
+    // 1. Show main window immediately so the user sees *something* (loading state)
+    // We don't block on this failing, but log it if it does.
+    safeInvoke<void>('show_main_window').then((res) => {
+      if (!res.ok) console.warn('Failed to show main window:', res.error);
+    });
+
     try {
+      // 2. Fetch app version (non-critical, but good to have early)
+      const versionResult = await safeInvoke<string>('get_app_version');
+      if (versionResult.ok) {
+        setAppVersion(versionResult.data);
+      }
+
+      // 3. Initialize Database (Critical)
       const initResult = await safeInvoke<void>('init_database');
       if (!initResult.ok) {
         const message =
@@ -25,35 +38,40 @@
         throw new Error(message);
       }
 
-      const showResult = await safeInvoke<void>('show_main_window');
-      if (!showResult.ok) {
-        const message =
-          showResult.error?.message ?? String(showResult.error ?? 'Failed to show main window');
-        throw new Error(message);
-      }
+      // 4. Preload data (only if DB is ready)
+      await Promise.all([collectionService.fetchCollection(), wishlistService.fetchWishlists()]);
     } catch (err) {
       console.error('Startup failed', err);
+      // Capture the error to show in the UI
+      error = err instanceof Error ? err.message : String(err);
     } finally {
       loading = false;
-    }
-
-    // Preload collection for nav badges
-    void collectionService.fetchCollection();
-    void wishlistService.fetchWishlists();
-
-    // Fetch app version using service layer
-    try {
-      const result = await safeInvoke<string>('get_app_version');
-      if (result.ok) {
-        setAppVersion(result.data);
-      }
-    } catch {
-      // Ignore version fetch errors silently
     }
   });
 </script>
 
-{#if loading}
+{#if error}
+  <div
+    class="bg-background flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans text-surface-50 selection:bg-primary-500/30"
+    in:fade
+  >
+    <div class="flex max-w-md flex-col items-center gap-6 p-6 text-center">
+      <div class="mb-2 flex items-center gap-3">
+        <TrainFront class="text-error-500" size={48} />
+      </div>
+      <h1 class="h2 font-bold text-error-500">Startup Failed</h1>
+      <p class="text-surface-200">The application could not start correctly.</p>
+      <div
+        class="max-h-48 w-full overflow-auto rounded border border-error-500/30 bg-surface-800/50 p-4 text-left font-mono text-xs"
+      >
+        {error}
+      </div>
+      <p class="text-sm text-surface-400">
+        Please check your database connection or logs for more details.
+      </p>
+    </div>
+  </div>
+{:else if loading}
   <div
     class="bg-background flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans text-surface-50 selection:bg-primary-500/30"
     in:fade
