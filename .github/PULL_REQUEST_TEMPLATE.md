@@ -1,9 +1,11 @@
 <!-- Please use this template for PRs. Start the title with a Conventional Commit-style summary. -->
 
 ## Summary
+
 Short description of what this PR changes.
 
 ## Type of change
+
 - [ ] feat
 - [ ] fix
 - [ ] docs
@@ -16,18 +18,23 @@ Short description of what this PR changes.
 - [ ] chore
 
 ## Related issues
+
 Closes # (issue number) or relate to other issues.
 
 ## Changes
+
 Describe the main changes and any important implementation notes.
 
 ## How to test / QA steps
+
 Provide step-by-step instructions to verify the changes locally.
 
 ## Screenshots or recordings
+
 If applicable, add screenshots to help reviewers.
 
 ## Checklist (required before merging)
+
 - Local tests & checks
   - [ ] I ran `pnpm install` and `pnpm check`
   - [ ] I ran `pnpm lint` and fixed lint issues
@@ -45,10 +52,11 @@ If applicable, add screenshots to help reviewers.
   - [ ] I linked related issues and added labels where relevant
 
 ## Reviewer notes
+
 Anything in particular reviewers should look at or test.
 
-
 Conventional commit examples for PR title:
+
 - feat(ui): add model details panel
 - fix: correct date parsing in exporter
 - docs: update contributing guide

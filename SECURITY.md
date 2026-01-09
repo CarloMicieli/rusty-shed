@@ -10,6 +10,7 @@ Preferred channels (in order):
 2. Email: send a report to `security@rusty-shed.io`. If possible, encrypt the message with the PGP key below.
 
 When reporting, please include:
+
 - Repository name and affected package(s) and version(s)
 - A clear description of the vulnerability and its impact
 - Steps to reproduce (minimal proof-of-concept if possible)
@@ -48,6 +49,4 @@ We will publish a security advisory on GitHub and a short disclosure note in the
 - Security contact: `security@rusty-shed.io`
 - For non-security issues, use regular issues or feature requests.
 
-
 _Last updated: 2026-01-09_
-

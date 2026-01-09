@@ -59,6 +59,7 @@ This project follows Conventional Commits. Commit messages should follow the for
 Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`.
 
 A few examples:
+
 - `feat(ui): add model details panel`
 - `fix: correct date parsing in exporter`
 - `docs: update contributing guide`
