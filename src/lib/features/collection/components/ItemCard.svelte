@@ -2,26 +2,15 @@
   import { fade } from 'svelte/transition';
   import { PencilLine, Trash2 } from 'lucide-svelte';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
-  // Local lightweight type used by the card UI.
-  type CollectionItemLite = {
-    id: string;
-    brand?: string | null;
-    catalogNumber?: string | null;
-    title?: string | null;
-    scale?: string | null;
-    powerSystem?: string | null;
-    description?: string | null;
-    tags?: string[] | null;
-    createdAt?: string | null;
-  };
+  import type { CollectionItemView } from '$lib/bindings';
 
   const { item, onEdit, onDelete } = $props<{
-    item: CollectionItemLite;
-    onEdit?: (item: CollectionItemLite) => void;
+    item: CollectionItemView;
+    onEdit?: (item: CollectionItemView) => void;
     onDelete?: (id: string) => void;
   }>();
 
-  const primaryTag = $derived(item.tags?.[0] ?? 'default');
+  const primaryTag = 'default';
   const PrimaryIcon = $derived(tagIcon(primaryTag));
 
   function handleEdit() {
@@ -62,9 +51,9 @@
     <div class="flex items-start justify-between gap-2">
       <div>
         <p class="text-xs tracking-[0.18em] text-surface-500 uppercase">
-          {item.brand} • {item.catalogNumber}
+          {item.railway_model.manufacturer} • {item.railway_model.product_code}
         </p>
-        <h3 class="text-lg leading-tight font-semibold">{item.title}</h3>
+        <h3 class="text-lg leading-tight font-semibold">{item.railway_model.description}</h3>
       </div>
       <div class="flex gap-2 opacity-0 transition group-hover:opacity-100">
         <button class="variant-soft-surface btn-icon btn btn-icon-sm" onclick={handleEdit}>
@@ -77,22 +66,14 @@
     </div>
 
     <div class="flex flex-wrap gap-2 text-xs text-surface-400">
-      <span class="variant-soft-surface badge">{item.scale}</span>
-      <span class="variant-soft-surface badge">{item.powerSystem}</span>
-      <span class="variant-soft-surface badge">{new Date(item.createdAt).toLocaleDateString()}</span
+      <span class="variant-soft-surface badge">{item.railway_model.scale}</span>
+      <span class="variant-soft-surface badge"
+        >{new Date(item.added_date).toLocaleDateString()}</span
       >
     </div>
 
-    {#if item.description}
-      <p class="line-clamp-2 text-sm text-surface-300">{item.description}</p>
-    {/if}
-
-    {#if item.tags?.length}
-      <div class="flex flex-wrap gap-2">
-        {#each item.tags as tag (tag)}
-          {@render TagBadge(tag)}
-        {/each}
-      </div>
+    {#if item.notes}
+      <p class="line-clamp-2 text-sm text-surface-300">{item.notes}</p>
     {/if}
   </div>
 </article>

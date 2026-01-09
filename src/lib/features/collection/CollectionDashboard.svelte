@@ -3,19 +3,11 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { collectionService, availableScales } from './service.svelte';
-  import type { CollectionSummary as CollectionSummaryType } from '$lib/bindings';
-  // Local lightweight types used by the collection UI.
-  type CollectionItemLite = {
-    id: string;
-    brand?: string | null;
-    catalogNumber?: string | null;
-    title?: string | null;
-    scale?: string | null;
-    powerSystem?: string | null;
-    description?: string | null;
-    tags?: string[] | null;
-    createdAt?: string | null;
-  };
+
+  import type {
+    CollectionSummary as CollectionSummaryType,
+    CollectionItemView
+  } from '$lib/bindings';
 
   type CreateCollectionItemInput = {
     brand: string;
@@ -36,7 +28,7 @@
 
   function useCollectionUI() {
     let showDrawer = $state(false);
-    let editing = $state<CollectionItemLite | null>(null);
+    let editing = $state<CollectionItemView | null>(null);
     let confirmDeleteId = $state<string | null>(null);
 
     const startCreate = () => {
@@ -44,7 +36,7 @@
       showDrawer = true;
     };
 
-    const edit = (item: CollectionItemLite) => {
+    const edit = (item: CollectionItemView) => {
       editing = item;
       showDrawer = true;
     };
@@ -91,8 +83,15 @@
     electric_multiple_units_count: 0,
     starter_sets_count: 0
   });
-  const summaryData = $derived(defaultSummary);
-  const totalValue = $state('--');
+  const summaryData = $derived(collectionService.summary ?? defaultSummary);
+  const totalValue = $derived(
+    collectionService.collection?.total_value
+      ? new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: collectionService.collection.total_value.currency
+        }).format(Number(collectionService.collection.total_value.amount) / 100)
+      : '--'
+  );
 
   const rawItems = $derived(collectionService.rawItems);
   const filteredItems = $derived(collectionService.filteredItems);

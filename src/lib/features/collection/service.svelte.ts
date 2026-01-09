@@ -55,8 +55,12 @@ export class CollectionService {
       if (scale && item.railway_model.scale !== scale) return false;
       // Tag filtering will be added when backend supports it
       if (q) {
+        const manufacturer =
+          typeof item.railway_model.manufacturer === 'object'
+            ? (item.railway_model.manufacturer as any).name
+            : item.railway_model.manufacturer;
         const haystack =
-          `${item.railway_model.manufacturer} ${item.railway_model.product_code} ${item.railway_model.description}`.toLowerCase();
+          `${manufacturer} ${item.railway_model.product_code} ${item.railway_model.description}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
@@ -64,6 +68,10 @@ export class CollectionService {
   });
 
   totalCount = $derived(this.#collection?.items.length ?? 0);
+
+  get summary() {
+    return this.#collection?.summary;
+  }
 
   get collection() {
     return this.#collection;

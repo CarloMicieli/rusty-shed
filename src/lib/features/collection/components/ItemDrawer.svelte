@@ -1,17 +1,6 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
-  // Local lightweight types matching expected shape used by this UI.
-  type CollectionItemLite = {
-    id: string;
-    brand?: string | null;
-    catalogNumber?: string | null;
-    title?: string | null;
-    scale?: string | null;
-    powerSystem?: string | null;
-    description?: string | null;
-    tags?: string[] | null;
-    createdAt?: string | null;
-  };
+  import type { CollectionItemView } from '$lib/bindings';
 
   type CreateCollectionItemInput = {
     brand: string;
@@ -27,7 +16,7 @@
 
   const { open, editing, availableScales, onClose, onSubmit } = $props<{
     open: boolean;
-    editing: CollectionItemLite | null;
+    editing: CollectionItemView | null;
     availableScales: ScaleOption[];
     onClose?: () => void;
     onSubmit?: (detail: { form: CreateCollectionItemInput; editingId: string | null }) => void;
@@ -49,13 +38,13 @@
     if (!open) return;
     form = editing
       ? {
-          brand: editing.brand,
-          catalogNumber: editing.catalogNumber,
-          title: editing.title,
-          scale: editing.scale,
-          powerSystem: editing.powerSystem,
-          description: editing.description ?? '',
-          tags: editing.tags ?? []
+          brand: editing.railway_model.manufacturer,
+          catalogNumber: editing.railway_model.product_code,
+          title: editing.railway_model.description,
+          scale: editing.railway_model.scale,
+          powerSystem: 'DC', // Placeholder
+          description: editing.railway_model.description,
+          tags: []
         }
       : { ...blankForm };
   });
