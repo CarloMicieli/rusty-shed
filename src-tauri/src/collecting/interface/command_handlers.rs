@@ -9,7 +9,7 @@ use crate::collecting::interface::{AddCollectionItemInput, RemoveCollectionItemI
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use chrono::NaiveDate;
-use log::{debug, info};
+use log::info;
 use std::convert::TryFrom;
 
 /// Tauri command to retrieve the current collection.
@@ -36,8 +36,6 @@ pub async fn get_collection(
 
     let collection = GetCollectionQuery::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    debug!("Collection: {:?}", collection);
     
     Ok(collection)
 }
