@@ -1,7 +1,4 @@
 <script>
-  import { redirect } from '@sveltejs/kit';
-
-  export function load() {
-    throw redirect(307, '/my-dashboard');
-  }
+  // Root page intentionally left blank; redirect handled server-side in +page.server.ts
 </script>
+
