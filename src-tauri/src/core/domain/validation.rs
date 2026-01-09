@@ -2,6 +2,7 @@ use crate::core::domain::domain_error::DomainError;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 /// A validation error returned by application use-cases.
 ///
@@ -90,6 +91,67 @@ impl ValidationContext {
         } else {
             Err(DomainError::ValidationError(self.errors))
         }
+    }
+
+    /// Convenience: try to parse an optional string into T using FromStr.
+    /// If `value` is Some and parse fails, records an error and returns None.
+    pub fn validate_opt_parse<T>(&mut self, field: &str, value: Option<String>) -> Option<T>
+    where
+        T: FromStr,
+        <T as FromStr>::Err: ToString,
+    {
+        value.and_then(|s| self.collect(field, s.parse::<T>()))
+    }
+
+    /// Convenience: try to parse a required string into T using FromStr.
+    /// Records an error on failure and returns None.
+    pub fn validate_parse<T>(&mut self, field: &str, value: String) -> Option<T>
+    where
+        T: FromStr,
+        <T as FromStr>::Err: ToString,
+    {
+        self.collect(field, value.parse::<T>())
+    }
+
+    /// Convenience: try to convert a required string into T using TryFrom<&str>.
+    /// Records an error on failure and returns None.
+    pub fn validate_try_from<T>(&mut self, field: &str, value: String) -> Option<T>
+    where
+        for<'a> T: TryFrom<&'a str>,
+        for<'a> <T as TryFrom<&'a str>>::Error: ToString,
+    {
+        match T::try_from(value.as_str()) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                self.push_error(field, "invalid_format", e.to_string());
+                None
+            }
+        }
+    }
+
+    /// Convenience: try to convert an optional string into T using TryFrom<&str>.
+    pub fn validate_opt_try_from<T>(&mut self, field: &str, value: Option<String>) -> Option<T>
+    where
+        for<'a> T: TryFrom<&'a str>,
+        for<'a> <T as TryFrom<&'a str>>::Error: ToString,
+    {
+        value.and_then(|s| self.validate_try_from::<T>(field, s))
+    }
+
+    /// Convenience: parse a vector of strings into Vec<T> using TryFrom<&str>, collecting
+    /// successes and pushing per-item errors into the context.
+    pub fn validate_vec_try_from<T>(&mut self, field: &str, values: Vec<String>) -> Vec<T>
+    where
+        for<'a> T: TryFrom<&'a str>,
+        for<'a> <T as TryFrom<&'a str>>::Error: ToString,
+    {
+        let mut out = Vec::with_capacity(values.len());
+        for v in values.into_iter() {
+            if let Some(parsed) = self.validate_try_from::<T>(field, v) {
+                out.push(parsed);
+            }
+        }
+        out
     }
 }
 

@@ -1,13 +1,15 @@
 use crate::catalog::domain::railway_model::Category;
-use crate::collecting::application::GetCollectionQuery;
-use crate::collecting::application::RemoveCollectionItemCommand;
+use crate::collecting::application::{
+    AddCollectionItemCommand, GetCollectionQuery, RemoveCollectionItemCommand,
+};
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::RemoveCollectionItem;
-use crate::collecting::domain::{CollectionView, DepotView};
+use crate::collecting::domain::{AddCollectionItem, CollectionView, DepotView};
+use crate::collecting::interface::{AddCollectionItemInput, RemoveCollectionItemInput};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use chrono::NaiveDate;
-use serde::Deserialize;
+use std::convert::TryFrom;
 
 /// Tauri command to retrieve the current collection.
 ///
@@ -60,8 +62,8 @@ pub async fn get_collection(
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<DepotView, CommandError> {
-    let mut unit_of_work = _state.unit_of_work().await?;
+pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, CommandError> {
+    let mut unit_of_work = state.unit_of_work().await?;
 
     match crate::collecting::application::GetDepotQuery::execute(&mut unit_of_work).await {
         Ok(depot) => {
@@ -76,13 +78,20 @@ pub async fn get_depot(_state: tauri::State<'_, AppState>) -> Result<DepotView, 
     }
 }
 
-#[derive(Deserialize, specta::Type)]
-pub struct RemoveCollectionItemInput {
-    pub collection_item_id: String,
-    pub category: String,
-    pub removed_date: String,
-}
-
+/// Tauri command to remove an item from the collection.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the updated `CollectionView` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// - `state`: Tauri-managed application state which provides a database pool.
+/// - `input`: Input parameters for removing the collection item.
+///
+/// Returns:
+/// - `Ok(CollectionView)` when removal succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn remove_collection_item(
@@ -109,6 +118,44 @@ pub async fn remove_collection_item(
     let mut unit_of_work = state.unit_of_work().await?;
 
     match RemoveCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await {
+        Ok(view) => {
+            unit_of_work
+                .commit()
+                .await
+                .map_err(|err| CommandError::DatabaseError(err.to_string()))?;
+
+            Ok(view)
+        }
+        Err(e) => Err(e.into()),
+    }
+}
+
+/// Tauri command to add a new item to the collection.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the updated `CollectionView` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// - `state`: Tauri-managed application state which provides a database pool.
+/// - `input`: Input parameters for adding the collection item.
+///
+/// Returns:
+/// - `Ok(CollectionView)` when addition succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
+#[tauri::command]
+#[specta::specta]
+pub async fn add_collection_item(
+    state: tauri::State<'_, AppState>,
+    input: AddCollectionItemInput,
+) -> Result<CollectionView, CommandError> {
+    // Strict validation happens in TryFrom implementation for the domain type
+    let domain_cmd = AddCollectionItem::try_from(input).map_err(CommandError::from)?;
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    match AddCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await {
         Ok(view) => {
             unit_of_work
                 .commit()

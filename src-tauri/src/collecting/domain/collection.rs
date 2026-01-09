@@ -45,8 +45,9 @@ pub struct Collection {
 }
 
 impl Collection {
+    /// Returns the total number of items in the collection.
     pub fn size(&self) -> u16 {
-        self.summary.train_sets_count
+        self.items.len() as u16
     }
 
     /// Add a new item to the collection, updating summary and total value.

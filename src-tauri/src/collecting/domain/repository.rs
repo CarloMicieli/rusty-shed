@@ -27,5 +27,7 @@ pub trait CollectionRepository: Send + Sync {
 
     /// Retrieves a `DepotView` representation listing owned rolling stocks
     /// suitable for the UI depot listing.
+    ///
+    /// Returns a `DepotView` on success or a `DomainError` on failure.
     async fn find_depot_view(&mut self) -> Result<DepotView, DomainError>;
 }
