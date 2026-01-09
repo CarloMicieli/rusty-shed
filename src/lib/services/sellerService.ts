@@ -38,7 +38,7 @@ export async function updateSeller(form: FormSeller): Promise<CmdResult<FormSell
   return res as unknown as CmdResult<FormSeller, CommandError>;
 }
 
-export async function deleteSeller(id: string): Promise<CmdResult<bigint, CommandError>> {
+export async function deleteSeller(id: string): Promise<CmdResult<null, CommandError>> {
   return await commands.deleteSeller(id);
 }
 
