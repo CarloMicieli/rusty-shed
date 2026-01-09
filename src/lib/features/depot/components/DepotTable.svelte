@@ -1,0 +1,178 @@
+<script lang="ts" generics="T extends { id: string }">
+  import type { Component } from 'svelte';
+  import * as m from '$lib/paraglide/messages.js';
+
+  let {
+    title,
+    items,
+    icon: Icon,
+    type,
+    toneClass = 'variant-filled-surface',
+    stickyOffset = 'var(--header-offset, 4rem)',
+    emptyMessage
+  }: {
+    title: string;
+    items: T[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    icon: Component<any> | any;
+    type: 'locomotive' | 'train' | 'car';
+    toneClass?: string;
+    stickyOffset?: string;
+    emptyMessage: string;
+  } = $props();
+
+  let viewAll = $state(false);
+  const visibleItems = $derived(viewAll || items.length <= 100 ? items : items.slice(0, 100));
+  const hasOverflow = $derived(!viewAll && items.length > 100);
+
+  // Helper to safely access properties that might differ between types
+  function getItemProps(item: T) {
+    const it = item as unknown as Record<string, unknown>;
+    const str = (v: unknown) => (v === undefined || v === null ? '-' : String(v));
+    return {
+      productCode: str(it.productCode ?? it.product_code ?? '-'),
+      model: str(it.group ?? it.type ?? '-'),
+      manufacturer: str(it.manufacturer ?? '-'),
+      series: str(it.seriesCode ?? it.series_code ?? '-'),
+      category: str(it.categoryLabel ?? it.category_label ?? '-'),
+      roadNumber: str(it.roadNumber ?? it.road_number ?? '-'),
+      railway: str(it.railwayCompany ?? it.railway_company ?? '-'),
+      livery: str(it.livery ?? '-'),
+      control: str(it.control ?? '-'),
+      serviceLevel: str(it.serviceLevel ?? '-')
+    };
+  }
+
+  // Table headers based on type
+  const headers = $derived.by(() => {
+    const base = [
+      { label: 'Manufacturer', class: 'hidden sm:table-cell w-32' },
+      { label: 'Category', class: 'hidden lg:table-cell w-32' },
+      { label: 'Product code', class: 'w-full' },
+      { label: 'Series', class: 'hidden xl:table-cell w-24' },
+      { label: 'Railway', class: 'hidden sm:table-cell w-32' },
+      { label: 'Road #', class: 'hidden md:table-cell w-24' }
+    ];
+
+    // Add specific columns
+    if (type === 'car') {
+      base.push({ label: 'Service', class: 'hidden lg:table-cell w-24' });
+    } else {
+      // Control for locos/trains
+      base.push({ label: 'Control', class: 'hidden lg:table-cell w-24 text-center' });
+    }
+
+    // Livery is always nice if space permits
+    base.push({ label: 'Livery', class: 'hidden 2xl:table-cell w-32' });
+
+    return base;
+  });
+</script>
+
+<section class="space-y-2 pt-2">
+  <div
+    class="sticky z-10 border-b border-surface-500/10 bg-surface-50/80 backdrop-blur-sm"
+    style:top={stickyOffset}
+  >
+    <div class="flex items-center gap-3 rounded-lg px-2 py-2">
+      <span class="badge {toneClass} flex items-center justify-center p-1.5">
+        {#if Icon}
+          <Icon size={16} />
+        {/if}
+      </span>
+      <div class="flex items-center gap-2">
+        <h2 class="text-lg font-semibold tracking-tight">{title}</h2>
+        <span class="variant-soft-surface badge font-mono text-xs">{items.length}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    {#if items.length === 0}
+      <div class="rounded-xl border border-dashed border-surface-500/20 p-8 text-center">
+        <p class="text-sm text-surface-500">{emptyMessage}</p>
+      </div>
+    {:else}
+      <div
+        class="table-container overflow-hidden rounded-xl border border-surface-500/10 bg-surface-900/40"
+      >
+        <table class="table-hover table-compact table w-full">
+          <thead class="bg-surface-900/60 font-medium text-surface-400">
+            <tr>
+              {#each headers as col (col.label)}
+                <th class={col.class}>{col.label}</th>
+              {/each}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-500/10">
+            {#each visibleItems as item (item.id)}
+              {@const props = getItemProps(item)}
+              <tr class="group">
+                <td class="hidden align-middle text-surface-300 sm:table-cell">
+                  {props.manufacturer}
+                </td>
+                <td
+                  class="hidden align-middle text-xs tracking-wide text-surface-400 uppercase lg:table-cell"
+                >
+                  {props.category}
+                </td>
+                <td class="align-middle font-medium text-surface-200">
+                  <div class="font-mono text-sm">{props.productCode}</div>
+                  <!-- Mobile-only details -->
+                  <div class="mt-0.5 space-x-1 text-xs font-normal text-surface-400 sm:hidden">
+                    <span>{props.manufacturer}</span>
+                    {#if props.railway !== '-'}<span>• {props.railway}</span>{/if}
+                    {#if props.roadNumber !== '-'}<span>• {props.roadNumber}</span>{/if}
+                  </div>
+                </td>
+                <td class="hidden align-middle text-sm text-surface-400 xl:table-cell">
+                  {props.series}
+                </td>
+                <td class="hidden align-middle text-surface-300 sm:table-cell">
+                  {props.railway}
+                </td>
+                <td class="hidden align-middle font-mono text-sm text-surface-300 md:table-cell">
+                  {props.roadNumber}
+                </td>
+                {#if type === 'car'}
+                  <td class="hidden align-middle text-sm text-surface-400 lg:table-cell">
+                    {props.serviceLevel}
+                  </td>
+                {:else}
+                  <td class="hidden text-center align-middle lg:table-cell">
+                    {#if props.control !== '-'}
+                      <span
+                        class="variant-soft-secondary badge max-w-[120px] truncate font-mono text-xs"
+                        title={props.control}>{props.control}</span
+                      >
+                    {:else}
+                      <span class="text-surface-500">-</span>
+                    {/if}
+                  </td>
+                {/if}
+                <td class="hidden align-middle text-sm text-surface-400 2xl:table-cell">
+                  {props.livery}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+
+      {#if hasOverflow}
+        <div
+          class="flex flex-wrap items-center justify-between gap-2 border-t border-surface-500/10 pt-4 text-xs text-surface-400"
+        >
+          <p>{m.depot_overflow_note({ showing: 100, total: items.length })}</p>
+          <button
+            type="button"
+            class="variant-ghost-primary btn btn-sm"
+            onclick={() => (viewAll = true)}
+          >
+            {m.depot_view_all()}
+          </button>
+        </div>
+      {/if}
+    {/if}
+  </div>
+</section>

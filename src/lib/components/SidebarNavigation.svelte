@@ -5,9 +5,12 @@
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
   import { appVersion } from '$lib/stores/app';
-  import { collectionService } from '$lib/features/collection/service.svelte';
-  import { wishlistService } from '$lib/features/wishlists/service.svelte';
+  import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
+  import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { localeStore } from '$lib/stores/locale';
+
+  const collectionService = getCollectionContext();
+  const wishlistService = getWishlistContext();
 
   const totalCount = $derived(collectionService.totalCount);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);

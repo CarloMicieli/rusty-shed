@@ -22,7 +22,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   collection_toast_retry: () => 'Retry'
 }));
 
-import { wishlistService } from '$lib/features/wishlists/service.svelte';
+import { createWishlistState } from '$lib/features/wishlists/WishlistState.svelte';
 import { invoke, type InvokeArgs } from '@tauri-apps/api/core';
 
 const mockInvoke = vi.mocked(invoke);
@@ -67,17 +67,15 @@ const tauriMock = {
   }
 };
 
-describe('WishlistService', () => {
+describe('WishlistState', () => {
+  let wishlistService: ReturnType<typeof createWishlistState>;
+
   beforeEach(async () => {
+    wishlistService = createWishlistState();
     tauriMock.reset();
     vi.clearAllMocks();
     tauriMock.mockCommand('get_wishlists', []);
-    // Reset state
-    // We can't access private fields to reset, but fetching empty list helps?
-    // BUT WishlistService state relies on wishlists array.
-    // We should probably rely on `createWishlistService` if we want fresh instances,
-    // but the app uses singleton.
-    // For now, mock empty fetch to clear state if possible.
+    // Reset state by fetching empty list
     await wishlistService.fetchWishlists();
   });
 

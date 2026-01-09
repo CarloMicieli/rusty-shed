@@ -1,10 +1,12 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
-  import { wishlistService } from './service.svelte';
+  import { getWishlistContext } from './WishlistState.svelte';
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
+
+  const wishlistService = getWishlistContext();
 
   const wishlists = $derived(wishlistService.wishlists);
   const activeWishlist = $derived(wishlistService.activeWishlist);

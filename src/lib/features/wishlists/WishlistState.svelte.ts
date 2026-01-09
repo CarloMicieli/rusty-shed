@@ -1,3 +1,4 @@
+import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
 import type { Wishlist, WishlistItem, WishlistPreview } from '$lib/bindings';
@@ -39,7 +40,7 @@ function toastError(id: string, message?: string, retry?: () => void) {
   });
 }
 
-export class WishlistService {
+export class WishlistState {
   #wishlists = $state<WishlistPreview[]>([]);
   #itemsByWishlist = $state<Record<string, WishlistItem[]>>({});
   #activeWishlistId = $state<string | null>(null);
@@ -411,6 +412,22 @@ export class WishlistService {
   }
 }
 
-export const createWishlistService = () => new WishlistService();
+const WISHLIST_CONTEXT_KEY = Symbol('wishlist-context');
 
-export const wishlistService = createWishlistService();
+export function createWishlistState() {
+  return new WishlistState();
+}
+
+export function setWishlistContext(state: WishlistState) {
+  setContext(WISHLIST_CONTEXT_KEY, state);
+}
+
+export function getWishlistContext(): WishlistState {
+  const state = getContext<WishlistState>(WISHLIST_CONTEXT_KEY);
+  if (!state) {
+    throw new Error(
+      'WishlistContext not provided. Ensure component is within a WishlistContext provider.'
+    );
+  }
+  return state;
+}

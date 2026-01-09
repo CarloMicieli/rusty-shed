@@ -1,3 +1,4 @@
+import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import { safeInvoke, getErrorMessage } from '$lib/services';
 import type { DashboardSummary, QueryParams } from '$lib/bindings';
@@ -12,9 +13,9 @@ function toastError(message?: string) {
 }
 
 /**
- * Loads dashboard data and handles state transitions
+ * DashboardState loads dashboard data and handles state transitions
  */
-export class DashboardService {
+export class DashboardState {
   // 1. Reactive State
   #data = $state<DashboardSummary | null>(null);
   #isLoading = $state(false);
@@ -69,5 +70,22 @@ export class DashboardService {
   }
 }
 
-// Export a single instance to be used across the app
-export const dashboardService = new DashboardService();
+const DASHBOARD_CONTEXT_KEY = Symbol('dashboard-context');
+
+export function createDashboardState() {
+  return new DashboardState();
+}
+
+export function setDashboardContext(state: DashboardState) {
+  setContext(DASHBOARD_CONTEXT_KEY, state);
+}
+
+export function getDashboardContext(): DashboardState {
+  const state = getContext<DashboardState>(DASHBOARD_CONTEXT_KEY);
+  if (!state) {
+    throw new Error(
+      'DashboardContext not provided. Ensure component is within a DashboardContext provider.'
+    );
+  }
+  return state;
+}

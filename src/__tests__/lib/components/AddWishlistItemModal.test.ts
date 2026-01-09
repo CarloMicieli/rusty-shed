@@ -42,25 +42,24 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }));
 
 let activeService: ReturnType<
-  typeof import('$lib/features/wishlists/service.svelte').createWishlistService
+  typeof import('$lib/features/wishlists/WishlistState.svelte').createWishlistState
 >;
 
-vi.mock('$lib/features/wishlists/service.svelte', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('$lib/features/wishlists/service.svelte')>();
+vi.mock('$lib/features/wishlists/WishlistState.svelte', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('$lib/features/wishlists/WishlistState.svelte')>();
   return {
     ...actual,
-    get wishlistService() {
-      return activeService;
-    }
+    getWishlistContext: () => activeService
   };
 });
 
 // Now import after mocks
 import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
 import {
-  createWishlistService,
+  createWishlistState,
   type WishlistPreviewLite
-} from '$lib/features/wishlists/service.svelte';
+} from '$lib/features/wishlists/WishlistState.svelte';
 import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
 
 const mockInvoke = vi.mocked(invoke);
@@ -68,7 +67,7 @@ type InvokeArgType = InvokeArgs | undefined;
 type InvokeOptionType = InvokeOptions | undefined;
 type Handler = (args?: InvokeArgType) => unknown;
 
-activeService = createWishlistService();
+activeService = createWishlistState();
 
 const wishlistFixtures: WishlistPreviewLite[] = [
   {
@@ -160,7 +159,7 @@ describe('AddWishlistItemModal', () => {
   };
 
   beforeEach(async () => {
-    activeService = createWishlistService();
+    activeService = createWishlistState();
     vi.clearAllMocks();
     tauriMock.reset();
 

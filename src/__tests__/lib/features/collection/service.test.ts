@@ -23,7 +23,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 }));
 
 // Now import after mocks
-import { collectionService } from '$lib/features/collection/service.svelte';
+import { createCollectionState } from '$lib/features/collection/CollectionState.svelte';
 import type { CollectionView } from '$lib/bindings';
 import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
 
@@ -94,8 +94,11 @@ mockInvoke.mockImplementation(
   }
 );
 
-describe('CollectionService (Read-Only)', () => {
-  beforeEach(async () => {
+describe('CollectionState (Read-Only)', () => {
+  let collectionService: ReturnType<typeof createCollectionState>;
+
+  beforeEach(() => {
+    collectionService = createCollectionState();
     tauriMock.reset();
     vi.clearAllMocks();
     // Ensure we start with empty state
@@ -116,7 +119,6 @@ describe('CollectionService (Read-Only)', () => {
     };
     tauriMock.mockCommand('get_collection', emptyCollection);
     collectionService.clearFilters();
-    await collectionService.fetchCollection();
   });
 
   const mockCollection: CollectionView = {

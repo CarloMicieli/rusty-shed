@@ -4,17 +4,39 @@
   import BottomNavigation from '$lib/components/BottomNavigation.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
   import { Bell, TrainFront } from 'lucide-svelte';
-  import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { setAppVersion } from '$lib/stores/app';
-  import { collectionService } from '$lib/features/collection/service.svelte';
-  import { wishlistService } from '$lib/features/wishlists/service.svelte';
+  import {
+    createCollectionState,
+    setCollectionContext
+  } from '$lib/features/collection/CollectionState.svelte';
+  import {
+    createWishlistState,
+    setWishlistContext
+  } from '$lib/features/wishlists/WishlistState.svelte';
+  import {
+    createDashboardState,
+    setDashboardContext
+  } from '$lib/features/dashboard/DashboardState.svelte';
+  import { createDepotState, setDepotContext } from '$lib/features/depot/DepotState.svelte';
   import ToastHost from '$lib/components/ToastHost.svelte';
   import { safeInvoke } from '$lib/services';
+  import { onMount } from 'svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
   let { children } = $props();
+
+  // Create and provide contexts
+  const collectionState = createCollectionState();
+  const wishlistState = createWishlistState();
+  const dashboardState = createDashboardState();
+  const depotState = createDepotState();
+
+  setCollectionContext(collectionState);
+  setWishlistContext(wishlistState);
+  setDashboardContext(dashboardState);
+  setDepotContext(depotState);
 
   onMount(async () => {
     // 1. Show main window immediately so the user sees *something* (loading state)
@@ -39,7 +61,7 @@
       }
 
       // 4. Preload data (only if DB is ready)
-      await Promise.all([collectionService.fetchCollection(), wishlistService.fetchWishlists()]);
+      await Promise.all([collectionState.fetchCollection(), wishlistState.fetchWishlists()]);
     } catch (err) {
       console.error('Startup failed', err);
       // Capture the error to show in the UI

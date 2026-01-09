@@ -2,7 +2,9 @@
   import { Plus, Tag, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
-  import { collectionService, availableScales } from './service.svelte';
+  import { getCollectionContext, availableScales } from './CollectionState.svelte';
+
+  const collectionService = getCollectionContext();
 
   import type {
     CollectionSummary as CollectionSummaryType,

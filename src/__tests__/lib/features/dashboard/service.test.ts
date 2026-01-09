@@ -10,7 +10,7 @@ vi.mock('$lib/toaster', () => ({
   }
 }));
 
-import { dashboardService } from '$lib/features/dashboard/service.svelte';
+import { createDashboardState } from '$lib/features/dashboard/DashboardState.svelte';
 import { invoke } from '@tauri-apps/api/core';
 
 const mockInvoke = vi.mocked(invoke);
@@ -35,9 +35,13 @@ const tauriMock = {
   }
 };
 
-describe('DashboardService', () => {
+describe('DashboardState', () => {
+  let dashboardService: ReturnType<typeof createDashboardState>;
+
   beforeEach(() => {
+    dashboardService = createDashboardState();
     tauriMock.reset();
+    vi.clearAllMocks();
   });
 
   it('should load summary', async () => {

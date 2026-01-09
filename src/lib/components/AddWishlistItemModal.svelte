@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { wishlistService } from '$lib/features/wishlists/service.svelte';
+  import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
+
+  const wishlistService = getWishlistContext();
 
   interface Props {
     onClose: () => void;

@@ -1,29 +1,30 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Box as BoxIcon, Search, TrainFront, TramFront, X } from 'lucide-svelte';
+  import {
+    Box as BoxIcon,
+    Search,
+    TrainFront,
+    TramFront,
+    X,
+    LayoutGrid,
+    List
+  } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
+  import DepotTable from '$lib/features/depot/components/DepotTable.svelte';
   import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
   import TrainCard from '$lib/features/depot/components/TrainCard.svelte';
   import CarCard from '$lib/features/depot/components/CarCard.svelte';
-  import type { Car, Locomotive, TrainSet } from '$lib/features/depot/types';
-  import { safeInvoke, getErrorMessage } from '$lib/services';
-  import type { CollectionView as Collection, RailwayModel, RollingStock } from '$lib/bindings';
+  import { getDepotContext } from '$lib/features/depot/DepotState.svelte';
   import { debounce } from '$lib/utils/debounce';
 
-  let loading = $state(true);
-  let error = $state<string | null>(null);
-
-  let depotLocomotives = $state<Locomotive[]>([]);
-  let depotTrains = $state<TrainSet[]>([]);
-  let depotCars = $state<Car[]>([]);
+  const depot = getDepotContext();
 
   let searchInput = $state('');
-  let query = $state('');
   const stickyOffset = $state('var(--header-offset, 4rem)');
 
   const debouncedSearch = debounce((value: string) => {
-    query = value.trim().toLowerCase();
+    depot.setQuery(value);
   }, 150);
 
   function handleInput(value: string) {
@@ -33,204 +34,24 @@
 
   function clearSearch() {
     searchInput = '';
-    query = '';
+    depot.clearQuery();
   }
 
-  const normalizedQuery = $derived(query);
+  const filteredLocomotives = $derived(depot.filteredLocomotives);
+  const filteredTrains = $derived(depot.filteredTrains);
+  const filteredCars = $derived(depot.filteredCars);
+  const totalFiltered = $derived(depot.totalFiltered);
+  const isLoading = $derived(depot.isLoading);
+  const error = $derived(depot.error);
+  const viewMode = $derived(depot.viewMode);
 
-  const filterMatch = (value?: string | number | null) => {
-    if (!normalizedQuery) return true;
-    const text = value === null || value === undefined ? '' : String(value);
-    return text.toLowerCase().includes(normalizedQuery);
-  };
-
-  const filteredLocomotives = $derived(
-    normalizedQuery
-      ? depotLocomotives.filter(
-          (item) =>
-            filterMatch(item.roadNumber) ||
-            filterMatch(item.railwayCompany) ||
-            filterMatch(item.group) ||
-            filterMatch(item.livery) ||
-            filterMatch(item.dccAddress)
-        )
-      : depotLocomotives
-  );
-
-  const filteredTrains = $derived(
-    normalizedQuery
-      ? depotTrains.filter(
-          (item) =>
-            filterMatch(item.roadNumber) ||
-            filterMatch(item.railwayCompany) ||
-            filterMatch(item.group) ||
-            filterMatch(item.livery) ||
-            filterMatch(item.dccAddress)
-        )
-      : depotTrains
-  );
-
-  const filteredCars = $derived(
-    normalizedQuery
-      ? depotCars.filter(
-          (item) =>
-            filterMatch(item.roadNumber) ||
-            filterMatch(item.railwayCompany) ||
-            filterMatch(item.type) ||
-            filterMatch(item.livery) ||
-            filterMatch(item.serviceLevel)
-        )
-      : depotCars
-  );
-
-  const totalFiltered = $derived(
-    filteredLocomotives.length + filteredTrains.length + filteredCars.length
-  );
-
-  function pushRollingStock(
-    model: RailwayModel,
-    rolling: RollingStock,
-    dccAddress: number | null,
-    collections: {
-      locomotives: Locomotive[];
-      trains: TrainSet[];
-      cars: Car[];
-    }
-  ) {
-    const baseGroup = model.description || model.product_code;
-    const railway = rolling.data.railway?.display ?? null;
-    const livery = rolling.data.livery ?? null;
-
-    if (rolling.category === 'Locomotive') {
-      const data = rolling.data;
-      collections.locomotives.push({
-        id: data.id,
-        group: baseGroup,
-        roadNumber: data.road_number ?? null,
-        railwayCompany: railway,
-        livery,
-        dccAddress
-      });
-      return;
-    }
-
-    if (rolling.category === 'ElectricMultipleUnit' || rolling.category === 'Railcar') {
-      const data = rolling.data;
-      collections.trains.push({
-        id: data.id,
-        group: baseGroup,
-        roadNumber: data.road_number ?? null,
-        railwayCompany: railway,
-        livery,
-        dccAddress
-      });
-      return;
-    }
-
-    if (rolling.category === 'PassengerCar' || rolling.category === 'FreightCar') {
-      const data = rolling.data;
-
-      // Build a safe, typed view of the data without using `any` so we can inspect fields
-      const d = data as Record<string, unknown> & {
-        id: string;
-        friendly_name?: string;
-        freight_car_type?: string | null;
-        passenger_car_type?: string | null;
-        road_number?: string | null;
-        service_level?: string | null;
-      };
-
-      // compute a string label for the car type: prefer the typed enum field, fallback to friendly_name
-      let typeLabel: string;
-      if (d.freight_car_type && typeof d.freight_car_type === 'string') {
-        typeLabel = d.freight_car_type;
-      } else if (d.passenger_car_type && typeof d.passenger_car_type === 'string') {
-        typeLabel = d.passenger_car_type;
-      } else {
-        typeLabel = d.friendly_name ?? '';
-      }
-
-      collections.cars.push({
-        id: data.id,
-        type: typeLabel,
-        roadNumber: data.road_number ?? null,
-        railwayCompany: railway,
-        livery,
-        category: rolling.category === 'PassengerCar' ? 'passenger' : 'freight',
-        serviceLevel: 'service_level' in data ? (data.service_level ?? null) : null,
-        dccAddress
-      });
-    }
+  function handleViewModeChange(mode: 'table' | 'grid') {
+    depot.setViewMode(mode);
   }
 
-  function buildDepotView(collection: Collection, models: RailwayModel[]) {
-    const modelMap = new Map(models.map((model) => [model.id, model]));
-
-    const buckets = {
-      locomotives: [] as Locomotive[],
-      trains: [] as TrainSet[],
-      cars: [] as Car[]
-    };
-
-    for (const item of collection.items) {
-      const model = modelMap.get(item.railway_model.railway_model_id);
-      if (!model) continue;
-
-      for (const owned of item.rolling_stocks) {
-        const rolling = model.rolling_stocks.find(
-          (rs) => rs.data.id === owned.rolling_stock_id || rs.data.id === owned.id
-        );
-
-        if (!rolling) continue;
-
-        const dccAddress = owned.digital?.dcc_address ?? null;
-        pushRollingStock(model, rolling, dccAddress, buckets);
-      }
-    }
-
-    depotLocomotives = buckets.locomotives;
-    depotTrains = buckets.trains;
-    depotCars = buckets.cars;
-  }
-
-  async function loadDepot() {
-    loading = true;
-    error = null;
-    depotLocomotives = [];
-    depotTrains = [];
-    depotCars = [];
-
-    try {
-      const collectionResult = await safeInvoke<Collection>('get_depot');
-      if (!collectionResult.ok) {
-        throw new Error(getErrorMessage(collectionResult.error));
-      }
-
-      const collection = collectionResult.data;
-      const modelIds = Array.from(
-        new Set(collection.items.map((item) => item.railway_model.railway_model_id))
-      );
-
-      if (modelIds.length === 0) {
-        return;
-      }
-
-      const modelsResult = await safeInvoke<RailwayModel[]>('get_railway_models_by_ids', {
-        ids: modelIds
-      });
-      if (!modelsResult.ok) {
-        throw new Error(getErrorMessage(modelsResult.error));
-      }
-
-      buildDepotView(collection, modelsResult.data);
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'Unknown error loading depot';
-    } finally {
-      loading = false;
-    }
-  }
-
-  onMount(loadDepot);
+  onMount(() => {
+    void depot.load();
+  });
 </script>
 
 <svelte:head>
@@ -240,7 +61,31 @@
 <div class="mx-auto max-w-4xl space-y-6 p-4 pt-4" style="--header-offset: 4rem;">
   <div class="space-y-1">
     <p class="text-sm tracking-[0.2em] text-surface-400 uppercase">{m.app_depot()}</p>
-    <h1 class="h2 font-bold">{m.depot_title()}</h1>
+    <div class="flex items-center justify-between">
+      <h1 class="h2 font-bold">{m.depot_title()}</h1>
+      <div
+        class="flex items-center gap-1 rounded-lg border border-surface-700/60 bg-surface-900 p-1"
+      >
+        <button
+          class="btn-icon btn-icon-sm rounded-md {viewMode === 'table'
+            ? 'variant-filled bg-surface-700'
+            : 'text-surface-400 hover:text-surface-200'}"
+          title="Table view"
+          onclick={() => handleViewModeChange('table')}
+        >
+          <List size={18} />
+        </button>
+        <button
+          class="btn-icon btn-icon-sm rounded-md {viewMode === 'grid'
+            ? 'variant-filled bg-surface-700'
+            : 'text-surface-400 hover:text-surface-200'}"
+          title="Grid view"
+          onclick={() => handleViewModeChange('grid')}
+        >
+          <LayoutGrid size={18} />
+        </button>
+      </div>
+    </div>
     <p class="text-sm text-surface-400">{m.depot_subtitle()}</p>
   </div>
 
@@ -265,7 +110,7 @@
     </div>
   </div>
 
-  {#if loading}
+  {#if isLoading}
     <div class="flex items-center gap-3 rounded-xl border border-surface-700/60 bg-surface-900 p-4">
       <div
         class="border-accent-400 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
@@ -279,7 +124,8 @@
     >
       <p class="text-sm font-semibold">{error}</p>
       <div class="flex gap-2">
-        <button class="variant-filled-primary btn btn-sm" onclick={loadDepot}>Retry</button>
+        <button class="variant-filled-primary btn btn-sm" onclick={() => depot.load()}>Retry</button
+        >
         <button class="variant-ghost-surface btn btn-sm" onclick={clearSearch}
           >{m.depot_clear_search()}</button
         >
@@ -296,35 +142,67 @@
     </div>
   {:else}
     <div class="space-y-8">
-      <DepotSection
-        title={m.depot_locomotives_title()}
-        items={filteredLocomotives}
-        icon={TrainFront}
-        card={LocomotiveCard}
-        toneClass="variant-filled-primary"
-        {stickyOffset}
-        emptyMessage={m.depot_empty_locomotives()}
-      />
+      {#if viewMode === 'grid'}
+        <DepotSection
+          title={m.depot_locomotives_title()}
+          items={filteredLocomotives}
+          icon={TrainFront}
+          card={LocomotiveCard}
+          toneClass="variant-filled-primary"
+          {stickyOffset}
+          emptyMessage={m.depot_empty_locomotives()}
+        />
 
-      <DepotSection
-        title={m.depot_trains_title()}
-        items={filteredTrains}
-        icon={TramFront}
-        card={TrainCard}
-        toneClass="variant-filled-secondary"
-        {stickyOffset}
-        emptyMessage={m.depot_empty_trains()}
-      />
+        <DepotSection
+          title={m.depot_trains_title()}
+          items={filteredTrains}
+          icon={TramFront}
+          card={TrainCard}
+          toneClass="variant-filled-secondary"
+          {stickyOffset}
+          emptyMessage={m.depot_empty_trains()}
+        />
 
-      <DepotSection
-        title={m.depot_cars_title()}
-        items={filteredCars}
-        icon={BoxIcon}
-        card={CarCard}
-        toneClass="variant-filled-surface"
-        {stickyOffset}
-        emptyMessage={m.depot_empty_cars()}
-      />
+        <DepotSection
+          title={m.depot_cars_title()}
+          items={filteredCars}
+          icon={BoxIcon}
+          card={CarCard}
+          toneClass="variant-filled-surface"
+          {stickyOffset}
+          emptyMessage={m.depot_empty_cars()}
+        />
+      {:else}
+        <DepotTable
+          title={m.depot_locomotives_title()}
+          items={filteredLocomotives}
+          icon={TrainFront}
+          type="locomotive"
+          toneClass="variant-filled-primary"
+          {stickyOffset}
+          emptyMessage={m.depot_empty_locomotives()}
+        />
+
+        <DepotTable
+          title={m.depot_trains_title()}
+          items={filteredTrains}
+          icon={TramFront}
+          type="train"
+          toneClass="variant-filled-secondary"
+          {stickyOffset}
+          emptyMessage={m.depot_empty_trains()}
+        />
+
+        <DepotTable
+          title={m.depot_cars_title()}
+          items={filteredCars}
+          icon={BoxIcon}
+          type="car"
+          toneClass="variant-filled-surface"
+          {stickyOffset}
+          emptyMessage={m.depot_empty_cars()}
+        />
+      {/if}
     </div>
   {/if}
 </div>

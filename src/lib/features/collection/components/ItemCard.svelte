@@ -22,16 +22,6 @@
   }
 </script>
 
-{#snippet TagBadge(tag: string)}
-  {@const Icon = tagIcon(tag)}
-  <span class={`badge ${resolveTagMeta(tag).variant}`}>
-    {#if Icon}
-      <Icon size={12} />
-    {/if}
-    {resolveTagMeta(tag).label() ?? tag}
-  </span>
-{/snippet}
-
 <article
   class="group hover:border-accent-500/60 rounded-xl border border-surface-700/60 bg-surface-900 p-4 shadow-lg shadow-surface-900/40 transition hover:-translate-y-1"
   in:fade

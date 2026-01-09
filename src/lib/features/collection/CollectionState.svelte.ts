@@ -1,3 +1,4 @@
+import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
 import scales from '$lib/data/constants/scales.json';
@@ -28,12 +29,12 @@ function toastError(id: string, message?: string) {
 }
 
 /**
- * Read-only CollectionService
+ * CollectionState manages the collection feature state and operations.
  *
  * Currently only supports fetching the collection.
  * CRUD operations will be added when backend commands are implemented.
  */
-export class CollectionService {
+export class CollectionState {
   #collection = $state<CollectionView | null>(null);
   #filters = $state<FilterState>({ query: '', scale: null, tags: new SvelteSet() });
   #isLoading = $state(false);
@@ -57,7 +58,7 @@ export class CollectionService {
       if (q) {
         const manufacturer =
           typeof item.railway_model.manufacturer === 'object'
-            ? (item.railway_model.manufacturer as any).name
+            ? ((item.railway_model.manufacturer as { name?: string }).name ?? '')
             : item.railway_model.manufacturer;
         const haystack =
           `${manufacturer} ${item.railway_model.product_code} ${item.railway_model.description}`.toLowerCase();
@@ -157,5 +158,24 @@ export class CollectionService {
   };
 }
 
-export const collectionService = new CollectionService();
+const COLLECTION_CONTEXT_KEY = Symbol('collection-context');
+
+export function createCollectionState() {
+  return new CollectionState();
+}
+
+export function setCollectionContext(state: CollectionState) {
+  setContext(COLLECTION_CONTEXT_KEY, state);
+}
+
+export function getCollectionContext(): CollectionState {
+  const state = getContext<CollectionState>(COLLECTION_CONTEXT_KEY);
+  if (!state) {
+    throw new Error(
+      'CollectionContext not provided. Ensure component is within a CollectionContext provider.'
+    );
+  }
+  return state;
+}
+
 export { tagIcon };

@@ -14,10 +14,11 @@
   import DashboardCharts from '$lib/features/dashboard/DashboardCharts.svelte';
 
   // Stores
-  import { dashboardService } from '$lib/features/dashboard/service.svelte';
-  import { wishlistService } from '$lib/features/wishlists/service.svelte';
+  import { getDashboardContext } from '$lib/features/dashboard/DashboardState.svelte';
+  import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
 
-  const dashboard = dashboardService;
+  const dashboard = getDashboardContext();
+  const wishlistService = getWishlistContext();
 
   // Data derived from store
   const totals = $derived(dashboard.data?.totals ?? null);

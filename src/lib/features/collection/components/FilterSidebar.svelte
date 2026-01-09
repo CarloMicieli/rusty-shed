@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import * as m from '$lib/paraglide/messages.js';
-  import type { FilterState } from '$lib/features/collection/service.svelte';
+  import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
 
   type ScaleOption = { id: string; display: string };
 
