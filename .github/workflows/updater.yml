@@ -16,25 +16,26 @@ jobs:
       - name: 📦 Install pnpm
         uses: pnpm/action-setup@v4
 
-      - name: 🦀 Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22' # Svelte 5/Tauri 2 works best on 20 or 22 (LTS)
           cache: 'pnpm'
 
-      - name: Update Rust dependencies
-        run: |
-          # Updates Cargo.lock within semver ranges
-          cargo update
-
-      - name: 🦀 Update Node.js dependencies
+      - name: 🟢 Update Node.js dependencies
         run: |
           # pnpm update will refresh the pnpm-lock.yaml
           # Use 'pnpm update --latest' if you want to ignore ranges in package.json
           pnpm update
+
+      - name: 🦀 Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 🦀 Update Rust dependencies
+        run: |
+          # Updates Cargo.lock within semver ranges
+          cargo update
+        working-directory: src-tauri
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
