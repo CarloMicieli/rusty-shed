@@ -180,11 +180,7 @@ impl CollectionMapper {
             pi_row.purchase_type.clone().map(|s| s.to_ascii_lowercase());
         let purchase_type = purchase_type_lower.as_deref();
         let purchase_date = pi_row.purchase_date;
-        // debug: log purchase row fields to understand failures in mapping from fixtures
-        eprintln!(
-            "DEBUG: pi_row.id={}, purchase_type={:?}, purchased_currency={:?}",
-            pi_row.id, pi_row.purchase_type, pi_row.purchased_price_currency
-        );
+
         match purchase_type {
             Some("purchased") => {
                 let price = MonetaryAmount::from_db(
