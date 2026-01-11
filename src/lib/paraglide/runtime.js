@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /** @type {any} */
 const URLPattern = {}
 
