@@ -45,7 +45,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore: weekly pnpm and cargo update'
-          title: 'Scheduled Dependency Update'
+          title: 'chore: weekly pnpm and cargo update'
           body: |
             Automated weekly dependency updates for Tauri 2 project.
             - Updated `Cargo.lock`
