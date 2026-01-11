@@ -36,7 +36,7 @@ pub async fn get_collection(
 
     let collection = GetCollectionQuery::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
-    
+
     Ok(collection)
 }
 
