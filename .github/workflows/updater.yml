@@ -35,7 +35,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: 🦀 Install cargo-edit
-        uses: taiki-e/install-action@cargo-edit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-edit
 
       - name: 🦀 Upgrade dependencies
         run: cargo upgrade --pinned # Updates Cargo.toml
