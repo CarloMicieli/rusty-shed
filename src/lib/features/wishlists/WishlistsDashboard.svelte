@@ -33,6 +33,7 @@
 
   function handleRename(name: string) {
     if (!activeWishlist) return;
+    console.log('WishlistsDashboard: handleRename', { activeId: activeWishlist?.id, name });
     void wishlistService.renameWishlist(activeWishlist.id, name);
   }
 

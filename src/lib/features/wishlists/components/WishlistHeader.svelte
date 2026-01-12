@@ -19,6 +19,7 @@
   async function handleRenameBlur() {
     if (!wishlist) return;
     if (nameDraft.trim() && nameDraft !== wishlist.name) {
+      console.log('WishlistHeader: rename requested', nameDraft.trim());
       onRename?.(nameDraft.trim());
     } else {
       nameDraft = wishlist.name;

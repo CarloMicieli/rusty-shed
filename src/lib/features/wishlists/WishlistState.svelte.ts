@@ -202,6 +202,7 @@ export class WishlistState {
   }
 
   async renameWishlist(id: string, name: string) {
+    console.log('WishlistState: renameWishlist called', { id, name });
     const toastId = randomId();
     this.#captureSnapshot();
     this.#wishlists = this.#wishlists.map((w) => (w.id === id ? { ...w, name } : w));
