@@ -34,10 +34,15 @@ jobs:
       - name: 🦀 Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: 🦀 Update Rust dependencies
-        run: |
-          # Updates Cargo.lock within semver ranges
-          cargo update
+      - name: 🦀 Install cargo-edit
+        uses: taiki-e/install-action@cargo-edit
+
+      - name: 🦀 Upgrade dependencies
+        run: cargo upgrade --pinned # Updates Cargo.toml
+        working-directory: src-tauri
+
+      - name: 🦀 Update Cargo.lock
+        run: cargo update # Ensures lockfile matches new TOML
         working-directory: src-tauri
 
       - name: Create Pull Request
