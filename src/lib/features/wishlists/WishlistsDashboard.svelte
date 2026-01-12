@@ -27,6 +27,7 @@
   }
 
   function _handleDelete(id: string) {
+    console.log('Wishlist delete clicked', id);
     void wishlistService.deleteWishlist(id);
   }
 
@@ -61,6 +62,7 @@
     activeId={activeWishlistId}
     onCreate={handleCreate}
     onSelect={handleSelect}
+    onDelete={_handleDelete}
   />
 
   <section class="space-y-4 rounded-2xl border border-surface-700/50 bg-surface-900 p-6">
