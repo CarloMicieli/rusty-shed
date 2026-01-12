@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::Control;
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRailwayModel;
 use crate::collecting::domain::CollectionSummary;
@@ -10,10 +11,9 @@ use crate::collecting::infrastructure::entities::{
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
 use crate::dcc_inventory::domain::DecoderId;
-use crate::catalog::domain::railway_model::Control;
-use std::str::FromStr;
 use anyhow::anyhow;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 /// Converts infrastructure row types into collecting domain types.
 ///
@@ -105,7 +105,10 @@ impl CollectionMapper {
                             series: rs_row.series.clone(),
                             road_number: rs_row.road_number.clone(),
                             livery: rs_row.livery.clone(),
-                            control: rs_row.control.as_deref().and_then(|c| Control::from_str(c).ok()),
+                            control: rs_row
+                                .control
+                                .as_deref()
+                                .and_then(|c| Control::from_str(c).ok()),
                             railway_company_name: rs_row.railway_company_name.clone(),
                             digital: None,
                         };
@@ -389,6 +392,13 @@ mod tests {
             decoder_type: None,
             decoder_protocol: None,
             decoder_interface: None,
+
+            // Joined fields from rolling_stocks and railway_companies (optional in tests)
+            series: None,
+            road_number: None,
+            livery: None,
+            control: None,
+            railway_company_name: None,
         };
 
         let purchase_id =

@@ -79,7 +79,7 @@ pub struct OwnedRollingStockRow {
     pub decoder_type: Option<DecoderType>,
     pub decoder_protocol: Option<DigitalProtocol>,
     pub decoder_interface: Option<DccInterface>,
-    
+
     // Joined fields from rolling_stocks and railway_companies
     pub series: Option<String>,
     pub road_number: Option<String>,
