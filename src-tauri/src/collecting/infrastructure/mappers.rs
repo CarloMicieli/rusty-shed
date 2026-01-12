@@ -10,6 +10,8 @@ use crate::collecting::infrastructure::entities::{
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
 use crate::dcc_inventory::domain::DecoderId;
+use crate::catalog::domain::railway_model::Control;
+use std::str::FromStr;
 use anyhow::anyhow;
 use std::collections::HashMap;
 
@@ -100,6 +102,11 @@ impl CollectionMapper {
                             id: rs_row.id.clone(),
                             rolling_stock_id: rs_row.rolling_stock_id.clone().unwrap(),
                             notes: rs_row.notes.clone(),
+                            series: rs_row.series.clone(),
+                            road_number: rs_row.road_number.clone(),
+                            livery: rs_row.livery.clone(),
+                            control: rs_row.control.as_deref().and_then(|c| Control::from_str(c).ok()),
+                            railway_company_name: rs_row.railway_company_name.clone(),
                             digital: None,
                         };
 
@@ -267,14 +274,15 @@ impl CollectionMapper {
         Ok(crate::collecting::domain::DepotRollingStockView {
             id: owned.id.clone(),
             series_code: collection_item.railway_model.product_code.clone(),
-            road_number: None,
+            road_number: owned.road_number.clone(),
             friendly_name: None,
             depot: None,
             category,
             manufacturer_name: collection_item.railway_model.manufacturer.clone(),
             product_code,
-            control: None,
-            livery: None,
+            control: owned.control,
+            livery: owned.livery.clone(),
+            railway_company_name: owned.railway_company_name.clone(),
         })
     }
 }

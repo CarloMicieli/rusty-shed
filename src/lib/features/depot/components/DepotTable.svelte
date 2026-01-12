@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends { id: string }">
   import type { Component } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { ArrowUpDown, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-svelte';
 
   let {
     title,
@@ -22,8 +23,20 @@
   } = $props();
 
   let viewAll = $state(false);
-  const visibleItems = $derived(viewAll || items.length <= 100 ? items : items.slice(0, 100));
   const hasOverflow = $derived(!viewAll && items.length > 100);
+
+  // Sorting state
+  let sortField = $state<string | null>(null);
+  let sortDirection = $state<'asc' | 'desc'>('asc');
+
+  function toggleSort(field: string) {
+    if (sortField === field) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortField = field;
+      sortDirection = 'asc';
+    }
+  }
 
   // Helper to safely access properties that might differ between types
   function getItemProps(item: T) {
@@ -33,7 +46,7 @@
       productCode: str(it.productCode ?? it.product_code ?? '-'),
       model: str(it.group ?? it.type ?? '-'),
       manufacturer: str(it.manufacturer ?? '-'),
-      series: str(it.seriesCode ?? it.series_code ?? '-'),
+      // series: str(it.seriesCode ?? it.series_code ?? '-'), // Removed as column is removed
       category: str(it.categoryLabel ?? it.category_label ?? '-'),
       roadNumber: str(it.roadNumber ?? it.road_number ?? '-'),
       railway: str(it.railwayCompany ?? it.railway_company ?? '-'),
@@ -43,27 +56,76 @@
     };
   }
 
+  const sortedItems = $derived.by(() => {
+    if (!sortField) return items;
+
+    // We sort a shallow copy to stay pure-ish regarding 'items'
+    return [...items].sort((a, b) => {
+      const propA = getItemProps(a)[sortField as keyof ReturnType<typeof getItemProps>];
+      const propB = getItemProps(b)[sortField as keyof ReturnType<typeof getItemProps>];
+
+      if (propA < propB) return sortDirection === 'asc' ? -1 : 1;
+      if (propA > propB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  });
+
+  const visibleItems = $derived(
+    viewAll || sortedItems.length <= 100 ? sortedItems : sortedItems.slice(0, 100)
+  );
+
   // Table headers based on type
   const headers = $derived.by(() => {
     const base = [
-      { label: 'Manufacturer', class: 'hidden sm:table-cell w-32' },
-      { label: 'Category', class: 'hidden lg:table-cell w-32' },
-      { label: 'Product code', class: 'w-full' },
-      { label: 'Series', class: 'hidden xl:table-cell w-24' },
-      { label: 'Railway', class: 'hidden sm:table-cell w-32' },
-      { label: 'Road #', class: 'hidden md:table-cell w-24' }
+      {
+        label: 'Manufacturer',
+        key: 'manufacturer',
+        class: 'hidden sm:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
+      },
+      {
+        label: 'Product code',
+        key: 'productCode',
+        class: 'w-50 cursor-pointer hover:bg-surface-500/10'
+      },
+      {
+        label: 'Category',
+        key: 'category',
+        class: 'hidden lg:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
+      },
+      {
+        label: 'Railway',
+        key: 'railway',
+        class: 'hidden sm:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
+      },
+      {
+        label: 'Road #',
+        key: 'roadNumber',
+        class: 'hidden md:table-cell w-full cursor-pointer hover:bg-surface-500/10'
+      }
     ];
 
     // Add specific columns
     if (type === 'car') {
-      base.push({ label: 'Service', class: 'hidden lg:table-cell w-24' });
+      base.push({
+        label: 'Service',
+        key: 'serviceLevel',
+        class: 'hidden lg:table-cell w-24 cursor-pointer hover:bg-surface-500/10'
+      });
     } else {
       // Control for locos/trains
-      base.push({ label: 'Control', class: 'hidden lg:table-cell w-24 text-center' });
+      base.push({
+        label: 'Control',
+        key: 'control',
+        class: 'hidden lg:table-cell w-24 text-center cursor-pointer hover:bg-surface-500/10'
+      });
     }
 
     // Livery is always nice if space permits
-    base.push({ label: 'Livery', class: 'hidden 2xl:table-cell w-32' });
+    base.push({
+      label: 'Livery',
+      key: 'livery',
+      class: 'hidden 2xl:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
+    });
 
     return base;
   });
@@ -100,7 +162,20 @@
           <thead class="bg-surface-900/60 font-medium text-surface-400">
             <tr>
               {#each headers as col (col.label)}
-                <th class={col.class}>{col.label}</th>
+                <th class="{col.class} group select-none" onclick={() => toggleSort(col.key)}>
+                  <div class="flex items-center gap-1">
+                    {col.label}
+                    {#if sortField === col.key}
+                      {#if sortDirection === 'asc'}
+                        <ArrowUpNarrowWide size={14} class="opacity-70" />
+                      {:else}
+                        <ArrowDownWideNarrow size={14} class="opacity-70" />
+                      {/if}
+                    {:else}
+                      <ArrowUpDown size={14} class="opacity-0 group-hover:opacity-30" />
+                    {/if}
+                  </div>
+                </th>
               {/each}
             </tr>
           </thead>
@@ -111,11 +186,6 @@
                 <td class="hidden align-middle text-surface-300 sm:table-cell">
                   {props.manufacturer}
                 </td>
-                <td
-                  class="hidden align-middle text-xs tracking-wide text-surface-400 uppercase lg:table-cell"
-                >
-                  {props.category}
-                </td>
                 <td class="align-middle font-medium text-surface-200">
                   <div class="font-mono text-sm">{props.productCode}</div>
                   <!-- Mobile-only details -->
@@ -125,8 +195,10 @@
                     {#if props.roadNumber !== '-'}<span>• {props.roadNumber}</span>{/if}
                   </div>
                 </td>
-                <td class="hidden align-middle text-sm text-surface-400 xl:table-cell">
-                  {props.series}
+                <td
+                  class="hidden align-middle text-xs tracking-wide text-surface-400 uppercase lg:table-cell"
+                >
+                  {props.category}
                 </td>
                 <td class="hidden align-middle text-surface-300 sm:table-cell">
                   {props.railway}

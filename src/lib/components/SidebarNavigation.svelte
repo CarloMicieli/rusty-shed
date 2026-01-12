@@ -41,13 +41,15 @@
       <li>
         <a
           href={resolve('/my-collection')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
+          class="hover:variant-soft-primary btn flex w-full items-center justify-between gap-3"
           class:variant-filled-primary={(page.url.pathname as string) === '/my-collection'}
           class:variant-ghost-surface={(page.url.pathname as string) !== '/my-collection'}
         >
-          <Library size={20} />
-          <span class="font-medium tracking-wide">{m.app_collection()}</span>
-          <span class="variant-soft-surface ml-auto badge">{totalCount}</span>
+          <div class="flex items-center gap-3">
+            <Library size={20} />
+            <span class="font-medium tracking-wide">{m.app_collection()}</span>
+          </div>
+          <span class="variant-filled-primary badge">{totalCount}</span>
         </a>
       </li>
       <li>

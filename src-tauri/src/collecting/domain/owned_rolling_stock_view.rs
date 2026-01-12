@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::RollingStockId;
+use crate::catalog::domain::railway_model::{Control, RollingStockId};
 use crate::collecting::domain::{DigitalSetup, OwnedRollingStockId};
 use serde::Serialize;
 
@@ -21,6 +21,21 @@ pub struct OwnedRollingStockView {
     /// Free-form notes associated with this owned instance.
     /// Use this for short owner notes or a brief textual label.
     pub notes: Option<String>,
+
+    /// Series derived from the catalog rolling stock data.
+    pub series: Option<String>,
+
+    /// Road number derived from the catalog rolling stock data.
+    pub road_number: Option<String>,
+
+    /// Livery derived from the catalog rolling stock data.
+    pub livery: Option<String>,
+
+    /// Control system derived from the catalog rolling stock data.
+    pub control: Option<Control>,
+
+    /// Railway company name derived from the catalog rolling stock data.
+    pub railway_company_name: Option<String>,
 
     /// Optional digital setup information if a decoder is installed.
     pub digital: Option<DigitalSetup>,

@@ -104,8 +104,15 @@ pub async fn get_owned_rolling_stock(
             d.product_code AS decoder_product_code,
             d.decoder_type AS decoder_type,
             d.protocol AS decoder_protocol,
-            d.decoder_interface AS decoder_interface
+            d.decoder_interface AS decoder_interface,
+            rs.series,
+            rs.road_number,
+            rs.livery,
+            rs.control,
+            rc.name AS railway_company_name
        FROM owned_rolling_stocks AS ors
+       LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id
+       LEFT JOIN railway_companies AS rc ON rc.id = rs.railway_company_id
        LEFT JOIN decoders AS d ON d.id = ors.installed_decoder_id
        WHERE ors.id = ?1
    "#;
@@ -140,9 +147,16 @@ pub async fn get_owned_rolling_stocks(
              d.product_code AS decoder_product_code,
              d.decoder_type AS decoder_type,
              d.protocol AS decoder_protocol,
-             d.decoder_interface AS decoder_interface
+             d.decoder_interface AS decoder_interface,
+             rs.series,
+             rs.road_number,
+             rs.livery,
+             rs.control,
+             rc.name AS railway_company_name
    FROM owned_rolling_stocks AS ors
    JOIN collection_items AS ci ON ci.id = ors.collection_item_id
+   LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id
+   LEFT JOIN railway_companies AS rc ON rc.id = rs.railway_company_id
    LEFT JOIN decoders d ON d.id = ors.installed_decoder_id
    WHERE ci.collection_id = ?1"#;
 

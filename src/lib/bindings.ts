@@ -1567,6 +1567,10 @@ export type DepotRollingStockView = {
    * Optional livery or paint scheme string for display purposes.
    */
   livery: string | null;
+  /**
+   * Optional railway company name for display purposes.
+   */
+  railway_company_name: string | null;
 };
 /**
  * A read-only representation of the depot contents.
@@ -2054,6 +2058,26 @@ export type OwnedRollingStockView = {
    * Use this for short owner notes or a brief textual label.
    */
   notes: string | null;
+  /**
+   * Series derived from the catalog rolling stock data.
+   */
+  series: string | null;
+  /**
+   * Road number derived from the catalog rolling stock data.
+   */
+  road_number: string | null;
+  /**
+   * Livery derived from the catalog rolling stock data.
+   */
+  livery: string | null;
+  /**
+   * Control system derived from the catalog rolling stock data.
+   */
+  control: Control | null;
+  /**
+   * Railway company name derived from the catalog rolling stock data.
+   */
+  railway_company_name: string | null;
   /**
    * Optional digital setup information if a decoder is installed.
    */

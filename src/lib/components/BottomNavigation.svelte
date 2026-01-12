@@ -4,14 +4,11 @@
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
-  import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { localeStore } from '$lib/stores/locale';
 
-  const collectionService = getCollectionContext();
   const wishlistService = getWishlistContext();
 
-  const totalCount = $derived(collectionService.totalCount);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const pathname = $derived(page.url.pathname as string);
   const locale = $derived($localeStore);
@@ -39,7 +36,6 @@
       >
         <Library size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_collection()}</span>
-        <span class="variant-soft-surface badge">{totalCount}</span>
       </a>
       <a
         href={resolve('/my-wishlists')}

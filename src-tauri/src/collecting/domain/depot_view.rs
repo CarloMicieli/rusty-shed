@@ -49,4 +49,7 @@ pub struct DepotRollingStockView {
 
     /// Optional livery or paint scheme string for display purposes.
     pub livery: Option<String>,
+
+    /// Optional railway company name for display purposes.
+    pub railway_company_name: Option<String>,
 }

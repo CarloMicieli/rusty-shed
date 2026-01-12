@@ -103,7 +103,7 @@ export class DepotState {
       productCode: item.product_code,
       categoryLabel: this.formatCategory(item.category),
       roadNumber: item.road_number,
-      railwayCompany: null,
+      railwayCompany: item.railway_company_name,
       livery: item.livery,
       control: item.control
     };
@@ -118,7 +118,7 @@ export class DepotState {
       productCode: item.product_code,
       categoryLabel: this.formatCategory(item.category),
       roadNumber: item.road_number,
-      railwayCompany: null,
+      railwayCompany: item.railway_company_name,
       livery: item.livery,
       control: item.control
     };
@@ -133,7 +133,7 @@ export class DepotState {
       productCode: item.product_code,
       categoryLabel: this.formatCategory(item.category),
       roadNumber: item.road_number,
-      railwayCompany: null,
+      railwayCompany: item.railway_company_name,
       livery: item.livery,
       category: item.category === 'PASSENGER_CAR' ? 'passenger' : 'freight',
       serviceLevel: null,
