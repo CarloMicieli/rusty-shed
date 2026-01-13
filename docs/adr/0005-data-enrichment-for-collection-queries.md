@@ -1,4 +1,4 @@
-# ADR 4: Data Enrichment for Collection Queries
+# ADR 5: Data Enrichment for Collection Queries
 
 Status: Accepted
 
