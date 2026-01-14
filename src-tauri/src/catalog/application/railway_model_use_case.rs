@@ -11,8 +11,6 @@ use crate::catalog::domain::railway_model::{RailwayModelParams, RollingStockPara
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use log::info;
 
 /// Use case for creating a new railway model.
 pub struct CreateRailwayModelUseCase;
@@ -27,12 +25,13 @@ impl CreateRailwayModelUseCase {
     /// # Returns
     /// * `Ok(RailwayModelId)` containing the new railway model ID on success,
     /// * `Err(DomainError)` with an error message on failure.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         input: CreateRailwayModelInput,
-    ) -> Result<RailwayModelId, DomainError> {
-        info!("Creating a new railway model with input: {:?}", input);
-
+    ) -> Result<RailwayModelId, DomainError>
+    where
+        U: RailwayModelUowExt + Send,
+    {
         let mut repository = unit_of_work.railway_model_repository();
         let mut validation_context = ValidationContext::default();
 
@@ -88,11 +87,14 @@ impl CreateRailwayModelUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::application::testing::FakeUow;
+    use crate::catalog::domain::railway_model::MockRailwayModelRepository;
     use pretty_assertions::assert_eq;
 
-    #[sqlx::test(migrations = "./migrations")]
-    async fn it_should_validate_railway_model_inputs(pool: sqlx::SqlitePool) {
-        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.unwrap();
+    #[tokio::test]
+    async fn it_should_validate_railway_model_inputs() {
+        let mock = MockRailwayModelRepository::new();
+        let mut unit_of_work = FakeUow::with_railway_models_repo(mock);
 
         let input = CreateRailwayModelInput {
             manufacturer_id: "trn:manufacturer:acme".to_string(),

@@ -60,3 +60,6 @@ pub use rolling_stock_params::RollingStockParams;
 pub use rolling_stock_railway::RollingStockRailway;
 pub use service_level::ServiceLevel;
 pub use technical_specifications::{TechnicalSpecifications, TechnicalSpecificationsBuilder};
+
+#[cfg(test)]
+pub use repository::MockRailwayModelRepository;

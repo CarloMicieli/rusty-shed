@@ -5,6 +5,7 @@ use crate::core::domain::domain_error::DomainError;
 ///
 /// This trait abstracts away the database engine (SQLite, Postgres, etc.),
 /// allowing the business logic to remain decoupled from infrastructure details.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait RailwayModelRepository: Send + Sync {
     /// Persists a new Railway Model aggregate and all its associated rolling stocks to the storage.
@@ -46,7 +47,7 @@ pub trait RailwayModelRepository: Send + Sync {
 /// This follows the **Interface Segregation Principle**. By using extension traits,
 /// we avoid a "God Object" where one struct knows about every repository in the
 /// system. Instead, repositories are grouped by domain logic.
-pub trait RailwayModelUowExt {
+pub trait RailwayModelUowExt: Send {
     /// Returns a trait object for interacting with railway model data.
     ///
     /// The repository is bound to the lifetime of the Unit of Work to ensure

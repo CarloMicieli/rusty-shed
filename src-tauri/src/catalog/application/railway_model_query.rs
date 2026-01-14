@@ -1,7 +1,5 @@
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use log::info;
 
 /// Query to retrieve a railway model by id from the database.
 pub struct GetRailwayModelByIdQuery;
@@ -17,12 +15,61 @@ impl GetRailwayModelByIdQuery {
     /// - `Ok(Some(RailwayModel))` when the railway model is found.
     /// - `Ok(None)` when the railway model is not found.
     /// - `Err(DomainError)` with an error message on failure.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         railway_model_id: RailwayModelId,
-    ) -> Result<Option<RailwayModel>, DomainError> {
-        info!("Retrieving railway model with id: {}", railway_model_id);
+    ) -> Result<Option<RailwayModel>, DomainError>
+    where
+        U: RailwayModelUowExt + Send,
+    {
         let mut repository = unit_of_work.railway_model_repository();
         repository.find_by_id(&railway_model_id).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::application::testing::FakeUow;
+    use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::{
+        Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModelManufacturer,
+    };
+    use crate::catalog::domain::scale::Scale;
+    use mockall::predicate::eq;
+
+    #[tokio::test]
+    async fn it_returns_railway_model_by_id() {
+        let mut mock = MockRailwayModelRepository::new();
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:model-x:1234").unwrap();
+        let railway_model = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer: RailwayModelManufacturer {
+                manufacturer_id: ManufacturerId::new("trn:manufacturer:mn-test"),
+                display: "Test Manufacturer".to_string(),
+            },
+            product_code: ProductCode::try_from("12345").unwrap(),
+            description: "A test railway model".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+        };
+
+        mock.expect_find_by_id()
+            .with(eq(railway_model_id.clone()))
+            .times(1)
+            .returning(move |_| Ok(Some(railway_model.clone())));
+        let mut fake_uow = FakeUow::with_railway_models_repo(mock);
+
+        let result = GetRailwayModelByIdQuery::execute(&mut fake_uow, railway_model_id)
+            .await
+            .expect("it should return");
+
+        assert!(result.is_some());
     }
 }

@@ -2,6 +2,7 @@ use crate::catalog::domain::railway_company::{RailwayCompany, RailwayCompanyId};
 use crate::core::domain::domain_error::DomainError;
 
 /// Repository trait for managing Railway company data.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait RailwayCompanyRepository: Send + Sync {
     /// Retrieves all Railway company from the database.
@@ -34,7 +35,7 @@ pub trait RailwayCompanyRepository: Send + Sync {
 /// This follows the **Interface Segregation Principle**. By using extension traits,
 /// we avoid a "God Object" where one struct knows about every repository in the
 /// system. Instead, repositories are grouped by domain logic.
-pub trait RailwayCompanyUowExt {
+pub trait RailwayCompanyUowExt: Send {
     /// Returns a trait object for interacting with railway company model data.
     ///
     /// The repository is bound to the lifetime of the Unit of Work to ensure

@@ -9,3 +9,6 @@ pub use manufacturer_id::ManufacturerId;
 pub use manufacturer_status::ManufacturerStatus;
 pub use repositories::ManufacturerRepository;
 pub use repositories::ManufacturerUowExt;
+
+#[cfg(test)]
+pub use repositories::MockManufacturerRepository;

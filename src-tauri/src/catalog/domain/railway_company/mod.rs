@@ -11,3 +11,6 @@ pub use railway_company_id::RailwayCompanyId;
 pub use railway_status::RailwayStatus;
 pub use repositories::RailwayCompanyRepository;
 pub use repositories::RailwayCompanyUowExt;
+
+#[cfg(test)]
+pub use repositories::MockRailwayCompanyRepository;
