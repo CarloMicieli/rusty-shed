@@ -1,19 +1,30 @@
 use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
-use crate::sellers::infrastructure::repository::SellersUowExt;
 use chrono::{DateTime, Utc};
 
 pub struct UpdateSellerUseCase;
 
 impl UpdateSellerUseCase {
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// Updates an existing seller and persists the changes using the provided unit of work.
+    ///
+    /// # Arguments
+    /// - `unit_of_work`: The unit of work providing access to the sellers repository.
+    /// - `input`: The input data required to update the seller.
+    ///
+    /// # Returns
+    /// - `Ok(Seller)` if the operation was successful, containing the updated seller.
+    /// - `Err(DomainError)` if an error occurred during the operation.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         input: UpdateSellerInput,
-    ) -> Result<Seller, DomainError> {
+    ) -> Result<Seller, DomainError>
+    where
+        U: SellersUowExt + Send,
+    {
         let now = Utc::now();
         let created_at = input.created_at.unwrap_or(now);
         let address_fields = AddressFields {

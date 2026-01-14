@@ -1,35 +1,31 @@
 use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
-use crate::sellers::infrastructure::repository::SellersUowExt;
 use chrono::Utc;
-
-#[derive(Debug, Clone, specta::Type, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateSellerInput {
-    pub name: String,
-    pub seller_type: SellerType,
-    pub email: Option<String>,
-    pub phone: Option<String>,
-    pub website_url: Option<String>,
-    pub street_address: Option<String>,
-    pub extended_address: Option<String>,
-    pub city: Option<String>,
-    pub state_region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country_code: Option<String>,
-}
+use serde::{Deserialize, Serialize};
 
 pub struct CreateSellerUseCase;
 
 impl CreateSellerUseCase {
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// Creates a new seller and persists it using the provided unit of work.
+    ///
+    /// # Arguments
+    /// - `unit_of_work`: The unit of work providing access to the sellers repository.
+    /// - `input`: The input data required to create a new seller.
+    ///
+    /// # Returns
+    /// - `Ok(Seller)` if the operation was successful, containing the created seller.
+    /// - `Err(DomainError)` if an error occurred during the operation.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         input: CreateSellerInput,
-    ) -> Result<Seller, DomainError> {
+    ) -> Result<Seller, DomainError>
+    where
+        U: SellersUowExt + Send,
+    {
         let now = Utc::now();
         let address_fields = AddressFields {
             street: input.street_address.clone(),
@@ -58,4 +54,20 @@ impl CreateSellerUseCase {
 
         Ok(seller)
     }
+}
+
+#[derive(Debug, Clone, specta::Type, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateSellerInput {
+    pub name: String,
+    pub seller_type: SellerType,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub website_url: Option<String>,
+    pub street_address: Option<String>,
+    pub extended_address: Option<String>,
+    pub city: Option<String>,
+    pub state_region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country_code: Option<String>,
 }

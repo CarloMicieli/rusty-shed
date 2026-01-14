@@ -2,6 +2,7 @@ use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
+use crate::sellers::domain::{SellersRepository, SellersUowExt};
 use crate::sellers::infrastructure::entities::SellerRow;
 use chrono::Utc;
 
@@ -13,8 +14,11 @@ impl<'conn> SqliteSellersRepository<'conn> {
     pub fn new(executor: &'conn mut sqlx::SqliteConnection) -> Self {
         Self { executor }
     }
+}
 
-    pub async fn list(&mut self) -> Result<Vec<Seller>, DomainError> {
+#[async_trait::async_trait]
+impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
+    async fn list(&mut self) -> Result<Vec<Seller>, DomainError> {
         let sql = r#"
         SELECT
             id,
@@ -41,7 +45,7 @@ impl<'conn> SqliteSellersRepository<'conn> {
         Ok(rows.into_iter().map(Into::into).collect())
     }
 
-    pub async fn get(&mut self, id: &SellerId) -> Result<Option<Seller>, DomainError> {
+    async fn get(&mut self, id: &SellerId) -> Result<Option<Seller>, DomainError> {
         let sql = r#"
         SELECT
             id,
@@ -69,7 +73,7 @@ impl<'conn> SqliteSellersRepository<'conn> {
         Ok(row.map(Into::into))
     }
 
-    pub async fn upsert(&mut self, seller: &Seller) -> Result<(), DomainError> {
+    async fn upsert(&mut self, seller: &Seller) -> Result<(), DomainError> {
         // Keep existing created_at if row exists; otherwise use provided created_at.
         let existing_created_at: Option<String> =
             sqlx::query_scalar("SELECT created_at FROM sellers WHERE id = ?")
@@ -137,7 +141,7 @@ impl<'conn> SqliteSellersRepository<'conn> {
         Ok(())
     }
 
-    pub async fn delete(&mut self, id: &SellerId) -> Result<u64, DomainError> {
+    async fn delete(&mut self, id: &SellerId) -> Result<u64, DomainError> {
         let sql = "DELETE FROM sellers WHERE id = ?";
         let res = sqlx::query(sql)
             .bind(&id.0)
@@ -148,13 +152,13 @@ impl<'conn> SqliteSellersRepository<'conn> {
     }
 }
 
-pub trait SellersUowExt {
-    fn sellers_repository(&mut self) -> SqliteSellersRepository<'_>;
-}
-
 impl<'conn> SellersUowExt for SqliteUnitOfWork<'conn> {
-    fn sellers_repository(&mut self) -> SqliteSellersRepository<'_> {
-        SqliteSellersRepository::new(&mut self.tx)
+    /// Links the SQLite-specific repository to the Unit of Work.
+    ///
+    /// It re-borrows the internal transaction (`&mut *self.tx`) to provide
+    /// the repository with a mutable executor without transferring ownership.
+    fn sellers_repository(&mut self) -> Box<dyn SellersRepository + '_> {
+        Box::new(SqliteSellersRepository::new(&mut self.tx))
     }
 }
 
