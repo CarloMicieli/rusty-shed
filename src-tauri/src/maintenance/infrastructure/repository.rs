@@ -1,6 +1,7 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
 use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
 use async_trait::async_trait;
 use chrono::NaiveDate;
@@ -24,72 +25,6 @@ pub struct NewMaintenanceEvent {
 
     /// Optional notes
     pub notes: Option<String>,
-}
-
-/// Repository abstraction for maintenance operations.
-///
-/// This trait defines the persistence API for maintenance-related data.
-/// Implementations are responsible for mapping database rows to the
-/// corresponding `entities` types and for correctly handling transactional
-/// semantics where required.
-///
-/// Key responsibilities and expectations:
-/// - Provide CRUD-like accessors for maintenance cards and maintenance events.
-/// - `record_event_transaction` MUST be implemented to perform the insert of a
-///   maintenance event and the related update to the maintenance card atomically
-///   (i.e. inside a single database transaction) so the system remains in a
-///   consistent state.
-/// - Date fields are treated as date-only values (YYYY-MM-DD). Any logic that
-///   evaluates whether a card is due/overdue should compare dates without time
-///   components (SQLite's `date('now')` is suitable for SQLite-based
-///   implementations).
-/// - Methods return `anyhow::Result` so SQL execution errors and mapping errors
-///   can be propagated and enriched by callers. Implementations should avoid
-///   swallowing errors and instead return informative failures.
-///
-/// Concurrency & lifecycle:
-/// - Repositories are typically short-lived and bound to a specific database
-///   connection or transaction (see `SqliteMaintenanceRepository`). Callers
-///   should acquire a repository instance as part of a unit-of-work or
-///   transaction scope and not reuse it across unrelated transactions.
-///
-/// Error handling:
-/// - SQL errors, constraint violations, and mapping/parsing problems are
-///   surfaced via the `anyhow::Error` value returned by methods. Callers can
-///   inspect or log these errors as needed.
-#[async_trait]
-pub trait MaintenanceRepository {
-    /// Fetch the maintenance card by owned rolling stock id.
-    async fn get_card_by_stock_id(
-        &mut self,
-        owned_rolling_stock_id: &str,
-    ) -> Result<Option<MaintenanceCardRow>, DomainError>;
-
-    /// Record an event and update the maintenance card within the same transaction.
-    async fn record_event_transaction(
-        &mut self,
-        new_event: NewMaintenanceEvent,
-    ) -> Result<(), DomainError>;
-
-    /// List events for a maintenance card.
-    async fn list_events_for_card(
-        &mut self,
-        maintenance_card_id: &str,
-    ) -> Result<Vec<MaintenanceEventRow>, DomainError>;
-
-    /// List maintenance cards that are due or overdue.
-    ///
-    /// A card is considered "due" when either:
-    /// - `next_maintenance_date` is present and is less than or equal to the
-    ///   current local date (comparison performed using SQLite's `date('now')`),
-    ///   or
-    /// - `next_maintenance_date` is NULL and `last_maintenance_date` is present
-    ///   and less than or equal to the current date (i.e. the card has been
-    ///   maintained before but no next date was scheduled and it is now overdue).
-    ///
-    /// Returned rows are mapped to `MaintenanceCardRow`. Any database or mapping
-    /// errors are returned as `anyhow::Error`.
-    async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCardRow>, DomainError>;
 }
 
 /// SQLite-specific repository implementation.
@@ -213,14 +148,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
     }
 }
 
-/// Extension trait to attach the maintenance repository to the Unit of Work.
-pub trait MaintenanceUowExt {
-    /// Returns a boxed maintenance repository tied to the Unit of Work's transaction.
-    fn maintenance_repo(&mut self) -> Box<dyn MaintenanceRepository + Send + '_>;
-}
-
 impl<'conn> MaintenanceUowExt for SqliteUnitOfWork<'conn> {
-    fn maintenance_repo(&mut self) -> Box<dyn MaintenanceRepository + Send + '_> {
+    fn maintenance_repository(&mut self) -> Box<dyn MaintenanceRepository + Send + '_> {
         Box::new(SqliteMaintenanceRepository::new(&mut self.tx))
             as Box<dyn MaintenanceRepository + Send + '_>
     }
@@ -243,7 +172,7 @@ mod tests {
     )]
     async fn repo_get_card_by_stock_id_found(pool: SqlitePool) {
         let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = unit_of_work.maintenance_repo();
+        let mut repo = unit_of_work.maintenance_repository();
 
         let maybe = repo
             .get_card_by_stock_id("d3606635-4c4e-462b-ae9f-02c7ce47bc770")
@@ -265,7 +194,7 @@ mod tests {
     )]
     async fn repo_list_events_order(pool: SqlitePool) {
         let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = unit_of_work.maintenance_repo();
+        let mut repo = unit_of_work.maintenance_repository();
 
         let events = repo
             .list_events_for_card("11111111-1111-1111-1111-111111111111")
@@ -287,7 +216,7 @@ mod tests {
     )]
     async fn repo_list_due_cards(pool: SqlitePool) {
         let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = unit_of_work.maintenance_repo();
+        let mut repo = unit_of_work.maintenance_repository();
 
         let due = repo.list_due_cards().await.expect("list due");
         // Given current date in test environment (2025-12-28), the fixture with next_maintenance_date 2025-07-01 should be due
@@ -303,7 +232,7 @@ mod tests {
     )]
     async fn repo_record_event_transaction_via_repo(pool: SqlitePool) {
         let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
-        let mut repo = unit_of_work.maintenance_repo();
+        let mut repo = unit_of_work.maintenance_repository();
 
         let new_event = NewMaintenanceEvent {
             id: Uuid::parse_str("66666666-6666-6666-6666-666666666666").unwrap(),

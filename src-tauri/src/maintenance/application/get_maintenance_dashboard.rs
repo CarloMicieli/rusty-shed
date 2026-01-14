@@ -1,7 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::maintenance::domain::MaintenanceUowExt;
 use crate::maintenance::domain::maintenance_card::MaintenanceCard;
-use crate::maintenance::infrastructure::repository::MaintenanceUowExt;
 
 /// Use-case to retrieve maintenance cards that are due or overdue.
 pub struct GetMaintenanceDashboardUseCase;
@@ -9,12 +8,17 @@ pub struct GetMaintenanceDashboardUseCase;
 impl GetMaintenanceDashboardUseCase {
     /// Execute the use-case using the provided Unit of Work.
     ///
-    /// Returns a vector of domain `MaintenanceCard` items converted from
-    /// the infrastructure row mappers.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-    ) -> Result<Vec<MaintenanceCard>, DomainError> {
-        let mut repo = unit_of_work.maintenance_repo();
+    /// # Arguments
+    /// - `unit_of_work`: The unit of work providing access to the maintenance repository.
+    ///
+    /// # Returns
+    /// - `Ok(Vec<MaintenanceCard>)` containing due or overdue maintenance cards.
+    /// - `Err(DomainError)` if an error occurred during the operation.
+    pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<MaintenanceCard>, DomainError>
+    where
+        U: MaintenanceUowExt + Send,
+    {
+        let mut repo = unit_of_work.maintenance_repository();
 
         let rows = repo.list_due_cards().await?;
 
