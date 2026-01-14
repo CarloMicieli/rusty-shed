@@ -1,18 +1,25 @@
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
-use anyhow::Result;
-
 use crate::core::domain::domain_error::DomainError;
+use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
+use anyhow::Result;
 
 /// Stateless use case to fetch wishlist previews.
 pub struct GetWishlistsUseCase;
 
 impl GetWishlistsUseCase {
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-    ) -> Result<Vec<WishlistPreview>, DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    /// Execute the get wishlists use case.
+    ///
+    /// # Arguments
+    /// - `unit_of_work`: transactional unit providing repository access.
+    ///
+    /// # Returns
+    /// * `Vec<WishlistPreview>` on success
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<WishlistPreview>, DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
         let previews = repo.list_wishlist_previews().await?;
         Ok(previews)
     }

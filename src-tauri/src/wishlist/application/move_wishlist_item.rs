@@ -1,7 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::commands::MoveWishlistItemCommand;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
+use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that moves a wishlist item to a different wishlist.
 ///
@@ -10,17 +9,23 @@ use crate::wishlist::infrastructure::repository::WishlistUowExt;
 pub struct MoveWishlistItemUseCase;
 
 impl MoveWishlistItemUseCase {
-    /// Execute the move-wishlist-item use case.
+    /// Execute the move wishlist item use case.
     ///
+    /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
     /// - `cmd`: command containing the item id and destination wishlist id.
     ///
-    /// Returns `()` on success or a `DomainError` on failure.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// # Returns
+    /// * `()` on success
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         cmd: MoveWishlistItemCommand,
-    ) -> Result<(), DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    ) -> Result<(), DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
         repo.move_item(&cmd.item_id, &cmd.destination_wishlist_id)
             .await?;
         Ok(())

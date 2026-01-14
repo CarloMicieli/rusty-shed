@@ -1,7 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::commands::DeleteWishlistCommand;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
+use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that deletes a wishlist and its items.
 ///
@@ -13,15 +12,21 @@ pub struct DeleteWishlistUseCase;
 impl DeleteWishlistUseCase {
     /// Execute the delete-wishlist use case.
     ///
+    /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
     /// - `cmd`: command containing the wishlist id to delete.
     ///
-    /// Returns `()` on success or a `DomainError` on failure.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// # Returns
+    /// * `()` on success
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         cmd: DeleteWishlistCommand,
-    ) -> Result<(), DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    ) -> Result<(), DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
         repo.delete_wishlist(&cmd.id).await?;
         Ok(())
     }

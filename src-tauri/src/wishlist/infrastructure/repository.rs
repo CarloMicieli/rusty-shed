@@ -2,7 +2,7 @@ use crate::core::domain::currency::Currency;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::wishlist::domain::repository::WishlistRepository;
+use crate::wishlist::domain::repository::{WishlistRepository, WishlistUowExt};
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
@@ -236,16 +236,12 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     }
 }
 
-pub trait WishlistUowExt {
-    fn wishlist_repo(&mut self) -> Box<dyn WishlistRepository + '_>;
-}
-
 impl<'conn> WishlistUowExt for SqliteUnitOfWork<'conn> {
     /// Links the SQLite-specific repository to the Unit of Work.
     ///
     /// It re-borrows the internal transaction (`&mut *self.tx`) to provide
     /// the repository with a mutable executor without transferring ownership.
-    fn wishlist_repo(&mut self) -> Box<dyn WishlistRepository + '_> {
+    fn wishlist_repository(&mut self) -> Box<dyn WishlistRepository + '_> {
         Box::new(SqliteWishlistRepository::new(&mut self.tx))
     }
 }
@@ -264,7 +260,7 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn get_wishlist_repo_returns_none(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let mut repo = unit_of_work.wishlist_repo();
+        let mut repo = unit_of_work.wishlist_repository();
 
         let id = WishlistId::default();
         let result = repo.get_wishlist_by_id(&id).await?;
@@ -279,7 +275,7 @@ mod tests {
     )]
     async fn get_wishlist_repo_returns_some(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let mut repo = unit_of_work.wishlist_repo();
+        let mut repo = unit_of_work.wishlist_repository();
 
         let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
         let result = repo.get_wishlist_by_id(&id).await?;
@@ -323,7 +319,7 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn list_wishlist_previews_returns_empty(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let mut repo = unit_of_work.wishlist_repo();
+        let mut repo = unit_of_work.wishlist_repository();
 
         let previews = repo.list_wishlist_previews().await?;
         assert_eq!(previews.len(), 0);
@@ -337,7 +333,7 @@ mod tests {
     )]
     async fn list_wishlist_previews_returns_preview(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let mut repo = unit_of_work.wishlist_repo();
+        let mut repo = unit_of_work.wishlist_repository();
 
         let previews = repo.list_wishlist_previews().await?;
         assert!(!previews.is_empty());

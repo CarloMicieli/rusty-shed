@@ -1,7 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::commands::RenameWishlistCommand;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
+use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that renames an existing wishlist.
 ///
@@ -10,17 +9,23 @@ use crate::wishlist::infrastructure::repository::WishlistUowExt;
 pub struct RenameWishlistUseCase;
 
 impl RenameWishlistUseCase {
-    /// Execute the rename-wishlist use case.
+    /// Execute the rename wishlist use case.
     ///
+    /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
     /// - `cmd`: command containing the wishlist id and new name.
     ///
-    /// Returns `()` on success or a `DomainError` on failure.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// # Returns
+    /// * `()` on success
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         cmd: RenameWishlistCommand,
-    ) -> Result<(), DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    ) -> Result<(), DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
         repo.rename_wishlist(&cmd.id, &cmd.name).await?;
         Ok(())
     }

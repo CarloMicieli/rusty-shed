@@ -1,9 +1,8 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::commands::AddToWishlistCommand;
+use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
 
 /// Use case that adds a new item to an existing wishlist.
 ///
@@ -15,15 +14,21 @@ pub struct AddToWishlistUseCase;
 impl AddToWishlistUseCase {
     /// Execute the add-to-wishlist use case.
     ///
+    /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
     /// - `cmd`: domain command containing item details and target wishlist id.
     ///
-    /// Returns the created `WishlistItem` on success or a `DomainError`.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// # Returns
+    /// * `WishlistItem` on success
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         cmd: AddToWishlistCommand,
-    ) -> Result<WishlistItem, DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    ) -> Result<WishlistItem, DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
 
         let item = WishlistItem {
             id: WishlistItemId::default(),

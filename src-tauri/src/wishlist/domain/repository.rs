@@ -11,6 +11,7 @@ use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 /// lightweight previews. Methods are designed to be used within a Unit of
 /// Work / transaction and return `anyhow::Result` to surface underlying DB
 /// failures to callers.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait WishlistRepository: Send + Sync {
     /// Fetch a wishlist aggregate by its identifier.
@@ -58,4 +59,17 @@ pub trait WishlistRepository: Send + Sync {
         item_id: &WishlistItemId,
         destination_wishlist: &WishlistId,
     ) -> Result<(), DomainError>;
+}
+
+/// An extension trait that provides access to the `WishlistRepository`.
+///
+/// This follows the **Interface Segregation Principle**. By using extension traits,
+/// we avoid a "God Object" where one struct knows about every repository in the
+/// system. Instead, repositories are grouped by domain logic.
+pub trait WishlistUowExt: Send {
+    /// Returns a trait object for interacting with wishlist data.
+    ///
+    /// The repository is bound to the lifetime of the Unit of Work to ensure
+    /// it cannot outlive the transaction it relies on.
+    fn wishlist_repository(&mut self) -> Box<dyn WishlistRepository + '_>;
 }

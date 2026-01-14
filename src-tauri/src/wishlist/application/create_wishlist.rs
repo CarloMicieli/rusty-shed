@@ -1,10 +1,9 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::commands::CreateWishlistCommand;
+use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
 
 /// Use case responsible for creating a new wishlist aggregate.
 ///
@@ -15,23 +14,29 @@ use crate::wishlist::infrastructure::repository::WishlistUowExt;
 pub struct CreateWishlistUseCase;
 
 impl CreateWishlistUseCase {
-    /// Execute the create wishlist use case.
+    /// Execute the wishlist creation use case.
     ///
+    /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `cmd`: validated domain command describing the wishlist to create.
+    /// - `create_wishlist`: validated domain command describing the wishlist to create.
     ///
-    /// Returns the created `WishlistPreview` on success or a `DomainError`.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        cmd: CreateWishlistCommand,
-    ) -> Result<WishlistPreview, DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    /// # Returns
+    /// * `WishlistPreview` on success.
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
+        create_wishlist: CreateWishlistCommand,
+    ) -> Result<WishlistPreview, DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
 
         let wishlist = Wishlist {
             id: WishlistId::default(),
-            name: cmd.name,
-            notes: cmd.notes,
-            is_default: cmd.is_default,
+            name: create_wishlist.name,
+            notes: create_wishlist.notes,
+            is_default: create_wishlist.is_default,
             items: Vec::new(),
         };
 
@@ -50,5 +55,55 @@ impl CreateWishlistUseCase {
                 identifier: wishlist.id.to_string(),
             }),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::wishlist::application::testing::FakeUow;
+    use crate::wishlist::domain::MockWishlistRepository;
+    use chrono::NaiveDate;
+    use pretty_assertions::assert_eq;
+
+    #[ignore]
+    #[tokio::test]
+    async fn create_wishlist_success() {
+        let mut mock = MockWishlistRepository::new();
+
+        mock.expect_create_wishlist().times(1).returning(|_| Ok(()));
+
+        mock.expect_list_wishlist_previews()
+            .times(1)
+            .returning(move || {
+                let wishlist = WishlistPreview {
+                    id: WishlistId::default(),
+                    name: "New Wishlist".to_string(),
+                    is_default: false,
+                    count: 0,
+                    notes: None,
+                    total_value: std::collections::HashMap::new(),
+                    updated_at: NaiveDate::from_ymd_opt(2016, 7, 8)
+                        .unwrap()
+                        .and_hms_opt(9, 10, 11)
+                        .unwrap(),
+                };
+
+                Ok(vec![wishlist.clone()])
+            });
+
+        let mut unit_of_work = FakeUow::new(mock);
+
+        let cmd = CreateWishlistCommand {
+            name: "New Wishlist".to_string(),
+            notes: Some("Some notes".to_string()),
+            is_default: false,
+        };
+
+        let preview = CreateWishlistUseCase::execute(&mut unit_of_work, cmd)
+            .await
+            .expect("Failed to create wishlist");
+
+        assert_eq!(preview.name, "New Wishlist");
     }
 }

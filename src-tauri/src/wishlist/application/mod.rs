@@ -7,6 +7,8 @@ mod move_wishlist_item;
 mod remove_wishlist_item;
 mod rename_wishlist;
 mod set_default_wishlist;
+#[cfg(test)]
+mod testing;
 
 pub use self::get_wishlist_by_id::GetWishlistUseCase;
 pub use self::get_wishlists::GetWishlistsUseCase;

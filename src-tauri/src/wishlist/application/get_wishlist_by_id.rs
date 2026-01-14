@@ -1,8 +1,7 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
-use crate::wishlist::infrastructure::repository::WishlistUowExt;
 
 /// Use case to fetch a wishlist by its identifier.
 ///
@@ -12,11 +11,24 @@ use crate::wishlist::infrastructure::repository::WishlistUowExt;
 pub struct GetWishlistUseCase;
 
 impl GetWishlistUseCase {
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    /// Execute the get wishlist by id use case.
+    ///
+    /// # Arguments
+    /// - `unit_of_work`: transactional unit providing repository access.
+    /// - `id`: identifier of the wishlist to retrieve.
+    ///
+    /// # Returns
+    /// * `Ok(Some(Wishlist))` if found.
+    /// * `Ok(None)` if not found.
+    /// * `DomainError` on failure.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         id: &WishlistId,
-    ) -> Result<Option<Wishlist>, DomainError> {
-        let mut repo = unit_of_work.wishlist_repo();
+    ) -> Result<Option<Wishlist>, DomainError>
+    where
+        U: WishlistUowExt + Send,
+    {
+        let mut repo = unit_of_work.wishlist_repository();
         let wishlist = repo.get_wishlist_by_id(id).await?;
         Ok(wishlist)
     }
