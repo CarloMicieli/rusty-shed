@@ -1,20 +1,21 @@
-use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::OwnedRollingStock;
 use crate::collecting::domain::RemoveCollectionItem;
-use crate::collecting::infrastructure::repositories::CollectingUowExt;
+use crate::collecting::domain::{Collection, CollectionUowExt};
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 
 pub struct RemoveCollectionItemCommand;
 
 impl RemoveCollectionItemCommand {
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         remove_cmd: RemoveCollectionItem,
-    ) -> Result<CollectionView, DomainError> {
-        let mut repo = unit_of_work.collection_repository();
+    ) -> Result<CollectionView, DomainError>
+    where
+        U: CollectionUowExt + Send,
+    {
+        let mut repo = unit_of_work.collections_repository();
 
         // Load current view and rehydrate into domain `Collection` so we can
         // apply domain operations and persist resulting events.
@@ -65,5 +66,49 @@ impl RemoveCollectionItemCommand {
         // Return the refreshed view after persistence
         let updated = repo.find_view().await?;
         Ok(updated)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::domain::railway_model::Category;
+    use crate::collecting::application::testing::FakeUow;
+    use crate::collecting::domain::{
+        CollectionId, CollectionItemId, CollectionSummary, MockCollectionRepository,
+    };
+
+    #[tokio::test]
+    async fn it_should_return_collection_view() {
+        let mut mock = MockCollectionRepository::new();
+        mock.expect_find_view().times(2).returning(move || {
+            let view = CollectionView {
+                id: CollectionId::default(),
+                name: "My Collection".to_string(),
+                summary: CollectionSummary::default(),
+                total_value: None,
+                items: vec![],
+            };
+            Ok(view.clone())
+        });
+
+        mock.expect_save().times(1).returning(move |_| Ok(()));
+
+        let mut unit_of_work = FakeUow::new(mock);
+
+        let date = chrono::NaiveDate::from_ymd_opt(2024, 6, 1).unwrap();
+        let remove_cmd = RemoveCollectionItem {
+            collection_item_id: CollectionItemId::try_from(
+                "trn:collection-item:89df34a4-ffee-49a2-9406-955264dea4f8",
+            )
+            .unwrap(),
+            category: Category::Locomotives,
+            removed_date: date,
+        };
+        let result = RemoveCollectionItemCommand::execute(&mut unit_of_work, remove_cmd)
+            .await
+            .expect("Failed to remove collection item");
+
+        assert_eq!(result.items.len(), 0);
     }
 }

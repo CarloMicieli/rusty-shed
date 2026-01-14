@@ -7,6 +7,7 @@ use crate::core::domain::domain_error::DomainError;
 ///
 /// This trait abstracts away the database engine (SQLite, Postgres, etc.),
 /// allowing the business logic to remain decoupled from infrastructure details.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait CollectionRepository: Send + Sync {
     /// Retrieves a collection from the underlying data store.
@@ -30,4 +31,17 @@ pub trait CollectionRepository: Send + Sync {
     ///
     /// Returns a `DepotView` on success or a `DomainError` on failure.
     async fn find_depot_view(&mut self) -> Result<DepotView, DomainError>;
+}
+
+/// An extension trait that provides access to the `CollectionRepository`.
+///
+/// This follows the **Interface Segregation Principle**. By using extension traits,
+/// we avoid a "God Object" where one struct knows about every repository in the
+/// system. Instead, repositories are grouped by domain logic.
+pub trait CollectionUowExt: Send {
+    /// Returns a trait object for interacting with collections data.
+    ///
+    /// The repository is bound to the lifetime of the Unit of Work to ensure
+    /// it cannot outlive the transaction it relies on.
+    fn collections_repository(&mut self) -> Box<dyn CollectionRepository + '_>;
 }

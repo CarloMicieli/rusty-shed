@@ -46,3 +46,7 @@ pub use purchase_info::PurchaseInfo;
 pub use purchase_info::{PreOrderInfo, PurchasedInfo, SoldInfo};
 pub use purchase_info_id::PurchaseInfoId;
 pub use repository::CollectionRepository;
+pub use repository::CollectionUowExt;
+
+#[cfg(test)]
+pub use repository::MockCollectionRepository;

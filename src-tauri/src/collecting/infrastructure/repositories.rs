@@ -1,11 +1,11 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
-use crate::collecting::domain::CollectionRepository;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::{
     BoxCondition, Collection, CollectionEvent, CollectionId, ModelCondition, OwnedRollingStockId,
     PurchaseCondition, PurchaseInfoId,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionSummary, DepotView};
+use crate::collecting::domain::{CollectionRepository, CollectionUowExt};
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
@@ -229,6 +229,16 @@ impl<'conn> SqliteCollectionRepository<'conn> {
     }
 }
 
+impl<'conn> CollectionUowExt for SqliteUnitOfWork<'conn> {
+    /// Links the SQLite-specific repository to the Unit of Work.
+    ///
+    /// It re-borrows the internal transaction (`&mut *self.tx`) to provide
+    /// the repository with a mutable executor without transferring ownership.
+    fn collections_repository(&mut self) -> Box<dyn CollectionRepository + '_> {
+        Box::new(SqliteCollectionRepository::new(&mut self.tx))
+    }
+}
+
 #[async_trait::async_trait]
 impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a collection.
@@ -420,29 +430,6 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
     }
 }
 
-/// An extension trait that provides access to the `CollectionRepository`.
-///
-/// This follows the **Interface Segregation Principle**. By using extension traits,
-/// we avoid a "God Object" where one struct knows about every repository in the
-/// system. Instead, repositories are grouped by domain logic.
-pub trait CollectingUowExt {
-    /// Returns a trait object for interacting with collection data.
-    ///
-    /// The repository is bound to the lifetime of the Unit of Work to ensure
-    /// it cannot outlive the transaction it relies on.
-    fn collection_repository(&mut self) -> Box<dyn CollectionRepository + '_>;
-}
-
-impl<'conn> CollectingUowExt for SqliteUnitOfWork<'conn> {
-    /// Links the SQLite-specific repository to the Unit of Work.
-    ///
-    /// It re-borrows the internal transaction (`&mut *self.tx`) to provide
-    /// the repository with a mutable executor without transferring ownership.
-    fn collection_repository(&mut self) -> Box<dyn CollectionRepository + '_> {
-        Box::new(SqliteCollectionRepository::new(&mut self.tx))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -464,7 +451,7 @@ mod tests {
             .expect("should create unit of work");
 
         let collection = unit_of_work
-            .collection_repository()
+            .collections_repository()
             .find_view()
             .await
             .expect("should get collection");
@@ -486,7 +473,7 @@ mod tests {
             .expect("should create unit of work");
 
         let collection = unit_of_work
-            .collection_repository()
+            .collections_repository()
             .find_view()
             .await
             .expect("should get collection");
@@ -573,7 +560,7 @@ mod tests {
         let mut collection = Collection::default();
 
         unit_of_work
-            .collection_repository()
+            .collections_repository()
             .save(&mut collection)
             .await
             .expect("save should succeed");
@@ -633,7 +620,7 @@ mod tests {
         collection.add_item(add_collection_item);
 
         unit_of_work
-            .collection_repository()
+            .collections_repository()
             .save(&mut collection)
             .await
             .expect("save should succeed");
@@ -709,7 +696,7 @@ mod tests {
         collection.add_item(add_collection_item);
 
         unit_of_work
-            .collection_repository()
+            .collections_repository()
             .save(&mut collection)
             .await
             .expect("save should succeed");
@@ -717,7 +704,7 @@ mod tests {
 
         // Now remove the item
         let mut uow2 = SqliteUnitOfWork::new(&conn).await.expect("uow2");
-        let mut repo = uow2.collection_repository();
+        let mut repo = uow2.collections_repository();
         let view = repo.find_view().await.expect("find view");
 
         // Build domain collection from view (reuse logic similar to use-case)
@@ -799,7 +786,7 @@ mod tests {
             .expect("should create unit of work");
 
         let depot = unit_of_work
-            .collection_repository()
+            .collections_repository()
             .find_depot_view()
             .await
             .expect("should get depot view");
