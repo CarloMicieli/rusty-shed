@@ -1,7 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::dashboard::domain::{DashboardSummary, DashboardUowExt, QueryParams};
-use log::info;
 
 /// Query to retrieve the dashboard summary from the database.
 pub struct GetDashboardSummaryQuery;
@@ -17,13 +15,14 @@ impl GetDashboardSummaryQuery {
     /// # Returns
     /// - `Ok(DashboardSummary)` dashboard summary on success.
     /// - `Err(DomainError)` with an error message on failure.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         number_of_recent_items: u8,
         number_of_depot_entries: u8,
-    ) -> Result<DashboardSummary, DomainError> {
-        info!("Retrieving dashboard summary");
-
+    ) -> Result<DashboardSummary, DomainError>
+    where
+        U: DashboardUowExt + Send,
+    {
         let params = QueryParams {
             number_of_recent_items,
             number_of_depot_entries,

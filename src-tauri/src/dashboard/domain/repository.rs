@@ -2,6 +2,7 @@ use crate::core::domain::domain_error::DomainError;
 use crate::dashboard::domain::DashboardSummary;
 
 /// Repository trait for accessing dashboard-related data.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait DashboardRepository: Send + Sync {
     /// Retrieves a comprehensive summary for the dashboard.
@@ -20,7 +21,7 @@ pub trait DashboardRepository: Send + Sync {
 /// This follows the **Interface Segregation Principle**. By using extension traits,
 /// we avoid a "God Object" where one struct knows about every repository in the
 /// system. Instead, repositories are grouped by domain logic.
-pub trait DashboardUowExt {
+pub trait DashboardUowExt: Send {
     /// Returns a trait object for interacting with dashboard data.
     ///
     /// The repository is bound to the lifetime of the Unit of Work to ensure
