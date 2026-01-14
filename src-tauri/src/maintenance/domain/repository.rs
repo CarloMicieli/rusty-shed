@@ -34,6 +34,7 @@ use async_trait::async_trait;
 /// - SQL errors, constraint violations, and mapping/parsing problems are
 ///   surfaced via the `anyhow::Error` value returned by methods. Callers can
 ///   inspect or log these errors as needed.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait MaintenanceRepository {
     /// Fetch the maintenance card by owned rolling stock id.
