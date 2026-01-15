@@ -8,7 +8,7 @@ pub async fn find_wishlist_by_id(
     id: &WishlistId,
 ) -> Result<Option<WishlistRow>, sqlx::Error> {
     let sql = r#"
-            SELECT id, name, notes, is_default, created_at, updated_at
+            SELECT id, name, notes, is_default, version, created_at, updated_at
             FROM wishlists
             WHERE id = ?
         "#;
@@ -86,8 +86,8 @@ pub async fn insert_wishlist(
     row: WishlistRow,
 ) -> Result<(), sqlx::Error> {
     let sql = r#"
-        INSERT INTO wishlists (id, name, notes, is_default, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO wishlists (id, name, notes, is_default, version, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     "#;
 
     sqlx::query(sql)
@@ -95,6 +95,7 @@ pub async fn insert_wishlist(
         .bind(row.name)
         .bind(row.notes)
         .bind(row.is_default)
+        .bind(row.version)
         .bind(row.created_at)
         .bind(row.updated_at)
         .execute(executor)
@@ -248,6 +249,7 @@ mod tests {
             name: "Test Wishlist".to_string(),
             notes: Some("Some notes".to_string()),
             is_default: 1,
+            version: 0,
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: chrono::Utc::now().naive_utc(),
         };

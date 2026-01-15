@@ -1,5 +1,6 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::domain::MonetaryAmount;
+use crate::core::domain::metadata::Metadata;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
@@ -8,6 +9,7 @@ use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use crate::wishlist::infrastructure::entities::{WishlistItemRow, WishlistRow};
 use anyhow::Context;
+use chrono::{DateTime, Utc};
 use std::convert::TryFrom;
 use std::str::FromStr;
 
@@ -16,11 +18,21 @@ impl TryFrom<WishlistRow> for Wishlist {
 
     fn try_from(row: WishlistRow) -> Result<Self, Self::Error> {
         let id = WishlistId::try_from(row.id.as_str()).context("invalid wishlist id")?;
+
+        // Map DB NaiveDateTime into DateTime<Utc> for Metadata
+        let created_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(row.created_at, Utc);
+        let updated_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(row.updated_at, Utc);
+
         Ok(Wishlist {
             id,
             name: row.name,
             notes: row.notes,
             is_default: row.is_default != 0,
+            metadata: Metadata {
+                version: row.version as u8,
+                created_at,
+                updated_at,
+            },
             items: vec![],
         })
     }

@@ -1,7 +1,8 @@
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// The metadata information for the current resource
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize, specta::Type)]
 pub struct Metadata {
     pub version: u8,
     pub created_at: DateTime<Utc>,

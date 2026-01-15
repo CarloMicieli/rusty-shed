@@ -25,7 +25,7 @@ impl CreateRailwayModelUseCase {
     /// # Returns
     /// * `Ok(RailwayModelId)` containing the new railway model ID on success,
     /// * `Err(DomainError)` with an error message on failure.
-    /// 
+    ///
     /// # Type Parameters
     /// * `U` - The type of the unit of work, which must implement `RailwayModelUowExt` and be `Send`.
     pub async fn execute<U>(

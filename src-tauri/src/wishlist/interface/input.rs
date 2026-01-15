@@ -1,6 +1,6 @@
-use chrono::NaiveDate;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]

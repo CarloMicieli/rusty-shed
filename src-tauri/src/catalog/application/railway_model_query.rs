@@ -15,7 +15,7 @@ impl GetRailwayModelByIdQuery {
     /// - `Ok(Some(RailwayModel))` when the railway model is found.
     /// - `Ok(None)` when the railway model is not found.
     /// - `Err(DomainError)` with an error message on failure.
-    /// 
+    ///
     /// # Type Parameters
     /// * `U` - The type of the unit of work, which must implement `RailwayModelUowExt` and be `Send`.
     pub async fn execute<U>(

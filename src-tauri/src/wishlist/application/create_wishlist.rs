@@ -1,5 +1,6 @@
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::metadata::Metadata;
 use crate::wishlist::domain::commands::CreateWishlistCommand;
 use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist::Wishlist;
@@ -44,6 +45,7 @@ impl CreateWishlistUseCase {
             name: create_wishlist.name,
             notes: create_wishlist.notes,
             is_default: create_wishlist.is_default,
+            metadata: Metadata::default(),
             items: Vec::new(),
         };
 

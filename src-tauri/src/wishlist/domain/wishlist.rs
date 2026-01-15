@@ -1,3 +1,4 @@
+use crate::core::domain::metadata::Metadata;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,8 @@ pub struct Wishlist {
     pub is_default: bool,
     /// Items contained in this wishlist.
     pub items: Vec<WishlistItem>,
+    /// Metadata about the wishlist (creation date, last modified, etc.).
+    pub metadata: Metadata,
 }
 
 impl Wishlist {

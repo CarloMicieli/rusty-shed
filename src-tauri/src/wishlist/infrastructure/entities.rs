@@ -10,6 +10,7 @@ pub struct WishlistRow {
     pub name: String,
     pub notes: Option<String>,
     pub is_default: i64, // SQLite INTEGER 0/1
+    pub version: i64,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }

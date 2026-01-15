@@ -13,7 +13,6 @@ use crate::wishlist::infrastructure::entities::{
     WishlistItemRow, WishlistPreviewProjection, WishlistRow,
 };
 use anyhow::Error as AnyhowError;
-use chrono::Utc;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
@@ -101,14 +100,15 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     }
 
     async fn create_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError> {
-        let now = Utc::now().naive_utc();
+        // Use wishlist.metadata values for deterministic timestamps and version
         let row = WishlistRow {
             id: wishlist.id.to_string(),
             name: wishlist.name.clone(),
             notes: wishlist.notes.clone(),
             is_default: if wishlist.is_default { 1 } else { 0 },
-            created_at: now,
-            updated_at: now,
+            version: wishlist.metadata.version as i64,
+            created_at: wishlist.metadata.created_at.naive_utc(),
+            updated_at: wishlist.metadata.updated_at.naive_utc(),
         };
 
         database::insert_wishlist(&mut *self.executor, row)
