@@ -15,6 +15,9 @@ impl GetWishlistsUseCase {
     /// # Returns
     /// * `Vec<WishlistPreview>` on success
     /// * `DomainError` on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<WishlistPreview>, DomainError>
     where
         U: WishlistUowExt + Send,

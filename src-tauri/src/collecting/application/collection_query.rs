@@ -14,6 +14,9 @@ impl GetCollectionQuery {
     /// # Returns
     /// - `Ok(Collection)` containing the entire collection on success.
     /// - `Err(DomainError)` with an error message on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `CollectionUowExt` and `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<CollectionView, DomainError>
     where
         U: CollectionUowExt + Send,

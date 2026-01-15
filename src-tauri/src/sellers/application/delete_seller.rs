@@ -14,6 +14,9 @@ impl DeleteSellerUseCase {
     /// # Returns
     /// - `Ok(u64)` containing the number of deleted records (typically 1 if the seller was found and deleted, 0 if not found).
     /// - `Err(DomainError)` if an error occurred during the operation.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `SellersUowExt` and `Send`.
     pub async fn execute<U>(unit_of_work: &mut U, id: &SellerId) -> Result<u64, DomainError>
     where
         U: SellersUowExt + Send,

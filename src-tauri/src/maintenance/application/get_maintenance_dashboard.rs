@@ -14,6 +14,9 @@ impl GetMaintenanceDashboardUseCase {
     /// # Returns
     /// - `Ok(Vec<MaintenanceCard>)` containing due or overdue maintenance cards.
     /// - `Err(DomainError)` if an error occurred during the operation.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `MaintenanceUowExt` and `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<MaintenanceCard>, DomainError>
     where
         U: MaintenanceUowExt + Send,

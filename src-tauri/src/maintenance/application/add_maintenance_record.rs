@@ -19,6 +19,9 @@ impl AddMaintenanceRecordUseCase {
     /// # Returns
     /// - `Ok(())` if the operation was successful.
     /// - `Err(DomainError)` if an error occurred during the operation.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `MaintenanceUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: AddMaintenanceRecordInput,

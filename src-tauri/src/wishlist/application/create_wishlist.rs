@@ -24,6 +24,10 @@ impl CreateWishlistUseCase {
     /// # Returns
     /// * `WishlistPreview` on success.
     /// * `DomainError` on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
+    /// - `P`: Identifier provider type for `WishlistItemId`.
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,

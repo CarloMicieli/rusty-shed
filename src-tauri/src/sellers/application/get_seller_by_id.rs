@@ -16,6 +16,9 @@ impl GetSellerByIdUseCase {
     /// - `Ok(Some(Seller))` if the seller was found.
     /// - `Ok(None)` if the seller was not found.
     /// - `Err(DomainError)` if an error occurred during the operation.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `SellersUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         id: &SellerId,

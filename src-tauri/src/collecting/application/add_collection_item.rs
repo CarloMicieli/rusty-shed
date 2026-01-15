@@ -6,6 +6,18 @@ use crate::core::domain::domain_error::DomainError;
 pub struct AddCollectionItemCommand;
 
 impl AddCollectionItemCommand {
+    /// Execute the add collection item use case.
+    ///
+    /// # Arguments
+    /// - `unit_of_work`: transactional unit providing repository access.
+    /// - `add_cmd`: command carrying the details of the item to add.
+    ///
+    /// # Returns
+    /// * `CollectionView` on success
+    /// * `DomainError` on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `CollectionUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         add_cmd: AddCollectionItem,

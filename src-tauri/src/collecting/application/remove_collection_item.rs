@@ -8,6 +8,18 @@ use crate::core::domain::domain_error::DomainError;
 pub struct RemoveCollectionItemCommand;
 
 impl RemoveCollectionItemCommand {
+    /// Execute the remove collection item use case.
+    ///
+    /// # Arguments
+    /// - `unit_of_work`: transactional unit providing repository access.
+    /// - `remove_cmd`: command carrying the details of the item to remove.
+    ///
+    /// # Returns
+    /// * `CollectionView` on success
+    /// * `DomainError` on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `CollectionUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         remove_cmd: RemoveCollectionItem,

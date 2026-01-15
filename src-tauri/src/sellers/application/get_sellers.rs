@@ -13,6 +13,9 @@ impl GetSellersUseCase {
     /// # Returns
     /// - `Ok(Vec<Seller>)` containing the list of sellers.
     /// - `Err(DomainError)` if an error occurred during the operation.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `SellersUowExt` and `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<Seller>, DomainError>
     where
         U: SellersUowExt + Send,

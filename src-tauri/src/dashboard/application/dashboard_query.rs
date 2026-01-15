@@ -15,6 +15,9 @@ impl GetDashboardSummaryQuery {
     /// # Returns
     /// - `Ok(DashboardSummary)` dashboard summary on success.
     /// - `Err(DomainError)` with an error message on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `DashboardUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         number_of_recent_items: u8,

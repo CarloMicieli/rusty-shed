@@ -19,6 +19,9 @@ impl CreateSellerUseCase {
     /// # Returns
     /// - `Ok(Seller)` if the operation was successful, containing the created seller.
     /// - `Err(DomainError)` if an error occurred during the operation.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `SellersUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: CreateSellerInput,

@@ -21,6 +21,9 @@ impl GetWishlistUseCase {
     /// * `Ok(Some(Wishlist))` if found.
     /// * `Ok(None)` if not found.
     /// * `DomainError` on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         id: &WishlistId,

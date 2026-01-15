@@ -6,6 +6,17 @@ use crate::core::domain::domain_error::DomainError;
 pub struct GetDepotQuery;
 
 impl GetDepotQuery {
+    /// Execute the query to retrieve the depot view.
+    ///
+    /// # Arguments
+    /// * `unit_of_work` - The unit of work managing the database transaction.
+    ///
+    /// # Returns
+    /// - `Ok(DepotView)` containing the depot view on success.
+    /// - `Err(DomainError)` with an error message on failure.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit of work type implementing `CollectionUowExt` and `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<DepotView, DomainError>
     where
         U: CollectionUowExt + Send,
