@@ -71,7 +71,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[tokio::test]
-    async fn create_wishlist_success() {
+    async fn it_should_create_wishlists() {
         let mut mock = MockWishlistRepository::new();
 
         let id = WishlistId::default();

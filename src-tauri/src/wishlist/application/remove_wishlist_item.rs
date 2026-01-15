@@ -31,3 +31,32 @@ impl RemoveWishlistItemUseCase {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::wishlist::application::testing::FakeUow;
+    use crate::wishlist::domain::MockWishlistRepository;
+    use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
+    use mockall::predicate::eq;
+
+    #[tokio::test]
+    async fn it_should_remove_wishlist_items() {
+        let mut mock = MockWishlistRepository::new();
+
+        let item_id = WishlistItemId::default();
+
+        mock.expect_remove_item()
+            .times(1)
+            .with(eq(item_id.clone()))
+            .returning(|_| Ok(()));
+
+        let mut unit_of_work = FakeUow::new(mock);
+
+        let cmd = RemoveWishlistItemCommand { item_id };
+
+        let res = RemoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await;
+
+        assert!(res.is_ok());
+    }
+}

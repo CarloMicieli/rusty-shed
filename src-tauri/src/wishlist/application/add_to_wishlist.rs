@@ -49,3 +49,42 @@ impl AddToWishlistUseCase {
         Ok(item)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::domain::railway_model::RailwayModelId;
+    use crate::core::domain::test_utils::MockIdProvider;
+    use crate::wishlist::application::testing::FakeUow;
+    use crate::wishlist::domain::MockWishlistRepository;
+    use crate::wishlist::domain::wishlist_id::WishlistId;
+    use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+    use crate::wishlist::domain::wishlist_status::WishlistStatus;
+
+    #[tokio::test]
+    async fn it_should_add_items_wishlists() {
+        let mut mock = MockWishlistRepository::new();
+
+        let id = WishlistItemId::default();
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:test:1234").unwrap();
+        let test_id_provider = MockIdProvider::new(id.clone());
+
+        mock.expect_add_item().times(1).returning(|_, _| Ok(()));
+
+        let mut unit_of_work = FakeUow::new(mock);
+
+        let cmd = AddToWishlistCommand {
+            wishlist_id: WishlistId::default(),
+            railway_model_id,
+            priority: WishlistPriority::Normal,
+            status: WishlistStatus::Wanted,
+            desired_price: None,
+            notes: None,
+            added_date: chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
+        };
+
+        let result = AddToWishlistUseCase::execute(&mut unit_of_work, test_id_provider, cmd).await;
+
+        assert!(result.is_ok());
+    }
+}

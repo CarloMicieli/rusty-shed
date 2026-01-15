@@ -31,3 +31,37 @@ impl MoveWishlistItemUseCase {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::wishlist::application::testing::FakeUow;
+    use crate::wishlist::domain::MockWishlistRepository;
+    use crate::wishlist::domain::wishlist_id::WishlistId;
+    use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
+    use mockall::predicate::eq;
+
+    #[tokio::test]
+    async fn it_should_move_wishlist_items() {
+        let mut mock = MockWishlistRepository::new();
+
+        let item_id = WishlistItemId::default();
+        let destination_wishlist_id = WishlistId::default();
+
+        mock.expect_move_item()
+            .times(1)
+            .with(eq(item_id.clone()), eq(destination_wishlist_id.clone()))
+            .returning(|_, _| Ok(()));
+
+        let mut unit_of_work = FakeUow::new(mock);
+
+        let cmd = MoveWishlistItemCommand {
+            item_id,
+            destination_wishlist_id,
+        };
+
+        let res = MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await;
+
+        assert!(res.is_ok());
+    }
+}
