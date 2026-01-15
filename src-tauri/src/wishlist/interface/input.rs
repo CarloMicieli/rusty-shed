@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,7 @@ pub struct AddToWishlistInput {
     pub desired_price_amount: Option<i64>,
     pub desired_price_currency: Option<String>,
     pub notes: Option<String>,
-    pub added_date: Option<String>,
+    pub added_date: Option<NaiveDate>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]

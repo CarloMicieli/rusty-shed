@@ -120,13 +120,6 @@ impl TryFrom<AddToWishlistInput> for AddToWishlistCommand {
             _ => None,
         };
 
-        let added_date = if let Some(s) = input.added_date {
-            NaiveDate::parse_from_str(&s, "%Y-%m-%d")
-                .map_err(|e| DomainError::Validation(e.to_string()))?
-        } else {
-            chrono::Utc::now().date_naive()
-        };
-
         Ok(AddToWishlistCommand {
             wishlist_id,
             railway_model_id,
@@ -134,7 +127,7 @@ impl TryFrom<AddToWishlistInput> for AddToWishlistCommand {
             status: input.status.unwrap_or_default(),
             desired_price,
             notes: input.notes,
-            added_date,
+            added_date: input.added_date.unwrap_or(chrono::Utc::now().date_naive()),
         })
     }
 }
