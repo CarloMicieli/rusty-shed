@@ -7,14 +7,18 @@ use crate::core::domain::IdProvider;
 /// generate a fresh value on `Default`, or numeric types where `Default` is
 /// zero). For more sophisticated strategies, implement a custom provider in
 /// infrastructure.
-#[allow(dead_code)]
-pub(crate) struct RuntimeIdProvider;
+pub struct RuntimeIdProvider;
 
-#[allow(dead_code)]
 impl RuntimeIdProvider {
     /// Construct a new runtime provider.
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for RuntimeIdProvider {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
