@@ -31,10 +31,7 @@ impl<'conn> SqliteWishlistRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     /// Executes the SQLite-specific logic to fetch a wishlist by its ID.
-    async fn get_wishlist_by_id(
-        &mut self,
-        id: &WishlistId,
-    ) -> Result<Option<Wishlist>, DomainError> {
+    async fn find_by_id(&mut self, id: &WishlistId) -> Result<Option<Wishlist>, DomainError> {
         let wishlist_row = database::find_wishlist_by_id(&mut *self.executor, id)
             .await
             .with_domain_context("Error finding wishlist by id")?;
@@ -59,7 +56,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         Ok(Some(wishlist))
     }
 
-    async fn list_wishlist_previews(&mut self) -> Result<Vec<WishlistPreview>, DomainError> {
+    async fn find_wishlists(&mut self) -> Result<Vec<WishlistPreview>, DomainError> {
         let rows: Vec<WishlistPreviewProjection> =
             database::find_wishlist_previews(&mut *self.executor)
                 .await
@@ -263,7 +260,7 @@ mod tests {
         let mut repo = unit_of_work.wishlist_repository();
 
         let id = WishlistId::default();
-        let result = repo.get_wishlist_by_id(&id).await?;
+        let result = repo.find_by_id(&id).await?;
         assert!(result.is_none());
 
         Ok(())
@@ -278,7 +275,7 @@ mod tests {
         let mut repo = unit_of_work.wishlist_repository();
 
         let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
-        let result = repo.get_wishlist_by_id(&id).await?;
+        let result = repo.find_by_id(&id).await?;
 
         assert!(result.is_some());
         let wishlist = result.unwrap();
@@ -321,7 +318,7 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repository();
 
-        let previews = repo.list_wishlist_previews().await?;
+        let previews = repo.find_wishlists().await?;
         assert_eq!(previews.len(), 0);
 
         Ok(())
@@ -335,7 +332,7 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
         let mut repo = unit_of_work.wishlist_repository();
 
-        let previews = repo.list_wishlist_previews().await?;
+        let previews = repo.find_wishlists().await?;
         assert!(!previews.is_empty());
 
         // Find the preview for our fixture wishlist id/name

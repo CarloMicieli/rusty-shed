@@ -1,24 +1,20 @@
 use crate::core::domain::domain_error::DomainError;
+use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::domain::repository::WishlistUowExt;
-use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 
-/// Use case to fetch a wishlist by its identifier.
-///
-/// This use case retrieves a `Wishlist` from the provided `SqliteUnitOfWork`.
-/// It returns `Ok(Some(wishlist))` when found, `Ok(None)` when no wishlist
-/// exists for the given id, or an error if the repository operation fails.
-pub struct GetWishlistUseCase;
+/// Query to fetch a wishlist by its identifier.
+pub struct GetWishlistByIdQuery;
 
-impl GetWishlistUseCase {
-    /// Execute the get wishlist by id use case.
+impl GetWishlistByIdQuery {
+    /// Execute the get wishlist by id query.
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
     /// - `id`: identifier of the wishlist to retrieve.
     ///
     /// # Returns
-    /// * `Ok(Some(Wishlist))` if found.
+    /// * `Ok(Some(WishlistView))` if the wishlist is found.
     /// * `Ok(None)` if not found.
     /// * `DomainError` on failure.
     ///
@@ -27,19 +23,18 @@ impl GetWishlistUseCase {
     pub async fn execute<U>(
         unit_of_work: &mut U,
         id: &WishlistId,
-    ) -> Result<Option<Wishlist>, DomainError>
+    ) -> Result<Option<WishlistView>, DomainError>
     where
         U: WishlistUowExt + Send,
     {
-        let mut repo = unit_of_work.wishlist_repository();
-        let wishlist = repo.get_wishlist_by_id(id).await?;
-        Ok(wishlist)
+        let wishlist = unit_of_work.wishlist_repository().find_by_id(id).await?;
+        Ok(wishlist.map(WishlistView::from))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::GetWishlistUseCase;
+    use super::GetWishlistByIdQuery;
     use crate::core::domain::currency::Currency;
     use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::wishlist::domain::wishlist_id::WishlistId;
@@ -52,7 +47,7 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
 
         let id = WishlistId::default();
-        let res = GetWishlistUseCase::execute(&mut unit_of_work, &id)
+        let res = GetWishlistByIdQuery::execute(&mut unit_of_work, &id)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
@@ -69,7 +64,7 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
 
         let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
-        let res = GetWishlistUseCase::execute(&mut unit_of_work, &id)
+        let res = GetWishlistByIdQuery::execute(&mut unit_of_work, &id)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
@@ -79,10 +74,11 @@ mod tests {
             wishlist.id.to_string(),
             "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
         );
-        assert_eq!(wishlist.items.len(), 1);
+        let items = wishlist.items.expect("items present");
+        assert_eq!(items.len(), 1);
 
         // Check the item's desired price mapping
-        let item = &wishlist.items[0];
+        let item = &items[0];
         // Assert the railway model id was mapped correctly from the DB row
         assert_eq!(
             item.railway_model_id.to_string(),

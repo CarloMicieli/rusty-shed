@@ -52,7 +52,7 @@ impl CreateWishlistUseCase {
         repo.create_wishlist(&wishlist).await?;
 
         // Return the freshly created preview by listing previews and finding by id
-        let previews = repo.list_wishlist_previews().await?;
+        let previews = repo.find_wishlists().await?;
         let maybe = previews
             .into_iter()
             .find(|p| p.id.to_string() == wishlist.id.to_string());
@@ -85,24 +85,22 @@ mod tests {
 
         mock.expect_create_wishlist().times(1).returning(|_| Ok(()));
 
-        mock.expect_list_wishlist_previews()
-            .times(1)
-            .returning(move || {
-                let wishlist = WishlistPreview {
-                    id: id.clone(),
-                    name: "New Wishlist".to_string(),
-                    is_default: false,
-                    count: 0,
-                    notes: None,
-                    total_value: std::collections::HashMap::new(),
-                    updated_at: NaiveDate::from_ymd_opt(2016, 7, 8)
-                        .unwrap()
-                        .and_hms_opt(9, 10, 11)
-                        .unwrap(),
-                };
+        mock.expect_find_wishlists().times(1).returning(move || {
+            let wishlist = WishlistPreview {
+                id: id.clone(),
+                name: "New Wishlist".to_string(),
+                is_default: false,
+                count: 0,
+                notes: None,
+                total_value: std::collections::HashMap::new(),
+                updated_at: NaiveDate::from_ymd_opt(2016, 7, 8)
+                    .unwrap()
+                    .and_hms_opt(9, 10, 11)
+                    .unwrap(),
+            };
 
-                Ok(vec![wishlist.clone()])
-            });
+            Ok(vec![wishlist.clone()])
+        });
 
         let mut unit_of_work = FakeUow::new(mock);
 

@@ -19,17 +19,14 @@ pub trait WishlistRepository: Send + Sync {
     /// Returns `Ok(Some(Wishlist))` when the wishlist exists, `Ok(None)` when no
     /// wishlist is found for the provided id, or an `Err` when the underlying
     /// repository fails.
-    async fn get_wishlist_by_id(
-        &mut self,
-        id: &WishlistId,
-    ) -> Result<Option<Wishlist>, DomainError>;
+    async fn find_by_id(&mut self, id: &WishlistId) -> Result<Option<Wishlist>, DomainError>;
 
     /// List lightweight wishlist previews.
     ///
     /// Previews contain summary information (counts and total values) and are
     /// suitable for list views where the full wishlist aggregate is not
     /// required.
-    async fn list_wishlist_previews(&mut self) -> Result<Vec<WishlistPreview>, DomainError>;
+    async fn find_wishlists(&mut self) -> Result<Vec<WishlistPreview>, DomainError>;
 
     /// Create a new wishlist.
     async fn create_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError>;

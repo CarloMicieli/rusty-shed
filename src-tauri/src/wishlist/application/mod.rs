@@ -4,14 +4,16 @@ mod delete_wishlist;
 mod get_wishlist_by_id;
 mod get_wishlists;
 mod move_wishlist_item;
+pub mod queries;
 mod remove_wishlist_item;
 mod rename_wishlist;
 mod set_default_wishlist;
 #[cfg(test)]
 mod testing;
 
-pub use self::get_wishlist_by_id::GetWishlistUseCase;
-pub use self::get_wishlists::GetWishlistsUseCase;
+pub use self::get_wishlist_by_id::GetWishlistByIdQuery;
+pub use self::get_wishlists::GetWishlistsQuery;
+pub use self::queries::{WishlistItemView, WishlistView};
 
 pub use self::add_to_wishlist::AddToWishlistUseCase;
 pub use self::create_wishlist::CreateWishlistUseCase;

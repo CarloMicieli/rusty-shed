@@ -1,30 +1,30 @@
 use crate::core::domain::domain_error::DomainError;
+use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::domain::repository::WishlistUowExt;
-use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use anyhow::Result;
 
-/// Stateless use case to fetch wishlist previews.
-pub struct GetWishlistsUseCase;
+/// Query to fetch all wishlists with their previews.
+pub struct GetWishlistsQuery;
 
-impl GetWishlistsUseCase {
-    /// Execute the get wishlists use case.
+impl GetWishlistsQuery {
+    /// Execute the get wishlists query.
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
     ///
     /// # Returns
-    /// * `Vec<WishlistPreview>` on success
+    /// * `Vec<WishlistView>` on success
     /// * `DomainError` on failure.
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
-    pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<WishlistPreview>, DomainError>
+    pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<WishlistView>, DomainError>
     where
         U: WishlistUowExt + Send,
     {
-        let mut repo = unit_of_work.wishlist_repository();
-        let previews = repo.list_wishlist_previews().await?;
-        Ok(previews)
+        let previews = unit_of_work.wishlist_repository().find_wishlists().await?;
+        let views = previews.into_iter().map(WishlistView::from).collect();
+        Ok(views)
     }
 }
 
@@ -40,7 +40,7 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn list_wishlists_empty(conn: SqlitePool) -> Result<()> {
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let previews = GetWishlistsUseCase::execute(&mut unit_of_work)
+        let previews = GetWishlistsQuery::execute(&mut unit_of_work)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
         assert!(previews.is_empty());
@@ -55,7 +55,7 @@ mod tests {
         let wishlist_id = "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9";
 
         let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let previews = GetWishlistsUseCase::execute(&mut unit_of_work)
+        let previews = GetWishlistsQuery::execute(&mut unit_of_work)
             .await
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 

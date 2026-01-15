@@ -4,17 +4,17 @@ use crate::state::AppState;
 use crate::wishlist::application::AddToWishlistUseCase;
 use crate::wishlist::application::CreateWishlistUseCase;
 use crate::wishlist::application::DeleteWishlistUseCase;
-use crate::wishlist::application::GetWishlistUseCase;
-use crate::wishlist::application::GetWishlistsUseCase;
+use crate::wishlist::application::GetWishlistByIdQuery;
+use crate::wishlist::application::GetWishlistsQuery;
 use crate::wishlist::application::MoveWishlistItemUseCase;
 use crate::wishlist::application::RemoveWishlistItemUseCase;
 use crate::wishlist::application::RenameWishlistUseCase;
 use crate::wishlist::application::SetDefaultWishlistUseCase;
+use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::domain::commands::{
     AddToWishlistCommand, CreateWishlistCommand, DeleteWishlistCommand, MoveWishlistItemCommand,
     RemoveWishlistItemCommand, RenameWishlistCommand, SetDefaultWishlistCommand,
 };
-use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
@@ -35,7 +35,7 @@ use log::info;
 /// * `id`: The identifier of the wishlist to retrieve.
 ///
 /// Returns:
-/// - `Ok(Some(Wishlist))` when a matching wishlist exists,
+/// - `Ok(Some(WishlistView))` when a matching wishlist exists,
 /// - `Ok(None)` when no matching row is found
 /// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
 #[tauri::command]
@@ -43,12 +43,12 @@ use log::info;
 pub async fn get_wishlist_by_id(
     state: tauri::State<'_, AppState>,
     id: WishlistId,
-) -> Result<Option<Wishlist>, CommandError> {
+) -> Result<Option<WishlistView>, CommandError> {
     info!("Fetching wishlist with ID: {}", id);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let result = GetWishlistUseCase::execute(&mut unit_of_work, &id).await?;
+    let result = GetWishlistByIdQuery::execute(&mut unit_of_work, &id).await?;
     unit_of_work.commit().await?;
 
     Ok(result)
@@ -65,18 +65,18 @@ pub async fn get_wishlist_by_id(
 /// * `state`: Tauri-managed application state which provides a database pool.
 ///
 /// Returns:
-/// - `Ok(Vec<WishlistPreview>)` when retrieval succeeds.
+/// - `Ok(Vec<WishlistView>)` when retrieval succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_wishlists(
     state: tauri::State<'_, AppState>,
-) -> Result<Vec<WishlistPreview>, CommandError> {
+) -> Result<Vec<crate::wishlist::application::queries::WishlistView>, CommandError> {
     info!("Fetching all wishlists");
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let result = GetWishlistsUseCase::execute(&mut unit_of_work).await?;
+    let result = GetWishlistsQuery::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await?;
 
     Ok(result)
