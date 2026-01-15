@@ -1,12 +1,6 @@
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumString;
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, EnumString, Default, specta::Type,
-)]
-#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
-#[strum(ascii_case_insensitive)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 /// Status of a wishlist item.
 ///
 /// Represents the current lifecycle state for an item on the wishlist. The
@@ -15,11 +9,26 @@ use strum_macros::EnumString;
 /// parsing via `FromStr` through `strum_macros::EnumString`.
 ///
 /// The default variant is `Wanted`.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, EnumString, Default, specta::Type,
+)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum WishlistStatus {
+    /// The user wants the item and it's a candidate for purchase.
+    ///
+    /// This is the default status used when adding a new item to a wishlist.
     #[default]
     Wanted,
+
+    /// The item has been ordered from a seller and is expected to arrive.
     OnOrder,
+
+    /// The item has been acquired / purchased and is no longer actively wanted.
     Purchased,
+
+    /// The item has been explicitly ignored by the user (not interested).
     Ignored,
 }
 
