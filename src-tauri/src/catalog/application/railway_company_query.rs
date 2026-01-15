@@ -15,6 +15,9 @@ impl GetRailwayCompaniesQuery {
     /// # Returns
     /// - `Ok(Vec<RailwayCompany>)` containing all railway companies on success.
     /// - `Err(DomainError)` with an error message on failure.
+    /// 
+    /// # Type Parameters
+    /// * `U` - The type of the unit of work, which must implement `RailwayCompanyUowExt` and be `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<RailwayCompany>, DomainError>
     where
         U: RailwayCompanyUowExt + Send,
