@@ -1,6 +1,6 @@
-use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::{AddCollectionItem, CollectionUowExt};
+use crate::collecting::domain::{Collection, CollectionItem, OwnedRollingStock};
 use crate::core::domain::domain_error::DomainError;
 
 pub struct AddCollectionItemCommand;
@@ -31,7 +31,7 @@ impl AddCollectionItemCommand {
                     let rolling_stocks = iv
                         .rolling_stocks
                         .into_iter()
-                        .map(|ov| crate::collecting::domain::OwnedRollingStock {
+                        .map(|ov| OwnedRollingStock {
                             id: ov.id,
                             rolling_stock_id: ov.rolling_stock_id,
                             notes: ov.notes,
@@ -39,7 +39,7 @@ impl AddCollectionItemCommand {
                         })
                         .collect();
 
-                    crate::collecting::domain::CollectionItem {
+                    CollectionItem {
                         id: iv.id,
                         railway_model_id: iv.railway_model.railway_model_id,
                         added_date: iv.added_date,

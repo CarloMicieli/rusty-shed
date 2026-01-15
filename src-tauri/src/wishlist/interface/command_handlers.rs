@@ -1,4 +1,5 @@
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::state::AppState;
 use crate::wishlist::application::AddToWishlistUseCase;
 use crate::wishlist::application::CreateWishlistUseCase;
@@ -103,10 +104,11 @@ pub async fn create_wishlist(
     info!("Creating wishlist: {:?}", input);
 
     let mut unit_of_work = state.unit_of_work().await?;
+    let id_provider = RuntimeIdProvider::new();
 
     let cmd = CreateWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let preview = CreateWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
+    let preview = CreateWishlistUseCase::execute(&mut unit_of_work, id_provider, cmd).await?;
 
     unit_of_work.commit().await?;
 
@@ -231,10 +233,11 @@ pub async fn add_to_wishlist(
     info!("Adding item to wishlist: {:?}", input);
 
     let mut unit_of_work = state.unit_of_work().await?;
+    let id_provider = RuntimeIdProvider::new();
 
     let cmd = AddToWishlistCommand::try_from(input).map_err(CommandError::from)?;
 
-    let item = AddToWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
+    let item = AddToWishlistUseCase::execute(&mut unit_of_work, id_provider, cmd).await?;
 
     unit_of_work.commit().await?;
 

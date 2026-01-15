@@ -1,3 +1,4 @@
+use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::commands::AddToWishlistCommand;
 use crate::wishlist::domain::repository::WishlistUowExt;
@@ -21,17 +22,19 @@ impl AddToWishlistUseCase {
     /// # Returns
     /// * `WishlistItem` on success
     /// * `DomainError` on failure.
-    pub async fn execute<U>(
+    pub async fn execute<U, P>(
         unit_of_work: &mut U,
+        id_provider: P,
         cmd: AddToWishlistCommand,
     ) -> Result<WishlistItem, DomainError>
     where
         U: WishlistUowExt + Send,
+        P: IdProvider<WishlistItemId>,
     {
         let mut repo = unit_of_work.wishlist_repository();
 
         let item = WishlistItem {
-            id: WishlistItemId::default(),
+            id: id_provider.next_id(),
             railway_model_id: cmd.railway_model_id,
             priority: cmd.priority,
             status: cmd.status,

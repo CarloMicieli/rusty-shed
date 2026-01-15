@@ -1,3 +1,4 @@
+use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::commands::CreateWishlistCommand;
 use crate::wishlist::domain::repository::WishlistUowExt;
@@ -23,17 +24,19 @@ impl CreateWishlistUseCase {
     /// # Returns
     /// * `WishlistPreview` on success.
     /// * `DomainError` on failure.
-    pub async fn execute<U>(
+    pub async fn execute<U, P>(
         unit_of_work: &mut U,
+        id_provider: P,
         create_wishlist: CreateWishlistCommand,
     ) -> Result<WishlistPreview, DomainError>
     where
         U: WishlistUowExt + Send,
+        P: IdProvider<WishlistId>,
     {
         let mut repo = unit_of_work.wishlist_repository();
 
         let wishlist = Wishlist {
-            id: WishlistId::default(),
+            id: id_provider.next_id(),
             name: create_wishlist.name,
             notes: create_wishlist.notes,
             is_default: create_wishlist.is_default,
@@ -61,15 +64,18 @@ impl CreateWishlistUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::domain::test_utils::MockIdProvider;
     use crate::wishlist::application::testing::FakeUow;
     use crate::wishlist::domain::MockWishlistRepository;
     use chrono::NaiveDate;
     use pretty_assertions::assert_eq;
 
-    #[ignore]
     #[tokio::test]
     async fn create_wishlist_success() {
         let mut mock = MockWishlistRepository::new();
+
+        let id = WishlistId::default();
+        let test_id_provider = MockIdProvider::new(id.clone());
 
         mock.expect_create_wishlist().times(1).returning(|_| Ok(()));
 
@@ -77,7 +83,7 @@ mod tests {
             .times(1)
             .returning(move || {
                 let wishlist = WishlistPreview {
-                    id: WishlistId::default(),
+                    id: id.clone(),
                     name: "New Wishlist".to_string(),
                     is_default: false,
                     count: 0,
@@ -100,7 +106,7 @@ mod tests {
             is_default: false,
         };
 
-        let preview = CreateWishlistUseCase::execute(&mut unit_of_work, cmd)
+        let preview = CreateWishlistUseCase::execute(&mut unit_of_work, test_id_provider, cmd)
             .await
             .expect("Failed to create wishlist");
 
