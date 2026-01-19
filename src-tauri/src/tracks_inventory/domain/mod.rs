@@ -1,3 +1,4 @@
+mod repositories;
 mod track_code;
 mod track_id;
 mod track_inventory;
@@ -8,6 +9,8 @@ mod track_purchase_id;
 mod track_quantity;
 mod track_type;
 
+pub use repositories::TrackProductUowExt;
+pub use repositories::{TrackInventoryRepository, TrackProductRepository, TracksInventoryUowExt};
 pub use track_code::TrackCode;
 pub use track_id::TrackId;
 pub use track_inventory::TrackInventory;
