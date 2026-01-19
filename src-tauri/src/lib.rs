@@ -7,6 +7,7 @@ pub mod maintenance;
 pub mod sellers;
 pub mod settings;
 pub mod state;
+pub mod tracks_inventory;
 pub mod wishlist;
 
 #[cfg(test)]
