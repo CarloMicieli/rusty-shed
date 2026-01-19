@@ -1,0 +1,214 @@
+use crate::core::domain::Currency;
+use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::metadata::Metadata;
+use crate::core::domain::monetary_amount::MonetaryAmount;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::tracks_inventory::domain::{
+    TrackInventory, TrackInventoryId, TrackInventoryRepository, TrackProductRepository,
+    TrackPurchase, TrackQuantity, TracksInventoryUowExt,
+};
+use crate::tracks_inventory::infrastructure::SqliteTrackProductRepository;
+use crate::tracks_inventory::infrastructure::entities::{
+    TrackInventoryItemRow, TrackInventoryRow, TrackPurchaseRow,
+};
+use chrono::{DateTime, Utc};
+use sqlx::SqliteConnection;
+use std::collections::HashMap;
+
+pub struct SqliteTrackInventoryRepository<'conn> {
+    executor: &'conn mut SqliteConnection,
+}
+
+impl<'conn> SqliteTrackInventoryRepository<'conn> {
+    pub fn new(executor: &'conn mut SqliteConnection) -> Self {
+        Self { executor }
+    }
+
+    async fn load_inventory(
+        &mut self,
+        id: &TrackInventoryId,
+    ) -> Result<Option<TrackInventory>, DomainError> {
+        let sql_inv = r#"
+            SELECT id, created_at, updated_at, version, name, description
+            FROM track_inventories
+            WHERE id = ?1
+            LIMIT 1
+        "#;
+
+        let header: Option<TrackInventoryRow> = sqlx::query_as(sql_inv)
+            .bind(id)
+            .fetch_optional(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let header = match header {
+            Some(h) => h,
+            None => return Ok(None),
+        };
+
+        let sql_items = r#"
+            SELECT track_id, quantity 
+            FROM track_inventory_items 
+            WHERE inventory_id = ?1
+        "#;
+
+        let inventory_items: Vec<TrackInventoryItemRow> = sqlx::query_as(sql_items)
+            .bind(id)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let mut inventory_map = HashMap::new();
+        for inventory_item in inventory_items {
+            inventory_map.insert(
+                inventory_item.track_id.clone(),
+                TrackQuantity {
+                    track_id: inventory_item.track_id,
+                    quantity: inventory_item.quantity,
+                },
+            );
+        }
+
+        // Load purchases using typed rows
+        let sql_purchases = r#"
+            SELECT id, track_id, quantity, price_amount, price_currency, seller_id, purchase_date
+            FROM track_purchases
+            WHERE inventory_id = ?1
+            ORDER BY purchase_date ASC
+        "#;
+
+        let track_purchase_rows: Vec<TrackPurchaseRow> = sqlx::query_as(sql_purchases)
+            .bind(id)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let mut track_purchases = Vec::new();
+        for track_purchase_row in track_purchase_rows {
+            let currency = Currency::from_code(&track_purchase_row.price_currency)
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+            let monetary = MonetaryAmount::new(track_purchase_row.price_amount, currency);
+
+            let track_purchase = TrackPurchase {
+                track_purchase_id: track_purchase_row.id,
+                track_id: track_purchase_row.track_id,
+                quantity: track_purchase_row.quantity,
+                price: monetary,
+                seller_id: track_purchase_row.seller_id,
+                purchase_date: track_purchase_row.purchase_date,
+            };
+
+            track_purchases.push(track_purchase);
+        }
+
+        // Build metadata from header
+        let created_at_dt: DateTime<Utc> = header.created_at;
+        let updated_at_dt: DateTime<Utc> = header.updated_at;
+        let version_u8: u8 = if header.version < 0 {
+            0
+        } else if header.version > (u8::MAX as i64) {
+            u8::MAX
+        } else {
+            header.version as u8
+        };
+
+        let metadata = Metadata {
+            version: version_u8,
+            created_at: created_at_dt,
+            updated_at: updated_at_dt,
+        };
+
+        // Construct TrackInventory with mapped metadata
+        let inventory = TrackInventory {
+            id: header.id,
+            inventory: inventory_map,
+            purchase_history: track_purchases,
+            metadata,
+            name: header.name.unwrap_or_default(),
+            description: header.description,
+        };
+
+        Ok(Some(inventory))
+    }
+}
+
+#[async_trait::async_trait]
+impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
+    async fn find_by_id(
+        &mut self,
+        id: &TrackInventoryId,
+    ) -> Result<Option<TrackInventory>, DomainError> {
+        self.load_inventory(id).await
+    }
+
+    async fn save(&mut self, inventory: TrackInventory) -> Result<(), DomainError> {
+        // Upsert inventory header
+        let sql_upsert = r#"
+            INSERT OR REPLACE INTO track_inventories (id, created_at, updated_at, version)
+            VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+        "#;
+
+        sqlx::query(sql_upsert)
+            .bind(inventory.id.to_string())
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        // Delete existing items and re-insert
+        let sql_delete_items = r#"DELETE FROM track_inventory_items WHERE inventory_id = ?1"#;
+        sqlx::query(sql_delete_items)
+            .bind(inventory.id.to_string())
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        for (_k, tq) in inventory.inventory.iter() {
+            let insert_item = r#"
+                INSERT INTO track_inventory_items (inventory_id, track_id, quantity)
+                VALUES (?1, ?2, ?3)
+            "#;
+            sqlx::query(insert_item)
+                .bind(inventory.id.to_string())
+                .bind(tq.track_id.to_string())
+                .bind(tq.quantity)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        // Persist purchases
+        for p in inventory.purchase_history.iter() {
+            let insert_purchase = r#"
+                INSERT OR REPLACE INTO track_purchases (
+                    id, inventory_id, track_id, quantity, price_amount, 
+                    price_currency, seller_id, purchase_date, created_at)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP)
+            "#;
+
+            sqlx::query(insert_purchase)
+                .bind(p.track_purchase_id.to_string())
+                .bind(inventory.id.to_string())
+                .bind(p.track_id.to_string())
+                .bind(p.quantity)
+                .bind(p.price.amount)
+                .bind(p.price.currency.to_code())
+                .bind(p.seller_id.as_ref().map(|s| s.to_string()))
+                .bind(p.purchase_date.to_string())
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<'conn> TracksInventoryUowExt for SqliteUnitOfWork<'conn> {
+    fn track_products_repo(&mut self) -> Box<dyn TrackProductRepository + '_> {
+        Box::new(SqliteTrackProductRepository::new(&mut self.tx))
+    }
+
+    fn track_inventories_repo(&mut self) -> Box<dyn TrackInventoryRepository + '_> {
+        Box::new(SqliteTrackInventoryRepository::new(&mut self.tx))
+    }
+}

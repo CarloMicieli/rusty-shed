@@ -18,10 +18,10 @@ use std::collections::HashMap;
 pub struct TrackInventory {
     /// Stable TRN identifier for this inventory aggregate.
     pub id: TrackInventoryId,
-    
+
     /// Human-readable name for this inventory.
     pub name: String,
-    
+
     /// Optional detailed description for this inventory.
     pub description: Option<String>,
 
