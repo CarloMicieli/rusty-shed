@@ -1,4 +1,4 @@
-# ADR 3: Layered Domain-Driven Design (DDD) for Feature Implementation
+# ADR 4: Layered Domain-Driven Design (DDD) for Feature Implementation
 
 Status: Accepted
 

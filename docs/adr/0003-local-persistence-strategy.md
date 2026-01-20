@@ -1,4 +1,4 @@
-# ADR 4: Local Persistence Strategy (SQLite & SQLx)
+# ADR 3: Local Persistence Strategy (SQLite & SQLx)
 
 **Status:** Accepted
 
