@@ -1,6 +1,6 @@
 ---
 description: 'Specialized agent for Tauri 2 Rust backend development, enforcing ADR compliance, SQLite integration, and automated quality checks.'
-tools: ['rust-analyzer/*', 'rust-mcp-server/*', 'sqlite-mcp/*']
+tools: ['rust-analyzer/*', 'rust-mcp-server/*', 'sqlite-mcp/*', 'read', 'edit', 'search', 'agent', 'todo']
 ---
 
 # Rust Planning & Execution Agent
