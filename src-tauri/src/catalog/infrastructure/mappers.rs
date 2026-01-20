@@ -75,6 +75,7 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
             delivery_date: row.delivery_date,
             availability_status: row.availability_status,
             rolling_stocks: Vec::new(),
+            pending_events: Vec::new(),
         })
     }
 }

@@ -61,6 +61,7 @@ mod tests {
             delivery_date: None,
             availability_status: None,
             rolling_stocks: vec![],
+            pending_events: Vec::new(),
         };
 
         mock.expect_find_by_id()

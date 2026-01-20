@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelId, RailwayModelParams, RailwayModelRepository, RailwayModelUowExt,
     RollingStock, RollingStockCategory, RollingStockId, RollingStockParams,
@@ -514,6 +515,87 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         } else {
             Ok(None)
         }
+    }
+
+    async fn save(&mut self, aggregate: &mut RailwayModel) -> Result<(), DomainError> {
+        // Pull pending events from the aggregate and apply them to the DB using
+        // the same executor (the UnitOfWork provides the transaction/executor).
+        let events = aggregate.pull_events();
+
+        for ev in events.into_iter() {
+            match ev {
+                RailwayModelEvent::RailwayModelCreated { params, .. } => {
+                    // Reuse existing helpers which bind to the repository's executor.
+                    let _id = self.insert_railway_model(&params).await?;
+                    for rs in params.rolling_stocks.iter() {
+                        self.insert_rolling_stock(&_id, rs).await?;
+                    }
+                }
+                RailwayModelEvent::RailwayModelUpdated {
+                    railway_model_id,
+                    changed,
+                    ..
+                } => {
+                    // Apply a minimal set of updates for common fields. The
+                    // `changed` payload is expected to be a JSON object.
+                    if let serde_json::Value::Object(map) = changed {
+                        if let Some(serde_json::Value::String(description)) = map.get("description")
+                        {
+                            let update_cmd = r#"UPDATE railway_models SET description = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(description)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+
+                        if let Some(serde_json::Value::String(details)) = map.get("details") {
+                            let update_cmd = r#"UPDATE railway_models SET details = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(details)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+
+                        if let Some(serde_json::Value::String(availability)) =
+                            map.get("availability_status")
+                        {
+                            let update_cmd = r#"UPDATE railway_models SET availability_status = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(availability)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+                    }
+                }
+                RailwayModelEvent::RollingStockAdded {
+                    railway_model_id,
+                    rolling_stock_params,
+                    ..
+                } => {
+                    // Insert a new rolling stock for the given railway model.
+                    self.insert_rolling_stock(&railway_model_id, &rolling_stock_params)
+                        .await?;
+                }
+                RailwayModelEvent::RollingStockRemoved {
+                    rolling_stock_id, ..
+                } => {
+                    let delete_cmd = r#"DELETE FROM rolling_stocks WHERE id = ?1;"#;
+                    sqlx::query(delete_cmd)
+                        .bind(rolling_stock_id)
+                        .execute(&mut *self.executor)
+                        .await
+                        .map_err(DomainError::from)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

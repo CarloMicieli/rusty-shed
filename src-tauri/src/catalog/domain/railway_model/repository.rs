@@ -40,6 +40,11 @@ pub trait RailwayModelRepository: Send + Sync {
         &mut self,
         id: &RailwayModelId,
     ) -> Result<Option<RailwayModel>, DomainError>;
+
+    /// Persists changes from a `RailwayModel` aggregate by applying its
+    /// pending domain events to storage. Implementations should pull events
+    /// from the aggregate and map them to appropriate SQL statements.
+    async fn save(&mut self, aggregate: &mut RailwayModel) -> Result<(), DomainError>;
 }
 
 /// An extension trait that provides access to the `RailwayModelRepository`.

@@ -15,6 +15,7 @@ mod product_code;
 mod radius;
 #[allow(clippy::module_inception)]
 mod railway_model;
+mod railway_model_event;
 mod railway_model_id;
 mod railway_model_manufacturer;
 mod railway_model_params;
@@ -49,6 +50,7 @@ pub use power_method::PowerMethod;
 pub use product_code::ProductCode;
 pub use radius::{Radius, RadiusError};
 pub use railway_model::RailwayModel;
+pub use railway_model_event::RailwayModelEvent;
 pub use railway_model_id::RailwayModelId;
 pub use railway_model_manufacturer::RailwayModelManufacturer;
 pub use railway_model_params::RailwayModelParams;

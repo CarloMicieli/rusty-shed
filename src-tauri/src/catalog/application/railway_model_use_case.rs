@@ -7,10 +7,15 @@ use crate::catalog::domain::railway_model::PowerMethod;
 use crate::catalog::domain::railway_model::ProductCode;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::{AvailabilityStatus, RailwayModelUowExt};
-use crate::catalog::domain::railway_model::{RailwayModelParams, RollingStockParams};
+use crate::catalog::domain::railway_model::{
+    RailwayModel, RailwayModelEvent, RailwayModelManufacturer, RailwayModelParams,
+    RollingStockParams,
+};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
+use chrono::Utc;
+use uuid::Uuid;
 
 /// Use case for creating a new railway model.
 pub struct CreateRailwayModelUseCase;
@@ -83,7 +88,46 @@ impl CreateRailwayModelUseCase {
             rolling_stocks,
         };
 
-        repository.create(&railway_model_params).await
+        // Aggregate-first approach: construct the RailwayModel aggregate,
+        // emit a Created event (carrying the params), then persist via save().
+        let product_code_string = railway_model_params.product_code.to_string();
+        let railway_model_id =
+            RailwayModelId::new(&railway_model_params.manufacturer_id, &product_code_string)
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let mut aggregate = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer: RailwayModelManufacturer {
+                manufacturer_id: railway_model_params.manufacturer_id.clone(),
+                display: String::new(),
+            },
+            product_code: railway_model_params.product_code.clone(),
+            description: railway_model_params.description.clone(),
+            details: railway_model_params.details.clone(),
+            power_method: railway_model_params.power_method,
+            scale: railway_model_params.scale.clone(),
+            epoch: railway_model_params.epoch.clone(),
+            category: railway_model_params.category,
+            delivery_date: railway_model_params.delivery_date.clone(),
+            availability_status: railway_model_params.availability_status,
+            rolling_stocks: Vec::new(),
+            pending_events: Vec::new(),
+        };
+
+        let created_event = RailwayModelEvent::RailwayModelCreated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: railway_model_id.clone(),
+            timestamp: Utc::now().naive_utc(),
+            params: railway_model_params.clone(),
+        };
+
+        aggregate.push_event(created_event);
+
+        // Persist aggregate by applying its events.
+        repository
+            .save(&mut aggregate)
+            .await
+            .map(|_| railway_model_id)
     }
 }
 
