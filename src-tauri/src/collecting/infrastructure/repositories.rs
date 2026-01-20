@@ -290,8 +290,8 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
     /// Saves the current state of the collection.
     async fn save(&mut self, collection: &mut Collection) -> Result<(), DomainError> {
-        for event in collection.pending_events.iter() {
-            match event {
+        for envelope in collection.pull_events() {
+            match &*envelope {
                 CollectionEvent::CollectionCreated { aggregate_id, .. } => {
                     self.insert_collection(aggregate_id, &collection.name)
                         .await?;
@@ -374,7 +374,7 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
         self.update_collection_metadata(&collection.id).await?;
 
-        collection.pending_events = Vec::new();
+        // `pull_events()` already cleared `pending_events` by taking ownership.
         Ok(())
     }
 

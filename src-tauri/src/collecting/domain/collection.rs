@@ -5,6 +5,7 @@ use crate::collecting::domain::{
     AddCollectionItem, CollectionEvent, CollectionId, CollectionItemId, OwnedRollingStock,
     OwnedRollingStockId, PurchaseInfo, PurchaseInfoId, PurchasedInfo, RemoveCollectionItem,
 };
+use crate::core::domain::EventEnvelope;
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::metadata::Metadata;
 
@@ -38,7 +39,7 @@ pub struct Collection {
     pub items: Vec<CollectionItem>,
 
     /// Pending events that have occurred in this collection but not yet processed.
-    pub pending_events: Vec<CollectionEvent>,
+    pub pending_events: Vec<EventEnvelope<CollectionEvent>>,
 
     /// Metadata about the collection (creation date, last modified, etc.).
     pub metadata: Metadata,
@@ -90,7 +91,7 @@ impl Collection {
         };
 
         self.apply(&event);
-        self.pending_events.push(event);
+        self.pending_events.push(EventEnvelope::new(event));
     }
 
     /// Remove an item from the collection by marking it removed and emitting
@@ -108,7 +109,12 @@ impl Collection {
         };
 
         self.apply(&event);
-        self.pending_events.push(event);
+        self.pending_events.push(EventEnvelope::new(event));
+    }
+
+    /// Pulls and returns pending events, clearing the internal buffer.
+    pub fn pull_events(&mut self) -> Vec<EventEnvelope<CollectionEvent>> {
+        std::mem::take(&mut self.pending_events)
     }
 
     /// Apply a `CollectionEvent` to the current state of the `Collection`.
@@ -232,7 +238,7 @@ impl Default for Collection {
             summary: CollectionSummary::default(),
             total_value: None,
             items: Vec::new(),
-            pending_events: vec![create_collection_event],
+            pending_events: vec![EventEnvelope::new(create_collection_event)],
             metadata: Metadata::default(),
         }
     }
@@ -262,7 +268,7 @@ mod tests {
             .pending_events
             .first()
             .expect("No pending events");
-        match event {
+        match &**event {
             CollectionEvent::CollectionCreated { aggregate_id, .. } => {
                 assert_eq!(aggregate_id, &collection.id);
             }
