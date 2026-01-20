@@ -3,7 +3,7 @@ use crate::collecting::domain::{
     BoxCondition, CollectionId, CollectionItemId, ModelCondition, OwnedRollingStockId,
     PurchaseCondition, PurchaseInfoId,
 };
-use crate::core::domain::{DomainEvent, MonetaryAmount};
+use crate::core::domain::MonetaryAmount;
 use crate::dcc_inventory::domain::DecoderId;
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::{NaiveDate, NaiveDateTime};
@@ -56,35 +56,6 @@ pub enum CollectionEvent {
         collection_item_id: CollectionItemId,
         removed_date: NaiveDate,
     },
-}
-
-impl DomainEvent<CollectionId> for CollectionEvent {
-    fn aggregate_id(&self) -> &CollectionId {
-        match self {
-            CollectionEvent::CollectionCreated { aggregate_id, .. } => aggregate_id,
-            CollectionEvent::RailwayModelAdded { aggregate_id, .. } => aggregate_id,
-            CollectionEvent::RailwayModelRemoved { aggregate_id, .. } => aggregate_id,
-            CollectionEvent::RailwayModelSold { aggregate_id, .. } => aggregate_id,
-        }
-    }
-
-    fn event_id(&self) -> &Uuid {
-        match self {
-            CollectionEvent::CollectionCreated { event_id, .. } => event_id,
-            CollectionEvent::RailwayModelAdded { event_id, .. } => event_id,
-            CollectionEvent::RailwayModelRemoved { event_id, .. } => event_id,
-            CollectionEvent::RailwayModelSold { event_id, .. } => event_id,
-        }
-    }
-
-    fn timestamp(&self) -> NaiveDateTime {
-        match self {
-            CollectionEvent::CollectionCreated { timestamp, .. } => *timestamp,
-            CollectionEvent::RailwayModelAdded { timestamp, .. } => *timestamp,
-            CollectionEvent::RailwayModelRemoved { timestamp, .. } => *timestamp,
-            CollectionEvent::RailwayModelSold { timestamp, .. } => *timestamp,
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
