@@ -47,6 +47,7 @@ impl CreateWishlistUseCase {
             is_default: create_wishlist.is_default,
             metadata: Metadata::default(),
             items: Vec::new(),
+            pending_events: Vec::new(),
         };
 
         repo.create_wishlist(&wishlist).await?;

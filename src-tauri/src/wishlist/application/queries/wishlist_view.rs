@@ -149,6 +149,7 @@ mod tests {
             notes: None,
             is_default: false,
             items: vec![item],
+            pending_events: Vec::new(),
             metadata: crate::core::domain::metadata::Metadata::default(),
         };
 

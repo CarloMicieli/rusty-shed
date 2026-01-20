@@ -34,6 +34,7 @@ impl TryFrom<WishlistRow> for Wishlist {
                 updated_at,
             },
             items: vec![],
+            pending_events: vec![],
         })
     }
 }

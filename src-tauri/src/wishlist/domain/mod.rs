@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod repository;
 pub mod wishlist;
+pub mod wishlist_event;
 pub mod wishlist_id;
 pub mod wishlist_item;
 pub mod wishlist_item_id;

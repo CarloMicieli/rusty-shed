@@ -4,6 +4,7 @@ use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::wishlist::domain::repository::{WishlistRepository, WishlistUowExt};
 use crate::wishlist::domain::wishlist::Wishlist;
+use crate::wishlist::domain::wishlist_event::WishlistEvent;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
@@ -25,6 +26,46 @@ impl<'conn> SqliteWishlistRepository<'conn> {
     /// Creates a new repository instance using the provided executor.
     pub fn new(executor: &'conn mut sqlx::SqliteConnection) -> Self {
         Self { executor }
+    }
+
+    /// Handle a single `WishlistEvent` by performing the corresponding
+    /// repository/database operation. This uses an exhaustive match to
+    /// guarantee every event variant is handled.
+    pub async fn handle_event(
+        &mut self,
+        wishlist_id: &WishlistId,
+        event: &WishlistEvent,
+    ) -> Result<(), DomainError> {
+        match event {
+            WishlistEvent::Created { .. } => Ok(()),
+            WishlistEvent::Renamed { name } => {
+                let affected =
+                    database::update_wishlist_name(&mut *self.executor, wishlist_id, name)
+                        .await
+                        .with_domain_context("Error renaming wishlist from event")?;
+                if affected == 0 {
+                    return Err(DomainError::NotFound {
+                        resource: "Wishlist".to_string(),
+                        identifier: wishlist_id.to_string(),
+                    });
+                }
+                Ok(())
+            }
+            WishlistEvent::ItemAdded { item } => self.add_item(wishlist_id, item).await,
+            WishlistEvent::ItemRemoved { item_id } => self.remove_item(item_id).await,
+            WishlistEvent::ItemMoved {
+                item_id,
+                destination,
+            } => self.move_item(item_id, destination).await,
+            WishlistEvent::MarkedDefault { is_default } => {
+                if *is_default {
+                    database::set_default_wishlist(&mut *self.executor, wishlist_id)
+                        .await
+                        .with_domain_context("Error setting default wishlist from event")?;
+                }
+                Ok(())
+            }
+        }
     }
 }
 
@@ -117,6 +158,39 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
                 .await
                 .with_domain_context("Error setting default wishlist")?;
         }
+        // Apply any pending domain events emitted by the aggregate.
+        for ev in &wishlist.pending_events {
+            self.handle_event(&wishlist.id, ev).await?;
+        }
+        Ok(())
+    }
+
+    async fn save_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError> {
+        // Persist simple wishlist fields (name + updated timestamp)
+        let affected =
+            database::update_wishlist_name(&mut *self.executor, &wishlist.id, &wishlist.name)
+                .await
+                .with_domain_context("Error updating wishlist")?;
+
+        if affected == 0 {
+            return Err(DomainError::NotFound {
+                resource: "Wishlist".to_string(),
+                identifier: wishlist.id.to_string(),
+            });
+        }
+
+        // If aggregate indicates it should be default, ensure exclusivity
+        if wishlist.is_default {
+            database::set_default_wishlist(&mut *self.executor, &wishlist.id)
+                .await
+                .with_domain_context("Error setting default wishlist")?;
+        }
+
+        // Process emitted events from aggregate
+        for ev in &wishlist.pending_events {
+            self.handle_event(&wishlist.id, ev).await?;
+        }
+
         Ok(())
     }
 

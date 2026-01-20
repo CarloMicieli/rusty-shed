@@ -29,7 +29,17 @@ impl RenameWishlistUseCase {
         U: WishlistUowExt + Send,
     {
         let mut repo = unit_of_work.wishlist_repository();
-        repo.rename_wishlist(&cmd.id, &cmd.name).await?;
+
+        // Load aggregate, apply rename which emits an event, then persist
+        // the aggregate via the repository which will process events.
+        let maybe = repo.find_by_id(&cmd.id).await?;
+        let mut wishlist = maybe.ok_or(DomainError::NotFound {
+            resource: "Wishlist".to_string(),
+            identifier: cmd.id.to_string(),
+        })?;
+
+        wishlist.rename(&cmd.name);
+        repo.save_wishlist(&wishlist).await?;
         Ok(())
     }
 }
@@ -47,11 +57,28 @@ mod tests {
         let mut mock = MockWishlistRepository::new();
 
         let id = WishlistId::default();
+        let id_for_expect = id.clone();
+        let id_for_return = id.clone();
 
-        mock.expect_rename_wishlist()
+        mock.expect_find_by_id()
             .times(1)
-            .with(eq(id.clone()), eq("New Wishlist Name".to_string()))
-            .returning(|_, _| Ok(()));
+            .with(eq(id_for_expect))
+            .returning(move |_| {
+                Ok(Some(crate::wishlist::domain::wishlist::Wishlist {
+                    id: id_for_return.clone(),
+                    name: "Old Name".to_string(),
+                    notes: None,
+                    is_default: false,
+                    items: vec![],
+                    pending_events: vec![],
+                    metadata: crate::core::domain::metadata::Metadata::default(),
+                }))
+            });
+
+        mock.expect_save_wishlist()
+            .times(1)
+            .withf(move |w| w.name == "New Wishlist Name")
+            .returning(|_| Ok(()));
 
         let mut unit_of_work = FakeUow::new(mock);
 

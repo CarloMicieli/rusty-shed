@@ -31,6 +31,11 @@ pub trait WishlistRepository: Send + Sync {
     /// Create a new wishlist.
     async fn create_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError>;
 
+    /// Persist changes for an existing wishlist aggregate and process
+    /// any emitted domain events. Implementations should apply the
+    /// aggregate state (e.g., name, metadata) and then handle events.
+    async fn save_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError>;
+
     /// Rename an existing wishlist.
     async fn rename_wishlist(&mut self, id: &WishlistId, name: &str) -> Result<(), DomainError>;
 
