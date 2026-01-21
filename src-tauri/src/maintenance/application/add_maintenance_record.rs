@@ -1,7 +1,8 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::maintenance::domain::MaintenanceUowExt;
+use crate::maintenance::domain::aggregate::MaintenanceAggregate;
+use crate::maintenance::domain::events::MaintenanceEvent;
 use crate::maintenance::domain::maintenance_type::MaintenanceType;
-use crate::maintenance::infrastructure::repository::NewMaintenanceEvent;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -31,15 +32,19 @@ impl AddMaintenanceRecordUseCase {
     {
         let mut repo = unit_of_work.maintenance_repository();
 
-        let event = NewMaintenanceEvent {
-            id: input.id,
-            maintenance_card_id: input.maintenance_card_id,
-            date_performed: input.date_performed,
-            maintenance_type: input.maintenance_type.map(|t| t.to_string()),
-            notes: input.notes,
-        };
+        // Build aggregate (minimal if full projection not available) and emit domain event
+        let mut aggregate = MaintenanceAggregate::from_id(input.maintenance_card_id);
 
-        repo.record_event_transaction(event).await?;
+        aggregate.record_maintenance(
+            input.id,
+            input.date_performed,
+            input.maintenance_type,
+            input.notes.clone(),
+        );
+
+        let events: Vec<MaintenanceEvent> = aggregate.take_events();
+
+        repo.record_events_transaction(events).await?;
 
         Ok(())
     }

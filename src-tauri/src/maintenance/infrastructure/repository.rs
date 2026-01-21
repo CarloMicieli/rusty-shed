@@ -1,31 +1,15 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::maintenance::domain::events::MaintenanceEvent;
 use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
 use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
 use async_trait::async_trait;
-use chrono::NaiveDate;
 use sqlx::SqliteConnection;
-use uuid::Uuid;
 
-/// New maintenance event DTO used by the repository transaction.
-#[derive(Debug, Clone)]
-pub struct NewMaintenanceEvent {
-    /// Event id
-    pub id: Uuid,
-
-    /// FK to maintenance_card
-    pub maintenance_card_id: Uuid,
-
-    /// Date performed (date-only)
-    pub date_performed: NaiveDate,
-
-    /// Optional maintenance type
-    pub maintenance_type: Option<String>,
-
-    /// Optional notes
-    pub notes: Option<String>,
-}
+// Note: Repository now persists domain events (event-driven). The
+// application layer should produce `MaintenanceEvent` values which are
+// persisted here and then applied to the maintenance_cards projection.
 
 /// SQLite-specific repository implementation.
 pub struct SqliteMaintenanceRepository<'conn> {
@@ -62,9 +46,11 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(row)
     }
 
-    async fn record_event_transaction(
+    // Legacy single-event shim removed. Use `record_events_transaction`.
+
+    async fn record_events_transaction(
         &mut self,
-        new_event: NewMaintenanceEvent,
+        events: Vec<MaintenanceEvent>,
     ) -> Result<(), DomainError> {
         let insert_sql = r#"INSERT INTO maintenance_events (
             id,
@@ -74,28 +60,42 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             notes
         ) VALUES (?, ?, ?, ?, ?)"#;
 
-        sqlx::query(insert_sql)
-            .bind(new_event.id.to_string())
-            .bind(new_event.maintenance_card_id.to_string())
-            .bind(new_event.date_performed.format("%Y-%m-%d").to_string())
-            .bind(new_event.maintenance_type.clone())
-            .bind(new_event.notes.clone())
-            .execute(&mut *self.executor)
-            .await
-            .with_domain_context("Error inserting new maintenance event")?;
-
         let update_sql = r#"UPDATE maintenance_cards
             SET
                 last_maintenance_date = ?,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?"#;
 
-        sqlx::query(update_sql)
-            .bind(new_event.date_performed.format("%Y-%m-%d").to_string())
-            .bind(new_event.maintenance_card_id.to_string())
-            .execute(&mut *self.executor)
-            .await
-            .with_domain_context("Error updating maintenance card last_maintenance_date")?;
+        for ev in events.iter() {
+            match ev {
+                MaintenanceEvent::MaintenanceRecorded {
+                    id,
+                    maintenance_card_id,
+                    date_performed,
+                    maintenance_type,
+                    notes,
+                } => {
+                    sqlx::query(insert_sql)
+                        .bind(id.to_string())
+                        .bind(maintenance_card_id.to_string())
+                        .bind(date_performed.format("%Y-%m-%d").to_string())
+                        .bind(maintenance_type.as_ref().map(|t| t.to_string()))
+                        .bind(notes.clone())
+                        .execute(&mut *self.executor)
+                        .await
+                        .with_domain_context("Error inserting new maintenance event")?;
+
+                    sqlx::query(update_sql)
+                        .bind(date_performed.format("%Y-%m-%d").to_string())
+                        .bind(maintenance_card_id.to_string())
+                        .execute(&mut *self.executor)
+                        .await
+                        .with_domain_context(
+                            "Error updating maintenance card last_maintenance_date",
+                        )?;
+                }
+            }
+        }
 
         Ok(())
     }
@@ -163,7 +163,9 @@ mod tests {
 
     use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::maintenance::infrastructure::entities::MaintenanceCardRow;
-    use crate::maintenance::infrastructure::repository::{MaintenanceUowExt, NewMaintenanceEvent};
+    use crate::maintenance::infrastructure::repository::MaintenanceUowExt;
+
+    use crate::maintenance::domain::events::MaintenanceEvent;
 
     #[ignore]
     #[sqlx::test(
@@ -234,37 +236,43 @@ mod tests {
         let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
         let mut repo = unit_of_work.maintenance_repository();
 
-        let new_event = NewMaintenanceEvent {
+        let new_event = MaintenanceEvent::MaintenanceRecorded {
             id: Uuid::parse_str("66666666-6666-6666-6666-666666666666").unwrap(),
             maintenance_card_id: Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap(),
             date_performed: NaiveDate::from_ymd_opt(2025, 12, 20).unwrap(),
-            maintenance_type: Some("inspection".to_string()),
+            maintenance_type: Some("INSPECTION".parse().unwrap_or_default()),
             notes: Some("Repo-level transaction test".to_string()),
         };
 
         // perform the transactional operation via the repository
-        repo.record_event_transaction(new_event.clone())
+        repo.record_events_transaction(vec![new_event.clone()])
             .await
             .expect("record event");
 
+        // Extract inner fields from the enum variant for assertions
+        let (evt_id, evt_card_id, evt_date) = match &new_event {
+            MaintenanceEvent::MaintenanceRecorded { id, maintenance_card_id, date_performed, .. } => (
+                *id,
+                maintenance_card_id.to_string(),
+                *date_performed,
+            ),
+        };
+
         // events visible on same transactional repo
         let events = repo
-            .list_events_for_card(&new_event.maintenance_card_id.to_string())
+            .list_events_for_card(&evt_card_id)
             .await
             .expect("list events");
 
-        assert!(events.iter().any(|e| e.id == new_event.id));
+        assert!(events.iter().any(|e| e.id == evt_id));
 
         // card last_maintenance_date updated in the same transaction
         let card = repo
-            .get_card_by_stock_id(&new_event.maintenance_card_id.to_string())
+            .get_card_by_stock_id(&evt_card_id)
             .await
             .expect("get card")
             .expect("card exists");
 
-        assert_eq!(
-            card.last_maintenance_date.expect("date"),
-            new_event.date_performed
-        );
+        assert_eq!(card.last_maintenance_date.expect("date"), evt_date);
     }
 }

@@ -1,6 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
+use crate::maintenance::domain::events::MaintenanceEvent;
 use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
-use crate::maintenance::infrastructure::repository::NewMaintenanceEvent;
 use async_trait::async_trait;
 
 /// Repository abstraction for maintenance operations.
@@ -43,10 +43,13 @@ pub trait MaintenanceRepository {
         owned_rolling_stock_id: &str,
     ) -> Result<Option<MaintenanceCardRow>, DomainError>;
 
-    /// Record an event and update the maintenance card within the same transaction.
-    async fn record_event_transaction(
+    /// Record one or more domain events and update the maintenance card within the same transaction.
+    ///
+    /// Implementations should persist events (insert into `maintenance_events`)
+    /// and update the `maintenance_cards` projection atomically.
+    async fn record_events_transaction(
         &mut self,
-        new_event: NewMaintenanceEvent,
+        events: Vec<MaintenanceEvent>,
     ) -> Result<(), DomainError>;
 
     /// List events for a maintenance card.
