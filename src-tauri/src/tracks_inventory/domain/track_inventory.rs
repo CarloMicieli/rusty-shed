@@ -1,10 +1,12 @@
 use super::track_id::TrackId;
+use super::track_inventory_event::TrackInventoryEvent;
 use super::track_inventory_id::TrackInventoryId;
 use super::track_purchase::TrackPurchase;
 use super::track_quantity::TrackQuantity;
 use crate::core::domain::metadata::Metadata;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::mem;
 
 /// Aggregate representing a collection of track products owned or managed by
 /// the application/user.
@@ -41,4 +43,25 @@ pub struct TrackInventory {
     /// Additional auxiliary metadata associated with the inventory record
     /// (for example timestamps, owner id or audit information).
     pub metadata: Metadata,
+
+    /// Pending domain events emitted by this aggregate which infrastructure
+    /// can consume to persist changes in an event-driven manner.
+    ///
+    /// Not serialized for persistence of the snapshot/state itself.
+    #[serde(skip)]
+    pub pending_events: Vec<TrackInventoryEvent>,
+}
+
+impl TrackInventory {
+    /// Pulls all pending events from the aggregate and clears the local queue.
+    /// Use by repositories or dispatchers to consume and persist emitted events.
+    pub fn pull_events(&mut self) -> Vec<TrackInventoryEvent> {
+        // Move the events out without cloning.
+        mem::take(&mut self.pending_events)
+    }
+
+    /// Append a domain event to the aggregate's pending queue.
+    pub fn push_event(&mut self, ev: TrackInventoryEvent) {
+        self.pending_events.push(ev);
+    }
 }

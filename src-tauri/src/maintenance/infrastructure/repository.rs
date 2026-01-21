@@ -251,11 +251,12 @@ mod tests {
 
         // Extract inner fields from the enum variant for assertions
         let (evt_id, evt_card_id, evt_date) = match &new_event {
-            MaintenanceEvent::MaintenanceRecorded { id, maintenance_card_id, date_performed, .. } => (
-                *id,
-                maintenance_card_id.to_string(),
-                *date_performed,
-            ),
+            MaintenanceEvent::MaintenanceRecorded {
+                id,
+                maintenance_card_id,
+                date_performed,
+                ..
+            } => (*id, maintenance_card_id.to_string(), *date_performed),
         };
 
         // events visible on same transactional repo

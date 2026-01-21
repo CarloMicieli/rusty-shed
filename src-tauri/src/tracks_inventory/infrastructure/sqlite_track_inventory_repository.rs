@@ -126,6 +126,7 @@ impl<'conn> SqliteTrackInventoryRepository<'conn> {
             metadata,
             name: header.name.unwrap_or_default(),
             description: header.description,
+            pending_events: Vec::new(),
         };
 
         Ok(Some(inventory))
@@ -142,6 +143,113 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
     }
 
     async fn save(&mut self, inventory: TrackInventory) -> Result<(), DomainError> {
+        // Prefer event-driven persistence when the aggregate emitted events.
+        let mut inventory = inventory;
+        let events = inventory.pull_events();
+
+        if !events.is_empty() {
+            // Apply events incrementally. This keeps compatibility with the
+            // existing schema while allowing producers to emit fine-grained
+            // changes.
+            for ev in events.into_iter() {
+                match ev {
+                    crate::tracks_inventory::domain::TrackInventoryEvent::Created => {
+                        let sql_upsert = r#"
+                            INSERT OR REPLACE INTO track_inventories (id, created_at, updated_at, version, name, description)
+                            VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, NULL, NULL)
+                        "#;
+                        sqlx::query(sql_upsert)
+                            .bind(inventory.id.to_string())
+                            .execute(&mut *self.executor)
+                            .await
+                            .map_err(DomainError::from)?;
+                    }
+
+                    crate::tracks_inventory::domain::TrackInventoryEvent::Renamed { name } => {
+                        let sql = r#"UPDATE track_inventories SET name = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2"#;
+                        sqlx::query(sql)
+                            .bind(name)
+                            .bind(inventory.id.to_string())
+                            .execute(&mut *self.executor)
+                            .await
+                            .map_err(DomainError::from)?;
+                    }
+
+                    crate::tracks_inventory::domain::TrackInventoryEvent::DescriptionUpdated {
+                        description,
+                    } => {
+                        let sql = r#"UPDATE track_inventories SET description = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2"#;
+                        sqlx::query(sql)
+                            .bind(description)
+                            .bind(inventory.id.to_string())
+                            .execute(&mut *self.executor)
+                            .await
+                            .map_err(DomainError::from)?;
+                    }
+
+                    crate::tracks_inventory::domain::TrackInventoryEvent::ItemQuantitySet {
+                        track_id,
+                        quantity,
+                    } => {
+                        if quantity <= 0 {
+                            let sql_del = r#"DELETE FROM track_inventory_items WHERE inventory_id = ?1 AND track_id = ?2"#;
+                            sqlx::query(sql_del)
+                                .bind(inventory.id.to_string())
+                                .bind(track_id.to_string())
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        } else {
+                            let sql_upd = r#"INSERT OR REPLACE INTO track_inventory_items (inventory_id, track_id, quantity) VALUES (?1, ?2, ?3)"#;
+                            sqlx::query(sql_upd)
+                                .bind(inventory.id.to_string())
+                                .bind(track_id.to_string())
+                                .bind(quantity)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+                    }
+
+                    crate::tracks_inventory::domain::TrackInventoryEvent::PurchaseAdded {
+                        purchase,
+                    } => {
+                        let insert_purchase = r#"
+                            INSERT OR REPLACE INTO track_purchases (
+                                id, inventory_id, track_id, quantity, price_amount, 
+                                price_currency, seller_id, purchase_date, created_at)
+                            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP)
+                        "#;
+
+                        sqlx::query(insert_purchase)
+                            .bind(purchase.track_purchase_id.to_string())
+                            .bind(inventory.id.to_string())
+                            .bind(purchase.track_id.to_string())
+                            .bind(purchase.quantity)
+                            .bind(purchase.price.amount)
+                            .bind(purchase.price.currency.to_code())
+                            .bind(purchase.seller_id.as_ref().map(|s| s.to_string()))
+                            .bind(purchase.purchase_date.to_string())
+                            .execute(&mut *self.executor)
+                            .await
+                            .map_err(DomainError::from)?;
+                    }
+                }
+            }
+
+            // Touch the inventory header's updated_at timestamp after applying events
+            let _ = sqlx::query(
+                "UPDATE track_inventories SET updated_at = CURRENT_TIMESTAMP WHERE id = ?1",
+            )
+            .bind(inventory.id.to_string())
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+            return Ok(());
+        }
+
+        // No events emitted: fall back to snapshot-style persistence (existing behavior)
         // Upsert inventory header
         let sql_upsert = r#"
             INSERT OR REPLACE INTO track_inventories (id, created_at, updated_at, version)
