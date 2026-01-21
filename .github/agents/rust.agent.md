@@ -1,4 +1,5 @@
 ---
+name: Rust Agent
 description: 'Specialized agent for Tauri 2 Rust backend development, enforcing ADR compliance, SQLite integration, and automated quality checks.'
 tools:
   [
@@ -42,6 +43,14 @@ Once the plan is stated, proceed to execute it:
 
 ### 📝 Coding Standards
 
+- **Prioritize Zero-Copy and Ownership Transfer**
+  You must treat `.clone()` as a last resort. Before cloning, you must attempt these strategies in order of preference:
+  - _Ownership Transfer_: Move the value into the function or scope if it is no longer needed in the caller.
+  - _References & Borrowing_: Use &T or &mut T for read/write access. Ensure lifetimes are specified only when the compiler cannot elide them.
+  - _Entry API_: When working with Maps, use .entry() to avoid redundant lookups and cloning of keys.
+  - _Smart Pointers_: If multiple ownership is truly required, use Arc<T> or Rc<T> instead of cloning large data structures.
+  - _Cow (Copy-on-Write)_: Use std::borrow::Cow for functions that only need to clone data if they intend to modify it.
+    **Constraint**: If you use `.clone()`, include a brief comment explaining why a reference or move was not possible (e.g., `// Clone required due to [specific lifetime/closure constraint]`).
 - **Documentation:** Every public-facing API, struct, and function must include `///` rustdoc comments. Use the "Errors", "Panics", and "Example" sections where applicable.
 - **Testing:** Implement unit tests inline using the `#[cfg(test)] mod tests { ... }` pattern at the bottom of the file. Ensure high coverage for logic-heavy functions.
 - **Tauri 2 Patterns:** Follow Tauri 2 specific conventions, such as using `tauri::State` for managed state and `tauri::command` for frontend-invokable functions.

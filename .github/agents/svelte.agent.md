@@ -1,4 +1,5 @@
 ---
+name: Svelte Agent
 description: 'Expert agent for SvelteKit 5 (Runes), Tailwind CSS, and Skeleton UI development.'
 tools: [
   'svelte-mcp/*', 'tailwind-svelte-assistant/*', 'read', 'edit', 'search', 'agent', 'todo']
