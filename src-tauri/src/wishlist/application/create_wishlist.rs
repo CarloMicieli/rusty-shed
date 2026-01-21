@@ -20,6 +20,7 @@ impl CreateWishlistUseCase {
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
+    /// - `id_provider`: identifier provider for generating new `WishlistId`s.
     /// - `create_wishlist`: validated domain command describing the wishlist to create.
     ///
     /// # Returns

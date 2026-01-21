@@ -201,8 +201,7 @@ impl Collection {
 
                     // Subtract purchase price from total_value when present
                     if let Some(purchase_info) = &item.purchase_info
-                        && let crate::collecting::domain::PurchaseInfo::Purchased(pi) =
-                            purchase_info
+                        && let PurchaseInfo::Purchased(pi) = purchase_info
                         && let Some(price) = &pi.price
                         && let Some(current_total) = self.total_value.take()
                     {
@@ -324,30 +323,24 @@ mod tests {
     fn remove_item_updates_collection_correctly() {
         let mut collection = Collection::default();
 
-        let railway_model_id = crate::catalog::domain::railway_model::RailwayModelId::try_from(
-            "trn:railway-model:acme:60100",
-        )
-        .expect("valid railway model id");
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid railway model id");
 
-        let rolling_stock_ids = vec![
-            crate::catalog::domain::railway_model::RollingStockId::new(),
-            crate::catalog::domain::railway_model::RollingStockId::new(),
-        ];
+        let rolling_stock_ids = vec![RollingStockId::new(), RollingStockId::new()];
 
-        let seller_id =
-            crate::sellers::domain::seller_id::SellerId::try_from("trn:seller:foo").unwrap();
+        let seller_id = SellerId::try_from("trn:seller:foo").unwrap();
 
         let add_collection_item = super::AddCollectionItem {
             railway_model_id: railway_model_id.clone(),
-            category: crate::catalog::domain::railway_model::Category::Locomotives,
+            category: Category::Locomotives,
             rolling_stock_ids: rolling_stock_ids.clone(),
             price: MonetaryAmount::new(1000, Currency::USD),
             seller_id: Some(seller_id.clone()),
             added_date: chrono::NaiveDate::from_ymd_opt(2024, 6, 15).unwrap(),
             purchase_date: chrono::NaiveDate::from_ymd_opt(2024, 6, 10).unwrap(),
-            purchase_condition: Some(crate::collecting::domain::PurchaseCondition::New),
-            model_condition: Some(crate::collecting::domain::ModelCondition::Mint),
-            box_condition: Some(crate::collecting::domain::BoxCondition::OriginalMint),
+            purchase_condition: Some(PurchaseCondition::New),
+            model_condition: Some(ModelCondition::Mint),
+            box_condition: Some(BoxCondition::OriginalMint),
             notes: Some("Test addition".to_string()),
         };
 
@@ -358,9 +351,9 @@ mod tests {
 
         let removed_date = chrono::NaiveDate::from_ymd_opt(2025, 1, 2).unwrap();
 
-        let remove_cmd = crate::collecting::domain::RemoveCollectionItem {
+        let remove_cmd = RemoveCollectionItem {
             collection_item_id: item_id.clone(),
-            category: crate::catalog::domain::railway_model::Category::Locomotives,
+            category: Category::Locomotives,
             removed_date,
         };
 
