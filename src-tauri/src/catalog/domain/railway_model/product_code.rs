@@ -62,20 +62,20 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn try_from_str_success() {
+    fn it_should_try_from_str_success() {
         let product_code = ProductCode::try_from("ACME-123").expect("expected valid product code");
         assert_eq!(product_code.0, "ACME-123");
     }
 
     #[test]
-    fn try_from_str_empty_fails() {
+    fn it_should_try_from_str_empty_fails() {
         let err = ProductCode::try_from("").expect_err("empty product code should fail");
         let msg = format!("{}", err);
         assert!(msg.contains("must not be empty"));
     }
 
     #[test]
-    fn try_from_string_blank_fails() {
+    fn it_should_try_from_string_blank_fails() {
         let err =
             ProductCode::try_from("   ".to_string()).expect_err("blank product code should fail");
         let msg = format!("{}", err);
@@ -83,13 +83,13 @@ mod tests {
     }
 
     #[test]
-    fn display_outputs_inner_string() {
+    fn it_should_display_outputs_inner_string() {
         let product_code = ProductCode::try_from("X-1").unwrap();
         assert_eq!(product_code.to_string(), "X-1");
     }
 
     #[test]
-    fn serde_roundtrip_as_string() {
+    fn it_should_serde_roundtrip_as_string() {
         let product_code = ProductCode::try_from("SER-9").unwrap();
         let s = serde_json::to_string(&product_code).expect("serialize");
         // since ProductCode is serde(transparent) it should serialize as a plain JSON string

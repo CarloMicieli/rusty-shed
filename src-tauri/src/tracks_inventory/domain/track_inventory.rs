@@ -134,7 +134,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn new_emits_created_and_clears_on_pull() {
+    fn it_should_new_emits_created_and_clears_on_pull() {
         let id = TrackInventoryId::default();
         let mut inv = TrackInventory::new(id, "Initial".to_string(), None);
 
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn rename_updates_name_and_emits_event() {
+    fn it_should_rename_updates_name_and_emits_event() {
         let id = TrackInventoryId::default();
         let mut inv = TrackInventory::new(id, "Old".to_string(), None);
 
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn add_purchase_appends_and_emits() {
+    fn it_should_add_purchase_appends_and_emits() {
         let id = TrackInventoryId::default();
         let mut inv = TrackInventory::new(id, "Inv".to_string(), None);
         inv.pull_events(); // consume Created

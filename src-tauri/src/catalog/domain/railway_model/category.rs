@@ -418,7 +418,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_category_lowercase() {
+        fn it_should_parse_category_lowercase() {
             let result = "locomotives".parse::<Category>();
             assert_eq!(Ok(Category::Locomotives), result);
         }
@@ -436,7 +436,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_category_invalid() {
+        fn it_should_parse_category_invalid() {
             let result = "NOT_A_VALID_CATEGORY".parse::<Category>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }
@@ -464,7 +464,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_rolling_stock_category_lowercase() {
+        fn it_should_parse_rolling_stock_category_lowercase() {
             let result = "locomotive".parse::<RollingStockCategory>();
             assert_eq!(Ok(RollingStockCategory::Locomotive), result);
         }
@@ -483,7 +483,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_rolling_stock_category_invalid() {
+        fn it_should_parse_rolling_stock_category_invalid() {
             let result = "NO_SUCH_ROLLING_STOCK_CATEGORY".parse::<RollingStockCategory>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }
@@ -523,7 +523,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_freight_car_type_lowercase() {
+        fn it_should_parse_freight_car_type_lowercase() {
             let result = "gondola".parse::<FreightCarType>();
             assert_eq!(Ok(FreightCarType::Gondola), result);
         }
@@ -554,7 +554,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_freight_car_type_invalid() {
+        fn it_should_parse_freight_car_type_invalid() {
             let result = "UNKNOWN_FREIGHT_CAR_TYPE".parse::<FreightCarType>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }
@@ -577,7 +577,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_locomotive_type_lowercase() {
+        fn it_should_parse_locomotive_type_lowercase() {
             let result = "steam_locomotive".parse::<LocomotiveType>();
             assert_eq!(Ok(LocomotiveType::SteamLocomotive), result);
         }
@@ -591,7 +591,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_locomotive_type_invalid() {
+        fn it_should_parse_locomotive_type_invalid() {
             let result = "NOT_A_LOCOMOTIVE_TYPE".parse::<LocomotiveType>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }
@@ -625,7 +625,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_passenger_car_type_lowercase() {
+        fn it_should_parse_passenger_car_type_lowercase() {
             let result = "combine_car".parse::<PassengerCarType>();
             assert_eq!(Ok(PassengerCarType::CombineCar), result);
         }
@@ -647,7 +647,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_passenger_car_type_invalid() {
+        fn it_should_parse_passenger_car_type_invalid() {
             let result = "NOT_VALID_PASSENGER_CAR_TYPE".parse::<PassengerCarType>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }
@@ -673,7 +673,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_electric_multiple_unit_type_lowercase() {
+        fn it_should_parse_electric_multiple_unit_type_lowercase() {
             let result = "driving_car".parse::<ElectricMultipleUnitType>();
             assert_eq!(Ok(ElectricMultipleUnitType::DrivingCar), result);
         }
@@ -693,7 +693,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_electric_multiple_unit_type_invalid() {
+        fn it_should_parse_electric_multiple_unit_type_invalid() {
             let result = "NO_EMU_TYPE".parse::<ElectricMultipleUnitType>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }
@@ -715,7 +715,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_railcar_type_lowercase() {
+        fn it_should_parse_railcar_type_lowercase() {
             let result = "power_car".parse::<RailcarType>();
             assert_eq!(Ok(RailcarType::PowerCar), result);
         }
@@ -728,7 +728,7 @@ mod tests {
         }
 
         #[test]
-        fn parse_railcar_type_invalid() {
+        fn it_should_parse_railcar_type_invalid() {
             let result = "UNKNOWN_RAILCAR_TYPE".parse::<RailcarType>();
             assert_eq!(Err(ParseError::VariantNotFound), result);
         }

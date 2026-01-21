@@ -61,7 +61,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_invalid_returns_error() {
+    fn it_should_try_from_invalid_returns_error() {
         let res = ManufacturerStatus::try_from("unknown");
         assert!(res.is_err());
     }

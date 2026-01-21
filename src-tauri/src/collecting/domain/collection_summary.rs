@@ -92,7 +92,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_update_count() {
+    fn it_should_test_update_count() {
         let mut summary = CollectionSummary::default();
         summary.update_count(Category::Locomotives, 5);
         summary.update_count(Category::PassengerCars, 10);
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn test_total_items() {
+    fn it_should_test_total_items() {
         let mut summary = CollectionSummary::default();
         summary.update_count(Category::Locomotives, 3);
         summary.update_count(Category::FreightCars, 7);

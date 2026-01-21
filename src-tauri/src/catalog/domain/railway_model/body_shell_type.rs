@@ -51,13 +51,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_invalid_returns_error() {
+    fn it_should_parse_invalid_returns_error() {
         let result = "NOT_A_BODY_SHELL_TYPE".parse::<BodyShellType>();
         assert_eq!(Err(ParseError::VariantNotFound), result);
     }
 
     #[test]
-    fn parse_lowercase() {
+    fn it_should_parse_lowercase() {
         let result = "plastic".parse::<BodyShellType>();
         assert_eq!(Ok(BodyShellType::Plastic), result);
     }

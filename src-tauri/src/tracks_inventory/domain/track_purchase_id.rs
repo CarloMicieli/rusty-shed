@@ -93,14 +93,14 @@ mod tests {
     use uuid::Uuid;
 
     #[test]
-    fn from_uuid_and_display() {
+    fn it_should_from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = TrackPurchaseId::from(u);
         assert_eq!(id.to_string(), format!("{}{}", TRN_PURCHASE_PREFIX, u));
     }
 
     #[test]
-    fn try_from_invalid_trn() {
+    fn it_should_try_from_invalid_trn() {
         let err = TrackPurchaseId::try_from("bad").unwrap_err();
         assert!(matches!(err, TrackPurchaseIdError::InvalidTrn(_)));
     }

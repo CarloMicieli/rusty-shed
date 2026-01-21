@@ -120,7 +120,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn add_collection_item_try_from_valid() {
+    fn it_should_add_collection_item_try_from_valid() {
         let input = AddCollectionItemInput {
             railway_model_id: "trn:railway-model:acme:60100".to_string(),
             rolling_stock_ids: vec![
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn add_collection_item_try_from_empty_rolling_stock() {
+    fn it_should_add_collection_item_try_from_empty_rolling_stock() {
         let input = AddCollectionItemInput {
             railway_model_id: "trn:railway-model:acme:60100".to_string(),
             rolling_stock_ids: vec![],

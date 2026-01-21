@@ -109,7 +109,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn parse_valid_trn_with_uuid_suffix() {
+    fn it_should_parse_valid_trn_with_uuid_suffix() {
         let u = Uuid::new_v4();
         let trn = format!("{}{}", TRN_ORS_PREFIX, u);
         let id = OwnedRollingStockId::try_from(trn.as_str()).expect("should parse trn");
@@ -117,14 +117,14 @@ mod tests {
     }
 
     #[test]
-    fn parse_invalid_trn() {
+    fn it_should_parse_invalid_trn() {
         let bad = "not-a-trn";
         let err = OwnedRollingStockId::try_from(bad).expect_err("invalid trn should fail");
         assert_eq!(err, OwnedRollingStockIdError::InvalidTrn(bad.to_string()));
     }
 
     #[test]
-    fn parse_trn_with_invalid_uuid_suffix() {
+    fn it_should_parse_trn_with_invalid_uuid_suffix() {
         let bad = format!("{}{}", TRN_ORS_PREFIX, "not-a-uuid");
         let err =
             OwnedRollingStockId::try_from(bad.as_str()).expect_err("invalid uuid should fail");
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn from_uuid_and_display() {
+    fn it_should_from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = OwnedRollingStockId::from(u);
         let expected = format!("{}{}", TRN_ORS_PREFIX, u);
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn serde_roundtrip() {
+    fn it_should_serde_roundtrip() {
         let u = Uuid::new_v4();
         let id = OwnedRollingStockId::from(u);
         let s = serde_json::to_string(&id).expect("serialize");

@@ -114,13 +114,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_invalid_returns_error() {
+    fn it_should_parse_invalid_returns_error() {
         let result = "NO_SUCH_INTERFACE".parse::<DccInterface>();
         assert_eq!(Err(ParseError::VariantNotFound), result);
     }
 
     #[test]
-    fn parse_lowercase() {
+    fn it_should_parse_lowercase() {
         // ascii_case_insensitive should accept lowercase
         let result = "nem_651".parse::<DccInterface>();
         assert_eq!(Ok(DccInterface::Nem651), result);

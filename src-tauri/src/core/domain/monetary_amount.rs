@@ -166,13 +166,13 @@ mod tests {
     }
 
     #[test]
-    fn monetary_from_db_none() {
+    fn it_should_monetary_from_db_none() {
         let monetary_amount = MonetaryAmount::from_db(0, None).unwrap();
         assert!(monetary_amount.is_none());
     }
 
     #[test]
-    fn monetary_from_db_negative() {
+    fn it_should_monetary_from_db_negative() {
         let result = MonetaryAmount::from_db(-1, Some("EUR"));
         assert!(result.is_err());
         let err = result.err().unwrap();
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn monetary_from_db_invalid_currency() {
+    fn it_should_monetary_from_db_invalid_currency() {
         let result = MonetaryAmount::from_db(100, Some("INVALID"));
         assert!(result.is_err());
 
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[rstest]
-    fn add_same_currency_mismatch() {
+    fn it_should_add_same_currency_mismatch() {
         let a = MonetaryAmount::new(100, Currency::EUR);
         let b = MonetaryAmount::new(100, Currency::USD);
         assert!(a.add_same_currency(&b).is_err());

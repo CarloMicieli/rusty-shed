@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn display_outputs_variant_name() {
+    fn it_should_display_outputs_variant_name() {
         // Display uses the serialized form (SCREAMING_SNAKE_CASE) as configured by `strum`.
         assert_eq!(format!("{}", SellerType::Marketplace), "MARKETPLACE");
     }

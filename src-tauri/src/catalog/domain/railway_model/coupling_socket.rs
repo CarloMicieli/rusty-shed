@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_invalid_returns_error() {
+    fn it_should_parse_invalid_returns_error() {
         let result = "NOT_A_COUPLING".parse::<CouplingSocket>();
         assert_eq!(Err(ParseError::VariantNotFound), result);
     }

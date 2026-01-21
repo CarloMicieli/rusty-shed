@@ -68,13 +68,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn decoder_id_from_parts_normalises() {
+    fn it_should_decoder_id_from_parts_normalises() {
         let id = DecoderId::from_parts(" ACME Ltd ", " P 1000 ");
         assert_eq!(&*id, "trn:decoder:acme-ltd:p-1000");
     }
 
     #[test]
-    fn decoder_id_display_and_fromstr() {
+    fn it_should_decoder_id_display_and_fromstr() {
         let id = DecoderId::from_parts("A", "B");
         let s = id.to_string();
         let parsed = s.parse::<DecoderId>().expect("parse ok");
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn decoder_id_fromstr_empty_fails() {
+    fn it_should_decoder_id_fromstr_empty_fails() {
         let parsed = "".parse::<DecoderId>();
         assert!(
             parsed.is_err(),

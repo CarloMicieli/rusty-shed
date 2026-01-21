@@ -81,20 +81,20 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn try_from_str_success() {
+    fn it_should_try_from_str_success() {
         let id = RailwayCompanyId::try_from("RY-ACME").expect("expected valid railway id");
         assert_eq!(id.0, "RY-ACME");
     }
 
     #[test]
-    fn try_from_str_empty_fails() {
+    fn it_should_try_from_str_empty_fails() {
         let err = RailwayCompanyId::try_from("").expect_err("empty railway id should fail");
         let msg = format!("{}", err);
         assert!(msg.contains("must not be empty"));
     }
 
     #[test]
-    fn try_from_string_blank_fails() {
+    fn it_should_try_from_string_blank_fails() {
         let err = RailwayCompanyId::try_from("   ".to_string())
             .expect_err("blank railway id should fail");
         let msg = format!("{}", err);
@@ -102,20 +102,20 @@ mod tests {
     }
 
     #[test]
-    fn deref_to_str() {
+    fn it_should_deref_to_str() {
         let id = RailwayCompanyId::try_from("R-1").unwrap();
         let s: &str = &id;
         assert_eq!(s, "R-1");
     }
 
     #[test]
-    fn display_outputs_inner_string() {
+    fn it_should_display_outputs_inner_string() {
         let id = RailwayCompanyId::try_from("RAIL-7").unwrap();
         assert_eq!(id.to_string(), "RAIL-7");
     }
 
     #[test]
-    fn serde_roundtrip_as_string() {
+    fn it_should_serde_roundtrip_as_string() {
         let id = RailwayCompanyId::try_from("RR-100").unwrap();
         let s = serde_json::to_string(&id).expect("serialize");
         assert_eq!(s, "\"RR-100\"");

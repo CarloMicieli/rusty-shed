@@ -164,7 +164,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn create_wishlist_try_from_sets_defaults() {
+    fn it_should_create_wishlist_try_from_sets_defaults() {
         let input = CreateWishlistInput {
             name: "My list".to_string(),
             notes: Some("notes".to_string()),
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn create_wishlist_try_from_with_true() {
+    fn it_should_create_wishlist_try_from_with_true() {
         let input = CreateWishlistInput {
             name: "List2".to_string(),
             notes: None,

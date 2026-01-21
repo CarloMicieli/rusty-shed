@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_invalid_returns_error() {
+    fn it_should_try_from_invalid_returns_error() {
         let err = Scale::try_from("unknown");
         assert!(err.is_err());
         let err = err.unwrap_err();

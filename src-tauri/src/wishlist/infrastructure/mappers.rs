@@ -95,7 +95,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn try_from_item_row_with_prices() {
+    fn it_should_try_from_item_row_with_prices() {
         let row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_item_row_missing_price_parts_results_none() {
+    fn it_should_try_from_item_row_missing_price_parts_results_none() {
         let row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
@@ -150,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_item_row_negative_amount_errors() {
+    fn it_should_try_from_item_row_negative_amount_errors() {
         let row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_item_row_invalid_priority_or_status_errors() {
+    fn it_should_try_from_item_row_invalid_priority_or_status_errors() {
         let mut row = WishlistItemRow {
             id: "trn:wishlist-item:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),
             wishlist_id: "trn:wishlist:f25e2ff1-0cfb-4fb6-a3b9-1e5c95e06840".to_string(),

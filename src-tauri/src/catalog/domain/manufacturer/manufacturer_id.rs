@@ -134,21 +134,21 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn try_from_str_success() {
+    fn it_should_try_from_str_success() {
         let id = ManufacturerId::try_from("trn:manufacturer:mn-acme")
             .expect("expected valid manufacturer id");
         assert_eq!(id.0, "trn:manufacturer:mn-acme");
     }
 
     #[test]
-    fn try_from_str_empty_fails() {
+    fn it_should_try_from_str_empty_fails() {
         let err = ManufacturerId::try_from("").expect_err("empty manufacturer id should fail");
         let msg = format!("{}", err);
         assert!(msg.contains("must not be empty"));
     }
 
     #[test]
-    fn try_from_string_blank_fails() {
+    fn it_should_try_from_string_blank_fails() {
         let err = ManufacturerId::try_from("   ".to_string())
             .expect_err("blank manufacturer id should fail");
         let msg = format!("{}", err);
@@ -156,27 +156,27 @@ mod tests {
     }
 
     #[test]
-    fn try_from_ref_string_success() {
+    fn it_should_try_from_ref_string_success() {
         let s = "trn:manufacturer:m-1".to_string();
         let id = ManufacturerId::try_from(&s).expect("expected valid manufacturer id from &String");
         assert_eq!(&*id, "trn:manufacturer:m-1");
     }
 
     #[test]
-    fn deref_to_str() {
+    fn it_should_deref_to_str() {
         let id = ManufacturerId::try_from("trn:manufacturer:man-7").unwrap();
         let s: &str = &id;
         assert_eq!(s, "trn:manufacturer:man-7");
     }
 
     #[test]
-    fn display_outputs_inner_string() {
+    fn it_should_display_outputs_inner_string() {
         let id = ManufacturerId::try_from("trn:manufacturer:man-100").unwrap();
         assert_eq!(id.to_string(), "trn:manufacturer:man-100");
     }
 
     #[test]
-    fn serde_roundtrip_as_string() {
+    fn it_should_serde_roundtrip_as_string() {
         let id = ManufacturerId::try_from("trn:manufacturer:mn-200").unwrap();
         let s = serde_json::to_string(&id).expect("serialize");
         assert_eq!(s, "\"trn:manufacturer:mn-200\"");
@@ -185,14 +185,14 @@ mod tests {
     }
 
     #[test]
-    fn invalid_prefix_fails() {
+    fn it_should_invalid_prefix_fails() {
         let err = ManufacturerId::try_from("MN ACME").expect_err("should fail non-trn");
         let msg = format!("{}", err);
         assert!(msg.contains("must be a TRN"));
     }
 
     #[test]
-    fn invalid_slug_fails() {
+    fn it_should_invalid_slug_fails() {
         // uppercase and spaces are invalid in slug
         let bad = "trn:manufacturer:Bad Slug";
         let err = ManufacturerId::try_from(bad).expect_err("invalid slug should fail");

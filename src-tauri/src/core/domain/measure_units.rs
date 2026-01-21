@@ -189,7 +189,7 @@ mod tests {
         }
 
         #[test]
-        fn measure_unit_symbol_should_return_the_symbol() {
+        fn it_should_measure_unit_symbol_should_return_the_symbol() {
             assert_eq!(MeasureUnit::Miles.symbol(), "mi");
             assert_eq!(MeasureUnit::Millimeters.symbol(), "mm");
             assert_eq!(MeasureUnit::Inches.symbol(), "in");

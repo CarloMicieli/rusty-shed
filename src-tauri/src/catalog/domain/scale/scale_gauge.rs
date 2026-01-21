@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn constants_have_expected_values() {
+    fn it_should_constants_have_expected_values() {
         // core/common scales
         assert_eq!(millimeters_value(Gauge::H0.millimeters()), dec!(16.5));
         assert_eq!(inches_value(Gauge::H0.inches()), dec!(0.65));
@@ -260,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn from_millimeters_roundtrip() {
+    fn it_should_from_millimeters_roundtrip() {
         let g =
             Gauge::from_millimeters(TrackGauge::Broad, dec!(45.0)).expect("should create gauge");
         // compare millimeters exactly and inches rounded to 3 dp
@@ -274,14 +274,14 @@ mod tests {
     }
 
     #[test]
-    fn from_inches_roundtrip_double_zero() {
+    fn it_should_from_inches_roundtrip_double_zero() {
         let g = Gauge::from_inches(TrackGauge::Standard, dec!(0.65)).expect("should create gauge");
         assert_eq!(millimeters_value(g.millimeters()).round_dp(1), dec!(16.5));
         assert_eq!(inches_value(g.inches()), dec!(0.65));
     }
 
     #[test]
-    fn ordering_by_millimeters() {
+    fn it_should_ordering_by_millimeters() {
         // ONE (45) > ZERO (33) > DOUBLE_ZERO (16.5)
         assert!(Gauge::ONE > Gauge::ZERO);
         assert!(Gauge::ZERO > Gauge::DOUBLE_ZERO);

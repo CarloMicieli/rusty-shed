@@ -241,13 +241,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_invalid_non_contiguous_range() {
+    fn it_should_parse_invalid_non_contiguous_range() {
         let err = EpochKind::try_from("I/III");
         assert!(err.is_err());
     }
 
     #[test]
-    fn parse_invalid_string() {
+    fn it_should_parse_invalid_string() {
         let err = EpochKind::try_from("unknown");
         assert!(err.is_err());
     }

@@ -71,21 +71,21 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn try_from_str_success() {
+    fn it_should_try_from_str_success() {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let id = WishlistItemId::try_from(uuid).expect("expected valid id");
         assert_eq!(id.to_string(), format!("{}{}", WISHLIST_ITEM_PREFIX, uuid));
     }
 
     #[test]
-    fn try_from_str_invalid_fails() {
+    fn it_should_try_from_str_invalid_fails() {
         let err = WishlistItemId::try_from("").expect_err("invalid uuid should fail");
         let msg = format!("{}", err);
         assert!(msg.contains("invalid uuid") || msg.contains("parse"));
     }
 
     #[test]
-    fn serde_roundtrip() {
+    fn it_should_serde_roundtrip() {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let id = WishlistItemId::try_from(uuid).unwrap();
         let s = serde_json::to_string(&id).expect("serialize");
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_string_success() {
+    fn it_should_try_from_string_success() {
         let uuid = String::from("550e8400-e29b-41d4-a716-446655440000");
         let id = WishlistItemId::try_from(uuid).expect("expected valid id from String");
         assert_eq!(
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn default_generates_random_uuid() {
+    fn it_should_default_generates_random_uuid() {
         let id = WishlistItemId::default();
         assert_ne!(
             id.0,
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn display_outputs_uuid() {
+    fn it_should_display_outputs_uuid() {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let id = WishlistItemId::try_from(uuid).unwrap();
         assert_eq!(

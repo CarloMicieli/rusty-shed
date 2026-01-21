@@ -70,7 +70,7 @@ mod tests {
     use crate::dcc_inventory::domain::{Decoder, DecoderId, DecoderType, DigitalProtocol};
 
     #[test]
-    fn install_decoder_validates_address_and_interface() {
+    fn it_should_install_decoder_validates_address_and_interface() {
         let rolling_stock_id = RollingStockId::new();
         let mut ors = OwnedRollingStock {
             id: OwnedRollingStockId::new("ors-1"),

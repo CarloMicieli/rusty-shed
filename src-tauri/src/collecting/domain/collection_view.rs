@@ -53,7 +53,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn default_collection_has_expected_values() {
+    fn it_should_default_collection_has_expected_values() {
         let d = CollectionView::default();
 
         assert_eq!(d.name, "My Collection");

@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_invalid_value_returns_error() {
+    fn it_should_try_from_invalid_value_returns_error() {
         let err = ServiceLevel::try_from("invalid");
         assert!(err.is_err());
         // Ensure the error contains the static message

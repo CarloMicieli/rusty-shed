@@ -144,7 +144,7 @@ mod tests {
     const RAILWAY_MODEL_TRN: &str = "trn:railway-model:acme:123456";
 
     #[test]
-    fn try_from_str_success() {
+    fn it_should_try_from_str_success() {
         let id = RailwayModelId::try_from(RAILWAY_MODEL_TRN).expect("expected valid id");
         assert_eq!(id.to_string(), RAILWAY_MODEL_TRN);
     }
@@ -168,14 +168,14 @@ mod tests {
     }
 
     #[test]
-    fn deref_to_str() {
+    fn it_should_deref_to_str() {
         let id = RailwayModelId::try_from(RAILWAY_MODEL_TRN).unwrap();
         let s: &str = &id;
         assert_eq!(s, RAILWAY_MODEL_TRN);
     }
 
     #[test]
-    fn serde_roundtrip_as_string() {
+    fn it_should_serde_roundtrip_as_string() {
         let id = RailwayModelId::try_from(RAILWAY_MODEL_TRN).unwrap();
         let s = serde_json::to_string(&id).expect("serialize");
         assert_eq!(s, "\"trn:railway-model:acme:123456\"");
@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn new_with_trn_manufacturer_success() {
+    fn it_should_new_with_trn_manufacturer_success() {
         let manufacturer_id =
             ManufacturerId::try_from(MANUFACTURER_ID_TRN).expect("valid manufacturer trn");
         let railway_model_id =
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn new_with_non_trn_manufacturer() {
+    fn it_should_new_with_non_trn_manufacturer() {
         let m = ManufacturerId::new("not-a-trn");
         let result = RailwayModelId::new(&m, "P1");
 

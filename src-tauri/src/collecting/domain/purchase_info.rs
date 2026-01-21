@@ -165,7 +165,7 @@ mod tests {
     use chrono::NaiveDate;
 
     #[test]
-    fn purchased_id_and_seller_accessor() {
+    fn it_should_purchased_id_and_seller_accessor() {
         let p = PurchasedInfo {
             id: PurchaseInfoId::new("p1"),
             purchase_date: NaiveDate::from_ymd_opt(2023, 10, 1).unwrap(),
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn sold_id_and_seller_accessor() {
+    fn it_should_sold_id_and_seller_accessor() {
         let s = SoldInfo {
             id: PurchaseInfoId::new("s1"),
             purchase_date: NaiveDate::from_ymd_opt(2020, 5, 10).unwrap(),
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn preorder_seller_none_and_validate_currency_mismatch() {
+    fn it_should_preorder_seller_none_and_validate_currency_mismatch() {
         let preorder = PreOrderInfo {
             id: PurchaseInfoId::new("pre1"),
             order_date: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),

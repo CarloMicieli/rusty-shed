@@ -81,12 +81,12 @@ mod tests {
     }
 
     #[test]
-    fn default_is_other() {
+    fn it_should_default_is_other() {
         assert_eq!(MaintenanceType::default(), MaintenanceType::Other);
     }
 
     #[test]
-    fn parse_unknown_is_err() {
+    fn it_should_parse_unknown_is_err() {
         assert!(
             "INVALID_MAINTENANCE_TYPE"
                 .parse::<MaintenanceType>()

@@ -34,20 +34,20 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn create_valid_dcc_address() {
+    fn it_should_create_valid_dcc_address() {
         let addr = DccAddress::new(5000).expect("expected valid DCC address");
         assert_eq!(addr.value(), 5000);
     }
 
     #[test]
-    fn create_invalid_dcc_address_zero() {
+    fn it_should_create_invalid_dcc_address_zero() {
         let err = DccAddress::new(0).expect_err("DCC address of 0 should fail");
         let msg = format!("{}", err);
         assert!(msg.contains("must be between 1 and 10239"));
     }
 
     #[test]
-    fn create_invalid_dcc_address_too_high() {
+    fn it_should_create_invalid_dcc_address_too_high() {
         let err = DccAddress::new(20000).expect_err("DCC address above 10239 should fail");
         let msg = format!("{}", err);
         assert!(msg.contains("must be between 1 and 10239"));

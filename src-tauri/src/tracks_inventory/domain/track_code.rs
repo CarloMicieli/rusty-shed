@@ -46,7 +46,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn serde_serialization_tokens() {
+    fn it_should_serde_serialization_tokens() {
         assert_eq!(
             serde_json::to_string(&TrackCode::Code70).unwrap(),
             "\"CODE_70\""
@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn serde_deserialization_tokens() {
+    fn it_should_serde_deserialization_tokens() {
         assert_eq!(
             serde_json::from_str::<TrackCode>("\"CODE_70\"").unwrap(),
             TrackCode::Code70
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn fromstr_ascii_case_insensitive() {
+    fn it_should_fromstr_ascii_case_insensitive() {
         assert_eq!(TrackCode::from_str("code_70").unwrap(), TrackCode::Code70);
         assert_eq!(TrackCode::from_str("Code_75").unwrap(), TrackCode::Code75);
         assert_eq!(TrackCode::from_str("cOdE_83").unwrap(), TrackCode::Code83);
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn fromstr_invalid() {
+    fn it_should_fromstr_invalid() {
         assert!(TrackCode::from_str("NOT_A_CODE").is_err());
     }
 }

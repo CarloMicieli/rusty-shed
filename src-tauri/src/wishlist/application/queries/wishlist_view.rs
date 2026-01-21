@@ -106,7 +106,7 @@ mod tests {
     use chrono::NaiveDate;
 
     #[test]
-    fn preview_converts_to_view_with_no_items() {
+    fn it_should_preview_converts_to_view_with_no_items() {
         let preview = WishlistPreview {
             id: WishlistId::default(),
             name: "Preview".to_string(),
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn wishlist_converts_to_view_with_items() {
+    fn it_should_wishlist_converts_to_view_with_items() {
         let railway_id = crate::catalog::domain::railway_model::RailwayModelId::try_from(
             "trn:railway-model:acme:1",
         )

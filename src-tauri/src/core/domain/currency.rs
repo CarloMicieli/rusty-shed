@@ -70,7 +70,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn currency_from_code_ok() {
+    fn it_should_currency_from_code_ok() {
         assert_eq!(Currency::from_code("EUR").unwrap(), Currency::EUR);
         assert_eq!(Currency::from_code("usd").unwrap(), Currency::USD);
         assert_eq!(Currency::from_code("Gbp").unwrap(), Currency::GBP);
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn currency_from_code_err() {
+    fn it_should_currency_from_code_err() {
         assert!(Currency::from_code("ABC").is_err());
     }
 }

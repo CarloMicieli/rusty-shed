@@ -253,7 +253,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn default_collection_has_expected_values() {
+    fn it_should_default_collection_has_expected_values() {
         let collection = Collection::default();
 
         assert_eq!(collection.name, "My Collection");
@@ -276,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn add_item_updates_collection_correctly() {
+    fn it_should_add_item_updates_collection_correctly() {
         let mut collection = Collection::default();
         assert_eq!(collection.items.len(), 0);
 
@@ -320,7 +320,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_item_updates_collection_correctly() {
+    fn it_should_remove_item_updates_collection_correctly() {
         let mut collection = Collection::default();
 
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")

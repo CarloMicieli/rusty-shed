@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn validation_context_collect_and_finish() {
+    fn it_should_validation_context_collect_and_finish() {
         let mut validation_context = ValidationContext::default();
 
         let value: Option<i32> = validation_context.collect("age", "not a number".parse::<i32>());

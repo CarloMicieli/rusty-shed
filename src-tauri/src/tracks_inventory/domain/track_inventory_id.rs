@@ -93,21 +93,21 @@ mod tests {
     use uuid::Uuid;
 
     #[test]
-    fn from_uuid_and_display() {
+    fn it_should_from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = TrackInventoryId::from(u);
         assert_eq!(id.to_string(), format!("{}{}", TRN_INVENTORY_PREFIX, u));
     }
 
     #[test]
-    fn try_from_invalid_trn_fails() {
+    fn it_should_try_from_invalid_trn_fails() {
         let bad = "not-a-trn";
         let err = TrackInventoryId::try_from(bad).expect_err("invalid trn should fail");
         assert_eq!(err, TrackInventoryIdError::InvalidTrn(bad.to_string()));
     }
 
     #[test]
-    fn try_from_trn_with_invalid_uuid_suffix_fails() {
+    fn it_should_try_from_trn_with_invalid_uuid_suffix_fails() {
         let bad = format!("{}{}", TRN_INVENTORY_PREFIX, "not-a-uuid");
         let err = TrackInventoryId::try_from(bad.as_str()).expect_err("invalid uuid should fail");
         assert_eq!(

@@ -31,7 +31,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn test_default_variant() {
+    fn it_should_test_default_variant() {
         assert_eq!(WishlistPriority::default(), WishlistPriority::Normal);
     }
 

@@ -137,7 +137,7 @@ mod tests {
     use std::collections::HashMap as StdHashMap;
 
     #[test]
-    fn test_domain_error_to_command_error_not_found() {
+    fn it_should_test_domain_error_to_command_error_not_found() {
         let domain_error = DomainError::NotFound {
             resource: "Wishlist".to_string(),
             identifier: "123".to_string(),
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn test_command_error_validation_field() {
+    fn it_should_test_command_error_validation_field() {
         let command_error = CommandError::validation_field("email", "Invalid format");
         match command_error {
             CommandError::ValidationError(map) => {
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn test_command_error_validation_fields() {
+    fn it_should_test_command_error_validation_fields() {
         let fields = vec![("email", "Invalid format"), ("age", "Must be at least 18")];
         let command_error = CommandError::validation_fields(fields);
         match command_error {
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn test_domain_error_to_command_error_business_rule() {
+    fn it_should_test_domain_error_to_command_error_business_rule() {
         let domain_error = DomainError::BusinessRule("Cannot delete paid invoice".to_string());
         let command_error: CommandError = domain_error.into();
         match command_error {

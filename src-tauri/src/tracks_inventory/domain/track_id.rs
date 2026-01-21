@@ -83,21 +83,21 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn new_from_parts_generates_trn() {
+    fn it_should_new_from_parts_generates_trn() {
         let id = TrackId::new_from_parts("ACME", "P-100");
         let expected = format!("{}{}:{}", TRN_PREFIX, slugify("ACME"), slugify("P-100"));
         assert_eq!(id.0, expected);
     }
 
     #[test]
-    fn try_from_valid_trn_ok() {
+    fn it_should_try_from_valid_trn_ok() {
         let s = format!("{}{}:{}", TRN_PREFIX, "mn-acme", "p100");
         let id = TrackId::try_from(s.as_str()).unwrap();
         assert_eq!(id.to_string(), s);
     }
 
     #[test]
-    fn try_from_invalid_trn_fails() {
+    fn it_should_try_from_invalid_trn_fails() {
         let err = TrackId::try_from("not-a-trn").expect_err("should fail");
         assert_eq!(format!("{}", err), "invalid track trn: not-a-trn");
     }

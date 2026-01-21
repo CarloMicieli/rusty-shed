@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn calculate_status_unknown() {
+    fn it_should_calculate_status_unknown() {
         assert_eq!(
             MaintenanceStatus::calculate_status(None),
             MaintenanceStatus::Unknown
