@@ -22,6 +22,41 @@ impl<T: Clone> IdProvider<T> for MockIdProvider<T> {
     }
 }
 
+/// A mock ID provider that returns the `Default` value for `T`.
+///
+/// Useful in tests where calling `Default::default()` on the provider
+/// should yield a deterministic identifier (the `T::default()` value).
+#[derive(Debug, Clone)]
+pub struct DefaultMockIdProvider<T: Clone + Default> {
+    value: T,
+}
+
+impl<T: Clone + Default> DefaultMockIdProvider<T> {
+    /// Create a new provider that will return `T::default()`.
+    pub fn new() -> Self {
+        Self {
+            value: T::default(),
+        }
+    }
+
+    /// Get the value that will be returned by the provider.
+    pub fn value(&self) -> T {
+        self.value.clone()
+    }
+}
+
+impl<T: Clone + Default> Default for DefaultMockIdProvider<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: Clone + Default> IdProvider<T> for DefaultMockIdProvider<T> {
+    fn next_id(&self) -> T {
+        self.value.clone()
+    }
+}
+
 /// Provider that yields a predetermined sequence of values.
 ///
 /// Uses a `RefCell<VecDeque<T>>` so the provider can be used through a

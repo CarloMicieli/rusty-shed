@@ -26,6 +26,7 @@ use crate::maintenance::interface::command_handlers as maintenance_command_handl
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
 use crate::state::AppState;
+use crate::tracks_inventory::interface::command_handlers as tracks_inventory_command_handlers;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
@@ -155,6 +156,10 @@ pub fn run() {
         sellers_command_handlers::create_seller,
         sellers_command_handlers::update_seller,
         sellers_command_handlers::delete_seller,
+        tracks_inventory_command_handlers::create_track_inventory,
+        tracks_inventory_command_handlers::rename_track_inventory,
+        tracks_inventory_command_handlers::add_track_purchase,
+        tracks_inventory_command_handlers::set_track_item_quantity,
         get_image_path,
         get_settings,
         update_settings

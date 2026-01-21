@@ -154,12 +154,15 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
             for ev in events.into_iter() {
                 match ev {
                     crate::tracks_inventory::domain::TrackInventoryEvent::Created => {
+                        // Insert header with the aggregate's current name/description to satisfy NOT NULL constraints.
                         let sql_upsert = r#"
                             INSERT OR REPLACE INTO track_inventories (id, created_at, updated_at, version, name, description)
-                            VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, NULL, NULL)
+                            VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, ?2, ?3)
                         "#;
                         sqlx::query(sql_upsert)
                             .bind(inventory.id.to_string())
+                            .bind(inventory.name.clone())
+                            .bind(inventory.description.clone())
                             .execute(&mut *self.executor)
                             .await
                             .map_err(DomainError::from)?;

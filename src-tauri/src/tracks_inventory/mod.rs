@@ -1,4 +1,4 @@
 mod application;
 pub mod domain;
 mod infrastructure;
-mod interface;
+pub mod interface;
