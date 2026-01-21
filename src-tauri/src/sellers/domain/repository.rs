@@ -17,6 +17,13 @@ pub trait SellersRepository: Send + Sync {
 
     /// Deletes a seller by its ID.
     async fn delete(&mut self, id: &SellerId) -> Result<u64, DomainError>;
+
+    /// Persist events produced by a `Seller` aggregate.
+    ///
+    /// Implementations should iterate `seller.pull_events()` and apply the
+    /// corresponding database operations. The method takes a mutable reference
+    /// so that `pull_events()` can clear the aggregate's pending events.
+    async fn save(&mut self, seller: &mut Seller) -> Result<(), DomainError>;
 }
 
 /// An extension trait that provides access to the `SellersRepository`.

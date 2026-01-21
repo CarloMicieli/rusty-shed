@@ -52,6 +52,7 @@ impl From<SellerRow> for Seller {
             address,
             created_at: created_at_dt,
             updated_at: updated_at_dt,
+            pending_events: Vec::new(),
         }
     }
 }

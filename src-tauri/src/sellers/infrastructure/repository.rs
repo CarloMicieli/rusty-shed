@@ -1,6 +1,7 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::sellers::domain::seller::Seller;
+use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::{SellersRepository, SellersUowExt};
 use crate::sellers::infrastructure::entities::SellerRow;
@@ -149,6 +150,115 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             .await
             .map_err(DomainError::Infrastructure)?;
         Ok(res.rows_affected())
+    }
+
+    async fn save(&mut self, seller: &mut Seller) -> Result<(), DomainError> {
+        for ev in seller.pull_events() {
+            match ev {
+                SellerEvent::Created {
+                    aggregate_id,
+                    name,
+                    seller_type,
+                    email,
+                    phone,
+                    website_url,
+                    address,
+                    created_at,
+                    updated_at,
+                }
+                | SellerEvent::Updated {
+                    aggregate_id,
+                    name,
+                    seller_type,
+                    email,
+                    phone,
+                    website_url,
+                    address,
+                    created_at,
+                    updated_at,
+                } => {
+                    // Keep existing created_at if row exists; otherwise use provided created_at.
+                    let existing_created_at: Option<String> =
+                        sqlx::query_scalar("SELECT created_at FROM sellers WHERE id = ?")
+                            .bind(&aggregate_id.0)
+                            .fetch_optional(&mut *self.executor)
+                            .await
+                            .map_err(DomainError::Infrastructure)?;
+
+                    let created_at_to_use =
+                        existing_created_at.unwrap_or_else(|| created_at.to_rfc3339());
+                    let updated_at_to_use = updated_at.to_rfc3339();
+
+                    let (
+                        street_address,
+                        extended_address,
+                        city,
+                        state_region,
+                        postal_code,
+                        country_code,
+                    ) = match &address {
+                        Some(addr) => (
+                            Some(addr.street_address().to_string()),
+                            addr.extended_address().map(|s| s.to_string()),
+                            Some(addr.city().to_string()),
+                            addr.region().map(|s| s.to_string()),
+                            Some(addr.postal_code().to_string()),
+                            Some(addr.country_code().to_string()),
+                        ),
+                        None => (None, None, None, None, None, None),
+                    };
+
+                    let sql = r#"
+                    INSERT INTO sellers (
+                        id, name, type, email, phone, website_url,
+                        street_address, extended_address, city, state_region, postal_code, country_code,
+                        created_at, updated_at
+                    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                                    ON CONFLICT(id) DO UPDATE SET
+                          name = excluded.name,
+                          type = excluded.type,
+                          email = excluded.email,
+                          phone = excluded.phone,
+                          website_url = excluded.website_url,
+                          street_address = excluded.street_address,
+                          extended_address = excluded.extended_address,
+                          city = excluded.city,
+                          state_region = excluded.state_region,
+                          postal_code = excluded.postal_code,
+                          country_code = excluded.country_code,
+                          updated_at = excluded.updated_at
+                    "#;
+                    sqlx::query(sql)
+                        .bind(&aggregate_id.0)
+                        .bind(&name)
+                        .bind(&seller_type)
+                        .bind(&email)
+                        .bind(&phone)
+                        .bind(&website_url)
+                        .bind(&street_address)
+                        .bind(&extended_address)
+                        .bind(&city)
+                        .bind(&state_region)
+                        .bind(&postal_code)
+                        .bind(&country_code)
+                        .bind(&created_at_to_use)
+                        .bind(&updated_at_to_use)
+                        .execute(&mut *self.executor)
+                        .await
+                        .map_err(DomainError::Infrastructure)?;
+                }
+                SellerEvent::Deleted { aggregate_id } => {
+                    let sql = "DELETE FROM sellers WHERE id = ?";
+                    sqlx::query(sql)
+                        .bind(&aggregate_id.0)
+                        .execute(&mut *self.executor)
+                        .await
+                        .map_err(DomainError::Infrastructure)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

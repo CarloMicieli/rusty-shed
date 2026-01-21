@@ -1,4 +1,5 @@
 use crate::core::domain::address::Address;
+use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
 use chrono::{DateTime, Utc};
@@ -40,4 +41,14 @@ pub struct Seller {
 
     /// Last update timestamp (UTC).
     pub updated_at: DateTime<Utc>,
+    /// Events produced by operations on the aggregate that have not yet been
+    /// persisted/handled by a repository or unit of work.
+    pub pending_events: Vec<SellerEvent>,
+}
+
+impl Seller {
+    /// Pull and clear pending events for persistence.
+    pub fn pull_events(&mut self) -> Vec<SellerEvent> {
+        std::mem::take(&mut self.pending_events)
+    }
 }

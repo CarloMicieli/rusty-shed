@@ -2,6 +2,7 @@ use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
 use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
+use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
 use chrono::Utc;
@@ -50,10 +51,24 @@ impl CreateSellerUseCase {
             address,
             created_at: now,
             updated_at: now,
+            pending_events: Vec::new(),
         };
 
+        let mut seller = seller;
+        seller.pending_events.push(SellerEvent::Created {
+            aggregate_id: seller.id.clone(),
+            name: seller.name.clone(),
+            seller_type: seller.seller_type.clone(),
+            email: seller.email.clone(),
+            phone: seller.phone.clone(),
+            website_url: seller.website_url.clone(),
+            address: seller.address.clone(),
+            created_at: seller.created_at,
+            updated_at: seller.updated_at,
+        });
+
         let mut repo = unit_of_work.sellers_repository();
-        repo.upsert(&seller).await?;
+        repo.save(&mut seller).await?;
 
         Ok(seller)
     }
