@@ -1,5 +1,6 @@
 mod box_condition;
 mod collection;
+mod collection_events;
 mod collection_id;
 mod collection_item;
 mod collection_item_id;
@@ -11,7 +12,6 @@ mod collection_view;
 mod command;
 mod depot_view;
 mod digital_setup;
-mod event;
 mod model_condition;
 mod owned_rolling_stock;
 mod owned_rolling_stock_id;
@@ -23,6 +23,7 @@ mod repository;
 
 pub use box_condition::BoxCondition;
 pub use collection::Collection;
+pub use collection_events::CollectionEvent;
 pub use collection_id::CollectionId;
 pub use collection_item::CollectionItem;
 pub use collection_item_id::CollectionItemId;
@@ -31,11 +32,9 @@ pub use collection_params::NewCollectionItemParams;
 pub use collection_railway_model::CollectionRailwayModel;
 pub use collection_summary::CollectionSummary;
 pub use collection_view::CollectionView;
-// `RemoveCollectionItem` moved to `collecting::application::inputs::RemoveCollectionItemInput`
 pub use depot_view::DepotRollingStockView;
 pub use depot_view::DepotView;
 pub use digital_setup::DigitalSetup;
-pub use event::CollectionEvent;
 pub use model_condition::ModelCondition;
 pub use owned_rolling_stock::OwnedRollingStock;
 pub use owned_rolling_stock_id::OwnedRollingStockId;

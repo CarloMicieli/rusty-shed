@@ -2,7 +2,7 @@ use crate::collecting::application::AddCollectionItemInput;
 use crate::collecting::application::RemoveCollectionItemInput;
 use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionSummary;
-use crate::collecting::domain::event::OwnedRollingStockIds;
+use crate::collecting::domain::collection_events::OwnedRollingStockIds;
 use crate::collecting::domain::{
     CollectionEvent, CollectionId, CollectionItemId, OwnedRollingStock, OwnedRollingStockId,
     PurchaseInfo, PurchaseInfoId, PurchasedInfo,
@@ -11,7 +11,9 @@ use crate::core::domain::EventEnvelope;
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::metadata::Metadata;
 
-/// Represents a user-owned collection of items.
+type CollectionDomainEvent = EventEnvelope<CollectionEvent>;
+
+/// Represents a user-owned collection of railway models.
 ///
 /// A `Collection` contains identifying information, a few aggregated summary
 /// values and the list of `CollectionItem` entries that make up the
@@ -41,7 +43,7 @@ pub struct Collection {
     pub items: Vec<CollectionItem>,
 
     /// Pending events that have occurred in this collection but not yet processed.
-    pub pending_events: Vec<EventEnvelope<CollectionEvent>>,
+    pub pending_events: Vec<CollectionDomainEvent>,
 
     /// Metadata about the collection (creation date, last modified, etc.).
     pub metadata: Metadata,
@@ -75,10 +77,7 @@ impl Collection {
             .collect();
 
         let event = CollectionEvent::RailwayModelAdded {
-            event_id: uuid::Uuid::new_v4(),
             aggregate_id: self.id.clone(),
-            timestamp: chrono::Utc::now().naive_utc(),
-
             collection_item_id: collection_item_id.clone(),
             category: add_collection_item.category,
             railway_model_id: add_collection_item.railway_model_id,
@@ -95,7 +94,7 @@ impl Collection {
         };
 
         self.apply(&event);
-        self.pending_events.push(EventEnvelope::new(event));
+        self.pending_events.push(CollectionDomainEvent::new(event));
 
         collection_item_id
     }
@@ -105,21 +104,18 @@ impl Collection {
     /// removed_date as provided by the caller.
     pub fn remove_item(&mut self, remove_collection_item: RemoveCollectionItemInput) {
         let event = CollectionEvent::RailwayModelRemoved {
-            event_id: uuid::Uuid::new_v4(),
             aggregate_id: self.id.clone(),
-            timestamp: chrono::Utc::now().naive_utc(),
-
             collection_item_id: remove_collection_item.collection_item_id,
             removed_date: remove_collection_item.removed_date,
             category: remove_collection_item.category,
         };
 
         self.apply(&event);
-        self.pending_events.push(EventEnvelope::new(event));
+        self.pending_events.push(CollectionDomainEvent::new(event));
     }
 
     /// Pulls and returns pending events, clearing the internal buffer.
-    pub fn pull_events(&mut self) -> Vec<EventEnvelope<CollectionEvent>> {
+    pub fn pull_events(&mut self) -> Vec<CollectionDomainEvent> {
         std::mem::take(&mut self.pending_events)
     }
 
@@ -232,9 +228,8 @@ impl Default for Collection {
     /// that expect a default when no collection is present in the database.
     fn default() -> Self {
         let create_collection_event = CollectionEvent::CollectionCreated {
-            event_id: uuid::Uuid::new_v4(),
             aggregate_id: CollectionId::default(),
-            timestamp: chrono::Utc::now().naive_utc(),
+            name: "My Collection".to_string(),
         };
 
         Collection {

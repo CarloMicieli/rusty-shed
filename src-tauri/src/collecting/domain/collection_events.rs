@@ -6,23 +6,18 @@ use crate::collecting::domain::{
 use crate::core::domain::MonetaryAmount;
 use crate::dcc_inventory::domain::DecoderId;
 use crate::sellers::domain::seller_id::SellerId;
-use chrono::{NaiveDate, NaiveDateTime};
-use uuid::Uuid;
+use chrono::NaiveDate;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CollectionEvent {
     /// A new collection was created.
     CollectionCreated {
-        event_id: Uuid,
         aggregate_id: CollectionId,
-        timestamp: NaiveDateTime,
+        name: String,
     },
     /// A railway model was added to the collection.
     RailwayModelAdded {
-        event_id: Uuid,
         aggregate_id: CollectionId,
-        timestamp: NaiveDateTime,
-
         collection_item_id: CollectionItemId,
         railway_model_id: RailwayModelId,
         category: Category,
@@ -39,20 +34,14 @@ pub enum CollectionEvent {
     },
     /// A railway model was removed from the collection.
     RailwayModelRemoved {
-        event_id: Uuid,
         aggregate_id: CollectionId,
-        timestamp: NaiveDateTime,
-
         collection_item_id: CollectionItemId,
         removed_date: NaiveDate,
         category: Category,
     },
     /// A railway model was sold from the collection.
     RailwayModelSold {
-        event_id: Uuid,
         aggregate_id: CollectionId,
-        timestamp: NaiveDateTime,
-
         collection_item_id: CollectionItemId,
         removed_date: NaiveDate,
     },
