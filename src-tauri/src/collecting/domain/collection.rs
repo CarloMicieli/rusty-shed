@@ -1,34 +1,16 @@
-use crate::catalog::domain::railway_model::RailwayModel;
 use crate::collecting::application::RemoveCollectionItemInput;
-use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionSummary;
 use crate::collecting::domain::collection_events::OwnedRollingStockIds;
 use crate::collecting::domain::{
     CollectionEvent, CollectionId, CollectionItemId, OwnedRollingStock, OwnedRollingStockId,
-    PurchaseInfo, PurchaseInfoId, PurchasedInfo,
+    PurchaseInfo, PurchasedInfo,
 };
+use crate::collecting::domain::{CollectionItem, NewCollectionItem};
 use crate::core::domain::EventEnvelope;
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::metadata::Metadata;
-use crate::sellers::domain::seller_id::SellerId;
 
 type CollectionDomainEvent = EventEnvelope<CollectionEvent>;
-
-/// Helper struct representing a new collection item prepared for addition.
-#[derive(Debug, Clone)]
-pub struct NewCollectionItem {
-    pub collection_item_id: CollectionItemId,
-    pub purchase_info_id: PurchaseInfoId,
-    pub railway_model: RailwayModel,
-    pub price: MonetaryAmount,
-    pub seller_id: Option<SellerId>,
-    pub added_date: chrono::NaiveDate,
-    pub purchase_date: chrono::NaiveDate,
-    pub purchase_condition: Option<crate::collecting::domain::PurchaseCondition>,
-    pub model_condition: Option<crate::collecting::domain::ModelCondition>,
-    pub box_condition: Option<crate::collecting::domain::BoxCondition>,
-    pub notes: Option<String>,
-}
 
 /// Represents a user-owned collection of railway models.
 ///
@@ -263,7 +245,9 @@ mod tests {
         Category, PowerMethod, ProductCode, RailwayModel, RailwayModelId, RailwayModelManufacturer,
     };
     use crate::catalog::domain::scale::Scale;
-    use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
+    use crate::collecting::domain::{
+        BoxCondition, ModelCondition, PurchaseCondition, PurchaseInfoId,
+    };
     use crate::core::domain::Currency;
     use crate::sellers::domain::seller_id::SellerId;
     use pretty_assertions::assert_eq;
