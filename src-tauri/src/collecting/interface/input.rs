@@ -1,7 +1,6 @@
 use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
-use crate::collecting::domain::{
-    AddCollectionItem, BoxCondition, ModelCondition, PurchaseCondition,
-};
+use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
+use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
 use crate::core::domain::{Currency, MonetaryAmount};
@@ -49,7 +48,7 @@ pub struct AddCollectionItemInput {
     pub notes: Option<String>,
 }
 
-impl TryFrom<AddCollectionItemInput> for AddCollectionItem {
+impl TryFrom<AddCollectionItemInput> for DomainAddCollectionItemInput {
     type Error = DomainError;
 
     fn try_from(input: AddCollectionItemInput) -> Result<Self, Self::Error> {
@@ -99,7 +98,7 @@ impl TryFrom<AddCollectionItemInput> for AddCollectionItem {
         ctx.finish()?;
 
         // SAFE UNWRAPS: Guaranteed by ctx.finish()?
-        Ok(AddCollectionItem {
+        Ok(DomainAddCollectionItemInput {
             railway_model_id: railway_model_id.unwrap(),
             rolling_stock_ids: rolling_stock_ids.unwrap(),
             category: category.unwrap(),
@@ -138,7 +137,7 @@ mod tests {
             notes: Some("Inserted by test".to_string()),
         };
 
-        let cmd = AddCollectionItem::try_from(input).expect("conversion should succeed");
+        let cmd = DomainAddCollectionItemInput::try_from(input).expect("conversion should succeed");
         assert_eq!(cmd.price.amount, 1234);
         assert_eq!(cmd.price.currency.to_code(), "USD");
         assert_eq!(cmd.rolling_stock_ids.len(), 1);
@@ -161,7 +160,7 @@ mod tests {
             notes: None,
         };
 
-        let res = AddCollectionItem::try_from(input);
+        let res = DomainAddCollectionItemInput::try_from(input);
         assert!(res.is_err());
         match res.err().unwrap() {
             crate::core::domain::domain_error::DomainError::ValidationError(errors) => {

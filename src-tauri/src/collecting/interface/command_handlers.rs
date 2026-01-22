@@ -1,12 +1,13 @@
 use crate::catalog::domain::railway_model::Category;
+use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
 use crate::collecting::application::{
-    AddCollectionItemCommand, GetCollectionQuery, GetDepotQuery, RemoveCollectionItemCommand,
+    AddCollectionItemUseCase, GetCollectionQuery, GetDepotQuery,
+    RemoveCollectionItemInput as DomainRemoveCollectionItemInput, RemoveCollectionItemUseCase,
 };
-use crate::collecting::domain::CollectionItemId;
-use crate::collecting::domain::RemoveCollectionItem;
-use crate::collecting::domain::{AddCollectionItem, CollectionView, DepotView};
+use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
 use crate::collecting::interface::{AddCollectionItemInput, RemoveCollectionItemInput};
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::state::AppState;
 use chrono::NaiveDate;
 use log::info;
@@ -86,7 +87,7 @@ pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, C
 pub async fn remove_collection_item(
     state: tauri::State<'_, AppState>,
     input: RemoveCollectionItemInput,
-) -> Result<CollectionView, CommandError> {
+) -> Result<CollectionItemId, CommandError> {
     info!("Removing collection item: {:?}", input);
 
     let collection_item_id = CollectionItemId::try_from(input.collection_item_id)
@@ -100,7 +101,7 @@ pub async fn remove_collection_item(
     let removed_date = NaiveDate::parse_from_str(&input.removed_date, "%Y-%m-%d")
         .map_err(|_| CommandError::validation_field("removed_date", "invalid"))?;
 
-    let domain_cmd = RemoveCollectionItem {
+    let domain_cmd = DomainRemoveCollectionItemInput {
         collection_item_id,
         category,
         removed_date,
@@ -108,11 +109,10 @@ pub async fn remove_collection_item(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let collection_view =
-        RemoveCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await?;
+    let removed_id = RemoveCollectionItemUseCase::execute(&mut unit_of_work, domain_cmd).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
-    Ok(collection_view)
+    Ok(removed_id)
 }
 
 /// Tauri command to add a new item to the collection.
@@ -134,15 +134,24 @@ pub async fn remove_collection_item(
 pub async fn add_collection_item(
     state: tauri::State<'_, AppState>,
     input: AddCollectionItemInput,
-) -> Result<CollectionView, CommandError> {
+) -> Result<CollectionItemId, CommandError> {
     info!("Adding collection item: {:?}", input);
 
-    let domain_cmd = AddCollectionItem::try_from(input).map_err(CommandError::from)?;
+    let domain_cmd = DomainAddCollectionItemInput::try_from(input).map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let collection_view = AddCollectionItemCommand::execute(&mut unit_of_work, domain_cmd).await?;
+    let id_provider = RuntimeIdProvider::new();
+    let purchase_info_provider = RuntimeIdProvider::new();
+
+    let item_id = AddCollectionItemUseCase::execute(
+        &mut unit_of_work,
+        id_provider,
+        purchase_info_provider,
+        domain_cmd,
+    )
+    .await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
-    Ok(collection_view)
+    Ok(item_id)
 }

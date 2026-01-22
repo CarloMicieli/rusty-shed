@@ -1,9 +1,11 @@
+use crate::collecting::application::AddCollectionItemInput;
+use crate::collecting::application::RemoveCollectionItemInput;
 use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionSummary;
 use crate::collecting::domain::event::OwnedRollingStockIds;
 use crate::collecting::domain::{
-    AddCollectionItem, CollectionEvent, CollectionId, CollectionItemId, OwnedRollingStock,
-    OwnedRollingStockId, PurchaseInfo, PurchaseInfoId, PurchasedInfo, RemoveCollectionItem,
+    CollectionEvent, CollectionId, CollectionItemId, OwnedRollingStock, OwnedRollingStockId,
+    PurchaseInfo, PurchaseInfoId, PurchasedInfo,
 };
 use crate::core::domain::EventEnvelope;
 use crate::core::domain::MonetaryAmount;
@@ -56,10 +58,12 @@ impl Collection {
     ///
     /// # Arguments
     /// - `add_collection_item`: The details of the item to add.
-    pub fn add_item(&mut self, add_collection_item: AddCollectionItem) {
-        let collection_item_id = CollectionItemId::default();
-        let purchase_info_id = PurchaseInfoId::default();
-
+    pub fn add_item(
+        &mut self,
+        add_collection_item: AddCollectionItemInput,
+        collection_item_id: CollectionItemId,
+        purchase_info_id: PurchaseInfoId,
+    ) -> CollectionItemId {
         let owned_rolling_stock = add_collection_item
             .rolling_stock_ids
             .iter()
@@ -75,7 +79,7 @@ impl Collection {
             aggregate_id: self.id.clone(),
             timestamp: chrono::Utc::now().naive_utc(),
 
-            collection_item_id,
+            collection_item_id: collection_item_id.clone(),
             category: add_collection_item.category,
             railway_model_id: add_collection_item.railway_model_id,
             added_date: add_collection_item.added_date,
@@ -92,12 +96,14 @@ impl Collection {
 
         self.apply(&event);
         self.pending_events.push(EventEnvelope::new(event));
+
+        collection_item_id
     }
 
     /// Remove an item from the collection by marking it removed and emitting
     /// a `RailwayModelRemoved` event. The event contains the item id and the
     /// removed_date as provided by the caller.
-    pub fn remove_item(&mut self, remove_collection_item: RemoveCollectionItem) {
+    pub fn remove_item(&mut self, remove_collection_item: RemoveCollectionItemInput) {
         let event = CollectionEvent::RailwayModelRemoved {
             event_id: uuid::Uuid::new_v4(),
             aggregate_id: self.id.clone(),
@@ -287,7 +293,7 @@ mod tests {
 
         let seller_id = SellerId::try_from("trn:seller:foo").unwrap();
 
-        let add_collection_item = AddCollectionItem {
+        let add_collection_item = AddCollectionItemInput {
             railway_model_id: railway_model_id.clone(),
             category: Category::Locomotives,
             rolling_stock_ids: rolling_stock_ids.clone(),
@@ -301,7 +307,11 @@ mod tests {
             notes: Some("Test addition".to_string()),
         };
 
-        collection.add_item(add_collection_item);
+        let _item_id = collection.add_item(
+            add_collection_item,
+            CollectionItemId::default(),
+            PurchaseInfoId::default(),
+        );
 
         assert_eq!(collection.items.len(), 1);
         assert_eq!(collection.pending_events.len(), 2);
@@ -330,7 +340,7 @@ mod tests {
 
         let seller_id = SellerId::try_from("trn:seller:foo").unwrap();
 
-        let add_collection_item = super::AddCollectionItem {
+        let add_collection_item = AddCollectionItemInput {
             railway_model_id: railway_model_id.clone(),
             category: Category::Locomotives,
             rolling_stock_ids: rolling_stock_ids.clone(),
@@ -344,14 +354,18 @@ mod tests {
             notes: Some("Test addition".to_string()),
         };
 
-        collection.add_item(add_collection_item);
+        let _item_id = collection.add_item(
+            add_collection_item,
+            CollectionItemId::default(),
+            PurchaseInfoId::default(),
+        );
 
         assert_eq!(collection.items.len(), 1);
         let item_id = collection.items[0].id.clone();
 
         let removed_date = chrono::NaiveDate::from_ymd_opt(2025, 1, 2).unwrap();
 
-        let remove_cmd = RemoveCollectionItem {
+        let remove_cmd = RemoveCollectionItemInput {
             collection_item_id: item_id.clone(),
             category: Category::Locomotives,
             removed_date,

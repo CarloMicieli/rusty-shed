@@ -436,7 +436,7 @@ mod tests {
     use crate::catalog::domain::railway_model::Category;
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
     use crate::catalog::domain::scale::Scale;
-    use crate::collecting::domain::AddCollectionItem;
+    use crate::collecting::application::AddCollectionItemInput;
     use crate::collecting::domain::{
         BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
     };
@@ -601,7 +601,7 @@ mod tests {
                 .expect("valid rolling stock id");
         let seller = SellerId::try_from("trn:seller:model-train-shop").ok();
 
-        let add_collection_item = AddCollectionItem {
+        let add_collection_item = AddCollectionItemInput {
             railway_model_id: railway_model_id.clone(),
             rolling_stock_ids: vec![rolling_stock_id.clone()],
             category: Category::Locomotives,
@@ -617,7 +617,11 @@ mod tests {
             notes: Some("Inserted by test".to_string()),
         };
 
-        collection.add_item(add_collection_item);
+        let _item_id = collection.add_item(
+            add_collection_item,
+            CollectionItemId::default(),
+            PurchaseInfoId::default(),
+        );
 
         unit_of_work
             .collections_repository()
@@ -679,7 +683,7 @@ mod tests {
                 .expect("valid rolling stock id");
         let seller = SellerId::try_from("trn:seller:model-train-shop").ok();
 
-        let add_collection_item = AddCollectionItem {
+        let add_collection_item = AddCollectionItemInput {
             railway_model_id: railway_model_id.clone(),
             rolling_stock_ids: vec![rolling_stock_id.clone()],
             category: crate::catalog::domain::railway_model::Category::Locomotives,
@@ -693,7 +697,11 @@ mod tests {
             notes: Some("Inserted by test".to_string()),
         };
 
-        collection.add_item(add_collection_item);
+        let _item_id = collection.add_item(
+            add_collection_item,
+            CollectionItemId::default(),
+            PurchaseInfoId::default(),
+        );
 
         unit_of_work
             .collections_repository()
@@ -745,7 +753,7 @@ mod tests {
         let item_id = collection2.items[0].id.clone();
         let removed_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
 
-        let remove_cmd = crate::collecting::domain::RemoveCollectionItem {
+        let remove_cmd = crate::collecting::application::RemoveCollectionItemInput {
             collection_item_id: item_id.clone(),
             category: crate::catalog::domain::railway_model::Category::Locomotives,
             removed_date,

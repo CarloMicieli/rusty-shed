@@ -1,29 +1,39 @@
-use crate::collecting::domain::CollectionView;
-use crate::collecting::domain::{AddCollectionItem, CollectionUowExt};
+use crate::collecting::application::AddCollectionItemInput;
 use crate::collecting::domain::{Collection, CollectionItem, OwnedRollingStock};
+use crate::collecting::domain::{CollectionItemId, CollectionUowExt, PurchaseInfoId};
+use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
 
-pub struct AddCollectionItemCommand;
+/// Command handler for adding an item to the collection.
+pub struct AddCollectionItemUseCase;
 
-impl AddCollectionItemCommand {
+impl AddCollectionItemUseCase {
     /// Execute the add collection item use case.
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `add_cmd`: command carrying the details of the item to add.
+    /// - `collection_item_id_provider`: provider for generating new collection item IDs.
+    /// - `purchase_info_id_provider`: provider for generating new purchase info IDs.
+    /// - `input`: command carrying the details of the item to add.
     ///
     /// # Returns
-    /// * `CollectionView` on success
+    /// * the `CollectionItemId` of the new item on success
     /// * `DomainError` on failure.
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `CollectionUowExt` and `Send`.
-    pub async fn execute<U>(
+    /// - `P`: Identifier provider type for `CollectionItemId`.
+    /// - `Q`: Identifier provider type for `PurchaseInfoId`.
+    pub async fn execute<U, P, Q>(
         unit_of_work: &mut U,
-        add_cmd: AddCollectionItem,
-    ) -> Result<CollectionView, DomainError>
+        collection_item_id_provider: P,
+        purchase_info_id_provider: Q,
+        input: AddCollectionItemInput,
+    ) -> Result<CollectionItemId, DomainError>
     where
         U: CollectionUowExt + Send,
+        P: IdProvider<CollectionItemId>,
+        Q: IdProvider<PurchaseInfoId>,
     {
         let mut repo = unit_of_work.collections_repository();
 
@@ -69,13 +79,15 @@ impl AddCollectionItemCommand {
             metadata: Default::default(),
         };
 
-        collection.add_item(add_cmd);
+        let collection_item_id = collection_item_id_provider.next_id();
+        let purchase_info_id = purchase_info_id_provider.next_id();
+
+        let item_id =
+            collection.add_item(input, collection_item_id.clone(), purchase_info_id.clone());
 
         repo.save(&mut collection).await?;
 
-        // Return the refreshed view after persistence
-        let updated = repo.find_view().await?;
-        Ok(updated)
+        Ok(item_id)
     }
 }
 
@@ -84,13 +96,16 @@ mod tests {
     use super::*;
     use crate::catalog::domain::railway_model::{Category, RailwayModelId};
     use crate::collecting::application::testing::FakeUow;
-    use crate::collecting::domain::{CollectionId, CollectionSummary, MockCollectionRepository};
+    use crate::collecting::domain::{
+        CollectionId, CollectionSummary, CollectionView, MockCollectionRepository,
+    };
+    use crate::core::domain::test_utils::DefaultMockIdProvider;
     use crate::core::domain::{Currency, MonetaryAmount};
 
     #[tokio::test]
     async fn it_should_add_collection_items() {
         let mut mock = MockCollectionRepository::new();
-        mock.expect_find_view().times(2).returning(move || {
+        mock.expect_find_view().times(1).returning(move || {
             let view = CollectionView {
                 id: CollectionId::default(),
                 name: "My Collection".to_string(),
@@ -108,7 +123,7 @@ mod tests {
         let mut unit_of_work = FakeUow::new(mock);
 
         let date = chrono::NaiveDate::from_ymd_opt(2024, 6, 1).unwrap();
-        let add_item = AddCollectionItem {
+        let add_item = AddCollectionItemInput {
             railway_model_id: RailwayModelId::try_from("trn:railway-model:rm:test").unwrap(),
             category: Category::Locomotives,
             rolling_stock_ids: vec![],
@@ -122,8 +137,16 @@ mod tests {
             notes: Some("Test note".to_string()),
         };
 
-        let _ = AddCollectionItemCommand::execute(&mut unit_of_work, add_item)
-            .await
-            .expect("Failed to add collection item");
+        let id_provider = DefaultMockIdProvider::<CollectionItemId>::new();
+        let purchase_info_provider = DefaultMockIdProvider::<PurchaseInfoId>::new();
+
+        let _ = AddCollectionItemUseCase::execute(
+            &mut unit_of_work,
+            id_provider,
+            purchase_info_provider,
+            add_item,
+        )
+        .await
+        .expect("Failed to add collection item");
     }
 }

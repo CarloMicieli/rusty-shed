@@ -2,7 +2,6 @@ use crate::collecting::domain::{CollectionUowExt, DepotView};
 use crate::core::domain::domain_error::DomainError;
 
 /// Query to retrieve depot view (list of owned rolling stocks for UI depot).
-#[derive(Debug)]
 pub struct GetDepotQuery;
 
 impl GetDepotQuery {
