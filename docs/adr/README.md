@@ -1,7 +1,7 @@
 # ADR Index
 
-| ID   | Title                                                         | Status     | Date       |
-|------|---------------------------------------------------------------|------------|------------|
+| ID   | Title                                                         | Status      | Date       |
+| ---- | ------------------------------------------------------------- | ----------- | ---------- |
 | 0001 | Choice of Technology                                          | ✅ Accepted | 2025-12-24 |
 | 0002 | Communication Bridge (IPC) and Type Generation                | ✅ Accepted | 2025-12-24 |
 | 0003 | Local Persistence Strategy                                    | ✅ Accepted | 2026-01-08 |
