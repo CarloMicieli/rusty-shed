@@ -1,4 +1,4 @@
-use crate::collecting::application::AddCollectionItemInput;
+use crate::catalog::domain::railway_model::RailwayModel;
 use crate::collecting::application::RemoveCollectionItemInput;
 use crate::collecting::domain::CollectionItem;
 use crate::collecting::domain::CollectionSummary;
@@ -10,8 +10,25 @@ use crate::collecting::domain::{
 use crate::core::domain::EventEnvelope;
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::metadata::Metadata;
+use crate::sellers::domain::seller_id::SellerId;
 
 type CollectionDomainEvent = EventEnvelope<CollectionEvent>;
+
+/// Helper struct representing a new collection item prepared for addition.
+#[derive(Debug, Clone)]
+pub struct NewCollectionItem {
+    pub collection_item_id: CollectionItemId,
+    pub purchase_info_id: PurchaseInfoId,
+    pub railway_model: RailwayModel,
+    pub price: MonetaryAmount,
+    pub seller_id: Option<SellerId>,
+    pub added_date: chrono::NaiveDate,
+    pub purchase_date: chrono::NaiveDate,
+    pub purchase_condition: Option<crate::collecting::domain::PurchaseCondition>,
+    pub model_condition: Option<crate::collecting::domain::ModelCondition>,
+    pub box_condition: Option<crate::collecting::domain::BoxCondition>,
+    pub notes: Option<String>,
+}
 
 /// Represents a user-owned collection of railway models.
 ///
@@ -57,46 +74,40 @@ impl Collection {
 
     /// Add a new item to the collection, updating summary and total value.
     /// Also generates a `CollectionEvent::RailwayModelAdded` event.
-    ///
-    /// # Arguments
-    /// - `add_collection_item`: The details of the item to add.
-    pub fn add_item(
-        &mut self,
-        add_collection_item: AddCollectionItemInput,
-        collection_item_id: CollectionItemId,
-        purchase_info_id: PurchaseInfoId,
-    ) -> CollectionItemId {
-        let owned_rolling_stock = add_collection_item
-            .rolling_stock_ids
+    pub fn add_item(&mut self, new_item: NewCollectionItem) -> CollectionItemId {
+        // Build event rolling stock entries from the supplied RailwayModel's rolling stocks
+        let owned_rolling_stock = new_item
+            .railway_model
+            .rolling_stocks
             .iter()
-            .map(|id| OwnedRollingStockIds {
+            .map(|rs| OwnedRollingStockIds {
                 owned_rolling_stock_id: OwnedRollingStockId::default(),
-                rolling_stock_id: id.clone(),
+                rolling_stock_id: rs.id_as_ref().clone(),
                 installed_decoder_id: None,
             })
             .collect();
 
         let event = CollectionEvent::RailwayModelAdded {
             aggregate_id: self.id.clone(),
-            collection_item_id: collection_item_id.clone(),
-            category: add_collection_item.category,
-            railway_model_id: add_collection_item.railway_model_id,
-            added_date: add_collection_item.added_date,
+            collection_item_id: new_item.collection_item_id.clone(),
+            category: new_item.railway_model.category,
+            railway_model_id: new_item.railway_model.id.clone(),
+            added_date: new_item.added_date,
             rolling_stock: owned_rolling_stock,
-            price: add_collection_item.price,
-            seller_id: add_collection_item.seller_id,
-            purchase_info_id,
-            purchase_date: add_collection_item.purchase_date,
-            purchase_condition: add_collection_item.purchase_condition,
-            model_condition: add_collection_item.model_condition,
-            box_condition: add_collection_item.box_condition,
-            notes: add_collection_item.notes,
+            price: new_item.price,
+            seller_id: new_item.seller_id,
+            purchase_info_id: new_item.purchase_info_id,
+            purchase_date: new_item.purchase_date,
+            purchase_condition: new_item.purchase_condition,
+            model_condition: new_item.model_condition,
+            box_condition: new_item.box_condition,
+            notes: new_item.notes,
         };
 
         self.apply(&event);
         self.pending_events.push(CollectionDomainEvent::new(event));
 
-        collection_item_id
+        new_item.collection_item_id
     }
 
     /// Remove an item from the collection by marking it removed and emitting
@@ -247,7 +258,11 @@ impl Default for Collection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
+    use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::{
+        Category, PowerMethod, ProductCode, RailwayModel, RailwayModelId, RailwayModelManufacturer,
+    };
+    use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
     use crate::core::domain::Currency;
     use crate::sellers::domain::seller_id::SellerId;
@@ -284,14 +299,31 @@ mod tests {
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
             .expect("valid railway model id");
 
-        let rolling_stock_ids = vec![RollingStockId::new(), RollingStockId::new()];
+        let railway_model = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer: RailwayModelManufacturer {
+                manufacturer_id: ManufacturerId::new("not-a-trn"),
+                display: "Test Manufacturer".to_string(),
+            },
+            product_code: ProductCode::try_from("P100").unwrap(),
+            description: "Test model".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+            pending_events: Vec::new(),
+        };
 
         let seller_id = SellerId::try_from("trn:seller:foo").unwrap();
 
-        let add_collection_item = AddCollectionItemInput {
-            railway_model_id: railway_model_id.clone(),
-            category: Category::Locomotives,
-            rolling_stock_ids: rolling_stock_ids.clone(),
+        let new_item = NewCollectionItem {
+            collection_item_id: CollectionItemId::default(),
+            purchase_info_id: PurchaseInfoId::default(),
+            railway_model: railway_model.clone(),
             price: MonetaryAmount::new(1000, Currency::USD),
             seller_id: Some(seller_id.clone()),
             added_date: chrono::NaiveDate::from_ymd_opt(2024, 6, 15).unwrap(),
@@ -302,11 +334,7 @@ mod tests {
             notes: Some("Test addition".to_string()),
         };
 
-        let _item_id = collection.add_item(
-            add_collection_item,
-            CollectionItemId::default(),
-            PurchaseInfoId::default(),
-        );
+        let _item_id = collection.add_item(new_item);
 
         assert_eq!(collection.items.len(), 1);
         assert_eq!(collection.pending_events.len(), 2);
@@ -331,14 +359,31 @@ mod tests {
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
             .expect("valid railway model id");
 
-        let rolling_stock_ids = vec![RollingStockId::new(), RollingStockId::new()];
+        let railway_model = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer: RailwayModelManufacturer {
+                manufacturer_id: ManufacturerId::new("not-a-trn"),
+                display: "Test Manufacturer".to_string(),
+            },
+            product_code: ProductCode::try_from("P100").unwrap(),
+            description: "Test model".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+            pending_events: Vec::new(),
+        };
 
         let seller_id = SellerId::try_from("trn:seller:foo").unwrap();
 
-        let add_collection_item = AddCollectionItemInput {
-            railway_model_id: railway_model_id.clone(),
-            category: Category::Locomotives,
-            rolling_stock_ids: rolling_stock_ids.clone(),
+        let new_item = NewCollectionItem {
+            collection_item_id: CollectionItemId::default(),
+            purchase_info_id: PurchaseInfoId::default(),
+            railway_model: railway_model.clone(),
             price: MonetaryAmount::new(1000, Currency::USD),
             seller_id: Some(seller_id.clone()),
             added_date: chrono::NaiveDate::from_ymd_opt(2024, 6, 15).unwrap(),
@@ -349,11 +394,7 @@ mod tests {
             notes: Some("Test addition".to_string()),
         };
 
-        let _item_id = collection.add_item(
-            add_collection_item,
-            CollectionItemId::default(),
-            PurchaseInfoId::default(),
-        );
+        let _item_id = collection.add_item(new_item);
 
         assert_eq!(collection.items.len(), 1);
         let item_id = collection.items[0].id.clone();

@@ -23,6 +23,7 @@ mod repository;
 
 pub use box_condition::BoxCondition;
 pub use collection::Collection;
+pub use collection::NewCollectionItem;
 pub use collection_events::CollectionEvent;
 pub use collection_id::CollectionId;
 pub use collection_item::CollectionItem;

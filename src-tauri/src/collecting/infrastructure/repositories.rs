@@ -1,8 +1,11 @@
+// Catalog domain types: only import the identifiers required by the
+// repository implementation signatures. Test-only types are imported in
+// the `#[cfg(test)]` modules below.
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::{
-    BoxCondition, Collection, CollectionEvent, CollectionId, ModelCondition, OwnedRollingStockId,
-    PurchaseCondition, PurchaseInfoId,
+    BoxCondition, Collection, CollectionEvent, CollectionId, CollectionItem, ModelCondition,
+    OwnedRollingStock, OwnedRollingStockId, PurchaseCondition, PurchaseInfoId,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionSummary, DepotView};
 use crate::collecting::domain::{CollectionRepository, CollectionUowExt};
@@ -428,15 +431,112 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
             rolling_stocks: depot_items,
         })
     }
+
+    /// Retrieve a full `Collection` aggregate by id, returning `None` when
+    /// no collection with the given id exists.
+    async fn find_by_id(&mut self, id: &CollectionId) -> Result<Option<Collection>, DomainError> {
+        let collection_row = database::get_collection(&mut *self.executor, id).await?;
+        if collection_row.is_none() {
+            return Ok(None);
+        }
+
+        let collection_row = collection_row.expect("Expect collection row to be present");
+
+        let owned_rolling_stock_rows =
+            database::get_owned_rolling_stocks(&mut *self.executor, &collection_row.id).await?;
+        let owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
+            owned_rolling_stock_rows
+                .into_iter()
+                .map(|owned_rs| (owned_rs.collection_item_id.clone(), owned_rs))
+                .into_group_map();
+
+        let purchase_info_rows =
+            database::get_purchase_infos(&mut *self.executor, &collection_row.id).await?;
+        let purchase_info_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = purchase_info_rows
+            .into_iter()
+            .map(|purchase_info| (purchase_info.collection_item_id.clone(), purchase_info))
+            .into_group_map();
+
+        let collection_item_rows =
+            database::get_collection_items(&mut *self.executor, &collection_row.id).await?;
+
+        let mut collection_items: Vec<CollectionItem> = Vec::new();
+        for collection_item_row in collection_item_rows {
+            let iv = CollectionMapper::row_to_collection_item(
+                collection_item_row,
+                &owned_rolling_stocks_map,
+                &purchase_info_map,
+            )?;
+
+            let rolling_stocks = iv
+                .rolling_stocks
+                .into_iter()
+                .map(|ov| OwnedRollingStock {
+                    id: ov.id,
+                    rolling_stock_id: ov.rolling_stock_id,
+                    notes: ov.notes,
+                    installed_decoder_id: ov.digital.map(|d| d.installed_decoder_id),
+                })
+                .collect();
+
+            let item = CollectionItem {
+                id: iv.id,
+                railway_model_id: iv.railway_model.railway_model_id,
+                added_date: iv.added_date,
+                removed_date: iv.removed_date,
+                purchase_condition: iv.purchase_condition,
+                model_condition: iv.model_condition,
+                box_condition: iv.box_condition,
+                notes: iv.notes,
+                rolling_stocks,
+                purchase_info: iv.purchase_info,
+            };
+
+            collection_items.push(item);
+        }
+
+        // Build the Collection aggregate
+        let total_value = MonetaryAmount::from_db(
+            collection_row.total_value_amount,
+            Some(&collection_row.total_value_currency),
+        )
+        .map_err(|err| DomainError::Validation(err.to_string()))?;
+
+        let summary = CollectionSummary {
+            locomotives_count: collection_row.locomotives_count as u16,
+            passenger_cars_count: collection_row.passenger_cars_count as u16,
+            freight_cars_count: collection_row.freight_cars_count as u16,
+            train_sets_count: collection_row.train_sets_count as u16,
+            railcars_count: collection_row.railcars_count as u16,
+            electric_multiple_units_count: collection_row.electric_multiple_units_count as u16,
+            starter_sets_count: 0u16,
+        };
+
+        let collection = Collection {
+            id: collection_row.id,
+            name: collection_row.name,
+            summary,
+            total_value,
+            items: collection_items,
+            pending_events: Vec::new(),
+            metadata: Default::default(),
+        };
+
+        Ok(Some(collection))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_model::Category;
+    use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_company::RailwayCompanyId;
+    use crate::catalog::domain::railway_model::{
+        Category, LocomotiveType, PowerMethod, ProductCode, RailwayModel, RailwayModelManufacturer,
+        RollingStock, RollingStockRailway,
+    };
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
     use crate::catalog::domain::scale::Scale;
-    use crate::collecting::application::AddCollectionItemInput;
     use crate::collecting::domain::{
         BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
     };
@@ -601,12 +701,44 @@ mod tests {
                 .expect("valid rolling stock id");
         let seller = SellerId::try_from("trn:seller:model-train-shop").ok();
 
-        let add_collection_item = AddCollectionItemInput {
-            railway_model_id: railway_model_id.clone(),
-            rolling_stock_ids: vec![rolling_stock_id.clone()],
+        let railway_model = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer: RailwayModelManufacturer {
+                manufacturer_id: ManufacturerId::new("not-a-trn"),
+                display: "Test Manufacturer".to_string(),
+            },
+            product_code: ProductCode::try_from("P100").unwrap(),
+            description: "Test model".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
             category: Category::Locomotives,
-            // Use USD here because Collection::apply uses MonetaryAmount::default() (USD)
-            // when total_value is None, and add_same_currency would otherwise fail.
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![RollingStock::Locomotive {
+                id: rolling_stock_id.clone(),
+                railway: RollingStockRailway::new(RailwayCompanyId::new("RY-ACME"), "ACME"),
+                livery: None,
+                length_over_buffer: None,
+                technical_specifications: None,
+                friendly_name: None,
+                series_code: "".to_string(),
+                road_number: None,
+                series: None,
+                depot: None,
+                locomotive_type: LocomotiveType::ElectricLocomotive,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            }],
+            pending_events: Vec::new(),
+        };
+
+        let new_item = crate::collecting::domain::NewCollectionItem {
+            collection_item_id: CollectionItemId::default(),
+            purchase_info_id: PurchaseInfoId::default(),
+            railway_model: railway_model.clone(),
             price: MonetaryAmount::new(1234, Currency::USD),
             seller_id: seller.clone(),
             added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
@@ -617,11 +749,7 @@ mod tests {
             notes: Some("Inserted by test".to_string()),
         };
 
-        let _item_id = collection.add_item(
-            add_collection_item,
-            CollectionItemId::default(),
-            PurchaseInfoId::default(),
-        );
+        let _item_id = collection.add_item(new_item);
 
         unit_of_work
             .collections_repository()
@@ -683,10 +811,44 @@ mod tests {
                 .expect("valid rolling stock id");
         let seller = SellerId::try_from("trn:seller:model-train-shop").ok();
 
-        let add_collection_item = AddCollectionItemInput {
-            railway_model_id: railway_model_id.clone(),
-            rolling_stock_ids: vec![rolling_stock_id.clone()],
-            category: crate::catalog::domain::railway_model::Category::Locomotives,
+        let railway_model = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer: RailwayModelManufacturer {
+                manufacturer_id: ManufacturerId::new("not-a-trn"),
+                display: "Test Manufacturer".to_string(),
+            },
+            product_code: ProductCode::try_from("P100").unwrap(),
+            description: "Test model".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![RollingStock::Locomotive {
+                id: rolling_stock_id.clone(),
+                railway: RollingStockRailway::new(RailwayCompanyId::new("RY-ACME"), "ACME"),
+                livery: None,
+                length_over_buffer: None,
+                technical_specifications: None,
+                friendly_name: None,
+                series_code: "".to_string(),
+                road_number: None,
+                series: None,
+                depot: None,
+                locomotive_type: LocomotiveType::ElectricLocomotive,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            }],
+            pending_events: Vec::new(),
+        };
+
+        let new_item = crate::collecting::domain::NewCollectionItem {
+            collection_item_id: CollectionItemId::default(),
+            purchase_info_id: PurchaseInfoId::default(),
+            railway_model: railway_model.clone(),
             price: MonetaryAmount::new(1234, Currency::USD),
             seller_id: seller.clone(),
             added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
@@ -697,11 +859,7 @@ mod tests {
             notes: Some("Inserted by test".to_string()),
         };
 
-        let _item_id = collection.add_item(
-            add_collection_item,
-            CollectionItemId::default(),
-            PurchaseInfoId::default(),
-        );
+        let _item_id = collection.add_item(new_item);
 
         unit_of_work
             .collections_repository()
@@ -809,5 +967,42 @@ mod tests {
         assert_eq!(rs.product_code.to_string(), "60100");
         // Owned rolling stock id should look like a trn:owned-rolling-stock
         assert!(rs.id.to_string().starts_with("trn:owned-rolling-stock"));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_return_none_for_find_by_id_when_not_found(conn: sqlx::SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let res = unit_of_work
+            .collections_repository()
+            .find_by_id(&CollectionId::default())
+            .await
+            .expect("find_by_id should succeed");
+
+        assert!(res.is_none());
+
+        unit_of_work.commit().await.unwrap();
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_find_collection_by_id(conn: sqlx::SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let coll = unit_of_work
+            .collections_repository()
+            .find_by_id(&CollectionId::default())
+            .await
+            .expect("find_by_id should succeed")
+            .expect("collection should be present");
+
+        assert_eq!(coll.id, CollectionId::default());
+        assert!(!coll.items.is_empty());
     }
 }

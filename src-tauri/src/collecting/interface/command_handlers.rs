@@ -137,7 +137,10 @@ pub async fn add_collection_item(
 ) -> Result<CollectionItemId, CommandError> {
     info!("Adding collection item: {:?}", input);
 
-    let domain_cmd = DomainAddCollectionItemInput::try_from(input).map_err(CommandError::from)?;
+    let domain_cmd = match DomainAddCollectionItemInput::try_from(input) {
+        Ok(cmd) => cmd,
+        Err(e) => return Err(CommandError::from(e)),
+    };
 
     let mut unit_of_work = state.unit_of_work().await?;
 

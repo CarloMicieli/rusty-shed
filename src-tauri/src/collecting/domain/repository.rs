@@ -1,4 +1,5 @@
 use crate::collecting::domain::Collection;
+use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::collection_view::CollectionView;
 use crate::collecting::domain::depot_view::DepotView;
 use crate::core::domain::domain_error::DomainError;
@@ -17,6 +18,12 @@ pub trait CollectionRepository: Send + Sync {
     /// `Collection` value. Database errors (I/O, query failures, etc.) are not
     /// swallowed and will be returned as `Err`.
     async fn find_view(&mut self) -> Result<CollectionView, DomainError>;
+
+    /// Retrieves a collection aggregate by its identifier.
+    ///
+    /// Returns `Ok(Some(Collection))` if found, `Ok(None)` if no collection
+    /// with the given id exists, or `Err(DomainError)` on failure.
+    async fn find_by_id(&mut self, id: &CollectionId) -> Result<Option<Collection>, DomainError>;
 
     /// Persists the current state of the collection to the data store.
     ///

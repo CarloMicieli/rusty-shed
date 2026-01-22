@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::core::domain::domain_error::DomainError;
@@ -24,10 +24,7 @@ pub struct RemoveCollectionItemInput {
 pub struct AddCollectionItemInput {
     /// The railway model ID of the item to add.
     pub railway_model_id: String,
-    /// The rolling stock IDs associated with the item.
-    pub rolling_stock_ids: Vec<String>,
-    /// The category of the item.
-    pub category: String,
+    /// The category and rolling stock are determined from the referenced railway model.
     /// The price amount in the smallest currency unit (e.g., cents).
     pub price_amount: i64,
     /// The currency code for the price (e.g., "USD").
@@ -57,20 +54,7 @@ impl TryFrom<AddCollectionItemInput> for DomainAddCollectionItemInput {
         let railway_model_id =
             ctx.validate_try_from::<RailwayModelId>("railway_model_id", input.railway_model_id);
 
-        // Rolling stock validation: Ensure we don't just "skip" invalid ones
-        let rolling_stock_ids = if input.rolling_stock_ids.is_empty() {
-            ctx.push_error("rolling_stock_ids", "required", "cannot be empty");
-            None // Mark as None so we know it failed
-        } else {
-            let items = ctx.validate_vec_try_from::<RollingStockId>(
-                "rolling_stock_ids",
-                input.rolling_stock_ids,
-            );
-            // If lengths don't match, some items failed validation
-            Some(items)
-        };
-
-        let category = ctx.validate_parse::<Category>("category", input.category);
+        // category and rolling stock are derived from the RailwayModel; no validation here.
 
         // Currency and Price
         let currency = ctx.collect("price_currency", Currency::from_code(&input.price_currency));
@@ -100,8 +84,6 @@ impl TryFrom<AddCollectionItemInput> for DomainAddCollectionItemInput {
         // SAFE UNWRAPS: Guaranteed by ctx.finish()?
         Ok(DomainAddCollectionItemInput {
             railway_model_id: railway_model_id.unwrap(),
-            rolling_stock_ids: rolling_stock_ids.unwrap(),
-            category: category.unwrap(),
             price: MonetaryAmount::new(input.price_amount, currency.unwrap()),
             seller_id,
             added_date: input.added_date,
@@ -122,10 +104,6 @@ mod tests {
     fn it_should_add_collection_item_try_from_valid() {
         let input = AddCollectionItemInput {
             railway_model_id: "trn:railway-model:acme:60100".to_string(),
-            rolling_stock_ids: vec![
-                "trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8".to_string(),
-            ],
-            category: "Locomotives".to_string(),
             price_amount: 1234,
             price_currency: "USD".to_string(),
             seller_id: Some("trn:seller:model-train-shop".to_string()),
@@ -140,33 +118,5 @@ mod tests {
         let cmd = DomainAddCollectionItemInput::try_from(input).expect("conversion should succeed");
         assert_eq!(cmd.price.amount, 1234);
         assert_eq!(cmd.price.currency.to_code(), "USD");
-        assert_eq!(cmd.rolling_stock_ids.len(), 1);
-    }
-
-    #[test]
-    fn it_should_add_collection_item_try_from_empty_rolling_stock() {
-        let input = AddCollectionItemInput {
-            railway_model_id: "trn:railway-model:acme:60100".to_string(),
-            rolling_stock_ids: vec![],
-            category: "Locomotives".to_string(),
-            price_amount: 1234,
-            price_currency: "USD".to_string(),
-            seller_id: None,
-            added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
-            purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
-            purchase_condition: None,
-            model_condition: None,
-            box_condition: None,
-            notes: None,
-        };
-
-        let res = DomainAddCollectionItemInput::try_from(input);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            crate::core::domain::domain_error::DomainError::ValidationError(errors) => {
-                assert!(errors.contains_key("rolling_stock_ids"));
-            }
-            _ => panic!("expected Validation error"),
-        }
     }
 }

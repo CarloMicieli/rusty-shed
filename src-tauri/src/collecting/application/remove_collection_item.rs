@@ -87,7 +87,7 @@ impl RemoveCollectionItemUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_model::Category;
+    use crate::catalog::domain::railway_model::{Category, MockRailwayModelRepository};
     use crate::collecting::application::testing::FakeUow;
     use crate::collecting::domain::{
         CollectionId, CollectionItemId, CollectionSummary, CollectionView, MockCollectionRepository,
@@ -109,7 +109,7 @@ mod tests {
 
         mock.expect_save().times(1).returning(move |_| Ok(()));
 
-        let mut unit_of_work = FakeUow::new(mock);
+        let mut unit_of_work = FakeUow::new(mock, MockRailwayModelRepository::new());
 
         let date = chrono::NaiveDate::from_ymd_opt(2024, 6, 1).unwrap();
         let remove_cmd = RemoveCollectionItemInput {

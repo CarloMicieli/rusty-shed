@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::core::domain::MonetaryAmount;
 use crate::sellers::domain::seller_id::SellerId;
@@ -8,10 +8,6 @@ use crate::sellers::domain::seller_id::SellerId;
 pub struct AddCollectionItemInput {
     /// The railway model ID of the item to add.
     pub railway_model_id: RailwayModelId,
-    /// The rolling stock IDs associated with the item.
-    pub rolling_stock_ids: Vec<RollingStockId>,
-    /// The category of the item.
-    pub category: Category,
     /// The price of the item.
     pub price: MonetaryAmount,
     /// The seller ID (optional).

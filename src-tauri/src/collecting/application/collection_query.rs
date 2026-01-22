@@ -32,6 +32,7 @@ impl GetCollectionQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::MockRailwayModelRepository;
     use crate::collecting::application::testing::FakeUow;
     use crate::collecting::domain::{CollectionId, CollectionSummary, MockCollectionRepository};
 
@@ -49,7 +50,7 @@ mod tests {
             Ok(view.clone())
         });
 
-        let mut unit_of_work = FakeUow::new(mock);
+        let mut unit_of_work = FakeUow::new(mock, MockRailwayModelRepository::new());
 
         let result = GetCollectionQuery::execute(&mut unit_of_work)
             .await
