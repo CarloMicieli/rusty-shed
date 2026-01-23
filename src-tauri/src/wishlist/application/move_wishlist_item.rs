@@ -1,5 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::wishlist::domain::commands::MoveWishlistItemCommand;
+use crate::wishlist::application::inputs::MoveWishlistItemInput;
 use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that moves a wishlist item to a different wishlist.
@@ -13,7 +13,7 @@ impl MoveWishlistItemUseCase {
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `cmd`: command containing the item id and destination wishlist id.
+    /// - `input`: command containing the item id and destination wishlist id.
     ///
     /// # Returns
     /// * `()` on success
@@ -23,13 +23,13 @@ impl MoveWishlistItemUseCase {
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        cmd: MoveWishlistItemCommand,
+        input: MoveWishlistItemInput,
     ) -> Result<(), DomainError>
     where
         U: WishlistUowExt + Send,
     {
         let mut repo = unit_of_work.wishlist_repository();
-        repo.move_item(&cmd.item_id, &cmd.destination_wishlist_id)
+        repo.move_item(&input.item_id, &input.destination_wishlist_id)
             .await?;
         Ok(())
     }
@@ -50,6 +50,7 @@ mod tests {
 
         let item_id = WishlistItemId::default();
         let destination_wishlist_id = WishlistId::default();
+        let wishlist_id = WishlistId::default();
 
         mock.expect_move_item()
             .times(1)
@@ -58,12 +59,13 @@ mod tests {
 
         let mut unit_of_work = FakeUow::new(mock);
 
-        let cmd = MoveWishlistItemCommand {
+        let input = MoveWishlistItemInput {
             item_id,
             destination_wishlist_id,
+            wishlist_id,
         };
 
-        let res = MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await;
+        let res = MoveWishlistItemUseCase::execute(&mut unit_of_work, input).await;
 
         assert!(res.is_ok());
     }

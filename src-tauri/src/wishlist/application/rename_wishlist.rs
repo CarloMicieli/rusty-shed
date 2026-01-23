@@ -1,5 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::wishlist::domain::commands::RenameWishlistCommand;
+use crate::wishlist::application::inputs::RenameWishlistInput;
 use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that renames an existing wishlist.
@@ -13,7 +13,7 @@ impl RenameWishlistUseCase {
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `cmd`: command containing the wishlist id and new name.
+    /// - `input`: command containing the wishlist id and new name.
     ///
     /// # Returns
     /// * `()` on success
@@ -23,7 +23,7 @@ impl RenameWishlistUseCase {
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        cmd: RenameWishlistCommand,
+        input: RenameWishlistInput,
     ) -> Result<(), DomainError>
     where
         U: WishlistUowExt + Send,
@@ -32,13 +32,13 @@ impl RenameWishlistUseCase {
 
         // Load aggregate, apply rename which emits an event, then persist
         // the aggregate via the repository which will process events.
-        let maybe = repo.find_by_id(&cmd.id).await?;
+        let maybe = repo.find_by_id(&input.id).await?;
         let mut wishlist = maybe.ok_or(DomainError::NotFound {
             resource: "Wishlist".to_string(),
-            identifier: cmd.id.to_string(),
+            identifier: input.id.to_string(),
         })?;
 
-        wishlist.rename(&cmd.name);
+        wishlist.rename(&input.name);
         repo.save_wishlist(&wishlist).await?;
         Ok(())
     }
@@ -82,12 +82,12 @@ mod tests {
 
         let mut unit_of_work = FakeUow::new(mock);
 
-        let cmd = RenameWishlistCommand {
+        let input = RenameWishlistInput {
             id,
             name: "New Wishlist Name".to_string(),
         };
 
-        let res = RenameWishlistUseCase::execute(&mut unit_of_work, cmd).await;
+        let res = RenameWishlistUseCase::execute(&mut unit_of_work, input).await;
 
         assert!(res.is_ok());
     }

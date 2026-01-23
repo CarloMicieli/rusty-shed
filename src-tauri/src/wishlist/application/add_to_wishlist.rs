@@ -1,6 +1,6 @@
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
-use crate::wishlist::domain::commands::AddToWishlistCommand;
+use crate::wishlist::application::inputs::AddToWishlistInput;
 use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
@@ -17,7 +17,7 @@ impl AddToWishlistUseCase {
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `cmd`: domain command containing item details and target wishlist id.
+    /// - `input`: domain command containing item details and target wishlist id.
     ///
     /// # Returns
     /// * `WishlistItem` on success
@@ -29,7 +29,7 @@ impl AddToWishlistUseCase {
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,
-        cmd: AddToWishlistCommand,
+        input: AddToWishlistInput,
     ) -> Result<WishlistItem, DomainError>
     where
         U: WishlistUowExt + Send,
@@ -39,17 +39,17 @@ impl AddToWishlistUseCase {
 
         let item = WishlistItem {
             id: id_provider.next_id(),
-            railway_model_id: cmd.railway_model_id,
-            priority: cmd.priority,
-            status: cmd.status,
-            added_date: cmd.added_date,
+            railway_model_id: input.railway_model_id,
+            priority: input.priority,
+            status: input.status,
+            added_date: input.added_date,
             removed_date: None,
-            notes: cmd.notes,
-            desired_price: cmd.desired_price,
+            notes: input.notes,
+            desired_price: input.desired_price,
             purchased_price: None,
         };
 
-        repo.add_item(&cmd.wishlist_id, &item).await?;
+        repo.add_item(&input.wishlist_id, &item).await?;
         Ok(item)
     }
 }
@@ -77,7 +77,7 @@ mod tests {
 
         let mut unit_of_work = FakeUow::new(mock);
 
-        let cmd = AddToWishlistCommand {
+        let input = AddToWishlistInput {
             wishlist_id: WishlistId::default(),
             railway_model_id,
             priority: WishlistPriority::Normal,
@@ -87,7 +87,8 @@ mod tests {
             added_date: chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
         };
 
-        let result = AddToWishlistUseCase::execute(&mut unit_of_work, test_id_provider, cmd).await;
+        let result =
+            AddToWishlistUseCase::execute(&mut unit_of_work, test_id_provider, input).await;
 
         assert!(result.is_ok());
     }

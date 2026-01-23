@@ -1,5 +1,5 @@
+mod command_args;
 pub mod command_handlers;
-mod input;
 
-pub use input::AddCollectionItemInput;
-pub use input::RemoveCollectionItemInput;
+pub use command_args::AddCollectionItemArgs;
+pub use command_args::RemoveCollectionItemArgs;

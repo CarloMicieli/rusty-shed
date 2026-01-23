@@ -1,7 +1,7 @@
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::metadata::Metadata;
-use crate::wishlist::domain::commands::CreateWishlistCommand;
+use crate::wishlist::application::inputs::CreateWishlistInput;
 use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist::Wishlist;
 use crate::wishlist::domain::wishlist_id::WishlistId;
@@ -33,7 +33,7 @@ impl CreateWishlistUseCase {
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,
-        create_wishlist: CreateWishlistCommand,
+        create_wishlist: CreateWishlistInput,
     ) -> Result<WishlistPreview, DomainError>
     where
         U: WishlistUowExt + Send,
@@ -106,7 +106,7 @@ mod tests {
 
         let mut unit_of_work = FakeUow::new(mock);
 
-        let cmd = CreateWishlistCommand {
+        let cmd = CreateWishlistInput {
             name: "New Wishlist".to_string(),
             notes: Some("Some notes".to_string()),
             is_default: false,

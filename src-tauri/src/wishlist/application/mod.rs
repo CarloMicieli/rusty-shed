@@ -3,6 +3,7 @@ mod create_wishlist;
 mod delete_wishlist;
 mod get_wishlist_by_id;
 mod get_wishlists;
+pub mod inputs;
 mod move_wishlist_item;
 pub mod queries;
 mod remove_wishlist_item;

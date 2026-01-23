@@ -1,0 +1,209 @@
+use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{Currency, MonetaryAmount};
+use crate::wishlist::application::inputs::{
+    AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
+    RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput,
+};
+use crate::wishlist::domain::wishlist_id::WishlistId;
+use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
+use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+use crate::wishlist::domain::wishlist_status::WishlistStatus;
+use chrono::NaiveDate;
+use serde::Deserialize;
+use validator::Validate;
+
+/// Arguments structure for adding an item to a wishlist.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct AddToWishlistArgs {
+    /// The ID of the wishlist to which the item will be added.
+    pub wishlist_id: String,
+    /// The railway model ID of the item to add.
+    pub railway_model_id: String,
+    /// The priority of the wishlist item (optional).
+    pub priority: Option<WishlistPriority>,
+    /// The status of the wishlist item (optional).
+    pub status: Option<WishlistStatus>,
+    /// The desired price amount in the smallest currency unit (e.g., cents) (optional).
+    pub desired_price_amount: Option<i64>,
+    /// The desired price currency code (e.g., "USD") (optional).
+    pub desired_price_currency: Option<String>,
+    /// Additional notes about the wishlist item (optional).
+    pub notes: Option<String>,
+    /// The date the item was added to the wishlist (optional).
+    pub added_date: Option<NaiveDate>,
+}
+
+/// Arguments structure for moving an item between wishlists.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveWishlistItemArgs {
+    /// The ID of the wishlist item to move.
+    pub item_id: String,
+    /// The ID of the destination wishlist.
+    pub destination_wishlist_id: String,
+    /// The ID of the source wishlist the item currently belongs to.
+    pub wishlist_id: String,
+}
+
+/// Arguments structure for creating a new wishlist.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateWishlistArgs {
+    /// The name of the new wishlist.
+    pub name: String,
+    /// Optional notes about the new wishlist.
+    pub notes: Option<String>,
+    /// Whether the new wishlist should be set as the default.
+    pub is_default: Option<bool>,
+}
+
+/// Arguments structure for renaming an existing wishlist.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct RenameWishlistArgs {
+    /// The ID of the wishlist to rename.
+    pub wishlist_id: String,
+    /// The new name for the wishlist.
+    pub name: String,
+}
+
+impl TryFrom<CreateWishlistArgs> for CreateWishlistInput {
+    type Error = DomainError;
+
+    fn try_from(input: CreateWishlistArgs) -> Result<Self, Self::Error> {
+        Ok(CreateWishlistInput {
+            name: input.name,
+            notes: input.notes,
+            is_default: input.is_default.unwrap_or(false),
+        })
+    }
+}
+
+impl TryFrom<RenameWishlistArgs> for RenameWishlistInput {
+    type Error = DomainError;
+
+    fn try_from(input: RenameWishlistArgs) -> Result<Self, Self::Error> {
+        let id = WishlistId::try_from(input.wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        Ok(RenameWishlistInput {
+            id,
+            name: input.name,
+        })
+    }
+}
+
+impl TryFrom<String> for DeleteWishlistInput {
+    type Error = DomainError;
+
+    fn try_from(id: String) -> Result<Self, Self::Error> {
+        let wid = WishlistId::try_from(id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        Ok(DeleteWishlistInput { id: wid })
+    }
+}
+
+impl TryFrom<String> for SetDefaultWishlistInput {
+    type Error = DomainError;
+
+    fn try_from(id: String) -> Result<Self, Self::Error> {
+        let wid = WishlistId::try_from(id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        Ok(SetDefaultWishlistInput { id: wid })
+    }
+}
+
+impl TryFrom<AddToWishlistArgs> for AddToWishlistInput {
+    type Error = DomainError;
+
+    fn try_from(input: AddToWishlistArgs) -> Result<Self, Self::Error> {
+        let wishlist_id = WishlistId::try_from(input.wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        let railway_model_id = RailwayModelId::try_from(input.railway_model_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let desired_price = match (input.desired_price_amount, input.desired_price_currency) {
+            (Some(amount), Some(code)) => {
+                let currency = Currency::from_code(&code)
+                    .map_err(|e| DomainError::Validation(e.to_string()))?;
+                Some(MonetaryAmount::new(amount, currency))
+            }
+            _ => None,
+        };
+
+        Ok(AddToWishlistInput {
+            wishlist_id,
+            railway_model_id,
+            priority: input.priority.unwrap_or_default(),
+            status: input.status.unwrap_or_default(),
+            desired_price,
+            notes: input.notes,
+            added_date: input.added_date.unwrap_or(chrono::Utc::now().date_naive()),
+        })
+    }
+}
+
+impl TryFrom<String> for RemoveWishlistItemInput {
+    type Error = DomainError;
+
+    fn try_from(id: String) -> Result<Self, Self::Error> {
+        let iid = WishlistItemId::try_from(id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        Ok(RemoveWishlistItemInput { item_id: iid })
+    }
+}
+
+impl TryFrom<MoveWishlistItemArgs> for MoveWishlistItemInput {
+    type Error = DomainError;
+
+    fn try_from(input: MoveWishlistItemArgs) -> Result<Self, Self::Error> {
+        let item_id = WishlistItemId::try_from(input.item_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        let dest = WishlistId::try_from(input.destination_wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        let wid = WishlistId::try_from(input.wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        Ok(MoveWishlistItemInput {
+            item_id,
+            destination_wishlist_id: dest,
+            wishlist_id: wid,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::wishlist::interface::CreateWishlistArgs;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn it_should_create_wishlist_try_from_sets_defaults() {
+        let input = CreateWishlistArgs {
+            name: "My list".to_string(),
+            notes: Some("notes".to_string()),
+            is_default: None,
+        };
+
+        let cmd = CreateWishlistInput::try_from(input).expect("conversion should succeed");
+
+        assert_eq!(cmd.name, "My list");
+        assert_eq!(cmd.notes, Some("notes".to_string()));
+        assert!(!cmd.is_default);
+    }
+
+    #[test]
+    fn it_should_create_wishlist_try_from_with_true() {
+        let input = CreateWishlistArgs {
+            name: "List2".to_string(),
+            notes: None,
+            is_default: Some(true),
+        };
+
+        let cmd = CreateWishlistInput::try_from(input).expect("conversion should succeed");
+
+        assert_eq!(cmd.name, "List2");
+        assert!(cmd.is_default);
+    }
+}

@@ -1,7 +1,7 @@
+mod command_args;
 pub mod command_handlers;
-mod input;
 
-pub use input::AddToWishlistInput;
-pub use input::CreateWishlistInput;
-pub use input::MoveWishlistItemInput;
-pub use input::RenameWishlistInput;
+pub use command_args::AddToWishlistArgs;
+pub use command_args::CreateWishlistArgs;
+pub use command_args::MoveWishlistItemArgs;
+pub use command_args::RenameWishlistArgs;

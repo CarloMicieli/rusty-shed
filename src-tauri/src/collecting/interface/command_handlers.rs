@@ -5,7 +5,7 @@ use crate::collecting::application::{
     RemoveCollectionItemInput as DomainRemoveCollectionItemInput, RemoveCollectionItemUseCase,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
-use crate::collecting::interface::{AddCollectionItemInput, RemoveCollectionItemInput};
+use crate::collecting::interface::{AddCollectionItemArgs, RemoveCollectionItemArgs};
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::state::AppState;
@@ -13,10 +13,10 @@ use chrono::NaiveDate;
 use log::info;
 use std::convert::TryFrom;
 
-/// Tauri command to retrieve the current collection.
+/// Tauri command to retrieve the default collection.
 ///
 /// This handler constructs the repository and query handler, executes the query
-/// asynchronously and returns the `Collection` on success. On failure, it
+/// asynchronously and returns the `CollectionView` on success. On failure, it
 /// converts the error into a `CommandError` preserving the error
 /// message for logging/debugging.
 ///
@@ -24,7 +24,7 @@ use std::convert::TryFrom;
 /// * `state`: Tauri-managed application state which provides a database pool.
 ///
 /// Returns:
-/// - `Ok(Collection)` when retrieval succeeds.
+/// - `Ok(CollectionView)` when retrieval succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
@@ -71,34 +71,34 @@ pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, C
 /// Tauri command to remove an item from the collection.
 ///
 /// This handler constructs the repository and command handler, executes the command
-/// asynchronously and returns the updated `CollectionView` on success. On failure, it
+/// asynchronously and returns the removed `CollectionItemId` on success. On failure, it
 /// converts the error into a `CommandError` preserving the error
 /// message for logging/debugging.
 ///
 /// Parameters:
 /// * `state`: Tauri-managed application state which provides a database pool.
-/// * `input`: Input parameters for removing the collection item.
+/// * `args`: Input parameters for removing the collection item.
 ///
 /// Returns:
-/// - `Ok(CollectionView)` when removal succeeds.
+/// - `Ok(CollectionItemId)` when removal succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn remove_collection_item(
     state: tauri::State<'_, AppState>,
-    input: RemoveCollectionItemInput,
+    args: RemoveCollectionItemArgs,
 ) -> Result<CollectionItemId, CommandError> {
-    info!("Removing collection item: {:?}", input);
+    info!("Removing collection item: {:?}", args);
 
-    let collection_item_id = CollectionItemId::try_from(input.collection_item_id)
+    let collection_item_id = CollectionItemId::try_from(args.collection_item_id)
         .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
 
-    let category = input
+    let category = args
         .category
         .parse::<Category>()
         .map_err(|_| CommandError::validation_field("category", "invalid"))?;
 
-    let removed_date = NaiveDate::parse_from_str(&input.removed_date, "%Y-%m-%d")
+    let removed_date = NaiveDate::parse_from_str(&args.removed_date, "%Y-%m-%d")
         .map_err(|_| CommandError::validation_field("removed_date", "invalid"))?;
 
     let domain_cmd = DomainRemoveCollectionItemInput {
@@ -118,30 +118,26 @@ pub async fn remove_collection_item(
 /// Tauri command to add a new item to the collection.
 ///
 /// This handler constructs the repository and command handler, executes the command
-/// asynchronously and returns the updated `CollectionView` on success. On failure, it
+/// asynchronously and returns the newly created `CollectionItemId` on success. On failure, it
 /// converts the error into a `CommandError` preserving the error
 /// message for logging/debugging.
 ///
 /// Parameters:
 /// * `state`: Tauri-managed application state which provides a database pool.
-/// * `input`: Input parameters for adding the collection item.
+/// * `args`: Input parameters for adding the collection item.
 ///
 /// Returns:
-/// - `Ok(CollectionView)` when addition succeeds.
+/// - `Ok(CollectionItemId)` when addition succeeds.
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
 pub async fn add_collection_item(
     state: tauri::State<'_, AppState>,
-    input: AddCollectionItemInput,
+    args: AddCollectionItemArgs,
 ) -> Result<CollectionItemId, CommandError> {
-    info!("Adding collection item: {:?}", input);
+    info!("Adding collection item: {:?}", args);
 
-    let domain_cmd = match DomainAddCollectionItemInput::try_from(input) {
-        Ok(cmd) => cmd,
-        Err(e) => return Err(CommandError::from(e)),
-    };
-
+    let domain_cmd = DomainAddCollectionItemInput::try_from(args).map_err(CommandError::from)?;
     let mut unit_of_work = state.unit_of_work().await?;
 
     let id_provider = RuntimeIdProvider::new();
@@ -154,6 +150,7 @@ pub async fn add_collection_item(
         domain_cmd,
     )
     .await?;
+
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(item_id)

@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
-use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
+use crate::collecting::application::AddCollectionItemInput;
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
@@ -7,10 +7,12 @@ use crate::core::domain::{Currency, MonetaryAmount};
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
 use serde::Deserialize;
+use validator::Validate;
 
-/// Input structure for removing an item from the collection.
-#[derive(Debug, Clone, Deserialize, specta::Type)]
-pub struct RemoveCollectionItemInput {
+/// Arguments structure for removing an item from the collection.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoveCollectionItemArgs {
     /// The ID of the collection item to remove.
     pub collection_item_id: String,
     /// The category of the item.
@@ -19,9 +21,10 @@ pub struct RemoveCollectionItemInput {
     pub removed_date: String,
 }
 
-/// Input structure for adding an item to the collection.
-#[derive(Debug, Clone, Deserialize, specta::Type)]
-pub struct AddCollectionItemInput {
+/// Arguments structure for adding an item to the collection.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct AddCollectionItemArgs {
     /// The railway model ID of the item to add.
     pub railway_model_id: String,
     /// The category and rolling stock are determined from the referenced railway model.
@@ -45,10 +48,10 @@ pub struct AddCollectionItemInput {
     pub notes: Option<String>,
 }
 
-impl TryFrom<AddCollectionItemInput> for DomainAddCollectionItemInput {
+impl TryFrom<AddCollectionItemArgs> for AddCollectionItemInput {
     type Error = DomainError;
 
-    fn try_from(input: AddCollectionItemInput) -> Result<Self, Self::Error> {
+    fn try_from(input: AddCollectionItemArgs) -> Result<Self, Self::Error> {
         let mut ctx = ValidationContext::default();
 
         let railway_model_id =
@@ -82,7 +85,7 @@ impl TryFrom<AddCollectionItemInput> for DomainAddCollectionItemInput {
         ctx.finish()?;
 
         // SAFE UNWRAPS: Guaranteed by ctx.finish()?
-        Ok(DomainAddCollectionItemInput {
+        Ok(AddCollectionItemInput {
             railway_model_id: railway_model_id.unwrap(),
             price: MonetaryAmount::new(input.price_amount, currency.unwrap()),
             seller_id,
@@ -102,7 +105,7 @@ mod tests {
 
     #[test]
     fn it_should_add_collection_item_try_from_valid() {
-        let input = AddCollectionItemInput {
+        let input = AddCollectionItemArgs {
             railway_model_id: "trn:railway-model:acme:60100".to_string(),
             price_amount: 1234,
             price_currency: "USD".to_string(),
@@ -115,7 +118,7 @@ mod tests {
             notes: Some("Inserted by test".to_string()),
         };
 
-        let cmd = DomainAddCollectionItemInput::try_from(input).expect("conversion should succeed");
+        let cmd = AddCollectionItemInput::try_from(input).expect("conversion should succeed");
         assert_eq!(cmd.price.amount, 1234);
         assert_eq!(cmd.price.currency.to_code(), "USD");
     }

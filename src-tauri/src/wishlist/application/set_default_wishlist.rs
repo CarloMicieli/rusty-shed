@@ -1,5 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::wishlist::domain::commands::SetDefaultWishlistCommand;
+use crate::wishlist::application::inputs::SetDefaultWishlistInput;
 use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that marks a wishlist as the default.
@@ -13,7 +13,7 @@ impl SetDefaultWishlistUseCase {
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `cmd`: command carrying the wishlist id to mark default.
+    /// - `input`: command carrying the wishlist id to mark default.
     ///
     /// # Returns
     /// * `()` on success
@@ -23,13 +23,13 @@ impl SetDefaultWishlistUseCase {
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        cmd: SetDefaultWishlistCommand,
+        input: SetDefaultWishlistInput,
     ) -> Result<(), DomainError>
     where
         U: WishlistUowExt + Send,
     {
         let mut repo = unit_of_work.wishlist_repository();
-        repo.set_default_wishlist(&cmd.id).await?;
+        repo.set_default_wishlist(&input.id).await?;
         Ok(())
     }
 }
@@ -55,9 +55,9 @@ mod tests {
 
         let mut unit_of_work = FakeUow::new(mock);
 
-        let cmd = SetDefaultWishlistCommand { id };
+        let input = SetDefaultWishlistInput { id };
 
-        let res = SetDefaultWishlistUseCase::execute(&mut unit_of_work, cmd).await;
+        let res = SetDefaultWishlistUseCase::execute(&mut unit_of_work, input).await;
 
         assert!(res.is_ok());
     }

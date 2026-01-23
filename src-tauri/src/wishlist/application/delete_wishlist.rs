@@ -1,5 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::wishlist::domain::commands::DeleteWishlistCommand;
+use crate::wishlist::application::inputs::DeleteWishlistInput;
 use crate::wishlist::domain::repository::WishlistUowExt;
 
 /// Use case that deletes a wishlist and its items.
@@ -14,7 +14,7 @@ impl DeleteWishlistUseCase {
     ///
     /// # Arguments
     /// - `unit_of_work`: transactional unit providing repository access.
-    /// - `cmd`: command containing the wishlist id to delete.
+    /// - `input`: command containing the wishlist id to delete.
     ///
     /// # Returns
     /// * `()` on success
@@ -24,13 +24,13 @@ impl DeleteWishlistUseCase {
     /// - `U`: Unit of work type implementing `WishlistUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        cmd: DeleteWishlistCommand,
+        input: DeleteWishlistInput,
     ) -> Result<(), DomainError>
     where
         U: WishlistUowExt + Send,
     {
         let mut repo = unit_of_work.wishlist_repository();
-        repo.delete_wishlist(&cmd.id).await?;
+        repo.delete_wishlist(&input.id).await?;
         Ok(())
     }
 }
@@ -56,9 +56,9 @@ mod tests {
 
         let mut unit_of_work = FakeUow::new(mock);
 
-        let cmd = DeleteWishlistCommand { id };
+        let input = DeleteWishlistInput { id };
 
-        let res = DeleteWishlistUseCase::execute(&mut unit_of_work, cmd).await;
+        let res = DeleteWishlistUseCase::execute(&mut unit_of_work, input).await;
 
         assert!(res.is_ok());
     }

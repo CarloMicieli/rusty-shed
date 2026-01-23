@@ -25,10 +25,3 @@ pub struct AddCollectionItemInput {
     /// Additional notes (optional).
     pub notes: Option<String>,
 }
-
-#[derive(Debug, Clone)]
-pub struct RemoveCollectionItemInput {
-    pub collection_item_id: crate::collecting::domain::CollectionItemId,
-    pub category: crate::catalog::domain::railway_model::Category,
-    pub removed_date: chrono::NaiveDate,
-}

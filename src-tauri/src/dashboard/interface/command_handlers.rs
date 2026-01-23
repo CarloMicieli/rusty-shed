@@ -14,7 +14,7 @@ use serde::Deserialize;
 ///
 /// Parameters:
 /// * `state`: Tauri-managed application state which provides a database pool.
-/// * `params`: Optional query parameters to customize the summary retrieval.
+/// * `criteria`: Optional query criteria to customize the summary retrieval.
 ///
 /// Returns:
 /// - `Ok(DashboardSummary)` when retrieval succeeds.
@@ -23,17 +23,17 @@ use serde::Deserialize;
 #[specta::specta]
 pub async fn get_dashboard_summary(
     state: tauri::State<'_, AppState>,
-    params: Option<QueryParams>,
+    criteria: Option<QueryCriteria>,
 ) -> Result<DashboardSummary, CommandError> {
     info!("Fetching dashboard summary");
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let params = params.unwrap_or_default();
-    let number_of_recent_items = params
+    let criteria = criteria.unwrap_or_default();
+    let number_of_recent_items = criteria
         .number_of_recent_items
         .unwrap_or(DEFAULT_RECENT_ITEMS);
-    let number_of_depot_entries = params
+    let number_of_depot_entries = criteria
         .number_of_depot_entries
         .unwrap_or(DEFAULT_DEPOT_ENTRIES);
 
@@ -52,17 +52,18 @@ pub async fn get_dashboard_summary(
 const DEFAULT_RECENT_ITEMS: u8 = 4;
 const DEFAULT_DEPOT_ENTRIES: u8 = 10;
 
-/// Query parameters for retrieving the dashboard summary.
+/// Query criteria for retrieving the dashboard summary.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, specta::Type)]
-pub struct QueryParams {
+#[serde(rename_all = "camelCase")]
+pub struct QueryCriteria {
     /// Number of recent items to retrieve for the dashboard.
     pub number_of_recent_items: Option<u8>,
     /// Number of depot entries to retrieve for the dashboard.
     pub number_of_depot_entries: Option<u8>,
 }
 
-/// Default values for QueryParams.
-impl Default for QueryParams {
+/// Default values for QueryCriteria.
+impl Default for QueryCriteria {
     fn default() -> Self {
         Self {
             number_of_recent_items: Some(DEFAULT_RECENT_ITEMS),

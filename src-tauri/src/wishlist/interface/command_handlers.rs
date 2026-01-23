@@ -10,16 +10,16 @@ use crate::wishlist::application::MoveWishlistItemUseCase;
 use crate::wishlist::application::RemoveWishlistItemUseCase;
 use crate::wishlist::application::RenameWishlistUseCase;
 use crate::wishlist::application::SetDefaultWishlistUseCase;
-use crate::wishlist::application::queries::WishlistView;
-use crate::wishlist::domain::commands::{
-    AddToWishlistCommand, CreateWishlistCommand, DeleteWishlistCommand, MoveWishlistItemCommand,
-    RemoveWishlistItemCommand, RenameWishlistCommand, SetDefaultWishlistCommand,
+use crate::wishlist::application::inputs::{
+    AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
+    RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput,
 };
+use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::interface::{
-    AddToWishlistInput, CreateWishlistInput, MoveWishlistItemInput, RenameWishlistInput,
+    AddToWishlistArgs, CreateWishlistArgs, MoveWishlistItemArgs, RenameWishlistArgs,
 };
 use log::info;
 
@@ -44,11 +44,21 @@ pub async fn get_wishlist_by_id(
     state: tauri::State<'_, AppState>,
     id: WishlistId,
 ) -> Result<Option<WishlistView>, CommandError> {
+    // Tauri commands must accept owned, deserializable args. Forward to
+    // the reference-taking helper below to keep the `&WishlistId` API.
+    get_wishlist_by_id_ref(state, &id).await
+}
+
+/// Helper that accepts a reference to `WishlistId`.
+pub async fn get_wishlist_by_id_ref(
+    state: tauri::State<'_, AppState>,
+    id: &WishlistId,
+) -> Result<Option<WishlistView>, CommandError> {
     info!("Fetching wishlist with ID: {}", id);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let result = GetWishlistByIdQuery::execute(&mut unit_of_work, &id).await?;
+    let result = GetWishlistByIdQuery::execute(&mut unit_of_work, id).await?;
     unit_of_work.commit().await?;
 
     Ok(result)
@@ -99,14 +109,14 @@ pub async fn get_wishlists(
 #[specta::specta]
 pub async fn create_wishlist(
     state: tauri::State<'_, AppState>,
-    input: CreateWishlistInput,
+    input: CreateWishlistArgs,
 ) -> Result<WishlistPreview, CommandError> {
     info!("Creating wishlist: {:?}", input);
 
     let mut unit_of_work = state.unit_of_work().await?;
     let id_provider = RuntimeIdProvider::new();
 
-    let cmd = CreateWishlistCommand::try_from(input).map_err(CommandError::from)?;
+    let cmd = CreateWishlistInput::try_from(input).map_err(CommandError::from)?;
 
     let preview = CreateWishlistUseCase::execute(&mut unit_of_work, id_provider, cmd).await?;
 
@@ -132,13 +142,13 @@ pub async fn create_wishlist(
 #[specta::specta]
 pub async fn rename_wishlist(
     state: tauri::State<'_, AppState>,
-    input: RenameWishlistInput,
+    input: RenameWishlistArgs,
 ) -> Result<(), CommandError> {
     info!("Renaming wishlist: {:?}", input);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = RenameWishlistCommand::try_from(input).map_err(CommandError::from)?;
+    let cmd = RenameWishlistInput::try_from(input).map_err(CommandError::from)?;
 
     RenameWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
@@ -170,7 +180,7 @@ pub async fn delete_wishlist(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = DeleteWishlistCommand::try_from(id).map_err(CommandError::from)?;
+    let cmd = DeleteWishlistInput::try_from(id).map_err(CommandError::from)?;
 
     DeleteWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
@@ -202,7 +212,7 @@ pub async fn set_default_wishlist(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = SetDefaultWishlistCommand::try_from(id).map_err(CommandError::from)?;
+    let cmd = SetDefaultWishlistInput::try_from(id).map_err(CommandError::from)?;
 
     SetDefaultWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
 
@@ -228,14 +238,14 @@ pub async fn set_default_wishlist(
 #[specta::specta]
 pub async fn add_to_wishlist(
     state: tauri::State<'_, AppState>,
-    input: AddToWishlistInput,
+    input: AddToWishlistArgs,
 ) -> Result<WishlistItem, CommandError> {
     info!("Adding item to wishlist: {:?}", input);
 
     let mut unit_of_work = state.unit_of_work().await?;
     let id_provider = RuntimeIdProvider::new();
 
-    let cmd = AddToWishlistCommand::try_from(input).map_err(CommandError::from)?;
+    let cmd = AddToWishlistInput::try_from(input).map_err(CommandError::from)?;
 
     let item = AddToWishlistUseCase::execute(&mut unit_of_work, id_provider, cmd).await?;
 
@@ -267,7 +277,7 @@ pub async fn remove_from_wishlist(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = RemoveWishlistItemCommand::try_from(item_id).map_err(CommandError::from)?;
+    let cmd = RemoveWishlistItemInput::try_from(item_id).map_err(CommandError::from)?;
 
     RemoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await?;
 
@@ -293,13 +303,13 @@ pub async fn remove_from_wishlist(
 #[specta::specta]
 pub async fn move_item_to_list(
     state: tauri::State<'_, AppState>,
-    input: MoveWishlistItemInput,
+    input: MoveWishlistItemArgs,
 ) -> Result<(), CommandError> {
     info!("Moving wishlist item: {:?}", input);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cmd = MoveWishlistItemCommand::try_from(input).map_err(CommandError::from)?;
+    let cmd = MoveWishlistItemInput::try_from(input).map_err(CommandError::from)?;
 
     MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await?;
 

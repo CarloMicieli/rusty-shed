@@ -1,4 +1,3 @@
-pub mod commands;
 pub mod repository;
 pub mod wishlist;
 pub mod wishlist_event;

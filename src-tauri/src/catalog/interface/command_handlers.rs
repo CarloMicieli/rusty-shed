@@ -1,8 +1,8 @@
 use crate::catalog::application::GetRailwayModelByIdQuery;
 use crate::catalog::application::railway_model_use_case::CreateRailwayModelUseCase;
-use crate::catalog::application::railway_model_use_case_input::CreateRailwayModelInput;
 use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::interface::CreateRailwayModelArgs;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use log::info;
@@ -46,7 +46,7 @@ pub async fn get_railway_model_by_id(
 ///
 /// # Arguments
 /// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `new_railway_model` - The validated input for creating the railway model (`CreateRailwayModelInput`).
+/// * `args` - The arguments required to create the railway model and its rolling stocks.
 ///
 /// # Returns
 /// - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
@@ -58,14 +58,15 @@ pub async fn get_railway_model_by_id(
 #[specta::specta]
 pub async fn create_railway_model(
     state: tauri::State<'_, AppState>,
-    new_railway_model: CreateRailwayModelInput,
+    args: CreateRailwayModelArgs,
 ) -> Result<RailwayModelId, CommandError> {
-    info!("Creating railway model: {:?}", new_railway_model);
+    info!("Creating railway model: {:?}", args);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
+    let railway_model_input = args.try_into()?;
     let railway_model_id =
-        CreateRailwayModelUseCase::execute(&mut unit_of_work, new_railway_model).await?;
+        CreateRailwayModelUseCase::execute(&mut unit_of_work, railway_model_input).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model_id)
