@@ -1,0 +1,29 @@
+# --- 1. Sensitive Data (The Non-Negotiables) ---
+.env
+.env.*
+*.pem
+*.key
+**/secrets/*
+
+# --- 2. Rust/Tauri Noise ---
+# The target folder is huge and contains zero useful info for the AI
+src-tauri/target/
+# Ignore compiled binaries and installers
+src-tauri/gen/
+src-tauri/bin/
+
+# --- 3. Frontend/Svelte Noise ---
+# Ignore the built output
+dist/
+build/
+.svelte-kit/
+
+# --- 4. Package Manager Bloat ---
+# Lockfiles are huge and eat up the AI's "context window" token limit
+pnpm-lock.yaml
+node_modules/
+
+# --- 5. Logs and Temp Files ---
+*.log
+.DS_Store
+Thumbs.db
