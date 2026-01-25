@@ -98,7 +98,7 @@ export const commands = {
    */
   async getRailwayModelById(
     railwayModelId: RailwayModelId
-  ): Promise<Result<RailwayModel | null, CommandError>> {
+  ): Promise<Result<RailwayModelView | null, CommandError>> {
     try {
       return {
         status: 'ok',
@@ -166,7 +166,7 @@ export const commands = {
    *
    * # Arguments
    * * `state` - Tauri-managed application `AppState` providing the database pool.
-   * * `new_railway_model` - The validated input for creating the railway model (`CreateRailwayModelInput`).
+   * * `args` - The arguments required to create the railway model and its rolling stocks.
    *
    * # Returns
    * - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
@@ -176,23 +176,20 @@ export const commands = {
    * Errors are mapped to `CommandError` and may represent validation, repository, or unit-of-work failures.
    */
   async createRailwayModel(
-    newRailwayModel: CreateRailwayModelInput
+    args: CreateRailwayModelArgs
   ): Promise<Result<RailwayModelId, CommandError>> {
     try {
-      return {
-        status: 'ok',
-        data: await TAURI_INVOKE('create_railway_model', { newRailwayModel })
-      };
+      return { status: 'ok', data: await TAURI_INVOKE('create_railway_model', { args }) };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
     }
   },
   /**
-   * Tauri command to retrieve the current collection.
+   * Tauri command to retrieve the default collection.
    *
    * This handler constructs the repository and query handler, executes the query
-   * asynchronously and returns the `Collection` on success. On failure, it
+   * asynchronously and returns the `CollectionView` on success. On failure, it
    * converts the error into a `CommandError` preserving the error
    * message for logging/debugging.
    *
@@ -200,7 +197,7 @@ export const commands = {
    * * `state`: Tauri-managed application state which provides a database pool.
    *
    * Returns:
-   * - `Ok(Collection)` when retrieval succeeds.
+   * - `Ok(CollectionView)` when retrieval succeeds.
    * - `Err(CommandError)` when the use-case returns an error.
    */
   async getCollection(): Promise<Result<CollectionView, CommandError>> {
@@ -245,17 +242,17 @@ export const commands = {
    *
    * Parameters:
    * * `state`: Tauri-managed application state which provides a database pool.
-   * * `params`: Optional query parameters to customize the summary retrieval.
+   * * `criteria`: Optional query criteria to customize the summary retrieval.
    *
    * Returns:
    * - `Ok(DashboardSummary)` when retrieval succeeds.
    * - `Err(CommandError)` when the use-case returns an error.
    */
   async getDashboardSummary(
-    params: QueryParams | null
+    criteria: QueryCriteria | null
   ): Promise<Result<DashboardSummary, CommandError>> {
     try {
-      return { status: 'ok', data: await TAURI_INVOKE('get_dashboard_summary', { params }) };
+      return { status: 'ok', data: await TAURI_INVOKE('get_dashboard_summary', { criteria }) };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -273,10 +270,10 @@ export const commands = {
    * * `state`: Tauri-managed application state which provides a database pool.
    *
    * Returns:
-   * - `Ok(Vec<WishlistPreview>)` when retrieval succeeds.
+   * - `Ok(Vec<WishlistView>)` when retrieval succeeds.
    * - `Err(CommandError)` when the use-case returns an error.
    */
-  async getWishlists(): Promise<Result<WishlistPreview[], CommandError>> {
+  async getWishlists(): Promise<Result<WishlistView[], CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_wishlists') };
     } catch (e) {
@@ -297,11 +294,11 @@ export const commands = {
    * * `id`: The identifier of the wishlist to retrieve.
    *
    * Returns:
-   * - `Ok(Some(Wishlist))` when a matching wishlist exists,
+   * - `Ok(Some(WishlistView))` when a matching wishlist exists,
    * - `Ok(None)` when no matching row is found
    * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
    */
-  async getWishlistById(id: WishlistId): Promise<Result<Wishlist | null, CommandError>> {
+  async getWishlistById(id: WishlistId): Promise<Result<WishlistView | null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_wishlist_by_id', { id }) };
     } catch (e) {
@@ -324,7 +321,7 @@ export const commands = {
    * - `Ok(WishlistPreview)` when creation succeeds.
    * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
    */
-  async createWishlist(input: CreateWishlistInput): Promise<Result<WishlistPreview, CommandError>> {
+  async createWishlist(input: CreateWishlistArgs): Promise<Result<WishlistPreview, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('create_wishlist', { input }) };
     } catch (e) {
@@ -347,7 +344,7 @@ export const commands = {
    * - `Ok(())` when renaming succeeds.
    * - `Err(CommandError)` when validation fails, a database error occurs, or business logic
    */
-  async renameWishlist(input: RenameWishlistInput): Promise<Result<null, CommandError>> {
+  async renameWishlist(input: RenameWishlistArgs): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('rename_wishlist', { input }) };
     } catch (e) {
@@ -416,7 +413,7 @@ export const commands = {
    * - `Ok(WishlistItem)` when the addition succeeds.
    * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
    */
-  async addToWishlist(input: AddToWishlistInput): Promise<Result<WishlistItem, CommandError>> {
+  async addToWishlist(input: AddToWishlistArgs): Promise<Result<WishlistItem, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('add_to_wishlist', { input }) };
     } catch (e) {
@@ -462,7 +459,7 @@ export const commands = {
    * - `Ok(())` when the move succeeds.
    * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
    */
-  async moveItemToList(input: MoveWishlistItemInput): Promise<Result<null, CommandError>> {
+  async moveItemToList(input: MoveWishlistItemArgs): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('move_item_to_list', { input }) };
     } catch (e) {
@@ -484,7 +481,7 @@ export const commands = {
   /**
    * Add a maintenance record and update the card.
    */
-  async addMaintenanceRecord(input: AddMaintenanceInput): Promise<Result<null, CommandError>> {
+  async addMaintenanceRecord(input: AddMaintenanceArgs): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('add_maintenance_record', { input }) };
     } catch (e) {
@@ -612,6 +609,58 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Create a new track inventory.
+   */
+  async createTrackInventory(
+    input: NewTrackInventoryInput
+  ): Promise<Result<TrackInventoryId, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('create_track_inventory', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Rename an existing track inventory.
+   */
+  async renameTrackInventory(
+    input: RenameTrackInventoryInput
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('rename_track_inventory', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Add a purchase to an existing track inventory.
+   */
+  async addTrackPurchase(
+    input: AddTrackPurchaseInput
+  ): Promise<Result<TrackPurchaseId, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('add_track_purchase', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Set quantity for a track item in an inventory.
+   */
+  async setTrackItemQuantity(
+    input: SetTrackItemQuantityInput
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('set_track_item_quantity', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
   async getImagePath(id: string, category: string): Promise<Result<string, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_image_path', { id, category }) };
@@ -645,24 +694,92 @@ export const commands = {
 /** user-defined types **/
 
 /**
- * Input DTO for adding a maintenance record over IPC.
+ * Arguments for adding a maintenance record.
  */
-export type AddMaintenanceInput = {
+export type AddMaintenanceArgs = {
+  /**
+   * The unique identifier for the maintenance record.
+   */
   id: string;
-  maintenance_card_id: string;
-  date_performed: string;
-  maintenance_type: string | null;
+  /**
+   * The ID of the maintenance card.
+   */
+  maintenanceCardId: string;
+  /**
+   * The date the maintenance was performed (YYYY-MM-DD).
+   */
+  datePerformed: string;
+  /**
+   * The type of maintenance performed (optional).
+   */
+  maintenanceType: string | null;
+  /**
+   * Additional notes about the maintenance (optional).
+   */
   notes: string | null;
 };
-export type AddToWishlistInput = {
+/**
+ * Arguments structure for adding an item to a wishlist.
+ */
+export type AddToWishlistArgs = {
+  /**
+   * The ID of the wishlist to which the item will be added.
+   */
   wishlistId: string;
+  /**
+   * The railway model ID of the item to add.
+   */
   railwayModelId: string;
+  /**
+   * The priority of the wishlist item (optional).
+   */
   priority: WishlistPriority | null;
+  /**
+   * The status of the wishlist item (optional).
+   */
   status: WishlistStatus | null;
+  /**
+   * The desired price amount in the smallest currency unit (e.g., cents) (optional).
+   */
   desiredPriceAmount: bigint | null;
+  /**
+   * The desired price currency code (e.g., "USD") (optional).
+   */
   desiredPriceCurrency: string | null;
+  /**
+   * Additional notes about the wishlist item (optional).
+   */
   notes: string | null;
+  /**
+   * The date the item was added to the wishlist (optional).
+   */
   addedDate: string | null;
+};
+/**
+ * Input used to add a purchase to an existing `TrackInventory`.
+ */
+export type AddTrackPurchaseInput = {
+  id: TrackInventoryId;
+  /**
+   * Reference to the purchased track product (canonical `TrackId`).
+   */
+  track_id: TrackId;
+  /**
+   * Quantity of track items acquired in this purchase.
+   */
+  quantity: bigint;
+  /**
+   * Total monetary amount paid for this purchase.
+   */
+  price: MonetaryAmount;
+  /**
+   * Optional seller reference for where the items were bought.
+   */
+  seller_id: SellerId | null;
+  /**
+   * Date when the purchase occurred.
+   */
+  purchase_date: string;
 };
 /**
  * It represents a physical street address
@@ -853,27 +970,27 @@ export type CollectionItemView = {
   /**
    * A lightweight view of the railway model details
    */
-  railway_model: CollectionRailwayModel;
+  railwayModel: CollectionRailwayModel;
   /**
    * Date when this item was added to the collection.
    */
-  added_date: string;
+  addedDate: string;
   /**
    * Date when this item was removed from the collection, if applicable.
    */
-  removed_date: string | null;
+  removedDate: string | null;
   /**
    * Condition of the item as recorded by the owner (e.g. "mint", "used").
    */
-  purchase_condition: PurchaseCondition | null;
+  purchaseCondition: PurchaseCondition | null;
   /**
    * Physical and mechanical condition of the model as recorded by the owner.
    */
-  model_condition: ModelCondition | null;
+  modelCondition: ModelCondition | null;
   /**
    * Condition of the original packaging box for this item.
    */
-  box_condition: BoxCondition | null;
+  boxCondition: BoxCondition | null;
   /**
    * Free-form notes provided by the owner for this collection item.
    */
@@ -881,11 +998,11 @@ export type CollectionItemView = {
   /**
    * The specific rolling stock instances owned that correspond to this model.
    */
-  rolling_stocks: OwnedRollingStockView[];
+  rollingStocks: OwnedRollingStockView[];
   /**
    * Optional purchase information associated with this collection item.
    */
-  purchase_info: PurchaseInfo | null;
+  purchaseInfo: PurchaseInfo | null;
 };
 /**
  * A lightweight representation of a railway model for collection display purposes.
@@ -897,7 +1014,7 @@ export type CollectionRailwayModel = {
   /**
    * The unique identifier of the railway model.
    */
-  railway_model_id: RailwayModelId;
+  railwayModelId: RailwayModelId;
   /**
    * The manufacturer of the railway model.
    */
@@ -905,7 +1022,7 @@ export type CollectionRailwayModel = {
   /**
    * The product code of the railway model.
    */
-  product_code: string;
+  productCode: string;
   /**
    * The scale of the railway model.
    */
@@ -933,31 +1050,31 @@ export type CollectionSummary = {
   /**
    * The total number of independent traction units (Steam, Diesel, Electric).
    */
-  locomotives_count: number;
+  locomotivesCount: number;
   /**
    * The total number of individual passenger-carrying vehicles.
    */
-  passenger_cars_count: number;
+  passengerCarsCount: number;
   /**
    * The total number of individual goods-transporting vehicles.
    */
-  freight_cars_count: number;
+  freightCarsCount: number;
   /**
    * The number of complete train sets (e.g., starter sets or fixed formations).
    *
    * Note: Depending on implementation, the individual cars within these sets
    * may or may not be included in the other specific counts.
    */
-  train_sets_count: number;
+  trainSetsCount: number;
   /**
    * The number of self-propelled, typically single-unit passenger vehicles.
    */
-  railcars_count: number;
-  starter_sets_count: number;
+  railcarsCount: number;
+  starterSetsCount: number;
   /**
    * The number of self-propelled, multi-unit electric passenger formations.
    */
-  electric_multiple_units_count: number;
+  electricMultipleUnitsCount: number;
 };
 /**
  * Represents a user-owned collection of items.
@@ -989,7 +1106,7 @@ export type CollectionView = {
    * Optional total monetary value of the collection. Use `MonetaryAmount`
    * to preserve currency and decimal precision.
    */
-  total_value: MonetaryAmount | null;
+  totalValue: MonetaryAmount | null;
   /**
    * The list of items contained in this collection.
    */
@@ -1094,21 +1211,21 @@ export type Coupling = {
   digital_shunting: FeatureFlag | null;
 };
 /**
- * Coupling configuration details for a rolling stock item.
+ * Coupling details for a rolling stock item.
  */
-export type CouplingInput = {
+export type CouplingArgs = {
   /**
-   * The coupling socket/type (for example: "NEM", "Kadee", "Generic").
+   * Type of coupling used.
    */
   socket: string;
   /**
-   * Whether close couplers are fitted or supported (free-text).
+   * Type of coupling head used.
    */
-  close_couplers: string | null;
+  closeCouplers: string | null;
   /**
-   * Digital shunting capability details (if any).
+   * Presence of digital shunting couplers.
    */
-  digital_shunting: string | null;
+  digitalShunting: string | null;
 };
 export type CouplingSocket =
   | 'NONE'
@@ -1141,34 +1258,60 @@ export type CouplingSocket =
    */
   | 'NEM_365';
 /**
- * Input for creating a new railway model (domain-level DTO).
+ * Arguments for creating a new railway model (transport from IPC to application).
  */
-export type CreateRailwayModelInput = {
-  manufacturer_id: string;
-  product_code: string;
+export type CreateRailwayModelArgs = {
+  /**
+   * ID of the manufacturer.
+   */
+  manufacturerId: string;
+  /**
+   * Product code of the railway model.
+   */
+  productCode: string;
+  /**
+   * Description of the railway model.
+   */
   description: string;
+  /**
+   * Additional details about the railway model.
+   */
   details: string | null;
-  power_method: string;
+  /**
+   * Power method of the railway model.
+   */
+  powerMethod: string;
+  /**
+   * Scale of the railway model.
+   */
   scale: string;
+  /**
+   * Epoch of the railway model.
+   */
   epoch: string;
+  /**
+   * Category of the railway model.
+   */
   category: string;
-  delivery_date: string | null;
-  availability_status: string | null;
-  rolling_stocks: CreateRollingStockInput[];
+  /**
+   * Optional delivery date of the railway model.
+   */
+  deliveryDate: string | null;
+  /**
+   * Optional availability status of the railway model.
+   */
+  availabilityStatus: string | null;
+  /**
+   * Rolling stock items associated with the railway model.
+   */
+  rollingStocks: CreateRollingStockArgs[];
 };
 /**
  * Input for creating a rolling stock (tagged union by category).
- *
- * This enum is a tagged union where each variant contains the fields
- * relevant to that rolling stock category. Consumers should supply the
- * variant matching the `category` of the rolling stock being created.
  */
-export type CreateRollingStockInput =
-  /**
-   * Locomotive-specific input fields.
-   */
+export type CreateRollingStockArgs =
   | {
-      category: 'Locomotive';
+      category: 'locomotive';
       railway_company_id: string;
       friendly_name: string;
       series_code: string;
@@ -1180,14 +1323,11 @@ export type CreateRollingStockInput =
       is_dummy: boolean | null;
       control: string | null;
       dcc_interface: string | null;
-      length_over_buffers: LengthOverBuffersInput | null;
-      technical_specifications: TechnicalSpecificationsInput | null;
+      length_over_buffers: LengthOverBuffersArgs | null;
+      technical_specifications: TechnicalSpecificationsArgs | null;
     }
-  /**
-   * Passenger car-specific input fields.
-   */
   | {
-      category: 'PassengerCar';
+      category: 'passengerCar';
       railway_company_id: string;
       friendly_name: string;
       series_code: string;
@@ -1196,14 +1336,11 @@ export type CreateRollingStockInput =
       livery: string | null;
       passenger_car_type: string;
       service_level: string | null;
-      length_over_buffers: LengthOverBuffersInput | null;
-      technical_specifications: TechnicalSpecificationsInput | null;
+      length_over_buffers: LengthOverBuffersArgs | null;
+      technical_specifications: TechnicalSpecificationsArgs | null;
     }
-  /**
-   * Freight car-specific input fields.
-   */
   | {
-      category: 'FreightCar';
+      category: 'freightCar';
       railway_company_id: string;
       friendly_name: string;
       series_code: string;
@@ -1211,14 +1348,11 @@ export type CreateRollingStockInput =
       series: string | null;
       livery: string | null;
       freight_car_type: string | null;
-      length_over_buffers: LengthOverBuffersInput | null;
-      technical_specifications: TechnicalSpecificationsInput | null;
+      length_over_buffers: LengthOverBuffersArgs | null;
+      technical_specifications: TechnicalSpecificationsArgs | null;
     }
-  /**
-   * Railcar-specific input fields.
-   */
   | {
-      category: 'Railcar';
+      category: 'railcar';
       railway_company_id: string;
       friendly_name: string;
       series_code: string;
@@ -1230,14 +1364,11 @@ export type CreateRollingStockInput =
       is_dummy: boolean | null;
       control: string | null;
       dcc_interface: string | null;
-      length_over_buffers: LengthOverBuffersInput | null;
-      technical_specifications: TechnicalSpecificationsInput | null;
+      length_over_buffers: LengthOverBuffersArgs | null;
+      technical_specifications: TechnicalSpecificationsArgs | null;
     }
-  /**
-   * Electric multiple unit-specific input fields.
-   */
   | {
-      category: 'ElectricMultipleUnit';
+      category: 'electricMultipleUnit';
       railway_company_id: string;
       friendly_name: string;
       series_code: string;
@@ -1249,8 +1380,8 @@ export type CreateRollingStockInput =
       is_dummy: boolean | null;
       control: string | null;
       dcc_interface: string | null;
-      length_over_buffers: LengthOverBuffersInput | null;
-      technical_specifications: TechnicalSpecificationsInput | null;
+      length_over_buffers: LengthOverBuffersArgs | null;
+      technical_specifications: TechnicalSpecificationsArgs | null;
     };
 export type CreateSellerPayload = {
   name: string;
@@ -1265,7 +1396,23 @@ export type CreateSellerPayload = {
   postalCode: string | null;
   countryCode: string | null;
 };
-export type CreateWishlistInput = { name: string; notes: string | null; isDefault: boolean | null };
+/**
+ * Arguments structure for creating a new wishlist.
+ */
+export type CreateWishlistArgs = {
+  /**
+   * The name of the new wishlist.
+   */
+  name: string;
+  /**
+   * Optional notes about the new wishlist.
+   */
+  notes: string | null;
+  /**
+   * Whether the new wishlist should be set as the default.
+   */
+  isDefault: boolean | null;
+};
 /**
  * Currency codes supported by the application.
  *
@@ -1534,15 +1681,15 @@ export type DepotRollingStockView = {
   /**
    * Series or class code for the rolling stock (e.g. "Class 37").
    */
-  series_code: string;
+  seriesCode: string;
   /**
    * Optional road number used to disambiguate items in the same series.
    */
-  road_number: string | null;
+  roadNumber: string | null;
   /**
    * Optional user-facing friendly name for the item.
    */
-  friendly_name: string | null;
+  friendlyName: string | null;
   /**
    * Optional depot/location name where the item is stored.
    */
@@ -1554,11 +1701,11 @@ export type DepotRollingStockView = {
   /**
    * Manufacturer display name (e.g. "Hornby").
    */
-  manufacturer_name: string;
+  manufacturerName: string;
   /**
    * Product code identifying the specific model variant.
    */
-  product_code: ProductCode;
+  productCode: ProductCode;
   /**
    * Optional control type (analogue/DCC/etc.) where known.
    */
@@ -1570,7 +1717,7 @@ export type DepotRollingStockView = {
   /**
    * Optional railway company name for display purposes.
    */
-  railway_company_name: string | null;
+  railwayCompanyName: string | null;
 };
 /**
  * A read-only representation of the depot contents.
@@ -1583,7 +1730,7 @@ export type DepotView = {
   /**
    * A list of rolling stock entries currently associated with the depot.
    */
-  rolling_stocks: DepotRollingStockView[];
+  rollingStocks: DepotRollingStockView[];
 };
 /**
  * Represents the installation of a decoder into a locomotive (owned rolling stock).
@@ -1832,12 +1979,8 @@ export type LengthOverBuffers = {
 };
 /**
  * Length measurements over buffers for a rolling stock item.
- *
- * Both measurements are optional; callers may provide either or both
- * depending on the available data. Values are represented as floating
- * point numbers (millimeters and inches respectively).
  */
-export type LengthOverBuffersInput = {
+export type LengthOverBuffersArgs = {
   /**
    * Length in millimeters.
    */
@@ -1955,6 +2098,10 @@ export type ManufacturerId = string;
 export type ManufacturerStatus = 'ACTIVE' | 'MERGED' | 'OUT_OF_BUSINESS';
 export type MeasureUnit = 'Millimeters' | 'Inches' | 'Meters' | 'Miles' | 'Kilometers';
 /**
+ * The metadata information for the current resource
+ */
+export type Metadata = { version: number; created_at: string; updated_at: string };
+/**
  * This represents the physical and mechanical state of the locomotive or rolling stock.
  */
 export type ModelCondition =
@@ -2018,7 +2165,36 @@ export type MonetaryAmount = {
    */
   currency: Currency;
 };
-export type MoveWishlistItemInput = { itemId: string; destinationWishlistId: string };
+/**
+ * Arguments structure for moving an item between wishlists.
+ */
+export type MoveWishlistItemArgs = {
+  /**
+   * The ID of the wishlist item to move.
+   */
+  itemId: string;
+  /**
+   * The ID of the destination wishlist.
+   */
+  destinationWishlistId: string;
+  /**
+   * The ID of the source wishlist the item currently belongs to.
+   */
+  wishlistId: string;
+};
+/**
+ * Input DTOs for the tracks inventory application layer.
+ */
+export type NewTrackInventoryInput = {
+  /**
+   * The name of the new track inventory.
+   */
+  name: string;
+  /**
+   * An optional description for the new track inventory.
+   */
+  description: string | null;
+};
 /**
  * Strongly-typed identifier for an `OwnedRollingStock`.
  *
@@ -2052,7 +2228,7 @@ export type OwnedRollingStockView = {
   /**
    * Identifier of the related rolling stock in the catalog (or the owned rolling stock id when catalog id is not available).
    */
-  rolling_stock_id: RollingStockId;
+  rollingStockId: RollingStockId;
   /**
    * Free-form notes associated with this owned instance.
    * Use this for short owner notes or a brief textual label.
@@ -2065,7 +2241,7 @@ export type OwnedRollingStockView = {
   /**
    * Road number derived from the catalog rolling stock data.
    */
-  road_number: string | null;
+  roadNumber: string | null;
   /**
    * Livery derived from the catalog rolling stock data.
    */
@@ -2077,7 +2253,7 @@ export type OwnedRollingStockView = {
   /**
    * Railway company name derived from the catalog rolling stock data.
    */
-  railway_company_name: string | null;
+  railwayCompanyName: string | null;
   /**
    * Optional digital setup information if a decoder is installed.
    */
@@ -2207,7 +2383,7 @@ export type PreOrderInfo = {
   /**
    * Date when the preorder was placed (ISO `YYYY-MM-DD`).
    */
-  order_date: string;
+  orderDate: string;
   /**
    * Amount paid as deposit (in smallest unit + currency).
    */
@@ -2215,7 +2391,7 @@ export type PreOrderInfo = {
   /**
    * Total price for the pre-ordered item (in smallest unit + currency).
    */
-  total_price: MonetaryAmount;
+  totalPrice: MonetaryAmount;
   /**
    * Optional seller identifier or shop name.
    */
@@ -2223,7 +2399,7 @@ export type PreOrderInfo = {
   /**
    * Optional expected delivery date (ETA) for the preorder.
    */
-  expected_date: string | null;
+  expectedDate: string | null;
 };
 /**
  * A product identifier (manufacturer model/code) used to uniquely identify
@@ -2280,7 +2456,7 @@ export type PurchaseInfo =
   /**
    * A preorder record with deposit and total price information.
    */
-  | { kind: 'preordered'; data: PreOrderInfo };
+  | { kind: 'preOrdered'; data: PreOrderInfo };
 /**
  * Strongly-typed identifier for PurchaseInfo records.
  *
@@ -2304,7 +2480,7 @@ export type PurchasedInfo = {
   /**
    * Date when the item was purchased (ISO `YYYY-MM-DD`).
    */
-  purchase_date: string;
+  purchaseDate: string;
   /**
    * The price paid when purchasing the item, if known.
    *
@@ -2339,17 +2515,17 @@ export type Quarter =
    */
   | 'Q4';
 /**
- * Query parameters for retrieving the dashboard summary.
+ * Query criteria for retrieving the dashboard summary.
  */
-export type QueryParams = {
+export type QueryCriteria = {
   /**
    * Number of recent items to retrieve for the dashboard.
    */
-  number_of_recent_items: number | null;
+  numberOfRecentItems: number | null;
   /**
    * Number of depot entries to retrieve for the dashboard.
    */
-  number_of_depot_entries: number | null;
+  numberOfDepotEntries: number | null;
 };
 /**
  * Domain types for handling minimum drivable radii.
@@ -2426,63 +2602,6 @@ export type RailwayCompany = {
  */
 export type RailwayCompanyId = string;
 /**
- * A `RailwayModel` represents a manufactured model product in the catalog.
- *
- * It contains metadata about the product (manufacturer, product code,
- * scale, epoch, etc.) and a list of `RollingStock` instances that correspond
- * to specific owned or catalogued items of this model.
- */
-export type RailwayModel = {
-  /**
-   * Unique identifier for the railway model.
-   */
-  id: RailwayModelId;
-  /**
-   * The manufacturer of the model (e.g. Bachmann, Märklin).
-   */
-  manufacturer: RailwayModelManufacturer;
-  /**
-   * Manufacturer-assigned product code.
-   */
-  product_code: ProductCode;
-  /**
-   * Human-readable description of the model.
-   */
-  description: string;
-  /**
-   * Additional details about the model (e.g. special features, variations).
-   */
-  details: string | null;
-  /**
-   * The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
-   */
-  power_method: PowerMethod;
-  /**
-   * The scale of the model (e.g. HO, N).
-   */
-  scale: Scale;
-  /**
-   * The historical epoch the model belongs to.
-   */
-  epoch: Epoch;
-  /**
-   * Classification category for the model (e.g. locomotive, freight car).
-   */
-  category: Category;
-  /**
-   * Delivery or release date information for the product.
-   */
-  delivery_date: DeliveryDate | null;
-  /**
-   * the availability status
-   */
-  availability_status: AvailabilityStatus | null;
-  /**
-   * Rolling stock instances (specific vehicles) that correspond to this model.
-   */
-  rolling_stocks: RollingStock[];
-};
-/**
  * Strongly-typed railway model identifier.
  *
  * `RailwayModelId` is a thin newtype over `String` used to represent railway
@@ -2508,311 +2627,102 @@ export type RailwayModel = {
  */
 export type RailwayModelId = string;
 /**
- * A `RailwayModelManufacturer` represents the manufacturer of a railway model.
- * It contains the unique identifier and display name of the manufacturer.
+ * Lightweight manufacturer information used by the UI view layer.
  */
 export type RailwayModelManufacturer = {
   /**
    * The unique identifier of the manufacturer.
    */
-  manufacturer_id: ManufacturerId;
+  manufacturerId: ManufacturerId;
   /**
-   * The manufacturer of the model (e.g. Bachmann, Märklin).
+   * The manufacturer display name (e.g. Bachmann, Märklin).
    */
   display: string;
 };
+/**
+ * A UI-focused view of a railway model used by the frontend.
+ */
+export type RailwayModelView = {
+  /**
+   * Unique identifier for the railway model.
+   */
+  id: RailwayModelId;
+  /**
+   * Manufacturer metadata (id and display name).
+   */
+  manufacturer: RailwayModelManufacturer;
+  /**
+   * Manufacturer-assigned product code.
+   */
+  productCode: ProductCode;
+  /**
+   * Human-readable description of the model.
+   */
+  description: string;
+  /**
+   * Optional longer details or notes about the model.
+   */
+  details: string | null;
+  /**
+   * Power method used by the model (e.g. DC, AC).
+   */
+  powerMethod: PowerMethod;
+  /**
+   * Scale of the model (e.g. H0, N).
+   */
+  scale: Scale;
+  /**
+   * Historical epoch the model represents.
+   */
+  epoch: Epoch;
+  /**
+   * Classification category for the model (locomotive, freight car, etc.).
+   */
+  category: Category;
+  /**
+   * Optional delivery or release date information.
+   */
+  deliveryDate: DeliveryDate | null;
+  /**
+   * Optional availability status for the model.
+   */
+  availabilityStatus: AvailabilityStatus | null;
+  /**
+   * Metadata for the resource (versioning and timestamps).
+   */
+  metadata: Metadata;
+  /**
+   * Rolling stock instances (UI views) associated with this model.
+   */
+  rollingStock: RollingStockView[];
+};
 export type RailwayStatus = 'ACTIVE' | 'INACTIVE' | 'MERGED';
-export type RenameWishlistInput = { id: string; name: string };
-export type RollingStock =
+/**
+ * Input used to rename an existing `TrackInventory`.
+ */
+export type RenameTrackInventoryInput = {
   /**
-   * an electric multiple unit rolling stock
+   * The identifier of the track inventory to be renamed.
    */
-  | {
-      category: 'ElectricMultipleUnit';
-      data: {
-        /**
-         * the unique identifier for this rolling stock
-         */
-        id: RollingStockId;
-        /**
-         * the railway for this rolling stock
-         */
-        railway: RollingStockRailway;
-        /**
-         * the livery description
-         */
-        livery: string | null;
-        /**
-         * the overall length
-         */
-        length_over_buffer: LengthOverBuffers | null;
-        /**
-         * the technical specifications
-         */
-        technical_specifications: TechnicalSpecifications | null;
-        /**
-         * the electric multiple unit friendly name
-         */
-        friendly_name: string | null;
-        /**
-         * the series code (eg. a short code identifying the series)
-         */
-        series_code: string;
-        /**
-         * the identification marking for this electric multiple unit
-         */
-        road_number: string | null;
-        /**
-         * the prototype series information
-         */
-        series: string | null;
-        /**
-         * the depot name
-         */
-        depot: string | null;
-        /**
-         * the electric multiple unit type
-         */
-        electric_multiple_unit_type: ElectricMultipleUnitType;
-        /**
-         * the dcc interface
-         */
-        dcc_interface: DccInterface | null;
-        /**
-         * the control
-         */
-        control: Control | null;
-        /**
-         * indicate whether the rolling stock has a motor or not
-         */
-        is_dummy: boolean;
-      };
-    }
+  id: TrackInventoryId;
   /**
-   * a freight car rolling stock
+   * The new name for the track inventory.
    */
-  | {
-      category: 'FreightCar';
-      data: {
-        /**
-         * the unique identifier for this rolling stock
-         */
-        id: RollingStockId;
-        /**
-         * the railway for this rolling stock
-         */
-        railway: RollingStockRailway;
-        /**
-         * the livery description
-         */
-        livery: string | null;
-        /**
-         * the overall length
-         */
-        length_over_buffer: LengthOverBuffers | null;
-        /**
-         * the technical specifications
-         */
-        technical_specifications: TechnicalSpecifications | null;
-        /**
-         * the freight car friendly name
-         */
-        friendly_name: string | null;
-        /**
-         * the series code
-         */
-        series_code: string;
-        /**
-         * the identification marking for this freight car
-         */
-        road_number: string | null;
-        /**
-         * the freight car type
-         */
-        freight_car_type: FreightCarType | null;
-      };
-    }
+  new_name: string;
+};
+/**
+ * Arguments structure for renaming an existing wishlist.
+ */
+export type RenameWishlistArgs = {
   /**
-   * a locomotive rolling stock
+   * The ID of the wishlist to rename.
    */
-  | {
-      category: 'Locomotive';
-      data: {
-        /**
-         * the unique identifier for this rolling stock
-         */
-        id: RollingStockId;
-        /**
-         * the railway for this rolling stock
-         */
-        railway: RollingStockRailway;
-        /**
-         * the livery description
-         */
-        livery: string | null;
-        /**
-         * the overall length
-         */
-        length_over_buffer: LengthOverBuffers | null;
-        /**
-         * the technical specification
-         */
-        technical_specifications: TechnicalSpecifications | null;
-        /**
-         * the locomotive friendly name
-         */
-        friendly_name: string | null;
-        /**
-         * the series code
-         */
-        series_code: string;
-        /**
-         * the identification marking for this locomotive
-         */
-        road_number: string | null;
-        /**
-         * the prototype series information
-         */
-        series: string | null;
-        /**
-         * the depot name
-         */
-        depot: string | null;
-        /**
-         * the locomotive type
-         */
-        locomotive_type: LocomotiveType;
-        /**
-         * the dcc interface
-         */
-        dcc_interface: DccInterface | null;
-        /**
-         * the control
-         */
-        control: Control | null;
-        /**
-         * indicate whether the rolling stock has a motor or not
-         */
-        is_dummy: boolean;
-      };
-    }
+  wishlistId: string;
   /**
-   * a passenger car rolling stock
+   * The new name for the wishlist.
    */
-  | {
-      category: 'PassengerCar';
-      data: {
-        /**
-         * the unique identifier for this rolling stock
-         */
-        id: RollingStockId;
-        /**
-         * the railway for this rolling stock
-         */
-        railway: RollingStockRailway;
-        /**
-         * the livery description
-         */
-        livery: string | null;
-        /**
-         * the overall length
-         */
-        length_over_buffer: LengthOverBuffers | null;
-        /**
-         * the technical specifications
-         */
-        technical_specifications: TechnicalSpecifications | null;
-        /**
-         * the passenger car friendly name
-         */
-        friendly_name: string | null;
-        /**
-         * the series code
-         */
-        series_code: string;
-        /**
-         * the identification marking for this passenger car
-         */
-        road_number: string | null;
-        /**
-         * the prototype series information
-         */
-        series: string | null;
-        /**
-         * the passenger car type
-         */
-        passenger_car_type: PassengerCarType | null;
-        /**
-         * the travel class for this passenger car. Passenger cars can have multiple service
-         * levels (ie, '1st/2nd')
-         */
-        service_level: ServiceLevel | null;
-      };
-    }
-  /**
-   * a railcar rolling stock
-   */
-  | {
-      category: 'Railcar';
-      data: {
-        /**
-         * the unique identifier for this rolling stock
-         */
-        id: RollingStockId;
-        /**
-         * the railway for this rolling stock
-         */
-        railway: RollingStockRailway;
-        /**
-         * the livery description
-         */
-        livery: string | null;
-        /**
-         * the overall length
-         */
-        length_over_buffer: LengthOverBuffers | null;
-        /**
-         * the technical specifications
-         */
-        technical_specifications: TechnicalSpecifications | null;
-        /**
-         * the railcar friendly name
-         */
-        friendly_name: string | null;
-        /**
-         * the series code
-         */
-        series_code: string;
-        /**
-         * the identification marking for this railcar
-         */
-        road_number: string | null;
-        /**
-         * the railcar series
-         */
-        series: string | null;
-        /**
-         * the depot name
-         */
-        depot: string | null;
-        /**
-         * the railcar type
-         */
-        railcar_type: RailcarType;
-        /**
-         * the dcc interface
-         */
-        dcc_interface: DccInterface | null;
-        /**
-         * the control
-         */
-        control: Control | null;
-        /**
-         * indicate whether the rolling stock has a motor or not
-         */
-        is_dummy: boolean;
-      };
-    };
+  name: string;
+};
 /**
  * High-level classification for different types of railway rolling stock.
  *
@@ -2850,24 +2760,290 @@ export type RollingStockCategory =
  */
 export type RollingStockId = string;
 /**
- * A railway association for a rolling stock item.
- *
- * `RollingStockRailway` ties a rolling stock to a specific railway by
- * containing the railway's unique identifier and the display name used in
- * user interfaces and listings. This is a lightweight DTO-like value used in
- * domains where the rolling stock's owning or related railway must be shown
- * or serialized.
+ * Lightweight railway/company info for `RollingStockView` UI shapes.
  */
 export type RollingStockRailway = {
   /**
-   * the railway unique identifier
+   * The railway company's unique identifier.
    */
-  railway_company_id: RailwayCompanyId;
+  railwayCompanyId: RailwayCompanyId;
   /**
-   * the railway display name
+   * The railway display name used in UIs.
    */
   display: string;
 };
+/**
+ * A UI-focused view of a rolling stock item used by the frontend.
+ */
+export type RollingStockView =
+  | {
+      electricMultipleUnit: {
+        /**
+         * Identifier for this rolling stock instance.
+         */
+        id: RollingStockId;
+        /**
+         * Railway/company information for this rolling stock (id + display).
+         */
+        railway: RollingStockRailway;
+        /**
+         * Optional livery name or color scheme.
+         */
+        livery: string | null;
+        /**
+         * Optional length over buffers measurement.
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * Optional technical specifications summary.
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * Optional friendly/display name for the vehicle.
+         */
+        friendly_name: string | null;
+        /**
+         * Series or product code used for this rolling stock instance.
+         */
+        series_code: string;
+        /**
+         * Optional road number assigned to this vehicle.
+         */
+        road_number: string | null;
+        /**
+         * Optional series identifier.
+         */
+        series: string | null;
+        /**
+         * Optional depot/location assignment.
+         */
+        depot: string | null;
+        /**
+         * Specific EMU subtype.
+         */
+        electric_multiple_unit_type: ElectricMultipleUnitType;
+        /**
+         * Optional DCC interface configuration.
+         */
+        dcc_interface: DccInterface | null;
+        /**
+         * Optional control type information.
+         */
+        control: Control | null;
+        /**
+         * Marker indicating a placeholder/dummy instance.
+         */
+        is_dummy: boolean;
+      };
+    }
+  | {
+      locomotive: {
+        /**
+         * Identifier for this rolling stock instance.
+         */
+        id: RollingStockId;
+        /**
+         * Railway/company information for this rolling stock (id + display).
+         */
+        railway: RollingStockRailway;
+        /**
+         * Optional livery name or color scheme.
+         */
+        livery: string | null;
+        /**
+         * Optional length over buffers measurement.
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * Optional technical specifications summary.
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * Optional friendly/display name for the vehicle.
+         */
+        friendly_name: string | null;
+        /**
+         * Series or product code used for this rolling stock instance.
+         */
+        series_code: string;
+        /**
+         * Optional road number assigned to this vehicle.
+         */
+        road_number: string | null;
+        /**
+         * Optional series identifier.
+         */
+        series: string | null;
+        /**
+         * Optional depot/location assignment.
+         */
+        depot: string | null;
+        /**
+         * Specific locomotive subtype.
+         */
+        locomotive_type: LocomotiveType;
+        /**
+         * Optional DCC interface configuration.
+         */
+        dcc_interface: DccInterface | null;
+        /**
+         * Optional control type information.
+         */
+        control: Control | null;
+        /**
+         * Marker indicating a placeholder/dummy instance.
+         */
+        is_dummy: boolean;
+      };
+    }
+  | {
+      freightCar: {
+        /**
+         * Identifier for this rolling stock instance.
+         */
+        id: RollingStockId;
+        /**
+         * Railway/company information for this rolling stock (id + display).
+         */
+        railway: RollingStockRailway;
+        /**
+         * Optional livery name or color scheme.
+         */
+        livery: string | null;
+        /**
+         * Optional length over buffers measurement.
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * Optional technical specifications summary.
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * Optional friendly/display name for the vehicle.
+         */
+        friendly_name: string | null;
+        /**
+         * Series or product code used for this rolling stock instance.
+         */
+        series_code: string;
+        /**
+         * Optional road number assigned to this vehicle.
+         */
+        road_number: string | null;
+        /**
+         * Optional freight car type classification.
+         */
+        freight_car_type: FreightCarType | null;
+      };
+    }
+  | {
+      passengerCar: {
+        /**
+         * Identifier for this rolling stock instance.
+         */
+        id: RollingStockId;
+        /**
+         * Railway/company information for this rolling stock (id + display).
+         */
+        railway: RollingStockRailway;
+        /**
+         * Optional livery name or color scheme.
+         */
+        livery: string | null;
+        /**
+         * Optional length over buffers measurement.
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * Optional technical specifications summary.
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * Optional friendly/display name for the vehicle.
+         */
+        friendly_name: string | null;
+        /**
+         * Series or product code used for this rolling stock instance.
+         */
+        series_code: string;
+        /**
+         * Optional road number assigned to this vehicle.
+         */
+        road_number: string | null;
+        /**
+         * Optional series identifier.
+         */
+        series: string | null;
+        /**
+         * Optional passenger car type classification.
+         */
+        passenger_car_type: PassengerCarType | null;
+        /**
+         * Optional service level (e.g., first class, standard).
+         */
+        service_level: ServiceLevel | null;
+      };
+    }
+  | {
+      railcar: {
+        /**
+         * Identifier for this rolling stock instance.
+         */
+        id: RollingStockId;
+        /**
+         * Railway/company information for this rolling stock (id + display).
+         */
+        railway: RollingStockRailway;
+        /**
+         * Optional livery name or color scheme.
+         */
+        livery: string | null;
+        /**
+         * Optional length over buffers measurement.
+         */
+        length_over_buffer: LengthOverBuffers | null;
+        /**
+         * Optional technical specifications summary.
+         */
+        technical_specifications: TechnicalSpecifications | null;
+        /**
+         * Optional friendly/display name for the vehicle.
+         */
+        friendly_name: string | null;
+        /**
+         * Series or product code used for this rolling stock instance.
+         */
+        series_code: string;
+        /**
+         * Optional road number assigned to this vehicle.
+         */
+        road_number: string | null;
+        /**
+         * Optional series identifier.
+         */
+        series: string | null;
+        /**
+         * Optional depot/location assignment.
+         */
+        depot: string | null;
+        /**
+         * Specific railcar subtype.
+         */
+        railcar_type: RailcarType;
+        /**
+         * Optional DCC interface configuration.
+         */
+        dcc_interface: DccInterface | null;
+        /**
+         * Optional control type information.
+         */
+        control: Control | null;
+        /**
+         * Marker indicating a placeholder/dummy instance.
+         */
+        is_dummy: boolean;
+      };
+    };
 /**
  * Model railway scales supported by the application.
  *
@@ -2963,7 +3139,43 @@ export type Seller = {
    * Last update timestamp (UTC).
    */
   updatedAt: string;
+  /**
+   * Events produced by operations on the aggregate that have not yet been
+   * persisted/handled by a repository or unit of work.
+   */
+  pendingEvents: SellerEvent[];
 };
+/**
+ * Domain events produced by the `Seller` aggregate.
+ */
+export type SellerEvent =
+  | {
+      created: {
+        aggregate_id: SellerId;
+        name: string;
+        seller_type: SellerType;
+        email: string | null;
+        phone: string | null;
+        website_url: string | null;
+        address: Address | null;
+        created_at: string;
+        updated_at: string;
+      };
+    }
+  | {
+      updated: {
+        aggregate_id: SellerId;
+        name: string;
+        seller_type: SellerType;
+        email: string | null;
+        phone: string | null;
+        website_url: string | null;
+        address: Address | null;
+        created_at: string;
+        updated_at: string;
+      };
+    }
+  | { deleted: { aggregate_id: SellerId } };
 /**
  * Strongly-typed identifier for a seller. Format: `trn:seller:{slug}`.
  */
@@ -3018,6 +3230,23 @@ export type ServiceLevel =
   | 'FIRST_SECOND'
   | 'SECOND_THIRD'
   | 'FIRST_SECOND_THIRD';
+/**
+ * Input used to set the quantity for a specific track in an inventory.
+ */
+export type SetTrackItemQuantityInput = {
+  /**
+   * The identifier of the track inventory to update.
+   */
+  inventory_id: TrackInventoryId;
+  /**
+   * The canonical identifier of the track product.
+   */
+  track_id: TrackId;
+  /**
+   * The desired quantity for the track product. Values <= 0 remove the item.
+   */
+  quantity: bigint;
+};
 export type SettingsDto = {
   id: bigint;
   currency: Currency;
@@ -3044,23 +3273,23 @@ export type SoldInfo = {
   /**
    * Date when the item was originally purchased (ISO `YYYY-MM-DD`).
    */
-  purchase_date: string;
+  purchaseDate: string;
   /**
    * Original purchase price, if available.
    *
    * Use `None` to indicate the original price is unknown or not stored.
    */
-  purchase_price: MonetaryAmount | null;
+  purchasePrice: MonetaryAmount | null;
   /**
    * Date when the item was sold (ISO `YYYY-MM-DD`).
    */
-  sale_date: string;
+  saleDate: string;
   /**
    * Price obtained when the item was sold. This value is required for
    * `Sold` records because a sale without a price is not meaningful for
    * financial reporting.
    */
-  sale_price: MonetaryAmount;
+  salePrice: MonetaryAmount;
   /**
    * Optional buyer identifier (when the buyer is a tracked entity).
    */
@@ -3111,45 +3340,85 @@ export type TechnicalSpecifications = {
 };
 /**
  * Optional technical specifications for a rolling stock item.
- *
- * Each field is optional and represents a small piece of technical
- * metadata such as minimum recommended curve radius, coupling details,
- * or whether a flywheel is fitted.
  */
-export type TechnicalSpecificationsInput = {
+export type TechnicalSpecificationsArgs = {
   /**
-   * Minimum recommended curve radius in millimetres (if known).
+   * Minimum radius the rolling stock can navigate.
    */
-  minimum_radius: number | null;
+  minimumRadius: number | null;
   /**
-   * Coupling details (socket type and optional behaviours).
+   * Coupling details.
    */
-  coupling: CouplingInput | null;
+  coupling: CouplingArgs | null;
   /**
-   * Whether a flywheel is fitted (free-text or a small enum encoded as string).
+   * Flywheel details.
    */
-  flywheel_fitted: string | null;
+  flywheelFitted: string | null;
   /**
-   * Information about the body shell (material / construction hints).
+   * Body shell details.
    */
-  body_shell: string | null;
+  bodyShell: string | null;
   /**
-   * Chassis description or notes.
+   * Chassis details.
    */
   chassis: string | null;
   /**
-   * Interior lighting details.
+   * Presence of interior lighting.
    */
-  interior_lights: string | null;
+  interiorLights: string | null;
   /**
-   * Exterior lighting details.
+   * Presence of headlights or other lights.
    */
   lights: string | null;
   /**
-   * Whether buffers are sprung (if applicable).
+   * Presence of sprung buffers.
    */
-  sprung_buffers: string | null;
+  sprungBuffers: string | null;
 };
+/**
+ * Strongly-typed identifier for a track product.
+ *
+ * `TrackId` is a transparent newtype wrapping a `String` that stores a TRN
+ * (Train) identifier for track products. The canonical form produced by
+ * `TrackId::new_from_parts` is:
+ *
+ * trn:track:{manufacturer_slug}:{product_code_slug}
+ *
+ * where `{manufacturer_slug}` and `{product_code_slug}` are the slugified
+ * namespace-specific parts (lowercased, hyphen-separated). Prefer using the
+ * provided constructors and `TryFrom` implementations to validate external
+ * input. The type serializes as a plain string and is `sqlx::transparent` for
+ * convenient persistence.
+ */
+export type TrackId = string;
+/**
+ * Strongly-typed identifier for a track inventory record.
+ *
+ * `TrackInventoryId` is a transparent newtype wrapping a `String` that stores
+ * the canonical TRN for inventory aggregates. The expected form is:
+ *
+ * `trn:track-inventory:{UUID}`
+ *
+ * Construct instances via `From<Uuid>`, `Default` (generates a new UUID) or
+ * the fallible `TryFrom<&str>`/`TryFrom<String>` implementations to validate
+ * external input. The type serializes as a plain string and is `sqlx::transparent`
+ * for convenient persistence.
+ */
+export type TrackInventoryId = string;
+/**
+ * Strongly-typed identifier for a track purchase record.
+ *
+ * `TrackPurchaseId` is a transparent newtype wrapping a `String` that stores
+ * the canonical TRN for purchase events. The expected form is:
+ *
+ * `trn:track-purchase:{UUID}`
+ *
+ * Construct instances via `From<Uuid>`, `Default` (generates a new UUID) or
+ * the fallible `TryFrom<&str>`/`TryFrom<String>` implementations to validate
+ * external input. The type serializes as a plain string and is `sqlx::transparent`
+ * for convenient persistence.
+ */
+export type TrackPurchaseId = string;
 export type UpdateSellerPayload = {
   id: string;
   name: string;
@@ -3220,36 +3489,6 @@ export type ValidationErrorParam =
    */
   | { type: 'Text'; value: string };
 /**
- * Domain model representing a user's wishlist.
- *
- * A `Wishlist` is a named collection of `WishlistItem`s. It carries
- * optional notes, a flag indicating whether it is the default list, and
- * a stable identifier used across the application. Business logic should
- * operate on this aggregate root when mutating the contained items.
- */
-export type Wishlist = {
-  /**
-   * Unique identifier for the wishlist.
-   */
-  id: WishlistId;
-  /**
-   * Human-readable name for the wishlist.
-   */
-  name: string;
-  /**
-   * Optional free-form notes attached to the wishlist.
-   */
-  notes: string | null;
-  /**
-   * Whether this wishlist is the default for the user.
-   */
-  is_default: boolean;
-  /**
-   * Items contained in this wishlist.
-   */
-  items: WishlistItem[];
-};
-/**
  * Strongly-typed identifier for a wishlist.
  *
  * Wraps a formatted `String` of the form `trn:wishlist:{uuid}`.
@@ -3309,6 +3548,52 @@ export type WishlistItem = {
  */
 export type WishlistItemId = string;
 /**
+ * View model representing a single wishlist item.
+ *
+ * This is a lightweight, serializable representation of `WishlistItem` tailored
+ * for use in application queries and for returning over the interface layer.
+ * Fields mirror the domain `WishlistItem` but intentionally do not include
+ * any references to the aggregate root.
+ */
+export type WishlistItemView = {
+  /**
+   * Stable identifier for this wishlist item (e.g. `trn:wishlist-item:{uuid}`).
+   */
+  id: WishlistItemId;
+  /**
+   * Identifier of the referenced railway model (TRN form).
+   */
+  railway_model_id: RailwayModelId;
+  /**
+   * The user's priority for this item.
+   */
+  priority: WishlistPriority;
+  /**
+   * The current procurement/status lifecycle state for the item.
+   */
+  status: WishlistStatus;
+  /**
+   * Date the item was added to the wishlist (YYYY-MM-DD).
+   */
+  added_date: string;
+  /**
+   * Optional date when the item was removed from the wishlist.
+   */
+  removed_date: string | null;
+  /**
+   * Optional free-form notes attached to the item.
+   */
+  notes: string | null;
+  /**
+   * Desired price the user is willing to pay for the item (monetary amount).
+   */
+  desired_price: MonetaryAmount | null;
+  /**
+   * Actual purchased price if available (monetary amount).
+   */
+  purchased_price: MonetaryAmount | null;
+};
+/**
  * Lightweight preview information for a wishlist.
  *
  * Primarily used for list views where a full wishlist and its items are
@@ -3346,7 +3631,68 @@ export type WishlistPriority = 'LOW' | 'NORMAL' | 'HIGH';
  *
  * The default variant is `Wanted`.
  */
-export type WishlistStatus = 'WANTED' | 'ON_ORDER' | 'PURCHASED' | 'IGNORED';
+export type WishlistStatus =
+  /**
+   * The user wants the item and it's a candidate for purchase.
+   *
+   * This is the default status used when adding a new item to a wishlist.
+   */
+  | 'WANTED'
+  /**
+   * The item has been ordered from a seller and is expected to arrive.
+   */
+  | 'ON_ORDER'
+  /**
+   * The item has been acquired / purchased and is no longer actively wanted.
+   */
+  | 'PURCHASED'
+  /**
+   * The item has been explicitly ignored by the user (not interested).
+   */
+  | 'IGNORED';
+/**
+ * View model representing a wishlist used by queries.
+ *
+ * `WishlistView` is returned by the query handlers. It contains the preview
+ * fields (matching `WishlistPreview`) and an optional `items` collection. For
+ * list queries each view will have `items == None` to keep payloads small;
+ * for the single-wishlist query the `items` field will be `Some(vec![...])`.
+ */
+export type WishlistView = {
+  /**
+   * Unique identifier for the wishlist (TRN format).
+   */
+  id: WishlistId;
+  /**
+   * Human-readable name for the wishlist.
+   */
+  name: string;
+  /**
+   * Optional free-form notes attached to the wishlist.
+   */
+  notes: string | null;
+  /**
+   * Whether this wishlist is the default for the user.
+   */
+  is_default: boolean;
+  /**
+   * Number of items contained in the wishlist (derived from `items` when present).
+   */
+  count: bigint;
+  /**
+   * Timestamp of the last update for the wishlist.
+   */
+  updated_at: string;
+  /**
+   * Summed monetary totals per currency for the wishlist items.
+   */
+  total_value: Partial<{ [key in Currency]: bigint }>;
+  /**
+   * Optional detailed items for the wishlist. This is `None` for list views and
+   * `Some(vec!)` for single-wishlist views returned by the `get_wishlist_by_id` query.
+   */
+  items: WishlistItemView[] | null;
+};
 
 /** tauri-specta globals **/
 

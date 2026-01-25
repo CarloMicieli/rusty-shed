@@ -1,7 +1,7 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
-import type { Wishlist, WishlistItem, WishlistPreview } from '$lib/bindings';
+import type { WishlistView, WishlistItem, WishlistPreview } from '$lib/bindings';
 import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 // Using WishlistPreview from bindings directly
@@ -134,7 +134,7 @@ export class WishlistState {
   }
 
   async loadWishlistItems(wishlistId: string) {
-    const result = await safeInvoke<Wishlist | null>('get_wishlist_by_id', { id: wishlistId });
+    const result = await safeInvoke<WishlistView | null>('get_wishlist_by_id', { id: wishlistId });
 
     if (!result.ok) {
       console.error('Failed to load wishlist items:', result.error);
@@ -393,7 +393,7 @@ export class WishlistState {
     toastLoading(toastId);
 
     const result = await safeInvoke('move_item_to_list', {
-      input: { itemId, destinationWishlistId: toWishlistId }
+      input: { itemId, destinationWishlistId: toWishlistId, wishlistId: fromWishlistId }
     });
 
     if (!result.ok) {

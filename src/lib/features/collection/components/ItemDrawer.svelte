@@ -38,12 +38,12 @@
     if (!open) return;
     form = editing
       ? {
-          brand: editing.railway_model.manufacturer,
-          catalogNumber: editing.railway_model.product_code,
-          title: editing.railway_model.description,
-          scale: editing.railway_model.scale,
+          brand: editing.railwayModel.manufacturer,
+          catalogNumber: editing.railwayModel.productCode,
+          title: editing.railwayModel.description,
+          scale: editing.railwayModel.scale,
           powerSystem: 'DC', // Placeholder
-          description: editing.railway_model.description,
+          description: editing.railwayModel.description,
           tags: []
         }
       : { ...blankForm };
@@ -94,7 +94,9 @@
           <p class="text-xs tracking-[0.2em] text-surface-500 uppercase">
             {editing ? 'Edit item' : 'Add item'}
           </p>
-          <h3 class="text-xl font-semibold">{editing ? editing.title : 'New item'}</h3>
+          <h3 class="text-xl font-semibold">
+            {editing ? editing.railwayModel.description : 'New item'}
+          </h3>
         </div>
         <button class="variant-ghost-surface btn-icon btn btn-icon-sm" onclick={handleClose}>
           <X size={16} />

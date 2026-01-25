@@ -77,21 +77,21 @@
   const ui = useCollectionUI();
 
   const defaultSummary = $state<CollectionSummaryType>({
-    locomotives_count: 0,
-    passenger_cars_count: 0,
-    freight_cars_count: 0,
-    train_sets_count: 0,
-    railcars_count: 0,
-    electric_multiple_units_count: 0,
-    starter_sets_count: 0
+    locomotivesCount: 0,
+    passengerCarsCount: 0,
+    freightCarsCount: 0,
+    trainSetsCount: 0,
+    railcarsCount: 0,
+    electricMultipleUnitsCount: 0,
+    starterSetsCount: 0
   });
   const summaryData = $derived(collectionService.summary ?? defaultSummary);
   const totalValue = $derived(
-    collectionService.collection?.total_value
+    collectionService.collection?.totalValue
       ? new Intl.NumberFormat('en-US', {
           style: 'currency',
-          currency: collectionService.collection.total_value.currency
-        }).format(Number(collectionService.collection.total_value.amount) / 100)
+          currency: collectionService.collection.totalValue.currency
+        }).format(Number(collectionService.collection.totalValue.amount) / 100)
       : '--'
   );
 

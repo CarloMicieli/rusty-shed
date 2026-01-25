@@ -106,15 +106,15 @@ describe('CollectionState (Read-Only)', () => {
       id: 'collection-1',
       name: 'My Collection',
       summary: {
-        locomotives_count: 0,
-        passenger_cars_count: 0,
-        freight_cars_count: 0,
-        train_sets_count: 0,
-        railcars_count: 0,
-        electric_multiple_units_count: 0,
-        starter_sets_count: 0
+        locomotivesCount: 0,
+        passengerCarsCount: 0,
+        freightCarsCount: 0,
+        trainSetsCount: 0,
+        railcarsCount: 0,
+        electricMultipleUnitsCount: 0,
+        starterSetsCount: 0
       },
-      total_value: null,
+      totalValue: null,
       items: []
     };
     tauriMock.mockCommand('get_collection', emptyCollection);
@@ -125,75 +125,75 @@ describe('CollectionState (Read-Only)', () => {
     id: 'collection-1',
     name: 'My Collection',
     summary: {
-      locomotives_count: 2,
-      passenger_cars_count: 1,
-      freight_cars_count: 0,
-      train_sets_count: 0,
-      railcars_count: 0,
-      electric_multiple_units_count: 0,
-      starter_sets_count: 0
+      locomotivesCount: 2,
+      passengerCarsCount: 1,
+      freightCarsCount: 0,
+      trainSetsCount: 0,
+      railcarsCount: 0,
+      electricMultipleUnitsCount: 0,
+      starterSetsCount: 0
     },
-    total_value: { amount: 50000n, currency: 'EUR' },
+    totalValue: { amount: 50000n, currency: 'EUR' },
     items: [
       {
         id: '1',
-        railway_model: {
-          railway_model_id: 'model-1',
+        railwayModel: {
+          railwayModelId: 'model-1',
           manufacturer: 'Roco',
-          product_code: '79894',
+          productCode: '79894',
           description: 'BR 185 Electric Locomotive',
           scale: 'H0',
           epoch: 'VI',
           category: 'LOCOMOTIVES'
         },
-        added_date: '2024-01-01',
-        removed_date: null,
-        purchase_condition: null,
-        model_condition: null,
-        box_condition: null,
+        addedDate: '2024-01-01',
+        removedDate: null,
+        purchaseCondition: null,
+        modelCondition: null,
+        boxCondition: null,
         notes: null,
-        rolling_stocks: [],
-        purchase_info: null
+        rollingStocks: [],
+        purchaseInfo: null
       },
       {
         id: '2',
-        railway_model: {
-          railway_model_id: 'model-2',
+        railwayModel: {
+          railwayModelId: 'model-2',
           manufacturer: 'Märklin',
-          product_code: '37712',
+          productCode: '37712',
           description: 'ICE 3 High Speed Train',
           scale: 'H0',
           epoch: 'VI',
           category: 'TRAIN_SETS'
         },
-        added_date: '2024-01-02',
-        removed_date: null,
-        purchase_condition: null,
-        model_condition: null,
-        box_condition: null,
+        addedDate: '2024-01-02',
+        removedDate: null,
+        purchaseCondition: null,
+        modelCondition: null,
+        boxCondition: null,
         notes: null,
-        rolling_stocks: [],
-        purchase_info: null
+        rollingStocks: [],
+        purchaseInfo: null
       },
       {
         id: '3',
-        railway_model: {
-          railway_model_id: 'model-3',
+        railwayModel: {
+          railwayModelId: 'model-3',
           manufacturer: 'Fleischmann',
-          product_code: '4170',
+          productCode: '4170',
           description: 'Tank Wagon',
           scale: 'N',
           epoch: 'IV',
           category: 'FREIGHT_CARS'
         },
-        added_date: '2024-01-03',
-        removed_date: null,
-        purchase_condition: null,
-        model_condition: null,
-        box_condition: null,
+        addedDate: '2024-01-03',
+        removedDate: null,
+        purchaseCondition: null,
+        modelCondition: null,
+        boxCondition: null,
         notes: null,
-        rolling_stocks: [],
-        purchase_info: null
+        rollingStocks: [],
+        purchaseInfo: null
       }
     ]
   };
@@ -242,14 +242,14 @@ describe('CollectionState (Read-Only)', () => {
       collectionService.setQuery('ICE');
 
       expect(collectionService.filteredItems).toHaveLength(1);
-      expect(collectionService.filteredItems[0].railway_model.description).toContain('ICE');
+      expect(collectionService.filteredItems[0].railwayModel.description).toContain('ICE');
     });
 
     it('should filter by scale', () => {
       collectionService.setScale('N');
 
       expect(collectionService.filteredItems).toHaveLength(1);
-      expect(collectionService.filteredItems[0].railway_model.scale).toBe('N');
+      expect(collectionService.filteredItems[0].railwayModel.scale).toBe('N');
     });
 
     it('should combine multiple filters', () => {

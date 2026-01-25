@@ -10,12 +10,12 @@
   }>();
 
   const totalUnits = $derived(
-    summary.locomotives_count +
-      summary.passenger_cars_count +
-      summary.freight_cars_count +
-      summary.train_sets_count +
-      summary.railcars_count +
-      summary.electric_multiple_units_count
+    summary.locomotivesCount +
+      summary.passengerCarsCount +
+      summary.freightCarsCount +
+      summary.trainSetsCount +
+      summary.railcarsCount +
+      summary.electricMultipleUnitsCount
   );
 </script>
 
@@ -60,16 +60,11 @@
   </div>
 
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-    {@render StatCard('Locomotives', summary.locomotives_count, TrainFront, 'border-primary-500')}
-    {@render StatCard(
-      'Passenger cars',
-      summary.passenger_cars_count,
-      TrainFront,
-      'border-info-500'
-    )}
-    {@render StatCard('Freight cars', summary.freight_cars_count, Box, 'border-warning-500')}
-    {@render StatCard('Train sets', summary.train_sets_count, Package, 'border-secondary-500')}
-    {@render StatCard('Railcars', summary.railcars_count, Bus, 'border-success-500')}
-    {@render StatCard('EMU', summary.electric_multiple_units_count, Zap, 'border-accent-500')}
+    {@render StatCard('Locomotives', summary.locomotivesCount, TrainFront, 'border-primary-500')}
+    {@render StatCard('Passenger cars', summary.passengerCarsCount, TrainFront, 'border-info-500')}
+    {@render StatCard('Freight cars', summary.freightCarsCount, Box, 'border-warning-500')}
+    {@render StatCard('Train sets', summary.trainSetsCount, Package, 'border-secondary-500')}
+    {@render StatCard('Railcars', summary.railcarsCount, Bus, 'border-success-500')}
+    {@render StatCard('EMU', summary.electricMultipleUnitsCount, Zap, 'border-accent-500')}
   </div>
 </section>

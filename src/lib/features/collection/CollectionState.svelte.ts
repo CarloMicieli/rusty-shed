@@ -53,15 +53,15 @@ export class CollectionState {
     const q = query.trim().toLowerCase();
 
     return items.filter((item) => {
-      if (scale && item.railway_model.scale !== scale) return false;
+      if (scale && item.railwayModel.scale !== scale) return false;
       // Tag filtering will be added when backend supports it
       if (q) {
         const manufacturer =
-          typeof item.railway_model.manufacturer === 'object'
-            ? ((item.railway_model.manufacturer as { name?: string }).name ?? '')
-            : item.railway_model.manufacturer;
+          typeof item.railwayModel.manufacturer === 'object'
+            ? ((item.railwayModel.manufacturer as { name?: string }).name ?? '')
+            : item.railwayModel.manufacturer;
         const haystack =
-          `${manufacturer} ${item.railway_model.product_code} ${item.railway_model.description}`.toLowerCase();
+          `${manufacturer} ${item.railwayModel.productCode} ${item.railwayModel.description}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;

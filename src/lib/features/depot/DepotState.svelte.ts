@@ -28,21 +28,21 @@ export class DepotState {
 
   locomotives = $derived.by(() => {
     if (!this.#depot) return [];
-    return this.#depot.rolling_stocks
+    return this.#depot.rollingStocks
       .filter((item) => item.category === 'LOCOMOTIVE')
       .map((item) => this.mapToLocomotive(item));
   });
 
   trains = $derived.by(() => {
     if (!this.#depot) return [];
-    return this.#depot.rolling_stocks
+    return this.#depot.rollingStocks
       .filter((item) => item.category === 'ELECTRIC_MULTIPLE_UNIT' || item.category === 'RAILCAR')
       .map((item) => this.mapToTrainSet(item));
   });
 
   cars = $derived.by(() => {
     if (!this.#depot) return [];
-    return this.#depot.rolling_stocks
+    return this.#depot.rollingStocks
       .filter((item) => item.category === 'PASSENGER_CAR' || item.category === 'FREIGHT_CAR')
       .map((item) => this.mapToCar(item));
   });
@@ -97,13 +97,13 @@ export class DepotState {
   private mapToLocomotive(item: DepotRollingStockView): Locomotive {
     return {
       id: item.id,
-      group: item.friendly_name ?? item.series_code,
-      manufacturer: item.manufacturer_name,
-      seriesCode: item.series_code,
-      productCode: item.product_code,
+      group: item.friendlyName ?? item.seriesCode,
+      manufacturer: item.manufacturerName,
+      seriesCode: item.seriesCode,
+      productCode: item.productCode,
       categoryLabel: this.formatCategory(item.category),
-      roadNumber: item.road_number,
-      railwayCompany: item.railway_company_name,
+      roadNumber: item.roadNumber,
+      railwayCompany: item.railwayCompanyName,
       livery: item.livery,
       control: item.control
     };
@@ -112,13 +112,13 @@ export class DepotState {
   private mapToTrainSet(item: DepotRollingStockView): TrainSet {
     return {
       id: item.id,
-      group: item.friendly_name ?? item.series_code,
-      manufacturer: item.manufacturer_name,
-      seriesCode: item.series_code,
-      productCode: item.product_code,
+      group: item.friendlyName ?? item.seriesCode,
+      manufacturer: item.manufacturerName,
+      seriesCode: item.seriesCode,
+      productCode: item.productCode,
       categoryLabel: this.formatCategory(item.category),
-      roadNumber: item.road_number,
-      railwayCompany: item.railway_company_name,
+      roadNumber: item.roadNumber,
+      railwayCompany: item.railwayCompanyName,
       livery: item.livery,
       control: item.control
     };
@@ -127,13 +127,13 @@ export class DepotState {
   private mapToCar(item: DepotRollingStockView): Car {
     return {
       id: item.id,
-      type: item.friendly_name ?? item.series_code,
-      manufacturer: item.manufacturer_name,
-      seriesCode: item.series_code,
-      productCode: item.product_code,
+      type: item.friendlyName ?? item.seriesCode,
+      manufacturer: item.manufacturerName,
+      seriesCode: item.seriesCode,
+      productCode: item.productCode,
       categoryLabel: this.formatCategory(item.category),
-      roadNumber: item.road_number,
-      railwayCompany: item.railway_company_name,
+      roadNumber: item.roadNumber,
+      railwayCompany: item.railwayCompanyName,
       livery: item.livery,
       category: item.category === 'PASSENGER_CAR' ? 'passenger' : 'freight',
       serviceLevel: null,

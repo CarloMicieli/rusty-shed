@@ -41,9 +41,9 @@
     <div class="flex items-start justify-between gap-2">
       <div>
         <p class="text-xs tracking-[0.18em] text-surface-500 uppercase">
-          {item.railway_model.manufacturer} • {item.railway_model.product_code}
+          {item.railwayModel.manufacturer} • {item.railwayModel.productCode}
         </p>
-        <h3 class="text-lg leading-tight font-semibold">{item.railway_model.description}</h3>
+        <h3 class="text-lg leading-tight font-semibold">{item.railwayModel.description}</h3>
       </div>
       <div class="flex gap-2 opacity-0 transition group-hover:opacity-100">
         <button class="variant-soft-surface btn-icon btn btn-icon-sm" onclick={handleEdit}>
@@ -56,9 +56,8 @@
     </div>
 
     <div class="flex flex-wrap gap-2 text-xs text-surface-400">
-      <span class="variant-soft-surface badge">{item.railway_model.scale}</span>
-      <span class="variant-soft-surface badge"
-        >{new Date(item.added_date).toLocaleDateString()}</span
+      <span class="variant-soft-surface badge">{item.railwayModel.scale}</span>
+      <span class="variant-soft-surface badge">{new Date(item.addedDate).toLocaleDateString()}</span
       >
     </div>
 

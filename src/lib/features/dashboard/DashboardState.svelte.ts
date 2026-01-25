@@ -1,7 +1,7 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import { safeInvoke, getErrorMessage } from '$lib/services';
-import type { DashboardSummary, QueryParams } from '$lib/bindings';
+import type { DashboardSummary, QueryCriteria } from '$lib/bindings';
 
 function toastError(message?: string) {
   toaster.error({
@@ -39,14 +39,14 @@ export class DashboardState {
   /**
    * Loads dashboard data and handles state transitions
    */
-  async load(params: QueryParams | null = null) {
+  async load(criteria: QueryCriteria | null = null) {
     // Prevent double-loading if already in progress
     if (this.#isLoading) return;
 
     this.#isLoading = true;
     this.#error = null;
 
-    const result = await safeInvoke<DashboardSummary>('get_dashboard_summary', { params });
+    const result = await safeInvoke<DashboardSummary>('get_dashboard_summary', { criteria });
 
     if (result.ok) {
       this.#data = result.data;
