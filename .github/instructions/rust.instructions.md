@@ -1,7 +1,7 @@
 ---
 name: Rust & Tauri Standards
 description: This file describes the Rust & Tauri code style and workflow standards for the project.
-applyTo: 'src-tauri/src/**/*.rs'
+applyTo: '**/*.{rs,toml,lock}'
 ---
 
 # Rust & Tauri Standards

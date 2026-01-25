@@ -1,7 +1,7 @@
 ---
 name: Svelte UI Standards
 description: This file describes the Svelte UI code style and workflow standards for the project.
-applyTo: 'src/**/*.ts,src/**/*.svelte.ts'
+applyTo: '**/*.{svelte,ts}'
 ---
 
 # Svelte UI Standards
@@ -16,6 +16,9 @@ Apply these rules to all files within the `src/` directory.
 2. **Testing:** Add Vitest or Playwright tests for new components.
 3. **Document:** Use JSDoc for exported props and functions.
 4. **Prettify:** Run `pnpm format`.
+5. **Lint:** Run `pnpm lint`.
+6. **Type Check:** Run `pnpm check`.
+7. **Verify:** Ensure all tests pass with `pnpm test`.
 
 ## Technical Preferences
 
