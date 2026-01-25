@@ -1,4 +1,6 @@
 ---
+name: Svelte UI Standards
+description: This file describes the Svelte UI code style and workflow standards for the project.
 applyTo: "src/**/*.ts,src/**/*.svelte.ts"
 ---
 
