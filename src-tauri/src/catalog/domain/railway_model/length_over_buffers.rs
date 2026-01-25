@@ -12,7 +12,7 @@ use thiserror::Error;
 /// positive. The type implements `Copy`/`Clone` and (de)serializes with
 /// serde using the helpers in `crate::core::domain::length::serde`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, specta::Type)]
-#[serde(default)]
+#[serde(default, rename_all = "camelCase")]
 pub struct LengthOverBuffers {
     /// the overall length in inches
     #[serde(with = "crate::core::domain::length::serde::inches_option")]

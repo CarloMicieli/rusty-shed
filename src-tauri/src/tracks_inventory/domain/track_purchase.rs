@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 /// purchase. Use this record to populate inventory history and costing
 /// calculations.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct TrackPurchase {
     /// Unique TRN identifier for this purchase event.
     pub track_purchase_id: TrackPurchaseId,

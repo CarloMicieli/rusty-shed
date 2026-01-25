@@ -7,6 +7,7 @@ use url::Url;
 /// Fields reflect the `manufacturers` table in the database. Optional fields
 /// correspond to nullable DB columns.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct Manufacturer {
     /// Unique identifier for the manufacturer.
     pub id: ManufacturerId,

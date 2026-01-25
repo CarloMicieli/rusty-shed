@@ -2062,12 +2062,12 @@ export type Manufacturer = {
   /**
    * The legally registered company name (nullable).
    */
-  registered_company_name: string | null;
+  registeredCompanyName: string | null;
   /**
    * The ISO 3166-1 alpha-2 country code where the company is registered
    * (nullable). Example: `"IT"` for Italy.
    */
-  country_code: string | null;
+  countryCode: string | null;
   /**
    * The lifecycle status of the manufacturer. Defaults to `Active`.
    */
@@ -2075,7 +2075,7 @@ export type Manufacturer = {
   /**
    * Optional website URL for the manufacturer.
    */
-  website_url: string | null;
+  websiteUrl: string | null;
 };
 /**
  * Strongly-typed identifier for a manufacturer in the catalog domain.
@@ -2339,11 +2339,11 @@ export type PeriodOfActivity = {
   /**
    * the date when the railway started its operation
    */
-  operating_since: string | null;
+  operatingSince: string | null;
   /**
    * the date when the railway ended its operation, if not active anymore
    */
-  operating_until: string | null;
+  operatingUntil: string | null;
   /**
    * the railway status
    */
@@ -2573,16 +2573,16 @@ export type RailwayCompany = {
   /**
    * The legally registered company name (nullable).
    */
-  registered_company_name: string | null;
+  registeredCompanyName: string | null;
   /**
    * The ISO 3166-1 alpha-2 country code where the company is registered
    * (nullable). Example: `"IT"` for Italy.
    */
-  country_code: string | null;
+  countryCode: string | null;
   /**
    * The period of activity of the railway company (nullable).
    */
-  period_of_activity: PeriodOfActivity | null;
+  periodOfActivity: PeriodOfActivity | null;
 };
 /**
  * Strongly-typed identifier for a railway in the catalog domain.

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 /// This struct models a real-world railway company. Some fields are optional
 /// because the corresponding database columns may be nullable.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct RailwayCompany {
     /// Unique identifier for the railway company.
     pub id: RailwayCompanyId,

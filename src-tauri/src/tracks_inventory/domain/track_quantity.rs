@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 /// currently recorded in an inventory. Use domain repositories and use-cases
 /// to update quantities rather than mutating instances directly.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, Hash)]
+#[serde(rename_all = "camelCase")]
 pub struct TrackQuantity {
     /// Canonical TRN identifier for the track product this quantity refers to.
     pub track_id: TrackId,

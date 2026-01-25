@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// It represents the period of activity for a railway company
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize, Default, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct PeriodOfActivity {
     /// the date when the railway started its operation
     pub operating_since: Option<NaiveDate>,
