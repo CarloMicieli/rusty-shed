@@ -58,6 +58,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::railway_company::MockRailwayCompanyRepository;
+    use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
     use pretty_assertions::assert_eq;
 
@@ -70,6 +71,7 @@ mod tests {
             name: "ACME Models".to_string(),
             registered_company_name: None,
             country_code: None,
+            metadata: Metadata::default(),
             period_of_activity: None,
         };
 
@@ -95,6 +97,7 @@ mod tests {
             name: "ACME Models".to_string(),
             registered_company_name: None,
             country_code: None,
+            metadata: Metadata::default(),
             period_of_activity: None,
         };
 

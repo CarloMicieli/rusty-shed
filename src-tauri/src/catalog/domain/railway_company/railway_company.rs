@@ -5,6 +5,7 @@
 //! minimal and optional where the underlying database allows null values.
 
 use crate::catalog::domain::railway_company::{PeriodOfActivity, RailwayCompanyId};
+use crate::core::domain::metadata::Metadata;
 use serde::{Deserialize, Serialize};
 
 /// A railway company (operator or owner).
@@ -29,4 +30,7 @@ pub struct RailwayCompany {
 
     /// The period of activity of the railway company (nullable).
     pub period_of_activity: Option<PeriodOfActivity>,
+
+    /// Metadata about the railway company (creation date, version, last updated).
+    pub metadata: Metadata,
 }

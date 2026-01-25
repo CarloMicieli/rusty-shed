@@ -7,6 +7,8 @@ use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::metadata::Metadata;
+use chrono::{DateTime, Utc};
 use url::Url;
 
 /// Convert a `ManufacturerRow` (database representation) into the domain
@@ -41,12 +43,21 @@ impl TryFrom<ManufacturerRow> for Manufacturer {
             None => None,
         };
 
+        // Map DB NaiveDateTime into DateTime<Utc> for Metadata
+        let created_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(row.created_at, Utc);
+        let updated_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(row.updated_at, Utc);
+
         Ok(Manufacturer {
             id: row.id,
             name: row.name,
             registered_company_name: row.registered_company_name,
             country_code: row.country_code,
             status: row.status,
+            metadata: Metadata {
+                version: row.version as u8,
+                created_at,
+                updated_at,
+            },
             website_url,
         })
     }
@@ -189,11 +200,20 @@ impl TryFrom<RailwayCompanyRow> for RailwayCompany {
                 operating_until: row.operating_until,
             });
 
+        // Map DB NaiveDateTime into DateTime<Utc> for Metadata
+        let created_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(row.created_at, Utc);
+        let updated_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(row.updated_at, Utc);
+
         Ok(RailwayCompany {
             id: row.id,
             name: row.name,
             registered_company_name: row.registered_company_name,
             country_code: row.country_code,
+            metadata: Metadata {
+                version: row.version as u8,
+                created_at,
+                updated_at,
+            },
             period_of_activity,
         })
     }

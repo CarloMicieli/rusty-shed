@@ -49,6 +49,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::{ManufacturerStatus, MockManufacturerRepository};
+    use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
     use pretty_assertions::assert_eq;
 
@@ -62,6 +63,7 @@ mod tests {
             registered_company_name: None,
             country_code: None,
             status: ManufacturerStatus::Active,
+            metadata: Metadata::default(),
             website_url: None,
         };
 
@@ -88,6 +90,7 @@ mod tests {
             registered_company_name: None,
             country_code: None,
             status: ManufacturerStatus::Active,
+            metadata: Metadata::default(),
             website_url: None,
         };
 

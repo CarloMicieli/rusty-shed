@@ -1,4 +1,5 @@
 use crate::catalog::domain::manufacturer::{ManufacturerId, ManufacturerStatus};
+use crate::core::domain::metadata::Metadata;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -27,4 +28,8 @@ pub struct Manufacturer {
 
     /// Optional website URL for the manufacturer.
     pub website_url: Option<Url>,
+
+    /// Metadata about the manufacturer (creation date, version, last updated).
+    #[serde(skip)]
+    pub metadata: Metadata,
 }
