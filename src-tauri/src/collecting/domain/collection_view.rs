@@ -15,6 +15,7 @@ use serde::Serialize;
 ///   `total_value` (i.e. `None`). This mirrors previous code paths that
 ///   returned a default when no database row existed.
 #[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CollectionView {
     /// Unique identifier for the collection (typically a UUID stored as a string).
     pub id: CollectionId,

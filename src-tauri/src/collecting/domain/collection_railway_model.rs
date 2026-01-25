@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// This struct captures the essential details of a railway model as needed
 /// for displaying in a collection context, omitting extraneous catalog information.
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CollectionRailwayModel {
     /// The unique identifier of the railway model.
     pub railway_model_id: RailwayModelId,

@@ -16,6 +16,7 @@ use serde::Serialize;
 /// It captures the state and details of a specific model as it exists within
 /// the collector's personal collection.
 #[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CollectionItemView {
     /// Unique identifier for this collection item.
     pub id: CollectionItemId,

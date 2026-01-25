@@ -11,6 +11,7 @@ use serde::Serialize;
 /// stored on the owned_rolling_stocks table and should be obtained from the
 /// catalog when needed.
 #[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct OwnedRollingStockView {
     /// Unique identifier for this owned rolling stock record (e.g. UUID in the DB).
     pub id: OwnedRollingStockId,

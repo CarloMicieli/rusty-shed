@@ -8,6 +8,7 @@ use serde::Serialize;
 /// serializes the minimal information required to display the depot and its
 /// rolling stock entries.
 #[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DepotView {
     /// A list of rolling stock entries currently associated with the depot.
     pub rolling_stocks: Vec<DepotRollingStockView>,
@@ -19,6 +20,7 @@ pub struct DepotView {
 /// identity, human-friendly labels, classification and a few display hints
 /// (like livery and depot location) used by the frontend.
 #[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DepotRollingStockView {
     /// Unique identifier for the owned rolling stock instance.
     pub id: OwnedRollingStockId,

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 /// This struct provides a high-level overview of the total quantities
 /// of different types of rolling stock within a specific inventory or sub-collection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CollectionSummary {
     /// The total number of independent traction units (Steam, Diesel, Electric).
     pub locomotives_count: u16,

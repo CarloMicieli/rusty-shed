@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// - `PreOrdered`: the item is pre-ordered from a seller; the collector may
 ///   have paid a deposit and the full total price is known as well.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(tag = "type", rename_all = "lowercase")]
+#[serde(tag = "type", rename_all = "camelCase")]
 #[specta(tag = "kind", content = "data")]
 pub enum PurchaseInfo {
     /// A standard purchase record.
@@ -63,6 +63,7 @@ impl PurchaseInfo {
 /// information. `price` is optional to support legacy records where the
 /// monetary amount or currency was not stored.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct PurchasedInfo {
     /// Unique identifier for this purchase record (for example a UUID).
     pub id: PurchaseInfoId,
@@ -86,6 +87,7 @@ pub struct PurchasedInfo {
 /// the sale outcome. The item should be excluded from collection value
 /// aggregations once sold.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct SoldInfo {
     /// Unique identifier for the original purchase record (or the sale record,
     /// depending on how you model identifiers). This is the canonical id for
@@ -122,6 +124,7 @@ pub struct SoldInfo {
 /// for the item. Both monetary amounts must use the same currency; use the
 /// `validate_currencies_match` helper to assert that condition.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct PreOrderInfo {
     /// Unique identifier for this preorder record.
     pub id: PurchaseInfoId,
