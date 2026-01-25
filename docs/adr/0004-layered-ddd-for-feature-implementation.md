@@ -28,6 +28,7 @@ Adopt Clean Architecture (Uncle Bob) which organizes code into concentric rings:
 - Bad, because: Requires discipline and some initial boilerplate (traits for ports, adapters for infrastructure, and small glue code).
 
 Key mechanics for this repo:
+
 - Domain layer (entities, domain errors) contains no framework imports and expresses business invariants.
 - Use Case layer exposes interactor functions/structs that accept repository and output ports as trait objects/generics.
 - Interface Adapters map transport (Tauri commands) and external models to Use Case inputs and map outputs back to view models or DTOs.
@@ -61,15 +62,18 @@ Chosen Option: Clean Architecture with Unit of Work (Option A)
 ### Consequences
 
 Positive:
+
 - Core business rules remain framework-agnostic and highly testable.
 - Infrastructure and framework changes (e.g., swapping SQLite for another datastore, or replacing Tauri with a web backend) have minimal impact on Use Cases and Domain logic.
 - Transactional atomicity is explicit and controlled at the Interface/Infrastructure boundary.
 
 Negative:
+
 - Initial boilerplate: traits for ports, wrappers for the Unit of Work, and adapter implementations add files and initial cognitive overhead.
 - Requires developer discipline to place code in the correct layer and to prefer trait-based ports for cross-layer interactions.
 
 Neutral:
+
 - Continued use of specta is recommended to keep Interface types in sync with the frontend.
 
 ## 5. Implementation Notes

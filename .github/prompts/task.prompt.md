@@ -1,9 +1,9 @@
 ---
-name: "task"
-description: "Start a new task with full planning and verification"
+name: 'task'
+description: 'Start a new task with full planning and verification'
 ---
 
-I want you to implement a new feature/fix. 
+I want you to implement a new feature/fix.
 You MUST strictly follow the workflow defined in our project instructions:
 
 1. **READ CONTEXT:** Use MCP tools to analyze `src-tauri` (Rust) or `src` (Svelte) depending on the task.
