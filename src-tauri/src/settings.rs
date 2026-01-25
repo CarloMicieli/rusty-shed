@@ -7,6 +7,7 @@ use crate::core::domain::measure_units::MeasureUnit;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -23,7 +24,8 @@ pub struct SettingsDto {
     pub language_code: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateSettingsPayload {
     pub currency: Currency,

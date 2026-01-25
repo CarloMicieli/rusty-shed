@@ -1,5 +1,6 @@
 use crate::maintenance::domain::maintenance_type::MaintenanceType;
 use chrono::NaiveDate;
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 
 /// Arguments for the `AddMaintenanceRecordUseCase`.
@@ -20,7 +21,8 @@ pub struct AddMaintenanceRecordArgs {
 }
 
 /// Arguments for adding a maintenance record.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddMaintenanceArgs {
     /// The unique identifier for the maintenance record.

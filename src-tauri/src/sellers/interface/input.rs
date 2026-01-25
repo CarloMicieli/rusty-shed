@@ -2,9 +2,11 @@ use crate::core::infrastructure::error::CommandError;
 use crate::sellers::application::update_seller::UpdateSellerInput;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateSellerPayload {
     pub name: String,
@@ -20,7 +22,8 @@ pub struct CreateSellerPayload {
     pub country_code: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateSellerPayload {
     pub id: String,

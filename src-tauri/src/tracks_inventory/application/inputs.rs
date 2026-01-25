@@ -3,10 +3,12 @@ use crate::sellers::domain::seller_id::SellerId;
 use crate::tracks_inventory::domain::TrackId;
 use crate::tracks_inventory::domain::TrackInventoryId;
 use chrono::NaiveDate;
+use garde::Validate;
 use serde::Deserialize;
 
 /// Input DTOs for the tracks inventory application layer.
-#[derive(Debug, Deserialize, specta::Type)]
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 pub struct NewTrackInventoryInput {
     /// The name of the new track inventory.
     pub name: String,
@@ -15,7 +17,8 @@ pub struct NewTrackInventoryInput {
 }
 
 /// Input used to add a purchase to an existing `TrackInventory`.
-#[derive(Debug, Deserialize, specta::Type)]
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 pub struct AddTrackPurchaseInput {
     pub id: TrackInventoryId,
 
@@ -36,7 +39,8 @@ pub struct AddTrackPurchaseInput {
 }
 
 /// Input used to rename an existing `TrackInventory`.
-#[derive(Debug, Deserialize, specta::Type)]
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 pub struct RenameTrackInventoryInput {
     /// The identifier of the track inventory to be renamed.
     pub id: TrackInventoryId,
@@ -45,7 +49,8 @@ pub struct RenameTrackInventoryInput {
 }
 
 /// Input used to set the quantity for a specific track in an inventory.
-#[derive(Debug, Deserialize, specta::Type)]
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 pub struct SetTrackItemQuantityInput {
     /// The identifier of the track inventory to update.
     pub inventory_id: TrackInventoryId,
