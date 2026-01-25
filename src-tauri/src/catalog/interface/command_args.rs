@@ -1,5 +1,5 @@
+use garde::Validate;
 use serde::Deserialize;
-use validator::Validate;
 
 use crate::{
     catalog::application::railway_model_use_case_input::{
@@ -11,6 +11,7 @@ use crate::{
 
 /// Arguments for creating a new railway model (transport from IPC to application).
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateRailwayModelArgs {
     /// ID of the manufacturer.
@@ -113,6 +114,7 @@ pub enum CreateRollingStockArgs {
 
 /// Length measurements over buffers for a rolling stock item.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct LengthOverBuffersArgs {
     /// Length in millimeters.
@@ -123,6 +125,7 @@ pub struct LengthOverBuffersArgs {
 
 /// Optional technical specifications for a rolling stock item.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct TechnicalSpecificationsArgs {
     /// Minimum radius the rolling stock can navigate.
@@ -145,6 +148,7 @@ pub struct TechnicalSpecificationsArgs {
 
 /// Coupling details for a rolling stock item.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct CouplingArgs {
     /// Type of coupling used.

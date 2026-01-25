@@ -6,11 +6,12 @@ use crate::core::domain::validation::ValidationContext;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
+use garde::Validate;
 use serde::Deserialize;
-use validator::Validate;
 
 /// Arguments structure for removing an item from the collection.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveCollectionItemArgs {
     /// The ID of the collection item to remove.
@@ -23,6 +24,7 @@ pub struct RemoveCollectionItemArgs {
 
 /// Arguments structure for adding an item to the collection.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddCollectionItemArgs {
     /// The railway model ID of the item to add.

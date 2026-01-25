@@ -10,11 +10,12 @@ use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use chrono::NaiveDate;
+use garde::Validate;
 use serde::Deserialize;
-use validator::Validate;
 
 /// Arguments structure for adding an item to a wishlist.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddToWishlistArgs {
     /// The ID of the wishlist to which the item will be added.
@@ -37,6 +38,7 @@ pub struct AddToWishlistArgs {
 
 /// Arguments structure for moving an item between wishlists.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct MoveWishlistItemArgs {
     /// The ID of the wishlist item to move.
@@ -49,6 +51,7 @@ pub struct MoveWishlistItemArgs {
 
 /// Arguments structure for creating a new wishlist.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateWishlistArgs {
     /// The name of the new wishlist.
@@ -61,6 +64,7 @@ pub struct CreateWishlistArgs {
 
 /// Arguments structure for renaming an existing wishlist.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct RenameWishlistArgs {
     /// The ID of the wishlist to rename.
