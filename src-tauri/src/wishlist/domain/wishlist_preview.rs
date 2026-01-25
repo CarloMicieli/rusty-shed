@@ -12,6 +12,7 @@ use crate::wishlist::domain::wishlist_id::WishlistId;
 /// (stored in the DB as integer amounts, typically the smallest unit, e.g.
 /// cents) for the wishlist items in that currency.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct WishlistPreview {
     pub id: WishlistId,
     pub name: String,

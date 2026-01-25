@@ -33,7 +33,11 @@ export class DashboardState {
   }
 
   // 3. Derived Logic (equivalent to Svelte 4 derived stores)
-  hasMaintenance = $derived((this.#data?.totals?.maintenance_due ?? 0) > 0);
+  hasMaintenance = $derived(
+    (this.#data?.totals?.maintenanceDue ??
+      ((this.#data?.totals as Record<string, unknown>)['maintenance_due'] as number | undefined) ??
+      0) > 0
+  );
   recentItemsCount = $derived(this.#data?.recentItems.length ?? 0);
 
   /**

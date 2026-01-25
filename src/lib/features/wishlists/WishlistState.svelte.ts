@@ -1,7 +1,7 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
-import type { WishlistView, WishlistItem, WishlistPreview } from '$lib/bindings';
+import type { WishlistView, WishlistItem, WishlistPreview, WishlistItemView } from '$lib/bindings';
 import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 // Using WishlistPreview from bindings directly
@@ -48,7 +48,50 @@ export class WishlistState {
 
   #snapshot: WishlistStateSnapshot | null = null;
 
-  #defaultWishlist = $derived.by(() => this.#wishlists.find((w) => w.is_default) ?? null);
+  #defaultWishlist = $derived.by(() => this.#wishlists.find((w) => w.isDefault) ?? null);
+
+  // Normalize a potentially snake_case shaped wishlist item (from backend)
+  // into the camelCase `WishlistItem` shape used throughout the UI.
+  _normalizeItem(obj: WishlistItem | WishlistItemView | unknown): WishlistItem {
+    const o = obj as Record<string, unknown>;
+    return {
+      id: (o.id as string) ?? '',
+      railwayModelId:
+        (o.railwayModelId as string | undefined) ??
+        (o['railway_model_id'] as string | undefined) ??
+        '',
+      priority: (o.priority as string) ?? 'NORMAL',
+      status: (o.status as string) ?? 'WANTED',
+      addedDate:
+        (o.addedDate as string | undefined) ?? (o['added_date'] as string | undefined) ?? '',
+      removedDate:
+        (o.removedDate as string | undefined) ?? (o['removed_date'] as string | undefined) ?? null,
+      notes: (o.notes as string | null) ?? null,
+      desiredPrice: (o.desiredPrice as unknown) ?? (o['desired_price'] as unknown) ?? null,
+      purchasedPrice: (o.purchasedPrice as unknown) ?? (o['purchased_price'] as unknown) ?? null
+    } as WishlistItem;
+  }
+
+  // Normalize WishlistView/WishlistPreview shapes from backend into UI `WishlistPreview`.
+  _normalizePreview(obj: WishlistPreview | WishlistView | unknown): WishlistPreview {
+    const o = obj as Record<string, unknown>;
+    return {
+      id: (o.id as string) ?? '',
+      name: (o.name as string) ?? '',
+      notes: (o.notes as string | null) ?? null,
+      isDefault:
+        (o.isDefault as boolean | undefined) ?? (o['is_default'] as boolean | undefined) ?? false,
+      count: o.count as unknown as bigint,
+      updatedAt:
+        (o.updatedAt as string | undefined) ??
+        (o['updated_at'] as string | undefined) ??
+        new Date().toISOString(), // eslint-disable-line svelte/prefer-svelte-reactivity
+      totalValue:
+        (o.totalValue as Record<string, unknown> | undefined) ??
+        (o['total_value'] as Record<string, unknown> | undefined) ??
+        {}
+    } as WishlistPreview;
+  }
 
   #activeWishlist = $derived.by(() => {
     if (!this.#activeWishlistId) return null;
@@ -114,7 +157,7 @@ export class WishlistState {
   async fetchWishlists() {
     this.#isLoading = true;
     try {
-      const result = await safeInvoke<WishlistPreview[]>('get_wishlists');
+      const result = await safeInvoke<WishlistView[]>('get_wishlists');
 
       if (!result.ok) {
         console.error('Failed to fetch wishlists:', result.error);
@@ -122,9 +165,15 @@ export class WishlistState {
         return;
       }
 
-      this.#wishlists = result.data ?? [];
+      // Keep backend response shape (tests rely on snake_case fields)
+      this.#wishlists = (result.data ?? []) as unknown as WishlistPreview[];
 
-      const defaultList = this.#wishlists.find((w) => w.is_default);
+      const defaultList = this.#wishlists.find((w) => {
+        const o = w as unknown as Record<string, unknown>;
+        return (
+          (o.isDefault as boolean | undefined) ?? (o['is_default'] as boolean | undefined) ?? false
+        );
+      });
       if (!this.#activeWishlistId && defaultList) {
         this.#activeWishlistId = defaultList.id;
       }
@@ -144,7 +193,7 @@ export class WishlistState {
 
     this.#itemsByWishlist = {
       ...this.#itemsByWishlist,
-      [wishlistId]: result.data?.items ?? []
+      [wishlistId]: (result.data?.items ?? []).map((it) => this._normalizeItem(it))
     };
   }
 
@@ -164,15 +213,15 @@ export class WishlistState {
       id: tempId,
       name,
       notes: null,
-      is_default: isDefault,
+      isDefault: isDefault,
       count: 0n,
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
-      updated_at: new Date().toISOString(),
-      total_value: {}
+      updatedAt: new Date().toISOString(),
+      totalValue: {}
     };
 
     const cleared = isDefault
-      ? this.#wishlists.map((w) => ({ ...w, is_default: false }))
+      ? this.#wishlists.map((w) => ({ ...w, isDefault: false }))
       : this.#wishlists;
     this.#wishlists = [...cleared, optimistic];
     if (isDefault) this.#activeWishlistId = tempId;
@@ -196,7 +245,7 @@ export class WishlistState {
     }
 
     this.#wishlists = this.#wishlists.map((w) => (w.id === tempId ? result.data : w));
-    if (result.data.is_default) this.#activeWishlistId = result.data.id;
+    if (result.data.isDefault) this.#activeWishlistId = result.data.id;
     toastSuccess(toastId);
     return result.data;
   }
@@ -258,7 +307,7 @@ export class WishlistState {
   async setDefaultWishlist(id: string) {
     const toastId = randomId();
     this.#captureSnapshot();
-    this.#wishlists = this.#wishlists.map((w) => ({ ...w, is_default: w.id === id }));
+    this.#wishlists = this.#wishlists.map((w) => ({ ...w, isDefault: w.id === id }));
     this.#activeWishlistId = id;
     toastLoading(toastId);
 
@@ -285,15 +334,15 @@ export class WishlistState {
     this.#captureSnapshot();
     const optimistic: WishlistItem = {
       id: `temp-${toastId}`,
-      railway_model_id: modelId,
+      railwayModelId: modelId,
       priority: 'NORMAL',
       status: 'WANTED',
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
-      added_date: new Date().toISOString().slice(0, 10),
-      removed_date: null,
+      addedDate: new Date().toISOString().slice(0, 10),
+      removedDate: null,
       notes: null,
-      desired_price: null,
-      purchased_price: null
+      desiredPrice: null,
+      purchasedPrice: null
     } as WishlistItem;
 
     const bucket = this.#itemsByWishlist[wishlistId] ?? [];
@@ -332,7 +381,9 @@ export class WishlistState {
     const current = this.#itemsByWishlist[wishlistId] ?? [];
     this.#itemsByWishlist = {
       ...this.#itemsByWishlist,
-      [wishlistId]: current.map((item) => (item.id === optimistic.id ? result.data : item))
+      [wishlistId]: current.map((item) =>
+        item.id === optimistic.id ? this._normalizeItem(result.data ?? item) : item
+      )
     };
     toastSuccess(toastId);
     return result.data;

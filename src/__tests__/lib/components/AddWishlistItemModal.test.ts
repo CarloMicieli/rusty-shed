@@ -75,19 +75,25 @@ const wishlistFixtures: WishlistPreviewLite[] = [
     name: 'My Wishlist',
     notes: null,
     is_default: true,
+    isDefault: true,
     count: 0n,
     updated_at: '2024-01-01T00:00:00Z',
-    total_value: {}
-  },
+    updatedAt: '2024-01-01T00:00:00Z',
+    total_value: {},
+    totalValue: {}
+  } as unknown as WishlistPreviewLite,
   {
     id: 'wishlist-2',
     name: 'Future Purchases',
     notes: null,
     is_default: false,
+    isDefault: false,
     count: 0n,
     updated_at: '2024-01-02T00:00:00Z',
-    total_value: {}
-  }
+    updatedAt: '2024-01-02T00:00:00Z',
+    total_value: {},
+    totalValue: {}
+  } as unknown as WishlistPreviewLite
 ];
 
 // Helper for Tauri mock
@@ -253,10 +259,13 @@ describe('AddWishlistItemModal', () => {
       name: 'New List',
       notes: null,
       is_default: false,
+      isDefault: false,
       count: 0n,
       updated_at: '2024-01-03T00:00:00Z',
-      total_value: {}
-    };
+      updatedAt: '2024-01-03T00:00:00Z',
+      total_value: {},
+      totalValue: {}
+    } as unknown as WishlistPreviewLite;
 
     const mockAddedItem = {
       id: 'item-1',

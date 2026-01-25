@@ -4,6 +4,7 @@ use serde::Serialize;
 use strum_macros::{Display, EnumString};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DashboardRecentItem {
     /// Unique identifier for the recent item.
     pub id: RailwayModelId,

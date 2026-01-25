@@ -49,9 +49,9 @@
   }
 
   function byStats(data: typeof totals) {
-    const collectionValue = formatMoney(data?.total_value ?? null);
-    const rollingStocks = data?.collection_items ?? 0;
-    const maintenance = data?.maintenance_due ?? 0;
+    const collectionValue = formatMoney(data?.totalValue ?? null);
+    const rollingStocks = data?.collectionItems ?? 0;
+    const maintenance = data?.maintenanceDue ?? 0;
 
     return [
       {
@@ -122,9 +122,9 @@
         <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
           {m.dashboard_yard_statistics()}
         </h3>
-        {#if totals?.maintenance_due}
+        {#if totals?.maintenanceDue}
           <span class="variant-soft-error badge animate-pulse font-semibold"
-            >{totals.maintenance_due} {m.dashboard_due_soon()}</span
+            >{totals.maintenanceDue} {m.dashboard_due_soon()}</span
           >
         {/if}
       </div>

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// state changes on the aggregate. They are used to persist changes in a
 /// durable store and to drive side-effects in repositories or handlers.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(tag = "type", content = "payload")]
+#[serde(tag = "type", content = "payload", rename_all = "camelCase")]
 pub enum WishlistEvent {
     Created {
         name: String,

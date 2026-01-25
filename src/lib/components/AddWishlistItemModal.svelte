@@ -106,7 +106,7 @@
             {#each wishlists as list (list.id)}
               <option value={list.id}>
                 {list.name}
-                {#if list.is_default}
+                {#if list.isDefault}
                   (default)
                 {/if}
               </option>

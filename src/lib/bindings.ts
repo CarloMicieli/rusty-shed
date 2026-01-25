@@ -763,7 +763,7 @@ export type AddTrackPurchaseInput = {
   /**
    * Reference to the purchased track product (canonical `TrackId`).
    */
-  track_id: TrackId;
+  trackId: TrackId;
   /**
    * Quantity of track items acquired in this purchase.
    */
@@ -775,11 +775,11 @@ export type AddTrackPurchaseInput = {
   /**
    * Optional seller reference for where the items were bought.
    */
-  seller_id: SellerId | null;
+  sellerId: SellerId | null;
   /**
    * Date when the purchase occurred.
    */
-  purchase_date: string;
+  purchaseDate: string;
 };
 /**
  * It represents a physical street address
@@ -1452,7 +1452,7 @@ export type DashboardDepotEntry = {
   /**
    * Railway model product code.
    */
-  product_code: string;
+  productCode: string;
   /**
    * Railway model category.
    */
@@ -1468,7 +1468,7 @@ export type DashboardDepotEntry = {
   /**
    * Railway model railway company.
    */
-  railway_company: DashboardDepotRailwayCompanyEntry;
+  railwayCompany: DashboardDepotRailwayCompanyEntry;
   /**
    * Railway model description.
    */
@@ -1476,7 +1476,7 @@ export type DashboardDepotEntry = {
   /**
    * Railway model power method.
    */
-  power_method: PowerMethod;
+  powerMethod: PowerMethod;
 };
 /**
  * Represents a manufacturer entry in the user's dashboard depot view.
@@ -1485,7 +1485,7 @@ export type DashboardDepotManufacturerEntry = {
   /**
    * Unique identifier for the manufacturer.
    */
-  manufacturer_id: ManufacturerId;
+  manufacturerId: ManufacturerId;
   /**
    * Manufacturer name.
    */
@@ -1498,7 +1498,7 @@ export type DashboardDepotRailwayCompanyEntry = {
   /**
    * Unique identifier for the railway company.
    */
-  railway_company_id: RailwayCompanyId;
+  railwayCompanyId: RailwayCompanyId;
   /**
    * Railway company name.
    */
@@ -1506,7 +1506,7 @@ export type DashboardDepotRailwayCompanyEntry = {
   /**
    * ISO 3166-1 alpha-2 country code where the railway company is registered (nullable).
    */
-  country_code: string | null;
+  countryCode: string | null;
 };
 export type DashboardRecentItem = {
   /**
@@ -1528,7 +1528,7 @@ export type DashboardRecentItem = {
   /**
    * Timestamp when the recent item was created.
    */
-  created_at: string;
+  createdAt: string;
 };
 /**
  * Comprehensive summary data for the user's dashboard.
@@ -1556,7 +1556,7 @@ export type DashboardTotals = {
   /**
    * Total number of unique items in the collection.
    */
-  collection_items: number;
+  collectionItems: number;
   /**
    * Total number of unique items marked as wishlisted.
    */
@@ -1564,11 +1564,11 @@ export type DashboardTotals = {
   /**
    * Total number of unique items that are due for maintenance.
    */
-  maintenance_due: number;
+  maintenanceDue: number;
   /**
    * Total monetary value of the entire collection.
    */
-  total_value: MonetaryAmount | null;
+  totalValue: MonetaryAmount | null;
 };
 /**
  * The NMRA and NEM Connectors for digital control (DCC)
@@ -2026,23 +2026,23 @@ export type MaintenanceCard = {
   /**
    * FK referencing the owned rolling stock.
    */
-  owned_rolling_stock_id: string;
+  ownedRollingStockId: string;
   /**
    * The date the last maintenance was performed, if any.
    */
-  last_maintenance_date: string | null;
+  lastMaintenanceDate: string | null;
   /**
    * The scheduled next maintenance date, if any.
    */
-  next_maintenance_date: string | null;
+  nextMaintenanceDate: string | null;
   /**
    * Created timestamp parsed from the database (if present).
    */
-  created_at: string | null;
+  createdAt: string | null;
   /**
    * Updated timestamp parsed from the database (if present).
    */
-  updated_at: string | null;
+  updatedAt: string | null;
 };
 /**
  * A manufacturer (maker of railway models).
@@ -2583,6 +2583,10 @@ export type RailwayCompany = {
    * The period of activity of the railway company (nullable).
    */
   periodOfActivity: PeriodOfActivity | null;
+  /**
+   * Metadata about the railway company (creation date, version, last updated).
+   */
+  metadata: Metadata;
 };
 /**
  * Strongly-typed identifier for a railway in the catalog domain.
@@ -2708,7 +2712,7 @@ export type RenameTrackInventoryInput = {
   /**
    * The new name for the track inventory.
    */
-  new_name: string;
+  newName: string;
 };
 /**
  * Arguments structure for renaming an existing wishlist.
@@ -3237,11 +3241,11 @@ export type SetTrackItemQuantityInput = {
   /**
    * The identifier of the track inventory to update.
    */
-  inventory_id: TrackInventoryId;
+  inventoryId: TrackInventoryId;
   /**
    * The canonical identifier of the track product.
    */
-  track_id: TrackId;
+  trackId: TrackId;
   /**
    * The desired quantity for the track product. Values <= 0 remove the item.
    */
@@ -3511,7 +3515,7 @@ export type WishlistItem = {
   /**
    * Identifier of the referenced railway model.
    */
-  railway_model_id: RailwayModelId;
+  railwayModelId: RailwayModelId;
   /**
    * The user's priority for this item.
    */
@@ -3523,11 +3527,11 @@ export type WishlistItem = {
   /**
    * Date the item was added to the wishlist (YYYY-MM-DD).
    */
-  added_date: string;
+  addedDate: string;
   /**
    * Optional date when the item was removed from the wishlist.
    */
-  removed_date: string | null;
+  removedDate: string | null;
   /**
    * Optional free-form notes attached to the item.
    */
@@ -3535,11 +3539,11 @@ export type WishlistItem = {
   /**
    * Desired price the user is willing to pay for the item (in cents).
    */
-  desired_price: MonetaryAmount | null;
+  desiredPrice: MonetaryAmount | null;
   /**
    * Actual purchased price if available (in cents).
    */
-  purchased_price: MonetaryAmount | null;
+  purchasedPrice: MonetaryAmount | null;
 };
 /**
  * Strongly-typed identifier for a wishlist item.
@@ -3605,10 +3609,10 @@ export type WishlistPreview = {
   id: WishlistId;
   name: string;
   notes: string | null;
-  is_default: boolean;
+  isDefault: boolean;
   count: bigint;
-  updated_at: string;
-  total_value: Partial<{ [key in Currency]: bigint }>;
+  updatedAt: string;
+  totalValue: Partial<{ [key in Currency]: bigint }>;
 };
 /**
  * Priority assigned to a wishlist item.

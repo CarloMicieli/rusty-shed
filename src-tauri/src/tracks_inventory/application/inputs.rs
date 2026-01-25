@@ -8,6 +8,7 @@ use serde::Deserialize;
 
 /// Input DTOs for the tracks inventory application layer.
 #[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
 #[garde(allow_unvalidated)]
 pub struct NewTrackInventoryInput {
     /// The name of the new track inventory.
@@ -18,6 +19,7 @@ pub struct NewTrackInventoryInput {
 
 /// Input used to add a purchase to an existing `TrackInventory`.
 #[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
 #[garde(allow_unvalidated)]
 pub struct AddTrackPurchaseInput {
     pub id: TrackInventoryId,
@@ -40,6 +42,7 @@ pub struct AddTrackPurchaseInput {
 
 /// Input used to rename an existing `TrackInventory`.
 #[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
 #[garde(allow_unvalidated)]
 pub struct RenameTrackInventoryInput {
     /// The identifier of the track inventory to be renamed.
@@ -50,6 +53,7 @@ pub struct RenameTrackInventoryInput {
 
 /// Input used to set the quantity for a specific track in an inventory.
 #[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
 #[garde(allow_unvalidated)]
 pub struct SetTrackItemQuantityInput {
     /// The identifier of the track inventory to update.

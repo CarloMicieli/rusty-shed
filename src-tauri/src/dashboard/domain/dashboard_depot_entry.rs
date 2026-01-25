@@ -6,6 +6,7 @@ use serde::Serialize;
 
 /// Represents a railway model entry in the user's dashboard depot view.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DashboardDepotEntry {
     /// Unique identifier for the railway model.
     pub id: RailwayModelId,
@@ -29,6 +30,7 @@ pub struct DashboardDepotEntry {
 
 /// Represents a manufacturer entry in the user's dashboard depot view.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DashboardDepotManufacturerEntry {
     /// Unique identifier for the manufacturer.
     pub manufacturer_id: ManufacturerId,
@@ -38,6 +40,7 @@ pub struct DashboardDepotManufacturerEntry {
 
 /// Represents a railway company entry in the user's dashboard depot view.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DashboardDepotRailwayCompanyEntry {
     /// Unique identifier for the railway company.
     pub railway_company_id: RailwayCompanyId,

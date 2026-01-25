@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 /// aggregate. Business operations that need the wishlist context should
 /// operate on the `Wishlist` aggregate.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct WishlistItem {
     /// Stable identifier for this wishlist item.
     pub id: WishlistItemId,

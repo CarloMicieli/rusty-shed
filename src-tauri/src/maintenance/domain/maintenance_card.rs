@@ -6,6 +6,7 @@ use uuid::Uuid;
 /// This struct contains parsed, strongly-typed fields suitable for use in
 /// application logic and for returning to the frontend via Specta.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct MaintenanceCard {
     /// Unique identifier for the maintenance card.
     pub id: Uuid,

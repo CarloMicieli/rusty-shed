@@ -29,6 +29,7 @@ use serde::{Deserialize, Serialize};
 /// installed into a piece of rolling stock and when presenting decoder details
 /// to the user (for example in an equipment detail view).
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, sqlx::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct Decoder {
     /// Unique identifier (URN) for this decoder.
     pub id: DecoderId,

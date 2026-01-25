@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 /// Domain model for a maintenance event performed on a maintenance card.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct MaintenanceEvent {
     /// Event identifier.
     pub id: Uuid,

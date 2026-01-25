@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// a stable identifier used across the application. Business logic should
 /// operate on this aggregate root when mutating the contained items.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct Wishlist {
     /// Unique identifier for the wishlist.
     pub id: WishlistId,
@@ -24,8 +25,10 @@ pub struct Wishlist {
     pub items: Vec<WishlistItem>,
     /// Events produced by operations on the aggregate that have not yet been
     /// persisted/handled by a repository or unit of work.
+    #[serde(skip)]
     pub pending_events: Vec<WishlistEvent>,
     /// Metadata about the wishlist (creation date, last modified, etc.).
+    #[serde(skip)]
     pub metadata: Metadata,
 }
 

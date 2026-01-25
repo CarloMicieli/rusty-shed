@@ -5,6 +5,7 @@ use serde::Serialize;
 ///
 /// Fields represent various summary statistics about the user's collection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DashboardTotals {
     /// Total number of unique items in the collection.
     pub collection_items: u32,
