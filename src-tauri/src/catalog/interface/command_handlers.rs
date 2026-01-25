@@ -1,7 +1,7 @@
 use crate::catalog::application::railway_model_query::GetRailwayModelViewByIdQuery;
 use crate::catalog::application::railway_model_use_case::CreateRailwayModelUseCase;
-use crate::catalog::application::railway_model_view::RailwayModelView;
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::interface::CreateRailwayModelArgs;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;

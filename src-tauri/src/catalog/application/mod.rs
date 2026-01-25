@@ -3,7 +3,6 @@ mod railway_company_query;
 pub mod railway_model_query;
 pub mod railway_model_use_case;
 pub mod railway_model_use_case_input;
-pub mod railway_model_view;
 
 #[cfg(test)]
 mod testing;

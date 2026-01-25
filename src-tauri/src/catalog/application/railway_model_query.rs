@@ -1,4 +1,4 @@
-use crate::catalog::application::railway_model_view::RailwayModelView;
+use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 
@@ -50,10 +50,10 @@ impl GetRailwayModelViewByIdQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::application::railway_model_view::RailwayModelManufacturer;
-    use crate::catalog::application::railway_model_view::RailwayModelView;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::RailwayModelManufacturer;
+    use crate::catalog::domain::railway_model::RailwayModelView;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode,
     };

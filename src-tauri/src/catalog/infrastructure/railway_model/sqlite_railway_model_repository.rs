@@ -1,10 +1,10 @@
-use crate::catalog::application::railway_model_view::{
-    RailwayModelView, RollingStockRailway, RollingStockView,
-};
 use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelId, RailwayModelParams, RailwayModelRepository, RailwayModelUowExt,
     RollingStock, RollingStockCategory, RollingStockId, RollingStockParams,
+};
+use crate::catalog::domain::railway_model::{
+    RailwayModelView, RollingStockRailway, RollingStockView,
 };
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
 use crate::core::domain::domain_error::DomainError;
@@ -621,11 +621,10 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 rolling_stock_views.push(view);
             }
 
-            let manufacturer =
-                crate::catalog::application::railway_model_view::RailwayModelManufacturer {
-                    manufacturer_id: row.manufacturer_id,
-                    display: row.manufacturer_name,
-                };
+            let manufacturer = crate::catalog::domain::railway_model::RailwayModelManufacturer {
+                manufacturer_id: row.manufacturer_id,
+                display: row.manufacturer_name,
+            };
 
             let metadata = crate::core::domain::metadata::Metadata {
                 version: row.version as u8,

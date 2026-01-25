@@ -18,6 +18,7 @@ mod railway_model;
 mod railway_model_event;
 mod railway_model_id;
 mod railway_model_params;
+mod railway_model_view;
 mod repository;
 mod rolling_stock;
 mod rolling_stock_id;
@@ -51,6 +52,9 @@ pub use railway_model::RailwayModel;
 pub use railway_model_event::RailwayModelEvent;
 pub use railway_model_id::RailwayModelId;
 pub use railway_model_params::RailwayModelParams;
+pub use railway_model_view::{
+    RailwayModelManufacturer, RailwayModelView, RollingStockRailway, RollingStockView,
+};
 pub use repository::RailwayModelRepository;
 pub use repository::RailwayModelUowExt;
 pub use rolling_stock::RollingStock;
