@@ -18,7 +18,7 @@ This ADR defines naming, derivation, and responsibility rules to make the transp
 - Clear separation of concerns (transport validation vs business logic).
 - Reusability and consistency across handlers and use cases.
 - Minimize runtime errors and security surface by validating at the transport edge.
-- Compatibility with Hexagonal/DDD layering (domain/use-cases inside, transport/infrastructure outside).
+- Compatibility with Clean Architecture/DDD layering (domain/use-cases inside, transport/infrastructure outside).
 
 ## 3. Considered Options
 

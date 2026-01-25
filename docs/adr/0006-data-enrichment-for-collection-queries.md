@@ -8,7 +8,7 @@ Deciders: Project Lead
 
 ## 1. Context and Problem Statement
 
-The application follows a Hexagonal Architecture. We have two distinct domain areas:
+The application follows a Clean Architecture. We have two distinct domain areas:
 
 1. **Catalog Domain**: Contains master data for railway models (Scale, Epoch, Company, etc.).
 1. **Collection Domain**: Manages the user's personal inventory.
@@ -33,7 +33,7 @@ The Application Layer coordinates the data retrieval. It fetches the IDs from th
 
 Pros:
 
-- Strict adherence to Hexagonal principles; domains remain completely ignorant of each other's persistence logic.
+- Strict adherence to Clean architecture/DDD principles; domains remain completely ignorant of each other's persistence logic.
 - Repositories stay highly reusable and focused on a single entity.
 
 Cons:
@@ -92,7 +92,7 @@ Chosen Option: Dedicated Query Port (Option B)
 We have chosen the Dedicated Query Port (CQRS-Lite) approach as the primary method for data enrichment. This decision is based on the following justifications:
 
 - Performance vs. Isolation Balance: While Option 1 (Orchestration) offers perfect isolation, the performance penalty of N+1 queries is unacceptable for a desktop application. Option 2 provides "near-instant" performance via SQL JOIN while maintaining boundary isolation at the Logic level, even if the Persistence level is shared.
-- Infrastructure as the "Integration Point": In Hexagonal Architecture, the Infrastructure layer is the natural place for technology-specific optimizations. By placing the SQL JOIN here, we keep the complexity out of the Domain and Application cores.
+- Infrastructure as the "Integration Point": In Clean Architecture, the Infrastructure layer is the natural place for technology-specific optimizations. By placing the SQL JOIN here, we keep the complexity out of the Domain and Application cores.
 - Real-time Consistency: Unlike Option 3 (Projections), using a SQL JOIN ensures that any updates to the master Catalog data are immediately visible in the Collection view without requiring event handlers or cache invalidation logic.
 - Reduced Boilerplate: This approach avoids the complex "manual stitching" code required in the Application layer, leading to a more maintainable Rust codebase.
 

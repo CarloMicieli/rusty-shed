@@ -8,7 +8,7 @@ Deciders: Project Lead
 
 ## 1. Context and Problem Statement
 
-In a Hexagonal Architecture using Domain-Driven Design (DDD), we need a strategy to persist changes made to complex Aggregates and their embedded entities within our Rust/Tauri command handlers.
+In a Clean Architecture using Domain-Driven Design (DDD), we need a strategy to persist changes made to complex Aggregates and their embedded entities within our Rust/Tauri command handlers.
 
 We want to avoid "Anemic Domain Models" where the repository dictates the domain structure. Instead, we need a way to track state changes within the Aggregate and ensure the database reflects those specific changes without exposing the persistence logic to the Domain layer
 

@@ -10,8 +10,7 @@ Decider: Project Lead
 
 The goal is to build a cross-platform application for model railway enthusiasts (likely covering inventory management). The application needs to run on Desktop (Windows/Linux/macOS) and Mobile (Android/iOS) to ensure users can access their data both at their workbench and while at exhibitions or clubs.
 
-We need a framework that balances performance for business logic with a modern, flexible UI
-system.
+We need a framework that balances performance for business logic with a modern, flexible UI system.
 
 ## 2. Decision Drivers
 
