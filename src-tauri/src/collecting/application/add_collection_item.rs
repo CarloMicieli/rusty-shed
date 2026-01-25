@@ -86,7 +86,7 @@ mod tests {
     use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
-        RailwayModelId, RailwayModelManufacturer,
+        RailwayModelId,
     };
     use crate::catalog::domain::scale::Scale;
     use crate::collecting::application::testing::FakeUow;
@@ -120,10 +120,7 @@ mod tests {
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer: RailwayModelManufacturer {
-                manufacturer_id: ManufacturerId::new("not-a-trn"),
-                display: "Test Manufacturer".to_string(),
-            },
+            manufacturer_id: ManufacturerId::new("not-a-trn"),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,

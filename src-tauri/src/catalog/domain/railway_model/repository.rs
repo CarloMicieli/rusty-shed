@@ -1,3 +1,4 @@
+use crate::catalog::application::railway_model_view::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelParams};
 use crate::core::domain::domain_error::DomainError;
 
@@ -40,6 +41,14 @@ pub trait RailwayModelRepository: Send + Sync {
         &mut self,
         id: &RailwayModelId,
     ) -> Result<Option<RailwayModel>, DomainError>;
+
+    /// Retrieves a UI-focused view of a Railway Model by id. This method is
+    /// intended for read-only scenarios where the frontend needs a serialized
+    /// view without domain-only metadata.
+    async fn find_view_by_id(
+        &mut self,
+        id: &RailwayModelId,
+    ) -> Result<Option<RailwayModelView>, DomainError>;
 
     /// Persists changes from a `RailwayModel` aggregate by applying its
     /// pending domain events to storage. Implementations should pull events

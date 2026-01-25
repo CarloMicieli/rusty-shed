@@ -8,8 +8,7 @@ use crate::catalog::domain::railway_model::ProductCode;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::{AvailabilityStatus, RailwayModelUowExt};
 use crate::catalog::domain::railway_model::{
-    RailwayModel, RailwayModelEvent, RailwayModelManufacturer, RailwayModelParams,
-    RollingStockParams,
+    RailwayModel, RailwayModelEvent, RailwayModelParams, RollingStockParams,
 };
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
@@ -97,10 +96,7 @@ impl CreateRailwayModelUseCase {
 
         let mut aggregate = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer: RailwayModelManufacturer {
-                manufacturer_id: railway_model_params.manufacturer_id.clone(),
-                display: String::new(),
-            },
+            manufacturer_id: railway_model_params.manufacturer_id.clone(),
             product_code: railway_model_params.product_code.clone(),
             description: railway_model_params.description.clone(),
             details: railway_model_params.details.clone(),

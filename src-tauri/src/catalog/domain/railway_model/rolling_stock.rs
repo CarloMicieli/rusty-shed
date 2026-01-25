@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::ServiceLevel;
 use crate::catalog::domain::railway_model::category::{
     ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
@@ -7,20 +8,16 @@ use crate::catalog::domain::railway_model::control::Control;
 use crate::catalog::domain::railway_model::dcc_interface::DccInterface;
 use crate::catalog::domain::railway_model::length_over_buffers::LengthOverBuffers;
 use crate::catalog::domain::railway_model::rolling_stock_id::RollingStockId;
-use crate::catalog::domain::railway_model::rolling_stock_railway::RollingStockRailway;
 use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecifications;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(tag = "category")]
-#[specta(tag = "category", content = "data")]
+#[derive(Debug, Clone)]
 pub enum RollingStock {
     /// an electric multiple unit rolling stock
     ElectricMultipleUnit {
         /// the unique identifier for this rolling stock
         id: RollingStockId,
-        /// the railway for this rolling stock
-        railway: RollingStockRailway,
+        /// the railway identifier for this rolling stock
+        railway_id: RailwayCompanyId,
         /// the livery description
         livery: Option<String>,
         /// the overall length
@@ -50,8 +47,8 @@ pub enum RollingStock {
     FreightCar {
         /// the unique identifier for this rolling stock
         id: RollingStockId,
-        /// the railway for this rolling stock
-        railway: RollingStockRailway,
+        /// the railway identifier for this rolling stock
+        railway_id: RailwayCompanyId,
         /// the livery description
         livery: Option<String>,
         /// the overall length
@@ -71,8 +68,8 @@ pub enum RollingStock {
     Locomotive {
         /// the unique identifier for this rolling stock
         id: RollingStockId,
-        /// the railway for this rolling stock
-        railway: RollingStockRailway,
+        /// the railway identifier for this rolling stock
+        railway_id: RailwayCompanyId,
         /// the livery description
         livery: Option<String>,
         /// the overall length
@@ -102,8 +99,8 @@ pub enum RollingStock {
     PassengerCar {
         /// the unique identifier for this rolling stock
         id: RollingStockId,
-        /// the railway for this rolling stock
-        railway: RollingStockRailway,
+        /// the railway identifier for this rolling stock
+        railway_id: RailwayCompanyId,
         /// the livery description
         livery: Option<String>,
         /// the overall length
@@ -128,8 +125,8 @@ pub enum RollingStock {
     Railcar {
         /// the unique identifier for this rolling stock
         id: RollingStockId,
-        /// the railway for this rolling stock
-        railway: RollingStockRailway,
+        /// the railway identifier for this rolling stock
+        railway_id: RailwayCompanyId,
         /// the livery description
         livery: Option<String>,
         /// the overall length
@@ -212,14 +209,14 @@ impl RollingStock {
         }
     }
 
-    /// The railway company for this rolling stock
-    pub fn railway(&self) -> &RollingStockRailway {
+    /// The railway identifier for this rolling stock
+    pub fn railway_id(&self) -> &RailwayCompanyId {
         match self {
-            RollingStock::ElectricMultipleUnit { railway, .. } => railway,
-            RollingStock::Locomotive { railway, .. } => railway,
-            RollingStock::FreightCar { railway, .. } => railway,
-            RollingStock::PassengerCar { railway, .. } => railway,
-            RollingStock::Railcar { railway, .. } => railway,
+            RollingStock::ElectricMultipleUnit { railway_id, .. } => railway_id,
+            RollingStock::Locomotive { railway_id, .. } => railway_id,
+            RollingStock::FreightCar { railway_id, .. } => railway_id,
+            RollingStock::PassengerCar { railway_id, .. } => railway_id,
+            RollingStock::Railcar { railway_id, .. } => railway_id,
         }
     }
 
@@ -315,5 +312,152 @@ impl RollingStock {
             } => control.has_decoder(),
             _ => false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn locomotive_accessors_return_expected_values() {
+        let id = RollingStockId::new();
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+
+        let loco = RollingStock::Locomotive {
+            id: id.clone(),
+            railway_id: railway.clone(),
+            livery: Some("Blue Livery".to_string()),
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: Some("Friendly".to_string()),
+            series_code: "SC-1".to_string(),
+            road_number: Some("42".to_string()),
+            series: None,
+            depot: None,
+            locomotive_type: LocomotiveType::ElectricLocomotive,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        };
+
+        assert_eq!(loco.category(), RollingStockCategory::Locomotive);
+        assert_eq!(loco.id_as_ref(), &id);
+        assert_eq!(loco.railway_id(), &railway);
+        assert_eq!(loco.livery(), Some("Blue Livery"));
+        assert_eq!(loco.road_number(), Some("42"));
+    }
+
+    #[test]
+    fn control_and_dcc_interface_and_decoder_behavior() {
+        let id = RollingStockId::new();
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+
+        let loco = RollingStock::Locomotive {
+            id: id.clone(),
+            railway_id: railway,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "SC-2".to_string(),
+            road_number: None,
+            series: None,
+            depot: None,
+            locomotive_type: LocomotiveType::DieselLocomotive,
+            dcc_interface: Some(DccInterface::Nem651),
+            control: Some(Control::DccFitted),
+            is_dummy: false,
+        };
+
+        assert_eq!(loco.control(), Some(Control::DccFitted));
+        assert_eq!(loco.dcc_interface(), Some(DccInterface::Nem651));
+        assert!(loco.with_decoder());
+    }
+
+    #[test]
+    fn freightcar_has_no_decoder_and_no_control() {
+        let id = RollingStockId::new();
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+
+        let freight = RollingStock::FreightCar {
+            id: id.clone(),
+            railway_id: railway,
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "FC-1".to_string(),
+            road_number: None,
+            freight_car_type: None,
+        };
+
+        assert_eq!(freight.control(), None);
+        assert_eq!(freight.dcc_interface(), None);
+        assert!(!freight.with_decoder());
+    }
+
+    #[test]
+    fn electric_multiple_unit_accessors_and_decoder_behavior() {
+        let id = RollingStockId::new();
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+
+        let emu = RollingStock::ElectricMultipleUnit {
+            id: id.clone(),
+            railway_id: railway.clone(),
+            livery: Some("Green Livery".to_string()),
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: Some("EMU Friendly".to_string()),
+            series_code: "EMU-1".to_string(),
+            road_number: Some("EMU-7".to_string()),
+            series: Some("Series A".to_string()),
+            depot: None,
+            electric_multiple_unit_type: ElectricMultipleUnitType::DrivingCar,
+            dcc_interface: Some(DccInterface::Nem651),
+            control: Some(Control::DccFitted),
+            is_dummy: false,
+        };
+
+        assert_eq!(emu.category(), RollingStockCategory::ElectricMultipleUnit);
+        assert_eq!(emu.id_as_ref(), &id);
+        assert_eq!(emu.railway_id(), &railway);
+        assert_eq!(emu.livery(), Some("Green Livery"));
+        assert_eq!(emu.road_number(), Some("EMU-7"));
+        assert_eq!(emu.control(), Some(Control::DccFitted));
+        assert_eq!(emu.dcc_interface(), Some(DccInterface::Nem651));
+        assert!(emu.with_decoder());
+    }
+    #[test]
+    fn railcar_accessors_and_decoder_behavior() {
+        let id = RollingStockId::new();
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+
+        let railcar = RollingStock::Railcar {
+            id: id.clone(),
+            railway_id: railway.clone(),
+            livery: Some("Red".to_string()),
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: Some("Railcar Friendly".to_string()),
+            series_code: "RC-1".to_string(),
+            road_number: Some("100".to_string()),
+            series: None,
+            depot: None,
+            railcar_type: RailcarType::PowerCar,
+            dcc_interface: Some(DccInterface::Plux8),
+            control: Some(Control::DccSound),
+            is_dummy: false,
+        };
+
+        assert_eq!(railcar.category(), RollingStockCategory::Railcar);
+        assert_eq!(railcar.id_as_ref(), &id);
+        assert_eq!(railcar.railway_id(), &railway);
+        assert_eq!(railcar.livery(), Some("Red"));
+        assert_eq!(railcar.road_number(), Some("100"));
+        assert_eq!(railcar.control(), Some(Control::DccSound));
+        assert_eq!(railcar.dcc_interface(), Some(DccInterface::Plux8));
+        assert!(railcar.with_decoder());
     }
 }

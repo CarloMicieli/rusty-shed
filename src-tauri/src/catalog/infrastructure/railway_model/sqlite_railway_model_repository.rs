@@ -1,3 +1,6 @@
+use crate::catalog::application::railway_model_view::{
+    RailwayModelView, RollingStockRailway, RollingStockView,
+};
 use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelId, RailwayModelParams, RailwayModelRepository, RailwayModelUowExt,
@@ -6,6 +9,7 @@ use crate::catalog::domain::railway_model::{
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use chrono::TimeZone;
 use sqlx::SqliteConnection;
 
 /// An SQLite-specific implementation of the `RailwayModelRepository`.
@@ -49,7 +53,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                 rm.delivery_date, 
                 rm.availability_status, 
                 rm.created_at, 
-                rm.updated_at 
+                rm.updated_at,
+                rm.version
             FROM railway_models AS rm
             JOIN manufacturers AS m ON rm.manufacturer_id = m.id
             WHERE rm.id = ?1 
@@ -512,6 +517,139 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
             rm.rolling_stocks = rolling_stocks;
 
             Ok(Some(rm))
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn find_view_by_id(
+        &mut self,
+        id: &RailwayModelId,
+    ) -> Result<Option<RailwayModelView>, DomainError> {
+        let row_opt = self.select_railway_model_by_id(id).await?;
+
+        if let Some(row) = row_opt {
+            // fetch rolling stocks
+            let child_rows = self.select_rolling_stocks_by_id(id).await?;
+
+            let mut rolling_stock_views = Vec::with_capacity(child_rows.len());
+            for cr in child_rows {
+                let railway = RollingStockRailway {
+                    railway_company_id: cr.railway_company_id.clone(),
+                    display: cr.railway_company_name.clone(),
+                };
+
+                let view = match cr.category {
+                    RollingStockCategory::Locomotive => RollingStockView::Locomotive {
+                        id: cr.id,
+                        railway,
+                        livery: cr.livery,
+                        length_over_buffer: None,
+                        technical_specifications: None,
+                        friendly_name: cr.friendly_name,
+                        series_code: cr.series_code,
+                        road_number: cr.road_number,
+                        series: cr.series,
+                        depot: cr.depot,
+                        locomotive_type: cr.locomotive_type.unwrap_or_default(),
+                        dcc_interface: cr.dcc_interface,
+                        control: cr.control,
+                        is_dummy: cr.is_dummy,
+                    },
+                    RollingStockCategory::FreightCar => RollingStockView::FreightCar {
+                        id: cr.id,
+                        railway,
+                        livery: cr.livery,
+                        length_over_buffer: None,
+                        technical_specifications: None,
+                        friendly_name: cr.friendly_name,
+                        series_code: cr.series_code,
+                        road_number: cr.road_number,
+                        freight_car_type: cr.freight_car_type,
+                    },
+                    RollingStockCategory::PassengerCar => RollingStockView::PassengerCar {
+                        id: cr.id,
+                        railway,
+                        livery: cr.livery,
+                        length_over_buffer: None,
+                        technical_specifications: None,
+                        friendly_name: cr.friendly_name,
+                        series_code: cr.series_code,
+                        road_number: cr.road_number,
+                        series: cr.series,
+                        passenger_car_type: cr.passenger_car_type,
+                        service_level: cr.service_level,
+                    },
+                    RollingStockCategory::ElectricMultipleUnit => {
+                        RollingStockView::ElectricMultipleUnit {
+                            id: cr.id,
+                            railway,
+                            livery: cr.livery,
+                            length_over_buffer: None,
+                            technical_specifications: None,
+                            friendly_name: cr.friendly_name,
+                            series_code: cr.series_code,
+                            road_number: cr.road_number,
+                            series: cr.series,
+                            depot: cr.depot,
+                            electric_multiple_unit_type: cr
+                                .electric_multiple_unit_type
+                                .unwrap_or_default(),
+                            dcc_interface: cr.dcc_interface,
+                            control: cr.control,
+                            is_dummy: cr.is_dummy,
+                        }
+                    }
+                    RollingStockCategory::Railcar => RollingStockView::Railcar {
+                        id: cr.id,
+                        railway,
+                        livery: cr.livery,
+                        length_over_buffer: None,
+                        technical_specifications: None,
+                        friendly_name: cr.friendly_name,
+                        series_code: cr.series_code,
+                        road_number: cr.road_number,
+                        series: cr.series,
+                        depot: cr.depot,
+                        railcar_type: cr.railcar_type.unwrap_or_default(),
+                        dcc_interface: cr.dcc_interface,
+                        control: cr.control,
+                        is_dummy: cr.is_dummy,
+                    },
+                };
+
+                rolling_stock_views.push(view);
+            }
+
+            let manufacturer =
+                crate::catalog::application::railway_model_view::RailwayModelManufacturer {
+                    manufacturer_id: row.manufacturer_id,
+                    display: row.manufacturer_name,
+                };
+
+            let metadata = crate::core::domain::metadata::Metadata {
+                version: row.version as u8,
+                created_at: chrono::Utc.from_utc_datetime(&row.created_at),
+                updated_at: chrono::Utc.from_utc_datetime(&row.updated_at),
+            };
+
+            let view = RailwayModelView {
+                id: row.id,
+                manufacturer,
+                product_code: row.product_code,
+                description: row.description,
+                details: row.details,
+                power_method: row.power_method,
+                scale: row.scale,
+                epoch: row.epoch,
+                category: row.category,
+                delivery_date: row.delivery_date,
+                availability_status: row.availability_status,
+                rolling_stock: rolling_stock_views,
+                metadata,
+            };
+
+            Ok(Some(view))
         } else {
             Ok(None)
         }

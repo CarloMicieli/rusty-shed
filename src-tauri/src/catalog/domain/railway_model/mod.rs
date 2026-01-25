@@ -17,13 +17,11 @@ mod radius;
 mod railway_model;
 mod railway_model_event;
 mod railway_model_id;
-mod railway_model_manufacturer;
 mod railway_model_params;
 mod repository;
 mod rolling_stock;
 mod rolling_stock_id;
 mod rolling_stock_params;
-mod rolling_stock_railway;
 mod service_level;
 mod technical_specifications;
 
@@ -52,14 +50,12 @@ pub use radius::{Radius, RadiusError};
 pub use railway_model::RailwayModel;
 pub use railway_model_event::RailwayModelEvent;
 pub use railway_model_id::RailwayModelId;
-pub use railway_model_manufacturer::RailwayModelManufacturer;
 pub use railway_model_params::RailwayModelParams;
 pub use repository::RailwayModelRepository;
 pub use repository::RailwayModelUowExt;
 pub use rolling_stock::RollingStock;
 pub use rolling_stock_id::RollingStockId;
 pub use rolling_stock_params::RollingStockParams;
-pub use rolling_stock_railway::RollingStockRailway;
 pub use service_level::ServiceLevel;
 pub use technical_specifications::{TechnicalSpecifications, TechnicalSpecificationsBuilder};
 

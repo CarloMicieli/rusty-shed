@@ -47,8 +47,10 @@ impl RenameWishlistUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::domain::metadata::Metadata;
     use crate::wishlist::application::testing::FakeUow;
     use crate::wishlist::domain::MockWishlistRepository;
+    use crate::wishlist::domain::wishlist::Wishlist;
     use crate::wishlist::domain::wishlist_id::WishlistId;
     use mockall::predicate::eq;
 
@@ -64,14 +66,14 @@ mod tests {
             .times(1)
             .with(eq(id_for_expect))
             .returning(move |_| {
-                Ok(Some(crate::wishlist::domain::wishlist::Wishlist {
+                Ok(Some(Wishlist {
                     id: id_for_return.clone(),
                     name: "Old Name".to_string(),
                     notes: None,
                     is_default: false,
                     items: vec![],
                     pending_events: vec![],
-                    metadata: crate::core::domain::metadata::Metadata::default(),
+                    metadata: Metadata::default(),
                 }))
             });
 

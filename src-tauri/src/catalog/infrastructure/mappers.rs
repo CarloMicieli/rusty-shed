@@ -3,10 +3,9 @@ use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::railway_company::PeriodOfActivity;
 use crate::catalog::domain::railway_company::RailwayCompany;
+use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
-use crate::catalog::domain::railway_model::RollingStockRailway;
-use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelManufacturer};
 use crate::core::domain::domain_error::DomainError;
 use url::Url;
 
@@ -57,14 +56,9 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
     type Error = DomainError;
 
     fn try_from(row: RailwayModelRow) -> Result<Self, Self::Error> {
-        let manufacturer = RailwayModelManufacturer {
-            manufacturer_id: row.manufacturer_id,
-            display: row.manufacturer_name,
-        };
-
         Ok(RailwayModel {
             id: row.id,
-            manufacturer,
+            manufacturer_id: row.manufacturer_id,
             product_code: row.product_code,
             description: row.description,
             details: row.details,
@@ -85,12 +79,6 @@ impl TryFrom<RollingStockRow> for RollingStock {
 
     fn try_from(row: RollingStockRow) -> Result<Self, Self::Error> {
         let category = row.category;
-
-        let railway = RollingStockRailway {
-            railway_company_id: row.railway_company_id,
-            display: row.railway_company_name,
-        };
-
         match category {
             RollingStockCategory::Locomotive => Ok(RollingStock::Locomotive {
                 id: row.id,
@@ -98,7 +86,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 series: row.series,
                 series_code: row.series_code,
                 road_number: row.road_number,
-                railway,
+                railway_id: row.railway_company_id,
                 locomotive_type: row.locomotive_type.unwrap_or_default(),
                 depot: row.depot,
                 livery: row.livery,
@@ -113,7 +101,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 friendly_name: row.friendly_name,
                 series_code: row.series_code,
                 road_number: row.road_number,
-                railway,
+                railway_id: row.railway_company_id,
                 freight_car_type: row.freight_car_type,
                 livery: row.livery,
                 length_over_buffer: None,
@@ -125,7 +113,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 series_code: row.series_code,
                 series: row.series,
                 road_number: row.road_number,
-                railway,
+                railway_id: row.railway_company_id,
                 passenger_car_type: row.passenger_car_type,
                 service_level: row.service_level,
                 livery: row.livery,
@@ -138,7 +126,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 series: row.series,
                 series_code: row.series_code,
                 road_number: row.road_number,
-                railway,
+                railway_id: row.railway_company_id,
                 electric_multiple_unit_type: row.electric_multiple_unit_type.unwrap_or_default(),
                 depot: row.depot,
                 livery: row.livery,
@@ -154,7 +142,7 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 series: row.series,
                 series_code: row.series_code,
                 road_number: row.road_number,
-                railway,
+                railway_id: row.railway_company_id,
                 railcar_type: row.railcar_type.unwrap_or_default(),
                 depot: row.depot,
                 livery: row.livery,
@@ -240,6 +228,7 @@ mod tests {
                 website_url: Some("https://www.acmetreni.com".to_string()),
                 created_at: utc_timestamp,
                 updated_at: utc_timestamp,
+                version: 0,
             };
 
             let domain = Manufacturer::try_from(row).expect("mapping should succeed");
@@ -285,6 +274,7 @@ mod tests {
                     operating_until: Some(NaiveDate::from_ymd_opt(1925, 2, 1).unwrap()),
                     created_at: utc_timestamp,
                     updated_at: utc_timestamp,
+                    version: 0,
                 };
 
                 let domain = RailwayCompany::try_from(row).expect("mapping should succeed");
@@ -350,15 +340,12 @@ mod tests {
                 availability_status: Some(AvailabilityStatus::Available),
                 created_at: utc_timestamp,
                 updated_at: utc_timestamp,
+                version: 0,
             };
 
             let domain = RailwayModel::try_from(row).expect("mapping should succeed");
-            let manufacturer = RailwayModelManufacturer {
-                manufacturer_id: manufacturer_id.clone(),
-                display: "ACME Models".to_string(),
-            };
             assert_eq!(domain.id, id);
-            assert_eq!(domain.manufacturer, manufacturer);
+            assert_eq!(domain.manufacturer_id, manufacturer_id);
             assert_eq!(domain.product_code, product_code);
             assert_eq!(domain.description, "Test model");
             assert_eq!(domain.details.as_deref(), Some("Detailed description"));
@@ -420,7 +407,7 @@ mod tests {
             match domain {
                 RollingStock::Locomotive {
                     id,
-                    railway,
+                    railway_id,
                     livery,
                     length_over_buffer,
                     technical_specifications,
@@ -435,8 +422,7 @@ mod tests {
                     is_dummy,
                 } => {
                     assert_eq!(id, id);
-                    assert_eq!(railway.railway_company_id, railway_company_id);
-                    assert_eq!(railway.display, "Ferrovie dello Stato");
+                    assert_eq!(railway_id, railway_company_id);
                     assert_eq!(livery.as_deref(), Some("Livery"));
                     assert_eq!(friendly_name.as_deref(), Some("Class X"));
                     assert_eq!(series_code, "123");

@@ -39,6 +39,9 @@ pub struct ManufacturerRow {
 
     /// Timestamp when the row was last updated.
     pub updated_at: NaiveDateTime,
+
+    /// Row version for optimistic concurrency control.
+    pub version: i64,
 }
 
 /// Row mapping for the `railway_companies` table.
@@ -73,6 +76,8 @@ pub struct RailwayCompanyRow {
 
     /// Timestamp when the row was last updated.
     pub updated_at: NaiveDateTime,
+    /// Row version for optimistic concurrency control.
+    pub version: i64,
 }
 
 /// Row mapping for the `railway_models` table.
@@ -122,6 +127,8 @@ pub struct RailwayModelRow {
 
     /// Timestamp when the row was last updated.
     pub updated_at: NaiveDateTime,
+    /// Row version for optimistic concurrency control.
+    pub version: i64,
 }
 
 /// Row mapping for the `rolling_stocks` table.

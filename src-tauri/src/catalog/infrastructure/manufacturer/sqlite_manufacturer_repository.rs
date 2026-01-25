@@ -40,7 +40,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
     /// - Returns a [`DomainError::DatabaseError`] if the query fails.
     async fn find_all(&mut self) -> Result<Vec<Manufacturer>, DomainError> {
         let sql = r#"
-            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at 
+            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version
             FROM manufacturers
             ORDER BY name
         "#;
@@ -71,7 +71,7 @@ impl<'conn> ManufacturerRepository for SqliteManufacturerRepository<'conn> {
         id: &ManufacturerId,
     ) -> Result<Option<Manufacturer>, DomainError> {
         let sql = r#"
-            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at 
+            SELECT id, name, registered_company_name, status, country_code, website_url, created_at, updated_at, version
             FROM manufacturers
             WHERE id = ?1 
             LIMIT 1"#;

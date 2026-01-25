@@ -532,8 +532,7 @@ mod tests {
     use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::catalog::domain::railway_company::RailwayCompanyId;
     use crate::catalog::domain::railway_model::{
-        Category, LocomotiveType, PowerMethod, ProductCode, RailwayModel, RailwayModelManufacturer,
-        RollingStock, RollingStockRailway,
+        Category, LocomotiveType, PowerMethod, ProductCode, RailwayModel, RollingStock,
     };
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
     use crate::catalog::domain::scale::Scale;
@@ -703,10 +702,7 @@ mod tests {
 
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer: RailwayModelManufacturer {
-                manufacturer_id: ManufacturerId::new("not-a-trn"),
-                display: "Test Manufacturer".to_string(),
-            },
+            manufacturer_id: ManufacturerId::new("not-a-trn"),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,
@@ -718,7 +714,7 @@ mod tests {
             availability_status: None,
             rolling_stocks: vec![RollingStock::Locomotive {
                 id: rolling_stock_id.clone(),
-                railway: RollingStockRailway::new(RailwayCompanyId::new("RY-ACME"), "ACME"),
+                railway_id: RailwayCompanyId::new("RY-ACME"),
                 livery: None,
                 length_over_buffer: None,
                 technical_specifications: None,
@@ -813,10 +809,7 @@ mod tests {
 
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer: RailwayModelManufacturer {
-                manufacturer_id: ManufacturerId::new("not-a-trn"),
-                display: "Test Manufacturer".to_string(),
-            },
+            manufacturer_id: ManufacturerId::new("not-a-trn"),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,
@@ -828,7 +821,7 @@ mod tests {
             availability_status: None,
             rolling_stocks: vec![RollingStock::Locomotive {
                 id: rolling_stock_id.clone(),
-                railway: RollingStockRailway::new(RailwayCompanyId::new("RY-ACME"), "ACME"),
+                railway_id: RailwayCompanyId::new("RY-ACME"),
                 livery: None,
                 length_over_buffer: None,
                 technical_specifications: None,
@@ -913,7 +906,7 @@ mod tests {
 
         let remove_cmd = crate::collecting::application::RemoveCollectionItemInput {
             collection_item_id: item_id.clone(),
-            category: crate::catalog::domain::railway_model::Category::Locomotives,
+            category: Category::Locomotives,
             removed_date,
         };
 

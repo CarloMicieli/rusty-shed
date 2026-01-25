@@ -1,11 +1,11 @@
+use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::{
     AvailabilityStatus, Category, DeliveryDate, Epoch, PowerMethod, ProductCode, RailwayModelId,
-    RailwayModelManufacturer, RollingStock,
+    RollingStock,
 };
 use crate::catalog::domain::railway_model::{RollingStockId, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 /// A `RailwayModel` represents a manufactured model product in the catalog.
@@ -13,13 +13,13 @@ use serde_json::json;
 /// It contains metadata about the product (manufacturer, product code,
 /// scale, epoch, etc.) and a list of `RollingStock` instances that correspond
 /// to specific owned or catalogued items of this model.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone)]
 pub struct RailwayModel {
     /// Unique identifier for the railway model.
     pub id: RailwayModelId,
 
-    /// The manufacturer of the model (e.g. Bachmann, Märklin).
-    pub manufacturer: RailwayModelManufacturer,
+    /// Reference to the manufacturer id of the model (e.g. Bachmann, Märklin).
+    pub manufacturer_id: ManufacturerId,
 
     /// Manufacturer-assigned product code.
     pub product_code: ProductCode,
@@ -52,7 +52,6 @@ pub struct RailwayModel {
     pub rolling_stocks: Vec<RollingStock>,
 
     /// Pending domain events produced by operations on this aggregate.
-    #[serde(skip)]
     pub pending_events: Vec<RailwayModelEvent>,
 }
 

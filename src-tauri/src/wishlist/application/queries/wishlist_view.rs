@@ -98,11 +98,15 @@ impl From<Wishlist> for WishlistView {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::RailwayModelId;
+    use crate::core::domain::metadata::Metadata;
     use crate::wishlist::domain::wishlist::Wishlist;
     use crate::wishlist::domain::wishlist_id::WishlistId;
     use crate::wishlist::domain::wishlist_item::WishlistItem;
     use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
     use crate::wishlist::domain::wishlist_preview::WishlistPreview;
+    use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+    use crate::wishlist::domain::wishlist_status::WishlistStatus;
     use chrono::NaiveDate;
 
     #[test]
@@ -127,15 +131,12 @@ mod tests {
 
     #[test]
     fn it_should_wishlist_converts_to_view_with_items() {
-        let railway_id = crate::catalog::domain::railway_model::RailwayModelId::try_from(
-            "trn:railway-model:acme:1",
-        )
-        .unwrap();
+        let railway_id = RailwayModelId::try_from("trn:railway-model:acme:1").unwrap();
         let item = WishlistItem {
             id: WishlistItemId::default(),
             railway_model_id: railway_id,
-            priority: crate::wishlist::domain::wishlist_priority::WishlistPriority::Normal,
-            status: crate::wishlist::domain::wishlist_status::WishlistStatus::Wanted,
+            priority: WishlistPriority::Normal,
+            status: WishlistStatus::Wanted,
             added_date: NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
             removed_date: None,
             notes: None,
@@ -150,7 +151,7 @@ mod tests {
             is_default: false,
             items: vec![item],
             pending_events: Vec::new(),
-            metadata: crate::core::domain::metadata::Metadata::default(),
+            metadata: Metadata::default(),
         };
 
         let view: WishlistView = wishlist.into();

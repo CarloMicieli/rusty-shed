@@ -40,10 +40,10 @@ impl<'conn> RailwayCompanyRepository for SqliteRailwayCompanyRepository<'conn> {
     /// - Returns a [`DomainError::DatabaseError`] if the query fails.
     async fn find_all(&mut self) -> Result<Vec<RailwayCompany>, DomainError> {
         let sql = r#"
-            SELECT id, name, registered_company_name, country_code, status, operating_since, 
-                   operating_until, created_at, updated_at 
-            FROM railway_companies
-            ORDER BY name"#;
+             SELECT id, name, registered_company_name, country_code, status, operating_since, 
+                 operating_until, created_at, updated_at, version
+             FROM railway_companies
+             ORDER BY name"#;
 
         let row = sqlx::query_as::<_, RailwayCompanyRow>(sql)
             .fetch_all(&mut *self.executor)
@@ -72,7 +72,7 @@ impl<'conn> RailwayCompanyRepository for SqliteRailwayCompanyRepository<'conn> {
     ) -> Result<Option<RailwayCompany>, DomainError> {
         let sql = r#"
             SELECT id, name, registered_company_name, country_code, status, operating_since, 
-                operating_until, created_at, updated_at 
+                operating_until, created_at, updated_at, version
             FROM railway_companies 
             WHERE id = ?1 
             LIMIT 1"#;

@@ -1,3 +1,4 @@
+use crate::catalog::application::railway_model_view::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 
@@ -30,22 +31,41 @@ impl GetRailwayModelByIdQuery {
     }
 }
 
+/// Query to retrieve a railway model view (UI) by id from the database.
+pub struct GetRailwayModelViewByIdQuery;
+
+impl GetRailwayModelViewByIdQuery {
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
+        railway_model_id: RailwayModelId,
+    ) -> Result<Option<RailwayModelView>, DomainError>
+    where
+        U: RailwayModelUowExt + Send,
+    {
+        let mut repository = unit_of_work.railway_model_repository();
+        repository.find_view_by_id(&railway_model_id).await
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::application::railway_model_view::RailwayModelManufacturer;
+    use crate::catalog::application::railway_model_view::RailwayModelView;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::catalog::domain::railway_model::{
-        Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModelManufacturer,
+        Category, MockRailwayModelRepository, PowerMethod, ProductCode,
     };
     use crate::catalog::domain::scale::Scale;
+    use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
 
     #[tokio::test]
     async fn it_returns_railway_model_by_id() {
         let mut mock = MockRailwayModelRepository::new();
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:model-x:1234").unwrap();
-        let railway_model = RailwayModel {
+        let railway_model = RailwayModelView {
             id: railway_model_id.clone(),
             manufacturer: RailwayModelManufacturer {
                 manufacturer_id: ManufacturerId::new("trn:manufacturer:mn-test"),
@@ -60,17 +80,17 @@ mod tests {
             category: Category::Locomotives,
             delivery_date: None,
             availability_status: None,
-            rolling_stocks: vec![],
-            pending_events: Vec::new(),
+            rolling_stock: vec![],
+            metadata: Metadata::default(),
         };
 
-        mock.expect_find_by_id()
+        mock.expect_find_view_by_id()
             .with(eq(railway_model_id.clone()))
             .times(1)
             .returning(move |_| Ok(Some(railway_model.clone())));
         let mut fake_uow = FakeUow::with_railway_models_repo(mock);
 
-        let result = GetRailwayModelByIdQuery::execute(&mut fake_uow, railway_model_id)
+        let result = GetRailwayModelViewByIdQuery::execute(&mut fake_uow, railway_model_id)
             .await
             .expect("it should return");
 

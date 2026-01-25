@@ -1,6 +1,6 @@
-use crate::catalog::application::GetRailwayModelByIdQuery;
+use crate::catalog::application::railway_model_query::GetRailwayModelViewByIdQuery;
 use crate::catalog::application::railway_model_use_case::CreateRailwayModelUseCase;
-use crate::catalog::domain::railway_model::RailwayModel;
+use crate::catalog::application::railway_model_view::RailwayModelView;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::interface::CreateRailwayModelArgs;
 use crate::core::infrastructure::error::CommandError;
@@ -30,13 +30,13 @@ use log::info;
 pub async fn get_railway_model_by_id(
     state: tauri::State<'_, AppState>,
     railway_model_id: RailwayModelId,
-) -> Result<Option<RailwayModel>, CommandError> {
+) -> Result<Option<RailwayModelView>, CommandError> {
     info!("Fetching railway model with ID: {}", railway_model_id);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model =
-        GetRailwayModelByIdQuery::execute(&mut unit_of_work, railway_model_id).await?;
+        GetRailwayModelViewByIdQuery::execute(&mut unit_of_work, railway_model_id).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model)
