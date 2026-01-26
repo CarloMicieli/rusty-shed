@@ -1,8 +1,8 @@
 use crate::catalog::domain::railway_model::Category;
 use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
 use crate::collecting::application::{
-    AddCollectionItemUseCase, GetCollectionQuery, GetDepotQuery,
-    RemoveCollectionItemInput as DomainRemoveCollectionItemInput, RemoveCollectionItemUseCase,
+    AddCollectionItem, GetCollection, GetDepot, RemoveCollectionItem,
+    RemoveCollectionItemInput as DomainRemoveCollectionItemInput,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
 use crate::collecting::interface::{AddCollectionItemArgs, RemoveCollectionItemArgs};
@@ -35,7 +35,7 @@ pub async fn get_collection(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let collection = GetCollectionQuery::execute(&mut unit_of_work).await?;
+    let collection = GetCollection::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(collection)
@@ -62,7 +62,7 @@ pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, C
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let depot_view = GetDepotQuery::execute(&mut unit_of_work).await?;
+    let depot_view = GetDepot::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(depot_view)
@@ -109,7 +109,7 @@ pub async fn remove_collection_item(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let removed_id = RemoveCollectionItemUseCase::execute(&mut unit_of_work, domain_cmd).await?;
+    let removed_id = RemoveCollectionItem::execute(&mut unit_of_work, domain_cmd).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(removed_id)
@@ -143,7 +143,7 @@ pub async fn add_collection_item(
     let id_provider = RuntimeIdProvider::new();
     let purchase_info_provider = RuntimeIdProvider::new();
 
-    let item_id = AddCollectionItemUseCase::execute(
+    let item_id = AddCollectionItem::execute(
         &mut unit_of_work,
         id_provider,
         purchase_info_provider,
