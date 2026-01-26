@@ -1,5 +1,5 @@
 use crate::core::infrastructure::error::CommandError;
-use crate::dashboard::application::GetDashboardSummaryQuery;
+use crate::dashboard::application::GetDashboardSummary;
 use crate::dashboard::domain::DashboardSummary;
 use crate::state::AppState;
 use log::info;
@@ -37,7 +37,7 @@ pub async fn get_dashboard_summary(
         .number_of_depot_entries
         .unwrap_or(DEFAULT_DEPOT_ENTRIES);
 
-    let dashboard_summary = GetDashboardSummaryQuery::execute(
+    let dashboard_summary = GetDashboardSummary::execute(
         &mut unit_of_work,
         number_of_recent_items,
         number_of_depot_entries,

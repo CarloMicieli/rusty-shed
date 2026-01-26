@@ -1,3 +1,3 @@
-mod dashboard_query;
+mod get_dashboard_summary;
 
-pub use dashboard_query::GetDashboardSummaryQuery;
+pub use get_dashboard_summary::GetDashboardSummary;

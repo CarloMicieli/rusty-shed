@@ -2,9 +2,9 @@ use crate::core::domain::domain_error::DomainError;
 use crate::dashboard::domain::{DashboardSummary, DashboardUowExt, QueryParams};
 
 /// Query to retrieve the dashboard summary from the database.
-pub struct GetDashboardSummaryQuery;
+pub struct GetDashboardSummary;
 
-impl GetDashboardSummaryQuery {
+impl GetDashboardSummary {
     /// Execute the query to retrieve the dashboard summary
     ///
     /// # Arguments
