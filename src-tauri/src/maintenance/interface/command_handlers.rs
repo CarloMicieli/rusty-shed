@@ -1,8 +1,6 @@
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
-use crate::maintenance::application::{
-    AddMaintenanceRecordUseCase, GetMaintenanceDashboardUseCase,
-};
+use crate::maintenance::application::{AddMaintenanceRecord, GetMaintenanceDashboard};
 use crate::maintenance::domain::MaintenanceCard;
 use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::interface::AddMaintenanceRecordArgs;
@@ -16,7 +14,7 @@ pub async fn get_maintenance_dashboard(
 ) -> Result<Vec<MaintenanceCard>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let cards = GetMaintenanceDashboardUseCase::execute(&mut unit_of_work)
+    let cards = GetMaintenanceDashboard::execute(&mut unit_of_work)
         .await
         .map_err(CommandError::from)?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
@@ -52,7 +50,7 @@ pub async fn add_maintenance_record(
 
     let id_provider = RuntimeIdProvider::new();
 
-    AddMaintenanceRecordUseCase::execute(&mut unit_of_work, id_provider, use_case_input)
+    AddMaintenanceRecord::execute(&mut unit_of_work, id_provider, use_case_input)
         .await
         .map_err(CommandError::from)?;
     unit_of_work.commit().await.map_err(CommandError::from)?;

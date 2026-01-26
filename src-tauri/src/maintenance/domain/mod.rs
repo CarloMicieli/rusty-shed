@@ -1,5 +1,5 @@
-pub mod aggregate;
-pub mod events;
+pub mod maintenance_card_event;
+pub use maintenance_card_event as events;
 mod maintenance_card;
 mod maintenance_card_id;
 mod maintenance_event;
@@ -16,3 +16,5 @@ pub use maintenance_status::MaintenanceStatus;
 pub use maintenance_type::MaintenanceType;
 pub use repository::MaintenanceRepository;
 pub use repository::MaintenanceUowExt;
+#[cfg(test)]
+pub use repository::MockMaintenanceRepository;

@@ -3,8 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use uuid::Uuid;
 
-pub const TRN_ORS_PREFIX: &str = "trn:owned-rolling-stock:";
-
 /// Strongly-typed identifier for an `OwnedRollingStock`.
 ///
 /// A small strongly-typed newtype for owned rolling stock identifiers used by the
@@ -23,19 +21,10 @@ pub const TRN_ORS_PREFIX: &str = "trn:owned-rolling-stock:";
 #[sqlx(transparent)]
 pub struct OwnedRollingStockId(String);
 
-/// Errors that may occur while parsing an `OwnedRollingStockId` from a string.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum OwnedRollingStockIdError {
-    /// The provided string does not start with the expected TRN prefix.
-    #[error("invalid owned rolling stock trn: {0}")]
-    InvalidTrn(String),
-
-    /// The suffix after the TRN prefix is not a valid UUID.
-    #[error("invalid UUID: {0}")]
-    InvalidUuid(String),
-}
-
 impl OwnedRollingStockId {
+    /// The TRN prefix for owned rolling stock identifiers.
+    pub const TRN_PREFIX: &str = "trn:owned-rolling-stock:";
+
     /// Construct an `OwnedRollingStockId` without validating the format.
     ///
     /// This is intended as a lightweight convenience (e.g. for tests or when
@@ -43,6 +32,11 @@ impl OwnedRollingStockId {
     /// external input.
     pub fn new<S: Into<String>>(s: S) -> Self {
         OwnedRollingStockId(s.into())
+    }
+
+    /// Get the inner string.
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 }
 
@@ -54,12 +48,12 @@ impl TryFrom<&str> for OwnedRollingStockId {
     /// Returns `Err(InvalidTrn(..))` when the prefix is missing and
     /// `Err(InvalidUuid(..))` when the suffix is not a valid UUID.
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if !value.starts_with(TRN_ORS_PREFIX) {
+        if !value.starts_with(Self::TRN_PREFIX) {
             return Err(OwnedRollingStockIdError::InvalidTrn(value.to_string()));
         }
-        let suffix = &value[TRN_ORS_PREFIX.len()..];
+        let suffix = &value[Self::TRN_PREFIX.len()..];
         match Uuid::parse_str(suffix) {
-            Ok(u) => Ok(OwnedRollingStockId(format!("{}{}", TRN_ORS_PREFIX, u))),
+            Ok(u) => Ok(OwnedRollingStockId(format!("{}{}", Self::TRN_PREFIX, u))),
             Err(_) => Err(OwnedRollingStockIdError::InvalidUuid(suffix.to_string())),
         }
     }
@@ -84,7 +78,7 @@ impl TryFrom<String> for OwnedRollingStockId {
 impl From<Uuid> for OwnedRollingStockId {
     /// Create a TRN from a `Uuid` value.
     fn from(u: Uuid) -> Self {
-        OwnedRollingStockId(format!("{}{}", TRN_ORS_PREFIX, u))
+        OwnedRollingStockId(format!("{}{}", Self::TRN_PREFIX, u))
     }
 }
 
@@ -92,7 +86,7 @@ impl Default for OwnedRollingStockId {
     /// Generate a fresh TRN using a newly generated UUID (v4).
     fn default() -> Self {
         let u = Uuid::new_v4();
-        OwnedRollingStockId(format!("{}{}", TRN_ORS_PREFIX, u))
+        OwnedRollingStockId(format!("{}{}", Self::TRN_PREFIX, u))
     }
 }
 
@@ -103,6 +97,18 @@ impl fmt::Display for OwnedRollingStockId {
     }
 }
 
+/// Errors that may occur while parsing an `OwnedRollingStockId` from a string.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum OwnedRollingStockIdError {
+    /// The provided string does not start with the expected TRN prefix.
+    #[error("invalid owned rolling stock trn: {0}")]
+    InvalidTrn(String),
+
+    /// The suffix after the TRN prefix is not a valid UUID.
+    #[error("invalid UUID: {0}")]
+    InvalidUuid(String),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,7 +117,7 @@ mod tests {
     #[test]
     fn it_should_parse_valid_trn_with_uuid_suffix() {
         let u = Uuid::new_v4();
-        let trn = format!("{}{}", TRN_ORS_PREFIX, u);
+        let trn = format!("{}{}", OwnedRollingStockId::TRN_PREFIX, u);
         let id = OwnedRollingStockId::try_from(trn.as_str()).expect("should parse trn");
         assert_eq!(id.to_string(), trn);
     }
@@ -125,7 +131,7 @@ mod tests {
 
     #[test]
     fn it_should_parse_trn_with_invalid_uuid_suffix() {
-        let bad = format!("{}{}", TRN_ORS_PREFIX, "not-a-uuid");
+        let bad = format!("{}{}", OwnedRollingStockId::TRN_PREFIX, "not-a-uuid");
         let err =
             OwnedRollingStockId::try_from(bad.as_str()).expect_err("invalid uuid should fail");
         assert_eq!(
@@ -138,7 +144,7 @@ mod tests {
     fn it_should_from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = OwnedRollingStockId::from(u);
-        let expected = format!("{}{}", TRN_ORS_PREFIX, u);
+        let expected = format!("{}{}", OwnedRollingStockId::TRN_PREFIX, u);
         assert_eq!(id.to_string(), expected);
     }
 
@@ -147,7 +153,7 @@ mod tests {
         let u = Uuid::new_v4();
         let id = OwnedRollingStockId::from(u);
         let s = serde_json::to_string(&id).expect("serialize");
-        let expected = format!("\"{}{}\"", TRN_ORS_PREFIX, u);
+        let expected = format!("\"{}{}\"", OwnedRollingStockId::TRN_PREFIX, u);
         assert_eq!(s, expected);
         let de: OwnedRollingStockId = serde_json::from_str(&s).expect("deserialize");
         assert_eq!(de, id);

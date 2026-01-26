@@ -1,62 +1,73 @@
+use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
-use crate::maintenance::domain::events::MaintenanceEvent;
-use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
+use crate::maintenance::domain::MaintenanceCard;
 use async_trait::async_trait;
 
 /// Repository abstraction for maintenance operations.
 ///
-/// This trait defines the persistence API for maintenance-related data.
-/// Implementations are responsible for mapping database rows to the
-/// corresponding `entities` types and for correctly handling transactional
-/// semantics where required.
+/// The `MaintenanceRepository` trait defines the persistence contract for the
+/// maintenance bounded context. Implementations are responsible for:
+/// - mapping persistence rows into domain types (`MaintenanceCard`,
+///   `MaintenanceEvent`) before returning to callers,
+/// - performing any multi-statement changes that must be atomic inside a
+///   single database transaction, and
+/// - returning rich `DomainError` values so the application layer can decide
+///   how to present failures to the user.
 ///
-/// Key responsibilities and expectations:
-/// - Provide CRUD-like accessors for maintenance cards and maintenance events.
-/// - `record_event_transaction` MUST be implemented to perform the insert of a
-///   maintenance event and the related update to the maintenance card atomically
-///   (i.e. inside a single database transaction) so the system remains in a
-///   consistent state.
-/// - Date fields are treated as date-only values (YYYY-MM-DD). Any logic that
-///   evaluates whether a card is due/overdue should compare dates without time
-///   components (SQLite's `date('now')` is suitable for SQLite-based
-///   implementations).
-/// - Methods return `anyhow::Result` so SQL execution errors and mapping errors
-///   can be propagated and enriched by callers. Implementations should avoid
-///   swallowing errors and instead return informative failures.
+/// Important guidelines for implementors:
+/// - Methods return `Result<_, DomainError>`; implementations should wrap
+///   lower-level SQL errors in the `DomainError::Infrastructure` variant and
+///   return `DomainError::Validation` for mapping/validation failures.
+/// - Do not leak infrastructure-specific types (e.g. DB row structs) to
+///   callers — always return domain types. The repository is the layer that
+///   performs infra -> domain translation.
+/// - Where operations require atomicity (for example, inserting a
+///   `maintenance_events` row and updating the `maintenance_cards` projection),
+///   they must be executed inside a single transaction. The `SqliteMaintenanceRepository`
+///   demonstrates this pattern via the `save` method which consumes pending
+///   domain events and persists them transactionally.
+/// - Date-only semantics are expected for maintenance scheduling: compare
+///   `NaiveDate` values (YYYY-MM-DD) rather than full datetimes when
+///   computing due/overdue state.
 ///
 /// Concurrency & lifecycle:
-/// - Repositories are typically short-lived and bound to a specific database
-///   connection or transaction (see `SqliteMaintenanceRepository`). Callers
-///   should acquire a repository instance as part of a unit-of-work or
-///   transaction scope and not reuse it across unrelated transactions.
-///
-/// Error handling:
-/// - SQL errors, constraint violations, and mapping/parsing problems are
-///   surfaced via the `anyhow::Error` value returned by methods. Callers can
-///   inspect or log these errors as needed.
+/// - Repository instances are typically short-lived and bound to a database
+///   connection or transaction. Acquire a repository from a Unit of Work for a
+///   single logical operation and avoid reusing it across unrelated work.
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait MaintenanceRepository {
-    /// Fetch the maintenance card by owned rolling stock id.
-    async fn get_card_by_stock_id(
-        &mut self,
-        owned_rolling_stock_id: &str,
-    ) -> Result<Option<MaintenanceCardRow>, DomainError>;
-
-    /// Record one or more domain events and update the maintenance card within the same transaction.
+    /// Find the maintenance card by `OwnedRollingStockId`.
     ///
-    /// Implementations should persist events (insert into `maintenance_events`)
-    /// and update the `maintenance_cards` projection atomically.
-    async fn record_events_transaction(
+    /// Returns the domain `MaintenanceCard` when present. Implementations
+    /// must map persistence rows into the domain model before returning and
+    /// should not expose infrastructure types to callers.
+    async fn find_by_rolling_stock_id(
         &mut self,
-        events: Vec<MaintenanceEvent>,
-    ) -> Result<(), DomainError>;
+        owned_rolling_stock_id: &OwnedRollingStockId,
+    ) -> Result<Option<MaintenanceCard>, DomainError>;
 
-    /// List events for a maintenance card.
-    async fn list_events_for_card(
+    /// Find a maintenance card by its `MaintenanceCardId`.
+    ///
+    /// Implementations should accept the strongly-typed `MaintenanceCardId`
+    /// (a TRN wrapper) and return the corresponding domain `MaintenanceCard`
+    /// if present. Mapping or parse errors should be reported using
+    /// `DomainError::Validation` and infrastructure failures using
+    /// `DomainError::Infrastructure`.
+    async fn find_by_id(
         &mut self,
-        maintenance_card_id: &str,
-    ) -> Result<Vec<MaintenanceEventRow>, DomainError>;
+        id: &crate::maintenance::domain::MaintenanceCardId,
+    ) -> Result<Option<MaintenanceCard>, DomainError>;
+
+    /// Persist changes for a maintenance card.
+    ///
+    /// The implementation SHOULD consume any pending events present on the
+    /// provided `MaintenanceCard` and perform the corresponding persistence
+    /// operations (insert into `maintenance_events` and update the
+    /// `maintenance_cards` projection) inside a single transaction so the
+    /// system remains consistent. The repository is responsible for translating
+    /// domain events into persistence-side rows and updating projections.
+    async fn save(&mut self, maintenance_card: MaintenanceCard) -> Result<(), DomainError>;
 
     /// List maintenance cards that are due or overdue.
     ///
@@ -68,9 +79,10 @@ pub trait MaintenanceRepository {
     ///   and less than or equal to the current date (i.e. the card has been
     ///   maintained before but no next date was scheduled and it is now overdue).
     ///
-    /// Returned rows are mapped to `MaintenanceCardRow`. Any database or mapping
-    /// errors are returned as `anyhow::Error`.
-    async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCardRow>, DomainError>;
+    /// Returned values are domain `MaintenanceCard` instances that match the
+    /// due/overdue criteria. Any database or mapping errors should be returned
+    /// as a `DomainError` so callers can react appropriately.
+    async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCard>, DomainError>;
 }
 
 /// Extension trait to attach the maintenance repository to the Unit of Work.

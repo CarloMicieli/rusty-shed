@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS maintenance_cards
     next_maintenance_date               TEXT,
     created_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                             INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (owned_rolling_stock_id) REFERENCES owned_rolling_stocks (id) ON DELETE CASCADE
 );
 
