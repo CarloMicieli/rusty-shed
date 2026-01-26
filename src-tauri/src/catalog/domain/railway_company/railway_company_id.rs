@@ -25,6 +25,9 @@ use std::ops::Deref;
 pub struct RailwayCompanyId(String);
 
 impl RailwayCompanyId {
+    /// TRN prefix expected for railway company identifiers.
+    pub const TRN_PREFIX: &'static str = "trn:railway-company:";
+
     /// Creates a new `RailwayId` from the given string.
     ///
     /// # Parameters
@@ -36,6 +39,19 @@ impl RailwayCompanyId {
     /// A new `RailwayId` instance wrapping the provided string.
     pub fn new<S: Into<String>>(id: S) -> Self {
         RailwayCompanyId(id.into())
+    }
+
+    /// Creates a new `RailwayCompanyId` from a railway company name.
+    ///
+    /// # Parameters
+    /// - `name`: the name of the railway company
+    ///
+    /// # Returns
+    /// A new `RailwayCompanyId` instance with a slugified TRN.
+    pub fn from_name(name: &str) -> Self {
+        let slug = slug::slugify(name);
+        let value = format!("{}{}", RailwayCompanyId::TRN_PREFIX, slug);
+        RailwayCompanyId(value)
     }
 }
 

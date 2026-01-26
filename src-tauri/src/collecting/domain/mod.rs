@@ -9,7 +9,6 @@ mod collection_params;
 mod collection_railway_model;
 mod collection_summary;
 mod collection_view;
-mod command;
 mod depot_view;
 mod digital_setup;
 mod model_condition;

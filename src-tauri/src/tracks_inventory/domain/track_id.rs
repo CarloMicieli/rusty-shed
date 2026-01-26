@@ -3,9 +3,6 @@ use slug::slugify;
 use std::fmt;
 use std::ops::Deref;
 
-/// TRN prefix for track identifiers.
-pub const TRN_PREFIX: &str = "trn:track:";
-
 /// Strongly-typed identifier for a track product.
 ///
 /// `TrackId` is a transparent newtype wrapping a `String` that stores a TRN
@@ -26,10 +23,21 @@ pub const TRN_PREFIX: &str = "trn:track:";
 pub struct TrackId(pub String);
 
 impl TrackId {
+    /// TRN prefix for track identifiers.
+    pub const TRN_PREFIX: &str = "trn:track:";
+
+    /// Create a new `TrackId` from manufacturer and product code parts.
+    ///
+    /// # Parameters
+    /// - `manufacturer`: the manufacturer name
+    /// - `product_code`: the product code
+    ///
+    /// # Returns
+    /// A new `TrackId` instance.
     pub fn new_from_parts(manufacturer: &str, product_code: &str) -> Self {
         let m = slugify(manufacturer);
         let p = slugify(product_code);
-        TrackId(format!("{}{}:{}", TRN_PREFIX, m, p))
+        TrackId(format!("{}{}:{}", TrackId::TRN_PREFIX, m, p))
     }
 }
 
@@ -51,11 +59,11 @@ impl TryFrom<&str> for TrackId {
     type Error = TrackIdError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if !value.starts_with(TRN_PREFIX) {
+        if !value.starts_with(TrackId::TRN_PREFIX) {
             return Err(TrackIdError::InvalidTrn(value.to_string()));
         }
         // basic validation: ensure suffix contains ':' separating manufacturer and product
-        let suffix = &value[TRN_PREFIX.len()..];
+        let suffix = &value[TrackId::TRN_PREFIX.len()..];
         if !suffix.contains(":") {
             return Err(TrackIdError::InvalidTrn(value.to_string()));
         }
@@ -85,13 +93,18 @@ mod tests {
     #[test]
     fn it_should_new_from_parts_generates_trn() {
         let id = TrackId::new_from_parts("ACME", "P-100");
-        let expected = format!("{}{}:{}", TRN_PREFIX, slugify("ACME"), slugify("P-100"));
+        let expected = format!(
+            "{}{}:{}",
+            TrackId::TRN_PREFIX,
+            slugify("ACME"),
+            slugify("P-100")
+        );
         assert_eq!(id.0, expected);
     }
 
     #[test]
     fn it_should_try_from_valid_trn_ok() {
-        let s = format!("{}{}:{}", TRN_PREFIX, "mn-acme", "p100");
+        let s = format!("{}{}:{}", TrackId::TRN_PREFIX, "mn-acme", "p100");
         let id = TrackId::try_from(s.as_str()).unwrap();
         assert_eq!(id.to_string(), s);
     }

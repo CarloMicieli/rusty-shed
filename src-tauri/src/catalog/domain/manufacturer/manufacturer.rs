@@ -4,9 +4,6 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 /// A manufacturer (maker of railway models).
-///
-/// Fields reflect the `manufacturers` table in the database. Optional fields
-/// correspond to nullable DB columns.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Manufacturer {

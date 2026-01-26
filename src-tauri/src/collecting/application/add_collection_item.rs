@@ -37,9 +37,8 @@ impl AddCollectionItemUseCase {
         P: IdProvider<CollectionItemId>,
         Q: IdProvider<PurchaseInfoId>,
     {
-        let railway_model = {
-            GetRailwayModelByIdQuery::execute(unit_of_work, input.railway_model_id.clone()).await?
-        };
+        let railway_model =
+            { GetRailwayModelByIdQuery::execute(unit_of_work, &input.railway_model_id).await? };
 
         let railway_model = railway_model.ok_or(DomainError::NotFound {
             resource: "RailwayModel".to_string(),

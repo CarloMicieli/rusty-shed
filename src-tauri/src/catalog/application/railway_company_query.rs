@@ -3,7 +3,7 @@ use crate::catalog::domain::railway_company::{
 };
 use crate::core::domain::domain_error::DomainError;
 
-/// Query to retrieve all railway companies from the database.
+/// Query to retrieve all railway companies.
 pub struct GetRailwayCompaniesQuery;
 
 impl GetRailwayCompaniesQuery {
@@ -27,7 +27,7 @@ impl GetRailwayCompaniesQuery {
     }
 }
 
-/// Query to retrieve a railway company by id from the database.
+/// Query to retrieve a railway company by id.
 pub struct GetRailwayCompanyByIdQuery;
 
 impl GetRailwayCompanyByIdQuery {
@@ -41,6 +41,9 @@ impl GetRailwayCompanyByIdQuery {
     /// - `Ok(Some(RailwayCompany))` when the railway company is found.
     /// - `Ok(None)` when the railway company is not found.
     /// - `Err(DomainError)` with an error message on failure.
+    ///
+    /// # Type Parameters
+    /// * `U` - The type of the unit of work, which must implement `RailwayCompanyUowExt` and be `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_company_id: RailwayCompanyId,

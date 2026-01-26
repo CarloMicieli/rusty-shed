@@ -1,6 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
+use crate::maintenance::domain::MaintenanceCard;
 use crate::maintenance::domain::MaintenanceUowExt;
-use crate::maintenance::domain::maintenance_card::MaintenanceCard;
 
 /// Use-case to retrieve maintenance cards that are due or overdue.
 pub struct GetMaintenanceDashboardUseCase;

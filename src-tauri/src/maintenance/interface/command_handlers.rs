@@ -3,8 +3,8 @@ use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::maintenance::application::{
     AddMaintenanceRecordUseCase, GetMaintenanceDashboardUseCase,
 };
-use crate::maintenance::domain::maintenance_card::MaintenanceCard;
-use crate::maintenance::domain::maintenance_type::MaintenanceType;
+use crate::maintenance::domain::MaintenanceCard;
+use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::interface::AddMaintenanceRecordArgs;
 use crate::state::AppState;
 

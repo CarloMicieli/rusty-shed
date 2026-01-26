@@ -45,7 +45,7 @@ impl ManufacturerUowExt for FakeUow {
         Box::new(
             self.manufacturers_repo
                 .take()
-                .expect("manufacturer repo already taken"),
+                .expect("manufacturer repository already taken"),
         )
     }
 }
@@ -55,7 +55,7 @@ impl RailwayCompanyUowExt for FakeUow {
         Box::new(
             self.railway_companies_repo
                 .take()
-                .expect("railway company repo already taken"),
+                .expect("railway company repository already taken"),
         )
     }
 }
@@ -65,7 +65,7 @@ impl RailwayModelUowExt for FakeUow {
         Box::new(
             self.railway_models_repo
                 .take()
-                .expect("railway model repo already taken"),
+                .expect("railway model repository already taken"),
         )
     }
 }

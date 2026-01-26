@@ -15,6 +15,9 @@ use std::str::FromStr;
 pub struct DecoderId(String);
 
 impl DecoderId {
+    /// TRN prefix expected for decoder identifiers.
+    pub const TRN_PREFIX: &'static str = "trn:decoder:";
+
     /// Construct a decoder URN from manufacturer and product code parts.
     ///
     /// Both inputs are trimmed, lowercased and internal whitespace is replaced
@@ -28,7 +31,12 @@ impl DecoderId {
                 .join("-")
         }
 
-        let id = format!("trn:decoder:{}:{}", norm(manufacturer), norm(product_code));
+        let id = format!(
+            "{}{}:{}",
+            Self::TRN_PREFIX,
+            norm(manufacturer),
+            norm(product_code)
+        );
         DecoderId(id)
     }
 

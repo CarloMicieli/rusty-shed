@@ -1,5 +1,7 @@
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
+use slug::slugify;
+use std::fmt;
 use std::ops::Deref;
 
 /// Strongly-typed identifier for a manufacturer in the catalog domain.
@@ -30,6 +32,19 @@ impl ManufacturerId {
     pub fn new<S: Into<String>>(value: S) -> Self {
         ManufacturerId(value.into())
     }
+
+    /// Creates a new `ManufacturerId` from a manufacturer name.
+    ///
+    /// # Parameters
+    /// - `name`: the name of the manufacturer
+    ///
+    /// # Returns
+    /// A new `ManufacturerId` instance with a slugified TRN.
+    pub fn from_name(name: &str) -> Self {
+        let slug = slug::slugify(name);
+        let value = format!("{}{}", ManufacturerId::TRN_PREFIX, slug);
+        ManufacturerId(value)
+    }
 }
 
 impl Deref for ManufacturerId {
@@ -41,28 +56,13 @@ impl Deref for ManufacturerId {
 }
 
 fn is_valid_slug(s: &str) -> bool {
+    // Consider a slug valid if it's non-empty and the `slug` crate's
+    // `slugify` produces the exact same output. This leverages the
+    // project's existing `slug` usage to validate canonical slugs.
     if s.is_empty() {
         return false;
     }
-    // Must be all lowercase ASCII, digits or hyphen, no leading/trailing hyphen
-    let bytes = s.as_bytes();
-    if bytes[0] == b'-' || bytes[bytes.len() - 1] == b'-' {
-        return false;
-    }
-    let mut prev_hyphen = false;
-    for &b in bytes {
-        match b {
-            b'a'..=b'z' | b'0'..=b'9' => prev_hyphen = false,
-            b'-' => {
-                if prev_hyphen {
-                    return false; // no consecutive hyphens
-                }
-                prev_hyphen = true;
-            }
-            _ => return false,
-        }
-    }
-    true
+    slugify(s) == s
 }
 
 impl TryFrom<&str> for ManufacturerId {
@@ -122,8 +122,8 @@ impl TryFrom<&String> for ManufacturerId {
     }
 }
 
-impl std::fmt::Display for ManufacturerId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ManufacturerId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }

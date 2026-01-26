@@ -53,6 +53,7 @@ url                    = { version = "2.5.8", features = ["serde"] }
 uuid                   = { version = "1.20.0", features = ["v4", "serde", "fast-rng"] }
 
 [dev-dependencies]
+fake                   = { version = "4", features = ["derive"] }
 rand                   = "0.9.2"
 pretty_assertions      = "1.4.1"
 rstest                 = "0.26.1"

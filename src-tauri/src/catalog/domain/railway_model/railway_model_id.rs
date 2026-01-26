@@ -5,8 +5,6 @@ use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
 
-const TRN_PREFIX: &str = "trn:railway-model:";
-
 /// Strongly-typed railway model identifier.
 ///
 /// `RailwayModelId` is a thin newtype over `String` used to represent railway
@@ -36,6 +34,9 @@ const TRN_PREFIX: &str = "trn:railway-model:";
 pub struct RailwayModelId(String);
 
 impl RailwayModelId {
+    /// TRN prefix expected for railway model identifiers.
+    pub const TRN_PREFIX: &'static str = "trn:railway-model:";
+
     /// Create a new `RailwayModelId` from a `ManufacturerId` and a product code.
     ///
     /// Behaviour:
@@ -54,8 +55,33 @@ impl RailwayModelId {
     ) -> Result<Self, RailwayModelIdError> {
         let manufacturer_trn = Trn::from_str(manufacturer_id)
             .map_err(|_| RailwayModelIdError::InvalidManufacturerId)?;
-        let value = format!("{}{}:{}", TRN_PREFIX, manufacturer_trn.nss(), product_code);
+        let value = format!(
+            "{}{}:{}",
+            RailwayModelId::TRN_PREFIX,
+            manufacturer_trn.nss(),
+            product_code
+        );
         Ok(RailwayModelId(value))
+    }
+
+    /// Create a new `RailwayModelId` from raw manufacturer and product code strings.
+    ///
+    /// This does not perform any validation.
+    ///
+    /// # Parameters
+    /// - `manufactuer`: the manufacturer namespace string
+    /// - `product_code`: the product code string
+    ///
+    /// # Returns
+    /// A new `RailwayModelId` instance.
+    pub fn new_from_parts(manufactuer: &str, product_code: &str) -> Self {
+        let value = format!(
+            "{}{}:{}",
+            RailwayModelId::TRN_PREFIX,
+            slug::slugify(manufactuer),
+            slug::slugify(product_code)
+        );
+        RailwayModelId(value)
     }
 }
 
@@ -92,7 +118,7 @@ impl TryFrom<&str> for RailwayModelId {
 
         // Expect the TRN prefix: trn:railway-model:{manufacturer_nss}:{product_code}
         let rest = v
-            .strip_prefix(TRN_PREFIX)
+            .strip_prefix(RailwayModelId::TRN_PREFIX)
             .ok_or(RailwayModelIdError::InvalidFormat)?;
 
         // Split the remaining part into exactly two components: manufacturer_nss and product_code

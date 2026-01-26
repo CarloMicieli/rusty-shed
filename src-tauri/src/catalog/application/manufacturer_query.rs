@@ -1,7 +1,7 @@
 use crate::catalog::domain::manufacturer::{Manufacturer, ManufacturerId, ManufacturerUowExt};
 use crate::core::domain::domain_error::DomainError;
 
-/// Query to retrieve all manufacturers from the database.
+/// Query to retrieve all manufacturers.
 pub struct GetManufacturersQuery;
 
 impl GetManufacturersQuery {
@@ -13,6 +13,9 @@ impl GetManufacturersQuery {
     /// # Returns
     /// - `Ok(Vec<Manufacturer>)` containing all manufacturers on success.
     /// - `Err(DomainError)` with an error message on failure.
+    ///
+    /// # Type Parameters
+    /// * `U` - The type of the unit of work, which must implement `ManufacturerUowExt` and be `Send`.
     pub async fn execute<U>(unit_of_work: &mut U) -> Result<Vec<Manufacturer>, DomainError>
     where
         U: ManufacturerUowExt + Send,
@@ -22,7 +25,7 @@ impl GetManufacturersQuery {
     }
 }
 
-/// Query to retrieve all manufacturers from the database.
+/// Query to retrieve a manufacturer by id.
 pub struct GetManufacturerByIdQuery;
 
 impl GetManufacturerByIdQuery {
@@ -35,10 +38,16 @@ impl GetManufacturerByIdQuery {
     /// # Returns
     /// - `Ok(Option<Manufacturer>)` containing the manufacturer on success.
     /// - `Err(DomainError)` with an error message on failure.
-    pub async fn execute(
-        unit_of_work: &mut dyn ManufacturerUowExt,
+    ///
+    /// # Type Parameters
+    /// * `U` - The type of the unit of work, which must implement `ManufacturerUowExt` and be `Send`.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
         manufacturer_id: ManufacturerId,
-    ) -> Result<Option<Manufacturer>, DomainError> {
+    ) -> Result<Option<Manufacturer>, DomainError>
+    where
+        U: ManufacturerUowExt + Send,
+    {
         let mut repository = unit_of_work.manufacturers_repo();
         repository.find_by_id(&manufacturer_id).await
     }

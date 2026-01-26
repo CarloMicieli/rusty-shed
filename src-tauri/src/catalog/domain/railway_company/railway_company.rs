@@ -32,5 +32,6 @@ pub struct RailwayCompany {
     pub period_of_activity: Option<PeriodOfActivity>,
 
     /// Metadata about the railway company (creation date, version, last updated).
+    #[serde(skip)]
     pub metadata: Metadata,
 }

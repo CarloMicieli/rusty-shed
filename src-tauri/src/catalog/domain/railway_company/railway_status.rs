@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
+/// The lifecycle status of a railway company.
 #[derive(
     Debug,
     Copy,
@@ -20,9 +21,12 @@ use strum_macros::{Display, EnumString};
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RailwayStatus {
+    /// The railway company is active and operational.
     #[default]
     Active,
+    /// The railway company is inactive and no longer operational.
     Inactive,
+    /// The railway company has merged with another entity.
     Merged,
 }
 

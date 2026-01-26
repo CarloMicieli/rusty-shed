@@ -3,9 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Deref;
 
-pub const TRN_PREFIX: &str = "trn:collection:";
-pub const DEFAULT_COLLECTION_ID: &str = "1";
-
 /// Identifier for a collection.
 ///
 /// This newtype wraps a `String` containing a TRN of the form
@@ -16,6 +13,27 @@ pub const DEFAULT_COLLECTION_ID: &str = "1";
 #[specta(transparent)]
 #[sqlx(transparent)]
 pub struct CollectionId(String);
+
+impl CollectionId {
+    /// TRN prefix expected for collection identifiers.
+    pub const TRN_PREFIX: &str = "trn:collection:";
+
+    /// Default collection ID suffix.
+    pub const DEFAULT_COLLECTION_ID: &str = "1";
+
+    /// Create a new `CollectionId` from raw strings.
+    ///
+    /// This does not perform any validation.
+    ///
+    /// # Parameters
+    /// - `id`: the collection identifier string
+    ///
+    /// # Returns
+    /// A new `CollectionId` instance.
+    pub fn from_id(id: &str) -> Self {
+        CollectionId(format!("{}{}", CollectionId::TRN_PREFIX, slug::slugify(id)))
+    }
+}
 
 /// Errors that can occur when creating a `CollectionId` from a string.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -29,7 +47,11 @@ impl TryFrom<&str> for CollectionId {
     type Error = CollectionIdError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let expected = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let expected = format!(
+            "{}{}",
+            CollectionId::TRN_PREFIX,
+            CollectionId::DEFAULT_COLLECTION_ID
+        );
         if value == expected {
             Ok(CollectionId(value.to_string()))
         } else {
@@ -57,7 +79,11 @@ impl TryFrom<String> for CollectionId {
 impl Default for CollectionId {
     /// Return the constant TRN-based collection id `trn:collection:1`.
     fn default() -> Self {
-        CollectionId(format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID))
+        CollectionId(format!(
+            "{}{}",
+            CollectionId::TRN_PREFIX,
+            CollectionId::DEFAULT_COLLECTION_ID
+        ))
     }
 }
 
@@ -69,7 +95,7 @@ impl fmt::Display for CollectionId {
 }
 
 impl Deref for CollectionId {
-    type Target = String;
+    type Target = str;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -82,7 +108,11 @@ mod tests {
 
     #[test]
     fn it_should_parse_valid_trn() {
-        let s = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let s = format!(
+            "{}{}",
+            CollectionId::TRN_PREFIX,
+            CollectionId::DEFAULT_COLLECTION_ID
+        );
         let id = CollectionId::try_from(s.as_str()).expect("should parse trn");
         assert_eq!(id.to_string(), s);
     }
@@ -96,14 +126,22 @@ mod tests {
 
     #[test]
     fn it_should_from_str_and_display() {
-        let s = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let s = format!(
+            "{}{}",
+            CollectionId::TRN_PREFIX,
+            CollectionId::DEFAULT_COLLECTION_ID
+        );
         let id = CollectionId::try_from(s.as_str()).expect("should parse");
         assert_eq!(id.to_string(), s);
     }
 
     #[test]
     fn it_should_serde_roundtrip() {
-        let s = format!("{}{}", TRN_PREFIX, DEFAULT_COLLECTION_ID);
+        let s = format!(
+            "{}{}",
+            CollectionId::TRN_PREFIX,
+            CollectionId::DEFAULT_COLLECTION_ID
+        );
         let id = CollectionId::try_from(s.as_str()).expect("should parse");
         let ser = serde_json::to_string(&id).expect("serialize");
         // serde(transparent) -> serialized as plain string

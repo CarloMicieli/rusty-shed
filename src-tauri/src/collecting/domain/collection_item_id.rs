@@ -3,8 +3,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use uuid::Uuid;
 
-pub const TRN_ITEM_PREFIX: &str = "trn:collection-item:";
-
 /// Identifier for a single item in a collection.
 ///
 /// This newtype wraps a `String` containing a TRN of the form
@@ -15,6 +13,16 @@ pub const TRN_ITEM_PREFIX: &str = "trn:collection-item:";
 #[specta(transparent)]
 #[sqlx(transparent)]
 pub struct CollectionItemId(String);
+
+impl CollectionItemId {
+    /// TRN prefix expected for collection item identifiers.
+    pub const TRN_PREFIX: &str = "trn:collection-item:";
+
+    /// Create a new `CollectionItemId` from a given `Uuid`.
+    pub fn from_id(id: &Uuid) -> Self {
+        CollectionItemId(format!("{}{}", Self::TRN_PREFIX, id))
+    }
+}
 
 /// Errors that can occur when creating a `CollectionItemId` from a string.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -31,12 +39,12 @@ impl TryFrom<&str> for CollectionItemId {
     type Error = CollectionItemIdError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if !value.starts_with(TRN_ITEM_PREFIX) {
+        if !value.starts_with(Self::TRN_PREFIX) {
             return Err(CollectionItemIdError::InvalidTrn(value.to_string()));
         }
-        let suffix = &value[TRN_ITEM_PREFIX.len()..];
+        let suffix = &value[Self::TRN_PREFIX.len()..];
         match Uuid::parse_str(suffix) {
-            Ok(u) => Ok(CollectionItemId(format!("{}{}", TRN_ITEM_PREFIX, u))),
+            Ok(u) => Ok(CollectionItemId(format!("{}{}", Self::TRN_PREFIX, u))),
             Err(_) => Err(CollectionItemIdError::InvalidUuid(suffix.to_string())),
         }
     }
@@ -60,7 +68,7 @@ impl TryFrom<String> for CollectionItemId {
 
 impl From<Uuid> for CollectionItemId {
     fn from(u: Uuid) -> Self {
-        CollectionItemId(format!("{}{}", TRN_ITEM_PREFIX, u))
+        CollectionItemId(format!("{}{}", Self::TRN_PREFIX, u))
     }
 }
 
@@ -69,7 +77,7 @@ impl Default for CollectionItemId {
     /// wrapped in the TRN prefix.
     fn default() -> Self {
         let u = Uuid::new_v4();
-        CollectionItemId(format!("{}{}", TRN_ITEM_PREFIX, u))
+        CollectionItemId(format!("{}{}", Self::TRN_PREFIX, u))
     }
 }
 
@@ -87,7 +95,7 @@ mod tests {
     #[test]
     fn it_should_parse_valid_trn_with_uuid_suffix() {
         let u = Uuid::new_v4();
-        let trn = format!("{}{}", TRN_ITEM_PREFIX, u);
+        let trn = format!("{}{}", CollectionItemId::TRN_PREFIX, u);
         let id = CollectionItemId::try_from(trn.as_str()).expect("should parse trn");
         assert_eq!(id.to_string(), trn);
     }
@@ -101,7 +109,7 @@ mod tests {
 
     #[test]
     fn it_should_parse_trn_with_invalid_uuid_suffix() {
-        let bad = format!("{}{}", TRN_ITEM_PREFIX, "not-a-uuid");
+        let bad = format!("{}{}", CollectionItemId::TRN_PREFIX, "not-a-uuid");
         let err = CollectionItemId::try_from(bad.as_str()).expect_err("invalid uuid should fail");
         assert_eq!(
             err,
@@ -113,7 +121,7 @@ mod tests {
     fn it_should_from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = CollectionItemId::from(u);
-        let expected = format!("{}{}", TRN_ITEM_PREFIX, u);
+        let expected = format!("{}{}", CollectionItemId::TRN_PREFIX, u);
         assert_eq!(id.to_string(), expected);
     }
 
@@ -123,7 +131,7 @@ mod tests {
         let id = CollectionItemId::from(u);
         let s = serde_json::to_string(&id).expect("serialize");
         // serde(transparent) -> serialized as plain string
-        let expected = format!("\"{}{}\"", TRN_ITEM_PREFIX, u);
+        let expected = format!("\"{}{}\"", CollectionItemId::TRN_PREFIX, u);
         assert_eq!(s, expected);
         let de: CollectionItemId = serde_json::from_str(&s).expect("deserialize");
         assert_eq!(de, id);

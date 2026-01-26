@@ -1,4 +1,4 @@
-use crate::maintenance::domain::maintenance_type::MaintenanceType;
+use crate::maintenance::domain::MaintenanceType;
 use chrono::NaiveDate;
 use garde::Validate;
 use serde::{Deserialize, Serialize};

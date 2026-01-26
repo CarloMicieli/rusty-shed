@@ -36,7 +36,7 @@ pub async fn get_railway_model_by_id(
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model =
-        GetRailwayModelViewByIdQuery::execute(&mut unit_of_work, railway_model_id).await?;
+        GetRailwayModelViewByIdQuery::execute(&mut unit_of_work, &railway_model_id).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model)

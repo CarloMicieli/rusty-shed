@@ -1,28 +1,36 @@
-use serde::{Deserialize, Serialize};
-
-/// Input for creating a new railway model (domain-level DTO).
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+/// Input for creating a new railway model.
+#[derive(Debug, Clone)]
 pub struct CreateRailwayModelInput {
+    /// Manufacturer identifier as a string.
     pub manufacturer_id: String,
+    /// Display name of the manufacturer.
     pub product_code: String,
+    /// Description of the railway model.
     pub description: String,
+    /// Additional details about the railway model.
     pub details: Option<String>,
+    /// Power method used by the railway model.
     pub power_method: String,
+    /// Scale of the railway model.
     pub scale: String,
+    /// Epoch of the railway model.
     pub epoch: String,
+    /// Category of the railway model.
     pub category: String,
+    /// Optional delivery date of the railway model.
     pub delivery_date: Option<String>,
+    /// Optional availability status of the railway model.
     pub availability_status: Option<String>,
+    /// Rolling stocks associated with the railway model.
     pub rolling_stocks: Vec<CreateRollingStockInput>,
 }
 
-/// Input for creating a rolling stock (tagged union by category).
+/// Input for creating a rolling stock.
 ///
 /// This enum is a tagged union where each variant contains the fields
 /// relevant to that rolling stock category. Consumers should supply the
 /// variant matching the `category` of the rolling stock being created.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(tag = "category")]
+#[derive(Debug, Clone)]
 pub enum CreateRollingStockInput {
     /// Locomotive-specific input fields.
     Locomotive {
@@ -104,7 +112,7 @@ pub enum CreateRollingStockInput {
 /// Both measurements are optional; callers may provide either or both
 /// depending on the available data. Values are represented as floating
 /// point numbers (millimeters and inches respectively).
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone)]
 pub struct LengthOverBuffersInput {
     /// Length in millimeters.
     pub millimeters: Option<f64>,
@@ -117,7 +125,7 @@ pub struct LengthOverBuffersInput {
 /// Each field is optional and represents a small piece of technical
 /// metadata such as minimum recommended curve radius, coupling details,
 /// or whether a flywheel is fitted.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone)]
 pub struct TechnicalSpecificationsInput {
     /// Minimum recommended curve radius in millimetres (if known).
     pub minimum_radius: Option<f64>,
@@ -137,7 +145,7 @@ pub struct TechnicalSpecificationsInput {
     pub sprung_buffers: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone)]
 /// Coupling configuration details for a rolling stock item.
 pub struct CouplingInput {
     /// The coupling socket/type (for example: "NEM", "Kadee", "Generic").

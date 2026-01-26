@@ -10,18 +10,28 @@ use std::ops::Deref;
 #[specta(transparent)]
 pub struct SellerId(pub String);
 
+impl SellerId {
+    /// TRN prefix expected for seller identifiers.
+    pub const TRN_PREFIX: &'static str = "trn:seller:";
+
+    /// Creates a new `SellerId` from a seller name.
+    ///
+    /// # Parameters
+    /// - `name`: the name of the seller
+    ///
+    /// # Returns
+    /// A new `SellerId` instance with a slugified TRN.
+    pub fn new_from_name(name: &str) -> Self {
+        let slug = slugify(name);
+        SellerId(format!("{}{}", SellerId::TRN_PREFIX, slug))
+    }
+}
+
 impl Deref for SellerId {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
         &self.0
-    }
-}
-
-impl SellerId {
-    pub fn new_from_name(name: &str) -> Self {
-        let slug = slugify(name);
-        SellerId(format!("trn:seller:{slug}"))
     }
 }
 

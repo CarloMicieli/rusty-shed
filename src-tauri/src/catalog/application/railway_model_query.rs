@@ -2,7 +2,7 @@ use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 
-/// Query to retrieve a railway model by id from the database.
+/// Query to retrieve a railway model by id.
 pub struct GetRailwayModelByIdQuery;
 
 impl GetRailwayModelByIdQuery {
@@ -21,29 +21,29 @@ impl GetRailwayModelByIdQuery {
     /// * `U` - The type of the unit of work, which must implement `RailwayModelUowExt` and be `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        railway_model_id: RailwayModelId,
+        railway_model_id: &RailwayModelId,
     ) -> Result<Option<RailwayModel>, DomainError>
     where
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        repository.find_by_id(&railway_model_id).await
+        repository.find_by_id(railway_model_id).await
     }
 }
 
-/// Query to retrieve a railway model view (UI) by id from the database.
+/// Query to retrieve a railway model view (UI) by id.
 pub struct GetRailwayModelViewByIdQuery;
 
 impl GetRailwayModelViewByIdQuery {
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        railway_model_id: RailwayModelId,
+        railway_model_id: &RailwayModelId,
     ) -> Result<Option<RailwayModelView>, DomainError>
     where
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        repository.find_view_by_id(&railway_model_id).await
+        repository.find_view_by_id(railway_model_id).await
     }
 }
 
@@ -90,7 +90,7 @@ mod tests {
             .returning(move |_| Ok(Some(railway_model.clone())));
         let mut fake_uow = FakeUow::with_railway_models_repo(mock);
 
-        let result = GetRailwayModelViewByIdQuery::execute(&mut fake_uow, railway_model_id)
+        let result = GetRailwayModelViewByIdQuery::execute(&mut fake_uow, &railway_model_id)
             .await
             .expect("it should return");
 

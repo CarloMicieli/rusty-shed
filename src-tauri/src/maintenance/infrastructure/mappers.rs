@@ -1,6 +1,6 @@
-use crate::maintenance::domain::maintenance_card::MaintenanceCard;
-use crate::maintenance::domain::maintenance_event::MaintenanceEvent;
-use crate::maintenance::domain::maintenance_type::MaintenanceType;
+use crate::maintenance::domain::MaintenanceCard;
+use crate::maintenance::domain::MaintenanceEvent;
+use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
 
 impl TryFrom<MaintenanceCardRow> for MaintenanceCard {
