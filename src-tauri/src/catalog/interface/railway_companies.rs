@@ -1,4 +1,4 @@
-use crate::catalog::application::{GetRailwayCompaniesQuery, GetRailwayCompanyByIdQuery};
+use crate::catalog::application::{GetRailwayCompanies, GetRailwayCompanyById};
 use crate::catalog::domain::railway_company::{RailwayCompany, RailwayCompanyId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -21,7 +21,7 @@ pub async fn get_railway_companies(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let railway_companies = GetRailwayCompaniesQuery::execute(&mut unit_of_work).await?;
+    let railway_companies = GetRailwayCompanies::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_companies)
@@ -59,7 +59,7 @@ pub async fn get_railway_company_by_id(
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_company =
-        GetRailwayCompanyByIdQuery::execute(&mut unit_of_work, railway_company_id).await?;
+        GetRailwayCompanyById::execute(&mut unit_of_work, railway_company_id).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_company)

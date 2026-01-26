@@ -2,7 +2,7 @@ use garde::Validate;
 use serde::Deserialize;
 
 use crate::{
-    catalog::application::railway_model_use_case_input::{
+    catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
         TechnicalSpecificationsInput,
     },

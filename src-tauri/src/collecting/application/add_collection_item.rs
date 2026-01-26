@@ -1,4 +1,4 @@
-use crate::catalog::application::GetRailwayModelByIdQuery;
+use crate::catalog::application::GetRailwayModelById;
 use crate::catalog::domain::railway_model::RailwayModelUowExt;
 use crate::collecting::application::AddCollectionItemInput;
 use crate::collecting::domain::{CollectionId, NewCollectionItem};
@@ -38,7 +38,7 @@ impl AddCollectionItemUseCase {
         Q: IdProvider<PurchaseInfoId>,
     {
         let railway_model =
-            { GetRailwayModelByIdQuery::execute(unit_of_work, &input.railway_model_id).await? };
+            { GetRailwayModelById::execute(unit_of_work, &input.railway_model_id).await? };
 
         let railway_model = railway_model.ok_or(DomainError::NotFound {
             resource: "RailwayModel".to_string(),

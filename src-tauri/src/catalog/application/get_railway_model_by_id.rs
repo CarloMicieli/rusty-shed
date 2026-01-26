@@ -3,10 +3,10 @@ use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, Railwa
 use crate::core::domain::domain_error::DomainError;
 
 /// Query to retrieve a railway model by id.
-pub struct GetRailwayModelByIdQuery;
+pub struct GetRailwayModelById;
 
-impl GetRailwayModelByIdQuery {
-    /// Execute the query to retrieve a railway model by id
+impl GetRailwayModelById {
+    /// Execute the query to retrieve a railway model by id.
     ///
     /// # Arguments
     /// * `unit_of_work` - The unit of work managing the database transaction.
@@ -32,9 +32,22 @@ impl GetRailwayModelByIdQuery {
 }
 
 /// Query to retrieve a railway model view (UI) by id.
-pub struct GetRailwayModelViewByIdQuery;
+pub struct GetRailwayModelViewById;
 
-impl GetRailwayModelViewByIdQuery {
+impl GetRailwayModelViewById {
+    /// Execute the query to retrieve a railway model view (UI) by id.
+    ///
+    /// # Arguments
+    /// * `unit_of_work` - The unit of work managing the database transaction.
+    /// * `railway_model_id` - The identifier of the railway model to retrieve the view for.
+    ///
+    /// # Returns
+    /// - `Ok(Some(RailwayModelView))` when the railway model view is found.
+    /// - `Ok(None)` when the railway model view is not found.
+    /// - `Err(DomainError)` with an error message on failure.
+    ///
+    /// # Type Parameters
+    /// * `U` - The type of the unit of work, which must implement `RailwayModelUowExt` and be `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_model_id: &RailwayModelId,
@@ -90,7 +103,7 @@ mod tests {
             .returning(move |_| Ok(Some(railway_model.clone())));
         let mut fake_uow = FakeUow::with_railway_models_repo(mock);
 
-        let result = GetRailwayModelViewByIdQuery::execute(&mut fake_uow, &railway_model_id)
+        let result = GetRailwayModelViewById::execute(&mut fake_uow, &railway_model_id)
             .await
             .expect("it should return");
 

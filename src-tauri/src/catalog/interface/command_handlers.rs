@@ -1,5 +1,4 @@
-use crate::catalog::application::railway_model_query::GetRailwayModelViewByIdQuery;
-use crate::catalog::application::railway_model_use_case::CreateRailwayModelUseCase;
+use crate::catalog::application::{AddRailwayModel, GetRailwayModelViewById};
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::interface::CreateRailwayModelArgs;
@@ -36,7 +35,7 @@ pub async fn get_railway_model_by_id(
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model =
-        GetRailwayModelViewByIdQuery::execute(&mut unit_of_work, &railway_model_id).await?;
+        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model)
@@ -65,8 +64,7 @@ pub async fn create_railway_model(
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model_input = args.try_into()?;
-    let railway_model_id =
-        CreateRailwayModelUseCase::execute(&mut unit_of_work, railway_model_input).await?;
+    let railway_model_id = AddRailwayModel::execute(&mut unit_of_work, railway_model_input).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model_id)

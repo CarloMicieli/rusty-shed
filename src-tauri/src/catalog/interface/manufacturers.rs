@@ -1,4 +1,4 @@
-use crate::catalog::application::{GetManufacturerByIdQuery, GetManufacturersQuery};
+use crate::catalog::application::{GetManufacturerById, GetManufacturers};
 use crate::catalog::domain::manufacturer::{Manufacturer, ManufacturerId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -21,7 +21,7 @@ pub async fn get_manufacturers(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let manufacturers = GetManufacturersQuery::execute(&mut unit_of_work).await?;
+    let manufacturers = GetManufacturers::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(manufacturers)
@@ -35,7 +35,7 @@ pub async fn get_manufacturers(
 ///
 /// # Arguments
 /// * `state` - Tauri-managed application `AppState` (provides DB pool).
-/// * `manufacturer_id` - The manufacturer identifier as a `String`.
+/// * `manufacturer_id` - The manufacturer identifier as a `ManufacturerId`.
 ///
 /// # Returns
 /// - `Ok(Some(Manufacturer))` when a matching manufacturer exists,
@@ -58,8 +58,7 @@ pub async fn get_manufacturer_by_id(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let manufacturer =
-        GetManufacturerByIdQuery::execute(&mut unit_of_work, manufacturer_id).await?;
+    let manufacturer = GetManufacturerById::execute(&mut unit_of_work, manufacturer_id).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(manufacturer)
