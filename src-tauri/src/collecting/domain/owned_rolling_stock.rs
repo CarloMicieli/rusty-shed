@@ -67,21 +67,25 @@ mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::collecting::domain::owned_rolling_stock_id::OwnedRollingStockId;
+    use crate::core::domain::identifiers::Identifier;
     use crate::dcc_inventory::domain::{Decoder, DecoderId, DecoderType, DigitalProtocol};
+    use uuid::Uuid;
 
     #[test]
     fn it_should_install_decoder_validates_address_and_interface() {
-        let rolling_stock_id = RollingStockId::new();
+        let rolling_stock_id = RollingStockId::from_uuid(&Uuid::new_v4());
         let mut ors = OwnedRollingStock {
-            id: OwnedRollingStockId::new("ors-1"),
+            id: OwnedRollingStockId::from_string_unchecked("ors-1".to_string()),
             rolling_stock_id,
             notes: None,
             installed_decoder_id: None,
         };
 
         let decoder = Decoder {
-            id: DecoderId::from_parts("Acme", "P100"),
-            manufacturer_id: ManufacturerId::new("MN-ACME"),
+            id: DecoderId::new_from_parts(&["Acme", "P100"]),
+            manufacturer_id: ManufacturerId::from_string_unchecked(
+                "trn:manufacturer:mn-acme".to_string(),
+            ),
             product_code: "P100".to_string(),
             decoder_type: DecoderType::Plain,
             protocol: DigitalProtocol::Dcc,
@@ -108,14 +112,5 @@ mod tests {
             }
             _ => panic!("unexpected error variant"),
         }
-        /*
-        // success
-        ors.install_decoder(DccInterface::Mtc21, 1, &decoder)
-            .expect("install should succeed");
-        assert!(ors.digital.is_some());
-        let ds = ors.digital.unwrap();
-        assert_eq!(ds.dcc_address, 1u16);
-        assert_eq!(ds.interface, DccInterface::Mtc21);
-        assert_eq!(ds.installed_decoder_id, decoder.id);*/
     }
 }

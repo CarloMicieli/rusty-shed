@@ -34,6 +34,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::{ManufacturerStatus, MockManufacturerRepository};
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
 
@@ -41,7 +42,7 @@ mod tests {
     async fn it_returns_manufacturer_by_id() -> Result<(), DomainError> {
         let mut mock = MockManufacturerRepository::new();
 
-        let id = ManufacturerId::from_name("test");
+        let id = ManufacturerId::new_from_parts(&["test"]);
 
         let manufacturer = Manufacturer {
             id: id.clone(),

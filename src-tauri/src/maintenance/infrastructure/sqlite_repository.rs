@@ -381,7 +381,7 @@ mod tests {
 
         // Query the card by ID to verify the event was recorded
         let card_with_events = repo
-            .find_by_id(&MaintenanceCardId::new(&evt_card_id))
+            .find_by_id(&MaintenanceCardId::from_uuid(&evt_card_id))
             .await
             .expect("get card")
             .expect("card exists");

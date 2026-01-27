@@ -1,5 +1,6 @@
 use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::identifiers::Identifier;
 use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_event::SellerEvent;
@@ -54,7 +55,7 @@ impl UpdateSellerUseCase {
             pending_events: Vec::new(),
         };
 
-        let derived = SellerId::new_from_name(&seller.name);
+        let derived = SellerId::new_from_parts(&[&seller.name]);
         if seller.id != derived {
             return Err(DomainError::BusinessRule(
                 "seller id is immutable and must match slug".to_string(),

@@ -39,9 +39,9 @@ impl PurchaseInfo {
     /// Always present for all variants.
     pub fn id(&self) -> &str {
         match self {
-            PurchaseInfo::Purchased(p) => &p.id,
-            PurchaseInfo::Sold(s) => &s.id,
-            PurchaseInfo::PreOrdered(po) => &po.id,
+            PurchaseInfo::Purchased(p) => p.id.as_ref(),
+            PurchaseInfo::Sold(s) => s.id.as_ref(),
+            PurchaseInfo::PreOrdered(po) => po.id.as_ref(),
         }
     }
 
@@ -50,9 +50,9 @@ impl PurchaseInfo {
     /// Returns `Some(&str)` when a seller is present, otherwise `None`.
     pub fn seller(&self) -> Option<&str> {
         match self {
-            PurchaseInfo::Purchased(p) => p.seller.as_deref(),
-            PurchaseInfo::Sold(s) => s.seller.as_deref(),
-            PurchaseInfo::PreOrdered(po) => po.seller.as_deref(),
+            PurchaseInfo::Purchased(p) => p.seller.as_ref().map(|s| s.as_ref()),
+            PurchaseInfo::Sold(s) => s.seller.as_ref().map(|s| s.as_ref()),
+            PurchaseInfo::PreOrdered(po) => po.seller.as_ref().map(|s| s.as_ref()),
         }
     }
 }
@@ -165,41 +165,42 @@ mod tests {
     use crate::collecting::domain::purchase_info_id::PurchaseInfoId;
     use crate::core::domain::MonetaryAmount;
     use crate::core::domain::currency::Currency;
+    use crate::core::domain::identifiers::Identifier;
     use chrono::NaiveDate;
 
     #[test]
     fn it_should_purchased_id_and_seller_accessor() {
         let p = PurchasedInfo {
-            id: PurchaseInfoId::new("p1"),
+            id: PurchaseInfoId::from_string_unchecked("p1".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2023, 10, 1).unwrap(),
             price: Some(MonetaryAmount::new(1500, Currency::EUR)),
-            seller: Some(SellerId::try_from("shop-1").unwrap()),
+            seller: Some(SellerId::try_from("trn:seller:shop-1").unwrap()),
         };
         let pi = PurchaseInfo::Purchased(p.clone());
         assert_eq!(pi.id(), "p1");
-        assert_eq!(pi.seller(), Some("shop-1"));
+        assert_eq!(pi.seller(), Some("trn:seller:shop-1"));
     }
 
     #[test]
     fn it_should_sold_id_and_seller_accessor() {
         let s = SoldInfo {
-            id: PurchaseInfoId::new("s1"),
+            id: PurchaseInfoId::from_string_unchecked("s1".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2020, 5, 10).unwrap(),
             purchase_price: Some(MonetaryAmount::new(2000, Currency::USD)),
             sale_date: NaiveDate::from_ymd_opt(2024, 1, 15).unwrap(),
             sale_price: MonetaryAmount::new(2500, Currency::USD),
             buyer: Some("buyer-1".to_string()),
-            seller: Some(SellerId::try_from("seller-shop").unwrap()),
+            seller: Some(SellerId::try_from("trn:seller:seller-shop").unwrap()),
         };
         let pi = PurchaseInfo::Sold(s.clone());
         assert_eq!(pi.id(), "s1");
-        assert_eq!(pi.seller(), Some("seller-shop"));
+        assert_eq!(pi.seller(), Some("trn:seller:seller-shop"));
     }
 
     #[test]
     fn it_should_preorder_seller_none_and_validate_currency_mismatch() {
         let preorder = PreOrderInfo {
-            id: PurchaseInfoId::new("pre1"),
+            id: PurchaseInfoId::from_string_unchecked("pre1".to_string()),
             order_date: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
             deposit: MonetaryAmount::new(500, Currency::EUR),
             total_price: MonetaryAmount::new(1000, Currency::USD), // mismatched currency

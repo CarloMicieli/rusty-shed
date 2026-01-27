@@ -249,6 +249,7 @@ mod tests {
         BoxCondition, ModelCondition, PurchaseCondition, PurchaseInfoId,
     };
     use crate::core::domain::Currency;
+    use crate::core::domain::identifiers::Identifier;
     use crate::sellers::domain::seller_id::SellerId;
     use pretty_assertions::assert_eq;
 
@@ -285,7 +286,9 @@ mod tests {
 
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer_id: ManufacturerId::new("not-a-trn"),
+            manufacturer_id: ManufacturerId::from_string_unchecked(
+                "trn:manufacturer:not-a-trn".to_string(),
+            ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,
@@ -342,7 +345,9 @@ mod tests {
 
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer_id: ManufacturerId::new("not-a-trn"),
+            manufacturer_id: ManufacturerId::from_string_unchecked(
+                "trn:manufacturer:not-a-trn".to_string(),
+            ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,

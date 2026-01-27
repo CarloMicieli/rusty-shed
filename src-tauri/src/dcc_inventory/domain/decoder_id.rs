@@ -1,7 +1,6 @@
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::ops::Deref;
-use std::str::FromStr;
 
 /// Strongly-typed identifier for a decoder (master record).
 ///
@@ -14,60 +13,19 @@ use std::str::FromStr;
 #[specta(transparent)]
 pub struct DecoderId(String);
 
-impl DecoderId {
-    /// TRN prefix expected for decoder identifiers.
-    pub const TRN_PREFIX: &'static str = "trn:decoder:";
+impl_identifier_traits!(DecoderId);
 
-    /// Construct a decoder URN from manufacturer and product code parts.
-    ///
-    /// Both inputs are trimmed, lowercased and internal whitespace is replaced
-    /// with hyphens. Example: `("ACME Ltd", " P 1000") -> trn:decoder:acme-ltd:p-1000`.
-    pub fn from_parts(manufacturer: &str, product_code: &str) -> Self {
-        fn norm(s: &str) -> String {
-            s.trim()
-                .to_lowercase()
-                .split_whitespace()
-                .collect::<Vec<_>>()
-                .join("-")
-        }
-
-        let id = format!(
-            "{}{}:{}",
-            Self::TRN_PREFIX,
-            norm(manufacturer),
-            norm(product_code)
-        );
-        DecoderId(id)
-    }
-
-    /// Create a `DecoderId` from a raw string without validation.
-    pub fn new<S: Into<String>>(s: S) -> Self {
-        DecoderId(s.into())
-    }
-}
-
-impl Deref for DecoderId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
+impl AsRef<str> for DecoderId {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-impl fmt::Display for DecoderId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
+impl Identifier for DecoderId {
+    const PREFIX: &'static str = "trn:decoder";
 
-impl FromStr for DecoderId {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.trim().is_empty() {
-            return Err(anyhow::anyhow!("decoder id must not be empty"));
-        }
-        Ok(DecoderId(s.to_owned()))
+    fn from_string_unchecked(s: String) -> Self {
+        DecoderId(s)
     }
 }
 
@@ -77,21 +35,21 @@ mod tests {
 
     #[test]
     fn it_should_decoder_id_from_parts_normalises() {
-        let id = DecoderId::from_parts(" ACME Ltd ", " P 1000 ");
-        assert_eq!(&*id, "trn:decoder:acme-ltd:p-1000");
+        let id = DecoderId::new_from_parts(&["ACME Ltd", "P 1000"]);
+        assert_eq!(id.as_ref(), "trn:decoder:acme-ltd:p-1000");
     }
 
     #[test]
-    fn it_should_decoder_id_display_and_fromstr() {
-        let id = DecoderId::from_parts("A", "B");
+    fn it_should_decoder_id_display_and_try_from() {
+        let id = DecoderId::new_from_parts(&["A", "B"]);
         let s = id.to_string();
-        let parsed = s.parse::<DecoderId>().expect("parse ok");
+        let parsed = DecoderId::try_from(s.as_str()).expect("parse ok");
         assert_eq!(parsed, id);
     }
 
     #[test]
-    fn it_should_decoder_id_fromstr_empty_fails() {
-        let parsed = "".parse::<DecoderId>();
+    fn it_should_decoder_id_try_from_empty_fails() {
+        let parsed = DecoderId::try_from("");
         assert!(
             parsed.is_err(),
             "empty string should not parse to DecoderId"

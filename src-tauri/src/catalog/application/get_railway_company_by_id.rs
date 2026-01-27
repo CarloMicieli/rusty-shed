@@ -37,6 +37,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::railway_company::MockRailwayCompanyRepository;
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
 
@@ -44,7 +45,7 @@ mod tests {
     async fn it_returns_railway_company_by_id() -> Result<(), DomainError> {
         let mut mock = MockRailwayCompanyRepository::new();
 
-        let id = RailwayCompanyId::new("trn:railway-company:test");
+        let id = RailwayCompanyId::from_string_unchecked("trn:railway-company:test".to_string());
 
         let railway_company = RailwayCompany {
             id: id.clone(),

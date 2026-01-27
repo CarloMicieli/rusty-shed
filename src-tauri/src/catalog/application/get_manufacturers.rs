@@ -34,6 +34,7 @@ mod tests {
     use crate::catalog::domain::manufacturer::{
         ManufacturerId, ManufacturerStatus, MockManufacturerRepository,
     };
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use pretty_assertions::assert_eq;
 
@@ -42,7 +43,7 @@ mod tests {
         let mut mock = MockManufacturerRepository::new();
 
         let manufacturer = Manufacturer {
-            id: ManufacturerId::from_name("acme"),
+            id: ManufacturerId::new_from_parts(&["acme"]),
             name: "ACME Models".to_string(),
             registered_company_name: None,
             country_code: None,

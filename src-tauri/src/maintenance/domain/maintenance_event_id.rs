@@ -1,32 +1,56 @@
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 /// Strongly-typed identifier for a maintenance event.
 #[derive(
-    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, specta::Type, sqlx::Type,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    specta::Type,
+    sqlx::Type,
 )]
 #[sqlx(transparent)]
 #[serde(transparent)]
 pub struct MaintenanceEventId(String);
 
-impl MaintenanceEventId {
-    /// TRN prefix expected for maintenance event identifiers.
-    pub const TRN_PREFIX: &'static str = "trn:maintenance-event:";
+impl_identifier_traits!(MaintenanceEventId);
 
+impl MaintenanceEventId {
     /// Creates a new `MaintenanceEventId` from a UUID.
-    ///
-    /// # Parameters
-    /// - `id`: the UUID to create the MaintenanceEventId from
-    ///
-    /// # Returns
-    /// A new `MaintenanceEventId` instance with a TRN.
-    pub fn new(id: &uuid::Uuid) -> Self {
-        MaintenanceEventId(format!("{}{}", MaintenanceEventId::TRN_PREFIX, id))
+    pub fn from_uuid(id: &uuid::Uuid) -> Self {
+        MaintenanceEventId::new_from_parts(&[&id.to_string()])
     }
 }
 
-impl fmt::Display for MaintenanceEventId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+impl AsRef<str> for MaintenanceEventId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Identifier for MaintenanceEventId {
+    const PREFIX: &'static str = "trn:maintenance-event";
+
+    fn from_string_unchecked(s: String) -> Self {
+        MaintenanceEventId(s)
+    }
+}
+
+impl From<uuid::Uuid> for MaintenanceEventId {
+    fn from(id: uuid::Uuid) -> Self {
+        MaintenanceEventId::from_uuid(&id)
+    }
+}
+
+impl Default for MaintenanceEventId {
+    fn default() -> Self {
+        MaintenanceEventId::from_uuid(&uuid::Uuid::new_v4())
     }
 }

@@ -319,10 +319,11 @@ impl RollingStock {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use uuid::Uuid;
 
     #[test]
     fn locomotive_accessors_return_expected_values() {
-        let id = RollingStockId::new();
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
         let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
 
         let loco = RollingStock::Locomotive {
@@ -351,7 +352,7 @@ mod tests {
 
     #[test]
     fn control_and_dcc_interface_and_decoder_behavior() {
-        let id = RollingStockId::new();
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
         let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
 
         let loco = RollingStock::Locomotive {
@@ -378,7 +379,7 @@ mod tests {
 
     #[test]
     fn freightcar_has_no_decoder_and_no_control() {
-        let id = RollingStockId::new();
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
         let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
 
         let freight = RollingStock::FreightCar {
@@ -400,7 +401,7 @@ mod tests {
 
     #[test]
     fn electric_multiple_unit_accessors_and_decoder_behavior() {
-        let id = RollingStockId::new();
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
         let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
 
         let emu = RollingStock::ElectricMultipleUnit {
@@ -431,7 +432,7 @@ mod tests {
     }
     #[test]
     fn railcar_accessors_and_decoder_behavior() {
-        let id = RollingStockId::new();
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
         let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
 
         let railcar = RollingStock::Railcar {

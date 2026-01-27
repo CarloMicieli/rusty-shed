@@ -75,6 +75,9 @@ impl From<DomainError> for CommandError {
             DomainError::Infrastructure(inner) => CommandError::DatabaseError(inner.to_string()),
             DomainError::BusinessRule(msg) => CommandError::BusinessRule(msg),
             DomainError::ValidationError(errors) => CommandError::ValidationError(errors),
+            DomainError::InvalidIdentifier(e) => {
+                CommandError::validation_field("id", e.to_string())
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::identifiers::Identifier;
 use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_event::SellerEvent;
@@ -42,7 +43,7 @@ impl CreateSellerUseCase {
         let address = Address::try_from(address_fields).ok();
 
         let seller = Seller {
-            id: SellerId::new_from_name(&input.name),
+            id: SellerId::new_from_parts(&[&input.name]),
             name: input.name,
             seller_type: input.seller_type,
             email: input.email,

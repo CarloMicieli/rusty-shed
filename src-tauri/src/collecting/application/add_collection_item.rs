@@ -117,6 +117,7 @@ mod tests {
     use crate::collecting::domain::{
         Collection, CollectionId, CollectionSummary, MockCollectionRepository,
     };
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::test_utils::DefaultMockIdProvider;
     use crate::core::domain::{Currency, MonetaryAmount};
 
@@ -144,7 +145,9 @@ mod tests {
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer_id: ManufacturerId::new("not-a-trn"),
+            manufacturer_id: ManufacturerId::from_string_unchecked(
+                "trn:manufacturer:not-a-trn".to_string(),
+            ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,

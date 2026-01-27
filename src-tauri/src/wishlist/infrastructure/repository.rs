@@ -107,7 +107,7 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
 
         for row in rows.into_iter() {
             let wishlist_id = WishlistId::try_from(row.wishlist_id.clone().as_str())
-                .map_err(|e: AnyhowError| DomainError::Validation(e.to_string()))?;
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
             let entry = map.entry(row.wishlist_id.clone()).or_insert_with(|| {
                 WishlistPreview {
                     id: wishlist_id,

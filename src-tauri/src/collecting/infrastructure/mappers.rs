@@ -10,6 +10,7 @@ use crate::collecting::infrastructure::entities::{
 };
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::identifiers::Identifier;
 use crate::dcc_inventory::domain::DecoderId;
 use anyhow::anyhow;
 use std::collections::HashMap;
@@ -125,9 +126,12 @@ impl CollectionMapper {
                                         // `DccInterface` implements `Copy` so avoid cloning
                                         interface: *interface,
                                         dcc_address: addr_u16,
-                                        installed_decoder_id: installed_id.parse().unwrap_or_else(
-                                            |_| DecoderId::new(installed_id.clone()),
-                                        ),
+                                        installed_decoder_id: DecoderId::try_from(
+                                            installed_id.as_str(),
+                                        )
+                                        .unwrap_or_else(|_| {
+                                            DecoderId::from_string_unchecked(installed_id.clone())
+                                        }),
                                     });
                                 }
                             }
@@ -309,6 +313,7 @@ mod tests {
     use chrono::NaiveDate;
     use pretty_assertions::assert_eq;
     use std::collections::HashMap;
+    use uuid::Uuid;
 
     #[test]
     fn it_should_map_collection() {
@@ -375,10 +380,10 @@ mod tests {
             notes: Some("My notes go here".to_string()),
         };
 
-        let owned_item_id = OwnedRollingStockId::new(
+        let owned_item_id = OwnedRollingStockId::from_string_unchecked(
             "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string(),
         );
-        let rolling_stock_id = RollingStockId::new();
+        let rolling_stock_id = RollingStockId::from_uuid(&Uuid::new_v4());
         let owned_rolling_stock = OwnedRollingStockRow {
             id: owned_item_id,
             collection_item_id: item_id.clone(),
@@ -403,7 +408,7 @@ mod tests {
 
         let purchase_id =
             PurchaseInfoId::try_from("trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e").unwrap();
-        let seller_id = SellerId::new_from_name("shop-1");
+        let seller_id = SellerId::new_from_parts(&["shop-1"]);
         let collection_item_id = item_id.clone();
         let purchase_info = PurchaseInfoRow {
             id: purchase_id,
@@ -493,14 +498,16 @@ mod tests {
     #[test]
     fn it_should_map_row_to_purchase_info_purchased() {
         let pi_row = PurchaseInfoRow {
-            id: PurchaseInfoId::new("59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string()),
+            id: PurchaseInfoId::from_string_unchecked(
+                "59adc26d-0274-4d6b-8c14-61e598d3fe0e".to_string(),
+            ),
             collection_item_id: CollectionItemId::try_from(
                 "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730",
             )
             .unwrap(),
             purchase_type: Some("purchased".to_string()),
             purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
-            seller_id: Some(SellerId::try_from("shop-1").unwrap()),
+            seller_id: Some(SellerId::try_from("trn:seller:shop-1").unwrap()),
             buyer_id: None,
             sale_date: None,
             purchased_price_amount: Some(17500),
@@ -525,7 +532,10 @@ mod tests {
                 let price = p.price.expect("price present");
                 assert_eq!(price.amount, 17500i64);
                 assert_eq!(price.currency, Currency::EUR);
-                assert_eq!(p.seller, Some(SellerId::try_from("shop-1").unwrap()));
+                assert_eq!(
+                    p.seller,
+                    Some(SellerId::try_from("trn:seller:shop-1").unwrap())
+                );
             }
             _ => panic!("expected Purchased variant"),
         }

@@ -1,9 +1,8 @@
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::ops::Deref;
 use uuid::Uuid;
-
-pub const TRN_INVENTORY_PREFIX: &str = "trn:track-inventory:";
 
 /// Strongly-typed identifier for a track inventory record.
 ///
@@ -22,17 +21,28 @@ pub const TRN_INVENTORY_PREFIX: &str = "trn:track-inventory:";
 #[sqlx(transparent)]
 pub struct TrackInventoryId(String);
 
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum TrackInventoryIdError {
-    #[error("invalid inventory trn: {0}")]
-    InvalidTrn(String),
-    #[error("invalid UUID: {0}")]
-    InvalidUuid(String),
+impl_identifier_traits!(TrackInventoryId);
+
+impl AsRef<str> for TrackInventoryId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Identifier for TrackInventoryId {
+    // Use a normalized prefix without a trailing colon. The shared
+    // `Identifier` helper expects `PREFIX` to not include the colon
+    // so it can append one during validation/formatting.
+    const PREFIX: &'static str = "trn:track-inventory";
+
+    fn from_string_unchecked(s: String) -> Self {
+        TrackInventoryId(s)
+    }
 }
 
 impl TrackInventoryId {
     pub fn new_from_uuid(u: Uuid) -> Self {
-        TrackInventoryId(format!("{}{}", TRN_INVENTORY_PREFIX, u))
+        TrackInventoryId(format!("{}:{}", Self::PREFIX, u))
     }
 }
 
@@ -41,29 +51,6 @@ impl Deref for TrackInventoryId {
 
     fn deref(&self) -> &Self::Target {
         &self.0
-    }
-}
-
-impl TryFrom<&str> for TrackInventoryId {
-    type Error = TrackInventoryIdError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if !value.starts_with(TRN_INVENTORY_PREFIX) {
-            return Err(TrackInventoryIdError::InvalidTrn(value.to_string()));
-        }
-        let suffix = &value[TRN_INVENTORY_PREFIX.len()..];
-        match Uuid::parse_str(suffix) {
-            Ok(u) => Ok(TrackInventoryId(format!("{}{}", TRN_INVENTORY_PREFIX, u))),
-            Err(_) => Err(TrackInventoryIdError::InvalidUuid(suffix.to_string())),
-        }
-    }
-}
-
-impl TryFrom<String> for TrackInventoryId {
-    type Error = TrackInventoryIdError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        TrackInventoryId::try_from(value.as_str())
     }
 }
 
@@ -80,12 +67,6 @@ impl Default for TrackInventoryId {
     }
 }
 
-impl fmt::Display for TrackInventoryId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,23 +77,9 @@ mod tests {
     fn it_should_from_uuid_and_display() {
         let u = Uuid::new_v4();
         let id = TrackInventoryId::from(u);
-        assert_eq!(id.to_string(), format!("{}{}", TRN_INVENTORY_PREFIX, u));
-    }
-
-    #[test]
-    fn it_should_try_from_invalid_trn_fails() {
-        let bad = "not-a-trn";
-        let err = TrackInventoryId::try_from(bad).expect_err("invalid trn should fail");
-        assert_eq!(err, TrackInventoryIdError::InvalidTrn(bad.to_string()));
-    }
-
-    #[test]
-    fn it_should_try_from_trn_with_invalid_uuid_suffix_fails() {
-        let bad = format!("{}{}", TRN_INVENTORY_PREFIX, "not-a-uuid");
-        let err = TrackInventoryId::try_from(bad.as_str()).expect_err("invalid uuid should fail");
         assert_eq!(
-            err,
-            TrackInventoryIdError::InvalidUuid("not-a-uuid".to_string())
+            id.to_string(),
+            format!("{}:{}", TrackInventoryId::PREFIX, u)
         );
     }
 }

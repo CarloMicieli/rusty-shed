@@ -18,7 +18,7 @@ impl TryFrom<MaintenanceCardRow> for MaintenanceCard {
         let uuid = uuid::Uuid::parse_str(uuid_str)
             .map_err(|e| format!("Invalid maintenance card id: {}", e))?;
 
-        let id = MaintenanceCardId::new(&uuid);
+        let id = MaintenanceCardId::from_uuid(&uuid);
         // `owned_rolling_stock_id` is already strongly-typed in the row, move it.
         let owned = row.owned_rolling_stock_id;
 

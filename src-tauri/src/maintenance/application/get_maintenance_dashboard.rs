@@ -62,7 +62,7 @@ mod tests {
         let test_stock_uuid = Uuid::new_v4();
 
         let row = MaintenanceCardRow {
-            id: MaintenanceCardId::new(&test_card_uuid),
+            id: MaintenanceCardId::from_uuid(&test_card_uuid),
             owned_rolling_stock_id: OwnedRollingStockId::from(test_stock_uuid),
             last_maintenance_date: Some(NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()),
             next_maintenance_date: Some(NaiveDate::from_ymd_opt(2025, 1, 1).unwrap()),
@@ -83,7 +83,7 @@ mod tests {
             .await
             .expect("execute use-case");
         assert_eq!(cards.len(), 1);
-        let expected_id = MaintenanceCardId::new(&test_card_uuid);
+        let expected_id = MaintenanceCardId::from_uuid(&test_card_uuid);
         assert_eq!(cards[0].id.to_string(), expected_id.to_string());
         let expected_owned = OwnedRollingStockId::from(test_stock_uuid);
         assert_eq!(

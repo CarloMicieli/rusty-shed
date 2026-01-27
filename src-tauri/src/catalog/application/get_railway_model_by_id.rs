@@ -71,6 +71,7 @@ mod tests {
         Category, MockRailwayModelRepository, PowerMethod, ProductCode,
     };
     use crate::catalog::domain::scale::Scale;
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use mockall::predicate::eq;
 
@@ -81,7 +82,9 @@ mod tests {
         let railway_model = RailwayModelView {
             id: railway_model_id.clone(),
             manufacturer: RailwayModelManufacturer {
-                manufacturer_id: ManufacturerId::new("trn:manufacturer:mn-test"),
+                manufacturer_id: ManufacturerId::from_string_unchecked(
+                    "trn:manufacturer:mn-test".to_string(),
+                ),
                 display: "Test Manufacturer".to_string(),
             },
             product_code: ProductCode::try_from("12345").unwrap(),

@@ -1,87 +1,34 @@
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
-use slug::slugify;
-use std::fmt;
-use std::ops::Deref;
 
 /// Strongly-typed identifier for a track product.
 ///
 /// `TrackId` is a transparent newtype wrapping a `String` that stores a TRN
-/// (Train) identifier for track products. The canonical form produced by
-/// `TrackId::new_from_parts` is:
+/// (Train) identifier for track products. The canonical form is:
 ///
 /// trn:track:{manufacturer_slug}:{product_code_slug}
 ///
-/// where `{manufacturer_slug}` and `{product_code_slug}` are the slugified
-/// namespace-specific parts (lowercased, hyphen-separated). Prefer using the
-/// provided constructors and `TryFrom` implementations to validate external
-/// input. The type serializes as a plain string and is `sqlx::transparent` for
-/// convenient persistence.
+/// where both parts are slugified (lowercased, hyphen-separated).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
 #[sqlx(transparent)]
 pub struct TrackId(pub String);
 
-impl TrackId {
-    /// TRN prefix for track identifiers.
-    pub const TRN_PREFIX: &str = "trn:track:";
+impl_identifier_traits!(TrackId);
 
-    /// Create a new `TrackId` from manufacturer and product code parts.
-    ///
-    /// # Parameters
-    /// - `manufacturer`: the manufacturer name
-    /// - `product_code`: the product code
-    ///
-    /// # Returns
-    /// A new `TrackId` instance.
-    pub fn new_from_parts(manufacturer: &str, product_code: &str) -> Self {
-        let m = slugify(manufacturer);
-        let p = slugify(product_code);
-        TrackId(format!("{}{}:{}", TrackId::TRN_PREFIX, m, p))
-    }
-}
-
-impl Deref for TrackId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
+impl AsRef<str> for TrackId {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum TrackIdError {
-    #[error("invalid track trn: {0}")]
-    InvalidTrn(String),
-}
+impl Identifier for TrackId {
+    const PREFIX: &'static str = "trn:track";
 
-impl TryFrom<&str> for TrackId {
-    type Error = TrackIdError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if !value.starts_with(TrackId::TRN_PREFIX) {
-            return Err(TrackIdError::InvalidTrn(value.to_string()));
-        }
-        // basic validation: ensure suffix contains ':' separating manufacturer and product
-        let suffix = &value[TrackId::TRN_PREFIX.len()..];
-        if !suffix.contains(":") {
-            return Err(TrackIdError::InvalidTrn(value.to_string()));
-        }
-        Ok(TrackId(value.to_owned()))
-    }
-}
-
-impl TryFrom<String> for TrackId {
-    type Error = TrackIdError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        TrackId::try_from(value.as_str())
-    }
-}
-
-impl fmt::Display for TrackId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+    fn from_string_unchecked(s: String) -> Self {
+        TrackId(s)
     }
 }
 
@@ -92,26 +39,21 @@ mod tests {
 
     #[test]
     fn it_should_new_from_parts_generates_trn() {
-        let id = TrackId::new_from_parts("ACME", "P-100");
-        let expected = format!(
-            "{}{}:{}",
-            TrackId::TRN_PREFIX,
-            slugify("ACME"),
-            slugify("P-100")
-        );
-        assert_eq!(id.0, expected);
+        let id = TrackId::new_from_parts(&["ACME", "P-100"]);
+        let expected = "trn:track:acme:p-100";
+        assert_eq!(id.as_ref(), expected);
     }
 
     #[test]
     fn it_should_try_from_valid_trn_ok() {
-        let s = format!("{}{}:{}", TrackId::TRN_PREFIX, "mn-acme", "p100");
-        let id = TrackId::try_from(s.as_str()).unwrap();
+        let s = "trn:track:mn-acme:p100";
+        let id = TrackId::try_from(s).unwrap();
         assert_eq!(id.to_string(), s);
     }
 
     #[test]
     fn it_should_try_from_invalid_trn_fails() {
         let err = TrackId::try_from("not-a-trn").expect_err("should fail");
-        assert_eq!(format!("{}", err), "invalid track trn: not-a-trn");
+        assert!(format!("{}", err).contains("Invalid prefix"));
     }
 }

@@ -1,8 +1,6 @@
-use anyhow::anyhow;
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
-use slug::slugify;
-use std::fmt;
-use std::ops::Deref;
 
 /// Strongly-typed identifier for a manufacturer in the catalog domain.
 ///
@@ -15,158 +13,73 @@ use std::ops::Deref;
 /// and implementing this invariant at construction time avoids accidental use
 /// of invalid identifiers across the codebase.
 #[derive(
-    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, specta::Type, sqlx::Type,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    specta::Type,
+    sqlx::Type,
 )]
 #[serde(transparent)]
 #[specta(transparent)]
 #[sqlx(transparent)]
 pub struct ManufacturerId(String);
 
-impl ManufacturerId {
-    /// TRN prefix expected for manufacturer identifiers.
-    pub const TRN_PREFIX: &'static str = "trn:manufacturer:";
+impl_identifier_traits!(ManufacturerId);
 
-    /// Create a new ManufacturerId from any string-like value without
-    /// validation. Prefer the fallible `TryFrom` constructors when parsing
-    /// external input.
-    pub fn new<S: Into<String>>(value: S) -> Self {
-        ManufacturerId(value.into())
-    }
-
-    /// Creates a new `ManufacturerId` from a manufacturer name.
-    ///
-    /// # Parameters
-    /// - `name`: the name of the manufacturer
-    ///
-    /// # Returns
-    /// A new `ManufacturerId` instance with a slugified TRN.
-    pub fn from_name(name: &str) -> Self {
-        let slug = slug::slugify(name);
-        let value = format!("{}{}", ManufacturerId::TRN_PREFIX, slug);
-        ManufacturerId(value)
-    }
-}
-
-impl Deref for ManufacturerId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
+impl AsRef<str> for ManufacturerId {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-fn is_valid_slug(s: &str) -> bool {
-    // Consider a slug valid if it's non-empty and the `slug` crate's
-    // `slugify` produces the exact same output. This leverages the
-    // project's existing `slug` usage to validate canonical slugs.
-    if s.is_empty() {
-        return false;
-    }
-    slugify(s) == s
-}
+impl Identifier for ManufacturerId {
+    const PREFIX: &'static str = "trn:manufacturer";
 
-impl TryFrom<&str> for ManufacturerId {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if value.trim().is_empty() {
-            return Err(anyhow!("manufacturer id must not be empty"));
-        }
-
-        // If the value is already a TRN, validate the slug suffix.
-        if let Some(suffix) = value.strip_prefix(ManufacturerId::TRN_PREFIX) {
-            if !is_valid_slug(suffix) {
-                return Err(anyhow!("manufacturer id has invalid slug"));
-            }
-            return Ok(ManufacturerId(value.to_owned()));
-        }
-
-        // Accept a legacy plain identifier composed of letters/digits/hyphens
-        // (for example `MN-1`) and normalise it into the TRN form by lowercasing
-        // the suffix. This keeps backwards compatibility with existing DB
-        // fixtures while ensuring the domain type always stores a TRN.
-        let s = value.trim();
-        if s.bytes()
-            .all(|b| matches!(b, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-'))
-        {
-            let slug = s.to_ascii_lowercase();
-            if !is_valid_slug(&slug) {
-                return Err(anyhow!("manufacturer id has invalid slug"));
-            }
-            return Ok(ManufacturerId(format!(
-                "{}{}",
-                ManufacturerId::TRN_PREFIX,
-                slug
-            )));
-        }
-
-        Err(anyhow!(
-            "manufacturer id must be a TRN: trn:manufacturer:{{slug}}"
-        ))
-    }
-}
-
-impl TryFrom<String> for ManufacturerId {
-    type Error = anyhow::Error;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        ManufacturerId::try_from(value.as_str())
-    }
-}
-
-impl TryFrom<&String> for ManufacturerId {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &String) -> Result<Self, Self::Error> {
-        ManufacturerId::try_from(value.as_str())
-    }
-}
-
-impl fmt::Display for ManufacturerId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+    fn from_string_unchecked(s: String) -> Self {
+        ManufacturerId(s)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::domain::identifiers::IdParseError;
     use pretty_assertions::assert_eq;
 
     #[test]
     fn it_should_try_from_str_success() {
         let id = ManufacturerId::try_from("trn:manufacturer:mn-acme")
             .expect("expected valid manufacturer id");
-        assert_eq!(id.0, "trn:manufacturer:mn-acme");
+        assert_eq!(id.as_ref(), "trn:manufacturer:mn-acme");
     }
 
     #[test]
     fn it_should_try_from_str_empty_fails() {
-        let err = ManufacturerId::try_from("").expect_err("empty manufacturer id should fail");
-        let msg = format!("{}", err);
-        assert!(msg.contains("must not be empty"));
+        let result = ManufacturerId::try_from("");
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            IdParseError::InvalidPrefix { .. } => {}
+            _ => panic!("Expected InvalidPrefix error"),
+        }
     }
 
     #[test]
     fn it_should_try_from_string_blank_fails() {
-        let err = ManufacturerId::try_from("   ".to_string())
-            .expect_err("blank manufacturer id should fail");
-        let msg = format!("{}", err);
-        assert!(msg.contains("must not be empty"));
+        let result = ManufacturerId::try_from("   ".to_string());
+        assert!(result.is_err());
     }
 
     #[test]
     fn it_should_try_from_ref_string_success() {
         let s = "trn:manufacturer:m-1".to_string();
         let id = ManufacturerId::try_from(&s).expect("expected valid manufacturer id from &String");
-        assert_eq!(&*id, "trn:manufacturer:m-1");
-    }
-
-    #[test]
-    fn it_should_deref_to_str() {
-        let id = ManufacturerId::try_from("trn:manufacturer:man-7").unwrap();
-        let s: &str = &id;
-        assert_eq!(s, "trn:manufacturer:man-7");
+        assert_eq!(id.as_ref(), "trn:manufacturer:m-1");
     }
 
     #[test]
@@ -186,17 +99,32 @@ mod tests {
 
     #[test]
     fn it_should_invalid_prefix_fails() {
-        let err = ManufacturerId::try_from("MN ACME").expect_err("should fail non-trn");
-        let msg = format!("{}", err);
-        assert!(msg.contains("must be a TRN"));
+        let result = ManufacturerId::try_from("trn:other:acme");
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            IdParseError::InvalidPrefix { expected, .. } => {
+                assert_eq!(expected, "trn:manufacturer");
+            }
+            _ => panic!("Expected InvalidPrefix error"),
+        }
     }
 
     #[test]
-    fn it_should_invalid_slug_fails() {
-        // uppercase and spaces are invalid in slug
-        let bad = "trn:manufacturer:Bad Slug";
-        let err = ManufacturerId::try_from(bad).expect_err("invalid slug should fail");
-        let msg = format!("{}", err);
-        assert!(msg.contains("invalid slug"));
+    fn it_should_create_from_name() {
+        let id = ManufacturerId::new_from_parts(&["ACME Corporation"]);
+        assert_eq!(id.as_ref(), "trn:manufacturer:acme-corporation");
+    }
+
+    #[test]
+    fn it_should_validate_correct_format() {
+        assert!(ManufacturerId::is_valid("trn:manufacturer:acme"));
+        assert!(ManufacturerId::is_valid("trn:manufacturer:marklin"));
+    }
+
+    #[test]
+    fn it_should_reject_invalid_format() {
+        assert!(!ManufacturerId::is_valid("trn:other:acme"));
+        assert!(!ManufacturerId::is_valid("trn:manufacturer:"));
+        assert!(!ManufacturerId::is_valid(""));
     }
 }

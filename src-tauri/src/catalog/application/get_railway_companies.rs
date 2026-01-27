@@ -31,6 +31,7 @@ mod tests {
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::railway_company::MockRailwayCompanyRepository;
     use crate::catalog::domain::railway_company::RailwayCompanyId;
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
     use pretty_assertions::assert_eq;
 
@@ -39,7 +40,7 @@ mod tests {
         let mut mock = MockRailwayCompanyRepository::new();
 
         let railway_company = RailwayCompany {
-            id: RailwayCompanyId::new("trn:railway-company:test"),
+            id: RailwayCompanyId::from_string_unchecked("trn:railway-company:test".to_string()),
             name: "ACME Models".to_string(),
             registered_company_name: None,
             country_code: None,

@@ -537,7 +537,7 @@ mod tests {
     #[test]
     fn it_should_convert_locomotive_input_success() {
         let input = CreateRollingStockInput::Locomotive {
-            railway_company_id: "RY-1".to_string(),
+            railway_company_id: "trn:railway-company:ry-1".to_string(),
             friendly_name: "Test Loco".to_string(),
             series_code: "SC".to_string(),
             road_number: "RN-1".to_string(),

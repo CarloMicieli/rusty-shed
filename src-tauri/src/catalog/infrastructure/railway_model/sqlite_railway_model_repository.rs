@@ -11,6 +11,7 @@ use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use chrono::TimeZone;
 use sqlx::SqliteConnection;
+use uuid::Uuid;
 
 /// An SQLite-specific implementation of the `RailwayModelRepository`.
 ///
@@ -168,7 +169,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         rolling_stock: &RollingStockParams,
     ) -> Result<(), DomainError> {
         // Bind parameters and execute the insert command here...
-        let id = RollingStockId::new();
+        let id = RollingStockId::from_uuid(&Uuid::new_v4());
 
         let (
             technical_coupling,

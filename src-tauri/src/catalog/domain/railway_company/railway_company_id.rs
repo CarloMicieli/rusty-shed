@@ -1,93 +1,46 @@
-use anyhow::anyhow;
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 
 /// Strongly-typed identifier for a railway in the catalog domain.
 ///
-/// `RailwayId` wraps a string value and provides a distinct type instead of
+/// `RailwayCompanyId` wraps a string value and provides a distinct type instead of
 /// using plain strings everywhere. This improves type safety and makes intent
 /// explicit in function signatures and data structures.
 ///
-/// The inner string is kept private to allow the crate to enforce invariants
-/// or to provide controlled constructors/parsers elsewhere. `RailwayId` also
-/// derives Serde traits so it serializes/deserializes as a plain string.
-///
-/// Requirements
-/// - The railway id MUST be a non-empty, non-blank string. Constructions via
-///   `TryFrom<&str>` / `TryFrom<String>` will return an error if the input is
-///   empty or contains only whitespace.
+/// The identifier follows the TRN format: `trn:railway-company:{slug}`.
+/// All identifiers are automatically slugified and validated.
 #[derive(
-    Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize, specta::Type, sqlx::Type,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    specta::Type,
+    sqlx::Type,
 )]
 #[serde(transparent)]
 #[specta(transparent)]
 #[sqlx(transparent)]
 pub struct RailwayCompanyId(String);
 
-impl RailwayCompanyId {
-    /// TRN prefix expected for railway company identifiers.
-    pub const TRN_PREFIX: &'static str = "trn:railway-company:";
+impl_identifier_traits!(RailwayCompanyId);
 
-    /// Creates a new `RailwayId` from the given string.
-    ///
-    /// # Parameters
-    ///
-    /// - `id`: the string identifier for the railway
-    ///
-    /// # Returns
-    ///
-    /// A new `RailwayId` instance wrapping the provided string.
-    pub fn new<S: Into<String>>(id: S) -> Self {
-        RailwayCompanyId(id.into())
-    }
-
-    /// Creates a new `RailwayCompanyId` from a railway company name.
-    ///
-    /// # Parameters
-    /// - `name`: the name of the railway company
-    ///
-    /// # Returns
-    /// A new `RailwayCompanyId` instance with a slugified TRN.
-    pub fn from_name(name: &str) -> Self {
-        let slug = slug::slugify(name);
-        let value = format!("{}{}", RailwayCompanyId::TRN_PREFIX, slug);
-        RailwayCompanyId(value)
-    }
-}
-
-impl Deref for RailwayCompanyId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
+impl AsRef<str> for RailwayCompanyId {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-impl TryFrom<&str> for RailwayCompanyId {
-    type Error = anyhow::Error;
+impl Identifier for RailwayCompanyId {
+    const PREFIX: &'static str = "trn:railway-company";
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if value.trim().is_empty() {
-            return Err(anyhow!("railway id must not be empty"));
-        }
-        Ok(RailwayCompanyId(value.to_owned()))
-    }
-}
-
-impl TryFrom<String> for RailwayCompanyId {
-    type Error = anyhow::Error;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if value.trim().is_empty() {
-            return Err(anyhow!("railway id must not be empty"));
-        }
-        Ok(RailwayCompanyId(value))
-    }
-}
-
-impl std::fmt::Display for RailwayCompanyId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+    fn from_string_unchecked(s: String) -> Self {
+        RailwayCompanyId(s)
     }
 }
 
@@ -97,44 +50,44 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
+    fn it_should_new_from_parts() {
+        let id = RailwayCompanyId::new_from_parts(&["ACME Railways"]);
+        assert_eq!(id.as_ref(), "trn:railway-company:acme-railways");
+    }
+
+    #[test]
     fn it_should_try_from_str_success() {
-        let id = RailwayCompanyId::try_from("RY-ACME").expect("expected valid railway id");
-        assert_eq!(id.0, "RY-ACME");
+        let id = RailwayCompanyId::try_from("trn:railway-company:acme")
+            .expect("expected valid railway id");
+        assert_eq!(id.as_ref(), "trn:railway-company:acme");
     }
 
     #[test]
     fn it_should_try_from_str_empty_fails() {
         let err = RailwayCompanyId::try_from("").expect_err("empty railway id should fail");
         let msg = format!("{}", err);
-        assert!(msg.contains("must not be empty"));
+        assert!(msg.contains("Invalid prefix"));
     }
 
     #[test]
-    fn it_should_try_from_string_blank_fails() {
-        let err = RailwayCompanyId::try_from("   ".to_string())
-            .expect_err("blank railway id should fail");
+    fn it_should_try_from_str_invalid_prefix_fails() {
+        let err =
+            RailwayCompanyId::try_from("trn:other:test").expect_err("wrong prefix should fail");
         let msg = format!("{}", err);
-        assert!(msg.contains("must not be empty"));
-    }
-
-    #[test]
-    fn it_should_deref_to_str() {
-        let id = RailwayCompanyId::try_from("R-1").unwrap();
-        let s: &str = &id;
-        assert_eq!(s, "R-1");
+        assert!(msg.contains("Invalid prefix"));
     }
 
     #[test]
     fn it_should_display_outputs_inner_string() {
-        let id = RailwayCompanyId::try_from("RAIL-7").unwrap();
-        assert_eq!(id.to_string(), "RAIL-7");
+        let id = RailwayCompanyId::new_from_parts(&["RAIL-7"]);
+        assert_eq!(id.to_string(), "trn:railway-company:rail-7");
     }
 
     #[test]
     fn it_should_serde_roundtrip_as_string() {
-        let id = RailwayCompanyId::try_from("RR-100").unwrap();
+        let id = RailwayCompanyId::new_from_parts(&["RR-100"]);
         let s = serde_json::to_string(&id).expect("serialize");
-        assert_eq!(s, "\"RR-100\"");
+        assert_eq!(s, "\"trn:railway-company:rr-100\"");
         let de: RailwayCompanyId = serde_json::from_str(&s).expect("deserialize");
         assert_eq!(de, id);
     }

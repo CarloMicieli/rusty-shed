@@ -1,3 +1,4 @@
+use crate::core::domain::identifiers::Identifier;
 use crate::dcc_inventory::domain::DecoderId;
 use anyhow::Context;
 use chrono::Utc;
@@ -249,8 +250,8 @@ pub async fn seed_decoders(pool: &SqlitePool) -> anyhow::Result<()> {
             // (e.g. `esu`), so build the full TRN here.
             let manufacturer_id = format!("trn:manufacturer:{}", slugify(manufacturer));
 
-            // Build decoder id using the same normalization as DecoderId::from_parts
-            let id = DecoderId::from_parts(manufacturer, product_code).to_string();
+            // Build decoder id using the same normalization as DecoderId::new_from_parts
+            let id = DecoderId::new_from_parts(&[manufacturer, product_code]).to_string();
 
             b.push_bind(id)
                 .push_bind(manufacturer_id)

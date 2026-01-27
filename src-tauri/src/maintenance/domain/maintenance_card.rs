@@ -1,4 +1,5 @@
 use crate::collecting::domain::OwnedRollingStockId;
+use crate::core::domain::identifiers::Identifier;
 use crate::core::domain::metadata::Metadata;
 use crate::maintenance::domain::MaintenanceCardId;
 use crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent;
@@ -44,7 +45,7 @@ impl MaintenanceCard {
     /// Construct a minimal `MaintenanceCard` when only the UUID is known.
     pub fn from_id(id: Uuid) -> Self {
         MaintenanceCard {
-            id: MaintenanceCardId::new(&id),
+            id: MaintenanceCardId::from_uuid(&id),
             owned_rolling_stock_id: OwnedRollingStockId::from(id),
             last_maintenance_date: None,
             next_maintenance_date: None,
@@ -74,7 +75,7 @@ impl MaintenanceCard {
             id,
             maintenance_card_id: {
                 let s = self.id.to_string();
-                let uuid_str = s.trim_start_matches(MaintenanceCardId::TRN_PREFIX);
+                let uuid_str = s.trim_start_matches(MaintenanceCardId::PREFIX);
                 Uuid::parse_str(uuid_str).expect("invalid maintenance card id trn")
             },
             date_performed,

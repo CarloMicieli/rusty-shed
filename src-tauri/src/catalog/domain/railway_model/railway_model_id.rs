@@ -1,87 +1,62 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::Trn;
+use crate::core::domain::identifiers::Identifier;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::ops::Deref;
 use std::str::FromStr;
 
 /// Strongly-typed railway model identifier.
 ///
-/// `RailwayModelId` is a thin newtype over `String` used to represent railway
-/// model identifiers across the domain. Values created with the provided
-/// constructor follow a TRN-like pattern and include the manufacturer namespace
-/// and the product code. The canonical form produced by `RailwayModelId::new`
-/// is:
+/// `RailwayModelId` follows a TRN-like pattern with manufacturer namespace
+/// and product code:
 ///
-/// trn:railway-model:{manufacturer_nss}:{product_code}
-///
-/// where `{manufacturer_nss}` is the namespace-specific part (NSS) of a
-/// `ManufacturerId` TRN (for example the `mn-acme` part of
-/// `trn:manufacturer:mn-acme`). The module-level constant `TRN_PREFIX` holds
-/// the `trn:railway-model:` prefix used by the constructor.
-///
-/// Notes on construction:
-/// - `TryFrom<&str>` and `TryFrom<String>` perform only a non-empty/blank
-///   check and will accept any non-blank string (they do not parse or validate
-///   TRN structure).
-/// - Use `RailwayModelId::new(manufacturer_id, product_code)` to create an
-///   instance from a `ManufacturerId`; this validates the manufacturer and
-///   returns a `RailwayModelIdError` on failure.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, specta::Type)]
+/// trn:railway-model:{manufacturer_slug}:{product_code}
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type, specta::Type)]
 #[serde(transparent)]
 #[specta(transparent)]
 #[sqlx(transparent)]
 pub struct RailwayModelId(String);
 
-impl RailwayModelId {
-    /// TRN prefix expected for railway model identifiers.
-    pub const TRN_PREFIX: &'static str = "trn:railway-model:";
+impl AsRef<str> for RailwayModelId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
 
+impl Identifier for RailwayModelId {
+    const PREFIX: &'static str = "trn:railway-model";
+
+    fn from_string_unchecked(s: String) -> Self {
+        RailwayModelId(s)
+    }
+}
+
+impl RailwayModelId {
     /// Create a new `RailwayModelId` from a `ManufacturerId` and a product code.
     ///
-    /// Behaviour:
-    /// - Parses the provided `manufacturer_id` as a `Trn` and uses its NSS
-    ///   component as the manufacturer namespace included in the resulting ID.
-    /// - The `product_code` is appended verbatim after the manufacturer NSS.
-    ///
-    /// Returns:
-    /// - `Ok(RailwayModelId)` when the manufacturer is valid and a value is
-    ///   constructed successfully.
-    /// - `Err(RailwayModelIdError::InvalidManufacturerId)` when the
-    ///   `manufacturer_id` cannot be parsed as a `Trn`.
+    /// Parses the provided `manufacturer_id` as a `Trn` and uses its NSS
+    /// component as the manufacturer namespace included in the resulting ID.
+    /// Note: The product code is lowercased but NOT slugified to preserve its original format.
     pub fn new(
         manufacturer_id: &ManufacturerId,
         product_code: &str,
     ) -> Result<Self, RailwayModelIdError> {
-        let manufacturer_trn = Trn::from_str(manufacturer_id)
+        let manufacturer_trn = Trn::from_str(manufacturer_id.as_ref())
             .map_err(|_| RailwayModelIdError::InvalidManufacturerId)?;
-        let value = format!(
-            "{}{}:{}",
-            RailwayModelId::TRN_PREFIX,
-            manufacturer_trn.nss(),
-            product_code
-        );
-        Ok(RailwayModelId(value))
-    }
 
-    /// Create a new `RailwayModelId` from raw manufacturer and product code strings.
-    ///
-    /// This does not perform any validation.
-    ///
-    /// # Parameters
-    /// - `manufactuer`: the manufacturer namespace string
-    /// - `product_code`: the product code string
-    ///
-    /// # Returns
-    /// A new `RailwayModelId` instance.
-    pub fn new_from_parts(manufactuer: &str, product_code: &str) -> Self {
-        let value = format!(
-            "{}{}:{}",
-            RailwayModelId::TRN_PREFIX,
-            slug::slugify(manufactuer),
-            slug::slugify(product_code)
+        // Build the ID manually without slugifying the product code
+        let id = format!(
+            "{}:{}:{}",
+            Self::PREFIX,
+            manufacturer_trn.nss(),
+            product_code.to_lowercase()
         );
-        RailwayModelId(value)
+        Ok(RailwayModelId::from_string_unchecked(id))
+    }
+}
+
+impl std::fmt::Display for RailwayModelId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -99,14 +74,6 @@ pub enum RailwayModelIdError {
     InvalidFormat,
 }
 
-impl Deref for RailwayModelId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl TryFrom<&str> for RailwayModelId {
     type Error = RailwayModelIdError;
 
@@ -116,12 +83,14 @@ impl TryFrom<&str> for RailwayModelId {
             return Err(RailwayModelIdError::EmptyId);
         }
 
-        // Expect the TRN prefix: trn:railway-model:{manufacturer_nss}:{product_code}
-        let rest = v
-            .strip_prefix(RailwayModelId::TRN_PREFIX)
-            .ok_or(RailwayModelIdError::InvalidFormat)?;
+        // Expect the TRN prefix
+        if !v.starts_with(&format!("{}:", Self::PREFIX)) {
+            return Err(RailwayModelIdError::InvalidFormat);
+        }
 
-        // Split the remaining part into exactly two components: manufacturer_nss and product_code
+        let rest = &v[Self::PREFIX.len() + 1..];
+
+        // Split into exactly two components: manufacturer_nss and product_code
         let parts: Vec<&str> = rest.split(':').collect();
         if parts.len() != 2 {
             return Err(RailwayModelIdError::InvalidFormat);
@@ -137,8 +106,13 @@ impl TryFrom<&str> for RailwayModelId {
             return Err(RailwayModelIdError::InvalidProductCode);
         }
 
+        // Validate manufacturer_nss is a valid slug (lowercase alphanumeric + hyphens, no spaces)
+        if manufacturer_nss.contains(char::is_whitespace) {
+            return Err(RailwayModelIdError::InvalidManufacturerNamespace);
+        }
+
         // Validate the manufacturer NSS by attempting to create a ManufacturerId from a TRN
-        let manufacturer_trn = format!("{}{}", ManufacturerId::TRN_PREFIX, manufacturer_nss);
+        let manufacturer_trn = format!("trn:manufacturer:{}", manufacturer_nss);
         ManufacturerId::try_from(manufacturer_trn.as_str())
             .map_err(|_| RailwayModelIdError::InvalidManufacturerNamespace)?;
 
@@ -151,12 +125,6 @@ impl TryFrom<String> for RailwayModelId {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         RailwayModelId::try_from(value.as_str())
-    }
-}
-
-impl fmt::Display for RailwayModelId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
     }
 }
 
@@ -196,12 +164,12 @@ mod tests {
     #[test]
     fn it_should_deref_to_str() {
         let id = RailwayModelId::try_from(RAILWAY_MODEL_TRN).unwrap();
-        let s: &str = &id;
+        let s: &str = id.as_ref();
         assert_eq!(s, RAILWAY_MODEL_TRN);
     }
 
     #[test]
-    fn it_should_serde_roundtrip_as_string() {
+    fn serde_roundtrip_as_string() {
         let id = RailwayModelId::try_from(RAILWAY_MODEL_TRN).unwrap();
         let s = serde_json::to_string(&id).expect("serialize");
         assert_eq!(s, "\"trn:railway-model:acme:123456\"");
@@ -216,12 +184,13 @@ mod tests {
         let railway_model_id =
             RailwayModelId::new(&manufacturer_id, "P123").expect("valid Railway model ID");
 
-        assert_eq!(railway_model_id.to_string(), "trn:railway-model:acme:P123");
+        assert_eq!(railway_model_id.to_string(), "trn:railway-model:acme:p123");
     }
 
     #[test]
     fn it_should_new_with_non_trn_manufacturer() {
-        let m = ManufacturerId::new("not-a-trn");
+        // Pass a ManufacturerId that doesn't follow TRN format
+        let m = ManufacturerId::from_string_unchecked("invalid-format".to_string());
         let result = RailwayModelId::new(&m, "P1");
 
         assert!(result.is_err());

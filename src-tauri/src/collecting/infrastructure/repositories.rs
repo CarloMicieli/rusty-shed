@@ -539,6 +539,7 @@ mod tests {
     use crate::collecting::domain::{
         BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
     };
+    use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::{Currency, MonetaryAmount};
     use crate::core::infrastructure::logging;
     use crate::sellers::domain::seller_id::SellerId;
@@ -702,7 +703,9 @@ mod tests {
 
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer_id: ManufacturerId::new("not-a-trn"),
+            manufacturer_id: ManufacturerId::from_string_unchecked(
+                "trn:manufacturer:not-a-trn".to_string(),
+            ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,
@@ -714,7 +717,7 @@ mod tests {
             availability_status: None,
             rolling_stocks: vec![RollingStock::Locomotive {
                 id: rolling_stock_id.clone(),
-                railway_id: RailwayCompanyId::new("RY-ACME"),
+                railway_id: RailwayCompanyId::from_string_unchecked("RY-ACME".to_string()),
                 livery: None,
                 length_over_buffer: None,
                 technical_specifications: None,
@@ -809,7 +812,9 @@ mod tests {
 
         let railway_model = RailwayModel {
             id: railway_model_id.clone(),
-            manufacturer_id: ManufacturerId::new("not-a-trn"),
+            manufacturer_id: ManufacturerId::from_string_unchecked(
+                "trn:manufacturer:not-a-trn".to_string(),
+            ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: "Test model".to_string(),
             details: None,
@@ -821,7 +826,7 @@ mod tests {
             availability_status: None,
             rolling_stocks: vec![RollingStock::Locomotive {
                 id: rolling_stock_id.clone(),
-                railway_id: RailwayCompanyId::new("RY-ACME"),
+                railway_id: RailwayCompanyId::from_string_unchecked("RY-ACME".to_string()),
                 livery: None,
                 length_over_buffer: None,
                 technical_specifications: None,

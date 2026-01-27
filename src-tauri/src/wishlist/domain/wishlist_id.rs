@@ -1,20 +1,20 @@
-use anyhow::anyhow;
+use crate::core::domain::identifiers::Identifier;
+use crate::impl_identifier_traits;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Strongly-typed identifier for a wishlist.
 ///
 /// Wraps a formatted `String` of the form `trn:wishlist:{uuid}`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, specta::Type, sqlx::Type)]
 #[sqlx(transparent)]
 #[serde(transparent)]
 #[specta(transparent)]
 pub struct WishlistId(pub String);
 
-impl WishlistId {
-    /// TRN prefix expected for wishlist identifiers.
-    pub const TRN_PREFIX: &'static str = "trn:wishlist:";
+impl_identifier_traits!(WishlistId);
 
+impl WishlistId {
     /// Create a new `WishlistId` from a `Uuid`.
     ///
     /// # Parameters
@@ -22,8 +22,22 @@ impl WishlistId {
     ///
     /// # Returns
     /// A new `WishlistId` instance.
-    pub fn from_id(uuid: &Uuid) -> Self {
-        WishlistId(format!("{}{}", WishlistId::TRN_PREFIX, uuid))
+    pub fn from_uuid(uuid: &Uuid) -> Self {
+        WishlistId::new_from_parts(&[&uuid.to_string()])
+    }
+}
+
+impl AsRef<str> for WishlistId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Identifier for WishlistId {
+    const PREFIX: &'static str = "trn:wishlist";
+
+    fn from_string_unchecked(s: String) -> Self {
+        WishlistId(s)
     }
 }
 
@@ -32,46 +46,7 @@ impl WishlistId {
 /// The default value is a namespaced string of the form `trn:wishlist:{uuid}`.
 impl Default for WishlistId {
     fn default() -> Self {
-        WishlistId::from_id(&Uuid::new_v4())
-    }
-}
-
-/// Parse a `WishlistId` from a `&str`.
-///
-/// Accepts either a raw UUID string (e.g. `550e8400-e29b-41d4-a716-446655440000`)
-/// or a namespaced form `trn:wishlist:{uuid}`. Returns an error when the UUID
-/// portion fails to parse.
-impl TryFrom<&str> for WishlistId {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let uuid_str = if let Some(s) = value.strip_prefix(WishlistId::TRN_PREFIX) {
-            s
-        } else {
-            value
-        };
-        let parsed = Uuid::parse_str(uuid_str).map_err(|e| anyhow!("invalid uuid: {}", e))?;
-        Ok(WishlistId::from_id(&parsed))
-    }
-}
-
-/// Parse a `WishlistId` from an owned `String`.
-///
-/// Delegates to the `&str` implementation.
-impl TryFrom<String> for WishlistId {
-    type Error = anyhow::Error;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        WishlistId::try_from(value.as_str())
-    }
-}
-
-/// Display the namespaced identifier as a string.
-///
-/// This writes the inner formatted string, e.g. `trn:wishlist:{uuid}`.
-impl std::fmt::Display for WishlistId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        WishlistId::from_uuid(&Uuid::new_v4())
     }
 }
 
@@ -82,42 +57,34 @@ mod tests {
 
     #[test]
     fn it_should_try_from_str_success() {
-        let uuid = "550e8400-e29b-41d4-a716-446655440000";
-        let id = WishlistId::try_from(uuid).expect("expected valid id");
-        assert_eq!(
-            id.to_string(),
-            format!("{}{}", WishlistId::TRN_PREFIX, uuid)
-        );
+        let trn = "trn:wishlist:550e8400-e29b-41d4-a716-446655440000";
+        let id = WishlistId::try_from(trn).expect("expected valid id");
+        assert_eq!(id.to_string(), trn);
     }
 
     #[test]
     fn it_should_try_from_str_invalid_fails() {
         let err = WishlistId::try_from("not-a-uuid").expect_err("invalid uuid should fail");
         let msg = format!("{}", err);
-        assert!(msg.contains("invalid uuid"));
+        assert!(msg.contains("Invalid prefix") || msg.contains("invalid UUID"));
     }
 
     #[test]
     fn it_should_serde_roundtrip() {
-        let uuid = "550e8400-e29b-41d4-a716-446655440000";
-        let id = WishlistId::try_from(uuid).unwrap();
+        let trn = "trn:wishlist:550e8400-e29b-41d4-a716-446655440000";
+        let id = WishlistId::try_from(trn).unwrap();
         let s = serde_json::to_string(&id).expect("serialize");
-        // compact serde may serialize as string
         let de: WishlistId = serde_json::from_str(&s).expect("deserialize");
         assert_eq!(de, id);
     }
 
     #[test]
     fn it_should_try_from_string_success() {
-        let uuid = String::from("550e8400-e29b-41d4-a716-446655440000");
-        let id = WishlistId::try_from(uuid).expect("expected valid id from String");
+        let trn = String::from("trn:wishlist:550e8400-e29b-41d4-a716-446655440000");
+        let id = WishlistId::try_from(trn).expect("expected valid id from String");
         assert_eq!(
             id.to_string(),
-            format!(
-                "{}{}",
-                WishlistId::TRN_PREFIX,
-                "550e8400-e29b-41d4-a716-446655440000"
-            )
+            "trn:wishlist:550e8400-e29b-41d4-a716-446655440000"
         );
     }
 
@@ -125,19 +92,13 @@ mod tests {
     fn it_should_default_generates_random_uuid() {
         let id = WishlistId::default();
         // default should not produce the nil UUID
-        assert_ne!(
-            id.0,
-            format!("{}{}", WishlistId::TRN_PREFIX, uuid::Uuid::nil())
-        );
+        assert_ne!(id.0, format!("trn:wishlist:{}", uuid::Uuid::nil()));
     }
 
     #[test]
     fn it_should_display_outputs_uuid() {
-        let uuid = "550e8400-e29b-41d4-a716-446655440000";
-        let id = WishlistId::try_from(uuid).unwrap();
-        assert_eq!(
-            format!("{}", id),
-            format!("{}{}", WishlistId::TRN_PREFIX, uuid)
-        );
+        let trn = "trn:wishlist:550e8400-e29b-41d4-a716-446655440000";
+        let id = WishlistId::try_from(trn).unwrap();
+        assert_eq!(format!("{}", id), trn);
     }
 }

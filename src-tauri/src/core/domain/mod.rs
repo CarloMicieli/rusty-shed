@@ -2,6 +2,7 @@ pub mod address;
 pub mod currency;
 pub mod domain_error;
 pub mod id_provider;
+pub mod identifiers;
 pub mod length;
 pub mod measure_units;
 pub mod metadata;

@@ -7,6 +7,7 @@ use crate::catalog::domain::railway_model::{
 use crate::catalog::domain::railway_model::{RollingStockId, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
 use serde_json::json;
+use uuid::Uuid;
 
 /// A `RailwayModel` represents a manufactured model product in the catalog.
 ///
@@ -108,7 +109,7 @@ impl RailwayModel {
 
     /// Emit RollingStockAdded event for a new rolling stock. Returns the generated id.
     pub fn add_rolling_stock(&mut self, params: RollingStockParams) -> RollingStockId {
-        let rs_id = RollingStockId::new();
+        let rs_id = RollingStockId::from_uuid(&Uuid::new_v4());
         let ev = RailwayModelEvent::RollingStockAdded {
             event_id: uuid::Uuid::new_v4(),
             railway_model_id: self.id.clone(),

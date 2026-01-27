@@ -1,3 +1,4 @@
+use crate::core::domain::identifiers::IdParseError;
 use crate::core::domain::validation::ValidationError;
 use std::collections::HashMap;
 
@@ -48,4 +49,11 @@ pub enum DomainError {
     /// Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
     #[error("validation error: {0:?}")]
     ValidationError(HashMap<String, Vec<ValidationError>>),
+
+    /// Indicates an invalid identifier format or parsing error.
+    ///
+    /// **Source:** Triggered when attempting to parse a string into an identifier
+    /// and the format is invalid or the prefix doesn't match.
+    #[error("Invalid identifier: {0}")]
+    InvalidIdentifier(#[from] IdParseError),
 }
