@@ -32,6 +32,16 @@ pub enum BodyShellType {
     MetalDieCast,
 }
 
+/// Garde validator for `BodyShellType`.
+#[allow(dead_code)]
+pub fn validate_body_shell_type(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<BodyShellType>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_body_shell_type"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -67,5 +77,24 @@ mod tests {
     #[case(BodyShellType::MetalDieCast, "METAL_DIE_CAST")]
     fn display_variants(#[case] input: BodyShellType, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("PLASTIC")]
+        #[case("METAL_DIE_CAST")]
+        fn validate_body_shell_type_accepts_all(#[case] s: &str) {
+            assert!(validate_body_shell_type(s, &()).is_ok());
+            assert!(validate_body_shell_type(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_body_shell_type_rejects_invalid() {
+            let err = validate_body_shell_type("BAD", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_body_shell_type"));
+        }
     }
 }

@@ -22,6 +22,16 @@ pub enum WishlistPriority {
     High,
 }
 
+/// Garde validator for `WishlistPriority`.
+#[allow(dead_code)]
+pub fn validate_wishlist_priority(value: &str, _ctx: &()) -> garde::Result {
+    if WishlistPriority::try_from(value).is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_wishlist_priority"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

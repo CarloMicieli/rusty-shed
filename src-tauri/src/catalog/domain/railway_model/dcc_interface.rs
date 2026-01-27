@@ -87,6 +87,16 @@ pub enum DccInterface {
     Mtc21,
 }
 
+/// Garde validator for `DccInterface`.
+#[allow(dead_code)]
+pub fn validate_dcc_interface(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<DccInterface>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_dcc_interface"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,5 +149,24 @@ mod tests {
     #[case(DccInterface::Mtc21, "MTC_21")]
     fn display_variants(#[case] input: DccInterface, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("NEM_651")]
+        #[case("PLUX_8")]
+        fn validate_dcc_interface_accepts_all(#[case] s: &str) {
+            assert!(validate_dcc_interface(s, &()).is_ok());
+            assert!(validate_dcc_interface(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_dcc_interface_rejects_invalid() {
+            let err = validate_dcc_interface("NONE", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_dcc_interface"));
+        }
     }
 }

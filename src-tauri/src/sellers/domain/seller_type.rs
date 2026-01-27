@@ -26,6 +26,7 @@ use strum_macros::{Display, EnumString};
 #[sqlx(type_name = "TEXT")]
 #[sqlx(rename_all = "SCREAMING_SNAKE_CASE")]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
 pub enum SellerType {
     /// A retail shop or online store selling products directly to customers.
     #[default]
@@ -39,6 +40,16 @@ pub enum SellerType {
 
     /// A commercial distributor or wholesaler that supplies retailers.
     Distributor,
+}
+
+/// Garde validator for `SellerType`.
+#[allow(dead_code)]
+pub fn validate_seller_type(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<SellerType>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_seller_type"))
+    }
 }
 
 #[cfg(test)]
@@ -72,5 +83,25 @@ mod tests {
     fn it_should_display_outputs_variant_name() {
         // Display uses the serialized form (SCREAMING_SNAKE_CASE) as configured by `strum`.
         assert_eq!(format!("{}", SellerType::Marketplace), "MARKETPLACE");
+    }
+}
+
+#[cfg(test)]
+mod validator_tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("PRIVATE")]
+    #[case("SHOP")]
+    fn validate_seller_type_accepts_all(#[case] s: &str) {
+        assert!(validate_seller_type(s, &()).is_ok());
+        assert!(validate_seller_type(&s.to_lowercase(), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_seller_type_rejects_invalid() {
+        let err = validate_seller_type("NONE", &()).unwrap_err();
+        assert!(err.to_string().contains("error_invalid_seller_type"));
     }
 }

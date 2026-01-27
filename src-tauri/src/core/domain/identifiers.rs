@@ -178,7 +178,7 @@ mod tests {
 
     // Test identifier for unit tests
     #[derive(Debug, Clone, PartialEq, Eq)]
-    struct TestId(String);
+    pub(crate) struct TestId(String);
 
     impl AsRef<str> for TestId {
         fn as_ref(&self) -> &str {
@@ -309,5 +309,45 @@ mod tests {
         let id3 = TestId::new_from_parts(&["different"]);
         assert_eq!(id1, id2);
         assert_ne!(id1, id3);
+    }
+}
+
+#[cfg(test)]
+mod validator_tests {
+    use super::*;
+    use crate::core::domain::identifiers::tests::TestId;
+
+    #[test]
+    fn validate_id_rejects_invalid() {
+        // empty string
+        let res = validate_id::<TestId>("", &());
+        assert!(res.is_err());
+        assert!(
+            res.unwrap_err()
+                .to_string()
+                .contains("error_invalid_identifier")
+        );
+
+        // wrong prefix
+        let res2 = validate_id::<TestId>("invalid:foo", &());
+        assert!(res2.is_err());
+    }
+
+    #[test]
+    fn validate_id_accepts_valid() {
+        let id = TestId::new_from_parts(&["my", "item"]);
+        let res = validate_id::<TestId>(id.as_ref(), &());
+        assert!(res.is_ok());
+    }
+}
+
+/// Garde validator for domain identifiers used in command arguments.
+///
+/// Usage in garde attributes: `#[garde(validate = "core::domain::identifiers::validate_id::<MyId>")]`
+pub fn validate_id<T: Identifier>(id: &str, _ctx: &()) -> garde::Result {
+    if T::is_valid(id) {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_identifier"))
     }
 }

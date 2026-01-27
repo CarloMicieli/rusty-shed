@@ -38,6 +38,16 @@ pub enum TrackCode {
     Code100,
 }
 
+/// Garde validator for `TrackCode`.
+#[allow(dead_code)]
+pub fn validate_track_code(value: &str, _ctx: &()) -> garde::Result {
+    if TrackCode::try_from(value).is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_track_code"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

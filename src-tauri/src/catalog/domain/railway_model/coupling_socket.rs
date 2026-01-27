@@ -67,6 +67,16 @@ pub enum CouplingSocket {
     Nem365,
 }
 
+/// Garde validator for `CouplingSocket`.
+#[allow(dead_code)]
+pub fn validate_coupling_socket(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<CouplingSocket>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_coupling_socket"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,5 +118,24 @@ mod tests {
     fn it_should_parse_invalid_returns_error() {
         let result = "NOT_A_COUPLING".parse::<CouplingSocket>();
         assert_eq!(Err(ParseError::VariantNotFound), result);
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("NONE")]
+        #[case("NEM_355")]
+        fn validate_coupling_socket_accepts_all(#[case] s: &str) {
+            assert!(validate_coupling_socket(s, &()).is_ok());
+            assert!(validate_coupling_socket(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_coupling_socket_rejects_invalid() {
+            let err = validate_coupling_socket("BAD", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_coupling_socket"));
+        }
     }
 }

@@ -32,6 +32,16 @@ pub enum WishlistStatus {
     Ignored,
 }
 
+/// Garde validator for `WishlistStatus`.
+#[allow(dead_code)]
+pub fn validate_wishlist_status(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<WishlistStatus>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_wishlist_status"))
+    }
+}
+
 // Tests for WishlistStatus
 #[cfg(test)]
 mod tests {
@@ -83,5 +93,25 @@ mod tests {
     #[case("ONORDER")]
     fn test_fromstr_invalid(#[case] input: &str) {
         assert!(WishlistStatus::from_str(input).is_err());
+    }
+}
+
+#[cfg(test)]
+mod validator_tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("WANTED")]
+    #[case("ON_ORDER")]
+    fn validate_wishlist_status_accepts_all(#[case] s: &str) {
+        assert!(validate_wishlist_status(s, &()).is_ok());
+        assert!(validate_wishlist_status(&s.to_lowercase(), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_wishlist_status_rejects_invalid() {
+        let err = validate_wishlist_status("NOPE", &()).unwrap_err();
+        assert!(err.to_string().contains("error_invalid_wishlist_status"));
     }
 }

@@ -31,6 +31,16 @@ pub enum PowerMethod {
     TrixExpress,
 }
 
+/// Garde validator for `PowerMethod` (case-insensitive parsing via `strum`).
+#[allow(dead_code)]
+pub fn validate_power_method(value: &str, _ctx: &()) -> garde::Result {
+    if PowerMethod::try_from(value).is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_power_method"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -58,5 +68,25 @@ mod tests {
     fn it_should_try_from_invalid_returns_error() {
         let res = PowerMethod::try_from("unknown");
         assert!(res.is_err());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("AC")]
+        #[case("DC")]
+        #[case("TRIX_EXPRESS")]
+        fn validate_power_method_accepts_all(#[case] s: &str) {
+            assert!(validate_power_method(s, &()).is_ok());
+            assert!(validate_power_method(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_power_method_rejects_invalid() {
+            let e = validate_power_method("UNKNOWN", &()).unwrap_err();
+            assert!(e.to_string().contains("error_invalid_power_method"));
+        }
     }
 }

@@ -22,6 +22,17 @@ pub enum DigitalProtocol {
     Selectrix,
     Motorola,
     Fmz,
+    Next18,
+}
+
+/// Garde validator for `DigitalProtocol`.
+#[allow(dead_code)]
+pub fn validate_digital_protocol(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<DigitalProtocol>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_digital_protocol"))
+    }
 }
 
 #[cfg(test)]
@@ -65,5 +76,24 @@ mod tests {
             })
             .collect::<String>();
         assert_eq!(DigitalProtocol::from_str(&mixed).unwrap(), proto);
+    }
+
+    mod validator_tests {
+        use crate::dcc_inventory::domain::digital_protocol::validate_digital_protocol;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("DCC")]
+        #[case("MFX")]
+        fn validate_digital_protocol_accepts_all(#[case] s: &str) {
+            assert!(validate_digital_protocol(s, &()).is_ok());
+            assert!(validate_digital_protocol(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_digital_protocol_rejects_invalid() {
+            let err = validate_digital_protocol("NOPE", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_digital_protocol"));
+        }
     }
 }

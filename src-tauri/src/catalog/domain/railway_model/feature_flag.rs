@@ -40,6 +40,16 @@ pub enum FeatureFlag {
     NotApplicable,
 }
 
+/// Garde validator for `FeatureFlag`.
+#[allow(dead_code)]
+pub fn validate_feature_flag(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<FeatureFlag>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_feature_flag"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,5 +76,24 @@ mod tests {
     #[case(FeatureFlag::NotApplicable, "NOT_APPLICABLE")]
     fn it_should_display_feature_flags(#[case] input: FeatureFlag, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("YES")]
+        #[case("NO")]
+        fn validate_feature_flag_accepts_all(#[case] s: &str) {
+            assert!(validate_feature_flag(s, &()).is_ok());
+            assert!(validate_feature_flag(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_feature_flag_rejects_invalid() {
+            let err = validate_feature_flag("BAD", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_feature_flag"));
+        }
     }
 }

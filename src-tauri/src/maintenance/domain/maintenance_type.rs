@@ -48,6 +48,50 @@ pub enum MaintenanceType {
     Other,
 }
 
+/// Garde validator for `MaintenanceType`.
+#[allow(dead_code)]
+pub fn validate_maintenance_type(value: &str, _ctx: &()) -> garde::Result {
+    if MaintenanceType::try_from(value).is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_maintenance_type"))
+    }
+}
+
+#[cfg(test)]
+mod validator_tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("WHEEL_CLEANING")]
+    #[case("TRACK_CLEANING")]
+    #[case("CONTACT_CLEANING")]
+    #[case("LUBRICATION")]
+    #[case("GEAR_GREASE")]
+    #[case("MOTOR_BRUSH_REPLACEMENT")]
+    #[case("TRACTION_TIRE_REPLACEMENT")]
+    #[case("DECODER_INSTALL")]
+    #[case("FIRMWARE_UPDATE")]
+    #[case("SPEAKER_REPAIR")]
+    #[case("STAY_ALIVE_INSTALL")]
+    #[case("COUPLER_ADJUSTMENT")]
+    #[case("DETAIL_REPAIR")]
+    #[case("WEATHERING")]
+    #[case("GENERAL_INSPECTION")]
+    #[case("OTHER")]
+    fn validate_maintenance_type_accepts_all(#[case] s: &str) {
+        assert!(validate_maintenance_type(s, &()).is_ok());
+        assert!(validate_maintenance_type(&s.to_lowercase(), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_maintenance_type_rejects_invalid() {
+        let err = validate_maintenance_type("INVALID", &()).unwrap_err();
+        assert!(err.to_string().contains("error_invalid_maintenance_type"));
+    }
+}
+
 // rust
 #[cfg(test)]
 mod tests {

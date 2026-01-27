@@ -26,6 +26,18 @@ pub enum DecoderType {
     Sound,
     /// Decoder with function capabilities.
     Function,
+    /// MultiProtocol decoder.
+    MultiProtocol,
+}
+
+/// Garde validator for `DecoderType`.
+#[allow(dead_code)]
+pub fn validate_decoder_type(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<DecoderType>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_decoder_type"))
+    }
 }
 
 #[cfg(test)]
@@ -49,5 +61,24 @@ mod tests {
         let lower = expected.to_lowercase();
         let parsed_lower = lower.parse::<DecoderType>().expect("parse ok lower");
         assert_eq!(parsed_lower, variant);
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("SOUND")]
+        #[case("PLAIN")]
+        fn validate_decoder_type_accepts_all(#[case] s: &str) {
+            assert!(validate_decoder_type(s, &()).is_ok());
+            assert!(validate_decoder_type(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_decoder_type_rejects_invalid() {
+            let err = validate_decoder_type("BAD", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_decoder_type"));
+        }
     }
 }

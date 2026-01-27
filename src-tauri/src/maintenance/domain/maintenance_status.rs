@@ -52,6 +52,16 @@ impl MaintenanceStatus {
     }
 }
 
+/// Garde validator for `MaintenanceStatus`.
+#[allow(dead_code)]
+pub fn validate_maintenance_status(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<MaintenanceStatus>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_maintenance_status"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,5 +103,25 @@ mod tests {
 
         let lower = text.to_lowercase();
         assert_eq!(lower.parse::<MaintenanceStatus>().unwrap(), status);
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("UP_TO_DATE")]
+        #[case("DUE")]
+        #[case("OVERDUE")]
+        fn validate_maintenance_status_accepts_all(#[case] s: &str) {
+            assert!(validate_maintenance_status(s, &()).is_ok());
+            assert!(validate_maintenance_status(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_maintenance_status_rejects_invalid() {
+            let err = validate_maintenance_status("BAD", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_maintenance_status"));
+        }
     }
 }

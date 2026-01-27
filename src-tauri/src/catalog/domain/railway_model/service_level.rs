@@ -69,6 +69,16 @@ impl FromStr for ServiceLevel {
     }
 }
 
+/// Garde validator for `ServiceLevel`.
+#[allow(dead_code)]
+pub fn validate_service_level(value: &str, _ctx: &()) -> garde::Result {
+    if ServiceLevel::try_from(value).is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_service_level"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -104,5 +114,25 @@ mod tests {
         // Ensure the error contains the static message
         let err = err.unwrap_err();
         assert!(format!("{}", err).contains(INVALID_SERVICE_LEVEL));
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("1")]
+        #[case("1/2")]
+        fn validate_service_level_accepts_all(#[case] s: &str) {
+            assert!(validate_service_level(s, &()).is_ok());
+            // ServiceLevel parsing is numeric; just reuse the input string
+            assert!(validate_service_level(s, &()).is_ok());
+        }
+
+        #[test]
+        fn validate_service_level_rejects_invalid() {
+            let err = validate_service_level("NO", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_service_level"));
+        }
     }
 }

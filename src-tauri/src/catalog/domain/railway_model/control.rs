@@ -94,3 +94,33 @@ mod tests {
         assert_eq!(expected, input.to_string());
     }
 }
+
+/// Garde validator for `Control`.
+#[allow(dead_code)]
+pub fn validate_control(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<Control>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_control"))
+    }
+}
+
+#[cfg(test)]
+mod validator_tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("DCC_FITTED")]
+    #[case("DCC_SOUND")]
+    fn validate_control_accepts_all(#[case] s: &str) {
+        assert!(validate_control(s, &()).is_ok());
+        assert!(validate_control(&s.to_lowercase(), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_control_rejects_invalid() {
+        let err = validate_control("ZZZ", &()).unwrap_err();
+        assert!(err.to_string().contains("error_invalid_control"));
+    }
+}

@@ -41,6 +41,16 @@ pub enum AvailabilityStatus {
     Discontinued,
 }
 
+/// Garde validator for `AvailabilityStatus`.
+#[allow(dead_code)]
+pub fn validate_availability_status(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<AvailabilityStatus>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_availability_status"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -68,5 +78,27 @@ mod tests {
     #[case(AvailabilityStatus::Discontinued, "DISCONTINUED")]
     fn it_should_display_dcc_interfaces(#[case] input: AvailabilityStatus, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("AVAILABLE")]
+        #[case("ANNOUNCED")]
+        fn validate_availability_status_accepts_all(#[case] s: &str) {
+            assert!(validate_availability_status(s, &()).is_ok());
+            assert!(validate_availability_status(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_availability_status_rejects_invalid() {
+            let err = validate_availability_status("NONE", &()).unwrap_err();
+            assert!(
+                err.to_string()
+                    .contains("error_invalid_availability_status")
+            );
+        }
     }
 }

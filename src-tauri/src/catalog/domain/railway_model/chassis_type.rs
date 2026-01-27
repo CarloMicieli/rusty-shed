@@ -32,6 +32,16 @@ pub enum ChassisType {
     MetalDieCast,
 }
 
+/// Garde validator for `ChassisType`.
+#[allow(dead_code)]
+pub fn validate_chassis_type(value: &str, _ctx: &()) -> garde::Result {
+    if value.parse::<ChassisType>().is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_chassis_type"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -60,5 +70,24 @@ mod tests {
     #[case(ChassisType::MetalDieCast, "METAL_DIE_CAST")]
     fn display_chassis_type(#[case] input: ChassisType, #[case] expected: &str) {
         assert_eq!(expected, input.to_string());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("PLASTIC")]
+        #[case("METAL_DIE_CAST")]
+        fn validate_chassis_type_accepts_all(#[case] s: &str) {
+            assert!(validate_chassis_type(s, &()).is_ok());
+            assert!(validate_chassis_type(&s.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_chassis_type_rejects_invalid() {
+            let err = validate_chassis_type("NOPE", &()).unwrap_err();
+            assert!(err.to_string().contains("error_invalid_chassis_type"));
+        }
     }
 }

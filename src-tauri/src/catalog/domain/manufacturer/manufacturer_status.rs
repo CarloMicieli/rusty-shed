@@ -29,6 +29,16 @@ pub enum ManufacturerStatus {
     OutOfBusiness,
 }
 
+/// Garde validator for ManufacturerStatus values used in command arguments.
+#[allow(dead_code)]
+pub fn validate_manufacturer_status(value: &str, _ctx: &()) -> garde::Result {
+    if ManufacturerStatus::try_from(value).is_ok() {
+        Ok(())
+    } else {
+        Err(garde::Error::new("error_invalid_manufacturer_status"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,5 +74,28 @@ mod tests {
     fn it_should_try_from_invalid_returns_error() {
         let res = ManufacturerStatus::try_from("unknown");
         assert!(res.is_err());
+    }
+
+    mod validator_tests {
+        use super::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case("ACTIVE")]
+        #[case("MERGED")]
+        #[case("OUT_OF_BUSINESS")]
+        fn validate_manufacturer_status_accepts_all(#[case] input: &str) {
+            assert!(validate_manufacturer_status(input, &()).is_ok());
+            assert!(validate_manufacturer_status(&input.to_lowercase(), &()).is_ok());
+        }
+
+        #[test]
+        fn validate_manufacturer_status_rejects_invalid() {
+            let err = validate_manufacturer_status("INVALID", &()).unwrap_err();
+            assert!(
+                err.to_string()
+                    .contains("error_invalid_manufacturer_status")
+            );
+        }
     }
 }
