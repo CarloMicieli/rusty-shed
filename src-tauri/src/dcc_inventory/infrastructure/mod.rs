@@ -1,0 +1,4 @@
+pub mod entities;
+mod sqlite_digital_rolling_stock_repository;
+
+pub use sqlite_digital_rolling_stock_repository::SqliteDigitalRollingStockRepository;
