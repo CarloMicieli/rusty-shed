@@ -11,7 +11,7 @@
   import RecentItemCard from '$lib/components/RecentItemCard.svelte';
   import DepotView from '$lib/components/DepotView.svelte';
   import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
-  import DashboardCharts from '$lib/features/dashboard/DashboardCharts.svelte';
+  import { DashboardCharts } from '$lib/features/dashboard';
 
   // Stores
   import { getDashboardContext } from '$lib/features/dashboard/DashboardState.svelte';
