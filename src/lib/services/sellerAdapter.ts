@@ -73,8 +73,8 @@ export function mapSellerToForm(s: SellerView | Seller): FormSeller {
     stateRegion: addr?.region ?? null,
     postalCode: addr?.postal_code ?? null,
     countryCode: addr?.country ?? null,
-    createdAt: 'createdAt' in s ? s.createdAt ?? null : null,
-    updatedAt: 'updatedAt' in s ? s.updatedAt ?? null : null
+    createdAt: 'createdAt' in s ? (s.createdAt ?? null) : null,
+    updatedAt: 'updatedAt' in s ? (s.updatedAt ?? null) : null
   };
 }
 
