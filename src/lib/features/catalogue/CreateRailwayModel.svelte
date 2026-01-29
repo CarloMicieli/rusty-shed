@@ -111,7 +111,7 @@
       } as CreateRailwayModelInput;
 
       const validated = createRailwayModelSchema.parse(payload);
-      const result = await safeInvoke<string>('create_railway_model', { input: validated });
+      const result = await safeInvoke<string>('create_railway_model', { args: validated });
 
       if (result.ok) {
         navigate(`/models/${result.data}`);

@@ -52,7 +52,7 @@ export const commands = {
    *
    * # Arguments
    * * `state` - Tauri-managed application `AppState` (provides DB pool).
-   * * `manufacturer_id` - The manufacturer identifier as a `String`.
+   * * `manufacturer_id` - The manufacturer identifier as a `ManufacturerId`.
    *
    * # Returns
    * - `Ok(Some(Manufacturer))` when a matching manufacturer exists,
@@ -162,7 +162,7 @@ export const commands = {
     }
   },
   /**
-   * Create a new railway model together with its rolling stocks.
+   * Create a new railway model along with its associated rolling stocks.
    *
    * # Arguments
    * * `state` - Tauri-managed application `AppState` providing the database pool.
@@ -171,15 +171,41 @@ export const commands = {
    * # Returns
    * - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
    * - `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
-   *
-   * # Errors
-   * Errors are mapped to `CommandError` and may represent validation, repository, or unit-of-work failures.
    */
   async createRailwayModel(
     args: CreateRailwayModelArgs
   ): Promise<Result<RailwayModelId, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('create_railway_model', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Simplified flow: save (merge) the railway model and add it to the default collection.
+   */
+  async addRailwayModelToCollection(
+    args: AddRailwayModelToCollectionArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('add_railway_model_to_collection', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Simplified flow: save (merge) the railway model and add it to the default wishlist.
+   */
+  async addRailwayModelToWishList(
+    args: AddRailwayModelToWishListArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('add_railway_model_to_wish_list', { args }) };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -468,9 +494,34 @@ export const commands = {
     }
   },
   /**
-   * Retrieve maintenance cards that are due or overdue.
+   * Tauri command to purchase a wishlist item and move it into the collection.
+   *
+   * # Arguments
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `input`: The input data required to purchase a wishlist item (`PurchaseWishlistArgs`).
+   *
+   * # Returns
+   * - `Ok(())` when the purchase and move succeeds.
+   * - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
    */
-  async getMaintenanceDashboard(): Promise<Result<MaintenanceCard[], CommandError>> {
+  async purchaseWishlistItem(input: PurchaseWishlistArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('purchase_wishlist_item', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Command handler to retrieve maintenance cards that are due or overdue.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   *
+   * # Returns
+   * A vector of `MaintenanceCardView` representing the due maintenance cards.
+   */
+  async getMaintenanceDashboard(): Promise<Result<MaintenanceCardView[], CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_maintenance_dashboard') };
     } catch (e) {
@@ -479,18 +530,48 @@ export const commands = {
     }
   },
   /**
-   * Add a maintenance record and update the card.
+   * Command handler to add a maintenance event and update the card.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to add a maintenance event.
+   *
+   * # Returns
+   * nothing on success.
    */
-  async addMaintenanceRecord(input: AddMaintenanceArgs): Promise<Result<null, CommandError>> {
+  async addMaintenanceEvent(input: AddMaintenanceArgs): Promise<Result<null, CommandError>> {
     try {
-      return { status: 'ok', data: await TAURI_INVOKE('add_maintenance_record', { input }) };
+      return { status: 'ok', data: await TAURI_INVOKE('add_maintenance_event', { input }) };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
     }
   },
   /**
-   * Tauri command to retrieve all sellers.
+   * Command handler to create a new maintenance card for the given owned rolling stock.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `owned_rolling_stock_id`: The ID of the owned rolling stock.
+   *
+   * # Returns
+   * The ID of the newly created maintenance card.
+   */
+  async addMaintenanceCard(
+    ownedRollingStockId: OwnedRollingStockId
+  ): Promise<Result<MaintenanceCardId, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('add_maintenance_card', { ownedRollingStockId })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Command handler to retrieve all sellers.
    *
    * This handler constructs the repository and query handler, executes the query
    * asynchronously and returns the list of `Seller` on success. On failure, it
@@ -504,7 +585,7 @@ export const commands = {
    * - `Ok(Vec<Seller>)` when retrieval succeeds.
    * - `Err(CommandError)` when the use-case returns an error.
    */
-  async getSellers(): Promise<Result<Seller[], CommandError>> {
+  async getSellers(): Promise<Result<SellerView[], CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_sellers') };
     } catch (e) {
@@ -513,7 +594,7 @@ export const commands = {
     }
   },
   /**
-   * Tauri command to retrieve a seller by its identifier.
+   * Command handler to retrieve a seller by its identifier.
    *
    * This handler constructs the repository and query handler, executes the query
    * asynchronously and returns the `Seller` on success. On failure, it
@@ -529,7 +610,7 @@ export const commands = {
    * - `Ok(None)` when no matching row is found
    * - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
    */
-  async getSellerById(id: SellerId): Promise<Result<Seller | null, CommandError>> {
+  async getSellerById(id: SellerId): Promise<Result<SellerView | null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_seller_by_id', { id }) };
     } catch (e) {
@@ -538,7 +619,7 @@ export const commands = {
     }
   },
   /**
-   * Tauri command to create a new seller.
+   * Command handler to create a new seller.
    *
    * This handler constructs the repository and command handler, executes the command
    * asynchronously and returns the created `Seller` on success. On failure, it
@@ -561,7 +642,7 @@ export const commands = {
     }
   },
   /**
-   * Tauri command to update an existing seller.
+   * Command handler to update an existing seller.
    *
    * This handler constructs the repository and command handler, executes the command
    * asynchronously and returns the updated `
@@ -586,7 +667,7 @@ export const commands = {
     }
   },
   /**
-   * Tauri command to delete a seller by ID.
+   * Command handler to delete a seller by ID.
    *
    * This handler constructs the repository and command handler, executes the command
    * asynchronously and returns the number of deleted records on success. On failure, it
@@ -610,10 +691,17 @@ export const commands = {
     }
   },
   /**
-   * Create a new track inventory.
+   * Command handler to create a new track inventory.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to create a new track inventory.
+   *
+   * # Returns
+   * the ID of the newly created track inventory.
    */
   async createTrackInventory(
-    input: NewTrackInventoryInput
+    input: NewTrackInventoryArgs
   ): Promise<Result<TrackInventoryId, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('create_track_inventory', { input }) };
@@ -623,11 +711,16 @@ export const commands = {
     }
   },
   /**
-   * Rename an existing track inventory.
+   * Command handler to rename an existing track inventory.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to rename a track inventory.
+   *
+   * # Returns
+   * nothing on success.
    */
-  async renameTrackInventory(
-    input: RenameTrackInventoryInput
-  ): Promise<Result<null, CommandError>> {
+  async renameTrackInventory(input: RenameTrackInventoryArgs): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('rename_track_inventory', { input }) };
     } catch (e) {
@@ -636,10 +729,17 @@ export const commands = {
     }
   },
   /**
-   * Add a purchase to an existing track inventory.
+   * Command handler to add a purchase to an existing track inventory.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to add a track purchase.
+   *
+   * # Returns
+   * the ID of the newly added track purchase.
    */
   async addTrackPurchase(
-    input: AddTrackPurchaseInput
+    input: AddTrackPurchaseArgs
   ): Promise<Result<TrackPurchaseId, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('add_track_purchase', { input }) };
@@ -649,13 +749,91 @@ export const commands = {
     }
   },
   /**
-   * Set quantity for a track item in an inventory.
+   * Command handler to set quantity for a track item in an inventory.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to set the track item quantity.
+   *
+   * # Returns
+   * nothing on success.
    */
-  async setTrackItemQuantity(
-    input: SetTrackItemQuantityInput
-  ): Promise<Result<null, CommandError>> {
+  async setTrackItemQuantity(input: SetTrackItemQuantityArgs): Promise<Result<null, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('set_track_item_quantity', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * A command handler to create a new digital rolling stock.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `args`: The command arguments.
+   *
+   * # Returns
+   * A result containing the response with the new digital rolling stock ID or a command error.
+   */
+  async newDigitalRollingStock(
+    args: NewDigitalRollingStockArgs
+  ): Promise<Result<ResponseNewDigitalRollingStock, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('new_digital_rolling_stock', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * A command handler to change the DCC address of a digital rolling stock.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `args`: The command arguments.
+   *
+   * # Returns
+   * A result indicating success or a command error.
+   */
+  async changeDccAddress(args: ChangeDccAddressArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('change_dcc_address', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * A command handler to change the decoder of a digital rolling stock.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `args`: The command arguments.
+   *
+   * # Returns
+   * A result indicating success or a command error.
+   */
+  async changeDecoder(args: ChangeDecoderArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('change_decoder', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * A command handler to retrieve all digital rolling stocks.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   *
+   * # Returns
+   * A result containing a list of digital rolling stock views or a command error.
+   */
+  async getDigitalRollingStocks(): Promise<Result<DigitalRollingStockView[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_digital_rolling_stocks') };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -719,6 +897,89 @@ export type AddMaintenanceArgs = {
   notes: string | null;
 };
 /**
+ * Arguments for creating a simplified railway model and adding it to the collection.
+ */
+export type AddRailwayModelToCollectionArgs = {
+  /**
+   * The simplified railway model data.
+   */
+  railwayModel: SimplifiedRailwayModelArgs;
+  /**
+   * The category and rolling stock are determined from the referenced railway model.
+   * The price amount in the smallest currency unit (e.g., cents).
+   */
+  priceAmount: bigint;
+  /**
+   * The currency code for the price (e.g., "USD").
+   */
+  priceCurrency: string;
+  /**
+   * The seller ID (optional).
+   */
+  sellerId: string | null;
+  /**
+   * The date the item was added to the collection (YYYY-MM-DD).
+   */
+  addedDate: string;
+  /**
+   * The date the item was purchased (YYYY-MM-DD).
+   */
+  purchaseDate: string;
+  /**
+   * The purchase condition (optional).
+   */
+  purchaseCondition: string | null;
+  /**
+   * The model condition (optional).
+   */
+  modelCondition: string | null;
+  /**
+   * The box condition (optional).
+   */
+  boxCondition: string | null;
+  /**
+   * Additional notes about the item (optional).
+   */
+  notes: string | null;
+};
+/**
+ * Arguments for creating a simplified railway model and adding it to a wishlist.
+ */
+export type AddRailwayModelToWishListArgs = {
+  /**
+   * The simplified railway model data.
+   */
+  railwayModel: SimplifiedRailwayModelArgs;
+  /**
+   * Target wishlist id. The item will be added to this wishlist.
+   */
+  wishlistId: string;
+  /**
+   * The priority of the wishlist item (optional).
+   */
+  priority: WishlistPriority | null;
+  /**
+   * The status of the wishlist item (optional).
+   */
+  status: WishlistStatus | null;
+  /**
+   * The desired price amount in the smallest currency unit (e.g., cents) (optional).
+   */
+  desiredPriceAmount: bigint | null;
+  /**
+   * The desired price currency code (e.g., "USD") (optional).
+   */
+  desiredPriceCurrency: string | null;
+  /**
+   * Additional notes about the wishlist item (optional).
+   */
+  notes: string | null;
+  /**
+   * The date the item was added to the wishlist (optional).
+   */
+  addedDate: string | null;
+};
+/**
  * Arguments structure for adding an item to a wishlist.
  */
 export type AddToWishlistArgs = {
@@ -756,28 +1017,31 @@ export type AddToWishlistArgs = {
   addedDate: string | null;
 };
 /**
- * Input used to add a purchase to an existing `TrackInventory`.
+ * Command argument to add a track purchase to an inventory
  */
-export type AddTrackPurchaseInput = {
+export type AddTrackPurchaseArgs = {
+  /**
+   * Inventory ID to which the purchase is added
+   */
   id: TrackInventoryId;
   /**
-   * Reference to the purchased track product (canonical `TrackId`).
+   * Track ID of the purchased track
    */
   trackId: TrackId;
   /**
-   * Quantity of track items acquired in this purchase.
+   * Quantity of tracks purchased
    */
   quantity: bigint;
   /**
-   * Total monetary amount paid for this purchase.
+   * Price paid for the purchase
    */
   price: MonetaryAmount;
   /**
-   * Optional seller reference for where the items were bought.
+   * Optional seller ID from whom the track was purchased
    */
   sellerId: SellerId | null;
   /**
-   * Date when the purchase occurred.
+   * Date of the purchase
    */
   purchaseDate: string;
 };
@@ -920,6 +1184,23 @@ export type Category =
    */
   | 'RAILCARS';
 /**
+ * Arguments for changing a DCC address.
+ */
+export type ChangeDccAddressArgs = {
+  /**
+   * The digital rolling stock id.
+   */
+  id: string;
+  /**
+   * The new DCC address.
+   */
+  newDccAddress: number;
+};
+/**
+ * Arguments for changing a decoder.
+ */
+export type ChangeDecoderArgs = { id: string; decoderId: string };
+/**
  * The construction type of a rolling stock's chassis.
  *
  * This enum indicates the material or manufacturing technique used for the
@@ -940,16 +1221,14 @@ export type ChassisType =
  * Identifier for a collection.
  *
  * This newtype wraps a `String` containing a TRN of the form
- * `trn:collection:1`. Construction from strings is fallible — the string must
- * exactly match the enforced TRN for the single-supported collection.
+ * `trn:collection:{id}`. The identifier follows standard TRN conventions.
  */
 export type CollectionId = string;
 /**
  * Identifier for a single item in a collection.
  *
  * This newtype wraps a `String` containing a TRN of the form
- * `trn:collection-item:{uuid}`. Construction from strings is fallible — the
- * string must start with the TRN prefix and the suffix must be a valid UUID.
+ * `trn:collection-item:{uuid}`. The UUID suffix is validated on construction.
  */
 export type CollectionItemId = string;
 /**
@@ -1571,6 +1850,11 @@ export type DashboardTotals = {
   totalValue: MonetaryAmount | null;
 };
 /**
+ * Represents a DCC (Digital Command Control) address for model trains.
+ * Valid DCC addresses range from 1 to 10239.
+ */
+export type DccAddress = number;
+/**
  * The NMRA and NEM Connectors for digital control (DCC)
  *
  * # Description
@@ -1625,6 +1909,55 @@ export type DccInterface =
  * URNs are of the form `trn:decoder:{manufacturer}:{product_code}`.
  */
 export type DecoderId = string;
+/**
+ * Represents the type of a DCC decoder.
+ */
+export type DecoderType =
+  /**
+   * Plain decoder without sound or function capabilities.
+   */
+  | 'PLAIN'
+  /**
+   * Decoder with sound capabilities.
+   */
+  | 'SOUND'
+  /**
+   * Decoder with function capabilities.
+   */
+  | 'FUNCTION'
+  /**
+   * MultiProtocol decoder.
+   */
+  | 'MULTI_PROTOCOL';
+/**
+ * View representation of a decoder used within `DigitalRollingStockView`.
+ */
+export type DecoderView = {
+  /**
+   * The unique identifier of the decoder
+   */
+  id: DecoderId;
+  /**
+   * The manufacturer name of the decoder
+   */
+  manufacturer: string;
+  /**
+   * The product code of the decoder
+   */
+  product_code: string;
+  /**
+   * The type of the decoder
+   */
+  decoder_type: DecoderType;
+  /**
+   * The digital protocol supported by the decoder
+   */
+  protocol: DigitalProtocol;
+  /**
+   * The DCC interface type of the decoder
+   */
+  decoder_interface: DccInterface;
+};
 /**
  * Represents the expected delivery timeframe for a railway model.
  *
@@ -1731,6 +2064,38 @@ export type DepotView = {
    * A list of rolling stock entries currently associated with the depot.
    */
   rollingStocks: DepotRollingStockView[];
+};
+/**
+ * Digital communication protocols supported by decoders.
+ */
+export type DigitalProtocol = 'DCC' | 'MFX' | 'SELECTRIX' | 'MOTOROLA' | 'FMZ' | 'NEXT_18';
+/**
+ * Strongly-typed identifier for a digital rolling stock entry.
+ *
+ * URNs are of the form `trn:digital-rolling-stock:{UUID}` where the UUID
+ * portion is a valid RFC4122 UUID (v4 typically).
+ */
+export type DigitalRollingStockId = string;
+/**
+ * View representation returned by queries
+ */
+export type DigitalRollingStockView = {
+  /**
+   * The unique identifier of the digital rolling stock
+   */
+  id: DigitalRollingStockId;
+  /**
+   * The associated owned rolling stock identifier
+   */
+  owned_rolling_stock_id: OwnedRollingStockId;
+  /**
+   * The DCC address assigned to the digital rolling stock
+   */
+  dcc_address: DccAddress;
+  /**
+   * The decoder information associated with the digital rolling stock
+   */
+  decoder: DecoderView;
 };
 /**
  * Represents the installation of a decoder into a locomotive (owned rolling stock).
@@ -2013,42 +2378,126 @@ export type LocomotiveType =
    */
   | 'ELECTRIC_LOCOMOTIVE';
 /**
- * Domain model representing a maintenance card for owned rolling stock.
- *
- * This struct contains parsed, strongly-typed fields suitable for use in
- * application logic and for returning to the frontend via Specta.
+ * Lightweight view representation of a maintenance event for UI consumption.
  */
-export type MaintenanceCard = {
+export type MaintenanceCardEventView = {
   /**
-   * Unique identifier for the maintenance card.
+   * Unique identifier for the maintenance event.
    */
   id: string;
   /**
-   * FK referencing the owned rolling stock.
+   * Date when the maintenance was performed.
    */
-  ownedRollingStockId: string;
+  datePerformed: string;
   /**
-   * The date the last maintenance was performed, if any.
+   * Optional type of maintenance performed.
+   */
+  maintenanceType: MaintenanceType | null;
+  /**
+   * Optional notes associated with the maintenance event.
+   */
+  notes: string | null;
+};
+/**
+ * Strongly-typed identifier for a maintenance card.
+ */
+export type MaintenanceCardId = string;
+/**
+ * Lightweight view representation of a maintenance card intended for the frontend.
+ * Does not include metadata or pending events.
+ */
+export type MaintenanceCardView = {
+  /**
+   * Unique identifier for the maintenance card.
+   */
+  id: MaintenanceCardId;
+  /**
+   * The owned rolling stock associated with this maintenance card.
+   */
+  ownedRollingStockId: OwnedRollingStockId;
+  /**
+   * Date of the last maintenance performed, if any.
    */
   lastMaintenanceDate: string | null;
   /**
-   * The scheduled next maintenance date, if any.
+   * Scheduled date for the next maintenance, if any.
    */
   nextMaintenanceDate: string | null;
   /**
-   * Created timestamp parsed from the database (if present).
+   * Historical maintenance events associated with this card.
    */
-  createdAt: string | null;
-  /**
-   * Updated timestamp parsed from the database (if present).
-   */
-  updatedAt: string | null;
+  events: MaintenanceCardEventView[];
 };
 /**
+ * Types of maintenance tasks commonly performed on rolling stock.
+ */
+export type MaintenanceType =
+  /**
+   * Cleaning the electrical contact surfaces of the wheels to ensure steady power pickup.
+   */
+  | 'WHEEL_CLEANING'
+  /**
+   * Removing dust, oxidation, or "black gunk" from the rails of the layout.
+   */
+  | 'TRACK_CLEANING'
+  /**
+   * Cleaning internal electrical wipers or brass pick-ups that transfer power from wheels to the motor.
+   */
+  | 'CONTACT_CLEANING'
+  /**
+   * Applying light plastic-safe oil to axles, bearings, or motor shafts.
+   */
+  | 'LUBRICATION'
+  /**
+   * Applying heavy-duty grease to gear towers and worm gears within the drivetrain.
+   */
+  | 'GEAR_GREASE'
+  /**
+   * Replacing the carbon brushes and springs within a DC motor to restore performance.
+   */
+  | 'MOTOR_BRUSH_REPLACEMENT'
+  /**
+   * Replacing the rubber traction tires on driving wheels to restore pulling power.
+   */
+  | 'TRACTION_TIRE_REPLACEMENT'
+  /**
+   * Installing a new DCC (Digital Command Control) decoder, including hard-wiring or plug-and-play.
+   */
+  | 'DECODER_INSTALL'
+  /**
+   * Updating the internal software/firmware of a digital decoder via a programmer.
+   */
+  | 'FIRMWARE_UPDATE'
+  /**
+   * Replacing or upgrading the speaker or enclosure for sound-enabled locomotives.
+   */
+  | 'SPEAKER_REPAIR'
+  /**
+   * Installing capacitors (PowerPacks) to prevent stalling over dirty track or insulated frogs.
+   */
+  | 'STAY_ALIVE_INSTALL'
+  /**
+   * Adjusting coupler height, centering springs, or replacing trip pins for reliable switching.
+   */
+  | 'COUPLER_ADJUSTMENT'
+  /**
+   * Re-attaching or replacing fine scale details like handrails, whistles, or air hoses.
+   */
+  | 'DETAIL_REPAIR'
+  /**
+   * Applying powders, airbrushing, or washes to simulate real-world grime and age.
+   */
+  | 'WEATHERING'
+  /**
+   * A standard "check-up" involving a visual inspection and a short test run.
+   */
+  | 'GENERAL_INSPECTION'
+  /**
+   * Any maintenance task not covered by the standard categories.
+   */
+  | 'OTHER';
+/**
  * A manufacturer (maker of railway models).
- *
- * Fields reflect the `manufacturers` table in the database. Optional fields
- * correspond to nullable DB columns.
  */
 export type Manufacturer = {
   /**
@@ -2183,15 +2632,32 @@ export type MoveWishlistItemArgs = {
   wishlistId: string;
 };
 /**
- * Input DTOs for the tracks inventory application layer.
+ * Arguments for creating a new Digital Rolling Stock.
  */
-export type NewTrackInventoryInput = {
+export type NewDigitalRollingStockArgs = {
   /**
-   * The name of the new track inventory.
+   * The owned rolling stock id.
+   */
+  ownedRollingStockId: string;
+  /**
+   * The DCC address.
+   */
+  dccAddress: number;
+  /**
+   * The decoder id.
+   */
+  decoderId: string;
+};
+/**
+ * Command argument to create a new track inventory
+ */
+export type NewTrackInventoryArgs = {
+  /**
+   * Name of the track inventory
    */
   name: string;
   /**
-   * An optional description for the new track inventory.
+   * Description of the track inventory
    */
   description: string | null;
 };
@@ -2203,11 +2669,6 @@ export type NewTrackInventoryInput = {
  * names) and have the form `trn:owned-rolling-stock:{uuid}` where the suffix is
  * a standard UUID (v4) string. The type is serde-transparent so it serializes
  * as a plain string in JSON and database mappings.
- *
- * The inner string is private; construction should use `TryFrom<&str>` to
- * validate the TRN format or `From<Uuid>` / `Default` to generate a fresh id.
- * The type derives `Serialize`/`Deserialize` and is `#[serde(transparent)]` so
- * it appears as a simple string in serialized forms.
  */
 export type OwnedRollingStockId = string;
 /**
@@ -2459,12 +2920,41 @@ export type PurchaseInfo =
   | { kind: 'preOrdered'; data: PreOrderInfo };
 /**
  * Strongly-typed identifier for PurchaseInfo records.
- *
- * The inner string is private. Use `TryFrom<&str>` to validate TRN inputs or
- * `From<Uuid>` / `Default` to generate new ids. The type derefs to `str` for
- * ergonomic access to the underlying string.
  */
 export type PurchaseInfoId = string;
+/**
+ * Arguments for purchasing a wishlist item and moving it to the collection.
+ */
+export type PurchaseWishlistArgs = {
+  /**
+   * The ID of the collection to add the purchased item to.
+   */
+  collectionId: string;
+  /**
+   * The ID of the wishlist containing the item.
+   */
+  wishlistId: string;
+  /**
+   * The ID of the wishlist item being purchased.
+   */
+  itemId: string;
+  /**
+   * Purchase price amount in the smallest currency unit (e.g., cents).
+   */
+  purchasePriceAmount: bigint;
+  /**
+   * Purchase price currency code (e.g., "USD").
+   */
+  purchasePriceCurrency: string;
+  /**
+   * The date the purchase occurred.
+   */
+  purchaseDate: string | null;
+  /**
+   * Optional seller id string.
+   */
+  sellerId: string | null;
+};
 /**
  * Details for a purchased item.
  *
@@ -2583,51 +3073,25 @@ export type RailwayCompany = {
    * The period of activity of the railway company (nullable).
    */
   periodOfActivity: PeriodOfActivity | null;
-  /**
-   * Metadata about the railway company (creation date, version, last updated).
-   */
-  metadata: Metadata;
 };
 /**
  * Strongly-typed identifier for a railway in the catalog domain.
  *
- * `RailwayId` wraps a string value and provides a distinct type instead of
+ * `RailwayCompanyId` wraps a string value and provides a distinct type instead of
  * using plain strings everywhere. This improves type safety and makes intent
  * explicit in function signatures and data structures.
  *
- * The inner string is kept private to allow the crate to enforce invariants
- * or to provide controlled constructors/parsers elsewhere. `RailwayId` also
- * derives Serde traits so it serializes/deserializes as a plain string.
- *
- * Requirements
- * - The railway id MUST be a non-empty, non-blank string. Constructions via
- * `TryFrom<&str>` / `TryFrom<String>` will return an error if the input is
- * empty or contains only whitespace.
+ * The identifier follows the TRN format: `trn:railway-company:{slug}`.
+ * All identifiers are automatically slugified and validated.
  */
 export type RailwayCompanyId = string;
 /**
  * Strongly-typed railway model identifier.
  *
- * `RailwayModelId` is a thin newtype over `String` used to represent railway
- * model identifiers across the domain. Values created with the provided
- * constructor follow a TRN-like pattern and include the manufacturer namespace
- * and the product code. The canonical form produced by `RailwayModelId::new`
- * is:
+ * `RailwayModelId` follows a TRN-like pattern with manufacturer namespace
+ * and product code:
  *
- * trn:railway-model:{manufacturer_nss}:{product_code}
- *
- * where `{manufacturer_nss}` is the namespace-specific part (NSS) of a
- * `ManufacturerId` TRN (for example the `mn-acme` part of
- * `trn:manufacturer:mn-acme`). The module-level constant `TRN_PREFIX` holds
- * the `trn:railway-model:` prefix used by the constructor.
- *
- * Notes on construction:
- * - `TryFrom<&str>` and `TryFrom<String>` perform only a non-empty/blank
- * check and will accept any non-blank string (they do not parse or validate
- * TRN structure).
- * - Use `RailwayModelId::new(manufacturer_id, product_code)` to create an
- * instance from a `ManufacturerId`; this validates the manufacturer and
- * returns a `RailwayModelIdError` on failure.
+ * trn:railway-model:{manufacturer_slug}:{product_code}
  */
 export type RailwayModelId = string;
 /**
@@ -2700,17 +3164,32 @@ export type RailwayModelView = {
    */
   rollingStock: RollingStockView[];
 };
-export type RailwayStatus = 'ACTIVE' | 'INACTIVE' | 'MERGED';
 /**
- * Input used to rename an existing `TrackInventory`.
+ * The lifecycle status of a railway company.
  */
-export type RenameTrackInventoryInput = {
+export type RailwayStatus =
   /**
-   * The identifier of the track inventory to be renamed.
+   * The railway company is active and operational.
+   */
+  | 'ACTIVE'
+  /**
+   * The railway company is inactive and no longer operational.
+   */
+  | 'INACTIVE'
+  /**
+   * The railway company has merged with another entity.
+   */
+  | 'MERGED';
+/**
+ * Command argument to rename a track inventory
+ */
+export type RenameTrackInventoryArgs = {
+  /**
+   * Inventory ID to be renamed
    */
   id: TrackInventoryId;
   /**
-   * The new name for the track inventory.
+   * New name for the track inventory
    */
   newName: string;
 };
@@ -2726,6 +3205,15 @@ export type RenameWishlistArgs = {
    * The new name for the wishlist.
    */
   name: string;
+};
+/**
+ * Response for created digital rolling stock: returns the new id.
+ */
+export type ResponseNewDigitalRollingStock = {
+  /**
+   * The new digital rolling stock id.
+   */
+  id: DigitalRollingStockId;
 };
 /**
  * High-level classification for different types of railway rolling stock.
@@ -3212,6 +3700,42 @@ export type SellerType =
    */
   | 'DISTRIBUTOR';
 /**
+ * Presentation model for a `Seller` aggregate returned to the client.
+ *
+ * This view mirrors the persisted `Seller` fields but intentionally omits
+ * domain-only fields such as `pending_events`.
+ */
+export type SellerView = {
+  /**
+   * Unique identifier for the seller.
+   */
+  id: SellerId;
+  /**
+   * Name of the seller.
+   */
+  name: string;
+  /**
+   * Type of the seller.
+   */
+  sellerType: SellerType;
+  /**
+   * Contact email of the seller.
+   */
+  email: string | null;
+  /**
+   * Contact phone number of the seller.
+   */
+  phone: string | null;
+  /**
+   * Website URL of the seller.
+   */
+  websiteUrl: string | null;
+  /**
+   * Address of the seller.
+   */
+  address: Address | null;
+};
+/**
  * Represents the service class(es) for a rolling stock or service.
  *
  * | **Variant**                      | **Description**           |
@@ -3235,19 +3759,19 @@ export type ServiceLevel =
   | 'SECOND_THIRD'
   | 'FIRST_SECOND_THIRD';
 /**
- * Input used to set the quantity for a specific track in an inventory.
+ * Command argument to set the quantity of a track item in an inventory
  */
-export type SetTrackItemQuantityInput = {
+export type SetTrackItemQuantityArgs = {
   /**
-   * The identifier of the track inventory to update.
+   * Inventory ID containing the track item
    */
   inventoryId: TrackInventoryId;
   /**
-   * The canonical identifier of the track product.
+   * Track ID of the item whose quantity is to be set
    */
   trackId: TrackId;
   /**
-   * The desired quantity for the track product. Values <= 0 remove the item.
+   * New quantity for the track item
    */
   quantity: bigint;
 };
@@ -3258,6 +3782,28 @@ export type SettingsDto = {
   favoriteScale: Scale;
   favoritePowerMethod: PowerMethod;
   languageCode: string;
+};
+/**
+ * Simplified arguments for creating a railway model and optionally a small set
+ * of rolling stocks. This is a lighter-weight payload used by the
+ * `add_railway_model_to_collection` and `add_railway_model_to_wish_list` commands.
+ */
+export type SimplifiedRailwayModelArgs = {
+  manufacturerId: string;
+  productCode: string;
+  description: string;
+  category: string;
+  scale: string;
+  epoch: string;
+  powerMethod: string;
+  rollingStocks: SimplifiedRollingStockArgs[];
+};
+export type SimplifiedRollingStockArgs = {
+  railwayCompanyId: string;
+  seriesCode: string;
+  roadNumber: string | null;
+  locomotiveType: string | null;
+  category: string;
 };
 /**
  * Details for an item that was sold.
@@ -3383,16 +3929,11 @@ export type TechnicalSpecificationsArgs = {
  * Strongly-typed identifier for a track product.
  *
  * `TrackId` is a transparent newtype wrapping a `String` that stores a TRN
- * (Train) identifier for track products. The canonical form produced by
- * `TrackId::new_from_parts` is:
+ * (Train) identifier for track products. The canonical form is:
  *
  * trn:track:{manufacturer_slug}:{product_code_slug}
  *
- * where `{manufacturer_slug}` and `{product_code_slug}` are the slugified
- * namespace-specific parts (lowercased, hyphen-separated). Prefer using the
- * provided constructors and `TryFrom` implementations to validate external
- * input. The type serializes as a plain string and is `sqlx::transparent` for
- * convenient persistence.
+ * where both parts are slugified (lowercased, hyphen-separated).
  */
 export type TrackId = string;
 /**
@@ -3411,16 +3952,6 @@ export type TrackId = string;
 export type TrackInventoryId = string;
 /**
  * Strongly-typed identifier for a track purchase record.
- *
- * `TrackPurchaseId` is a transparent newtype wrapping a `String` that stores
- * the canonical TRN for purchase events. The expected form is:
- *
- * `trn:track-purchase:{UUID}`
- *
- * Construct instances via `From<Uuid>`, `Default` (generates a new UUID) or
- * the fallible `TryFrom<&str>`/`TryFrom<String>` implementations to validate
- * external input. The type serializes as a plain string and is `sqlx::transparent`
- * for convenient persistence.
  */
 export type TrackPurchaseId = string;
 export type UpdateSellerPayload = {

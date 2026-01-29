@@ -2,6 +2,7 @@ import type {
   CreateSellerPayload,
   UpdateSellerPayload,
   Seller,
+  SellerView,
   Address,
   SellerType
 } from '$lib/bindings';
@@ -57,7 +58,7 @@ export function mapFormToUpdatePayload(f: FormSeller): UpdateSellerPayload {
   };
 }
 
-export function mapSellerToForm(s: Seller): FormSeller {
+export function mapSellerToForm(s: SellerView | Seller): FormSeller {
   const addr: Address | null = s.address ?? null;
   return {
     id: s.id,
@@ -72,8 +73,8 @@ export function mapSellerToForm(s: Seller): FormSeller {
     stateRegion: addr?.region ?? null,
     postalCode: addr?.postal_code ?? null,
     countryCode: addr?.country ?? null,
-    createdAt: s.createdAt ?? null,
-    updatedAt: s.updatedAt ?? null
+    createdAt: 'createdAt' in s ? s.createdAt ?? null : null,
+    updatedAt: 'updatedAt' in s ? s.updatedAt ?? null : null
   };
 }
 
