@@ -1,6 +1,5 @@
 use crate::maintenance::domain::maintenance_type::MaintenanceType;
 use chrono::NaiveDate;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Domain events for the maintenance aggregate.
@@ -8,8 +7,14 @@ use uuid::Uuid;
 /// This enum represents the immutable facts that occurred within the
 /// maintenance bounded context. Event-driven persistence stores these
 /// events and replays or projects them into read models.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone)]
 pub enum MaintenanceCardEvent {
+    /// A maintenance card aggregate was created.
+    Created {
+        id: Uuid,
+        maintenance_card_id: Uuid,
+        created_at: NaiveDate,
+    },
     /// A maintenance record was created for a maintenance card.
     MaintenanceRecorded {
         id: Uuid,
@@ -37,6 +42,11 @@ impl MaintenanceCardEvent {
                 maintenance_type.as_ref().map(|t| t.to_string()),
                 notes.clone(),
             ),
+            MaintenanceCardEvent::Created {
+                id,
+                maintenance_card_id,
+                created_at,
+            } => (*id, *maintenance_card_id, *created_at, None, None),
         }
     }
 }

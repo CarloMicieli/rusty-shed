@@ -59,6 +59,12 @@ pub trait MaintenanceRepository {
         id: &crate::maintenance::domain::MaintenanceCardId,
     ) -> Result<Option<MaintenanceCard>, DomainError>;
 
+    /// Find a lightweight view representation of a maintenance card by id.
+    async fn find_view_by_id(
+        &mut self,
+        id: &crate::maintenance::domain::MaintenanceCardId,
+    ) -> Result<Option<crate::maintenance::interface::MaintenanceCardView>, DomainError>;
+
     /// Persist changes for a maintenance card.
     ///
     /// The implementation SHOULD consume any pending events present on the
@@ -83,6 +89,11 @@ pub trait MaintenanceRepository {
     /// due/overdue criteria. Any database or mapping errors should be returned
     /// as a `DomainError` so callers can react appropriately.
     async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCard>, DomainError>;
+
+    /// List lightweight view representations for maintenance cards that are due or overdue.
+    async fn list_due_card_views(
+        &mut self,
+    ) -> Result<Vec<crate::maintenance::interface::MaintenanceCardView>, DomainError>;
 }
 
 /// Extension trait to attach the maintenance repository to the Unit of Work.

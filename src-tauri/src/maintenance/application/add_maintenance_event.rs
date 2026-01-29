@@ -1,14 +1,28 @@
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
-use crate::maintenance::domain::MaintenanceCard;
+use crate::core::domain::identifiers::Identifier;
+use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::MaintenanceUowExt;
-use crate::maintenance::interface::AddMaintenanceRecordArgs;
+use crate::maintenance::domain::{MaintenanceCard, MaintenanceCardId};
 use uuid::Uuid;
 
-/// Use-case responsible for adding a maintenance record and updating the card.
-pub struct AddMaintenanceRecord;
+/// Input DTO for the AddMaintenanceEvent use-case.
+/// This type belongs to the application layer and is not an interface/wire type.
+pub struct AddMaintenanceEventInput {
+    /// Parsed UUID of the maintenance card the record belongs to.
+    pub maintenance_card_id: MaintenanceCardId,
+    /// Date when the maintenance was performed.
+    pub date_performed: chrono::NaiveDate,
+    /// Optional maintenance type.
+    pub maintenance_type: Option<MaintenanceType>,
+    /// Optional free-text notes.
+    pub notes: Option<String>,
+}
 
-impl AddMaintenanceRecord {
+/// Use-case responsible for adding a maintenance event and updating the card.
+pub struct AddMaintenanceEvent;
+
+impl AddMaintenanceEvent {
     /// Execute the use-case within the provided Unit of Work using a typed input.
     ///
     /// # Arguments
@@ -26,7 +40,7 @@ impl AddMaintenanceRecord {
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,
-        input: AddMaintenanceRecordArgs,
+        input: AddMaintenanceEventInput,
     ) -> Result<(), DomainError>
     where
         U: MaintenanceUowExt + Send,
@@ -34,24 +48,27 @@ impl AddMaintenanceRecord {
     {
         let mut repo = unit_of_work.maintenance_repository();
 
-        let card_id = Uuid::parse_str(&input.maintenance_card_id)
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        // Input contains a `MaintenanceCardId` TRN. Convert it to UUID for the
+        // aggregate constructor which expects a UUID.
+        let card_trn = input.maintenance_card_id.to_string();
+        let uuid_str = card_trn
+            .trim_start_matches(MaintenanceCardId::PREFIX)
+            .trim_start_matches(':');
+        let card_id =
+            Uuid::parse_str(uuid_str).map_err(|e| DomainError::Validation(e.to_string()))?;
 
         let mut card = MaintenanceCard::from_id(card_id);
 
-        // Generate a new id for the maintenance record using the provided IdProvider.
         let id = id_provider.next_id();
 
         card.record_maintenance(
             id,
             input.date_performed,
             input.maintenance_type,
-            input.notes.clone(),
+            input.notes,
         );
 
-        // pass the card (containing pending events) to the repository to persist
         repo.save(card).await?;
-
         Ok(())
     }
 }

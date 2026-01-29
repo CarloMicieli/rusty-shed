@@ -1,13 +1,16 @@
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::identifiers::Identifier;
 use crate::core::infrastructure::WithDomainContext;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::maintenance::domain::MaintenanceCard;
 use crate::maintenance::domain::MaintenanceCardId;
 use crate::maintenance::domain::MaintenanceEvent;
+use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent;
+use crate::maintenance::domain::{MaintenanceCard, MaintenanceEventId};
 use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
 use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
+use crate::maintenance::interface::{MaintenanceCardEventView, MaintenanceCardView};
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
@@ -150,6 +153,84 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
     // Persist changes for a maintenance card by consuming its pending events.
 
+    async fn find_view_by_id(
+        &mut self,
+        id: &MaintenanceCardId,
+    ) -> Result<Option<MaintenanceCardView>, DomainError> {
+        let q = r#"SELECT
+            id,
+            owned_rolling_stock_id,
+            last_maintenance_date,
+            next_maintenance_date,
+            created_at,
+            updated_at,
+            version
+        FROM maintenance_cards
+        WHERE id = ?"#;
+
+        let trn = id.to_string();
+
+        let row = sqlx::query_as::<_, MaintenanceCardRow>(q)
+            .bind(trn)
+            .fetch_optional(&mut *self.executor)
+            .await
+            .with_domain_context("Error fetching maintenance card by id for view")?;
+
+        let maybe = match row {
+            Some(r) => {
+                // load events for view
+                let events_q = r#"SELECT
+                    id,
+                    maintenance_card_id,
+                    date_performed,
+                    notes,
+                    maintenance_type
+                FROM maintenance_events
+                WHERE maintenance_card_id = ?
+                ORDER BY date_performed DESC"#;
+
+                let rows = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
+                    .bind(r.id.to_string())
+                    .fetch_all(&mut *self.executor)
+                    .await
+                    .with_domain_context("Error listing maintenance events for view")?;
+
+                let mut events = Vec::with_capacity(rows.len());
+                for er in rows.into_iter() {
+                    // parse event id uuid from TRN
+                    let id_trn = er.id.to_string();
+                    let uuid_str = id_trn.trim_start_matches(MaintenanceEventId::PREFIX);
+                    let uuid_str = uuid_str.trim_start_matches(':');
+                    let evt_uuid = uuid::Uuid::parse_str(uuid_str)
+                        .map_err(|_| DomainError::Validation("invalid event id".to_string()))?;
+
+                    let maintenance_type = er
+                        .maintenance_type
+                        .as_ref()
+                        .and_then(|s| s.parse::<MaintenanceType>().ok());
+
+                    events.push(MaintenanceCardEventView {
+                        id: evt_uuid,
+                        date_performed: er.date_performed,
+                        maintenance_type,
+                        notes: er.notes,
+                    });
+                }
+
+                Some(MaintenanceCardView {
+                    id: r.id,
+                    owned_rolling_stock_id: r.owned_rolling_stock_id,
+                    last_maintenance_date: r.last_maintenance_date,
+                    next_maintenance_date: r.next_maintenance_date,
+                    events,
+                })
+            }
+            None => None,
+        };
+
+        Ok(maybe)
+    }
+
     async fn save(&mut self, maintenance_card: MaintenanceCard) -> Result<(), DomainError> {
         let insert_sql = r#"INSERT INTO maintenance_events (
             id,
@@ -197,13 +278,29 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                             "Error updating maintenance card last_maintenance_date",
                         )?;
                 }
+                MaintenanceCardEvent::Created {
+                    id,
+                    maintenance_card_id,
+                    created_at,
+                } => {
+                    let event_trn = format!("trn:maintenance-event:{}", id);
+                    let card_trn = format!("trn:maintenance-card:{}", maintenance_card_id);
+
+                    sqlx::query(insert_sql)
+                        .bind(event_trn)
+                        .bind(&card_trn)
+                        .bind(created_at.format("%Y-%m-%d").to_string())
+                        .bind(None::<String>)
+                        .bind(None::<String>)
+                        .execute(&mut *self.executor)
+                        .await
+                        .with_domain_context("Error inserting maintenance created event")?;
+                }
             }
         }
 
         Ok(())
     }
-
-    // (list_events_for_card removed; events are returned as part of `get_card_by_stock_id`)
 
     async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCard>, DomainError> {
         let q = r#"SELECT
@@ -235,6 +332,83 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         }
 
         Ok(cards)
+    }
+
+    async fn list_due_card_views(
+        &mut self,
+    ) -> Result<Vec<crate::maintenance::interface::MaintenanceCardView>, DomainError> {
+        let q = r#"SELECT
+            id,
+            owned_rolling_stock_id,
+            last_maintenance_date,
+            next_maintenance_date,
+            created_at,
+            updated_at,
+            version
+        FROM maintenance_cards
+        WHERE next_maintenance_date <= date('now')
+           OR (
+               next_maintenance_date IS NULL
+               AND last_maintenance_date IS NOT NULL
+               AND last_maintenance_date <= date('now')
+           )"#;
+
+        let rows = sqlx::query_as::<_, MaintenanceCardRow>(q)
+            .fetch_all(&mut *self.executor)
+            .await
+            .with_domain_context("Error querying due maintenance cards for view")?;
+
+        let mut views = Vec::with_capacity(rows.len());
+        for r in rows.into_iter() {
+            // load events for each card
+            let events_q = r#"SELECT
+                id,
+                maintenance_card_id,
+                date_performed,
+                notes,
+                maintenance_type
+            FROM maintenance_events
+            WHERE maintenance_card_id = ?
+            ORDER BY date_performed DESC"#;
+
+            let rows_ev = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
+                .bind(r.id.to_string())
+                .fetch_all(&mut *self.executor)
+                .await
+                .with_domain_context("Error listing maintenance events for view")?;
+
+            let mut events = Vec::with_capacity(rows_ev.len());
+            for er in rows_ev.into_iter() {
+                let id_trn = er.id.to_string();
+                let uuid_str = id_trn
+                    .trim_start_matches(crate::maintenance::domain::MaintenanceEventId::PREFIX);
+                let uuid_str = uuid_str.trim_start_matches(':');
+                let evt_uuid = uuid::Uuid::parse_str(uuid_str)
+                    .map_err(|_| DomainError::Validation("invalid event id".to_string()))?;
+
+                let maintenance_type = er
+                    .maintenance_type
+                    .as_ref()
+                    .and_then(|s| s.parse::<MaintenanceType>().ok());
+
+                events.push(MaintenanceCardEventView {
+                    id: evt_uuid,
+                    date_performed: er.date_performed,
+                    maintenance_type,
+                    notes: er.notes,
+                });
+            }
+
+            views.push(MaintenanceCardView {
+                id: r.id,
+                owned_rolling_stock_id: r.owned_rolling_stock_id,
+                last_maintenance_date: r.last_maintenance_date,
+                next_maintenance_date: r.next_maintenance_date,
+                events,
+            });
+        }
+
+        Ok(views)
     }
 }
 
@@ -364,6 +538,10 @@ mod tests {
                 maintenance_card_id,
                 ..
             } => *maintenance_card_id,
+            MaintenanceCardEvent::Created {
+                maintenance_card_id,
+                ..
+            } => *maintenance_card_id,
         };
         let mut card = MaintenanceCard::from_id(card_id);
         card.pending_events = vec![new_event.clone()];
@@ -377,6 +555,11 @@ mod tests {
                 date_performed,
                 ..
             } => (*id, *maintenance_card_id, *date_performed),
+            MaintenanceCardEvent::Created {
+                id,
+                maintenance_card_id,
+                created_at,
+            } => (*id, *maintenance_card_id, *created_at),
         };
 
         // Query the card by ID to verify the event was recorded

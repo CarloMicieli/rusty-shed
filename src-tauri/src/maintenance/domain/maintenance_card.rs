@@ -16,8 +16,7 @@ use uuid::Uuid;
 ///
 /// # Invariants
 /// * Maintenance events are recorded chronologically.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct MaintenanceCard {
     /// Unique identifier for the maintenance card.
     pub id: MaintenanceCardId,
@@ -53,6 +52,40 @@ impl MaintenanceCard {
             events: Vec::new(),
             metadata: Metadata::default(),
         }
+    }
+
+    /// Construct a new `MaintenanceCard` for an owned rolling stock.
+    /// Emits a `Created` domain event in `pending_events` so repositories can persist the creation.
+    pub fn create(id: MaintenanceCardId, owned: OwnedRollingStockId) -> Self {
+        let u = {
+            // extract uuid from maintenance card id TRN
+            let s = id.to_string();
+            let uuid_str = s
+                .trim_start_matches(MaintenanceCardId::PREFIX)
+                .trim_start_matches(':');
+            uuid::Uuid::parse_str(uuid_str).expect("invalid maintenance card id trn")
+        };
+
+        let mut card = MaintenanceCard {
+            id,
+            owned_rolling_stock_id: owned,
+            last_maintenance_date: None,
+            next_maintenance_date: None,
+            pending_events: Vec::new(),
+            events: Vec::new(),
+            metadata: Metadata::default(),
+        };
+
+        // emit Created event with today's date
+        let created_evt = MaintenanceCardEvent::Created {
+            id: Uuid::new_v4(),
+            maintenance_card_id: u,
+            created_at: chrono::Local::now().date_naive(),
+        };
+
+        card.pending_events.push(created_evt);
+
+        card
     }
 
     /// Record a maintenance activity: update state and emit an event.
