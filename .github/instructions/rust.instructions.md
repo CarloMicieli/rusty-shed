@@ -39,6 +39,7 @@ Before a task is considered "Done", you MUST execute this sequence:
 - Break down complex functions into smaller, more manageable functions.
 - For algorithm-related code, include explanations of the approach used.
 - Write code with good maintainability practices, including comments on why certain design decisions were made.
+- Use clear and descriptive names for variables, functions, structs, and modules.
 - Handle errors gracefully using `Result<T, E>` and provide meaningful error messages.
 - For external dependencies, mention their usage and purpose in documentation.
 - Use consistent naming conventions following [RFC 430](https://github.com/rust-lang/rfcs/blob/master/text/0430-finalizing-naming-conventions.md).
