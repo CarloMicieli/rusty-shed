@@ -21,52 +21,44 @@ Rusty Shed helps model railway enthusiasts manage their collections, their wish 
 
 ```json
 {
-	"servers": {
-		"github-mcp": {
-			"type": "http",
-			"url": "https://api.githubcopilot.com/mcp"
-		},
-		"rust-analyzer": {
-			"command": "rust-analyzer-mcp",
-			"args": [],
-			"cwd": "./src-tauri",
-			"env": {
-				"LSP_TIMEOUT": "300",
-				"RA_LOG": "info",
-				"CARGO_TARGET_DIR": "target/mcp-analyzer"
-			}
-		},
-		"rust-mcp-server": {
-			"command": "rust-mcp-server",
-			"args": [
-				"--workspace",
-				"..",
-				"--log-file",
-				".log/rust-mcp-server.log"
-			],
-			"cwd": "./src-tauri",
-			"env": {
-				"RUST_BACKTRACE": "1"
-			}
-		},
-		"svelte-mcp": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"-y",
-				"@sveltejs/mcp"
-			]
-		},
-		"sqlite-mcp": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"mcp-server-sqlite-npx",
-				".local/share/io.github.carlomicieli.rustyshed/database.sqlite"
-			]
-		}
-	},
-	"inputs": []
+  "servers": {
+    "github-mcp": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp"
+    },
+    "rust-analyzer": {
+      "command": "rust-analyzer-mcp",
+      "args": [],
+      "cwd": "./src-tauri",
+      "env": {
+        "LSP_TIMEOUT": "300",
+        "RA_LOG": "info",
+        "CARGO_TARGET_DIR": "target/mcp-analyzer"
+      }
+    },
+    "rust-mcp-server": {
+      "command": "rust-mcp-server",
+      "args": ["--workspace", "..", "--log-file", ".log/rust-mcp-server.log"],
+      "cwd": "./src-tauri",
+      "env": {
+        "RUST_BACKTRACE": "1"
+      }
+    },
+    "svelte-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@sveltejs/mcp"]
+    },
+    "sqlite-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-sqlite-npx",
+        ".local/share/io.github.carlomicieli.rustyshed/database.sqlite"
+      ]
+    }
+  },
+  "inputs": []
 }
 ```
 
