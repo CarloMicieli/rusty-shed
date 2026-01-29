@@ -1,0 +1,479 @@
+use crate::catalog::domain::railway_model::{
+    Category, ElectricMultipleUnitType, Epoch, LocomotiveType, PassengerCarType, PowerMethod,
+    ProductCode, RailcarType, RollingStockCategory,
+};
+use crate::catalog::domain::railway_model::{
+    RailwayModel, RailwayModelEvent, RailwayModelId, RailwayModelParams, RailwayModelUowExt,
+    RollingStockParams,
+};
+use crate::catalog::domain::scale::Scale;
+use crate::catalog::domain::{manufacturer::ManufacturerId, railway_company::RailwayCompanyId};
+use crate::core::domain::domain_error::DomainError;
+use chrono::Utc;
+use serde::Deserialize;
+use serde_json::json;
+
+/// Input for saving (create-or-merge) a simplified railway model.
+#[derive(Debug, Clone, Deserialize)]
+pub struct SaveRailwayModelInput {
+    pub manufacturer_id: String,
+    pub product_code: String,
+    pub description: String,
+    pub category: String,
+    pub scale: String,
+    pub epoch: String,
+    pub power_method: String,
+    pub rolling_stocks: Vec<SimplifiedRollingStockInput>,
+}
+
+/// Simplified rolling stock input used by the simplified commands.
+#[derive(Debug, Clone, Deserialize)]
+pub struct SimplifiedRollingStockInput {
+    pub railway_company_id: String,
+    pub series_code: String,
+    pub road_number: Option<String>,
+    pub locomotive_type: Option<String>,
+    pub category: String,
+}
+
+/// Use case that saves or merges a simplified railway model into the catalog.
+pub struct SaveRailwayModel;
+
+impl SaveRailwayModel {
+    /// Save or merge a simplified railway model. If a model already exists
+    /// it is patched with the provided values (incoming values win). New
+    /// rolling stocks are appended.
+    pub async fn execute<U>(
+        unit_of_work: &mut U,
+        input: SaveRailwayModelInput,
+    ) -> Result<RailwayModelId, DomainError>
+    where
+        U: RailwayModelUowExt + Send,
+    {
+        let mut repo = unit_of_work.railway_model_repository();
+
+        // Basic validation / parsing
+        let manufacturer_id = ManufacturerId::try_from(&input.manufacturer_id)
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let product_code = ProductCode::try_from(input.product_code.clone())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let power_method = input
+            .power_method
+            .parse::<PowerMethod>()
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let scale = Scale::try_from(input.scale.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let category = input
+            .category
+            .parse::<Category>()
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let epoch = Epoch::from(input.epoch.as_str());
+
+        let railway_model_id = RailwayModelId::new(&manufacturer_id, &product_code.to_string())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        // Try to find an existing aggregate
+        let existing = repo.find_by_id(&railway_model_id).await?;
+
+        if let Some(mut aggregate) = existing {
+            // Merge: incoming wins for main fields
+            let mut changed = serde_json::Map::new();
+
+            if aggregate.description != input.description {
+                aggregate.description = input.description.clone();
+                changed.insert("description".to_string(), json!(input.description));
+            }
+
+            // power method, scale, category, epoch — treat as replacements
+            aggregate.power_method = power_method;
+            changed.insert(
+                "power_method".to_string(),
+                json!(aggregate.power_method.to_string()),
+            );
+
+            aggregate.scale = scale;
+            changed.insert("scale".to_string(), json!(aggregate.scale.to_string()));
+
+            aggregate.category = category;
+            changed.insert(
+                "category".to_string(),
+                json!(aggregate.category.to_string()),
+            );
+
+            aggregate.epoch = epoch;
+            changed.insert("epoch".to_string(), json!(aggregate.epoch.0.clone()));
+
+            if !changed.is_empty() {
+                let ev = RailwayModelEvent::RailwayModelUpdated {
+                    event_id: uuid::Uuid::new_v4(),
+                    railway_model_id: railway_model_id.clone(),
+                    timestamp: Utc::now().naive_utc(),
+                    changed: serde_json::Value::Object(changed),
+                };
+                aggregate.push_event(ev);
+            }
+
+            // Append rolling stocks
+            for rs in input.rolling_stocks.into_iter() {
+                let company_id = RailwayCompanyId::try_from(&rs.railway_company_id)
+                    .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+                // minimal mapping: treat category to select variant
+                let params = match rs.category.parse::<RollingStockCategory>() {
+                    Ok(RollingStockCategory::Locomotive) => {
+                        let loco_type = rs.locomotive_type.ok_or_else(|| {
+                            DomainError::Validation(
+                                "locomotive_type required for locomotive".to_string(),
+                            )
+                        })?;
+                        let loco_type = loco_type
+                            .parse::<LocomotiveType>()
+                            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+                        RollingStockParams::LocomotiveParams {
+                            railway_company_id: company_id,
+                            livery: None,
+                            length_over_buffers: None,
+                            technical_specifications: None,
+                            friendly_name: "".to_string(),
+                            series_code: Some(rs.series_code),
+                            road_number: rs.road_number.unwrap_or_default(),
+                            series: None,
+                            depot: None,
+                            locomotive_type: loco_type,
+                            dcc_interface: None,
+                            control: None,
+                            is_dummy: false,
+                        }
+                    }
+                    Ok(RollingStockCategory::PassengerCar) => {
+                        RollingStockParams::PassengerCarParams {
+                            railway_company_id: company_id,
+                            livery: None,
+                            length_over_buffers: None,
+                            technical_specifications: None,
+                            friendly_name: "".to_string(),
+                            series_code: Some(rs.series_code),
+                            road_number: rs.road_number,
+                            series: None,
+                            passenger_car_type: Some("UNKNOWN".parse().unwrap_or(
+                                crate::catalog::domain::railway_model::PassengerCarType::BaggageCar,
+                            )),
+                            service_level: None,
+                        }
+                    }
+                    Ok(RollingStockCategory::FreightCar) => RollingStockParams::FreightCarParams {
+                        railway_company_id: company_id,
+                        livery: None,
+                        length_over_buffers: None,
+                        technical_specifications: None,
+                        friendly_name: "".to_string(),
+                        series_code: Some(rs.series_code),
+                        road_number: rs.road_number,
+                        series: None,
+                        freight_car_type: None,
+                    },
+                    Ok(RollingStockCategory::ElectricMultipleUnit) => {
+                        RollingStockParams::ElectricMultipleUnitParams {
+                            railway_company_id: company_id,
+                            livery: None,
+                            length_over_buffers: None,
+                            technical_specifications: None,
+                            friendly_name: "".to_string(),
+                            series_code: Some(rs.series_code),
+                            road_number: rs.road_number,
+                            series: None,
+                            depot: None,
+                            electric_multiple_unit_type: ""
+                                .parse()
+                                .unwrap_or(ElectricMultipleUnitType::default()),
+                            dcc_interface: None,
+                            control: None,
+                            is_dummy: false,
+                        }
+                    }
+                    Ok(RollingStockCategory::Railcar) => RollingStockParams::RailcarParams {
+                        railway_company_id: company_id,
+                        livery: None,
+                        length_over_buffers: None,
+                        technical_specifications: None,
+                        friendly_name: "".to_string(),
+                        series_code: Some(rs.series_code),
+                        road_number: rs.road_number,
+                        series: None,
+                        depot: None,
+                        railcar_type: "".parse().unwrap_or(RailcarType::default()),
+                        dcc_interface: None,
+                        control: None,
+                        is_dummy: false,
+                    },
+                    Err(_) => {
+                        return Err(DomainError::Validation(
+                            "invalid rolling stock category".to_string(),
+                        ));
+                    }
+                };
+
+                aggregate.add_rolling_stock(params);
+            }
+
+            // Persist
+            repo.save(&mut aggregate).await?;
+
+            Ok(railway_model_id)
+        } else {
+            // Create new aggregate (reuse AddRailwayModel style)
+            let rolling_stocks = input
+                .rolling_stocks
+                .into_iter()
+                .map(|rs| {
+                    let company_id = RailwayCompanyId::try_from(&rs.railway_company_id)
+                        .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+                    match rs.category.parse::<RollingStockCategory>() {
+                        Ok(RollingStockCategory::Locomotive) => {
+                            let loco_type = rs.locomotive_type.ok_or_else(|| {
+                                DomainError::Validation(
+                                    "locomotive_type required for locomotive".to_string(),
+                                )
+                            })?;
+                            let loco_type = loco_type
+                                .parse::<LocomotiveType>()
+                                .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+                            Ok(RollingStockParams::LocomotiveParams {
+                                railway_company_id: company_id,
+                                livery: None,
+                                length_over_buffers: None,
+                                technical_specifications: None,
+                                friendly_name: "".to_string(),
+                                series_code: Some(rs.series_code),
+                                road_number: rs.road_number.unwrap_or_default(),
+                                series: None,
+                                depot: None,
+                                locomotive_type: loco_type,
+                                dcc_interface: None,
+                                control: None,
+                                is_dummy: false,
+                            })
+                        }
+                        Ok(RollingStockCategory::PassengerCar) => {
+                            Ok(RollingStockParams::PassengerCarParams {
+                                railway_company_id: company_id,
+                                livery: None,
+                                length_over_buffers: None,
+                                technical_specifications: None,
+                                friendly_name: "".to_string(),
+                                series_code: Some(rs.series_code),
+                                road_number: rs.road_number,
+                                series: None,
+                                passenger_car_type: Some(
+                                    "UNKNOWN".parse().unwrap_or(PassengerCarType::BaggageCar),
+                                ),
+                                service_level: None,
+                            })
+                        }
+                        Ok(RollingStockCategory::FreightCar) => {
+                            Ok(RollingStockParams::FreightCarParams {
+                                railway_company_id: company_id,
+                                livery: None,
+                                length_over_buffers: None,
+                                technical_specifications: None,
+                                friendly_name: "".to_string(),
+                                series_code: Some(rs.series_code),
+                                road_number: rs.road_number,
+                                series: None,
+                                freight_car_type: None,
+                            })
+                        }
+                        Ok(RollingStockCategory::ElectricMultipleUnit) => {
+                            Ok(RollingStockParams::ElectricMultipleUnitParams {
+                                railway_company_id: company_id,
+                                livery: None,
+                                length_over_buffers: None,
+                                technical_specifications: None,
+                                friendly_name: "".to_string(),
+                                series_code: Some(rs.series_code),
+                                road_number: rs.road_number,
+                                series: None,
+                                depot: None,
+                                electric_multiple_unit_type: ""
+                                    .parse()
+                                    .unwrap_or(ElectricMultipleUnitType::default()),
+                                dcc_interface: None,
+                                control: None,
+                                is_dummy: false,
+                            })
+                        }
+                        Ok(RollingStockCategory::Railcar) => {
+                            Ok(RollingStockParams::RailcarParams {
+                                railway_company_id: company_id,
+                                livery: None,
+                                length_over_buffers: None,
+                                technical_specifications: None,
+                                friendly_name: "".to_string(),
+                                series_code: Some(rs.series_code),
+                                road_number: rs.road_number,
+                                series: None,
+                                depot: None,
+                                railcar_type: "".parse().unwrap_or(RailcarType::default()),
+                                dcc_interface: None,
+                                control: None,
+                                is_dummy: false,
+                            })
+                        }
+                        Err(_) => Err(DomainError::Validation(
+                            "invalid rolling stock category".to_string(),
+                        )),
+                    }
+                })
+                .collect::<Result<Vec<RollingStockParams>, DomainError>>()?;
+
+            let railway_model_params = RailwayModelParams {
+                manufacturer_id: manufacturer_id.clone(),
+                product_code: product_code.clone(),
+                power_method,
+                scale,
+                category,
+                epoch,
+                delivery_date: None,
+                availability_status: None,
+                description: input.description,
+                details: None,
+                rolling_stocks: rolling_stocks.clone(),
+            };
+
+            let mut aggregate = RailwayModel {
+                id: railway_model_id.clone(),
+                manufacturer_id: railway_model_params.manufacturer_id.clone(),
+                product_code: railway_model_params.product_code.clone(),
+                description: railway_model_params.description.clone(),
+                details: railway_model_params.details.clone(),
+                power_method: railway_model_params.power_method,
+                scale: railway_model_params.scale.clone(),
+                epoch: railway_model_params.epoch.clone(),
+                category: railway_model_params.category,
+                delivery_date: railway_model_params.delivery_date.clone(),
+                availability_status: railway_model_params.availability_status,
+                rolling_stocks: Vec::new(),
+                pending_events: Vec::new(),
+            };
+
+            let created_event = RailwayModelEvent::RailwayModelCreated {
+                event_id: uuid::Uuid::new_v4(),
+                railway_model_id: railway_model_id.clone(),
+                timestamp: Utc::now().naive_utc(),
+                params: railway_model_params.clone(),
+            };
+
+            aggregate.push_event(created_event);
+
+            for p in rolling_stocks.into_iter() {
+                aggregate.add_rolling_stock(p);
+            }
+
+            repo.save(&mut aggregate).await.map(|_| railway_model_id)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::application::testing::FakeUow;
+    use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::{Category, PowerMethod, ProductCode};
+    use crate::catalog::domain::railway_model::{MockRailwayModelRepository, RailwayModel};
+    use crate::catalog::domain::scale::Scale;
+    // chrono::NaiveDate not used in these tests
+
+    #[tokio::test]
+    async fn it_creates_new_railway_model_when_missing() {
+        let mut mock = MockRailwayModelRepository::new();
+        mock.expect_find_by_id().times(1).returning(|_| Ok(None));
+        mock.expect_save().times(1).returning(|_| Ok(()));
+
+        let mut uow = FakeUow::with_railway_models_repo(mock);
+
+        let input = SaveRailwayModelInput {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "P100".to_string(),
+            description: "A test model".to_string(),
+            category: "Locomotives".to_string(),
+            scale: "H0".to_string(),
+            epoch: "IV".to_string(),
+            power_method: "DC".to_string(),
+            rolling_stocks: vec![],
+        };
+
+        let id = SaveRailwayModel::execute(&mut uow, input)
+            .await
+            .expect("should create railway model");
+
+        // Basic sanity: id contains manufacturer namespace
+        assert!(id.to_string().contains("acme"));
+    }
+
+    #[tokio::test]
+    async fn it_updates_existing_railway_model_and_appends_rolling_stock() {
+        let mut mock = MockRailwayModelRepository::new();
+
+        // build an existing minimal aggregate
+        let manufacturer = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
+        let product = ProductCode::try_from("P100").unwrap();
+        let existing_id =
+            crate::catalog::domain::railway_model::RailwayModelId::new(&manufacturer, "P100")
+                .unwrap();
+
+        let existing = RailwayModel {
+            id: existing_id.clone(),
+            manufacturer_id: manufacturer.clone(),
+            product_code: product.clone(),
+            description: "Old desc".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "III".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+            pending_events: Vec::new(),
+        };
+
+        mock.expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(Some(existing.clone())));
+        mock.expect_save().times(1).returning(|_| Ok(()));
+
+        let mut uow = FakeUow::with_railway_models_repo(mock);
+
+        let input = SaveRailwayModelInput {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "P100".to_string(),
+            description: "New desc".to_string(),
+            category: "Locomotives".to_string(),
+            scale: "H0".to_string(),
+            epoch: "IV".to_string(),
+            power_method: "DC".to_string(),
+            rolling_stocks: vec![SimplifiedRollingStockInput {
+                railway_company_id: "trn:railway-company:rc1".to_string(),
+                series_code: "S1".to_string(),
+                road_number: Some("100".to_string()),
+                locomotive_type: Some("STEAM_LOCOMOTIVE".to_string()),
+                category: "Locomotive".to_string(),
+            }],
+        };
+
+        let id = SaveRailwayModel::execute(&mut uow, input)
+            .await
+            .expect("should update railway model");
+
+        assert_eq!(id, existing_id);
+    }
+}

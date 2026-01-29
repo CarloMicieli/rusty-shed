@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::interface::SimplifiedRailwayModelArgs;
 use crate::collecting::application::AddCollectionItemInput;
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::core::domain::domain_error::DomainError;
@@ -125,3 +126,34 @@ mod tests {
         assert_eq!(cmd.price.currency.to_code(), "USD");
     }
 }
+
+/// Arguments for creating a simplified railway model and adding it to the collection.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct AddRailwayModelToCollectionArgs {
+    /// The simplified railway model data.
+    pub railway_model: SimplifiedRailwayModelArgs,
+
+    /// The category and rolling stock are determined from the referenced railway model.
+    /// The price amount in the smallest currency unit (e.g., cents).
+    pub price_amount: i64,
+    /// The currency code for the price (e.g., "USD").
+    pub price_currency: String,
+    /// The seller ID (optional).
+    pub seller_id: Option<String>,
+    /// The date the item was added to the collection (YYYY-MM-DD).
+    pub added_date: NaiveDate,
+    /// The date the item was purchased (YYYY-MM-DD).
+    pub purchase_date: NaiveDate,
+    /// The purchase condition (optional).
+    pub purchase_condition: Option<String>,
+    /// The model condition (optional).
+    pub model_condition: Option<String>,
+    /// The box condition (optional).
+    pub box_condition: Option<String>,
+    /// Additional notes about the item (optional).
+    pub notes: Option<String>,
+}
+
+// Reuse `SimplifiedRailwayModelArgs` from the `catalog::interface` module.

@@ -4,7 +4,7 @@ use serde::Deserialize;
 use crate::{
     catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
-        TechnicalSpecificationsInput,
+        SaveRailwayModelInput, SimplifiedRollingStockInput, TechnicalSpecificationsInput,
     },
     core::domain::domain_error::DomainError,
 };
@@ -180,6 +180,61 @@ impl TryFrom<CreateRailwayModelArgs> for CreateRailwayModelInput {
             category: args.category,
             delivery_date: args.delivery_date,
             availability_status: args.availability_status,
+            rolling_stocks,
+        })
+    }
+}
+
+/// Simplified arguments for creating a railway model and optionally a small set
+/// of rolling stocks. This is a lighter-weight payload used by the
+/// `add_railway_model_to_collection` and `add_railway_model_to_wish_list` commands.
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SimplifiedRailwayModelArgs {
+    pub manufacturer_id: String,
+    pub product_code: String,
+    pub description: String,
+    pub category: String,
+    pub scale: String,
+    pub epoch: String,
+    pub power_method: String,
+    pub rolling_stocks: Vec<SimplifiedRollingStockArgs>,
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SimplifiedRollingStockArgs {
+    pub railway_company_id: String,
+    pub series_code: String,
+    pub road_number: Option<String>,
+    pub locomotive_type: Option<String>,
+    pub category: String,
+}
+
+impl TryFrom<SimplifiedRailwayModelArgs> for SaveRailwayModelInput {
+    type Error = DomainError;
+
+    fn try_from(args: SimplifiedRailwayModelArgs) -> Result<Self, Self::Error> {
+        let rolling_stocks = args
+            .rolling_stocks
+            .into_iter()
+            .map(|rs| SimplifiedRollingStockInput {
+                railway_company_id: rs.railway_company_id,
+                series_code: rs.series_code,
+                road_number: rs.road_number,
+                locomotive_type: rs.locomotive_type,
+                category: rs.category,
+            })
+            .collect();
+
+        Ok(SaveRailwayModelInput {
+            manufacturer_id: args.manufacturer_id,
+            product_code: args.product_code,
+            description: args.description,
+            category: args.category,
+            scale: args.scale,
+            epoch: args.epoch,
+            power_method: args.power_method,
             rolling_stocks,
         })
     }

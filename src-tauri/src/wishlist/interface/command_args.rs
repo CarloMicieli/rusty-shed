@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::interface::SimplifiedRailwayModelArgs;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::wishlist::application::inputs::{
@@ -243,6 +244,29 @@ impl TryFrom<PurchaseWishlistArgs>
             },
         )
     }
+}
+
+/// Arguments for creating a simplified railway model and adding it to a wishlist.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct AddRailwayModelToWishListArgs {
+    /// The simplified railway model data.
+    pub railway_model: SimplifiedRailwayModelArgs,
+    /// Target wishlist id. The item will be added to this wishlist.
+    pub wishlist_id: String,
+    /// The priority of the wishlist item (optional).
+    pub priority: Option<WishlistPriority>,
+    /// The status of the wishlist item (optional).
+    pub status: Option<WishlistStatus>,
+    /// The desired price amount in the smallest currency unit (e.g., cents) (optional).
+    pub desired_price_amount: Option<i64>,
+    /// The desired price currency code (e.g., "USD") (optional).
+    pub desired_price_currency: Option<String>,
+    /// Additional notes about the wishlist item (optional).
+    pub notes: Option<String>,
+    /// The date the item was added to the wishlist (optional).
+    pub added_date: Option<NaiveDate>,
 }
 
 #[cfg(test)]

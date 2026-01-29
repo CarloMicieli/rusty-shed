@@ -41,7 +41,7 @@ pub async fn get_railway_model_by_id(
     Ok(railway_model)
 }
 
-/// Create a new railway model together with its rolling stocks.
+/// Create a new railway model along with its associated rolling stocks.
 ///
 /// # Arguments
 /// * `state` - Tauri-managed application `AppState` providing the database pool.
@@ -50,9 +50,6 @@ pub async fn get_railway_model_by_id(
 /// # Returns
 /// - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
 /// - `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
-///
-/// # Errors
-/// Errors are mapped to `CommandError` and may represent validation, repository, or unit-of-work failures.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_railway_model(

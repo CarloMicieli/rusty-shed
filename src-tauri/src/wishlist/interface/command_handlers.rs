@@ -1,3 +1,5 @@
+use crate::catalog::application::{SaveRailwayModel, SaveRailwayModelInput};
+use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::state::AppState;
@@ -21,10 +23,13 @@ use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::interface::PurchaseWishlistArgs;
+use crate::wishlist::interface::command_args::AddRailwayModelToWishListArgs;
 use crate::wishlist::interface::{
     AddToWishlistArgs, CreateWishlistArgs, MoveWishlistItemArgs, RenameWishlistArgs,
 };
 use log::info;
+// SimplifiedRailwayModelArgs is referenced via the command args; no direct import needed here.
+use crate::core::domain::{Currency, MonetaryAmount};
 
 /// Tauri command to get a wishlist by its ID.
 ///
@@ -358,6 +363,56 @@ pub async fn purchase_wishlist_item(
         move_cmd,
     )
     .await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Simplified flow: save (merge) the railway model and add it to the default wishlist.
+#[tauri::command]
+#[specta::specta]
+pub async fn add_railway_model_to_wish_list(
+    state: tauri::State<'_, AppState>,
+    args: AddRailwayModelToWishListArgs,
+) -> Result<(), CommandError> {
+    info!("add_railway_model_to_wish_list (wishlist): {:?}", args);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let save_input: SaveRailwayModelInput = args.railway_model.try_into()?;
+
+    let railway_model_id = SaveRailwayModel::execute(&mut unit_of_work, save_input).await?;
+
+    // Use the provided wishlist id (required by the args).
+    let target_wishlist_id = WishlistId::try_from(args.wishlist_id.as_str())
+        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+
+    let id_provider = RuntimeIdProvider::new();
+
+    let desired_price: Option<MonetaryAmount> = match (
+        args.desired_price_amount,
+        args.desired_price_currency.clone(),
+    ) {
+        (Some(amount), Some(code)) => {
+            let currency = Currency::from_code(&code)
+                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+            Some(MonetaryAmount::new(amount, currency))
+        }
+        _ => None,
+    };
+
+    let add_input = AddToWishlistInput {
+        wishlist_id: target_wishlist_id,
+        railway_model_id,
+        priority: args.priority.unwrap_or_default(),
+        status: args.status.unwrap_or_default(),
+        desired_price,
+        notes: args.notes,
+        added_date: args.added_date.unwrap_or(chrono::Utc::now().date_naive()),
+    };
+
+    AddToWishlistUseCase::execute(&mut unit_of_work, id_provider, add_input).await?;
 
     unit_of_work.commit().await?;
 
