@@ -2,9 +2,9 @@ use crate::core::domain::domain_error::DomainError;
 use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller_id::SellerId;
 
-pub struct DeleteSellerUseCase;
+pub struct DeleteSeller;
 
-impl DeleteSellerUseCase {
+impl DeleteSeller {
     /// Deletes a seller by its ID.
     ///
     /// # Arguments
@@ -23,5 +23,29 @@ impl DeleteSellerUseCase {
     {
         let mut repo = unit_of_work.sellers_repository();
         repo.delete(id).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::domain::domain_error::DomainError;
+    use crate::core::domain::identifiers::Identifier;
+    use crate::sellers::application::testing::FakeUow;
+    use crate::sellers::domain::MockSellersRepository;
+    use crate::sellers::domain::seller_id::SellerId;
+
+    #[tokio::test]
+    async fn delete_delegates_to_repo() -> Result<(), DomainError> {
+        let id = SellerId::new_from_parts(&["test"]);
+
+        let mut mock = MockSellersRepository::new();
+        mock.expect_delete().returning(|_id| Ok(1));
+
+        let mut uow = FakeUow::with_sellers_repo(Box::new(mock));
+
+        let affected = DeleteSeller::execute(&mut uow, &id).await?;
+        assert_eq!(affected, 1);
+        Ok(())
     }
 }

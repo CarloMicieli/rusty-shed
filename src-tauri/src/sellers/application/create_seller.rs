@@ -7,11 +7,10 @@ use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
 
-pub struct CreateSellerUseCase;
+pub struct CreateSeller;
 
-impl CreateSellerUseCase {
+impl CreateSeller {
     /// Creates a new seller and persists it using the provided unit of work.
     ///
     /// # Arguments
@@ -75,13 +74,18 @@ impl CreateSellerUseCase {
     }
 }
 
-#[derive(Debug, Clone, specta::Type, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// Input data required to create a new seller.
+#[derive(Debug, Clone)]
 pub struct CreateSellerInput {
+    /// Name of the seller.
     pub name: String,
+    /// Type of the seller.
     pub seller_type: SellerType,
+    /// Contact email of the seller.
     pub email: Option<String>,
+    /// Contact phone number of the seller.
     pub phone: Option<String>,
+    /// Website URL of the seller.
     pub website_url: Option<String>,
     pub street_address: Option<String>,
     pub extended_address: Option<String>,
@@ -89,4 +93,38 @@ pub struct CreateSellerInput {
     pub state_region: Option<String>,
     pub postal_code: Option<String>,
     pub country_code: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::domain::domain_error::DomainError;
+    use crate::sellers::application::testing::FakeUow;
+    use crate::sellers::domain::MockSellersRepository;
+    use crate::sellers::domain::seller_type::SellerType;
+
+    #[tokio::test]
+    async fn create_saves_seller() -> Result<(), DomainError> {
+        let mut mock = MockSellersRepository::new();
+        mock.expect_save().returning(|_seller| Ok(()));
+
+        let mut uow = FakeUow::with_sellers_repo(Box::new(mock));
+        let input = CreateSellerInput {
+            name: "Test Shop".to_string(),
+            seller_type: SellerType::Shop,
+            email: None,
+            phone: None,
+            website_url: None,
+            street_address: None,
+            extended_address: None,
+            city: None,
+            state_region: None,
+            postal_code: None,
+            country_code: None,
+        };
+
+        let seller = CreateSeller::execute(&mut uow, input).await?;
+        assert_eq!(seller.name, "Test Shop");
+        Ok(())
+    }
 }

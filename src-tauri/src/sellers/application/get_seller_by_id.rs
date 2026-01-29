@@ -1,32 +1,75 @@
 use crate::core::domain::domain_error::DomainError;
+use crate::sellers::application::seller_view::SellerView;
 use crate::sellers::domain::SellersUowExt;
-use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 
-pub struct GetSellerByIdUseCase;
+pub struct GetSellerById;
 
-impl GetSellerByIdUseCase {
+impl GetSellerById {
     /// Retrieves a seller by its ID.
-    ///
-    /// # Arguments
-    /// - `unit_of_work`: The unit of work providing access to the sellers repository.
-    /// - `id`: The ID of the seller to be retrieved.
-    ///
-    /// # Returns
-    /// - `Ok(Some(Seller))` if the seller was found.
-    /// - `Ok(None)` if the seller was not found.
-    /// - `Err(DomainError)` if an error occurred during the operation.
-    ///
-    /// # Type Parameters
-    /// - `U`: Unit of work type implementing `SellersUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         id: &SellerId,
-    ) -> Result<Option<Seller>, DomainError>
+    ) -> Result<Option<SellerView>, DomainError>
     where
         U: SellersUowExt + Send,
     {
         let mut repo = unit_of_work.sellers_repository();
-        repo.get(id).await
+        // repository provides a dedicated view lookup to avoid loading/pulling events
+        // for the full aggregate when only a presentation model is required.
+        repo.find_seller_view_by_id(id).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::domain::domain_error::DomainError;
+    use crate::core::domain::identifiers::Identifier;
+    use crate::sellers::application::seller_view::SellerView;
+    use crate::sellers::application::testing::FakeUow;
+    use crate::sellers::domain::MockSellersRepository;
+    use crate::sellers::domain::seller_id::SellerId;
+    use crate::sellers::domain::seller_type::SellerType;
+
+    #[tokio::test]
+    async fn returns_some_when_found() -> Result<(), DomainError> {
+        let id = SellerId::new_from_parts(&["found"]);
+
+        let view = SellerView {
+            id: id.clone(),
+            name: "Found".to_string(),
+            seller_type: SellerType::Shop,
+            email: None,
+            phone: None,
+            website_url: None,
+            address: None,
+        };
+
+        let mut mock = MockSellersRepository::new();
+        let view_clone = view.clone();
+        mock.expect_find_seller_view_by_id()
+            .returning(move |_id| Ok(Some(view_clone.clone())));
+
+        let mut uow = FakeUow::with_sellers_repo(Box::new(mock));
+
+        let res = GetSellerById::execute(&mut uow, &id).await?;
+        assert!(res.is_some());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn returns_none_when_not_found() -> Result<(), DomainError> {
+        let id = SellerId::new_from_parts(&["missing"]);
+
+        let mut mock = MockSellersRepository::new();
+        mock.expect_find_seller_view_by_id()
+            .returning(|_id| Ok(None));
+
+        let mut uow = FakeUow::with_sellers_repo(Box::new(mock));
+
+        let res = GetSellerById::execute(&mut uow, &id).await?;
+        assert!(res.is_none());
+        Ok(())
     }
 }

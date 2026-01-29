@@ -74,6 +74,40 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
         Ok(row.map(Into::into))
     }
 
+    async fn find_seller_view_by_id(
+        &mut self,
+        id: &SellerId,
+    ) -> Result<Option<crate::sellers::application::seller_view::SellerView>, DomainError> {
+        let sql = r#"
+        SELECT
+            id,
+            name,
+            type AS seller_type,
+            email,
+            phone,
+            website_url,
+            street_address,
+            extended_address,
+            city,
+            state_region,
+            postal_code,
+            country_code,
+            created_at,
+            updated_at
+        FROM sellers
+        WHERE id = ?
+        "#;
+        let row = sqlx::query_as::<_, SellerRow>(sql)
+            .bind(&id.0)
+            .fetch_optional(&mut *self.executor)
+            .await
+            .map_err(DomainError::Infrastructure)?;
+        Ok(row.map(|r| {
+            let s: Seller = r.into();
+            crate::sellers::application::seller_view::SellerView::from(s)
+        }))
+    }
+
     async fn upsert(&mut self, seller: &Seller) -> Result<(), DomainError> {
         // Keep existing created_at if row exists; otherwise use provided created_at.
         let existing_created_at: Option<String> =

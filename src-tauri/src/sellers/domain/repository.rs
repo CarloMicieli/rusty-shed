@@ -1,4 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
+use crate::sellers::application::seller_view::SellerView;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 
@@ -11,6 +12,12 @@ pub trait SellersRepository: Send + Sync {
 
     /// Retrieves a seller by its ID.
     async fn get(&mut self, id: &SellerId) -> Result<Option<Seller>, DomainError>;
+
+    /// Retrieves a presentation `SellerView` by id.
+    async fn find_seller_view_by_id(
+        &mut self,
+        id: &SellerId,
+    ) -> Result<Option<SellerView>, DomainError>;
 
     /// Upserts a seller into the data store.
     async fn upsert(&mut self, seller: &Seller) -> Result<(), DomainError>;

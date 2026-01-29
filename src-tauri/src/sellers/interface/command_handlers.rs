@@ -1,8 +1,9 @@
 use crate::core::infrastructure::error::CommandError;
-use crate::sellers::application::create_seller::{CreateSellerInput, CreateSellerUseCase};
-use crate::sellers::application::delete_seller::DeleteSellerUseCase;
-use crate::sellers::application::get_seller_by_id::GetSellerByIdUseCase;
-use crate::sellers::application::get_sellers::GetSellersUseCase;
+use crate::sellers::application::create_seller::{CreateSeller, CreateSellerInput};
+use crate::sellers::application::delete_seller::DeleteSeller;
+use crate::sellers::application::get_seller_by_id::GetSellerById;
+use crate::sellers::application::get_sellers::GetSellers;
+use crate::sellers::application::seller_view::SellerView;
 use crate::sellers::application::update_seller::{UpdateSellerInput, UpdateSellerUseCase};
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
@@ -11,7 +12,7 @@ use crate::state::AppState;
 use log::info;
 use std::convert::TryFrom;
 
-/// Tauri command to retrieve all sellers.
+/// Command handler to retrieve all sellers.
 ///
 /// This handler constructs the repository and query handler, executes the query
 /// asynchronously and returns the list of `Seller` on success. On failure, it
@@ -26,18 +27,20 @@ use std::convert::TryFrom;
 /// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_sellers(state: tauri::State<'_, AppState>) -> Result<Vec<Seller>, CommandError> {
+pub async fn get_sellers(
+    state: tauri::State<'_, AppState>,
+) -> Result<Vec<SellerView>, CommandError> {
     info!("Fetching all sellers");
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let sellers = GetSellersUseCase::execute(&mut unit_of_work).await?;
+    let sellers = GetSellers::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(sellers)
 }
 
-/// Tauri command to retrieve a seller by its identifier.
+/// Command handler to retrieve a seller by its identifier.
 ///
 /// This handler constructs the repository and query handler, executes the query
 /// asynchronously and returns the `Seller` on success. On failure, it
@@ -57,12 +60,12 @@ pub async fn get_sellers(state: tauri::State<'_, AppState>) -> Result<Vec<Seller
 pub async fn get_seller_by_id(
     state: tauri::State<'_, AppState>,
     id: SellerId,
-) -> Result<Option<Seller>, CommandError> {
+) -> Result<Option<SellerView>, CommandError> {
     info!("Fetching seller with ID: {}", id);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let result = GetSellerByIdUseCase::execute(&mut unit_of_work, &id)
+    let result = GetSellerById::execute(&mut unit_of_work, &id)
         .await
         .map_err(CommandError::from)?;
 
@@ -71,7 +74,7 @@ pub async fn get_seller_by_id(
     Ok(result)
 }
 
-/// Tauri command to create a new seller.
+/// Command handler to create a new seller.
 ///
 /// This handler constructs the repository and command handler, executes the command
 /// asynchronously and returns the created `Seller` on success. On failure, it
@@ -108,7 +111,7 @@ pub async fn create_seller(
         postal_code: payload.postal_code,
         country_code: payload.country_code,
     };
-    let result = CreateSellerUseCase::execute(&mut unit_of_work, input)
+    let result = CreateSeller::execute(&mut unit_of_work, input)
         .await
         .map_err(CommandError::from)?;
 
@@ -117,7 +120,7 @@ pub async fn create_seller(
     Ok(result)
 }
 
-/// Tauri command to update an existing seller.
+/// Command handler to update an existing seller.
 ///
 /// This handler constructs the repository and command handler, executes the command
 /// asynchronously and returns the updated `
@@ -151,7 +154,7 @@ pub async fn update_seller(
     Ok(result)
 }
 
-/// Tauri command to delete a seller by ID.
+/// Command handler to delete a seller by ID.
 ///
 /// This handler constructs the repository and command handler, executes the command
 /// asynchronously and returns the number of deleted records on success. On failure, it
@@ -175,7 +178,7 @@ pub async fn delete_seller(
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let _ = DeleteSellerUseCase::execute(&mut unit_of_work, &id)
+    let _ = DeleteSeller::execute(&mut unit_of_work, &id)
         .await
         .map_err(CommandError::from)?;
 
