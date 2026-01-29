@@ -1,14 +1,28 @@
+use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
-use crate::dcc_inventory::application::NewDigitalRollingStockInput;
 use crate::dcc_inventory::domain::{
-    DccInventoryUowExt, DigitalRollingStock, DigitalRollingStockId,
+    DccAddress, DccInventoryUowExt, DecoderId, DigitalRollingStock, DigitalRollingStockId,
 };
 
 /// Use case to create a new DigitalRollingStock aggregate.
 pub struct NewDigitalRollingStockUseCase;
 
 impl NewDigitalRollingStockUseCase {
+    /// Execute the use case to create a new `DigitalRollingStock` aggregate.
+    ///
+    /// # Parameters
+    /// - `unit_of_work`: Unit of work providing repository access required by the use case.
+    /// - `id_provider`: Provider used to obtain a new `DigitalRollingStockId`.
+    /// - `input`: `NewDigitalRollingStockInput` containing initial aggregate data.
+    ///
+    /// # Returns
+    /// - `Ok(DigitalRollingStockId)` with the created aggregate id on success.
+    /// - `Err(DomainError)` when persistence fails.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit-of-work type that implements `DccInventoryUowExt` and `Send`.
+    /// - `P`: `IdProvider` implementation that yields `DigitalRollingStockId` values.
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,
@@ -18,7 +32,7 @@ impl NewDigitalRollingStockUseCase {
         U: DccInventoryUowExt + Send,
         P: IdProvider<DigitalRollingStockId>,
     {
-        let mut repo = unit_of_work.digital_rolling_stocks_repo();
+        let mut repo = unit_of_work.digital_rolling_stocks_repository();
 
         let id = id_provider.next_id();
 
@@ -33,33 +47,28 @@ impl NewDigitalRollingStockUseCase {
     }
 }
 
+/// Input for creating a new digital rolling stock
+#[derive(Debug, Clone)]
+pub struct NewDigitalRollingStockInput {
+    /// The owned rolling stock id associated with the digital rolling stock
+    pub owned_rolling_stock_id: OwnedRollingStockId,
+    /// The DCC address assigned to the digital rolling stock
+    pub dcc_address: DccAddress,
+    /// The decoder id assigned to the digital rolling stock
+    pub decoder_id: DecoderId,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::core::domain::test_utils::MockIdProvider;
+    use crate::dcc_inventory::domain::DigitalRollingStockId;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
     use crate::dcc_inventory::domain::{DccAddress, DecoderId};
-    use crate::dcc_inventory::domain::{DccInventoryUowExt, DigitalRollingStockId};
     use uuid::Uuid;
 
-    struct FakeUow {
-        repo: Option<MockDigitalRollingStockRepository>,
-    }
-
-    impl FakeUow {
-        fn new(repo: MockDigitalRollingStockRepository) -> Self {
-            Self { repo: Some(repo) }
-        }
-    }
-
-    impl DccInventoryUowExt for FakeUow {
-        fn digital_rolling_stocks_repo(
-            &mut self,
-        ) -> Box<dyn crate::dcc_inventory::domain::DigitalRollingStockRepository + '_> {
-            Box::new(self.repo.take().expect("repo already taken"))
-        }
-    }
+    use crate::dcc_inventory::application::testing::FakeUow;
 
     #[tokio::test]
     async fn it_should_create_new_digital_rolling_stock() {

@@ -1,11 +1,22 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::dcc_inventory::application::ChangeDecoderInput;
-use crate::dcc_inventory::domain::DccInventoryUowExt;
+use crate::dcc_inventory::domain::{DccInventoryUowExt, DecoderId, DigitalRollingStockId};
 
 /// Use case to change the decoder of a DigitalRollingStock aggregate.
 pub struct ChangeDecoderUseCase;
 
 impl ChangeDecoderUseCase {
+    /// Execute the use case to change the decoder of a `DigitalRollingStock`.
+    ///
+    /// # Parameters
+    /// - `unit_of_work`: Unit of work providing repository access required by the use case.
+    /// - `input`: `ChangeDecoderInput` containing the target `DigitalRollingStock` id and the new `DecoderId`.
+    ///
+    /// # Returns
+    /// - `Ok(())` when the change is persisted successfully.
+    /// - `Err(DomainError)` when the target cannot be found or a repository error occurs.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit-of-work type that implements `DccInventoryUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: ChangeDecoderInput,
@@ -13,7 +24,7 @@ impl ChangeDecoderUseCase {
     where
         U: DccInventoryUowExt + Send,
     {
-        let mut repo = unit_of_work.digital_rolling_stocks_repo();
+        let mut repo = unit_of_work.digital_rolling_stocks_repository();
 
         let maybe = repo.find_by_id(&input.id).await?;
         let mut drs = maybe.ok_or_else(|| DomainError::NotFound {
@@ -27,34 +38,25 @@ impl ChangeDecoderUseCase {
     }
 }
 
+/// Input for changing a decoder
+#[derive(Debug, Clone)]
+pub struct ChangeDecoderInput {
+    /// The digital rolling stock id whose decoder is to be changed
+    pub id: DigitalRollingStockId,
+    /// The new decoder id to assign to the digital rolling stock
+    pub decoder_id: DecoderId,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
     use crate::dcc_inventory::domain::{DccAddress, DecoderId};
-    use crate::dcc_inventory::domain::{
-        DccInventoryUowExt, DigitalRollingStock, DigitalRollingStockId,
-    };
+    use crate::dcc_inventory::domain::{DigitalRollingStock, DigitalRollingStockId};
     use uuid::Uuid;
 
-    struct FakeUow {
-        repo: Option<MockDigitalRollingStockRepository>,
-    }
-
-    impl FakeUow {
-        fn new(repo: MockDigitalRollingStockRepository) -> Self {
-            Self { repo: Some(repo) }
-        }
-    }
-
-    impl DccInventoryUowExt for FakeUow {
-        fn digital_rolling_stocks_repo(
-            &mut self,
-        ) -> Box<dyn crate::dcc_inventory::domain::DigitalRollingStockRepository + '_> {
-            Box::new(self.repo.take().expect("repo already taken"))
-        }
-    }
+    use crate::dcc_inventory::application::testing::FakeUow;
 
     #[tokio::test]
     async fn it_should_change_decoder_and_emit_event() {

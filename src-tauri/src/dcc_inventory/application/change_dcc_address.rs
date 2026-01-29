@@ -1,11 +1,22 @@
 use crate::core::domain::domain_error::DomainError;
-use crate::dcc_inventory::application::ChangeDccAddressInput;
-use crate::dcc_inventory::domain::DccInventoryUowExt;
+use crate::dcc_inventory::domain::{DccAddress, DccInventoryUowExt, DigitalRollingStockId};
 
 /// Use case to change the DCC address of a DigitalRollingStock aggregate.
 pub struct ChangeDccAddressUseCase;
 
 impl ChangeDccAddressUseCase {
+    /// Execute the use case to change the DCC address of a `DigitalRollingStock`.
+    ///
+    /// # Parameters
+    /// - `unit_of_work`: Unit of work providing repository access required by the use case.
+    /// - `input`: `ChangeDccAddressInput` containing the target `DigitalRollingStock` id and the new DCC address.
+    ///
+    /// # Returns
+    /// - `Ok(())` when the change is persisted successfully.
+    /// - `Err(DomainError)` when the target cannot be found or a repository error occurs.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit-of-work type that implements `DccInventoryUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
         input: ChangeDccAddressInput,
@@ -13,7 +24,7 @@ impl ChangeDccAddressUseCase {
     where
         U: DccInventoryUowExt + Send,
     {
-        let mut repo = unit_of_work.digital_rolling_stocks_repo();
+        let mut repo = unit_of_work.digital_rolling_stocks_repository();
 
         let maybe = repo.find_by_id(&input.id).await?;
         let mut drs = maybe.ok_or_else(|| DomainError::NotFound {
@@ -27,34 +38,25 @@ impl ChangeDccAddressUseCase {
     }
 }
 
+/// Input for changing DCC address
+#[derive(Debug, Clone)]
+pub struct ChangeDccAddressInput {
+    /// The digital rolling stock id whose DCC address is to be changed
+    pub id: DigitalRollingStockId,
+    /// The new DCC address to assign to the digital rolling stock
+    pub new_dcc_address: DccAddress,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
     use crate::dcc_inventory::domain::{DccAddress, DecoderId};
-    use crate::dcc_inventory::domain::{
-        DccInventoryUowExt, DigitalRollingStock, DigitalRollingStockId,
-    };
+    use crate::dcc_inventory::domain::{DigitalRollingStock, DigitalRollingStockId};
     use uuid::Uuid;
 
-    struct FakeUow {
-        repo: Option<MockDigitalRollingStockRepository>,
-    }
-
-    impl FakeUow {
-        fn new(repo: MockDigitalRollingStockRepository) -> Self {
-            Self { repo: Some(repo) }
-        }
-    }
-
-    impl DccInventoryUowExt for FakeUow {
-        fn digital_rolling_stocks_repo(
-            &mut self,
-        ) -> Box<dyn crate::dcc_inventory::domain::DigitalRollingStockRepository + '_> {
-            Box::new(self.repo.take().expect("repo already taken"))
-        }
-    }
+    use crate::dcc_inventory::application::testing::FakeUow;
 
     #[tokio::test]
     async fn it_should_change_dcc_address_and_emit_event() {

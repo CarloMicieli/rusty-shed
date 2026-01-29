@@ -9,7 +9,7 @@ use crate::dcc_inventory::domain::{DecoderId, DecoderType, DigitalProtocol};
 pub struct DigitalRollingStockRow {
     pub id: DigitalRollingStockId,
     pub owned_rolling_stock_id: OwnedRollingStockId,
-    pub dcc_address: i64,
+    pub dcc_address: u16,
     pub installed_decoder_id: Option<DecoderId>,
 }
 
@@ -18,8 +18,14 @@ pub struct DigitalRollingStockRow {
 pub struct DecoderRow {
     pub id: DecoderId,
     pub manufacturer_id: ManufacturerId,
-    pub product_code: Option<String>,
+    pub product_code: String,
     pub decoder_type: DecoderType,
     pub protocol: DigitalProtocol,
     pub decoder_interface: DccInterface,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct ManufacturerNameRow {
+    pub id: ManufacturerId,
+    pub name: String,
 }

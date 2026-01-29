@@ -6,13 +6,24 @@ use crate::dcc_inventory::domain::DccInventoryUowExt;
 pub struct GetDigitalRollingStocksUseCase;
 
 impl GetDigitalRollingStocksUseCase {
+    /// Execute the use case to fetch all digital rolling stocks as view objects.
+    ///
+    /// # Parameters
+    /// - `unit_of_work`: Unit of work providing repository access required by the query.
+    ///
+    /// # Returns
+    /// - `Ok(Vec<DigitalRollingStockView>)` containing the views on success.
+    /// - `Err(DomainError)` when the repository query fails.
+    ///
+    /// # Type Parameters
+    /// - `U`: Unit-of-work type that implements `DccInventoryUowExt` and `Send`.
     pub async fn execute<U>(
         unit_of_work: &mut U,
     ) -> Result<Vec<DigitalRollingStockView>, DomainError>
     where
         U: DccInventoryUowExt + Send,
     {
-        let mut repo = unit_of_work.digital_rolling_stocks_repo();
+        let mut repo = unit_of_work.digital_rolling_stocks_repository();
         repo.find_all_digital_rolling_stocks().await
     }
 }
@@ -22,28 +33,12 @@ mod tests {
     use super::*;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::dcc_inventory::application::DigitalRollingStockView;
+    use crate::dcc_inventory::domain::DigitalRollingStockId;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
     use crate::dcc_inventory::domain::{DccAddress, DecoderId};
-    use crate::dcc_inventory::domain::{DccInventoryUowExt, DigitalRollingStockId};
     use uuid::Uuid;
 
-    struct FakeUow {
-        repo: Option<MockDigitalRollingStockRepository>,
-    }
-
-    impl FakeUow {
-        fn new(repo: MockDigitalRollingStockRepository) -> Self {
-            Self { repo: Some(repo) }
-        }
-    }
-
-    impl DccInventoryUowExt for FakeUow {
-        fn digital_rolling_stocks_repo(
-            &mut self,
-        ) -> Box<dyn crate::dcc_inventory::domain::DigitalRollingStockRepository + '_> {
-            Box::new(self.repo.take().expect("repo already taken"))
-        }
-    }
+    use crate::dcc_inventory::application::testing::FakeUow;
 
     #[tokio::test]
     async fn it_should_return_all_digital_rolling_stocks_views() {
@@ -53,7 +48,14 @@ mod tests {
             id: DigitalRollingStockId::from_uuid(Uuid::new_v4()),
             owned_rolling_stock_id: OwnedRollingStockId::from(Uuid::new_v4()),
             dcc_address: DccAddress::new(1).unwrap(),
-            decoder_id: DecoderId::try_from("trn:decoder:acme:d-100").unwrap(),
+            decoder: crate::dcc_inventory::application::DecoderView {
+                id: DecoderId::try_from("trn:decoder:acme:d-100").unwrap(),
+                manufacturer: "ACME".to_string(),
+                product_code: "d-100".to_string(),
+                decoder_type: crate::dcc_inventory::domain::DecoderType::Plain,
+                protocol: crate::dcc_inventory::domain::DigitalProtocol::Dcc,
+                decoder_interface: crate::catalog::domain::railway_model::DccInterface::Nem651,
+            },
         };
 
         mock.expect_find_all_digital_rolling_stocks()

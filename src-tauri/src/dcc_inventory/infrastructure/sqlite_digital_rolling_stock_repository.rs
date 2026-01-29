@@ -1,11 +1,15 @@
+use std::collections::HashMap;
+
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::dcc_inventory::application::DigitalRollingStockView;
+use crate::dcc_inventory::application::{DecoderView, DigitalRollingStockView};
 use crate::dcc_inventory::domain::{
     DccAddress, DccInventoryUowExt, Decoder, DigitalRollingStock, DigitalRollingStockId,
     DigitalRollingStockRepository,
 };
-use crate::dcc_inventory::infrastructure::entities::{DecoderRow, DigitalRollingStockRow};
+use crate::dcc_inventory::infrastructure::entities::{
+    DecoderRow, DigitalRollingStockRow, ManufacturerNameRow,
+};
 use sqlx::SqliteConnection;
 
 /// SQLite implementation of the `DigitalRollingStockRepository`.
@@ -14,6 +18,13 @@ pub struct SqliteDigitalRollingStockRepository<'conn> {
 }
 
 impl<'conn> SqliteDigitalRollingStockRepository<'conn> {
+    /// Create a new `SqliteDigitalRollingStockRepository` with the given executor.
+    ///
+    /// # Parameters
+    /// - `executor`: Mutable reference to a `SqliteConnection` to execute queries against.
+    ///
+    /// # Returns
+    /// - New instance of `SqliteDigitalRollingStockRepository`.
     pub fn new(executor: &'conn mut SqliteConnection) -> Self {
         Self { executor }
     }
@@ -47,25 +58,28 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
     ) -> Result<Option<DigitalRollingStock>, DomainError> {
         if let Some(r) = self.select_by_id(id).await? {
             // Map DB row to domain aggregate
-            let addr = DccAddress::new(r.dcc_address as u16)
+            let dcc_address = DccAddress::new(r.dcc_address)
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-            let decoder = r.installed_decoder_id.ok_or_else(|| {
+            let decoder_id = r.installed_decoder_id.ok_or_else(|| {
                 DomainError::Validation("missing decoder for digital rolling stock".to_string())
             })?;
 
             Ok(Some(DigitalRollingStock::new(
                 r.id,
                 r.owned_rolling_stock_id,
-                addr,
-                decoder,
+                dcc_address,
+                decoder_id,
             )))
         } else {
             Ok(None)
         }
     }
 
-    async fn save(&mut self, drs: DigitalRollingStock) -> Result<(), DomainError> {
+    async fn save(
+        &mut self,
+        digital_rolling_stock: DigitalRollingStock,
+    ) -> Result<(), DomainError> {
         let sql = r#"
             INSERT INTO digital_rolling_stocks (id, owned_rolling_stock_id, dcc_address, installed_decoder_id)
             VALUES (?1, ?2, ?3, ?4)
@@ -76,10 +90,10 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
         "#;
 
         sqlx::query(sql)
-            .bind(&drs.id)
-            .bind(&drs.owned_rolling_stock_id)
-            .bind(drs.dcc_address.value() as i64)
-            .bind(drs.decoder_id)
+            .bind(&digital_rolling_stock.id)
+            .bind(&digital_rolling_stock.owned_rolling_stock_id)
+            .bind(*digital_rolling_stock.dcc_address)
+            .bind(digital_rolling_stock.decoder_id)
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
@@ -94,17 +108,17 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             ORDER BY id
         "#;
 
-        let rows = sqlx::query_as::<_, DecoderRow>(sql)
+        let decoder_rows = sqlx::query_as::<_, DecoderRow>(sql)
             .fetch_all(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
 
-        let mut out = Vec::with_capacity(rows.len());
-        for r in rows {
+        let mut out = Vec::with_capacity(decoder_rows.len());
+        for r in decoder_rows {
             let decoder = Decoder {
                 id: r.id,
                 manufacturer_id: r.manufacturer_id,
-                product_code: r.product_code.unwrap_or_default(),
+                product_code: r.product_code,
                 decoder_type: r.decoder_type,
                 protocol: r.protocol,
                 decoder_interface: r.decoder_interface,
@@ -118,32 +132,71 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
     async fn find_all_digital_rolling_stocks(
         &mut self,
     ) -> Result<Vec<DigitalRollingStockView>, DomainError> {
+        // Load all decoders and manufacturers once and build lookup maps to avoid N+1 queries.
+        let decoders = self.find_all_decoders().await?;
+        let mut decoder_map = HashMap::with_capacity(decoders.len());
+        for d in decoders {
+            decoder_map.insert(d.id.clone(), d);
+        }
+
+        let msql = r#"SELECT id, name FROM manufacturers"#;
+        let manufacturer_rows = sqlx::query_as::<_, ManufacturerNameRow>(msql)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let mut manufacturer_map = HashMap::with_capacity(manufacturer_rows.len());
+        for m in manufacturer_rows {
+            manufacturer_map.insert(m.id, m.name);
+        }
+
         let sql = r#"
             SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id
             FROM digital_rolling_stocks
             ORDER BY id
         "#;
 
-        let rows = sqlx::query_as::<_, DigitalRollingStockRow>(sql)
+        let digital_rolling_stock_rows = sqlx::query_as::<_, DigitalRollingStockRow>(sql)
             .fetch_all(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
 
-        let mut out = Vec::with_capacity(rows.len());
+        let mut out = Vec::with_capacity(digital_rolling_stock_rows.len());
 
-        for r in rows {
-            let dcc = DccAddress::new(r.dcc_address as u16)
+        for digital_rolling_stock_row in digital_rolling_stock_rows {
+            let dcc = DccAddress::new(digital_rolling_stock_row.dcc_address)
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-            let decoder = r.installed_decoder_id.ok_or_else(|| {
-                DomainError::Validation("missing decoder for digital rolling stock".to_string())
-            })?;
+            let decoder_id = digital_rolling_stock_row
+                .installed_decoder_id
+                .ok_or_else(|| {
+                    DomainError::Validation("missing decoder for digital rolling stock".to_string())
+                })?;
+
+            let decoder = decoder_map
+                .get(&decoder_id)
+                .ok_or_else(|| DomainError::NotFound {
+                    resource: "Decoder".to_string(),
+                    identifier: decoder_id.to_string(),
+                })?;
+
+            let decoder_view = DecoderView {
+                id: decoder.id.clone(),
+                manufacturer: manufacturer_map
+                    .get(&decoder.manufacturer_id)
+                    .cloned()
+                    .unwrap_or_else(|| decoder.manufacturer_id.to_string()),
+                product_code: decoder.product_code.clone(),
+                decoder_type: decoder.decoder_type.clone(),
+                protocol: decoder.protocol.clone(),
+                decoder_interface: decoder.decoder_interface,
+            };
 
             out.push(DigitalRollingStockView {
-                id: r.id,
-                owned_rolling_stock_id: r.owned_rolling_stock_id,
+                id: digital_rolling_stock_row.id,
+                owned_rolling_stock_id: digital_rolling_stock_row.owned_rolling_stock_id,
                 dcc_address: dcc,
-                decoder_id: decoder,
+                decoder: decoder_view,
             });
         }
 
@@ -152,9 +205,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
 }
 
 impl<'conn> DccInventoryUowExt for SqliteUnitOfWork<'conn> {
-    fn digital_rolling_stocks_repo(
-        &mut self,
-    ) -> Box<dyn crate::dcc_inventory::domain::DigitalRollingStockRepository + '_> {
+    fn digital_rolling_stocks_repository(&mut self) -> Box<dyn DigitalRollingStockRepository + '_> {
         Box::new(SqliteDigitalRollingStockRepository::new(&mut self.tx))
     }
 }
@@ -190,5 +241,52 @@ mod tests {
             .await
             .expect("views query");
         assert!(!views.is_empty());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_dcc_inventory.sql")
+    )]
+    async fn it_should_save_digital_rolling_stock(pool: SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
+
+        let id = DigitalRollingStockId::try_from(
+            "trn:digital-rolling-stock:00000000-0000-0000-0000-000000000001",
+        )
+        .unwrap();
+
+        // Load existing aggregate, then re-save it to exercise the `save` path.
+        let drs = repo
+            .find_by_id(&id)
+            .await
+            .expect("query should run")
+            .expect("should exist");
+
+        // Call save (consumes the aggregate) — should upsert without error.
+        repo.save(drs).await.expect("save should succeed");
+
+        // Verify it can still be loaded afterwards.
+        let res = repo.find_by_id(&id).await.expect("query should run");
+        assert!(res.is_some());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_dcc_inventory.sql")
+    )]
+    async fn it_should_find_all_decoders(pool: SqlitePool) {
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let mut repo = SqliteDigitalRollingStockRepository::new(&mut conn);
+
+        let decoders = repo.find_all_decoders().await.expect("decoders query");
+        assert!(!decoders.is_empty());
+
+        // Basic shape assertions for the first decoder
+        let d = &decoders[0];
+        assert!(!d.id.to_string().is_empty());
+        assert!(!d.manufacturer_id.to_string().is_empty());
     }
 }

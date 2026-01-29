@@ -28,6 +28,14 @@ impl std::fmt::Display for DccAddress {
     }
 }
 
+impl std::ops::Deref for DccAddress {
+    type Target = u16;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
