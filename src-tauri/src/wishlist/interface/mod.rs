@@ -4,4 +4,5 @@ pub mod command_handlers;
 pub use command_args::AddToWishlistArgs;
 pub use command_args::CreateWishlistArgs;
 pub use command_args::MoveWishlistItemArgs;
+pub use command_args::PurchaseWishlistArgs;
 pub use command_args::RenameWishlistArgs;

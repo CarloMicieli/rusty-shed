@@ -73,6 +73,27 @@ pub struct RenameWishlistArgs {
     pub name: String,
 }
 
+/// Arguments for purchasing a wishlist item and moving it to the collection.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct PurchaseWishlistArgs {
+    /// The ID of the collection to add the purchased item to.
+    pub collection_id: String,
+    /// The ID of the wishlist containing the item.
+    pub wishlist_id: String,
+    /// The ID of the wishlist item being purchased.
+    pub item_id: String,
+    /// Purchase price amount in the smallest currency unit (e.g., cents).
+    pub purchase_price_amount: i64,
+    /// Purchase price currency code (e.g., "USD").
+    pub purchase_price_currency: String,
+    /// The date the purchase occurred.
+    pub purchase_date: Option<NaiveDate>,
+    /// Optional seller id string.
+    pub seller_id: Option<String>,
+}
+
 impl TryFrom<CreateWishlistArgs> for CreateWishlistInput {
     type Error = DomainError;
 
@@ -173,6 +194,54 @@ impl TryFrom<MoveWishlistItemArgs> for MoveWishlistItemInput {
             destination_wishlist_id: dest,
             wishlist_id: wid,
         })
+    }
+}
+
+impl TryFrom<PurchaseWishlistArgs>
+    for crate::wishlist::application::inputs::PurchaseWishlistItemInput
+{
+    type Error = DomainError;
+
+    fn try_from(input: PurchaseWishlistArgs) -> Result<Self, Self::Error> {
+        use crate::collecting::domain::CollectionId;
+        use crate::sellers::domain::seller_id::SellerId;
+
+        let collection_id = CollectionId::try_from(input.collection_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let wishlist_id = WishlistId::try_from(input.wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let item_id = WishlistItemId::try_from(input.item_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let currency = Currency::from_code(&input.purchase_price_currency)
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        let price = MonetaryAmount::new(input.purchase_price_amount, currency);
+
+        let purchase_date = input
+            .purchase_date
+            .unwrap_or(chrono::Utc::now().date_naive());
+
+        let seller = match input.seller_id {
+            Some(s) => Some(
+                SellerId::try_from(s.as_str())
+                    .map_err(|e| DomainError::Validation(e.to_string()))?,
+            ),
+            None => None,
+        };
+
+        Ok(
+            crate::wishlist::application::inputs::PurchaseWishlistItemInput {
+                collection_id,
+                wishlist_id,
+                item_id,
+                purchase_price: price,
+                purchase_date,
+                seller_id: seller,
+            },
+        )
     }
 }
 

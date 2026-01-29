@@ -1,7 +1,6 @@
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::state::AppState;
-use crate::wishlist::application::AddToWishlistUseCase;
 use crate::wishlist::application::CreateWishlistUseCase;
 use crate::wishlist::application::DeleteWishlistUseCase;
 use crate::wishlist::application::GetWishlistByIdQuery;
@@ -10,14 +9,18 @@ use crate::wishlist::application::MoveWishlistItemUseCase;
 use crate::wishlist::application::RemoveWishlistItemUseCase;
 use crate::wishlist::application::RenameWishlistUseCase;
 use crate::wishlist::application::SetDefaultWishlistUseCase;
+use crate::wishlist::application::inputs::PurchaseWishlistItemInput;
 use crate::wishlist::application::inputs::{
     AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
     RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput,
 };
+use crate::wishlist::application::purchase_wishlist_item::MoveWishlistItemId;
 use crate::wishlist::application::queries::WishlistView;
+use crate::wishlist::application::{AddToWishlistUseCase, PurchaseWishlistItemService};
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
+use crate::wishlist::interface::PurchaseWishlistArgs;
 use crate::wishlist::interface::{
     AddToWishlistArgs, CreateWishlistArgs, MoveWishlistItemArgs, RenameWishlistArgs,
 };
@@ -44,8 +47,6 @@ pub async fn get_wishlist_by_id(
     state: tauri::State<'_, AppState>,
     id: WishlistId,
 ) -> Result<Option<WishlistView>, CommandError> {
-    // Tauri commands must accept owned, deserializable args. Forward to
-    // the reference-taking helper below to keep the `&WishlistId` API.
     get_wishlist_by_id_ref(state, &id).await
 }
 
@@ -81,7 +82,7 @@ pub async fn get_wishlist_by_id_ref(
 #[specta::specta]
 pub async fn get_wishlists(
     state: tauri::State<'_, AppState>,
-) -> Result<Vec<crate::wishlist::application::queries::WishlistView>, CommandError> {
+) -> Result<Vec<WishlistView>, CommandError> {
     info!("Fetching all wishlists");
 
     let mut unit_of_work = state.unit_of_work().await?;
@@ -312,6 +313,51 @@ pub async fn move_item_to_list(
     let cmd = MoveWishlistItemInput::try_from(input).map_err(CommandError::from)?;
 
     MoveWishlistItemUseCase::execute(&mut unit_of_work, cmd).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Tauri command to purchase a wishlist item and move it into the collection.
+///
+/// # Arguments
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `input`: The input data required to purchase a wishlist item (`PurchaseWishlistArgs`).
+///
+/// # Returns
+/// - `Ok(())` when the purchase and move succeeds.
+/// - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
+#[tauri::command]
+#[specta::specta]
+pub async fn purchase_wishlist_item(
+    state: tauri::State<'_, AppState>,
+    input: PurchaseWishlistArgs,
+) -> Result<(), CommandError> {
+    info!("Purchasing wishlist item: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let collection_item_id_provider = RuntimeIdProvider::new();
+    let purchase_info_id_provider = RuntimeIdProvider::new();
+
+    let cmd = PurchaseWishlistItemInput::try_from(input).map_err(CommandError::from)?;
+
+    let move_cmd = MoveWishlistItemId {
+        collection_id: cmd.collection_id.clone(),
+        wishlist_id: cmd.wishlist_id.clone(),
+        wishlist_item_id: cmd.item_id.clone(),
+        purchase_price: cmd.purchase_price.clone(),
+        purchase_date: cmd.purchase_date,
+        seller_id: cmd.seller_id.clone(),
+    };
+
+    PurchaseWishlistItemService::move_wishlist_item(
+        &mut unit_of_work,
+        collection_item_id_provider,
+        purchase_info_id_provider,
+        move_cmd,
+    )
+    .await?;
 
     unit_of_work.commit().await?;
 
