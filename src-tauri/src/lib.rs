@@ -22,6 +22,7 @@ use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::logging;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
+use crate::dcc_inventory::interface::command_handlers as dcc_inventory_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
@@ -160,6 +161,10 @@ pub fn run() {
         tracks_inventory_command_handlers::rename_track_inventory,
         tracks_inventory_command_handlers::add_track_purchase,
         tracks_inventory_command_handlers::set_track_item_quantity,
+        dcc_inventory_command_handlers::new_digital_rolling_stock,
+        dcc_inventory_command_handlers::change_dcc_address,
+        dcc_inventory_command_handlers::change_decoder,
+        dcc_inventory_command_handlers::get_digital_rolling_stocks,
         get_image_path,
         get_settings,
         update_settings
