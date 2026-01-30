@@ -1,13 +1,13 @@
 <!--
 Sync Impact Report
 
-- Version change: 1.0.0 → 1.1.0
-- Modified principles: Architecture Rules → Architecture Rules + Architectural Laws (codified ADRs)
-- Added sections: Architectural Laws (codifying ADRs: database, state management, API/transport)
+- Version change: 1.1.0 → 1.2.0
+- Modified principles: Added new focused principles (Code Quality, Testing Standards, User Experience Consistency, Performance Requirements)
+- Added sections: Code Quality; Testing Standards; User Experience Consistency; Performance Requirements
 - Removed sections: none
 - Templates requiring verification: .specify/templates/plan-template.md ⚠ pending, .specify/templates/spec-template.md ⚠ pending, .specify/templates/tasks-template.md ⚠ pending
 - Follow-up TODOs:
-  - Update templates to include new `Constitution Check` gates for DB/State/API (see .specify/templates/) — ACTION REQUIRED
+  - Update templates to include explicit `Constitution Check` gates that reference the new principles — ACTION REQUIRED
   - RATIFICATION_DATE (deferred) — TODO(RATIFICATION_DATE)
 -->
 
@@ -32,6 +32,38 @@ are expected to enable debugging and telemetry (JSON or structured logger output
 Tests are required for new features and bug fixes. The repository enforces unit and integration
 testing practices via `vitest` on the frontend and `cargo test` on the Rust side. Authors SHOULD
 follow Red–Green–Refactor practices when feasible.
+
+### Code Quality
+
+Code quality is non-negotiable. All code MUST be well-typed, readable, and maintainable. Contributors
+MUST follow repository linting and formatting rules (`pnpm lint`, `pnpm format`, `cargo clippy`,
+`cargo fmt`) and resolve reported issues before merging. PRs MUST include a short design summary
+for non-trivial changes and justify trade-offs. Critical sections (security, persistence, transport)
+MUST include rationale and at least one unit test demonstrating intended behavior.
+
+### Testing Standards
+
+The project enforces clear, measurable testing standards. Unit tests MUST exercise business logic
+in isolation; integration tests MUST validate cross-layer contracts (e.g., repository ↔ DB, use-case
+↔ transport). Test coverage targets SHOULD be defined per-area (example: core domain 80%+, UI 60%+),
+and CI MUST run coverage checks. Tests MUST be deterministic, fast, and free of external network
+dependencies; where external interactions are required, use fixtures or local emulators.
+
+### User Experience Consistency
+
+UX consistency ensures predictable behavior across the app. All user-facing interactions MUST
+follow the Paraglide messaging system for strings and the design tokens in the shared UI library.
+Visual and interaction patterns (spacing, typography, feedback states, error handling) MUST be
+documented in the frontend style guide and applied consistently. Accessibility (a11y) checks
+SHOULD be included in component-level tests and manual review for major flows.
+
+### Performance Requirements
+
+Performance targets are part of the constitution: interactive flows MUST remain responsive on
+typical target hardware. Backend commands exposed via Tauri MUST complete within defined SLOs
+for UI-critical operations (e.g., <200ms for read queries in the common case). Long-running work
+MUST be executed off the UI thread and provide progress indicators. New features that impact
+performance MUST include benchmarks or profiling evidence and a mitigation plan if targets are not met.
 
 ### Safe Rust Practices (Backend Specific)
 
@@ -149,4 +181,4 @@ Compliance and Review:
 - PRs touching code or docs that affect governance MUST reference the relevant constitution principles in the PR description.
 - Periodic compliance reviews SHOULD run annually or after major releases.
 
-**Version**: 1.1.0 | **Ratified**: TODO(RATIFICATION_DATE): specify original adoption date | **Last Amended**: 2026-01-25
+**Version**: 1.2.0 | **Ratified**: TODO(RATIFICATION_DATE): specify original adoption date | **Last Amended**: 2026-01-30
