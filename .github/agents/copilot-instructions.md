@@ -4,9 +4,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-30
 
 ## Active Technologies
 
-- SQLite (via sqlx with `sqlx::migrate!` embedded migrations, `PRAGMA foreign_keys = ON`) (001-budget-tracking)
-
-- Rust 1.93.0 (edition 2024) backend, TypeScript 5.9.3 frontend + Tauri 2.9.x, SQLite via sqlx, Svelte 5.48.2, Skeleton UI 4.x, Tailwind CSS 4.x, specta/tauri-specta for type generation (001-budget-tracking)
+- TypeScript 5.9.3 (frontend), Rust 1.93.0 (backend) + Skeleton UI 4.x, Tailwind CSS 4.1.18, SvelteKit (Svelte 5.48.2), Tauri 2.9.x, sqlx (011-steampunk-theme)
 
 ## Project Structure
 
@@ -21,13 +19,11 @@ cargo test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECH
 
 ## Code Style
 
-Rust 1.93.0 (edition 2024) backend, TypeScript 5.9.3 frontend: Follow standard conventions
+TypeScript 5.9.3 (frontend), Rust 1.93.0 (backend): Follow standard conventions
 
 ## Recent Changes
 
-- 001-budget-tracking: Added Rust 1.93.0 (edition 2024) backend, TypeScript 5.9.3 frontend + Tauri 2.9.x, SQLite via sqlx, Svelte 5.48.2, Skeleton UI 4.x, Tailwind CSS 4.x, specta/tauri-specta for type generation
-
-- 001-budget-tracking: Added Rust 1.93.0 (edition 2024) backend, TypeScript 5.9.3 frontend + Tauri 2.9.x, SQLite via sqlx, Svelte 5.48.2, Skeleton UI 4.x, Tailwind CSS 4.x, specta/tauri-specta for type generation
+- 011-steampunk-theme: Added TypeScript 5.9.3 (frontend), Rust 1.93.0 (backend) + Skeleton UI 4.x, Tailwind CSS 4.1.18, SvelteKit (Svelte 5.48.2), Tauri 2.9.x, sqlx
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
