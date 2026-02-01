@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-30
 
 ## Active Technologies
 
-- TypeScript 5.9.3 (frontend), Rust 1.93.0 (backend) + shadcn-svelte, Tailwind CSS 4.1.18, SvelteKit (Svelte 5.48.2), Tauri 2.9.x, sqlx (011-steampunk-theme)
+- Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend) (010-data-import-utility)
 
 ## Project Structure
 
@@ -19,11 +19,11 @@ cargo test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECH
 
 ## Code Style
 
-TypeScript 5.9.3 (frontend), Rust 1.93.0 (backend): Follow standard conventions
+Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend): Follow standard conventions
 
 ## Recent Changes
 
-- 011-steampunk-theme: Added TypeScript 5.9.3 (frontend), Rust 1.93.0 (backend) + shadcn-svelte, Tailwind CSS 4.1.18, SvelteKit (Svelte 5.48.2), Tauri 2.9.x, sqlx
+- 010-data-import-utility: Added Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
