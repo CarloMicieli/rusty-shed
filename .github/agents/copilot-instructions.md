@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-30
 
 ## Active Technologies
 
-- TypeScript 5.9.3, Svelte 5.48.2 + SvelteKit/Vite 7.3.1, Tailwind CSS 4.1.18, Skeleton UI 4.x, Paraglide-JS 2.7.1 (003-add-model-wishlist)
+- Rust 2024 edition (rust-version 1.93.0) for backend, TypeScript 5.9.3 for frontend + Tauri 2.9.x, sqlx (SQLite), tokio, specta/tauri-specta (backend); SvelteKit, Svelte 5.48.2, Tailwind 4, Skeleton UI 4.x (frontend) (006-digital-rolling-stocks)
 
 ## Project Structure
 
@@ -15,15 +15,15 @@ tests/
 
 ## Commands
 
-npm test && npm run lint
+cargo test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] cargo clippy
 
 ## Code Style
 
-TypeScript 5.9.3, Svelte 5.48.2: Follow standard conventions
+Rust 2024 edition (rust-version 1.93.0) for backend, TypeScript 5.9.3 for frontend: Follow standard conventions
 
 ## Recent Changes
 
-- 003-add-model-wishlist: Added TypeScript 5.9.3, Svelte 5.48.2 + SvelteKit/Vite 7.3.1, Tailwind CSS 4.1.18, Skeleton UI 4.x, Paraglide-JS 2.7.1
+- 006-digital-rolling-stocks: Added Rust 2024 edition (rust-version 1.93.0) for backend, TypeScript 5.9.3 for frontend + Tauri 2.9.x, sqlx (SQLite), tokio, specta/tauri-specta (backend); SvelteKit, Svelte 5.48.2, Tailwind 4, Skeleton UI 4.x (frontend)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
