@@ -1,7 +1,7 @@
 [
-  { "id": "Locomotive", "labelKey": "constants_categories_locomotives" },
-  { "id": "PassengerCar", "labelKey": "constants_categories_passenger_cars" },
-  { "id": "FreightCar", "labelKey": "constants_categories_freight_cars" },
-  { "id": "Railcar", "labelKey": "constants_categories_railcars" },
-  { "id": "ElectricMultipleUnit", "labelKey": "constants_categories_electric_multiple_units" }
+  { "id": "LOCOMOTIVE", "labelKey": "constants_categories_locomotives" },
+  { "id": "PASSENGER_CAR", "labelKey": "constants_categories_passenger_cars" },
+  { "id": "FREIGHT_CAR", "labelKey": "constants_categories_freight_cars" },
+  { "id": "RAILCAR", "labelKey": "constants_categories_railcars" },
+  { "id": "ELECTRIC_MULTIPLE_UNIT", "labelKey": "constants_categories_electric_multiple_units" }
 ]

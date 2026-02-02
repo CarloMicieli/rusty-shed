@@ -11,22 +11,11 @@
     CollectionItemView
   } from '$lib/bindings';
 
-  type CreateCollectionItemInput = {
-    brand: string;
-    catalogNumber: string;
-    title: string;
-    scale: string;
-    powerSystem: string;
-    description: string;
-    tags: string[];
-  };
   import ItemCard from './components/ItemCard.svelte';
   import FilterSidebar from './components/FilterSidebar.svelte';
-  import ItemDrawer from './components/ItemDrawer.svelte';
+  import AddModelDrawer from './components/AddModelDrawer.svelte';
   import DeleteModal from './components/DeleteModal.svelte';
   import CollectionSummary from './components/CollectionSummary.svelte';
-
-  type SubmitDetail = { form: CreateCollectionItemInput; editingId: string | null };
 
   function useCollectionUI() {
     let showDrawer = $state(false);
@@ -105,16 +94,6 @@
     void collectionService.fetchCollection();
   });
 
-  async function handleSubmit(detail: SubmitDetail) {
-    const { form, editingId } = detail;
-    if (editingId) {
-      await collectionService.updateItem({ id: editingId, ...form });
-    } else {
-      await collectionService.createItem(form);
-    }
-    ui.closeDrawer();
-  }
-
   function handleSearch(query: string) {
     collectionService.setQuery(query);
     void collectionService.fetchCollection(query);
@@ -190,7 +169,7 @@
     <div class="flex flex-col gap-3 md:flex-row md:items-center">
       <button class="variant-filled-primary btn gap-2" onclick={ui.startCreate}>
         <Plus size={18} />
-        {m.collection_add_item()}
+        {m.collection_add_model()}
       </button>
     </div>
   </div>
@@ -226,12 +205,12 @@
   </div>
 </div>
 
-<ItemDrawer
+<AddModelDrawer
   open={ui.showDrawer}
-  editing={ui.editing}
-  {availableScales}
   onClose={ui.closeDrawer}
-  onSubmit={handleSubmit}
+  onSuccess={() => {
+    ui.closeDrawer();
+  }}
 />
 
 <DeleteModal

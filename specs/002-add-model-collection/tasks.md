@@ -25,9 +25,9 @@
 
 **Purpose**: Paraglide message keys and state management extension
 
-- [ ] T001 Add English Paraglide message keys for form labels, validation, and UI text in messages/en.json (~40 keys from contracts/AddModelDrawer.contract.md)
-- [ ] T002 [P] Add Italian translations for all new message keys in messages/it.json
-- [ ] T003 Extend CollectionState with addRailwayModel method in src/lib/features/collection/CollectionState.svelte.ts
+- [x] T001 Add English Paraglide message keys for form labels, validation, and UI text in messages/en.json (~40 keys from contracts/AddModelDrawer.contract.md)
+- [x] T002 [P] Add Italian translations for all new message keys in messages/it.json
+- [x] T003 Extend CollectionState with addRailwayModel method in src/lib/features/collection/CollectionState.svelte.ts
 
 **Checkpoint**: Messages compile (`pnpm paraglide-js compile`), TypeScript passes (`pnpm check`)
 
@@ -41,19 +41,19 @@
 
 ### Tests for User Story 1
 
-- [ ] T004 [P] [US1] Create form state initialization tests in src/**tests**/lib/features/collection/AddModelForm.test.ts
-- [ ] T005 [P] [US1] Create validation logic tests (required fields, rolling stock minimum) in src/**tests**/lib/features/collection/AddModelForm.test.ts
-- [ ] T006 [P] [US1] Create toAddRailwayModelArgs transformation tests in src/**tests**/lib/features/collection/AddModelForm.test.ts
+- [x] T004 [P] [US1] Create form state initialization tests in src/**tests**/lib/features/collection/AddModelForm.test.ts
+- [x] T005 [P] [US1] Create validation logic tests (required fields, rolling stock minimum) in src/**tests**/lib/features/collection/AddModelForm.test.ts
+- [x] T006 [P] [US1] Create toAddRailwayModelArgs transformation tests in src/**tests**/lib/features/collection/AddModelForm.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Create RollingStockEntry component for dynamic rolling stock row in src/lib/features/collection/components/RollingStockEntry.svelte
-- [ ] T008 [US1] Create AddModelDrawer component with railway model form fields in src/lib/features/collection/components/AddModelDrawer.svelte
-- [ ] T009 [US1] Implement form state management with $state rune and validation with $derived in AddModelDrawer.svelte
-- [ ] T010 [US1] Implement reference data loading (manufacturers, railway companies) on drawer open in AddModelDrawer.svelte
-- [ ] T011 [US1] Implement rolling stock add/remove functionality in AddModelDrawer.svelte
-- [ ] T012 [US1] Implement form submission calling addRailwayModelToCollection command in AddModelDrawer.svelte
-- [ ] T013 [US1] Update CollectionDashboard to use new AddModelDrawer instead of ItemDrawer in src/lib/features/collection/CollectionDashboard.svelte
+- [x] T007 [P] [US1] Create RollingStockEntry component for dynamic rolling stock row in src/lib/features/collection/components/RollingStockEntry.svelte
+- [x] T008 [US1] Create AddModelDrawer component with railway model form fields in src/lib/features/collection/components/AddModelDrawer.svelte
+- [x] T009 [US1] Implement form state management with $state rune and validation with $derived in AddModelDrawer.svelte
+- [x] T010 [US1] Implement reference data loading (manufacturers, railway companies) on drawer open in AddModelDrawer.svelte
+- [x] T011 [US1] Implement rolling stock add/remove functionality in AddModelDrawer.svelte
+- [x] T012 [US1] Implement form submission calling addRailwayModelToCollection command in AddModelDrawer.svelte
+- [x] T013 [US1] Update CollectionDashboard to use new AddModelDrawer instead of ItemDrawer in src/lib/features/collection/CollectionDashboard.svelte
 
 **Checkpoint**: User Story 1 fully functional - can add railway model with rolling stock to collection
 

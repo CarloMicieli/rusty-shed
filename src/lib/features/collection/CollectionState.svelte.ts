@@ -4,7 +4,7 @@ import * as m from '$lib/paraglide/messages.js';
 import scales from '$lib/data/constants/scales.json';
 import { FIXED_TAG_META, sortAvailableTags, tagIcon } from '$lib/config/tags';
 import { SvelteSet } from 'svelte/reactivity';
-import type { CollectionView } from '$lib/bindings';
+import type { CollectionView, AddRailwayModelToCollectionArgs } from '$lib/bindings';
 import { safeInvoke, getErrorMessage } from '$lib/services';
 
 export type FilterState = {
@@ -125,6 +125,28 @@ export class CollectionState {
 
   clearFilters = () => {
     this.#filters = { query: '', scale: null, tags: new SvelteSet() };
+  };
+
+  /**
+   * Add a railway model to the collection.
+   * @param args - The railway model data and purchase information
+   * @returns true if successful, false otherwise
+   */
+  addRailwayModel = async (args: AddRailwayModelToCollectionArgs): Promise<boolean> => {
+    const result = await safeInvoke('add_railway_model_to_collection', { args });
+
+    if (result.ok) {
+      toaster.success({
+        id: randomId(),
+        title: m.add_model_success(),
+        duration: 3000
+      });
+      await this.fetchCollection();
+      return true;
+    }
+
+    toastError(randomId(), getErrorMessage(result.error));
+    return false;
   };
 
   // CRUD operations commented out - will be implemented when backend commands are available
