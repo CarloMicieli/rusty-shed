@@ -25,10 +25,10 @@
 
 **Purpose**: Foundation code needed by all user stories
 
-- [ ] T001 Add English i18n message keys to messages/en.json (40+ keys from contracts/messages.md)
-- [ ] T002 [P] Add Italian i18n message keys to messages/it.json (40+ keys from contracts/messages.md)
-- [ ] T003 Run `pnpm prepare` to regenerate Paraglide types
-- [ ] T004 [P] Create static dropdown constants in src/lib/features/wishlists/constants.ts (CATEGORIES, SCALES, POWER_METHODS, PRIORITIES arrays)
+- [x] T001 Add English i18n message keys to messages/en.json (40+ keys from contracts/messages.md)
+- [x] T002 [P] Add Italian i18n message keys to messages/it.json (40+ keys from contracts/messages.md)
+- [x] T003 Run `pnpm prepare` to regenerate Paraglide types
+- [x] T004 [P] Create static dropdown constants in src/lib/features/wishlists/constants.ts (CATEGORIES, SCALES, POWER_METHODS, PRIORITIES arrays)
 
 ---
 
@@ -38,9 +38,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Add `addRailwayModelToWishlist` method to src/lib/features/wishlists/WishlistState.svelte.ts
-- [ ] T006 Add type imports for `AddRailwayModelToWishListArgs` in WishlistState.svelte.ts
-- [ ] T007 Verify service method compiles with `pnpm check`
+- [x] T005 Add `addRailwayModelToWishlist` method to src/lib/features/wishlists/WishlistState.svelte.ts
+- [x] T006 Add type imports for `AddRailwayModelToWishListArgs` in WishlistState.svelte.ts
+- [x] T007 Verify service method compiles with `pnpm check`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -54,24 +54,24 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Create form type definitions in src/lib/features/wishlists/types.ts (AddRailwayModelFormState, RollingStockFormEntry)
-- [ ] T009 [P] [US1] Create RollingStockEntry.svelte component in src/lib/features/wishlists/components/RollingStockEntry.svelte
-- [ ] T010 [US1] Create AddRailwayModelDrawer.svelte component in src/lib/features/wishlists/components/AddRailwayModelDrawer.svelte
-- [ ] T011 [US1] Implement drawer structure with backdrop, close handlers, accessibility attributes in AddRailwayModelDrawer.svelte
-- [ ] T012 [US1] Implement form fields (wishlist dropdown, manufacturer, product code, description, category, scale, power method, epoch) in AddRailwayModelDrawer.svelte
-- [ ] T013 [US1] Implement wishlist item fields (desired price, priority, notes) in AddRailwayModelDrawer.svelte
-- [ ] T014 [US1] Implement form validation with $derived in AddRailwayModelDrawer.svelte
-- [ ] T015 [US1] Implement form submission handler calling wishlistService.addRailwayModelToWishlist() in AddRailwayModelDrawer.svelte
-- [ ] T016 [US1] Implement dropdown data loading (manufacturers, railway companies) on drawer open in AddRailwayModelDrawer.svelte
-- [ ] T017 [US1] Add drawer open/close state and handlers to src/lib/features/wishlists/WishlistsDashboard.svelte
-- [ ] T018 [US1] Add "Add railway model" button to WishlistsDashboard.svelte header section
-- [ ] T019 [US1] Import and render AddRailwayModelDrawer in WishlistsDashboard.svelte
+- [x] T008 [P] [US1] Create form type definitions in src/lib/features/wishlists/types.ts (AddRailwayModelFormState, RollingStockFormEntry)
+- [x] T009 [P] [US1] Create RollingStockEntry.svelte component in src/lib/features/wishlists/components/RollingStockEntry.svelte
+- [x] T010 [US1] Create AddRailwayModelDrawer.svelte component in src/lib/features/wishlists/components/AddRailwayModelDrawer.svelte
+- [x] T011 [US1] Implement drawer structure with backdrop, close handlers, accessibility attributes in AddRailwayModelDrawer.svelte
+- [x] T012 [US1] Implement form fields (wishlist dropdown, manufacturer, product code, description, category, scale, power method, epoch) in AddRailwayModelDrawer.svelte
+- [x] T013 [US1] Implement wishlist item fields (desired price, priority, notes) in AddRailwayModelDrawer.svelte
+- [x] T014 [US1] Implement form validation with $derived in AddRailwayModelDrawer.svelte
+- [x] T015 [US1] Implement form submission handler calling wishlistService.addRailwayModelToWishlist() in AddRailwayModelDrawer.svelte
+- [x] T016 [US1] Implement dropdown data loading (manufacturers, railway companies) on drawer open in AddRailwayModelDrawer.svelte
+- [x] T017 [US1] Add drawer open/close state and handlers to src/lib/features/wishlists/WishlistsDashboard.svelte
+- [x] T018 [US1] Add "Add railway model" button to WishlistsDashboard.svelte header section
+- [x] T019 [US1] Import and render AddRailwayModelDrawer in WishlistsDashboard.svelte
 
 ### Tests for User Story 1
 
-- [ ] T020 [P] [US1] Create test file src/**tests**/lib/features/wishlists/AddRailwayModelDrawer.test.ts
-- [ ] T021 [US1] Add test: form validation prevents submission when required fields empty
-- [ ] T022 [US1] Add test: form reset on drawer close
+- [x] T020 [P] [US1] Create test file src/**tests**/lib/features/wishlists/AddRailwayModelDrawer.test.ts
+- [x] T021 [US1] Add test: form validation prevents submission when required fields empty
+- [x] T022 [US1] Add test: form reset on drawer close
 
 **Checkpoint**: User Story 1 complete - users can add railway models to wishlists from overview
 
@@ -85,16 +85,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Add `preselectedWishlistId` prop to AddRailwayModelDrawer.svelte
-- [ ] T024 [US2] Implement $effect to initialize wishlistId from preselectedWishlistId when drawer opens in AddRailwayModelDrawer.svelte
-- [ ] T025 [US2] Pass `activeWishlistId` as preselectedWishlistId in WishlistsDashboard.svelte
-- [ ] T026 [US2] Add `onAddModel` prop to src/lib/features/wishlists/components/WishlistHeader.svelte
-- [ ] T027 [US2] Add "Add railway model" button to WishlistHeader.svelte (next to "Set as Default")
-- [ ] T028 [US2] Wire WishlistHeader onAddModel to drawer open handler in WishlistsDashboard.svelte
+- [x] T023 [US2] Add `preselectedWishlistId` prop to AddRailwayModelDrawer.svelte
+- [x] T024 [US2] Implement $effect to initialize wishlistId from preselectedWishlistId when drawer opens in AddRailwayModelDrawer.svelte
+- [x] T025 [US2] Pass `activeWishlistId` as preselectedWishlistId in WishlistsDashboard.svelte
+- [x] T026 [US2] Add `onAddModel` prop to src/lib/features/wishlists/components/WishlistHeader.svelte
+- [x] T027 [US2] Add "Add railway model" button to WishlistHeader.svelte (next to "Set as Default")
+- [x] T028 [US2] Wire WishlistHeader onAddModel to drawer open handler in WishlistsDashboard.svelte
 
 ### Tests for User Story 2
 
-- [ ] T029 [US2] Add test: wishlist is pre-selected when preselectedWishlistId is provided
+- [x] T029 [US2] Add test: wishlist is pre-selected when preselectedWishlistId is provided
 
 **Checkpoint**: User Story 2 complete - context-aware wishlist pre-selection works
 
@@ -108,18 +108,18 @@
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Implement rolling stocks section UI in AddRailwayModelDrawer.svelte
-- [ ] T031 [US3] Implement addRollingStock function in AddRailwayModelDrawer.svelte
-- [ ] T032 [US3] Implement removeRollingStock function in AddRailwayModelDrawer.svelte
-- [ ] T033 [US3] Wire RollingStockEntry onChange and onRemove handlers in AddRailwayModelDrawer.svelte
-- [ ] T034 [US3] Update form validation to validate rolling stock entries in AddRailwayModelDrawer.svelte
-- [ ] T035 [US3] Map rolling stocks to SimplifiedRollingStockArgs in form submission
+- [x] T030 [US3] Implement rolling stocks section UI in AddRailwayModelDrawer.svelte
+- [x] T031 [US3] Implement addRollingStock function in AddRailwayModelDrawer.svelte
+- [x] T032 [US3] Implement removeRollingStock function in AddRailwayModelDrawer.svelte
+- [x] T033 [US3] Wire RollingStockEntry onChange and onRemove handlers in AddRailwayModelDrawer.svelte
+- [x] T034 [US3] Update form validation to validate rolling stock entries in AddRailwayModelDrawer.svelte
+- [x] T035 [US3] Map rolling stocks to SimplifiedRollingStockArgs in form submission
 
 ### Tests for User Story 3
 
-- [ ] T036 [P] [US3] Add test: clicking "Add rolling stock" adds new entry
-- [ ] T037 [P] [US3] Add test: clicking remove button removes entry
-- [ ] T038 [US3] Add test: rolling stock validation blocks submission when fields incomplete
+- [x] T036 [P] [US3] Add test: clicking "Add rolling stock" adds new entry
+- [x] T037 [P] [US3] Add test: clicking remove button removes entry
+- [x] T038 [US3] Add test: rolling stock validation blocks submission when fields incomplete
 
 **Checkpoint**: User Story 3 complete - full rolling stock management works
 
@@ -129,10 +129,10 @@
 
 **Purpose**: Final verification and cleanup
 
-- [ ] T039 Run `pnpm format` to format all files
-- [ ] T040 Run `pnpm lint` and fix any issues
-- [ ] T041 Run `pnpm check` and fix any type errors
-- [ ] T042 Run `pnpm test` and verify all tests pass
+- [x] T039 Run `pnpm format` to format all files
+- [x] T040 Run `pnpm lint` and fix any issues
+- [x] T041 Run `pnpm check` and fix any type errors
+- [x] T042 Run `pnpm test` and verify all tests pass
 - [ ] T043 Manual verification: test complete user flow in browser
 - [ ] T044 [P] Export new components from src/lib/features/wishlists/index.ts (if applicable)
 - [ ] T045 Update WishlistsDashboard.svelte styling to match CollectionDashboard.svelte layout (grid, spacing, header structure per FR-012)

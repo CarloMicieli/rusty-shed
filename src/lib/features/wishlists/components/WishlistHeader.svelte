@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { Heart, Star } from 'lucide-svelte';
+  import { Heart, Star, Plus } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
+  import * as m from '$lib/paraglide/messages.js';
 
-  const { wishlist, onRename, onSetDefault } = $props<{
+  const { wishlist, onRename, onSetDefault, onAddModel } = $props<{
     wishlist: WishlistPreview | null;
     onRename?: (name: string) => void;
     onSetDefault?: () => void;
+    onAddModel?: () => void;
   }>();
 
   let isEditing = $state(false);
@@ -61,6 +63,10 @@
       {/if}
     </div>
     <div class="flex items-center gap-2">
+      <button class="variant-soft-primary btn" onclick={() => onAddModel?.()}>
+        <Plus size={16} />
+        <span>{m.wishlist_add_model_button()}</span>
+      </button>
       <button
         class="variant-soft-primary btn"
         class:variant-filled-primary={wishlist.is_default}

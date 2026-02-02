@@ -5,6 +5,7 @@
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
+  import AddRailwayModelDrawer from './components/AddRailwayModelDrawer.svelte';
 
   const wishlistService = getWishlistContext();
 
@@ -13,6 +14,9 @@
   const activeWishlistId = $derived(wishlistService.activeWishlistId);
   const wishlistItems = $derived(wishlistService.wishlistItems);
   const otherTargets = $derived(wishlists.filter((w) => w.id !== activeWishlistId));
+
+  // Drawer state
+  let showAddModelDrawer = $state(false);
 
   onMount(() => {
     void wishlistService.fetchWishlists();
@@ -51,6 +55,19 @@
     const { itemId, fromId, toId } = detail;
     void wishlistService.moveItemToList(itemId, fromId, toId);
   }
+
+  function openAddModelDrawer() {
+    showAddModelDrawer = true;
+  }
+
+  function closeAddModelDrawer() {
+    showAddModelDrawer = false;
+  }
+
+  function handleAddModelSuccess() {
+    closeAddModelDrawer();
+    // Refresh handled by WishlistState method
+  }
 </script>
 
 <svelte:head>
@@ -71,6 +88,7 @@
       wishlist={activeWishlist}
       onRename={handleRename}
       onSetDefault={handleSetDefault}
+      onAddModel={openAddModelDrawer}
     />
 
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -84,3 +102,12 @@
     </div>
   </section>
 </div>
+
+<!-- Add Railway Model Drawer -->
+<AddRailwayModelDrawer
+  open={showAddModelDrawer}
+  preselectedWishlistId={activeWishlistId}
+  {wishlists}
+  onClose={closeAddModelDrawer}
+  onSuccess={handleAddModelSuccess}
+/>

@@ -1,7 +1,13 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
-import type { WishlistView, WishlistItem, WishlistPreview, WishlistItemView } from '$lib/bindings';
+import type {
+  WishlistView,
+  WishlistItem,
+  WishlistPreview,
+  WishlistItemView,
+  AddRailwayModelToWishListArgs
+} from '$lib/bindings';
 import { safeInvoke, getErrorMessage, isRetryableError } from '$lib/services';
 
 // Using WishlistPreview from bindings directly
@@ -461,6 +467,37 @@ export class WishlistState {
     }
 
     toastSuccess(toastId);
+  }
+
+  /**
+   * Add a new railway model to a wishlist.
+   * Creates the railway model in the catalog and adds it to the specified wishlist.
+   *
+   * @param args - The complete arguments for the command
+   * @returns Promise<boolean> - true on success, false on failure
+   */
+  async addRailwayModelToWishlist(args: AddRailwayModelToWishListArgs): Promise<boolean> {
+    const toastId = randomId();
+    toastLoading(toastId);
+
+    const result = await safeInvoke('add_railway_model_to_wish_list', { args });
+
+    if (!result.ok) {
+      console.error('Failed to add railway model to wishlist:', result.error);
+      toastError(toastId, getErrorMessage(result.error));
+      return false;
+    }
+
+    // Refresh the active wishlist items if it matches the target wishlist
+    if (this.#activeWishlistId === args.wishlistId) {
+      await this.loadWishlistItems(args.wishlistId);
+    }
+
+    // Refresh wishlist previews (counts may have changed)
+    await this.fetchWishlists();
+
+    toastSuccess(toastId);
+    return true;
   }
 }
 
