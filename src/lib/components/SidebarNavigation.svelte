@@ -1,6 +1,6 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { LayoutDashboard, Library, Heart, Box, Settings, TrainFront } from 'lucide-svelte';
+  import { LayoutDashboard, Library, Heart, Box, Settings, TrainFront, Train } from 'lucide-svelte';
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -64,6 +64,17 @@
           {#if defaultWishlist}
             <span class="variant-soft-surface ml-auto badge">{defaultWishlist.count}</span>
           {/if}
+        </a>
+      </li>
+      <li>
+        <a
+          href={resolve('/my-tracks')}
+          class="hover:variant-soft-primary btn w-full justify-start gap-3"
+          class:variant-filled-primary={(page.url.pathname as string).startsWith('/my-tracks')}
+          class:variant-ghost-surface={!(page.url.pathname as string).startsWith('/my-tracks')}
+        >
+          <Train size={20} />
+          <span class="font-medium tracking-wide">{m.app_tracks()}</span>
         </a>
       </li>
       <li>

@@ -1,12 +1,13 @@
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::core::domain::length::Length;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::error::CommandError;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::tracks_inventory::application::{
-    AddTrackPurchaseInput, NewTrackInventoryInput, RenameTrackInventoryInput,
-    SetTrackItemQuantityInput,
+    AddTrackPurchaseInput, CreateTrackProductInput, NewTrackInventoryInput,
+    RenameTrackInventoryInput, SetTrackItemQuantityInput,
 };
-use crate::tracks_inventory::domain::TrackId;
-use crate::tracks_inventory::domain::TrackInventoryId;
+use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackType};
 use chrono::NaiveDate;
 use garde::Validate;
 use serde::Deserialize;
@@ -65,6 +66,42 @@ pub struct SetTrackItemQuantityArgs {
     pub quantity: i64,
 }
 
+/// Command argument to create a new track product
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+#[garde(allow_unvalidated)]
+pub struct CreateTrackProductArgs {
+    /// Manufacturer that produces this track product
+    pub manufacturer_id: ManufacturerId,
+    /// Manufacturer's product code or name
+    pub product_code: String,
+    /// Human-readable description of the track piece
+    pub description: String,
+    /// Geometric type of the track piece
+    pub track_type: TrackType,
+    /// Rail profile code describing the rail height
+    pub track_code: TrackCode,
+    /// Whether this track piece includes an integrated roadbed
+    pub with_roadbed: bool,
+    /// Length for straight track pieces, when applicable
+    pub length: Option<Length>,
+    /// Radius for curved track elements, when applicable
+    pub radius: Option<Length>,
+}
+
+/// Command argument to set the required quantity for a track item
+#[derive(Debug, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+#[garde(allow_unvalidated)]
+pub struct SetItemRequiredArgs {
+    /// Inventory ID containing the track item
+    pub inventory_id: TrackInventoryId,
+    /// Track ID of the item whose required quantity is to be set
+    pub track_id: TrackId,
+    /// Required quantity for planning
+    pub required: i64,
+}
+
 impl TryFrom<NewTrackInventoryArgs> for NewTrackInventoryInput {
     type Error = CommandError;
 
@@ -87,6 +124,23 @@ impl TryFrom<AddTrackPurchaseArgs> for AddTrackPurchaseInput {
             price: value.price,
             seller_id: value.seller_id,
             purchase_date: value.purchase_date,
+        })
+    }
+}
+
+impl TryFrom<CreateTrackProductArgs> for CreateTrackProductInput {
+    type Error = CommandError;
+
+    fn try_from(value: CreateTrackProductArgs) -> Result<Self, Self::Error> {
+        Ok(CreateTrackProductInput {
+            manufacturer_id: value.manufacturer_id,
+            product_code: value.product_code,
+            description: value.description,
+            track_type: value.track_type,
+            track_code: value.track_code,
+            with_roadbed: value.with_roadbed,
+            length: value.length,
+            radius: value.radius,
         })
     }
 }

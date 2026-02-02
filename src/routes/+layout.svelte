@@ -19,6 +19,7 @@
     setDashboardContext
   } from '$lib/features/dashboard/DashboardState.svelte';
   import { createDepotState, setDepotContext } from '$lib/features/depot/DepotState.svelte';
+  import { TrackInventoryService, setTrackInventoryContext } from '$lib/features/track-inventory';
   import ToastHost from '$lib/components/ToastHost.svelte';
   import { safeInvoke } from '$lib/services';
   import { onMount } from 'svelte';
@@ -32,11 +33,13 @@
   const wishlistState = createWishlistState();
   const dashboardState = createDashboardState();
   const depotState = createDepotState();
+  const trackInventoryService = new TrackInventoryService();
 
   setCollectionContext(collectionState);
   setWishlistContext(wishlistState);
   setDashboardContext(dashboardState);
   setDepotContext(depotState);
+  setTrackInventoryContext(trackInventoryService);
 
   onMount(async () => {
     // 1. Show main window immediately so the user sees *something* (loading state)

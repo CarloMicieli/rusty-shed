@@ -47,7 +47,7 @@ impl<'conn> SqliteTrackInventoryRepository<'conn> {
         };
 
         let sql_items = r#"
-            SELECT track_id, quantity 
+            SELECT track_id, quantity, required 
             FROM track_inventory_items 
             WHERE inventory_id = ?1
         "#;

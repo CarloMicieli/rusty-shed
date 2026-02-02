@@ -3,12 +3,14 @@ use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::state::AppState;
 use crate::tracks_inventory::application::{
     AddTrackPurchaseInput, AddTrackPurchaseUseCase, CreateTrackInventoryUseCase,
+    CreateTrackProductInput, CreateTrackProductUseCase, DeleteTrackInventoryUseCase,
     NewTrackInventoryInput, RenameTrackInventoryInput, RenameTrackInventoryUseCase,
     SetTrackItemQuantityInput, SetTrackItemQuantityUseCase,
 };
-use crate::tracks_inventory::domain::{TrackInventoryId, TrackPurchaseId};
+use crate::tracks_inventory::domain::{TrackId, TrackInventoryId, TrackPurchaseId};
 use crate::tracks_inventory::interface::command_args::{
-    AddTrackPurchaseArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs, SetTrackItemQuantityArgs,
+    AddTrackPurchaseArgs, CreateTrackProductArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
+    SetItemRequiredArgs, SetTrackItemQuantityArgs,
 };
 use log::info;
 use std::convert::TryInto;
@@ -117,6 +119,111 @@ pub async fn set_track_item_quantity(
     let input: SetTrackItemQuantityInput = input.try_into()?;
 
     SetTrackItemQuantityUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Command handler to delete a track inventory.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `id`: The ID of the inventory to delete.
+///
+/// # Returns
+/// nothing on success.
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_track_inventory(
+    state: tauri::State<'_, AppState>,
+    id: TrackInventoryId,
+) -> Result<(), CommandError> {
+    info!("Deleting track inventory: {:?}", id);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    DeleteTrackInventoryUseCase::execute(&mut unit_of_work, &id).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Command handler to create a new track product.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `input`: The arguments required to create a new track product.
+///
+/// # Returns
+/// the ID of the newly created track product.
+#[tauri::command]
+#[specta::specta]
+pub async fn create_track_product(
+    state: tauri::State<'_, AppState>,
+    input: CreateTrackProductArgs,
+) -> Result<TrackId, CommandError> {
+    info!("Creating track product: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let id_provider = RuntimeIdProvider::new();
+
+    let input: CreateTrackProductInput = input.try_into()?;
+
+    let id = CreateTrackProductUseCase::execute(&mut unit_of_work, id_provider, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(id)
+}
+
+/// Command handler to set the required quantity for a track item.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `input`: The arguments specifying inventory, track, and required quantity.
+///
+/// # Returns
+/// Unit type on success.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_item_required(
+    state: tauri::State<'_, AppState>,
+    input: SetItemRequiredArgs,
+) -> Result<(), CommandError> {
+    info!("Setting required quantity: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    // Validate required quantity
+    if input.required < 0 {
+        return Err(CommandError::validation_field(
+            "required",
+            "Required quantity cannot be negative",
+        ));
+    }
+
+    // Update required quantity in database
+    let sql = r#"
+        UPDATE track_inventory_items
+        SET required = ?1
+        WHERE inventory_id = ?2 AND track_id = ?3
+    "#;
+
+    let result = sqlx::query(sql)
+        .bind(input.required)
+        .bind(&input.inventory_id)
+        .bind(&input.track_id)
+        .execute(&mut *unit_of_work.tx)
+        .await?;
+
+    if result.rows_affected() == 0 {
+        return Err(CommandError::NotFound(format!(
+            "Track item {} not found in inventory {}",
+            input.track_id, input.inventory_id
+        )));
+    }
 
     unit_of_work.commit().await?;
 

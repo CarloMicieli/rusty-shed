@@ -1,5 +1,6 @@
 use super::track_code::TrackCode;
 use super::track_id::TrackId;
+use super::track_type::TrackType;
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::length::Length;
 use crate::core::domain::metadata::Metadata;
@@ -34,6 +35,9 @@ pub struct TrackProduct {
 
     /// Radius for curved track elements, when applicable.
     pub radius: Option<Length>,
+
+    /// The geometric type of the track piece (e.g. Straight, Curve, Turnout).
+    pub track_type: TrackType,
 
     /// The rail profile code (e.g. Code70, Code83) describing the rail height.
     pub track_code: TrackCode,

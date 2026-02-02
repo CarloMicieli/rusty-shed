@@ -28,6 +28,7 @@ use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
 use crate::state::AppState;
 use crate::tracks_inventory::interface::command_handlers as tracks_inventory_command_handlers;
+use crate::tracks_inventory::interface::query_handlers as tracks_inventory_query_handlers;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
@@ -165,6 +166,12 @@ pub fn run() {
         tracks_inventory_command_handlers::rename_track_inventory,
         tracks_inventory_command_handlers::add_track_purchase,
         tracks_inventory_command_handlers::set_track_item_quantity,
+        tracks_inventory_command_handlers::set_item_required,
+        tracks_inventory_command_handlers::delete_track_inventory,
+        tracks_inventory_command_handlers::create_track_product,
+        tracks_inventory_query_handlers::get_track_inventories,
+        tracks_inventory_query_handlers::get_track_inventory,
+        tracks_inventory_query_handlers::get_track_products,
         dcc_inventory_command_handlers::new_digital_rolling_stock,
         dcc_inventory_command_handlers::change_dcc_address,
         dcc_inventory_command_handlers::change_decoder,

@@ -767,6 +767,112 @@ export const commands = {
     }
   },
   /**
+   * Command handler to set the required quantity for a track item.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments specifying inventory, track, and required quantity.
+   *
+   * # Returns
+   * Unit type on success.
+   */
+  async setItemRequired(input: SetItemRequiredArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('set_item_required', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Command handler to delete a track inventory.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `id`: The ID of the inventory to delete.
+   *
+   * # Returns
+   * nothing on success.
+   */
+  async deleteTrackInventory(id: TrackInventoryId): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('delete_track_inventory', { id }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Command handler to create a new track product.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to create a new track product.
+   *
+   * # Returns
+   * the ID of the newly created track product.
+   */
+  async createTrackProduct(input: CreateTrackProductArgs): Promise<Result<TrackId, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('create_track_product', { input }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Query handler to fetch all track inventories with summary information.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   *
+   * # Returns
+   * A list of track inventory summaries.
+   */
+  async getTrackInventories(): Promise<Result<TrackInventoryListItem[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_track_inventories') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Query handler to fetch a single track inventory with full details.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `id`: The ID of the inventory to fetch.
+   *
+   * # Returns
+   * The complete inventory view with items and purchases.
+   */
+  async getTrackInventory(id: TrackInventoryId): Promise<Result<TrackInventoryView, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_track_inventory', { id }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Query handler to fetch all track products.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   *
+   * # Returns
+   * A list of all track products available.
+   */
+  async getTrackProducts(): Promise<Result<TrackProductView[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_track_products') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * A command handler to create a new digital rolling stock.
    *
    * # Arguments
@@ -1674,6 +1780,43 @@ export type CreateSellerPayload = {
   stateRegion: string | null;
   postalCode: string | null;
   countryCode: string | null;
+};
+/**
+ * Command argument to create a new track product
+ */
+export type CreateTrackProductArgs = {
+  /**
+   * Manufacturer that produces this track product
+   */
+  manufacturerId: ManufacturerId;
+  /**
+   * Manufacturer's product code or name
+   */
+  productCode: string;
+  /**
+   * Human-readable description of the track piece
+   */
+  description: string;
+  /**
+   * Geometric type of the track piece
+   */
+  trackType: TrackType;
+  /**
+   * Rail profile code describing the rail height
+   */
+  trackCode: TrackCode;
+  /**
+   * Whether this track piece includes an integrated roadbed
+   */
+  withRoadbed: boolean;
+  /**
+   * Length for straight track pieces, when applicable
+   */
+  length: Length | null;
+  /**
+   * Radius for curved track elements, when applicable
+   */
+  radius: Length | null;
 };
 /**
  * Arguments structure for creating a new wishlist.
@@ -3759,6 +3902,23 @@ export type ServiceLevel =
   | 'SECOND_THIRD'
   | 'FIRST_SECOND_THIRD';
 /**
+ * Command argument to set the required quantity for a track item
+ */
+export type SetItemRequiredArgs = {
+  /**
+   * Inventory ID containing the track item
+   */
+  inventoryId: TrackInventoryId;
+  /**
+   * Track ID of the item whose required quantity is to be set
+   */
+  trackId: TrackId;
+  /**
+   * Required quantity for planning
+   */
+  required: bigint;
+};
+/**
  * Command argument to set the quantity of a track item in an inventory
  */
 export type SetTrackItemQuantityArgs = {
@@ -3926,6 +4086,31 @@ export type TechnicalSpecificationsArgs = {
   sprungBuffers: string | null;
 };
 /**
+ * Rail profile code for a track product.
+ *
+ * This enum lists the common model railway rail heights ("Code" values)
+ * used to describe the rail profile. It derives `specta::Type` so it can be
+ * emitted into TypeScript bindings and `EnumString` to allow parsing from
+ * textual representations.
+ */
+export type TrackCode =
+  /**
+   * 70-series rail profile (lightweight rail, often used for smaller scales).
+   */
+  | 'CODE_70'
+  /**
+   * 75-series rail profile.
+   */
+  | 'CODE_75'
+  /**
+   * 83-series rail profile (common medium-weight rail for many layouts).
+   */
+  | 'CODE_83'
+  /**
+   * 100-series rail profile (heavy-duty rail profile).
+   */
+  | 'CODE_100';
+/**
  * Strongly-typed identifier for a track product.
  *
  * `TrackId` is a transparent newtype wrapping a `String` that stores a TRN
@@ -3951,9 +4136,151 @@ export type TrackId = string;
  */
 export type TrackInventoryId = string;
 /**
+ * View of a single inventory item (track product + quantities).
+ */
+export type TrackInventoryItemView = {
+  /**
+   * Track product identifier.
+   */
+  track_id: TrackId;
+  /**
+   * Product details.
+   */
+  track_product: TrackProductView;
+  /**
+   * Current stock quantity.
+   */
+  quantity: bigint;
+  /**
+   * Required quantity for planning (defaults to 0).
+   */
+  required: bigint;
+};
+/**
+ * Summary view of a track inventory for list display.
+ */
+export type TrackInventoryListItem = {
+  /**
+   * Inventory identifier.
+   */
+  id: TrackInventoryId;
+  /**
+   * Inventory name.
+   */
+  name: string;
+  /**
+   * Optional description.
+   */
+  description: string | null;
+  /**
+   * Count of distinct track types in this inventory.
+   */
+  total_items: bigint;
+  /**
+   * Sum of all quantities across all track types.
+   */
+  total_quantity: bigint;
+};
+/**
+ * Detailed view of a track inventory with items and purchase history.
+ */
+export type TrackInventoryView = {
+  /**
+   * Inventory identifier.
+   */
+  id: TrackInventoryId;
+  /**
+   * Inventory name.
+   */
+  name: string;
+  /**
+   * Optional description.
+   */
+  description: string | null;
+  /**
+   * Track items with quantities.
+   */
+  items: TrackInventoryItemView[];
+  /**
+   * Purchase history.
+   */
+  purchases: TrackPurchaseView[];
+};
+/**
+ * Track product view for display.
+ */
+export type TrackProductView = {
+  /**
+   * Track product identifier.
+   */
+  track_id: TrackId;
+  /**
+   * Manufacturer name (denormalized for display).
+   */
+  manufacturer_name: string;
+  /**
+   * Manufacturer's product code.
+   */
+  product_code: string;
+  /**
+   * Human-readable description.
+   */
+  description: string;
+  /**
+   * Geometric type of the track piece.
+   */
+  track_type: TrackType;
+  /**
+   * Rail profile code.
+   */
+  track_code: TrackCode;
+  /**
+   * Whether this track piece includes an integrated roadbed.
+   */
+  with_roadbed: boolean;
+  /**
+   * Length for straight track pieces.
+   */
+  length: Length | null;
+  /**
+   * Radius for curved track elements.
+   */
+  radius: Length | null;
+};
+/**
  * Strongly-typed identifier for a track purchase record.
  */
 export type TrackPurchaseId = string;
+/**
+ * Purchase history view.
+ */
+export type TrackPurchaseView = {
+  /**
+   * Purchase identifier.
+   */
+  id: TrackPurchaseId;
+  /**
+   * Product purchased.
+   */
+  track_product: TrackProductView;
+  /**
+   * Quantity purchased.
+   */
+  quantity: bigint;
+  /**
+   * Total price.
+   */
+  price: MonetaryAmount;
+  /**
+   * Seller name (denormalized, optional).
+   */
+  seller_name: string | null;
+  /**
+   * Purchase date.
+   */
+  purchase_date: string;
+};
+export type TrackType = 'STRAIGHT' | 'CURVE' | 'TURNOUT' | 'FLEX_TRACK';
 export type UpdateSellerPayload = {
   id: string;
   name: string;

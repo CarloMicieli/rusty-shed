@@ -4,7 +4,7 @@ use crate::core::domain::length::Length;
 use crate::core::domain::measure_units::MeasureUnit;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::tracks_inventory::domain::{
-    TrackCode, TrackId, TrackProduct, TrackProductRepository, TrackProductUowExt,
+    TrackCode, TrackId, TrackProduct, TrackProductRepository, TrackProductUowExt, TrackType,
 };
 use crate::tracks_inventory::infrastructure::entities::TrackProductRow;
 use rust_decimal::Decimal;
@@ -33,7 +33,7 @@ impl<'conn> SqliteTrackProductRepository<'conn> {
         id: &TrackId,
     ) -> Result<Option<TrackProduct>, DomainError> {
         let sql = r#"
-            SELECT track_id, product_code, manufacturer_id, with_roadbed, length_mm, radius_mm, track_code, description
+            SELECT track_id, product_code, manufacturer_id, with_roadbed, length_mm, radius_mm, track_code, track_type, description
             FROM track_products
             WHERE track_id = ?1
             LIMIT 1
@@ -57,6 +57,10 @@ impl<'conn> SqliteTrackProductRepository<'conn> {
                     length: Self::mm_to_length(track_product_row.length_mm),
                     radius: Self::mm_to_length(track_product_row.radius_mm),
                     track_code: track_product_row.track_code.unwrap_or(TrackCode::Code83),
+                    track_type: track_product_row
+                        .track_type
+                        .and_then(|t| t.parse::<TrackType>().ok())
+                        .unwrap_or(TrackType::Straight),
                     metadata: Default::default(),
                 };
 
@@ -79,7 +83,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
         product_code: &str,
     ) -> Result<Option<TrackProduct>, DomainError> {
         let sql = r#"
-            SELECT track_id, product_code, manufacturer_id, with_roadbed, length_mm, radius_mm, track_code
+            SELECT track_id, product_code, manufacturer_id, with_roadbed, length_mm, radius_mm, track_code, track_type
             FROM track_products
             WHERE manufacturer_id = ?1 AND product_code = ?2
             LIMIT 1
@@ -104,8 +108,8 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
         let sql = r#"
             INSERT OR REPLACE INTO track_products (
                 id, track_id, manufacturer_id, product_code, with_roadbed, length_mm, 
-                radius_mm, track_code, created_at, updated_at, version)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+                radius_mm, track_code, track_type, created_at, updated_at, version)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
         "#;
 
         sqlx::query(sql)
@@ -117,6 +121,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
             .bind(track.length.map(|l| l.quantity().to_i32().unwrap_or(0)))
             .bind(track.radius.map(|r| r.quantity().to_i32().unwrap_or(0)))
             .bind(track.track_code)
+            .bind(track.track_type)
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;

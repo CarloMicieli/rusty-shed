@@ -1,7 +1,8 @@
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::core::domain::length::Length;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::sellers::domain::seller_id::SellerId;
-use crate::tracks_inventory::domain::TrackId;
-use crate::tracks_inventory::domain::TrackInventoryId;
+use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackType};
 use chrono::NaiveDate;
 
 /// Input DTOs for the tracks inventory application layer.
@@ -54,4 +55,25 @@ pub struct SetTrackItemQuantityInput {
 
     /// The desired quantity for the track product. Values <= 0 remove the item.
     pub quantity: i64,
+}
+
+/// Input used to create a new track product.
+#[derive(Debug, Clone)]
+pub struct CreateTrackProductInput {
+    /// Manufacturer that produces this track product.
+    pub manufacturer_id: ManufacturerId,
+    /// Manufacturer's product code or name.
+    pub product_code: String,
+    /// Human-readable description of the track piece.
+    pub description: String,
+    /// Geometric type of the track piece.
+    pub track_type: TrackType,
+    /// Rail profile code describing the rail height.
+    pub track_code: TrackCode,
+    /// Whether this track piece includes an integrated roadbed.
+    pub with_roadbed: bool,
+    /// Length for straight track pieces, when applicable.
+    pub length: Option<Length>,
+    /// Radius for curved track elements, when applicable.
+    pub radius: Option<Length>,
 }

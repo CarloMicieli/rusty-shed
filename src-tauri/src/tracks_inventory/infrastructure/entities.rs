@@ -29,6 +29,8 @@ pub struct TrackProductRow {
     pub radius_mm: Option<i32>,
     /// Optional domain `TrackCode` (parsed/validated at the domain layer).
     pub track_code: Option<TrackCode>,
+    /// Optional track type (e.g. "STRAIGHT", "CURVE").
+    pub track_type: Option<String>,
     /// Optional human-readable description.
     pub description: Option<String>,
 }
@@ -42,6 +44,10 @@ pub struct TrackInventoryItemRow {
     pub track_id: TrackId,
     /// Quantity available for the given track.
     pub quantity: i64,
+    /// Required quantity for planning (target stock level).
+    /// This field is only used for read-side queries (views), not for aggregate reconstruction.
+    #[allow(dead_code)]
+    pub required: i64,
 }
 
 /// Row representation for track purchases.
