@@ -48,6 +48,17 @@ pub struct ChangeDecoderArgs {
     pub decoder_id: String,
 }
 
+/// Arguments for checking DCC address duplicates.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct CheckDccAddressDuplicateArgs {
+    /// The DCC address to check (1-9999).
+    pub dcc_address: u16,
+    /// Optional: exclude this ID from the check (for edit mode).
+    pub exclude_id: Option<String>,
+}
+
 // TryFrom conversions
 impl TryFrom<NewDigitalRollingStockArgs> for NewDigitalRollingStockInput {
     type Error = DomainError;

@@ -176,6 +176,10 @@ pub fn run() {
         dcc_inventory_command_handlers::change_dcc_address,
         dcc_inventory_command_handlers::change_decoder,
         dcc_inventory_command_handlers::get_digital_rolling_stocks,
+        dcc_inventory_command_handlers::get_digital_summary,
+        dcc_inventory_command_handlers::get_decoders,
+        dcc_inventory_command_handlers::check_dcc_address_duplicate,
+        dcc_inventory_command_handlers::get_installable_rolling_stocks,
         get_image_path,
         get_settings,
         update_settings

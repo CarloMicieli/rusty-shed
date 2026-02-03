@@ -31,6 +31,8 @@ impl GetDigitalRollingStocksUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::catalog::domain::railway_model::{DccInterface, PowerMethod, RollingStockCategory};
+    use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::dcc_inventory::application::DigitalRollingStockView;
     use crate::dcc_inventory::domain::DigitalRollingStockId;
@@ -54,8 +56,15 @@ mod tests {
                 product_code: "d-100".to_string(),
                 decoder_type: crate::dcc_inventory::domain::DecoderType::Plain,
                 protocol: crate::dcc_inventory::domain::DigitalProtocol::Dcc,
-                decoder_interface: crate::catalog::domain::railway_model::DccInterface::Nem651,
+                decoder_interface: DccInterface::Nem651,
             },
+            category: RollingStockCategory::Locomotive,
+            railway_company_name: Some("Test Railway".to_string()),
+            scale: Some(Scale::H0),
+            power_method: Some(PowerMethod::AC),
+            road_number: Some("E.428.001".to_string()),
+            series_code: Some("E.428".to_string()),
+            description: Some("Test locomotive".to_string()),
         };
 
         mock.expect_find_all_digital_rolling_stocks()

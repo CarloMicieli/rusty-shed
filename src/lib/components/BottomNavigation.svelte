@@ -1,6 +1,6 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { LayoutDashboard, Library, Heart, Box, Settings, Train } from 'lucide-svelte';
+  import { LayoutDashboard, Library, Heart, Box, Settings, Train, Cpu } from 'lucide-svelte';
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -66,6 +66,15 @@
       >
         <Box size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_depot()}</span>
+      </a>
+      <a
+        href={resolve('/my-digital-roster')}
+        class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
+        class:text-accent-500={pathname === '/my-digital-roster'}
+        class:text-surface-400={pathname !== '/my-digital-roster'}
+      >
+        <Cpu size={20} />
+        <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_digital_roster()}</span>
       </a>
       <a
         href={resolve('/my-settings')}

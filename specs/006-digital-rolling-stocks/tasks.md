@@ -16,9 +16,9 @@
 
 **Purpose**: Project structure and shared configuration
 
-- [ ] T001 Add Paraglide messages for digital roster feature in `messages/en.json`
-- [ ] T002 [P] Add Paraglide messages for digital roster feature in `messages/it.json`
-- [ ] T003 Run `pnpm prepare` to regenerate Paraglide files
+- [x] T001 Add Paraglide messages for digital roster feature in `messages/en.json`
+- [x] T002 [P] Add Paraglide messages for digital roster feature in `messages/it.json`
+- [x] T003 Run `pnpm prepare` to regenerate Paraglide files
 
 ---
 
@@ -30,51 +30,51 @@
 
 ### Backend View Extensions
 
-- [ ] T004 Extend `DigitalRollingStockView` with catalog fields (category, railway_company_name, scale, power_method, road_number, series_code, description) in `src-tauri/src/dcc_inventory/application/views.rs`
-- [ ] T005 Add `DigitalSummary` view struct in `src-tauri/src/dcc_inventory/application/views.rs`
-- [ ] T006 [P] Add `CheckDuplicateAddressResult` view struct in `src-tauri/src/dcc_inventory/application/views.rs`
-- [ ] T007 [P] Add `InstallableRollingStockView` view struct in `src-tauri/src/dcc_inventory/application/views.rs`
+- [x] T004 Extend `DigitalRollingStockView` with catalog fields (category, railway_company_name, scale, power_method, road_number, series_code, description) in `src-tauri/src/dcc_inventory/application/views.rs`
+- [x] T005 Add `DigitalSummary` view struct in `src-tauri/src/dcc_inventory/application/views.rs`
+- [x] T006 [P] Add `CheckDuplicateAddressResult` view struct in `src-tauri/src/dcc_inventory/application/views.rs`
+- [x] T007 [P] Add `InstallableRollingStockView` view struct in `src-tauri/src/dcc_inventory/application/views.rs`
 
 ### Repository Extensions
 
-- [ ] T008 Add `get_digital_summary` method to `DigitalRollingStockRepository` trait in `src-tauri/src/dcc_inventory/domain/repositories.rs`
-- [ ] T009 [P] Add `check_address_exists` method to `DigitalRollingStockRepository` trait in `src-tauri/src/dcc_inventory/domain/repositories.rs`
-- [ ] T010 [P] Add `find_installable_rolling_stocks` method to `DigitalRollingStockRepository` trait in `src-tauri/src/dcc_inventory/domain/repositories.rs`
-- [ ] T011 Implement `get_digital_summary` in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
-- [ ] T012 [P] Implement `check_address_exists` in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
-- [ ] T013 [P] Implement `find_installable_rolling_stocks` in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
-- [ ] T014 Extend `find_all_digital_rolling_stocks` query to JOIN catalog tables and exclude Function decoders in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
+- [x] T008 Add `get_digital_summary` method to `DigitalRollingStockRepository` trait in `src-tauri/src/dcc_inventory/domain/repositories.rs`
+- [x] T009 [P] Add `check_address_exists` method to `DigitalRollingStockRepository` trait in `src-tauri/src/dcc_inventory/domain/repositories.rs`
+- [x] T010 [P] Add `find_installable_rolling_stocks` method to `DigitalRollingStockRepository` trait in `src-tauri/src/dcc_inventory/domain/repositories.rs`
+- [x] T011 Implement `get_digital_summary` in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
+- [x] T012 [P] Implement `check_address_exists` in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
+- [x] T013 [P] Implement `find_installable_rolling_stocks` in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
+- [x] T014 Extend `find_all_digital_rolling_stocks` query to JOIN catalog tables and exclude Function decoders in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
 
 ### Unit Tests (Constitution: Test-First Emphasis)
 
-- [ ] T014a [P] Write unit test for `GetDigitalSummaryUseCase` verifying percentage calculation excludes dummies and counts factory-fitted
-- [ ] T014b [P] Write unit test for `CheckDuplicateAddressUseCase` verifying duplicate detection and exclude-self logic
-- [ ] T014c [P] Write unit test for `GetInstallableRollingStocksUseCase` verifying dummy exclusion and hasDecoder flag
-- [ ] T014d [P] Write integration test for enriched `find_all_digital_rolling_stocks` query in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
+- [x] T014a [P] Write unit test for `GetDigitalSummaryUseCase` verifying percentage calculation excludes dummies and counts factory-fitted
+- [x] T014b [P] Write unit test for `CheckDuplicateAddressUseCase` verifying duplicate detection and exclude-self logic
+- [x] T014c [P] Write unit test for `GetInstallableRollingStocksUseCase` verifying dummy exclusion and hasDecoder flag
+- [x] T014d [P] Write integration test for enriched `find_all_digital_rolling_stocks` query in `src-tauri/src/dcc_inventory/infrastructure/sqlite_digital_rolling_stock_repository.rs`
 
 ### Use Cases
 
-- [ ] T015 Create `GetDigitalSummaryUseCase` in `src-tauri/src/dcc_inventory/application/get_digital_summary.rs`
-- [ ] T016 [P] Create `GetDecodersUseCase` in `src-tauri/src/dcc_inventory/application/get_decoders.rs`
-- [ ] T017 [P] Create `CheckDuplicateAddressUseCase` in `src-tauri/src/dcc_inventory/application/check_duplicate_address.rs`
-- [ ] T018 [P] Create `GetInstallableRollingStocksUseCase` in `src-tauri/src/dcc_inventory/application/get_installable_rolling_stocks.rs`
-- [ ] T019 Export new use cases in `src-tauri/src/dcc_inventory/application/mod.rs`
+- [x] T015 Create `GetDigitalSummaryUseCase` in `src-tauri/src/dcc_inventory/application/get_digital_summary.rs`
+- [x] T016 [P] Create `GetDecodersUseCase` in `src-tauri/src/dcc_inventory/application/get_decoders.rs`
+- [x] T017 [P] Create `CheckDuplicateAddressUseCase` in `src-tauri/src/dcc_inventory/application/check_duplicate_address.rs`
+- [x] T018 [P] Create `GetInstallableRollingStocksUseCase` in `src-tauri/src/dcc_inventory/application/get_installable_rolling_stocks.rs`
+- [x] T019 Export new use cases in `src-tauri/src/dcc_inventory/application/mod.rs`
 
 ### Tauri Commands
 
-- [ ] T020 Add `CheckDccAddressDuplicateArgs` in `src-tauri/src/dcc_inventory/interface/command_args.rs`
-- [ ] T021 Add `get_digital_summary` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
-- [ ] T022 [P] Add `get_decoders` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
-- [ ] T023 [P] Add `check_dcc_address_duplicate` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
-- [ ] T024 [P] Add `get_installable_rolling_stocks` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
-- [ ] T025 Register new commands in `src-tauri/src/lib.rs` generate_handler macro
-- [ ] T026 Run `pnpm tauri dev` to regenerate TypeScript bindings
+- [x] T020 Add `CheckDccAddressDuplicateArgs` in `src-tauri/src/dcc_inventory/interface/command_args.rs`
+- [x] T021 Add `get_digital_summary` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
+- [x] T022 [P] Add `get_decoders` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
+- [x] T023 [P] Add `check_dcc_address_duplicate` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
+- [x] T024 [P] Add `get_installable_rolling_stocks` command handler in `src-tauri/src/dcc_inventory/interface/command_handlers.rs`
+- [x] T025 Register new commands in `src-tauri/src/lib.rs` generate_handler macro
+- [x] T026 Run `pnpm tauri dev` to regenerate TypeScript bindings
 
 ### Backend Verification
 
-- [ ] T027 Run `pnpm rust:check` to verify compilation
-- [ ] T028 Run `pnpm rust:clippy` to verify no warnings
-- [ ] T029 Run `pnpm rust:test` to verify existing tests pass
+- [x] T027 Run `pnpm rust:check` to verify compilation
+- [x] T028 Run `pnpm rust:clippy` to verify no warnings
+- [x] T029 Run `pnpm rust:test` to verify existing tests pass
 
 **Checkpoint**: Backend foundation ready. All new Tauri commands available in bindings.ts.
 
@@ -88,39 +88,39 @@
 
 ### Frontend Feature Module Setup
 
-- [ ] T030 [US1] Create feature directory structure `src/lib/features/digital-roster/components/`
-- [ ] T031 [US1] Create `DigitalRosterState.svelte.ts` context provider with Svelte 5 runes in `src/lib/features/digital-roster/`
-- [ ] T032 [US1] Create `DigitalRosterController.svelte.ts` controller class in `src/lib/features/digital-roster/`
-- [ ] T033 [US1] Create `index.ts` public exports in `src/lib/features/digital-roster/`
+- [x] T030 [US1] Create feature directory structure `src/lib/features/digital-roster/components/`
+- [x] T031 [US1] Create `DigitalRosterState.svelte.ts` context provider with Svelte 5 runes in `src/lib/features/digital-roster/`
+- [x] T032 [US1] Create `DigitalRosterController.svelte.ts` controller class in `src/lib/features/digital-roster/`
+- [x] T033 [US1] Create `index.ts` public exports in `src/lib/features/digital-roster/`
 
 ### Summary Component (US1)
 
-- [ ] T034 [US1] Create `DigitalSummary.svelte` component in `src/lib/features/digital-roster/components/`
-- [ ] T035 [US1] Implement summary loading from `getDigitalSummary` command
-- [ ] T036 [US1] Add empty state handling when no rolling stocks exist
+- [x] T034 [US1] Create `DigitalSummary.svelte` component in `src/lib/features/digital-roster/components/`
+- [x] T035 [US1] Implement summary loading from `getDigitalSummary` command
+- [x] T036 [US1] Add empty state handling when no rolling stocks exist
 
 ### Roster Table Component (US2)
 
-- [ ] T037 [US2] Create `DigitalRosterTable.svelte` component in `src/lib/features/digital-roster/components/`
-- [ ] T038 [US2] Implement table with columns: DCC Address, Road Number, Category, Railway, Scale, Power Method
-- [ ] T039 [US2] Implement data loading from `getDigitalRollingStocks` command
-- [ ] T040 [US2] Add empty state handling when no digital rolling stocks exist
-- [ ] T041 [US2] Sort table by DCC address by default
+- [x] T037 [US2] Create `DigitalRosterTable.svelte` component in `src/lib/features/digital-roster/components/`
+- [x] T038 [US2] Implement table with columns: DCC Address, Road Number, Category, Railway, Scale, Power Method
+- [x] T039 [US2] Implement data loading from `getDigitalRollingStocks` command
+- [x] T040 [US2] Add empty state handling when no digital rolling stocks exist
+- [x] T041 [US2] Sort table by DCC address by default
 
 ### Route & Navigation
 
-- [ ] T042 [US1] Create route directory `src/routes/my-digital-roster/`
-- [ ] T043 [US1] Create `+page.svelte` in `src/routes/my-digital-roster/`
-- [ ] T044 [US1] Create `+page.server.ts` SSR stub in `src/routes/my-digital-roster/`
-- [ ] T045 [US1] Compose Summary and Table components in page
-- [ ] T046 [US1] Add navigation item to `src/lib/components/SidebarNavigation.svelte`
-- [ ] T047 [P] [US1] Add navigation item to `src/lib/components/BottomNavigation.svelte`
+- [x] T042 [US1] Create route directory `src/routes/my-digital-roster/`
+- [x] T043 [US1] Create `+page.svelte` in `src/routes/my-digital-roster/`
+- [x] T044 [US1] Create `+page.server.ts` SSR stub in `src/routes/my-digital-roster/`
+- [x] T045 [US1] Compose Summary and Table components in page
+- [x] T046 [US1] Add navigation item to `src/lib/components/SidebarNavigation.svelte`
+- [x] T047 [P] [US1] Add navigation item to `src/lib/components/BottomNavigation.svelte`
 
 ### P1 Verification
 
-- [ ] T048 Run `pnpm lint` to verify no linting errors
-- [ ] T049 Run `pnpm check` to verify TypeScript compilation
-- [ ] T050 Manual test: Navigate to page, verify summary and list display correctly
+- [x] T048 Run `pnpm lint` to verify no linting errors
+- [x] T049 Run `pnpm check` to verify TypeScript compilation
+- [x] T050 Manual test: Navigate to page, verify summary and list display correctly
 
 **Checkpoint**: MVP complete. Users can view digital roster summary and browse by DCC address.
 
@@ -134,11 +134,11 @@
 
 ### Implementation
 
-- [ ] T051 [US3] Add filter input field to `DigitalRosterTable.svelte`
-- [ ] T052 [US3] Implement client-side filtering logic (DCC address or road number match)
-- [ ] T053 [US3] Add debounced filter input with Svelte 5 reactivity
-- [ ] T054 [US3] Show empty state when filter matches no results
-- [ ] T055 [US3] Add clear filter button/functionality
+- [x] T051 [US3] Add filter input field to `DigitalRosterTable.svelte`
+- [x] T052 [US3] Implement client-side filtering logic (DCC address or road number match)
+- [x] T053 [US3] Add debounced filter input with Svelte 5 reactivity
+- [x] T054 [US3] Show empty state when filter matches no results
+- [x] T055 [US3] Add clear filter button/functionality
 
 **Checkpoint**: Users can search and filter their digital roster.
 
@@ -152,17 +152,17 @@
 
 ### Components
 
-- [ ] T056 [US4] Create `DccAddressEditor.svelte` modal/inline editor component in `src/lib/features/digital-roster/components/`
-- [ ] T057 [US4] Implement address input with validation (1-9999 range)
-- [ ] T058 [US4] Call `checkDccAddressDuplicate` on address change to show warning
-- [ ] T059 [US4] Display duplicate warning message (soft warning, allow save)
-- [ ] T060 [US4] Call `changeDccAddress` command on save
-- [ ] T061 [US4] Refresh roster table after successful address change
+- [x] T056 [US4] Create `DccAddressEditor.svelte` modal/inline editor component in `src/lib/features/digital-roster/components/`
+- [x] T057 [US4] Implement address input with validation (1-9999 range)
+- [x] T058 [US4] Call `checkDccAddressDuplicate` on address change to show warning
+- [x] T059 [US4] Display duplicate warning message (soft warning, allow save)
+- [x] T060 [US4] Call `changeDccAddress` command on save
+- [x] T061 [US4] Refresh roster table after successful address change
 
 ### Integration
 
-- [ ] T062 [US4] Add "Edit" action button to roster table rows
-- [ ] T063 [US4] Wire edit button to open DccAddressEditor
+- [x] T062 [US4] Add "Edit" action button to roster table rows
+- [x] T063 [US4] Wire edit button to open DccAddressEditor
 
 **Checkpoint**: Users can change DCC addresses with duplicate detection.
 
@@ -176,20 +176,20 @@
 
 ### Drawer Component
 
-- [ ] T064 [US5] Create `DecoderInstallDrawer.svelte` component in `src/lib/features/digital-roster/components/`
-- [ ] T065 [US5] Implement right-sliding drawer using Skeleton UI Drawer
-- [ ] T066 [US5] Add rolling stock dropdown (from `getInstallableRollingStocks`)
-- [ ] T067 [US5] Add decoder dropdown (from `getDecoders`)
-- [ ] T068 [US5] Add installation date picker with today as default
-- [ ] T069 [US5] Add DCC address input with validation
-- [ ] T070 [US5] Check for duplicate address and show warning
-- [ ] T071 [US5] Call `newDigitalRollingStock` command on submit
-- [ ] T072 [US5] Close drawer and refresh roster on success
+- [x] T064 [US5] Create `DecoderInstallDrawer.svelte` component in `src/lib/features/digital-roster/components/`
+- [x] T065 [US5] Implement right-sliding drawer using Skeleton UI Drawer
+- [x] T066 [US5] Add rolling stock dropdown (from `getInstallableRollingStocks`)
+- [x] T067 [US5] Add decoder dropdown (from `getDecoders`)
+- [x] T068 [US5] Add installation date picker with today as default
+- [x] T069 [US5] Add DCC address input with validation
+- [x] T070 [US5] Check for duplicate address and show warning
+- [x] T071 [US5] Call `newDigitalRollingStock` command on submit
+- [x] T072 [US5] Close drawer and refresh roster on success
 
 ### Integration
 
-- [ ] T073 [US5] Add "Install Decoder" button to page header
-- [ ] T074 [US5] Wire button to open DecoderInstallDrawer
+- [x] T073 [US5] Add "Install Decoder" button to page header
+- [x] T074 [US5] Wire button to open DecoderInstallDrawer
 
 **Checkpoint**: Users can install decoders on their rolling stocks.
 
@@ -203,10 +203,10 @@
 
 ### Implementation
 
-- [ ] T075 [US6] Detect if selected rolling stock has existing decoder (from `InstallableRollingStockView.hasDecoder`)
-- [ ] T076 [US6] Show confirmation dialog when replacing existing decoder
-- [ ] T077 [US6] Call `changeDecoder` command for replacement (instead of new)
-- [ ] T078 [US6] Handle cancel action - return to form without changes
+- [x] T075 [US6] Detect if selected rolling stock has existing decoder (from `InstallableRollingStockView.hasDecoder`)
+- [x] T076 [US6] Show confirmation dialog when replacing existing decoder
+- [x] T077 [US6] Call `changeDecoder` command for replacement (instead of new)
+- [x] T078 [US6] Handle cancel action - return to form without changes
 
 **Checkpoint**: Users can replace existing decoders with confirmation.
 
@@ -216,11 +216,11 @@
 
 **Purpose**: Final cleanup and verification
 
-- [ ] T079 [P] Ensure all UI strings use Paraglide (no hardcoded text)
-- [ ] T080 [P] Add loading states to all async operations
-- [ ] T081 [P] Add error handling with toast notifications
-- [ ] T082 Run full verification: `pnpm rust:check && pnpm rust:clippy && pnpm rust:test`
-- [ ] T083 Run full verification: `pnpm lint && pnpm check && pnpm test`
+- [x] T079 [P] Ensure all UI strings use Paraglide (no hardcoded text)
+- [x] T080 [P] Add loading states to all async operations
+- [x] T081 [P] Add error handling with toast notifications
+- [x] T082 Run full verification: `pnpm rust:check && pnpm rust:clippy && pnpm rust:test`
+- [x] T083 Run full verification: `pnpm lint && pnpm check && pnpm test`
 - [ ] T084 Run quickstart.md validation checklist
 - [ ] T085 Manual E2E test of all user stories
 

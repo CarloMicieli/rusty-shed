@@ -1,17 +1,18 @@
 use crate::core::domain::IdProvider;
 use crate::core::infrastructure::error::CommandError;
-use crate::dcc_inventory::application::DigitalRollingStockView;
-use crate::dcc_inventory::application::NewDigitalRollingStockUseCase;
 use crate::dcc_inventory::application::change_dcc_address::ChangeDccAddressInput;
 use crate::dcc_inventory::application::change_decoder::ChangeDecoderInput;
 use crate::dcc_inventory::application::new_digital_rolling_stock::NewDigitalRollingStockInput;
 use crate::dcc_inventory::application::{
-    ChangeDccAddressUseCase, ChangeDecoderUseCase, GetDigitalRollingStocksUseCase,
+    ChangeDccAddressUseCase, ChangeDecoderUseCase, CheckDuplicateAddressResult,
+    CheckDuplicateAddressUseCase, DigitalRollingStockView, DigitalSummary, GetDecodersUseCase,
+    GetDigitalRollingStocksUseCase, GetDigitalSummaryUseCase, GetInstallableRollingStocksUseCase,
+    InstallableRollingStockView, NewDigitalRollingStockUseCase,
 };
-use crate::dcc_inventory::domain::DigitalRollingStockId;
+use crate::dcc_inventory::domain::{DccAddress, Decoder, DigitalRollingStockId};
 use crate::dcc_inventory::interface::command_args::{
-    ChangeDccAddressArgs, ChangeDecoderArgs, NewDigitalRollingStockArgs,
-    ResponseNewDigitalRollingStock,
+    ChangeDccAddressArgs, ChangeDecoderArgs, CheckDccAddressDuplicateArgs,
+    NewDigitalRollingStockArgs, ResponseNewDigitalRollingStock,
 };
 use crate::state::AppState;
 use log::info;
@@ -125,6 +126,106 @@ pub async fn get_digital_rolling_stocks(
     let mut unit_of_work = state.unit_of_work().await?;
 
     let list = GetDigitalRollingStocksUseCase::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(list)
+}
+
+/// A command handler to get the digital rolling stock summary.
+///
+/// # Arguments
+/// - `state`: The application state.
+///
+/// # Returns
+/// A result containing the digital summary or a command error.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_digital_summary(
+    state: tauri::State<'_, AppState>,
+) -> Result<DigitalSummary, CommandError> {
+    info!("Getting digital summary");
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let summary = GetDigitalSummaryUseCase::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(summary)
+}
+
+/// A command handler to get all available decoders.
+///
+/// # Arguments
+/// - `state`: The application state.
+///
+/// # Returns
+/// A result containing a list of decoders or a command error.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_decoders(state: tauri::State<'_, AppState>) -> Result<Vec<Decoder>, CommandError> {
+    info!("Getting decoders");
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let decoders = GetDecodersUseCase::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(decoders)
+}
+
+/// A command handler to check if a DCC address is a duplicate.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `args`: The command arguments.
+///
+/// # Returns
+/// A result containing the duplicate check result or a command error.
+#[tauri::command]
+#[specta::specta]
+pub async fn check_dcc_address_duplicate(
+    state: tauri::State<'_, AppState>,
+    args: CheckDccAddressDuplicateArgs,
+) -> Result<CheckDuplicateAddressResult, CommandError> {
+    info!("Checking DCC address duplicate: {:?}", args);
+
+    let dcc_address = DccAddress::new(args.dcc_address).map_err(CommandError::from)?;
+
+    let exclude_id = if let Some(id_str) = args.exclude_id {
+        let id = DigitalRollingStockId::try_from(id_str.as_str())
+            .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        Some(id)
+    } else {
+        None
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let result =
+        CheckDuplicateAddressUseCase::execute(&mut unit_of_work, dcc_address, exclude_id).await?;
+
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(result)
+}
+
+/// A command handler to get all installable rolling stocks.
+///
+/// # Arguments
+/// - `state`: The application state.
+///
+/// # Returns
+/// A result containing a list of installable rolling stock views or a command error.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_installable_rolling_stocks(
+    state: tauri::State<'_, AppState>,
+) -> Result<Vec<InstallableRollingStockView>, CommandError> {
+    info!("Getting installable rolling stocks");
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let list = GetInstallableRollingStocksUseCase::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(list)

@@ -1,8 +1,13 @@
 use std::collections::HashMap;
 
+use crate::catalog::domain::railway_model::{PowerMethod, RollingStockCategory};
+use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::dcc_inventory::application::{DecoderView, DigitalRollingStockView};
+use crate::dcc_inventory::application::{
+    CheckDuplicateAddressResult, DecoderView, DigitalRollingStockView, DigitalSummary,
+    InstallableRollingStockView,
+};
 use crate::dcc_inventory::domain::{
     DccAddress, DccInventoryUowExt, Decoder, DigitalRollingStock, DigitalRollingStockId,
     DigitalRollingStockRepository,
@@ -150,28 +155,59 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             manufacturer_map.insert(m.id, m.name);
         }
 
+        // Enhanced query with catalog data JOIN and Function decoder exclusion
         let sql = r#"
-            SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id
-            FROM digital_rolling_stocks
-            ORDER BY id
+            SELECT 
+                drs.id,
+                drs.owned_rolling_stock_id,
+                drs.dcc_address,
+                drs.installed_decoder_id,
+                rs.category,
+                rs.road_number,
+                rs.series_code,
+                rs.series AS description,
+                rc.name AS railway_company_name,
+                rm.scale,
+                rm.power_method
+            FROM digital_rolling_stocks drs
+            JOIN decoders d ON drs.installed_decoder_id = d.id
+            JOIN owned_rolling_stocks ors ON drs.owned_rolling_stock_id = ors.id
+            LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
+            LEFT JOIN railway_companies rc ON rs.railway_company_id = rc.id
+            LEFT JOIN railway_models rm ON rs.railway_model_id = rm.id
+            WHERE d.decoder_type != 'FUNCTION'
+            ORDER BY drs.dcc_address ASC
         "#;
 
-        let digital_rolling_stock_rows = sqlx::query_as::<_, DigitalRollingStockRow>(sql)
+        #[derive(sqlx::FromRow)]
+        struct EnrichedRow {
+            id: DigitalRollingStockId,
+            owned_rolling_stock_id: crate::collecting::domain::OwnedRollingStockId,
+            dcc_address: i32,
+            installed_decoder_id: Option<crate::dcc_inventory::domain::DecoderId>,
+            category: Option<String>,
+            road_number: Option<String>,
+            series_code: Option<String>,
+            description: Option<String>,
+            railway_company_name: Option<String>,
+            scale: Option<String>,
+            power_method: Option<String>,
+        }
+
+        let rows = sqlx::query_as::<_, EnrichedRow>(sql)
             .fetch_all(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
 
-        let mut out = Vec::with_capacity(digital_rolling_stock_rows.len());
+        let mut out = Vec::with_capacity(rows.len());
 
-        for digital_rolling_stock_row in digital_rolling_stock_rows {
-            let dcc = DccAddress::new(digital_rolling_stock_row.dcc_address)
+        for row in rows {
+            let dcc = DccAddress::new(row.dcc_address.try_into().unwrap_or(1))
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-            let decoder_id = digital_rolling_stock_row
-                .installed_decoder_id
-                .ok_or_else(|| {
-                    DomainError::Validation("missing decoder for digital rolling stock".to_string())
-                })?;
+            let decoder_id = row.installed_decoder_id.ok_or_else(|| {
+                DomainError::Validation("missing decoder for digital rolling stock".to_string())
+            })?;
 
             let decoder = decoder_map
                 .get(&decoder_id)
@@ -192,11 +228,163 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
                 decoder_interface: decoder.decoder_interface,
             };
 
+            // Parse catalog enums from strings
+            let category = row
+                .category
+                .and_then(|c| c.parse::<RollingStockCategory>().ok())
+                .unwrap_or(RollingStockCategory::Locomotive);
+
+            let scale = row.scale.as_deref().and_then(|s| Scale::try_from(s).ok());
+            let power_method = row
+                .power_method
+                .as_deref()
+                .and_then(|p| PowerMethod::try_from(p).ok());
+
             out.push(DigitalRollingStockView {
-                id: digital_rolling_stock_row.id,
-                owned_rolling_stock_id: digital_rolling_stock_row.owned_rolling_stock_id,
+                id: row.id,
+                owned_rolling_stock_id: row.owned_rolling_stock_id,
                 dcc_address: dcc,
                 decoder: decoder_view,
+                category,
+                railway_company_name: row.railway_company_name,
+                scale,
+                power_method,
+                road_number: row.road_number,
+                series_code: row.series_code,
+                description: row.description,
+            });
+        }
+
+        Ok(out)
+    }
+
+    async fn get_digital_summary(&mut self) -> Result<DigitalSummary, DomainError> {
+        let sql = r#"
+            SELECT
+                COALESCE(SUM(CASE WHEN rs.is_dummy = 0 OR rs.is_dummy IS NULL THEN 1 ELSE 0 END), 0) as total_non_dummy,
+                COALESCE(SUM(
+                    CASE
+                        WHEN (rs.is_dummy = 0 OR rs.is_dummy IS NULL)
+                        AND (rs.control IN ('DCC_SOUND', 'DCC_FITTED') OR drs.id IS NOT NULL)
+                        THEN 1
+                        ELSE 0
+                    END
+                ), 0) as digital_count
+            FROM owned_rolling_stocks ors
+            LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
+            LEFT JOIN digital_rolling_stocks drs ON drs.owned_rolling_stock_id = ors.id
+            JOIN collection_items ci ON ors.collection_item_id = ci.id
+            WHERE ci.removed_date IS NULL
+        "#;
+
+        #[derive(sqlx::FromRow)]
+        struct SummaryRow {
+            total_non_dummy: i64,
+            digital_count: i64,
+        }
+
+        let row = sqlx::query_as::<_, SummaryRow>(sql)
+            .fetch_one(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let total_non_dummy = row.total_non_dummy as u32;
+        let digital_count = row.digital_count as u32;
+        let percentage = if total_non_dummy > 0 {
+            (digital_count as f32 / total_non_dummy as f32) * 100.0
+        } else {
+            0.0
+        };
+
+        Ok(DigitalSummary {
+            total_non_dummy,
+            digital_count,
+            percentage,
+        })
+    }
+
+    async fn check_address_exists(
+        &mut self,
+        address: DccAddress,
+        exclude_id: Option<DigitalRollingStockId>,
+    ) -> Result<CheckDuplicateAddressResult, DomainError> {
+        let sql = r#"
+            SELECT id
+            FROM digital_rolling_stocks
+            WHERE dcc_address = ?1
+            AND id != COALESCE(?2, '')
+            LIMIT 1
+        "#;
+
+        let exclude_id_str = exclude_id
+            .as_ref()
+            .map(|id| id.to_string())
+            .unwrap_or_default();
+
+        let row: Option<(DigitalRollingStockId,)> = sqlx::query_as(sql)
+            .bind(*address)
+            .bind(&exclude_id_str)
+            .fetch_optional(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(CheckDuplicateAddressResult {
+            is_duplicate: row.is_some(),
+            existing_rolling_stock_id: row.map(|(id,)| id),
+        })
+    }
+
+    async fn find_installable_rolling_stocks(
+        &mut self,
+    ) -> Result<Vec<InstallableRollingStockView>, DomainError> {
+        let sql = r#"
+            SELECT 
+                ors.id AS owned_rolling_stock_id,
+                rs.category,
+                rs.road_number,
+                rs.series_code,
+                rc.name AS railway_company_name,
+                CASE WHEN drs.id IS NOT NULL THEN 1 ELSE 0 END AS has_decoder
+            FROM owned_rolling_stocks ors
+            LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
+            LEFT JOIN railway_companies rc ON rs.railway_company_id = rc.id
+            LEFT JOIN digital_rolling_stocks drs ON drs.owned_rolling_stock_id = ors.id
+            JOIN collection_items ci ON ors.collection_item_id = ci.id
+            WHERE ci.removed_date IS NULL
+            AND (rs.is_dummy = 0 OR rs.is_dummy IS NULL)
+            ORDER BY rs.road_number ASC, ors.id ASC
+        "#;
+
+        #[derive(sqlx::FromRow)]
+        struct InstallableRow {
+            owned_rolling_stock_id: crate::collecting::domain::OwnedRollingStockId,
+            category: Option<String>,
+            road_number: Option<String>,
+            series_code: Option<String>,
+            railway_company_name: Option<String>,
+            has_decoder: i32,
+        }
+
+        let rows = sqlx::query_as::<_, InstallableRow>(sql)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let mut out = Vec::with_capacity(rows.len());
+
+        for row in rows {
+            let category = row
+                .category
+                .and_then(|c| c.parse::<RollingStockCategory>().ok())
+                .unwrap_or(RollingStockCategory::Locomotive);
+
+            out.push(InstallableRollingStockView {
+                owned_rolling_stock_id: row.owned_rolling_stock_id,
+                category,
+                railway_company_name: row.railway_company_name,
+                road_number: row.road_number,
+                series_code: row.series_code,
+                has_decoder: row.has_decoder != 0,
             });
         }
 
