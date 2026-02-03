@@ -8,7 +8,8 @@
     Settings,
     TrainFront,
     Train,
-    Cpu
+    Cpu,
+    Wrench
   } from 'lucide-svelte';
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
@@ -106,6 +107,17 @@
         >
           <Cpu size={20} />
           <span class="font-medium tracking-wide">{m.app_digital_roster()}</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href={resolve('/my-maintenance')}
+          class="hover:variant-soft-primary btn w-full justify-start gap-3"
+          class:variant-filled-primary={(page.url.pathname as string) === '/my-maintenance'}
+          class:variant-ghost-surface={(page.url.pathname as string) !== '/my-maintenance'}
+        >
+          <Wrench size={20} />
+          <span class="font-medium tracking-wide">{m.app_maintenance()}</span>
         </a>
       </li>
     </ul>

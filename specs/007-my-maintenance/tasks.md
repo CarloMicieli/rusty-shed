@@ -25,9 +25,9 @@
 
 **Purpose**: Project initialization and feature structure
 
-- [ ] T001 Create maintenance feature directory structure at `src/lib/features/maintenance/`
-- [ ] T002 [P] Create feature barrel export at `src/lib/features/maintenance/index.ts`
-- [ ] T003 [P] Create route directory at `src/routes/my-maintenance/`
+- [x] T001 Create maintenance feature directory structure at `src/lib/features/maintenance/`
+- [x] T002 [P] Create feature barrel export at `src/lib/features/maintenance/index.ts`
+- [x] T003 [P] Create route directory at `src/routes/my-maintenance/`
 
 ---
 
@@ -39,11 +39,11 @@
 
 - [x] T003a [Backend] Update `list_due_card_views` query in `src-tauri/src/maintenance/infrastructure/sqlite_repository.rs` to JOIN through owned_rolling_stocks → rolling_stocks → railway_models → manufacturers and populate manufacturer_name, product_code, series, and road_number fields ✅ DONE
 - [x] T003b [Backend] Regenerate TypeScript bindings by running `pnpm tauri:codegen` to update `MaintenanceCardView` type in frontend ✅ DONE
-- [ ] T004 Create MaintenanceService class at `src/lib/features/maintenance/services/MaintenanceService.ts` wrapping Tauri commands (`getMaintenanceDashboard`, `addMaintenanceCard`, `addMaintenanceEvent`)
-- [ ] T005 Create MaintenanceState class at `src/lib/features/maintenance/MaintenanceState.svelte.ts` with reactive state for loading, error, and maintenance cards
-- [ ] T006 [P] Add i18n message keys for maintenance feature to `messages/en.json` (page title, labels, buttons, urgency indicators, empty states)
-- [ ] T007 [P] Add i18n message keys for maintenance feature to `messages/it.json` (Italian translations)
-- [ ] T008 [P] Create types file at `src/lib/features/maintenance/types.ts` for UI-specific types (urgency levels, form state)
+- [x] T004 Create MaintenanceService class at `src/lib/features/maintenance/services/MaintenanceService.ts` wrapping Tauri commands (`getMaintenanceDashboard`, `addMaintenanceCard`, `addMaintenanceEvent`)
+- [x] T005 Create MaintenanceState class at `src/lib/features/maintenance/MaintenanceState.svelte.ts` with reactive state for loading, error, and maintenance cards
+- [x] T006 [P] Add i18n message keys for maintenance feature to `messages/en.json` (page title, labels, buttons, urgency indicators, empty states)
+- [x] T007 [P] Add i18n message keys for maintenance feature to `messages/it.json` (Italian translations)
+- [x] T008 [P] Create types file at `src/lib/features/maintenance/types.ts` for UI-specific types (urgency levels, form state)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -57,13 +57,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 Create MaintenanceCardItem component at `src/lib/features/maintenance/components/MaintenanceCardItem.svelte` showing manufacturer, product code, series code, due date, and urgency styling
-- [ ] T010 Create getUrgencyLevel utility function at `src/lib/features/maintenance/utils/urgency.ts` to calculate urgency (overdue, warning, normal) from due date
-- [ ] T011 [P] [US1] Create MaintenanceCardList component at `src/lib/features/maintenance/components/MaintenanceCardList.svelte` rendering up to 10 cards sorted by due date
-- [ ] T012 [US1] Create page component at `src/routes/my-maintenance/+page.svelte` with quick action buttons layout and MaintenanceCardList integration
-- [ ] T013 [US1] Add empty state component at `src/lib/features/maintenance/components/EmptyMaintenanceState.svelte` for when no maintenance cards exist
-- [ ] T014 [US1] Integrate MaintenanceState context provider in page and load data on mount
-- [ ] T015 [US1] Add navigation link to My Maintenance page in `src/lib/components/SidebarNavigation.svelte`
+- [x] T009 Create MaintenanceCardItem component at `src/lib/features/maintenance/components/MaintenanceCardItem.svelte` showing manufacturer, product code, series code, due date, and urgency styling
+- [x] T010 Create getUrgencyLevel utility function at `src/lib/features/maintenance/utils/urgency.ts` to calculate urgency (overdue, warning, normal) from due date
+- [x] T011 [P] [US1] Create MaintenanceCardList component at `src/lib/features/maintenance/components/MaintenanceCardList.svelte` rendering up to 10 cards sorted by due date
+- [x] T012 [US1] Create page component at `src/routes/my-maintenance/+page.svelte` with quick action buttons layout and MaintenanceCardList integration
+- [x] T013 [US1] Add empty state component at `src/lib/features/maintenance/components/EmptyMaintenanceState.svelte` for when no maintenance cards exist
+- [x] T014 [US1] Integrate MaintenanceState context provider in page and load data on mount
+- [x] T015 [US1] Add navigation link to My Maintenance page in `src/lib/components/SidebarNavigation.svelte`
 - [ ] T016 [P] [US1] Add navigation link to My Maintenance page in `src/lib/components/BottomNavigation.svelte`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can view their maintenance overview
@@ -78,11 +78,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Create RollingStockSelector component at `src/lib/features/maintenance/components/RollingStockSelector.svelte` for selecting owned rolling stock without existing maintenance cards
-- [ ] T018 [US2] Create AddMaintenanceCardModal component at `src/lib/features/maintenance/components/AddMaintenanceCardModal.svelte` with rolling stock selection and form submission
-- [ ] T019 [US2] Add `createMaintenanceCard` method to MaintenanceState for handling form submission and state update
-- [ ] T020 [US2] Wire "Add Maintenance Card" quick action button in page to open AddMaintenanceCardModal
-- [ ] T021 [US2] Add success/error toast notifications for maintenance card creation
+- [x] T017 [US2] Create RollingStockSelector component at `src/lib/features/maintenance/components/RollingStockSelector.svelte` for selecting owned rolling stock without existing maintenance cards
+- [x] T018 [US2] Create AddMaintenanceCardModal component at `src/lib/features/maintenance/components/AddMaintenanceCardModal.svelte` with rolling stock selection and form submission
+- [x] T019 [US2] Add `createMaintenanceCard` method to MaintenanceState for handling form submission and state update
+- [x] T020 [US2] Wire "Add Maintenance Card" quick action button in page to open AddMaintenanceCardModal
+- [x] T021 [US2] Add success/error toast notifications for maintenance card creation
 
 **Checkpoint**: At this point, User Stories 1 AND 2 are functional - users can view and create maintenance cards
 
@@ -96,11 +96,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Create MaintenanceCardSelector component at `src/lib/features/maintenance/components/MaintenanceCardSelector.svelte` for selecting existing maintenance cards
-- [ ] T023 [US3] Create AddMaintenanceEventModal component at `src/lib/features/maintenance/components/AddMaintenanceEventModal.svelte` with card selection, date picker, maintenance type, and notes
-- [ ] T024 [US3] Add `addMaintenanceEvent` method to MaintenanceState for handling event submission and refreshing card list
-- [ ] T025 [US3] Wire "Add Maintenance Event" quick action button in page to open AddMaintenanceEventModal
-- [ ] T026 [US3] Add success/error toast notifications for maintenance event logging
+- [x] T022 [US3] Create MaintenanceCardSelector component at `src/lib/features/maintenance/components/MaintenanceCardSelector.svelte` for selecting existing maintenance cards
+- [x] T023 [US3] Create AddMaintenanceEventModal component at `src/lib/features/maintenance/components/AddMaintenanceEventModal.svelte` with card selection, date picker, maintenance type, and notes
+- [x] T024 [US3] Add `addMaintenanceEvent` method to MaintenanceState for handling event submission and refreshing card list
+- [x] T025 [US3] Wire "Add Maintenance Event" quick action button in page to open AddMaintenanceEventModal
+- [x] T026 [US3] Add success/error toast notifications for maintenance event logging
 
 **Checkpoint**: All user stories are now independently functional
 
@@ -113,9 +113,9 @@
 - [ ] T027 Add loading skeleton states to MaintenanceCardList component
 - [ ] T028 [P] Add error boundary and retry functionality to page component
 - [ ] T029 [P] Update `src/lib/features/maintenance/README.md` with feature documentation
-- [ ] T030 Run `pnpm format` and `pnpm lint` to ensure code style compliance
-- [ ] T031 Run `pnpm check` to verify TypeScript types
-- [ ] T032 Run `pnpm test` to verify no regressions
+- [x] T030 Run `pnpm format` and `pnpm lint` to ensure code style compliance
+- [x] T031 Run `pnpm check` to verify TypeScript types
+- [x] T032 Run `pnpm test` to verify no regressions
 
 ---
 

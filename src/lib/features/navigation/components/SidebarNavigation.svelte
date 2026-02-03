@@ -1,6 +1,15 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { LayoutDashboard, Library, Heart, Box, Settings, TrainFront, Train } from 'lucide-svelte';
+  import {
+    LayoutDashboard,
+    Library,
+    Heart,
+    Box,
+    Settings,
+    TrainFront,
+    Train,
+    Wrench
+  } from 'lucide-svelte';
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -86,6 +95,17 @@
         >
           <Box size={20} />
           <span class="font-medium tracking-wide">{m.app_depot()}</span>
+        </a>
+      </li>
+      <li>
+        <a
+          href={resolve('/my-maintenance')}
+          class="hover:variant-soft-primary btn w-full justify-start gap-3"
+          class:variant-filled-primary={(page.url.pathname as string) === '/my-maintenance'}
+          class:variant-ghost-surface={(page.url.pathname as string) !== '/my-maintenance'}
+        >
+          <Wrench size={20} />
+          <span class="font-medium tracking-wide">{m.app_maintenance()}</span>
         </a>
       </li>
     </ul>
