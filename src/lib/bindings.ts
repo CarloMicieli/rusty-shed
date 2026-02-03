@@ -1018,6 +1018,133 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Tauri command to get the current budget configuration.
+   *
+   * Returns `None` if no configuration has been set yet.
+   */
+  async getBudgetConfig(): Promise<Result<BudgetConfigDto | null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_budget_config') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to set or update the budget configuration.
+   */
+  async setBudgetConfig(args: SetBudgetConfigArgs): Promise<Result<BudgetConfigDto, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('set_budget_config', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to get monthly budget records for a year.
+   *
+   * Returns 12 monthly budget records with rollover calculations.
+   * If year is not specified, uses the current year.
+   */
+  async getMonthlyBudgetRecords(
+    args: GetMonthlyBudgetRecordsArgs
+  ): Promise<Result<MonthlyBudgetRecordDto[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_monthly_budget_records', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to get budget dashboard summary.
+   *
+   * Returns dashboard data for widgets (donut, bar chart, heatmap).
+   * Returns `None` if budget is not configured.
+   */
+  async getBudgetDashboard(): Promise<Result<BudgetDashboardSummary | null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_budget_dashboard') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to add a one-time budget injection.
+   *
+   * # Arguments
+   * * `state` - App state for database access
+   * * `args` - Arguments containing year, month, amount, and optional reason
+   *
+   * # Returns
+   * The created extra budget entry as a DTO.
+   */
+  async addExtraBudget(args: AddExtraBudgetArgs): Promise<Result<ExtraBudgetDto, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('add_extra_budget', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to remove an extra budget entry.
+   *
+   * # Arguments
+   * * `state` - App state for database access
+   * * `args` - Arguments containing the extra budget ID
+   */
+  async removeExtraBudget(args: RemoveExtraBudgetArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('remove_extra_budget', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to get all extra budget entries for a specific year.
+   *
+   * # Arguments
+   * * `state` - App state for database access
+   * * `args` - Arguments containing the year
+   *
+   * # Returns
+   * List of extra budget entries for the specified year.
+   */
+  async getExtraBudgets(
+    args: GetExtraBudgetsArgs
+  ): Promise<Result<ExtraBudgetDto[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_extra_budgets', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Tauri command to get quarterly summaries with category breakdown.
+   *
+   * # Arguments
+   * * `state` - App state for database access
+   * * `args` - Arguments containing year and optional currency
+   *
+   * # Returns
+   * List of quarterly summaries for the specified year, each with category breakdown.
+   */
+  async getQuarterlySummaries(
+    args: GetQuarterlySummariesArgs
+  ): Promise<Result<QuarterlySummary[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_quarterly_summaries', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
   async getImagePath(id: string, category: string): Promise<Result<string, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_image_path', { id, category }) };
@@ -1050,6 +1177,31 @@ export const commands = {
 
 /** user-defined types **/
 
+/**
+ * Arguments for adding an extra budget to a specific month.
+ */
+export type AddExtraBudgetArgs = {
+  /**
+   * Target year (2000-2100)
+   */
+  year: number;
+  /**
+   * Target month (1-12)
+   */
+  month: number;
+  /**
+   * Amount in minor currency units (must be positive)
+   */
+  amount: bigint;
+  /**
+   * Optional currency code (inherits from settings if not provided)
+   */
+  currency: string | null;
+  /**
+   * Optional reason for the extra budget
+   */
+  reason: string | null;
+};
 /**
  * Arguments for adding a maintenance record.
  */
@@ -1324,6 +1476,70 @@ export type BoxCondition =
    */
   | 'NO_BOX';
 /**
+ * Budget configuration DTO for transport layer.
+ */
+export type BudgetConfigDto = {
+  id: number;
+  mode: BudgetMode;
+  baseAmount: bigint;
+  monthlyAmount: bigint;
+  yearlyAmount: bigint;
+  currency: Currency;
+  lastResetYear: number;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+};
+/**
+ * Budget dashboard summary - aggregates all dashboard widgets data.
+ */
+export type BudgetDashboardSummary = {
+  /**
+   * Current month's remaining budget amount
+   */
+  remainingAmount: bigint;
+  /**
+   * Remaining as percentage (0.0 to 100.0+)
+   */
+  remainingPercentage: number;
+  /**
+   * Total available this month (base + extra + rollover)
+   */
+  totalAvailable: bigint;
+  /**
+   * Currency for all amounts
+   */
+  currency: Currency;
+  /**
+   * Monthly spending for bar chart (12 data points)
+   */
+  monthlySpending: MonthlySpendingPoint[];
+  /**
+   * Monthly budget goal line amount
+   */
+  monthlyGoal: bigint;
+  /**
+   * Quarterly activity for heatmap (up to 20 data points: 5 years × 4 quarters)
+   */
+  quarterlyActivity: QuarterlyActivityPoint[];
+};
+/**
+ * Budget mode - determines how the budget is set (yearly or monthly).
+ */
+export type BudgetMode =
+  /**
+   * Budget is configured as a yearly amount (divided by 12 for monthly).
+   */
+  | 'YEARLY'
+  /**
+   * Budget is configured as a monthly amount (multiplied by 12 for yearly).
+   */
+  | 'MONTHLY';
+/**
+ * Quarter enum for quarterly summaries.
+ */
+export type BudgetQuarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+/**
  * The enumeration of the railway model categories.
  */
 export type Category =
@@ -1362,6 +1578,10 @@ export type Category =
    * designed for passenger service on branch lines.
    */
   | 'RAILCARS';
+/**
+ * Spending breakdown for a single category in a quarter.
+ */
+export type CategorySpending = { category: Category; amount: MonetaryAmount; percentage: number };
 /**
  * Arguments for changing a DCC address.
  */
@@ -2500,6 +2720,19 @@ export type ElectricMultipleUnitType =
  */
 export type Epoch = string;
 /**
+ * Extra budget entry DTO.
+ */
+export type ExtraBudgetDto = {
+  id: string;
+  year: number;
+  month: number;
+  amount: bigint;
+  currency: Currency;
+  reason: string | null;
+  createdAt: string;
+  version: number;
+};
+/**
  * Represents the availability or relevance of a specific model feature.
  *
  * This is often used for technical specifications where a feature might
@@ -2630,6 +2863,37 @@ export type FreightCarType =
    * over each other, used for protecting steel coils or heavy machinery.
    */
   | 'TELESCOPE_HOOD_WAGONS';
+/**
+ * Arguments for querying extra budgets for a year.
+ */
+export type GetExtraBudgetsArgs = {
+  /**
+   * Year to query
+   */
+  year: number;
+};
+/**
+ * Arguments for querying monthly budget records.
+ */
+export type GetMonthlyBudgetRecordsArgs = {
+  /**
+   * Year to query (defaults to current year if not provided)
+   */
+  year: number | null;
+};
+/**
+ * Arguments for querying quarterly summaries.
+ */
+export type GetQuarterlySummariesArgs = {
+  /**
+   * Year to query (defaults to current year if not provided)
+   */
+  year: number | null;
+  /**
+   * Currency code (defaults to settings currency if not provided)
+   */
+  currency: string | null;
+};
 /**
  * View representation of rolling stock that can have a decoder installed
  */
@@ -2983,6 +3247,27 @@ export type MonetaryAmount = {
    */
   currency: Currency;
 };
+/**
+ * Monthly budget record DTO.
+ */
+export type MonthlyBudgetRecordDto = {
+  year: number;
+  month: number;
+  baseBudget: bigint;
+  extraBudget: bigint;
+  actualSpend: bigint;
+  rolloverIn: bigint;
+  rolloverOut: bigint;
+  available: bigint;
+  remaining: bigint;
+  remainingPercentage: number;
+  status: string;
+  currency: Currency;
+};
+/**
+ * Monthly spending point for bar chart.
+ */
+export type MonthlySpendingPoint = { month: number; amount: bigint; currency: Currency };
 /**
  * Arguments structure for moving an item between wishlists.
  */
@@ -3374,6 +3659,24 @@ export type Quarter =
    */
   | 'Q4';
 /**
+ * Quarterly activity point for heatmap.
+ */
+export type QuarterlyActivityPoint = {
+  year: number;
+  quarter: BudgetQuarter;
+  spendingLevel: SpendingLevel;
+  amount: bigint;
+};
+/**
+ * Summary of spending for a quarter with category breakdown.
+ */
+export type QuarterlySummary = {
+  year: number;
+  quarter: BudgetQuarter;
+  totalSpending: MonetaryAmount;
+  categoryBreakdown: CategorySpending[];
+};
+/**
  * Query criteria for retrieving the dashboard summary.
  */
 export type QueryCriteria = {
@@ -3549,6 +3852,15 @@ export type RailwayStatus =
    * The railway company has merged with another entity.
    */
   | 'MERGED';
+/**
+ * Arguments for removing an extra budget entry.
+ */
+export type RemoveExtraBudgetArgs = {
+  /**
+   * ID of the extra budget entry to remove
+   */
+  id: string;
+};
 /**
  * Command argument to rename a track inventory
  */
@@ -4128,6 +4440,23 @@ export type ServiceLevel =
   | 'SECOND_THIRD'
   | 'FIRST_SECOND_THIRD';
 /**
+ * Arguments for setting/updating the budget configuration.
+ */
+export type SetBudgetConfigArgs = {
+  /**
+   * Budget mode: YEARLY or MONTHLY
+   */
+  mode: BudgetMode;
+  /**
+   * Base amount in minor currency units (cents)
+   */
+  baseAmount: bigint;
+  /**
+   * Optional currency code (inherits from settings if not provided)
+   */
+  currency: string | null;
+};
+/**
  * Command argument to set the required quantity for a track item
  */
 export type SetItemRequiredArgs = {
@@ -4237,6 +4566,10 @@ export type SoldInfo = {
   seller: SellerId | null;
 };
 export type Source = 'Collection' | 'Wishlist';
+/**
+ * Spending level for heatmap visualization.
+ */
+export type SpendingLevel = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
 /**
  * The technical specification data for a rolling stock model
  */

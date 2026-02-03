@@ -1,6 +1,15 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { LayoutDashboard, Library, Heart, Box, Settings, Train, Cpu } from 'lucide-svelte';
+  import {
+    LayoutDashboard,
+    Library,
+    Heart,
+    Wallet,
+    Box,
+    Settings,
+    Train,
+    Cpu
+  } from 'lucide-svelte';
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -48,6 +57,15 @@
         {#if defaultWishlist}
           <span class="variant-soft-surface badge">{defaultWishlist.count}</span>
         {/if}
+      </a>
+      <a
+        href={resolve('/my-budget')}
+        class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
+        class:text-accent-500={pathname === '/my-budget'}
+        class:text-surface-400={pathname !== '/my-budget'}
+      >
+        <Wallet size={20} />
+        <span class="text-[10px] font-bold tracking-wider uppercase">{m.budget_title()}</span>
       </a>
       <a
         href={resolve('/my-tracks')}

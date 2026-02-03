@@ -1,3 +1,4 @@
+pub mod budget;
 pub mod catalog;
 pub mod collecting;
 pub mod core;
@@ -13,6 +14,7 @@ pub mod wishlist;
 #[cfg(test)]
 pub mod test_utils;
 
+use crate::budget::interface::command_handlers as budget_command_handlers;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::catalog::interface::manufacturers as manufacturers_command_handlers;
 use crate::catalog::interface::railway_companies as railway_companies_command_handlers;
@@ -180,6 +182,14 @@ pub fn run() {
         dcc_inventory_command_handlers::get_decoders,
         dcc_inventory_command_handlers::check_dcc_address_duplicate,
         dcc_inventory_command_handlers::get_installable_rolling_stocks,
+        budget_command_handlers::get_budget_config,
+        budget_command_handlers::set_budget_config,
+        budget_command_handlers::get_monthly_budget_records,
+        budget_command_handlers::get_budget_dashboard,
+        budget_command_handlers::add_extra_budget,
+        budget_command_handlers::remove_extra_budget,
+        budget_command_handlers::get_extra_budgets,
+        budget_command_handlers::get_quarterly_summaries,
         get_image_path,
         get_settings,
         update_settings

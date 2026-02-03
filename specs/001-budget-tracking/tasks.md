@@ -25,11 +25,11 @@
 
 **Purpose**: Create module structure and database schema
 
-- [ ] T001 Create database migration file at src-tauri/migrations/0007_create_budget_schema.sql with budget_config and extra_budgets tables
-- [ ] T002 Create budget module structure with mod.rs files at src-tauri/src/budget/{mod.rs,domain/mod.rs,application/mod.rs,infrastructure/mod.rs,interface/mod.rs}
-- [ ] T003 Register budget module in src-tauri/src/lib.rs
-- [ ] T004 [P] Create frontend feature directory structure at src/lib/features/budget/{index.ts,services/,components/}
-- [ ] T005 [P] Add budget-related Paraglide message keys to messages/en.json and messages/it.json
+- [x] T001 Create database migration file at src-tauri/migrations/0009_create_budget_schema.sql with budget_config and extra_budgets tables
+- [x] T002 Create budget module structure with mod.rs files at src-tauri/src/budget/{mod.rs,domain/mod.rs,application/mod.rs,infrastructure/mod.rs,interface/mod.rs}
+- [x] T003 Register budget module in src-tauri/src/lib.rs
+- [x] T004 [P] Create frontend feature directory structure at src/lib/features/budget/{index.ts,services/,components/}
+- [x] T005 [P] Add budget-related Paraglide message keys to messages/en.json and messages/it.json
 
 ---
 
@@ -41,25 +41,25 @@
 
 ### Domain Layer (src-tauri/src/budget/domain/)
 
-- [ ] T006 Create BudgetMode enum in src-tauri/src/budget/domain/budget_mode.rs with Yearly/Monthly variants and sqlx::Type derive
-- [ ] T007 Create BudgetConfigId newtype in src-tauri/src/budget/domain/budget_config_id.rs
-- [ ] T008 Create ExtraBudgetId newtype in src-tauri/src/budget/domain/extra_budget_id.rs
-- [ ] T009 [P] Create BudgetEvent enum in src-tauri/src/budget/domain/budget_events.rs with BudgetConfigured, ExtraBudgetAdded, ExtraBudgetRemoved, AnnualResetPerformed variants
-- [ ] T010 Create BudgetConfiguration aggregate in src-tauri/src/budget/domain/budget_configuration.rs with monthly_amount(), yearly_amount() methods and pending_events
-- [ ] T011 [P] Create ExtraBudgetEntry value object in src-tauri/src/budget/domain/extra_budget_entry.rs
-- [ ] T012 Create BudgetRepository trait in src-tauri/src/budget/domain/repository.rs
+- [x] T006 Create BudgetMode enum in src-tauri/src/budget/domain/budget_mode.rs with Yearly/Monthly variants and sqlx::Type derive
+- [x] T007 Create BudgetConfigId newtype in src-tauri/src/budget/domain/budget_config_id.rs
+- [x] T008 Create ExtraBudgetId newtype in src-tauri/src/budget/domain/extra_budget_id.rs
+- [x] T009 [P] Create BudgetEvent enum in src-tauri/src/budget/domain/budget_events.rs with BudgetConfigured, ExtraBudgetAdded, ExtraBudgetRemoved, AnnualResetPerformed variants
+- [x] T010 Create BudgetConfiguration aggregate in src-tauri/src/budget/domain/budget_configuration.rs with monthly_amount(), yearly_amount() methods and pending_events
+- [x] T011 [P] Create ExtraBudgetEntry value object in src-tauri/src/budget/domain/extra_budget_entry.rs
+- [x] T012 Create BudgetRepository trait in src-tauri/src/budget/domain/repository.rs
 
 ### Infrastructure Layer (src-tauri/src/budget/infrastructure/)
 
-- [ ] T013 Create BudgetConfigRow and ExtraBudgetRow structs in src-tauri/src/budget/infrastructure/entities.rs
-- [ ] T014 Create row_to_budget_config and row_to_extra_budget mappers in src-tauri/src/budget/infrastructure/mappers.rs
-- [ ] T015 Implement SQL queries for budget_config CRUD in src-tauri/src/budget/infrastructure/database.rs
-- [ ] T016 Implement SQL queries for extra_budgets CRUD in src-tauri/src/budget/infrastructure/database.rs
-- [ ] T017 Implement BudgetRepository trait for SqliteUnitOfWork in src-tauri/src/budget/infrastructure/repositories.rs
+- [x] T013 Create BudgetConfigRow and ExtraBudgetRow structs in src-tauri/src/budget/infrastructure/entities.rs
+- [x] T014 Create row_to_budget_config and row_to_extra_budget mappers in src-tauri/src/budget/infrastructure/mappers.rs
+- [x] T015 Implement SQL queries for budget_config CRUD in src-tauri/src/budget/infrastructure/database.rs
+- [x] T016 Implement SQL queries for extra_budgets CRUD in src-tauri/src/budget/infrastructure/database.rs
+- [x] T017 Implement BudgetRepository trait for SqliteUnitOfWork in src-tauri/src/budget/infrastructure/repositories.rs
 
 ### Interface Layer (src-tauri/src/budget/interface/)
 
-- [ ] T018 Create transport DTOs (SetBudgetConfigArgs, AddExtraBudgetArgs, etc.) in src-tauri/src/budget/interface/command_args.rs with validator::Validate derives
+- [x] T018 Create transport DTOs (SetBudgetConfigArgs, AddExtraBudgetArgs, etc.) in src-tauri/src/budget/interface/command_args.rs with validator::Validate derives
 
 **Checkpoint**: Foundation ready - Run `cargo check` and `cargo clippy` to verify compilation
 
@@ -73,18 +73,18 @@
 
 ### Backend Implementation
 
-- [ ] T019 [US1] Implement SetBudgetUseCase in src-tauri/src/budget/application/set_budget.rs with input validation and domain event emission
-- [ ] T020 [US1] Create get_budget_config Tauri command handler in src-tauri/src/budget/interface/command_handlers.rs
-- [ ] T021 [US1] Create set_budget_config Tauri command handler in src-tauri/src/budget/interface/command_handlers.rs
-- [ ] T022 [US1] Register budget commands in Tauri command builder (src-tauri/src/lib.rs or main.rs)
+- [x] T019 [US1] Implement SetBudgetUseCase in src-tauri/src/budget/application/set_budget.rs with input validation and domain event emission
+- [x] T020 [US1] Create get_budget_config Tauri command handler in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T021 [US1] Create set_budget_config Tauri command handler in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T022 [US1] Register budget commands in Tauri command builder (src-tauri/src/lib.rs or main.rs)
 
 ### Frontend Implementation
 
-- [ ] T023 [US1] Create budget.service.ts in src/lib/features/budget/services/ with getBudgetConfig() and setBudgetConfig() invoke wrappers
-- [ ] T024 [US1] Create BudgetState.svelte.ts controller in src/lib/features/budget/ with $state for config and load/save methods
-- [ ] T025 [US1] Create BudgetConfigForm.svelte component in src/lib/features/budget/components/ with yearly/monthly toggle and amount input
-- [ ] T026 [US1] Create budget management route at src/routes/my-budget/+page.svelte with BudgetConfigForm
-- [ ] T027 [US1] Add navigation link to my-budget in app navigation
+- [x] T023 [US1] Create budget.service.ts in src/lib/features/budget/services/ with getBudgetConfig() and setBudgetConfig() invoke wrappers
+- [x] T024 [US1] Create BudgetState.svelte.ts controller in src/lib/features/budget/ with $state for config and load/save methods
+- [x] T025 [US1] Create BudgetConfigForm.svelte component in src/lib/features/budget/components/ with yearly/monthly toggle and amount input
+- [x] T026 [US1] Create budget management route at src/routes/my-budget/+page.svelte with BudgetConfigForm
+- [x] T027 [US1] Add navigation link to my-budget in app navigation
 
 **Checkpoint**: User Story 1 complete - Can set and persist budget configuration
 
@@ -98,18 +98,18 @@
 
 ### Backend Implementation
 
-- [ ] T028 [US2] Create MonthlyBudgetRecord read model in src-tauri/src/budget/domain/monthly_budget_record.rs with available(), remaining(), remaining_percentage() methods
-- [ ] T029 [US2] Create MonthStatus enum (Projected/InProgress/Completed) in src-tauri/src/budget/domain/month_status.rs
-- [ ] T030 [US2] Implement calculate_rollover_chain function in src-tauri/src/budget/application/budget_query.rs that derives rollover from spending data
-- [ ] T031 [US2] Implement SQL query to aggregate monthly spending from collection_items.purchase_info in src-tauri/src/budget/infrastructure/database.rs
-- [ ] T032 [US2] Create get_monthly_budget_records Tauri command in src-tauri/src/budget/interface/command_handlers.rs
-- [ ] T033 [US2] Implement annual reset check in budget query (compare last_reset_year with current year)
+- [x] T028 [US2] Create MonthlyBudgetRecord read model in src-tauri/src/budget/domain/monthly_budget_record.rs with available(), remaining(), remaining_percentage() methods
+- [x] T029 [US2] Create MonthStatus enum (Projected/InProgress/Completed) in src-tauri/src/budget/domain/month_status.rs
+- [x] T030 [US2] Implement calculate_rollover_chain function in src-tauri/src/budget/application/budget_query.rs that derives rollover from spending data
+- [x] T031 [US2] Implement SQL query to aggregate monthly spending from collection_items.purchase_info in src-tauri/src/budget/infrastructure/database.rs
+- [x] T032 [US2] Create get_monthly_budget_records Tauri command in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T033 [US2] Implement annual reset check in budget query (compare last_reset_year with current year)
 
 ### Frontend Implementation
 
-- [ ] T034 [US2] Add getMonthlyBudgetRecords() to src/lib/features/budget/services/budget.service.ts
-- [ ] T035 [US2] Add monthlyRecords state and derived calculations to BudgetState.svelte.ts
-- [ ] T036 [US2] Create BudgetTable.svelte component in src/lib/features/budget/components/ showing 12-month breakdown with rollover columns
+- [x] T034 [US2] Add getMonthlyBudgetRecords() to src/lib/features/budget/services/budget.service.ts
+- [x] T035 [US2] Add monthlyRecords state and derived calculations to BudgetState.svelte.ts
+- [x] T036 [US2] Create BudgetTable.svelte component in src/lib/features/budget/components/ showing 12-month breakdown with rollover columns
 
 **Checkpoint**: User Story 2 complete - Rollover calculations work correctly
 
@@ -123,19 +123,19 @@
 
 ### Backend Implementation
 
-- [ ] T037 [US3] Create BudgetDashboardSummary, MonthlySpendingPoint, QuarterlyActivityPoint DTOs in src-tauri/src/budget/domain/
-- [ ] T038 [US3] Create SpendingLevel enum (None/Low/Medium/High) in src-tauri/src/budget/domain/spending_level.rs
-- [ ] T039 [US3] Implement get_budget_dashboard query in src-tauri/src/budget/application/budget_query.rs combining donut/bar/heatmap data
-- [ ] T040 [US3] Create get_budget_dashboard Tauri command in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T037 [US3] Create BudgetDashboardSummary, MonthlySpendingPoint, QuarterlyActivityPoint DTOs in src-tauri/src/budget/domain/
+- [x] T038 [US3] Create SpendingLevel enum (None/Low/Medium/High) in src-tauri/src/budget/domain/spending_level.rs
+- [x] T039 [US3] Implement get_budget_dashboard query in src-tauri/src/budget/application/budget_query.rs combining donut/bar/heatmap data
+- [x] T040 [US3] Create get_budget_dashboard Tauri command in src-tauri/src/budget/interface/command_handlers.rs
 
 ### Frontend Implementation
 
-- [ ] T041 [US3] Add getBudgetDashboard() to src/lib/features/budget/services/budget.service.ts
-- [ ] T042 [US3] Add dashboard state to BudgetState.svelte.ts with $derived for chart data
-- [ ] T043 [US3] Create BudgetDonutChart.svelte in src/lib/features/budget/components/ with green→yellow→red gradient based on remaining %
-- [ ] T044 [US3] Create YearlySpendingChart.svelte in src/lib/features/budget/components/ with 12 bars and horizontal budget goal line
-- [ ] T045 [US3] Create ActivityHeatmap.svelte in src/lib/features/budget/components/ with 5-year quarterly grid
-- [ ] T046 [US3] Integrate budget widgets into src/routes/my-dashboard/+page.svelte
+- [x] T041 [US3] Add getBudgetDashboard() to src/lib/features/budget/services/budget.service.ts
+- [x] T042 [US3] Add dashboard state to BudgetState.svelte.ts with $derived for chart data
+- [x] T043 [US3] Create BudgetDonutChart.svelte in src/lib/features/budget/components/ with green→yellow→red gradient based on remaining %
+- [x] T044 [US3] Create YearlySpendingChart.svelte in src/lib/features/budget/components/ with 12 bars and horizontal budget goal line
+- [x] T045 [US3] Create ActivityHeatmap.svelte in src/lib/features/budget/components/ with 5-year quarterly grid
+- [x] T046 [US3] Integrate budget widgets into src/routes/my-dashboard/+page.svelte
 
 **Checkpoint**: User Story 3 complete - Dashboard shows all three budget visualizations
 
@@ -149,17 +149,17 @@
 
 ### Backend Implementation
 
-- [ ] T047 [US4] Implement AddExtraBudgetUseCase in src-tauri/src/budget/application/add_extra_budget.rs with validation
-- [ ] T048 [US4] Create add_extra_budget Tauri command in src-tauri/src/budget/interface/command_handlers.rs
-- [ ] T049 [US4] Create remove_extra_budget Tauri command in src-tauri/src/budget/interface/command_handlers.rs
-- [ ] T050 [US4] Create get_extra_budgets Tauri command in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T047 [US4] Implement AddExtraBudgetUseCase in src-tauri/src/budget/application/add_extra_budget.rs with validation
+- [x] T048 [US4] Create add_extra_budget Tauri command in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T049 [US4] Create remove_extra_budget Tauri command in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T050 [US4] Create get_extra_budgets Tauri command in src-tauri/src/budget/interface/command_handlers.rs
 
 ### Frontend Implementation
 
-- [ ] T051 [US4] Add addExtraBudget(), removeExtraBudget(), getExtraBudgets() to budget.service.ts
-- [ ] T052 [US4] Add extra budget state management to BudgetState.svelte.ts
-- [ ] T053 [US4] Create ExtraBudgetModal.svelte in src/lib/features/budget/components/ with amount input and reason field
-- [ ] T054 [US4] Add "Add Extra Budget" button to BudgetTable.svelte that opens modal for selected month
+- [x] T051 [US4] Add addExtraBudget(), removeExtraBudget(), getExtraBudgets() to budget.service.ts
+- [x] T052 [US4] Add extra budget state management to BudgetState.svelte.ts
+- [x] T053 [US4] Create ExtraBudgetModal.svelte in src/lib/features/budget/components/ with amount input and reason field
+- [x] T054 [US4] Add "Add Extra Budget" button to BudgetTable.svelte that opens modal for selected month
 
 **Checkpoint**: User Story 4 complete - Extra budget entries can be added and removed
 
@@ -173,14 +173,14 @@
 
 ### Backend Implementation (mostly done in earlier phases)
 
-- [ ] T055 [US5] Verify get_monthly_budget_records returns data for specified year (not just current)
+- [x] T055 [US5] Verify get_monthly_budget_records returns data for specified year (not just current)
 
 ### Frontend Implementation
 
-- [ ] T056 [US5] Enhance BudgetTable.svelte with status column (Projected/In-Progress/Completed) and styling
-- [ ] T057 [US5] Create HistoricalArchive.svelte accordion component in src/lib/features/budget/components/ showing past 5 years
-- [ ] T058 [US5] Add year toggle/selector to my-budget page header
-- [ ] T059 [US5] Integrate HistoricalArchive.svelte into src/routes/my-budget/+page.svelte
+- [x] T056 [US5] Enhance BudgetTable.svelte with status column (Projected/In-Progress/Completed) and styling
+- [x] T057 [US5] Create HistoricalArchive.svelte accordion component in src/lib/features/budget/components/ showing past 5 years
+- [x] T058 [US5] Add year toggle/selector to my-budget page header
+- [x] T059 [US5] Integrate HistoricalArchive.svelte into src/routes/my-budget/+page.svelte
 
 **Checkpoint**: User Story 5 complete - Full budget management page with current year and history
 
@@ -194,18 +194,18 @@
 
 ### Backend Implementation
 
-- [ ] T060 [US6] Create QuarterlySummary and CategorySpending DTOs in src-tauri/src/budget/domain/quarterly_summary.rs
-- [ ] T061 [US6] Create Quarter enum (Q1/Q2/Q3/Q4) in src-tauri/src/budget/domain/quarter.rs
-- [ ] T062 [US6] Implement SQL query for quarterly spending with category breakdown in src-tauri/src/budget/infrastructure/database.rs
-- [ ] T063 [US6] Implement get_quarterly_summaries in src-tauri/src/budget/application/historical_query.rs
-- [ ] T064 [US6] Create get_quarterly_summaries Tauri command in src-tauri/src/budget/interface/command_handlers.rs
+- [x] T060 [US6] Create QuarterlySummary and CategorySpending DTOs in src-tauri/src/budget/domain/quarterly_summary.rs
+- [x] T061 [US6] Create Quarter enum (Q1/Q2/Q3/Q4) in src-tauri/src/budget/domain/quarter.rs
+- [x] T062 [US6] Implement SQL query for quarterly spending with category breakdown in src-tauri/src/budget/infrastructure/database.rs
+- [x] T063 [US6] Implement get_quarterly_summaries in src-tauri/src/budget/application/historical_query.rs
+- [x] T064 [US6] Create get_quarterly_summaries Tauri command in src-tauri/src/budget/interface/command_handlers.rs
 
 ### Frontend Implementation
 
-- [ ] T065 [US6] Add getQuarterlySummaries() to budget.service.ts
-- [ ] T066 [US6] Add quarterly summary state to BudgetState.svelte.ts
-- [ ] T067 [US6] Create QuarterlySummaryModal.svelte in src/lib/features/budget/components/ with category breakdown chart
-- [ ] T068 [US6] Add click handler to ActivityHeatmap.svelte to open QuarterlySummaryModal for selected quarter
+- [x] T065 [US6] Add getQuarterlySummaries() to budget.service.ts
+- [x] T066 [US6] Add quarterly summary state to BudgetState.svelte.ts
+- [x] T067 [US6] Create QuarterlySummaryModal.svelte in src/lib/features/budget/components/ with category breakdown chart
+- [x] T068 [US6] Add click handler to ActivityHeatmap.svelte to open QuarterlySummaryModal for selected quarter
 
 **Checkpoint**: User Story 6 complete - Category breakdowns visible in quarterly summaries
 
@@ -215,9 +215,9 @@
 
 **Purpose**: Final integration, cleanup, and verification
 
-- [ ] T069 [P] Run cargo fmt on all budget module files
-- [ ] T070 [P] Run cargo clippy and fix any warnings in src-tauri/src/budget/
-- [ ] T071 [P] Run pnpm format on all frontend budget files
+- [x] T069 [P] Run cargo fmt on all budget module files
+- [x] T070 [P] Run cargo clippy and fix any warnings in src-tauri/src/budget/
+- [x] T071 [P] Run pnpm format on all frontend budget files
 - [ ] T072 [P] Run pnpm lint and fix any errors in src/lib/features/budget/
 - [ ] T073 Run pnpm check to verify TypeScript types
 - [ ] T074 Verify all Paraglide messages are used (no hardcoded strings in components)

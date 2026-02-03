@@ -1,0 +1,231 @@
+// Budget Query Service
+// Feature: 001-budget-tracking - Phase 4 (US2) & Phase 5 (US3)
+
+use crate::budget::domain::BudgetRepository;
+use crate::budget::domain::dashboard::{
+    BudgetDashboardSummary, BudgetQuarter, MonthlySpendingPoint, QuarterlyActivityPoint,
+    SpendingLevel,
+};
+use crate::budget::domain::monthly_budget_record::{MonthStatus, MonthlyBudgetRecord};
+use crate::budget::infrastructure::BudgetUowExt;
+use crate::budget::infrastructure::database;
+use crate::core::domain::domain_error::DomainError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use chrono::Datelike;
+
+/// Calculate monthly budget records for a given year with rollover chain.
+///
+/// This function derives the rollover chain from spending data and extra budgets,
+/// computing each month's available budget, spending, and rollover to the next month.
+///
+/// # Arguments
+/// * `uow` - Unit of work for database access
+/// * `year` - The year to calculate records for
+///
+/// # Returns
+/// A vector of 12 `MonthlyBudgetRecord` objects, one for each month of the year.
+pub async fn get_monthly_budget_records(
+    uow: &mut SqliteUnitOfWork<'_>,
+    year: i32,
+) -> Result<Vec<MonthlyBudgetRecord>, DomainError> {
+    // Get budget configuration
+    let config_option = {
+        let mut repo = uow.budget_repo();
+        repo.get_config()
+            .await
+            .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?
+    };
+
+    let config = config_option
+        .ok_or_else(|| DomainError::Validation("Budget configuration not set".to_string()))?;
+
+    // Check if annual reset is needed
+    let current_year = chrono::Utc::now().year();
+    let _needs_reset = current_year > config.last_reset_year;
+
+    // Get spending data for the year
+    let monthly_spending =
+        database::get_monthly_spending(&mut uow.tx, year, config.base_amount.currency.to_code())
+            .await?;
+
+    // Convert to a map for easier lookup
+    let mut spending_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
+    for (month, amount) in monthly_spending {
+        spending_map.insert(month as u8, amount);
+    }
+
+    // Get extra budgets for the year
+    let extra_budgets = database::get_extra_budgets(&mut uow.tx, year).await?;
+
+    // Convert to a map for easier lookup
+    let mut extra_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
+    for extra in extra_budgets {
+        *extra_map.entry(extra.month as u8).or_insert(0) += extra.amount;
+    }
+
+    // Calculate monthly records with rollover chain
+    let base_monthly = config.monthly_amount();
+    let mut records = Vec::with_capacity(12);
+    // For now, always start with 0 rollover
+    // TODO: In the future, can carry over from previous year for historical data
+    let mut rollover = 0;
+
+    let now = chrono::Utc::now();
+    let current_month = now.month() as u8;
+
+    for month in 1..=12 {
+        let actual_spend = spending_map.get(&month).copied().unwrap_or(0);
+        let extra = extra_map.get(&month).copied().unwrap_or(0);
+
+        // Determine month status
+        let status = if year > current_year || (year == current_year && month > current_month) {
+            MonthStatus::Projected
+        } else if year == current_year && month == current_month {
+            MonthStatus::InProgress
+        } else {
+            MonthStatus::Completed
+        };
+
+        let available = base_monthly + extra + rollover;
+        let remaining = available - actual_spend;
+
+        // Rollover only positive amounts to next month
+        let rollover_out = if remaining > 0 { remaining } else { 0 };
+
+        records.push(MonthlyBudgetRecord {
+            year,
+            month,
+            base_budget: base_monthly,
+            extra_budget: extra,
+            actual_spend,
+            rollover_in: rollover,
+            rollover_out,
+            status,
+            currency: config.base_amount.currency,
+        });
+
+        // Set rollover for next month
+        rollover = rollover_out;
+    }
+
+    Ok(records)
+}
+
+/// Get budget dashboard summary for widgets.
+///
+/// This function aggregates:
+/// - Current month remaining budget (donut chart)
+/// - 12-month spending data (bar chart)
+/// - 5-year quarterly activity (heatmap)
+///
+/// # Arguments
+/// * `uow` - Unit of work for database access
+///
+/// # Returns
+/// A `BudgetDashboardSummary` with all dashboard widget data, or None if budget not configured.
+pub async fn get_budget_dashboard(
+    uow: &mut SqliteUnitOfWork<'_>,
+) -> Result<Option<BudgetDashboardSummary>, DomainError> {
+    // Get budget configuration
+    let config_option = {
+        let mut repo = uow.budget_repo();
+        repo.get_config()
+            .await
+            .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?
+    };
+
+    let config = match config_option {
+        Some(c) => c,
+        None => return Ok(None), // Budget not configured
+    };
+
+    let now = chrono::Utc::now();
+    let current_year = now.year();
+    let current_month = now.month() as u8;
+
+    // Get monthly records for the current year
+    let monthly_records = get_monthly_budget_records(uow, current_year).await?;
+
+    // Find current month's record
+    let current_record = monthly_records
+        .iter()
+        .find(|r| r.month == current_month)
+        .ok_or_else(|| DomainError::BusinessRule("Current month record not found".to_string()))?;
+
+    // Build monthly spending points for bar chart (current year)
+    let monthly_spending: Vec<MonthlySpendingPoint> = monthly_records
+        .iter()
+        .map(|r| MonthlySpendingPoint {
+            month: r.month,
+            amount: r.actual_spend,
+            currency: r.currency,
+        })
+        .collect();
+
+    // Build quarterly activity for heatmap (last 5 years)
+    let start_year = current_year - 4;
+    let mut quarterly_activity = Vec::new();
+
+    for year in start_year..=current_year {
+        // Get spending for this year
+        let year_spending = database::get_monthly_spending(
+            &mut uow.tx,
+            year,
+            config.base_amount.currency.to_code(),
+        )
+        .await?;
+
+        // Group by quarter
+        let mut q1_total = 0i64;
+        let mut q2_total = 0i64;
+        let mut q3_total = 0i64;
+        let mut q4_total = 0i64;
+
+        for (month, amount) in year_spending {
+            match BudgetQuarter::from_month(month as u8) {
+                BudgetQuarter::Q1 => q1_total += amount,
+                BudgetQuarter::Q2 => q2_total += amount,
+                BudgetQuarter::Q3 => q3_total += amount,
+                BudgetQuarter::Q4 => q4_total += amount,
+            }
+        }
+
+        // Calculate max spending for the year to determine levels
+        let max_quarter = [q1_total, q2_total, q3_total, q4_total]
+            .iter()
+            .max()
+            .copied()
+            .unwrap_or(0);
+
+        // Add quarterly points
+        for (quarter, total) in [
+            (BudgetQuarter::Q1, q1_total),
+            (BudgetQuarter::Q2, q2_total),
+            (BudgetQuarter::Q3, q3_total),
+            (BudgetQuarter::Q4, q4_total),
+        ] {
+            let percentage = if max_quarter > 0 {
+                (total as f64 / max_quarter as f64) * 100.0
+            } else {
+                0.0
+            };
+
+            quarterly_activity.push(QuarterlyActivityPoint {
+                year,
+                quarter,
+                spending_level: SpendingLevel::from_percentage(percentage),
+                amount: total,
+            });
+        }
+    }
+
+    Ok(Some(BudgetDashboardSummary {
+        remaining_amount: current_record.remaining(),
+        remaining_percentage: current_record.remaining_percentage(),
+        total_available: current_record.available(),
+        currency: config.base_amount.currency,
+        monthly_spending,
+        monthly_goal: config.monthly_amount(),
+        quarterly_activity,
+    }))
+}

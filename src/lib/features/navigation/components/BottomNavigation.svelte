@@ -1,6 +1,6 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import { LayoutDashboard, Library, Heart, Train, Settings } from 'lucide-svelte';
+  import { LayoutDashboard, Library, Heart, Wallet, Settings } from 'lucide-svelte';
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -50,13 +50,13 @@
         {/if}
       </a>
       <a
-        href={resolve('/my-tracks')}
+        href={resolve('/my-budget')}
         class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-        class:text-accent-500={pathname.startsWith('/my-tracks')}
-        class:text-surface-400={!pathname.startsWith('/my-tracks')}
+        class:text-accent-500={pathname === '/my-budget'}
+        class:text-surface-400={pathname !== '/my-budget'}
       >
-        <Train size={20} />
-        <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_tracks()}</span>
+        <Wallet size={20} />
+        <span class="text-[10px] font-bold tracking-wider uppercase">{m.budget_title()}</span>
       </a>
       <a
         href={resolve('/my-settings')}

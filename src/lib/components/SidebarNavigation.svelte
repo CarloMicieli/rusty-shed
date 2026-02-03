@@ -4,6 +4,7 @@
     LayoutDashboard,
     Library,
     Heart,
+    Wallet,
     Box,
     Settings,
     TrainFront,
@@ -74,6 +75,17 @@
           {#if defaultWishlist}
             <span class="variant-soft-surface ml-auto badge">{defaultWishlist.count}</span>
           {/if}
+        </a>
+      </li>
+      <li>
+        <a
+          href={resolve('/my-budget')}
+          class="hover:variant-soft-primary btn w-full justify-start gap-3"
+          class:variant-filled-primary={(page.url.pathname as string) === '/my-budget'}
+          class:variant-ghost-surface={(page.url.pathname as string) !== '/my-budget'}
+        >
+          <Wallet size={20} />
+          <span class="font-medium tracking-wide">{m.budget_title()}</span>
         </a>
       </li>
       <li>
