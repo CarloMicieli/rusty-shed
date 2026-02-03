@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DashboardDepotEntry } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
+  import StatusBadge from '$lib/components/StatusBadge.svelte';
 
   let { data } = $props<{ data: DashboardDepotEntry[] }>();
 </script>
@@ -14,6 +15,7 @@
         <th>{m.depot_category()}</th>
         <th>{m.depot_scale()}</th>
         <th>{m.depot_company()}</th>
+        <th>Status</th>
         <th>{m.depot_description()}</th>
       </tr>
     </thead>
@@ -36,6 +38,9 @@
             <span class="variant-filled-surface badge font-bold tracking-wider">
               {row.railway_company.name ?? '—'}
             </span>
+          </td>
+          <td>
+            <StatusBadge status="in-service" />
           </td>
           <td class="text-surface-300">{row.description ?? '—'}</td>
         </tr>

@@ -2,10 +2,12 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Heart, Plus, RefreshCw, House } from 'lucide-svelte';
+  import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { toaster } from '$lib/toaster';
 
   // Components
+  import PageHeader from '$lib/components/PageHeader.svelte';
   import StatsCard from '$lib/components/StatsCard.svelte';
   import QuickActionButtons, { type QuickAction } from '$lib/components/QuickActionButtons.svelte';
   import RecentItemCard from '$lib/components/RecentItemCard.svelte';
@@ -90,6 +92,17 @@
         if (!wishlistService.wishlists.length) void wishlistService.fetchWishlists();
         showWishlistModal = true;
       }
+    },
+    {
+      id: 'log-maintenance',
+      label: m.actions_log_maintenance(),
+      icon: Wrench,
+      onClick: () => {
+        toaster.info({
+          title: m.actions_maintenance_coming_soon(),
+          duration: 3000
+        });
+      }
     }
   ]);
 </script>
@@ -117,6 +130,13 @@
   </div>
 {:else}
   <div class="space-y-8">
+    <!-- Page Header with Title and Description -->
+    <PageHeader
+      title={m.dashboard_title()}
+      subtitle={m.dashboard_subtitle()}
+      description={m.dashboard_description()}
+    />
+
     <section>
       <div class="mb-4 flex items-center justify-between">
         <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
@@ -141,7 +161,13 @@
         {/if}
       </div>
 
+      <!-- Visual Separator between Stats and Charts -->
+      <div class="my-6 border-t border-surface-700/50"></div>
+
       <div class="mt-6">
+        <h3 class="mb-4 h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+          Charts & Analytics
+        </h3>
         <DashboardCharts />
       </div>
     </section>
@@ -169,7 +195,8 @@
             <div
               class="variant-soft-surface rounded-container border border-dashed border-surface-700/60 p-10 text-center text-surface-300"
             >
-              <p>{m.dashboard_empty_recent()}</p>
+              <p class="mb-2">{m.dashboard_empty_recent()}</p>
+              <p class="text-sm text-surface-400">{m.dashboard_empty_recent_prompt()}</p>
             </div>
           {:else}
             <div
@@ -209,7 +236,7 @@
       <aside>
         <div class="sticky top-24 space-y-4">
           <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
-            {m.dashboard_quick_actions()}
+            {m.dashboard_command_center()}
           </h3>
           <QuickActionButtons {actions} />
         </div>

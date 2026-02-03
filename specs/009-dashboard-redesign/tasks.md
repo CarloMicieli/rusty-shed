@@ -17,10 +17,10 @@
 
 **Purpose**: Add required translation keys and create shared components
 
-- [ ] T001 [P] Add new translation keys for dashboard redesign to messages/en.json
-- [ ] T002 [P] Add new translation keys for dashboard redesign to messages/it.json
-- [ ] T003 [P] Create PageHeader component in src/lib/components/PageHeader.svelte
-- [ ] T004 [P] Create StatusBadge component in src/lib/components/StatusBadge.svelte
+- [x] T001 [P] Add new translation keys for dashboard redesign to messages/en.json
+- [x] T002 [P] Add new translation keys for dashboard redesign to messages/it.json
+- [x] T003 [P] Create PageHeader component in src/lib/components/PageHeader.svelte
+- [x] T004 [P] Create StatusBadge component in src/lib/components/StatusBadge.svelte
 
 **Checkpoint**: Shared components ready for use in user stories
 
@@ -34,9 +34,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Import PageHeader component and add to dashboard layout in src/routes/my-dashboard/+page.svelte
-- [ ] T006 [US1] Add page title section with h1 heading "Dashboard" and uppercase subtitle "DASHBOARD / OVERVIEW" in src/routes/my-dashboard/+page.svelte
-- [ ] T007 [US1] Add brief description text below title matching Collection view pattern in src/routes/my-dashboard/+page.svelte
+- [x] T005 [US1] Import PageHeader component and add to dashboard layout in src/routes/my-dashboard/+page.svelte
+- [x] T006 [US1] Add page title section with h1 heading "Dashboard" and uppercase subtitle "DASHBOARD / OVERVIEW" in src/routes/my-dashboard/+page.svelte
+- [x] T007 [US1] Add brief description text below title matching Collection view pattern in src/routes/my-dashboard/+page.svelte
 
 **Checkpoint**: Dashboard has consistent page identity with My Collection view
 
@@ -50,10 +50,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Add "Log Maintenance" action to actions array in src/routes/my-dashboard/+page.svelte
-- [ ] T009 [US2] Rename "Quick Actions" section header to "Command Center" in src/routes/my-dashboard/+page.svelte
-- [ ] T010 [US2] Update QuickActionButtons component styling for distinct button appearance in src/lib/components/QuickActionButtons.svelte
-- [ ] T011 [US2] Implement Log Maintenance click handler to show "coming soon" toast (maintenance feature not yet implemented) in src/routes/my-dashboard/+page.svelte
+- [x] T008 [US2] Add "Log Maintenance" action to actions array in src/routes/my-dashboard/+page.svelte
+- [x] T009 [US2] Rename "Quick Actions" section header to "Command Center" in src/routes/my-dashboard/+page.svelte
+- [x] T010 [US2] Update QuickActionButtons component styling for distinct button appearance in src/lib/components/QuickActionButtons.svelte
+- [x] T011 [US2] Implement Log Maintenance click handler to show "coming soon" toast (maintenance feature not yet implemented) in src/routes/my-dashboard/+page.svelte
 
 **Checkpoint**: Command Center displays three functional action buttons
 
@@ -67,10 +67,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Enhance RecentItemCard to display larger images with overlay title in src/lib/components/RecentItemCard.svelte
-- [ ] T013 [US3] Add click handler to RecentItemCard for navigation based on source field (Collection → /my-collection/{id}, Wishlist → /my-wishlists/{id}) in src/lib/components/RecentItemCard.svelte
-- [ ] T014 [US3] Update gallery grid layout for larger card display in src/routes/my-dashboard/+page.svelte
-- [ ] T015 [US3] Improve empty state message with prompt to add models in src/routes/my-dashboard/+page.svelte
+- [x] T012 [US3] Enhance RecentItemCard to display larger images with overlay title in src/lib/components/RecentItemCard.svelte
+- [x] T013 [US3] Add click handler to RecentItemCard for navigation based on source field (Collection → /my-collection/{id}, Wishlist → /my-wishlists/{id}) in src/lib/components/RecentItemCard.svelte
+- [x] T014 [US3] Update gallery grid layout for larger card display in src/routes/my-dashboard/+page.svelte
+- [x] T015 [US3] Improve empty state message with prompt to add models in src/routes/my-dashboard/+page.svelte
 
 **Checkpoint**: Recently Added section displays visual gallery with clickable cards
 
@@ -84,10 +84,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T016 [US4] Integrate StatusBadge component into DepotListCard in src/lib/components/DepotListCard.svelte
-- [ ] T017 [US4] Integrate StatusBadge component into DepotTable in src/lib/components/DepotTable.svelte
-- [ ] T018 [US4] Update DepotView section header styling to emphasize utility focus in src/lib/components/DepotView.svelte
-- [ ] T019 [US4] Add default "In Service" status to all depot items (DashboardDepotEntry lacks status field; placeholder for MVP)
+- [x] T016 [US4] Integrate StatusBadge component into DepotListCard in src/lib/components/DepotListCard.svelte
+- [x] T017 [US4] Integrate StatusBadge component into DepotTable in src/lib/components/DepotTable.svelte
+- [x] T018 [US4] Update DepotView section header styling to emphasize utility focus in src/lib/components/DepotView.svelte
+- [x] T019 [US4] Add default "In Service" status to all depot items (DashboardDepotEntry lacks status field; placeholder for MVP)
 
 **Checkpoint**: Depot displays items with color-coded status badges
 
@@ -101,10 +101,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T020 [US5] Update StatsCard component with enhanced widget styling in src/lib/components/StatsCard.svelte
-- [ ] T021 [US5] Add visual separator between statistics grid and charts section in src/routes/my-dashboard/+page.svelte
-- [ ] T022 [US5] Add alert indicator styling for maintenance due card in src/lib/components/StatsCard.svelte
-- [ ] T023 [US5] Ensure skeleton loading states match new widget styling in src/routes/my-dashboard/+page.svelte
+- [x] T020 [US5] Update StatsCard component with enhanced widget styling in src/lib/components/StatsCard.svelte
+- [x] T021 [US5] Add visual separator between statistics grid and charts section in src/routes/my-dashboard/+page.svelte
+- [x] T022 [US5] Add alert indicator styling for maintenance due card in src/lib/components/StatsCard.svelte
+- [x] T023 [US5] Ensure skeleton loading states match new widget styling in src/routes/my-dashboard/+page.svelte
 
 **Checkpoint**: Statistics display as distinct widget cards with chart separation
 
@@ -114,12 +114,12 @@
 
 **Purpose**: Final improvements and validation
 
-- [ ] T024 [P] Run `pnpm format` to format all modified files
-- [ ] T025 [P] Run `pnpm lint` to verify no linting errors
-- [ ] T026 [P] Run `pnpm check` to verify TypeScript types
-- [ ] T027 Verify mobile responsiveness of all dashboard sections
-- [ ] T028 Test all quick action button navigations work correctly
-- [ ] T029 Verify visual consistency with My Collection page styling
+- [x] T024 [P] Run `pnpm format` to format all modified files
+- [x] T025 [P] Run `pnpm lint` to verify no linting errors
+- [x] T026 [P] Run `pnpm check` to verify TypeScript types
+- [x] T027 Verify mobile responsiveness of all dashboard sections
+- [x] T028 Test all quick action button navigations work correctly
+- [x] T029 Verify visual consistency with My Collection page styling
 
 ---
 
