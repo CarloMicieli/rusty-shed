@@ -133,7 +133,6 @@ Users should receive error and validation feedback with consistent positioning a
 - **FR-008**: All page headers MUST remove "Dashboard" text from desktop navigation areas
 - **FR-009**: Error toast notifications MUST render in the top-right corner with identical styling, animation, and timing to the current Skeleton implementation
 - **FR-010**: Toast notifications MUST support stacking with proper spacing and z-index management
-- **FR-010**: Toast notifications MUST support stacking with proper spacing and z-index management
 - **FR-011**: All custom component extensions or overrides from Skeleton MUST be replicated with shadcn-svelte
 - **FR-012**: Build process MUST complete successfully with no console errors or warnings related to component misconfigurations
 - **FR-013**: Accessibility features (ARIA labels, keyboard navigation, screen reader support) MUST be maintained or improved
