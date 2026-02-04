@@ -21,6 +21,11 @@
 @import '@skeletonlabs/skeleton';
 @import '@skeletonlabs/skeleton/themes/cerberus';
 
+/* 3. Steampunk Theme Imports */
+@import '../lib/themes/steampunk-base.css';
+@import '../lib/themes/steampunk-light.css';
+@import '../lib/themes/steampunk-dark.css';
+
 /* LayerChart compatibility: SVG fill utilities and tooltip fixes */
 .fill-transparent {
   fill: transparent !important;

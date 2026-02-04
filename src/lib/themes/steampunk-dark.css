@@ -1,0 +1,184 @@
+/**
+ * Steampunk Dark Theme: "Iron & Copper"
+ * Cold iron surfaces with burnished copper highlights
+ * Feature: 011-steampunk-theme
+ */
+
+[data-theme='steampunk-dark'] {
+  /* ========================================================================
+     Surface/Background Colors (50-950 scale)
+     ======================================================================== */
+
+  --color-surface-50: #f8f7f6;
+  --color-surface-100: #eae8e5;
+  --color-surface-200: #dcd9d4;
+  --color-surface-300: #ccc6bf;
+  --color-surface-400: #b8afa6;
+  --color-surface-500: #3a3a3b;
+  --color-surface-600: #2d2d2e;
+  --color-surface-700: #242425;
+  --color-surface-800: #1e1e1f;
+  --color-surface-900: #1a1a1b;
+  --color-surface-950: #0f0f10;
+
+  /* Base background for pages and containers */
+  --color-background: #1a1a1b;
+  --color-background-alt: #242425;
+
+  /* ========================================================================
+     Primary Color: Polished Copper (#CD7F32 core)
+     ======================================================================== */
+
+  --color-primary-50: #faf8f4;
+  --color-primary-100: #f3f0e8;
+  --color-primary-200: #ebe3d1;
+  --color-primary-300: #ddd0b3;
+  --color-primary-400: #d0b991;
+  --color-primary-500: #c49b6e;
+  --color-primary-600: #cd7f32;
+  --color-primary-700: #a86428;
+  --color-primary-800: #875320;
+  --color-primary-900: #684018;
+  --color-primary-950: #4a2d10;
+
+  /* Copper-specific aliases */
+  --color-copper-50: #faf8f4;
+  --color-copper-600: #cd7f32;
+  --color-copper-700: #a86428;
+  --color-copper-800: #875320;
+
+  /* ========================================================================
+     Secondary Color: Furnace Orange (#FF4500)
+     ======================================================================== */
+
+  --color-secondary-50: #fff7f1;
+  --color-secondary-100: #ffecde;
+  --color-secondary-200: #ffd9bd;
+  --color-secondary-300: #ffbb87;
+  --color-secondary-400: #ff9a51;
+  --color-secondary-500: #ff7a2a;
+  --color-secondary-600: #ff4500;
+  --color-secondary-700: #e63400;
+  --color-secondary-800: #b82600;
+  --color-secondary-900: #8a1a00;
+  --color-secondary-950: #5c0f00;
+
+  /* ========================================================================
+     Tertiary Color: Slate Blue (#4a5f7f)
+     ======================================================================== */
+
+  --color-tertiary-50: #f6f8fb;
+  --color-tertiary-100: #f0f5f8;
+  --color-tertiary-200: #e5eff3;
+  --color-tertiary-300: #d5e7ed;
+  --color-tertiary-400: #b8d5e4;
+  --color-tertiary-500: #95bdd4;
+  --color-tertiary-600: #4a5f7f;
+  --color-tertiary-700: #3a4a63;
+  --color-tertiary-800: #2d3a4d;
+  --color-tertiary-900: #1f2938;
+  --color-tertiary-950: #151d29;
+
+  /* ========================================================================
+     Accent Color: Furnace Orange (#FF4500)
+     ======================================================================== */
+
+  --color-accent-50: #fff7f1;
+  --color-accent-100: #ffecde;
+  --color-accent-200: #ffd9bd;
+  --color-accent-300: #ffbb87;
+  --color-accent-400: #ff9a51;
+  --color-accent-500: #ff7a2a;
+  --color-accent-600: #ff4500;
+  --color-accent-700: #e63400;
+  --color-accent-800: #b82600;
+  --color-accent-900: #8a1a00;
+  --color-accent-950: #5c0f00;
+
+  /* Furnace orange alias */
+  --color-furnace-orange-600: #ff4500;
+  --color-furnace-orange-700: #e63400;
+
+  /* ========================================================================
+     Brass-specific aliases (for consistency with light theme)
+     ======================================================================== */
+
+  --color-brass-50: #f8f7f6;
+  --color-brass-600: #b8860b;
+  --color-brass-700: #8b6508;
+  --color-brass-800: #6b4f06;
+
+  /* ========================================================================
+     Semantic Colors: Error, Success, Warning
+     ======================================================================== */
+
+  --color-error-50: #fff7f1;
+  --color-error-100: #ffecde;
+  --color-error-200: #ffd9bd;
+  --color-error-300: #ffbb87;
+  --color-error-400: #ff9a51;
+  --color-error-500: #ff7a2a;
+  --color-error-600: #ff3333;
+  --color-error-700: #e60000;
+  --color-error-800: #b30000;
+  --color-error-900: #800000;
+  --color-error-950: #4d0000;
+
+  --color-success-50: #f0fbf7;
+  --color-success-100: #ddf6ed;
+  --color-success-200: #c0ecda;
+  --color-success-300: #9be3c3;
+  --color-success-400: #6dd6a8;
+  --color-success-500: #4cca8e;
+  --color-success-600: #2fa56a;
+  --color-success-700: #238055;
+  --color-success-800: #1d6145;
+  --color-success-900: #184836;
+  --color-success-950: #10301f;
+
+  --color-warning-50: #fffcf1;
+  --color-warning-100: #fff7de;
+  --color-warning-200: #fff0c0;
+  --color-warning-300: #ffe99d;
+  --color-warning-400: #ffd966;
+  --color-warning-500: #ffcc33;
+  --color-warning-600: #ffb100;
+  --color-warning-700: #cc8800;
+  --color-warning-800: #9d6600;
+  --color-warning-900: #664400;
+  --color-warning-950: #331f00;
+
+  /* ========================================================================
+     Text Colors
+     ======================================================================== */
+
+  --color-text-50: #f8f7f6;
+  --color-text-100: #eae8e5;
+  --color-text-200: #dcd9d4;
+  --color-text-300: #b8afa6;
+  --color-text-400: #9a9088;
+  --color-text-500: #7d7369;
+  --color-text-600: #6b605a;
+  --color-text-700: #5a4f48;
+  --color-text-800: #454038;
+  --color-text-900: #eae8e5;
+  --color-text-950: #f8f7f6;
+
+  /* ========================================================================
+     Tailwind theme integration
+     ======================================================================== */
+
+  color-scheme: dark;
+  background-color: var(--color-background);
+  color: var(--color-text-900);
+}
+
+/* Ensure text contrast meets WCAG AA (4.5:1 for normal text) */
+[data-theme='steampunk-dark'] {
+  /* Heading contrast: copper on dark iron */
+  --heading-color: var(--color-primary-500);
+  --heading-weight: 700;
+
+  /* Body text contrast */
+  --body-color: var(--color-text-100);
+}

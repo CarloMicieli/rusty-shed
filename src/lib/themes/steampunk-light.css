@@ -1,0 +1,187 @@
+/**
+ * Steampunk Light Theme: "Parchment & Brass"
+ * Warm, aged paper tones with polished brass accents
+ * Feature: 011-steampunk-theme
+ */
+
+[data-theme='steampunk-light'] {
+  /* ========================================================================
+     Surface/Background Colors (50-950 scale)
+     ======================================================================== */
+
+  --color-surface-50: #fffdf7;
+  --color-surface-100: #fef9ed;
+  --color-surface-200: #fceee0;
+  --color-surface-300: #f9ddd4;
+  --color-surface-400: #f4c8bf;
+  --color-surface-500: #ebaaa3;
+  --color-surface-600: #d99889;
+  --color-surface-700: #c68075;
+  --color-surface-800: #b27462;
+  --color-surface-900: #8f5a4d;
+  --color-surface-950: #6b3d35;
+
+  /* Base background for pages and containers */
+  --color-background: #f4ebd0;
+  --color-background-alt: #e8dcc0;
+
+  /* ========================================================================
+     Primary Color: Burnished Gold / Brass (#B8860B core)
+     ======================================================================== */
+
+  --color-primary-50: #fefdf5;
+  --color-primary-100: #fef9e8;
+  --color-primary-200: #fcf0cc;
+  --color-primary-300: #f9e1a0;
+  --color-primary-400: #f5cd73;
+  --color-primary-500: #f0b850;
+  --color-primary-600: #e09a34;
+  --color-primary-700: #c07d1f;
+  --color-primary-800: #b8860b;
+  --color-primary-900: #805c0a;
+  --color-primary-950: #5a3f07;
+
+  /* Brass-specific aliases */
+  --color-brass-50: #fefdf5;
+  --color-brass-600: #b8860b;
+  --color-brass-700: #8b6508;
+  --color-brass-800: #6b4f06;
+
+  /* ========================================================================
+     Secondary Color: Warm Terracotta (#C85A54)
+     ======================================================================== */
+
+  --color-secondary-50: #fef7f5;
+  --color-secondary-100: #fcf0ed;
+  --color-secondary-200: #f8ddd6;
+  --color-secondary-300: #f2c4b7;
+  --color-secondary-400: #e9a490;
+  --color-secondary-500: #de8370;
+  --color-secondary-600: #c85a54;
+  --color-secondary-700: #a0483e;
+  --color-secondary-800: #82392d;
+  --color-secondary-900: #632c22;
+  --color-secondary-950: #4c1f18;
+
+  /* ========================================================================
+     Tertiary Color: Muted Green (#7a8f7d)
+     ======================================================================== */
+
+  --color-tertiary-50: #f6faf7;
+  --color-tertiary-100: #f0f5f0;
+  --color-tertiary-200: #e5f0e8;
+  --color-tertiary-300: #d5e8db;
+  --color-tertiary-400: #b8d9c2;
+  --color-tertiary-500: #9ccaa8;
+  --color-tertiary-600: #7a8f7d;
+  --color-tertiary-700: #5f7463;
+  --color-tertiary-800: #4d5e52;
+  --color-tertiary-900: #3d483f;
+  --color-tertiary-950: #2f373b;
+
+  /* ========================================================================
+     Accent Color: Burnished Copper (#CC6633)
+     ======================================================================== */
+
+  --color-accent-50: #fef7f5;
+  --color-accent-100: #fdeee8;
+  --color-accent-200: #fad9d0;
+  --color-accent-300: #f5bda8;
+  --color-accent-400: #ed9878;
+  --color-accent-500: #e07f5c;
+  --color-accent-600: #cc6633;
+  --color-accent-700: #a85427;
+  --color-accent-800: #8a4620;
+  --color-accent-900: #6b361a;
+  --color-accent-950: #5a2814;
+
+  /* Copper-specific aliases */
+  --color-copper-50: #fef7f5;
+  --color-copper-600: #cc6633;
+  --color-copper-700: #a85427;
+  --color-copper-800: #8a4620;
+
+  /* ========================================================================
+     Parchment-specific aliases
+     ======================================================================== */
+
+  --color-parchment-50: #f4ebd0;
+  --color-parchment-100: #e8dcc0;
+  --color-parchment-200: #dcc9ac;
+  --color-parchment-300: #cfb598;
+  --color-parchment-400: #c39f82;
+
+  /* ========================================================================
+     Semantic Colors: Error, Success, Warning
+     ======================================================================== */
+
+  --color-error-50: #fef7f5;
+  --color-error-100: #fdeee8;
+  --color-error-200: #fad9d0;
+  --color-error-300: #f5bda8;
+  --color-error-400: #ed9878;
+  --color-error-500: #e07f5c;
+  --color-error-600: #cc3333;
+  --color-error-700: #a82020;
+  --color-error-800: #8a1818;
+  --color-error-900: #6b1010;
+  --color-error-950: #4d0a0a;
+
+  --color-success-50: #f0fbf7;
+  --color-success-100: #ddf6ed;
+  --color-success-200: #c0ecda;
+  --color-success-300: #9be3c3;
+  --color-success-400: #6dd6a8;
+  --color-success-500: #4cca8e;
+  --color-success-600: #2fa56a;
+  --color-success-700: #238055;
+  --color-success-800: #1d6145;
+  --color-success-900: #184836;
+  --color-success-950: #10301f;
+
+  --color-warning-50: #fffcf1;
+  --color-warning-100: #fff7de;
+  --color-warning-200: #fff0c0;
+  --color-warning-300: #ffe99d;
+  --color-warning-400: #ffd966;
+  --color-warning-500: #ffcc33;
+  --color-warning-600: #ffb100;
+  --color-warning-700: #cc8800;
+  --color-warning-800: #9d6600;
+  --color-warning-900: #664400;
+  --color-warning-950: #331f00;
+
+  /* ========================================================================
+     Text Colors
+     ======================================================================== */
+
+  --color-text-50: #f8f6f2;
+  --color-text-100: #e8e4d8;
+  --color-text-200: #d8cfc0;
+  --color-text-300: #a39585;
+  --color-text-400: #8b7d65;
+  --color-text-500: #6b5d45;
+  --color-text-600: #5a4f43;
+  --color-text-700: #4a4238;
+  --color-text-800: #3a322d;
+  --color-text-900: #2a2218;
+  --color-text-950: #1a1410;
+
+  /* ========================================================================
+     Tailwind theme integration
+     ======================================================================== */
+
+  color-scheme: light;
+  background-color: var(--color-background);
+  color: var(--color-text-900);
+}
+
+/* Ensure text contrast meets WCAG AA (4.5:1 for normal text) */
+[data-theme='steampunk-light'] {
+  /* Heading contrast: brass on parchment */
+  --heading-color: var(--color-primary-800);
+  --heading-weight: 700;
+
+  /* Body text contrast */
+  --body-color: var(--color-text-700);
+}

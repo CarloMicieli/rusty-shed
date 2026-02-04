@@ -1,0 +1,227 @@
+/**
+ * Steampunk Theme Base Definitions
+ * Shared typography, textures, and variant component classes
+ * Feature: 011-steampunk-theme
+ */
+
+/* ============================================================================
+   Typography & Font Families
+   ============================================================================ */
+
+:root {
+  /* Body/UI Font */
+  --font-family-body: 'Courier Prime', 'Courier New', monospace;
+
+  /* Heading Font */
+  --font-family-heading: 'Cinzel', 'Georgia', serif;
+
+  /* Accent/Decorative Font */
+  --font-family-accent: 'Spectral', 'Georgia', serif;
+
+  /* Parchment texture for light theme - aged paper effect */
+  --texture-parchment: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(161, 130, 80, 0.02) 10px,
+    rgba(161, 130, 80, 0.02) 20px
+  );
+
+  /* Metal grain texture for dark theme - brushed steel effect */
+  --texture-metal: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 1px,
+    rgba(255, 255, 255, 0.02) 1px,
+    rgba(255, 255, 255, 0.02) 2px
+  );
+}
+
+/* ============================================================================
+   Texture Gradients (Base Definitions)
+   ============================================================================ */
+
+/* ============================================================================
+   Variant Component Classes - Steampunk Styling
+   ============================================================================ */
+
+/* Riveted Panel - adds corner rivets for mechanical appearance */
+.variant-steampunk-riveted {
+  position: relative;
+  background-clip: padding-box;
+}
+
+.variant-steampunk-riveted::before,
+.variant-steampunk-riveted::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.3));
+  border: 1px solid currentColor;
+}
+
+.variant-steampunk-riveted::before {
+  top: 8px;
+  left: 8px;
+}
+
+.variant-steampunk-riveted::after {
+  top: 8px;
+  right: 8px;
+}
+
+/* Brass variant - warm metallic accent styling */
+.variant-steampunk-brass {
+  border-color: var(--color-brass-600, #b8860b);
+  color: var(--color-brass-700, #8b6508);
+}
+
+/* Copper variant - burnished copper accent styling */
+.variant-steampunk-copper {
+  border-color: var(--color-copper-600, #cd7f32);
+  color: var(--color-copper-700, #b67325);
+}
+
+/* Lever button styling - mechanical press effect */
+.variant-steampunk-lever {
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 2px solid currentColor;
+}
+
+.variant-steampunk-lever:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Embossed text styling - raised/pressed effect */
+.variant-steampunk-embossed {
+  text-shadow:
+    1px 1px 0 rgba(255, 255, 255, 0.5),
+    -1px -1px 0 rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+}
+
+/* Parchment card styling - light theme card effect */
+.variant-steampunk-parchment {
+  background: var(--color-parchment-50, #f4ebd0);
+  border: 2px solid var(--color-brass-600, #b8860b);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Pressure gauge styling - circular indicator */
+.variant-steampunk-gauge {
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-family: var(--font-family-accent);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Valve toggle styling - mechanical on/off */
+.variant-steampunk-valve {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  background: var(--color-surface-500, #666);
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid currentColor;
+  transition: background 0.3s ease;
+}
+
+.variant-steampunk-valve::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--color-surface-50, #f0f0f0);
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.variant-steampunk-valve:checked::after {
+  left: 22px;
+}
+
+/* Focus state for accessibility */
+.variant-steampunk-focus {
+  outline: 3px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Mobile & Accessibility Optimizations
+   ============================================================================ */
+
+/* Disable complex textures on small screens (mobile) */
+@media (max-width: 1023px) {
+  :root {
+    --texture-parchment: none;
+    --texture-metal: none;
+  }
+
+  /* Ensure 44×44px minimum touch targets */
+  button,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Simplify typography on mobile */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  /* Hide rivets on mobile for cleaner appearance */
+  .variant-steampunk-riveted::before,
+  .variant-steampunk-riveted::after {
+    display: none;
+  }
+}
+
+/* Respect prefers-reduced-motion for animations */
+@media (prefers-reduced-motion: reduce) {
+  .variant-steampunk-lever,
+  .variant-steampunk-valve {
+    transition: none;
+  }
+
+  .variant-steampunk-lever:active {
+    transform: none;
+  }
+
+  :root {
+    --texture-parchment: none;
+    --texture-metal: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  .variant-steampunk-riveted::before,
+  .variant-steampunk-riveted::after {
+    background: var(--color-surface-900);
+    border: 2px solid var(--color-surface-900);
+  }
+
+  .variant-steampunk-lever {
+    border-width: 3px;
+  }
+}

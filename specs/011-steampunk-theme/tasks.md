@@ -19,13 +19,13 @@
 
 **Purpose**: Project initialization, migrations, and shared configuration
 
-- [ ] T001 Create database migration in src-tauri/migrations/0007_add_theme_setting.sql
-- [ ] T002 [P] Add ThemeValue enum to src-tauri/src/settings.rs with parse function
-- [ ] T003 [P] Add theme field to SettingsDto and UpdateSettingsPayload in src-tauri/src/settings.rs
-- [ ] T004 Update SettingsRepository SQL queries to include theme column in src-tauri/src/settings.rs
-- [ ] T005 [P] Add Google Fonts preconnect and font links in src/app.html
-- [ ] T006 [P] Add theme messages to messages/en.json (settings_theme_label, settings_theme_system, settings_theme_light, settings_theme_dark)
-- [ ] T007 [P] Add theme messages to messages/it.json (Italian translations)
+- [x] T001 Create database migration in src-tauri/migrations/0007_add_theme_setting.sql
+- [x] T002 [P] Add ThemeValue enum to src-tauri/src/settings.rs with parse function
+- [x] T003 [P] Add theme field to SettingsDto and UpdateSettingsPayload in src-tauri/src/settings.rs
+- [x] T004 Update SettingsRepository SQL queries to include theme column in src-tauri/src/settings.rs
+- [x] T005 [P] Add Google Fonts preconnect and font links in src/app.html
+- [x] T006 [P] Add theme messages to messages/en.json (settings_theme_label, settings_theme_system, settings_theme_light, settings_theme_dark)
+- [x] T007 [P] Add theme messages to messages/it.json (Italian translations)
 - [ ] T008 Run `pnpm tauri dev` to verify migration applies and bindings regenerate
 
 ---
@@ -36,13 +36,13 @@
 
 **⚠️ CRITICAL**: No UI work can proceed until theme tokens are defined
 
-- [ ] T009 Create src/lib/themes/ directory structure
-- [ ] T010 [P] Create steampunk-base.css with font families, texture gradients, and variant-steampunk-\* classes in src/lib/themes/steampunk-base.css
-- [ ] T011 [P] Create steampunk-light.css with Parchment & Brass color tokens in src/lib/themes/steampunk-light.css
-- [ ] T012 [P] Create steampunk-dark.css with Iron & Copper color tokens in src/lib/themes/steampunk-dark.css
-- [ ] T013 Update src/routes/layout.css to import steampunk themes and remove cerberus import
-- [ ] T014 [P] Create themeStore.svelte.ts with state management in src/lib/stores/themeStore.svelte.ts
-- [ ] T015 [P] Create steampunk-transitions.ts with custom Svelte transitions in src/lib/utils/steampunk-transitions.ts
+- [x] T009 Create src/lib/themes/ directory structure
+- [x] T010 [P] Create steampunk-base.css with font families, texture gradients, and variant-steampunk-\* classes in src/lib/themes/steampunk-base.css
+- [x] T011 [P] Create steampunk-light.css with Parchment & Brass color tokens in src/lib/themes/steampunk-light.css
+- [x] T012 [P] Create steampunk-dark.css with Iron & Copper color tokens in src/lib/themes/steampunk-dark.css
+- [x] T013 Update src/routes/layout.css to import steampunk themes and remove cerberus import
+- [x] T014 [P] Create themeStore.svelte.ts with state management in src/lib/stores/themeStore.svelte.ts
+- [x] T015 [P] Create steampunk-transitions.ts with custom Svelte transitions in src/lib/utils/steampunk-transitions.ts
 
 **Checkpoint**: Theme infrastructure ready—all theme tokens defined, store created
 

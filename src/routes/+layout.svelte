@@ -6,6 +6,7 @@
   import { Bell, TrainFront } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import { setAppVersion } from '$lib/stores/app';
+  import { themeStore } from '$lib/stores/themeStore.svelte';
   import {
     createCollectionState,
     setCollectionContext
@@ -42,6 +43,9 @@
   setTrackInventoryContext(trackInventoryService);
 
   onMount(async () => {
+    // 0. Initialize theme from settings
+    await themeStore.initializeFromSettings();
+
     // 1. Show main window immediately so the user sees *something* (loading state)
     // We don't block on this failing, but log it if it does.
     safeInvoke<void>('show_main_window').then((res) => {
