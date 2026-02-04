@@ -7,8 +7,7 @@
    */
 
   import { SvelteMap } from 'svelte/reactivity';
-  // @ts-expect-error - Skeleton types not available but package works at runtime
-  import { getModalStore } from '@skeletonlabs/skeleton';
+  import { getModalStore } from '$lib/stores/modal';
   import type { QuarterlyActivityPoint } from '../services/BudgetService.svelte';
   import type { BudgetState } from '../BudgetState.svelte';
   import QuarterlySummaryModal from './QuarterlySummaryModal.svelte';

@@ -6,8 +6,7 @@
    * Each year shows a full BudgetTable with 12-month breakdown.
    */
 
-  // @ts-expect-error - Skeleton types not available but package works at runtime
-  import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+  import { Accordion, AccordionItem } from '$lib/components/accordion';
   import type { BudgetState } from '../BudgetState.svelte';
   import BudgetTable from './BudgetTable.svelte';
   import * as m from '$lib/paraglide/messages.js';

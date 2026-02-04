@@ -10,8 +10,7 @@
    * - Error handling with toast feedback
    */
 
-  // @ts-expect-error - Skeleton types not available but package works at runtime
-  import { getModalStore } from '@skeletonlabs/skeleton';
+  import { getModalStore } from '$lib/stores/modal';
   import * as m from '$lib/paraglide/messages.js';
   import type { BudgetState } from '../BudgetState.svelte';
 

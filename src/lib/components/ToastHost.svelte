@@ -1,23 +1,10 @@
 <script lang="ts">
-  import { Toast } from '@skeletonlabs/skeleton-svelte';
-  import { toaster } from '$lib/toaster';
+  /**
+   * Toast Host Component
+   * Renders the toast notification provider for shadcn-svelte
+   * Displays all active toasts in top-right corner
+   */
+  import ToastProvider from './ToastProvider.svelte';
 </script>
 
-<Toast.Group {toaster}>
-  {#snippet children(toast)}
-    <Toast {toast}>
-      <Toast.Message>
-        {#if toast.title}
-          <Toast.Title>{toast.title}</Toast.Title>
-        {/if}
-        {#if toast.description}
-          <Toast.Description>{toast.description}</Toast.Description>
-        {/if}
-      </Toast.Message>
-      {#if toast.action}
-        <Toast.ActionTrigger />
-      {/if}
-      <Toast.CloseTrigger />
-    </Toast>
-  {/snippet}
-</Toast.Group>
+<ToastProvider />

@@ -6,8 +6,7 @@
    * Displays total spending and category-by-category breakdown with percentages.
    */
 
-  // @ts-expect-error - Skeleton types not available but package works at runtime
-  import { getModalStore } from '@skeletonlabs/skeleton';
+  import { getModalStore } from '$lib/stores/modal';
   import type { QuarterlySummary } from '../services/BudgetService.svelte';
   import * as m from '$lib/paraglide/messages.js';
 

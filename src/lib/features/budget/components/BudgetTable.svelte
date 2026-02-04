@@ -6,8 +6,7 @@
    * Shows base budget, extra budget, spending, rollover, and status for each month.
    */
 
-  // @ts-expect-error - Skeleton types not available but package works at runtime
-  import { getModalStore } from '@skeletonlabs/skeleton';
+  import { getModalStore } from '$lib/stores/modal';
   import type { BudgetState } from '../BudgetState.svelte';
   import type { MonthlyBudgetRecordDto } from '../services/BudgetService.svelte';
   import ExtraBudgetModal from './ExtraBudgetModal.svelte';

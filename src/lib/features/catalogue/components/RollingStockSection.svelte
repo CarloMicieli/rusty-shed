@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { Accordion } from '@skeletonlabs/skeleton-svelte';
-  const AccordionItem = Accordion.Item;
-  const AccordionItemTrigger = Accordion.ItemTrigger;
-  const AccordionItemContent = Accordion.ItemContent;
-  const AccordionItemIndicator = Accordion.ItemIndicator;
+  import {
+    Accordion,
+    AccordionItem,
+    AccordionItemTrigger,
+    AccordionItemContent,
+    AccordionItemIndicator
+  } from '$lib/components/accordion';
 
   import FormField from '$lib/components/ui/FormField.svelte';
   import type { ConstantItem } from '../constants';

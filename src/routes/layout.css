@@ -17,11 +17,7 @@
   --color-surface-content: #e4e4e7;
 }
 
-/* 2. Skeleton styles (now @variant md will work) */
-@import '@skeletonlabs/skeleton';
-@import '@skeletonlabs/skeleton/themes/cerberus';
-
-/* 3. Steampunk Theme Imports */
+/* 2. Steampunk Theme Imports (shadcn-svelte compatible) */
 @import '../lib/themes/steampunk-base.css';
 @import '../lib/themes/steampunk-light.css';
 @import '../lib/themes/steampunk-dark.css';

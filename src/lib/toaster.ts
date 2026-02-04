@@ -1,8 +1,3 @@
-import { createToaster } from '@skeletonlabs/skeleton-svelte';
-
-// Shared toaster instance used across the app
-export const toaster = createToaster({
-  placement: 'top-end',
-  overlap: true,
-  duration: 4000
-});
+// Re-export toast store for backward compatibility
+// This replaces the Skeleton toaster with a shadcn-svelte compatible implementation
+export { toastStore as toaster, type Toast } from './stores/toast';
