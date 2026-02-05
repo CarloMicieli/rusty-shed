@@ -8,7 +8,7 @@
   } from '$lib/components/accordion';
 
   import FormField from '$lib/components/ui/FormField.svelte';
-  import { Input } from '$lib/components';
+  import { Input, Checkbox } from '$lib/components';
   import type { ConstantItem } from '../constants';
   import type { RollingStockForm } from '../utils';
   import { resolveLabel } from '../../../../utils/resolveLabel';

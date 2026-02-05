@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Check } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, Badge } from '$lib/components';
   import type {
     SettingsDto,
     UpdateSettingsPayload,
@@ -103,10 +103,10 @@
       </p>
       <h2 class="h3 text-surface-50 font-bold">{m.settings_subtitle()}</h2>
     </div>
-    <div class="variant-soft-primary badge font-semibold tracking-wide uppercase">
+    <Badge variant="secondary" class="font-semibold tracking-wide uppercase">
       <Check class="mr-2 h-4 w-4" />
       {m.settings_saved_badge()}
-    </div>
+    </Badge>
   </header>
 
   <form class="space-y-8 p-6" onsubmit={handleSubmit}>

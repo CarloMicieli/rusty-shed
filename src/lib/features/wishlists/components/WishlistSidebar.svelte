@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Sparkles, Heart } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
+  import { Badge } from '$lib/components';
 
   const { wishlists, activeId, onSelect, onCreate, onDelete } = $props<{
     wishlists: WishlistPreview[];
@@ -43,7 +44,7 @@
           </div>
           <div class="flex items-center gap-2">
             {#if wl.is_default}
-              <span class="variant-soft-primary badge text-[10px] uppercase">Default</span>
+              <Badge variant="secondary" class="text-[10px] uppercase">Default</Badge>
             {/if}
             <button
               class="btn-icon btn btn-icon-sm"
