@@ -128,9 +128,7 @@
       <p class="text-sm font-semibold">{error}</p>
       <div class="flex gap-2">
         <Button variant="default" size="sm" onclick={() => depot.load()}>Retry</Button>
-        <Button variant="ghost" size="sm" onclick={clearSearch}
-          >{m.depot_clear_search()}</Button
-        >
+        <Button variant="ghost" size="sm" onclick={clearSearch}>{m.depot_clear_search()}</Button>
       </div>
     </div>
   {:else if totalFiltered === 0}

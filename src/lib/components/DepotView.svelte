@@ -48,11 +48,7 @@
     <p class="text-surface-400 mt-2 max-w-xs text-sm">
       {m.dashboard_empty_depot_message()}
     </p>
-    <Button
-      variant="default"
-      class="mt-6"
-      onclick={() => goto(resolve('/catalogue/new-model'))}
-    >
+    <Button variant="default" class="mt-6" onclick={() => goto(resolve('/catalogue/new-model'))}>
       <Plus size={18} class="mr-2" />
       {m.dashboard_add_first_model()}
     </Button>

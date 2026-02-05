@@ -155,11 +155,7 @@
           <Button type="button" variant="ghost" onclick={handleClose}>
             {m.maintenance_add_event_cancel()}
           </Button>
-          <Button
-            type="submit"
-            variant="default"
-            disabled={!isFormValid || isSubmitting}
-          >
+          <Button type="submit" variant="default" disabled={!isFormValid || isSubmitting}>
             {isSubmitting ? m.app_loading() : m.maintenance_add_event_submit()}
           </Button>
         </div>

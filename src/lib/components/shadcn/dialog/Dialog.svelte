@@ -3,7 +3,7 @@
    * Dialog Component (shadcn-svelte compatible)
    * Modal dialog overlay component
    * Supports Steampunk theme
-   * 
+   *
    * Feature: 012-shadcn-migration
    */
   import { twMerge } from 'tailwind-merge';
@@ -15,12 +15,7 @@
     children?: any;
   };
 
-  const {
-    open = false,
-    onOpenChange,
-    class: className = '',
-    children
-  }: Props = $props();
+  const { open = false, onOpenChange, class: className = '', children }: Props = $props();
 
   function handleBackdropClick(e: MouseEvent) {
     if (e.target === e.currentTarget && onOpenChange) {
@@ -29,10 +24,12 @@
   }
 
   const backdropClass = 'fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4';
-  const contentClass = $derived(twMerge(
-    'bg-surface-900 rounded-lg border border-surface-700/70 shadow-xl max-w-lg w-full',
-    className
-  ));
+  const contentClass = $derived(
+    twMerge(
+      'bg-surface-900 rounded-lg border border-surface-700/70 shadow-xl max-w-lg w-full',
+      className
+    )
+  );
 </script>
 
 {#if open}

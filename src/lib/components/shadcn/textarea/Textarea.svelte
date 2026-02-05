@@ -3,7 +3,7 @@
    * Textarea Component (shadcn-svelte compatible)
    * Replaces Skeleton's textarea classes with a proper component
    * Supports Steampunk theme
-   * 
+   *
    * Feature: 012-shadcn-migration
    */
   import { twMerge } from 'tailwind-merge';
@@ -42,7 +42,8 @@
     onfocus
   }: Props = $props();
 
-  const baseStyles = 'flex min-h-[80px] w-full rounded-md border border-surface-600 bg-surface-800 px-3 py-2 text-sm ring-offset-background placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y';
+  const baseStyles =
+    'flex min-h-[80px] w-full rounded-md border border-surface-600 bg-surface-800 px-3 py-2 text-sm ring-offset-background placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y';
 
   const textareaClass = $derived(twMerge(baseStyles, className));
 </script>
@@ -58,8 +59,8 @@
   {name}
   {maxlength}
   class={textareaClass}
-  oninput={oninput}
-  onchange={onchange}
-  onblur={onblur}
-  onfocus={onfocus}
+  {oninput}
+  {onchange}
+  {onblur}
+  {onfocus}
 ></textarea>

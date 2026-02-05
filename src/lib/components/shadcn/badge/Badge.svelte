@@ -3,7 +3,7 @@
    * Badge Component (shadcn-svelte compatible)
    * Replaces Skeleton's badge classes with a proper component
    * Supports Steampunk theme variants
-   * 
+   *
    * Feature: 012-shadcn-migration
    */
   import { twMerge } from 'tailwind-merge';
@@ -16,13 +16,10 @@
     children?: any;
   };
 
-  const {
-    variant = 'default',
-    class: className = '',
-    children
-  }: Props = $props();
+  const { variant = 'default', class: className = '', children }: Props = $props();
 
-  const baseStyles = 'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
+  const baseStyles =
+    'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
 
   const variantStyles: Record<BadgeVariant, string> = {
     default: 'border-transparent bg-primary-600 text-white hover:bg-primary-700',
@@ -32,11 +29,7 @@
     success: 'border-transparent bg-green-600 text-white hover:bg-green-700'
   };
 
-  const badgeClass = $derived(twMerge(
-    baseStyles,
-    variantStyles[variant],
-    className
-  ));
+  const badgeClass = $derived(twMerge(baseStyles, variantStyles[variant], className));
 </script>
 
 <span class={badgeClass}>

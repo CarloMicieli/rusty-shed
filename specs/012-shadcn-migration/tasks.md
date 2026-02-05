@@ -106,7 +106,7 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 **Status**: 🔄 IN PROGRESS - Button and Badge components created (commit b372a41)
 
 - Created Button component with 6 variants and 4 sizes
-- Created Badge component with 5 variants  
+- Created Badge component with 5 variants
 - Created COMPONENT_MAPPING.md with comprehensive audit (50+ btn, 30+ badge instances)
 - Installed tailwind-merge for className merging
 - Next: Begin replacing Skeleton classes across codebase

@@ -220,10 +220,7 @@
           {#if !dashboard.isLoading && depot.length === 0}
             <div class="card border-surface-500/20 border-2 border-dashed p-8 text-center">
               <p class="mb-4 text-surface-300">{m.dashboard_empty_depot()}</p>
-              <Button
-                variant="secondary"
-                onclick={() => goto(resolve('/catalogue/new-model'))}
-              >
+              <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
                 <Plus class="mr-2" />
                 {m.actions_add_railway_model()}
               </Button>

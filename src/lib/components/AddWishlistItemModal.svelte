@@ -167,12 +167,7 @@
       <Button variant="ghost" size="sm" onclick={close} disabled={isSubmitting}>
         {m.wishlist_modal_cancel()}
       </Button>
-      <Button
-        variant="default"
-        size="sm"
-        onclick={handleSubmit}
-        disabled={isSubmitting}
-      >
+      <Button variant="default" size="sm" onclick={handleSubmit} disabled={isSubmitting}>
         {isSubmitting ? m.wishlist_modal_saving() : m.wishlist_modal_save()}
       </Button>
     </div>

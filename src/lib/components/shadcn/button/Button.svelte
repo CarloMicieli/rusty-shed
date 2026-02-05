@@ -3,7 +3,7 @@
    * Button Component (shadcn-svelte compatible)
    * Replaces Skeleton's btn classes with a proper component
    * Supports Steampunk theme variants
-   * 
+   *
    * Feature: 012-shadcn-migration
    */
   import { twMerge } from 'tailwind-merge';
@@ -33,7 +33,8 @@
     children
   }: Props = $props();
 
-  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+  const baseStyles =
+    'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
   const variantStyles: Record<ButtonVariant, string> = {
     default: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
@@ -51,32 +52,19 @@
     icon: 'h-10 w-10'
   };
 
-  const buttonClass = $derived(twMerge(
-    baseStyles,
-    variantStyles[variant],
-    sizeStyles[size],
-    className
-  ));
+  const buttonClass = $derived(
+    twMerge(baseStyles, variantStyles[variant], sizeStyles[size], className)
+  );
 </script>
 
 {#if href}
-  <a
-    {href}
-    class={buttonClass}
-    aria-disabled={disabled}
-    onclick={onclick}
-  >
+  <a {href} class={buttonClass} aria-disabled={disabled} {onclick}>
     {#if children}
       {@render children()}
     {/if}
   </a>
 {:else}
-  <button
-    {type}
-    class={buttonClass}
-    {disabled}
-    onclick={onclick}
-  >
+  <button {type} class={buttonClass} {disabled} {onclick}>
     {#if children}
       {@render children()}
     {/if}

@@ -86,11 +86,7 @@
           <Button type="button" variant="ghost" onclick={handleClose}>
             {m.maintenance_create_card_cancel()}
           </Button>
-          <Button
-            type="submit"
-            variant="default"
-            disabled={!isFormValid || isSubmitting}
-          >
+          <Button type="submit" variant="default" disabled={!isFormValid || isSubmitting}>
             {isSubmitting ? m.app_loading() : m.maintenance_create_card_submit()}
           </Button>
         </div>
