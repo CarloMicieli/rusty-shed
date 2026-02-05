@@ -136,16 +136,16 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 
 - [x] T028 [P] Replace Skeleton Input with shadcn-svelte Input
 - [x] T029 [P] Replace Skeleton Textarea with shadcn-svelte Textarea
-- [ ] T030 [US1] Replace Skeleton Form components with shadcn-svelte Form (from bits-ui)
-- [ ] T031 [P] Test form validation and error display
-- [ ] T032 [US1] Test form submission workflow
+- [x] T030 [US1] Replace Skeleton Form components with shadcn-svelte Form (from bits-ui)
+- [x] T031 [P] Test form validation and error display
+- [x] T032 [US1] Test form submission workflow
 
 ### Modal & Overlay Components
 
 - [x] T033 [P] Replace Skeleton Modal with shadcn-svelte Dialog
 - [x] T034 [P] Replace Skeleton Drawer with shadcn-svelte Sheet
-- [ ] T035 [US1] Test modal open/close and animations
-- [ ] T036 [P] Test focus trapping and keyboard escape
+- [x] T035 [US1] Test modal open/close and animations
+- [x] T036 [P] Test focus trapping and keyboard escape
 
 ### Data Display Components
 
@@ -156,23 +156,23 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 
 ### Navigation & Dropdown Components
 
-- [ ] T041 [P] Replace Skeleton Menu with shadcn-svelte DropdownMenu
-- [ ] T042 [P] Replace Skeleton Navbar with shadcn-svelte components
-- [ ] T043 [US1] Test dropdown interactions and keyboard navigation
-- [ ] T044 [P] Test navbar responsiveness on mobile/tablet/desktop
+- [x] T041 [P] Replace Skeleton Menu with shadcn-svelte DropdownMenu
+- [x] T042 [P] Replace Skeleton Navbar with shadcn-svelte components
+- [x] T043 [US1] Test dropdown interactions and keyboard navigation
+- [x] T044 [P] Test navbar responsiveness on mobile/tablet/desktop
 
 ### Form Controls (Checkboxes, Radios, Toggles)
 
-- [ ] T045 [P] Replace Skeleton Checkbox with shadcn-svelte Checkbox
-- [ ] T046 [P] Replace Skeleton Radio with shadcn-svelte RadioGroup
-- [ ] T047 [US1] Replace Skeleton Toggle with shadcn-svelte Toggle
-- [ ] T048 [P] Test toggle states and form binding
+- [x] T045 [P] Replace Skeleton Checkbox with shadcn-svelte Checkbox
+- [x] T046 [P] Replace Skeleton Radio with shadcn-svelte RadioGroup
+- [x] T047 [US1] Replace Skeleton Toggle with shadcn-svelte Toggle
+- [x] T048 [P] Test toggle states and form binding
 
 ### Final Component Audit
 
-- [ ] T049 [US1] Search codebase for remaining Skeleton imports and replace
-- [ ] T050 Run build and verify no Skeleton-related errors
-- [ ] T051 Commit: `feat: replace all skeleton components with shadcn-svelte`
+- [x] T049 [US1] Search codebase for remaining Skeleton imports and replace
+- [x] T050 Run build and verify no Skeleton-related errors
+- [x] T051 Commit: `feat: replace all skeleton components with shadcn-svelte`
 
 ---
 
