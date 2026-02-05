@@ -134,8 +134,8 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 
 ### Form Components
 
-- [ ] T028 [P] Replace Skeleton Input with shadcn-svelte Input
-- [ ] T029 [P] Replace Skeleton Textarea with shadcn-svelte Textarea
+- [x] T028 [P] Replace Skeleton Input with shadcn-svelte Input
+- [x] T029 [P] Replace Skeleton Textarea with shadcn-svelte Textarea
 - [ ] T030 [US1] Replace Skeleton Form components with shadcn-svelte Form (from bits-ui)
 - [ ] T031 [P] Test form validation and error display
 - [ ] T032 [US1] Test form submission workflow
@@ -152,7 +152,7 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 - [x] T037 [P] Replace Skeleton Table with shadcn-svelte Table
 - [x] T038 [P] Replace Skeleton Card with shadcn-svelte Card
 - [ ] T039 [US1] Test table sorting and pagination
-- [ ] T040 [P] Replace Skeleton Badge with shadcn-svelte Badge
+- [x] T040 [P] Replace Skeleton Badge with shadcn-svelte Badge
 
 ### Navigation & Dropdown Components
 

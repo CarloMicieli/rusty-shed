@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, Input } from '$lib/components';
   import * as sellerService from '$lib/services/sellerService';
   import type { FormSeller } from '$lib/services/sellerAdapter';
   import type { SellerType } from '$lib/bindings';
@@ -105,7 +105,7 @@
   </div>
 
   <div class="card-body space-y-3">
-    <input class="input" placeholder="Name" bind:value={name} />
+    <Input placeholder="Name" bind:value={name} />
 
     <select class="select" bind:value={sellerType}>
       <option value="SHOP">Shop</option>
@@ -113,18 +113,18 @@
       <option value="OTHER">Other</option>
     </select>
 
-    <input class="input" placeholder="Email" bind:value={email} />
-    <input class="input" placeholder="Phone" bind:value={phone} />
-    <input class="input" placeholder="Website" bind:value={websiteUrl} />
+    <Input placeholder="Email" bind:value={email} />
+    <Input placeholder="Phone" bind:value={phone} />
+    <Input placeholder="Website" bind:value={websiteUrl} />
 
-    <input class="input" placeholder="Street address" bind:value={streetAddress} />
-    <input class="input" placeholder="Extended address" bind:value={extendedAddress} />
+    <Input placeholder="Street address" bind:value={streetAddress} />
+    <Input placeholder="Extended address" bind:value={extendedAddress} />
     <div class="grid grid-cols-3 gap-2">
-      <input class="input" placeholder="City" bind:value={city} />
-      <input class="input" placeholder="Region" bind:value={stateRegion} />
-      <input class="input" placeholder="Postal code" bind:value={postalCode} />
+      <Input placeholder="City" bind:value={city} />
+      <Input placeholder="Region" bind:value={stateRegion} />
+      <Input placeholder="Postal code" bind:value={postalCode} />
     </div>
-    <input class="input" placeholder="Country code" bind:value={countryCode} />
+    <Input placeholder="Country code" bind:value={countryCode} />
 
     {#if formError}
       <div class="text-error">{formError}</div>

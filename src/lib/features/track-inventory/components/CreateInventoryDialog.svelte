@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
   import { X } from 'lucide-svelte';
+  import { Input, Textarea, Button } from '$lib/components';
 
   interface Props {
     open?: boolean;
@@ -78,13 +79,12 @@
       <form onsubmit={handleSubmit} class="space-y-4">
         <label class="label">
           <span>{m.track_inventory_create_field_name()}</span>
-          <input type="text" class="input" bind:value={name} disabled={submitting} required />
+          <Input type="text" bind:value={name} disabled={submitting} required />
         </label>
 
         <label class="label">
           <span>{m.track_inventory_create_field_description()}</span>
-          <textarea class="textarea" bind:value={description} rows="3" disabled={submitting}
-          ></textarea>
+          <Textarea bind:value={description} rows={3} disabled={submitting} />
         </label>
 
         {#if error}
@@ -94,21 +94,16 @@
         {/if}
 
         <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            onclick={handleClose}
-            class="variant-ghost-surface btn"
-            disabled={submitting}
-          >
+          <Button type="button" onclick={handleClose} variant="ghost" disabled={submitting}>
             {m.track_inventory_create_cancel()}
-          </button>
-          <button type="submit" class="variant-filled-primary btn" disabled={submitting}>
+          </Button>
+          <Button type="submit" variant="default" disabled={submitting}>
             {#if submitting}
               <span class="animate-pulse">...</span>
             {:else}
               {m.track_inventory_create_submit()}
             {/if}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

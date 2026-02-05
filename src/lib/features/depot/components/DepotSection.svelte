@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends { id: string }">
   import type { Component } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Badge, Button } from '$lib/components';
 
   interface CardProps<ItemType> {
     item: ItemType;
@@ -11,7 +12,7 @@
     items,
     icon: Icon,
     card: Card,
-    toneClass = 'variant-filled-surface',
+    toneClass = 'secondary',
     stickyOffset = 'var(--header-offset, 4rem)',
     emptyMessage
   }: {
@@ -36,12 +37,12 @@
     style:top={stickyOffset}
   >
     <div class="flex items-center gap-3 rounded-lg px-2 py-2">
-      <span class="badge {toneClass} flex items-center justify-center p-1.5">
+      <Badge variant={toneClass} class="flex items-center justify-center p-1.5">
         <Icon size={16} />
-      </span>
+      </Badge>
       <div class="flex items-center gap-2">
         <h2 class="text-lg font-semibold tracking-tight">{title}</h2>
-        <span class="variant-soft-surface badge font-mono text-xs">{items.length}</span>
+        <Badge variant="outline" class="font-mono text-xs">{items.length}</Badge>
       </div>
     </div>
   </div>
@@ -63,13 +64,9 @@
           class="border-surface-500/10 text-surface-400 flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs"
         >
           <p>{m.depot_overflow_note({ showing: 100, total: items.length })}</p>
-          <button
-            type="button"
-            class="variant-ghost-primary btn btn-sm"
-            onclick={() => (viewAll = true)}
-          >
+          <Button type="button" variant="ghost" size="sm" onclick={() => (viewAll = true)}>
             {m.depot_view_all()}
-          </button>
+          </Button>
         </div>
       {/if}
     {/if}

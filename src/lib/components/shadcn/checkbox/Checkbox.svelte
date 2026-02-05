@@ -20,7 +20,7 @@
     onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
   };
 
-  const {
+  let {
     checked = $bindable(false),
     disabled = false,
     required = false,
@@ -35,19 +35,24 @@
     'peer h-4 w-4 shrink-0 rounded-sm border border-surface-600 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary-600 data-[state=checked]:text-white';
 
   const checkboxClass = $derived(twMerge(baseStyles, className));
+
+  function handleChange(e: Event & { currentTarget: HTMLInputElement }) {
+    checked = e.currentTarget.checked;
+    onchange?.(e);
+  }
 </script>
 
 <div class="relative inline-flex items-center">
   <input
     type="checkbox"
-    bind:checked
+    {checked}
+    onchange={handleChange}
     {disabled}
     {required}
     {id}
     {name}
     {value}
     class="peer sr-only"
-    {onchange}
     data-state={checked ? 'checked' : 'unchecked'}
   />
   <div class={checkboxClass} data-state={checked ? 'checked' : 'unchecked'}>

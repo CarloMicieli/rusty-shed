@@ -25,7 +25,7 @@
     onfocus?: (e: FocusEvent & { currentTarget: HTMLTextAreaElement }) => void;
   };
 
-  const {
+  let {
     value = $bindable(''),
     placeholder = '',
     disabled = false,
@@ -46,10 +46,22 @@
     'flex min-h-[80px] w-full rounded-md border border-surface-600 bg-surface-800 px-3 py-2 text-sm ring-offset-background placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y';
 
   const textareaClass = $derived(twMerge(baseStyles, className));
+
+  function handleInput(e: Event & { currentTarget: HTMLTextAreaElement }) {
+    value = e.currentTarget.value;
+    oninput?.(e);
+  }
+
+  function handleChange(e: Event & { currentTarget: HTMLTextAreaElement }) {
+    value = e.currentTarget.value;
+    onchange?.(e);
+  }
 </script>
 
 <textarea
-  bind:value
+  {value}
+  oninput={handleInput}
+  onchange={handleChange}
   {placeholder}
   {disabled}
   {readonly}
@@ -59,8 +71,6 @@
   {name}
   {maxlength}
   class={textareaClass}
-  {oninput}
-  {onchange}
   {onblur}
   {onfocus}
 ></textarea>
