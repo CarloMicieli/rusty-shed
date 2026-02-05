@@ -5,7 +5,7 @@
   import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { toaster } from '$lib/toaster';
-  import { Button } from '$lib/components';
+  import { Badge, Button } from '$lib/components';
 
   // Components
   import PageHeader from '$lib/components/PageHeader.svelte';
@@ -116,7 +116,7 @@
   <div
     class="variant-soft-error rounded-container border-error-500/30 flex flex-col items-center justify-center border p-12 text-center"
   >
-    <div class="variant-filled-error badge-icon mb-4 h-12 w-12"><RefreshCw /></div>
+    <Badge variant="destructive" class="mb-4 h-12 w-12 rounded-full"><RefreshCw /></Badge>
     <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
     <p class="mt-2 text-surface-200">{m.errors_dashboard_message()}</p>
     <div class="mt-6 flex gap-4">
@@ -144,8 +144,8 @@
           {m.dashboard_yard_statistics()}
         </h3>
         {#if totals?.maintenanceDue}
-          <span class="variant-soft-error badge animate-pulse font-semibold"
-            >{totals.maintenanceDue} {m.dashboard_due_soon()}</span
+          <Badge variant="destructive" class="animate-pulse font-semibold"
+            >{totals.maintenanceDue} {m.dashboard_due_soon()}</Badge
           >
         {/if}
       </div>

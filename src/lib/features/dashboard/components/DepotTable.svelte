@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DashboardDepotEntry } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
+  import { Badge } from '$lib/components';
 
   let { data } = $props<{ data: DashboardDepotEntry[] }>();
 </script>
@@ -23,19 +24,19 @@
           <td class="font-bold">{row.manufacturer.name ?? '—'}</td>
           <td class="text-primary-400 font-mono">{row.product_code ?? '—'}</td>
           <td>
-            <span class="variant-soft-surface badge">
+            <Badge variant="outline">
               {row.category ?? '—'}
-            </span>
+            </Badge>
           </td>
           <td>
-            <span class="variant-soft-secondary badge font-bold">
+            <Badge variant="secondary" class="font-bold">
               {row.scale ?? '—'}
-            </span>
+            </Badge>
           </td>
           <td>
-            <span class="variant-filled-surface badge font-bold tracking-wider">
-              {row.railway_company.name ?? '—'}
-            </span>
+            <Badge variant="default" class="font-bold tracking-wider">
+              {row.railway_company ?? '—'}
+            </Badge>
           </td>
           <td class="text-surface-300">{row.description ?? '—'}</td>
         </tr>

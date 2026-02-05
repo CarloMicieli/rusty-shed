@@ -11,6 +11,11 @@
   const urgency = $derived(getUrgencyLevel(card.nextMaintenanceDate));
   const colors = $derived(getUrgencyColors(urgency));
 
+  // Map urgency to Badge variant
+  const urgencyVariant = $derived(
+    urgency === 'overdue' ? 'destructive' : urgency === 'warning' ? 'secondary' : 'outline'
+  );
+
   // Format dates for display
   const formatDate = (dateStr: string | null): string => {
     if (!dateStr) return m.maintenance_card_no_last_maintenance();
@@ -44,9 +49,9 @@
         </h3>
       </div>
     </div>
-    <span class="badge {colors.bg} {colors.text} text-xs font-semibold">
+    <Badge variant={urgencyVariant} class="text-xs font-semibold">
       {getUrgencyLabel(urgency)}
-    </span>
+    </Badge>
   </div>
 
   <div class="flex flex-wrap gap-2 text-sm">

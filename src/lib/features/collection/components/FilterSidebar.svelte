@@ -2,7 +2,7 @@
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import * as m from '$lib/paraglide/messages.js';
   import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
-  import { Input } from '$lib/components';
+  import { Input, Badge } from '$lib/components';
 
   type ScaleOption = { id: string; display: string };
 
@@ -75,21 +75,21 @@
       {m.collection_filter_scales()}
     </p>
     <div class="flex flex-wrap gap-2">
-      <button
-        class="variant-soft-surface badge"
-        class:variant-filled-primary={filters.scale === null}
+      <Badge
+        variant={filters.scale === null ? 'default' : 'outline'}
         onclick={() => handleScaleChange(null)}
+        class="hover:bg-primary-600 cursor-pointer transition-colors"
       >
         All
-      </button>
+      </Badge>
       {#each availableScales as scaleOpt (scaleOpt.id)}
-        <button
-          class="variant-soft-surface badge"
-          class:variant-filled-primary={filters.scale === scaleOpt.id}
+        <Badge
+          variant={filters.scale === scaleOpt.id ? 'default' : 'outline'}
           onclick={() => handleScaleChange(scaleOpt.id)}
+          class="hover:bg-primary-600 cursor-pointer transition-colors"
         >
           {scaleOpt.display}
-        </button>
+        </Badge>
       {/each}
     </div>
   </div>
@@ -102,16 +102,16 @@
       {#each availableTags as tag (tag)}
         {#if tag}
           {@const Icon = tagIcon(tag)}
-          <button
-            class={`badge ${resolveTagMeta(tag).variant}`}
-            class:variant-filled-primary={filters.tags.has(tag)}
+          <Badge
+            variant={filters.tags.has(tag) ? 'default' : 'outline'}
             onclick={() => handleTagToggle(tag)}
+            class="hover:bg-primary-600 cursor-pointer transition-colors"
           >
             {#if Icon}
               <Icon size={14} />
             {/if}
             <span>{resolveTagMeta(tag).label()}</span>
-          </button>
+          </Badge>
         {/if}
       {/each}
     </div>

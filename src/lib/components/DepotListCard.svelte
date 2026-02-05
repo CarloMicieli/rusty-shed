@@ -2,6 +2,7 @@
   import type { DashboardDepotEntry } from '$lib/bindings';
   import { Building2, TrainFront } from 'lucide-svelte';
   import StatusBadge from '$lib/components/StatusBadge.svelte';
+  import { Badge } from '$lib/components';
 
   let { depot } = $props<{ depot: DashboardDepotEntry }>();
 </script>
@@ -24,23 +25,23 @@
         {depot.description ?? '—'}
       </p>
     </div>
-    <span class="variant-filled-secondary badge font-bold">
+    <Badge variant="secondary" class="font-bold">
       {depot.scale ?? '—'}
-    </span>
+    </Badge>
   </div>
 
   <div class="border-surface-700/50 flex flex-wrap gap-2 border-t pt-3">
     {#if depot.category}
-      <span class="variant-soft-surface badge flex items-center gap-1">
+      <Badge variant="outline" class="flex items-center gap-1">
         <TrainFront size={12} />
         {depot.category}
-      </span>
+      </Badge>
     {/if}
     {#if depot.railway_company}
-      <span class="variant-soft-surface badge flex items-center gap-1">
+      <Badge variant="outline" class="flex items-center gap-1">
         <Building2 size={12} />
         {depot.railway_company.name}
-      </span>
+      </Badge>
     {/if}
   </div>
 </div>

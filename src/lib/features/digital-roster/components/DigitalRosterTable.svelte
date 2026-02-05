@@ -2,7 +2,7 @@
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
   import { Search, X } from 'lucide-svelte';
-  import { Input } from '$lib/components';
+  import { Input, Badge } from '$lib/components';
 
   interface Props {
     rollingStocks: DigitalRollingStockView[];
@@ -88,9 +88,9 @@
               <td class="font-mono font-semibold">{stock.dcc_address}</td>
               <td>{stock.road_number ?? '-'}</td>
               <td>
-                <span class="variant-soft-primary badge">
+                <Badge variant="secondary">
                   {stock.category}
-                </span>
+                </Badge>
               </td>
               <td>{stock.railway_company_name ?? '-'}</td>
               <td>{stock.scale ?? '-'}</td>

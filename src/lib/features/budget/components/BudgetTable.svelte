@@ -10,6 +10,7 @@
   import type { BudgetState } from '../BudgetState.svelte';
   import type { MonthlyBudgetRecordDto } from '../services/BudgetService.svelte';
   import ExtraBudgetModal from './ExtraBudgetModal.svelte';
+  import { Badge } from '$lib/components';
 
   interface Props {
     records: MonthlyBudgetRecordDto[];
@@ -140,9 +141,9 @@
               {record.rolloverOut > 0 ? formatAmount(record.rolloverOut, record.currency) : '—'}
             </td>
             <td>
-              <span class="badge {getStatusBadgeClass(record.status)}">
+              <Badge variant="outline" class={getStatusBadgeClass(record.status)}>
                 {getStatusLabel(record.status)}
-              </span>
+              </Badge>
             </td>
             <td>
               <button

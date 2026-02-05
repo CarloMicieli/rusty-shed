@@ -203,21 +203,25 @@ Replaced 50+ Skeleton button instances across:
 ### Files Modified (Latest Sessions)
 
 **Session 1 - Input/Textarea/Badge Initial Replacements** (commit 06faa99):
+
 - **15 files changed** - ItemDrawer, PurchaseSection, AddModelDrawer, RollingStockEntry (both), AddWishlistItemModal, RollingStockSection, CreateRailwayModel, SidebarNavigation, BottomNavigation, ItemCard, DepotListCard, LocomotiveCard, MaintenanceCardItem, SearchBar
 - **70+ Input replacements** across high-priority forms
 - **10+ Textarea replacements** in notes and description fields
 - **25+ Badge replacements** in navigation and depot cards
 
 **Session 2 - Input/Textarea Completion** (commit 492fa31):
+
 - **4 files changed** - SearchBar, AddMaintenanceEventModal, ExtraBudgetModal, AddRailwayModelDrawer
 - **4 Input/Textarea replacements** completing feature components
 
 **Session 3 - Final Input Component Migration** (commit ff4943d):
+
 - **12 files changed** - RenameInventoryDialog, AddPurchaseDialog, InventoryItemRow, WishlistHeader, AddWishlistItemModal, FilterSidebar, DccAddressEditor, DecoderInstallDrawer, DigitalRosterTable, RollingStockSection, ExtraBudgetModal, SearchBar
 - **18+ Input replacements** across track inventory, wishlists, digital roster, catalogue, budget, and shared components
 - All native `<input>` elements with `class="input"` now replaced
 
 **Session 4 - Checkbox and Badge Completion** (commit ef80698):
+
 - **5 files changed** - RollingStockSection, SidebarNavigation, BottomNavigation, WishlistSidebar, SettingsForm
 - **2 Checkbox replacements** in catalogue (is_dummy fields)
 - **5 Badge replacements** in navigation (counts) and settings (saved status)

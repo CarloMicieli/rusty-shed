@@ -6,7 +6,7 @@
   import { PackageOpen, Plus } from 'lucide-svelte';
   import { resolve } from '$app/paths';
   import { goto } from '$app/navigation';
-  import { Button } from '$lib/components';
+  import { Badge, Button } from '$lib/components';
 
   // Use $props() for Svelte 5 component inputs
   let { data = [], isLoading = false } = $props<{
@@ -39,9 +39,9 @@
   <div
     class="rounded-container border-surface-700/60 bg-surface-800/30 flex flex-col items-center justify-center border-2 border-dashed p-12 text-center"
   >
-    <div class="variant-soft-surface badge-icon mb-4 h-16 w-16">
+    <Badge variant="outline" class="mb-4 h-16 w-16 rounded-full">
       <PackageOpen size={32} class="opacity-50" />
-    </div>
+    </Badge>
     <h4 class="h4 font-bold opacity-80">
       {m.dashboard_empty_depot_title()}
     </h4>
