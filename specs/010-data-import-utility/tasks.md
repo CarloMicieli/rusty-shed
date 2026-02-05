@@ -76,30 +76,30 @@
 
 ### Application Layer for US1
 
-- [ ] T023 [US1] Implement `ValidatePackageUseCase` in `src-tauri/src/import/application/validate_package.rs`
-- [ ] T024 [US1] Implement `ExecuteImportUseCase` for writing records in `src-tauri/src/import/application/execute_import.rs`
-- [ ] T025 [P] [US1] Create ID mapping service for external→internal ID resolution in `src-tauri/src/import/application/id_mapper.rs`
+- [x] T023 [US1] Implement `ValidatePackageUseCase` in `src-tauri/src/import/application/validate_package.rs`
+- [x] T024 [US1] Implement `ExecuteImportUseCase` for writing records in `src-tauri/src/import/application/execute_import.rs`
+- [x] T025 [P] [US1] Create ID mapping service for external→internal ID resolution in `src-tauri/src/import/application/id_mapper.rs`
 - [ ] T026 [US1] Export application layer in `src-tauri/src/import/application/mod.rs`
 
 ### Infrastructure for US1
 
-- [ ] T027 [US1] Implement `MediaStorage` for copying images to app data dir in `src-tauri/src/import/infrastructure/media_storage.rs`
-- [ ] T028 [US1] Add UUID-prefix collision avoidance to `MediaStorage`
+- [x] T027 [US1] Implement `MediaStorage` for copying images to app data dir in `src-tauri/src/import/infrastructure/media_storage.rs`
+- [x] T028 [US1] Add UUID-prefix collision avoidance to `MediaStorage`
 - [ ] T092 [US1] Add image file extension validation (.png, .jpg, .jpeg only) in `ArchiveExtractor` or validation phase
 
 ### Interface Layer for US1
 
-- [ ] T029 [US1] Create `AnalyzeImportPackageArgs` and response types in `src-tauri/src/import/interface/types.rs`
-- [ ] T030 [US1] Implement `analyze_import_package` Tauri command in `src-tauri/src/import/interface/commands.rs`
-- [ ] T031 [US1] Implement `execute_import` Tauri command in `src-tauri/src/import/interface/commands.rs`
-- [ ] T032 [US1] Register commands in Tauri app builder (update `src-tauri/src/lib.rs` or main.rs)
-- [ ] T033 [US1] Export interface types in `src-tauri/src/import/interface/mod.rs`
+- [x] T029 [US1] Create `AnalyzeImportPackageArgs` and response types in `src-tauri/src/import/interface/types.rs`
+- [x] T030 [US1] Implement `analyze_import_package` Tauri command in `src-tauri/src/import/interface/commands.rs`
+- [x] T031 [US1] Implement `execute_import` Tauri command in `src-tauri/src/import/interface/commands.rs`
+- [x] T032 [US1] Register commands in Tauri app builder (update `src-tauri/src/lib.rs` or main.rs)
+- [x] T033 [US1] Export interface types in `src-tauri/src/import/interface/mod.rs`
 
 ### Frontend for US1
 
-- [ ] T034 [P] [US1] Create `ImportDropZone.svelte` component in `src/lib/features/import/components/ImportDropZone.svelte`
-- [ ] T035 [US1] Add file handling methods to `import.controller.svelte.ts` (analyzePackage, executeImport)
-- [ ] T036 [US1] Create import page route at `src/routes/my-settings/import/+page.svelte`
+- [x] T034 [P] [US1] Create `ImportDropZone.svelte` component in `src/lib/features/import/components/ImportDropZone.svelte`
+- [x] T035 [US1] Add file handling methods to `import.controller.svelte.ts` (analyzePackage, executeImport)
+- [x] T036 [US1] Create import page route at `src/routes/my-settings/import/+page.svelte`
 
 ### Verification for US1
 

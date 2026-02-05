@@ -33,7 +33,7 @@ pub struct DataContainerDto {
     pub maintenance_cards: Vec<MaintenanceCardRecord>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ManufacturerRecord {
     pub id: String,
@@ -61,7 +61,7 @@ pub struct RailwayCompanyRecord {
     pub status: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RailwayModelRecord {
     pub id: String,
@@ -84,7 +84,7 @@ pub struct RailwayModelRecord {
     pub rolling_stocks: Vec<RollingStockRecord>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct CategoryRecord {
     pub r#type: String,
