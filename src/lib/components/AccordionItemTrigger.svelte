@@ -23,7 +23,7 @@
   type="button"
   data-accordion-trigger
   onclick={() => context?.toggle(value)}
-  class="bg-background hover:bg-accent flex w-full items-center justify-between px-4 py-3 text-left transition-colors {className}"
+  class="flex w-full items-center justify-between bg-background px-4 py-3 text-left transition-colors hover:bg-accent {className}"
   {value}
 >
   {#if children}

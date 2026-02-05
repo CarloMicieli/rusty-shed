@@ -28,7 +28,7 @@
 
   {#if isExpanded}
     <div
-      class="bg-background/95 animate-fade-in fixed inset-0 z-50 flex flex-col p-4 pt-20 backdrop-blur-sm"
+      class="animate-fade-in fixed inset-0 z-50 flex flex-col bg-background/95 p-4 pt-20 backdrop-blur-sm"
     >
       <Button variant="ghost" size="icon" class="absolute top-4 right-4" onclick={toggleSearch}>
         <X size={24} />

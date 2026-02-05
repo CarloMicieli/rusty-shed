@@ -144,11 +144,11 @@
   </div>
 
   <!-- Legend -->
-  <div class="mt-4 flex items-center gap-4 border-t border-surface-200 pt-4">
+  <div class="border-surface-200 mt-4 flex items-center gap-4 border-t pt-4">
     <span class="text-surface-700 text-sm font-medium">Spending Level:</span>
     <div class="flex gap-3">
       <div class="flex items-center gap-1.5">
-        <div class="h-4 w-4 rounded bg-surface-200"></div>
+        <div class="bg-surface-200 h-4 w-4 rounded"></div>
         <span class="text-surface-600 text-xs">None</span>
       </div>
       <div class="flex items-center gap-1.5">

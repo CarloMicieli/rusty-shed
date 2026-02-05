@@ -349,15 +349,15 @@ Final validation, performance optimization, and production readiness.
 
 - [x] T096 [P] Run full test suite: `pnpm test:ci`
 - [x] T097 [P] Run linter and formatter: `pnpm lint && pnpm format`
-- [X] T098 Run Tailwind CSS purge to optimize output size
+- [x] T098 Run Tailwind CSS purge to optimize output size
 - [ ] T099 [P] Benchmark page load performance (Lighthouse, WebPageTest)
-- [X] T100 [P] Check for console errors/warnings in dev and production builds
+- [x] T100 [P] Check for console errors/warnings in dev and production builds
 - [ ] T101 Verify dark mode switcher persists user preference
 - [ ] T102 [P] Test on multiple browsers: Chrome, Firefox, Safari, Edge
 - [ ] T103 Test Tauri desktop app build: `pnpm tauri build`
 - [ ] T104 [P] Visual regression testing: final comparison with baseline
 - [ ] T105 Accessibility audit: run WCAG 2.1 AA compliance check
-- [X] T106 [P] Update CHANGELOG.md with migration notes
+- [x] T106 [P] Update CHANGELOG.md with migration notes
 - [ ] T107 Create final PR with summary of changes and testing evidence
 - [x] T108 [P] Commit: `chore: final polish and cross-cutting validation`
 

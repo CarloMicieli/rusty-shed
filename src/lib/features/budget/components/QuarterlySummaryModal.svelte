@@ -88,14 +88,14 @@
   <!-- Category Breakdown -->
   {#if summary.categoryBreakdown.length > 0}
     <div class="space-y-3">
-      <h3 class="mb-3 text-lg font-semibold text-surface-100">By Category</h3>
+      <h3 class="text-surface-100 mb-3 text-lg font-semibold">By Category</h3>
 
       {#each summary.categoryBreakdown as category, index (category.category)}
         <div class="category-item border-surface-700 bg-surface-800 rounded-lg border p-3">
           <div class="mb-2 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <div class="h-3 w-3 rounded-full {getCategoryColor(index)}"></div>
-              <span class="font-medium text-surface-100">{getCategoryLabel(category.category)}</span
+              <span class="text-surface-100 font-medium">{getCategoryLabel(category.category)}</span
               >
             </div>
             <span class="text-surface-50 font-bold">

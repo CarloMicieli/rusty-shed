@@ -62,7 +62,7 @@
     </div>
 
     {#if item.notes}
-      <p class="line-clamp-2 text-sm text-surface-300">{item.notes}</p>
+      <p class="text-surface-300 line-clamp-2 text-sm">{item.notes}</p>
     {/if}
   </div>
 </article>

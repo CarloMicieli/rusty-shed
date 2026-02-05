@@ -187,7 +187,7 @@
       <AccordionItem value="basic-info" class="border-surface-600 rounded-lg border">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.basicInfo)}</h3>
-          <AccordionItemIndicator class="text-muted text-sm" />
+          <AccordionItemIndicator class="text-sm text-muted" />
         </AccordionItemTrigger>
 
         <AccordionItemContent class="px-3 pt-1 pb-4">
@@ -260,7 +260,7 @@
       <AccordionItem value="delivery-availability" class="border-surface-600 rounded-lg border">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.deliveryAvailability)}</h3>
-          <AccordionItemIndicator class="text-muted text-sm" />
+          <AccordionItemIndicator class="text-sm text-muted" />
         </AccordionItemTrigger>
 
         <AccordionItemContent class="px-3 pt-1 pb-4">
@@ -301,13 +301,13 @@
             {resolveLabel(formLabels.rollingStock)}
             <Badge variant="default" class="ml-2">{formData.rolling_stocks.length}</Badge>
           </h3>
-          <AccordionItemIndicator class="text-muted text-sm" />
+          <AccordionItemIndicator class="text-sm text-muted" />
         </AccordionItemTrigger>
 
         <AccordionItemContent class="px-3 pt-1 pb-4">
           <div class="space-y-4">
             {#if !hasRollingStock}
-              <div class="text-muted text-sm">Add at least one rolling stock item to continue.</div>
+              <div class="text-sm text-muted">Add at least one rolling stock item to continue.</div>
             {/if}
 
             {#each formData.rolling_stocks as rs, index (index)}

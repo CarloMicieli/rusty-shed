@@ -17,7 +17,7 @@
           <span class="text-primary-400 ml-1 font-mono">#{depot.product_code}</span>
         {/if}
       </h4>
-      <p class="line-clamp-2 pt-1 text-sm text-surface-300">
+      <p class="text-surface-300 line-clamp-2 pt-1 text-sm">
         {depot.description ?? '—'}
       </p>
     </div>

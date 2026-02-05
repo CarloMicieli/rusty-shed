@@ -21,7 +21,7 @@
         </h4>
         <StatusBadge status="in-service" />
       </div>
-      <p class="line-clamp-2 pt-1 text-sm text-surface-300">
+      <p class="text-surface-300 line-clamp-2 pt-1 text-sm">
         {depot.description ?? '—'}
       </p>
     </div>

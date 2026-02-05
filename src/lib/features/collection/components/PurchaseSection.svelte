@@ -50,7 +50,7 @@
   <!-- Section Header -->
   <button
     type="button"
-    class="hover:bg-surface-700/50 flex w-full items-center justify-between p-4 text-left text-surface-100"
+    class="hover:bg-surface-700/50 text-surface-100 flex w-full items-center justify-between p-4 text-left"
     onclick={onToggle}
     aria-expanded={expanded}
   >
@@ -69,7 +69,7 @@
         <!-- Seller -->
         <div>
           <label for="seller" class="mb-1 block">
-            <span class="text-sm text-surface-300">{m.add_model_seller()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_seller()}</span>
             <span class="text-surface-500 ml-1 text-xs">(optional)</span>
           </label>
           <select id="seller" bind:value={purchase.sellerId} class="input bg-surface-700 w-full">
@@ -83,7 +83,7 @@
         <!-- Purchase Date -->
         <div>
           <label for="purchase-date" class="mb-1 block">
-            <span class="text-sm text-surface-300">{m.add_model_purchase_date()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_purchase_date()}</span>
             <span class="text-surface-500 ml-1 text-xs">(optional)</span>
           </label>
           <Input id="purchase-date" type="date" bind:value={purchase.purchaseDate} class="w-full" />
@@ -94,7 +94,7 @@
         <!-- Price Amount -->
         <div class="md:col-span-2">
           <label for="price-amount" class="mb-1 block">
-            <span class="text-sm text-surface-300">{m.add_model_price()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_price()}</span>
             <span class="text-surface-500 ml-1 text-xs">(optional)</span>
           </label>
           <Input
@@ -111,7 +111,7 @@
         <!-- Currency -->
         <div>
           <label for="currency" class="mb-1 block">
-            <span class="text-sm text-surface-300">{m.add_model_currency()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_currency()}</span>
             <span class="text-surface-500 invisible ml-1 text-xs">.</span>
           </label>
           <select
@@ -131,7 +131,7 @@
         <!-- Purchase Condition -->
         <div>
           <label for="purchase-condition" class="mb-1 flex items-baseline">
-            <span class="text-sm text-surface-300">{m.add_model_purchase_condition()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_purchase_condition()}</span>
             <span class="text-surface-500 ml-1 text-xs whitespace-nowrap">(optional)</span>
           </label>
           <select
@@ -149,7 +149,7 @@
         <!-- Model Condition -->
         <div>
           <label for="model-condition" class="mb-1 flex items-baseline">
-            <span class="text-sm text-surface-300">{m.add_model_model_condition()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_model_condition()}</span>
             <span class="text-surface-500 ml-1 text-xs whitespace-nowrap">(optional)</span>
           </label>
           <select
@@ -167,7 +167,7 @@
         <!-- Box Condition -->
         <div>
           <label for="box-condition" class="mb-1 flex items-baseline">
-            <span class="text-sm text-surface-300">{m.add_model_box_condition()}</span>
+            <span class="text-surface-300 text-sm">{m.add_model_box_condition()}</span>
             <span class="text-surface-500 ml-1 text-xs whitespace-nowrap">(optional)</span>
           </label>
           <select
@@ -186,7 +186,7 @@
       <!-- Notes -->
       <div>
         <label for="notes" class="mb-1 block">
-          <span class="text-sm text-surface-300">{m.add_model_notes()}</span>
+          <span class="text-surface-300 text-sm">{m.add_model_notes()}</span>
           <span class="text-surface-500 ml-1 text-xs">(optional)</span>
         </label>
         <Textarea

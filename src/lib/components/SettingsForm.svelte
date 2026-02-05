@@ -112,7 +112,7 @@
   <form class="space-y-8 p-6" onsubmit={handleSubmit}>
     <div class="grid gap-6 md:grid-cols-2">
       <div class="space-y-2">
-        <label class="text-sm font-semibold tracking-wide text-surface-200" for="currency">
+        <label class="text-surface-200 text-sm font-semibold tracking-wide" for="currency">
           {m.currency_label()}
         </label>
         <select
@@ -127,7 +127,7 @@
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-semibold tracking-wide text-surface-200" for="language">
+        <label class="text-surface-200 text-sm font-semibold tracking-wide" for="language">
           {m.settings_language_label()}
         </label>
         <select
@@ -144,7 +144,7 @@
 
     <div class="grid gap-6 md:grid-cols-2">
       <div class="space-y-2">
-        <label class="text-sm font-semibold tracking-wide text-surface-200" for="length-unit">
+        <label class="text-surface-200 text-sm font-semibold tracking-wide" for="length-unit">
           {m.settings_unit_label()}
         </label>
         <select
@@ -159,7 +159,7 @@
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-semibold tracking-wide text-surface-200" for="scale">
+        <label class="text-surface-200 text-sm font-semibold tracking-wide" for="scale">
           {m.settings_scale_label()}
         </label>
         <select
@@ -175,7 +175,7 @@
     </div>
 
     <div class="space-y-3">
-      <p class="text-sm font-semibold tracking-wide text-surface-200">
+      <p class="text-surface-200 text-sm font-semibold tracking-wide">
         {m.settings_power_label()}
       </p>
       <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">

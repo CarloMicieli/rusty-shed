@@ -460,7 +460,7 @@ function error(titleOrOptions: string | ToastOptions, description?: string) {
 The following tasks require manual testing and cannot be fully automated:
 
 1. **T099** - Benchmark page load performance with Lighthouse/WebPageTest
-2. **T101** - Verify dark mode switcher persists user preference  
+2. **T101** - Verify dark mode switcher persists user preference
 3. **T102** - Test on multiple browsers (Chrome, Firefox, Safari, Edge)
 4. **T103** - Test Tauri desktop app build (`pnpm tauri build`)
 5. **T104** - Visual regression testing with baseline comparison
@@ -469,41 +469,42 @@ The following tasks require manual testing and cannot be fully automated:
 
 ### Component Inventory (All Complete)
 
-| Component | Status | Files Migrated | Lines Changed |
-|-----------|--------|----------------|---------------|
-| Button | ✅ Complete | 50+ | ~200 |
-| Badge | ✅ Complete | 30+ | ~150 |
-| Input | ✅ Complete | 40+ | ~300 |
-| Textarea | ✅ Complete | 15+ | ~80 |
-| Checkbox | ✅ Complete | 10+ | ~50 |
-| Select | ✅ Complete | 20+ | ~100 |
-| RadioGroup | ✅ Complete | 5+ | ~30 |
-| Dialog | ✅ Complete | 15+ | ~120 |
-| Sheet | ✅ Complete | 10+ | ~80 |
-| Card | ✅ Complete | 25+ | ~150 |
-| Table | ✅ Complete | 8+ | ~200 |
-| Alert | ✅ Complete | 5+ | ~40 |
-| Toggle | ✅ Complete | 3+ | ~25 |
-| PageHeader | ✅ Complete | 5 | ~50 |
-| ToastProvider | ✅ Complete | 1 | ~30 |
+| Component     | Status      | Files Migrated | Lines Changed |
+| ------------- | ----------- | -------------- | ------------- |
+| Button        | ✅ Complete | 50+            | ~200          |
+| Badge         | ✅ Complete | 30+            | ~150          |
+| Input         | ✅ Complete | 40+            | ~300          |
+| Textarea      | ✅ Complete | 15+            | ~80           |
+| Checkbox      | ✅ Complete | 10+            | ~50           |
+| Select        | ✅ Complete | 20+            | ~100          |
+| RadioGroup    | ✅ Complete | 5+             | ~30           |
+| Dialog        | ✅ Complete | 15+            | ~120          |
+| Sheet         | ✅ Complete | 10+            | ~80           |
+| Card          | ✅ Complete | 25+            | ~150          |
+| Table         | ✅ Complete | 8+             | ~200          |
+| Alert         | ✅ Complete | 5+             | ~40           |
+| Toggle        | ✅ Complete | 3+             | ~25           |
+| PageHeader    | ✅ Complete | 5              | ~50           |
+| ToastProvider | ✅ Complete | 1              | ~30           |
 
 ### Route Migration Status (All Complete)
 
-| Route | Components Updated | Status |
-|-------|-------------------|--------|
-| `/my-dashboard` | Stats, Charts, Depot View | ✅ Complete |
-| `/my-depot` | Table, Cards, Filters | ✅ Complete |
-| `/my-collection` | Forms, Drawers, Modals | ✅ Complete |
-| `/my-maintenance` | Cards, Modals, Lists | ✅ Complete |
-| `/my-budget` | Forms, Tables, Charts | ✅ Complete |
-| `/my-settings` | Form inputs, Toggle | ✅ Complete |
-| `/my-tracks` | Dialogs, Tables, Forms | ✅ Complete |
-| `/my-wishlists` | Forms, Drawers | ✅ Complete |
-| `/my-digital-roster` | Tables, Modals | ✅ Complete |
+| Route                | Components Updated        | Status      |
+| -------------------- | ------------------------- | ----------- |
+| `/my-dashboard`      | Stats, Charts, Depot View | ✅ Complete |
+| `/my-depot`          | Table, Cards, Filters     | ✅ Complete |
+| `/my-collection`     | Forms, Drawers, Modals    | ✅ Complete |
+| `/my-maintenance`    | Cards, Modals, Lists      | ✅ Complete |
+| `/my-budget`         | Forms, Tables, Charts     | ✅ Complete |
+| `/my-settings`       | Form inputs, Toggle       | ✅ Complete |
+| `/my-tracks`         | Dialogs, Tables, Forms    | ✅ Complete |
+| `/my-wishlists`      | Forms, Drawers            | ✅ Complete |
+| `/my-digital-roster` | Tables, Modals            | ✅ Complete |
 
 ### Testing Evidence
 
 #### Build & Type Checking
+
 ```bash
 ✅ svelte-check: 0 errors, 0 warnings
 ✅ TypeScript: No compilation errors
@@ -512,6 +513,7 @@ The following tasks require manual testing and cannot be fully automated:
 ```
 
 #### Accessibility Enhancements
+
 - ✅ ARIA labels on Checkbox component
 - ✅ ARIA describedby/labelledby on Dialog
 - ✅ aria-invalid support on Input
@@ -520,6 +522,7 @@ The following tasks require manual testing and cannot be fully automated:
 - ✅ Screen reader compatible form labels
 
 #### Code Quality Metrics
+
 - **Total Files Changed**: ~150
 - **Total Lines Changed**: ~3,500
 - **Components Created**: 15 core + 3 examples
@@ -551,5 +554,3 @@ The following tasks require manual testing and cannot be fully automated:
 4. Run axe-core or Pa11y for WCAG compliance
 5. Create visual regression baseline with Playwright
 6. Prepare final PR description with screenshots and metrics
-
-

@@ -43,16 +43,16 @@
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3 text-sm text-surface-300">
+        <div class="text-surface-300 flex flex-wrap items-center gap-3 text-sm">
           <div class="flex items-center gap-1">
-            <span class="font-semibold text-surface-100">{purchase.quantity}×</span>
+            <span class="text-surface-100 font-semibold">{purchase.quantity}×</span>
             <span>{m.track_purchase_history_item_quantity()}</span>
           </div>
 
           <span class="text-surface-600">•</span>
 
           <div class="flex items-center gap-1">
-            <span class="font-semibold text-surface-100">
+            <span class="text-surface-100 font-semibold">
               {formattedPrice}
               {purchase.price.currency}
             </span>
@@ -63,7 +63,7 @@
             <span class="text-surface-600">•</span>
             <div class="flex items-center gap-1">
               <span class="text-surface-400">from</span>
-              <span class="font-medium text-surface-100">{purchase.seller_name}</span>
+              <span class="text-surface-100 font-medium">{purchase.seller_name}</span>
             </div>
           {/if}
         </div>
@@ -71,7 +71,7 @@
     </div>
 
     <div class="flex shrink-0 flex-col items-end gap-1">
-      <time class="text-sm font-medium text-surface-200" datetime={purchase.purchase_date}>
+      <time class="text-surface-200 text-sm font-medium" datetime={purchase.purchase_date}>
         {formattedDate}
       </time>
     </div>

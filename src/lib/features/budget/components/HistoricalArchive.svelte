@@ -50,7 +50,7 @@
 </script>
 
 <div class="historical-archive space-y-4">
-  <h3 class="mb-4 text-lg font-semibold text-surface-100">Historical Budget Data</h3>
+  <h3 class="text-surface-100 mb-4 text-lg font-semibold">Historical Budget Data</h3>
 
   {#if historicalYears.length === 0}
     <p class="text-surface-400 text-sm">No historical data available.</p>
@@ -62,7 +62,7 @@
             {#snippet children({ isExpanded }: { isExpanded: boolean })}
               <AccordionItemTrigger value={year.toString()}>
                 <div class="flex w-full items-center justify-between">
-                  <span class="font-semibold text-surface-100">{formatYearRange(year)}</span>
+                  <span class="text-surface-100 font-semibold">{formatYearRange(year)}</span>
                   {#if loadingYear === year}
                     <span class="text-surface-400 text-xs"
                       >{m.budget_loading?.() || 'Loading...'}</span

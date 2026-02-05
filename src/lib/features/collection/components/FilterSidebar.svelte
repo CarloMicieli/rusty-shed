@@ -50,7 +50,7 @@
 
 <aside class="border-surface-700/60 bg-surface-900 space-y-4 rounded-xl border p-4">
   <div class="flex items-center justify-between">
-    <h3 class="text-sm font-semibold tracking-wide text-surface-300 uppercase">
+    <h3 class="text-surface-300 text-sm font-semibold tracking-wide uppercase">
       {m.collection_filters_title()}
     </h3>
     <button class="text-accent-400 hover:text-accent-300 text-xs" onclick={handleClear}>

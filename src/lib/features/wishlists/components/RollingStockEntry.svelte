@@ -39,7 +39,7 @@
     <!-- Railway Company -->
     <div>
       <label for="railway-company-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.wishlist_field_railway_company()}</span>
+        <span class="text-surface-300 text-sm">{m.wishlist_field_railway_company()}</span>
       </label>
       <select
         id="railway-company-{entry.id}"
@@ -57,7 +57,7 @@
     <!-- Series Code -->
     <div>
       <label for="series-code-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.wishlist_field_series_code()}</span>
+        <span class="text-surface-300 text-sm">{m.wishlist_field_series_code()}</span>
       </label>
       <Input
         id="series-code-{entry.id}"
@@ -74,7 +74,7 @@
     <!-- Category -->
     <div>
       <label for="category-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.wishlist_field_category()}</span>
+        <span class="text-surface-300 text-sm">{m.wishlist_field_category()}</span>
       </label>
       <select
         id="category-{entry.id}"
@@ -93,7 +93,7 @@
     <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.wishlist_field_road_number()}</span>
+        <span class="text-surface-300 text-sm">{m.wishlist_field_road_number()}</span>
       </label>
       <Input
         id="road-number-{entry.id}"

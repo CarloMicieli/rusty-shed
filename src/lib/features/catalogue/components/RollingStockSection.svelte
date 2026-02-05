@@ -125,7 +125,7 @@
       <AccordionItem value={`technical-${index}-passenger`}>
         <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-muted text-xs" />
+          <AccordionItemIndicator class="text-xs text-muted" />
         </AccordionItemTrigger>
         <AccordionItemContent class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -192,7 +192,7 @@
       <AccordionItem value={`technical-${index}-railcar`}>
         <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-muted text-xs" />
+          <AccordionItemIndicator class="text-xs text-muted" />
         </AccordionItemTrigger>
         <AccordionItemContent class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -233,7 +233,7 @@
 
   <label class="label flex items-center gap-2">
     <input class="checkbox" type="checkbox" bind:checked={rs.is_dummy} />
-    <span class="text-sm font-bold tracking-wider text-surface-300 uppercase">
+    <span class="text-surface-300 text-sm font-bold tracking-wider uppercase">
       {resolveLabel(formLabels.isDummy)}
     </span>
   </label>
@@ -243,7 +243,7 @@
       <AccordionItem value={`technical-${index}-emu`}>
         <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-muted text-xs" />
+          <AccordionItemIndicator class="text-xs text-muted" />
         </AccordionItemTrigger>
         <AccordionItemContent class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -286,7 +286,7 @@
 
   <label class="label flex items-center gap-2">
     <input class="checkbox" type="checkbox" bind:checked={rs.is_dummy} />
-    <span class="text-sm font-bold tracking-wider text-surface-300 uppercase">
+    <span class="text-surface-300 text-sm font-bold tracking-wider uppercase">
       {resolveLabel(formLabels.isDummy)}
     </span>
   </label>
@@ -296,7 +296,7 @@
       <AccordionItem value={`technical-${index}-locomotive`}>
         <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-muted text-xs" />
+          <AccordionItemIndicator class="text-xs text-muted" />
         </AccordionItemTrigger>
         <AccordionItemContent class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -106,20 +106,20 @@
 
       <div class="space-y-4">
         <label class="block space-y-1">
-          <span class="text-sm text-surface-300">Brand</span>
+          <span class="text-surface-300 text-sm">Brand</span>
           <Input bind:value={form.brand} class="w-full" />
         </label>
         <label class="block space-y-1">
-          <span class="text-sm text-surface-300">Catalog Number</span>
+          <span class="text-surface-300 text-sm">Catalog Number</span>
           <Input bind:value={form.catalogNumber} class="w-full" />
         </label>
         <label class="block space-y-1">
-          <span class="text-sm text-surface-300">Title</span>
+          <span class="text-surface-300 text-sm">Title</span>
           <Input bind:value={form.title} class="w-full" />
         </label>
         <div class="grid grid-cols-2 gap-3">
           <label class="block space-y-1">
-            <span class="text-sm text-surface-300">Scale</span>
+            <span class="text-surface-300 text-sm">Scale</span>
             <select class="input bg-surface-800 w-full" bind:value={form.scale}>
               {#each availableScales as scaleOpt (scaleOpt.id)}
                 <option value={scaleOpt.id}>{scaleOpt.display}</option>
@@ -127,16 +127,16 @@
             </select>
           </label>
           <label class="block space-y-1">
-            <span class="text-sm text-surface-300">Power</span>
+            <span class="text-surface-300 text-sm">Power</span>
             <Input bind:value={form.powerSystem} class="w-full" />
           </label>
         </div>
         <label class="block space-y-1">
-          <span class="text-sm text-surface-300">Description</span>
+          <span class="text-surface-300 text-sm">Description</span>
           <Textarea rows={3} bind:value={form.description} class="w-full" />
         </label>
         <label class="block space-y-1">
-          <span class="text-sm text-surface-300">Tags (comma separated)</span>
+          <span class="text-surface-300 text-sm">Tags (comma separated)</span>
           <Input
             value={form.tags.join(', ')}
             oninput={(e) => handleTagsInput((e.target as HTMLInputElement).value)}

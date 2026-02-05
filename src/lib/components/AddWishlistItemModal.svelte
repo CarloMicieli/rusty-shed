@@ -90,7 +90,7 @@
       <div class="space-y-2">
         <label
           for="wishlist-select"
-          class="text-xs font-semibold tracking-wide text-surface-300 uppercase"
+          class="text-surface-300 text-xs font-semibold tracking-wide uppercase"
         >
           {m.wishlist_modal_choose_or_create()}
         </label>
@@ -124,7 +124,7 @@
       <div class="space-y-2">
         <label
           for="model-id"
-          class="text-xs font-semibold tracking-wide text-surface-300 uppercase"
+          class="text-surface-300 text-xs font-semibold tracking-wide uppercase"
         >
           {m.wishlist_modal_item_id_label()}
         </label>
@@ -139,7 +139,7 @@
       <div class="space-y-2">
         <label
           for="wishlist-notes"
-          class="text-xs font-semibold tracking-wide text-surface-300 uppercase"
+          class="text-surface-300 text-xs font-semibold tracking-wide uppercase"
         >
           {m.wishlist_modal_notes_label()}
         </label>

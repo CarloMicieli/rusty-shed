@@ -73,7 +73,7 @@
   setContext('accordion-context', context);
 </script>
 
-<div class="divide-border bg-background divide-y rounded-lg border {className}">
+<div class="divide-y divide-border rounded-lg border bg-background {className}">
   {#if children}
     {@render children(context)}
   {/if}

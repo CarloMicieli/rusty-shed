@@ -339,7 +339,7 @@
         <form id="add-model-form" class="space-y-6">
           <!-- Railway Model Section -->
           <section>
-            <h3 class="mb-4 text-lg font-semibold text-surface-100">
+            <h3 class="text-surface-100 mb-4 text-lg font-semibold">
               {m.add_model_section_model()}
             </h3>
             <div class="space-y-4">
@@ -347,7 +347,7 @@
                 <!-- Manufacturer -->
                 <div>
                   <label for="manufacturer" class="block space-y-1">
-                    <span class="text-sm text-surface-300">{m.add_model_manufacturer()}</span>
+                    <span class="text-surface-300 text-sm">{m.add_model_manufacturer()}</span>
                   </label>
                   <select
                     id="manufacturer"
@@ -373,7 +373,7 @@
                 <!-- Product Code -->
                 <div>
                   <label for="product-code" class="block space-y-1">
-                    <span class="text-sm text-surface-300">{m.add_model_product_code()}</span>
+                    <span class="text-surface-300 text-sm">{m.add_model_product_code()}</span>
                   </label>
                   <Input
                     id="product-code"
@@ -396,7 +396,7 @@
               <!-- Description -->
               <div>
                 <label for="description" class="block space-y-1">
-                  <span class="text-sm text-surface-300">{m.add_model_description()}</span>
+                  <span class="text-surface-300 text-sm">{m.add_model_description()}</span>
                 </label>
                 <Input
                   id="description"
@@ -417,7 +417,7 @@
                 <!-- Category -->
                 <div>
                   <label for="category" class="block space-y-1">
-                    <span class="text-sm text-surface-300">{m.add_model_category()}</span>
+                    <span class="text-surface-300 text-sm">{m.add_model_category()}</span>
                   </label>
                   <select
                     id="category"
@@ -442,7 +442,7 @@
                 <!-- Scale -->
                 <div>
                   <label for="scale" class="block space-y-1">
-                    <span class="text-sm text-surface-300">{m.add_model_scale()}</span>
+                    <span class="text-surface-300 text-sm">{m.add_model_scale()}</span>
                   </label>
                   <select
                     id="scale"
@@ -468,7 +468,7 @@
                 <!-- Power Method -->
                 <div>
                   <label for="power-method" class="block space-y-1">
-                    <span class="text-sm text-surface-300">{m.add_model_power_method()}</span>
+                    <span class="text-surface-300 text-sm">{m.add_model_power_method()}</span>
                   </label>
                   <select
                     id="power-method"
@@ -494,7 +494,7 @@
                 <!-- Epoch -->
                 <div>
                   <label for="epoch" class="block space-y-1">
-                    <span class="text-sm text-surface-300">{m.add_model_epoch()}</span>
+                    <span class="text-surface-300 text-sm">{m.add_model_epoch()}</span>
                   </label>
                   <select
                     id="epoch"
@@ -521,7 +521,7 @@
           <!-- Rolling Stocks Section -->
           <section>
             <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-surface-100">
+              <h3 class="text-surface-100 text-lg font-semibold">
                 {m.add_model_section_rolling_stock()}
               </h3>
               <button
@@ -589,7 +589,7 @@
 {#if showDiscardDialog}
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
     <div class="border-surface-700 bg-surface-900 w-full max-w-md rounded-lg border p-6 shadow-xl">
-      <h3 class="mb-2 text-lg font-bold text-surface-100">{m.add_model_discard_title()}</h3>
+      <h3 class="text-surface-100 mb-2 text-lg font-bold">{m.add_model_discard_title()}</h3>
       <p class="text-surface-400 mb-4">{m.add_model_discard_message()}</p>
       <div class="flex justify-end gap-3">
         <button type="button" class="variant-ghost-surface btn" onclick={handleDiscardCancel}>

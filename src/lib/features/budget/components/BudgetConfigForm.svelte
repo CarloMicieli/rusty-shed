@@ -74,14 +74,14 @@
       <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.budget_config_title()}
       </p>
-      <h2 class="text-xl font-bold text-surface-100">{m.budget_subtitle()}</h2>
+      <h2 class="text-surface-100 text-xl font-bold">{m.budget_subtitle()}</h2>
     </div>
   </header>
 
   <form class="space-y-6 p-6" onsubmit={handleSubmit}>
     <!-- Budget Mode Toggle -->
     <div class="space-y-2">
-      <label for="budget-mode" class="block text-sm font-medium text-surface-300">
+      <label for="budget-mode" class="text-surface-300 block text-sm font-medium">
         {m.budget_config_mode_label()}
       </label>
       <div id="budget-mode" class="flex gap-3">
@@ -108,7 +108,7 @@
                 <div class="h-2 w-2 rounded-full bg-white"></div>
               {/if}
             </div>
-            <span class="font-medium text-surface-100">{option.label}</span>
+            <span class="text-surface-100 font-medium">{option.label}</span>
           </label>
         {/each}
       </div>
@@ -116,7 +116,7 @@
 
     <!-- Budget Amount Input -->
     <div class="space-y-2">
-      <label for="amount" class="block text-sm font-medium text-surface-300">
+      <label for="amount" class="text-surface-300 block text-sm font-medium">
         {m.budget_config_amount_label()}
         {mode === 'MONTHLY' ? m.budget_config_mode_monthly() : m.budget_config_mode_yearly()}
       </label>
@@ -128,7 +128,7 @@
         bind:value={amountInputValue}
         required
         disabled={saving}
-        class="border-surface-700 bg-surface-800 placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500/50 w-full rounded-lg border px-4 py-3 text-surface-100 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="border-surface-700 bg-surface-800 placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500/50 text-surface-100 w-full rounded-lg border px-4 py-3 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         placeholder="0.00"
       />
       <p class="text-surface-400 text-xs">
@@ -138,7 +138,7 @@
 
     <!-- Derived Calculations Display -->
     <div class="border-surface-700 bg-surface-800/30 space-y-2 rounded-lg border p-4">
-      <h3 class="text-sm font-semibold text-surface-300">{m.budget_config_summary_title()}</h3>
+      <h3 class="text-surface-300 text-sm font-semibold">{m.budget_config_summary_title()}</h3>
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
           <p class="text-surface-400">{m.budget_config_mode_monthly()}</p>

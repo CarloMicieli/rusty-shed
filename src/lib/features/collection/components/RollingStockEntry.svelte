@@ -44,7 +44,7 @@
     <!-- Railway Company -->
     <div>
       <label for="railway-company-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.add_model_railway_company()}</span>
+        <span class="text-surface-300 text-sm">{m.add_model_railway_company()}</span>
       </label>
       <select
         id="railway-company-{entry.uid}"
@@ -70,7 +70,7 @@
     <!-- Series Code -->
     <div>
       <label for="series-code-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.add_model_series_code()}</span>
+        <span class="text-surface-300 text-sm">{m.add_model_series_code()}</span>
       </label>
       <Input
         id="series-code-{entry.uid}"
@@ -92,7 +92,7 @@
     <!-- Category -->
     <div>
       <label for="category-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.add_model_rs_category()}</span>
+        <span class="text-surface-300 text-sm">{m.add_model_rs_category()}</span>
       </label>
       <select
         id="category-{entry.uid}"
@@ -117,7 +117,7 @@
     <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.add_model_road_number()}</span>
+        <span class="text-surface-300 text-sm">{m.add_model_road_number()}</span>
         <span class="text-surface-500 ml-1 text-xs">(optional)</span>
       </label>
       <Input
@@ -134,7 +134,7 @@
   {#if showLocomotiveType}
     <div>
       <label for="locomotive-type-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-surface-300">{m.add_model_locomotive_type()}</span>
+        <span class="text-surface-300 text-sm">{m.add_model_locomotive_type()}</span>
       </label>
       <select
         id="locomotive-type-{entry.uid}"

@@ -116,7 +116,7 @@
         class="border-accent-400 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
         aria-hidden="true"
       ></div>
-      <p class="text-sm text-surface-300">Loading depot…</p>
+      <p class="text-surface-300 text-sm">Loading depot…</p>
     </div>
   {:else if error}
     <div

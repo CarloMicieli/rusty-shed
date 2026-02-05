@@ -185,10 +185,10 @@
             {#each visibleItems as item (item.id)}
               {@const props = getItemProps(item)}
               <tr class="group">
-                <td class="hidden align-middle text-surface-300 sm:table-cell">
+                <td class="text-surface-300 hidden align-middle sm:table-cell">
                   {props.manufacturer}
                 </td>
-                <td class="align-middle font-medium text-surface-200">
+                <td class="text-surface-200 align-middle font-medium">
                   <div class="font-mono text-sm">{props.productCode}</div>
                   <!-- Mobile-only details -->
                   <div class="text-surface-400 mt-0.5 space-x-1 text-xs font-normal sm:hidden">
@@ -202,10 +202,10 @@
                 >
                   {props.category}
                 </td>
-                <td class="hidden align-middle text-surface-300 sm:table-cell">
+                <td class="text-surface-300 hidden align-middle sm:table-cell">
                   {props.railway}
                 </td>
-                <td class="hidden align-middle font-mono text-sm text-surface-300 md:table-cell">
+                <td class="text-surface-300 hidden align-middle font-mono text-sm md:table-cell">
                   {props.roadNumber}
                 </td>
                 {#if type === 'car'}

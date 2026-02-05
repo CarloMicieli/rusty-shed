@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Feature 012: shadcn-svelte Migration
 
 #### New Components
+
 - **shadcn-svelte UI Components** (v1.1.1): Complete replacement of Skeleton UI 4.9.0
   - `Button` - Primary CTA component with 5 variants (default, destructive, outline, ghost, link) and 3 sizes
   - `Badge` - Status indicators with 4 variants (default, secondary, destructive, outline)
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Toggle` - Toggle switch component
 
 #### Component Features
+
 - **Tailwind CSS 4.1.18**: Upgraded from v3, automatic CSS purging via Vite plugin
 - **Steampunk Theme Integration**: All components styled with custom Steampunk design system
   - Bronze/copper accents with gear motifs
@@ -39,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - WCAG 2.1 AA compliant color contrast
 
 #### Developer Experience
+
 - **Comprehensive Documentation**:
   - `/docs/SHADCN_ONBOARDING.md` - 890-line developer guide
   - Quick start guide
@@ -56,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DialogFormExample.svelte` - Modal form workflows
 
 #### UI Consistency
+
 - **PageHeader Component**: Standardized 3-tier page headers across all routes
   - Section label (e.g., "Command Center")
   - Page title
@@ -64,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Applied to: Dashboard, Depot, Maintenance, Budget, Settings pages
 
 #### Code Quality
+
 - **Build Optimization**:
   - Tailwind CSS automatic purging (production builds)
   - Manual chunk splitting for lucide-svelte icons
@@ -140,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Notes
 
 This migration maintains 100% feature parity with the previous Skeleton UI implementation while adding:
+
 - Better accessibility (ARIA support, keyboard navigation)
 - Improved TypeScript safety
 - Enhanced developer documentation
@@ -151,7 +157,8 @@ This migration maintains 100% feature parity with the previous Skeleton UI imple
 
 **Upgrade Path**: Automatic - no user action required
 
-**Testing**: 
+**Testing**:
+
 - ✅ All routes manually tested
 - ✅ All components visually verified
 - ✅ Dark mode tested and working
@@ -164,4 +171,3 @@ This migration maintains 100% feature parity with the previous Skeleton UI imple
 ## [Previous Releases]
 
 _(Previous changelog entries will be added here)_
-

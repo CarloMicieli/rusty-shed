@@ -318,7 +318,7 @@
         <!-- Wishlist Selection -->
         <div>
           <label for="wishlist" class="block space-y-1">
-            <span class="text-sm font-medium text-surface-300">
+            <span class="text-surface-300 text-sm font-medium">
               {m.wishlist_field_wishlist()}
               <span class="text-error-500">*</span>
             </span>
@@ -333,12 +333,12 @@
 
         <!-- Railway Model Section -->
         <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
-          <h3 class="text-lg font-semibold text-surface-100">Railway Model Details</h3>
+          <h3 class="text-surface-100 text-lg font-semibold">Railway Model Details</h3>
 
           <!-- Manufacturer -->
           <div>
             <label for="manufacturer" class="block space-y-1">
-              <span class="text-sm font-medium text-surface-300">
+              <span class="text-surface-300 text-sm font-medium">
                 {m.wishlist_field_manufacturer()}
                 <span class="text-error-500">*</span>
               </span>
@@ -359,7 +359,7 @@
           <!-- Product Code -->
           <div>
             <label for="product-code" class="block space-y-1">
-              <span class="text-sm font-medium text-surface-300">
+              <span class="text-surface-300 text-sm font-medium">
                 {m.wishlist_field_product_code()}
                 <span class="text-error-500">*</span>
               </span>
@@ -377,7 +377,7 @@
           <!-- Description -->
           <div>
             <label for="description" class="block space-y-1">
-              <span class="text-sm font-medium text-surface-300">
+              <span class="text-surface-300 text-sm font-medium">
                 {m.wishlist_field_description()}
                 <span class="text-error-500">*</span>
               </span>
@@ -396,7 +396,7 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label for="category" class="block space-y-1">
-                <span class="text-sm font-medium text-surface-300">
+                <span class="text-surface-300 text-sm font-medium">
                   {m.wishlist_field_category()}
                   <span class="text-error-500">*</span>
                 </span>
@@ -412,7 +412,7 @@
 
             <div>
               <label for="scale" class="block space-y-1">
-                <span class="text-sm font-medium text-surface-300">
+                <span class="text-surface-300 text-sm font-medium">
                   {m.wishlist_field_scale()}
                   <span class="text-error-500">*</span>
                 </span>
@@ -430,7 +430,7 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label for="power-method" class="block space-y-1">
-                <span class="text-sm font-medium text-surface-300">
+                <span class="text-surface-300 text-sm font-medium">
                   {m.wishlist_field_power_method()}
                   <span class="text-error-500">*</span>
                 </span>
@@ -446,7 +446,7 @@
 
             <div>
               <label for="epoch" class="block space-y-1">
-                <span class="text-sm font-medium text-surface-300">
+                <span class="text-surface-300 text-sm font-medium">
                   {m.wishlist_field_epoch()}
                   <span class="text-error-500">*</span>
                 </span>
@@ -464,7 +464,7 @@
         <!-- Rolling Stocks Section -->
         <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-surface-100">
+            <h3 class="text-surface-100 text-lg font-semibold">
               {m.wishlist_rolling_stocks_title()}
             </h3>
             <button type="button" class="variant-soft btn btn-sm" onclick={addRollingStock}>
@@ -491,12 +491,12 @@
 
         <!-- Wishlist Item Details -->
         <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
-          <h3 class="text-lg font-semibold text-surface-100">Wishlist Details</h3>
+          <h3 class="text-surface-100 text-lg font-semibold">Wishlist Details</h3>
 
           <!-- Priority -->
           <div>
             <label for="priority" class="block space-y-1">
-              <span class="text-sm font-medium text-surface-300">{m.wishlist_field_priority()}</span
+              <span class="text-surface-300 text-sm font-medium">{m.wishlist_field_priority()}</span
               >
             </label>
             <select id="priority" bind:value={form.priority} class="input w-full">
@@ -510,7 +510,7 @@
           <!-- Desired Price -->
           <div>
             <label for="desired-price" class="block space-y-1">
-              <span class="text-sm font-medium text-surface-300"
+              <span class="text-surface-300 text-sm font-medium"
                 >{m.wishlist_field_desired_price()}</span
               >
             </label>
@@ -528,7 +528,7 @@
           <!-- Notes -->
           <div>
             <label for="notes" class="block space-y-1">
-              <span class="text-sm font-medium text-surface-300">{m.wishlist_field_notes()}</span>
+              <span class="text-surface-300 text-sm font-medium">{m.wishlist_field_notes()}</span>
             </label>
             <Textarea
               id="notes"

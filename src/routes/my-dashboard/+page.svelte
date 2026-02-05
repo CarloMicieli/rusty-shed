@@ -118,7 +118,7 @@
   >
     <Badge variant="destructive" class="mb-4 h-12 w-12 rounded-full"><RefreshCw /></Badge>
     <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
-    <p class="mt-2 text-surface-200">{m.errors_dashboard_message()}</p>
+    <p class="text-surface-200 mt-2">{m.errors_dashboard_message()}</p>
     <div class="mt-6 flex gap-4">
       <Button variant="default" size="lg" onclick={handleRetry}>
         {m.errors_retry_page()}
@@ -140,7 +140,7 @@
 
     <section>
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
           {m.dashboard_yard_statistics()}
         </h3>
         {#if totals?.maintenanceDue}
@@ -166,7 +166,7 @@
       <div class="border-surface-700/50 my-6 border-t"></div>
 
       <div class="mt-6">
-        <h3 class="h3 mb-4 text-sm font-bold tracking-wider text-surface-300 uppercase">
+        <h3 class="h3 text-surface-300 mb-4 text-sm font-bold tracking-wider uppercase">
           Charts & Analytics
         </h3>
         <DashboardCharts />
@@ -177,7 +177,7 @@
       <div class="space-y-8 lg:col-span-2">
         <section>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+            <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
               {m.dashboard_recently_added()}
             </h3>
             <a
@@ -194,7 +194,7 @@
             </div>
           {:else if !recent.length}
             <div
-              class="variant-soft-surface rounded-container border-surface-700/60 border border-dashed p-10 text-center text-surface-300"
+              class="variant-soft-surface rounded-container border-surface-700/60 text-surface-300 border border-dashed p-10 text-center"
             >
               <p class="mb-2">{m.dashboard_empty_recent()}</p>
               <p class="text-surface-400 text-sm">{m.dashboard_empty_recent_prompt()}</p>
@@ -212,14 +212,14 @@
 
         <section>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+            <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
               {m.dashboard_the_depot()}
             </h3>
           </div>
 
           {#if !dashboard.isLoading && depot.length === 0}
             <div class="card border-surface-500/20 border-2 border-dashed p-8 text-center">
-              <p class="mb-4 text-surface-300">{m.dashboard_empty_depot()}</p>
+              <p class="text-surface-300 mb-4">{m.dashboard_empty_depot()}</p>
               <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
                 <Plus class="mr-2" />
                 {m.actions_add_railway_model()}
@@ -233,7 +233,7 @@
 
       <aside>
         <div class="sticky top-24 space-y-4">
-          <h3 class="h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+          <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
             {m.dashboard_command_center()}
           </h3>
           <QuickActionButtons {actions} />

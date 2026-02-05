@@ -81,7 +81,7 @@
 
 {#if error}
   <div
-    class="bg-background text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans"
+    class="text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans"
     in:fade
   >
     <div class="flex max-w-md flex-col items-center gap-6 p-6 text-center">
@@ -102,7 +102,7 @@
   </div>
 {:else if loading}
   <div
-    class="bg-background text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans"
+    class="text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans"
     in:fade
     out:fade
   >
@@ -116,12 +116,12 @@
           <span class="text-lg font-semibold tracking-wide">Rusty Shed</span>
         </div>
       </div>
-      <p class="text-sm text-surface-300">Preparing your collection...</p>
+      <p class="text-surface-300 text-sm">Preparing your collection...</p>
     </div>
   </div>
 {:else}
   <div
-    class="bg-background text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col overflow-hidden font-sans lg:flex-row"
+    class="text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col overflow-hidden bg-background font-sans lg:flex-row"
     in:fade
   >
     <!-- Sidebar Left (Desktop) -->
@@ -133,7 +133,7 @@
     <div class="relative flex h-full min-w-0 flex-1 flex-col">
       <!-- Header -->
       <header
-        class="bg-background/80 border-surface-700/50 sticky top-0 z-40 border-b backdrop-blur-md"
+        class="border-surface-700/50 sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md"
         data-tauri-drag-region
       >
         <div class="flex items-center justify-between p-4">

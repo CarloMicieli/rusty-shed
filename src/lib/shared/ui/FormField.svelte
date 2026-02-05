@@ -9,7 +9,7 @@
 </script>
 
 <label class="label" for={fieldId}>
-  <span class="text-sm font-bold tracking-wider text-surface-300 uppercase">
+  <span class="text-surface-300 text-sm font-bold tracking-wider uppercase">
     {resolveLabel(label)}{required ? ' *' : ''}
   </span>
   <slot />

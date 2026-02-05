@@ -72,7 +72,7 @@
       out:send={{ key: toast.id }}
       class="pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg {getVariantClasses(
         toast.variant
-      )} animate-in fade-in slide-in-from-right-1/2 transition-all duration-200"
+      )} animate-in transition-all duration-200 fade-in slide-in-from-right-1/2"
       role="alert"
       aria-live="polite"
     >

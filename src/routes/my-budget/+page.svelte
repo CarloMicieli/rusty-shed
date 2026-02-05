@@ -135,7 +135,7 @@
     <!-- Current Configuration Display (if exists) -->
     {#if budgetState.hasConfig && budgetState.config}
       <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
-        <h3 class="mb-4 text-lg font-semibold text-surface-100">
+        <h3 class="text-surface-100 mb-4 text-lg font-semibold">
           {m.budget_config_summary_title()}
         </h3>
 
@@ -168,7 +168,7 @@
       <!-- Year Selector and Budget Table -->
       <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-surface-100">
+          <h3 class="text-surface-100 text-lg font-semibold">
             {m.budget_mode_yearly?.() || 'Monthly Budget Breakdown'}
           </h3>
           <div class="flex items-center gap-2">

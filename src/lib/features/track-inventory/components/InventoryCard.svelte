@@ -23,7 +23,7 @@
       <div>
         <h3 class="h4 font-bold">{inventory.name}</h3>
         {#if inventory.description}
-          <p class="text-sm text-surface-300">{inventory.description}</p>
+          <p class="text-surface-300 text-sm">{inventory.description}</p>
         {/if}
       </div>
     </div>

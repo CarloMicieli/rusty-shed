@@ -341,7 +341,7 @@
           <!-- Rolling Stock Selection -->
           <div>
             <label for="rolling-stock" class="block space-y-1">
-              <span class="text-sm text-surface-300">{m.digital_roster_rolling_stock_label()}</span>
+              <span class="text-surface-300 text-sm">{m.digital_roster_rolling_stock_label()}</span>
             </label>
             <select
               id="rolling-stock"
@@ -367,7 +367,7 @@
           <!-- Decoder Selection -->
           <div>
             <label for="decoder" class="block space-y-1">
-              <span class="text-sm text-surface-300">{m.digital_roster_decoder_label()}</span>
+              <span class="text-surface-300 text-sm">{m.digital_roster_decoder_label()}</span>
             </label>
             <select
               id="decoder"
@@ -390,7 +390,7 @@
           <!-- DCC Address -->
           <div>
             <label for="dcc-address" class="block space-y-1">
-              <span class="text-sm text-surface-300">{m.digital_roster_address_label()}</span>
+              <span class="text-surface-300 text-sm">{m.digital_roster_address_label()}</span>
             </label>
             <Input
               id="dcc-address"
@@ -412,7 +412,7 @@
           <!-- Installation Date (for future use, not currently stored) -->
           <div>
             <label for="installation-date" class="block space-y-1">
-              <span class="text-sm text-surface-300">{m.digital_roster_date_label()}</span>
+              <span class="text-surface-300 text-sm">{m.digital_roster_date_label()}</span>
             </label>
             <Input
               id="installation-date"

@@ -29,7 +29,7 @@
     </div>
     <div class="text-right">
       <p class="text-surface-400 text-xs font-semibold tracking-wide uppercase">{label}</p>
-      <p class="text-xl font-bold text-surface-100">{value}</p>
+      <p class="text-surface-100 text-xl font-bold">{value}</p>
     </div>
   </div>
 {/snippet}

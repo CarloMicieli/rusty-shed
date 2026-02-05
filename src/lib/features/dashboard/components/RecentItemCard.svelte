@@ -19,19 +19,19 @@
         alt={item.title}
         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
-      <div class="from-background/90 absolute inset-0 bg-gradient-to-t to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
     {:else}
       <div
-        class="from-surface-800 to-surface-700 absolute inset-0 flex items-center justify-center bg-gradient-to-br text-2xl font-semibold text-surface-200"
+        class="from-surface-800 to-surface-700 text-surface-200 absolute inset-0 flex items-center justify-center bg-gradient-to-br text-2xl font-semibold"
       >
         {item.title.slice(0, 2).toUpperCase()}
       </div>
     {/if}
-    <div class="from-background/90 absolute inset-0 bg-gradient-to-t to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
     <div class="absolute bottom-0 left-0 p-4">
       <h4 class="h4 text-surface-50 font-bold">{item.title}</h4>
       {#if item.subtitle}
-        <p class="text-xs tracking-wider text-surface-300 uppercase">{item.subtitle}</p>
+        <p class="text-surface-300 text-xs tracking-wider uppercase">{item.subtitle}</p>
       {/if}
     </div>
   </div>
