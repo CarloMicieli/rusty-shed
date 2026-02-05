@@ -68,16 +68,16 @@ Set up the core systems needed for all user stories: theme system integration, t
 
 ---
 
-- [ ] T010 Create `src/lib/components/shadcn/` directory structure for shadcn components
-- [ ] T011 [P] Verify Steampunk theme files are intact (steampunk-base.css, steampunk-light.css, steampunk-dark.css)
-- [ ] T012 Integrate Steampunk theme system with shadcn-svelte's theming approach (CSS variables, design tokens)
-- [ ] T013 [P] Test theme switching: dark mode → light mode → dark mode works
-- [ ] T014 Create toast provider component at root level (`src/routes/+layout.svelte`)
-- [ ] T015 [P] Implement toast stacking logic for top-right corner positioning
-- [ ] T016 Create theme switcher store (`src/lib/stores/theme.ts`) for centralized theme state
-- [ ] T017 [P] Document component import patterns for developers (in README or CONTRIBUTING)
-- [ ] T018 Create `src/lib/components/index.ts` to export all shadcn components
-- [ ] T019 [P] Test toast provider setup with a test notification
+- [X] T010 Create `src/lib/components/shadcn/` directory structure for shadcn components
+- [X] T011 [P] Verify Steampunk theme files are intact (steampunk-base.css, steampunk-light.css, steampunk-dark.css)
+- [X] T012 Integrate Steampunk theme system with shadcn-svelte's theming approach (CSS variables, design tokens)
+- [X] T013 [P] Test theme switching: dark mode → light mode → dark mode works
+- [X] T014 Create toast provider component at root level (`src/routes/+layout.svelte`)
+- [X] T015 [P] Implement toast stacking logic for top-right corner positioning
+- [X] T016 Create theme switcher store (`src/lib/stores/theme.ts`) for centralized theme state
+- [X] T017 [P] Document component import patterns for developers (in README or CONTRIBUTING)
+- [X] T018 Create `src/lib/components/index.ts` to export all shadcn components
+- [X] T019 [P] Test toast provider setup with a test notification
 - [ ] T020 Commit: `feat: setup shadcn-svelte theme system and toast provider`
 
 ---

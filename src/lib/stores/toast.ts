@@ -75,29 +75,82 @@ function createToastStore() {
 
     /**
      * Show an error toast
-     * @param title Error title
-     * @param description Optional error details
+     * @param titleOrOptions Error title string or full Toast object
+     * @param description Optional error details (only used if first param is string)
      */
-    error: (title: string, description?: string) => {
+    error: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+      if (typeof titleOrOptions === 'string') {
+        return toastStore.add({
+          title: titleOrOptions,
+          description,
+          variant: 'destructive',
+          duration: 5000
+        });
+      }
       return toastStore.add({
-        title,
-        description,
-        variant: 'destructive',
-        duration: 5000
+        ...titleOrOptions,
+        variant: 'destructive'
       });
     },
 
     /**
      * Show a success toast
-     * @param title Success title
-     * @param description Optional details
+     * @param titleOrOptions Success title string or full Toast object
+     * @param description Optional details (only used if first param is string)
      */
-    success: (title: string, description?: string) => {
+    success: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+      if (typeof titleOrOptions === 'string') {
+        return toastStore.add({
+          title: titleOrOptions,
+          description,
+          variant: 'success',
+          duration: 4000
+        });
+      }
       return toastStore.add({
-        title,
-        description,
-        variant: 'success',
-        duration: 4000
+        ...titleOrOptions,
+        variant: 'success'
+      });
+    },
+
+    /**
+     * Show an info toast
+     * @param titleOrOptions Info title string or full Toast object
+     * @param description Optional details (only used if first param is string)
+     */
+    info: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+      if (typeof titleOrOptions === 'string') {
+        return toastStore.add({
+          title: titleOrOptions,
+          description,
+          variant: 'default',
+          duration: 4000
+        });
+      }
+      return toastStore.add({
+        ...titleOrOptions,
+        variant: 'default'
+      });
+    },
+
+    /**
+     * Show a loading toast
+     * @param titleOrOptions Loading title string or full Toast object
+     * @param description Optional details (only used if first param is string)
+     */
+    loading: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+      if (typeof titleOrOptions === 'string') {
+        return toastStore.add({
+          title: titleOrOptions,
+          description,
+          variant: 'default',
+          duration: 0 // Loading toasts don't auto-dismiss
+        });
+      }
+      return toastStore.add({
+        ...titleOrOptions,
+        variant: 'default',
+        duration: titleOrOptions.duration ?? 0
       });
     }
   };

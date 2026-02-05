@@ -7,11 +7,13 @@
 import { writable, derived } from 'svelte/store';
 
 export interface ModalOptions {
+  type?: 'alert' | 'confirm' | 'prompt' | 'component';
   title?: string;
   body?: string;
   component?: unknown;
   meta?: Record<string, unknown>;
   response?: (value: unknown) => void;
+  value?: unknown;
 }
 
 export interface Modal extends ModalOptions {
