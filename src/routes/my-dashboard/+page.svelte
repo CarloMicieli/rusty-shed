@@ -150,9 +150,9 @@
         {/if}
       </div>
 
-      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {#if dashboard.isLoading}
-          {#each Array(4) as _item, index (index)}<div
+          {#each Array(3) as _item, index (index)}<div
               class="skeleton rounded-container h-28"
             ></div>{/each}
         {:else}
@@ -173,8 +173,8 @@
       </div>
     </section>
 
-    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-      <div class="space-y-8 lg:col-span-2">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div class="space-y-8">
         <section>
           <div class="mb-4 flex items-center justify-between">
             <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
@@ -194,17 +194,22 @@
             </div>
           {:else if !recent.length}
             <div
-              class="variant-soft-surface rounded-container border-surface-700/60 text-surface-300 border border-dashed p-10 text-center"
+              class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
             >
-              <p class="mb-2">{m.dashboard_empty_recent()}</p>
-              <p class="text-surface-400 text-sm">{m.dashboard_empty_recent_prompt()}</p>
+              <div
+                class="border-surface-600/60 text-surface-200 mx-auto mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
+              >
+                {m.dashboard_blueprint_label()}
+              </div>
+              <p class="text-base font-semibold">{m.dashboard_empty_recent_blueprint_title()}</p>
+              <p class="text-surface-300 mt-2 text-sm">
+                {m.dashboard_empty_recent_blueprint_message()}
+              </p>
             </div>
           {:else}
-            <div
-              class="hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 lg:grid lg:grid-cols-2"
-            >
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {#each recent as item (item.id)}
-                <div class="min-w-[80%] snap-center lg:min-w-0"><RecentItemCard {item} /></div>
+                <RecentItemCard {item} />
               {/each}
             </div>
           {/if}
@@ -218,8 +223,16 @@
           </div>
 
           {#if !dashboard.isLoading && depot.length === 0}
-            <div class="card border-surface-500/20 border-2 border-dashed p-8 text-center">
-              <p class="text-surface-300 mb-4">{m.dashboard_empty_depot()}</p>
+            <div class="blueprint-panel card p-8 text-center">
+              <div
+                class="border-surface-600/60 text-surface-200 mx-auto mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
+              >
+                {m.dashboard_blueprint_label()}
+              </div>
+              <p class="text-base font-semibold">{m.dashboard_empty_depot_blueprint_title()}</p>
+              <p class="text-surface-300 mt-2 mb-5 text-sm">
+                {m.dashboard_empty_depot_blueprint_message()}
+              </p>
               <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
                 <Plus class="mr-2" />
                 {m.actions_add_railway_model()}
@@ -231,14 +244,23 @@
         </section>
       </div>
 
-      <aside>
-        <div class="sticky top-24 space-y-4">
+      <aside class="hidden lg:block">
+        <div class="gauge-frame sticky top-24 space-y-4 p-4">
           <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
             {m.dashboard_command_center()}
           </h3>
           <QuickActionButtons {actions} />
         </div>
       </aside>
+    </div>
+
+    <div class="lg:hidden">
+      <div class="gauge-frame fixed right-6 bottom-6 z-30 w-64 max-w-[80vw] space-y-3 p-3">
+        <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
+          {m.dashboard_command_center()}
+        </p>
+        <QuickActionButtons {actions} class="gap-2" />
+      </div>
     </div>
   </div>
 {/if}

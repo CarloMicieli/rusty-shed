@@ -70,8 +70,7 @@
     Math.max(...monthlySpending.map((d: MonthlySpendingPoint) => d.amount), 1)
   );
   const historyValueMax = $derived(Math.max(...historyData.map((d: HistoryPoint) => d.value), 1));
-  const chartCardClass =
-    'variant-filled-surface card border border-surface-700/60 p-4 transition-colors duration-200 backdrop-blur-sm';
+  const chartCardClass = 'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm';
 </script>
 
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -118,8 +117,8 @@
           slot="belowMarks"
           id={budgetGradientId}
           stops={[
-            ['0%', '#22c55e'],
-            ['100%', '#ef4444']
+            ['0%', '#d48a3e'],
+            ['100%', '#b87333']
           ]}
         />
       </PieChart>
@@ -149,7 +148,7 @@
         padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
         props={{
           svg: { class: 'h-full w-full', style: 'background: transparent' },
-          bars: { fill: '#3b82f6' },
+          bars: { fill: '#d48a3e' },
           grid: {
             y: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' },
             x: false
@@ -202,9 +201,9 @@
             y: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' }
           },
           points: {
-            fill: '#10b981',
+            fill: '#b87333',
             fillOpacity: 0.32,
-            stroke: '#10b981'
+            stroke: '#d48a3e'
           },
           xAxis: {
             format: formatMonthNumber,

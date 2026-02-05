@@ -10,12 +10,13 @@
 </script>
 
 <div
-  class="{hasAlert
-    ? 'variant-soft-error border-error-500/30'
-    : 'variant-filled-surface hover:variant-filled-secondary'} card space-y-2 border p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+  class={[
+    'card gauge-frame space-y-3 p-5 text-foreground transition-all duration-200',
+    hasAlert ? 'ring-error-500/40 ring-2' : 'ring-1 ring-border/40'
+  ]}
 >
   <div class="text-surface-400 flex items-center justify-between">
-    <span class="text-sm font-bold tracking-widest uppercase">{stat.label}</span>
+    <span class="text-xs font-bold tracking-[0.2em] uppercase">{stat.label}</span>
     {#if hasAlert}
       <AlertCircle size={18} class="text-error-400 animate-pulse" />
     {:else if stat.trend === 'up'}
@@ -27,7 +28,7 @@
     {/if}
   </div>
   <div class="flex items-end gap-2">
-    <h3 class="h2 text-primary-400 font-bold">{stat.value}</h3>
+    <h3 class="h2 font-bold text-primary">{stat.value}</h3>
     <span
       class="{stat.trend === 'up'
         ? 'text-success-500'

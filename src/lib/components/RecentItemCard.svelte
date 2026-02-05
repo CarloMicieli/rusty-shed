@@ -1,6 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import type { Source } from '$lib/bindings';
+  import * as m from '$lib/paraglide/messages.js';
 
   type RecentItem = {
     id: string;
@@ -16,9 +18,9 @@
     if (!item.source) return;
 
     if (item.source === 'Collection') {
-      goto(`/my-collection/${item.id}`);
+      goto(resolve('/my-collection'));
     } else {
-      goto(`/my-wishlists/${item.id}`);
+      goto(resolve('/my-wishlists'));
     }
   }
 </script>
@@ -37,10 +39,15 @@
       />
       <div class="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
     {:else}
-      <div
-        class="from-surface-800 to-surface-700 text-surface-200 absolute inset-0 flex items-center justify-center bg-gradient-to-br text-3xl font-bold"
-      >
-        {item.title.slice(0, 2).toUpperCase()}
+      <div class="absolute inset-0 p-4">
+        <div
+          class="blueprint-panel text-surface-200 flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg text-center"
+        >
+          <span class="text-xs font-semibold tracking-[0.3em] uppercase">
+            {m.dashboard_blueprint_label()}
+          </span>
+          <span class="text-lg font-bold">{item.title}</span>
+        </div>
       </div>
     {/if}
     <div class="absolute inset-0 bg-gradient-to-t from-background/95 to-transparent"></div>
