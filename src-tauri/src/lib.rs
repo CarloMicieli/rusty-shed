@@ -4,6 +4,7 @@ pub mod collecting;
 pub mod core;
 pub mod dashboard;
 pub mod dcc_inventory;
+pub mod import;
 pub mod maintenance;
 pub mod sellers;
 pub mod settings;
@@ -25,6 +26,7 @@ use crate::core::infrastructure::logging;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::dcc_inventory::interface::command_handlers as dcc_inventory_command_handlers;
+use crate::import::interface::command_handlers as import_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
@@ -182,6 +184,10 @@ pub fn run() {
         dcc_inventory_command_handlers::get_decoders,
         dcc_inventory_command_handlers::check_dcc_address_duplicate,
         dcc_inventory_command_handlers::get_installable_rolling_stocks,
+        import_command_handlers::analyze_import_package,
+        import_command_handlers::get_import_preview,
+        import_command_handlers::execute_import,
+        import_command_handlers::cancel_import_session,
         budget_command_handlers::get_budget_config,
         budget_command_handlers::set_budget_config,
         budget_command_handlers::get_monthly_budget_records,

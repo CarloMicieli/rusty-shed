@@ -1,0 +1,488 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rusty-shed.app/schemas/manifest/v1.json",
+  "title": "Rusty Shed Import Manifest",
+  "description": "Schema for the manifest.json file within Rusty Shed import packages",
+  "type": "object",
+  "required": ["version", "data"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to this schema"
+    },
+    "version": {
+      "type": "string",
+      "enum": ["1.0"],
+      "description": "Schema version"
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the export was created"
+    },
+    "source": {
+      "type": "string",
+      "description": "Name and version of the application that created this export"
+    },
+    "data": {
+      "$ref": "#/$defs/DataContainer"
+    }
+  },
+  "$defs": {
+    "DataContainer": {
+      "type": "object",
+      "properties": {
+        "manufacturers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Manufacturer" },
+          "default": []
+        },
+        "railwayCompanies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RailwayCompany" },
+          "default": []
+        },
+        "railwayModels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RailwayModel" },
+          "default": []
+        },
+        "collectionItems": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CollectionItem" },
+          "default": []
+        },
+        "sellers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Seller" },
+          "default": []
+        },
+        "maintenanceCards": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/MaintenanceCard" },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "Manufacturer": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique identifier within this manifest"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Manufacturer name, e.g., 'Märklin'"
+        },
+        "registeredCompanyName": {
+          "type": "string",
+          "description": "Legal company name"
+        },
+        "countryCode": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "ISO 3166-1 alpha-2 country code"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "outOfBusiness"],
+          "default": "active"
+        },
+        "websiteUrl": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RailwayCompany": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Railway company name, e.g., 'Deutsche Bahn'"
+        },
+        "abbreviation": {
+          "type": "string",
+          "description": "Short code, e.g., 'DB'"
+        },
+        "countryCode": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "inactive"],
+          "default": "active"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RailwayModel": {
+      "type": "object",
+      "required": [
+        "id",
+        "manufacturerId",
+        "productCode",
+        "description",
+        "scale",
+        "epoch",
+        "category",
+        "powerMethod"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manufacturerId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References manufacturers[].id"
+        },
+        "productCode": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Manufacturer's product code, e.g., '39010'"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable description"
+        },
+        "details": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "string",
+          "description": "Model scale, normalized during import. Accepts: H0, HO, N, TT, Z, G, 0, 00, 1"
+        },
+        "epoch": {
+          "type": "string",
+          "description": "Historical epoch, e.g., 'III', 'IV', 'V', 'VI'"
+        },
+        "category": {
+          "$ref": "#/$defs/Category"
+        },
+        "powerMethod": {
+          "type": "string",
+          "enum": ["dc", "ac", "dcc", "none"]
+        },
+        "deliveryDate": {
+          "type": "string",
+          "description": "Release date in ISO format or 'Q1 2024' style"
+        },
+        "availabilityStatus": {
+          "type": "string",
+          "enum": ["available", "announced", "discontinued"]
+        },
+        "image": {
+          "type": "string",
+          "description": "Filename in /images/ folder"
+        },
+        "rollingStocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RollingStock" },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "Category": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "locomotive",
+            "passengerCar",
+            "freightCar",
+            "electricMultipleUnit",
+            "railcar",
+            "trainSet"
+          ]
+        },
+        "subType": {
+          "type": "string",
+          "description": "Category-specific subtype, e.g., 'steam', 'electric', 'tank', 'covered'"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RollingStock": {
+      "type": "object",
+      "required": ["railwayCompanyId", "seriesCode"],
+      "properties": {
+        "railwayCompanyId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References railwayCompanies[].id"
+        },
+        "seriesCode": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Series identifier, e.g., 'BR 01'"
+        },
+        "roadNumber": {
+          "type": "string",
+          "description": "Vehicle number, e.g., '01 118'"
+        },
+        "livery": {
+          "type": "string"
+        },
+        "friendlyName": {
+          "type": "string"
+        },
+        "isDummy": {
+          "type": "boolean",
+          "default": false,
+          "description": "True for non-powered units in sets"
+        },
+        "lengthOverBuffers": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length in mm"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CollectionItem": {
+      "type": "object",
+      "required": ["id", "railwayModelId", "addedDate"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "railwayModelId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References railwayModels[].id"
+        },
+        "addedDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date added to collection (YYYY-MM-DD)"
+        },
+        "removedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "purchaseCondition": {
+          "type": "string",
+          "enum": ["new", "used", "preowned"]
+        },
+        "modelCondition": {
+          "type": "string",
+          "enum": ["mint", "excellent", "good", "fair", "poor"]
+        },
+        "boxCondition": {
+          "type": "string",
+          "enum": ["mint", "good", "damaged", "missing"]
+        },
+        "notes": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "purchase": {
+          "$ref": "#/$defs/Purchase"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Purchase": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["purchased", "sold", "preordered"]
+        },
+        "purchaseDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "price": {
+          "$ref": "#/$defs/Money"
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "References sellers[].id"
+        },
+        "saleDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "salePrice": {
+          "$ref": "#/$defs/Money"
+        },
+        "depositAmount": {
+          "$ref": "#/$defs/Money"
+        },
+        "expectedDelivery": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "purchased" } }
+          },
+          "then": {
+            "required": ["purchaseDate"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "sold" } }
+          },
+          "then": {
+            "required": ["purchaseDate", "saleDate"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "preordered" } }
+          },
+          "then": {
+            "required": ["sellerId"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "Money": {
+      "type": "object",
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Amount in smallest currency unit (e.g., cents)"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "ISO 4217 currency code"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Seller": {
+      "type": "object",
+      "required": ["id", "name", "sellerType"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sellerType": {
+          "type": "string",
+          "enum": ["shop", "private", "marketplace", "auction"]
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "websiteUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "address": {
+          "$ref": "#/$defs/Address"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Address": {
+      "type": "object",
+      "properties": {
+        "street": { "type": "string" },
+        "city": { "type": "string" },
+        "region": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "countryCode": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MaintenanceCard": {
+      "type": "object",
+      "required": ["id", "collectionItemId"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "collectionItemId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References collectionItems[].id"
+        },
+        "lastMaintenanceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "nextMaintenanceDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/MaintenanceEvent" },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "MaintenanceEvent": {
+      "type": "object",
+      "required": ["id", "date", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["cleaning", "lubrication", "repair", "modification", "inspection"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "cost": {
+          "$ref": "#/$defs/Money"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

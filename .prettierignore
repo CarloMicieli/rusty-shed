@@ -5,6 +5,12 @@ yarn.lock
 bun.lock
 bun.lockb
 
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+
 # Miscellaneous
 /static/
 

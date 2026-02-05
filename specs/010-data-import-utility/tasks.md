@@ -24,13 +24,13 @@
 
 **Purpose**: Project initialization, dependencies, and module structure
 
-- [ ] T001 Add new dependencies to `src-tauri/Cargo.toml`: zip, flate2, tar, jsonschema
-- [ ] T002 [P] Create import module directory structure: `src-tauri/src/import/{domain,application,infrastructure,interface}/`
-- [ ] T003 [P] Create import module entry points: `src-tauri/src/import/mod.rs` and layer mod.rs files
-- [ ] T004 Register import module in `src-tauri/src/lib.rs`
-- [ ] T005 [P] Copy manifest JSON schema to `src-tauri/src/import/domain/manifest_schema.json`
-- [ ] T006 [P] Create frontend feature directory structure: `src/lib/features/import/components/`
-- [ ] T007 [P] Add Paraglide i18n keys for import feature to `messages/en.json` and `messages/it.json`
+- [x] T001 Add new dependencies to `src-tauri/Cargo.toml`: zip, flate2, tar, jsonschema
+- [x] T002 [P] Create import module directory structure: `src-tauri/src/import/{domain,application,infrastructure,interface}/`
+- [x] T003 [P] Create import module entry points: `src-tauri/src/import/mod.rs` and layer mod.rs files
+- [x] T004 Register import module in `src-tauri/src/lib.rs`
+- [x] T005 [P] Copy manifest JSON schema to `src-tauri/src/import/domain/manifest_schema.json`
+- [x] T006 [P] Create frontend feature directory structure: `src/lib/features/import/components/`
+- [x] T007 [P] Add Paraglide i18n keys for import feature to `messages/en.json` and `messages/it.json`
 
 ---
 
@@ -42,27 +42,27 @@
 
 ### Domain Layer
 
-- [ ] T008 Create `ValidationError` types in `src-tauri/src/import/domain/validation_error.rs`
-- [ ] T009 [P] Create `ImportWarning` type in `src-tauri/src/import/domain/import_warning.rs`
-- [ ] T010 [P] Create `RecordCounts` value object in `src-tauri/src/import/domain/record_counts.rs`
-- [ ] T011 Create manifest DTOs (ManufacturerRecord, RailwayModelRecord, etc.) in `src-tauri/src/import/domain/manifest.rs`
-- [ ] T012 Create `ImportSession` aggregate with state machine in `src-tauri/src/import/domain/import_session.rs`
-- [ ] T013 [P] Create `ImportPreview` value object in `src-tauri/src/import/domain/import_preview.rs`
-- [ ] T014 [P] Create `ImportResult` value object in `src-tauri/src/import/domain/import_result.rs`
-- [ ] T015 Export all domain types in `src-tauri/src/import/domain/mod.rs`
+- [x] T008 Create `ValidationError` types in `src-tauri/src/import/domain/validation_error.rs`
+- [x] T009 [P] Create `ImportWarning` type in `src-tauri/src/import/domain/import_warning.rs`
+- [x] T010 [P] Create `RecordCounts` value object in `src-tauri/src/import/domain/record_counts.rs`
+- [x] T011 Create manifest DTOs (ManufacturerRecord, RailwayModelRecord, etc.) in `src-tauri/src/import/domain/manifest.rs`
+- [x] T012 Create `ImportSession` aggregate with state machine in `src-tauri/src/import/domain/import_session.rs`
+- [x] T013 [P] Create `ImportPreview` value object in `src-tauri/src/import/domain/import_preview.rs`
+- [x] T014 [P] Create `ImportResult` value object in `src-tauri/src/import/domain/import_result.rs`
+- [x] T015 Export all domain types in `src-tauri/src/import/domain/mod.rs`
 
 ### Infrastructure Layer
 
-- [ ] T016 Implement `ArchiveExtractor` with ZIP support in `src-tauri/src/import/infrastructure/archive_extractor.rs`
-- [ ] T017 Add tar.gz support to `ArchiveExtractor` in `src-tauri/src/import/infrastructure/archive_extractor.rs`
-- [ ] T018 Implement `SchemaValidator` with embedded JSON schema in `src-tauri/src/import/infrastructure/schema_validator.rs`
-- [ ] T019 [P] Implement scale string normalization utility in `src-tauri/src/import/infrastructure/normalizer.rs`
-- [ ] T020 Export infrastructure types in `src-tauri/src/import/infrastructure/mod.rs`
+- [x] T016 Implement `ArchiveExtractor` with ZIP support in `src-tauri/src/import/infrastructure/archive_extractor.rs`
+- [x] T017 Add tar.gz support to `ArchiveExtractor` in `src-tauri/src/import/infrastructure/archive_extractor.rs`
+- [x] T018 Implement `SchemaValidator` with embedded JSON schema in `src-tauri/src/import/infrastructure/schema_validator.rs`
+- [x] T019 [P] Implement scale string normalization utility in `src-tauri/src/import/infrastructure/normalizer.rs`
+- [x] T020 Export infrastructure types in `src-tauri/src/import/infrastructure/mod.rs`
 
 ### Frontend Foundation
 
-- [ ] T021 Create `types.ts` with frontend-specific types in `src/lib/features/import/types.ts`
-- [ ] T022 Create base `import.controller.svelte.ts` with $state setup in `src/lib/features/import/import.controller.svelte.ts`
+- [x] T021 Create `types.ts` with frontend-specific types in `src/lib/features/import/types.ts`
+- [x] T022 Create base `import.controller.svelte.ts` with $state setup in `src/lib/features/import/import.controller.svelte.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
