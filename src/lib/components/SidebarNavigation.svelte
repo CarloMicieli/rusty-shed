@@ -12,7 +12,7 @@
     Cpu,
     Wrench
   } from 'lucide-svelte';
-  import { page } from '$app/state';
+  import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components';
@@ -43,10 +43,10 @@
         <a
           href={resolve('/my-dashboard')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-dashboard'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-dashboard'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-dashboard'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-dashboard'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-dashboard'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-dashboard'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-dashboard'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-dashboard'}
         >
           <LayoutDashboard size={20} />
           <span class="tracking-wide">{m.app_dashboard()}</span>
@@ -56,10 +56,10 @@
         <a
           href={resolve('/my-collection')}
           class="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-collection'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-collection'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-collection'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-collection'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-collection'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-collection'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-collection'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-collection'}
         >
           <div class="flex items-center gap-3">
             <Library size={20} />
@@ -72,10 +72,10 @@
         <a
           href={resolve('/my-wishlists')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-wishlists'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-wishlists'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-wishlists'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-wishlists'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-wishlists'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-wishlists'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-wishlists'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-wishlists'}
         >
           <Heart size={20} />
           <span class="tracking-wide">{m.app_wishlists()}</span>
@@ -88,10 +88,10 @@
         <a
           href={resolve('/my-budget')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-budget'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-budget'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-budget'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-budget'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-budget'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-budget'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-budget'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-budget'}
         >
           <Wallet size={20} />
           <span class="tracking-wide">{m.budget_title()}</span>
@@ -101,10 +101,10 @@
         <a
           href={resolve('/my-tracks')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string).startsWith('/my-tracks')}
-          class:text-primary-foreground={(page.url.pathname as string).startsWith('/my-tracks')}
-          class:text-surface-300={!(page.url.pathname as string).startsWith('/my-tracks')}
-          class:hover:bg-surface-700={!(page.url.pathname as string).startsWith('/my-tracks')}
+          class:bg-primary-600={($page.url.pathname as string).startsWith('/my-tracks')}
+          class:text-primary-foreground={($page.url.pathname as string).startsWith('/my-tracks')}
+          class:text-surface-300={!($page.url.pathname as string).startsWith('/my-tracks')}
+          class:hover:bg-surface-700={!($page.url.pathname as string).startsWith('/my-tracks')}
         >
           <Train size={20} />
           <span class="tracking-wide">{m.app_tracks()}</span>
@@ -114,10 +114,10 @@
         <a
           href={resolve('/my-depot')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-depot'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-depot'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-depot'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-depot'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-depot'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-depot'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-depot'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-depot'}
         >
           <Box size={20} />
           <span class="tracking-wide">{m.app_depot()}</span>
@@ -127,10 +127,10 @@
         <a
           href={resolve('/my-digital-roster')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-digital-roster'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-digital-roster'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-digital-roster'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-digital-roster'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-digital-roster'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-digital-roster'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-digital-roster'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-digital-roster'}
         >
           <Cpu size={20} />
           <span class="tracking-wide">{m.app_digital_roster()}</span>
@@ -140,10 +140,10 @@
         <a
           href={resolve('/my-maintenance')}
           class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary-600={(page.url.pathname as string) === '/my-maintenance'}
-          class:text-primary-foreground={(page.url.pathname as string) === '/my-maintenance'}
-          class:text-surface-300={(page.url.pathname as string) !== '/my-maintenance'}
-          class:hover:bg-surface-700={(page.url.pathname as string) !== '/my-maintenance'}
+          class:bg-primary-600={($page.url.pathname as string) === '/my-maintenance'}
+          class:text-primary-foreground={($page.url.pathname as string) === '/my-maintenance'}
+          class:text-surface-300={($page.url.pathname as string) !== '/my-maintenance'}
+          class:hover:bg-surface-700={($page.url.pathname as string) !== '/my-maintenance'}
         >
           <Wrench size={20} />
           <span class="tracking-wide">{m.app_maintenance()}</span>
@@ -155,8 +155,8 @@
       <a
         href={resolve('/my-settings')}
         class="hover:bg-surface-700 text-surface-300 flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-        class:bg-primary-600={(page.url.pathname as string) === '/my-settings'}
-        class:text-primary-foreground={(page.url.pathname as string) === '/my-settings'}
+        class:bg-primary-600={($page.url.pathname as string) === '/my-settings'}
+        class:text-primary-foreground={($page.url.pathname as string) === '/my-settings'}
       >
         <Settings size={20} />
         <span class="tracking-wide">{m.app_settings()}</span>

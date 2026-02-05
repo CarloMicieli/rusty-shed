@@ -10,7 +10,7 @@
     Train,
     Cpu
   } from 'lucide-svelte';
-  import { page } from '$app/state';
+  import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components';
@@ -20,7 +20,7 @@
   const wishlistService = getWishlistContext();
 
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
-  const pathname = $derived(page.url.pathname as string);
+  const pathname = $derived($page.url.pathname as string);
   const locale = $derived($localeStore);
 </script>
 
