@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Search, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, Input } from '$lib/components';
 
   let isExpanded = $state(false);
 
@@ -13,10 +13,10 @@
 <!-- Desktop: Inline Input -->
 <div class="relative hidden w-64 items-center lg:flex xl:w-96">
   <Search class="text-surface-400 pointer-events-none absolute left-3" size={18} />
-  <input
+  <Input
     type="text"
     placeholder={m.app_search_placeholder()}
-    class="input border-surface-600 bg-surface-800 focus:border-primary-500 rounded-full py-2 pl-10 text-sm transition-colors"
+    class="focus:border-primary-500 rounded-full py-2 pl-10 text-sm transition-colors"
   />
 </div>
 
@@ -36,11 +36,11 @@
       <div class="relative w-full">
         <Search class="text-surface-400 absolute top-1/2 left-4 -translate-y-1/2" size={20} />
         <!-- svelte-ignore a11y_autofocus -->
-        <input
+        <Input
           type="text"
           placeholder={m.app_search_mobile_placeholder()}
-          class="input border-primary-500 bg-surface-900 rounded-xl py-4 pl-12 text-lg shadow-xl"
-          autoFocus
+          class="border-primary-500 rounded-xl py-4 pl-12 text-lg shadow-xl"
+          autofocus
         />
       </div>
       <div class="text-surface-400 mt-8 text-center text-sm tracking-widest uppercase">

@@ -12,6 +12,7 @@
 
   import { getModalStore } from '$lib/stores/modal';
   import * as m from '$lib/paraglide/messages.js';
+  import { Input, Textarea } from '$lib/components';
   import type { BudgetState } from '../BudgetState.svelte';
 
   interface Props {
@@ -151,15 +152,15 @@
       <label for="extra-reason" class="text-surface-700 mb-1 block text-sm font-medium">
         {m.budget_extra_reason_label()}
       </label>
-      <textarea
+      <Textarea
         id="extra-reason"
         bind:value={reason}
         disabled={isSubmitting}
-        class="textarea w-full"
-        rows="3"
+        class="w-full"
+        rows={3}
         maxlength="500"
         placeholder={m.budget_extra_reason_placeholder()}
-      ></textarea>
+      />
       {#if errors.reason}
         <p class="text-error-500 mt-1 text-sm">{errors.reason}</p>
       {/if}

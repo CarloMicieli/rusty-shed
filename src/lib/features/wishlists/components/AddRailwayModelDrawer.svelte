@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X, Plus } from 'lucide-svelte';
+  import { Textarea } from '$lib/components';
   import { getWishlistContext } from '../WishlistState.svelte';
   import type { AddRailwayModelFormState, RollingStockFormEntry } from '../types';
   import type {
@@ -529,13 +530,13 @@
             <label for="notes" class="block space-y-1">
               <span class="text-sm font-medium text-surface-300">{m.wishlist_field_notes()}</span>
             </label>
-            <textarea
+            <Textarea
               id="notes"
               bind:value={form.notes}
-              class="textarea w-full"
-              rows="3"
+              class="w-full"
+              rows={3}
               placeholder="Additional notes..."
-            ></textarea>
+            />
           </div>
         </div>
       </form>

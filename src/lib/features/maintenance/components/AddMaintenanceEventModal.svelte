@@ -1,7 +1,7 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, Input, Textarea } from '$lib/components';
   import { getMaintenanceState } from '../MaintenanceState.svelte';
   import MaintenanceCardSelector from './MaintenanceCardSelector.svelte';
   import type { MaintenanceType } from '$lib/bindings';
@@ -102,10 +102,9 @@
           <label for="date-performed" class="label">
             {m.maintenance_add_event_date_label()}
           </label>
-          <input
+          <Input
             id="date-performed"
             type="date"
-            class="input"
             bind:value={datePerformed}
             max={new Date().toISOString().split('T')[0]}
           />
@@ -127,13 +126,12 @@
           <label for="notes" class="label">
             {m.maintenance_add_event_notes_label()}
           </label>
-          <textarea
+          <Textarea
             id="notes"
-            class="textarea"
-            rows="3"
+            rows={3}
             placeholder={m.maintenance_add_event_notes_placeholder()}
             bind:value={notes}
-          ></textarea>
+          />
         </div>
 
         {#if error}
