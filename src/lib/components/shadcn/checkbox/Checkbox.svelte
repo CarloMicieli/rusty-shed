@@ -17,6 +17,8 @@
     id?: string;
     name?: string;
     value?: string;
+    'aria-label'?: string;
+    'aria-labelledby'?: string;
     onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
   };
 
@@ -28,6 +30,8 @@
     id,
     name,
     value,
+    'aria-label': ariaLabel,
+    'aria-labelledby': ariaLabelledby,
     onchange
   }: Props = $props();
 
@@ -50,6 +54,9 @@
     {disabled}
     {required}
     {id}
+    aria-label={ariaLabel}
+    aria-labelledby={ariaLabelledby}
+    aria-checked={checked}
     {name}
     {value}
     class="peer sr-only"

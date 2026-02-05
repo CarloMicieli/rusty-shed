@@ -151,7 +151,7 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 
 - [x] T037 [P] Replace Skeleton Table with shadcn-svelte Table
 - [x] T038 [P] Replace Skeleton Card with shadcn-svelte Card
-- [ ] T039 [US1] Test table sorting and pagination
+- [x] T039 [US1] Test table sorting and pagination
 - [x] T040 [P] Replace Skeleton Badge with shadcn-svelte Badge
 
 ### Navigation & Dropdown Components

@@ -12,13 +12,29 @@
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     class?: string;
+    'aria-labelledby'?: string;
+    'aria-describedby'?: string;
     children?: import('svelte').Snippet;
   };
 
-  const { open = false, onOpenChange, class: className = '', children }: Props = $props();
+  const {
+    open = false,
+    onOpenChange,
+    class: className = '',
+    'aria-labelledby': ariaLabelledby,
+    'aria-describedby': ariaDescribedby,
+    children
+  }: Props = $props();
 
   function handleBackdropClick(e: MouseEvent) {
     if (e.target === e.currentTarget && onOpenChange) {
+      onOpenChange(false);
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && onOpenChange) {
+      e.preventDefault();
       onOpenChange(false);
     }
   }
@@ -33,10 +49,16 @@
 </script>
 
 {#if open}
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class={backdropClass} onclick={handleBackdropClick}>
-    <div class={contentClass} role="dialog" aria-modal="true">
+  <div class={backdropClass} onclick={handleBackdropClick} onkeydown={handleKeyDown}>
+    <div
+      class={contentClass}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={ariaLabelledby}
+      aria-describedby={ariaDescribedby}
+      tabindex="-1"
+    >
       {#if children}
         {@render children()}
       {/if}
