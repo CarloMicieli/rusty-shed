@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Textarea } from '$lib/components';
+  import { Input } from '$lib/components';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
 
   const wishlistService = getWishlistContext();
@@ -113,11 +114,11 @@
               </option>
             {/each}
           </select>
-          <input
-            class="input"
+          <Input
             type="text"
             placeholder={m.wishlist_modal_new_list_placeholder()}
-            bind:value={newListName}
+            value={newListName}
+            oninput={(e) => (newListName = e.currentTarget.value)}
           />
         </div>
       </div>
@@ -129,12 +130,12 @@
         >
           {m.wishlist_modal_item_id_label()}
         </label>
-        <input
+        <Input
           id="model-id"
-          class="input"
           type="text"
           placeholder={m.wishlist_modal_item_id_placeholder()}
-          bind:value={modelId}
+          value={modelId}
+          oninput={(e) => (modelId = e.currentTarget.value)}
         />
       </div>
 

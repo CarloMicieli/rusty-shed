@@ -2,6 +2,7 @@
   import { Heart, Star, Plus } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
+  import { Input } from '$lib/components';
 
   const { wishlist, onRename, onSetDefault, onAddModel } = $props<{
     wishlist: WishlistPreview | null;
@@ -45,9 +46,10 @@
     <div class="flex items-center gap-2">
       <Heart class="text-accent-500" size={20} />
       {#if isEditing}
-        <input
-          class="input-lg variant-ghost-surface input"
-          bind:value={nameDraft}
+        <Input
+          class="input-lg variant-ghost-surface"
+          value={nameDraft}
+          oninput={(e) => (nameDraft = e.currentTarget.value)}
           onblur={handleRenameBlur}
           onkeydown={handleRenameKeydown}
         />

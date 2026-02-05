@@ -4,6 +4,7 @@
   import type { TrackProductView, SellerView, Currency, Manufacturer } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import CreateProductDialog from './CreateProductDialog.svelte';
+  import { Input } from '$lib/components';
 
   interface Props {
     open?: boolean;
@@ -207,10 +208,10 @@
           <!-- Quantity -->
           <label class="label">
             <span>{m.track_purchase_field_quantity()}</span>
-            <input
+            <Input
               type="number"
-              class="input"
-              bind:value={quantity}
+              value={String(quantity)}
+              oninput={(e) => (quantity = parseInt(e.currentTarget.value) || 1)}
               min="1"
               disabled={submitting}
               required
@@ -221,10 +222,10 @@
           <div class="grid grid-cols-2 gap-4">
             <label class="label">
               <span>{m.track_purchase_field_price()}</span>
-              <input
+              <Input
                 type="number"
-                class="input"
-                bind:value={priceAmount}
+                value={priceAmount}
+                oninput={(e) => (priceAmount = e.currentTarget.value)}
                 min="0"
                 step="0.01"
                 disabled={submitting}
@@ -255,10 +256,10 @@
           <!-- Purchase date -->
           <label class="label">
             <span>{m.track_purchase_field_date()}</span>
-            <input
+            <Input
               type="date"
-              class="input"
-              bind:value={purchaseDate}
+              value={purchaseDate}
+              oninput={(e) => (purchaseDate = e.currentTarget.value)}
               disabled={submitting}
               required
             />

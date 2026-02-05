@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
   import { X } from 'lucide-svelte';
+  import { Input } from '$lib/components';
 
   interface Props {
     open?: boolean;
@@ -85,7 +86,13 @@
       <form onsubmit={handleSubmit} class="space-y-4">
         <label class="label">
           <span>{m.track_inventory_rename_field_name()}</span>
-          <input type="text" class="input" bind:value={name} disabled={submitting} required />
+          <Input
+            type="text"
+            value={name}
+            oninput={(e) => (name = e.currentTarget.value)}
+            disabled={submitting}
+            required
+          />
         </label>
 
         {#if error}

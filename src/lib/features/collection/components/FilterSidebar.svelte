@@ -2,6 +2,7 @@
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import * as m from '$lib/paraglide/messages.js';
   import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
+  import { Input } from '$lib/components';
 
   type ScaleOption = { id: string; display: string };
 
@@ -61,8 +62,8 @@
     <p class="text-surface-400 text-xs font-medium tracking-wide uppercase">
       {m.collection_search_placeholder()}
     </p>
-    <input
-      class="input-md input bg-surface-900 w-full"
+    <Input
+      class="input-md bg-surface-900 w-full"
       placeholder={m.collection_search_placeholder()}
       value={query}
       oninput={(e) => handleSearch((e.target as HTMLInputElement).value)}

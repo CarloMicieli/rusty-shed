@@ -130,14 +130,15 @@
         <span class="text-surface-500 absolute top-1/2 left-3 -translate-y-1/2">
           {budgetState.currency === 'EUR' ? '€' : '$'}
         </span>
-        <input
+        <Input
           id="extra-amount"
           type="number"
           step="0.01"
           min="0"
-          bind:value={amount}
+          value={String(amount)}
+          oninput={(e) => (amount = parseFloat(e.currentTarget.value) || 0)}
           disabled={isSubmitting}
-          class="input w-full py-2 pr-4 pl-8"
+          class="w-full py-2 pr-4 pl-8"
           placeholder="0.00"
           required
         />

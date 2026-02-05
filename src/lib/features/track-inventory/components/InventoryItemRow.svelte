@@ -3,6 +3,7 @@
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
   import { AlertTriangle, Edit2 } from 'lucide-svelte';
+  import { Input } from '$lib/components';
 
   interface Props {
     item: TrackInventoryItemView;
@@ -104,13 +105,14 @@
       {#if isEditingRequired}
         <div class="flex flex-col items-center gap-1">
           <div class="flex items-center gap-2">
-            <input
+            <Input
               type="number"
               min="0"
-              bind:value={requiredInput}
+              value={requiredInput}
+              oninput={(e) => (requiredInput = e.currentTarget.value)}
               onkeydown={handleKeydown}
               disabled={isSaving}
-              class="input w-20 rounded px-2 py-1 text-center text-sm"
+              class="w-20 rounded px-2 py-1 text-center text-sm"
             />
             <button
               onclick={saveRequired}

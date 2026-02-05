@@ -94,19 +94,30 @@
   )}
 
   <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
-    <input
-      class="input border-surface-600 bg-surface-800"
+    <Input
+      class="border-surface-600 bg-surface-800"
       type="text"
-      bind:value={rs.road_number}
+      value={rs.road_number || ''}
+      oninput={(e) => (rs.road_number = e.currentTarget.value)}
     />
   </FormField>
 
   <FormField label={formLabels.series} error={fieldError('series')}>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.series} />
+    <Input
+      class="border-surface-600 bg-surface-800"
+      type="text"
+      value={rs.series || ''}
+      oninput={(e) => (rs.series = e.currentTarget.value)}
+    />
   </FormField>
 
   <FormField label={formLabels.depot} error={fieldError('depot')}>
-    <input class="input border-surface-600 bg-surface-800" type="text" bind:value={rs.depot} />
+    <Input
+      class="border-surface-600 bg-surface-800"
+      type="text"
+      value={rs.depot || ''}
+      oninput={(e) => (rs.depot = e.currentTarget.value)}
+    />
   </FormField>
 
   <div class="lg:col-span-2">

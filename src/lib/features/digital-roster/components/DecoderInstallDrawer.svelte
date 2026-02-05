@@ -9,6 +9,7 @@
     DigitalRollingStockView
   } from '$lib/bindings';
   import { getDigitalRosterContext } from '../DigitalRosterState.svelte';
+  import { Input } from '$lib/components';
 
   interface Props {
     /** Controls drawer visibility */
@@ -391,14 +392,13 @@
             <label for="dcc-address" class="block space-y-1">
               <span class="text-sm text-surface-300">{m.digital_roster_address_label()}</span>
             </label>
-            <input
+            <Input
               id="dcc-address"
               type="number"
               min="1"
               max="9999"
-              bind:value={dccAddress}
-              class="input"
-              class:input-error={touched && validationErrors.address}
+              value={dccAddress ? String(dccAddress) : ''}
+              oninput={(e) => (dccAddress = parseInt(e.currentTarget.value) || null)}
               placeholder="1-9999"
             />
             {#if touched && validationErrors.address}
@@ -414,7 +414,12 @@
             <label for="installation-date" class="block space-y-1">
               <span class="text-sm text-surface-300">{m.digital_roster_date_label()}</span>
             </label>
-            <input id="installation-date" type="date" bind:value={installationDate} class="input" />
+            <Input
+              id="installation-date"
+              type="date"
+              value={installationDate}
+              oninput={(e) => (installationDate = e.currentTarget.value)}
+            />
           </div>
         </form>
       {/if}

@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages';
   import { AlertTriangle } from 'lucide-svelte';
   import { untrack } from 'svelte';
+  import { Input } from '$lib/components';
 
   interface Props {
     open: boolean;
@@ -105,13 +106,10 @@
         <label for="dcc-address" class="label">
           <span>{m.digital_roster_table_address()}</span>
         </label>
-        <input
+        <Input
           id="dcc-address"
           type="number"
-          class="input"
-          class:input-error={validationError}
-          class:input-warning={isDuplicateWarning}
-          bind:value={newAddress}
+          value={String(newAddress)}
           oninput={(e) => handleAddressChange(parseInt((e.target as HTMLInputElement).value))}
           min="1"
           max="9999"

@@ -2,6 +2,7 @@
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
   import { Search, X } from 'lucide-svelte';
+  import { Input } from '$lib/components';
 
   interface Props {
     rollingStocks: DigitalRollingStockView[];
@@ -42,12 +43,11 @@
       <div class="input-group-shim">
         <Search class="h-5 w-5" />
       </div>
-      <input
+      <Input
         type="text"
         placeholder={m.digital_roster_filter_placeholder()}
         value={filterText}
         oninput={handleFilterInput}
-        class="input"
       />
       {#if filterText}
         <button type="button" class="variant-filled-surface btn-icon" onclick={clearFilter}>
