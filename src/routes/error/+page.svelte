@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { Button } from '$lib/components';
 </script>
 
 <svelte:head>
@@ -11,5 +12,5 @@
   <p class="text-surface-300">
     We'll add more guidance here soon. In the meantime, you can head back to the dashboard.
   </p>
-  <a class="variant-filled btn" href={resolve('/')}>Go Home</a>
+  <Button variant="default" href={resolve('/')}>Go Home</Button>
 </section>

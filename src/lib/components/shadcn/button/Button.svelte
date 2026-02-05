@@ -17,6 +17,7 @@
     class?: string;
     type?: 'button' | 'submit' | 'reset';
     disabled?: boolean;
+    href?: string;
     onclick?: (e: MouseEvent) => void;
     children?: any;
   };
@@ -27,6 +28,7 @@
     class: className = '',
     type = 'button',
     disabled = false,
+    href,
     onclick,
     children
   }: Props = $props();
@@ -57,13 +59,26 @@
   ));
 </script>
 
-<button
-  {type}
-  class={buttonClass}
-  {disabled}
-  onclick={onclick}
->
-  {#if children}
-    {@render children()}
-  {/if}
-</button>
+{#if href}
+  <a
+    {href}
+    class={buttonClass}
+    aria-disabled={disabled}
+    onclick={onclick}
+  >
+    {#if children}
+      {@render children()}
+    {/if}
+  </a>
+{:else}
+  <button
+    {type}
+    class={buttonClass}
+    {disabled}
+    onclick={onclick}
+  >
+    {#if children}
+      {@render children()}
+    {/if}
+  </button>
+{/if}
