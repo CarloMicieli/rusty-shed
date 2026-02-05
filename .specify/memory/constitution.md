@@ -79,7 +79,7 @@ and breaking governance changes require a MAJOR bump and a documented migration 
 ## Tech Stack
 
 - Frontend: SvelteKit (Svelte v5.48.2) running on Vite (v7.3.1)
-- Styling: Tailwind CSS v4.1.18, Skeleton UI v4.x
+- Styling: Tailwind CSS v4.1.18, shadcn-svelte
 - Package manager: pnpm (packageManager string indicates pnpm@10.27.0)
 - Language: TypeScript (v5.9.3) with `tsconfig.json` using `"strict": true`
 - Testing (frontend): Vitest v4.0.18 with `happy-dom` environment; `vitest.config.ts` present

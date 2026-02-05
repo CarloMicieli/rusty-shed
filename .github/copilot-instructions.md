@@ -2,7 +2,7 @@
 
 ## 1. Directory Map
 
-- **Frontend:** `/src` (Svelte 5 Runes, Tailwind 4, Skeleton 4.x)
+- **Frontend:** `/src` (Svelte 5 Runes, Tailwind 4, shadcn-svelte)
 - **Backend:** `/src-tauri` (Rust, Tauri 2, Workspace Root)
 
 ## 2. Model Context & Tools
@@ -23,5 +23,5 @@
 - Ensure code is modular, well-documented, and adheres to best practices for Svelte 5 and Rust.
 - Write unit tests for all new features and bug fixes.
 - Ensure compatibility with Tauri 2 and Svelte 5 frameworks.
-- Use Tailwind 4 and Skeleton 4.x for styling; avoid custom CSS unless absolutely necessary.
+- Use Tailwind 4 and shadcn-svelte for styling; avoid custom CSS unless absolutely necessary.
 - Maintain a clean and organized project structure as outlined in the directory map.
