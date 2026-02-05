@@ -24,7 +24,7 @@
 </script>
 
 <article
-  class="group hover:border-accent-500/60 border-surface-700/60 bg-surface-900 shadow-surface-900/40 rounded-xl border p-4 shadow-lg transition hover:-translate-y-1"
+  class="group hover:border-accent-500/60 border-surface-700/60 bg-surface-900 shadow-surface-900/40 flex h-96 flex-col rounded-xl border p-4 shadow-lg transition hover:-translate-y-1"
   in:fade
 >
   <div
@@ -38,7 +38,7 @@
     </div>
   </div>
 
-  <div class="space-y-2">
+  <div class="flex flex-1 flex-col space-y-2">
     <div class="flex items-start justify-between gap-2">
       <div>
         <p class="text-surface-500 text-xs tracking-[0.18em] uppercase">
@@ -62,7 +62,7 @@
     </div>
 
     {#if item.notes}
-      <p class="text-surface-300 line-clamp-2 text-sm">{item.notes}</p>
+      <p class="text-surface-300 line-clamp-3 flex-1 text-sm">{item.notes}</p>
     {/if}
   </div>
 </article>

@@ -79,6 +79,7 @@ CollectionDashboard.svelte (Main Page)
 ## Responsive Breakpoints
 
 ### Mobile (< 640px)
+
 - Header: Single column
 - Title stacked above KPIs
 - Search bar full width
@@ -88,6 +89,7 @@ CollectionDashboard.svelte (Main Page)
 - Sheet drawer: `w-3/4` of screen width
 
 ### Tablet (640px - 1024px)
+
 - Header: Two-column layout starts
 - Title left, KPIs right
 - Stat chips on separate line
@@ -95,6 +97,7 @@ CollectionDashboard.svelte (Main Page)
 - Sheet drawer: `sm:w-96` (384px fixed)
 
 ### Desktop (1024px+)
+
 - Header: Full multi-element layout
 - All KPIs visible inline
 - Horizontal stat chips fully visible
@@ -105,18 +108,21 @@ CollectionDashboard.svelte (Main Page)
 ## Color Palette
 
 ### Backgrounds
+
 - Page: `bg-surface-950` (darkest)
 - Header: `bg-surface-900/95` with `backdrop-blur-sm`
 - Stat Chips: `bg-surface-800/60`
 - Content: transparent
 
 ### Text
+
 - Page Title: `text-surface-50` (brightest)
 - Labels: `text-surface-400` (muted)
 - Values: `text-primary-200` (accent)
 - Secondary: `text-surface-300` (light muted)
 
 ### Borders & Accents
+
 - Primary borders: `border-surface-700/60`
 - Hover state: `hover:border-primary-500/40`
 - Accent: `text-accent-400` (buttons)
@@ -124,31 +130,37 @@ CollectionDashboard.svelte (Main Page)
 ## Interactive Elements
 
 ### Sticky Header
+
 - **Hover Effect:** None (informational only)
 - **Behavior:** Stays fixed while content scrolls
 - **Z-Index:** `z-40` (below modals)
 
 ### Stat Chips
+
 - **Hover Effect:** `hover:border-primary-500/40` (border lightens)
 - **Behavior:** Read-only, scrollable horizontally on small screens
 - **Transition:** smooth `transition-colors`
 
 ### Search Input
+
 - **Placeholder:** Collection search placeholder
 - **Debounce:** 300ms for performance
 - **Background:** `bg-surface-800`
 
 ### Filter Button
+
 - **Icon:** Lucide `<Filter>` (20px)
 - **Action:** Toggles Sheet drawer visibility
 - **Hover:** `hover:bg-surface-800 transition-colors`
 
 ### Add Model Button
+
 - **Style:** Primary variant with Icon + Text
 - **Size:** `sm` (compact)
 - **Action:** Opens AddModelDrawer modal
 
 ### Filter Drawer (Sheet)
+
 - **Position:** Right-side overlay
 - **Width:** `w-3/4` (mobile), `sm:w-96` (tablet+)
 - **Z-Index:** `z-50` (above header)
@@ -159,21 +171,23 @@ CollectionDashboard.svelte (Main Page)
 ## State Management
 
 ### UI State (useCollectionUI)
+
 ```typescript
-showDrawer: boolean          // Add/Edit model modal
-showFilterSheet: boolean     // Filter drawer visibility
-editing: CollectionItemView | null
-confirmDeleteId: string | null
+showDrawer: boolean; // Add/Edit model modal
+showFilterSheet: boolean; // Filter drawer visibility
+editing: CollectionItemView | null;
+confirmDeleteId: string | null;
 ```
 
 ### Reactive Derived Values
+
 ```typescript
-summaryData: CollectionSummary    // From service
-totalValue: string                // Formatted currency
-totalUnits: number                // Sum of all categories
-filteredItems: array              // Search + filtered results
-isLoading: boolean                // Loading state
-filters: FilterState              // Current filter selections
+summaryData: CollectionSummary; // From service
+totalValue: string; // Formatted currency
+totalUnits: number; // Sum of all categories
+filteredItems: array; // Search + filtered results
+isLoading: boolean; // Loading state
+filters: FilterState; // Current filter selections
 ```
 
 ## Performance Optimizations

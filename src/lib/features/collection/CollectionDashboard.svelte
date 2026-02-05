@@ -3,7 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { getCollectionContext, availableScales } from './CollectionState.svelte';
-  import { Button, Input, Badge } from '$lib/components';
+  import { Button } from '$lib/components';
 
   const collectionService = getCollectionContext();
 
@@ -19,7 +19,7 @@
 
   function useCollectionUI() {
     let showDrawer = $state(false);
-    let showFilterSidebar = $state(true);
+    let showFilterSidebar = $state(false);
     let editing = $state<CollectionItemView | null>(null);
     let confirmDeleteId = $state<string | null>(null);
 
@@ -180,49 +180,63 @@
   <title>{m.collection_title()}</title>
 </svelte:head>
 
-<div class="flex h-screen overflow-hidden bg-surface-950">
-  <!-- Main Content -->
-  <div class="flex flex-col flex-1 overflow-hidden">
-    <!-- Sticky Header -->
-    <header class="sticky top-0 z-30 border-b border-surface-700/60 bg-surface-900/95 backdrop-blur-sm flex-shrink-0">
-      <div class="px-4 py-3 sm:px-6">
-        <div class="flex items-center justify-between gap-4 mb-3">
-          <div>
-            <p class="text-xs tracking-[0.2em] text-surface-400 uppercase">{m.app_collection()}</p>
-            <h1 class="text-lg font-bold text-surface-50">{m.collection_title()}</h1>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="text-right">
-              <p class="text-xs text-surface-400 uppercase tracking-widest">Collection Value</p>
-              <p class="text-xl font-bold text-primary-200">{totalValue}</p>
-            </div>
-            <div class="w-px h-12 bg-surface-700/60"></div>
-            <div class="text-right">
-              <p class="text-xs text-surface-400 uppercase tracking-widest">Total Units</p>
-              <p class="text-xl font-bold text-primary-200">{totalUnits}</p>
-            </div>
-            <Button onclick={ui.startCreate} size="sm">
-              <Plus size={18} />
-              {m.collection_add_model()}
-            </Button>
-          </div>
+<div class="bg-surface-950 flex h-screen flex-col overflow-hidden">
+  <!-- Sticky Header (Full Width) -->
+  <header
+    class="border-surface-700/60 bg-surface-900/95 sticky top-0 z-30 flex-shrink-0 border-b backdrop-blur-sm"
+  >
+    <div class="px-4 py-3 sm:px-6">
+      <div class="mb-3 flex items-center justify-between gap-4">
+        <div>
+          <p class="text-surface-400 text-xs tracking-[0.2em] uppercase">{m.app_collection()}</p>
+          <h1 class="text-surface-50 text-lg font-bold">{m.collection_title()}</h1>
         </div>
-
-        <!-- Horizontal Stat Chips -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
-          {@render StatChip('Locomotives', summaryData.locomotivesCount)}
-          {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
-          {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
-          {@render StatChip('Train Sets', summaryData.trainSetsCount)}
-          {@render StatChip('Railcars', summaryData.railcarsCount)}
-          {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
+        <div class="flex items-center gap-2">
+          <div class="text-right">
+            <p class="text-surface-400 text-xs tracking-widest uppercase">Collection Value</p>
+            <p class="text-primary-200 text-xl font-bold">{totalValue}</p>
+          </div>
+          <div class="bg-surface-700/60 h-12 w-px"></div>
+          <div class="text-right">
+            <p class="text-surface-400 text-xs tracking-widest uppercase">Total Units</p>
+            <p class="text-primary-200 text-xl font-bold">{totalUnits}</p>
+          </div>
         </div>
       </div>
-    </header>
 
-    <!-- Main Content Area -->
+      <!-- Horizontal Stat Chips -->
+      <div class="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1">
+        {@render StatChip('Locomotives', summaryData.locomotivesCount)}
+        {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
+        {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
+        {@render StatChip('Train Sets', summaryData.trainSetsCount)}
+        {@render StatChip('Railcars', summaryData.railcarsCount)}
+        {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
+      </div>
+    </div>
+  </header>
+
+  <!-- Content Area with Sidebar -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Main Content -->
     <main class="flex-1 overflow-y-auto">
       <div class="px-4 py-6 sm:px-6">
+        <!-- Add Button and Filter Toggle -->
+        <div class="mb-6 flex items-center justify-end gap-3">
+          <Button onclick={ui.startCreate} size="sm">
+            <Plus size={18} />
+            {m.collection_add_model()}
+          </Button>
+          <Button
+            onclick={ui.toggleFilterSidebar}
+            variant="outline"
+            size="sm"
+            title="Toggle filters"
+          >
+            <Filter size={18} />
+          </Button>
+        </div>
+
         {#if isLoading && rawItems.length === 0}
           {@render LoadingSkeleton()}
         {:else if !isLoading && rawItems.length === 0}
@@ -238,23 +252,25 @@
         {/if}
       </div>
     </main>
-  </div>
 
-  <!-- Sidebar (Right) -->
-  {#if ui.showFilterSidebar}
-    <aside class="w-80 flex-shrink-0 border-l border-surface-700/60 bg-surface-900 overflow-y-auto">
-      <FilterPanel
-        {filters}
-        {availableTags}
-        {availableScales}
-        onSearch={handleSearch}
-        onSetScale={handleScale}
-        onToggleTag={handleTag}
-        onClear={handleClear}
-        onToggleSidebar={ui.toggleFilterSidebar}
-      />
-    </aside>
-  {/if}
+    <!-- Sidebar (Right) -->
+    {#if ui.showFilterSidebar}
+      <aside
+        class="border-surface-700/60 bg-surface-900 w-80 flex-shrink-0 overflow-y-auto border-l"
+      >
+        <FilterPanel
+          {filters}
+          {availableTags}
+          {availableScales}
+          onSearch={handleSearch}
+          onSetScale={handleScale}
+          onToggleTag={handleTag}
+          onClear={handleClear}
+          onToggleSidebar={ui.toggleFilterSidebar}
+        />
+      </aside>
+    {/if}
+  </div>
 </div>
 
 <AddModelDrawer
@@ -275,9 +291,9 @@
 
 {#snippet StatChip(label: string, count: number)}
   <div
-    class="flex-shrink-0 px-3 py-1.5 rounded-full bg-surface-800/60 border border-surface-700/80 hover:border-primary-500/40 transition-colors whitespace-nowrap"
+    class="bg-surface-800/60 border-surface-700/80 hover:border-primary-500/40 w-36 flex-shrink-0 rounded-full border px-3 py-1.5 transition-colors"
   >
-    <p class="text-xs text-surface-300 font-medium">{label}</p>
-    <p class="text-sm font-bold text-primary-200">{count}</p>
+    <p class="text-surface-300 truncate text-xs font-medium">{label}</p>
+    <p class="text-primary-200 text-sm font-bold">{count}</p>
   </div>
 {/snippet}

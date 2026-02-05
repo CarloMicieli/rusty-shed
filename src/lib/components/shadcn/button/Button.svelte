@@ -20,6 +20,7 @@
     href?: string;
     onclick?: (e: MouseEvent) => void;
     'aria-label'?: string;
+    title?: string;
     children?: import('svelte').Snippet;
   };
 
@@ -32,6 +33,7 @@
     href,
     onclick,
     'aria-label': ariaLabel,
+    title,
     children
   }: Props = $props();
 
@@ -68,7 +70,7 @@
     {/if}
   </a>
 {:else}
-  <button {type} class={buttonClass} {disabled} aria-label={ariaLabel} {onclick}>
+  <button {type} class={buttonClass} {disabled} aria-label={ariaLabel} {title} {onclick}>
     {#if children}
       {@render children()}
     {/if}
