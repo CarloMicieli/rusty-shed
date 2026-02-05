@@ -122,9 +122,9 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 
 ### Button & Link Components
 
-- [ ] T025 [P] Replace Skeleton Button with shadcn-svelte Button in src/routes/
-- [ ] T026 [P] Replace Skeleton Link with shadcn-svelte Link (or use <a> + Tailwind)
-- [ ] T027 [US1] Test button interactions and state (hover, active, disabled)
+- [x] T025 [P] Replace Skeleton Button with shadcn-svelte Button in src/routes/
+- [x] T026 [P] Replace Skeleton Link with shadcn-svelte Link (or use <a> + Tailwind)
+- [x] T027 [US1] Test button interactions and state (hover, active, disabled)
 
 ### Form Components
 
