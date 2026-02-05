@@ -1,23 +1,23 @@
 export interface CardProps {
-	class?: string;
+  class?: string;
 }
 
 export interface CardHeaderProps {
-	class?: string;
+  class?: string;
 }
 
 export interface CardTitleProps {
-	class?: string;
+  class?: string;
 }
 
 export interface CardDescriptionProps {
-	class?: string;
+  class?: string;
 }
 
 export interface CardContentProps {
-	class?: string;
+  class?: string;
 }
 
 export interface CardFooterProps {
-	class?: string;
+  class?: string;
 }

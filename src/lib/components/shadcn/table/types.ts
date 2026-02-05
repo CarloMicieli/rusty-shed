@@ -1,23 +1,23 @@
 export interface TableProps {
-	class?: string;
+  class?: string;
 }
 
 export interface TableHeaderProps {
-	class?: string;
+  class?: string;
 }
 
 export interface TableBodyProps {
-	class?: string;
+  class?: string;
 }
 
 export interface TableRowProps {
-	class?: string;
+  class?: string;
 }
 
 export interface TableHeadProps {
-	class?: string;
+  class?: string;
 }
 
 export interface TableCellProps {
-	class?: string;
+  class?: string;
 }

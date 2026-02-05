@@ -103,13 +103,19 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 - ✓ Modals, dropdowns, and interactive elements function as before
 - ✓ No visual degradation in component rendering
 
-**Status**: 🔄 IN PROGRESS - Button and Badge components created (commit b372a41)
+**Status**: 🔄 IN PROGRESS - Core components created (commit e6805a6)
 
-- Created Button component with 6 variants and 4 sizes
-- Created Badge component with 5 variants
-- Created COMPONENT_MAPPING.md with comprehensive audit (50+ btn, 30+ badge instances)
-- Installed tailwind-merge for className merging
-- Next: Begin replacing Skeleton classes across codebase
+- ✅ Created Button component with 6 variants and 4 sizes + href support
+- ✅ Created Badge component with 5 variants
+- ✅ Created Input, Textarea, Checkbox components
+- ✅ Created Dialog component for modals
+- ✅ Created Sheet component for slide-out drawers (4 directions)
+- ✅ Created comprehensive Table component system (6 sub-components)
+- ✅ Created Card component system (6 sub-components)
+- ✅ Created Alert component with 4 variants
+- ✅ Replaced 50+ button instances across routes and components
+- 📝 COMPONENT_MAPPING.md with comprehensive audit (50+ btn, 30+ badge instances)
+- 🎯 Next: Replace badge, input, textarea, checkbox classes across codebase
 
 ---
 
@@ -136,15 +142,15 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 
 ### Modal & Overlay Components
 
-- [ ] T033 [P] Replace Skeleton Modal with shadcn-svelte Dialog
-- [ ] T034 [P] Replace Skeleton Drawer with shadcn-svelte Sheet
+- [x] T033 [P] Replace Skeleton Modal with shadcn-svelte Dialog
+- [x] T034 [P] Replace Skeleton Drawer with shadcn-svelte Sheet
 - [ ] T035 [US1] Test modal open/close and animations
 - [ ] T036 [P] Test focus trapping and keyboard escape
 
 ### Data Display Components
 
-- [ ] T037 [P] Replace Skeleton Table with shadcn-svelte Table
-- [ ] T038 [P] Replace Skeleton Card with shadcn-svelte Card
+- [x] T037 [P] Replace Skeleton Table with shadcn-svelte Table
+- [x] T038 [P] Replace Skeleton Card with shadcn-svelte Card
 - [ ] T039 [US1] Test table sorting and pagination
 - [ ] T040 [P] Replace Skeleton Badge with shadcn-svelte Badge
 

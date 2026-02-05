@@ -15,7 +15,14 @@ export { Textarea } from './shadcn/textarea';
 export { Checkbox } from './shadcn/checkbox';
 export { Dialog } from './shadcn/dialog';
 export { Sheet } from './shadcn/sheet';
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './shadcn/card';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter
+} from './shadcn/card';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './shadcn/table';
 export { Alert, AlertTitle, AlertDescription } from './shadcn/alert';
 
