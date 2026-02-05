@@ -65,27 +65,27 @@
 </script>
 
 <!-- Toast Container - Fixed top-right positioning (FR-009) -->
-<div class="pointer-events-none fixed right-0 top-0 z-50 flex flex-col gap-2 p-4 max-w-md">
+<div class="pointer-events-none fixed top-0 right-0 z-50 flex max-w-md flex-col gap-2 p-4">
   {#each toasts as toast (toast.id)}
     <div
       in:receive={{ key: toast.id }}
       out:send={{ key: toast.id }}
       class="pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg {getVariantClasses(
         toast.variant
-      )} transition-all duration-200 animate-in fade-in slide-in-from-right-1/2"
+      )} animate-in fade-in slide-in-from-right-1/2 transition-all duration-200"
       role="alert"
       aria-live="polite"
     >
       <!-- Icon -->
       {#if getIcon(toast.variant)}
-        <svelte:component this={getIcon(toast.variant)} class="h-5 w-5 mt-0.5 flex-shrink-0" />
+        <svelte:component this={getIcon(toast.variant)} class="mt-0.5 h-5 w-5 flex-shrink-0" />
       {/if}
 
       <!-- Content -->
       <div class="flex-1">
-        <h3 class="font-semibold text-sm">{toast.title}</h3>
+        <h3 class="text-sm font-semibold">{toast.title}</h3>
         {#if toast.description}
-          <p class="text-sm opacity-90 mt-0.5">{toast.description}</p>
+          <p class="mt-0.5 text-sm opacity-90">{toast.description}</p>
         {/if}
       </div>
 
@@ -93,7 +93,7 @@
       {#if toast.action}
         <button
           on:click={toast.action.onClick}
-          class="text-sm font-medium hover:underline flex-shrink-0"
+          class="flex-shrink-0 text-sm font-medium hover:underline"
         >
           {toast.action.label}
         </button>
@@ -102,7 +102,7 @@
       <!-- Close Button -->
       <button
         on:click={() => closeToast(toast.id)}
-        class="hover:opacity-75 transition-opacity flex-shrink-0"
+        class="flex-shrink-0 transition-opacity hover:opacity-75"
         aria-label="Close notification"
       >
         <X class="h-4 w-4" />

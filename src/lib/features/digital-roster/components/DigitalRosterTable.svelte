@@ -35,7 +35,7 @@
   }
 </script>
 
-<div class="space-y-4 card p-6">
+<div class="card space-y-4 p-6">
   <!-- Filter Input -->
   <div class="flex items-center gap-2">
     <div class="input-group-divider input-group flex-1 grid-cols-[auto_1fr_auto]">
@@ -60,7 +60,7 @@
   <!-- Table -->
   {#if loading}
     <div class="flex items-center justify-center py-12">
-      <div class="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
+      <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
     </div>
   {:else if rollingStocks.length === 0}
     <div class="space-y-2 py-12 text-center">

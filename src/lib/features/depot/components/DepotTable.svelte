@@ -133,7 +133,7 @@
 
 <section class="space-y-2 pt-2">
   <div
-    class="sticky z-10 border-b border-surface-500/10 bg-surface-50/80 backdrop-blur-sm"
+    class="border-surface-500/10 bg-surface-50/80 sticky z-10 border-b backdrop-blur-sm"
     style:top={stickyOffset}
   >
     <div class="flex items-center gap-3 rounded-lg px-2 py-2">
@@ -151,15 +151,15 @@
 
   <div class="space-y-3">
     {#if items.length === 0}
-      <div class="rounded-xl border border-dashed border-surface-500/20 p-8 text-center">
-        <p class="text-sm text-surface-500">{emptyMessage}</p>
+      <div class="border-surface-500/20 rounded-xl border border-dashed p-8 text-center">
+        <p class="text-surface-500 text-sm">{emptyMessage}</p>
       </div>
     {:else}
       <div
-        class="table-container overflow-hidden rounded-xl border border-surface-500/10 bg-surface-900/40"
+        class="table-container border-surface-500/10 bg-surface-900/40 overflow-hidden rounded-xl border"
       >
         <table class="table-hover table-compact table w-full">
-          <thead class="bg-surface-900/60 font-medium text-surface-400">
+          <thead class="bg-surface-900/60 text-surface-400 font-medium">
             <tr>
               {#each headers as col (col.label)}
                 <th class="{col.class} group select-none" onclick={() => toggleSort(col.key)}>
@@ -179,7 +179,7 @@
               {/each}
             </tr>
           </thead>
-          <tbody class="divide-y divide-surface-500/10">
+          <tbody class="divide-surface-500/10 divide-y">
             {#each visibleItems as item (item.id)}
               {@const props = getItemProps(item)}
               <tr class="group">
@@ -189,14 +189,14 @@
                 <td class="align-middle font-medium text-surface-200">
                   <div class="font-mono text-sm">{props.productCode}</div>
                   <!-- Mobile-only details -->
-                  <div class="mt-0.5 space-x-1 text-xs font-normal text-surface-400 sm:hidden">
+                  <div class="text-surface-400 mt-0.5 space-x-1 text-xs font-normal sm:hidden">
                     <span>{props.manufacturer}</span>
                     {#if props.railway !== '-'}<span>• {props.railway}</span>{/if}
                     {#if props.roadNumber !== '-'}<span>• {props.roadNumber}</span>{/if}
                   </div>
                 </td>
                 <td
-                  class="hidden align-middle text-xs tracking-wide text-surface-400 uppercase lg:table-cell"
+                  class="text-surface-400 hidden align-middle text-xs tracking-wide uppercase lg:table-cell"
                 >
                   {props.category}
                 </td>
@@ -207,7 +207,7 @@
                   {props.roadNumber}
                 </td>
                 {#if type === 'car'}
-                  <td class="hidden align-middle text-sm text-surface-400 lg:table-cell">
+                  <td class="text-surface-400 hidden align-middle text-sm lg:table-cell">
                     {props.serviceLevel}
                   </td>
                 {:else}
@@ -222,7 +222,7 @@
                     {/if}
                   </td>
                 {/if}
-                <td class="hidden align-middle text-sm text-surface-400 2xl:table-cell">
+                <td class="text-surface-400 hidden align-middle text-sm 2xl:table-cell">
                   {props.livery}
                 </td>
               </tr>
@@ -233,7 +233,7 @@
 
       {#if hasOverflow}
         <div
-          class="flex flex-wrap items-center justify-between gap-2 border-t border-surface-500/10 pt-4 text-xs text-surface-400"
+          class="border-surface-500/10 text-surface-400 flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs"
         >
           <p>{m.depot_overflow_note({ showing: 100, total: items.length })}</p>
           <button

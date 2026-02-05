@@ -9,9 +9,9 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <p class="text-sm tracking-[0.2em] text-surface-400 uppercase">{subtitle}</p>
+  <p class="text-surface-400 text-sm tracking-[0.2em] uppercase">{subtitle}</p>
   <h1 class="h2 font-bold">{title}</h1>
   {#if description}
-    <p class="text-sm text-surface-400">{description}</p>
+    <p class="text-surface-400 text-sm">{description}</p>
   {/if}
 </div>

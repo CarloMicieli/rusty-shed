@@ -108,12 +108,12 @@
   }
 </script>
 
-<div class="w-full max-w-md card p-6">
+<div class="card w-full max-w-md p-6">
   <header class="mb-4">
-    <h3 class="h3 font-semibold text-surface-900">
+    <h3 class="h3 text-surface-900 font-semibold">
       {m.budget_extra_modal_title()}
     </h3>
-    <p class="mt-1 text-sm text-surface-600">
+    <p class="text-surface-600 mt-1 text-sm">
       {monthName}
       {year}
     </p>
@@ -122,11 +122,11 @@
   <form onsubmit={handleSubmit} class="space-y-4">
     <!-- Amount Input -->
     <div>
-      <label for="extra-amount" class="mb-1 block text-sm font-medium text-surface-700">
+      <label for="extra-amount" class="text-surface-700 mb-1 block text-sm font-medium">
         {m.budget_extra_amount_label()}
       </label>
       <div class="relative">
-        <span class="absolute top-1/2 left-3 -translate-y-1/2 text-surface-500">
+        <span class="text-surface-500 absolute top-1/2 left-3 -translate-y-1/2">
           {budgetState.currency === 'EUR' ? '€' : '$'}
         </span>
         <input
@@ -142,13 +142,13 @@
         />
       </div>
       {#if errors.amount}
-        <p class="mt-1 text-sm text-error-500">{errors.amount}</p>
+        <p class="text-error-500 mt-1 text-sm">{errors.amount}</p>
       {/if}
     </div>
 
     <!-- Reason Input -->
     <div>
-      <label for="extra-reason" class="mb-1 block text-sm font-medium text-surface-700">
+      <label for="extra-reason" class="text-surface-700 mb-1 block text-sm font-medium">
         {m.budget_extra_reason_label()}
       </label>
       <textarea
@@ -161,7 +161,7 @@
         placeholder={m.budget_extra_reason_placeholder()}
       ></textarea>
       {#if errors.reason}
-        <p class="mt-1 text-sm text-error-500">{errors.reason}</p>
+        <p class="text-error-500 mt-1 text-sm">{errors.reason}</p>
       {/if}
     </div>
 

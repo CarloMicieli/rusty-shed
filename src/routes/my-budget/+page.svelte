@@ -88,10 +88,10 @@
   <!-- Page Header -->
   <div class="flex items-center justify-between">
     <div>
-      <p class="text-sm font-semibold tracking-widest text-surface-400 uppercase">
+      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.budget_title()}
       </p>
-      <h1 class="h2 font-bold text-surface-50">{m.budget_config_title()}</h1>
+      <h1 class="h2 text-surface-50 font-bold">{m.budget_config_title()}</h1>
       <p class="text-surface-300">{m.budget_subtitle()}</p>
     </div>
     <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
@@ -104,7 +104,7 @@
     <div class="flex items-center justify-center py-12">
       <div class="text-center">
         <div
-          class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-surface-700 border-t-primary-500"
+          class="border-surface-700 border-t-primary-500 mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4"
         ></div>
         <p class="text-surface-400">{m.budget_loading()}</p>
       </div>
@@ -112,11 +112,11 @@
 
     <!-- Error State -->
   {:else if error}
-    <div class="rounded-lg border border-error-500 bg-error-500/10 p-6 text-center">
-      <p class="mb-4 text-error-400">{error}</p>
+    <div class="border-error-500 bg-error-500/10 rounded-lg border p-6 text-center">
+      <p class="text-error-400 mb-4">{error}</p>
       <button
         onclick={loadBudgetConfig}
-        class="rounded-lg bg-error-600 px-4 py-2 font-semibold text-white hover:bg-error-700"
+        class="bg-error-600 hover:bg-error-700 rounded-lg px-4 py-2 font-semibold text-white"
       >
         {m.budget_error_retry()}
       </button>
@@ -134,29 +134,29 @@
 
     <!-- Current Configuration Display (if exists) -->
     {#if budgetState.hasConfig && budgetState.config}
-      <section class="card border border-surface-700/60 bg-surface-900/50 p-6 shadow-xl">
+      <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
         <h3 class="mb-4 text-lg font-semibold text-surface-100">
           {m.budget_config_summary_title()}
         </h3>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
-            <p class="text-sm text-surface-400">{m.budget_config_mode_label()}</p>
-            <p class="text-xl font-bold text-primary-400">{budgetState.modeLabel}</p>
+          <div class="border-surface-700 bg-surface-800/50 rounded-lg border p-4">
+            <p class="text-surface-400 text-sm">{m.budget_config_mode_label()}</p>
+            <p class="text-primary-400 text-xl font-bold">{budgetState.modeLabel}</p>
           </div>
 
-          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
-            <p class="text-sm text-surface-400">{m.budget_config_mode_monthly()}</p>
-            <p class="text-xl font-bold text-primary-400">{budgetState.formattedMonthlyBudget}</p>
+          <div class="border-surface-700 bg-surface-800/50 rounded-lg border p-4">
+            <p class="text-surface-400 text-sm">{m.budget_config_mode_monthly()}</p>
+            <p class="text-primary-400 text-xl font-bold">{budgetState.formattedMonthlyBudget}</p>
           </div>
 
-          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
-            <p class="text-sm text-surface-400">{m.budget_config_mode_yearly()}</p>
-            <p class="text-xl font-bold text-primary-400">{budgetState.formattedYearlyBudget}</p>
+          <div class="border-surface-700 bg-surface-800/50 rounded-lg border p-4">
+            <p class="text-surface-400 text-sm">{m.budget_config_mode_yearly()}</p>
+            <p class="text-primary-400 text-xl font-bold">{budgetState.formattedYearlyBudget}</p>
           </div>
         </div>
 
-        <div class="mt-4 text-xs text-surface-400">
+        <div class="text-surface-400 mt-4 text-xs">
           <p>
             {m.budget_table_status_header()}:
             {new Date(budgetState.config.updatedAt).toLocaleString()}
@@ -166,13 +166,13 @@
       </section>
 
       <!-- Year Selector and Budget Table -->
-      <section class="card border border-surface-700/60 bg-surface-900/50 p-6 shadow-xl">
+      <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-surface-100">
             {m.budget_mode_yearly?.() || 'Monthly Budget Breakdown'}
           </h3>
           <div class="flex items-center gap-2">
-            <label for="year-selector" class="text-sm text-surface-400">Year:</label>
+            <label for="year-selector" class="text-surface-400 text-sm">Year:</label>
             <select
               id="year-selector"
               bind:value={selectedYear}
@@ -190,7 +190,7 @@
         {#if loadingRecords}
           <div class="flex items-center justify-center py-8">
             <div
-              class="h-8 w-8 animate-spin rounded-full border-4 border-surface-700 border-t-primary-500"
+              class="border-surface-700 border-t-primary-500 h-8 w-8 animate-spin rounded-full border-4"
             ></div>
           </div>
         {:else if budgetState.hasRecords}
@@ -200,14 +200,14 @@
             currency={budgetState.currency}
           />
         {:else}
-          <div class="py-8 text-center text-surface-400">
+          <div class="text-surface-400 py-8 text-center">
             {m.dashboard_empty_recent?.() || 'No budget records available for this year.'}
           </div>
         {/if}
       </section>
 
       <!-- Historical Archive -->
-      <section class="card border border-surface-700/60 bg-surface-900/50 p-6 shadow-xl">
+      <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
         <HistoricalArchive
           {budgetState}
           currentYear={selectedYear}

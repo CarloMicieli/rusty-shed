@@ -6,16 +6,16 @@
   let { item: train } = $props<{ item: TrainSet }>();
 </script>
 
-<div class="variant-hover space-y-3 card border border-surface-700/40 p-4">
+<div class="variant-hover card border-surface-700/40 space-y-3 border p-4">
   <div class="flex items-start justify-between gap-3">
     <div class="flex items-center gap-2">
       <span class="variant-filled-secondary badge flex items-center gap-1">
         <TramFront size={14} />
       </span>
       <div class="space-y-1">
-        <p class="text-xs tracking-wide text-surface-500 uppercase">{m.depot_group()}</p>
+        <p class="text-surface-500 text-xs tracking-wide uppercase">{m.depot_group()}</p>
         <h3 class="text-base leading-tight font-semibold">{train.group}</h3>
-        <p class="text-sm text-surface-400">{train.railwayCompany}</p>
+        <p class="text-surface-400 text-sm">{train.railwayCompany}</p>
       </div>
     </div>
     <span class="variant-soft-warning badge flex items-center gap-1 font-mono text-xs">

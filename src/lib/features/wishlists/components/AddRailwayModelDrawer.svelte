@@ -283,7 +283,7 @@
 
 <!-- Drawer -->
 <div
-  class="drawer fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl transform flex-col bg-surface-800 shadow-xl transition-transform duration-300 {open
+  class="drawer bg-surface-800 fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl transform flex-col shadow-xl transition-transform duration-300 {open
     ? 'translate-x-0'
     : 'translate-x-full'}"
   role="dialog"
@@ -291,12 +291,12 @@
   aria-labelledby="drawer-title"
 >
   <!-- Header -->
-  <div class="flex items-center justify-between border-b border-surface-700 p-4">
+  <div class="border-surface-700 flex items-center justify-between border-b p-4">
     <div>
-      <h2 id="drawer-title" class="text-xl font-bold text-surface-50">
+      <h2 id="drawer-title" class="text-surface-50 text-xl font-bold">
         {m.wishlist_drawer_title()}
       </h2>
-      <p class="mt-1 text-sm text-surface-400">{m.wishlist_drawer_subtitle()}</p>
+      <p class="text-surface-400 mt-1 text-sm">{m.wishlist_drawer_subtitle()}</p>
     </div>
     <button
       type="button"
@@ -311,7 +311,7 @@
   <!-- Form Content -->
   <div class="flex-1 overflow-y-auto p-4">
     {#if isLoadingData}
-      <p class="text-center text-surface-400">{m.wishlist_loading_data()}</p>
+      <p class="text-surface-400 text-center">{m.wishlist_loading_data()}</p>
     {:else}
       <form onsubmit={(e) => e.preventDefault()} class="space-y-6">
         <!-- Wishlist Selection -->
@@ -331,7 +331,7 @@
         </div>
 
         <!-- Railway Model Section -->
-        <div class="space-y-4 rounded-lg border border-surface-700 bg-surface-900 p-4">
+        <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
           <h3 class="text-lg font-semibold text-surface-100">Railway Model Details</h3>
 
           <!-- Manufacturer -->
@@ -461,7 +461,7 @@
         </div>
 
         <!-- Rolling Stocks Section -->
-        <div class="space-y-4 rounded-lg border border-surface-700 bg-surface-900 p-4">
+        <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-surface-100">
               {m.wishlist_rolling_stocks_title()}
@@ -473,7 +473,7 @@
           </div>
 
           {#if form.rollingStocks.length === 0}
-            <p class="text-sm text-surface-400">No rolling stocks added yet.</p>
+            <p class="text-surface-400 text-sm">No rolling stocks added yet.</p>
           {:else}
             <div class="space-y-4">
               {#each form.rollingStocks as entry, i (entry.id)}
@@ -489,7 +489,7 @@
         </div>
 
         <!-- Wishlist Item Details -->
-        <div class="space-y-4 rounded-lg border border-surface-700 bg-surface-900 p-4">
+        <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
           <h3 class="text-lg font-semibold text-surface-100">Wishlist Details</h3>
 
           <!-- Priority -->
@@ -543,7 +543,7 @@
   </div>
 
   <!-- Footer -->
-  <div class="flex items-center justify-end gap-2 border-t border-surface-700 p-4">
+  <div class="border-surface-700 flex items-center justify-end gap-2 border-t p-4">
     <button type="button" class="variant-ghost btn" onclick={handleCloseRequest}>
       {m.wishlist_drawer_cancel()}
     </button>

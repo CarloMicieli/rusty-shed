@@ -159,7 +159,4 @@ function createToastStore() {
 export const toastStore = createToastStore();
 
 /** Derived store for total toast count */
-export const toastCount = derived(
-  toastStore,
-  ($toastStore) => $toastStore.toasts.length
-);
+export const toastCount = derived(toastStore, ($toastStore) => $toastStore.toasts.length);

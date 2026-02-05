@@ -16,7 +16,7 @@
     {@const Icon = action.icon}
     <button
       type="button"
-      class="variant-ghost-surface hover:variant-filled-primary group btn w-full justify-start border border-surface-700/50 p-4 transition-all duration-200"
+      class="variant-ghost-surface hover:variant-filled-primary group btn border-surface-700/50 w-full justify-start border p-4 transition-all duration-200"
       onclick={() => action.onClick?.()}
     >
       <Icon

@@ -68,10 +68,10 @@
   }
 </script>
 
-<section class="card border border-surface-700/60 bg-surface-900/50 shadow-xl">
-  <header class="flex items-center justify-between gap-4 border-b border-surface-700/60 p-6">
+<section class="card border-surface-700/60 bg-surface-900/50 border shadow-xl">
+  <header class="border-surface-700/60 flex items-center justify-between gap-4 border-b p-6">
     <div>
-      <p class="text-sm font-semibold tracking-widest text-surface-400 uppercase">
+      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.budget_config_title()}
       </p>
       <h2 class="text-xl font-bold text-surface-100">{m.budget_subtitle()}</h2>
@@ -87,7 +87,7 @@
       <div id="budget-mode" class="flex gap-3">
         {#each modeOptions as option (option.value)}
           <label
-            class="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border border-surface-700 bg-surface-800/50 p-4 transition-all hover:border-primary-500 hover:bg-surface-800"
+            class="border-surface-700 bg-surface-800/50 hover:border-primary-500 hover:bg-surface-800 flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 transition-all"
             class:border-primary-500={mode === option.value}
             class:bg-surface-800={mode === option.value}
           >
@@ -128,25 +128,25 @@
         bind:value={amountInputValue}
         required
         disabled={saving}
-        class="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 placeholder-surface-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="border-surface-700 bg-surface-800 placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500/50 w-full rounded-lg border px-4 py-3 text-surface-100 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         placeholder="0.00"
       />
-      <p class="text-xs text-surface-400">
+      <p class="text-surface-400 text-xs">
         {m.budget_config_amount_helper()}
       </p>
     </div>
 
     <!-- Derived Calculations Display -->
-    <div class="space-y-2 rounded-lg border border-surface-700 bg-surface-800/30 p-4">
+    <div class="border-surface-700 bg-surface-800/30 space-y-2 rounded-lg border p-4">
       <h3 class="text-sm font-semibold text-surface-300">{m.budget_config_summary_title()}</h3>
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
           <p class="text-surface-400">{m.budget_config_mode_monthly()}</p>
-          <p class="text-lg font-bold text-primary-400">{formatCurrency(monthlyDisplay)}</p>
+          <p class="text-primary-400 text-lg font-bold">{formatCurrency(monthlyDisplay)}</p>
         </div>
         <div>
           <p class="text-surface-400">{m.budget_config_mode_yearly()}</p>
-          <p class="text-lg font-bold text-primary-400">{formatCurrency(yearlyDisplay)}</p>
+          <p class="text-primary-400 text-lg font-bold">{formatCurrency(yearlyDisplay)}</p>
         </div>
       </div>
     </div>
@@ -156,16 +156,16 @@
       <button
         type="submit"
         disabled={saving}
-        class="flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:bg-primary-700 focus:ring-2 focus:ring-primary-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500/50 flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-lg transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Check class="h-5 w-5" />
         <span>{saving ? m.budget_config_saving_button() : m.budget_config_save_button()}</span>
       </button>
 
       {#if saving}
-        <div class="flex items-center gap-2 text-sm text-surface-400">
+        <div class="text-surface-400 flex items-center gap-2 text-sm">
           <div
-            class="h-4 w-4 animate-spin rounded-full border-2 border-surface-600 border-t-primary-500"
+            class="border-surface-600 border-t-primary-500 h-4 w-4 animate-spin rounded-full border-2"
           ></div>
           <span>{m.budget_config_saving_status()}</span>
         </div>

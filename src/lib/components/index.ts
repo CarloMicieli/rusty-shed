@@ -1,9 +1,9 @@
 /**
  * Component Index - Central export for all shadcn-svelte components
- * 
+ *
  * This file provides a single import point for all UI components used in the app.
  * Import components like: import { Button, Card } from '$lib/components';
- * 
+ *
  * Feature: 012-shadcn-migration
  */
 

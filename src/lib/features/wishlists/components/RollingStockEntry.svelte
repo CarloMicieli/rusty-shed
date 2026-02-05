@@ -32,7 +32,7 @@
 </script>
 
 <div
-  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-surface-700/60 bg-surface-800 p-4"
+  class="rolling-stock-entry border-surface-700/60 bg-surface-800 grid grid-cols-1 gap-4 rounded-lg border p-4"
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
@@ -43,7 +43,7 @@
       <select
         id="railway-company-{entry.id}"
         bind:value={entry.railwayCompanyId}
-        class="input w-full bg-surface-700"
+        class="input bg-surface-700 w-full"
         required
       >
         <option value="">-- {m.wishlist_field_railway_company()} --</option>
@@ -63,7 +63,7 @@
         type="text"
         bind:value={entry.seriesCode}
         placeholder="e.g., 218, Re 4/4"
-        class="input w-full bg-surface-700 font-mono"
+        class="input bg-surface-700 w-full font-mono"
         required
       />
     </div>
@@ -78,7 +78,7 @@
       <select
         id="category-{entry.id}"
         bind:value={entry.category}
-        class="input w-full bg-surface-700"
+        class="input bg-surface-700 w-full"
         required
       >
         <option value="">-- {m.wishlist_field_category()} --</option>
@@ -99,7 +99,7 @@
         type="text"
         bind:value={entry.roadNumber}
         placeholder="e.g., 218 101-3"
-        class="input w-full bg-surface-700 font-mono"
+        class="input bg-surface-700 w-full font-mono"
       />
     </div>
   </div>

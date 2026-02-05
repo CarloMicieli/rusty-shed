@@ -68,19 +68,19 @@
   }
 </script>
 
-<div class="modal-content max-w-2xl rounded-lg bg-surface-900 p-6 shadow-xl">
+<div class="modal-content bg-surface-900 max-w-2xl rounded-lg p-6 shadow-xl">
   <!-- Header -->
   <header class="mb-6">
-    <h2 class="text-2xl font-bold text-surface-50">
+    <h2 class="text-surface-50 text-2xl font-bold">
       {summary.year} - {summary.quarter}
     </h2>
-    <p class="mt-1 text-surface-400">Category Spending Breakdown</p>
+    <p class="text-surface-400 mt-1">Category Spending Breakdown</p>
   </header>
 
   <!-- Total Spending -->
-  <div class="mb-6 rounded-lg border border-surface-700 bg-surface-800 p-4">
-    <p class="text-sm text-surface-400">Total Spending</p>
-    <p class="text-3xl font-bold text-primary-400">
+  <div class="border-surface-700 bg-surface-800 mb-6 rounded-lg border p-4">
+    <p class="text-surface-400 text-sm">Total Spending</p>
+    <p class="text-primary-400 text-3xl font-bold">
       {formatAmount(summary.totalSpending.amount, summary.totalSpending.currency)}
     </p>
   </div>
@@ -91,20 +91,20 @@
       <h3 class="mb-3 text-lg font-semibold text-surface-100">By Category</h3>
 
       {#each summary.categoryBreakdown as category, index (category.category)}
-        <div class="category-item rounded-lg border border-surface-700 bg-surface-800 p-3">
+        <div class="category-item border-surface-700 bg-surface-800 rounded-lg border p-3">
           <div class="mb-2 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <div class="h-3 w-3 rounded-full {getCategoryColor(index)}"></div>
               <span class="font-medium text-surface-100">{getCategoryLabel(category.category)}</span
               >
             </div>
-            <span class="font-bold text-surface-50">
+            <span class="text-surface-50 font-bold">
               {formatAmount(category.amount.amount, category.amount.currency)}
             </span>
           </div>
 
           <!-- Progress Bar -->
-          <div class="h-2 w-full overflow-hidden rounded-full bg-surface-700">
+          <div class="bg-surface-700 h-2 w-full overflow-hidden rounded-full">
             <div
               class="h-full {getCategoryColor(index)} transition-all duration-300"
               style="width: {category.percentage}%"
@@ -113,13 +113,13 @@
 
           <!-- Percentage -->
           <div class="mt-1 text-right">
-            <span class="text-xs text-surface-400">{category.percentage.toFixed(1)}%</span>
+            <span class="text-surface-400 text-xs">{category.percentage.toFixed(1)}%</span>
           </div>
         </div>
       {/each}
     </div>
   {:else}
-    <div class="py-8 text-center text-surface-500">
+    <div class="text-surface-500 py-8 text-center">
       {noSpendingText}
     </div>
   {/if}

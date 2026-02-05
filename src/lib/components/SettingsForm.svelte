@@ -94,13 +94,13 @@
   }
 </script>
 
-<section class="card border border-surface-700/60 bg-surface-900/50 shadow-xl">
-  <header class="flex items-center justify-between gap-4 border-b border-surface-700/60 p-6">
+<section class="card border-surface-700/60 bg-surface-900/50 border shadow-xl">
+  <header class="border-surface-700/60 flex items-center justify-between gap-4 border-b p-6">
     <div>
-      <p class="text-sm font-semibold tracking-widest text-surface-400 uppercase">
+      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.settings_title()}
       </p>
-      <h2 class="h3 font-bold text-surface-50">{m.settings_subtitle()}</h2>
+      <h2 class="h3 text-surface-50 font-bold">{m.settings_subtitle()}</h2>
     </div>
     <div class="variant-soft-primary badge font-semibold tracking-wide uppercase">
       <Check class="mr-2 h-4 w-4" />
@@ -181,10 +181,10 @@
         {#each powerMethodOptions as option (option.value)}
           <label
             class={[
-              'group relative flex gap-3 rounded-container border p-4 transition',
+              'group rounded-container relative flex gap-3 border p-4 transition',
               'bg-surface-800/60 hover:border-primary-400/70 hover:bg-surface-800/90',
               form.favoritePowerMethod === option.value
-                ? 'border-primary-400/90 ring-1 ring-primary-500/30'
+                ? 'border-primary-400/90 ring-primary-500/30 ring-1'
                 : 'border-surface-700/60'
             ]}
           >
@@ -207,16 +207,16 @@
             >
               <span
                 class={[
-                  'h-2 w-2 rounded-full bg-primary-400 transition',
+                  'bg-primary-400 h-2 w-2 rounded-full transition',
                   form.favoritePowerMethod === option.value ? 'opacity-100' : 'opacity-0'
                 ]}
               ></span>
             </span>
 
             <div class="space-y-1">
-              <p class="text-sm font-semibold text-surface-50">{option.label}</p>
+              <p class="text-surface-50 text-sm font-semibold">{option.label}</p>
               {#if option.helper}
-                <p class="text-xs leading-relaxed text-surface-400">{option.helper}</p>
+                <p class="text-surface-400 text-xs leading-relaxed">{option.helper}</p>
               {/if}
             </div>
           </label>
@@ -224,7 +224,7 @@
       </div>
     </div>
 
-    <div class="flex items-center justify-end gap-4 border-t border-surface-700/60 pt-4">
+    <div class="border-surface-700/60 flex items-center justify-end gap-4 border-t pt-4">
       <button class="variant-filled-primary btn" type="submit" disabled={saving}>
         {saving ? m.settings_saving_button() : m.save_button()}
       </button>

@@ -156,7 +156,7 @@
       if (e.key === 'Escape') handleClose();
     }}
   >
-    <div class="variant-filled-surface w-full max-w-2xl space-y-4 card p-6">
+    <div class="variant-filled-surface card w-full max-w-2xl space-y-4 p-6">
       <div class="flex items-center justify-between">
         <h2 id="add-purchase-title" class="h3 font-bold">
           {m.track_purchase_dialog_title()}

@@ -60,11 +60,11 @@
 
 <div class="mx-auto max-w-4xl space-y-6 p-4 pt-4" style="--header-offset: 4rem;">
   <div class="space-y-1">
-    <p class="text-sm tracking-[0.2em] text-surface-400 uppercase">{m.app_depot()}</p>
+    <p class="text-surface-400 text-sm tracking-[0.2em] uppercase">{m.app_depot()}</p>
     <div class="flex items-center justify-between">
       <h1 class="h2 font-bold">{m.depot_title()}</h1>
       <div
-        class="flex items-center gap-1 rounded-lg border border-surface-700/60 bg-surface-900 p-1"
+        class="border-surface-700/60 bg-surface-900 flex items-center gap-1 rounded-lg border p-1"
       >
         <button
           class="btn-icon btn-icon-sm rounded-md {viewMode === 'table'
@@ -86,14 +86,14 @@
         </button>
       </div>
     </div>
-    <p class="text-sm text-surface-400">{m.depot_subtitle()}</p>
+    <p class="text-surface-400 text-sm">{m.depot_subtitle()}</p>
   </div>
 
-  <div class="rounded-xl border border-surface-700/60 bg-surface-900 p-3">
+  <div class="border-surface-700/60 bg-surface-900 rounded-xl border p-3">
     <div class="input-group items-center gap-2">
       <Search size={18} class="text-surface-500" />
       <input
-        class="w-full bg-transparent text-sm outline-none placeholder:text-surface-500"
+        class="placeholder:text-surface-500 w-full bg-transparent text-sm outline-none"
         placeholder={m.depot_search_placeholder()}
         value={searchInput}
         oninput={(event) => handleInput(event.currentTarget.value)}
@@ -111,7 +111,7 @@
   </div>
 
   {#if isLoading}
-    <div class="flex items-center gap-3 rounded-xl border border-surface-700/60 bg-surface-900 p-4">
+    <div class="border-surface-700/60 bg-surface-900 flex items-center gap-3 rounded-xl border p-4">
       <div
         class="border-accent-400 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
         aria-hidden="true"
@@ -133,7 +133,7 @@
     </div>
   {:else if totalFiltered === 0}
     <div
-      class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-surface-700/50 bg-surface-900 p-8 text-center"
+      class="border-surface-700/50 bg-surface-900 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center"
     >
       <p class="text-lg font-semibold">{m.depot_no_results()}</p>
       <button class="variant-soft-primary btn" onclick={clearSearch}>

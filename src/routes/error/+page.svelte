@@ -7,7 +7,7 @@
 </svelte:head>
 
 <section class="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
-  <h1 class="h2 font-bold text-error-400">Ops, something bad happened</h1>
+  <h1 class="h2 text-error-400 font-bold">Ops, something bad happened</h1>
   <p class="text-surface-300">
     We'll add more guidance here soon. In the meantime, you can head back to the dashboard.
   </p>

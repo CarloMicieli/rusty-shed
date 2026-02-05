@@ -23,7 +23,7 @@
       {#each data as row (row.id)}
         <tr>
           <td class="font-bold">{row.manufacturer.name ?? '—'}</td>
-          <td class="font-mono text-primary-400">{row.product_code ?? '—'}</td>
+          <td class="text-primary-400 font-mono">{row.product_code ?? '—'}</td>
           <td>
             <span class="variant-soft-surface badge">
               {row.category ?? '—'}

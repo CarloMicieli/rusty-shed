@@ -15,7 +15,7 @@
 </script>
 
 <div
-  class="pb-safe-area fixed right-0 bottom-0 left-0 z-50 border-t border-surface-700/50 bg-surface-900 lg:hidden"
+  class="pb-safe-area border-surface-700/50 bg-surface-900 fixed right-0 bottom-0 left-0 z-50 border-t lg:hidden"
 >
   {#key locale}
     <div class="flex h-16 items-center justify-around">

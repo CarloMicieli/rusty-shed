@@ -103,28 +103,28 @@
   }
 </script>
 
-<div class="rounded-lg bg-surface-50 p-6">
-  <h3 class="mb-4 text-lg font-semibold text-surface-900">5-Year Quarterly Activity</h3>
+<div class="bg-surface-50 rounded-lg p-6">
+  <h3 class="text-surface-900 mb-4 text-lg font-semibold">5-Year Quarterly Activity</h3>
   <div class="space-y-1">
     <!-- Header row with quarter labels -->
     <div class="grid grid-cols-[80px_repeat(4,1fr)] gap-1">
-      <div class="flex items-center justify-end pr-2 text-sm font-medium text-surface-700"></div>
+      <div class="text-surface-700 flex items-center justify-end pr-2 text-sm font-medium"></div>
       {#each quarters as quarter (quarter)}
-        <div class="pb-1 text-center text-xs font-medium text-surface-600">{quarter}</div>
+        <div class="text-surface-600 pb-1 text-center text-xs font-medium">{quarter}</div>
       {/each}
     </div>
 
     <!-- Data rows -->
     {#each years as year (year)}
       <div class="grid grid-cols-[80px_repeat(4,1fr)] gap-1">
-        <div class="flex items-center justify-end pr-2 text-sm font-medium text-surface-700">
+        <div class="text-surface-700 flex items-center justify-end pr-2 text-sm font-medium">
           {year}
         </div>
         {#each quarters as quarter (quarter)}
           {@const activity = getActivityLevel(year, quarter)}
           <button
             type="button"
-            class="relative flex aspect-square cursor-pointer items-center justify-center rounded transition-all duration-200 hover:z-10 hover:ring-2 hover:ring-primary-500 {activity
+            class="hover:ring-primary-500 relative flex aspect-square cursor-pointer items-center justify-center rounded transition-all duration-200 hover:z-10 hover:ring-2 {activity
               ? getLevelColor(activity.spendingLevel)
               : 'bg-surface-200'}"
             title={activity
@@ -133,7 +133,7 @@
             onclick={() => handleCellClick(year, quarter)}
           >
             {#if activity && activity.amount > 0}
-              <span class="text-xs font-medium text-surface-900">
+              <span class="text-surface-900 text-xs font-medium">
                 {formatAmount(activity.amount)}
               </span>
             {/if}
@@ -145,23 +145,23 @@
 
   <!-- Legend -->
   <div class="mt-4 flex items-center gap-4 border-t border-surface-200 pt-4">
-    <span class="text-sm font-medium text-surface-700">Spending Level:</span>
+    <span class="text-surface-700 text-sm font-medium">Spending Level:</span>
     <div class="flex gap-3">
       <div class="flex items-center gap-1.5">
         <div class="h-4 w-4 rounded bg-surface-200"></div>
-        <span class="text-xs text-surface-600">None</span>
+        <span class="text-surface-600 text-xs">None</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <div class="h-4 w-4 rounded bg-success-200"></div>
-        <span class="text-xs text-surface-600">Low</span>
+        <div class="bg-success-200 h-4 w-4 rounded"></div>
+        <span class="text-surface-600 text-xs">Low</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <div class="h-4 w-4 rounded bg-warning-300"></div>
-        <span class="text-xs text-surface-600">Medium</span>
+        <div class="bg-warning-300 h-4 w-4 rounded"></div>
+        <span class="text-surface-600 text-xs">Medium</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <div class="h-4 w-4 rounded bg-error-400"></div>
-        <span class="text-xs text-surface-600">High</span>
+        <div class="bg-error-400 h-4 w-4 rounded"></div>
+        <span class="text-surface-600 text-xs">High</span>
       </div>
     </div>
   </div>

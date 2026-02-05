@@ -14,7 +14,7 @@
   };
 
   const { class: className = '', value = '', children, isExpanded = false }: Props = $props();
-  
+
   // Get context from parent Accordion
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const context = getContext<any>('accordion-context');
@@ -26,7 +26,7 @@
 </script>
 
 {#if expanded}
-  <div data-accordion-content class="overflow-hidden bg-muted/50 px-4 py-3 {className}">
+  <div data-accordion-content class="bg-muted/50 overflow-hidden px-4 py-3 {className}">
     {#if children}
       {@render children()}
     {/if}

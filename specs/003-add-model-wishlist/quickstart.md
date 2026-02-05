@@ -170,8 +170,8 @@
     onkeydown={(e) => e.key === 'Escape' && handleClose()}
   >
     <div
-      class="h-full w-full max-w-xl overflow-y-auto border-l
-                border-surface-700/60 bg-surface-900 p-6 shadow-2xl"
+      class="border-surface-700/60 bg-surface-900 h-full w-full max-w-xl
+                overflow-y-auto border-l p-6 shadow-2xl"
       role="dialog"
       aria-modal="true"
       tabindex="-1"

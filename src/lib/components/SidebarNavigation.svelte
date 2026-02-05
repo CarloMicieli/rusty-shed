@@ -30,7 +30,7 @@
 
 {#key locale}
   <nav
-    class="hidden h-full w-64 flex-col border-r border-surface-700/50 bg-surface-900 p-4 lg:flex"
+    class="border-surface-700/50 bg-surface-900 hidden h-full w-64 flex-col border-r p-4 lg:flex"
   >
     <div class="mb-8 flex items-center gap-3 px-4">
       <TrainFront class="text-accent-500" size={32} />
@@ -73,7 +73,7 @@
           <Heart size={20} />
           <span class="font-medium tracking-wide">{m.app_wishlists()}</span>
           {#if defaultWishlist}
-            <span class="variant-soft-surface ml-auto badge">{defaultWishlist.count}</span>
+            <span class="variant-soft-surface badge ml-auto">{defaultWishlist.count}</span>
           {/if}
         </a>
       </li>
@@ -134,7 +134,7 @@
       </li>
     </ul>
 
-    <div class="mt-auto space-y-2 border-t border-surface-700/50 pt-4">
+    <div class="border-surface-700/50 mt-auto space-y-2 border-t pt-4">
       <a
         href={resolve('/my-settings')}
         class="hover:variant-soft-primary variant-ghost-surface btn w-full justify-start gap-3"
@@ -143,7 +143,7 @@
         <Settings size={20} />
         <span class="font-medium tracking-wide">{m.app_settings()}</span>
       </a>
-      <div class="px-4 py-2 text-center text-xs tracking-widest text-surface-400 uppercase">
+      <div class="text-surface-400 px-4 py-2 text-center text-xs tracking-widest uppercase">
         {m.app_version_prefix()}
         {$appVersion || '—'}
       </div>

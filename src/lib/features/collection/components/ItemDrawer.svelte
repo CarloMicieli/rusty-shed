@@ -77,7 +77,7 @@
     onkeydown={(event) => event.key === 'Escape' && handleClose()}
   >
     <div
-      class="h-full w-full max-w-xl overflow-y-auto border-l border-surface-700/60 bg-surface-900 p-6 shadow-2xl"
+      class="border-surface-700/60 bg-surface-900 h-full w-full max-w-xl overflow-y-auto border-l p-6 shadow-2xl"
       role="dialog"
       aria-modal="true"
       tabindex="-1"
@@ -91,7 +91,7 @@
     >
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <p class="text-xs tracking-[0.2em] text-surface-500 uppercase">
+          <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
             {editing ? 'Edit item' : 'Add item'}
           </p>
           <h3 class="text-xl font-semibold">
@@ -106,20 +106,20 @@
       <div class="space-y-4">
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Brand</span>
-          <input class="input w-full bg-surface-800" bind:value={form.brand} />
+          <input class="input bg-surface-800 w-full" bind:value={form.brand} />
         </label>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Catalog Number</span>
-          <input class="input w-full bg-surface-800" bind:value={form.catalogNumber} />
+          <input class="input bg-surface-800 w-full" bind:value={form.catalogNumber} />
         </label>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Title</span>
-          <input class="input w-full bg-surface-800" bind:value={form.title} />
+          <input class="input bg-surface-800 w-full" bind:value={form.title} />
         </label>
         <div class="grid grid-cols-2 gap-3">
           <label class="block space-y-1">
             <span class="text-sm text-surface-300">Scale</span>
-            <select class="input w-full bg-surface-800" bind:value={form.scale}>
+            <select class="input bg-surface-800 w-full" bind:value={form.scale}>
               {#each availableScales as scaleOpt (scaleOpt.id)}
                 <option value={scaleOpt.id}>{scaleOpt.display}</option>
               {/each}
@@ -127,18 +127,18 @@
           </label>
           <label class="block space-y-1">
             <span class="text-sm text-surface-300">Power</span>
-            <input class="input w-full bg-surface-800" bind:value={form.powerSystem} />
+            <input class="input bg-surface-800 w-full" bind:value={form.powerSystem} />
           </label>
         </div>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Description</span>
-          <textarea class="input w-full bg-surface-800" rows="3" bind:value={form.description}
+          <textarea class="input bg-surface-800 w-full" rows="3" bind:value={form.description}
           ></textarea>
         </label>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Tags (comma separated)</span>
           <input
-            class="input w-full bg-surface-800"
+            class="input bg-surface-800 w-full"
             value={form.tags.join(', ')}
             oninput={(e) => handleTagsInput((e.target as HTMLInputElement).value)}
           />

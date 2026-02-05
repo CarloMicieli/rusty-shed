@@ -37,7 +37,7 @@
         <Wrench size={14} />
       </span>
       <div class="space-y-1">
-        <p class="text-xs tracking-wide text-surface-500 uppercase">Rolling Stock</p>
+        <p class="text-surface-500 text-xs tracking-wide uppercase">Rolling Stock</p>
         <h3 class="text-base leading-tight font-semibold">
           {card.ownedRollingStockId}
         </h3>

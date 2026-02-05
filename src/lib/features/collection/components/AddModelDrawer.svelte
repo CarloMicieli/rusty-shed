@@ -308,12 +308,12 @@
   aria-labelledby="drawer-title"
 >
   <div
-    class="flex h-full flex-col overflow-y-auto border-l border-surface-700/60 bg-surface-900 shadow-2xl"
+    class="border-surface-700/60 bg-surface-900 flex h-full flex-col overflow-y-auto border-l shadow-2xl"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-surface-700/60 p-6">
+    <div class="border-surface-700/60 flex items-center justify-between border-b p-6">
       <div>
-        <p class="text-xs tracking-[0.2em] text-surface-500 uppercase">
+        <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
           {m.add_model_subtitle()}
         </p>
         <h2 id="drawer-title" class="text-xl font-semibold">{m.add_model_title()}</h2>
@@ -351,7 +351,7 @@
                   <select
                     id="manufacturer"
                     bind:value={form.manufacturerId}
-                    class="input w-full bg-surface-800"
+                    class="input bg-surface-800 w-full"
                     class:input-error={validationErrors.manufacturerId}
                     aria-describedby={validationErrors.manufacturerId
                       ? 'manufacturer-error'
@@ -363,7 +363,7 @@
                     {/each}
                   </select>
                   {#if validationErrors.manufacturerId}
-                    <p id="manufacturer-error" class="mt-1 text-sm text-error-500">
+                    <p id="manufacturer-error" class="text-error-500 mt-1 text-sm">
                       {validationErrors.manufacturerId}
                     </p>
                   {/if}
@@ -379,14 +379,14 @@
                     type="text"
                     bind:value={form.productCode}
                     placeholder="e.g., 37858"
-                    class="input w-full bg-surface-800 font-mono"
+                    class="input bg-surface-800 w-full font-mono"
                     class:input-error={validationErrors.productCode}
                     aria-describedby={validationErrors.productCode
                       ? 'product-code-error'
                       : undefined}
                   />
                   {#if validationErrors.productCode}
-                    <p id="product-code-error" class="mt-1 text-sm text-error-500">
+                    <p id="product-code-error" class="text-error-500 mt-1 text-sm">
                       {validationErrors.productCode}
                     </p>
                   {/if}
@@ -403,12 +403,12 @@
                   type="text"
                   bind:value={form.description}
                   placeholder="e.g., Class 218 Diesel Locomotive"
-                  class="input w-full bg-surface-800"
+                  class="input bg-surface-800 w-full"
                   class:input-error={validationErrors.description}
                   aria-describedby={validationErrors.description ? 'description-error' : undefined}
                 />
                 {#if validationErrors.description}
-                  <p id="description-error" class="mt-1 text-sm text-error-500">
+                  <p id="description-error" class="text-error-500 mt-1 text-sm">
                     {validationErrors.description}
                   </p>
                 {/if}
@@ -423,7 +423,7 @@
                   <select
                     id="category"
                     bind:value={form.category}
-                    class="input w-full bg-surface-800"
+                    class="input bg-surface-800 w-full"
                     class:input-error={validationErrors.category}
                     aria-describedby={validationErrors.category ? 'category-error' : undefined}
                   >
@@ -434,7 +434,7 @@
                     {/each}
                   </select>
                   {#if validationErrors.category}
-                    <p id="category-error" class="mt-1 text-sm text-error-500">
+                    <p id="category-error" class="text-error-500 mt-1 text-sm">
                       {validationErrors.category}
                     </p>
                   {/if}
@@ -448,7 +448,7 @@
                   <select
                     id="scale"
                     bind:value={form.scale}
-                    class="input w-full bg-surface-800"
+                    class="input bg-surface-800 w-full"
                     class:input-error={validationErrors.scale}
                     aria-describedby={validationErrors.scale ? 'scale-error' : undefined}
                   >
@@ -458,7 +458,7 @@
                     {/each}
                   </select>
                   {#if validationErrors.scale}
-                    <p id="scale-error" class="mt-1 text-sm text-error-500">
+                    <p id="scale-error" class="text-error-500 mt-1 text-sm">
                       {validationErrors.scale}
                     </p>
                   {/if}
@@ -474,7 +474,7 @@
                   <select
                     id="power-method"
                     bind:value={form.powerMethod}
-                    class="input w-full bg-surface-800"
+                    class="input bg-surface-800 w-full"
                     class:input-error={validationErrors.powerMethod}
                     aria-describedby={validationErrors.powerMethod
                       ? 'power-method-error'
@@ -486,7 +486,7 @@
                     {/each}
                   </select>
                   {#if validationErrors.powerMethod}
-                    <p id="power-method-error" class="mt-1 text-sm text-error-500">
+                    <p id="power-method-error" class="text-error-500 mt-1 text-sm">
                       {validationErrors.powerMethod}
                     </p>
                   {/if}
@@ -500,7 +500,7 @@
                   <select
                     id="epoch"
                     bind:value={form.epoch}
-                    class="input w-full bg-surface-800"
+                    class="input bg-surface-800 w-full"
                     class:input-error={validationErrors.epoch}
                     aria-describedby={validationErrors.epoch ? 'epoch-error' : undefined}
                   >
@@ -510,7 +510,7 @@
                     {/each}
                   </select>
                   {#if validationErrors.epoch}
-                    <p id="epoch-error" class="mt-1 text-sm text-error-500">
+                    <p id="epoch-error" class="text-error-500 mt-1 text-sm">
                       {validationErrors.epoch}
                     </p>
                   {/if}
@@ -536,7 +536,7 @@
             </div>
 
             {#if validationErrors.rollingStocks}
-              <p class="mb-3 text-sm text-error-500">{validationErrors.rollingStocks}</p>
+              <p class="text-error-500 mb-3 text-sm">{validationErrors.rollingStocks}</p>
             {/if}
 
             <div class="space-y-4">
@@ -564,7 +564,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-surface-700/60 p-6">
+    <div class="border-surface-700/60 flex items-center justify-end gap-3 border-t p-6">
       <button
         type="button"
         class="variant-ghost-surface btn"
@@ -589,9 +589,9 @@
 <!-- Discard Changes Dialog -->
 {#if showDiscardDialog}
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-    <div class="w-full max-w-md rounded-lg border border-surface-700 bg-surface-900 p-6 shadow-xl">
+    <div class="border-surface-700 bg-surface-900 w-full max-w-md rounded-lg border p-6 shadow-xl">
       <h3 class="mb-2 text-lg font-bold text-surface-100">{m.add_model_discard_title()}</h3>
-      <p class="mb-4 text-surface-400">{m.add_model_discard_message()}</p>
+      <p class="text-surface-400 mb-4">{m.add_model_discard_message()}</p>
       <div class="flex justify-end gap-3">
         <button type="button" class="variant-ghost-surface btn" onclick={handleDiscardCancel}>
           {m.add_model_discard_cancel()}

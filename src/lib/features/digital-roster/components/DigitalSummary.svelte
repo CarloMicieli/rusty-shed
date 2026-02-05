@@ -12,18 +12,18 @@
   const formattedPercentage = $derived(summary ? summary.percentage.toFixed(1) : '0.0');
 </script>
 
-<div class="space-y-4 card p-6">
+<div class="card space-y-4 p-6">
   <h2 class="h3 font-bold">{m.digital_roster_summary_title()}</h2>
 
   {#if loading}
     <div class="flex items-center justify-center py-8">
-      <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-500"></div>
+      <div class="border-primary-500 h-8 w-8 animate-spin rounded-full border-b-2"></div>
     </div>
   {:else if summary}
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <!-- Percentage Card -->
       <div class="variant-ghost-primary card p-4 text-center">
-        <div class="text-4xl font-bold text-primary-500">
+        <div class="text-primary-500 text-4xl font-bold">
           {formattedPercentage}%
         </div>
         <div class="mt-2 text-sm opacity-75">
@@ -40,7 +40,7 @@
 
       <!-- Digital Count -->
       <div class="variant-ghost-success card p-4 text-center">
-        <div class="text-3xl font-semibold text-success-500">
+        <div class="text-success-500 text-3xl font-semibold">
           {summary.digital_count}
         </div>
         <div class="mt-2 text-sm opacity-75">

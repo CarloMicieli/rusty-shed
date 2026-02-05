@@ -5,7 +5,7 @@
   let { onCreate } = $props<{ onCreate: () => void }>();
 </script>
 
-<div class="space-y-4 card p-8 text-center">
+<div class="card space-y-4 p-8 text-center">
   <div class="flex justify-center">
     <span class="variant-filled-surface badge-icon">
       <Wrench size={32} />

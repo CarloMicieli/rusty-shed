@@ -17,6 +17,7 @@ import { Button } from '$lib/components';
 ## Component Organization
 
 Each component follows the shadcn-svelte structure:
+
 - Individual component folders (e.g., `button/`, `card/`, `dialog/`)
 - Index files for convenient re-exports
 - TypeScript types included
@@ -24,6 +25,7 @@ Each component follows the shadcn-svelte structure:
 ## Steampunk Theme Integration
 
 All shadcn-svelte components are styled using our custom Steampunk theme system:
+
 - Theme CSS variables are defined in `src/lib/themes/steampunk-base.css`
 - Light theme: `steampunk-light.css` (Parchment & Brass)
 - Dark theme: `steampunk-dark.css` (Iron & Copper)
@@ -35,6 +37,7 @@ The theme is automatically applied via the theme store in `src/lib/stores/themeS
 To add a new shadcn-svelte component:
 
 1. Use the shadcn-svelte CLI (if available):
+
    ```bash
    npx shadcn-svelte@latest add [component-name]
    ```
@@ -48,6 +51,7 @@ To add a new shadcn-svelte component:
 ## Customization
 
 Components can be customized via:
+
 - **Props**: Standard Svelte component properties
 - **Classes**: Tailwind utility classes for styling overrides
 - **Slots**: For content injection and layout customization

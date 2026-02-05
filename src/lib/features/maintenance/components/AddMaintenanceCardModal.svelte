@@ -50,8 +50,8 @@
 </script>
 
 {#if open}
-  <div class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-surface-900/80">
-    <div class="m-4 w-full max-w-md space-y-4 card p-6">
+  <div class="modal-backdrop bg-surface-900/80 fixed inset-0 z-50 flex items-center justify-center">
+    <div class="card m-4 w-full max-w-md space-y-4 p-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h3 class="h3">{m.maintenance_create_card_title()}</h3>
@@ -77,7 +77,7 @@
         {/if}
 
         {#if !isFormValid && selectedRollingStockId === null}
-          <p class="text-sm text-surface-500">{m.maintenance_create_card_validation()}</p>
+          <p class="text-surface-500 text-sm">{m.maintenance_create_card_validation()}</p>
         {/if}
 
         <!-- Actions -->

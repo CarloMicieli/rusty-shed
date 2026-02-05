@@ -81,28 +81,28 @@
 
 {#if error}
   <div
-    class="bg-background flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans text-surface-50 selection:bg-primary-500/30"
+    class="bg-background text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans"
     in:fade
   >
     <div class="flex max-w-md flex-col items-center gap-6 p-6 text-center">
       <div class="mb-2 flex items-center gap-3">
         <TrainFront class="text-error-500" size={48} />
       </div>
-      <h1 class="h2 font-bold text-error-500">Startup Failed</h1>
+      <h1 class="h2 text-error-500 font-bold">Startup Failed</h1>
       <p class="text-surface-200">The application could not start correctly.</p>
       <div
-        class="max-h-48 w-full overflow-auto rounded border border-error-500/30 bg-surface-800/50 p-4 text-left font-mono text-xs"
+        class="border-error-500/30 bg-surface-800/50 max-h-48 w-full overflow-auto rounded border p-4 text-left font-mono text-xs"
       >
         {error}
       </div>
-      <p class="text-sm text-surface-400">
+      <p class="text-surface-400 text-sm">
         Please check your database connection or logs for more details.
       </p>
     </div>
   </div>
 {:else if loading}
   <div
-    class="bg-background flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans text-surface-50 selection:bg-primary-500/30"
+    class="bg-background text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden font-sans"
     in:fade
     out:fade
   >
@@ -121,7 +121,7 @@
   </div>
 {:else}
   <div
-    class="bg-background flex h-screen w-full flex-col overflow-hidden font-sans text-surface-50 selection:bg-primary-500/30 lg:flex-row"
+    class="bg-background text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col overflow-hidden font-sans lg:flex-row"
     in:fade
   >
     <!-- Sidebar Left (Desktop) -->
@@ -133,7 +133,7 @@
     <div class="relative flex h-full min-w-0 flex-1 flex-col">
       <!-- Header -->
       <header
-        class="bg-background/80 sticky top-0 z-40 border-b border-surface-700/50 backdrop-blur-md"
+        class="bg-background/80 border-surface-700/50 sticky top-0 z-40 border-b backdrop-blur-md"
         data-tauri-drag-region
       >
         <div class="flex items-center justify-between p-4">
@@ -152,9 +152,9 @@
           <div class="flex items-center gap-4">
             <SearchBar />
 
-            <button class="variant-ghost-surface relative btn-icon btn-icon-sm">
+            <button class="variant-ghost-surface btn-icon btn-icon-sm relative">
               <Bell size={20} />
-              <span class="absolute top-0 right-0 h-2 w-2 animate-pulse rounded-full bg-error-500"
+              <span class="bg-error-500 absolute top-0 right-0 h-2 w-2 animate-pulse rounded-full"
               ></span>
             </button>
           </div>

@@ -78,7 +78,7 @@
     onkeydown={(event) => event.key === 'Escape' && handleClose()}
   >
     <div
-      class="w-full max-w-md space-y-4 rounded-xl border border-surface-700/70 bg-surface-900 p-6"
+      class="border-surface-700/70 bg-surface-900 w-full max-w-md space-y-4 rounded-xl border p-6"
       role="dialog"
       aria-modal="true"
       tabindex="-1"
@@ -119,7 +119,7 @@
         />
 
         {#if validationError}
-          <p class="text-sm text-error-500">{validationError}</p>
+          <p class="text-error-500 text-sm">{validationError}</p>
         {/if}
 
         {#if isDuplicateWarning}

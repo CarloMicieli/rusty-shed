@@ -68,10 +68,10 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <p class="text-sm font-semibold tracking-widest text-surface-400 uppercase">
+      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.app_settings()}
       </p>
-      <h1 class="h2 font-bold text-surface-50">{m.settings_heading()}</h1>
+      <h1 class="h2 text-surface-50 font-bold">{m.settings_heading()}</h1>
       <p class="text-surface-300">{m.settings_description()}</p>
     </div>
     <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
@@ -80,21 +80,21 @@
   </div>
 
   {#if loading}
-    <div class="card border border-surface-700/40 p-8 shadow-xl">
+    <div class="card border-surface-700/40 border p-8 shadow-xl">
       <div class="animate-pulse space-y-4">
-        <div class="h-4 w-1/3 rounded bg-surface-700/60"></div>
-        <div class="h-4 w-1/2 rounded bg-surface-700/60"></div>
+        <div class="bg-surface-700/60 h-4 w-1/3 rounded"></div>
+        <div class="bg-surface-700/60 h-4 w-1/2 rounded"></div>
         <div class="grid gap-4 md:grid-cols-2">
           {#each Array(4) as _item, index (index)}
-            <div class="h-20 rounded bg-surface-700/40"></div>
+            <div class="bg-surface-700/40 h-20 rounded"></div>
           {/each}
         </div>
       </div>
     </div>
   {:else if error}
-    <div class="variant-soft-error rounded-container border border-error-500/30 p-6">
-      <p class="font-semibold text-error-200">{error}</p>
-      <button class="variant-filled-primary mt-4 btn" onclick={loadSettings}>
+    <div class="variant-soft-error rounded-container border-error-500/30 border p-6">
+      <p class="text-error-200 font-semibold">{error}</p>
+      <button class="variant-filled-primary btn mt-4" onclick={loadSettings}>
         {m.errors_retry_page()}
       </button>
     </div>

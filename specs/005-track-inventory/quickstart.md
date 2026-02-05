@@ -223,7 +223,7 @@ Create `src/routes/my-tracks/+page.svelte`:
 </script>
 
 <div class="p-6">
-  <h1 class="mb-6 h2">{m.track_inventories_title()}</h1>
+  <h1 class="h2 mb-6">{m.track_inventories_title()}</h1>
 
   {#if isLoading}
     <p>Loading...</p>

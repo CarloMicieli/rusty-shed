@@ -16,7 +16,14 @@
     multiple?: boolean;
   };
 
-  const { children, collapsible = false, defaultValue = '', value = [], onValueChange, multiple = false }: Props = $props();
+  const {
+    children,
+    collapsible = false,
+    defaultValue = '',
+    value = [],
+    onValueChange,
+    multiple = false
+  }: Props = $props();
 
   let expandedValues: Record<string, boolean> = $state(
     defaultValue ? { [defaultValue]: true } : {}
@@ -37,10 +44,10 @@
       }
       expandedValues[itemValue] = true;
     }
-    
+
     // Call onValueChange callback if provided
     if (onValueChange) {
-      const activeValues = Object.keys(expandedValues).filter(k => expandedValues[k]);
+      const activeValues = Object.keys(expandedValues).filter((k) => expandedValues[k]);
       onValueChange({ value: activeValues });
     }
   }
@@ -51,11 +58,11 @@
     isExpanded: (itemValue: string) => expandedValues[itemValue] ?? false,
     expandedValues
   };
-  
+
   setContext('accordion-context', context);
 </script>
 
-<div class="divide-y divide-border rounded-lg border bg-background">
+<div class="divide-border bg-background divide-y rounded-lg border">
   {#if children}
     {@render children(context)}
   {/if}

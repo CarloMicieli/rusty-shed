@@ -22,13 +22,13 @@
 {#snippet StatCard(label: string, value: number | string, Icon: IconComponent, accentClass: string)}
   {@const iconClass = accentClass.replace('border-', 'text-').replace('500', '300')}
   <div
-    class={`variant-soft-surface flex items-center justify-between gap-3 card border-l-4 p-4 ${accentClass}`}
+    class={`variant-soft-surface card flex items-center justify-between gap-3 border-l-4 p-4 ${accentClass}`}
   >
-    <div class={`rounded-lg bg-surface-800/60 p-3 ${iconClass}`}>
+    <div class={`bg-surface-800/60 rounded-lg p-3 ${iconClass}`}>
       <Icon size={20} />
     </div>
     <div class="text-right">
-      <p class="text-xs font-semibold tracking-wide text-surface-400 uppercase">{label}</p>
+      <p class="text-surface-400 text-xs font-semibold tracking-wide uppercase">{label}</p>
       <p class="text-xl font-bold text-surface-100">{value}</p>
     </div>
   </div>
@@ -36,25 +36,25 @@
 
 <section class="space-y-4">
   <div
-    class="variant-glass-surface flex flex-col gap-4 card p-4 sm:flex-row sm:items-center sm:justify-between"
+    class="variant-glass-surface card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between"
   >
     <div class="space-y-1">
-      <p class="text-xs font-semibold tracking-[0.18em] text-surface-400 uppercase">
+      <p class="text-surface-400 text-xs font-semibold tracking-[0.18em] uppercase">
         Collection value
       </p>
-      <p class="h3 font-bold text-primary-100">{totalValue}</p>
+      <p class="h3 text-primary-100 font-bold">{totalValue}</p>
     </div>
     <div
-      class="flex items-center gap-3 rounded-xl border border-primary-500/40 bg-primary-500/10 px-4 py-3"
+      class="border-primary-500/40 bg-primary-500/10 flex items-center gap-3 rounded-xl border px-4 py-3"
     >
-      <div class="rounded-full bg-primary-500/20 p-3 text-primary-200">
+      <div class="bg-primary-500/20 text-primary-200 rounded-full p-3">
         <TrainFront size={22} />
       </div>
       <div>
-        <p class="text-xs font-semibold tracking-[0.12em] text-surface-400 uppercase">
+        <p class="text-surface-400 text-xs font-semibold tracking-[0.12em] uppercase">
           Total units
         </p>
-        <p class="text-2xl font-bold text-surface-50">{totalUnits}</p>
+        <p class="text-surface-50 text-2xl font-bold">{totalUnits}</p>
       </div>
     </div>
   </div>

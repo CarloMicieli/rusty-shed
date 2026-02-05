@@ -75,7 +75,7 @@
         {item.track_product.description || item.track_product.product_code}
       </h4>
       {#if hasShortage}
-        <div class="flex items-center gap-1 text-warning-500">
+        <div class="text-warning-500 flex items-center gap-1">
           <AlertTriangle size={16} />
           <span class="text-xs font-medium">
             {m.track_inventory_item_shortage({ count: shortageCount })}
@@ -83,7 +83,7 @@
         </div>
       {/if}
     </div>
-    <div class="flex items-center gap-4 text-sm text-surface-400">
+    <div class="text-surface-400 flex items-center gap-4 text-sm">
       <span>{item.track_product.manufacturer_name}</span>
       <span>•</span>
       <span>{item.track_product.product_code}</span>
@@ -94,13 +94,13 @@
 
   <div class="flex items-center gap-6">
     <div class="flex flex-col items-center">
-      <span class="text-xs text-surface-400">{m.track_inventory_item_quantity()}</span>
+      <span class="text-surface-400 text-xs">{m.track_inventory_item_quantity()}</span>
       <span class="text-lg font-bold" class:text-warning-500={hasShortage}>
         {item.quantity}
       </span>
     </div>
     <div class="flex flex-col items-center">
-      <span class="text-xs text-surface-400">{m.track_inventory_item_required()}</span>
+      <span class="text-surface-400 text-xs">{m.track_inventory_item_required()}</span>
       {#if isEditingRequired}
         <div class="flex flex-col items-center gap-1">
           <div class="flex items-center gap-2">
@@ -124,13 +124,13 @@
             </button>
           </div>
           {#if error}
-            <span class="text-xs text-error-500">{error}</span>
+            <span class="text-error-500 text-xs">{error}</span>
           {/if}
         </div>
       {:else}
         <button
           onclick={startEditing}
-          class="group flex items-center gap-1 transition-colors hover:text-primary-500"
+          class="group hover:text-primary-500 flex items-center gap-1 transition-colors"
         >
           <span class="text-lg font-semibold">{item.required}</span>
           <Edit2 size={14} class="opacity-0 transition-opacity group-hover:opacity-100" />

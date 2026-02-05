@@ -106,7 +106,7 @@
     aria-modal="true"
     aria-labelledby="create-product-title"
   >
-    <div class="w-full max-w-2xl rounded-lg bg-surface-100-900 p-6 shadow-xl">
+    <div class="bg-surface-100-900 w-full max-w-2xl rounded-lg p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <h2 id="create-product-title" class="text-xl font-semibold">
           {m.track_product_dialog_title()}
@@ -115,7 +115,7 @@
           type="button"
           onclick={handleClose}
           disabled={submitting}
-          class="rounded p-1 hover:bg-surface-200-800"
+          class="hover:bg-surface-200-800 rounded p-1"
           aria-label="Close"
         >
           <X size={20} />
@@ -124,7 +124,7 @@
 
       <form onsubmit={handleSubmit} class="space-y-4">
         {#if error}
-          <div class="rounded bg-error-500/10 p-3 text-error-500">
+          <div class="bg-error-500/10 text-error-500 rounded p-3">
             {error}
           </div>
         {/if}
@@ -140,7 +140,7 @@
               bind:value={manufacturerId}
               disabled={submitting}
               required
-              class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+              class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
             >
               <option value="" disabled>Select manufacturer</option>
               {#each manufacturers as manufacturer (manufacturer.id)}
@@ -161,7 +161,7 @@
               disabled={submitting}
               required
               placeholder="e.g. 6210"
-              class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+              class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
             />
           </div>
         </div>
@@ -178,7 +178,7 @@
             disabled={submitting}
             required
             placeholder="e.g. Straight Track 111.06mm"
-            class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+            class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
           />
         </div>
 
@@ -193,7 +193,7 @@
               bind:value={trackType}
               disabled={submitting}
               required
-              class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+              class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
             >
               {#each trackTypes as type (type)}
                 <option value={type}>{type.replace('_', ' ')}</option>
@@ -211,7 +211,7 @@
               bind:value={trackCode}
               disabled={submitting}
               required
-              class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+              class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
             >
               {#each trackCodes as code (code)}
                 <option value={code}>{code.replace('CODE_', 'Code ')}</option>
@@ -231,7 +231,7 @@
               bind:value={length}
               disabled={submitting}
               placeholder="111.06"
-              class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+              class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
             />
           </div>
 
@@ -245,7 +245,7 @@
               bind:value={radius}
               disabled={submitting}
               placeholder="360"
-              class="w-full rounded border border-surface-300-700 bg-surface-50-950 p-2"
+              class="border-surface-300-700 bg-surface-50-950 w-full rounded border p-2"
             />
           </div>
 
@@ -256,7 +256,7 @@
                 type="checkbox"
                 bind:checked={withRoadbed}
                 disabled={submitting}
-                class="h-5 w-5 rounded border-surface-300-700"
+                class="border-surface-300-700 h-5 w-5 rounded"
               />
               <span class="text-sm">With Roadbed</span>
             </label>
@@ -268,14 +268,14 @@
             type="button"
             onclick={handleClose}
             disabled={submitting}
-            class="rounded bg-surface-200-800 px-4 py-2 hover:bg-surface-300-700"
+            class="bg-surface-200-800 hover:bg-surface-300-700 rounded px-4 py-2"
           >
             {m.track_product_cancel()}
           </button>
           <button
             type="submit"
             disabled={submitting}
-            class="rounded bg-primary-500 px-4 py-2 text-white hover:bg-primary-600 disabled:opacity-50"
+            class="bg-primary-500 hover:bg-primary-600 rounded px-4 py-2 text-white disabled:opacity-50"
           >
             {submitting ? 'Creating...' : m.track_product_submit()}
           </button>

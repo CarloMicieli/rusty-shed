@@ -11,7 +11,7 @@
   }>();
 </script>
 
-<aside class="space-y-4 rounded-2xl border border-surface-700/50 bg-surface-900 p-4">
+<aside class="border-surface-700/50 bg-surface-900 space-y-4 rounded-2xl border p-4">
   <div class="flex items-center justify-between">
     <h2 class="h5 font-semibold tracking-tight">Wishlists</h2>
     <button class="variant-soft-primary btn btn-sm" onclick={() => onCreate?.()}>
@@ -22,7 +22,7 @@
 
   <div class="space-y-2">
     {#if wishlists.length === 0}
-      <p class="text-sm text-surface-400">Wishlist is empty</p>
+      <p class="text-surface-400 text-sm">Wishlist is empty</p>
     {:else}
       {#each wishlists as wl (wl.id)}
         <div
@@ -38,7 +38,7 @@
             <Heart size={16} />
             <div class="flex flex-col">
               <span class="font-semibold">{wl.name}</span>
-              <span class="text-xs text-surface-400">{wl.count} items</span>
+              <span class="text-surface-400 text-xs">{wl.count} items</span>
             </div>
           </div>
           <div class="flex items-center gap-2">

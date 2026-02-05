@@ -113,9 +113,9 @@
 
 {#if dashboard.error}
   <div
-    class="variant-soft-error flex flex-col items-center justify-center rounded-container border border-error-500/30 p-12 text-center"
+    class="variant-soft-error rounded-container border-error-500/30 flex flex-col items-center justify-center border p-12 text-center"
   >
-    <div class="variant-filled-error mb-4 badge-icon h-12 w-12"><RefreshCw /></div>
+    <div class="variant-filled-error badge-icon mb-4 h-12 w-12"><RefreshCw /></div>
     <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
     <p class="mt-2 text-surface-200">{m.errors_dashboard_message()}</p>
     <div class="mt-6 flex gap-4">
@@ -152,7 +152,7 @@
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {#if dashboard.isLoading}
           {#each Array(4) as _item, index (index)}<div
-              class="skeleton h-28 rounded-container"
+              class="skeleton rounded-container h-28"
             ></div>{/each}
         {:else}
           {#each stats as stat (stat.label)}
@@ -162,10 +162,10 @@
       </div>
 
       <!-- Visual Separator between Stats and Charts -->
-      <div class="my-6 border-t border-surface-700/50"></div>
+      <div class="border-surface-700/50 my-6 border-t"></div>
 
       <div class="mt-6">
-        <h3 class="mb-4 h3 text-sm font-bold tracking-wider text-surface-300 uppercase">
+        <h3 class="h3 mb-4 text-sm font-bold tracking-wider text-surface-300 uppercase">
           Charts & Analytics
         </h3>
         <DashboardCharts />
@@ -188,15 +188,15 @@
           {#if dashboard.isLoading}
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {#each Array(2) as _item, index (index)}<div
-                  class="skeleton aspect-video w-full rounded-container"
+                  class="skeleton rounded-container aspect-video w-full"
                 ></div>{/each}
             </div>
           {:else if !recent.length}
             <div
-              class="variant-soft-surface rounded-container border border-dashed border-surface-700/60 p-10 text-center text-surface-300"
+              class="variant-soft-surface rounded-container border-surface-700/60 border border-dashed p-10 text-center text-surface-300"
             >
               <p class="mb-2">{m.dashboard_empty_recent()}</p>
-              <p class="text-sm text-surface-400">{m.dashboard_empty_recent_prompt()}</p>
+              <p class="text-surface-400 text-sm">{m.dashboard_empty_recent_prompt()}</p>
             </div>
           {:else}
             <div
@@ -217,7 +217,7 @@
           </div>
 
           {#if !dashboard.isLoading && depot.length === 0}
-            <div class="card border-2 border-dashed border-surface-500/20 p-8 text-center">
+            <div class="card border-surface-500/20 border-2 border-dashed p-8 text-center">
               <p class="mb-4 text-surface-300">{m.dashboard_empty_depot()}</p>
               <button
                 class="variant-filled-secondary btn"

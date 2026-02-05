@@ -13,7 +13,7 @@
 
 <a
   href={resolve(`/my-tracks/${inventory.id}`)}
-  class="variant-ghost-surface hover:variant-soft-primary flex flex-col gap-3 card p-6 transition-all hover:scale-[1.02]"
+  class="variant-ghost-surface hover:variant-soft-primary card flex flex-col gap-3 p-6 transition-all hover:scale-[1.02]"
 >
   <div class="flex items-start justify-between">
     <div class="flex items-center gap-3">
@@ -29,14 +29,14 @@
     </div>
   </div>
 
-  <div class="flex items-center gap-6 border-t border-surface-700/50 pt-3">
+  <div class="border-surface-700/50 flex items-center gap-6 border-t pt-3">
     <div class="flex flex-col">
-      <span class="text-xs text-surface-400">{m.track_inventories_card_total_quantity()}</span>
+      <span class="text-surface-400 text-xs">{m.track_inventories_card_total_quantity()}</span>
       <span class="text-accent-500 h3 font-bold">{inventory.total_quantity}</span>
     </div>
     {#if inventory.total_items > 0}
       <div class="flex flex-col">
-        <span class="text-xs text-surface-400">Types</span>
+        <span class="text-surface-400 text-xs">Types</span>
         <span class="text-lg font-semibold">{inventory.total_items}</span>
       </div>
     {/if}

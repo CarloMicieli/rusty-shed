@@ -23,14 +23,14 @@
 </script>
 
 <article
-  class="group hover:border-accent-500/60 rounded-xl border border-surface-700/60 bg-surface-900 p-4 shadow-lg shadow-surface-900/40 transition hover:-translate-y-1"
+  class="group hover:border-accent-500/60 border-surface-700/60 bg-surface-900 shadow-surface-900/40 rounded-xl border p-4 shadow-lg transition hover:-translate-y-1"
   in:fade
 >
   <div
     class={`relative mb-3 h-32 overflow-hidden rounded-lg ${resolveTagMeta(primaryTag).gradient}`}
   >
-    <div class="absolute inset-0 bg-gradient-to-t from-surface-900/80 to-transparent"></div>
-    <div class="absolute top-3 left-3 rounded-full bg-surface-900/60 p-2">
+    <div class="from-surface-900/80 absolute inset-0 bg-gradient-to-t to-transparent"></div>
+    <div class="bg-surface-900/60 absolute top-3 left-3 rounded-full p-2">
       {#if PrimaryIcon}
         <PrimaryIcon size={20} class="text-accent-300" />
       {/if}
@@ -40,7 +40,7 @@
   <div class="space-y-2">
     <div class="flex items-start justify-between gap-2">
       <div>
-        <p class="text-xs tracking-[0.18em] text-surface-500 uppercase">
+        <p class="text-surface-500 text-xs tracking-[0.18em] uppercase">
           {item.railwayModel.manufacturer} • {item.railwayModel.productCode}
         </p>
         <h3 class="text-lg leading-tight font-semibold">{item.railwayModel.description}</h3>
@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-2 text-xs text-surface-400">
+    <div class="text-surface-400 flex flex-wrap gap-2 text-xs">
       <span class="variant-soft-surface badge">{item.railwayModel.scale}</span>
       <span class="variant-soft-surface badge">{new Date(item.addedDate).toLocaleDateString()}</span
       >

@@ -21,7 +21,7 @@
 </script>
 
 <div
-  class="variant-ghost-surface group rounded-lg border border-surface-700 p-4 transition-all hover:border-surface-600"
+  class="variant-ghost-surface group border-surface-700 hover:border-surface-600 rounded-lg border p-4 transition-all"
 >
   <div class="flex items-start justify-between gap-4">
     <div class="flex flex-1 items-start gap-3">
@@ -37,7 +37,7 @@
             <h4 class="font-medium">
               {purchase.track_product.description || purchase.track_product.product_code}
             </h4>
-            <p class="text-sm text-surface-400">
+            <p class="text-surface-400 text-sm">
               {purchase.track_product.manufacturer_name}
             </p>
           </div>

@@ -32,7 +32,7 @@
 
 <section class="space-y-2 pt-2">
   <div
-    class="sticky z-10 border-b border-surface-500/10 bg-surface-50/80 backdrop-blur-sm"
+    class="border-surface-500/10 bg-surface-50/80 sticky z-10 border-b backdrop-blur-sm"
     style:top={stickyOffset}
   >
     <div class="flex items-center gap-3 rounded-lg px-2 py-2">
@@ -48,8 +48,8 @@
 
   <div class="space-y-3">
     {#if items.length === 0}
-      <div class="rounded-xl border border-dashed border-surface-500/20 p-8 text-center">
-        <p class="text-sm text-surface-500">{emptyMessage}</p>
+      <div class="border-surface-500/20 rounded-xl border border-dashed p-8 text-center">
+        <p class="text-surface-500 text-sm">{emptyMessage}</p>
       </div>
     {:else}
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -60,7 +60,7 @@
 
       {#if hasOverflow}
         <div
-          class="flex flex-wrap items-center justify-between gap-2 border-t border-surface-500/10 pt-4 text-xs text-surface-400"
+          class="border-surface-500/10 text-surface-400 flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs"
         >
           <p>{m.depot_overflow_note({ showing: 100, total: items.length })}</p>
           <button

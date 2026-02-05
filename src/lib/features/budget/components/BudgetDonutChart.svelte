@@ -47,7 +47,7 @@
   const offset = $derived(circumference - (remainingPercentage / 100) * circumference);
 </script>
 
-<div class="flex flex-col items-center gap-4 rounded-lg bg-surface-50 p-6">
+<div class="bg-surface-50 flex flex-col items-center gap-4 rounded-lg p-6">
   <div class="relative">
     <svg width={size} height={size} class="transform transition-transform duration-300">
       <!-- Background circle -->
@@ -78,17 +78,17 @@
       <div class="text-4xl font-bold {getColorClass(remainingPercentage)}">
         {remainingPercentage.toFixed(1)}%
       </div>
-      <div class="mt-1 text-sm text-surface-600">Remaining</div>
+      <div class="text-surface-600 mt-1 text-sm">Remaining</div>
     </div>
   </div>
   <div class="w-full space-y-2">
     <div class="flex items-center justify-between text-sm">
       <span class="text-surface-600">Available:</span>
-      <span class="font-semibold text-surface-900">{formatAmount(totalAvailable, currency)}</span>
+      <span class="text-surface-900 font-semibold">{formatAmount(totalAvailable, currency)}</span>
     </div>
     <div class="flex items-center justify-between text-sm">
       <span class="text-surface-600">Remaining:</span>
-      <span class="font-semibold text-surface-900 {getColorClass(remainingPercentage)}">
+      <span class="text-surface-900 font-semibold {getColorClass(remainingPercentage)}">
         {formatAmount(remainingAmount, currency)}
       </span>
     </div>

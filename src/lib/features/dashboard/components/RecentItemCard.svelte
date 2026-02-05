@@ -10,7 +10,7 @@
 </script>
 
 <div
-  class="group overflow-hidden card transition-all duration-200 hover:ring-1 hover:ring-primary-500"
+  class="group card hover:ring-primary-500 overflow-hidden transition-all duration-200 hover:ring-1"
 >
   <div class="relative aspect-video overflow-hidden">
     {#if item.imageUrl}
@@ -22,14 +22,14 @@
       <div class="from-background/90 absolute inset-0 bg-gradient-to-t to-transparent"></div>
     {:else}
       <div
-        class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-surface-800 to-surface-700 text-2xl font-semibold text-surface-200"
+        class="from-surface-800 to-surface-700 absolute inset-0 flex items-center justify-center bg-gradient-to-br text-2xl font-semibold text-surface-200"
       >
         {item.title.slice(0, 2).toUpperCase()}
       </div>
     {/if}
     <div class="from-background/90 absolute inset-0 bg-gradient-to-t to-transparent"></div>
     <div class="absolute bottom-0 left-0 p-4">
-      <h4 class="h4 font-bold text-surface-50">{item.title}</h4>
+      <h4 class="h4 text-surface-50 font-bold">{item.title}</h4>
       {#if item.subtitle}
         <p class="text-xs tracking-wider text-surface-300 uppercase">{item.subtitle}</p>
       {/if}

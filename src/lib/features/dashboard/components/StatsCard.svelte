@@ -6,9 +6,9 @@
 </script>
 
 <div
-  class="variant-filled-surface hover:variant-filled-secondary space-y-2 card p-4 transition-colors duration-200"
+  class="variant-filled-surface hover:variant-filled-secondary card space-y-2 p-4 transition-colors duration-200"
 >
-  <div class="flex items-center justify-between text-surface-400">
+  <div class="text-surface-400 flex items-center justify-between">
     <span class="text-sm font-bold tracking-widest uppercase">{stat.label}</span>
     {#if stat.trend === 'up'}
       <TrendingUp size={16} class="text-success-500" />
@@ -19,7 +19,7 @@
     {/if}
   </div>
   <div class="flex items-end gap-2">
-    <h3 class="h3 font-bold text-primary-500">{stat.value}</h3>
+    <h3 class="h3 text-primary-500 font-bold">{stat.value}</h3>
     <span
       class="{stat.trend === 'up'
         ? 'text-success-500'

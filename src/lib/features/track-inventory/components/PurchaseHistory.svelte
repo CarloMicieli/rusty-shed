@@ -47,7 +47,7 @@
   {:else}
     {#each groupedPurchases as group (group.monthKey)}
       <div class="space-y-3">
-        <h4 class="text-sm font-semibold tracking-wider text-surface-400 uppercase">
+        <h4 class="text-surface-400 text-sm font-semibold tracking-wider uppercase">
           {group.displayMonth}
         </h4>
         <div class="space-y-2">

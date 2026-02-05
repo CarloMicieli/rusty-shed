@@ -7,7 +7,7 @@
 </script>
 
 <div
-  class="variant-filled-surface space-y-3 card border-l-4 border-surface-600 p-4 transition-colors hover:border-primary-500/50"
+  class="variant-filled-surface card border-surface-600 hover:border-primary-500/50 space-y-3 border-l-4 p-4 transition-colors"
 >
   <div class="flex items-start justify-between">
     <div class="flex-1">
@@ -15,7 +15,7 @@
         <h4 class="h4 font-bold">
           {depot.manufacturer.name ?? '—'}
           {#if depot.product_code}
-            <span class="ml-1 font-mono text-primary-400">#{depot.product_code}</span>
+            <span class="text-primary-400 ml-1 font-mono">#{depot.product_code}</span>
           {/if}
         </h4>
         <StatusBadge status="in-service" />
@@ -29,7 +29,7 @@
     </span>
   </div>
 
-  <div class="flex flex-wrap gap-2 border-t border-surface-700/50 pt-3">
+  <div class="border-surface-700/50 flex flex-wrap gap-2 border-t pt-3">
     {#if depot.category}
       <span class="variant-soft-surface badge flex items-center gap-1">
         <TrainFront size={12} />

@@ -14,6 +14,6 @@
   </span>
   <slot />
   {#if error}
-    <span class="text-sm text-error-500">{error}</span>
+    <span class="text-error-500 text-sm">{error}</span>
   {/if}
 </label>

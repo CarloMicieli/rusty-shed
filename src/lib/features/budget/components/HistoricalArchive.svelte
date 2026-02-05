@@ -6,7 +6,12 @@
    * Each year shows a full BudgetTable with 12-month breakdown.
    */
 
-  import { Accordion, AccordionItem, AccordionItemTrigger, AccordionItemContent } from '$lib/components/accordion';
+  import {
+    Accordion,
+    AccordionItem,
+    AccordionItemTrigger,
+    AccordionItemContent
+  } from '$lib/components/accordion';
   import type { BudgetState } from '../BudgetState.svelte';
   import BudgetTable from './BudgetTable.svelte';
   import * as m from '$lib/paraglide/messages.js';
@@ -48,7 +53,7 @@
   <h3 class="mb-4 text-lg font-semibold text-surface-100">Historical Budget Data</h3>
 
   {#if historicalYears.length === 0}
-    <p class="text-sm text-surface-400">No historical data available.</p>
+    <p class="text-surface-400 text-sm">No historical data available.</p>
   {:else}
     <Accordion>
       {#snippet children(_context)}
@@ -59,11 +64,13 @@
                 <div class="flex w-full items-center justify-between">
                   <span class="font-semibold text-surface-100">{formatYearRange(year)}</span>
                   {#if loadingYear === year}
-                    <span class="text-xs text-surface-400">{m.budget_loading?.() || 'Loading...'}</span>
+                    <span class="text-surface-400 text-xs"
+                      >{m.budget_loading?.() || 'Loading...'}</span
+                    >
                   {/if}
                 </div>
               </AccordionItemTrigger>
-              
+
               <AccordionItemContent value={year.toString()} {isExpanded}>
                 <div class="p-4">
                   {#if budgetState.hasRecords && budgetState.monthlyRecords.length > 0 && budgetState.monthlyRecords[0].year === year}

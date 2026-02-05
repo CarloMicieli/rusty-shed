@@ -165,9 +165,9 @@
 {/snippet}
 
 <div class="container mx-auto p-8">
-  <h1 class="mb-8 h2">{resolveLabel(formLabels.title)}</h1>
+  <h1 class="h2 mb-8">{resolveLabel(formLabels.title)}</h1>
   {#if errors.general}
-    <div class="variant-filled-error mb-4 card p-4">{errors.general}</div>
+    <div class="variant-filled-error card mb-4 p-4">{errors.general}</div>
   {/if}
 
   <form
@@ -183,9 +183,9 @@
       collapsible
       class="space-y-3"
     >
-      <AccordionItem value="basic-info" class="rounded-lg border border-surface-600">
+      <AccordionItem value="basic-info" class="border-surface-600 rounded-lg border">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="mb-0 h4">{resolveLabel(formLabels.basicInfo)}</h3>
+          <h3 class="h4 mb-0">{resolveLabel(formLabels.basicInfo)}</h3>
           <AccordionItemIndicator class="text-muted text-sm" />
         </AccordionItemTrigger>
 
@@ -257,9 +257,9 @@
         </AccordionItemContent>
       </AccordionItem>
 
-      <AccordionItem value="delivery-availability" class="rounded-lg border border-surface-600">
+      <AccordionItem value="delivery-availability" class="border-surface-600 rounded-lg border">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="mb-0 h4">{resolveLabel(formLabels.deliveryAvailability)}</h3>
+          <h3 class="h4 mb-0">{resolveLabel(formLabels.deliveryAvailability)}</h3>
           <AccordionItemIndicator class="text-muted text-sm" />
         </AccordionItemTrigger>
 
@@ -297,9 +297,9 @@
         </AccordionItemContent>
       </AccordionItem>
 
-      <AccordionItem value="rolling-stock" class="rounded-lg border border-surface-600">
+      <AccordionItem value="rolling-stock" class="border-surface-600 rounded-lg border">
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="mb-0 h4">
+          <h3 class="h4 mb-0">
             {resolveLabel(formLabels.rollingStock)}
             <span class="variant-soft-primary badge">{formData.rolling_stocks.length}</span>
           </h3>

@@ -12,12 +12,12 @@
 <div
   class="{hasAlert
     ? 'variant-soft-error border-error-500/30'
-    : 'variant-filled-surface hover:variant-filled-secondary'} space-y-2 card border p-5 shadow-sm transition-all duration-200 hover:shadow-md"
+    : 'variant-filled-surface hover:variant-filled-secondary'} card space-y-2 border p-5 shadow-sm transition-all duration-200 hover:shadow-md"
 >
-  <div class="flex items-center justify-between text-surface-400">
+  <div class="text-surface-400 flex items-center justify-between">
     <span class="text-sm font-bold tracking-widest uppercase">{stat.label}</span>
     {#if hasAlert}
-      <AlertCircle size={18} class="animate-pulse text-error-400" />
+      <AlertCircle size={18} class="text-error-400 animate-pulse" />
     {:else if stat.trend === 'up'}
       <TrendingUp size={16} class="text-success-500" />
     {:else if stat.trend === 'down'}
@@ -27,7 +27,7 @@
     {/if}
   </div>
   <div class="flex items-end gap-2">
-    <h3 class="h2 font-bold text-primary-400">{stat.value}</h3>
+    <h3 class="h2 text-primary-400 font-bold">{stat.value}</h3>
     <span
       class="{stat.trend === 'up'
         ? 'text-success-500'

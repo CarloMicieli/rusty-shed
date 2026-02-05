@@ -31,7 +31,7 @@
     onkeydown={(event) => event.key === 'Escape' && handleClose()}
   >
     <div
-      class="w-full max-w-md rounded-xl border border-surface-700/70 bg-surface-900 p-6"
+      class="border-surface-700/70 bg-surface-900 w-full max-w-md rounded-xl border p-6"
       role="dialog"
       aria-modal="true"
       tabindex="-1"
@@ -44,7 +44,7 @@
       }}
     >
       <h3 class="text-lg font-semibold">{title}</h3>
-      <p class="mt-2 text-sm text-surface-400">{message}</p>
+      <p class="text-surface-400 mt-2 text-sm">{message}</p>
       <div class="mt-5 flex justify-end gap-3">
         <button class="variant-ghost-surface btn" onclick={handleClose}>Cancel</button>
         <button class="variant-filled-error btn" onclick={handleConfirm}>Confirm</button>

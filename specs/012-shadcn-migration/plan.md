@@ -10,7 +10,8 @@ Migrate the Rusty Shed frontend from Skeleton UI (v4.9.0) to shadcn-svelte (v1.1
 ## Technical Context
 
 **Language/Version**: Svelte 5.49.1 + SvelteKit 2.50.1 (frontend), Tauri 2.9.x (desktop)  
-**Primary Dependencies**: 
+**Primary Dependencies**:
+
 - UI Library: shadcn-svelte 1.1.1 (replacing @skeletonlabs/skeleton 4.9.0)
 - Styling: Tailwind CSS 4.1.18 + custom Steampunk themes
 - Component Primitives: bits-ui (shadcn-svelte uses this foundation)
@@ -22,14 +23,16 @@ Migrate the Rusty Shed frontend from Skeleton UI (v4.9.0) to shadcn-svelte (v1.1
 **Target Platform**: Desktop application (Windows, macOS, Linux) via Tauri 2; responsive web design (mobile to desktop)
 **Project Type**: SvelteKit web frontend + Tauri desktop wrapper
 **Performance Goals**: No degradation from baseline; maintain <10% performance impact (SC-006)  
-**Constraints**: 
+**Constraints**:
+
 - Must preserve Steampunk theme system (custom colors, fonts, variants)
 - All interactive components must behave identically to Skeleton versions
 - Dark mode / light mode switching must work without interruption
 - Toast notifications must render in top-right corner with identical UX
 - Custom component extensions must be migrated or replaced
 
-**Scale/Scope**: 
+**Scale/Scope**:
+
 - Estimated component count: 30-50 UI components (buttons, forms, modals, tables, dropdowns, etc.)
 - Codebase size: ~200 .svelte files + ~500 .ts files in src/
 - Breaking changes: None (internal library swap only)
@@ -39,29 +42,35 @@ Migrate the Rusty Shed frontend from Skeleton UI (v4.9.0) to shadcn-svelte (v1.1
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Code Quality ✓
+
 - Migration preserves code quality standards; new shadcn-svelte components must follow same linting/formatting rules
 - No breaking changes to component APIs during replacement
 
 ### Testing Standards ✓
+
 - Component replacement does not require new unit tests (behavior preserved)
 - Integration tests for toast notifications, theme switching, form submission required
 - Visual regression testing to validate styling consistency (SC-008, SC-009, SC-010)
 
 ### User Experience Consistency ✓
+
 - All user-facing interactions preserved via theme system
 - Page header standardization improves UX consistency
 - Paraglide messaging system continues unchanged
 - Toast positioning / styling ensures predictable error feedback
 
 ### Performance Requirements ✓
+
 - No performance degradation expected (shadcn-svelte is lightweight)
 - Tailwind v4 + custom themes maintain same CSS footprint
 - Performance benchmarking included in Phase 2 validation
 
 ### Safe Rust Practices (N/A)
+
 - Frontend migration only; no Rust changes
 
 ### Simplicity & Semantic Versioning ✓
+
 - No API changes exposed to Tauri backend
 - Migration is internal implementation detail
 - No version bump required (patch-level feature)
@@ -140,6 +149,7 @@ Generate `research.md` with findings, architecture decisions, and component mapp
 ### Data Model
 
 Generate `data-model.md` documenting:
+
 - Steampunk theme architecture (CSS variables, token system)
 - Component replacement mapping (Skeleton → shadcn-svelte)
 - Toast notification provider setup
@@ -148,6 +158,7 @@ Generate `data-model.md` documenting:
 ### API Contracts
 
 Generate `contracts/` directory with:
+
 - Component API compatibility checklist
 - Theme API specification (for UI layer)
 - Toast notification interface
@@ -155,6 +166,7 @@ Generate `contracts/` directory with:
 ### Setup Instructions
 
 Generate `quickstart.md` with:
+
 1. Install shadcn-svelte v1.1.1 and dependencies
 2. Configure Tailwind v4 and shadcn-svelte integration
 3. Migrate Steampunk theme files
@@ -168,6 +180,7 @@ Run `.specify/scripts/bash/update-agent-context.sh copilot` to embed shadcn-svel
 ## Phase 2: Implementation (Planned)
 
 Tasks include:
+
 1. Install shadcn-svelte and remove Skeleton from package.json
 2. Replace components iteratively (grouped by page/feature)
 3. Verify Steampunk theme system integration

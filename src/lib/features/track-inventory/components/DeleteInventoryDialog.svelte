@@ -45,7 +45,7 @@
       if (e.key === 'Escape') handleClose();
     }}
   >
-    <div class="variant-filled-surface w-full max-w-md space-y-4 card p-6">
+    <div class="variant-filled-surface card w-full max-w-md space-y-4 p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="variant-filled-error flex h-10 w-10 items-center justify-center rounded-full">

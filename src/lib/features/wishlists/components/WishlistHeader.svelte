@@ -54,7 +54,7 @@
       {:else}
         <button
           type="button"
-          class="text-left h4 font-bold"
+          class="h4 text-left font-bold"
           onclick={() => (isEditing = true)}
           onkeydown={(e) => e.key === 'Enter' && (isEditing = true)}
         >
@@ -79,7 +79,7 @@
   </div>
 {:else}
   <div
-    class="rounded-xl border border-dashed border-surface-700/60 p-8 text-center text-surface-400"
+    class="border-surface-700/60 text-surface-400 rounded-xl border border-dashed p-8 text-center"
   >
     Wishlist is empty
   </div>

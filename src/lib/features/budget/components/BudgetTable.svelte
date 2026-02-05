@@ -170,7 +170,7 @@
   </div>
 
   {#if records.length === 0}
-    <div class="py-8 text-center text-surface-500">No budget records available</div>
+    <div class="text-surface-500 py-8 text-center">No budget records available</div>
   {/if}
 </div>
 

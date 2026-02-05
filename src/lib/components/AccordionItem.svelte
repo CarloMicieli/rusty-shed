@@ -14,11 +14,11 @@
   };
 
   const { value, _disabled = false, class: className = '', children }: Props = $props();
-  
+
   // Get context from parent Accordion
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const context = getContext<any>('accordion-context');
-  
+
   const isExpanded = $derived(context?.isExpanded(value) ?? false);
 </script>
 

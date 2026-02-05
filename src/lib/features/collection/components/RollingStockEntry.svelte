@@ -37,7 +37,7 @@
 </script>
 
 <div
-  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-surface-700/60 bg-surface-800 p-4"
+  class="rolling-stock-entry border-surface-700/60 bg-surface-800 grid grid-cols-1 gap-4 rounded-lg border p-4"
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
@@ -48,7 +48,7 @@
       <select
         id="railway-company-{entry.uid}"
         bind:value={entry.railwayCompanyId}
-        class="input w-full bg-surface-700"
+        class="input bg-surface-700 w-full"
         class:input-error={errors?.railwayCompanyId}
         aria-describedby={errors?.railwayCompanyId
           ? `railway-company-error-{entry.uid}`
@@ -60,7 +60,7 @@
         {/each}
       </select>
       {#if errors?.railwayCompanyId}
-        <p id="railway-company-error-{entry.uid}" class="mt-1 text-sm text-error-500">
+        <p id="railway-company-error-{entry.uid}" class="text-error-500 mt-1 text-sm">
           {errors.railwayCompanyId}
         </p>
       {/if}
@@ -76,12 +76,12 @@
         type="text"
         bind:value={entry.seriesCode}
         placeholder="e.g., 218, Re 4/4"
-        class="input w-full bg-surface-700 font-mono"
+        class="input bg-surface-700 w-full font-mono"
         class:input-error={errors?.seriesCode}
         aria-describedby={errors?.seriesCode ? `series-code-error-{entry.uid}` : undefined}
       />
       {#if errors?.seriesCode}
-        <p id="series-code-error-{entry.uid}" class="mt-1 text-sm text-error-500">
+        <p id="series-code-error-{entry.uid}" class="text-error-500 mt-1 text-sm">
           {errors.seriesCode}
         </p>
       {/if}
@@ -97,7 +97,7 @@
       <select
         id="category-{entry.uid}"
         bind:value={entry.category}
-        class="input w-full bg-surface-700"
+        class="input bg-surface-700 w-full"
         class:input-error={errors?.category}
         aria-describedby={errors?.category ? `category-error-{entry.uid}` : undefined}
       >
@@ -108,7 +108,7 @@
         {/each}
       </select>
       {#if errors?.category}
-        <p id="category-error-{entry.uid}" class="mt-1 text-sm text-error-500">
+        <p id="category-error-{entry.uid}" class="text-error-500 mt-1 text-sm">
           {errors.category}
         </p>
       {/if}
@@ -118,14 +118,14 @@
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
         <span class="text-sm text-surface-300">{m.add_model_road_number()}</span>
-        <span class="ml-1 text-xs text-surface-500">(optional)</span>
+        <span class="text-surface-500 ml-1 text-xs">(optional)</span>
       </label>
       <input
         id="road-number-{entry.uid}"
         type="text"
         bind:value={entry.roadNumber}
         placeholder="e.g., 218 101-3"
-        class="input w-full bg-surface-700 font-mono"
+        class="input bg-surface-700 w-full font-mono"
       />
     </div>
   </div>
@@ -139,7 +139,7 @@
       <select
         id="locomotive-type-{entry.uid}"
         bind:value={entry.locomotiveType}
-        class="input w-full bg-surface-700"
+        class="input bg-surface-700 w-full"
       >
         <option value={null}>-- {m.add_model_locomotive_type()} --</option>
         {#each locomotiveTypes as type (type.id)}

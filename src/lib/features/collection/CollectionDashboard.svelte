@@ -123,7 +123,7 @@
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
     {#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
       <div
-        class="h-56 animate-pulse rounded-xl bg-surface-800/80"
+        class="bg-surface-800/80 h-56 animate-pulse rounded-xl"
         aria-label={`loading-card-${i}`}
       ></div>
     {/each}
@@ -132,11 +132,11 @@
 
 {#snippet EmptyState()}
   <div
-    class="flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed border-surface-700/60 bg-surface-900 p-10 text-center"
+    class="border-surface-700/60 bg-surface-900 flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed p-10 text-center"
   >
     <Tag class="text-surface-500" size={32} />
     <h3 class="text-lg font-semibold">{m.collection_add_first()}</h3>
-    <p class="text-sm text-surface-400">{m.collection_empty_caption()}</p>
+    <p class="text-surface-400 text-sm">{m.collection_empty_caption()}</p>
     <button class="variant-filled-primary btn" onclick={ui.startCreate}>
       {m.collection_add_item()}
     </button>
@@ -145,7 +145,7 @@
 
 {#snippet NoResults()}
   <div
-    class="flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed border-warning-500/40 bg-surface-900 p-8 text-center"
+    class="border-warning-500/40 bg-surface-900 flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed p-8 text-center"
   >
     <X class="text-warning-400" size={28} />
     <h3 class="text-lg font-semibold">{m.collection_no_results()}</h3>
@@ -162,9 +162,9 @@
 <div class="space-y-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
-      <p class="text-sm tracking-[0.2em] text-surface-400 uppercase">{m.app_collection()}</p>
+      <p class="text-surface-400 text-sm tracking-[0.2em] uppercase">{m.app_collection()}</p>
       <h1 class="h2 font-bold">{m.collection_title()}</h1>
-      <p class="text-sm text-surface-400">{m.collection_empty_caption()}</p>
+      <p class="text-surface-400 text-sm">{m.collection_empty_caption()}</p>
     </div>
     <div class="flex flex-col gap-3 md:flex-row md:items-center">
       <button class="variant-filled-primary btn gap-2" onclick={ui.startCreate}>

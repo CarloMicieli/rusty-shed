@@ -47,7 +47,7 @@
   }
 </script>
 
-<aside class="space-y-4 rounded-xl border border-surface-700/60 bg-surface-900 p-4">
+<aside class="border-surface-700/60 bg-surface-900 space-y-4 rounded-xl border p-4">
   <div class="flex items-center justify-between">
     <h3 class="text-sm font-semibold tracking-wide text-surface-300 uppercase">
       {m.collection_filters_title()}
@@ -58,11 +58,11 @@
   </div>
 
   <div class="space-y-2">
-    <p class="text-xs font-medium tracking-wide text-surface-400 uppercase">
+    <p class="text-surface-400 text-xs font-medium tracking-wide uppercase">
       {m.collection_search_placeholder()}
     </p>
     <input
-      class="input-md input w-full bg-surface-900"
+      class="input-md input bg-surface-900 w-full"
       placeholder={m.collection_search_placeholder()}
       value={query}
       oninput={(e) => handleSearch((e.target as HTMLInputElement).value)}
@@ -70,7 +70,7 @@
   </div>
 
   <div class="space-y-2">
-    <p class="text-xs font-medium tracking-wide text-surface-400 uppercase">
+    <p class="text-surface-400 text-xs font-medium tracking-wide uppercase">
       {m.collection_filter_scales()}
     </p>
     <div class="flex flex-wrap gap-2">
@@ -94,7 +94,7 @@
   </div>
 
   <div class="space-y-2">
-    <p class="text-xs font-medium tracking-wide text-surface-400 uppercase">
+    <p class="text-surface-400 text-xs font-medium tracking-wide uppercase">
       {m.collection_filter_tags()}
     </p>
     <div class="flex flex-wrap gap-2">

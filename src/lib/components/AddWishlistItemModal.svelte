@@ -76,9 +76,9 @@
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
   <div
-    class="w-full max-w-lg rounded-container border border-surface-700/70 bg-surface-900 shadow-xl"
+    class="rounded-container border-surface-700/70 bg-surface-900 w-full max-w-lg border shadow-xl"
   >
-    <div class="flex items-center justify-between border-b border-surface-800 px-4 py-3">
+    <div class="border-surface-800 flex items-center justify-between border-b px-4 py-3">
       <h3 class="text-base font-semibold tracking-wide uppercase">{m.wishlist_modal_title()}</h3>
       <button class="variant-ghost-surface btn btn-sm" onclick={close} aria-label="close">
         {m.wishlist_modal_close()}
@@ -155,14 +155,14 @@
 
       {#if formError}
         <div
-          class="variant-soft-error rounded-container border border-error-700/40 p-3 text-sm text-error-100"
+          class="variant-soft-error rounded-container border-error-700/40 text-error-100 border p-3 text-sm"
         >
           {formError}
         </div>
       {/if}
     </div>
 
-    <div class="flex items-center justify-end gap-2 border-t border-surface-800 px-4 py-3">
+    <div class="border-surface-800 flex items-center justify-end gap-2 border-t px-4 py-3">
       <button class="variant-ghost-surface btn btn-sm" onclick={close} disabled={isSubmitting}>
         {m.wishlist_modal_cancel()}
       </button>

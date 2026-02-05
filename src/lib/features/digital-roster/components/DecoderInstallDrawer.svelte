@@ -307,12 +307,12 @@
   aria-labelledby="drawer-title"
 >
   <div
-    class="flex h-full flex-col overflow-y-auto border-l border-surface-700/60 bg-surface-900 shadow-2xl"
+    class="border-surface-700/60 bg-surface-900 flex h-full flex-col overflow-y-auto border-l shadow-2xl"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-surface-700/60 p-6">
+    <div class="border-surface-700/60 flex items-center justify-between border-b p-6">
       <div>
-        <p class="text-xs tracking-[0.2em] text-surface-500 uppercase">
+        <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
           {m.app_digital_roster()}
         </p>
         <h2 id="drawer-title" class="text-xl font-semibold">
@@ -333,7 +333,7 @@
     <div class="flex-1 overflow-y-auto p-6">
       {#if isLoadingData}
         <div class="flex items-center justify-center py-8">
-          <div class="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
         </div>
       {:else}
         <form id="install-decoder-form" class="space-y-6" onsubmit={(e) => e.preventDefault()}>
@@ -359,7 +359,7 @@
               {/each}
             </select>
             {#if touched && validationErrors.rollingStock}
-              <p class="mt-1 text-xs text-error-500">{validationErrors.rollingStock}</p>
+              <p class="text-error-500 mt-1 text-xs">{validationErrors.rollingStock}</p>
             {/if}
           </div>
 
@@ -382,7 +382,7 @@
               {/each}
             </select>
             {#if touched && validationErrors.decoder}
-              <p class="mt-1 text-xs text-error-500">{validationErrors.decoder}</p>
+              <p class="text-error-500 mt-1 text-xs">{validationErrors.decoder}</p>
             {/if}
           </div>
 
@@ -402,10 +402,10 @@
               placeholder="1-9999"
             />
             {#if touched && validationErrors.address}
-              <p class="mt-1 text-xs text-error-500">{validationErrors.address}</p>
+              <p class="text-error-500 mt-1 text-xs">{validationErrors.address}</p>
             {/if}
             {#if duplicateWarning}
-              <p class="mt-1 text-xs text-warning-500">{duplicateWarning}</p>
+              <p class="text-warning-500 mt-1 text-xs">{duplicateWarning}</p>
             {/if}
           </div>
 
@@ -421,7 +421,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="border-t border-surface-700/60 p-6">
+    <div class="border-surface-700/60 border-t p-6">
       <div class="flex justify-end gap-3">
         <button
           type="button"
@@ -451,9 +451,9 @@
 <!-- Confirmation Dialog for Replacing Decoder -->
 {#if showConfirmDialog}
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-    <div class="mx-4 max-w-md space-y-4 card p-6">
+    <div class="card mx-4 max-w-md space-y-4 p-6">
       <h3 class="text-lg font-semibold">{m.digital_roster_confirm_replace_title()}</h3>
-      <p class="text-sm text-surface-400">
+      <p class="text-surface-400 text-sm">
         {m.digital_roster_confirm_replace()}
       </p>
       <div class="flex justify-end gap-3">
@@ -481,9 +481,9 @@
 <!-- Discard Changes Dialog -->
 {#if showDiscardDialog}
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-    <div class="mx-4 max-w-md space-y-4 card p-6">
+    <div class="card mx-4 max-w-md space-y-4 p-6">
       <h3 class="text-lg font-semibold">{m.add_model_discard_title()}</h3>
-      <p class="text-sm text-surface-400">
+      <p class="text-surface-400 text-sm">
         {m.add_model_discard_message()}
       </p>
       <div class="flex justify-end gap-3">

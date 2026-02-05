@@ -30,13 +30,13 @@
 
 {#if items.length === 0}
   <div
-    class="col-span-full rounded-xl border border-dashed border-surface-700/60 p-6 text-center text-surface-400"
+    class="border-surface-700/60 text-surface-400 col-span-full rounded-xl border border-dashed p-6 text-center"
   >
     Wishlist is empty
   </div>
 {:else}
   {#each items as item (item.id)}
-    <div class="rounded-xl border border-surface-700/50 bg-surface-800 p-4 shadow-sm">
+    <div class="border-surface-700/50 bg-surface-800 rounded-xl border p-4 shadow-sm">
       <div class="mb-3 flex items-center gap-2">
         {#if FallbackIcon}
           <FallbackIcon size={16} class="text-accent-400" />
@@ -45,7 +45,7 @@
         {/if}
         <span class="text-sm font-semibold">{item.railway_model_id as unknown as string}</span>
       </div>
-      <div class="flex items-center justify-between text-xs text-surface-400">
+      <div class="text-surface-400 flex items-center justify-between text-xs">
         <span>{item.status}</span>
         <span>{item.priority}</span>
       </div>

@@ -55,9 +55,9 @@
     {m.maintenance_create_card_select_rolling_stock()}
   </label>
   {#if isLoading}
-    <p class="text-sm text-surface-400">{m.app_loading()}</p>
+    <p class="text-surface-400 text-sm">{m.app_loading()}</p>
   {:else if error}
-    <p class="text-sm text-error-500">{error}</p>
+    <p class="text-error-500 text-sm">{error}</p>
   {:else}
     <select
       id="rolling-stock-select"

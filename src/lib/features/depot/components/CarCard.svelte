@@ -6,16 +6,16 @@
   let { item: car } = $props<{ item: Car }>();
 </script>
 
-<div class="variant-hover space-y-3 card border border-surface-700/40 p-4">
+<div class="variant-hover card border-surface-700/40 space-y-3 border p-4">
   <div class="flex items-start justify-between gap-3">
     <div class="flex items-center gap-2">
       <span class="variant-filled-surface badge flex items-center gap-1">
         <Box size={14} />
       </span>
       <div class="space-y-1">
-        <p class="text-xs tracking-wide text-surface-500 uppercase">{m.depot_type()}</p>
+        <p class="text-surface-500 text-xs tracking-wide uppercase">{m.depot_type()}</p>
         <h3 class="text-base leading-tight font-semibold">{car.type}</h3>
-        <p class="text-sm text-surface-400">{car.railwayCompany}</p>
+        <p class="text-surface-400 text-sm">{car.railwayCompany}</p>
       </div>
     </div>
   </div>

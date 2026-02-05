@@ -13,7 +13,7 @@
   };
 
   const { class: className = '', value = '', children }: Props = $props();
-  
+
   // Get context from parent Accordion
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const context = getContext<any>('accordion-context');
@@ -23,7 +23,7 @@
   type="button"
   data-accordion-trigger
   onclick={() => context?.toggle(value)}
-  class="flex w-full items-center justify-between bg-background px-4 py-3 text-left hover:bg-accent transition-colors {className}"
+  class="bg-background hover:bg-accent flex w-full items-center justify-between px-4 py-3 text-left transition-colors {className}"
   {value}
 >
   {#if children}

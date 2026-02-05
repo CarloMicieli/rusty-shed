@@ -57,15 +57,15 @@
   }
 </script>
 
-<div class="rounded-lg bg-surface-50 p-6">
-  <h3 class="mb-4 text-lg font-semibold text-surface-900">Monthly Spending</h3>
+<div class="bg-surface-50 rounded-lg p-6">
+  <h3 class="text-surface-900 mb-4 text-lg font-semibold">Monthly Spending</h3>
   <div class="relative h-64">
     <!-- Goal line -->
     <div
-      class="absolute right-0 left-0 z-10 border-t-2 border-dashed border-success-500"
+      class="border-success-500 absolute right-0 left-0 z-10 border-t-2 border-dashed"
       style="bottom: {getBarHeight(monthlyGoal)}%"
     >
-      <span class="absolute -top-5 right-0 bg-surface-50 px-2 text-xs text-success-700">
+      <span class="bg-surface-50 text-success-700 absolute -top-5 right-0 px-2 text-xs">
         {formatAmount(monthlyGoal)} goal
       </span>
     </div>
@@ -85,7 +85,7 @@
             >
               {#if point.amount > 0}
                 <span
-                  class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-medium whitespace-nowrap text-surface-700"
+                  class="text-surface-700 absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-medium whitespace-nowrap"
                 >
                   {formatAmount(point.amount)}
                 </span>
@@ -93,7 +93,7 @@
             </div>
           </div>
           <div
-            class="mt-2 text-xs text-surface-600"
+            class="text-surface-600 mt-2 text-xs"
             class:font-bold={point.month === currentMonth}
             class:text-primary-600={point.month === currentMonth}
           >

@@ -9,12 +9,14 @@
 ## Dependencies & Execution Order
 
 **Critical Path**:
+
 1. Phase 1 (Setup) must complete before any Phase 2+ tasks
 2. Phase 2 (Foundational) blocks all user story phases
 3. User Stories (US1-US6) are mostly independent but share common infrastructure from Phase 2
 4. Phase 7 (Polish) can run in parallel with Phase 2 in some cases
 
 **Parallel Opportunities**:
+
 - US1 (Component Replacement) and US2 (Styling) can start together after Phase 2
 - US3 (Feature Parity) and US4 (Developer Transition) are independent
 - US5 (Headers) and US6 (Toasts) are independent UI-specific tasks
@@ -24,15 +26,18 @@
 ## Phase 1: Setup & Project Initialization
 
 ### Phase Goal
+
 Initialize the migration project, install shadcn-svelte v1.1.1, and remove Skeleton dependencies.
 
 ### Independent Test Criteria
+
 - ✓ Build succeeds with shadcn-svelte installed and Skeleton removed
 - ✓ No console errors or warnings related to missing Skeleton imports
 - ✓ Package.json reflects v1.1.1 as UI library
 - ✓ Tailwind config is verified compatible with shadcn-svelte
 
 **Status**: ✅ COMPLETE - All Phase 1 tasks completed successfully (commit ea3a3c0)
+
 - Created Toast store with shadcn-svelte compatible implementation
 - Created ToastProvider component for top-right notifications
 - Created Accordion component system with all sub-components
@@ -42,24 +47,26 @@ Initialize the migration project, install shadcn-svelte v1.1.1, and remove Skele
 
 ---
 
-- [X] T001 Install shadcn-svelte v1.1.1 and dependencies in package.json
-- [X] T002 Remove @skeletonlabs/skeleton (4.9.0) and @skeletonlabs/skeleton-common (4.11.0) from dependencies
-- [X] T003 [P] Install additional shadcn-svelte peer dependencies (@floating-ui/dom, bits-ui)
-- [X] T004 Update Tailwind config to integrate shadcn-svelte theme system
-- [X] T005 [P] Verify Tailwind v4.1.18 compatibility with shadcn-svelte
-- [X] T006 Run `pnpm install` and validate clean lock file
-- [X] T007 [P] Test build: `pnpm build` completes without errors
-- [X] T008 Verify no Skeleton CSS imports remain in build output
-- [X] T009 [P] Commit: `feat: install shadcn-svelte v1.1.1 and remove skeleton dependency`
+- [x] T001 Install shadcn-svelte v1.1.1 and dependencies in package.json
+- [x] T002 Remove @skeletonlabs/skeleton (4.9.0) and @skeletonlabs/skeleton-common (4.11.0) from dependencies
+- [x] T003 [P] Install additional shadcn-svelte peer dependencies (@floating-ui/dom, bits-ui)
+- [x] T004 Update Tailwind config to integrate shadcn-svelte theme system
+- [x] T005 [P] Verify Tailwind v4.1.18 compatibility with shadcn-svelte
+- [x] T006 Run `pnpm install` and validate clean lock file
+- [x] T007 [P] Test build: `pnpm build` completes without errors
+- [x] T008 Verify no Skeleton CSS imports remain in build output
+- [x] T009 [P] Commit: `feat: install shadcn-svelte v1.1.1 and remove skeleton dependency`
 
 ---
 
 ## Phase 2: Foundational Infrastructure
 
 ### Phase Goal
+
 Set up the core systems needed for all user stories: theme system integration, toast provider, and component structure.
 
 ### Independent Test Criteria
+
 - ✓ Steampunk theme system is fully integrated with shadcn-svelte
 - ✓ Theme switching (dark/light) works without app restart
 - ✓ Toast notification provider is available globally
@@ -68,16 +75,16 @@ Set up the core systems needed for all user stories: theme system integration, t
 
 ---
 
-- [X] T010 Create `src/lib/components/shadcn/` directory structure for shadcn components
-- [X] T011 [P] Verify Steampunk theme files are intact (steampunk-base.css, steampunk-light.css, steampunk-dark.css)
-- [X] T012 Integrate Steampunk theme system with shadcn-svelte's theming approach (CSS variables, design tokens)
-- [X] T013 [P] Test theme switching: dark mode → light mode → dark mode works
-- [X] T014 Create toast provider component at root level (`src/routes/+layout.svelte`)
-- [X] T015 [P] Implement toast stacking logic for top-right corner positioning
-- [X] T016 Create theme switcher store (`src/lib/stores/theme.ts`) for centralized theme state
-- [X] T017 [P] Document component import patterns for developers (in README or CONTRIBUTING)
-- [X] T018 Create `src/lib/components/index.ts` to export all shadcn components
-- [X] T019 [P] Test toast provider setup with a test notification
+- [x] T010 Create `src/lib/components/shadcn/` directory structure for shadcn components
+- [x] T011 [P] Verify Steampunk theme files are intact (steampunk-base.css, steampunk-light.css, steampunk-dark.css)
+- [x] T012 Integrate Steampunk theme system with shadcn-svelte's theming approach (CSS variables, design tokens)
+- [x] T013 [P] Test theme switching: dark mode → light mode → dark mode works
+- [x] T014 Create toast provider component at root level (`src/routes/+layout.svelte`)
+- [x] T015 [P] Implement toast stacking logic for top-right corner positioning
+- [x] T016 Create theme switcher store (`src/lib/stores/theme.ts`) for centralized theme state
+- [x] T017 [P] Document component import patterns for developers (in README or CONTRIBUTING)
+- [x] T018 Create `src/lib/components/index.ts` to export all shadcn components
+- [x] T019 [P] Test toast provider setup with a test notification
 - [ ] T020 Commit: `feat: setup shadcn-svelte theme system and toast provider`
 
 ---
@@ -85,9 +92,11 @@ Set up the core systems needed for all user stories: theme system integration, t
 ## Phase 3: User Story 1 – Seamless UI Component Replacement (P1)
 
 ### Story Goal
+
 Replace all Skeleton UI components with shadcn-svelte equivalents without changing user-visible functionality.
 
 ### Independent Test Criteria
+
 - ✓ All pages load without console errors or missing component warnings
 - ✓ All Skeleton component imports have been replaced with shadcn-svelte equivalents
 - ✓ Form validation and submission work identically
@@ -97,17 +106,20 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 ---
 
 ### Components Audit & Mapping
+
 - [ ] T021 [P] Audit codebase: identify all Skeleton components in use
 - [ ] T022 Create component replacement mapping table (Skeleton → shadcn-svelte)
 - [ ] T023 [P] Identify missing shadcn-svelte equivalents and plan alternatives
 - [ ] T024 Document component API differences and migration notes
 
 ### Button & Link Components
+
 - [ ] T025 [P] Replace Skeleton Button with shadcn-svelte Button in src/routes/
 - [ ] T026 [P] Replace Skeleton Link with shadcn-svelte Link (or use <a> + Tailwind)
 - [ ] T027 [US1] Test button interactions and state (hover, active, disabled)
 
 ### Form Components
+
 - [ ] T028 [P] Replace Skeleton Input with shadcn-svelte Input
 - [ ] T029 [P] Replace Skeleton Textarea with shadcn-svelte Textarea
 - [ ] T030 [US1] Replace Skeleton Form components with shadcn-svelte Form (from bits-ui)
@@ -115,30 +127,35 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 - [ ] T032 [US1] Test form submission workflow
 
 ### Modal & Overlay Components
+
 - [ ] T033 [P] Replace Skeleton Modal with shadcn-svelte Dialog
 - [ ] T034 [P] Replace Skeleton Drawer with shadcn-svelte Sheet
 - [ ] T035 [US1] Test modal open/close and animations
 - [ ] T036 [P] Test focus trapping and keyboard escape
 
 ### Data Display Components
+
 - [ ] T037 [P] Replace Skeleton Table with shadcn-svelte Table
 - [ ] T038 [P] Replace Skeleton Card with shadcn-svelte Card
 - [ ] T039 [US1] Test table sorting and pagination
 - [ ] T040 [P] Replace Skeleton Badge with shadcn-svelte Badge
 
 ### Navigation & Dropdown Components
+
 - [ ] T041 [P] Replace Skeleton Menu with shadcn-svelte DropdownMenu
 - [ ] T042 [P] Replace Skeleton Navbar with shadcn-svelte components
 - [ ] T043 [US1] Test dropdown interactions and keyboard navigation
 - [ ] T044 [P] Test navbar responsiveness on mobile/tablet/desktop
 
 ### Form Controls (Checkboxes, Radios, Toggles)
+
 - [ ] T045 [P] Replace Skeleton Checkbox with shadcn-svelte Checkbox
 - [ ] T046 [P] Replace Skeleton Radio with shadcn-svelte RadioGroup
 - [ ] T047 [US1] Replace Skeleton Toggle with shadcn-svelte Toggle
 - [ ] T048 [P] Test toggle states and form binding
 
 ### Final Component Audit
+
 - [ ] T049 [US1] Search codebase for remaining Skeleton imports and replace
 - [ ] T050 Run build and verify no Skeleton-related errors
 - [ ] T051 Commit: `feat: replace all skeleton components with shadcn-svelte`
@@ -148,9 +165,11 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 ## Phase 4: User Story 2 – Consistent Styling with Tailwind 4 (P1)
 
 ### Story Goal
+
 Maintain visual consistency across all pages after switching libraries.
 
 ### Independent Test Criteria
+
 - ✓ All pages render with no visual degradation
 - ✓ Spacing, colors, fonts, and borders match pre-migration design
 - ✓ Responsive design works across mobile, tablet, desktop breakpoints
@@ -174,9 +193,11 @@ Maintain visual consistency across all pages after switching libraries.
 ## Phase 5: User Story 3 – Component Feature Parity (P1)
 
 ### Story Goal
+
 All interactive and complex components maintain feature parity with Skeleton equivalents.
 
 ### Independent Test Criteria
+
 - ✓ Multi-select, datepicker, autocomplete components work identically
 - ✓ All ARIA labels and keyboard navigation work correctly
 - ✓ Screen reader support is present and functioning
@@ -198,9 +219,11 @@ All interactive and complex components maintain feature parity with Skeleton equ
 ## Phase 6: User Story 4 – Smooth Developer Transition (P2)
 
 ### Story Goal
+
 Developers can work with shadcn-svelte components using straightforward patterns.
 
 ### Independent Test Criteria
+
 - ✓ Component documentation is clear and discoverable
 - ✓ New developer can add a feature without deep framework knowledge
 - ✓ Component customization (styling, behavior) follows consistent patterns
@@ -220,9 +243,11 @@ Developers can work with shadcn-svelte components using straightforward patterns
 ## Phase 7: User Story 5 – Standardized Page Headers & Navigation (P2)
 
 ### Story Goal
+
 All pages have consistent header structure following the "My Collection" template.
 
 ### Independent Test Criteria
+
 - ✓ All page headers follow 3-tier format: [SECTION], [Title], [Description]
 - ✓ "Dashboard" text is removed from desktop headers
 - ✓ Spacing, font sizing, and layout match "My Collection" template exactly
@@ -246,9 +271,11 @@ All pages have consistent header structure following the "My Collection" templat
 ## Phase 8: User Story 6 – Consistent Error Feedback (P2)
 
 ### Story Goal
+
 Error toast notifications render consistently in top-right corner with identical UX.
 
 ### Independent Test Criteria
+
 - ✓ Toast notifications appear in top-right corner
 - ✓ Styling, colors, and typography match Skeleton version exactly
 - ✓ Auto-dismiss timing and animation match current implementation
@@ -271,9 +298,11 @@ Error toast notifications render consistently in top-right corner with identical
 ## Phase 9: Polish & Cross-Cutting Concerns
 
 ### Phase Goal
+
 Final validation, performance optimization, and production readiness.
 
 ### Independent Test Criteria
+
 - ✓ All builds succeed with no warnings
 - ✓ Performance meets baseline (no >10% degradation)
 - ✓ All success criteria pass (SC-001 through SC-011)
@@ -299,34 +328,37 @@ Final validation, performance optimization, and production readiness.
 
 ## Summary
 
-| Phase | Count | Description |
-|-------|-------|-------------|
-| Phase 1: Setup | 9 tasks | Install shadcn-svelte, remove Skeleton, configure build |
-| Phase 2: Foundational | 11 tasks | Theme system, toast provider, component structure |
-| Phase 3: US1 – Components | 30 tasks | Replace all UI components across forms, modals, tables, nav |
-| Phase 4: US2 – Styling | 10 tasks | Validate Tailwind consistency, responsive, dark/light modes |
-| Phase 5: US3 – Feature Parity | 8 tasks | Complex components, accessibility, keyboard navigation |
-| Phase 6: US4 – Developer Transition | 6 tasks | Documentation, onboarding, examples |
-| Phase 7: US5 – Headers | 10 tasks | Standardize page headers, remove Dashboard label |
-| Phase 8: US6 – Error Feedback | 9 tasks | Toast notifications positioning and styling |
-| Phase 9: Polish | 13 tasks | Testing, performance, accessibility, cross-browser validation |
-| **TOTAL** | **62 tasks** | **End-to-end migration** |
+| Phase                               | Count        | Description                                                   |
+| ----------------------------------- | ------------ | ------------------------------------------------------------- |
+| Phase 1: Setup                      | 9 tasks      | Install shadcn-svelte, remove Skeleton, configure build       |
+| Phase 2: Foundational               | 11 tasks     | Theme system, toast provider, component structure             |
+| Phase 3: US1 – Components           | 30 tasks     | Replace all UI components across forms, modals, tables, nav   |
+| Phase 4: US2 – Styling              | 10 tasks     | Validate Tailwind consistency, responsive, dark/light modes   |
+| Phase 5: US3 – Feature Parity       | 8 tasks      | Complex components, accessibility, keyboard navigation        |
+| Phase 6: US4 – Developer Transition | 6 tasks      | Documentation, onboarding, examples                           |
+| Phase 7: US5 – Headers              | 10 tasks     | Standardize page headers, remove Dashboard label              |
+| Phase 8: US6 – Error Feedback       | 9 tasks      | Toast notifications positioning and styling                   |
+| Phase 9: Polish                     | 13 tasks     | Testing, performance, accessibility, cross-browser validation |
+| **TOTAL**                           | **62 tasks** | **End-to-end migration**                                      |
 
 ---
 
 ## Parallelizable Task Groups
 
 ### Group A: Component Installation (T025-T048)
+
 - Start after Phase 2 completes
 - Can be split across multiple developers (different components/pages)
 - Typical dependency: Component must exist in shadcn-svelte library
 
 ### Group B: Testing & Validation (T052-T095)
+
 - Can run concurrently with component replacement (on merged changes)
 - US2 (styling) and US3 (feature parity) tests are most critical
 - Accessibility tests (T067-T068, T094) should be continuous
 
 ### Group C: Polish (T096-T108)
+
 - Blocks release; must complete after all feature tasks
 - Can run partially in parallel (linting, formatting, builds)
 
