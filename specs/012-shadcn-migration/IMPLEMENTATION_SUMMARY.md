@@ -22,7 +22,7 @@ This document summarizes the complete migration from Skeleton UI 4.9.0 to shadcn
 - ✅ Created central component exports in `/src/lib/components/index.ts`
 - ✅ Documented component architecture in README.md
 
-### Phase 3: Core Components Created (T021-T027, T033) ✓
+### Phase 3: Core Components Created (T021-T040 Partial) ✓
 
 #### Button Component
 
@@ -200,12 +200,25 @@ Replaced 50+ Skeleton button instances across:
 
 ## 📊 Implementation Statistics
 
-### Files Modified
+### Files Modified (Latest Session)
 
-- **14 files changed** in latest commit (formatting)
-- **87 insertions, 117 deletions** (net code reduction)
-- **50+ button replacements** across 15+ files
-- **6 core components** created and integrated
+- **8 files changed** in latest commit
+- **Input/Textarea/Badge components** fixed for Svelte 5 compatibility
+- **10+ Input replacements** in SellerForm, AddWishlistItemModal, CreateInventoryDialog
+- **8+ Badge replacements** in TrainCard, CarCard, DepotSection, DepotTable
+- **Build passes successfully** ✅
+
+### Cumulative Progress
+
+- **Phase 1**: 100% complete (9/9 tasks)
+- **Phase 2**: 100% complete (11/11 tasks)
+- **Phase 3**: ~35% complete (12/30 tasks)
+  - Button: ✅ Complete (50+ instances)
+  - Input: 🔄 Partial (10+ instances, 30+ remaining)
+  - Textarea: 🔄 Partial (5+ instances, 10+ remaining)
+  - Badge: 🔄 Partial (8+ instances, 25+ remaining)
+  - Dialog/Sheet/Table/Card: ✅ Components created
+  - Checkbox: ✅ Component fixed for Svelte 5
 
 ### Commits
 
@@ -214,6 +227,14 @@ Replaced 50+ Skeleton button instances across:
 3. `feat: replace button classes across routes and components` (Systematic button migration)
 4. `feat: create Dialog component and mark button tasks complete` (Modal foundation)
 5. `chore: format code with prettier` (Code quality)
+6. `feat: replace Input, Textarea, Badge components across codebase` (Latest - T028, T029, T040 partial)
+
+### Critical Fixes Applied
+
+- ✅ **Input component**: Changed from `bind:value` to controlled input with event handlers
+- ✅ **Textarea component**: Changed from `bind:value` to controlled input with event handlers
+- ✅ **Checkbox component**: Changed from `bind:checked` to controlled input with event handlers
+- 🔍 **Reason**: Svelte 5 $bindable props cannot be directly bound in templates; requires manual synchronization
 
 ### Code Quality
 
@@ -222,6 +243,7 @@ Replaced 50+ Skeleton button instances across:
 - ✅ Steampunk theme CSS variables integrated
 - ✅ Prettier formatting applied
 - ✅ No hardcoded text (Paraglide-JS ready)
+- ✅ Build passes without errors
 
 ## 🔄 Migration Patterns Established
 
@@ -274,30 +296,43 @@ All components use custom CSS variables from `/src/lib/themes/steampunk-*.css`:
 
 ## 📋 Next Steps
 
-### Phase 3 Continued (T028-T051)
+### Immediate Priorities (Phase 3 Continuation)
 
-- [ ] T028-T030: Replace input/textarea/checkbox across forms
-- [ ] T034: Create Sheet component for drawer/slide-out panels
-- [ ] T035-T036: Replace modal components with Dialog
-- [ ] T037-T040: Create Table, Card, Alert components
-- [ ] T041-T051: Replace remaining Skeleton UI elements
+1. **Complete Input/Textarea/Badge Replacements** (~50+ instances remaining)
+   - SettingsForm, RollingStockSection, CreateRailwayModel
+   - Navigation components (SidebarNavigation, BottomNavigation)
+   - Remaining form components and modals
 
-### Phase 4: Validation (T052-T060)
+2. **Replace variant-* classes** (~100+ instances)
+   - `variant-filled-*` → Button/Badge variants
+   - `variant-soft-*` → Badge/Alert variants
+   - `variant-ghost-*` → Button variants
+   - Card backgrounds and borders
+
+3. **Navigation Component Migration** (T041-T044)
+   - Replace button navigation in SidebarNavigation
+   - Update BottomNavigation badges
+   - Test responsive behavior
+
+### Phase 4: Validation (T052-T061)
 
 - [ ] Visual regression testing
 - [ ] Mobile responsiveness verification
-- [ ] Theme consistency audit
-- [ ] Accessibility testing
+- [ ] Theme consistency audit (dark/light modes)
+- [ ] Accessibility testing (WCAG 2.1 AA)
 
-### Phase 5: Feature Parity (T061-T070)
+### Phase 5: Feature Parity (T062-T069)
 
 - [ ] Verify all interactive features work
-- [ ] Test form submissions
+- [ ] Test form submissions and validation
 - [ ] Validate navigation flows
+- [ ] Screen reader support
 
-### Phase 6: Documentation (T071-T075)
+### Phase 6: Documentation (T070-T075)
 
 - [ ] Component usage documentation
+- [ ] Developer onboarding guide
+- [ ] Migration patterns guide
 - [ ] Storybook examples
 - [ ] Migration guide for future components
 
