@@ -303,7 +303,7 @@ All components use custom CSS variables from `/src/lib/themes/steampunk-*.css`:
    - Navigation components (SidebarNavigation, BottomNavigation)
    - Remaining form components and modals
 
-2. **Replace variant-* classes** (~100+ instances)
+2. **Replace variant-\* classes** (~100+ instances)
    - `variant-filled-*` → Button/Badge variants
    - `variant-soft-*` → Badge/Alert variants
    - `variant-ghost-*` → Button variants

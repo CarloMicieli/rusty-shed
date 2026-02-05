@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
+  import { Input } from '$lib/components';
   import type { RailwayCompany } from '$lib/bindings';
   import type { RollingStockFormEntry } from '../types';
   import { ROLLING_STOCK_CATEGORIES } from '../constants';
@@ -58,12 +59,12 @@
       <label for="series-code-{entry.id}" class="block space-y-1">
         <span class="text-sm text-surface-300">{m.wishlist_field_series_code()}</span>
       </label>
-      <input
+      <Input
         id="series-code-{entry.id}"
         type="text"
         bind:value={entry.seriesCode}
         placeholder="e.g., 218, Re 4/4"
-        class="input bg-surface-700 w-full font-mono"
+        class="w-full font-mono"
         required
       />
     </div>
@@ -94,12 +95,12 @@
       <label for="road-number-{entry.id}" class="block space-y-1">
         <span class="text-sm text-surface-300">{m.wishlist_field_road_number()}</span>
       </label>
-      <input
+      <Input
         id="road-number-{entry.id}"
         type="text"
         bind:value={entry.roadNumber}
         placeholder="e.g., 218 101-3"
-        class="input bg-surface-700 w-full font-mono"
+        class="w-full font-mono"
       />
     </div>
   </div>

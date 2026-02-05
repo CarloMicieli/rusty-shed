@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Calendar, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Badge } from '$lib/components';
   import { getUrgencyLevel, getUrgencyColors } from '../utils/urgency';
   import type { MaintenanceCardView } from '$lib/bindings';
 
@@ -33,9 +34,9 @@
 <div class="card border {colors.border} space-y-3 p-4">
   <div class="flex items-start justify-between gap-3">
     <div class="flex items-center gap-2">
-      <span class="variant-filled-primary badge flex items-center gap-1">
+      <Badge variant="default" class="flex items-center gap-1">
         <Wrench size={14} />
-      </span>
+      </Badge>
       <div class="space-y-1">
         <p class="text-surface-500 text-xs tracking-wide uppercase">Rolling Stock</p>
         <h3 class="text-base leading-tight font-semibold">
@@ -50,19 +51,19 @@
 
   <div class="flex flex-wrap gap-2 text-sm">
     {#if card.nextMaintenanceDate}
-      <span class="variant-soft-primary badge flex items-center gap-1">
+      <Badge variant="default" class="flex items-center gap-1">
         <Calendar size={14} />
         {m.maintenance_card_due_date()}: {formatDate(card.nextMaintenanceDate)}
-      </span>
+      </Badge>
     {/if}
     {#if card.lastMaintenanceDate}
-      <span class="variant-soft-surface badge">
+      <Badge variant="outline">
         {m.maintenance_card_last_maintenance()}: {formatDate(card.lastMaintenanceDate)}
-      </span>
+      </Badge>
     {:else}
-      <span class="variant-soft-surface badge opacity-60">
+      <Badge variant="outline" class="opacity-60">
         {m.maintenance_card_no_last_maintenance()}
-      </span>
+      </Badge>
     {/if}
   </div>
 </div>

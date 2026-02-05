@@ -15,6 +15,7 @@
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
+  import { Badge } from '$lib/components';
   import { appVersion } from '$lib/stores/app';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
@@ -60,7 +61,7 @@
             <Library size={20} />
             <span class="font-medium tracking-wide">{m.app_collection()}</span>
           </div>
-          <span class="variant-filled-primary badge">{totalCount}</span>
+          <Badge variant="default">{totalCount}</Badge>
         </a>
       </li>
       <li>
@@ -73,7 +74,7 @@
           <Heart size={20} />
           <span class="font-medium tracking-wide">{m.app_wishlists()}</span>
           {#if defaultWishlist}
-            <span class="variant-soft-surface badge ml-auto">{defaultWishlist.count}</span>
+            <Badge variant="outline" class="ml-auto">{defaultWishlist.count}</Badge>
           {/if}
         </a>
       </li>

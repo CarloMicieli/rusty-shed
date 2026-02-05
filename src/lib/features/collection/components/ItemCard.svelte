@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { PencilLine, Trash2 } from 'lucide-svelte';
+  import { Badge } from '$lib/components';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import type { CollectionItemView } from '$lib/bindings';
 
@@ -56,9 +57,8 @@
     </div>
 
     <div class="text-surface-400 flex flex-wrap gap-2 text-xs">
-      <span class="variant-soft-surface badge">{item.railwayModel.scale}</span>
-      <span class="variant-soft-surface badge">{new Date(item.addedDate).toLocaleDateString()}</span
-      >
+      <Badge variant="outline">{item.railwayModel.scale}</Badge>
+      <Badge variant="outline">{new Date(item.addedDate).toLocaleDateString()}</Badge>
     </div>
 
     {#if item.notes}

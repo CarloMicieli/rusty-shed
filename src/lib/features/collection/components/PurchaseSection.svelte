@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { ChevronDown, ChevronRight } from 'lucide-svelte';
+  import { Input, Textarea } from '$lib/components';
   import type { SellerView } from '$lib/bindings';
   import type { PurchaseFormState } from '$lib/features/collection/types/AddModelFormTypes';
 
@@ -85,12 +86,7 @@
             <span class="text-sm text-surface-300">{m.add_model_purchase_date()}</span>
             <span class="text-surface-500 ml-1 text-xs">(optional)</span>
           </label>
-          <input
-            id="purchase-date"
-            type="date"
-            bind:value={purchase.purchaseDate}
-            class="input bg-surface-700 w-full"
-          />
+          <Input id="purchase-date" type="date" bind:value={purchase.purchaseDate} class="w-full" />
         </div>
       </div>
 
@@ -101,14 +97,14 @@
             <span class="text-sm text-surface-300">{m.add_model_price()}</span>
             <span class="text-surface-500 ml-1 text-xs">(optional)</span>
           </label>
-          <input
+          <Input
             id="price-amount"
             type="number"
             step="0.01"
             min="0"
             bind:value={purchase.priceAmount}
             placeholder="0.00"
-            class="input bg-surface-700 w-full font-mono"
+            class="w-full font-mono"
           />
         </div>
 
@@ -193,13 +189,13 @@
           <span class="text-sm text-surface-300">{m.add_model_notes()}</span>
           <span class="text-surface-500 ml-1 text-xs">(optional)</span>
         </label>
-        <textarea
+        <Textarea
           id="notes"
           bind:value={purchase.notes}
-          rows="3"
+          rows={3}
           placeholder="Additional notes about this purchase..."
-          class="input bg-surface-700 w-full"
-        ></textarea>
+          class="w-full"
+        />
       </div>
     </div>
   {/if}

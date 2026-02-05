@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { Textarea } from '$lib/components';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
 
   const wishlistService = getWishlistContext();
@@ -144,13 +145,12 @@
         >
           {m.wishlist_modal_notes_label()}
         </label>
-        <textarea
+        <Textarea
           id="wishlist-notes"
-          class="textarea"
-          rows="3"
+          rows={3}
           placeholder={m.wishlist_modal_notes_placeholder()}
           bind:value={notes}
-        ></textarea>
+        />
       </div>
 
       {#if formError}

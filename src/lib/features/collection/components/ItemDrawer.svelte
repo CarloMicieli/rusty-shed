@@ -1,5 +1,6 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
+  import { Input, Textarea } from '$lib/components';
   import type { CollectionItemView } from '$lib/bindings';
 
   type CreateCollectionItemInput = {
@@ -106,15 +107,15 @@
       <div class="space-y-4">
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Brand</span>
-          <input class="input bg-surface-800 w-full" bind:value={form.brand} />
+          <Input bind:value={form.brand} class="w-full" />
         </label>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Catalog Number</span>
-          <input class="input bg-surface-800 w-full" bind:value={form.catalogNumber} />
+          <Input bind:value={form.catalogNumber} class="w-full" />
         </label>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Title</span>
-          <input class="input bg-surface-800 w-full" bind:value={form.title} />
+          <Input bind:value={form.title} class="w-full" />
         </label>
         <div class="grid grid-cols-2 gap-3">
           <label class="block space-y-1">
@@ -127,20 +128,19 @@
           </label>
           <label class="block space-y-1">
             <span class="text-sm text-surface-300">Power</span>
-            <input class="input bg-surface-800 w-full" bind:value={form.powerSystem} />
+            <Input bind:value={form.powerSystem} class="w-full" />
           </label>
         </div>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Description</span>
-          <textarea class="input bg-surface-800 w-full" rows="3" bind:value={form.description}
-          ></textarea>
+          <Textarea rows={3} bind:value={form.description} class="w-full" />
         </label>
         <label class="block space-y-1">
           <span class="text-sm text-surface-300">Tags (comma separated)</span>
-          <input
-            class="input bg-surface-800 w-full"
+          <Input
             value={form.tags.join(', ')}
             oninput={(e) => handleTagsInput((e.target as HTMLInputElement).value)}
+            class="w-full"
           />
         </label>
       </div>

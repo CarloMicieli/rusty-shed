@@ -14,6 +14,7 @@
   import { formLabels } from './constants';
   import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
   import FormField from '$lib/components/ui/FormField.svelte';
+  import { Input, Textarea, Badge } from '$lib/components';
   import manufacturersData from '$lib/data/manufacturers.json';
   import railwayCompaniesData from '$lib/data/railway-companies.json';
   import availabilityStatusesData from '$lib/data/constants/availabilityStatuses.json';
@@ -201,17 +202,16 @@
             )}
 
             <FormField label={formLabels.productCode} error={errors.product_code} required>
-              <input
-                class="input border-surface-600 bg-surface-800 font-mono"
+              <Input
                 type="text"
                 bind:value={formData.product_code}
                 placeholder={resolveLabel(formLabels.productCodePlaceholder)}
+                class="font-mono"
               />
             </FormField>
 
             <FormField label={formLabels.description} error={errors.description} required>
-              <input
-                class="input border-surface-600 bg-surface-800"
+              <Input
                 type="text"
                 bind:value={formData.description}
                 placeholder={resolveLabel(formLabels.descriptionPlaceholder)}
@@ -266,8 +266,7 @@
         <AccordionItemContent class="px-3 pt-1 pb-4">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <FormField label={formLabels.deliveryDate} error={errors.delivery_date}>
-              <input
-                class="input border-surface-600 bg-surface-800"
+              <Input
                 type="text"
                 bind:value={formData.delivery_date}
                 placeholder={resolveLabel(formLabels.deliveryDatePlaceholder)}
@@ -286,12 +285,11 @@
             )}
 
             <FormField label={formLabels.additionalDetails} error={errors.details}>
-              <textarea
-                class="textarea border-surface-600 bg-surface-800"
-                rows="3"
+              <Textarea
+                rows={3}
                 bind:value={formData.details}
                 placeholder={resolveLabel(formLabels.detailsPlaceholder)}
-              ></textarea>
+              />
             </FormField>
           </div>
         </AccordionItemContent>
@@ -301,7 +299,7 @@
         <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">
             {resolveLabel(formLabels.rollingStock)}
-            <span class="variant-soft-primary badge">{formData.rolling_stocks.length}</span>
+            <Badge variant="default" class="ml-2">{formData.rolling_stocks.length}</Badge>
           </h3>
           <AccordionItemIndicator class="text-muted text-sm" />
         </AccordionItemTrigger>

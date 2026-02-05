@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X, Plus } from 'lucide-svelte';
+  import { Input } from '$lib/components';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -374,13 +375,12 @@
                   <label for="product-code" class="block space-y-1">
                     <span class="text-sm text-surface-300">{m.add_model_product_code()}</span>
                   </label>
-                  <input
+                  <Input
                     id="product-code"
                     type="text"
                     bind:value={form.productCode}
                     placeholder="e.g., 37858"
-                    class="input bg-surface-800 w-full font-mono"
-                    class:input-error={validationErrors.productCode}
+                    class="w-full font-mono"
                     aria-describedby={validationErrors.productCode
                       ? 'product-code-error'
                       : undefined}
@@ -398,13 +398,12 @@
                 <label for="description" class="block space-y-1">
                   <span class="text-sm text-surface-300">{m.add_model_description()}</span>
                 </label>
-                <input
+                <Input
                   id="description"
                   type="text"
                   bind:value={form.description}
                   placeholder="e.g., Class 218 Diesel Locomotive"
-                  class="input bg-surface-800 w-full"
-                  class:input-error={validationErrors.description}
+                  class="w-full"
                   aria-describedby={validationErrors.description ? 'description-error' : undefined}
                 />
                 {#if validationErrors.description}

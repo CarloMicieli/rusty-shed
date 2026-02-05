@@ -13,6 +13,7 @@
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
+  import { Badge } from '$lib/components';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { localeStore } from '$lib/stores/locale';
 
@@ -55,7 +56,7 @@
         <Heart size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_wishlists()}</span>
         {#if defaultWishlist}
-          <span class="variant-soft-surface badge">{defaultWishlist.count}</span>
+          <Badge variant="outline" class="text-[9px]">{defaultWishlist.count}</Badge>
         {/if}
       </a>
       <a
