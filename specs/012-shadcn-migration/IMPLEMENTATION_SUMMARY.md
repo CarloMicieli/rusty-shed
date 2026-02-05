@@ -200,34 +200,52 @@ Replaced 50+ Skeleton button instances across:
 
 ## 📊 Implementation Statistics
 
-### Files Modified (Latest Session)
+### Files Modified (Latest Sessions)
 
-- **8 files changed** in latest commit
-- **Input/Textarea/Badge components** fixed for Svelte 5 compatibility
-- **10+ Input replacements** in SellerForm, AddWishlistItemModal, CreateInventoryDialog
-- **8+ Badge replacements** in TrainCard, CarCard, DepotSection, DepotTable
-- **Build passes successfully** ✅
+**Session 1 - Input/Textarea/Badge Initial Replacements** (commit 06faa99):
+- **15 files changed** - ItemDrawer, PurchaseSection, AddModelDrawer, RollingStockEntry (both), AddWishlistItemModal, RollingStockSection, CreateRailwayModel, SidebarNavigation, BottomNavigation, ItemCard, DepotListCard, LocomotiveCard, MaintenanceCardItem, SearchBar
+- **70+ Input replacements** across high-priority forms
+- **10+ Textarea replacements** in notes and description fields
+- **25+ Badge replacements** in navigation and depot cards
+
+**Session 2 - Input/Textarea Completion** (commit 492fa31):
+- **4 files changed** - SearchBar, AddMaintenanceEventModal, ExtraBudgetModal, AddRailwayModelDrawer
+- **4 Input/Textarea replacements** completing feature components
+
+**Session 3 - Final Input Component Migration** (commit ff4943d):
+- **12 files changed** - RenameInventoryDialog, AddPurchaseDialog, InventoryItemRow, WishlistHeader, AddWishlistItemModal, FilterSidebar, DccAddressEditor, DecoderInstallDrawer, DigitalRosterTable, RollingStockSection, ExtraBudgetModal, SearchBar
+- **18+ Input replacements** across track inventory, wishlists, digital roster, catalogue, budget, and shared components
+- All native `<input>` elements with `class="input"` now replaced
+
+**Session 4 - Checkbox and Badge Completion** (commit ef80698):
+- **5 files changed** - RollingStockSection, SidebarNavigation, BottomNavigation, WishlistSidebar, SettingsForm
+- **2 Checkbox replacements** in catalogue (is_dummy fields)
+- **5 Badge replacements** in navigation (counts) and settings (saved status)
 
 ### Cumulative Progress
 
-- **Phase 1**: 100% complete (9/9 tasks)
-- **Phase 2**: 100% complete (11/11 tasks)
-- **Phase 3**: ~35% complete (12/30 tasks)
-  - Button: ✅ Complete (50+ instances)
-  - Input: 🔄 Partial (10+ instances, 30+ remaining)
-  - Textarea: 🔄 Partial (5+ instances, 10+ remaining)
-  - Badge: 🔄 Partial (8+ instances, 25+ remaining)
-  - Dialog/Sheet/Table/Card: ✅ Components created
-  - Checkbox: ✅ Component fixed for Svelte 5
+- **Phase 1**: 100% complete (9/9 tasks) ✅
+- **Phase 2**: 100% complete (11/11 tasks) ✅
+- **Phase 3**: ~55% complete (21/40 tasks)
+  - ✅ T021-T027: Button (50+ instances) - COMPLETE
+  - ✅ T028: Input (~90+ instances) - COMPLETE
+  - ✅ T029: Textarea (~15 instances) - COMPLETE
+  - ✅ T033-T034: Dialog/Sheet components - COMPLETE
+  - ✅ T037-T038: Table/Card components - COMPLETE
+  - 🔄 T040: Badge (~30 instances replaced, ~20 remaining)
+  - 🔄 T045: Checkbox (2 instances, CreateProductDialog checkbox doesn't use Skeleton class)
+  - ⏳ T030-T032: Form validation components
+  - ⏳ T041-T044: Dropdown/Menu components
+  - ⏳ T046-T048: Radio/Toggle components
 
 ### Commits
 
-1. `feat: create Button and Badge components` (Phase 2 completion)
-2. `feat: create Input, Textarea, Checkbox components` (Form components)
-3. `feat: replace button classes across routes and components` (Systematic button migration)
-4. `feat: create Dialog component and mark button tasks complete` (Modal foundation)
-5. `chore: format code with prettier` (Code quality)
-6. `feat: replace Input, Textarea, Badge components across codebase` (Latest - T028, T029, T040 partial)
+1. `ea3a3c0` - feat: create Toast store and Accordion components (Phase 2)
+2. `e6805a6` - feat: create Button and Badge components
+3. `06faa99` - feat: replace Input/Textarea/Badge in high-priority components (session 1)
+4. `492fa31` - feat: replace Input/Textarea in remaining feature components (session 2)
+5. `ff4943d` - feat: replace Input components in remaining feature modules (session 3)
+6. `ef80698` - feat: replace Checkbox and Badge components in navigation and catalogue (session 4)
 
 ### Critical Fixes Applied
 
@@ -414,7 +432,8 @@ function error(titleOrOptions: string | ToastOptions, description?: string) {
 
 ---
 
-**Generated:** 2025-01-XX  
+**Last Updated:** 2025-02-05  
 **Branch:** `012-shadcn-migration`  
-**Status:** Phase 3 in progress, ~30% complete overall  
-**Next Milestone:** Complete form component replacements and create Sheet/Table/Card components
+**Status:** Phase 3 in progress, ~55% complete overall  
+**Commits:** 6 (ea3a3c0, e6805a6, 06faa99, 492fa31, ff4943d, ef80698)  
+**Next Milestone:** Complete Badge replacements, create Dropdown/Menu components, implement form validation
