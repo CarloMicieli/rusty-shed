@@ -2,7 +2,7 @@
   /**
    * Select Component (shadcn-svelte compatible)
    * Native HTML select styled with Steampunk theme
-   * 
+   *
    * Feature: 012-shadcn-migration
    * Task: T041 - Create select/dropdown components
    */
@@ -47,7 +47,6 @@
   {id}
   {name}
   class={selectClass}
-  {...$$restProps}
 >
   <slot />
 </select>

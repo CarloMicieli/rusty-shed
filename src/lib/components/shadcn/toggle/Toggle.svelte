@@ -2,7 +2,7 @@
   /**
    * Toggle Component (shadcn-svelte compatible)
    * Toggle button/switch styled with Steampunk theme
-   * 
+   *
    * Feature: 012-shadcn-migration
    * Task: T047 - Create Toggle component
    */
@@ -35,14 +35,10 @@
   const baseStyles = `inline-flex items-center justify-center rounded-md font-medium ring-offset-background transition-colors hover:bg-surface-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50`;
 
   const variantStyles = $derived(
-    pressed
-      ? 'bg-primary-600 text-primary-foreground'
-      : 'bg-transparent border border-surface-600'
+    pressed ? 'bg-primary-600 text-primary-foreground' : 'bg-transparent border border-surface-600'
   );
 
-  const buttonClass = $derived(
-    twMerge(baseStyles, sizeStyles[size], variantStyles, className)
-  );
+  const buttonClass = $derived(twMerge(baseStyles, sizeStyles[size], variantStyles, className));
 
   function handleClick() {
     if (disabled) return;
@@ -59,7 +55,6 @@
   {disabled}
   class={buttonClass}
   onclick={handleClick}
-  {...$$restProps}
 >
   <slot />
 </button>

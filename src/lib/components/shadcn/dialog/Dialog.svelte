@@ -12,10 +12,9 @@
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     class?: string;
-    children?: any;
   };
 
-  const { open = false, onOpenChange, class: className = '', children }: Props = $props();
+  const { open = false, onOpenChange, class: className = '' }: Props = $props();
 
   function handleBackdropClick(e: MouseEvent) {
     if (e.target === e.currentTarget && onOpenChange) {

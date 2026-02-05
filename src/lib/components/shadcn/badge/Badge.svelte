@@ -13,10 +13,9 @@
   type Props = {
     variant?: BadgeVariant;
     class?: string;
-    children?: any;
   };
 
-  const { variant = 'default', class: className = '', children }: Props = $props();
+  const { variant = 'default', class: className = '' }: Props = $props();
 
   const baseStyles =
     'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';

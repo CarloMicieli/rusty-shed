@@ -154,7 +154,7 @@
     <div class="border-surface-700/50 mt-auto space-y-2 border-t pt-4">
       <a
         href={resolve('/my-settings')}
-        class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors text-surface-300 hover:bg-surface-700"
+        class="hover:bg-surface-700 flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-surface-300 transition-colors"
         class:bg-primary-600={(page.url.pathname as string) === '/my-settings'}
         class:text-primary-foreground={(page.url.pathname as string) === '/my-settings'}
       >

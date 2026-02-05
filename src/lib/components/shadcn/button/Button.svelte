@@ -19,7 +19,6 @@
     disabled?: boolean;
     href?: string;
     onclick?: (e: MouseEvent) => void;
-    children?: any;
   };
 
   const {
@@ -29,8 +28,7 @@
     type = 'button',
     disabled = false,
     href,
-    onclick,
-    children
+    onclick
   }: Props = $props();
 
   const baseStyles =

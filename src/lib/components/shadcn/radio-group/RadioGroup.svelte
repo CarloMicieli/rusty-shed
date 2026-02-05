@@ -2,7 +2,7 @@
   /**
    * RadioGroup Component (shadcn-svelte compatible)
    * Accessible radio button group with Steampunk theme
-   * 
+   *
    * Feature: 012-shadcn-migration
    * Task: T046 - Create RadioGroup component
    */
@@ -41,8 +41,8 @@
 </script>
 
 <div class={groupClass} role="radiogroup">
-  {#each options as option}
-    <label class="flex items-center gap-2 cursor-pointer">
+  {#each options as option (option.value)}
+    <label class="flex cursor-pointer items-center gap-2">
       <input
         type="radio"
         {name}
@@ -50,7 +50,7 @@
         checked={value === option.value}
         disabled={disabled || option.disabled}
         onchange={() => handleChange(option.value)}
-        class="h-4 w-4 border-surface-600 text-primary-600 focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        class="border-surface-600 text-primary-600 focus:ring-primary-600 h-4 w-4 focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       />
       <span class="text-sm {disabled || option.disabled ? 'opacity-50' : ''}">
         {option.label}

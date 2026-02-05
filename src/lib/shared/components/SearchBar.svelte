@@ -35,7 +35,7 @@
       </button>
       <div class="relative w-full">
         <Search class="text-surface-400 absolute top-1/2 left-4 -translate-y-1/2" size={20} />
-        <!-- svelte-ignore a11y_autofocus -->
+
         <Input
           type="text"
           placeholder={m.app_search_mobile_placeholder()}
