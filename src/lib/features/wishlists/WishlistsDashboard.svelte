@@ -1,7 +1,9 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { Sparkles } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
+  import { Button } from '$lib/components';
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
@@ -74,33 +76,48 @@
   <title>{m.app_wishlists()}</title>
 </svelte:head>
 
-<div class="grid gap-6 lg:grid-cols-[320px,1fr]">
-  <WishlistSidebar
-    {wishlists}
-    activeId={activeWishlistId}
-    onCreate={handleCreate}
-    onSelect={handleSelect}
-    onDelete={_handleDelete}
-  />
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_wishlists()}</p>
+      <h1 class="h2 font-bold">{m.wishlists_title()}</h1>
+      <p class="text-sm text-muted-foreground">{m.wishlists_subtitle()}</p>
+    </div>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+      <Button onclick={handleCreate}>
+        <Sparkles size={18} />
+        Create new List
+      </Button>
+    </div>
+  </div>
 
-  <section class="border-surface-700/50 bg-surface-900 space-y-4 rounded-2xl border p-6">
-    <WishlistHeader
-      wishlist={activeWishlist}
-      onRename={handleRename}
-      onSetDefault={handleSetDefault}
-      onAddModel={openAddModelDrawer}
+  <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
+    <WishlistSidebar
+      {wishlists}
+      activeId={activeWishlistId}
+      onSelect={handleSelect}
+      onDelete={_handleDelete}
     />
 
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <WishlistItems
-        items={wishlistItems}
-        {activeWishlistId}
-        {otherTargets}
-        onRemove={handleRemove}
-        onMove={handleMove}
+    <section class="space-y-4 rounded-2xl border border-border bg-card p-6">
+      <WishlistHeader
+        wishlist={activeWishlist}
+        onRename={handleRename}
+        onSetDefault={handleSetDefault}
+        onAddModel={openAddModelDrawer}
       />
-    </div>
-  </section>
+
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <WishlistItems
+          items={wishlistItems}
+          {activeWishlistId}
+          {otherTargets}
+          onRemove={handleRemove}
+          onMove={handleMove}
+        />
+      </div>
+    </section>
+  </div>
 </div>
 
 <!-- Add Railway Model Drawer -->

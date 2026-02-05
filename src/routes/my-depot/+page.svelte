@@ -10,7 +10,7 @@
     List
   } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button, PageHeader } from '$lib/components';
+  import { Button } from '$lib/components';
   import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
   import DepotTable from '$lib/features/depot/components/DepotTable.svelte';
   import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
@@ -59,16 +59,19 @@
   <title>{m.depot_title()}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 p-4 pt-4" style="--header-offset: 4rem;">
-  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
-    {#snippet actions()}
-      <div
-        class="border-surface-700/60 bg-surface-900 flex items-center gap-1 rounded-lg border p-1"
-      >
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_depot()}</p>
+      <h1 class="h2 font-bold">{m.depot_title()}</h1>
+      <p class="text-sm text-muted-foreground">{m.depot_subtitle()}</p>
+    </div>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+      <div class="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
         <button
           class="btn-icon btn-icon-sm rounded-md {viewMode === 'table'
-            ? 'variant-filled bg-surface-700'
-            : 'text-surface-400 hover:text-surface-200'}"
+            ? 'bg-sidebar-accent text-sidebar-foreground'
+            : 'text-muted-foreground hover:text-foreground'}"
           title="Table view"
           onclick={() => handleViewModeChange('table')}
         >
@@ -76,22 +79,22 @@
         </button>
         <button
           class="btn-icon btn-icon-sm rounded-md {viewMode === 'grid'
-            ? 'variant-filled bg-surface-700'
-            : 'text-surface-400 hover:text-surface-200'}"
+            ? 'bg-sidebar-accent text-sidebar-foreground'
+            : 'text-muted-foreground hover:text-foreground'}"
           title="Grid view"
           onclick={() => handleViewModeChange('grid')}
         >
           <LayoutGrid size={18} />
         </button>
       </div>
-    {/snippet}
-  </PageHeader>
+    </div>
+  </div>
 
-  <div class="border-surface-700/60 bg-surface-900 rounded-xl border p-3">
+  <div class="rounded-xl border border-border bg-card p-3">
     <div class="input-group items-center gap-2">
-      <Search size={18} class="text-surface-500" />
+      <Search size={18} class="text-muted-foreground" />
       <input
-        class="placeholder:text-surface-500 w-full bg-transparent text-sm outline-none"
+        class="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         placeholder={m.depot_search_placeholder()}
         value={searchInput}
         oninput={(event) => handleInput(event.currentTarget.value)}
@@ -111,12 +114,12 @@
   </div>
 
   {#if isLoading}
-    <div class="border-surface-700/60 bg-surface-900 flex items-center gap-3 rounded-xl border p-4">
+    <div class="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
       <div
-        class="border-accent-400 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
+        class="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"
         aria-hidden="true"
       ></div>
-      <p class="text-surface-300 text-sm">Loading depot…</p>
+      <p class="text-sm text-muted-foreground">Loading depot…</p>
     </div>
   {:else if error}
     <div
@@ -130,7 +133,7 @@
     </div>
   {:else if totalFiltered === 0}
     <div
-      class="border-surface-700/50 bg-surface-900 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center"
+      class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card p-8 text-center"
     >
       <p class="text-lg font-semibold">{m.depot_no_results()}</p>
       <Button variant="outline" onclick={clearSearch}>

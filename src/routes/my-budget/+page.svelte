@@ -91,13 +91,7 @@
     title={m.budget_config_title()}
     subtitle={m.budget_title()}
     description={m.budget_subtitle()}
-  >
-    {#snippet actions()}
-      <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
-        {m.settings_back_to_dashboard()}
-      </a>
-    {/snippet}
-  </PageHeader>
+  />
 
   <!-- Loading State -->
   {#if loading}

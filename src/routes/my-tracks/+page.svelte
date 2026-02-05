@@ -38,31 +38,33 @@
   });
 </script>
 
-<div class="container mx-auto space-y-6 p-4">
-  <div class="flex items-center justify-between">
+<svelte:head>
+  <title>{m.track_inventories_title()}</title>
+</svelte:head>
+
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
-      <h1 class="h1 font-bold">{m.track_inventories_title()}</h1>
-      <p class="text-surface-300">{m.track_inventories_subtitle()}</p>
+      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_tracks()}</p>
+      <h1 class="h2 font-bold">{m.track_inventories_title()}</h1>
+      <p class="text-sm text-muted-foreground">{m.track_inventories_subtitle()}</p>
     </div>
-    <Button
-      onclick={() => (createDialogOpen = true)}
-      variant="default"
-      class="gap-2"
-      disabled={loading}
-    >
-      <Plus size={20} />
-      <span class="hidden sm:inline">{m.track_inventories_create_button()}</span>
-    </Button>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+      <Button onclick={() => (createDialogOpen = true)} disabled={loading}>
+        <Plus size={18} />
+        <span>{m.track_inventories_create_button()}</span>
+      </Button>
+    </div>
   </div>
 
   {#if loading}
     <div class="flex items-center justify-center py-16">
       <div
-        class="variant-filled-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
+        class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
       ></div>
     </div>
   {:else if error}
-    <div class="variant-filled-error rounded-lg p-4">
+    <div class="rounded-2xl border border-border bg-destructive/10 p-4">
       <p class="font-medium">{error}</p>
     </div>
   {:else if inventories.length === 0}

@@ -47,7 +47,7 @@
   <title>{m.maintenance_title()}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 p-4 pt-4">
+<div class="space-y-6">
   <!-- Page Header -->
   <PageHeader
     title={m.maintenance_title()}
@@ -56,12 +56,12 @@
   />
 
   <!-- Quick Actions -->
-  <div class="border-surface-700/60 bg-surface-900 rounded-xl border p-4">
-    <p class="text-surface-400 mb-3 text-xs tracking-[0.2em] uppercase">
+  <div class="rounded-2xl border border-border bg-card p-4">
+    <p class="mb-3 text-xs tracking-[0.2em] text-muted-foreground uppercase">
       {m.maintenance_quick_actions()}
     </p>
     <div class="flex flex-wrap gap-3">
-      <Button type="button" variant="default" class="gap-2" onclick={handleAddCard}>
+      <Button type="button" class="gap-2" onclick={handleAddCard}>
         <Plus size={18} />
         {m.maintenance_add_card_button()}
       </Button>
@@ -79,10 +79,10 @@
         <p class="text-surface-400">{m.maintenance_loading()}</p>
       </div>
     {:else if error}
-      <div class="variant-filled-error card space-y-4 p-8 text-center">
+      <div class="space-y-4 rounded-2xl border border-border bg-destructive/10 p-8 text-center">
         <p class="font-semibold">{m.maintenance_error_load()}</p>
         <p class="text-sm">{error}</p>
-        <Button type="button" variant="default" onclick={handleRetry}>
+        <Button type="button" onclick={handleRetry}>
           {m.maintenance_error_retry()}
         </Button>
       </div>

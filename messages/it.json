@@ -173,6 +173,8 @@
   "collection_tag_electric": "Elettrico",
   "collection_tag_passenger": "Passeggeri",
   "collection_tag_freight": "Merci",
+  "wishlists_title": "Le Mie Liste dei Desideri",
+  "wishlists_subtitle": "Tieni traccia dei modelli che desideri acquisire per la tua collezione.",
   "wishlist_modal_title": "Aggiungi Elemento alla Lista Desideri",
   "wishlist_modal_close": "Chiudi",
   "wishlist_modal_choose_or_create": "Scegli o Crea Lista Desideri",

@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { getCollectionContext, availableScales } from './CollectionState.svelte';
+  import { Button } from '$lib/components';
 
   const collectionService = getCollectionContext();
 
@@ -162,15 +163,15 @@
 <div class="space-y-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
-      <p class="text-surface-400 text-sm tracking-[0.2em] uppercase">{m.app_collection()}</p>
+      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_collection()}</p>
       <h1 class="h2 font-bold">{m.collection_title()}</h1>
-      <p class="text-surface-400 text-sm">{m.collection_empty_caption()}</p>
+      <p class="text-sm text-muted-foreground">{m.collection_empty_caption()}</p>
     </div>
     <div class="flex flex-col gap-3 md:flex-row md:items-center">
-      <button class="variant-filled-primary btn gap-2" onclick={ui.startCreate}>
+      <Button onclick={ui.startCreate}>
         <Plus size={18} />
         {m.collection_add_model()}
-      </button>
+      </Button>
     </div>
   </div>
 

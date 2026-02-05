@@ -143,13 +143,8 @@
             <span class="text-sm font-bold tracking-widest uppercase">Rusty Shed</span>
           </div>
 
-          <!-- Desktop: Spacer (Sidebar handles branding) -->
-          <div class="hidden lg:block">
-            <h2 class="h3 font-bold">Dashboard</h2>
-          </div>
-
           <!-- Right Actions -->
-          <div class="flex items-center gap-4">
+          <div class="ml-auto flex items-center gap-4">
             <SearchBar />
 
             <button class="variant-ghost-surface btn-icon btn-icon-sm relative">
