@@ -1,7 +1,7 @@
 /**
  * Accordion Component Exports
  * Re-exports all accordion components for convenient importing
- * Usage: import { Accordion } from '$lib/components/accordion'
+ * Usage: import { Accordion, AccordionItem, AccordionItemTrigger, AccordionItemContent } from '$lib/components/accordion'
  */
 
 export { default as Accordion } from '../Accordion.svelte';

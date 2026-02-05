@@ -3,19 +3,21 @@
    * Accordion Item Content Component (shadcn-svelte compatible)
    * Content that shows/hides based on accordion item expansion state
    */
+  import { getContext } from 'svelte';
 
   type Props = {
     class?: string;
     value?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    context?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     children?: any;
     isExpanded?: boolean;
   };
 
-  const { class: className = '', value = '', context = null, children, isExpanded = false }: Props =
-    $props();
+  const { class: className = '', value = '', children, isExpanded = false }: Props = $props();
+  
+  // Get context from parent Accordion
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = getContext<any>('accordion-context');
 
   let expanded = $derived.by(() => {
     if (!context || !value) return isExpanded;

@@ -6,7 +6,7 @@
    * Each year shows a full BudgetTable with 12-month breakdown.
    */
 
-  import { Accordion, AccordionItem } from '$lib/components/accordion';
+  import { Accordion, AccordionItem, AccordionItemTrigger, AccordionItemContent } from '$lib/components/accordion';
   import type { BudgetState } from '../BudgetState.svelte';
   import BudgetTable from './BudgetTable.svelte';
   import * as m from '$lib/paraglide/messages.js';
@@ -51,41 +51,45 @@
     <p class="text-sm text-surface-400">No historical data available.</p>
   {:else}
     <Accordion>
-      {#each historicalYears as year (year)}
-        <AccordionItem>
-          <svelte:fragment slot="summary">
-            <div class="flex w-full items-center justify-between">
-              <span class="font-semibold text-surface-100">{formatYearRange(year)}</span>
-              {#if loadingYear === year}
-                <span class="text-xs text-surface-400">{m.budget_loading?.() || 'Loading...'}</span>
-              {/if}
-            </div>
-          </svelte:fragment>
-
-          <svelte:fragment slot="content">
-            <div class="p-4">
-              {#if budgetState.hasRecords && budgetState.monthlyRecords.length > 0 && budgetState.monthlyRecords[0].year === year}
-                <BudgetTable
-                  records={budgetState.monthlyRecords}
-                  {budgetState}
-                  currency={budgetState.currency}
-                />
-              {:else}
-                <button
-                  type="button"
-                  class="variant-ghost-primary btn btn-sm"
-                  onclick={() => handleYearExpand(year)}
-                  disabled={loadingYear !== null}
-                >
-                  {loadingYear === year
-                    ? m.budget_loading?.() || 'Loading...'
-                    : m.budget_mode_yearly?.() || `Load ${year} data`}
-                </button>
-              {/if}
-            </div>
-          </svelte:fragment>
-        </AccordionItem>
-      {/each}
+      {#snippet children(_context)}
+        {#each historicalYears as year (year)}
+          <AccordionItem value={year.toString()}>
+            {#snippet children({ isExpanded })}
+              <AccordionItemTrigger value={year.toString()}>
+                <div class="flex w-full items-center justify-between">
+                  <span class="font-semibold text-surface-100">{formatYearRange(year)}</span>
+                  {#if loadingYear === year}
+                    <span class="text-xs text-surface-400">{m.budget_loading?.() || 'Loading...'}</span>
+                  {/if}
+                </div>
+              </AccordionItemTrigger>
+              
+              <AccordionItemContent value={year.toString()} {isExpanded}>
+                <div class="p-4">
+                  {#if budgetState.hasRecords && budgetState.monthlyRecords.length > 0 && budgetState.monthlyRecords[0].year === year}
+                    <BudgetTable
+                      records={budgetState.monthlyRecords}
+                      {budgetState}
+                      currency={budgetState.currency}
+                    />
+                  {:else}
+                    <button
+                      type="button"
+                      class="variant-ghost-primary btn btn-sm"
+                      onclick={() => handleYearExpand(year)}
+                      disabled={loadingYear !== null}
+                    >
+                      {loadingYear === year
+                        ? m.budget_loading?.() || 'Loading...'
+                        : m.budget_mode_yearly?.() || `Load ${year} data`}
+                    </button>
+                  {/if}
+                </div>
+              </AccordionItemContent>
+            {/snippet}
+          </AccordionItem>
+        {/each}
+      {/snippet}
     </Accordion>
   {/if}
 </div>

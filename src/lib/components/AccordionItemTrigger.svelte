@@ -3,22 +3,26 @@
    * Accordion Item Trigger Component (shadcn-svelte compatible)
    * Clickable trigger to expand/collapse accordion item
    */
+  import { getContext } from 'svelte';
 
   type Props = {
     class?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    context?: any;
     value?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     children?: any;
   };
 
-  const { class: className = '', context = null, value = '', children }: Props = $props();
+  const { class: className = '', value = '', children }: Props = $props();
+  
+  // Get context from parent Accordion
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = getContext<any>('accordion-context');
 </script>
 
 <button
+  type="button"
   data-accordion-trigger
-  on:click={() => context?.toggle(value)}
+  onclick={() => context?.toggle(value)}
   class="flex w-full items-center justify-between bg-background px-4 py-3 text-left hover:bg-accent transition-colors {className}"
   {value}
 >
