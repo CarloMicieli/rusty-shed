@@ -1,7 +1,7 @@
 /**
  * Central type definitions for shadcn-svelte components
  * Feature: 012-shadcn-migration
- * 
+ *
  * This file re-exports all component types for convenient importing.
  * Usage: import type { ButtonVariant, BadgeVariant, ... } from '$lib/components/types';
  */
@@ -13,7 +13,12 @@ export type { ButtonVariant, ButtonSize } from './shadcn/button/types.js';
 export type { BadgeVariant } from './shadcn/badge/types.js';
 
 // Alert types
-export type { AlertVariant, AlertProps, AlertTitleProps, AlertDescriptionProps } from './shadcn/alert/types.js';
+export type {
+  AlertVariant,
+  AlertProps,
+  AlertTitleProps,
+  AlertDescriptionProps
+} from './shadcn/alert/types.js';
 
 // Card types
 export type {

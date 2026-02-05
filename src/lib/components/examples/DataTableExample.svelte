@@ -9,9 +9,18 @@
   - Responsive design
 -->
 <script lang="ts">
-  import { Button, Badge, Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '$lib/components';
+  import {
+    Button,
+    Badge,
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell
+  } from '$lib/components';
   import { ArrowUpDown, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-svelte';
-  
+
   interface User {
     id: number;
     name: string;
@@ -19,22 +28,28 @@
     role: string;
     status: 'active' | 'inactive';
   }
-  
+
   const users: User[] = [
     { id: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'active' },
     { id: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'User', status: 'active' },
-    { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', role: 'User', status: 'inactive' },
+    {
+      id: 3,
+      name: 'Charlie Brown',
+      email: 'charlie@example.com',
+      role: 'User',
+      status: 'inactive'
+    },
     { id: 4, name: 'Diana Prince', email: 'diana@example.com', role: 'Moderator', status: 'active' }
   ];
-  
+
   // Sorting state
   let sortField = $state<keyof User | null>(null);
   let sortDirection = $state<'asc' | 'desc'>('asc');
-  
+
   // Pagination state
   let currentPage = $state(1);
   const itemsPerPage = 10;
-  
+
   function toggleSort(field: keyof User) {
     if (sortField === field) {
       sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -43,36 +58,36 @@
       sortDirection = 'asc';
     }
   }
-  
+
   const sortedUsers = $derived.by(() => {
     if (!sortField) return users;
-    
+
     return [...users].sort((a, b) => {
       const aValue = a[sortField];
       const bValue = b[sortField];
-      
+
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   });
-  
+
   const paginatedUsers = $derived(
     sortedUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
   );
-  
+
   const totalPages = $derived(Math.ceil(sortedUsers.length / itemsPerPage));
 </script>
 
 <div class="space-y-4 p-4">
   <h1 class="text-2xl font-bold">User Management</h1>
-  
-  <div class="rounded-lg border border-surface-700">
+
+  <div class="border-surface-700 rounded-lg border">
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead
-            class="cursor-pointer hover:bg-surface-700/50"
+            class="hover:bg-surface-700/50 cursor-pointer"
             onclick={() => toggleSort('name')}
           >
             <div class="flex items-center gap-1">
@@ -89,7 +104,7 @@
             </div>
           </TableHead>
           <TableHead
-            class="cursor-pointer hover:bg-surface-700/50"
+            class="hover:bg-surface-700/50 cursor-pointer"
             onclick={() => toggleSort('email')}
           >
             <div class="flex items-center gap-1">
@@ -127,11 +142,11 @@
       </TableBody>
     </Table>
   </div>
-  
+
   <!-- Pagination -->
   {#if totalPages > 1}
     <div class="flex items-center justify-between">
-      <p class="text-sm text-surface-400">
+      <p class="text-surface-400 text-sm">
         Page {currentPage} of {totalPages}
       </p>
       <div class="flex gap-2">

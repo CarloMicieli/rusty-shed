@@ -87,7 +87,6 @@
 
 <div class="space-y-6">
   <!-- Page Header -->
-  <div class="flex items-center justify-between">
   <PageHeader
     title={m.budget_config_title()}
     subtitle={m.budget_title()}

@@ -30,13 +30,13 @@ All components are built with Svelte 5 Runes. Make sure to use the new reactive 
 ```svelte
 <script lang="ts">
   import { Button, Input } from '$lib/components';
-  
+
   // Use $state for reactive variables
   let name = $state('');
-  
+
   // Use $derived for computed values
   const greeting = $derived(`Hello, ${name}!`);
-  
+
   function handleClick() {
     console.log('Button clicked!');
   }
@@ -65,9 +65,7 @@ No manual theme configuration needed—just use the components!
 **Sizes**: `default`, `sm`, `lg`, `icon`
 
 ```svelte
-<Button variant="default" size="sm" onclick={handleClick}>
-  Save Changes
-</Button>
+<Button variant="default" size="sm" onclick={handleClick}>Save Changes</Button>
 
 <!-- Link button (renders as <a> tag) -->
 <Button href="/settings" variant="link">Go to Settings</Button>
@@ -79,6 +77,7 @@ No manual theme configuration needed—just use the components!
 ```
 
 **Props**:
+
 - `variant?: ButtonVariant` - Visual style
 - `size?: ButtonSize` - Button size
 - `disabled?: boolean` - Disable interaction
@@ -98,6 +97,7 @@ No manual theme configuration needed—just use the components!
 ```
 
 **Props**:
+
 - `variant?: BadgeVariant` - Visual style
 - `class?: string` - Additional CSS classes
 
@@ -111,22 +111,13 @@ No manual theme configuration needed—just use the components!
   let password = $state('');
 </script>
 
-<Input
-  type="email"
-  bind:value={email}
-  placeholder="Enter your email"
-  required
-/>
+<Input type="email" bind:value={email} placeholder="Enter your email" required />
 
-<Input
-  type="password"
-  bind:value={password}
-  placeholder="Password"
-  aria-label="Password input"
-/>
+<Input type="password" bind:value={password} placeholder="Password" aria-label="Password input" />
 ```
 
 **Props**:
+
 - `type?: string` - Input type
 - `value?: string | number` - Input value (use `bind:value`)
 - `placeholder?: string` - Placeholder text
@@ -144,11 +135,7 @@ No manual theme configuration needed—just use the components!
   let description = $state('');
 </script>
 
-<Textarea
-  bind:value={description}
-  placeholder="Enter description"
-  rows={5}
-/>
+<Textarea bind:value={description} placeholder="Enter description" rows={5} />
 ```
 
 **Props**: Same as Input (except `type`)
@@ -167,6 +154,7 @@ No manual theme configuration needed—just use the components!
 ```
 
 **Props**:
+
 - `checked?: boolean` - Checked state (use `bind:checked`)
 - `disabled?: boolean` - Disable checkbox
 - `aria-label?: string` - Accessibility label
@@ -177,25 +165,26 @@ No manual theme configuration needed—just use the components!
 ```svelte
 <script lang="ts">
   import { Dialog } from '$lib/components';
-  
+
   let open = $state(false);
 </script>
 
-<Button onclick={() => open = true}>Open Dialog</Button>
+<Button onclick={() => (open = true)}>Open Dialog</Button>
 
-<Dialog bind:open={open}>
-  <div class="p-6 space-y-4">
+<Dialog bind:open>
+  <div class="space-y-4 p-6">
     <h2 id="dialog-title" class="text-lg font-semibold">Confirm Action</h2>
     <p id="dialog-description">Are you sure you want to proceed?</p>
-    <div class="flex gap-2 justify-end">
-      <Button variant="ghost" onclick={() => open = false}>Cancel</Button>
-      <Button variant="default" onclick={() => open = false}>Confirm</Button>
+    <div class="flex justify-end gap-2">
+      <Button variant="ghost" onclick={() => (open = false)}>Cancel</Button>
+      <Button variant="default" onclick={() => (open = false)}>Confirm</Button>
     </div>
   </div>
 </Dialog>
 ```
 
 **Props**:
+
 - `open?: boolean` - Open state (use `bind:open`)
 - `onOpenChange?: (open: boolean) => void` - Open state change handler
 - `aria-labelledby?: string` - ID of title element
@@ -207,7 +196,7 @@ No manual theme configuration needed—just use the components!
 ```svelte
 <script lang="ts">
   import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '$lib/components';
-  
+
   const users = [
     { id: 1, name: 'Alice', email: 'alice@example.com' },
     { id: 2, name: 'Bob', email: 'bob@example.com' }
@@ -236,7 +225,14 @@ No manual theme configuration needed—just use the components!
 
 ```svelte
 <script lang="ts">
-  import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '$lib/components';
+  import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+    CardContent,
+    CardFooter
+  } from '$lib/components';
 </script>
 
 <Card>
@@ -260,9 +256,9 @@ No manual theme configuration needed—just use the components!
 Use the `class` prop to add Tailwind utility classes:
 
 ```svelte
-<Button class="w-full mt-4">Full Width Button</Button>
+<Button class="mt-4 w-full">Full Width Button</Button>
 
-<Badge class="text-xs font-mono">Custom Badge</Badge>
+<Badge class="font-mono text-xs">Custom Badge</Badge>
 ```
 
 ### 2. Component Composition
@@ -272,9 +268,9 @@ Build complex UIs by composing smaller components:
 ```svelte
 <script lang="ts">
   import { Card, CardHeader, CardTitle, CardContent, Input, Button } from '$lib/components';
-  
+
   let email = $state('');
-  
+
   function handleSubmit() {
     console.log('Email:', email);
   }
@@ -300,9 +296,7 @@ The Steampunk theme automatically switches between light and dark modes based on
   import { themeStore } from '$lib/stores/themeStore.svelte';
 </script>
 
-<Button onclick={() => themeStore.toggle()}>
-  Toggle Theme
-</Button>
+<Button onclick={() => themeStore.toggle()}>Toggle Theme</Button>
 ```
 
 ### 4. Accessibility Best Practices
@@ -320,11 +314,7 @@ Always include proper ARIA labels and semantic HTML:
 <Input id="username" bind:value={username} />
 
 <!-- Good: Dialog with proper ARIA -->
-<Dialog 
-  bind:open={dialogOpen} 
-  aria-labelledby="dialog-title"
-  aria-describedby="dialog-desc"
->
+<Dialog bind:open={dialogOpen} aria-labelledby="dialog-title" aria-describedby="dialog-desc">
   <h2 id="dialog-title">Title</h2>
   <p id="dialog-desc">Description</p>
 </Dialog>
@@ -344,14 +334,22 @@ Always include proper ARIA labels and semantic HTML:
 
 ```svelte
 <script lang="ts">
-  import { Card, CardHeader, CardTitle, CardContent, Input, Checkbox, Button } from '$lib/components';
-  
+  import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+    Input,
+    Checkbox,
+    Button
+  } from '$lib/components';
+
   let settings = $state({
     username: '',
     email: '',
     notifications: false
   });
-  
+
   function handleSave() {
     console.log('Saving settings:', settings);
   }
@@ -363,20 +361,20 @@ Always include proper ARIA labels and semantic HTML:
   </CardHeader>
   <CardContent class="space-y-4">
     <div>
-      <label for="username" class="block text-sm font-medium mb-1">Username</label>
+      <label for="username" class="mb-1 block text-sm font-medium">Username</label>
       <Input id="username" bind:value={settings.username} />
     </div>
-    
+
     <div>
-      <label for="email" class="block text-sm font-medium mb-1">Email</label>
+      <label for="email" class="mb-1 block text-sm font-medium">Email</label>
       <Input id="email" type="email" bind:value={settings.email} />
     </div>
-    
+
     <div class="flex items-center gap-2">
       <Checkbox bind:checked={settings.notifications} id="notifications" />
       <label for="notifications">Enable notifications</label>
     </div>
-    
+
     <Button onclick={handleSave}>Save Settings</Button>
   </CardContent>
 </Card>
@@ -404,14 +402,14 @@ test('Button renders and handles clicks', async () => {
   let clicked = false;
   const { getByRole } = render(Button, {
     props: {
-      onclick: () => clicked = true
+      onclick: () => (clicked = true)
     },
     children: 'Click me'
   });
-  
+
   const button = getByRole('button');
   await fireEvent.click(button);
-  
+
   expect(clicked).toBe(true);
 });
 ```

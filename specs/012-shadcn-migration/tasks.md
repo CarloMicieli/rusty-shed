@@ -276,17 +276,17 @@ All pages have consistent header structure following the "My Collection" templat
 
 ---
 
-- [ ] T076 [P] [US5] Document "My Collection" header template (font sizes, spacing, layout)
-- [ ] T077 [P] [US5] Create reusable PageHeader component with 3-tier structure
-- [ ] T078 [US5] Audit all page files and identify headers to standardize
-- [ ] T079 [P] [US5] Replace Budget Tracking page header with PageHeader component
-- [ ] T080 [P] [US5] Replace Collection page header with PageHeader component
-- [ ] T081 [US5] Replace Wishlist page header with PageHeader component
-- [ ] T082 [P] [US5] Replace Inventory page header with PageHeader component
-- [ ] T083 [P] [US5] Replace Maintenance page header with PageHeader component
-- [ ] T084 [US5] Remove "Dashboard" text from all page headers
-- [ ] T085 [P] [US5] Test header consistency: spacing and typography match template
-- [ ] T086 Commit: `feat: standardize page headers and remove dashboard label`
+- [x] T076 [P] [US5] Document "My Collection" header template (font sizes, spacing, layout)
+- [x] T077 [P] [US5] Create reusable PageHeader component with 3-tier structure
+- [x] T078 [US5] Audit all page files and identify headers to standardize
+- [x] T079 [P] [US5] Replace Budget Tracking page header with PageHeader component
+- [x] T080 [P] [US5] Replace Collection page header with PageHeader component
+- [x] T081 [US5] Replace Wishlist page header with PageHeader component
+- [x] T082 [P] [US5] Replace Inventory page header with PageHeader component
+- [x] T083 [P] [US5] Replace Maintenance page header with PageHeader component
+- [x] T084 [US5] Remove "Dashboard" text from all page headers
+- [x] T085 [P] [US5] Test header consistency: spacing and typography match template
+- [x] T086 Commit: `feat: standardize page headers and remove dashboard label`
 
 ---
 

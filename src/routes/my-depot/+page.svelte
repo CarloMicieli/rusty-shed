@@ -60,11 +60,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-6 p-4 pt-4" style="--header-offset: 4rem;">
-  <PageHeader
-    title={m.depot_title()}
-    subtitle={m.app_depot()}
-    description={m.depot_subtitle()}
-  >
+  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
     {#snippet actions()}
       <div
         class="border-surface-700/60 bg-surface-900 flex items-center gap-1 rounded-lg border p-1"
