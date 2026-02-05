@@ -37,6 +37,7 @@
     "d3-scale": "^4.0.2",
     "layerchart": "^1.0.13",
     "shadcn-svelte": "1.1.1",
+    "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },

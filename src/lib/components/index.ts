@@ -7,15 +7,10 @@
  * Feature: 012-shadcn-migration
  */
 
-// Accordion components (already migrated from Skeleton)
-export { default as Accordion } from './Accordion.svelte';
-export { default as AccordionItem } from './AccordionItem.svelte';
-export { default as AccordionItemTrigger } from './AccordionItemTrigger.svelte';
-export { default as AccordionItemContent } from './AccordionItemContent.svelte';
-export { default as AccordionItemIndicator } from './AccordionItemIndicator.svelte';
+// shadcn-svelte UI Components
+export { Button } from './shadcn/button';
+export { Badge } from './shadcn/badge';
 
-// Toast notification system (shadcn-svelte compatible)
-export { default as ToastProvider } from './ToastProvider.svelte';
 export { default as ToastHost } from './ToastHost.svelte';
 
 // UI components (for form fields)
