@@ -35,6 +35,7 @@
     autofocus?: boolean;
     autoFocus?: boolean; // Alias for React-style compatibility
     'aria-describedby'?: string;
+    'aria-invalid'?: boolean | 'true' | 'false';
     onkeydown?: (e: KeyboardEvent & { currentTarget: HTMLInputElement }) => void;
     oninput?: (e: Event & { currentTarget: HTMLInputElement }) => void;
     onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
@@ -61,6 +62,7 @@
     autofocus,
     autoFocus,
     'aria-describedby': ariaDescribedby,
+    'aria-invalid': ariaInvalid,
     onkeydown,
     oninput,
     onchange,
@@ -105,6 +107,7 @@
   {step}
   autofocus={shouldAutofocus}
   aria-describedby={ariaDescribedby}
+  aria-invalid={ariaInvalid}
   class={inputClass}
   {onkeydown}
   {onblur}

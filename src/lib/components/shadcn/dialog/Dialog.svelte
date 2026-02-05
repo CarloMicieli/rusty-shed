@@ -17,8 +17,8 @@
     children?: import('svelte').Snippet;
   };
 
-  const {
-    open = false,
+  let {
+    open = $bindable(false),
     onOpenChange,
     class: className = '',
     'aria-labelledby': ariaLabelledby,

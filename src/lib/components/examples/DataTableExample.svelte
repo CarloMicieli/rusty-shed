@@ -63,8 +63,8 @@
     if (!sortField) return users;
 
     return [...users].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+      const aValue = a[sortField as keyof User];
+      const bValue = b[sortField as keyof User];
 
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -86,11 +86,12 @@
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead
-            class="hover:bg-surface-700/50 cursor-pointer"
-            onclick={() => toggleSort('name')}
-          >
-            <div class="flex items-center gap-1">
+          <TableHead class="hover:bg-surface-700/50 cursor-pointer">
+            <button
+              type="button"
+              onclick={() => toggleSort('name')}
+              class="flex items-center gap-1"
+            >
               Name
               {#if sortField === 'name'}
                 {#if sortDirection === 'asc'}
@@ -101,13 +102,14 @@
               {:else}
                 <ArrowUpDown size={14} class="opacity-30" />
               {/if}
-            </div>
+            </button>
           </TableHead>
-          <TableHead
-            class="hover:bg-surface-700/50 cursor-pointer"
-            onclick={() => toggleSort('email')}
-          >
-            <div class="flex items-center gap-1">
+          <TableHead class="hover:bg-surface-700/50 cursor-pointer">
+            <button
+              type="button"
+              onclick={() => toggleSort('email')}
+              class="flex items-center gap-1"
+            >
               Email
               {#if sortField === 'email'}
                 {#if sortDirection === 'asc'}
@@ -118,7 +120,7 @@
               {:else}
                 <ArrowUpDown size={14} class="opacity-30" />
               {/if}
-            </div>
+            </button>
           </TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Status</TableHead>
