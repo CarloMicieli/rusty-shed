@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Plus, CalendarPlus } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
   import MaintenanceState, {
     setMaintenanceState
   } from '$lib/features/maintenance/MaintenanceState.svelte';
@@ -49,11 +49,11 @@
 
 <div class="mx-auto max-w-4xl space-y-6 p-4 pt-4">
   <!-- Page Header -->
-  <div class="space-y-1">
-    <p class="text-surface-400 text-sm tracking-[0.2em] uppercase">{m.app_maintenance()}</p>
-    <h1 class="h2 font-bold">{m.maintenance_title()}</h1>
-    <p class="text-surface-400 text-sm">{m.maintenance_subtitle()}</p>
-  </div>
+  <PageHeader
+    title={m.maintenance_title()}
+    subtitle={m.app_maintenance()}
+    description={m.maintenance_subtitle()}
+  />
 
   <!-- Quick Actions -->
   <div class="border-surface-700/60 bg-surface-900 rounded-xl border p-4">

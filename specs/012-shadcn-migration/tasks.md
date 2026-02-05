@@ -253,12 +253,12 @@ Developers can work with shadcn-svelte components using straightforward patterns
 
 ---
 
-- [ ] T070 [P] [US4] Update component documentation in code comments
-- [ ] T071 [US4] Create developer onboarding guide: "Getting Started with shadcn-svelte"
-- [ ] T072 [P] [US4] Document component customization patterns (props, slots, events)
-- [ ] T073 [P] [US4] Add TypeScript types for all exported components
-- [ ] T074 [US4] Create example components showing best practices
-- [ ] T075 [P] Commit: `docs: create developer onboarding for shadcn-svelte components`
+- [x] T070 [P] [US4] Update component documentation in code comments
+- [x] T071 [US4] Create developer onboarding guide: "Getting Started with shadcn-svelte"
+- [x] T072 [P] [US4] Document component customization patterns (props, slots, events)
+- [x] T073 [P] [US4] Add TypeScript types for all exported components
+- [x] T074 [US4] Create example components showing best practices
+- [x] T075 [P] Commit: `docs: create developer onboarding for shadcn-svelte components`
 
 ---
 

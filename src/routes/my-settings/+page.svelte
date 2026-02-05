@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
   import {
     fetchSettings,
@@ -67,18 +67,17 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
-        {m.app_settings()}
-      </p>
-      <h1 class="h2 text-surface-50 font-bold">{m.settings_heading()}</h1>
-      <p class="text-surface-300">{m.settings_description()}</p>
-    </div>
-    <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
-      {m.settings_back_to_dashboard()}
-    </a>
-  </div>
+  <PageHeader
+    title={m.settings_heading()}
+    subtitle={m.app_settings()}
+    description={m.settings_description()}
+  >
+    {#snippet actions()}
+      <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
+        {m.settings_back_to_dashboard()}
+      </a>
+    {/snippet}
+  </PageHeader>
 
   {#if loading}
     <div class="card border-surface-700/40 border p-8 shadow-xl">

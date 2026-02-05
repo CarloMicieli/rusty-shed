@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { PageHeader } from '$lib/components';
   import { toaster } from '$lib/toaster';
   import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
   import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
@@ -87,17 +88,17 @@
 <div class="space-y-6">
   <!-- Page Header -->
   <div class="flex items-center justify-between">
-    <div>
-      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
-        {m.budget_title()}
-      </p>
-      <h1 class="h2 text-surface-50 font-bold">{m.budget_config_title()}</h1>
-      <p class="text-surface-300">{m.budget_subtitle()}</p>
-    </div>
-    <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
-      {m.settings_back_to_dashboard()}
-    </a>
-  </div>
+  <PageHeader
+    title={m.budget_config_title()}
+    subtitle={m.budget_title()}
+    description={m.budget_subtitle()}
+  >
+    {#snippet actions()}
+      <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
+        {m.settings_back_to_dashboard()}
+      </a>
+    {/snippet}
+  </PageHeader>
 
   <!-- Loading State -->
   {#if loading}

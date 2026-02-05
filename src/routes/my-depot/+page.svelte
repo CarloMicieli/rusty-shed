@@ -10,7 +10,7 @@
     List
   } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
   import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
   import DepotTable from '$lib/features/depot/components/DepotTable.svelte';
   import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
@@ -60,10 +60,12 @@
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-6 p-4 pt-4" style="--header-offset: 4rem;">
-  <div class="space-y-1">
-    <p class="text-surface-400 text-sm tracking-[0.2em] uppercase">{m.app_depot()}</p>
-    <div class="flex items-center justify-between">
-      <h1 class="h2 font-bold">{m.depot_title()}</h1>
+  <PageHeader
+    title={m.depot_title()}
+    subtitle={m.app_depot()}
+    description={m.depot_subtitle()}
+  >
+    {#snippet actions()}
       <div
         class="border-surface-700/60 bg-surface-900 flex items-center gap-1 rounded-lg border p-1"
       >
@@ -86,9 +88,8 @@
           <LayoutGrid size={18} />
         </button>
       </div>
-    </div>
-    <p class="text-surface-400 text-sm">{m.depot_subtitle()}</p>
-  </div>
+    {/snippet}
+  </PageHeader>
 
   <div class="border-surface-700/60 bg-surface-900 rounded-xl border p-3">
     <div class="input-group items-center gap-2">
