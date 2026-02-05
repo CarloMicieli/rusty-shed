@@ -85,7 +85,7 @@ Set up the core systems needed for all user stories: theme system integration, t
 - [x] T017 [P] Document component import patterns for developers (in README or CONTRIBUTING)
 - [x] T018 Create `src/lib/components/index.ts` to export all shadcn components
 - [x] T019 [P] Test toast provider setup with a test notification
-- [ ] T020 Commit: `feat: setup shadcn-svelte theme system and toast provider`
+- [x] T020 Commit: `feat: setup shadcn-svelte theme system and toast provider`
 
 ---
 
@@ -103,14 +103,22 @@ Replace all Skeleton UI components with shadcn-svelte equivalents without changi
 - ✓ Modals, dropdowns, and interactive elements function as before
 - ✓ No visual degradation in component rendering
 
+**Status**: 🔄 IN PROGRESS - Button and Badge components created (commit b372a41)
+
+- Created Button component with 6 variants and 4 sizes
+- Created Badge component with 5 variants  
+- Created COMPONENT_MAPPING.md with comprehensive audit (50+ btn, 30+ badge instances)
+- Installed tailwind-merge for className merging
+- Next: Begin replacing Skeleton classes across codebase
+
 ---
 
 ### Components Audit & Mapping
 
-- [ ] T021 [P] Audit codebase: identify all Skeleton components in use
-- [ ] T022 Create component replacement mapping table (Skeleton → shadcn-svelte)
-- [ ] T023 [P] Identify missing shadcn-svelte equivalents and plan alternatives
-- [ ] T024 Document component API differences and migration notes
+- [x] T021 [P] Audit codebase: identify all Skeleton components in use
+- [x] T022 Create component replacement mapping table (Skeleton → shadcn-svelte)
+- [x] T023 [P] Identify missing shadcn-svelte equivalents and plan alternatives
+- [x] T024 Document component API differences and migration notes
 
 ### Button & Link Components
 

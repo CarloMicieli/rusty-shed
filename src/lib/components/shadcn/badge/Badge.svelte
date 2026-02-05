@@ -32,11 +32,11 @@
     success: 'border-transparent bg-green-600 text-white hover:bg-green-700'
   };
 
-  const badgeClass = twMerge(
+  const badgeClass = $derived(twMerge(
     baseStyles,
     variantStyles[variant],
     className
-  );
+  ));
 </script>
 
 <span class={badgeClass}>

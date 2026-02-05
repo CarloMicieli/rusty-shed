@@ -10,6 +10,9 @@
 // shadcn-svelte UI Components
 export { Button } from './shadcn/button';
 export { Badge } from './shadcn/badge';
+export { Input } from './shadcn/input';
+export { Textarea } from './shadcn/textarea';
+export { Checkbox } from './shadcn/checkbox';
 
 export { default as ToastHost } from './ToastHost.svelte';
 

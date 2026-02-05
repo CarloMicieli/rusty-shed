@@ -19,6 +19,9 @@ export interface Toast {
   };
 }
 
+/** Toast options for methods (id is optional and will be generated if not provided) */
+export type ToastOptions = Omit<Toast, 'variant'> & { id?: string };
+
 export interface ToastState {
   toasts: Toast[];
 }
@@ -34,8 +37,8 @@ function createToastStore() {
      * @param toast Toast configuration
      * @returns Toast ID for removal reference
      */
-    add: (toast: Omit<Toast, 'id'>) => {
-      const id = uuidv4();
+    add: (toast: Omit<Toast, 'id'> & { id?: string }) => {
+      const id = toast.id || uuidv4();
       const newToast: Toast = {
         ...toast,
         id,
@@ -78,7 +81,7 @@ function createToastStore() {
      * @param titleOrOptions Error title string or full Toast object
      * @param description Optional error details (only used if first param is string)
      */
-    error: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+    error: (titleOrOptions: string | ToastOptions, description?: string) => {
       if (typeof titleOrOptions === 'string') {
         return toastStore.add({
           title: titleOrOptions,
@@ -98,7 +101,7 @@ function createToastStore() {
      * @param titleOrOptions Success title string or full Toast object
      * @param description Optional details (only used if first param is string)
      */
-    success: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+    success: (titleOrOptions: string | ToastOptions, description?: string) => {
       if (typeof titleOrOptions === 'string') {
         return toastStore.add({
           title: titleOrOptions,
@@ -118,7 +121,7 @@ function createToastStore() {
      * @param titleOrOptions Info title string or full Toast object
      * @param description Optional details (only used if first param is string)
      */
-    info: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+    info: (titleOrOptions: string | ToastOptions, description?: string) => {
       if (typeof titleOrOptions === 'string') {
         return toastStore.add({
           title: titleOrOptions,
@@ -138,7 +141,7 @@ function createToastStore() {
      * @param titleOrOptions Loading title string or full Toast object
      * @param description Optional details (only used if first param is string)
      */
-    loading: (titleOrOptions: string | Omit<Toast, 'id' | 'variant'>, description?: string) => {
+    loading: (titleOrOptions: string | ToastOptions, description?: string) => {
       if (typeof titleOrOptions === 'string') {
         return toastStore.add({
           title: titleOrOptions,

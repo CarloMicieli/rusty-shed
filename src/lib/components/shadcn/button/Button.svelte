@@ -49,12 +49,12 @@
     icon: 'h-10 w-10'
   };
 
-  const buttonClass = twMerge(
+  const buttonClass = $derived(twMerge(
     baseStyles,
     variantStyles[variant],
     sizeStyles[size],
     className
-  );
+  ));
 </script>
 
 <button
