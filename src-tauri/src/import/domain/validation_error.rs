@@ -4,8 +4,9 @@ use specta::Type;
 /// A validation error that blocks import.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
+#[specta(rename = "ImportValidationError")]
 pub struct ValidationError {
-    /// JSON path to the error (e.g., "data.railwayModels[3].productCode")
+    /// JSON path to the error (e.g., "data.railwayModels\[3\].productCode")
     pub path: String,
     /// Error code for i18n lookup
     pub code: String,
@@ -51,6 +52,25 @@ impl ValidationError {
             path,
             "orphaned_reference",
             format!("Referenced ID '{}' not found in data", referenced_id),
+        )
+    }
+
+    /// Get a user-friendly display message with path context.
+    ///
+    /// Formats the error for end-user display with clear location information.
+    pub fn display_message(&self) -> String {
+        if self.path.is_empty() {
+            self.message.clone()
+        } else {
+            format!("{} (at {})", self.message, self.path)
+        }
+    }
+
+    /// Check if this is a blocking error (vs warning).
+    pub fn is_blocking(&self) -> bool {
+        !matches!(
+            self.code.as_str(),
+            "missing_image" | "image_load_failed" | "deprecated_field"
         )
     }
 }

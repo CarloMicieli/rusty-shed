@@ -15,6 +15,7 @@ Successfully implemented the setup and foundational phases for the Data Import U
 ## Phase 1: Setup (T001-T007)
 
 ### Dependencies Added
+
 - ✅ `zip 0.6` - Archive extraction for .zip files
 - ✅ `flate2 1.1` - gzip decompression
 - ✅ `tar 0.4` - Tar archive support
@@ -25,6 +26,7 @@ All dependencies are production-ready, well-maintained, and cross-platform compa
 ### Module Structure Created
 
 **Backend (Rust)**:
+
 ```
 src-tauri/src/import/
 ├── domain/              # Business logic & value objects
@@ -35,6 +37,7 @@ src-tauri/src/import/
 ```
 
 **Frontend (Svelte)**:
+
 ```
 src/lib/features/import/
 ├── components/         # UI components
@@ -44,15 +47,18 @@ src/lib/features/import/
 ```
 
 ### Manifest Schema Integration
+
 - ✅ Copied `manifest.schema.json` to `src-tauri/src/import/domain/`
 - ✅ Ready for compile-time embedding via `include_str!()`
 
 ### Internationalization (i18n)
+
 - ✅ Added 24 import-related keys to `messages/en.json`
 - ✅ Added 24 import-related keys to `messages/it.json`
 - ✅ Keys cover: UI labels, progress states, error messages, warnings
 
 ### Module Registration
+
 - ✅ Module registered in `src-tauri/src/lib.rs`
 - ✅ Commands registered in Tauri command builder
 - ✅ All commands will auto-generate TypeScript bindings
@@ -66,24 +72,28 @@ src/lib/features/import/
 #### Value Objects & Entities
 
 **1. ValidationError** (`validation_error.rs`)
+
 - Path tracking for JSON pointer references
 - Error codes for i18n mapping
 - Helper constructors: `missing_field()`, `invalid_enum()`, `orphaned_reference()`
 - Full test coverage (4 tests)
 
 **2. ImportWarning** (`import_warning.rs`)
+
 - Non-blocking issue tracking
 - Context field for related entities
 - `missing_image()` convenience constructor
 - Full test coverage (1 test)
 
 **3. RecordCounts** (`record_counts.rs`)
+
 - Per-entity-type record counts
 - Total count calculation
 - Count aggregation via `add()`
 - Full test coverage (2 tests)
 
 **4. ImportPreview** (`import_preview.rs`)
+
 - User-facing import summary
 - Blocking errors vs non-blocking warnings
 - `can_import()` predicate
@@ -91,6 +101,7 @@ src/lib/features/import/
 - Full test coverage (3 tests)
 
 **5. ImportResult** (`import_result.rs`)
+
 - Final import outcome tracking
 - Duration tracking in milliseconds
 - Image failure details
@@ -98,6 +109,7 @@ src/lib/features/import/
 - Full test coverage (4 tests)
 
 **6. ImportSession** (`import_session.rs`) - Aggregate Root
+
 - Session ID (UUID v4)
 - State machine (Pending → Analyzed → Validated → Previewed → Importing → Completed/Failed)
 - Path and format tracking
@@ -106,6 +118,7 @@ src/lib/features/import/
 - Full test coverage (4 tests)
 
 **7. Manifest DTOs** (`manifest.rs`)
+
 - Full schema representation from import packages
 - All entity types: Manufacturer, RailwayCompany, RailwayModel, CollectionItem, Seller, MaintenanceCard
 - Proper serde deserialization configuration
@@ -114,6 +127,7 @@ src/lib/features/import/
 ### Infrastructure Layer (T016-T020)
 
 **Placeholder Services** (To be implemented in user stories):
+
 - ✅ `ArchiveExtractor` - ZIP/tar.gz handling stub
 - ✅ `SchemaValidator` - JSON Schema validation stub
 - ✅ `DuplicateChecker` - Database duplicate lookup stub
@@ -125,12 +139,14 @@ All services are properly structured as empty implementations ready for gradual 
 ### Frontend Foundation (T021-T022)
 
 **1. Frontend Types** (`types.ts`)
+
 - `ImportSessionState` type union
 - `ImportSession` interface
 - `ImportProgress` interface
 - TypeScript bindings import setup
 
 **2. ImportController** (`import.controller.svelte.ts`)
+
 - Svelte 5 reactive store-based state management
 - Readonly store subscriptions for encapsulation
 - Placeholder methods for all three main operations:
@@ -144,6 +160,7 @@ All services are properly structured as empty implementations ready for gradual 
 ### Interface Layer (T029-T033)
 
 **Tauri Command Types** (`interface/types.rs`):
+
 - ✅ `AnalyzeImportPackageArgs` + Response
 - ✅ `GetImportPreviewArgs` + Response
 - ✅ `ExecuteImportArgs` + Response
@@ -151,6 +168,7 @@ All services are properly structured as empty implementations ready for gradual 
 - ✅ Supporting types: `ValidationStatus`, `ImportOutcome`, `ImageFailureDto`, `ArchiveFormat`
 
 **Command Handlers** (`interface/command_handlers.rs`):
+
 - ✅ Placeholder implementations for all 4 commands
 - ✅ Proper Tauri #[tauri::command] and #[specta::specta] attributes
 - ✅ Error handling setup with `CommandError`
@@ -161,12 +179,14 @@ All services are properly structured as empty implementations ready for gradual 
 ## Quality Metrics
 
 ### Testing
+
 - ✅ **18 Unit Tests** - All passing
 - ✅ Domain logic fully covered
 - ✅ No panics or unwrap() calls
 - ✅ Proper Result types throughout
 
 ### Code Quality
+
 - ✅ `cargo fmt` - All code formatted
 - ✅ `cargo clippy` - No import-related warnings
 - ✅ `cargo check` - Compiles cleanly
@@ -174,6 +194,7 @@ All services are properly structured as empty implementations ready for gradual 
 - ✅ Proper documentation comments on all public types
 
 ### Architecture
+
 - ✅ **DDD Compliance** - Clear layer separation
 - ✅ **Type Safety** - Strong typing throughout
 - ✅ **Error Handling** - Proper error types, no panics
@@ -187,6 +208,7 @@ All services are properly structured as empty implementations ready for gradual 
 ### New Files Created
 
 **Backend**:
+
 ```
 src-tauri/src/import/
 ├── mod.rs
@@ -220,6 +242,7 @@ src-tauri/src/import/
 ```
 
 **Frontend**:
+
 ```
 src/lib/features/import/
 ├── types.ts
@@ -232,6 +255,7 @@ src/routes/my-settings/import/
 ```
 
 ### Modified Files
+
 - ✅ `src-tauri/Cargo.toml` - Added 4 dependencies
 - ✅ `src-tauri/Cargo.lock` - Dependency resolution
 - ✅ `src-tauri/src/lib.rs` - Module registration + command registration
@@ -245,6 +269,7 @@ src/routes/my-settings/import/
 ## Readiness for User Stories
 
 ### ✅ Prerequisites Met
+
 1. Domain types fully defined and tested
 2. DTO structures for manifest parsing ready
 3. Interface types defined for Tauri communication
@@ -253,17 +278,20 @@ src/routes/my-settings/import/
 6. Module structure allows for gradual implementation
 
 ### 📋 User Story 1 (Import Valid Package) Ready
+
 - Domain types for result tracking: ✅
 - Infrastructure stubs for archive extraction: ✅
 - Command interface for analysis: ✅
 - Frontend controller: ✅
 
 ### 📋 User Story 2 (Preview Import) Ready
+
 - Domain types for preview generation: ✅
 - Validation error tracking: ✅
 - Command interface for preview: ✅
 
 ### 📋 Subsequent Stories Ready
+
 - Duplicate detection infrastructure stub: ✅
 - Warning tracking system: ✅
 - Result reporting types: ✅
@@ -306,18 +334,22 @@ src/routes/my-settings/import/
 ## Architecture Decisions
 
 ### Why These Dependencies?
+
 - **zip 0.6**: Mature, no-alloc capable, widely used
 - **flate2 1.1**: Standard for gzip in Rust ecosystem
 - **tar 0.4**: Handles tar archives reliably
 - **jsonschema 0.29**: Full JSON Schema 2020-12 support, fast validation
 
 ### State Machine Design
+
 Sessions progress through clearly defined states, enabling proper validation at each stage and preventing invalid transitions.
 
 ### Value Object Pattern
+
 All domain concepts (errors, warnings, counts, results) are immutable value objects, ensuring thread safety and predictable behavior.
 
 ### DDD Layer Separation
+
 - **Domain**: Pure business logic, no I/O
 - **Application**: Use cases combining domain + infrastructure
 - **Infrastructure**: External service adapters
@@ -344,6 +376,7 @@ The Data Import Utility feature now has a solid, well-tested foundation ready fo
 **Phase 1-2 Completion Status**: ✅ **100% Complete**
 
 All 22 foundational tasks (T001-T022) are complete with:
+
 - Zero compilation errors
 - 18 passing unit tests
 - Full code formatting compliance

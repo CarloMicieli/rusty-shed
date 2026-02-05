@@ -1,0 +1,125 @@
+{
+  "$schema": "https://rusty-shed.app/schemas/manifest/v1.json",
+  "version": "1.0",
+  "exportedAt": "2026-02-05T10:00:00Z",
+  "source": "Test Fixture Generator v1.0",
+  "data": {
+    "manufacturers": [
+      {
+        "id": "mfr-001",
+        "name": "Märklin",
+        "abbreviation": "MAR",
+        "websiteUrl": "https://www.maerklin.de",
+        "countryCode": "DE"
+      },
+      {
+        "id": "mfr-002",
+        "name": "Roco",
+        "abbreviation": "ROCO",
+        "websiteUrl": "https://www.roco.cc",
+        "countryCode": "AT"
+      }
+    ],
+    "railwayCompanies": [
+      {
+        "id": "rc-001",
+        "name": "Deutsche Bahn",
+        "abbreviation": "DB",
+        "countryCode": "DE",
+        "status": "active"
+      },
+      {
+        "id": "rc-002",
+        "name": "Österreichische Bundesbahnen",
+        "abbreviation": "ÖBB",
+        "countryCode": "AT",
+        "status": "active"
+      }
+    ],
+    "railwayModels": [
+      {
+        "id": "rm-001",
+        "manufacturerId": "mfr-001",
+        "railwayCompanyId": "rc-001",
+        "seriesCode": "ICE 3",
+        "productCode": "37710",
+        "description": "ICE 3 Electric Trainset",
+        "scale": "H0",
+        "epoch": "VI",
+        "powerMethod": "ac",
+        "minimumRadius": 360,
+        "image": "images/maerklin-37710.png"
+      },
+      {
+        "id": "rm-002",
+        "manufacturerId": "mfr-002",
+        "railwayCompanyId": "rc-002",
+        "seriesCode": "1116",
+        "productCode": "73234",
+        "description": "Taurus Electric Locomotive",
+        "scale": "H0",
+        "epoch": "VI",
+        "powerMethod": "ac",
+        "minimumRadius": 358,
+        "image": "images/roco-73234.jpg"
+      }
+    ],
+    "collectionItems": [
+      {
+        "id": "ci-001",
+        "railwayModelId": "rm-001",
+        "purchaseDate": "2024-01-15",
+        "purchasePrice": 349.99,
+        "purchaseCurrency": "EUR",
+        "condition": "new",
+        "retailer": "Model Train Shop"
+      },
+      {
+        "id": "ci-002",
+        "railwayModelId": "rm-002",
+        "purchaseDate": "2024-03-20",
+        "purchasePrice": 299.5,
+        "purchaseCurrency": "EUR",
+        "condition": "new",
+        "retailer": "Online Model Store"
+      }
+    ],
+    "sellers": [
+      {
+        "id": "seller-001",
+        "name": "Model Train Shop",
+        "websiteUrl": "https://www.modeltrainshop.example",
+        "emailAddress": "info@modeltrainshop.example",
+        "phoneNumber": "+49 123 456789",
+        "address": {
+          "street": "Bahnhofstraße 1",
+          "city": "Munich",
+          "postalCode": "80335",
+          "country": "Germany"
+        }
+      },
+      {
+        "id": "seller-002",
+        "name": "Online Model Store",
+        "websiteUrl": "https://www.onlinemodels.example",
+        "emailAddress": "contact@onlinemodels.example"
+      }
+    ],
+    "maintenanceCards": [
+      {
+        "id": "mc-001",
+        "collectionItemId": "ci-001",
+        "performedAt": "2024-06-15",
+        "description": "Regular cleaning and lubrication",
+        "notes": "All wheels cleaned, gears lubricated with light oil"
+      },
+      {
+        "id": "mc-002",
+        "collectionItemId": "ci-002",
+        "performedAt": "2024-08-10",
+        "description": "Track test and adjustment",
+        "notes": "Tested on test track, adjusted pickup shoes for better contact"
+      }
+    ]
+  }
+}

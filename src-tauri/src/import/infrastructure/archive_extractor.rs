@@ -38,6 +38,22 @@ impl ArchiveExtractor {
         Self
     }
 
+    /// Validate that a file path has an allowed image extension.
+    ///
+    /// Allowed extensions: .png, .jpg, .jpeg
+    ///
+    /// # Returns
+    /// `true` if the file has a valid image extension, `false` otherwise.
+    pub fn is_valid_image_extension(file_path: &str) -> bool {
+        let path = Path::new(file_path);
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_string_lossy().to_lowercase();
+            matches!(ext_str.as_str(), "png" | "jpg" | "jpeg")
+        } else {
+            false
+        }
+    }
+
     /// Extract manifest.json from an archive.
     ///
     /// Detects format (ZIP or tar.gz) automatically based on file extension.
@@ -132,7 +148,7 @@ impl ArchiveExtractor {
 
             let is_manifest = entry
                 .path()
-                .map(|p| p.to_string_lossy().to_string() == "manifest.json")
+                .map(|p| p.to_string_lossy() == "manifest.json")
                 .unwrap_or(false);
 
             if is_manifest {
@@ -186,10 +202,10 @@ impl ArchiveExtractor {
                 ArchiveError::ExtractError(format!("Failed to read tar entry: {}", e))
             })?;
 
-            if let Ok(path) = entry.path() {
-                if !entry.header().entry_type().is_dir() {
-                    files.push(path.to_string_lossy().to_string());
-                }
+            if let Ok(path) = entry.path()
+                && !entry.header().entry_type().is_dir()
+            {
+                files.push(path.to_string_lossy().into_owned());
             }
         }
 
@@ -239,7 +255,7 @@ impl ArchiveExtractor {
 
             let is_target = entry
                 .path()
-                .map(|p| p.to_string_lossy().to_string() == file_path)
+                .map(|p| p.to_string_lossy() == file_path)
                 .unwrap_or(false);
 
             if is_target {
@@ -261,5 +277,97 @@ impl ArchiveExtractor {
 impl Default for ArchiveExtractor {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_valid_image_extension_png() {
+        assert!(ArchiveExtractor::is_valid_image_extension("image.png"));
+        assert!(ArchiveExtractor::is_valid_image_extension(
+            "path/to/image.PNG"
+        ));
+        assert!(ArchiveExtractor::is_valid_image_extension(
+            "images/model.png"
+        ));
+    }
+
+    #[test]
+    fn test_is_valid_image_extension_jpg() {
+        assert!(ArchiveExtractor::is_valid_image_extension("image.jpg"));
+        assert!(ArchiveExtractor::is_valid_image_extension(
+            "path/to/image.JPG"
+        ));
+        assert!(ArchiveExtractor::is_valid_image_extension(
+            "images/model.jpg"
+        ));
+    }
+
+    #[test]
+    fn test_is_valid_image_extension_jpeg() {
+        assert!(ArchiveExtractor::is_valid_image_extension("image.jpeg"));
+        assert!(ArchiveExtractor::is_valid_image_extension(
+            "path/to/image.JPEG"
+        ));
+        assert!(ArchiveExtractor::is_valid_image_extension(
+            "images/model.jpeg"
+        ));
+    }
+
+    #[test]
+    fn test_is_valid_image_extension_invalid() {
+        assert!(!ArchiveExtractor::is_valid_image_extension("image.gif"));
+        assert!(!ArchiveExtractor::is_valid_image_extension("image.bmp"));
+        assert!(!ArchiveExtractor::is_valid_image_extension("image.webp"));
+        assert!(!ArchiveExtractor::is_valid_image_extension("image.svg"));
+        assert!(!ArchiveExtractor::is_valid_image_extension("manifest.json"));
+        assert!(!ArchiveExtractor::is_valid_image_extension("no_extension"));
+        assert!(!ArchiveExtractor::is_valid_image_extension(""));
+    }
+
+    #[test]
+    fn test_detect_format_zip() {
+        let path = Path::new("test.zip");
+        let format = ArchiveExtractor::detect_format(path).unwrap();
+        assert!(matches!(format, ArchiveFormat::Zip));
+    }
+
+    #[test]
+    fn test_detect_format_targz() {
+        let path = Path::new("test.tar.gz");
+        let format = ArchiveExtractor::detect_format(path).unwrap();
+        assert!(matches!(format, ArchiveFormat::TarGz));
+    }
+
+    #[test]
+    fn test_detect_format_gz() {
+        let path = Path::new("test.gz");
+        let format = ArchiveExtractor::detect_format(path).unwrap();
+        assert!(matches!(format, ArchiveFormat::TarGz));
+    }
+
+    #[test]
+    fn test_detect_format_invalid() {
+        let path = Path::new("test.rar");
+        let result = ArchiveExtractor::detect_format(path);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            ArchiveError::InvalidFormat(_)
+        ));
+    }
+
+    #[test]
+    fn test_detect_format_no_extension() {
+        let path = Path::new("test");
+        let result = ArchiveExtractor::detect_format(path);
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            ArchiveError::InvalidFormat(_)
+        ));
     }
 }

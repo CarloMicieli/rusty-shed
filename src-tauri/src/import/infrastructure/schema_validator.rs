@@ -1,5 +1,6 @@
 use crate::import::domain::ValidationError;
 use serde_json::Value;
+use std::collections::HashSet;
 
 /// Error type for schema validation operations.
 #[derive(Debug, Clone)]
@@ -56,26 +57,164 @@ impl SchemaValidator {
     ///
     /// Returns a vector of `ValidationError` structs with path information.
     pub fn validate_detailed(&self, manifest: &Value) -> Result<(), Vec<ValidationError>> {
-        // First check if valid
-        if jsonschema::is_valid(&self.schema, manifest) {
-            return Ok(());
+        let mut errors = Vec::new();
+
+        // First check schema conformance
+        if !jsonschema::is_valid(&self.schema, manifest) {
+            if let Err(error) = jsonschema::validate(&self.schema, manifest) {
+                let validation_error = ValidationError::new(
+                    error.instance_path.to_string(),
+                    "schema_validation",
+                    format!("{:?}", error.kind),
+                );
+                errors.push(validation_error);
+            } else {
+                errors.push(ValidationError::new(
+                    "",
+                    "schema_validation",
+                    "Validation failed".to_string(),
+                ));
+            }
         }
 
-        // If not valid, try to get error details
-        if let Err(error) = jsonschema::validate(&self.schema, manifest) {
-            let validation_error = ValidationError::new(
-                error.instance_path.to_string(),
-                "schema_validation",
-                format!("{:?}", error.kind),
-            );
-            Err(vec![validation_error])
-        } else {
-            Err(vec![ValidationError::new(
-                "",
-                "schema_validation",
-                "Validation failed".to_string(),
-            )])
+        // Then check referential integrity
+        if let Err(mut ref_errors) = Self::validate_referential_integrity(manifest) {
+            errors.append(&mut ref_errors);
         }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+
+    /// Validate referential integrity between entities.
+    ///
+    /// Checks that all foreign keys reference existing entities.
+    fn validate_referential_integrity(manifest: &Value) -> Result<(), Vec<ValidationError>> {
+        let mut errors = Vec::new();
+
+        let data = match manifest.get("data") {
+            Some(d) => d,
+            None => return Ok(()), // Schema validation will catch this
+        };
+
+        // Build lookup sets for all entity IDs
+        let manufacturer_ids = Self::extract_ids(data, "manufacturers");
+        let railway_company_ids = Self::extract_ids(data, "railwayCompanies");
+        let railway_model_ids = Self::extract_ids(data, "railwayModels");
+        let collection_item_ids = Self::extract_ids(data, "collectionItems");
+        let seller_ids = Self::extract_ids(data, "sellers");
+
+        // Validate railway models reference valid manufacturers
+        if let Some(models) = data.get("railwayModels").and_then(|v| v.as_array()) {
+            for (idx, model) in models.iter().enumerate() {
+                if let Some(manufacturer_id) = model.get("manufacturerId").and_then(|v| v.as_str())
+                    && !manufacturer_ids.contains(manufacturer_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!("data.railwayModels[{}].manufacturerId", idx),
+                        "referential_integrity",
+                        format!(
+                            "Manufacturer '{}' not found in manufacturers list",
+                            manufacturer_id
+                        ),
+                    ));
+                }
+
+                if let Some(railway_id) = model.get("railwayId").and_then(|v| v.as_str())
+                    && !railway_company_ids.contains(railway_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!("data.railwayModels[{}].railwayId", idx),
+                        "referential_integrity",
+                        format!(
+                            "Railway company '{}' not found in railwayCompanies list",
+                            railway_id
+                        ),
+                    ));
+                }
+            }
+        }
+
+        // Validate collection items reference valid models, manufacturers, and sellers
+        if let Some(items) = data.get("collectionItems").and_then(|v| v.as_array()) {
+            for (idx, item) in items.iter().enumerate() {
+                if let Some(model_id) = item.get("modelId").and_then(|v| v.as_str())
+                    && !railway_model_ids.contains(model_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!("data.collectionItems[{}].modelId", idx),
+                        "referential_integrity",
+                        format!(
+                            "Railway model '{}' not found in railwayModels list",
+                            model_id
+                        ),
+                    ));
+                }
+
+                if let Some(manufacturer_id) = item.get("manufacturerId").and_then(|v| v.as_str())
+                    && !manufacturer_ids.contains(manufacturer_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!("data.collectionItems[{}].manufacturerId", idx),
+                        "referential_integrity",
+                        format!(
+                            "Manufacturer '{}' not found in manufacturers list",
+                            manufacturer_id
+                        ),
+                    ));
+                }
+
+                if let Some(seller_id) = item.get("sellerId").and_then(|v| v.as_str())
+                    && !seller_ids.contains(seller_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!("data.collectionItems[{}].sellerId", idx),
+                        "referential_integrity",
+                        format!("Seller '{}' not found in sellers list", seller_id),
+                    ));
+                }
+            }
+        }
+
+        // Validate maintenance cards reference valid collection items
+        if let Some(cards) = data.get("maintenanceCards").and_then(|v| v.as_array()) {
+            for (idx, card) in cards.iter().enumerate() {
+                if let Some(item_id) = card.get("collectionItemId").and_then(|v| v.as_str())
+                    && !collection_item_ids.contains(item_id)
+                {
+                    errors.push(ValidationError::new(
+                        format!("data.maintenanceCards[{}].collectionItemId", idx),
+                        "referential_integrity",
+                        format!(
+                            "Collection item '{}' not found in collectionItems list",
+                            item_id
+                        ),
+                    ));
+                }
+            }
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+
+    /// Extract all IDs from an entity array.
+    fn extract_ids(data: &Value, field: &str) -> HashSet<String> {
+        data.get(field)
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|item| item.get("id").and_then(|id| id.as_str()))
+                    .map(String::from)
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     /// Load the embedded manifest schema.
@@ -99,6 +238,12 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    fn test_schema_loads_successfully() {
+        let result = SchemaValidator::new();
+        assert!(result.is_ok(), "Embedded schema should load successfully");
+    }
+
+    #[test]
     fn test_valid_minimal_manifest() {
         let validator = SchemaValidator::new().expect("Schema should load");
         let manifest = json!({
@@ -113,6 +258,15 @@ mod tests {
         let validator = SchemaValidator::new().expect("Schema should load");
         let manifest = json!({
             "data": {}
+        });
+        assert!(validator.validate(&manifest).is_err());
+    }
+
+    #[test]
+    fn test_invalid_missing_data() {
+        let validator = SchemaValidator::new().expect("Schema should load");
+        let manifest = json!({
+            "version": "1.0"
         });
         assert!(validator.validate(&manifest).is_err());
     }
@@ -140,6 +294,89 @@ mod tests {
                     }
                 ]
             }
+        });
+        assert!(validator.validate(&manifest).is_ok());
+    }
+
+    #[test]
+    fn test_valid_manifest_with_railway_companies() {
+        let validator = SchemaValidator::new().expect("Schema should load");
+        let manifest = json!({
+            "version": "1.0",
+            "data": {
+                "railwayCompanies": [
+                    {
+                        "id": "rc1",
+                        "name": "Deutsche Bahn",
+                        "abbreviation": "DB",
+                        "countryCode": "DE"
+                    }
+                ]
+            }
+        });
+        assert!(validator.validate(&manifest).is_ok());
+    }
+
+    #[test]
+    fn test_valid_manifest_with_all_entities() {
+        let validator = SchemaValidator::new().expect("Schema should load");
+        let manifest = json!({
+            "version": "1.0",
+            "exportedAt": "2026-02-05T10:00:00Z",
+            "source": "Test App v1.0",
+            "data": {
+                "manufacturers": [
+                    {
+                        "id": "mfr1",
+                        "name": "Märklin"
+                    }
+                ],
+                "railwayCompanies": [
+                    {
+                        "id": "rc1",
+                        "name": "Deutsche Bahn",
+                        "abbreviation": "DB",
+                        "countryCode": "DE"
+                    }
+                ],
+                "railwayModels": [],
+                "collectionItems": [],
+                "sellers": [],
+                "maintenanceCards": []
+            }
+        });
+        assert!(validator.validate(&manifest).is_ok());
+    }
+
+    #[test]
+    fn test_validate_detailed_returns_errors() {
+        let validator = SchemaValidator::new().expect("Schema should load");
+        let manifest = json!({
+            "data": {}
+        });
+        let result = validator.validate_detailed(&manifest);
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(!errors.is_empty());
+    }
+
+    #[test]
+    fn test_validate_detailed_passes_for_valid() {
+        let validator = SchemaValidator::new().expect("Schema should load");
+        let manifest = json!({
+            "version": "1.0",
+            "data": {}
+        });
+        let result = validator.validate_detailed(&manifest);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_default_validator() {
+        let validator = SchemaValidator::default();
+        let manifest = json!({
+            "version": "1.0",
+            "data": {}
         });
         assert!(validator.validate(&manifest).is_ok());
     }

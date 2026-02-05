@@ -60,6 +60,8 @@ pub struct ImportPreviewResponse {
     pub new_records: RecordCounts,
     /// Records that will be skipped (duplicates)
     pub duplicate_records: RecordCounts,
+    /// Specific duplicate record identifiers
+    pub duplicate_details: crate::import::domain::DuplicateDetails,
     /// Validation errors (if any, import cannot proceed)
     pub errors: Vec<ValidationError>,
     /// Warnings (non-blocking, e.g., missing images)

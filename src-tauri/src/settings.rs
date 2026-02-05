@@ -13,18 +13,13 @@ use sqlx::FromRow;
 
 const SETTINGS_ID: i64 = 1;
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum ThemeValue {
     SteampunkLight,
     SteampunkDark,
+    #[default]
     System,
-}
-
-impl Default for ThemeValue {
-    fn default() -> Self {
-        Self::System
-    }
 }
 
 impl FromStr for ThemeValue {

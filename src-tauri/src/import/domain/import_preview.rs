@@ -2,6 +2,20 @@ use crate::import::domain::{ImportWarning, RecordCounts, ValidationError};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
+/// Details of duplicate records found during preview
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct DuplicateDetails {
+    /// Duplicate manufacturer names
+    pub manufacturers: Vec<String>,
+    /// Duplicate railway model IDs
+    pub railway_models: Vec<String>,
+    /// Duplicate collection item IDs  
+    pub collection_items: Vec<String>,
+    /// Duplicate seller names
+    pub sellers: Vec<String>,
+}
+
 /// Preview of import before confirmation.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -12,6 +26,8 @@ pub struct ImportPreview {
     pub new_records: RecordCounts,
     /// Records that will be skipped (duplicates)
     pub duplicate_records: RecordCounts,
+    /// Specific duplicate record identifiers
+    pub duplicate_details: DuplicateDetails,
     /// Validation errors (blocking)
     pub errors: Vec<ValidationError>,
     /// Warnings (non-blocking)
@@ -25,6 +41,7 @@ impl ImportPreview {
             total_records: RecordCounts::new(),
             new_records: RecordCounts::new(),
             duplicate_records: RecordCounts::new(),
+            duplicate_details: DuplicateDetails::default(),
             errors: Vec::new(),
             warnings: Vec::new(),
         }

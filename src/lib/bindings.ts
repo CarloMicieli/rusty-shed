@@ -1019,6 +1019,80 @@ export const commands = {
     }
   },
   /**
+   * Analyze an import package archive.
+   *
+   * This command:
+   * 1. Validates the archive format
+   * 2. Extracts and validates the manifest
+   * 3. Creates an import session
+   * 4. Returns validation results and record counts
+   */
+  async analyzeImportPackage(
+    args: AnalyzeImportPackageArgs
+  ): Promise<Result<AnalyzeImportPackageResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('analyze_import_package', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Get a preview of the import before execution.
+   *
+   * This command:
+   * 1. Loads the existing session
+   * 2. Checks for duplicate records
+   * 3. Returns record counts and any validation errors
+   */
+  async getImportPreview(
+    args: GetImportPreviewArgs
+  ): Promise<Result<ImportPreviewResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_import_preview', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Execute the import operation.
+   *
+   * This command:
+   * 1. Loads the validated session and manifest
+   * 2. Checks for duplicates and skips them
+   * 3. Writes new records to the database
+   * 4. Returns import results with added/skipped counts
+   */
+  async executeImport(
+    args: ExecuteImportArgs
+  ): Promise<Result<ImportResultResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('execute_import', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Cancel an import session.
+   *
+   * This command:
+   * 1. Finds the session
+   * 2. Transitions it to failed state
+   * 3. Cleans up temporary files
+   */
+  async cancelImportSession(
+    args: CancelImportSessionArgs
+  ): Promise<Result<CancelImportSessionResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cancel_import_session', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Tauri command to get the current budget configuration.
    *
    * Returns `None` if no configuration has been set yet.
@@ -1406,6 +1480,48 @@ export type Address = {
   country: string;
 };
 /**
+ * Arguments for analyze_import_package command
+ */
+export type AnalyzeImportPackageArgs = {
+  /**
+   * Absolute path to the import package file (.zip or .tar.gz)
+   */
+  filePath: string;
+};
+/**
+ * Response for analyze_import_package command
+ */
+export type AnalyzeImportPackageResponse = {
+  /**
+   * Unique session ID for subsequent operations
+   */
+  sessionId: string;
+  /**
+   * Detected archive format
+   */
+  format: ArchiveFormat;
+  /**
+   * Whether the manifest was found and parseable
+   */
+  manifestFound: boolean;
+  /**
+   * Initial validation status
+   */
+  validationStatus: ValidationStatus;
+  /**
+   * Quick summary of found records
+   */
+  recordCounts: RecordCounts;
+  /**
+   * List of images found in the archive
+   */
+  imagesFound: string[];
+};
+/**
+ * Archive format detection.
+ */
+export type ArchiveFormat = 'zip' | 'tarGz';
+/**
  * Lifecycle availability status of a railway model.
  *
  * The enum variants represent common product lifecycle states. When
@@ -1539,6 +1655,14 @@ export type BudgetMode =
  * Quarter enum for quarterly summaries.
  */
 export type BudgetQuarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+/**
+ * Arguments for cancel_import_session command
+ */
+export type CancelImportSessionArgs = { sessionId: string };
+/**
+ * Response for cancel_import_session command
+ */
+export type CancelImportSessionResponse = { sessionId: string; cancelled: boolean };
 /**
  * The enumeration of the railway model categories.
  */
@@ -2675,6 +2799,27 @@ export type DigitalSummary = {
   percentage: number;
 };
 /**
+ * Details of duplicate records found during preview
+ */
+export type DuplicateDetails = {
+  /**
+   * Duplicate manufacturer names
+   */
+  manufacturers: string[];
+  /**
+   * Duplicate railway model IDs
+   */
+  railwayModels: string[];
+  /**
+   * Duplicate collection item IDs
+   */
+  collectionItems: string[];
+  /**
+   * Duplicate seller names
+   */
+  sellers: string[];
+};
+/**
  * The cars that form a complete EMU set can usually be separated by function into four types:
  * power car, motor car, driving car, and trailer car.
  *
@@ -2719,6 +2864,15 @@ export type ElectricMultipleUnitType =
  * conversions to the structured `EpochKind` for validation and richer handling.
  */
 export type Epoch = string;
+/**
+ * Arguments for execute_import command
+ */
+export type ExecuteImportArgs = {
+  /**
+   * Session ID from analyze_import_package
+   */
+  sessionId: string;
+};
 /**
  * Extra budget entry DTO.
  */
@@ -2873,6 +3027,15 @@ export type GetExtraBudgetsArgs = {
   year: number;
 };
 /**
+ * Arguments for get_import_preview command
+ */
+export type GetImportPreviewArgs = {
+  /**
+   * Session ID from analyze_import_package
+   */
+  sessionId: string;
+};
+/**
  * Arguments for querying monthly budget records.
  */
 export type GetMonthlyBudgetRecordsArgs = {
@@ -2893,6 +3056,134 @@ export type GetQuarterlySummariesArgs = {
    * Currency code (defaults to settings currency if not provided)
    */
   currency: string | null;
+};
+/**
+ * Details about a failed image import
+ */
+export type ImageFailureDto = { filename: string; reason: string };
+/**
+ * Import outcome
+ */
+export type ImportOutcome =
+  /**
+   * All operations succeeded
+   */
+  | 'success'
+  /**
+   * Import completed with some warnings
+   */
+  | 'successWithWarnings'
+  /**
+   * Import failed and was rolled back
+   */
+  | { failed: { reason: string } };
+/**
+ * Response for get_import_preview command
+ */
+export type ImportPreviewResponse = {
+  /**
+   * Session ID
+   */
+  sessionId: string;
+  /**
+   * Total records in manifest
+   */
+  totalRecords: RecordCounts;
+  /**
+   * Records that will be imported (new)
+   */
+  newRecords: RecordCounts;
+  /**
+   * Records that will be skipped (duplicates)
+   */
+  duplicateRecords: RecordCounts;
+  /**
+   * Specific duplicate record identifiers
+   */
+  duplicateDetails: DuplicateDetails;
+  /**
+   * Validation errors (if any, import cannot proceed)
+   */
+  errors: ImportValidationError[];
+  /**
+   * Warnings (non-blocking, e.g., missing images)
+   */
+  warnings: ImportWarning[];
+  /**
+   * Whether import can proceed
+   */
+  canImport: boolean;
+};
+/**
+ * Response for execute_import command
+ */
+export type ImportResultResponse = {
+  /**
+   * Session ID
+   */
+  sessionId: string;
+  /**
+   * Import outcome
+   */
+  status: ImportOutcome;
+  /**
+   * Records successfully added
+   */
+  added: RecordCounts;
+  /**
+   * Records skipped (duplicates)
+   */
+  skipped: RecordCounts;
+  /**
+   * Images successfully imported
+   */
+  imagesImported: number;
+  /**
+   * Images that failed to import
+   */
+  imagesFailed: ImageFailureDto[];
+  /**
+   * Duration in milliseconds
+   */
+  durationMs: bigint;
+  /**
+   * Any warnings during import
+   */
+  warnings: ImportWarning[];
+};
+/**
+ * A validation error that blocks import.
+ */
+export type ImportValidationError = {
+  /**
+   * JSON path to the error (e.g., "data.railwayModels\[3\].productCode")
+   */
+  path: string;
+  /**
+   * Error code for i18n lookup
+   */
+  code: string;
+  /**
+   * Human-readable message
+   */
+  message: string;
+};
+/**
+ * An import warning (non-blocking issue).
+ */
+export type ImportWarning = {
+  /**
+   * Warning code for i18n lookup
+   */
+  code: string;
+  /**
+   * Human-readable message
+   */
+  message: string;
+  /**
+   * Related entity or file (optional context)
+   */
+  context: string | null;
 };
 /**
  * View representation of rolling stock that can have a decoder installed
@@ -3852,6 +4143,17 @@ export type RailwayStatus =
    * The railway company has merged with another entity.
    */
   | 'MERGED';
+/**
+ * Counts of records by entity type.
+ */
+export type RecordCounts = {
+  manufacturers: number;
+  railwayCompanies: number;
+  railwayModels: number;
+  collectionItems: number;
+  sellers: number;
+  maintenanceCards: number;
+};
 /**
  * Arguments for removing an extra budget entry.
  */
@@ -4912,6 +5214,22 @@ export type ValidationErrorParam =
    * A textual parameter (for example: a field name or explanatory text).
    */
   | { type: 'Text'; value: string };
+/**
+ * Validation status
+ */
+export type ValidationStatus =
+  /**
+   * Schema validation passed
+   */
+  | 'valid'
+  /**
+   * Schema validation failed with errors
+   */
+  | { invalid: { error_count: number } }
+  /**
+   * Manifest could not be parsed
+   */
+  | { parseError: { message: string } };
 /**
  * Strongly-typed identifier for a wishlist.
  *

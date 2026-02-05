@@ -79,13 +79,13 @@
 - [x] T023 [US1] Implement `ValidatePackageUseCase` in `src-tauri/src/import/application/validate_package.rs`
 - [x] T024 [US1] Implement `ExecuteImportUseCase` for writing records in `src-tauri/src/import/application/execute_import.rs`
 - [x] T025 [P] [US1] Create ID mapping service for external→internal ID resolution in `src-tauri/src/import/application/id_mapper.rs`
-- [ ] T026 [US1] Export application layer in `src-tauri/src/import/application/mod.rs`
+- [x] T026 [US1] Export application layer in `src-tauri/src/import/application/mod.rs`
 
 ### Infrastructure for US1
 
 - [x] T027 [US1] Implement `MediaStorage` for copying images to app data dir in `src-tauri/src/import/infrastructure/media_storage.rs`
 - [x] T028 [US1] Add UUID-prefix collision avoidance to `MediaStorage`
-- [ ] T092 [US1] Add image file extension validation (.png, .jpg, .jpeg only) in `ArchiveExtractor` or validation phase
+- [x] T092 [US1] Add image file extension validation (.png, .jpg, .jpeg only) in `ArchiveExtractor` or validation phase
 
 ### Interface Layer for US1
 
@@ -103,9 +103,9 @@
 
 ### Verification for US1
 
-- [ ] T037 [US1] Create test fixture archive at `src-tauri/fixtures/test_import.zip`
-- [ ] T038 [US1] Add unit tests for `ArchiveExtractor` in `src-tauri/src/import/infrastructure/archive_extractor.rs`
-- [ ] T039 [US1] Add unit tests for `SchemaValidator` in `src-tauri/src/import/infrastructure/schema_validator.rs`
+- [x] T037 [US1] Create test fixture archive at `src-tauri/fixtures/test_import.zip`
+- [x] T038 [US1] Add unit tests for `ArchiveExtractor` in `src-tauri/src/import/infrastructure/archive_extractor.rs`
+- [x] T039 [US1] Add unit tests for `SchemaValidator` in `src-tauri/src/import/infrastructure/schema_validator.rs`
 
 **Checkpoint**: User Story 1 complete - users can import valid packages
 
@@ -119,26 +119,26 @@
 
 ### Infrastructure for US2
 
-- [ ] T040 [US2] Implement `DuplicateChecker` with batch key loading in `src-tauri/src/import/infrastructure/duplicate_checker.rs`
-- [ ] T041 [US2] Add railway model duplicate detection (manufacturer_id + product_code) to `DuplicateChecker`
-- [ ] T042 [US2] Add collection item duplicate detection (railway_model_id + purchase_date) to `DuplicateChecker`
+- [x] T040 [US2] Implement `DuplicateChecker` with batch key loading in `src-tauri/src/import/infrastructure/duplicate_checker.rs`
+- [x] T041 [US2] Add railway model duplicate detection (manufacturer_id + product_code) to `DuplicateChecker`
+- [x] T042 [US2] Add collection item duplicate detection (railway_model_id + purchase_date) to `DuplicateChecker`
 
 ### Application Layer for US2
 
-- [ ] T043 [US2] Implement `PreviewImportUseCase` in `src-tauri/src/import/application/preview_import.rs`
-- [ ] T044 [US2] Integrate `DuplicateChecker` into preview generation
+- [x] T043 [US2] Implement `PreviewImportUseCase` in `src-tauri/src/import/application/preview_import.rs`
+- [x] T044 [US2] Integrate `DuplicateChecker` into preview generation
 
 ### Interface Layer for US2
 
-- [ ] T045 [US2] Create `GetImportPreviewArgs` and `ImportPreviewResponse` types in `src-tauri/src/import/interface/types.rs`
-- [ ] T046 [US2] Implement `get_import_preview` Tauri command in `src-tauri/src/import/interface/commands.rs`
+- [x] T045 [US2] Create `GetImportPreviewArgs` and `ImportPreviewResponse` types in `src-tauri/src/import/interface/types.rs`
+- [x] T046 [US2] Implement `get_import_preview` Tauri command in `src-tauri/src/import/interface/commands.rs`
 
 ### Frontend for US2
 
-- [ ] T047 [P] [US2] Create `ImportPreview.svelte` component in `src/lib/features/import/components/ImportPreview.svelte`
-- [ ] T048 [US2] Add preview state and methods to `import.controller.svelte.ts`
-- [ ] T049 [US2] Integrate preview step into import page workflow at `src/routes/my-settings/import/+page.svelte`
-- [ ] T050 [US2] Add confirm/cancel buttons with proper state handling
+- [x] T047 [P] [US2] Create `ImportPreview.svelte` component in `src/lib/features/import/components/ImportPreview.svelte`
+- [x] T048 [US2] Add preview state and methods to `import.controller.svelte.ts`
+- [x] T049 [US2] Integrate preview step into import page workflow at `src/routes/my-settings/import/+page.svelte`
+- [x] T050 [US2] Add confirm/cancel buttons with proper state handling
 
 **Checkpoint**: User Story 2 complete - users can preview before import
 
@@ -152,15 +152,15 @@
 
 ### Backend for US3
 
-- [ ] T051 [US3] Add manufacturer duplicate detection to `DuplicateChecker`
-- [ ] T052 [US3] Add seller duplicate detection (by name) to `DuplicateChecker`
-- [ ] T053 [US3] Add skip logic to `ExecuteImportUseCase` that uses DuplicateChecker results
-- [ ] T054 [US3] Track skipped record counts in `ImportResult`
+- [x] T051 [US3] Add manufacturer duplicate detection to `DuplicateChecker`
+- [x] T052 [US3] Add seller duplicate detection (by name) to `DuplicateChecker`
+- [x] T053 [US3] Add skip logic to `ExecuteImportUseCase` that uses DuplicateChecker results
+- [x] T054 [US3] Track skipped record counts in `ImportResult`
 
 ### Frontend for US3
 
-- [ ] T055 [US3] Display duplicate counts in `ImportPreview.svelte`
-- [ ] T056 [US3] Show which specific records will be skipped (expandable list)
+- [x] T055 [US3] Display duplicate counts in `ImportPreview.svelte`
+- [x] T056 [US3] Show which specific records will be skipped (expandable list)
 
 **Checkpoint**: User Story 3 complete - duplicates handled gracefully
 
@@ -174,14 +174,14 @@
 
 ### Backend for US4
 
-- [ ] T057 [US4] Ensure `ImportResult` includes all required counts (added, skipped, warnings)
-- [ ] T058 [US4] Add image failure tracking to `ImportResult`
+- [x] T057 [US4] Ensure `ImportResult` includes all required counts (added, skipped, warnings)
+- [x] T058 [US4] Add image failure tracking to `ImportResult`
 
 ### Frontend for US4
 
-- [ ] T059 [P] [US4] Create `ImportReport.svelte` component in `src/lib/features/import/components/ImportReport.svelte`
-- [ ] T060 [US4] Add result state handling to `import.controller.svelte.ts`
-- [ ] T061 [US4] Integrate report display into import page after execution completes
+- [x] T059 [P] [US4] Create `ImportReport.svelte` component in `src/lib/features/import/components/ImportReport.svelte`
+- [x] T060 [US4] Add result state handling to `import.controller.svelte.ts`
+- [x] T061 [US4] Integrate report display into import page after execution completes
 
 **Checkpoint**: User Story 4 complete - users get clear completion reports
 
@@ -195,16 +195,16 @@
 
 ### Backend for US5
 
-- [ ] T062 [US5] Implement relationship integrity validation in `SchemaValidator`
-- [ ] T063 [US5] Add orphaned reference detection (e.g., manufacturerId not in manufacturers[])
-- [ ] T064 [US5] Wrap `ExecuteImportUseCase` writes in sqlx transaction with rollback on any error
-- [ ] T065 [US5] Map validation errors to user-friendly messages with path information
+- [x] T062 [US5] Implement relationship integrity validation in `SchemaValidator`
+- [x] T063 [US5] Add orphaned reference detection (e.g., manufacturerId not in manufacturers[])
+- [x] T064 [US5] Wrap `ExecuteImportUseCase` writes in sqlx transaction with rollback on any error
+- [x] T065 [US5] Map validation errors to user-friendly messages with path information
 
 ### Frontend for US5
 
-- [ ] T066 [US5] Display validation errors in `ImportPreview.svelte` with affected record paths
-- [ ] T067 [US5] Disable confirm button when `canImport: false`
-- [ ] T068 [US5] Add error state display for aborted imports
+- [x] T066 [US5] Display validation errors in `ImportPreview.svelte` with affected record paths
+- [x] T067 [US5] Disable confirm button when `canImport: false`
+- [x] T068 [US5] Add error state display for aborted imports
 
 **Checkpoint**: User Story 5 complete - validation failures abort cleanly
 
@@ -218,14 +218,14 @@
 
 ### Backend for US6
 
-- [ ] T069 [US6] Add image existence checking to validation phase
-- [ ] T070 [US6] Create `ImportWarning` entries for missing images
-- [ ] T071 [US6] Continue import when images missing, include warnings in result
+- [x] T069 [US6] Add image existence checking to validation phase
+- [x] T070 [US6] Create `ImportWarning` entries for missing images
+- [x] T071 [US6] Continue import when images missing, include warnings in result
 
 ### Frontend for US6
 
-- [ ] T072 [US6] Display image warnings in `ImportPreview.svelte`
-- [ ] T073 [US6] Show image warning count in `ImportReport.svelte`
+- [x] T072 [US6] Display image warnings in `ImportPreview.svelte`
+- [x] T073 [US6] Show image warning count in `ImportReport.svelte`
 
 **Checkpoint**: User Story 6 complete - missing images handled as warnings
 
@@ -255,11 +255,11 @@
 
 ### Documentation & Verification
 
-- [ ] T081 [P] Add rustdoc comments to all public types and functions
-- [ ] T082 [P] Run `pnpm rust:format` and fix any formatting issues
-- [ ] T083 Run `pnpm rust:clippy` and resolve all warnings
-- [ ] T084 Run `pnpm rust:test` and verify all tests pass
-- [ ] T085 [P] Run `pnpm lint` and `pnpm check` for frontend
+- [x] T081 [P] Add rustdoc comments to all public types and functions
+- [x] T082 [P] Run `pnpm rust:format` and fix any formatting issues
+- [x] T083 Run `pnpm rust:clippy` and resolve all warnings
+- [x] T084 Run `pnpm rust:test` and verify all tests pass
+- [x] T085 [P] Run `pnpm lint` and `pnpm check` for frontend
 - [ ] T086 Manual test: complete import with valid package
 - [ ] T087 Manual test: verify duplicate detection with pre-existing records
 - [ ] T088 Manual test: verify abort on invalid manifest

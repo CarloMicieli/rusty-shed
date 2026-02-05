@@ -1,4 +1,4 @@
-import { RecordCounts, ValidationError, ImportWarning, ArchiveFormat } from '$lib/bindings';
+import type { ArchiveFormat } from '$lib/bindings';
 
 export type ImportSessionState =
   | 'pending'
