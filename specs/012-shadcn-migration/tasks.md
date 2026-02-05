@@ -227,14 +227,14 @@ All interactive and complex components maintain feature parity with Skeleton equ
 
 ---
 
-- [ ] T062 [P] [US3] Test multi-select functionality and selection state
-- [ ] T063 [P] [US3] Test datepicker: date selection, range selection, constraints
-- [ ] T064 [US3] Test autocomplete: filtering, selection, keyboard navigation
-- [ ] T065 [P] [US3] Verify ARIA labels on all interactive components
-- [ ] T066 [P] [US3] Test keyboard navigation: Tab, Shift+Tab, Enter, Escape
-- [ ] T067 [US3] Test with screen reader (NVDA, JAWS, VoiceOver)
-- [ ] T068 [P] [US3] Run accessibility audit tool (axe, Lighthouse)
-- [ ] T069 Commit: `feat: validate component feature parity and accessibility`
+- [x] T062 [P] [US3] Test multi-select functionality and selection state
+- [x] T063 [P] [US3] Test datepicker: date selection, range selection, constraints
+- [x] T064 [US3] Test autocomplete: filtering, selection, keyboard navigation
+- [x] T065 [P] [US3] Verify ARIA labels on all interactive components
+- [x] T066 [P] [US3] Test keyboard navigation: Tab, Shift+Tab, Enter, Escape
+- [x] T067 [US3] Test with screen reader (NVDA, JAWS, VoiceOver)
+- [x] T068 [P] [US3] Run accessibility audit tool (axe, Lighthouse)
+- [x] T069 Commit: `feat: validate component feature parity and accessibility`
 
 ---
 
