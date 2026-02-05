@@ -14,6 +14,7 @@
     value?: string[];
     onValueChange?: (details: { value: string[] }) => void;
     multiple?: boolean;
+    class?: string;
   };
 
   const {
@@ -22,12 +23,18 @@
     defaultValue = '',
     value = [],
     onValueChange,
-    multiple = false
+    multiple = false,
+    class: className = ''
   }: Props = $props();
 
-  let expandedValues: Record<string, boolean> = $state(
-    defaultValue ? { [defaultValue]: true } : {}
-  );
+  // Initialize expanded values from defaultValue
+  let expandedValues: Record<string, boolean> = $state({});
+
+  $effect(() => {
+    if (defaultValue && Object.keys(expandedValues).length === 0) {
+      expandedValues = { [defaultValue]: true };
+    }
+  });
 
   function toggle(itemValue: string) {
     if (collapsible && expandedValues[itemValue]) {
@@ -55,14 +62,18 @@
   // Create context for item components
   const context = {
     toggle,
-    isExpanded: (itemValue: string) => expandedValues[itemValue] ?? false,
-    expandedValues
+    isExpanded: (itemValue: string) => {
+      return expandedValues[itemValue] ?? false;
+    },
+    get expandedValues() {
+      return expandedValues;
+    }
   };
 
   setContext('accordion-context', context);
 </script>
 
-<div class="divide-border bg-background divide-y rounded-lg border">
+<div class="divide-border bg-background divide-y rounded-lg border {className}">
   {#if children}
     {@render children(context)}
   {/if}

@@ -19,8 +19,8 @@ export interface Toast {
   };
 }
 
-/** Toast options for methods (id is optional and will be generated if not provided) */
-export type ToastOptions = Omit<Toast, 'variant'> & { id?: string };
+/** Toast options for methods (id and variant are optional) */
+export type ToastOptions = Omit<Toast, 'id' | 'variant'> & { id?: string };
 
 export interface ToastState {
   toasts: Toast[];

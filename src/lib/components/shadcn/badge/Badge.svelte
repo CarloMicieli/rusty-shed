@@ -8,14 +8,17 @@
    */
   import { twMerge } from 'tailwind-merge';
 
-  type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success';
+  export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success';
 
   type Props = {
     variant?: BadgeVariant;
     class?: string;
+    onclick?: (e: MouseEvent) => void;
+    title?: string;
+    children?: import('svelte').Snippet;
   };
 
-  const { variant = 'default', class: className = '' }: Props = $props();
+  const { variant = 'default', class: className = '', onclick, title, children }: Props = $props();
 
   const baseStyles =
     'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
@@ -31,8 +34,16 @@
   const badgeClass = $derived(twMerge(baseStyles, variantStyles[variant], className));
 </script>
 
-<span class={badgeClass}>
-  {#if children}
-    {@render children()}
-  {/if}
-</span>
+{#if onclick}
+  <button type="button" class={badgeClass} {onclick} {title}>
+    {#if children}
+      {@render children()}
+    {/if}
+  </button>
+{:else}
+  <span class={badgeClass} {title}>
+    {#if children}
+      {@render children()}
+    {/if}
+  </span>
+{/if}

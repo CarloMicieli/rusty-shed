@@ -12,9 +12,10 @@
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     class?: string;
+    children?: import('svelte').Snippet;
   };
 
-  const { open = false, onOpenChange, class: className = '' }: Props = $props();
+  const { open = false, onOpenChange, class: className = '', children }: Props = $props();
 
   function handleBackdropClick(e: MouseEvent) {
     if (e.target === e.currentTarget && onOpenChange) {

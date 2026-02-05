@@ -15,6 +15,7 @@
     'aria-label'?: string;
     size?: 'default' | 'sm' | 'lg';
     onclick?: (pressed: boolean) => void;
+    children?: import('svelte').Snippet;
   };
 
   let {
@@ -23,7 +24,8 @@
     class: className = '',
     'aria-label': ariaLabel,
     size = 'default',
-    onclick
+    onclick,
+    children
   }: Props = $props();
 
   const sizeStyles = {
@@ -56,5 +58,5 @@
   class={buttonClass}
   onclick={handleClick}
 >
-  <slot />
+  {@render children?.()}
 </button>

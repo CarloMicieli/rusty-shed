@@ -9,7 +9,7 @@
   import { twMerge } from 'tailwind-merge';
 
   type Props = {
-    value?: string;
+    value?: string | null;
     placeholder?: string;
     disabled?: boolean;
     readonly?: boolean;

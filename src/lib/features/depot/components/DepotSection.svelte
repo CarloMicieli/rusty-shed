@@ -1,5 +1,6 @@
 <script lang="ts" generics="T extends { id: string }">
   import type { Component } from 'svelte';
+  import type { BadgeVariant } from '$lib/components/shadcn/badge/Badge.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Badge, Button } from '$lib/components';
 
@@ -21,7 +22,7 @@
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     icon: Component<any> | any;
     card: Component<CardProps<T>>;
-    toneClass?: string;
+    toneClass?: BadgeVariant;
     stickyOffset?: string;
     emptyMessage: string;
   } = $props();

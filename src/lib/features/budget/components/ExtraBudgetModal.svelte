@@ -26,7 +26,7 @@
   const modalStore = getModalStore();
 
   // Form state
-  let amount = $state('');
+  let amount = $state(0);
   let reason = $state('');
   let isSubmitting = $state(false);
   let errors = $state<Record<string, string>>({});
@@ -55,8 +55,7 @@
     const newErrors: Record<string, string> = {};
 
     // Validate amount
-    const amountValue = parseFloat(amount);
-    if (!amount || isNaN(amountValue) || amountValue <= 0) {
+    if (!amount || amount <= 0) {
       newErrors.amount = 'Please enter a valid positive amount';
     }
 
@@ -82,8 +81,7 @@
     isSubmitting = true;
 
     try {
-      const amountValue = parseFloat(amount);
-      const amountInCents = Math.round(amountValue * 100); // Convert to minor units
+      const amountInCents = Math.round(amount * 100); // Convert to minor units
 
       await budgetState.addExtraBudget({
         year,
@@ -135,7 +133,7 @@
           type="number"
           step="0.01"
           min="0"
-          value={String(amount)}
+          value={amount}
           oninput={(e) => (amount = parseFloat(e.currentTarget.value) || 0)}
           disabled={isSubmitting}
           class="w-full py-2 pr-4 pl-8"
@@ -159,7 +157,7 @@
         disabled={isSubmitting}
         class="w-full"
         rows={3}
-        maxlength="500"
+        maxlength={500}
         placeholder={m.budget_extra_reason_placeholder()}
       />
       {#if errors.reason}
@@ -183,25 +181,3 @@
     </footer>
   </form>
 </div>
-
-<style>
-  .input,
-  .textarea {
-    border-radius: 0.5rem;
-    border-width: 1px;
-    border-color: rgb(212 212 216);
-  }
-
-  .input:focus,
-  .textarea:focus {
-    border-color: rgb(59 130 246);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-    outline: none;
-  }
-
-  .input:disabled,
-  .textarea:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-</style>

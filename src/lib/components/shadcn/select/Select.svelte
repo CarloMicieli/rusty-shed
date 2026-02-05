@@ -16,6 +16,7 @@
     id?: string;
     name?: string;
     onchange?: (e: Event & { currentTarget: HTMLSelectElement }) => void;
+    children?: import('svelte').Snippet;
   };
 
   let {
@@ -25,7 +26,8 @@
     class: className = '',
     id,
     name,
-    onchange
+    onchange,
+    children
   }: Props = $props();
 
   const baseStyles =
@@ -39,14 +41,6 @@
   }
 </script>
 
-<select
-  {value}
-  onchange={handleChange}
-  {disabled}
-  {required}
-  {id}
-  {name}
-  class={selectClass}
->
-  <slot />
+<select {value} onchange={handleChange} {disabled} {required} {id} {name} class={selectClass}>
+  {@render children?.()}
 </select>

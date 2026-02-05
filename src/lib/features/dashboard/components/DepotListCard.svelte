@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DashboardDepotEntry } from '$lib/bindings';
   import { Building2, TrainFront } from 'lucide-svelte';
+  import Badge from '$lib/components/shadcn/badge/Badge.svelte';
 
   let { depot } = $props<{ depot: DashboardDepotEntry }>();
 </script>

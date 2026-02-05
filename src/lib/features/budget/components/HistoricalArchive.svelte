@@ -56,10 +56,10 @@
     <p class="text-surface-400 text-sm">No historical data available.</p>
   {:else}
     <Accordion>
-      {#snippet children(_context)}
+      {#snippet children(_context: { isExpanded: (value: string) => boolean })}
         {#each historicalYears as year (year)}
           <AccordionItem value={year.toString()}>
-            {#snippet children({ isExpanded })}
+            {#snippet children({ isExpanded }: { isExpanded: boolean })}
               <AccordionItemTrigger value={year.toString()}>
                 <div class="flex w-full items-center justify-between">
                   <span class="font-semibold text-surface-100">{formatYearRange(year)}</span>

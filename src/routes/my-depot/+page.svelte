@@ -148,7 +148,7 @@
           items={filteredLocomotives}
           icon={TrainFront}
           card={LocomotiveCard}
-          toneClass="variant-filled-primary"
+          toneClass="default"
           {stickyOffset}
           emptyMessage={m.depot_empty_locomotives()}
         />
@@ -158,7 +158,7 @@
           items={filteredTrains}
           icon={TramFront}
           card={TrainCard}
-          toneClass="variant-filled-secondary"
+          toneClass="secondary"
           {stickyOffset}
           emptyMessage={m.depot_empty_trains()}
         />
@@ -168,7 +168,7 @@
           items={filteredCars}
           icon={BoxIcon}
           card={CarCard}
-          toneClass="variant-filled-surface"
+          toneClass="outline"
           {stickyOffset}
           emptyMessage={m.depot_empty_cars()}
         />
@@ -178,7 +178,7 @@
           items={filteredLocomotives}
           icon={TrainFront}
           type="locomotive"
-          toneClass="variant-filled-primary"
+          toneClass="default"
           {stickyOffset}
           emptyMessage={m.depot_empty_locomotives()}
         />
@@ -188,7 +188,7 @@
           items={filteredTrains}
           icon={TramFront}
           type="train"
-          toneClass="variant-filled-secondary"
+          toneClass="secondary"
           {stickyOffset}
           emptyMessage={m.depot_empty_trains()}
         />
@@ -198,7 +198,7 @@
           items={filteredCars}
           icon={BoxIcon}
           type="car"
-          toneClass="variant-filled-surface"
+          toneClass="outline"
           {stickyOffset}
           emptyMessage={m.depot_empty_cars()}
         />
