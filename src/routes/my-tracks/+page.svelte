@@ -6,6 +6,7 @@
   import CreateInventoryDialog from '$lib/features/track-inventory/components/CreateInventoryDialog.svelte';
   import { onMount } from 'svelte';
   import { Plus } from 'lucide-svelte';
+  import { Button } from '$lib/components';
 
   const service = getTrackInventoryContext();
 
@@ -43,14 +44,15 @@
       <h1 class="h1 font-bold">{m.track_inventories_title()}</h1>
       <p class="text-surface-300">{m.track_inventories_subtitle()}</p>
     </div>
-    <button
+    <Button
       onclick={() => (createDialogOpen = true)}
-      class="variant-filled-primary btn gap-2"
+      variant="default"
+      class="gap-2"
       disabled={loading}
     >
       <Plus size={20} />
       <span class="hidden sm:inline">{m.track_inventories_create_button()}</span>
-    </button>
+    </Button>
   </div>
 
   {#if loading}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Search, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
 
   let isExpanded = $state(false);
 
@@ -21,17 +22,17 @@
 
 <!-- Mobile: Icon Trigger + Overlay -->
 <div class="lg:hidden">
-  <button class="variant-ghost-surface btn-icon" onclick={toggleSearch}>
+  <Button variant="ghost" size="icon" onclick={toggleSearch}>
     <Search size={20} />
-  </button>
+  </Button>
 
   {#if isExpanded}
     <div
       class="bg-background/95 animate-fade-in fixed inset-0 z-50 flex flex-col p-4 pt-20 backdrop-blur-sm"
     >
-      <button class="btn-icon absolute top-4 right-4" onclick={toggleSearch}>
+      <Button variant="ghost" size="icon" class="absolute top-4 right-4" onclick={toggleSearch}>
         <X size={24} />
-      </button>
+      </Button>
       <div class="relative w-full">
         <Search class="text-surface-400 absolute top-1/2 left-4 -translate-y-1/2" size={20} />
         <!-- svelte-ignore a11y_autofocus -->

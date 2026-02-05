@@ -10,6 +10,7 @@
     List
   } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
   import DepotTable from '$lib/features/depot/components/DepotTable.svelte';
   import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
@@ -99,13 +100,15 @@
         oninput={(event) => handleInput(event.currentTarget.value)}
       />
       {#if searchInput}
-        <button
-          class="variant-ghost-surface btn btn-sm px-2"
+        <Button
+          variant="ghost"
+          size="sm"
+          class="px-2"
           aria-label={m.depot_clear_search()}
           onclick={clearSearch}
         >
           <X size={16} />
-        </button>
+        </Button>
       {/if}
     </div>
   </div>
@@ -124,10 +127,9 @@
     >
       <p class="text-sm font-semibold">{error}</p>
       <div class="flex gap-2">
-        <button class="variant-filled-primary btn btn-sm" onclick={() => depot.load()}>Retry</button
-        >
-        <button class="variant-ghost-surface btn btn-sm" onclick={clearSearch}
-          >{m.depot_clear_search()}</button
+        <Button variant="default" size="sm" onclick={() => depot.load()}>Retry</Button>
+        <Button variant="ghost" size="sm" onclick={clearSearch}
+          >{m.depot_clear_search()}</Button
         >
       </div>
     </div>
@@ -136,9 +138,9 @@
       class="border-surface-700/50 bg-surface-900 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center"
     >
       <p class="text-lg font-semibold">{m.depot_no_results()}</p>
-      <button class="variant-soft-primary btn" onclick={clearSearch}>
+      <Button variant="outline" onclick={clearSearch}>
         {m.depot_clear_search()}
-      </button>
+      </Button>
     </div>
   {:else}
     <div class="space-y-8">

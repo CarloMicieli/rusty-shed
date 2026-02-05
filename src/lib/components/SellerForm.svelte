@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import * as sellerService from '$lib/services/sellerService';
   import type { FormSeller } from '$lib/services/sellerAdapter';
   import type { SellerType } from '$lib/bindings';
@@ -100,7 +101,7 @@
 <div class="card">
   <div class="card-header">
     <h3 class="text-base font-semibold">{id ? 'Edit Seller' : 'New Seller'}</h3>
-    <button class="btn-ghost btn" onclick={close}>×</button>
+    <Button variant="ghost" onclick={close}>×</Button>
   </div>
 
   <div class="card-body space-y-3">
@@ -131,11 +132,11 @@
   </div>
 
   <div class="card-footer flex justify-end gap-2">
-    <button class="btn-ghost btn" onclick={close} disabled={isSubmitting}
-      >{m.form_new_model_cancel()}</button
+    <Button variant="ghost" onclick={close} disabled={isSubmitting}
+      >{m.form_new_model_cancel()}</Button
     >
-    <button class="btn-primary btn" onclick={handleSubmit} disabled={isSubmitting}>
+    <Button variant="default" onclick={handleSubmit} disabled={isSubmitting}>
       {isSubmitting ? m.wishlist_modal_saving() : m.form_new_model_create()}
-    </button>
+    </Button>
   </div>
 </div>

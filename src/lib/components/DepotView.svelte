@@ -6,6 +6,7 @@
   import { PackageOpen, Plus } from 'lucide-svelte';
   import { resolve } from '$app/paths';
   import { goto } from '$app/navigation';
+  import { Button } from '$lib/components';
 
   // Use $props() for Svelte 5 component inputs
   let { data = [], isLoading = false } = $props<{
@@ -47,13 +48,14 @@
     <p class="text-surface-400 mt-2 max-w-xs text-sm">
       {m.dashboard_empty_depot_message()}
     </p>
-    <button
-      class="variant-filled-primary btn mt-6"
+    <Button
+      variant="default"
+      class="mt-6"
       onclick={() => goto(resolve('/catalogue/new-model'))}
     >
       <Plus size={18} class="mr-2" />
       {m.dashboard_add_first_model()}
-    </button>
+    </Button>
   </div>
 {:else}
   <div class="space-y-4 lg:hidden">

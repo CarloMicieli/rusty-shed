@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
+  import { Button } from '$lib/components';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
   import {
     fetchSettings,
@@ -94,9 +95,9 @@
   {:else if error}
     <div class="variant-soft-error rounded-container border-error-500/30 border p-6">
       <p class="text-error-200 font-semibold">{error}</p>
-      <button class="variant-filled-primary btn mt-4" onclick={loadSettings}>
+      <Button variant="default" class="mt-4" onclick={loadSettings}>
         {m.errors_retry_page()}
-      </button>
+      </Button>
     </div>
   {:else if settings}
     {#key `${settings.languageCode}-${settings.currency}-${settings.lengthUnit}-${settings.favoriteScale}-${settings.favoritePowerMethod}`}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Check } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import type {
     SettingsDto,
     UpdateSettingsPayload,
@@ -225,9 +226,9 @@
     </div>
 
     <div class="border-surface-700/60 flex items-center justify-end gap-4 border-t pt-4">
-      <button class="variant-filled-primary btn" type="submit" disabled={saving}>
+      <Button variant="default" type="submit" disabled={saving}>
         {saving ? m.settings_saving_button() : m.save_button()}
-      </button>
+      </Button>
     </div>
   </form>
 </section>

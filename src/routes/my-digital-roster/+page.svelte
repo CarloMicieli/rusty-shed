@@ -12,6 +12,7 @@
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
   import { Plus } from 'lucide-svelte';
+  import { Button } from '$lib/components';
 
   // Initialize state and controller
   const rosterState = new DigitalRosterState();
@@ -82,10 +83,10 @@
         {m.depot_subtitle()}
       </p>
     </div>
-    <button type="button" class="variant-filled-primary btn" onclick={openInstallDrawer}>
+    <Button type="button" variant="default" onclick={openInstallDrawer}>
       <Plus class="h-4 w-4" />
       <span>{m.digital_roster_install_decoder()}</span>
-    </button>
+    </Button>
   </div>
 
   <!-- Summary Section -->

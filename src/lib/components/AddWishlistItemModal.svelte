@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
 
   const wishlistService = getWishlistContext();
@@ -80,9 +81,9 @@
   >
     <div class="border-surface-800 flex items-center justify-between border-b px-4 py-3">
       <h3 class="text-base font-semibold tracking-wide uppercase">{m.wishlist_modal_title()}</h3>
-      <button class="variant-ghost-surface btn btn-sm" onclick={close} aria-label="close">
+      <Button variant="ghost" size="sm" onclick={close} aria-label="close">
         {m.wishlist_modal_close()}
-      </button>
+      </Button>
     </div>
 
     <div class="space-y-4 p-4">
@@ -163,16 +164,17 @@
     </div>
 
     <div class="border-surface-800 flex items-center justify-end gap-2 border-t px-4 py-3">
-      <button class="variant-ghost-surface btn btn-sm" onclick={close} disabled={isSubmitting}>
+      <Button variant="ghost" size="sm" onclick={close} disabled={isSubmitting}>
         {m.wishlist_modal_cancel()}
-      </button>
-      <button
-        class="variant-filled-primary btn btn-sm"
+      </Button>
+      <Button
+        variant="default"
+        size="sm"
         onclick={handleSubmit}
         disabled={isSubmitting}
       >
         {isSubmitting ? m.wishlist_modal_saving() : m.wishlist_modal_save()}
-      </button>
+      </Button>
     </div>
   </div>
 </div>

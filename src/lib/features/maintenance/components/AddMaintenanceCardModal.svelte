@@ -1,6 +1,7 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import { getMaintenanceState } from '../MaintenanceState.svelte';
   import RollingStockSelector from './RollingStockSelector.svelte';
   import { toaster } from '$lib/toaster';
@@ -55,9 +56,9 @@
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h3 class="h3">{m.maintenance_create_card_title()}</h3>
-        <button type="button" class="btn-icon btn-icon-sm" onclick={handleClose}>
+        <Button type="button" variant="ghost" size="icon" onclick={handleClose}>
           <X size={20} />
-        </button>
+        </Button>
       </div>
 
       <!-- Form -->
@@ -82,16 +83,16 @@
 
         <!-- Actions -->
         <div class="flex justify-end gap-3">
-          <button type="button" class="variant-ghost-surface btn" onclick={handleClose}>
+          <Button type="button" variant="ghost" onclick={handleClose}>
             {m.maintenance_create_card_cancel()}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            class="variant-filled-primary btn"
+            variant="default"
             disabled={!isFormValid || isSubmitting}
           >
             {isSubmitting ? m.app_loading() : m.maintenance_create_card_submit()}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

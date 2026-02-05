@@ -5,6 +5,7 @@
   import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { toaster } from '$lib/toaster';
+  import { Button } from '$lib/components';
 
   // Components
   import PageHeader from '$lib/components/PageHeader.svelte';
@@ -119,13 +120,13 @@
     <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
     <p class="mt-2 text-surface-200">{m.errors_dashboard_message()}</p>
     <div class="mt-6 flex gap-4">
-      <button class="variant-filled-primary btn btn-lg" onclick={handleRetry}>
+      <Button variant="default" size="lg" onclick={handleRetry}>
         {m.errors_retry_page()}
-      </button>
-      <button class="variant-ghost-surface btn btn-lg" onclick={handleReturn}>
+      </Button>
+      <Button variant="ghost" size="lg" onclick={handleReturn}>
         <House class="mr-2 h-4 w-4" />
         {m.errors_return_dashboard()}
-      </button>
+      </Button>
     </div>
   </div>
 {:else}
@@ -219,13 +220,13 @@
           {#if !dashboard.isLoading && depot.length === 0}
             <div class="card border-surface-500/20 border-2 border-dashed p-8 text-center">
               <p class="mb-4 text-surface-300">{m.dashboard_empty_depot()}</p>
-              <button
-                class="variant-filled-secondary btn"
+              <Button
+                variant="secondary"
                 onclick={() => goto(resolve('/catalogue/new-model'))}
               >
                 <Plus class="mr-2" />
                 {m.actions_add_railway_model()}
-              </button>
+              </Button>
             </div>
           {:else}
             <DepotView data={depot} isLoading={dashboard.isLoading} />

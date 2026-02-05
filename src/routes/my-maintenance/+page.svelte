@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { Plus, CalendarPlus } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import MaintenanceState, {
     setMaintenanceState
   } from '$lib/features/maintenance/MaintenanceState.svelte';
@@ -60,14 +61,14 @@
       {m.maintenance_quick_actions()}
     </p>
     <div class="flex flex-wrap gap-3">
-      <button type="button" class="variant-filled-primary btn gap-2" onclick={handleAddCard}>
+      <Button type="button" variant="default" class="gap-2" onclick={handleAddCard}>
         <Plus size={18} />
         {m.maintenance_add_card_button()}
-      </button>
-      <button type="button" class="variant-filled-secondary btn gap-2" onclick={handleAddEvent}>
+      </Button>
+      <Button type="button" variant="secondary" class="gap-2" onclick={handleAddEvent}>
         <CalendarPlus size={18} />
         {m.maintenance_add_event_button()}
-      </button>
+      </Button>
     </div>
   </div>
 
@@ -81,9 +82,9 @@
       <div class="variant-filled-error card space-y-4 p-8 text-center">
         <p class="font-semibold">{m.maintenance_error_load()}</p>
         <p class="text-sm">{error}</p>
-        <button type="button" class="variant-filled btn" onclick={handleRetry}>
+        <Button type="button" variant="default" onclick={handleRetry}>
           {m.maintenance_error_retry()}
-        </button>
+        </Button>
       </div>
     {:else if hasCards}
       <MaintenanceCardList {cards} />
