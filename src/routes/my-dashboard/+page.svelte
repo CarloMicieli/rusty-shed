@@ -165,8 +165,18 @@
       <!-- Visual Separator between Stats and Charts -->
       <div class="border-surface-700/50 my-6 border-t"></div>
 
-      <div class="mt-6">
-        <h3 class="h3 text-surface-300 mb-4 text-sm font-bold tracking-wider uppercase">
+      <div class="mt-6 space-y-6">
+        <!-- Command Center for mobile (moved above charts) -->
+        <div class="lg:hidden">
+          <div class="gauge-frame space-y-3 p-4">
+            <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
+              {m.dashboard_command_center()}
+            </p>
+            <QuickActionButtons {actions} class="gap-2" />
+          </div>
+        </div>
+
+        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
           Charts & Analytics
         </h3>
         <DashboardCharts />
@@ -252,15 +262,6 @@
           <QuickActionButtons {actions} />
         </div>
       </aside>
-    </div>
-
-    <div class="lg:hidden">
-      <div class="gauge-frame fixed right-6 bottom-6 z-30 w-64 max-w-[80vw] space-y-3 p-3">
-        <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
-          {m.dashboard_command_center()}
-        </p>
-        <QuickActionButtons {actions} class="gap-2" />
-      </div>
     </div>
   </div>
 {/if}

@@ -1,17 +1,6 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <script lang="ts">
-  import {
-    LayoutDashboard,
-    Library,
-    Heart,
-    Wallet,
-    Box,
-    Settings,
-    TrainFront,
-    Train,
-    Cpu,
-    Wrench
-  } from 'lucide-svelte';
+  import { Settings } from 'lucide-svelte';
   import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
@@ -19,140 +8,68 @@
   import { appVersion } from '$lib/stores/app';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { localeStore } from '$lib/stores/locale';
+  import { NAVIGATION_ITEMS } from './navigation/config';
+  import { isActive } from './navigation/utils';
 
   const wishlistService = getWishlistContext();
 
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const locale = $derived($localeStore);
+  const pathname = $derived(($page.url.pathname as string) || '');
 </script>
 
 {#key locale}
   <nav class="hidden h-full w-64 flex-col border-r border-border bg-sidebar p-4 lg:flex">
     <div class="mb-8 flex items-center gap-3 px-4">
-      <TrainFront class="text-primary" size={32} />
+      <svg
+        class="text-primary"
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M6 9v12m6-12v12m6-12v12M3 9h18" />
+      </svg>
       <h2 class="h3 font-bold tracking-tight text-sidebar-foreground uppercase">
         {m.app_name()}
       </h2>
     </div>
 
     <ul class="space-y-2">
-      <li>
-        <a
-          href={resolve('/my-dashboard')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-dashboard'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-dashboard'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-dashboard'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-dashboard'}
-        >
-          <LayoutDashboard size={20} />
-          <span class="tracking-wide">{m.app_dashboard()}</span>
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-collection')}
-          class="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-collection'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-collection'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-collection'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-collection'}
-        >
-          <Library size={20} />
-          <span class="tracking-wide">{m.app_collection()}</span>
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-wishlists')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-wishlists'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-wishlists'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-wishlists'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-wishlists'}
-        >
-          <Heart size={20} />
-          <span class="tracking-wide">{m.app_wishlists()}</span>
-          {#if defaultWishlist}
-            <Badge variant="outline" class="ml-auto">{defaultWishlist.count}</Badge>
-          {/if}
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-budget')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-budget'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-budget'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-budget'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-budget'}
-        >
-          <Wallet size={20} />
-          <span class="tracking-wide">{m.budget_title()}</span>
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-tracks')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string).startsWith('/my-tracks')}
-          class:text-primary-foreground={($page.url.pathname as string).startsWith('/my-tracks')}
-          class:text-sidebar-foreground={!($page.url.pathname as string).startsWith('/my-tracks')}
-          class:hover:bg-sidebar-accent={!($page.url.pathname as string).startsWith('/my-tracks')}
-        >
-          <Train size={20} />
-          <span class="tracking-wide">{m.app_tracks()}</span>
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-depot')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-depot'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-depot'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-depot'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-depot'}
-        >
-          <Box size={20} />
-          <span class="tracking-wide">{m.app_depot()}</span>
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-digital-roster')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-digital-roster'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-digital-roster'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-digital-roster'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-digital-roster'}
-        >
-          <Cpu size={20} />
-          <span class="tracking-wide">{m.app_digital_roster()}</span>
-        </a>
-      </li>
-      <li>
-        <a
-          href={resolve('/my-maintenance')}
-          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-          class:bg-primary={($page.url.pathname as string) === '/my-maintenance'}
-          class:text-primary-foreground={($page.url.pathname as string) === '/my-maintenance'}
-          class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-maintenance'}
-          class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-maintenance'}
-        >
-          <Wrench size={20} />
-          <span class="tracking-wide">{m.app_maintenance()}</span>
-        </a>
-      </li>
+      {#each NAVIGATION_ITEMS as item (item.id)}
+        <li>
+          <a
+            href={resolve(item.href as '/my-dashboard')}
+            class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+            class:bg-primary={isActive(item, pathname)}
+            class:text-primary-foreground={isActive(item, pathname)}
+            class:text-sidebar-foreground={!isActive(item, pathname)}
+            class:hover:bg-sidebar-accent={!isActive(item, pathname)}
+            aria-current={isActive(item, pathname) ? 'page' : undefined}
+          >
+            <item.icon size={20} />
+            <span class="tracking-wide">{item.label()}</span>
+            {#if item.id === 'wishlists' && defaultWishlist}
+              <Badge variant="outline" class="ml-auto">{defaultWishlist.count}</Badge>
+            {/if}
+          </a>
+        </li>
+      {/each}
     </ul>
 
     <div class="mt-auto space-y-2 border-t border-border pt-4">
       <a
         href={resolve('/my-settings')}
         class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-        class:bg-primary={($page.url.pathname as string) === '/my-settings'}
-        class:text-primary-foreground={($page.url.pathname as string) === '/my-settings'}
-        class:text-sidebar-foreground={($page.url.pathname as string) !== '/my-settings'}
-        class:hover:bg-sidebar-accent={($page.url.pathname as string) !== '/my-settings'}
+        class:bg-primary={pathname === '/my-settings'}
+        class:text-primary-foreground={pathname === '/my-settings'}
+        class:text-sidebar-foreground={pathname !== '/my-settings'}
+        class:hover:bg-sidebar-accent={pathname !== '/my-settings'}
+        aria-current={pathname === '/my-settings' ? 'page' : undefined}
       >
         <Settings size={20} />
         <span class="tracking-wide">{m.app_settings()}</span>

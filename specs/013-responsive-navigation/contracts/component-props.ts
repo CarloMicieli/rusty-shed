@@ -199,6 +199,7 @@ export interface BottomNavigationState {
  * - NAVIGATION_ITEMS config (navigation data)
  * - Paraglide messages (localized labels)
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SidebarNavigationState {
   // No local state; fully derived
 }
@@ -208,6 +209,7 @@ export interface SidebarNavigationState {
  *
  * Note: MoreMenu is a controlled component. State is managed by parent (BottomNavigation).
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface MoreMenuState {
   // No local state; controlled by parent via `open` prop
 }

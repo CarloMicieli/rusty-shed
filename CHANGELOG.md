@@ -7,6 +7,125 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Feature 013: Responsive Navigation System
+
+#### Navigation Architecture
+
+- **Responsive Navigation System** with dual-layout design:
+  - **Desktop Navigation** (≥768px): Full sidebar with all 8 features visible
+    - Home, Collection, Finance, Wishlists, Maintenance, Depot, Digital (DCC), Railway Tracks
+    - Persistent sidebar for primary workspace navigation
+    - Active state highlighting based on current route
+  - **Mobile Navigation** (<768px): 5-slot bottom bar + More menu
+    - 4 primary features: Home, Collection, Finance, Wishlists (optimized for mobile usage)
+    - More button revealing 4 secondary features in bottom sheet: Maintenance, Depot, Digital (DCC), Railway Tracks
+    - Touch-optimized 64px tap targets (WCAG AAA compliance)
+    - Slide-up bottom sheet for secondary features
+
+#### New Components
+
+- **SidebarNavigation.svelte** - Desktop sidebar (updated from legacy version)
+  - Configuration-driven feature list via NAVIGATION_ITEMS
+  - Active state detection with route prefix matching support
+  - Responsive visibility: `hidden lg:flex` (desktop only)
+  - Locale-reactive rendering via `{#key locale}` block
+  - Badge support for feature counts (e.g., wishlist count)
+  - Settings button and app version footer
+- **BottomNavigation.svelte** - Mobile bottom bar (updated from legacy version)
+  - 5-slot layout: 4 primary item links + More button
+  - Responsive visibility: `md:hidden` (mobile only)
+  - More button with active state detection for secondary features
+  - Slide-up MoreMenu integration for secondary features
+  - Locale-reactive rendering via `{#key locale}` block
+  - Accessible aria-label for More button via Paraglide
+- **MoreMenu.svelte** - Bottom sheet drawer (NEW)
+  - Secondary features in slide-up bottom sheet
+  - Uses shadcn-svelte Sheet component
+  - Active state highlighting for current secondary feature
+  - Auto-close on feature selection or backdrop tap
+  - ESC key support for accessibility
+  - Locale-reactive rendering via `{#key locale}` block
+
+#### New Modules
+
+- **src/lib/components/navigation/types.ts** - Navigation type definitions
+  - `NavigationItem`: Feature descriptor with id, label, icon, href, isPrimary, badgeCount, usePrefixMatch
+  - `SidebarNavigationProps`, `BottomNavigationProps`, `MoreMenuProps` - Component contracts
+- **src/lib/components/navigation/config.ts** - Centralized configuration
+  - `NAVIGATION_ITEMS`: All 8 features with icons, Paraglide labels, and primary/secondary classification
+  - `PRIMARY_ITEMS`: Filtered 4 primary features for mobile bottom bar
+  - `SECONDARY_ITEMS`: Filtered 4 secondary features for More menu
+  - Development-only validation: warns if primary count ≠ 4
+- **src/lib/components/navigation/utils.ts** - Navigation utilities
+  - `isActive()`: Detects active route with exact or prefix matching
+  - `isMoreButtonActive()`: Returns true if any secondary feature route is active
+
+#### New Tests
+
+- **SidebarNavigation.test.ts** (9 tests): Desktop navigation behavior
+  - All 9 items render with correct icons and labels
+  - Active state applies to current route
+  - Paraglide translations used for labels
+  - Responsive classes applied correctly
+  - Keyboard navigation support
+- **BottomNavigation.test.ts** (9 tests): Mobile navigation behavior
+  - 5-slot layout (4 links + 1 button)
+  - Active state for primary features
+  - Mobile/desktop visibility on responsive breakpoints
+  - Touch targets ≥44px (64px with h-16)
+  - More button active state detection
+- **MoreMenu.test.ts** (9 tests): Secondary feature access
+  - 4 secondary items display correctly
+  - Opens/closes with touch interactions
+  - Auto-close on feature selection
+  - Prefix matching for secondary routes
+- **Consistency.test.ts** (7 tests): Feature identity validation
+  - Icons consistent across desktop/mobile (same lucide-svelte components)
+  - Labels consistent (same Paraglide functions)
+  - Feature names match specification
+  - Icon mappings verified
+  - Single source of truth in config
+- **Localization.test.ts** (10 tests): i18n behavior
+  - All labels use Paraglide message functions (no hardcoded strings)
+  - MoreMenu uses Paraglide functions for all text
+  - aria-label for More button uses `m.app_more_aria()`
+  - Deprecated keys (app_dashboard, budget_title, etc.) removed
+
+#### Updated Translations
+
+- **messages/en.json**: Added 6 new keys
+  - `app_home`: "Home" (replaces `app_dashboard`)
+  - `app_finance`: "Finance" (replaces `budget_title`)
+  - `app_digital_dcc`: "Digital (DCC)" (replaces `app_digital_roster`)
+  - `app_railway_tracks`: "Railway Tracks" (replaces `app_tracks`)
+  - `app_more`: "More"
+  - `app_more_aria`: "Open more features menu"
+- **messages/it.json**: Italian translations
+  - `app_home`: "Home"
+  - `app_finance`: "Finanze"
+  - `app_digital_dcc`: "Digitale (DCC)"
+  - `app_railway_tracks`: "Binari"
+  - `app_more`: "Altro"
+  - `app_more_aria`: "Apri menu funzionalità aggiuntive"
+
+- **Deprecated keys removed** from both files:
+  - `app_dashboard` (legacy "Dashboard")
+  - `budget_title` (legacy "Budget Tracking")
+  - `app_digital_roster` (legacy "My Digital Rolling Stocks")
+  - `app_tracks` (legacy "My Tracks")
+
+#### Technical Implementation
+
+- **Configuration-Driven**: Single source of truth (NAVIGATION_ITEMS) used by all components
+- **Reactive Localization**: All components wrapped in `{#key locale}` for instant language switching
+- **Type Safety**: Full TypeScript support with strict mode
+- **Responsive Design**: CSS media queries (`md:` breakpoint at 768px) - no JavaScript viewport detection
+- **Accessibility**: WCAG AA compliant with 64px touch targets, keyboard navigation, ARIA labels
+- **Performance**: Instant CSS transitions (<300ms), no animation delays
+- **Icon Consistency**: lucide-svelte icons across all viewports (Home, Collection, Finance, Wishlists, Maintenance, Depot, CPU/DCC, TrainTrack, Ellipsis/More)
+
+### Fixed - Feature 012: shadcn-svelte Migration
+
 ### Added - Feature 012: shadcn-svelte Migration
 
 #### New Components
