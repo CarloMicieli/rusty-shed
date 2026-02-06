@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { convertFileSrc } from '@tauri-apps/api/core';
   import type { RailwayModelView, RailwayModelImageResponse } from '$lib/bindings';
 
   interface Props {
@@ -7,14 +8,19 @@
   }
 
   let { model, imageResponse }: Props = $props();
+
+  // Convert filesystem path to Tauri asset protocol
+  const imageSrc = $derived(
+    imageResponse?.imagePath ? convertFileSrc(imageResponse.imagePath) : null
+  );
 </script>
 
 <div class="mb-8">
   <!-- Image Container -->
   <div class="mb-6 overflow-hidden rounded-lg">
-    {#if imageResponse?.hasImage && imageResponse.imagePath}
+    {#if imageResponse?.hasImage && imageSrc}
       <img
-        src={imageResponse.imagePath}
+        src={imageSrc}
         alt={model.description}
         class="h-auto w-full object-cover"
         style="max-height: 400px;"

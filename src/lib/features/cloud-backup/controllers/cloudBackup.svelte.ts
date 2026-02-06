@@ -242,7 +242,7 @@ export class CloudBackupController {
 
     try {
       const result = await commands.cloudBackupRestore({
-        backupId,
+        backup_id: backupId,
         confirmation
       });
 

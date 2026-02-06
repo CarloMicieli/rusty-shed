@@ -391,38 +391,38 @@ interface Props {
 ## Phase 8: Frontend - Data Binding & State
 
 ### T025: Implement Model Data Loading
-- [ ] T025 In `+page.ts` or `+page.svelte`: fetch railway model by ID
-- [ ] T025 Call `get_railway_model_by_id` from bindings
-- [ ] T025 Handle loading, success, error states
-- [ ] T025 Extract RailwayModelId from route parameter `[modelId]`
-- [ ] T025 Use proper error handling
+- [X] T025 In `+page.ts` or `+page.svelte`: fetch railway model by ID
+- [X] T025 Call `get_railway_model_by_id` from bindings
+- [X] T025 Handle loading, success, error states
+- [X] T025 Extract RailwayModelId from route parameter `[modelId]`
+- [X] T025 Use proper error handling
 
 **File Paths**: `src/routes/models/[modelId]/+page.ts` or `+page.svelte` script section
 
 ### T026: Implement Image Retrieval
-- [ ] T026 Call `get_railway_model_image` from bindings in page
-- [ ] T026 Pass RailwayModelId to image command
-- [ ] T026 Destructure response: `{ imagePath, placeholderHtml, hasImage }`
-- [ ] T026 Handle loading, success, error states
-- [ ] T026 Pass to header component for display
+- [X] T026 Call `get_railway_model_image` from bindings in page
+- [X] T026 Pass RailwayModelId to image command
+- [X] T026 Destructure response: `{ imagePath, placeholderHtml, hasImage }`
+- [X] T026 Handle loading, success, error states
+- [X] T026 Pass to header component for display
 
 **File Paths**: `src/routes/models/[modelId]/+page.svelte` script section
 
 ### T027: Implement Rolling Stock Data Loading
-- [ ] T027 Query backend for rolling stock units owned for this model
-- [ ] T027 Handle empty state (no units)
-- [ ] T027 Pass list to RollingStock tab
-- [ ] T027 Handle error scenarios
+- [X] T027 Query backend for rolling stock units owned for this model
+- [X] T027 Handle empty state (no units)
+- [X] T027 Pass list to RollingStock tab
+- [X] T027 Handle error scenarios
 
 **File Paths**: `src/routes/models/[modelId]/+page.svelte` script section
 
 ### T028: Assemble Page Layout
-- [ ] T028 In `+page.svelte`: import all components
-- [ ] T028 Arrange: Header → Tabs → Tab Content
-- [ ] T028 Pass all data to components via props
-- [ ] T028 Use Svelte $state for tab selection
-- [ ] T028 Add loading skeleton or spinner
-- [ ] T028 Add error boundary component
+- [X] T028 In `+page.svelte`: import all components
+- [X] T028 Arrange: Header → Tabs → Tab Content
+- [X] T028 Pass all data to components via props
+- [X] T028 Use Svelte $state for tab selection
+- [X] T028 Add loading skeleton or spinner
+- [X] T028 Add error boundary component
 
 **File Paths**: `src/routes/models/[modelId]/+page.svelte`
 
