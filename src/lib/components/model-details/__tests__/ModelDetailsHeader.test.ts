@@ -17,20 +17,26 @@ import type { RailwayModelView, RailwayModelImageResponse } from '$lib/bindings'
 
 describe('ModelDetailsHeader', () => {
   const mockModel: RailwayModelView = {
-    railwayModelId: 'trn:railway-model:maer:37858',
+    id: 'trn:railway-model:maer:37858',
     description: 'Class 218 Diesel Locomotive',
     manufacturer: {
-      id: 'maer',
+      manufacturerId: 'maer',
       display: 'Märklin'
     },
     productCode: '37858',
-    category: 'Locomotive',
+    category: 'LOCOMOTIVES' as const,
     scale: 'H0',
     epoch: 'IV',
     powerMethod: 'DC',
     deliveryDate: null,
     availabilityStatus: null,
-    details: null
+    details: null,
+    metadata: {
+      version: 1,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    },
+    rollingStock: []
   };
 
   beforeEach(() => {

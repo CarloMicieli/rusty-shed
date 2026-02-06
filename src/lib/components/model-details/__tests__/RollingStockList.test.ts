@@ -21,9 +21,10 @@ import RollingStockList from '../RollingStockList.svelte';
 import type { OwnedRollingStockView } from '$lib/bindings';
 
 describe('RollingStockList', () => {
-  const mockRollingStocks: OwnedRollingStockView[] = [
+  const mockRollingStocks = [
     {
       id: 'rs-1',
+      rollingStockId: 'trn:rolling-stock:rs-1',
       series: '218',
       roadNumber: '218 217-8',
       livery: 'DB Red',
@@ -31,9 +32,10 @@ describe('RollingStockList', () => {
       control: 'Digital',
       notes: null,
       digital: null
-    } as OwnedRollingStockView,
+    },
     {
       id: 'rs-2',
+      rollingStockId: 'trn:rolling-stock:rs-2',
       series: '103',
       roadNumber: '103 113-6',
       livery: 'DB Blue',
@@ -41,8 +43,8 @@ describe('RollingStockList', () => {
       control: 'Analog',
       notes: null,
       digital: null
-    } as OwnedRollingStockView
-  ];
+    }
+  ] as unknown as OwnedRollingStockView[];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -200,6 +202,7 @@ describe('RollingStockList', () => {
     it('should handle null values in rolling stock data', () => {
       const stockWithNulls = {
         id: 'rs-3',
+        rollingStockId: 'trn:rolling-stock:rs-3',
         series: null,
         roadNumber: null,
         livery: null,
@@ -207,7 +210,7 @@ describe('RollingStockList', () => {
         control: null,
         notes: null,
         digital: null
-      } as OwnedRollingStockView;
+      } as unknown as OwnedRollingStockView;
 
       render(RollingStockList, {
         props: {
@@ -222,6 +225,7 @@ describe('RollingStockList', () => {
     it('should handle large number of rolling stocks', () => {
       const manyStocks = Array.from({ length: 50 }, (_, i) => ({
         id: `rs-${i}`,
+        rollingStockId: `trn:rolling-stock:rs-${i}`,
         series: `${100 + i}`,
         roadNumber: `${100 + i} 000-0`,
         livery: 'Test',
@@ -229,7 +233,7 @@ describe('RollingStockList', () => {
         control: 'Digital',
         notes: null,
         digital: null
-      })) as OwnedRollingStockView[];
+      })) as unknown as OwnedRollingStockView[];
 
       const { container } = render(RollingStockList, {
         props: {

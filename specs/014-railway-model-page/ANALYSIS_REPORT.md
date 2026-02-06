@@ -1,4 +1,5 @@
 # Specification Analysis Report
+
 ## Feature 014: Railway Model Details Page
 
 **Analysis Date**: February 6, 2026  
@@ -24,21 +25,21 @@ Feature 014 has **comprehensive planning documentation** with strong consistency
 
 All constitutional principles are properly addressed:
 
-| Principle | Status | Evidence |
-|-----------|--------|----------|
-| Modular, Library-First Design | ✅ PASS | Media module designed with DDD pattern (domain/app/infra/interface layers); self-contained, documented, independently testable |
-| Deterministic Interfaces & Observability | ✅ PASS | Tauri commands with specta auto-generate TypeScript bindings; structured error types (ImageError enum); logging planned for all operations |
-| Test-First Emphasis | ✅ PASS | Tests defined in Phase 4 (T009, T010) and Phase 10 (T033-T036); >80% coverage target set; unit + integration tests specified |
-| Code Quality | ✅ PASS | Phase 12 (T040-T043) explicitly requires zero Clippy warnings, 100% rustdoc, ESLint compliance, code formatting |
-| Testing Standards | ✅ PASS | Unit tests for domain/infrastructure; integration tests for commands; fixtures planned for path validation; Vitest for UI components |
-| User Experience Consistency | ✅ PASS | 100% Paraglide-JS localization required (FR-016, T029-T032); shadcn-svelte components ensure design consistency; accessibility WCAG 2.1 AA mandated |
-| Performance Requirements | ✅ PASS | SC-001 sets <1s page load target (details page), <2s desktop/<3s mobile; Phase 11 includes performance profiling |
-| Safe Rust Practices | ✅ PASS | Error handling via thiserror; Result<T, E> everywhere; path validation to prevent traversal attacks (T009 sanitize_path); async-first Tokio design |
-| Simplicity & Semantic Versioning | ✅ PASS | No new external dependencies; uses existing tech stack; DDD pattern matches existing 12 modules; clear interface contract |
-| Database (Persistence) - REQUIRED | ✅ PASS | No new database tables; uses existing RailwayModel and RollingStock; filesystem image storage; no breaking schema changes |
-| State Management - REQUIRED | ✅ PASS | No stateful changes; image metadata queried per-request; domain events not applicable (read-only feature); clean repo pattern |
+| Principle                                  | Status  | Evidence                                                                                                                                                                   |
+| ------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Modular, Library-First Design              | ✅ PASS | Media module designed with DDD pattern (domain/app/infra/interface layers); self-contained, documented, independently testable                                             |
+| Deterministic Interfaces & Observability   | ✅ PASS | Tauri commands with specta auto-generate TypeScript bindings; structured error types (ImageError enum); logging planned for all operations                                 |
+| Test-First Emphasis                        | ✅ PASS | Tests defined in Phase 4 (T009, T010) and Phase 10 (T033-T036); >80% coverage target set; unit + integration tests specified                                               |
+| Code Quality                               | ✅ PASS | Phase 12 (T040-T043) explicitly requires zero Clippy warnings, 100% rustdoc, ESLint compliance, code formatting                                                            |
+| Testing Standards                          | ✅ PASS | Unit tests for domain/infrastructure; integration tests for commands; fixtures planned for path validation; Vitest for UI components                                       |
+| User Experience Consistency                | ✅ PASS | 100% Paraglide-JS localization required (FR-016, T029-T032); shadcn-svelte components ensure design consistency; accessibility WCAG 2.1 AA mandated                        |
+| Performance Requirements                   | ✅ PASS | SC-001 sets <1s page load target (details page), <2s desktop/<3s mobile; Phase 11 includes performance profiling                                                           |
+| Safe Rust Practices                        | ✅ PASS | Error handling via thiserror; Result<T, E> everywhere; path validation to prevent traversal attacks (T009 sanitize_path); async-first Tokio design                         |
+| Simplicity & Semantic Versioning           | ✅ PASS | No new external dependencies; uses existing tech stack; DDD pattern matches existing 12 modules; clear interface contract                                                  |
+| Database (Persistence) - REQUIRED          | ✅ PASS | No new database tables; uses existing RailwayModel and RollingStock; filesystem image storage; no breaking schema changes                                                  |
+| State Management - REQUIRED                | ✅ PASS | No stateful changes; image metadata queried per-request; domain events not applicable (read-only feature); clean repo pattern                                              |
 | API Design & Transport Boundary - REQUIRED | ✅ PASS | Tauri command `get_railway_model_image` with specta bindings; RailwayModelImageResponse DTO with serde/specta derives; input validation at boundary (T013 command handler) |
-| Domain Logic Location - REQUIRED | ✅ PASS | All business logic (filename resolution, path validation, placeholder generation) in Rust backend; frontend is render + UX only |
+| Domain Logic Location - REQUIRED           | ✅ PASS | All business logic (filename resolution, path validation, placeholder generation) in Rust backend; frontend is render + UX only                                            |
 
 **Constitutional Check**: PASSED ✅
 
@@ -48,16 +49,16 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **COMPREHENSIVE**
 
-| Requirement | Present | Quality |
-|-------------|---------|---------|
-| Overview/Context | ✅ | Clear: 2-part feature (backend media + frontend UI) |
-| Functional Requirements | ✅ | 16 requirements (FR-001 to FR-016) mapped to user stories |
-| Non-Functional Requirements | ✅ | Accessibility (WCAG 2.1 AA), Localization (100% Paraglide), Performance (<2s desktop), Responsive (320px-1920px) |
-| User Stories | ✅ | 3 P1 stories with independent acceptance scenarios (5-6 scenarios each) |
-| Edge Cases | ✅ | 5 edge cases documented (missing image, no units, optional fields, responsive grid, URL navigation) |
-| Success Criteria | ✅ | 6 measurable criteria (SC-001 to SC-006) with specific targets |
-| Key Entities | ✅ | RailwayModel, RollingStock, TechnicalSpecification with field definitions |
-| Assumptions | ✅ | 5 assumptions documented with clear rationale |
+| Requirement                 | Present | Quality                                                                                                          |
+| --------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| Overview/Context            | ✅      | Clear: 2-part feature (backend media + frontend UI)                                                              |
+| Functional Requirements     | ✅      | 16 requirements (FR-001 to FR-016) mapped to user stories                                                        |
+| Non-Functional Requirements | ✅      | Accessibility (WCAG 2.1 AA), Localization (100% Paraglide), Performance (<2s desktop), Responsive (320px-1920px) |
+| User Stories                | ✅      | 3 P1 stories with independent acceptance scenarios (5-6 scenarios each)                                          |
+| Edge Cases                  | ✅      | 5 edge cases documented (missing image, no units, optional fields, responsive grid, URL navigation)              |
+| Success Criteria            | ✅      | 6 measurable criteria (SC-001 to SC-006) with specific targets                                                   |
+| Key Entities                | ✅      | RailwayModel, RollingStock, TechnicalSpecification with field definitions                                        |
+| Assumptions                 | ✅      | 5 assumptions documented with clear rationale                                                                    |
 
 **Spec Quality**: ✅ **EXCELLENT** (147 lines, well-structured, zero ambiguities)
 
@@ -67,24 +68,24 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **COMPLETE COVERAGE**
 
-| Req ID | Category | Requirement | Mapped Tasks | Coverage |
-|--------|----------|-------------|--------------|----------|
-| FR-001 | Frontend | Route `/models/{modelId}` | T017-T020 (routes/layout) | ✅ Complete |
-| FR-002 | Frontend | Header: model description | T021-T024 (header component) | ✅ Complete |
-| FR-003 | Frontend | Header: manufacturer/product code | T021-T024 (header component) | ✅ Complete |
-| FR-004 | Frontend+Backend | Hero image or placeholder | T004 (domain), T010 (generator), T025-T028 (binding) | ✅ Complete |
-| FR-005 | Frontend | Badges: scale, era, power | T021-T024 (header component) | ✅ Complete |
-| FR-006 | Frontend | Two tabs: Details + Rolling Stock | T021-T024 (components) | ✅ Complete |
-| FR-007 | Frontend | Details tab: description | T021-T024 (components) | ✅ Complete |
-| FR-008 | Frontend | Rolling Stock tab: list units | T021-T024 (components) | ✅ Complete |
-| FR-009 | Frontend | Card header: "{type} — {road_number}" | T021-T024 (card component) | ✅ Complete |
-| FR-010 | Frontend | Expanded card: all fields | T021-T024 (card expand logic) | ✅ Complete |
-| FR-011 | Frontend | Tech specs responsive grid | T029-T032 (styling) | ✅ Complete |
-| FR-012 | Frontend | Expand/collapse cards independently | T021-T024 (card component) | ✅ Complete |
-| FR-013 | Frontend | Preserve tab selection state | T025-T028 (data binding) | ✅ Complete |
-| FR-014 | Frontend | Omit missing optional fields | T029-T032 (conditional rendering) | ✅ Complete |
-| FR-015 | Frontend | Empty state message | T021-T024 (empty state component) | ✅ Complete |
-| FR-016 | Frontend | 100% Paraglide i18n | T029-T032 (localization) | ✅ Complete |
+| Req ID | Category         | Requirement                           | Mapped Tasks                                         | Coverage    |
+| ------ | ---------------- | ------------------------------------- | ---------------------------------------------------- | ----------- |
+| FR-001 | Frontend         | Route `/models/{modelId}`             | T017-T020 (routes/layout)                            | ✅ Complete |
+| FR-002 | Frontend         | Header: model description             | T021-T024 (header component)                         | ✅ Complete |
+| FR-003 | Frontend         | Header: manufacturer/product code     | T021-T024 (header component)                         | ✅ Complete |
+| FR-004 | Frontend+Backend | Hero image or placeholder             | T004 (domain), T010 (generator), T025-T028 (binding) | ✅ Complete |
+| FR-005 | Frontend         | Badges: scale, era, power             | T021-T024 (header component)                         | ✅ Complete |
+| FR-006 | Frontend         | Two tabs: Details + Rolling Stock     | T021-T024 (components)                               | ✅ Complete |
+| FR-007 | Frontend         | Details tab: description              | T021-T024 (components)                               | ✅ Complete |
+| FR-008 | Frontend         | Rolling Stock tab: list units         | T021-T024 (components)                               | ✅ Complete |
+| FR-009 | Frontend         | Card header: "{type} — {road_number}" | T021-T024 (card component)                           | ✅ Complete |
+| FR-010 | Frontend         | Expanded card: all fields             | T021-T024 (card expand logic)                        | ✅ Complete |
+| FR-011 | Frontend         | Tech specs responsive grid            | T029-T032 (styling)                                  | ✅ Complete |
+| FR-012 | Frontend         | Expand/collapse cards independently   | T021-T024 (card component)                           | ✅ Complete |
+| FR-013 | Frontend         | Preserve tab selection state          | T025-T028 (data binding)                             | ✅ Complete |
+| FR-014 | Frontend         | Omit missing optional fields          | T029-T032 (conditional rendering)                    | ✅ Complete |
+| FR-015 | Frontend         | Empty state message                   | T021-T024 (empty state component)                    | ✅ Complete |
+| FR-016 | Frontend         | 100% Paraglide i18n                   | T029-T032 (localization)                             | ✅ Complete |
 
 **Coverage**: ✅ **100%** (all 16 functional requirements have mapped tasks)
 
@@ -94,11 +95,11 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **COMPLETE**
 
-| Story ID | Title | Acceptance Scenarios | Mapped Phases | Status |
-|----------|-------|----------------------|----------------|--------|
-| US-001 | View Railway Model Details (P1) | 4 scenarios | Phases 6-10 (frontend), 12-13 (quality) | ✅ Complete |
-| US-002 | Navigate via Tabs (P1) | 4 scenarios | Phases 7-8 (tab component + binding) | ✅ Complete |
-| US-003 | Explore Rolling Stock Units (P1) | 5 scenarios | Phases 7-8 (expandable card component) | ✅ Complete |
+| Story ID | Title                            | Acceptance Scenarios | Mapped Phases                           | Status      |
+| -------- | -------------------------------- | -------------------- | --------------------------------------- | ----------- |
+| US-001   | View Railway Model Details (P1)  | 4 scenarios          | Phases 6-10 (frontend), 12-13 (quality) | ✅ Complete |
+| US-002   | Navigate via Tabs (P1)           | 4 scenarios          | Phases 7-8 (tab component + binding)    | ✅ Complete |
+| US-003   | Explore Rolling Stock Units (P1) | 5 scenarios          | Phases 7-8 (expandable card component)  | ✅ Complete |
 
 **All user stories**: Independently implementable, testable, and traceable to tasks
 
@@ -108,16 +109,16 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **EXCELLENT**
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| Total Tasks | 47 | ✅ Appropriate granularity |
-| Phases | 13 | ✅ Logical grouping |
-| Backend Tasks | 16 | ✅ Phases 1-5 (module setup through integration) |
-| Frontend Tasks | 20 | ✅ Phases 6-10 (routes through testing) |
-| Quality/Review Tasks | 11 | ✅ Phases 11-13 (integration, QA, merge) |
-| Tasks with File Paths | 47/47 | ✅ **100% specificity** |
-| Tasks with Acceptance Criteria | 47/47 | ✅ **100% completeness** |
-| Tasks with Test Cases | 42/47 | ✅ **89% coverage** (all critical tasks have tests) |
+| Metric                         | Value | Status                                              |
+| ------------------------------ | ----- | --------------------------------------------------- |
+| Total Tasks                    | 47    | ✅ Appropriate granularity                          |
+| Phases                         | 13    | ✅ Logical grouping                                 |
+| Backend Tasks                  | 16    | ✅ Phases 1-5 (module setup through integration)    |
+| Frontend Tasks                 | 20    | ✅ Phases 6-10 (routes through testing)             |
+| Quality/Review Tasks           | 11    | ✅ Phases 11-13 (integration, QA, merge)            |
+| Tasks with File Paths          | 47/47 | ✅ **100% specificity**                             |
+| Tasks with Acceptance Criteria | 47/47 | ✅ **100% completeness**                            |
+| Tasks with Test Cases          | 42/47 | ✅ **89% coverage** (all critical tasks have tests) |
 
 **Task Quality**: ✅ **PRODUCTION-READY** (each task is executable, measurable, traceable)
 
@@ -140,13 +141,13 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **MINIMAL (0 CRITICAL)**
 
-| Item | Potential Ambiguity | Severity | Clarification | Resolution |
-|------|-------------------|----------|----------------|------------|
-| "Placeholder HTML" design | How to style placeholder? | LOW | Task T004 specifies: responsive, accessible, centered "No picture yet" | Task design requirements clear |
-| Image file extensions | Which extensions supported? | LOW | Plan specifies .png, .jpg, .jpeg | Explicitly documented in T009 |
-| Model ID transformation | Colon to underscore? | LOW | Plan documents: `trn:railway-model:abc123` → `trn_railway-model_abc123` | Clear in plan and T003 |
-| Tab state persistence | Persist across navigation? | LOW | Spec FR-013 requires: "previously selected tab state maintained" | Clear acceptance criterion |
-| Empty rolling stock state | Message content? | LOW | Spec FR-015 requires "empty state message"; T021-T024 includes this task | Clear requirement |
+| Item                      | Potential Ambiguity         | Severity | Clarification                                                            | Resolution                     |
+| ------------------------- | --------------------------- | -------- | ------------------------------------------------------------------------ | ------------------------------ |
+| "Placeholder HTML" design | How to style placeholder?   | LOW      | Task T004 specifies: responsive, accessible, centered "No picture yet"   | Task design requirements clear |
+| Image file extensions     | Which extensions supported? | LOW      | Plan specifies .png, .jpg, .jpeg                                         | Explicitly documented in T009  |
+| Model ID transformation   | Colon to underscore?        | LOW      | Plan documents: `trn:railway-model:abc123` → `trn_railway-model_abc123`  | Clear in plan and T003         |
+| Tab state persistence     | Persist across navigation?  | LOW      | Spec FR-013 requires: "previously selected tab state maintained"         | Clear acceptance criterion     |
+| Empty rolling stock state | Message content?            | LOW      | Spec FR-015 requires "empty state message"; T021-T024 includes this task | Clear requirement              |
 
 **Ambiguity Level**: ✅ **NONE BLOCKING** (all ambiguities minor and resolved by existing documentation)
 
@@ -156,18 +157,18 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **NONE CRITICAL**
 
-| Area | Potentially Underspecified? | Completeness |
-|------|--------------------------|--------------|
-| Backend architecture | DDD pattern with 5 layers clearly defined | ✅ Complete |
-| Frontend routing | SvelteKit file-based, route `/models/[modelId]/+page.svelte` specified | ✅ Complete |
-| Component structure | Header, Details tab, Rolling Stock tab with card composition | ✅ Complete |
-| Data model | RailwayModel, RollingStock, TechnicalSpecification entities defined | ✅ Complete |
-| Error handling | ImageError enum with 4 variants, conversion to CommandError | ✅ Complete |
-| Image storage | Path convention and directory documented | ✅ Complete |
-| Localization | 100% Paraglide-JS, EN/IT languages specified | ✅ Complete |
-| Accessibility | WCAG 2.1 AA target, semantic HTML required | ✅ Complete |
-| Performance targets | <1s page load (details), <2s desktop/<3s mobile | ✅ Complete |
-| Test coverage | >80% target, unit + integration + E2E specified | ✅ Complete |
+| Area                 | Potentially Underspecified?                                            | Completeness |
+| -------------------- | ---------------------------------------------------------------------- | ------------ |
+| Backend architecture | DDD pattern with 5 layers clearly defined                              | ✅ Complete  |
+| Frontend routing     | SvelteKit file-based, route `/models/[modelId]/+page.svelte` specified | ✅ Complete  |
+| Component structure  | Header, Details tab, Rolling Stock tab with card composition           | ✅ Complete  |
+| Data model           | RailwayModel, RollingStock, TechnicalSpecification entities defined    | ✅ Complete  |
+| Error handling       | ImageError enum with 4 variants, conversion to CommandError            | ✅ Complete  |
+| Image storage        | Path convention and directory documented                               | ✅ Complete  |
+| Localization         | 100% Paraglide-JS, EN/IT languages specified                           | ✅ Complete  |
+| Accessibility        | WCAG 2.1 AA target, semantic HTML required                             | ✅ Complete  |
+| Performance targets  | <1s page load (details), <2s desktop/<3s mobile                        | ✅ Complete  |
+| Test coverage        | >80% target, unit + integration + E2E specified                        | ✅ Complete  |
 
 **Underspecification**: ✅ **NONE** (all major areas fully specified)
 
@@ -177,16 +178,16 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **ZERO INCONSISTENCIES**
 
-| Aspect | Spec | Plan | Tasks | Consistency |
-|--------|------|------|-------|-------------|
-| Feature scope | Backend (media module) + Frontend (details page) | Identical | Phased 13-phase breakdown | ✅ Consistent |
-| Architecture | DDD pattern, 5-layer media module | DDD pattern, 5-layer media module | Phases 1-5 implement DDD layers | ✅ Consistent |
-| Tech stack | Svelte 5, Tauri 2.9.5, Rust 1.93.0+, SQLite, specta | Identical tech list | Used in all task descriptions | ✅ Consistent |
-| Naming | RailwayModel, RollingStock, RailwayModelImage | Identical | Consistent throughout tasks | ✅ Consistent |
-| Success criteria | 6 measurable criteria (SC-001 to SC-006) | Referenced in quality gates section | SC-001 to SC-006 appear in phase 11+ | ✅ Consistent |
-| Database | No new tables, uses existing RailwayModel/RollingStock | No schema changes, filesystem images | Tasks do not create new tables | ✅ Consistent |
-| Localization | 100% Paraglide-JS required | FR-016 mandates Paraglide | T029-T032 include localization phase | ✅ Consistent |
-| Timeline | ~2 weeks | ~2 weeks | 47 tasks over 2-week sprint | ✅ Consistent |
+| Aspect           | Spec                                                   | Plan                                 | Tasks                                | Consistency   |
+| ---------------- | ------------------------------------------------------ | ------------------------------------ | ------------------------------------ | ------------- |
+| Feature scope    | Backend (media module) + Frontend (details page)       | Identical                            | Phased 13-phase breakdown            | ✅ Consistent |
+| Architecture     | DDD pattern, 5-layer media module                      | DDD pattern, 5-layer media module    | Phases 1-5 implement DDD layers      | ✅ Consistent |
+| Tech stack       | Svelte 5, Tauri 2.9.5, Rust 1.93.0+, SQLite, specta    | Identical tech list                  | Used in all task descriptions        | ✅ Consistent |
+| Naming           | RailwayModel, RollingStock, RailwayModelImage          | Identical                            | Consistent throughout tasks          | ✅ Consistent |
+| Success criteria | 6 measurable criteria (SC-001 to SC-006)               | Referenced in quality gates section  | SC-001 to SC-006 appear in phase 11+ | ✅ Consistent |
+| Database         | No new tables, uses existing RailwayModel/RollingStock | No schema changes, filesystem images | Tasks do not create new tables       | ✅ Consistent |
+| Localization     | 100% Paraglide-JS required                             | FR-016 mandates Paraglide            | T029-T032 include localization phase | ✅ Consistent |
+| Timeline         | ~2 weeks                                               | ~2 weeks                             | 47 tasks over 2-week sprint          | ✅ Consistent |
 
 **Inconsistency Count**: ✅ **ZERO**
 
@@ -210,13 +211,13 @@ All constitutional principles are properly addressed:
 
 **Result**: ✅ **APPROPRIATE**
 
-| Entity | Defined | Database | Task Coverage | Status |
-|--------|---------|----------|---|--------|
-| RailwayModel | ✅ Spec, Plan | Existing ✅ | Fetch in T025-T028 | ✅ Complete |
-| RollingStock | ✅ Spec, Plan | Existing ✅ | Fetch in T025-T028 | ✅ Complete |
-| RailwayModelImage | ✅ Domain entity | Filesystem (no table) | T003 (domain), T006 (use case) | ✅ Complete |
-| ImagePlaceholder | ✅ Value object | N/A (in-memory) | T004 (domain), T007 (use case) | ✅ Complete |
-| TechnicalSpecification | ✅ Spec | Embedded in RollingStock.specs | T029 (grid display) | ✅ Complete |
+| Entity                 | Defined          | Database                       | Task Coverage                  | Status      |
+| ---------------------- | ---------------- | ------------------------------ | ------------------------------ | ----------- |
+| RailwayModel           | ✅ Spec, Plan    | Existing ✅                    | Fetch in T025-T028             | ✅ Complete |
+| RollingStock           | ✅ Spec, Plan    | Existing ✅                    | Fetch in T025-T028             | ✅ Complete |
+| RailwayModelImage      | ✅ Domain entity | Filesystem (no table)          | T003 (domain), T006 (use case) | ✅ Complete |
+| ImagePlaceholder       | ✅ Value object  | N/A (in-memory)                | T004 (domain), T007 (use case) | ✅ Complete |
+| TechnicalSpecification | ✅ Spec          | Embedded in RollingStock.specs | T029 (grid display)            | ✅ Complete |
 
 **Data Model Alignment**: ✅ **SOUND** (no database changes required; filesystem + in-memory entities appropriately used)
 
@@ -224,33 +225,33 @@ All constitutional principles are properly addressed:
 
 ## Coverage Summary Table
 
-| Requirement ID | Type | Has Task(s)? | Task IDs | Mapped Requirement |
-|---|---|---|---|---|
-| FR-001 | Functional | ✅ | T017-T020 | Display route `/models/{modelId}` |
-| FR-002 | Functional | ✅ | T021-T024 | Header: model description |
-| FR-003 | Functional | ✅ | T021-T024 | Header: manufacturer/product code |
-| FR-004 | Functional | ✅ | T004, T010, T025-T028 | Hero image or placeholder |
-| FR-005 | Functional | ✅ | T021-T024 | Badges: scale, era, power method |
-| FR-006 | Functional | ✅ | T021-T024 | Two tabs: Details + Rolling Stock |
-| FR-007 | Functional | ✅ | T021-T024 | Details tab: full description |
-| FR-008 | Functional | ✅ | T021-T024 | Rolling Stock tab: list units |
-| FR-009 | Functional | ✅ | T021-T024 | Card header format |
-| FR-010 | Functional | ✅ | T021-T024 | Expanded card fields |
-| FR-011 | Functional | ✅ | T029-T032 | Tech specs responsive grid |
-| FR-012 | Functional | ✅ | T021-T024 | Expand/collapse cards |
-| FR-013 | Functional | ✅ | T025-T028 | Preserve tab state |
-| FR-014 | Functional | ✅ | T029-T032 | Omit missing fields |
-| FR-015 | Functional | ✅ | T021-T024 | Empty state message |
-| FR-016 | Functional | ✅ | T029-T032 | 100% Paraglide i18n |
-| SC-001 | Non-Functional | ✅ | T037-T039 | <1s page load time |
-| SC-002 | Non-Functional | ✅ | T033-T036 | First-load rendering |
-| SC-003 | Non-Functional | ✅ | T033-T036 | 300ms animations |
-| SC-004 | Non-Functional | ✅ | T029-T032 | 100% localization |
-| SC-005 | Non-Functional | ✅ | T029-T032 | Responsive (320px-1920px) |
-| SC-006 | Non-Functional | ✅ | T033-T036 | WCAG 2.1 AA accessibility |
-| US-001 | User Story | ✅ | Phases 6-10, 12-13 | View model details |
-| US-002 | User Story | ✅ | Phases 7-8, 12-13 | Navigate tabs |
-| US-003 | User Story | ✅ | Phases 7-8, 12-13 | Explore rolling stock |
+| Requirement ID | Type           | Has Task(s)? | Task IDs              | Mapped Requirement                |
+| -------------- | -------------- | ------------ | --------------------- | --------------------------------- |
+| FR-001         | Functional     | ✅           | T017-T020             | Display route `/models/{modelId}` |
+| FR-002         | Functional     | ✅           | T021-T024             | Header: model description         |
+| FR-003         | Functional     | ✅           | T021-T024             | Header: manufacturer/product code |
+| FR-004         | Functional     | ✅           | T004, T010, T025-T028 | Hero image or placeholder         |
+| FR-005         | Functional     | ✅           | T021-T024             | Badges: scale, era, power method  |
+| FR-006         | Functional     | ✅           | T021-T024             | Two tabs: Details + Rolling Stock |
+| FR-007         | Functional     | ✅           | T021-T024             | Details tab: full description     |
+| FR-008         | Functional     | ✅           | T021-T024             | Rolling Stock tab: list units     |
+| FR-009         | Functional     | ✅           | T021-T024             | Card header format                |
+| FR-010         | Functional     | ✅           | T021-T024             | Expanded card fields              |
+| FR-011         | Functional     | ✅           | T029-T032             | Tech specs responsive grid        |
+| FR-012         | Functional     | ✅           | T021-T024             | Expand/collapse cards             |
+| FR-013         | Functional     | ✅           | T025-T028             | Preserve tab state                |
+| FR-014         | Functional     | ✅           | T029-T032             | Omit missing fields               |
+| FR-015         | Functional     | ✅           | T021-T024             | Empty state message               |
+| FR-016         | Functional     | ✅           | T029-T032             | 100% Paraglide i18n               |
+| SC-001         | Non-Functional | ✅           | T037-T039             | <1s page load time                |
+| SC-002         | Non-Functional | ✅           | T033-T036             | First-load rendering              |
+| SC-003         | Non-Functional | ✅           | T033-T036             | 300ms animations                  |
+| SC-004         | Non-Functional | ✅           | T029-T032             | 100% localization                 |
+| SC-005         | Non-Functional | ✅           | T029-T032             | Responsive (320px-1920px)         |
+| SC-006         | Non-Functional | ✅           | T033-T036             | WCAG 2.1 AA accessibility         |
+| US-001         | User Story     | ✅           | Phases 6-10, 12-13    | View model details                |
+| US-002         | User Story     | ✅           | Phases 7-8, 12-13     | Navigate tabs                     |
+| US-003         | User Story     | ✅           | Phases 7-8, 12-13     | Explore rolling stock             |
 
 **Coverage Percentage**: ✅ **100%** (23/23 requirements mapped)
 
@@ -295,21 +296,21 @@ No task exists without a mapped requirement or user story.
 
 ## Metrics Summary
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| **Total Requirements** | 23 (16 functional + 6 non-functional + 1 other) | ✅ Comprehensive |
-| **Total User Stories** | 3 (all P1) | ✅ Focused scope |
-| **Total Tasks** | 47 | ✅ Well-granularized |
-| **Requirements with ≥1 Task** | 23/23 | ✅ **100% coverage** |
-| **Tasks with ≥1 Requirement** | 47/47 | ✅ **100% mapping** |
-| **Duplication Count** | 0 | ✅ No redundancy |
-| **Ambiguity Count** | 0 (minor items all resolved) | ✅ No blockers |
-| **Underspecification Count** | 0 | ✅ Fully specified |
-| **Inconsistency Count** | 0 | ✅ Consistent across artifacts |
-| **Constitution Violations** | 0 | ✅ **FULL COMPLIANCE** |
-| **Critical Issues** | 0 | ✅ **ZERO BLOCKERS** |
-| **High Issues** | 0 | ✅ **ZERO BLOCKERS** |
-| **Specification Quality Score** | 98/100 | ✅ **EXCELLENT** |
+| Metric                          | Value                                           | Status                         |
+| ------------------------------- | ----------------------------------------------- | ------------------------------ |
+| **Total Requirements**          | 23 (16 functional + 6 non-functional + 1 other) | ✅ Comprehensive               |
+| **Total User Stories**          | 3 (all P1)                                      | ✅ Focused scope               |
+| **Total Tasks**                 | 47                                              | ✅ Well-granularized           |
+| **Requirements with ≥1 Task**   | 23/23                                           | ✅ **100% coverage**           |
+| **Tasks with ≥1 Requirement**   | 47/47                                           | ✅ **100% mapping**            |
+| **Duplication Count**           | 0                                               | ✅ No redundancy               |
+| **Ambiguity Count**             | 0 (minor items all resolved)                    | ✅ No blockers                 |
+| **Underspecification Count**    | 0                                               | ✅ Fully specified             |
+| **Inconsistency Count**         | 0                                               | ✅ Consistent across artifacts |
+| **Constitution Violations**     | 0                                               | ✅ **FULL COMPLIANCE**         |
+| **Critical Issues**             | 0                                               | ✅ **ZERO BLOCKERS**           |
+| **High Issues**                 | 0                                               | ✅ **ZERO BLOCKERS**           |
+| **Specification Quality Score** | 98/100                                          | ✅ **EXCELLENT**               |
 
 ---
 
@@ -392,15 +393,15 @@ All quality gates from plan.md are achievable:
 
 ## Final Verdict
 
-| Category | Status | Recommendation |
-|----------|--------|---|
-| **Specification Completeness** | ✅ PASS | Ready for development |
-| **Requirement Coverage** | ✅ PASS | 100% mapped, zero gaps |
-| **Task Breakdown Quality** | ✅ PASS | Executable, granular, traced |
-| **Constitutional Alignment** | ✅ PASS | Zero violations, full compliance |
-| **Architecture & Design** | ✅ PASS | DDD pattern, proven approach |
-| **Risk Assessment** | ✅ LOW RISK | No critical blockers identified |
-| **Overall Status** | ✅ **APPROVED** | **READY FOR IMPLEMENTATION** |
+| Category                       | Status          | Recommendation                   |
+| ------------------------------ | --------------- | -------------------------------- |
+| **Specification Completeness** | ✅ PASS         | Ready for development            |
+| **Requirement Coverage**       | ✅ PASS         | 100% mapped, zero gaps           |
+| **Task Breakdown Quality**     | ✅ PASS         | Executable, granular, traced     |
+| **Constitutional Alignment**   | ✅ PASS         | Zero violations, full compliance |
+| **Architecture & Design**      | ✅ PASS         | DDD pattern, proven approach     |
+| **Risk Assessment**            | ✅ LOW RISK     | No critical blockers identified  |
+| **Overall Status**             | ✅ **APPROVED** | **READY FOR IMPLEMENTATION**     |
 
 ---
 
@@ -415,19 +416,19 @@ All quality gates from plan.md are achievable:
 
 ### Core Principles Compliance Matrix
 
-| Constitutional Principle | Feature 014 Compliance | Evidence |
-|---|---|---|
-| Modular, Library-First Design | ✅ COMPLIANT | Media module: self-contained, documented (IMPLEMENTATION_PLAN.md), independently testable (T009, T010, T016) |
-| Deterministic Interfaces | ✅ COMPLIANT | Tauri command `get_railway_model_image` with specta auto-generation; ImageError enum; structured JSON responses |
-| Test-First Emphasis | ✅ COMPLIANT | 20 test tasks (T033-T036 frontend, T009/T010 backend infrastructure tests); >80% coverage target |
-| Code Quality | ✅ COMPLIANT | Phase 12 (T040-T043): clippy -D warnings, fmt, 100% rustdoc, ESLint compliance; design rationale in IMPLEMENTATION_PLAN |
-| Testing Standards | ✅ COMPLIANT | Unit (domain/infra), integration (commands), E2E (page flow); Vitest + Playwright; mock Tauri in tests; fixtures for path validation |
-| User Experience | ✅ COMPLIANT | 100% Paraglide localization (T029-T032), shadcn-svelte components, WCAG 2.1 AA (T033-T036) |
-| Performance | ✅ COMPLIANT | SC-001: <1s page load, SC-003: 300ms animations; Phase 11 profiling (T037) |
-| Safe Rust | ✅ COMPLIANT | Result<T, E> error handling, path validation (T009 sanitize_path), no unsafe code planned |
-| Database Rules | ✅ COMPLIANT | No new tables; uses existing RailwayModel/RollingStock; filesystem image storage documented |
-| API Design | ✅ COMPLIANT | specta bindings to TypeScript; RailwayModelImageResponse DTO with serde/specta; input validation at boundary (T013) |
-| Domain Logic | ✅ COMPLIANT | All business logic in Rust (filename resolution, path validation, placeholder generation); frontend is render-only |
+| Constitutional Principle      | Feature 014 Compliance | Evidence                                                                                                                             |
+| ----------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Modular, Library-First Design | ✅ COMPLIANT           | Media module: self-contained, documented (IMPLEMENTATION_PLAN.md), independently testable (T009, T010, T016)                         |
+| Deterministic Interfaces      | ✅ COMPLIANT           | Tauri command `get_railway_model_image` with specta auto-generation; ImageError enum; structured JSON responses                      |
+| Test-First Emphasis           | ✅ COMPLIANT           | 20 test tasks (T033-T036 frontend, T009/T010 backend infrastructure tests); >80% coverage target                                     |
+| Code Quality                  | ✅ COMPLIANT           | Phase 12 (T040-T043): clippy -D warnings, fmt, 100% rustdoc, ESLint compliance; design rationale in IMPLEMENTATION_PLAN              |
+| Testing Standards             | ✅ COMPLIANT           | Unit (domain/infra), integration (commands), E2E (page flow); Vitest + Playwright; mock Tauri in tests; fixtures for path validation |
+| User Experience               | ✅ COMPLIANT           | 100% Paraglide localization (T029-T032), shadcn-svelte components, WCAG 2.1 AA (T033-T036)                                           |
+| Performance                   | ✅ COMPLIANT           | SC-001: <1s page load, SC-003: 300ms animations; Phase 11 profiling (T037)                                                           |
+| Safe Rust                     | ✅ COMPLIANT           | Result<T, E> error handling, path validation (T009 sanitize_path), no unsafe code planned                                            |
+| Database Rules                | ✅ COMPLIANT           | No new tables; uses existing RailwayModel/RollingStock; filesystem image storage documented                                          |
+| API Design                    | ✅ COMPLIANT           | specta bindings to TypeScript; RailwayModelImageResponse DTO with serde/specta; input validation at boundary (T013)                  |
+| Domain Logic                  | ✅ COMPLIANT           | All business logic in Rust (filename resolution, path validation, placeholder generation); frontend is render-only                   |
 
 **Compliance Score**: 11/11 principles ✅ **FULLY ALIGNED**
 

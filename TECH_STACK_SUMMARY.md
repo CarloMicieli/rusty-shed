@@ -15,63 +15,63 @@
 
 ### 🖥️ Frontend
 
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| **Framework** | Svelte | 5.x | Reactive UI with Runes |
-| **Build Tool** | Vite | Latest | Fast HMR dev server |
-| **Language** | TypeScript | 5.x | Type-safe frontend |
-| **CSS** | Tailwind CSS | 4.x | Utility-first styling |
-| **UI Components** | shadcn-svelte | 1.1.1 | Headless component library |
-| **Router** | SvelteKit | 2.x | File-based routing |
-| **Localization** | Paraglide-JS | 2.7.1 | Message i18n (EN, IT) |
-| **Icons** | Lucide Svelte | 0.563.1 | 563+ SVG icons |
-| **Testing** | Vitest | Latest | Unit testing |
-| **E2E Testing** | Playwright | Latest | Integration testing |
-| **Data Viz** | D3 + Layerchart | Latest | Charts/graphs |
-| **Validation** | Zod | 4.3.6 | Runtime type validation |
-| **State** | Svelte $state Rune | 5.x | Reactive state management |
+| Layer             | Technology         | Version | Purpose                    |
+| ----------------- | ------------------ | ------- | -------------------------- |
+| **Framework**     | Svelte             | 5.x     | Reactive UI with Runes     |
+| **Build Tool**    | Vite               | Latest  | Fast HMR dev server        |
+| **Language**      | TypeScript         | 5.x     | Type-safe frontend         |
+| **CSS**           | Tailwind CSS       | 4.x     | Utility-first styling      |
+| **UI Components** | shadcn-svelte      | 1.1.1   | Headless component library |
+| **Router**        | SvelteKit          | 2.x     | File-based routing         |
+| **Localization**  | Paraglide-JS       | 2.7.1   | Message i18n (EN, IT)      |
+| **Icons**         | Lucide Svelte      | 0.563.1 | 563+ SVG icons             |
+| **Testing**       | Vitest             | Latest  | Unit testing               |
+| **E2E Testing**   | Playwright         | Latest  | Integration testing        |
+| **Data Viz**      | D3 + Layerchart    | Latest  | Charts/graphs              |
+| **Validation**    | Zod                | 4.3.6   | Runtime type validation    |
+| **State**         | Svelte $state Rune | 5.x     | Reactive state management  |
 
 ### 🦀 Backend
 
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| **Language** | Rust | 1.93.0+ | Memory-safe systems language |
-| **Edition** | 2024 | - | Modern Rust syntax |
-| **App Framework** | Tauri | 2.9.5 | Desktop app + IPC bridge |
-| **Runtime** | Tokio | 1.49.0 | Async multi-threaded executor |
-| **Database** | SQLite | Latest | Embedded relational DB |
-| **ORM** | sqlx | 0.8.6 | Type-safe query builder |
-| **Serialization** | serde | 1.0.228 | Data serialization framework |
-| **API Typing** | specta | 2.0.0-rc.22 | Auto TypeScript bindings |
-| **Error Handling** | thiserror | 2.0.18 | Custom error derivation |
-| **Validation** | garde | 0.22.1 | Derive-based validation |
-| **Logging** | flexi_logger | 0.31.8 | Rotating log files |
-| **JSON** | serde_json | 1.0.149 | JSON parsing |
-| **Decimals** | rust_decimal | 1.40.0 | Precise monetary values |
-| **Date/Time** | chrono | 0.4.43 | Date/time handling |
-| **UUID** | uuid | 1.20.0 | UUID generation (v4) |
-| **HTTP** | reqwest | 0.12 | Async HTTP client |
-| **OAuth2** | oauth2 | 5.x | Google Drive authentication |
-| **Compression** | flate2 + tar + zip | Latest | Archive handling |
+| Layer              | Technology         | Version     | Purpose                       |
+| ------------------ | ------------------ | ----------- | ----------------------------- |
+| **Language**       | Rust               | 1.93.0+     | Memory-safe systems language  |
+| **Edition**        | 2024               | -           | Modern Rust syntax            |
+| **App Framework**  | Tauri              | 2.9.5       | Desktop app + IPC bridge      |
+| **Runtime**        | Tokio              | 1.49.0      | Async multi-threaded executor |
+| **Database**       | SQLite             | Latest      | Embedded relational DB        |
+| **ORM**            | sqlx               | 0.8.6       | Type-safe query builder       |
+| **Serialization**  | serde              | 1.0.228     | Data serialization framework  |
+| **API Typing**     | specta             | 2.0.0-rc.22 | Auto TypeScript bindings      |
+| **Error Handling** | thiserror          | 2.0.18      | Custom error derivation       |
+| **Validation**     | garde              | 0.22.1      | Derive-based validation       |
+| **Logging**        | flexi_logger       | 0.31.8      | Rotating log files            |
+| **JSON**           | serde_json         | 1.0.149     | JSON parsing                  |
+| **Decimals**       | rust_decimal       | 1.40.0      | Precise monetary values       |
+| **Date/Time**      | chrono             | 0.4.43      | Date/time handling            |
+| **UUID**           | uuid               | 1.20.0      | UUID generation (v4)          |
+| **HTTP**           | reqwest            | 0.12        | Async HTTP client             |
+| **OAuth2**         | oauth2             | 5.x         | Google Drive authentication   |
+| **Compression**    | flate2 + tar + zip | Latest      | Archive handling              |
 
 ### 📱 Desktop Framework
 
-| Component | Tech | Version | Purpose |
-|-----------|------|---------|---------|
-| **App Container** | Tauri | 2.9.5 | Native window + IPC |
-| **Filesystem** | tauri-plugin-fs | 2.4.5 | File I/O operations |
-| **HTTP** | tauri-plugin-http | 2.5.6 | HTTP requests |
-| **Logging** | tauri-plugin-log | 2.8.0 | App logging |
-| **OAuth** | tauri-plugin-oauth | 2 | OAuth flows |
-| **Keychain** | tauri-plugin-stronghold | 2 | Secure storage |
-| **URL Opener** | tauri-plugin-opener | 2.5.3 | Open external links |
-| **Deep Links** | tauri-plugin-deep-link | 2 | URL scheme handling |
+| Component         | Tech                    | Version | Purpose             |
+| ----------------- | ----------------------- | ------- | ------------------- |
+| **App Container** | Tauri                   | 2.9.5   | Native window + IPC |
+| **Filesystem**    | tauri-plugin-fs         | 2.4.5   | File I/O operations |
+| **HTTP**          | tauri-plugin-http       | 2.5.6   | HTTP requests       |
+| **Logging**       | tauri-plugin-log        | 2.8.0   | App logging         |
+| **OAuth**         | tauri-plugin-oauth      | 2       | OAuth flows         |
+| **Keychain**      | tauri-plugin-stronghold | 2       | Secure storage      |
+| **URL Opener**    | tauri-plugin-opener     | 2.5.3   | Open external links |
+| **Deep Links**    | tauri-plugin-deep-link  | 2       | URL scheme handling |
 
 ### 🔄 IPC Communication
 
 - **Protocol**: Tauri Command System (RPC-like)
 - **Type Safety**: specta-typescript auto-generates `src/lib/bindings.ts`
-- **Pattern**: 
+- **Pattern**:
   - Backend: `#[tauri::command] #[specta::specta] async fn name(...)`
   - Frontend: `import { invoke } from '@tauri-apps/api/core'; invoke('name', args)`
 
@@ -111,6 +111,7 @@ src-tauri/src/
 ```
 
 **Key Principles**:
+
 - No panics in production code (return Result)
 - Strong typing with newtype patterns
 - Comprehensive error handling with custom error types
@@ -144,6 +145,7 @@ src/
 ```
 
 **Key Principles**:
+
 - Svelte 5 Runes: $state, $derived, $props
 - TypeScript strict mode
 - Tailwind CSS first (no custom CSS unless necessary)
@@ -172,11 +174,11 @@ src/
 
 ### Base Directories (Tauri)
 
-| OS | AppData | AppLocalData |
-|----|---------|--------------|
-| Windows | `%APPDATA%` | `%APPDATA%` |
-| macOS | `~/Library/Application Support` | `~/Library/Application Support` |
-| Linux | `~/.config` | `~/.cache` |
+| OS      | AppData                         | AppLocalData                    |
+| ------- | ------------------------------- | ------------------------------- |
+| Windows | `%APPDATA%`                     | `%APPDATA%`                     |
+| macOS   | `~/Library/Application Support` | `~/Library/Application Support` |
+| Linux   | `~/.config`                     | `~/.cache`                      |
 
 ---
 
@@ -229,7 +231,7 @@ pnpm tauri build      # Build production installer
 ### Paraglide-JS Integration
 
 - **Config**: `project.inlang/settings.json`
-- **Message Files**: 
+- **Message Files**:
   - `messages/en.json` - English
   - `messages/it.json` - Italian
 - **Compilation**: `pnpm prepare` compiles to `src/lib/paraglide/`
@@ -282,10 +284,10 @@ pnpm tauri build      # Build production installer
 pub enum CommandError {
     #[error("Not found: {0}")]
     NotFound(String),
-    
+
     #[error("Validation error: {field} - {message}")]
     ValidationError { field: String, message: String },
-    
+
     #[error("Database error: {0}")]
     DatabaseError(String),
 }
@@ -391,17 +393,17 @@ pnpm rust:test        # Run all Rust tests
 
 ## Key Stats
 
-| Metric | Value |
-|--------|-------|
-| **Frontend Files** | ~40+ Svelte components |
-| **Backend Modules** | 13 feature modules |
-| **Database Tables** | 20+ tables (catalog, collection, etc.) |
-| **Tauri Commands** | 50+ exposed commands |
-| **Languages** | Rust, TypeScript, SQL |
-| **Rust Dependencies** | 40+ crates |
-| **Frontend Dependencies** | 20+ packages |
-| **Minimum Rust Version** | 1.93.0 |
-| **Target Platforms** | Windows, macOS, Linux |
+| Metric                    | Value                                  |
+| ------------------------- | -------------------------------------- |
+| **Frontend Files**        | ~40+ Svelte components                 |
+| **Backend Modules**       | 13 feature modules                     |
+| **Database Tables**       | 20+ tables (catalog, collection, etc.) |
+| **Tauri Commands**        | 50+ exposed commands                   |
+| **Languages**             | Rust, TypeScript, SQL                  |
+| **Rust Dependencies**     | 40+ crates                             |
+| **Frontend Dependencies** | 20+ packages                           |
+| **Minimum Rust Version**  | 1.93.0                                 |
+| **Target Platforms**      | Windows, macOS, Linux                  |
 
 ---
 
@@ -425,4 +427,3 @@ pnpm rust:test        # Run all Rust tests
 6. **Localization**: Use Paraglide-JS for all user-facing text
 7. **Code Review**: Clippy must pass with zero warnings
 8. **Commits**: Use Conventional Commits (feat:, fix:, docs:, etc.)
-

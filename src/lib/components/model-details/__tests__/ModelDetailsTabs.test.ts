@@ -10,10 +10,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 import ModelDetailsTabs from '../ModelDetailsTabs.svelte';
 
 describe('ModelDetailsTabs', () => {
-  let onTabChangeMock: ReturnType<typeof vi.fn>;
+  let onTabChangeMock: (tab: 'details' | 'rolling-stock') => void;
 
   beforeEach(() => {
-    onTabChangeMock = vi.fn();
+    onTabChangeMock = vi.fn() as (tab: 'details' | 'rolling-stock') => void;
     vi.clearAllMocks();
   });
 
@@ -31,7 +31,7 @@ describe('ModelDetailsTabs', () => {
     });
 
     it('should highlight active tab', () => {
-      const { container } = render(ModelDetailsTabs, {
+      const { container: _container } = render(ModelDetailsTabs, {
         props: {
           activeTab: 'details',
           onTabChange: onTabChangeMock
@@ -44,7 +44,7 @@ describe('ModelDetailsTabs', () => {
     });
 
     it('should not highlight inactive tab', () => {
-      const { container } = render(ModelDetailsTabs, {
+      const { container: _container } = render(ModelDetailsTabs, {
         props: {
           activeTab: 'details',
           onTabChange: onTabChangeMock
@@ -161,7 +161,7 @@ describe('ModelDetailsTabs', () => {
 
       const buttons = screen.getAllByRole('button');
       expect(buttons).toHaveLength(2);
-      
+
       // Both buttons should be focusable
       buttons.forEach((button) => {
         expect(button).toBeInstanceOf(HTMLButtonElement);
@@ -171,7 +171,7 @@ describe('ModelDetailsTabs', () => {
 
   describe('Visual States', () => {
     it('should apply hover styles to inactive tabs', () => {
-      const { container } = render(ModelDetailsTabs, {
+      const { container: _container } = render(ModelDetailsTabs, {
         props: {
           activeTab: 'details',
           onTabChange: onTabChangeMock
@@ -184,7 +184,7 @@ describe('ModelDetailsTabs', () => {
     });
 
     it('should have transition classes for smooth animations', () => {
-      const { container } = render(ModelDetailsTabs, {
+      const { container: _container } = render(ModelDetailsTabs, {
         props: {
           activeTab: 'details',
           onTabChange: onTabChangeMock

@@ -20,8 +20,9 @@ import RollingStockCard from '../RollingStockCard.svelte';
 import type { OwnedRollingStockView } from '$lib/bindings';
 
 describe('RollingStockCard', () => {
-  const mockRollingStock: OwnedRollingStockView = {
+  const mockRollingStock = {
     id: 'rs-1',
+    rollingStockId: 'trn:rolling-stock:rs-1',
     series: '218',
     roadNumber: '218 217-8',
     livery: 'DB Red',
@@ -33,7 +34,7 @@ describe('RollingStockCard', () => {
       dcc_address: 3,
       installed_decoder_id: 'decoder-123'
     }
-  } as OwnedRollingStockView;
+  } as unknown as OwnedRollingStockView;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,7 +52,10 @@ describe('RollingStockCard', () => {
     });
 
     it('should render with Unknown series when missing', () => {
-      const stockWithoutSeries = { ...mockRollingStock, series: null };
+      const stockWithoutSeries = {
+        ...mockRollingStock,
+        series: null
+      } as unknown as OwnedRollingStockView;
       render(RollingStockCard, {
         props: {
           rollingStock: stockWithoutSeries
@@ -62,7 +66,10 @@ describe('RollingStockCard', () => {
     });
 
     it('should render with N/A road number when missing', () => {
-      const stockWithoutRoadNumber = { ...mockRollingStock, roadNumber: null };
+      const stockWithoutRoadNumber = {
+        ...mockRollingStock,
+        roadNumber: null
+      } as unknown as OwnedRollingStockView;
       render(RollingStockCard, {
         props: {
           rollingStock: stockWithoutRoadNumber
@@ -107,7 +114,7 @@ describe('RollingStockCard', () => {
       });
 
       const button = screen.getByRole('button');
-      
+
       // Expand
       await fireEvent.click(button);
       expect(screen.getByText('Test notes')).toBeInTheDocument();
@@ -125,13 +132,13 @@ describe('RollingStockCard', () => {
       });
 
       const button = screen.getByRole('button');
-      
+
       // Initially collapsed - should have ChevronDown
       expect(container.querySelector('svg')).toBeInTheDocument();
 
       // Expand
       await fireEvent.click(button);
-      
+
       // Should still have an icon (now ChevronUp)
       expect(container.querySelector('svg')).toBeInTheDocument();
     });
@@ -195,6 +202,7 @@ describe('RollingStockCard', () => {
     it('should not render fields that are missing', async () => {
       const minimalStock = {
         id: 'rs-2',
+        rollingStockId: 'trn:rolling-stock:rs-2',
         series: '218',
         roadNumber: '218 217-8',
         livery: null,
@@ -202,7 +210,7 @@ describe('RollingStockCard', () => {
         control: null,
         notes: null,
         digital: null
-      } as OwnedRollingStockView;
+      } as unknown as OwnedRollingStockView;
 
       render(RollingStockCard, {
         props: {
@@ -255,10 +263,10 @@ describe('RollingStockCard', () => {
       });
 
       const button = screen.getByRole('button');
-      
+
       // Simulate Enter key press
       await fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' });
-      
+
       // Button click should work (though fireEvent doesn't fully simulate Enter on buttons)
       expect(button).toBeInTheDocument();
     });

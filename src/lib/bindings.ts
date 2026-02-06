@@ -1310,6 +1310,43 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Get the image for a railway model.
+   *
+   * Returns either the path to the image file (if found) or an HTML/CSS
+   * placeholder (if no image exists).
+   *
+   * # Arguments
+   *
+   * * `state` - Application state containing models directory path
+   * * `railway_model_id` - The model ID to retrieve an image for
+   *
+   * # Returns
+   *
+   * Returns `RailwayModelImageResponse` with either:
+   * - `image_path` set if image found
+   * - `placeholder_html` set if no image found
+   *
+   * # Errors
+   *
+   * Returns `CommandError` if:
+   * - Path validation fails (security)
+   * - I/O errors occur
+   * - Model ID is invalid
+   */
+  async getRailwayModelImage(
+    railwayModelId: RailwayModelId
+  ): Promise<Result<RailwayModelImageResponse, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('get_railway_model_image', { railwayModelId })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
   async getImagePath(id: string, category: string): Promise<Result<string, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_image_path', { id, category }) };
@@ -4177,6 +4214,44 @@ export type RailwayCompanyId = string;
  * trn:railway-model:{manufacturer_slug}:{product_code}
  */
 export type RailwayModelId = string;
+/**
+ * Response DTO for railway model image requests.
+ *
+ * This DTO contains either the image path (if found) or placeholder HTML.
+ * The frontend can check `has_image` to determine which field to use.
+ *
+ * # Example
+ *
+ * ```ignore
+ * // Image found
+ * RailwayModelImageResponse {
+ * image_path: Some("/app/data/models/trn_railway-model_roco_43210.png".to_string()),
+ * placeholder_html: None,
+ * has_image: true,
+ * }
+ *
+ * // No image (placeholder)
+ * RailwayModelImageResponse {
+ * image_path: None,
+ * placeholder_html: Some("<div>...</div>".to_string()),
+ * has_image: false,
+ * }
+ * ```
+ */
+export type RailwayModelImageResponse = {
+  /**
+   * Absolute path to the image file (if found)
+   */
+  imagePath: string | null;
+  /**
+   * HTML/CSS placeholder markup (if no image found)
+   */
+  placeholderHtml: string | null;
+  /**
+   * Quick flag indicating if image exists
+   */
+  hasImage: boolean;
+};
 /**
  * Lightweight manufacturer information used by the UI view layer.
  */

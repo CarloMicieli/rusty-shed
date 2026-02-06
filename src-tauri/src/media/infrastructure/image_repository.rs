@@ -210,7 +210,7 @@ mod tests {
         // For practical purposes, joined paths with normal components are always safe
         let path = Path::new("/home/user/image.png");
         let result = ImageRepository::sanitize_path(path);
-        
+
         // Normal paths should pass
         assert!(result.is_ok());
     }

@@ -98,22 +98,23 @@ Details Page (/models/{modelId})
 
 ## 📊 Specification Metrics
 
-| Aspect | Value |
-|--------|-------|
-| **User Stories** | 3 (all P1 - equal priority) |
-| **Functional Requirements** | 16 (FR-001 through FR-016) |
-| **Edge Cases** | 5 identified and addressed |
-| **Success Criteria** | 6 (measurable, technology-agnostic) |
-| **Key Entities** | 3 (RailwayModel, RollingStock, TechnicalSpec) |
-| **Frontend Routes** | 1 (`/models/[modelId]`) |
-| **Tauri Commands** | 2 (image retrieval + data queries) |
-| **Documentation Pages** | 6 (comprehensive and cross-linked) |
+| Aspect                      | Value                                         |
+| --------------------------- | --------------------------------------------- |
+| **User Stories**            | 3 (all P1 - equal priority)                   |
+| **Functional Requirements** | 16 (FR-001 through FR-016)                    |
+| **Edge Cases**              | 5 identified and addressed                    |
+| **Success Criteria**        | 6 (measurable, technology-agnostic)           |
+| **Key Entities**            | 3 (RailwayModel, RollingStock, TechnicalSpec) |
+| **Frontend Routes**         | 1 (`/models/[modelId]`)                       |
+| **Tauri Commands**          | 2 (image retrieval + data queries)            |
+| **Documentation Pages**     | 6 (comprehensive and cross-linked)            |
 
 ---
 
 ## 🏗️ Architecture Summary
 
 ### Backend: Media Module (DDD Pattern)
+
 ```
 Domain Layer:
   ├── RailwayModelImage entity
@@ -134,6 +135,7 @@ Interface Layer:
 ```
 
 ### Frontend: SvelteKit Route
+
 ```
 /src/routes/models/[modelId]/+page.svelte
   ├── Header component (image, title, badges)
@@ -147,6 +149,7 @@ Interface Layer:
 ## ⚙️ Technology Stack
 
 ### Frontend
+
 - **Framework**: Svelte 5 (Runes-based reactivity)
 - **Build**: Vite with HMR
 - **Styling**: Tailwind CSS 4 + shadcn-svelte 1.1.1
@@ -155,6 +158,7 @@ Interface Layer:
 - **Testing**: Vitest + Playwright
 
 ### Backend
+
 - **Language**: Rust 1.93.0+
 - **Framework**: Tauri 2.9.5 (desktop + IPC)
 - **Runtime**: Tokio (async)
@@ -163,6 +167,7 @@ Interface Layer:
 - **Error Handling**: thiserror
 
 ### Communication
+
 - Tauri command pattern (RPC-like)
 - Type-safe via specta auto-generation
 - Async/await throughout
@@ -171,32 +176,32 @@ Interface Layer:
 
 ## 🚀 Implementation Timeline
 
-| Phase | Component | Duration | Owner |
-|-------|-----------|----------|-------|
-| **Phase 1** | Backend: Domain Layer | 1-2 days | Backend Dev |
-| **Phase 2** | Backend: Application Layer | 1 day | Backend Dev |
-| **Phase 3** | Backend: Infrastructure Layer | 1-2 days | Backend Dev |
-| **Phase 4** | Backend: Interface Layer | 1 day | Backend Dev |
-| **Phase 5** | Backend: Integration | 1 day | Backend Dev |
-| **Parallel** | Frontend: Details Page | 4-6 days | Frontend Dev |
-| **Phase 3** | Integration & Testing | 2-3 days | QA/Team |
-| **Phase 4** | Code Review & Merge | 1 day | Tech Lead |
-| **Total** | **Estimated Duration** | **~2 weeks** | **Team** |
+| Phase        | Component                     | Duration     | Owner        |
+| ------------ | ----------------------------- | ------------ | ------------ |
+| **Phase 1**  | Backend: Domain Layer         | 1-2 days     | Backend Dev  |
+| **Phase 2**  | Backend: Application Layer    | 1 day        | Backend Dev  |
+| **Phase 3**  | Backend: Infrastructure Layer | 1-2 days     | Backend Dev  |
+| **Phase 4**  | Backend: Interface Layer      | 1 day        | Backend Dev  |
+| **Phase 5**  | Backend: Integration          | 1 day        | Backend Dev  |
+| **Parallel** | Frontend: Details Page        | 4-6 days     | Frontend Dev |
+| **Phase 3**  | Integration & Testing         | 2-3 days     | QA/Team      |
+| **Phase 4**  | Code Review & Merge           | 1 day        | Tech Lead    |
+| **Total**    | **Estimated Duration**        | **~2 weeks** | **Team**     |
 
 ---
 
 ## ✅ Quality Targets
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Page Load Time | < 1 second | Specified |
-| Animation Duration | < 300ms | Specified |
-| Accessibility | WCAG 2.1 AA | Specified |
-| Responsive Design | 320px, 768px, 1920px | Specified |
-| Localization Coverage | 100% (Paraglide-JS) | Specified |
-| Test Coverage | > 80% | Specified |
-| Code Quality | Clippy: zero warnings | Specified |
-| Type Safety | Full TypeScript + Rust | Specified |
+| Metric                | Target                 | Status    |
+| --------------------- | ---------------------- | --------- |
+| Page Load Time        | < 1 second             | Specified |
+| Animation Duration    | < 300ms                | Specified |
+| Accessibility         | WCAG 2.1 AA            | Specified |
+| Responsive Design     | 320px, 768px, 1920px   | Specified |
+| Localization Coverage | 100% (Paraglide-JS)    | Specified |
+| Test Coverage         | > 80%                  | Specified |
+| Code Quality          | Clippy: zero warnings  | Specified |
+| Type Safety           | Full TypeScript + Rust | Specified |
 
 ---
 
@@ -214,6 +219,7 @@ Interface Layer:
 ## 📋 Handoff Checklist
 
 ### Planning Phase (Completed ✅)
+
 - [x] Feature specification written (user-focused, no implementation details)
 - [x] User stories prioritized (3 P1 stories)
 - [x] Functional requirements defined (16 total)
@@ -225,6 +231,7 @@ Interface Layer:
 - [x] Specification quality validated
 
 ### Ready for Implementation
+
 - [x] All documents committed
 - [x] Branch created and active
 - [x] No blockers identified
@@ -249,6 +256,7 @@ specs/014-railway-model-page/
 ```
 
 **Additional Context**:
+
 - `TECH_STACK_SUMMARY.md` - Repository-wide technology overview
 - `.github/instructions/rust.instructions.md` - Rust coding standards
 - `.github/instructions/svelte.instructions.md` - Svelte coding standards
@@ -258,22 +266,27 @@ specs/014-railway-model-page/
 ## 🎓 Key Decisions & Rationale
 
 ### 1. DDD Architecture for Media Module
+
 **Why**: Maintains consistency with existing codebase (catalog, collecting, etc.)  
 **Impact**: Clear separation of concerns, testable, maintainable
 
 ### 2. Placeholder via HTML/CSS
+
 **Why**: No additional rendering complexity, pure static content  
 **Impact**: Frontend receives complete HTML, no JavaScript needed for fallback
 
 ### 3. Image File Storage
+
 **Why**: Simple filesystem-based approach, no additional database tables  
 **Impact**: Fast retrieval, secure path validation required
 
 ### 4. Tab-Based Organization
+
 **Why**: Prevents scrolling overload, clear information hierarchy  
 **Impact**: Better UX for long content, faster cognitive processing
 
 ### 5. Expandable Rolling Stock Cards
+
 **Why**: Collectors have multiple units per model, need detailed inspection  
 **Impact**: Scalable UI, independent card states, no auto-close behavior
 
@@ -295,17 +308,20 @@ specs/014-railway-model-page/
 ## 📞 Resources & Support
 
 ### Documentation
+
 - **Feature Specification**: [spec.md](./spec.md)
 - **Implementation Plan**: [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 - **Quick Reference**: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 - **Tech Stack**: [TECH_STACK.md](./TECH_STACK.md) and [TECH_STACK_SUMMARY.md](../../TECH_STACK_SUMMARY.md)
 
 ### Code Examples
+
 - **Existing Modules**: `src-tauri/src/catalog/`, `src-tauri/src/collecting/` (DDD pattern)
 - **Command Pattern**: See `src-tauri/src/lib.rs` (current get_image_path command)
 - **Frontend Routes**: `src/routes/collection/`, `src/routes/wishlist/` (SvelteKit patterns)
 
 ### Standards
+
 - **Rust**: [.github/instructions/rust.instructions.md](../../.github/instructions/rust.instructions.md)
 - **Svelte**: [.github/instructions/svelte.instructions.md](../../.github/instructions/svelte.instructions.md)
 - **Global**: [.github/copilot-instructions.md](../../.github/copilot-instructions.md)
@@ -315,24 +331,28 @@ specs/014-railway-model-page/
 ## 🎉 Next Steps
 
 ### Immediate (This Sprint)
+
 1. **Team Review**: Present planning to implementation team
 2. **Answer Questions**: Clarify any ambiguities in specification
 3. **Resource Allocation**: Assign backend and frontend developers
 4. **Environment Setup**: Ensure development environment ready
 
 ### Sprint Planning
+
 1. **Estimate Stories**: Break down 5 phases into sprint tasks
 2. **Create Tasks**: Add to project management tool
 3. **Define Acceptance**: Reference [requirements.md](./checklists/requirements.md)
 4. **Sprint Assignment**: Assign to team members
 
 ### Implementation Start
+
 1. **Create Task Board**: Track progress through 5 phases
 2. **Daily Standups**: Sync on blockers and cross-team dependencies
 3. **Continuous Integration**: Run checks (Clippy, type checking, tests)
 4. **Code Review**: Peer review before each phase completion
 
 ### Completion & Merge
+
 1. **Acceptance Testing**: Verify all acceptance scenarios
 2. **Performance Testing**: Validate page load < 1s target
 3. **Accessibility Audit**: WCAG 2.1 AA compliance
@@ -372,4 +392,4 @@ The feature will significantly enhance the user experience by allowing collector
 
 ---
 
-*All documentation available in [specs/014-railway-model-page/](.) directory*
+_All documentation available in [specs/014-railway-model-page/](.) directory_

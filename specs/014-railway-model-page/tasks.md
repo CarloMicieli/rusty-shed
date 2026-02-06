@@ -471,24 +471,24 @@ interface Props {
 
 ### T029: Apply Tailwind CSS Styling
 
-- [X] T029 Review all components for Tailwind utility classes
-- [X] T029 Ensure consistent spacing, colors, typography
-- [X] T029 Verify responsive design on mobile (320px), tablet (768px), desktop (1920px)
-- [X] T029 Test dark mode compatibility (if applicable)
-- [X] T029 Use shadcn-svelte component styling consistently
-- [X] T029 Remove any custom CSS (use utilities instead)
+- [x] T029 Review all components for Tailwind utility classes
+- [x] T029 Ensure consistent spacing, colors, typography
+- [x] T029 Verify responsive design on mobile (320px), tablet (768px), desktop (1920px)
+- [x] T029 Test dark mode compatibility (if applicable)
+- [x] T029 Use shadcn-svelte component styling consistently
+- [x] T029 Remove any custom CSS (use utilities instead)
 
 **File Paths**: All component files
 
 ### T030: Implement Paraglide-JS Localization
 
-- [X] T030 Extract all hardcoded user-facing text
-- [X] T030 Add to `messages/en.json`
-- [X] T030 Add translations to `messages/it.json`
-- [X] T030 Import i18n runtime: `import { t } from '$lib/paraglide/runtime'`
-- [X] T030 Replace all strings with `t('message.key')`
-- [X] T030 Run `pnpm prepare` to compile messages
-- [X] T030 Test both English and Italian in browser
+- [x] T030 Extract all hardcoded user-facing text
+- [x] T030 Add to `messages/en.json`
+- [x] T030 Add translations to `messages/it.json`
+- [x] T030 Import i18n runtime: `import { t } from '$lib/paraglide/runtime'`
+- [x] T030 Replace all strings with `t('message.key')`
+- [x] T030 Run `pnpm prepare` to compile messages
+- [x] T030 Test both English and Italian in browser
 
 **Strings to Localize**:
 
@@ -507,23 +507,23 @@ interface Props {
 
 ### T031: Add Accessibility Features
 
-- [X] T031 Review all components for semantic HTML
-- [X] T031 Add ARIA labels where needed
-- [X] T031 Ensure keyboard navigation works (Tab, Enter, Arrow keys)
-- [X] T031 Test with screen reader (NVDA or JAWS)
-- [X] T031 Verify color contrast ratios (WCAG 2.1 AA minimum)
-- [X] T031 Ensure focus indicators visible
-- [X] T031 Test with keyboard only (no mouse)
+- [x] T031 Review all components for semantic HTML
+- [x] T031 Add ARIA labels where needed
+- [x] T031 Ensure keyboard navigation works (Tab, Enter, Arrow keys)
+- [x] T031 Test with screen reader (NVDA or JAWS)
+- [x] T031 Verify color contrast ratios (WCAG 2.1 AA minimum)
+- [x] T031 Ensure focus indicators visible
+- [x] T031 Test with keyboard only (no mouse)
 
 **File Paths**: All component files
 
 ### T032: Verify Frontend Styling
 
-- [X] T032 Run `pnpm check` - TypeScript type check passes
-- [X] T032 Run `pnpm lint` - ESLint passes
-- [X] T032 Run `pnpm format` - Prettier formatting applied
-- [X] T032 Review all files in browser at different viewport sizes
-- [X] T032 Manual accessibility audit with screen reader
+- [x] T032 Run `pnpm check` - TypeScript type check passes
+- [x] T032 Run `pnpm lint` - ESLint passes
+- [x] T032 Run `pnpm format` - Prettier formatting applied
+- [x] T032 Review all files in browser at different viewport sizes
+- [x] T032 Manual accessibility audit with screen reader
 
 ---
 
@@ -531,46 +531,46 @@ interface Props {
 
 ### T033: Create Page Component Tests
 
-- [X] T033 Create `src/routes/models/[modelId]/+page.test.ts`
-- [X] T033 Test page loads with valid model ID
-- [X] T033 Test renders model information correctly
-- [X] T033 Test image loads or placeholder displays
-- [X] T033 Test tabs switch content
-- [X] T033 Use Vitest + Playwright
-- [X] T033 Add tests for error scenarios
+- [x] T033 Create `src/routes/models/[modelId]/+page.test.ts`
+- [x] T033 Test page loads with valid model ID
+- [x] T033 Test renders model information correctly
+- [x] T033 Test image loads or placeholder displays
+- [x] T033 Test tabs switch content
+- [x] T033 Use Vitest + Playwright
+- [x] T033 Add tests for error scenarios
 
 **File Paths**: `src/routes/models/[modelId]/__tests__/+page.test.ts`
 
 ### T034: Create Component Unit Tests
 
-- [X] T034 Create tests for ModelDetailsHeader.svelte
-- [X] T034 Create tests for RollingStockCard.svelte
-- [X] T034 Create tests for TechSpecGrid.svelte
-- [X] T034 Create tests for ModelDetailsTabs.svelte
-- [X] T034 Test props rendering
-- [X] T034 Test user interactions
-- [X] T034 Test accessibility
+- [x] T034 Create tests for ModelDetailsHeader.svelte
+- [x] T034 Create tests for RollingStockCard.svelte
+- [x] T034 Create tests for TechSpecGrid.svelte
+- [x] T034 Create tests for ModelDetailsTabs.svelte
+- [x] T034 Test props rendering
+- [x] T034 Test user interactions
+- [x] T034 Test accessibility
 
 **File Paths**: `src/lib/components/__tests__/`
 
 ### T035: Test Localization
 
-- [X] T035 Test English language strings display correctly
-- [X] T035 Test Italian language strings display correctly
-- [X] T035 Test language switching (if supported)
-- [X] T035 Verify all UI text is localized
+- [x] T035 Test English language strings display correctly
+- [x] T035 Test Italian language strings display correctly
+- [x] T035 Test language switching (if supported)
+- [x] T035 Verify all UI text is localized
 
 **File Paths**: Manual testing in browser
 
 ### T036: Cross-Platform Testing
 
-- [X] T036 Test on Windows (native installer)
-- [X] T036 Test on macOS (.dmg)
-- [X] T036 Test on Linux (.AppImage)
-- [X] T036 Verify page load performance (< 1 second target)
-- [X] T036 Check animations smooth (< 300ms)
-- [X] T036 Test image loading on slow network
-- [X] T036 Test with no image available (placeholder)
+- [x] T036 Test on Windows (native installer)
+- [x] T036 Test on macOS (.dmg)
+- [x] T036 Test on Linux (.AppImage)
+- [x] T036 Verify page load performance (< 1 second target)
+- [x] T036 Check animations smooth (< 300ms)
+- [x] T036 Test image loading on slow network
+- [x] T036 Test with no image available (placeholder)
 
 ---
 
@@ -578,15 +578,15 @@ interface Props {
 
 ### T037: Test Backend-Frontend Integration
 
-- [ ] T037 Run `pnpm dev` to start dev server
-- [ ] T037 Navigate to collection, click model card
-- [ ] T037 Verify details page opens with correct model
-- [ ] T037 Verify image loads or placeholder displays
-- [ ] T037 Verify tabs switch correctly
-- [ ] T037 Verify rolling stock cards expand/collapse
-- [ ] T037 Verify all data displays correctly
-- [ ] T037 Check browser console for errors
-- [ ] T037 Verify TypeScript bindings working
+- [x] T037 Run `pnpm dev` to start dev server
+- [x] T037 Navigate to collection, click model card
+- [x] T037 Verify details page opens with correct model
+- [x] T037 Verify image loads or placeholder displays
+- [x] T037 Verify tabs switch correctly
+- [x] T037 Verify rolling stock cards expand/collapse
+- [x] T037 Verify all data displays correctly
+- [x] T037 Check browser console for errors
+- [x] T037 Verify TypeScript bindings working
 
 **Manual Testing Checklist**:
 
@@ -604,34 +604,34 @@ interface Props {
 
 ### T038: Verify All Requirements Met
 
-- [ ] T038 Map each FR (functional requirement) to implemented feature
-- [ ] T038 Verify FR-001: Route `/models/{modelId}` works
-- [ ] T038 Verify FR-002: Header displays title
-- [ ] T038 Verify FR-003: Header displays manufacturer | product code
-- [ ] T038 Verify FR-004: Hero image or placeholder displays
-- [ ] T038 Verify FR-005: Badges show scale, era, power method
-- [ ] T038 Verify FR-006: Two tabs present (Details, Rolling Stock)
-- [ ] T038 Verify FR-007: Details tab shows description
-- [ ] T038 Verify FR-008: Rolling Stock tab shows units
-- [ ] T038 Verify FR-009: Card headers show "{type} — {road_number}"
-- [ ] T038 Verify FR-010: Expanded cards show all details
-- [ ] T038 Verify FR-011: Tech specs in responsive grid
-- [ ] T038 Verify FR-012: Cards expand/collapse independently
-- [ ] T038 Verify FR-013: Tab state preserved
-- [ ] T038 Verify FR-014: Missing fields omitted (not shown as "N/A")
-- [ ] T038 Verify FR-015: Empty state when no rolling stock
-- [ ] T038 Verify FR-016: 100% Paraglide-JS localization
+- [x] T038 Map each FR (functional requirement) to implemented feature
+- [x] T038 Verify FR-001: Route `/models/{modelId}` works
+- [x] T038 Verify FR-002: Header displays title
+- [x] T038 Verify FR-003: Header displays manufacturer | product code
+- [x] T038 Verify FR-004: Hero image or placeholder displays
+- [x] T038 Verify FR-005: Badges show scale, era, power method
+- [x] T038 Verify FR-006: Two tabs present (Details, Rolling Stock)
+- [x] T038 Verify FR-007: Details tab shows description
+- [x] T038 Verify FR-008: Rolling Stock tab shows units
+- [x] T038 Verify FR-009: Card headers show "{type} — {road_number}"
+- [x] T038 Verify FR-010: Expanded cards show all details
+- [x] T038 Verify FR-011: Tech specs in responsive grid
+- [x] T038 Verify FR-012: Cards expand/collapse independently
+- [x] T038 Verify FR-013: Tab state preserved
+- [x] T038 Verify FR-014: Missing fields omitted (not shown as "N/A")
+- [x] T038 Verify FR-015: Empty state when no rolling stock
+- [x] T038 Verify FR-016: 100% Paraglide-JS localization
 
 **File Paths**: Specification checklist in IMPLEMENTATION_PLAN.md
 
 ### T039: Verify Success Criteria
 
-- [ ] T039 SC-001: Page load < 1 second (use DevTools Performance tab)
-- [ ] T039 SC-002: No layout shifts on load (check Cumulative Layout Shift)
-- [ ] T039 SC-003: Card animations < 300ms (check DevTools)
-- [ ] T039 SC-004: 100% Paraglide-JS coverage (search for hardcoded strings)
-- [ ] T039 SC-005: Responsive design on 320px, 768px, 1920px
-- [ ] T039 SC-006: Keyboard accessible (Tab, Enter, Arrow keys)
+- [x] T039 SC-001: Page load < 1 second (use DevTools Performance tab)
+- [x] T039 SC-002: No layout shifts on load (check Cumulative Layout Shift)
+- [x] T039 SC-003: Card animations < 300ms (check DevTools)
+- [x] T039 SC-004: 100% Paraglide-JS coverage (search for hardcoded strings)
+- [x] T039 SC-005: Responsive design on 320px, 768px, 1920px
+- [x] T039 SC-006: Keyboard accessible (Tab, Enter, Arrow keys)
 
 ---
 

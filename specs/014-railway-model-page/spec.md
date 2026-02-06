@@ -10,22 +10,27 @@
 ## Implementation Scope
 
 ### Backend: Media Module Creation (Prerequisite)
+
 Creating a new **media** feature module in the Rust backend to handle image management. This is a prerequisite for the details page image functionality.
 
 **Scope**:
+
 - Move existing `get_image_path` command from `lib.rs` to structured `media` module
 - Implement DDD architecture with application, domain, infrastructure, and interface layers
 - Add fallback placeholder generation (HTML/CSS) when no image available
 - Validate filesystem paths to prevent traversal attacks
 
 **Artifacts**:
+
 - Implementation plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 - Tech stack reference: [TECH_STACK.md](TECH_STACK.md)
 
 ### Frontend: Railway Model Details Page (Feature Story)
+
 Building the UI page that displays comprehensive model information organized in tabs.
 
 **Scope**:
+
 - Create route `/models/[modelId]/+page.svelte`
 - Implement header with title, subtitle, hero image, and quick badges
 - Organize content into "Details" and "Rolling Stock" tabs

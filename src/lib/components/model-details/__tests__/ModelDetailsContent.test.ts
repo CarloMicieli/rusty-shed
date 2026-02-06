@@ -16,7 +16,7 @@ describe('ModelDetailsContent', () => {
   describe('Rendering', () => {
     it('should render details text when provided', () => {
       const details = 'This is a detailed description of the railway model.';
-      
+
       render(ModelDetailsContent, {
         props: {
           details
@@ -33,7 +33,9 @@ describe('ModelDetailsContent', () => {
         }
       });
 
-      expect(screen.getByText('No detailed description available for this model.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No detailed description available for this model.')
+      ).toBeInTheDocument();
     });
 
     it('should render empty state message when details is undefined', () => {
@@ -43,7 +45,9 @@ describe('ModelDetailsContent', () => {
         }
       });
 
-      expect(screen.getByText('No detailed description available for this model.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No detailed description available for this model.')
+      ).toBeInTheDocument();
     });
 
     it('should render empty state message when details is empty string', () => {
@@ -53,12 +57,14 @@ describe('ModelDetailsContent', () => {
         }
       });
 
-      expect(screen.getByText('No detailed description available for this model.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No detailed description available for this model.')
+      ).toBeInTheDocument();
     });
 
     it('should render multiline details correctly', () => {
       const details = 'Line 1\nLine 2\nLine 3';
-      
+
       render(ModelDetailsContent, {
         props: {
           details
@@ -101,7 +107,7 @@ describe('ModelDetailsContent', () => {
   describe('Content Formatting', () => {
     it('should render text content in paragraph', () => {
       const details = 'Simple text content';
-      
+
       render(ModelDetailsContent, {
         props: {
           details
@@ -113,7 +119,7 @@ describe('ModelDetailsContent', () => {
 
     it('should handle long text content', () => {
       const longDetails = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(20);
-      
+
       render(ModelDetailsContent, {
         props: {
           details: longDetails
@@ -126,7 +132,7 @@ describe('ModelDetailsContent', () => {
 
     it('should handle special characters', () => {
       const details = 'Model with special chars: é, ü, ñ';
-      
+
       render(ModelDetailsContent, {
         props: {
           details
@@ -140,7 +146,7 @@ describe('ModelDetailsContent', () => {
   describe('Accessibility', () => {
     it('should render semantic paragraph element', () => {
       const details = 'Test content';
-      
+
       const { container } = render(ModelDetailsContent, {
         props: {
           details
@@ -154,7 +160,7 @@ describe('ModelDetailsContent', () => {
 
     it('should be readable by screen readers', () => {
       const details = 'Important railway model information';
-      
+
       render(ModelDetailsContent, {
         props: {
           details

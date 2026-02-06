@@ -8,26 +8,28 @@
 
 ## 📍 File Locations
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| Specification | `specs/014-railway-model-page/spec.md` | User stories, requirements, success criteria |
-| Tech Stack (Feature) | `specs/014-railway-model-page/TECH_STACK.md` | Technologies used for this feature |
-| Implementation Plan | `specs/014-railway-model-page/IMPLEMENTATION_PLAN.md` | Backend media module detailed design |
-| Tech Stack (Repo) | `TECH_STACK_SUMMARY.md` | Overall project architecture |
-| Planning Summary | `specs/014-railway-model-page/README.md` | Complete planning overview |
-| Spec Checklist | `specs/014-railway-model-page/checklists/requirements.md` | Quality validation |
+| Document             | Location                                                  | Purpose                                      |
+| -------------------- | --------------------------------------------------------- | -------------------------------------------- |
+| Specification        | `specs/014-railway-model-page/spec.md`                    | User stories, requirements, success criteria |
+| Tech Stack (Feature) | `specs/014-railway-model-page/TECH_STACK.md`              | Technologies used for this feature           |
+| Implementation Plan  | `specs/014-railway-model-page/IMPLEMENTATION_PLAN.md`     | Backend media module detailed design         |
+| Tech Stack (Repo)    | `TECH_STACK_SUMMARY.md`                                   | Overall project architecture                 |
+| Planning Summary     | `specs/014-railway-model-page/README.md`                  | Complete planning overview                   |
+| Spec Checklist       | `specs/014-railway-model-page/checklists/requirements.md` | Quality validation                           |
 
 ---
 
 ## 🎯 Feature at a Glance
 
 ### What It Does
+
 - User clicks on railway model card → Details page opens
 - Page displays model header (image, title, manufacturer, badges)
 - Content organized in two tabs: Details & Rolling Stock
 - Rolling stock units displayed as expandable cards
 
 ### Key Requirements
+
 - Route: `/models/{modelId}`
 - Header with hero image (or CSS placeholder)
 - Two tabs (Details, Rolling Stock)
@@ -40,6 +42,7 @@
 ## 🚀 Implementation Roadmap
 
 ### Phase 1: Backend Media Module (Prerequisite)
+
 **Timeline**: ~3-5 days  
 **Owner**: Backend Developer
 
@@ -72,6 +75,7 @@ Phase 5: Integration
 ```
 
 **Verification**:
+
 ```bash
 pnpm rust:fmt
 pnpm rust:clippy  # Must pass with zero warnings
@@ -79,6 +83,7 @@ pnpm rust:test    # All tests pass
 ```
 
 ### Phase 2: Frontend Details Page (Parallel with Backend)
+
 **Timeline**: ~4-6 days  
 **Owner**: Frontend Developer
 
@@ -114,6 +119,7 @@ Step 6: Testing
 ```
 
 **Verification**:
+
 ```bash
 pnpm check        # Type checking
 pnpm lint         # ESLint
@@ -121,6 +127,7 @@ pnpm test         # Vitest
 ```
 
 ### Phase 3: Integration & Testing
+
 **Timeline**: ~2-3 days
 
 ```
@@ -147,6 +154,7 @@ Step 4: Localization check
 ```
 
 ### Phase 4: Code Review & Merge
+
 **Timeline**: ~1 day
 
 ```
@@ -172,6 +180,7 @@ Step 3: Merge to main
 ## 💻 Development Commands
 
 ### Backend Setup
+
 ```bash
 # Format Rust code
 pnpm rust:fmt
@@ -188,6 +197,7 @@ pnpm rust:test
 ```
 
 ### Frontend Setup
+
 ```bash
 # Start dev server
 pnpm dev
@@ -207,6 +217,7 @@ pnpm build
 ```
 
 ### Desktop App
+
 ```bash
 # Run in dev mode
 pnpm tauri dev
@@ -220,6 +231,7 @@ pnpm tauri build
 ## 🏗️ Architecture References
 
 ### Backend: Media Module Structure
+
 ```
 src-tauri/src/media/
 ├── mod.rs
@@ -243,6 +255,7 @@ src-tauri/src/media/
 ```
 
 ### Frontend: Route Structure
+
 ```
 src/routes/
 ├── models/
@@ -256,15 +269,15 @@ src/routes/
 
 ## 📊 Key Metrics & Targets
 
-| Metric | Target |
-|--------|--------|
-| Page load time | < 1 second |
-| Card animation | < 300ms |
-| Test coverage | > 80% |
-| Accessibility | WCAG 2.1 AA |
-| Responsive | 320px, 768px, 1920px |
-| Localization | 100% (EN, IT) |
-| Code quality | Clippy: zero warnings |
+| Metric         | Target                |
+| -------------- | --------------------- |
+| Page load time | < 1 second            |
+| Card animation | < 300ms               |
+| Test coverage  | > 80%                 |
+| Accessibility  | WCAG 2.1 AA           |
+| Responsive     | 320px, 768px, 1920px  |
+| Localization   | 100% (EN, IT)         |
+| Code quality   | Clippy: zero warnings |
 
 ---
 
@@ -282,6 +295,7 @@ src/routes/
 ## 📝 Code Style Reminders
 
 ### Rust
+
 - Follow RFC 430 naming conventions
 - Use strong typing (newtype patterns)
 - Return `Result<T, E>` instead of panicking
@@ -290,6 +304,7 @@ src/routes/
 - Use `?` operator for error propagation
 
 ### TypeScript
+
 - Use TypeScript strict mode
 - Use Svelte 5 Runes (`$state`, `$derived`, `$props`)
 - Use Paraglide-JS for all user-facing text
@@ -302,21 +317,22 @@ src/routes/
 ## 🧪 Testing Strategy
 
 ### Backend
+
 ```rust
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_filename_resolution() {
         // Test: "trn:railway-model:abc" → "trn_railway-model_abc"
     }
-    
+
     #[tokio::test]
     async fn test_image_retrieval() {
         // Test: Find image in filesystem
     }
-    
+
     #[test]
     fn test_path_validation() {
         // Test: Prevent traversal attacks
@@ -325,17 +341,18 @@ mod tests {
 ```
 
 ### Frontend
+
 ```typescript
 // Component tests with Vitest
 describe('ModelDetailsPage', () => {
   it('should render header with title', () => {
     // Test header displays model description
   });
-  
+
   it('should toggle rolling stock card', () => {
     // Test card expand/collapse
   });
-  
+
   it('should preserve tab state', () => {
     // Test tab navigation persistence
   });
@@ -362,6 +379,7 @@ describe('ModelDetailsPage', () => {
 ## ✅ Definition of Done
 
 ### Code
+
 - [x] Specification met (all 16 requirements implemented)
 - [x] All acceptance scenarios passing
 - [x] Edge cases handled
@@ -370,6 +388,7 @@ describe('ModelDetailsPage', () => {
 - [x] Documentation written (rustdoc, JSDoc)
 
 ### Testing
+
 - [x] Unit tests passing (>80% coverage)
 - [x] Integration tests passing
 - [x] Manual testing on all platforms
@@ -377,6 +396,7 @@ describe('ModelDetailsPage', () => {
 - [x] Performance targets met
 
 ### Quality
+
 - [x] `pnpm rust:clippy` passing (zero warnings)
 - [x] `pnpm rust:fmt` applied
 - [x] `pnpm check` passing
@@ -384,6 +404,7 @@ describe('ModelDetailsPage', () => {
 - [x] Code reviewed and approved
 
 ### Release
+
 - [x] CHANGELOG.md updated
 - [x] Branch merged to main
 - [x] Installers tested
@@ -394,15 +415,18 @@ describe('ModelDetailsPage', () => {
 ## 🔗 Important Links
 
 **Specification Files**:
+
 - Main spec: `specs/014-railway-model-page/spec.md`
 - Tech stack: `specs/014-railway-model-page/TECH_STACK.md`
 - Implementation plan: `specs/014-railway-model-page/IMPLEMENTATION_PLAN.md`
 
 **Project Standards**:
+
 - Rust standards: `.github/instructions/rust.instructions.md`
 - Svelte standards: `.github/instructions/svelte.instructions.md`
 
 **Repository Overview**:
+
 - Tech stack summary: `TECH_STACK_SUMMARY.md`
 - Feature implementation guide: `docs/FEATURE_IMPLEMENTATION.md`
 
@@ -411,6 +435,7 @@ describe('ModelDetailsPage', () => {
 ## 📞 Questions?
 
 Refer to:
+
 1. **Specification** for business requirements
 2. **Implementation Plan** for technical design
 3. **Tech Stack** documents for technology decisions

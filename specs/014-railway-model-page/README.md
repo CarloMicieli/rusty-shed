@@ -11,6 +11,7 @@
 Complete planning documentation for **Feature 014: Railway Model Details Page** has been created and committed. This feature enables users to click on a railway model card in their collection and view a detailed page with comprehensive model information, organized into tabs with expandable rolling stock cards.
 
 The feature is split into two parallel work streams:
+
 1. **Backend**: Media module for image management (prerequisite)
 2. **Frontend**: Railway model details page UI (main feature)
 
@@ -19,6 +20,7 @@ The feature is split into two parallel work streams:
 ## 📋 Delivered Documentation
 
 ### 1. Feature Specification
+
 **File**: [specs/014-railway-model-page/spec.md](specs/014-railway-model-page/spec.md)
 
 - ✅ 3 P1 user stories (all equally critical)
@@ -29,6 +31,7 @@ The feature is split into two parallel work streams:
 - ✅ Assumptions and scope boundaries clearly defined
 
 **User Stories**:
+
 1. **View Railway Model Details** - Core page functionality
 2. **Navigate Model Information via Tabs** - Tab-based organization
 3. **Explore Individual Rolling Stock Units** - Expandable unit cards
@@ -36,11 +39,13 @@ The feature is split into two parallel work streams:
 ---
 
 ### 2. Technology Stack Reference
+
 **File**: [specs/014-railway-model-page/TECH_STACK.md](specs/014-railway-model-page/TECH_STACK.md)
 
 Complete tech stack for the feature:
 
 **Frontend Stack**:
+
 - Svelte 5 (with Runes: `$state`, `$derived`, `$props`)
 - TypeScript (strict mode)
 - Vite (build) + SvelteKit (routing)
@@ -49,6 +54,7 @@ Complete tech stack for the feature:
 - Vitest + Playwright (testing)
 
 **Backend Stack**:
+
 - Rust 1.93.0+ with Tauri 2.9.5
 - Tokio async runtime
 - SQLite + sqlx ORM
@@ -57,17 +63,20 @@ Complete tech stack for the feature:
 - Image storage: Models directory with filesystem-based image retrieval
 
 **IPC Communication**:
+
 - Tauri command pattern with automatic TypeScript bindings
 - Type-safe from Rust → TypeScript
 
 ---
 
 ### 3. Media Module Implementation Plan
+
 **File**: [specs/014-railway-model-page/IMPLEMENTATION_PLAN.md](specs/014-railway-model-page/IMPLEMENTATION_PLAN.md)
 
 **Comprehensive 5-phase implementation roadmap** for the backend media module:
 
 #### Architecture (DDD Pattern)
+
 ```
 media/
 ├── domain/
@@ -86,6 +95,7 @@ media/
 ```
 
 #### Implementation Phases
+
 1. **Phase 1**: Domain layer (entities, value objects, errors)
 2. **Phase 2**: Application layer (use cases)
 3. **Phase 3**: Infrastructure layer (file I/O, placeholder generation)
@@ -93,6 +103,7 @@ media/
 5. **Phase 5**: Integration (add to lib.rs, remove old get_image_path)
 
 #### Key Features
+
 - ✅ Type-safe image retrieval
 - ✅ Path traversal attack prevention
 - ✅ Fallback placeholder (HTML/CSS) generation
@@ -104,9 +115,11 @@ media/
 ---
 
 ### 4. Repository-Wide Tech Stack
+
 **File**: [TECH_STACK_SUMMARY.md](TECH_STACK_SUMMARY.md)
 
 Complete overview of the entire Rusty Shed repository:
+
 - Full technology matrix for frontend and backend
 - DDD architecture explanation
 - Module structure
@@ -120,9 +133,11 @@ Complete overview of the entire Rusty Shed repository:
 ---
 
 ### 5. Specification Quality Checklist
+
 **File**: [specs/014-railway-model-page/checklists/requirements.md](specs/014-railway-model-page/checklists/requirements.md)
 
 ✅ All checklist items passing:
+
 - [x] No implementation details (user/business focused)
 - [x] All mandatory sections completed
 - [x] No unresolved clarifications
@@ -136,20 +151,24 @@ Complete overview of the entire Rusty Shed repository:
 ## 🎯 Feature Highlights
 
 ### Header Section
+
 - **Primary Title**: Model description (e.g., "DB BR 218 Diesel Locomotive")
 - **Subtitle**: Manufacturer | Product Code
 - **Hero Image**: Actual photo or CSS/HTML placeholder
 - **Quick Badges**: Scale, Era, Power Method (for at-a-glance identification)
 
 ### Tab Organization
+
 1. **Details Tab**: Full detailed description of the model
 2. **Rolling Stock Tab**: List of owned units with expandable cards
 
 ### Rolling Stock Cards
+
 - **Collapsed Header**: `{Type} — {Road Number}` (e.g., "Locomotive — 218 217-8")
 - **Expanded Body**: Type, Road Number, Depot, Series Code, Railway Company, Country, Livery, Technical Specs
 
 ### Accessibility & Responsiveness
+
 - WCAG 2.1 AA compliance required
 - Mobile (320px), Tablet (768px), Desktop (1920px) all supported
 - Keyboard navigation for all interactive elements
@@ -159,22 +178,23 @@ Complete overview of the entire Rusty Shed repository:
 
 ## 📊 Specification Metrics
 
-| Metric | Value |
-|--------|-------|
-| **User Stories** | 3 (all P1) |
-| **Functional Requirements** | 16 |
-| **Edge Cases** | 5 |
-| **Success Criteria** | 6 (measurable) |
-| **Key Entities** | 3 (RailwayModel, RollingStock, TechnicalSpec) |
-| **Frontend Routes** | 1 (`/models/[modelId]`) |
-| **Tauri Commands** | 2 (get_railway_model_image + existing data queries) |
-| **Documentation Files** | 5 |
+| Metric                      | Value                                               |
+| --------------------------- | --------------------------------------------------- |
+| **User Stories**            | 3 (all P1)                                          |
+| **Functional Requirements** | 16                                                  |
+| **Edge Cases**              | 5                                                   |
+| **Success Criteria**        | 6 (measurable)                                      |
+| **Key Entities**            | 3 (RailwayModel, RollingStock, TechnicalSpec)       |
+| **Frontend Routes**         | 1 (`/models/[modelId]`)                             |
+| **Tauri Commands**          | 2 (get_railway_model_image + existing data queries) |
+| **Documentation Files**     | 5                                                   |
 
 ---
 
 ## 🚀 Next Steps (Implementation Phase)
 
 ### Backend Work (Feature Squad)
+
 1. **Implement Media Module**
    - Follow IMPLEMENTATION_PLAN.md (5 phases)
    - Create DDD-structured module
@@ -183,6 +203,7 @@ Complete overview of the entire Rusty Shed repository:
    - Run `pnpm rust:fmt`, `pnpm rust:clippy`, `pnpm rust:test`
 
 ### Frontend Work (Feature Squad)
+
 2. **Implement Details Page**
    - Create route: `/src/routes/models/[modelId]/+page.svelte`
    - Implement header with hero image + badges
@@ -193,6 +214,7 @@ Complete overview of the entire Rusty Shed repository:
    - Run `pnpm check`, `pnpm lint`, `pnpm test`
 
 ### Testing & Verification
+
 3. **Quality Assurance**
    - Unit tests for all components
    - Manual testing on Windows, macOS, Linux
@@ -201,6 +223,7 @@ Complete overview of the entire Rusty Shed repository:
    - Localization verification (EN & IT)
 
 ### Deployment
+
 4. **Release**
    - Merge to main after review
    - Verify TypeScript bindings generated
@@ -226,6 +249,7 @@ specs/014-railway-model-page/
 ## 📋 Functional Requirements Summary
 
 ### Display & Navigation (FR-001 to FR-006)
+
 - [x] Route: `/models/{modelId}`
 - [x] Header displays model description, manufacturer, product code
 - [x] Hero image (actual or CSS placeholder)
@@ -233,12 +257,14 @@ specs/014-railway-model-page/
 - [x] Two tabs: Details & Rolling Stock
 
 ### Content Organization (FR-007 to FR-010)
+
 - [x] Details tab shows full description
 - [x] Rolling Stock tab displays units as cards
 - [x] Card header format: `{type} — {road_number}`
 - [x] Expanded card shows all unit details
 
 ### UX Features (FR-011 to FR-016)
+
 - [x] Responsive grid/table for technical specs
 - [x] Independent card expand/collapse
 - [x] Tab state preservation
@@ -250,28 +276,30 @@ specs/014-railway-model-page/
 
 ## ✨ Quality Assurance Targets
 
-| Aspect | Target | Status |
-|--------|--------|--------|
-| **Performance** | < 1 second page load | Specified |
-| **Animation** | < 300ms card expand/collapse | Specified |
-| **Accessibility** | WCAG 2.1 AA | Specified |
-| **Responsiveness** | 320px, 768px, 1920px viewports | Specified |
-| **Localization** | 100% Paraglide-JS | Specified |
-| **Type Safety** | Full TypeScript + Rust coverage | Specified |
-| **Code Quality** | Clippy: zero warnings | Specified |
-| **Testing** | Unit + integration tests | Specified |
+| Aspect             | Target                          | Status    |
+| ------------------ | ------------------------------- | --------- |
+| **Performance**    | < 1 second page load            | Specified |
+| **Animation**      | < 300ms card expand/collapse    | Specified |
+| **Accessibility**  | WCAG 2.1 AA                     | Specified |
+| **Responsiveness** | 320px, 768px, 1920px viewports  | Specified |
+| **Localization**   | 100% Paraglide-JS               | Specified |
+| **Type Safety**    | Full TypeScript + Rust coverage | Specified |
+| **Code Quality**   | Clippy: zero warnings           | Specified |
+| **Testing**        | Unit + integration tests        | Specified |
 
 ---
 
 ## 🔗 Related Resources
 
 ### In-Repo Documentation
+
 - [Rust Standards](/.github/instructions/rust.instructions.md)
 - [Svelte Standards](/.github/instructions/svelte.instructions.md)
 - [Global Copilot Instructions](/.github/copilot-instructions.md)
 - [Feature Implementation Guide](/docs/FEATURE_IMPLEMENTATION.md)
 
 ### External References
+
 - [Tauri Documentation](https://tauri.app/)
 - [Svelte 5 Docs](https://svelte.dev/docs/svelte/what-is-svelte)
 - [Tailwind CSS](https://tailwindcss.com/)
@@ -302,18 +330,21 @@ specs/014-railway-model-page/
 ## 📝 Final Notes
 
 ### For Feature Squad (Implementation)
+
 - Start with **backend media module** (prerequisite for image retrieval)
 - Follow **IMPLEMENTATION_PLAN.md** exactly (5 phases)
 - Frontend implementation can proceed in parallel once backend API is exposed
 - Use **TECH_STACK.md** as reference for technology-specific questions
 
 ### For Reviewers
+
 - Specification is **non-technical** and focuses on user value
 - Technology decisions are **documented in TECH_STACK.md**
 - Implementation approach is **detailed in IMPLEMENTATION_PLAN.md**
 - All functional requirements are **testable and measurable**
 
 ### For Project Manager
+
 - Feature is **well-scoped** with 3 independent P1 stories
 - Estimated effort: ~2 weeks (backend module + frontend page)
 - **No database schema changes** required
@@ -325,6 +356,7 @@ specs/014-railway-model-page/
 ## 🎓 Learning Resources
 
 For team members unfamiliar with project patterns:
+
 1. Read `TECH_STACK_SUMMARY.md` for architecture overview
 2. Review existing modules (e.g., `catalog/`, `collecting/`) for DDD pattern examples
 3. Check `IMPLEMENTATION_PLAN.md` for detailed design decisions
@@ -339,4 +371,4 @@ For team members unfamiliar with project patterns:
 
 ---
 
-*All documentation generated and committed: February 6, 2026*
+_All documentation generated and committed: February 6, 2026_
