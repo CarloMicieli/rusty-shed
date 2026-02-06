@@ -93,7 +93,7 @@ describe('ModelDetailsContent', () => {
     });
 
     it('should apply muted foreground to empty state', () => {
-      const { container } = render(ModelDetailsContent, {
+      render(ModelDetailsContent, {
         props: {
           details: null
         }
