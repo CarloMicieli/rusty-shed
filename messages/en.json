@@ -648,5 +648,9 @@
   "cloud_backup_error_not_connected": "Not connected to Google Drive",
   "cloud_backup_error_token_expired": "Session expired. Please reconnect.",
   "cloud_backup_error_import_in_progress": "Cannot sync during data import",
-  "cloud_backup_error_network": "Network error. Check your connection."
+  "cloud_backup_error_network": "Network error. Check your connection.",
+  "model_details_tab": "Details",
+  "model_rolling_stock_tab": "Rolling Stock",
+  "model_no_details": "No detailed description available for this model.",
+  "model_no_rolling_stock": "No rolling stock units found for this model."
 }

@@ -647,5 +647,9 @@
   "cloud_backup_error_not_connected": "Non connesso a Google Drive",
   "cloud_backup_error_token_expired": "Sessione scaduta. Riconnettiti.",
   "cloud_backup_error_import_in_progress": "Impossibile sincronizzare durante l'importazione dati",
-  "cloud_backup_error_network": "Errore di rete. Controlla la connessione."
+  "cloud_backup_error_network": "Errore di rete. Controlla la connessione.",
+  "model_details_tab": "Dettagli",
+  "model_rolling_stock_tab": "Rotabili",
+  "model_no_details": "Nessuna descrizione dettagliata disponibile per questo modello.",
+  "model_no_rolling_stock": "Nessun rotabile trovato per questo modello."
 }
