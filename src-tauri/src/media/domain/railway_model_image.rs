@@ -11,19 +11,6 @@ use std::path::{Path, PathBuf};
 /// This entity encapsulates the logic for resolving image file paths
 /// from model IDs, following the naming convention:
 /// `{model_id_with_underscores}.{ext}`
-///
-/// # Example
-///
-/// ```ignore
-/// use railway_model_image::RailwayModelImage;
-/// use railway_model_id::RailwayModelId;
-///
-/// let model_id = RailwayModelId::try_from("trn:railway-model:roco:43210")?;
-/// let models_dir = Path::new("/app/data/models");
-/// let image = RailwayModelImage::from_model_id(&model_id, models_dir)?;
-///
-/// assert_eq!(image.filename(), "trn_railway-model_roco_43210");
-/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RailwayModelImage {
     /// The railway model ID this image belongs to
@@ -64,14 +51,6 @@ impl RailwayModelImage {
     /// Resolve the base filename (without extension) from a model ID.
     ///
     /// Converts the model ID by replacing colons with underscores.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// // Model ID: "trn:railway-model:roco:43210"
-    /// // Filename: "trn_railway-model_roco_43210"
-    /// let filename = RailwayModelImage::resolve_filename(&model_id);
-    /// ```
     pub fn resolve_filename(model_id: &RailwayModelId) -> String {
         model_id.as_ref().replace(':', "_")
     }

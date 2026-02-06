@@ -6,14 +6,6 @@
 ///
 /// Used when a railway model has no associated image file.
 /// The placeholder displays a centered message with appropriate styling.
-///
-/// # Example
-///
-/// ```ignore
-/// let placeholder = ImagePlaceholder::generate();
-/// let html = placeholder.html_content();
-/// // html contains ready-to-use HTML/CSS
-/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImagePlaceholder {
     /// Display text shown in the placeholder

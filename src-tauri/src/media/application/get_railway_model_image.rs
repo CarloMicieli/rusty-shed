@@ -11,21 +11,6 @@ use std::path::Path;
 ///
 /// This use case coordinates domain logic and infrastructure services
 /// to locate and return railway model images from the filesystem.
-///
-/// # Example
-///
-/// ```ignore
-/// use get_railway_model_image::GetRailwayModelImage;
-///
-/// let use_case = GetRailwayModelImage;
-/// let model_id = RailwayModelId::try_from("trn:railway-model:roco:43210")?;
-/// let models_dir = Path::new("/app/data/models");
-///
-/// match use_case.execute(&model_id, models_dir).await {
-///     Ok(image) => println!("Found image at: {:?}", image.path()),
-///     Err(e) => println!("Image not found: {}", e),
-/// }
-/// ```
 pub struct GetRailwayModelImage;
 
 impl GetRailwayModelImage {

@@ -33,13 +33,6 @@ static OPERATION_LOCK: Lazy<Mutex<Option<OperationType>>> = Lazy::new(|| Mutex::
 /// # Returns
 /// * `Ok(OperationLockGuard)` - Lock acquired successfully
 /// * `Err(CloudBackupError)` - Another operation is already running
-///
-/// # Example
-/// ```ignore
-/// let _lock = try_acquire_lock(OperationType::Backup)?;
-/// // Lock is held while _lock is in scope
-/// // Lock is automatically released when _lock is dropped
-/// ```
 pub fn try_acquire_lock(operation: OperationType) -> Result<OperationLockGuard> {
     let mut lock = OPERATION_LOCK
         .lock()

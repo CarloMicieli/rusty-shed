@@ -8,17 +8,6 @@ use crate::media::domain::ImagePlaceholder;
 ///
 /// This use case creates a ready-to-use HTML/CSS placeholder
 /// that can be displayed when a railway model has no associated image.
-///
-/// # Example
-///
-/// ```ignore
-/// use get_image_placeholder::GetImagePlaceholder;
-///
-/// let use_case = GetImagePlaceholder;
-/// let placeholder = use_case.execute();
-/// let html = placeholder.html_content();
-/// // Send html to frontend
-/// ```
 pub struct GetImagePlaceholder;
 
 impl GetImagePlaceholder {
