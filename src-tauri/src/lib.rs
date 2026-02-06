@@ -8,6 +8,7 @@ pub mod dashboard;
 pub mod dcc_inventory;
 pub mod import;
 pub mod maintenance;
+pub mod media;
 pub mod sellers;
 pub mod settings;
 pub mod state;
@@ -32,6 +33,7 @@ use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::dcc_inventory::interface::command_handlers as dcc_inventory_command_handlers;
 use crate::import::interface::command_handlers as import_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
+use crate::media::interface::command_handlers as media_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::{ensure_default_settings, get_settings, update_settings};
 use crate::state::AppState;
@@ -208,6 +210,7 @@ pub fn run() {
         cloud_backup_command_handlers::cloud_backup_list_backups,
         cloud_backup_command_handlers::cloud_backup_restore,
         cloud_backup_command_handlers::cloud_backup_get_sync_status,
+        media_command_handlers::get_railway_model_image,
         get_image_path,
         get_settings,
         update_settings

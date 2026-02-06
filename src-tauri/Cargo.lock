@@ -5167,6 +5167,7 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-stronghold",
  "tauri-specta",
+ "tempfile",
  "thiserror 2.0.18",
  "tokio",
  "url",
