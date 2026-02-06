@@ -1219,6 +1219,97 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Get current Google connection status
+   */
+  async cloudBackupGetConnectionStatus(): Promise<Result<ConnectionStatusResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_get_connection_status') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Initiate Google OAuth flow
+   */
+  async cloudBackupConnectGoogle(): Promise<Result<ConnectionStatusResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_connect_google') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Disconnect Google account
+   */
+  async cloudBackupDisconnectGoogle(userEmail: string): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('cloud_backup_disconnect_google', { userEmail })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Check internet connectivity
+   */
+  async cloudBackupCheckConnectivity(): Promise<Result<ConnectivityStatus, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_check_connectivity') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Sync (backup) to Google Drive
+   */
+  async cloudBackupSyncNow(): Promise<Result<BackupListItem, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_sync_now') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Get list of available backups
+   */
+  async cloudBackupListBackups(): Promise<Result<BackupListResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_list_backups') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Restore database from backup
+   */
+  async cloudBackupRestore(args: RestoreBackupArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_restore', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Get current sync operation status
+   */
+  async cloudBackupGetSyncStatus(): Promise<Result<SyncStatusResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_get_sync_status') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
   async getImagePath(id: string, category: string): Promise<Result<string, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_image_path', { id, category }) };
@@ -1547,6 +1638,22 @@ export type AvailabilityStatus =
    * The railway model has been discontinued and is no longer produced.
    */
   | 'DISCONTINUED';
+/**
+ * Single backup item in list
+ */
+export type BackupListItem = {
+  id: string;
+  label: string;
+  createdAt: string;
+  sizeBytes: bigint;
+  sizeFormatted: string;
+  recordCount: bigint;
+  isInitial: boolean;
+};
+/**
+ * Backup list response
+ */
+export type BackupListResponse = { backups: BackupListItem[]; totalCount: bigint };
 /**
  * The construction type of rolling stock's body shell.
  *
@@ -1990,6 +2097,19 @@ export type CommandError =
    * "Cannot cancel an invoice that has already been paid").
    */
   | { BusinessRule: string };
+/**
+ * Connection status response
+ */
+export type ConnectionStatusResponse = {
+  isConnected: boolean;
+  email: string | null;
+  connectedAt: string | null;
+  lastSyncAt: string | null;
+};
+/**
+ * Network connectivity status
+ */
+export type ConnectivityStatus = { isOnline: boolean; checkedAt: string };
 /**
  * The control method for this railway model.
  *
@@ -4199,6 +4319,19 @@ export type ResponseNewDigitalRollingStock = {
   id: DigitalRollingStockId;
 };
 /**
+ * Arguments for restoring from backup
+ */
+export type RestoreBackupArgs = {
+  /**
+   * The backup ID to restore from
+   */
+  backup_id: string;
+  /**
+   * User confirmation (must be "RESTORE")
+   */
+  confirmation: string;
+};
+/**
  * High-level classification for different types of railway rolling stock.
  *
  * This categorization distinguishes between traction units, hauled vehicles,
@@ -4873,6 +5006,15 @@ export type Source = 'Collection' | 'Wishlist';
  * Spending level for heatmap visualization.
  */
 export type SpendingLevel = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+/**
+ * Sync operation status (for progress tracking)
+ */
+export type SyncStatusResponse = {
+  operationId: string | null;
+  isSyncing: boolean;
+  progressPercent: number;
+  statusMessage: string;
+};
 /**
  * The technical specification data for a rolling stock model
  */

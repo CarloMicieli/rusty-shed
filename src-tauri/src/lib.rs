@@ -1,6 +1,8 @@
 pub mod budget;
 pub mod catalog;
+pub mod cloud_backup;
 pub mod collecting;
+pub mod commands;
 pub mod core;
 pub mod dashboard;
 pub mod dcc_inventory;
@@ -19,7 +21,9 @@ use crate::budget::interface::command_handlers as budget_command_handlers;
 use crate::catalog::interface::command_handlers as catalog_command_handlers;
 use crate::catalog::interface::manufacturers as manufacturers_command_handlers;
 use crate::catalog::interface::railway_companies as railway_companies_command_handlers;
+use crate::cloud_backup::infrastructure::start_connectivity_monitor;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
+use crate::commands::cloud_backup as cloud_backup_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::logging;
@@ -196,11 +200,20 @@ pub fn run() {
         budget_command_handlers::remove_extra_budget,
         budget_command_handlers::get_extra_budgets,
         budget_command_handlers::get_quarterly_summaries,
+        cloud_backup_command_handlers::cloud_backup_get_connection_status,
+        cloud_backup_command_handlers::cloud_backup_connect_google,
+        cloud_backup_command_handlers::cloud_backup_disconnect_google,
+        cloud_backup_command_handlers::cloud_backup_check_connectivity,
+        cloud_backup_command_handlers::cloud_backup_sync_now,
+        cloud_backup_command_handlers::cloud_backup_list_backups,
+        cloud_backup_command_handlers::cloud_backup_restore,
+        cloud_backup_command_handlers::cloud_backup_get_sync_status,
         get_image_path,
         get_settings,
         update_settings
     ]);
 
+    #[allow(unused_variables)]
     let ts_config = Typescript::default().bigint(BigIntExportBehavior::BigInt);
 
     // 2. Export the bindings (This creates the TS file)
@@ -247,6 +260,8 @@ pub fn run() {
 
             // Initial management of state
             app.manage(AppState::new(pool.clone(), models_dir));
+
+            start_connectivity_monitor(app.handle().clone());
 
             Ok(())
         })

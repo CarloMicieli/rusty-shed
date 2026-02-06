@@ -24,13 +24,13 @@
 
 **Purpose**: Project initialization, dependencies, and module structure
 
-- [ ] T001 Add Rust dependencies to src-tauri/Cargo.toml (oauth2, google-drive3, keyring, secrecy, zeroize, online, flate2)
-- [ ] T002 Add Tauri plugins via `pnpm tauri add oauth deep-link stronghold`
-- [ ] T003 [P] Add frontend dependency `@tauri-apps/plugin-stronghold` to package.json
-- [ ] T004 [P] Create backend feature module structure at src-tauri/src/features/cloud_backup/mod.rs
-- [ ] T005 [P] Create frontend feature folder structure at src/lib/features/cloud-backup/index.ts
-- [ ] T006 [P] Add Paraglide messages for cloud backup feature to messages/en.json
-- [ ] T007 Register cloud_backup feature module in src-tauri/src/lib.rs
+- [x] T001 Add Rust dependencies to src-tauri/Cargo.toml (oauth2, google-drive3, keyring, secrecy, zeroize, online, flate2)
+- [x] T002 Add Tauri plugins via `pnpm tauri add oauth deep-link stronghold`
+- [x] T003 [P] Add frontend dependency `@tauri-apps/plugin-stronghold` to package.json
+- [x] T004 [P] Create backend feature module structure at src-tauri/src/features/cloud_backup/mod.rs
+- [x] T005 [P] Create frontend feature folder structure at src/lib/features/cloud-backup/index.ts
+- [x] T006 [P] Add Paraglide messages for cloud backup feature to messages/en.json
+- [x] T007 Register cloud_backup feature module in src-tauri/src/lib.rs
 
 ---
 
@@ -40,17 +40,17 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 Create domain error types in src-tauri/src/features/cloud_backup/domain/errors.rs
-- [ ] T009 Create GoogleConnection value object in src-tauri/src/features/cloud_backup/domain/connection.rs
-- [ ] T010 Create CloudBackup entity in src-tauri/src/features/cloud_backup/domain/backup.rs
-- [ ] T011 [P] Create domain module exports in src-tauri/src/features/cloud_backup/domain/mod.rs
-- [ ] T012 Implement SecureStorage trait abstraction in src-tauri/src/features/cloud_backup/infrastructure/secure_storage.rs
-- [ ] T013 Implement KeyringStorage (desktop) in src-tauri/src/features/cloud_backup/infrastructure/secure_storage.rs
-- [ ] T013b [P] Implement StrongholdStorage (Android) in src-tauri/src/features/cloud_backup/infrastructure/secure_storage.rs
-- [ ] T014 [P] Create infrastructure module exports in src-tauri/src/features/cloud_backup/infrastructure/mod.rs
-- [ ] T015 Create application module exports in src-tauri/src/features/cloud_backup/application/mod.rs
-- [ ] T016 Create Tauri command handlers file at src-tauri/src/commands/cloud_backup.rs
-- [ ] T017 Register cloud backup commands in src-tauri/src/lib.rs invoke_handler
+- [x] T008 Create domain error types in src-tauri/src/features/cloud_backup/domain/errors.rs
+- [x] T009 Create GoogleConnection value object in src-tauri/src/features/cloud_backup/domain/connection.rs
+- [x] T010 Create CloudBackup entity in src-tauri/src/features/cloud_backup/domain/backup.rs
+- [x] T011 [P] Create domain module exports in src-tauri/src/features/cloud_backup/domain/mod.rs
+- [x] T012 Implement SecureStorage trait abstraction in src-tauri/src/features/cloud_backup/infrastructure/secure_storage.rs
+- [x] T013 Implement KeyringStorage (desktop) in src-tauri/src/features/cloud_backup/infrastructure/secure_storage.rs
+- [x] T013b [P] Implement StrongholdStorage (Android) in src-tauri/src/features/cloud_backup/infrastructure/secure_storage.rs
+- [x] T014 [P] Create infrastructure module exports in src-tauri/src/features/cloud_backup/infrastructure/mod.rs
+- [x] T015 Create application module exports in src-tauri/src/features/cloud_backup/application/mod.rs
+- [x] T016 Create Tauri command handlers file at src-tauri/src/commands/cloud_backup.rs
+- [x] T017 Register cloud backup commands in src-tauri/src/lib.rs invoke_handler
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -64,19 +64,19 @@
 
 ### Backend Implementation
 
-- [ ] T018 [US1] Implement OAuthService with PKCE flow in src-tauri/src/features/cloud_backup/infrastructure/oauth_service.rs
-- [ ] T019 [US1] Implement connect_google use case in src-tauri/src/features/cloud_backup/application/connect_google.rs
-- [ ] T020 [US1] Implement disconnect_google use case in src-tauri/src/features/cloud_backup/application/disconnect_google.rs
-- [ ] T021 [US1] Implement cloud_backup_connect_google command in src-tauri/src/commands/cloud_backup.rs
-- [ ] T022 [US1] Implement cloud_backup_disconnect_google command in src-tauri/src/commands/cloud_backup.rs
-- [ ] T023 [US1] Implement cloud_backup_get_connection_status command in src-tauri/src/commands/cloud_backup.rs
+- [x] T018 [US1] Implement OAuthService with PKCE flow in src-tauri/src/features/cloud_backup/infrastructure/oauth_service.rs
+- [x] T019 [US1] Implement connect_google use case in src-tauri/src/features/cloud_backup/application/connect_google.rs
+- [x] T020 [US1] Implement disconnect_google use case in src-tauri/src/features/cloud_backup/application/disconnect_google.rs
+- [x] T021 [US1] Implement cloud_backup_connect_google command in src-tauri/src/commands/cloud_backup.rs
+- [x] T022 [US1] Implement cloud_backup_disconnect_google command in src-tauri/src/commands/cloud_backup.rs
+- [x] T023 [US1] Implement cloud_backup_get_connection_status command in src-tauri/src/commands/cloud_backup.rs
 
 ### Frontend Implementation
 
-- [ ] T024 [P] [US1] Create CloudBackupController class in src/lib/features/cloud-backup/controllers/cloudBackup.svelte.ts
-- [ ] T025 [US1] Create GoogleConnectButton component in src/lib/features/cloud-backup/components/GoogleConnectButton.svelte
-- [ ] T026 [US1] Add cloud backup section to src/routes/my-settings/+page.svelte
-- [ ] T027 [US1] Add connection status display showing email and disconnect option
+- [x] T024 [P] [US1] Create CloudBackupController class in src/lib/features/cloud-backup/controllers/cloudBackup.svelte.ts
+- [x] T025 [US1] Create GoogleConnectButton component in src/lib/features/cloud-backup/components/GoogleConnectButton.svelte
+- [x] T026 [US1] Add cloud backup section to src/routes/my-settings/+page.svelte
+- [x] T027 [US1] Add connection status display showing email and disconnect option
 
 **Checkpoint**: User Story 1 complete - OAuth flow works independently
 
@@ -90,20 +90,20 @@
 
 ### Backend Implementation
 
-- [ ] T028 [US2] Implement GoogleDriveClient in src-tauri/src/features/cloud_backup/infrastructure/google_drive.rs
-- [ ] T029 [US2] Implement create/get backup folder logic in google_drive.rs
-- [ ] T030 [US2] Implement file upload with resumable upload in google_drive.rs
-- [ ] T031 [US2] Implement database compression in src-tauri/src/features/cloud_backup/application/sync_backup.rs
-- [ ] T032 [US2] Implement sync_backup use case with progress events in sync_backup.rs
-- [ ] T033 [US2] Implement cloud_backup_sync_now command in src-tauri/src/commands/cloud_backup.rs
-- [ ] T034 [US2] Implement cloud_backup_get_sync_status command in src-tauri/src/commands/cloud_backup.rs
+- [x] T028 [US2] Implement GoogleDriveClient in src-tauri/src/features/cloud_backup/infrastructure/google_drive.rs
+- [x] T029 [US2] Implement create/get backup folder logic in google_drive.rs
+- [x] T030 [US2] Implement file upload with resumable upload in google_drive.rs
+- [x] T031 [US2] Implement database compression in src-tauri/src/features/cloud_backup/application/sync_backup.rs
+- [x] T032 [US2] Implement sync_backup use case with progress events in sync_backup.rs
+- [x] T033 [US2] Implement cloud_backup_sync_now command in src-tauri/src/commands/cloud_backup.rs
+- [x] T034 [US2] Implement cloud_backup_get_sync_status command in src-tauri/src/commands/cloud_backup.rs
 
 ### Frontend Implementation
 
-- [ ] T035 [P] [US2] Create SyncButton component with progress indicator in src/lib/features/cloud-backup/components/SyncButton.svelte
-- [ ] T036 [US2] Add sync progress event listener to CloudBackupController
-- [ ] T037 [US2] Display "Last Successful Sync" timestamp in settings UI
-- [ ] T038 [US2] Add error handling and toast notifications for sync failures
+- [x] T035 [P] [US2] Create SyncButton component with progress indicator in src/lib/features/cloud-backup/components/SyncButton.svelte
+- [x] T036 [US2] Add sync progress event listener to CloudBackupController
+- [x] T037 [US2] Display "Last Successful Sync" timestamp in settings UI
+- [x] T038 [US2] Add error handling and toast notifications for sync failures
 
 **Checkpoint**: User Stories 1 & 2 complete - Core backup functionality works
 
@@ -117,21 +117,21 @@
 
 ### Backend Implementation
 
-- [ ] T039 [US3] Implement file listing in src-tauri/src/features/cloud_backup/infrastructure/google_drive.rs
-- [ ] T040 [US3] Implement file download in google_drive.rs
-- [ ] T041 [US3] Implement list_backups use case in src-tauri/src/features/cloud_backup/application/list_backups.rs
-- [ ] T042 [US3] Implement restore_backup use case with decompression in src-tauri/src/features/cloud_backup/application/restore_backup.rs
-- [ ] T043 [US3] Implement database replacement logic with safety backup in restore_backup.rs
-- [ ] T044 [US3] Implement cloud_backup_list_backups command in src-tauri/src/commands/cloud_backup.rs
-- [ ] T045 [US3] Implement cloud_backup_restore command with RESTORE validation in src-tauri/src/commands/cloud_backup.rs
+- [x] T039 [US3] Implement file listing in src-tauri/src/features/cloud_backup/infrastructure/google_drive.rs
+- [x] T040 [US3] Implement file download in google_drive.rs
+- [x] T041 [US3] Implement list_backups use case in src-tauri/src/features/cloud_backup/application/list_backups.rs
+- [x] T042 [US3] Implement restore_backup use case with decompression in src-tauri/src/features/cloud_backup/application/restore_backup.rs
+- [x] T043 [US3] Implement database replacement logic with safety backup in restore_backup.rs
+- [x] T044 [US3] Implement cloud_backup_list_backups command in src-tauri/src/commands/cloud_backup.rs
+- [x] T045 [US3] Implement cloud_backup_restore command with RESTORE validation in src-tauri/src/commands/cloud_backup.rs
 
 ### Frontend Implementation
 
-- [ ] T046 [P] [US3] Create BackupList component in src/lib/features/cloud-backup/components/BackupList.svelte
-- [ ] T047 [P] [US3] Create RestoreConfirmModal component in src/lib/features/cloud-backup/components/RestoreConfirmModal.svelte
-- [ ] T048 [US3] Add backup list fetching to CloudBackupController
-- [ ] T049 [US3] Implement restore flow with RESTORE confirmation in controller
-- [ ] T050 [US3] Add restore progress events and app reload after restore
+- [x] T046 [P] [US3] Create BackupList component in src/lib/features/cloud-backup/components/BackupList.svelte
+- [x] T047 [P] [US3] Create RestoreConfirmModal component in src/lib/features/cloud-backup/components/RestoreConfirmModal.svelte
+- [x] T048 [US3] Add backup list fetching to CloudBackupController
+- [x] T049 [US3] Implement restore flow with RESTORE confirmation in controller
+- [x] T050 [US3] Add restore progress events and app reload after restore
 
 **Checkpoint**: User Stories 1, 2 & 3 complete - Full backup/restore cycle works
 
@@ -145,15 +145,15 @@
 
 ### Backend Implementation
 
-- [ ] T051 [US4] Implement version limit enforcement (BR-02) in sync_backup.rs
-- [ ] T052 [US4] Implement file deletion for oldest backup in google_drive.rs
-- [ ] T053 [US4] Implement backup labeling (Initial vs timestamped) in sync_backup.rs
-- [ ] T054 [US4] Add app_properties metadata to uploaded files
+- [x] T051 [US4] Implement version limit enforcement (BR-02) in sync_backup.rs
+- [x] T052 [US4] Implement file deletion for oldest backup in google_drive.rs
+- [x] T053 [US4] Implement backup labeling (Initial vs timestamped) in sync_backup.rs
+- [x] T054 [US4] Add app_properties metadata to uploaded files
 
 ### Frontend Implementation
 
-- [ ] T055 [US4] Display backup labels (Initial, date/time) in BackupList component
-- [ ] T056 [US4] Show backup count in settings UI
+- [x] T055 [US4] Display backup labels (Initial, date/time) in BackupList component
+- [x] T056 [US4] Show backup count in settings UI
 
 **Checkpoint**: Version management automated
 
@@ -167,17 +167,17 @@
 
 ### Backend Implementation
 
-- [ ] T057 [US5] Implement connectivity checker in src-tauri/src/features/cloud_backup/infrastructure/connectivity.rs
-- [ ] T058 [US5] Implement cloud_backup_check_connectivity command in src-tauri/src/commands/cloud_backup.rs
-- [ ] T059 [US5] Implement connectivity-changed event emission with periodic checks
-- [ ] T060 [US5] Add offline guard to sync_backup and restore_backup use cases
+- [x] T057 [US5] Implement connectivity checker in src-tauri/src/features/cloud_backup/infrastructure/connectivity.rs
+- [x] T058 [US5] Implement cloud_backup_check_connectivity command in src-tauri/src/commands/cloud_backup.rs
+- [x] T059 [US5] Implement connectivity-changed event emission with periodic checks
+- [x] T060 [US5] Add offline guard to sync_backup and restore_backup use cases
 
 ### Frontend Implementation
 
-- [ ] T061 [P] [US5] Create connectivity store in src/lib/features/cloud-backup/stores/connectivity.ts
-- [ ] T062 [P] [US5] Create ConnectivityIndicator component in src/lib/features/cloud-backup/components/ConnectivityIndicator.svelte
-- [ ] T063 [US5] Add connectivity event listener to CloudBackupController
-- [ ] T064 [US5] Disable SyncButton when offline with appropriate message
+- [x] T061 [P] [US5] Create connectivity store in src/lib/features/cloud-backup/stores/connectivity.ts
+- [x] T062 [P] [US5] Create ConnectivityIndicator component in src/lib/features/cloud-backup/components/ConnectivityIndicator.svelte
+- [x] T063 [US5] Add connectivity event listener to CloudBackupController
+- [x] T064 [US5] Disable SyncButton when offline with appropriate message
 
 **Checkpoint**: All user stories complete
 

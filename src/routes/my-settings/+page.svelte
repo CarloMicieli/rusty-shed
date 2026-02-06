@@ -1,8 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { resolve } from '$app/paths';
   import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
   import { Button, PageHeader } from '$lib/components';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
+  import GoogleConnectButton from '$lib/features/cloud-backup/components/GoogleConnectButton.svelte';
+  import ConnectivityIndicator from '$lib/features/cloud-backup/components/ConnectivityIndicator.svelte';
+  import SyncButton from '$lib/features/cloud-backup/components/SyncButton.svelte';
+  import BackupList from '$lib/features/cloud-backup/components/BackupList.svelte';
+  import RestoreConfirmModal from '$lib/features/cloud-backup/components/RestoreConfirmModal.svelte';
+  import { getCloudBackupController } from '$lib/features/cloud-backup';
   import {
     fetchSettings,
     saveSettings,
@@ -19,6 +26,17 @@
   let loading = $state(true);
   let saving = $state(false);
   let error: string | null = $state(null);
+
+  const cloudBackupController = getCloudBackupController();
+  let isConnected = $derived(cloudBackupController.isConnected);
+  let lastSyncAt = $derived(cloudBackupController.lastSyncAt);
+  let backups = $derived(cloudBackupController.backups);
+  let backupCount = $derived(cloudBackupController.backups.length);
+
+  // Restore modal state
+  let showRestoreModal = $state(false);
+  let selectedBackupId = $state<string | null>(null);
+  let selectedBackupLabel = $state<string>('');
 
   onMount(async () => {
     await loadSettings();
@@ -60,6 +78,34 @@
     await setLocale(nextLocale, { reload: false });
     setActiveLocale(nextLocale);
   }
+
+  function handleRestoreClick(backupId: string) {
+    const backup = backups.find((b) => b.id === backupId);
+    if (backup) {
+      selectedBackupId = backupId;
+      selectedBackupLabel = backup.label;
+      showRestoreModal = true;
+    }
+  }
+
+  async function handleRestoreConfirm() {
+    // Restore was successful, reload the app
+    toaster.success({
+      title: m.cloud_backup_restore_success(),
+      description: m.cloud_backup_restore_reload_notice()
+    });
+
+    // Wait a moment for the toast to show
+    setTimeout(async () => {
+      window.location.reload();
+    }, 1000);
+  }
+
+  function handleRestoreCancel() {
+    showRestoreModal = false;
+    selectedBackupId = null;
+    selectedBackupLabel = '';
+  }
 </script>
 
 <svelte:head>
@@ -73,7 +119,10 @@
     description={m.settings_description()}
   >
     {#snippet actions()}
-      <a class="text-accent-500 text-sm font-semibold hover:underline" href="/my-dashboard">
+      <a
+        class="text-accent-500 text-sm font-semibold hover:underline"
+        href={resolve('/my-dashboard')}
+      >
         {m.settings_back_to_dashboard()}
       </a>
     {/snippet}
@@ -99,8 +148,63 @@
       </Button>
     </div>
   {:else if settings}
-    {#key `${settings.languageCode}-${settings.currency}-${settings.lengthUnit}-${settings.favoriteScale}-${settings.favoritePowerMethod}`}
-      <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
-    {/key}
+    <div class="space-y-6">
+      {#key `${settings.languageCode}-${settings.currency}-${settings.lengthUnit}-${settings.favoriteScale}-${settings.favoritePowerMethod}`}
+        <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
+      {/key}
+
+      <!-- Cloud Backup Section -->
+      <div class="card border-surface-700/40 border p-6 shadow-xl">
+        <div class="space-y-4">
+          <div>
+            <h2 class="text-xl font-bold">{m.cloud_backup_title()}</h2>
+            <p class="text-surface-400 mt-1 text-sm">{m.cloud_backup_subtitle()}</p>
+          </div>
+
+          <GoogleConnectButton />
+
+          {#if isConnected}
+            <div class="border-surface-700/40 space-y-4 border-t pt-4">
+              <ConnectivityIndicator />
+              <SyncButton />
+
+              {#if lastSyncAt}
+                <div class="text-surface-400 text-sm">
+                  <p>
+                    {m.cloud_backup_last_sync({ timestamp: new Date(lastSyncAt).toLocaleString() })}
+                  </p>
+                </div>
+              {/if}
+
+              {#if backupCount > 0}
+                <div class="text-surface-400 text-sm">
+                  {#if backupCount === 1}
+                    <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
+                  {:else}
+                    <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
+                  {/if}
+                </div>
+              {/if}
+
+              <!-- Backup List Section -->
+              <div class="border-surface-700/40 border-t pt-4">
+                <BackupList onRestore={handleRestoreClick} />
+              </div>
+            </div>
+          {/if}
+        </div>
+      </div>
+    </div>
   {/if}
 </div>
+
+<!-- Restore Confirmation Modal -->
+{#if selectedBackupId}
+  <RestoreConfirmModal
+    bind:open={showRestoreModal}
+    backupId={selectedBackupId}
+    backupLabel={selectedBackupLabel}
+    onConfirm={handleRestoreConfirm}
+    onCancel={handleRestoreCancel}
+  />
+{/if}

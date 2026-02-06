@@ -254,3 +254,14 @@ pub async fn cancel_import_session(
         Err(CommandError::Unknown("Session not found".to_string()))
     }
 }
+
+/// Check if an import session is currently in progress.
+///
+/// Returns `true` if any session is in the `Importing` state,
+/// `false` otherwise.
+pub fn is_import_in_progress() -> bool {
+    let sessions = IMPORT_SESSIONS.lock().unwrap();
+    sessions
+        .values()
+        .any(|session| session.state == ImportState::Importing)
+}

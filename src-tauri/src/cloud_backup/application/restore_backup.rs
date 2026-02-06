@@ -1,0 +1,138 @@
+use crate::cloud_backup::application::operation_lock::{OperationType, try_acquire_lock};
+/// Use case: Restore database from Google Drive backup
+use crate::cloud_backup::domain::{CloudBackupError, Result, dtos::RestoreBackupArgs};
+use crate::cloud_backup::infrastructure::{
+    google_drive::GoogleDriveClient, is_online, oauth_service::OAuthService,
+    secure_storage::SecureStorage,
+};
+use flate2::read::GzDecoder;
+use std::io::Read;
+use std::path::Path;
+
+const GOOGLE_CLIENT_ID: &str = "YOUR_CLIENT_ID_HERE"; // TODO: Load from config
+
+/// Restore database from a backup
+pub async fn restore_backup(
+    args: RestoreBackupArgs,
+    db_path: &Path,
+    oauth_service: &OAuthService,
+    storage: &dyn SecureStorage,
+    user_email: &str,
+) -> Result<()> {
+    // T078: Acquire operation lock to prevent concurrent restores
+    let _lock = try_acquire_lock(OperationType::Restore)?;
+
+    // Validate confirmation string
+    if args.confirmation != "RESTORE" {
+        return Err(CloudBackupError::InvalidConfirmation);
+    }
+
+    if !is_online().await {
+        return Err(CloudBackupError::OfflineError);
+    }
+
+    // Get access token
+    let tokens = storage
+        .retrieve_tokens(user_email)
+        .await?
+        .ok_or(CloudBackupError::NotConnected)?;
+
+    // Refresh if expired
+    let access_token = if tokens.is_expired() {
+        let refreshed = oauth_service.refresh_token(user_email).await?;
+        storage.store_tokens(user_email, &refreshed).await?;
+        refreshed.access_token_str().to_string()
+    } else {
+        tokens.access_token_str().to_string()
+    };
+
+    // Create Drive client
+    let drive_client = GoogleDriveClient::new(GOOGLE_CLIENT_ID.to_string(), access_token);
+
+    // Download backup file
+    let compressed_data = drive_client.download_file(&args.backup_id).await?;
+
+    // Decompress the backup
+    let decompressed_data = decompress_backup(&compressed_data)?;
+
+    // Create safety backup before replacing
+    create_safety_backup(db_path).await?;
+
+    // Replace database file
+    replace_database(db_path, &decompressed_data).await?;
+
+    Ok(())
+}
+
+/// Decompress a gzip-compressed backup
+fn decompress_backup(compressed_data: &[u8]) -> Result<Vec<u8>> {
+    let mut decoder = GzDecoder::new(compressed_data);
+    let mut decompressed = Vec::new();
+    decoder
+        .read_to_end(&mut decompressed)
+        .map_err(|e| CloudBackupError::CompressionError(format!("Decompression failed: {}", e)))?;
+
+    Ok(decompressed)
+}
+
+/// Create a safety backup before replacing database
+async fn create_safety_backup(db_path: &Path) -> Result<()> {
+    // Create backup path with timestamp
+    let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
+    let backup_path = db_path.with_extension(format!("backup_{}.sqlite", timestamp));
+
+    // Check if original exists
+    if tokio::fs::metadata(db_path).await.is_err() {
+        // No existing database, nothing to backup
+        return Ok(());
+    }
+
+    // Copy current database to backup
+    tokio::fs::copy(db_path, &backup_path).await.map_err(|e| {
+        CloudBackupError::RestoreError(format!("Failed to create safety backup: {}", e))
+    })?;
+
+    log::info!("Created safety backup at: {}", backup_path.display());
+
+    Ok(())
+}
+
+/// Replace database file with restored data
+async fn replace_database(db_path: &Path, data: &[u8]) -> Result<()> {
+    // Write to a temporary file first
+    let temp_path = db_path.with_extension("tmp");
+
+    tokio::fs::write(&temp_path, data).await.map_err(|e| {
+        CloudBackupError::RestoreError(format!("Failed to write temporary file: {}", e))
+    })?;
+
+    // Atomic rename
+    tokio::fs::rename(&temp_path, db_path).await.map_err(|e| {
+        // Try to clean up temp file
+        let _ = std::fs::remove_file(&temp_path);
+        CloudBackupError::RestoreError(format!("Failed to replace database: {}", e))
+    })?;
+
+    log::info!("Database restored successfully");
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_decompress_backup() {
+        // Create test data and compress it
+        let original = b"test database content";
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(original).unwrap();
+        let compressed = encoder.finish().unwrap();
+
+        // Decompress and verify
+        let decompressed = decompress_backup(&compressed).unwrap();
+        assert_eq!(decompressed, original);
+    }
+}
