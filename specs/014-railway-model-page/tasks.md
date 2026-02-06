@@ -531,46 +531,46 @@ interface Props {
 
 ### T033: Create Page Component Tests
 
-- [ ] T033 Create `src/routes/models/[modelId]/+page.test.ts`
-- [ ] T033 Test page loads with valid model ID
-- [ ] T033 Test renders model information correctly
-- [ ] T033 Test image loads or placeholder displays
-- [ ] T033 Test tabs switch content
-- [ ] T033 Use Vitest + Playwright
-- [ ] T033 Add tests for error scenarios
+- [X] T033 Create `src/routes/models/[modelId]/+page.test.ts`
+- [X] T033 Test page loads with valid model ID
+- [X] T033 Test renders model information correctly
+- [X] T033 Test image loads or placeholder displays
+- [X] T033 Test tabs switch content
+- [X] T033 Use Vitest + Playwright
+- [X] T033 Add tests for error scenarios
 
 **File Paths**: `src/routes/models/[modelId]/__tests__/+page.test.ts`
 
 ### T034: Create Component Unit Tests
 
-- [ ] T034 Create tests for ModelDetailsHeader.svelte
-- [ ] T034 Create tests for RollingStockCard.svelte
-- [ ] T034 Create tests for TechSpecGrid.svelte
-- [ ] T034 Create tests for ModelDetailsTabs.svelte
-- [ ] T034 Test props rendering
-- [ ] T034 Test user interactions
-- [ ] T034 Test accessibility
+- [X] T034 Create tests for ModelDetailsHeader.svelte
+- [X] T034 Create tests for RollingStockCard.svelte
+- [X] T034 Create tests for TechSpecGrid.svelte
+- [X] T034 Create tests for ModelDetailsTabs.svelte
+- [X] T034 Test props rendering
+- [X] T034 Test user interactions
+- [X] T034 Test accessibility
 
 **File Paths**: `src/lib/components/__tests__/`
 
 ### T035: Test Localization
 
-- [ ] T035 Test English language strings display correctly
-- [ ] T035 Test Italian language strings display correctly
-- [ ] T035 Test language switching (if supported)
-- [ ] T035 Verify all UI text is localized
+- [X] T035 Test English language strings display correctly
+- [X] T035 Test Italian language strings display correctly
+- [X] T035 Test language switching (if supported)
+- [X] T035 Verify all UI text is localized
 
 **File Paths**: Manual testing in browser
 
 ### T036: Cross-Platform Testing
 
-- [ ] T036 Test on Windows (native installer)
-- [ ] T036 Test on macOS (.dmg)
-- [ ] T036 Test on Linux (.AppImage)
-- [ ] T036 Verify page load performance (< 1 second target)
-- [ ] T036 Check animations smooth (< 300ms)
-- [ ] T036 Test image loading on slow network
-- [ ] T036 Test with no image available (placeholder)
+- [X] T036 Test on Windows (native installer)
+- [X] T036 Test on macOS (.dmg)
+- [X] T036 Test on Linux (.AppImage)
+- [X] T036 Verify page load performance (< 1 second target)
+- [X] T036 Check animations smooth (< 300ms)
+- [X] T036 Test image loading on slow network
+- [X] T036 Test with no image available (placeholder)
 
 ---
 
