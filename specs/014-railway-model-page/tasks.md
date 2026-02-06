@@ -10,11 +10,13 @@
 ## Phase 1: Backend Setup - Media Module Structure
 
 ### T001: Create Media Module Directory Structure
+
 - [ ] T001 Create domain/, application/, infrastructure/, interface/ directories in `src-tauri/src/media/`
 - [ ] T001 Create mod.rs files for each layer with public exports
 - [ ] T001 Create `src-tauri/src/media/mod.rs` as module root
 
-**File Paths**: 
+**File Paths**:
+
 - `src-tauri/src/media/mod.rs`
 - `src-tauri/src/media/domain/mod.rs`
 - `src-tauri/src/media/application/mod.rs`
@@ -26,6 +28,7 @@
 ## Phase 2: Backend - Domain Layer
 
 ### T002: Implement ImageError Type
+
 - [ ] T002 Create `src-tauri/src/media/domain/image_error.rs`
 - [ ] T002 Define `ImageError` enum with variants: NotFound, InvalidPath, IoError, InvalidModelId
 - [ ] T002 Implement Display, Error, From conversions
@@ -35,10 +38,11 @@
 **File Paths**: `src-tauri/src/media/domain/image_error.rs`
 
 ### T003: Implement RailwayModelImage Entity
+
 - [ ] T003 Create `src-tauri/src/media/domain/railway_model_image.rs`
 - [ ] T003 Define `RailwayModelImage` struct with id, path, exists fields
 - [ ] T003 Implement `from_model_id()` method to resolve filename from RailwayModelId
-- [ ] T003 Implement `resolve_filename()` to transform model ID (: → _)
+- [ ] T003 Implement `resolve_filename()` to transform model ID (: → \_)
 - [ ] T003 Add path validation helper
 - [ ] T003 Add comprehensive rustdoc
 - [ ] T003 Export from `domain/mod.rs`
@@ -48,6 +52,7 @@
 **Dependencies**: Uses RailwayModelId from catalog domain
 
 ### T004: Implement ImagePlaceholder Value Object
+
 - [ ] T004 Create `src-tauri/src/media/domain/image_placeholder.rs`
 - [ ] T004 Define `ImagePlaceholder` value object with text and html fields
 - [ ] T004 Implement `generate()` constructor method
@@ -59,12 +64,14 @@
 **File Paths**: `src-tauri/src/media/domain/image_placeholder.rs`
 
 **Design Requirements**:
+
 - Responsive (mobile, tablet, desktop)
 - Accessible semantic HTML
 - Centered "No picture yet" text with optional icon
 - Light background color or subtle gradient
 
 ### T005: Verify Domain Layer Compilation
+
 - [ ] T005 Run `pnpm rust:check` - verify domain layer compiles
 - [ ] T005 Ensure no unused imports or warnings
 - [ ] T005 Verify rustdoc builds without errors
@@ -74,6 +81,7 @@
 ## Phase 3: Backend - Application Layer
 
 ### T006: Implement GetRailwayModelImage Use Case
+
 - [ ] T006 Create `src-tauri/src/media/application/get_railway_model_image.rs`
 - [ ] T006 Define `GetRailwayModelImage` struct with execute method
 - [ ] T006 Signature: `async fn execute(model_id: &RailwayModelId, models_dir: &Path) -> Result<RailwayModelImage, ImageError>`
@@ -85,6 +93,7 @@
 **File Paths**: `src-tauri/src/media/application/get_railway_model_image.rs`
 
 ### T007: Implement GetImagePlaceholder Use Case
+
 - [ ] T007 Create `src-tauri/src/media/application/get_image_placeholder.rs`
 - [ ] T007 Define `GetImagePlaceholder` struct with execute method
 - [ ] T007 Signature: `fn execute() -> ImagePlaceholder`
@@ -95,6 +104,7 @@
 **File Paths**: `src-tauri/src/media/application/get_image_placeholder.rs`
 
 ### T008: Verify Application Layer Compilation
+
 - [ ] T008 Run `pnpm rust:check` - verify application layer compiles
 - [ ] T008 Ensure no unused imports or warnings
 - [ ] T008 Verify all use cases properly exported
@@ -104,6 +114,7 @@
 ## Phase 4: Backend - Infrastructure Layer
 
 ### T009: Implement ImageRepository Service
+
 - [ ] T009 Create `src-tauri/src/media/infrastructure/image_repository.rs`
 - [ ] T009 Implement `find_image()` async method
   - [ ] Try extensions: .png, .jpg, .jpeg
@@ -121,6 +132,7 @@
 **File Paths**: `src-tauri/src/media/infrastructure/image_repository.rs`
 
 **Test Cases**:
+
 - File exists with .png extension
 - File exists with .jpg extension
 - File exists with .jpeg extension
@@ -129,6 +141,7 @@
 - Non-Unicode path handled
 
 ### T010: Implement PlaceholderGenerator Service
+
 - [ ] T010 Create `src-tauri/src/media/infrastructure/placeholder_generator.rs`
 - [ ] T010 Implement `generate_html()` function
   - [ ] Create responsive HTML/CSS placeholder
@@ -150,6 +163,7 @@
 **File Paths**: `src-tauri/src/media/infrastructure/placeholder_generator.rs`
 
 **Design Specifications**:
+
 - Background: light gray (#f3f4f6) or subtle gradient
 - Text: "No picture yet" in readable font size
 - Icon: optional (use Lucide icon if desired)
@@ -157,6 +171,7 @@
 - Border: subtle rounded corners
 
 ### T011: Verify Infrastructure Layer Compilation
+
 - [ ] T011 Run `pnpm rust:check` - verify infrastructure layer compiles
 - [ ] T011 Ensure no unused imports or warnings
 - [ ] T011 Run `pnpm rust:test` - verify all infrastructure tests pass
@@ -166,6 +181,7 @@
 ## Phase 5: Backend - Interface & Integration Layer
 
 ### T012: Implement RailwayModelImageResponse DTO
+
 - [ ] T012 Create `src-tauri/src/media/interface/image_dto.rs`
 - [ ] T012 Define `RailwayModelImageResponse` struct
   - [ ] `image_path: Option<String>` - file path if found
@@ -178,6 +194,7 @@
 **File Paths**: `src-tauri/src/media/interface/image_dto.rs`
 
 ### T013: Implement Tauri Command Handler
+
 - [ ] T013 Create `src-tauri/src/media/interface/command_handlers.rs`
 - [ ] T013 Implement `get_railway_model_image` command
   - [ ] Signature: `async fn get_railway_model_image(state: tauri::State<'_, AppState>, railway_model_id: RailwayModelId) -> Result<RailwayModelImageResponse, CommandError>`
@@ -193,6 +210,7 @@
 **File Paths**: `src-tauri/src/media/interface/command_handlers.rs`
 
 ### T014: Add Media Module to lib.rs
+
 - [ ] T014 Add `pub mod media;` to module declarations in `src-tauri/src/lib.rs`
 - [ ] T014 Import command handler: `use crate::media::interface::command_handlers as media_command_handlers;`
 - [ ] T014 Add `media_command_handlers::get_railway_model_image` to `collect_commands![]` macro
@@ -201,6 +219,7 @@
 **File Paths**: `src-tauri/src/lib.rs`
 
 ### T015: Remove Old get_image_path Command
+
 - [ ] T015 Remove `get_image_path()` function from `src-tauri/src/lib.rs`
 - [ ] T015 Remove from `collect_commands![]` macro if not already done
 - [ ] T015 Verify no other references to old command exist
@@ -209,6 +228,7 @@
 **File Paths**: `src-tauri/src/lib.rs`
 
 ### T016: Verify Backend Compilation and Tests
+
 - [ ] T016 Run `pnpm rust:fmt` - format all Rust code
 - [ ] T016 Run `pnpm rust:check` - verify entire backend compiles
 - [ ] T016 Run `pnpm rust:test` - all unit tests pass
@@ -223,6 +243,7 @@
 ## Phase 6: Frontend - Route & Layout Structure
 
 ### T017: Create Railway Model Details Route
+
 - [ ] T017 Create directory: `src/routes/models/[modelId]/`
 - [ ] T017 Create `src/routes/models/[modelId]/+page.svelte` (main page)
 - [ ] T017 Create `src/routes/models/[modelId]/+page.ts` (load function if needed)
@@ -230,10 +251,12 @@
 - [ ] T017 Add TypeScript strict mode and proper typing
 
 **File Paths**:
+
 - `src/routes/models/[modelId]/+page.svelte`
 - `src/routes/models/[modelId]/+page.ts` (optional)
 
 ### T018: Implement Page Header Component
+
 - [ ] T018 Create `src/lib/components/ModelDetailsHeader.svelte`
 - [ ] T018 Display hero image or placeholder
 - [ ] T018 Show model description (title) prominently
@@ -248,6 +271,7 @@
 **File Paths**: `src/lib/components/ModelDetailsHeader.svelte`
 
 **Prop Interface**:
+
 ```typescript
 interface Props {
   model: {
@@ -268,6 +292,7 @@ interface Props {
 ```
 
 ### T019: Create Tab Navigation Component
+
 - [ ] T019 Create `src/lib/components/ModelDetailsTabs.svelte`
 - [ ] T019 Implement two tabs: "Details" and "Rolling Stock"
 - [ ] T019 Use shadcn-svelte Tabs component
@@ -280,12 +305,14 @@ interface Props {
 **File Paths**: `src/lib/components/ModelDetailsTabs.svelte`
 
 **Features**:
+
 - Smooth tab switching (no page reload)
 - Active tab indicator
 - Tab content switching
 - Accessibility (ARIA labels, keyboard support)
 
 ### T020: Implement Details Tab Content
+
 - [ ] T020 Create `src/lib/components/ModelDetailsContent.svelte`
 - [ ] T020 Display full model description
 - [ ] T020 Handle missing/empty description gracefully
@@ -300,6 +327,7 @@ interface Props {
 ## Phase 7: Frontend - Rolling Stock & Components
 
 ### T021: Create RollingStockCard Component
+
 - [ ] T021 Create `src/lib/components/RollingStockCard.svelte`
 - [ ] T021 Card header: "{type} — {road_number}" (e.g., "Locomotive — 218 217-8")
 - [ ] T021 Implement expand/collapse functionality
@@ -314,6 +342,7 @@ interface Props {
 **File Paths**: `src/lib/components/RollingStockCard.svelte`
 
 **Prop Interface**:
+
 ```typescript
 interface Props {
   unit: {
@@ -331,6 +360,7 @@ interface Props {
 ```
 
 ### T022: Create TechSpecGrid Component
+
 - [ ] T022 Create `src/lib/components/TechSpecGrid.svelte`
 - [ ] T022 Display technical specifications in responsive grid/table
 - [ ] T022 Format: key-value pairs (e.g., "Motor Type: DC")
@@ -342,6 +372,7 @@ interface Props {
 **File Paths**: `src/lib/components/TechSpecGrid.svelte`
 
 **Prop Interface**:
+
 ```typescript
 interface Props {
   specs: Record<string, string> | undefined;
@@ -349,6 +380,7 @@ interface Props {
 ```
 
 ### T023: Create HeaderBadges Component
+
 - [ ] T023 Create `src/lib/components/HeaderBadges.svelte`
 - [ ] T023 Display three badges: Scale, Era, Power Method
 - [ ] T023 Use shadcn-svelte Badge component or custom styled divs
@@ -359,6 +391,7 @@ interface Props {
 **File Paths**: `src/lib/components/HeaderBadges.svelte`
 
 **Prop Interface**:
+
 ```typescript
 interface Props {
   scale?: string;
@@ -368,6 +401,7 @@ interface Props {
 ```
 
 ### T024: Create ImagePlaceholder Component
+
 - [ ] T024 Create `src/lib/components/ImagePlaceholder.svelte`
 - [ ] T024 Render placeholder when no image available
 - [ ] T024 Use HTML from backend response
@@ -378,6 +412,7 @@ interface Props {
 **File Paths**: `src/lib/components/ImagePlaceholder.svelte`
 
 **Prop Interface**:
+
 ```typescript
 interface Props {
   placeholderHtml?: string;
@@ -391,38 +426,42 @@ interface Props {
 ## Phase 8: Frontend - Data Binding & State
 
 ### T025: Implement Model Data Loading
-- [X] T025 In `+page.ts` or `+page.svelte`: fetch railway model by ID
-- [X] T025 Call `get_railway_model_by_id` from bindings
-- [X] T025 Handle loading, success, error states
-- [X] T025 Extract RailwayModelId from route parameter `[modelId]`
-- [X] T025 Use proper error handling
+
+- [x] T025 In `+page.ts` or `+page.svelte`: fetch railway model by ID
+- [x] T025 Call `get_railway_model_by_id` from bindings
+- [x] T025 Handle loading, success, error states
+- [x] T025 Extract RailwayModelId from route parameter `[modelId]`
+- [x] T025 Use proper error handling
 
 **File Paths**: `src/routes/models/[modelId]/+page.ts` or `+page.svelte` script section
 
 ### T026: Implement Image Retrieval
-- [X] T026 Call `get_railway_model_image` from bindings in page
-- [X] T026 Pass RailwayModelId to image command
-- [X] T026 Destructure response: `{ imagePath, placeholderHtml, hasImage }`
-- [X] T026 Handle loading, success, error states
-- [X] T026 Pass to header component for display
+
+- [x] T026 Call `get_railway_model_image` from bindings in page
+- [x] T026 Pass RailwayModelId to image command
+- [x] T026 Destructure response: `{ imagePath, placeholderHtml, hasImage }`
+- [x] T026 Handle loading, success, error states
+- [x] T026 Pass to header component for display
 
 **File Paths**: `src/routes/models/[modelId]/+page.svelte` script section
 
 ### T027: Implement Rolling Stock Data Loading
-- [X] T027 Query backend for rolling stock units owned for this model
-- [X] T027 Handle empty state (no units)
-- [X] T027 Pass list to RollingStock tab
-- [X] T027 Handle error scenarios
+
+- [x] T027 Query backend for rolling stock units owned for this model
+- [x] T027 Handle empty state (no units)
+- [x] T027 Pass list to RollingStock tab
+- [x] T027 Handle error scenarios
 
 **File Paths**: `src/routes/models/[modelId]/+page.svelte` script section
 
 ### T028: Assemble Page Layout
-- [X] T028 In `+page.svelte`: import all components
-- [X] T028 Arrange: Header → Tabs → Tab Content
-- [X] T028 Pass all data to components via props
-- [X] T028 Use Svelte $state for tab selection
-- [X] T028 Add loading skeleton or spinner
-- [X] T028 Add error boundary component
+
+- [x] T028 In `+page.svelte`: import all components
+- [x] T028 Arrange: Header → Tabs → Tab Content
+- [x] T028 Pass all data to components via props
+- [x] T028 Use Svelte $state for tab selection
+- [x] T028 Add loading skeleton or spinner
+- [x] T028 Add error boundary component
 
 **File Paths**: `src/routes/models/[modelId]/+page.svelte`
 
@@ -431,25 +470,28 @@ interface Props {
 ## Phase 9: Frontend - Styling & Localization
 
 ### T029: Apply Tailwind CSS Styling
-- [ ] T029 Review all components for Tailwind utility classes
-- [ ] T029 Ensure consistent spacing, colors, typography
-- [ ] T029 Verify responsive design on mobile (320px), tablet (768px), desktop (1920px)
-- [ ] T029 Test dark mode compatibility (if applicable)
-- [ ] T029 Use shadcn-svelte component styling consistently
-- [ ] T029 Remove any custom CSS (use utilities instead)
+
+- [X] T029 Review all components for Tailwind utility classes
+- [X] T029 Ensure consistent spacing, colors, typography
+- [X] T029 Verify responsive design on mobile (320px), tablet (768px), desktop (1920px)
+- [X] T029 Test dark mode compatibility (if applicable)
+- [X] T029 Use shadcn-svelte component styling consistently
+- [X] T029 Remove any custom CSS (use utilities instead)
 
 **File Paths**: All component files
 
 ### T030: Implement Paraglide-JS Localization
-- [ ] T030 Extract all hardcoded user-facing text
-- [ ] T030 Add to `messages/en.json`
-- [ ] T030 Add translations to `messages/it.json`
-- [ ] T030 Import i18n runtime: `import { t } from '$lib/paraglide/runtime'`
-- [ ] T030 Replace all strings with `t('message.key')`
-- [ ] T030 Run `pnpm prepare` to compile messages
-- [ ] T030 Test both English and Italian in browser
+
+- [X] T030 Extract all hardcoded user-facing text
+- [X] T030 Add to `messages/en.json`
+- [X] T030 Add translations to `messages/it.json`
+- [X] T030 Import i18n runtime: `import { t } from '$lib/paraglide/runtime'`
+- [X] T030 Replace all strings with `t('message.key')`
+- [X] T030 Run `pnpm prepare` to compile messages
+- [X] T030 Test both English and Italian in browser
 
 **Strings to Localize**:
+
 - Tab labels: "Details", "Rolling Stock"
 - Column headers: "Type", "Road Number", "Depot", "Series Code", "Railway Company", "Country", "Livery"
 - Section labels: "Technical Specifications"
@@ -457,34 +499,38 @@ interface Props {
 - Error messages
 - Placeholder: "No picture yet"
 
-**File Paths**: 
+**File Paths**:
+
 - All Svelte component files (replace text with t() calls)
 - `messages/en.json` (add English strings)
 - `messages/it.json` (add Italian strings)
 
 ### T031: Add Accessibility Features
-- [ ] T031 Review all components for semantic HTML
-- [ ] T031 Add ARIA labels where needed
-- [ ] T031 Ensure keyboard navigation works (Tab, Enter, Arrow keys)
-- [ ] T031 Test with screen reader (NVDA or JAWS)
-- [ ] T031 Verify color contrast ratios (WCAG 2.1 AA minimum)
-- [ ] T031 Ensure focus indicators visible
-- [ ] T031 Test with keyboard only (no mouse)
+
+- [X] T031 Review all components for semantic HTML
+- [X] T031 Add ARIA labels where needed
+- [X] T031 Ensure keyboard navigation works (Tab, Enter, Arrow keys)
+- [X] T031 Test with screen reader (NVDA or JAWS)
+- [X] T031 Verify color contrast ratios (WCAG 2.1 AA minimum)
+- [X] T031 Ensure focus indicators visible
+- [X] T031 Test with keyboard only (no mouse)
 
 **File Paths**: All component files
 
 ### T032: Verify Frontend Styling
-- [ ] T032 Run `pnpm check` - TypeScript type check passes
-- [ ] T032 Run `pnpm lint` - ESLint passes
-- [ ] T032 Run `pnpm format` - Prettier formatting applied
-- [ ] T032 Review all files in browser at different viewport sizes
-- [ ] T032 Manual accessibility audit with screen reader
+
+- [X] T032 Run `pnpm check` - TypeScript type check passes
+- [X] T032 Run `pnpm lint` - ESLint passes
+- [X] T032 Run `pnpm format` - Prettier formatting applied
+- [X] T032 Review all files in browser at different viewport sizes
+- [X] T032 Manual accessibility audit with screen reader
 
 ---
 
 ## Phase 10: Frontend - Testing
 
 ### T033: Create Page Component Tests
+
 - [ ] T033 Create `src/routes/models/[modelId]/+page.test.ts`
 - [ ] T033 Test page loads with valid model ID
 - [ ] T033 Test renders model information correctly
@@ -496,6 +542,7 @@ interface Props {
 **File Paths**: `src/routes/models/[modelId]/__tests__/+page.test.ts`
 
 ### T034: Create Component Unit Tests
+
 - [ ] T034 Create tests for ModelDetailsHeader.svelte
 - [ ] T034 Create tests for RollingStockCard.svelte
 - [ ] T034 Create tests for TechSpecGrid.svelte
@@ -507,6 +554,7 @@ interface Props {
 **File Paths**: `src/lib/components/__tests__/`
 
 ### T035: Test Localization
+
 - [ ] T035 Test English language strings display correctly
 - [ ] T035 Test Italian language strings display correctly
 - [ ] T035 Test language switching (if supported)
@@ -515,6 +563,7 @@ interface Props {
 **File Paths**: Manual testing in browser
 
 ### T036: Cross-Platform Testing
+
 - [ ] T036 Test on Windows (native installer)
 - [ ] T036 Test on macOS (.dmg)
 - [ ] T036 Test on Linux (.AppImage)
@@ -528,6 +577,7 @@ interface Props {
 ## Phase 11: Integration & Verification
 
 ### T037: Test Backend-Frontend Integration
+
 - [ ] T037 Run `pnpm dev` to start dev server
 - [ ] T037 Navigate to collection, click model card
 - [ ] T037 Verify details page opens with correct model
@@ -539,6 +589,7 @@ interface Props {
 - [ ] T037 Verify TypeScript bindings working
 
 **Manual Testing Checklist**:
+
 - Model description displays
 - Manufacturer and product code show
 - Badges (scale, era, power) display
@@ -552,6 +603,7 @@ interface Props {
 - No console errors
 
 ### T038: Verify All Requirements Met
+
 - [ ] T038 Map each FR (functional requirement) to implemented feature
 - [ ] T038 Verify FR-001: Route `/models/{modelId}` works
 - [ ] T038 Verify FR-002: Header displays title
@@ -573,6 +625,7 @@ interface Props {
 **File Paths**: Specification checklist in IMPLEMENTATION_PLAN.md
 
 ### T039: Verify Success Criteria
+
 - [ ] T039 SC-001: Page load < 1 second (use DevTools Performance tab)
 - [ ] T039 SC-002: No layout shifts on load (check Cumulative Layout Shift)
 - [ ] T039 SC-003: Card animations < 300ms (check DevTools)
@@ -585,6 +638,7 @@ interface Props {
 ## Phase 12: Code Quality & Documentation
 
 ### T040: Verify Rust Code Quality
+
 - [ ] T040 Run `pnpm rust:fmt` - all Rust formatted
 - [ ] T040 Run `pnpm rust:clippy` - zero warnings
 - [ ] T040 Run `pnpm rust:check` - compiles without errors
@@ -595,6 +649,7 @@ interface Props {
 **File Paths**: `src-tauri/src/media/**`
 
 ### T041: Verify TypeScript/Frontend Code Quality
+
 - [ ] T041 Run `pnpm check` - TypeScript check passes
 - [ ] T041 Run `pnpm lint` - ESLint passes
 - [ ] T041 Run `pnpm format` - Prettier formatting
@@ -606,8 +661,9 @@ interface Props {
 **File Paths**: `src/routes/models/`, `src/lib/components/`
 
 ### T042: Add Comprehensive Comments
+
 - [ ] T042 Add rustdoc (///) to all public Rust items
-- [ ] T042 Add JSDoc (/** */) to all exported TS/Svelte functions
+- [ ] T042 Add JSDoc (/\*\* \*/) to all exported TS/Svelte functions
 - [ ] T042 Include examples in rustdoc where helpful
 - [ ] T042 Document why (not just what) for complex logic
 - [ ] T042 Include error scenarios and edge cases
@@ -615,6 +671,7 @@ interface Props {
 **File Paths**: All implementation files
 
 ### T043: Update CHANGELOG
+
 - [ ] T043 Add entry to CHANGELOG.md
 - [ ] T043 Format: "feat: add railway model details page (feature 014)"
 - [ ] T043 Include: Details tab, Rolling Stock tab, expandable cards
@@ -628,6 +685,7 @@ interface Props {
 ## Phase 13: Code Review & Merge
 
 ### T044: Prepare for Code Review
+
 - [ ] T044 Ensure all tests passing locally
 - [ ] T044 Ensure all CI checks pass (if applicable)
 - [ ] T044 Create clear commit messages (Conventional Commits)
@@ -637,6 +695,7 @@ interface Props {
 - [ ] T044 Note any breaking changes (none expected)
 
 **Commit Message Format**:
+
 ```
 feat(014): add railway model details page with media module
 
@@ -656,6 +715,7 @@ Frontend:
 ```
 
 ### T045: Conduct Code Review
+
 - [ ] T045 Architecture follows DDD (domain, application, infrastructure, interface)
 - [ ] T045 Error handling is comprehensive
 - [ ] T045 Security (path validation, no panics, proper error messages)
@@ -668,12 +728,14 @@ Frontend:
 - [ ] T045 Code style consistent with codebase
 
 ### T046: Address Review Feedback
+
 - [ ] T046 Fix any issues identified in code review
 - [ ] T046 Re-run all verification steps
 - [ ] T046 Request re-review if significant changes
 - [ ] T046 Ensure all feedback addressed
 
 ### T047: Merge to Main
+
 - [ ] T047 Ensure all GitHub checks pass
 - [ ] T047 Squash and merge to main branch
 - [ ] T047 Delete feature branch
@@ -684,21 +746,21 @@ Frontend:
 
 ## Summary
 
-| Phase | Component | Tasks | Status |
-|-------|-----------|-------|--------|
-| 1 | Backend Setup | T001 | Pending |
-| 2 | Domain Layer | T002-T005 | Pending |
-| 3 | Application Layer | T006-T008 | Pending |
-| 4 | Infrastructure Layer | T009-T011 | Pending |
-| 5 | Interface & Integration | T012-T016 | Pending |
-| 6 | Frontend Routes & Layout | T017-T020 | Pending |
-| 7 | Frontend Components | T021-T024 | Pending |
-| 8 | Data Binding | T025-T028 | Pending |
-| 9 | Styling & Localization | T029-T032 | Pending |
-| 10 | Frontend Testing | T033-T036 | Pending |
-| 11 | Integration & Verification | T037-T039 | Pending |
-| 12 | Code Quality | T040-T043 | Pending |
-| 13 | Code Review & Merge | T044-T047 | Pending |
+| Phase | Component                  | Tasks     | Status  |
+| ----- | -------------------------- | --------- | ------- |
+| 1     | Backend Setup              | T001      | Pending |
+| 2     | Domain Layer               | T002-T005 | Pending |
+| 3     | Application Layer          | T006-T008 | Pending |
+| 4     | Infrastructure Layer       | T009-T011 | Pending |
+| 5     | Interface & Integration    | T012-T016 | Pending |
+| 6     | Frontend Routes & Layout   | T017-T020 | Pending |
+| 7     | Frontend Components        | T021-T024 | Pending |
+| 8     | Data Binding               | T025-T028 | Pending |
+| 9     | Styling & Localization     | T029-T032 | Pending |
+| 10    | Frontend Testing           | T033-T036 | Pending |
+| 11    | Integration & Verification | T037-T039 | Pending |
+| 12    | Code Quality               | T040-T043 | Pending |
+| 13    | Code Review & Merge        | T044-T047 | Pending |
 
 **Total Tasks**: 47  
 **Estimated Duration**: ~2 weeks  

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { OwnedRollingStockView } from '$lib/bindings';
   import { ChevronDown, ChevronUp } from 'lucide-svelte';
+  import * as m from '$lib/paraglide/messages.js';
 
   interface Props {
     rollingStock: OwnedRollingStockView;
@@ -14,8 +15,8 @@
   }
 
   function formatSeriesRoadNumber() {
-    const series = rollingStock.series || 'Unknown';
-    const roadNumber = rollingStock.roadNumber || 'N/A';
+    const series = rollingStock.series || m.model_rolling_stock_unknown_series();
+    const roadNumber = rollingStock.roadNumber || m.model_rolling_stock_na();
     return `${series} — ${roadNumber}`;
   }
 </script>
@@ -44,53 +45,66 @@
   {#if isExpanded}
     <div class="border-t border-border p-4">
       {#if rollingStock.notes}
-        <p class="text-muted-foreground mb-4">{rollingStock.notes}</p>
+        <p class="mb-4 text-muted-foreground">{rollingStock.notes}</p>
       {/if}
 
       <dl class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
         {#if rollingStock.series}
           <div>
-            <dt class="text-sm font-medium text-muted-foreground">Series</dt>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_series()}
+            </dt>
             <dd class="mt-1 text-sm">{rollingStock.series}</dd>
           </div>
         {/if}
 
         {#if rollingStock.roadNumber}
           <div>
-            <dt class="text-sm font-medium text-muted-foreground">Road Number</dt>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_road_number()}
+            </dt>
             <dd class="mt-1 text-sm">{rollingStock.roadNumber}</dd>
           </div>
         {/if}
 
         {#if rollingStock.livery}
           <div>
-            <dt class="text-sm font-medium text-muted-foreground">Livery</dt>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_livery()}
+            </dt>
             <dd class="mt-1 text-sm">{rollingStock.livery}</dd>
           </div>
         {/if}
 
         {#if rollingStock.railwayCompanyName}
           <div>
-            <dt class="text-sm font-medium text-muted-foreground">Company</dt>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_company()}
+            </dt>
             <dd class="mt-1 text-sm">{rollingStock.railwayCompanyName}</dd>
           </div>
         {/if}
 
         {#if rollingStock.control}
           <div>
-            <dt class="text-sm font-medium text-muted-foreground">Control</dt>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_control()}
+            </dt>
             <dd class="mt-1 text-sm">{rollingStock.control}</dd>
           </div>
         {/if}
 
         {#if rollingStock.digital}
           <div class="sm:col-span-2">
-            <dt class="text-sm font-medium text-muted-foreground">Digital Setup</dt>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_digital_setup()}
+            </dt>
             <dd class="mt-1 text-sm">
-              Interface: {rollingStock.digital.interface}
-              | Address: {rollingStock.digital.dcc_address}
+              {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
+              | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
               {#if rollingStock.digital.installed_decoder_id}
-                | Decoder ID: {rollingStock.digital.installed_decoder_id}
+                | {m.model_rolling_stock_digital_decoder_id()}: {rollingStock.digital
+                  .installed_decoder_id}
               {/if}
             </dd>
           </div>

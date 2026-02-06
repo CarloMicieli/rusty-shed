@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { commands } from '$lib/bindings';
   import { ArrowLeft } from 'lucide-svelte';
+  import * as m from '$lib/paraglide/messages.js';
   import type {
     RailwayModelView,
     RailwayModelId,
@@ -43,9 +44,10 @@
       // Fetch model data
       const modelResult = await commands.getRailwayModelById(modelId);
       if (modelResult.status === 'error') {
-        const errorMsg = typeof modelResult.error === 'object' && 'DatabaseError' in modelResult.error
-          ? modelResult.error.DatabaseError
-          : 'Failed to load model';
+        const errorMsg =
+          typeof modelResult.error === 'object' && 'DatabaseError' in modelResult.error
+            ? modelResult.error.DatabaseError
+            : 'Failed to load model';
         throw new Error(errorMsg);
       }
 
@@ -69,9 +71,10 @@
       // Fetch collection data for rolling stock
       const collectionResult = await commands.getCollection();
       if (collectionResult.status === 'ok') {
-        collectionItem = collectionResult.data.items.find(
-          (item) => item.railwayModel.railwayModelId === modelId
-        ) || null;
+        collectionItem =
+          collectionResult.data.items.find(
+            (item) => item.railwayModel.railwayModelId === modelId
+          ) || null;
       }
     } catch (e) {
       error = e instanceof Error ? e.message : 'An error occurred';
@@ -84,21 +87,23 @@
 {#if loading}
   <div class="flex h-full items-center justify-center p-8">
     <div class="text-center">
-      <div class="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      <p class="text-muted-foreground">Loading model details...</p>
+      <div
+        class="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
+      ></div>
+      <p class="text-muted-foreground">{m.model_loading()}</p>
     </div>
   </div>
 {:else if error}
   <div class="flex h-full items-center justify-center p-8">
     <div class="text-center">
-      <p class="text-destructive mb-4 text-lg font-semibold">{error}</p>
+      <p class="mb-4 text-lg font-semibold text-destructive">{error}</p>
       <button
         type="button"
         class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         onclick={goBack}
       >
         <ArrowLeft class="h-4 w-4" />
-        Back to Collection
+        {m.model_back_to_collection()}
       </button>
     </div>
   </div>
@@ -111,7 +116,7 @@
       onclick={goBack}
     >
       <ArrowLeft class="h-4 w-4" />
-      Back to Collection
+      {m.model_back_to_collection()}
     </button>
 
     <!-- Hero Section with Image -->

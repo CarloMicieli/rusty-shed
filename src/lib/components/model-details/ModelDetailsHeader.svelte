@@ -1,5 +1,6 @@
 <script lang="ts">
   import { convertFileSrc } from '@tauri-apps/api/core';
+  import * as m from '$lib/paraglide/messages.js';
   import type { RailwayModelView, RailwayModelImageResponse } from '$lib/bindings';
 
   interface Props {
@@ -27,7 +28,6 @@
       />
     {:else if imageResponse?.placeholderHtml}
       <div class="h-64">
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         {@html imageResponse.placeholderHtml}
       </div>
@@ -36,9 +36,9 @@
       <div
         class="flex h-64 items-center justify-center bg-muted"
         role="img"
-        aria-label="No image available"
+        aria-label={m.model_image_alt_no_image()}
       >
-        <p class="text-muted-foreground">No image yet</p>
+        <p class="text-muted-foreground">{m.model_image_placeholder()}</p>
       </div>
     {/if}
   </div>
@@ -48,7 +48,7 @@
     <h1 class="mb-2 text-3xl font-bold tracking-tight sm:text-4xl">
       {model.description}
     </h1>
-    <p class="text-muted-foreground text-lg">
+    <p class="text-lg text-muted-foreground">
       {model.manufacturer.display} | {model.productCode}
     </p>
   </div>

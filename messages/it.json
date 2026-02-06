@@ -651,5 +651,20 @@
   "model_details_tab": "Dettagli",
   "model_rolling_stock_tab": "Rotabili",
   "model_no_details": "Nessuna descrizione dettagliata disponibile per questo modello.",
-  "model_no_rolling_stock": "Nessun rotabile trovato per questo modello."
+  "model_no_rolling_stock": "Nessun rotabile trovato per questo modello.",
+  "model_loading": "Caricamento dettagli modello...",
+  "model_back_to_collection": "Torna alla Collezione",
+  "model_image_alt_no_image": "Nessuna immagine disponibile",
+  "model_image_placeholder": "Nessuna immagine ancora",
+  "model_rolling_stock_unknown_series": "Sconosciuto",
+  "model_rolling_stock_na": "N/D",
+  "model_rolling_stock_field_series": "Serie",
+  "model_rolling_stock_field_road_number": "Numero di Servizio",
+  "model_rolling_stock_field_livery": "Livrea",
+  "model_rolling_stock_field_company": "Compagnia",
+  "model_rolling_stock_field_control": "Controllo",
+  "model_rolling_stock_field_digital_setup": "Configurazione Digitale",
+  "model_rolling_stock_digital_interface": "Interfaccia",
+  "model_rolling_stock_digital_address": "Indirizzo",
+  "model_rolling_stock_digital_decoder_id": "ID Decoder"
 }

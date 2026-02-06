@@ -13,7 +13,7 @@
   <nav class="-mb-px flex space-x-8" aria-label="Tabs">
     <button
       type="button"
-      class="whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors {activeTab ===
+      class="border-b-2 px-1 py-4 text-sm font-medium whitespace-nowrap transition-colors {activeTab ===
       'details'
         ? 'border-primary text-primary'
         : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'}"
@@ -24,7 +24,7 @@
     </button>
     <button
       type="button"
-      class="whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors {activeTab ===
+      class="border-b-2 px-1 py-4 text-sm font-medium whitespace-nowrap transition-colors {activeTab ===
       'rolling-stock'
         ? 'border-primary text-primary'
         : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'}"
