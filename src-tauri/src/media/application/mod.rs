@@ -4,6 +4,10 @@
 
 pub mod get_image_placeholder;
 pub mod get_railway_model_image;
+pub mod upload_model_image;
 
 pub use get_image_placeholder::GetImagePlaceholder;
 pub use get_railway_model_image::GetRailwayModelImage;
+pub use upload_model_image::{
+    UploadError, UploadImageBytesInput, UploadImageInput, UploadModelImage, UploadModelImageBytes,
+};

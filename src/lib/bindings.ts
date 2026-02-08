@@ -1347,6 +1347,62 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Upload a model image from a file path (file explorer selection).
+   *
+   * # Arguments
+   *
+   * * `state` - Application state containing models directory path
+   * * `args` - Upload arguments (model ID and file path)
+   *
+   * # Returns
+   *
+   * Returns `Ok(())` on success
+   *
+   * # Errors
+   *
+   * Returns `CommandError` if:
+   * - Model doesn't exist
+   * - File validation fails (format, size)
+   * - Storage operations fail
+   */
+  async uploadModelImage(args: UploadModelImageArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('upload_model_image', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Upload a model image from bytes (drag & drop).
+   *
+   * # Arguments
+   *
+   * * `state` - Application state containing models directory path
+   * * `args` - Upload arguments (model ID, filename, file data)
+   *
+   * # Returns
+   *
+   * Returns `Ok(())` on success
+   *
+   * # Errors
+   *
+   * Returns `CommandError` if:
+   * - Model doesn't exist
+   * - File validation fails (format, size)
+   * - Storage operations fail
+   */
+  async uploadModelImageBytes(
+    args: UploadModelImageBytesArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('upload_model_image_bytes', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
   async getImagePath(id: string, category: string): Promise<Result<string, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_image_path', { id, category }) };
@@ -5384,6 +5440,14 @@ export type UpdateSettingsPayload = {
   languageCode: string;
   theme: ThemeValue;
 };
+/**
+ * Arguments for uploading a model image from file path
+ */
+export type UploadModelImageArgs = { modelId: string; filePath: string };
+/**
+ * Arguments for uploading a model image from bytes
+ */
+export type UploadModelImageBytesArgs = { modelId: string; fileName: string; fileData: number[] };
 /**
  * A validation error returned by application use-cases.
  *

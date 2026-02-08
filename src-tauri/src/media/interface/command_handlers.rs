@@ -4,11 +4,19 @@
 
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
-use crate::media::application::{GetImagePlaceholder, GetRailwayModelImage};
+use crate::media::application::{
+    GetImagePlaceholder, GetRailwayModelImage, UploadError, UploadImageBytesInput,
+    UploadImageInput, UploadModelImage, UploadModelImageBytes,
+};
 use crate::media::domain::ImageError;
+use crate::media::domain::image_validation::{StorageError, ValidationError};
+use crate::media::infrastructure::FileStorage;
 use crate::media::interface::RailwayModelImageResponse;
 use crate::state::AppState;
+use garde::Validate;
 use log::{debug, warn};
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 /// Get the image for a railway model.
 ///
@@ -78,6 +86,201 @@ pub async fn get_railway_model_image(
             ))
         }
         Err(err) => Err(map_image_error(err)),
+    }
+}
+
+/// Upload a model image from a file path (file explorer selection).
+///
+/// # Arguments
+///
+/// * `state` - Application state containing models directory path
+/// * `args` - Upload arguments (model ID and file path)
+///
+/// # Returns
+///
+/// Returns `Ok(())` on success
+///
+/// # Errors
+///
+/// Returns `CommandError` if:
+/// - Model doesn't exist
+/// - File validation fails (format, size)
+/// - Storage operations fail
+#[tauri::command]
+#[specta::specta]
+pub async fn upload_model_image(
+    state: tauri::State<'_, AppState>,
+    args: UploadModelImageArgs,
+) -> Result<(), CommandError> {
+    debug!("Uploading image for model: {}", args.model_id);
+
+    // Validate arguments
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid upload arguments: {}", e)))?;
+
+    // Parse model ID
+    let model_id = RailwayModelId::try_from(args.model_id.as_str())
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid model ID: {}", e)))?;
+
+    // Get storage directory
+    let models_dir = state.models_dir();
+    let storage = FileStorage::new(models_dir.clone()).map_err(|e| map_storage_error(e))?;
+
+    // Execute use case
+    let use_case = UploadModelImage::new(storage);
+    let input = UploadImageInput {
+        model_id,
+        file_path: PathBuf::from(args.file_path),
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    use_case
+        .execute(input, &mut unit_of_work)
+        .await
+        .map_err(map_upload_error)?;
+
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    debug!("Image uploaded successfully");
+    Ok(())
+}
+
+/// Upload a model image from bytes (drag & drop).
+///
+/// # Arguments
+///
+/// * `state` - Application state containing models directory path
+/// * `args` - Upload arguments (model ID, filename, file data)
+///
+/// # Returns
+///
+/// Returns `Ok(())` on success
+///
+/// # Errors
+///
+/// Returns `CommandError` if:
+/// - Model doesn't exist
+/// - File validation fails (format, size)
+/// - Storage operations fail
+#[tauri::command]
+#[specta::specta]
+pub async fn upload_model_image_bytes(
+    state: tauri::State<'_, AppState>,
+    args: UploadModelImageBytesArgs,
+) -> Result<(), CommandError> {
+    debug!("Uploading image bytes for model: {}", args.model_id);
+
+    // Validate arguments
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid upload arguments: {}", e)))?;
+
+    // Parse model ID
+    let model_id = RailwayModelId::try_from(args.model_id.as_str())
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid model ID: {}", e)))?;
+
+    // Get storage directory
+    let models_dir = state.models_dir();
+    let storage = FileStorage::new(models_dir.clone()).map_err(|e| map_storage_error(e))?;
+
+    // Execute use case
+    let use_case = UploadModelImageBytes::new(storage);
+    let input = UploadImageBytesInput {
+        model_id,
+        file_name: args.file_name,
+        file_data: args.file_data,
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    use_case
+        .execute(input, &mut unit_of_work)
+        .await
+        .map_err(map_upload_error)?;
+
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    debug!("Image bytes uploaded successfully");
+    Ok(())
+}
+
+// ============================================================================
+// DTOs
+// ============================================================================
+
+/// Arguments for uploading a model image from file path
+#[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadModelImageArgs {
+    #[garde(length(min = 1))]
+    pub model_id: String,
+
+    #[garde(length(min = 1))]
+    pub file_path: String,
+}
+
+/// Arguments for uploading a model image from bytes
+#[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadModelImageBytesArgs {
+    #[garde(length(min = 1))]
+    pub model_id: String,
+
+    #[garde(length(min = 1))]
+    pub file_name: String,
+
+    #[garde(length(min = 1))]
+    pub file_data: Vec<u8>,
+}
+
+// ============================================================================
+// Error Mapping
+// ============================================================================
+
+/// Map UploadError to CommandError
+fn map_upload_error(err: UploadError) -> CommandError {
+    match err {
+        UploadError::ModelNotFound(msg) => CommandError::NotFound(msg),
+        UploadError::Validation(e) => map_validation_error(e),
+        UploadError::Storage(e) => map_storage_error(e),
+        UploadError::Domain(e) => CommandError::from(e),
+    }
+}
+
+/// Map ValidationError to CommandError
+fn map_validation_error(err: ValidationError) -> CommandError {
+    match err {
+        ValidationError::FileNotFound => CommandError::BusinessRule("File not found".to_string()),
+        ValidationError::FileTooLarge { size_mb, max_mb } => CommandError::BusinessRule(format!(
+            "File size ({} MB) exceeds maximum allowed size ({} MB)",
+            size_mb, max_mb
+        )),
+        ValidationError::UnsupportedFormat { format } => CommandError::BusinessRule(format!(
+            "Unsupported format: {}. Supported formats: JPEG, PNG, WebP",
+            format
+        )),
+        ValidationError::CorruptedImage => {
+            CommandError::BusinessRule("Image file is corrupted or invalid".to_string())
+        }
+        ValidationError::IoError(msg) => CommandError::Unknown(msg),
+    }
+}
+
+/// Map StorageError to CommandError
+fn map_storage_error(err: StorageError) -> CommandError {
+    match err {
+        StorageError::DirectoryCreation(msg) => {
+            CommandError::Unknown(format!("Failed to create storage directory: {}", msg))
+        }
+        StorageError::CopyFailed(msg) => {
+            CommandError::Unknown(format!("Failed to copy file: {}", msg))
+        }
+        StorageError::WriteFailed(msg) => {
+            CommandError::Unknown(format!("Failed to write file: {}", msg))
+        }
+        StorageError::DeleteFailed(msg) => {
+            CommandError::Unknown(format!("Failed to delete file: {}", msg))
+        }
+        StorageError::FileNotFound(msg) => CommandError::NotFound(msg),
+        StorageError::IoError(msg) => CommandError::Unknown(msg),
     }
 }
 

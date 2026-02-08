@@ -5,5 +5,8 @@
 pub mod command_handlers;
 pub mod image_dto;
 
-pub use command_handlers::get_railway_model_image;
+pub use command_handlers::{
+    UploadModelImageArgs, UploadModelImageBytesArgs, get_railway_model_image, upload_model_image,
+    upload_model_image_bytes,
+};
 pub use image_dto::RailwayModelImageResponse;

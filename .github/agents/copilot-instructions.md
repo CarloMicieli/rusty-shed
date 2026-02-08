@@ -30,12 +30,13 @@ Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend): Follow standard conventions
 
 ## Recent Changes
 
+- 015-model-image-upload: Added Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend)
+
 <<<<<<< HEAD
 
 - 013-responsive-navigation: Added TypeScript 5.9.3 (strict mode), Svelte 5.48.2 + SvelteKit (Vite 7.3.1), Tailwind CSS 4.1.18, shadcn-svelte, lucide-svelte, @inlang/paraglide-js 2.7.1
 
 - # 010-data-import-utility: Added Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend)
-- 008-google-drive-backup: Added Rust 1.93.0 (backend), TypeScript 5.9.3 (frontend)
   > > > > > > > ea3d384 (docs: Implement Google Drive Cloud Backup feature)
 
 <!-- MANUAL ADDITIONS START -->

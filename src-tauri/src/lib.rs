@@ -212,6 +212,8 @@ pub fn run() {
         cloud_backup_command_handlers::cloud_backup_restore,
         cloud_backup_command_handlers::cloud_backup_get_sync_status,
         media_command_handlers::get_railway_model_image,
+        media_command_handlers::upload_model_image,
+        media_command_handlers::upload_model_image_bytes,
         get_image_path,
         get_settings,
         update_settings
