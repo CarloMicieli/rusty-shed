@@ -225,3 +225,15 @@
     border-width: 3px;
   }
 }
+
+/* ============================================================================
+   LayerChart Container Overrides
+   ============================================================================ */
+
+:global(.layercake-container svg) {
+  overflow: visible !important;
+}
+
+:global(.layercake-container) {
+  z-index: 1;
+}

@@ -14,8 +14,8 @@
     };
   }>();
 
+  // --- Mock Data ---
   const budgetMock = 0.75;
-
   const monthlySpendingMock: MonthlySpendingPoint[] = [
     { month: 0, amount: 1200 },
     { month: 1, amount: 980 },
@@ -39,15 +39,16 @@
     return { year, month, value };
   });
 
+  // --- Reactive Derived Logic ---
   const currencyCode = $derived(props.currencyCode ?? 'EUR');
   const data = $derived(props.data ?? {});
-
   const budget = $derived<number>(data.budget ?? budgetMock);
   const monthlySpending = $derived<MonthlySpendingPoint[]>(
     data.monthlySpending ?? monthlySpendingMock
   );
   const historyData = $derived<HistoryPoint[]>(data.history ?? historyMock);
 
+  // --- Formatters ---
   const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' });
   const currencyFormatter = $derived(
     new Intl.NumberFormat(undefined, {
@@ -65,12 +66,11 @@
 
   const budgetGradientId = 'budget-gradient';
   const budgetPercent = $derived(Math.round(budget * 100));
+  const monthlyYMax = $derived(Math.max(...monthlySpending.map((d) => d.amount), 1));
+  const historyValueMax = $derived(Math.max(...historyData.map((d) => d.value), 1));
 
-  const monthlyYMax = $derived(
-    Math.max(...monthlySpending.map((d: MonthlySpendingPoint) => d.amount), 1)
-  );
-  const historyValueMax = $derived(Math.max(...historyData.map((d: HistoryPoint) => d.value), 1));
-  const chartCardClass = 'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm';
+  const chartCardClass =
+    'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm bg-zinc-900/50 border border-zinc-800';
 </script>
 
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -82,50 +82,37 @@
       <p class="text-lg font-bold">{m.dashboard_chart_budget_title()}</p>
     </div>
 
-    <div class="relative h-64">
+    <div class="relative h-64 w-full">
       <PieChart
-        data={[{ key: 'available', label: m.dashboard_chart_budget_title(), value: budget }]}
-        series={[
-          {
-            key: 'budget',
-            data: [{ key: 'available', label: m.dashboard_chart_budget_title(), value: budget }],
-            maxValue: 1,
-            color: `url(#${budgetGradientId})`
-          }
-        ]}
+        data={[{ key: 'available', value: budget }]}
         key="key"
-        label="label"
         value="value"
-        maxValue={1}
-        innerRadius={0.62}
-        padAngle={0.015}
+        innerRadius={0.65}
+        padAngle={0.02}
         props={{
-          arc: { stroke: 'transparent', track: { fill: 'rgb(63 63 70)' } },
-          svg: { class: 'w-full h-full', style: 'background: transparent' },
-          tooltip: {
-            header: {
-              format: (value: number) => `${Math.round(Number(value ?? 0) * 100)}%`
-            },
-            item: {
-              format: (value: number) => `${Math.round(Number(value ?? 0) * 100)}%`,
-              valueAlign: 'right'
-            }
+          svg: { class: 'w-full h-full overflow-visible' },
+          arc: {
+            fill: `url(#${budgetGradientId})`,
+            track: { fill: 'rgba(63, 63, 70, 0.4)' },
+            strokeWidth: 0
           }
         }}
       >
         <LinearGradient
-          slot="belowMarks"
           id={budgetGradientId}
           stops={[
             ['0%', '#d48a3e'],
             ['100%', '#b87333']
           ]}
+          vertical
         />
       </PieChart>
 
       <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span class="text-3xl font-extrabold">{budgetPercent}%</span>
-        <span class="text-xs opacity-80">{m.dashboard_chart_budget_remaining()}</span>
+        <span class="text-3xl font-extrabold text-white">{budgetPercent}%</span>
+        <span class="text-xs tracking-tighter uppercase opacity-60"
+          >{m.dashboard_chart_budget_remaining()}</span
+        >
       </div>
     </div>
   </div>
@@ -138,39 +125,29 @@
       <p class="text-lg font-bold">{m.dashboard_chart_spending_title()}</p>
     </div>
 
-    <div class="h-64">
+    <div class="relative h-64 w-full">
       <BarChart
         data={monthlySpending}
-        x={(d: MonthlySpendingPoint) => d.month}
-        y={(d: MonthlySpendingPoint) => d.amount}
+        x="month"
+        y="amount"
         yDomain={[0, monthlyYMax * 1.1]}
-        bandPadding={0.25}
         padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
         props={{
-          svg: { class: 'h-full w-full', style: 'background: transparent' },
-          bars: { fill: '#d48a3e' },
+          svg: { class: 'w-full h-full overflow-visible' },
+          bars: { fill: '#d48a3e', radius: 4, strokeWidth: 0 },
           grid: {
-            y: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' },
+            y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 4 4;' },
             x: false
           },
           xAxis: {
-            format: formatMonthIndex,
-            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
-            label: m.dashboard_chart_spending_label()
+            format: formatMonthIndex
           },
           yAxis: {
-            format: (value: number) => formatCurrency(value),
-            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
-            label: currencyCode
+            format: formatCurrency
           },
           tooltip: {
-            header: {
-              format: (value: unknown) => formatMonthIndex(Number(value))
-            },
-            item: {
-              format: (value: unknown) => formatCurrency(Number(value)),
-              valueAlign: 'right'
-            }
+            header: { format: (v) => formatMonthIndex(Number(v)) },
+            item: { format: (v) => formatCurrency(Number(v)) }
           }
         }}
       />
@@ -185,47 +162,42 @@
       <p class="text-lg font-bold">{m.dashboard_chart_punchcard_title()}</p>
     </div>
 
-    <div class="h-64">
+    <div class="relative h-64 w-full">
       <ScatterChart
         data={historyData}
-        x={(d: HistoryPoint) => d.month}
-        y={(d: HistoryPoint) => d.year}
-        r={(d: HistoryPoint) => d.value}
+        x="month"
+        y="year"
+        r="value"
         rDomain={[0, historyValueMax]}
-        rRange={[4, 16]}
-        padding={{ top: 10, right: 10, bottom: 30, left: 40 }}
+        rRange={[3, 12]}
+        padding={{ top: 10, right: 15, bottom: 30, left: 45 }}
         props={{
-          svg: { class: 'h-full w-full', style: 'background: transparent' },
-          grid: {
-            x: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' },
-            y: { style: 'stroke: rgb(82 82 91); stroke-width: 1; stroke-dasharray: 4 4;' }
-          },
+          svg: { class: 'w-full h-full overflow-visible' },
           points: {
             fill: '#b87333',
-            fillOpacity: 0.32,
-            stroke: '#d48a3e'
+            fillOpacity: 0.4,
+            stroke: '#d48a3e',
+            strokeWidth: 1
+          },
+          grid: {
+            x: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 2 2;' },
+            y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 2 2;' }
           },
           xAxis: {
-            format: formatMonthNumber,
-            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
-            label: m.dashboard_chart_punchcard_label()
-          },
-          yAxis: {
-            format: (value: number) => String(value),
-            tick: { style: 'stroke: rgb(161 161 170); color: rgb(161 161 170);' },
-            label: String(currentYear)
+            format: formatMonthNumber
           },
           tooltip: {
-            header: {
-              format: (value: unknown) => formatMonthNumber(Number(value))
-            },
-            item: {
-              format: (value: unknown) => String(value),
-              valueAlign: 'right'
-            }
+            header: { format: (v) => formatMonthNumber(Number(v)) }
           }
         }}
       />
     </div>
   </div>
 </div>
+
+<style>
+  /* Ensure the SVG container itself is visible if Tailwind classes are purged */
+  :global(.layercake-container svg) {
+    overflow: visible !important;
+  }
+</style>
