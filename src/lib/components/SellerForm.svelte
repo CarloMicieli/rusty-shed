@@ -1,9 +1,15 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { superForm } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
+  import { sellerSchema } from '$lib/schemas/seller';
+  import * as Form from '$lib/components/ui/form';
+  import type { ControlAttrs } from 'formsnap';
   import { Button, Input } from '$lib/components';
   import * as sellerService from '$lib/services/sellerService';
   import type { FormSeller } from '$lib/services/sellerAdapter';
-  import type { SellerType } from '$lib/bindings';
+  import { toaster } from '$lib/toaster';
 
   interface Props {
     onClose?: () => void;
@@ -13,85 +19,69 @@
 
   let { onClose = () => {}, onSaved = () => {}, initial = null }: Props = $props();
 
-  let id = $state<string | null>(null);
-  let name = $state('');
-  let sellerType = $state<SellerType>('SHOP' as SellerType);
-  let email = $state('');
-  let phone = $state('');
-  let websiteUrl = $state('');
+  // Capture initial values as snapshot to avoid Svelte 5 reactivity warnings
+  const initialSnapshot = untrack(() => $state.snapshot(initial));
 
-  let streetAddress = $state('');
-  let extendedAddress = $state('');
-  let city = $state('');
-  let stateRegion = $state('');
-  let postalCode = $state('');
-  let countryCode = $state('');
+  const formObj = superForm(
+    {
+      id: initialSnapshot?.id,
+      name: initialSnapshot?.name ?? '',
+      sellerType: initialSnapshot?.sellerType ?? 'SHOP',
+      email: initialSnapshot?.email ?? '',
+      phone: initialSnapshot?.phone ?? '',
+      websiteUrl: initialSnapshot?.websiteUrl ?? '',
+      streetAddress: initialSnapshot?.streetAddress ?? '',
+      extendedAddress: initialSnapshot?.extendedAddress ?? '',
+      city: initialSnapshot?.city ?? '',
+      stateRegion: initialSnapshot?.stateRegion ?? '',
+      postalCode: initialSnapshot?.postalCode ?? '',
+      countryCode: initialSnapshot?.countryCode ?? ''
+    },
+    {
+      SPA: true,
+      dataType: 'json',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      validators: zodClient(sellerSchema as any),
+      onUpdate: async ({ form: formData }) => {
+        if (formData.valid) {
+          try {
+            const payload: FormSeller = {
+              ...formData.data,
+              email: formData.data.email || null,
+              phone: formData.data.phone || null,
+              websiteUrl: formData.data.websiteUrl || null,
+              streetAddress: formData.data.streetAddress || null,
+              extendedAddress: formData.data.extendedAddress || null,
+              city: formData.data.city || null,
+              stateRegion: formData.data.stateRegion || null,
+              postalCode: formData.data.postalCode || null,
+              countryCode: formData.data.countryCode || null
+            };
 
-  $effect(() => {
-    if (initial) {
-      id = initial.id ?? null;
-      name = initial.name ?? '';
-      sellerType = initial.sellerType ?? ('SHOP' as SellerType);
-      email = initial.email ?? '';
-      phone = initial.phone ?? '';
-      websiteUrl = initial.websiteUrl ?? '';
+            const res = payload.id
+              ? await sellerService.updateSeller(payload)
+              : await sellerService.createSeller(payload);
 
-      streetAddress = initial.streetAddress ?? '';
-      extendedAddress = initial.extendedAddress ?? '';
-      city = initial.city ?? '';
-      stateRegion = initial.stateRegion ?? '';
-      postalCode = initial.postalCode ?? '';
-      countryCode = initial.countryCode ?? '';
-    }
-  });
-
-  let isSubmitting = $state(false);
-  let formError = $state<string | null>(null);
-
-  function toForm(): FormSeller {
-    return {
-      id: id ?? undefined,
-      name,
-      sellerType,
-      email: email || null,
-      phone: phone || null,
-      websiteUrl: websiteUrl || null,
-      streetAddress: streetAddress || null,
-      extendedAddress: extendedAddress || null,
-      city: city || null,
-      stateRegion: stateRegion || null,
-      postalCode: postalCode || null,
-      countryCode: countryCode || null
-    } as FormSeller;
-  }
-
-  async function handleSubmit() {
-    formError = null;
-    if (!name.trim()) {
-      formError = m.form_new_model_basic_info();
-      return;
-    }
-
-    isSubmitting = true;
-    try {
-      const form = toForm();
-      let res;
-      if (form.id) {
-        res = await sellerService.updateSeller(form);
-      } else {
-        res = await sellerService.createSeller(form);
+            if (res.status === 'ok') {
+              toaster.success('Seller saved successfully');
+              onSaved(res.data);
+              onClose();
+            } else {
+              toaster.error('Failed to save seller');
+            }
+          } catch {
+            toaster.error('An unexpected error occurred');
+          }
+        }
       }
-
-      if (res.status === 'ok') {
-        onSaved(res.data);
-        onClose();
-      } else {
-        formError = 'Failed to save seller';
-      }
-    } finally {
-      isSubmitting = false;
     }
-  }
+  );
+
+  const { form, enhance, submitting, tainted } = formObj;
+
+  const hasUnsavedChanges = $derived(
+    typeof $tainted === 'boolean' ? $tainted : Object.keys($tainted ?? {}).length > 0
+  );
 
   function close() {
     onClose();
@@ -100,43 +90,150 @@
 
 <div class="card">
   <div class="card-header">
-    <h3 class="text-base font-semibold">{id ? 'Edit Seller' : 'New Seller'}</h3>
+    <h3 class="text-base font-semibold">{$form.id ? 'Edit Seller' : 'New Seller'}</h3>
     <Button variant="ghost" onclick={close}>×</Button>
   </div>
 
-  <div class="card-body space-y-3">
-    <Input placeholder="Name" bind:value={name} />
+  <form method="POST" use:enhance>
+    <div class="card-body space-y-3">
+      <Form.Field form={formObj} name="name">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label required>Name</Form.Label>
+            <Input {...props} bind:value={$form.name} placeholder="Seller name" />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
 
-    <select class="select" bind:value={sellerType}>
-      <option value="SHOP">Shop</option>
-      <option value="INDIVIDUAL">Individual</option>
-      <option value="OTHER">Other</option>
-    </select>
+      <Form.Field form={formObj} name="sellerType">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label required>Seller Type</Form.Label>
+            <select {...props} bind:value={$form.sellerType} class="select">
+              <option value="SHOP">Shop</option>
+              <option value="PRIVATE">Private</option>
+              <option value="MANUFACTURER">Manufacturer</option>
+            </select>
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
 
-    <Input placeholder="Email" bind:value={email} />
-    <Input placeholder="Phone" bind:value={phone} />
-    <Input placeholder="Website" bind:value={websiteUrl} />
+      <Form.Field form={formObj} name="email">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label>Email</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.email}
+              placeholder="email@example.com"
+              type="email"
+            />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
 
-    <Input placeholder="Street address" bind:value={streetAddress} />
-    <Input placeholder="Extended address" bind:value={extendedAddress} />
-    <div class="grid grid-cols-3 gap-2">
-      <Input placeholder="City" bind:value={city} />
-      <Input placeholder="Region" bind:value={stateRegion} />
-      <Input placeholder="Postal code" bind:value={postalCode} />
+      <Form.Field form={formObj} name="phone">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label>Phone</Form.Label>
+            <Input {...props} bind:value={$form.phone} placeholder="Phone number" />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+
+      <Form.Field form={formObj} name="websiteUrl">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label>Website</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.websiteUrl}
+              placeholder="https://example.com"
+              type="url"
+            />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+
+      <Form.Field form={formObj} name="streetAddress">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label>Street Address</Form.Label>
+            <Input {...props} bind:value={$form.streetAddress} placeholder="123 Main St" />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+
+      <Form.Field form={formObj} name="extendedAddress">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label>Extended Address</Form.Label>
+            <Input {...props} bind:value={$form.extendedAddress} placeholder="Apt 4B" />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+
+      <div class="grid grid-cols-3 gap-2">
+        <Form.Field form={formObj} name="city">
+          <Form.Control>
+            {#snippet children({ props }: { props: ControlAttrs })}
+              <Form.Label>City</Form.Label>
+              <Input {...props} bind:value={$form.city} placeholder="City" />
+            {/snippet}
+          </Form.Control>
+          <Form.FieldErrors />
+        </Form.Field>
+
+        <Form.Field form={formObj} name="stateRegion">
+          <Form.Control>
+            {#snippet children({ props }: { props: ControlAttrs })}
+              <Form.Label>Region</Form.Label>
+              <Input {...props} bind:value={$form.stateRegion} placeholder="Region" />
+            {/snippet}
+          </Form.Control>
+          <Form.FieldErrors />
+        </Form.Field>
+
+        <Form.Field form={formObj} name="postalCode">
+          <Form.Control>
+            {#snippet children({ props }: { props: ControlAttrs })}
+              <Form.Label>Postal Code</Form.Label>
+              <Input {...props} bind:value={$form.postalCode} placeholder="12345" />
+            {/snippet}
+          </Form.Control>
+          <Form.FieldErrors />
+        </Form.Field>
+      </div>
+
+      <Form.Field form={formObj} name="countryCode">
+        <Form.Control>
+          {#snippet children({ props }: { props: ControlAttrs })}
+            <Form.Label>Country Code</Form.Label>
+            <Input {...props} bind:value={$form.countryCode} placeholder="US" />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+
+      {#if hasUnsavedChanges}
+        <p class="text-warning text-sm">You have unsaved changes</p>
+      {/if}
     </div>
-    <Input placeholder="Country code" bind:value={countryCode} />
 
-    {#if formError}
-      <div class="text-error">{formError}</div>
-    {/if}
-  </div>
-
-  <div class="card-footer flex justify-end gap-2">
-    <Button variant="ghost" onclick={close} disabled={isSubmitting}
-      >{m.form_new_model_cancel()}</Button
-    >
-    <Button variant="default" onclick={handleSubmit} disabled={isSubmitting}>
-      {isSubmitting ? m.wishlist_modal_saving() : m.form_new_model_create()}
-    </Button>
-  </div>
+    <div class="card-footer flex justify-end gap-2">
+      <Button variant="ghost" type="button" onclick={close} disabled={$submitting}
+        >{m.form_new_model_cancel()}</Button
+      >
+      <Button variant="default" type="submit" disabled={$submitting}>
+        {$submitting ? m.wishlist_modal_saving() : m.form_new_model_create()}
+      </Button>
+    </div>
+  </form>
 </div>

@@ -184,11 +184,10 @@ export class WishlistService {
    * @returns The created wishlist or null if failed
    */
   async createWishlist(name: string, isDefault = false): Promise<WishlistPreview | null> {
-    const toastId = crypto.randomUUID();
     this.#captureSnapshot();
 
     // Optimistic update
-    const tempId = `temp-${toastId}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const optimistic: WishlistPreview = {
       id: tempId,
       name,
@@ -205,7 +204,7 @@ export class WishlistService {
     this.#wishlists = [...cleared, optimistic];
     if (isDefault) this.#activeWishlistId = tempId;
 
-    toaster.loading({ id: toastId, title: m.collection_toast_loading(), duration: 4000 });
+    const toastId = toaster.loading(m.collection_toast_loading(), { duration: 4000 });
 
     const result = await safeInvoke<WishlistPreview>('create_wishlist', {
       input: { name, notes: null, isDefault }
@@ -214,6 +213,7 @@ export class WishlistService {
     if (!result.ok) {
       console.error('Failed to create wishlist:', result.error);
       this.#revertSnapshot();
+      toaster.dismiss(toastId);
       const retry = isRetryableError(result.error)
         ? {
             label: m.collection_toast_retry(),
@@ -223,9 +223,7 @@ export class WishlistService {
             }
           }
         : undefined;
-      toaster.error({
-        id: toastId,
-        title: getErrorMessage(result.error),
+      toaster.error(getErrorMessage(result.error), {
         duration: 5000,
         action: retry
       });
@@ -235,7 +233,8 @@ export class WishlistService {
     // Replace optimistic with real data
     this.#wishlists = this.#wishlists.map((w) => (w.id === tempId ? result.data : w));
     if (result.data.isDefault) this.#activeWishlistId = result.data.id;
-    toaster.success({ id: toastId, title: m.collection_toast_success(), duration: 2000 });
+    toaster.dismiss(toastId);
+    toaster.success(m.collection_toast_success(), { duration: 2000 });
     return result.data;
   }
 
@@ -246,18 +245,18 @@ export class WishlistService {
    * @param name - The new name
    */
   async renameWishlist(id: string, name: string): Promise<void> {
-    const toastId = crypto.randomUUID();
     this.#captureSnapshot();
 
     // Optimistic update
     this.#wishlists = this.#wishlists.map((w) => (w.id === id ? { ...w, name } : w));
-    toaster.loading({ id: toastId, title: m.collection_toast_loading(), duration: 4000 });
+    const toastId = toaster.loading(m.collection_toast_loading(), { duration: 4000 });
 
     const result = await safeInvoke('rename_wishlist', { input: { id, name } });
 
     if (!result.ok) {
       console.error('Failed to rename wishlist:', result.error);
       this.#revertSnapshot();
+      toaster.dismiss(toastId);
       const retry = isRetryableError(result.error)
         ? {
             label: m.collection_toast_retry(),
@@ -267,16 +266,15 @@ export class WishlistService {
             }
           }
         : undefined;
-      toaster.error({
-        id: toastId,
-        title: getErrorMessage(result.error),
+      toaster.error(getErrorMessage(result.error), {
         duration: 5000,
         action: retry
       });
       return;
     }
 
-    toaster.success({ id: toastId, title: m.collection_toast_success(), duration: 2000 });
+    toaster.dismiss(toastId);
+    toaster.success(m.collection_toast_success(), { duration: 2000 });
   }
 
   /**
@@ -285,7 +283,6 @@ export class WishlistService {
    * @param id - The wishlist ID to delete
    */
   async deleteWishlist(id: string): Promise<void> {
-    const toastId = crypto.randomUUID();
     this.#captureSnapshot();
 
     // Optimistic update
@@ -295,13 +292,14 @@ export class WishlistService {
     this.#itemsByWishlist = nextItems;
     if (this.#activeWishlistId === id) this.#activeWishlistId = null;
 
-    toaster.loading({ id: toastId, title: m.collection_toast_loading(), duration: 4000 });
+    const toastId = toaster.loading(m.collection_toast_loading(), { duration: 4000 });
 
     const result = await safeInvoke('delete_wishlist', { id });
 
     if (!result.ok) {
       console.error('Failed to delete wishlist:', result.error);
       this.#revertSnapshot();
+      toaster.dismiss(toastId);
       const retry = isRetryableError(result.error)
         ? {
             label: m.collection_toast_retry(),
@@ -311,16 +309,15 @@ export class WishlistService {
             }
           }
         : undefined;
-      toaster.error({
-        id: toastId,
-        title: getErrorMessage(result.error),
+      toaster.error(getErrorMessage(result.error), {
         duration: 5000,
         action: retry
       });
       return;
     }
 
-    toaster.success({ id: toastId, title: m.collection_toast_success(), duration: 2000 });
+    toaster.dismiss(toastId);
+    toaster.success(m.collection_toast_success(), { duration: 2000 });
   }
 
   /**

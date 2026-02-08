@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    Accordion,
-    AccordionItem,
-    AccordionItemTrigger,
-    AccordionItemContent,
-    AccordionItemIndicator
-  } from '$lib/components/accordion';
+  import * as Accordion from '$lib/components/ui/accordion';
 
   import FormField from '$lib/components/ui/FormField.svelte';
   import { Input } from '$lib/components';
@@ -18,7 +12,7 @@
   type Props = {
     rs: RollingStockForm;
     index: number;
-    errors: Record<string, string>;
+    errorsFn: (field: string) => string | undefined;
     onDuplicate: (i: number) => void;
     onDelete: (i: number) => void;
     rollingStockCategoriesData: ConstantItem[];
@@ -36,7 +30,7 @@
   const {
     rs,
     index,
-    errors,
+    errorsFn,
     onDuplicate,
     onDelete,
     rollingStockCategoriesData,
@@ -58,7 +52,7 @@
   const isElectricMultipleUnit = $derived(rs.category === 'ElectricMultipleUnit');
 
   function fieldError(name: string): string | undefined {
-    return errors[`rolling_stocks.${index}.${name}`];
+    return errorsFn(name);
   }
 </script>
 
@@ -121,13 +115,12 @@
   </FormField>
 
   <div class="lg:col-span-2">
-    <Accordion collapsible>
-      <AccordionItem value={`technical-${index}-passenger`}>
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
+    <Accordion.Root type="single">
+      <Accordion.Item value={`technical-${index}-passenger`}>
+        <Accordion.Trigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-xs text-muted" />
-        </AccordionItemTrigger>
-        <AccordionItemContent class="px-2 pt-1 pb-2">
+        </Accordion.Trigger>
+        <Accordion.Content class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {@render selectField(
               formLabels.serviceLevel,
@@ -136,9 +129,9 @@
               serviceLevelsData
             )}
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
-    </Accordion>
+        </Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
   </div>
 {/snippet}
 
@@ -188,13 +181,12 @@
   </FormField>
 
   <div class="lg:col-span-2">
-    <Accordion collapsible>
-      <AccordionItem value={`technical-${index}-railcar`}>
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
+    <Accordion.Root type="single">
+      <Accordion.Item value={`technical-${index}-railcar`}>
+        <Accordion.Trigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-xs text-muted" />
-        </AccordionItemTrigger>
-        <AccordionItemContent class="px-2 pt-1 pb-2">
+        </Accordion.Trigger>
+        <Accordion.Content class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {@render selectField(formLabels.control, 'control', false, controlsData)}
             {@render selectField(
@@ -204,9 +196,9 @@
               dccInterfacesData
             )}
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
-    </Accordion>
+        </Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
   </div>
 {/snippet}
 
@@ -239,13 +231,12 @@
   </label>
 
   <div class="lg:col-span-2">
-    <Accordion collapsible>
-      <AccordionItem value={`technical-${index}-emu`}>
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
+    <Accordion.Root type="single">
+      <Accordion.Item value={`technical-${index}-emu`}>
+        <Accordion.Trigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-xs text-muted" />
-        </AccordionItemTrigger>
-        <AccordionItemContent class="px-2 pt-1 pb-2">
+        </Accordion.Trigger>
+        <Accordion.Content class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {@render selectField(formLabels.control, 'control', false, controlsData)}
             {@render selectField(
@@ -255,9 +246,9 @@
               dccInterfacesData
             )}
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
-    </Accordion>
+        </Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
   </div>
 {/snippet}
 
@@ -292,13 +283,12 @@
   </label>
 
   <div class="lg:col-span-2">
-    <Accordion collapsible>
-      <AccordionItem value={`technical-${index}-locomotive`}>
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-2 py-1 text-left">
+    <Accordion.Root type="single">
+      <Accordion.Item value={`technical-${index}-locomotive`}>
+        <Accordion.Trigger class="flex w-full items-center justify-between px-2 py-1 text-left">
           <span class="text-sm font-semibold">{resolveLabel(formLabels.technicalDetails)}</span>
-          <AccordionItemIndicator class="text-xs text-muted" />
-        </AccordionItemTrigger>
-        <AccordionItemContent class="px-2 pt-1 pb-2">
+        </Accordion.Trigger>
+        <Accordion.Content class="px-2 pt-1 pb-2">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {@render selectField(formLabels.control, 'control', false, controlsData)}
             {@render selectField(
@@ -308,9 +298,9 @@
               dccInterfacesData
             )}
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
-    </Accordion>
+        </Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
   </div>
 {/snippet}
 

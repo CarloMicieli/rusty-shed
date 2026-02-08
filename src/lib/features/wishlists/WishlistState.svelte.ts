@@ -24,18 +24,22 @@ function randomId() {
   return Math.random().toString(36).slice(2);
 }
 
-function toastLoading(id: string) {
-  toaster.loading({ id, title: m.collection_toast_loading(), duration: 4000 });
+function toastLoading(_id: string) {
+  // Note: Sonner returns toast ID from the function call, not accepts it as parameter
+  // For now, we'll just show the toast without tracking the ID
+  return toaster.loading(m.collection_toast_loading(), { duration: 4000 });
 }
 
-function toastSuccess(id: string) {
-  toaster.success({ id, title: m.collection_toast_success(), duration: 2000 });
+function toastSuccess(_id: string) {
+  // Dismiss the loading toast if we had stored its ID
+  // toaster.dismiss(id);
+  return toaster.success(m.collection_toast_success(), { duration: 2000 });
 }
 
-function toastError(id: string, message?: string, retry?: () => void) {
-  toaster.error({
-    id,
-    title: message || m.collection_toast_error(),
+function toastError(_id: string, message?: string, retry?: () => void) {
+  // Dismiss the loading toast if we had stored its ID
+  // toaster.dismiss(id);
+  return toaster.error(message || m.collection_toast_error(), {
     duration: 5000,
     action: retry
       ? {

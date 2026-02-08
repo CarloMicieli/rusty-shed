@@ -8,28 +8,17 @@
  */
 
 // shadcn-svelte UI Components
-export { Button } from './shadcn/button';
-export { Badge } from './shadcn/badge';
-export { Input } from './shadcn/input';
-export { Textarea } from './shadcn/textarea';
-export { Checkbox } from './shadcn/checkbox';
-export { Select } from './shadcn/select';
-export { RadioGroup } from './shadcn/radio-group';
-export { Toggle } from './shadcn/toggle';
-export { Dialog } from './shadcn/dialog';
-export { Sheet } from './shadcn/sheet';
-export {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from './shadcn/card';
-export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './shadcn/table';
-export { Alert, AlertTitle, AlertDescription } from './shadcn/alert';
-
-export { default as ToastHost } from './ToastHost.svelte';
+export { Button } from './ui/button';
+export { Badge } from './ui/badge';
+export { Input } from './ui/input';
+export { Textarea } from './ui/textarea';
+export { Checkbox } from './ui/checkbox';
+export { RadioGroup } from './ui/radio-group';
+export { Toggle } from './ui/toggle';
+export { Sheet } from './ui/sheet';
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
+export { Alert, AlertTitle, AlertDescription } from './ui/alert';
 
 // UI components (for form fields)
 export { default as FormField } from './ui/FormField.svelte';
@@ -53,5 +42,9 @@ export { default as DepotView } from './DepotView.svelte';
 export { default as SellerForm } from './SellerForm.svelte';
 export { default as SettingsForm } from './SettingsForm.svelte';
 
-// Re-export accordion components for convenience
-export * from './accordion';
+// Re-export shadcn-svelte UI components
+export * as Accordion from './ui/accordion';
+export * as Form from './ui/form';
+export * as Dialog from './ui/dialog';
+export * as Select from './ui/select';
+export { Toaster } from './ui/sonner';

@@ -1,6 +1,6 @@
 <script lang="ts" generics="T extends { id: string }">
   import type { Component } from 'svelte';
-  import type { BadgeVariant } from '$lib/components/shadcn/badge/Badge.svelte';
+  import type { BadgeVariant } from '$lib/components/ui/badge/Badge.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { ArrowUpDown, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-svelte';
   import { Badge, Button } from '$lib/components';

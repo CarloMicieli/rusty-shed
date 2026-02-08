@@ -7,10 +7,10 @@
  */
 
 // Button types
-export type { ButtonVariant, ButtonSize } from './shadcn/button/types.js';
+export type { ButtonVariant, ButtonSize } from './ui/button/types.js';
 
 // Badge types
-export type { BadgeVariant } from './shadcn/badge/types.js';
+export type { BadgeVariant } from './ui/badge/types.js';
 
 // Alert types
 export type {
@@ -18,7 +18,7 @@ export type {
   AlertProps,
   AlertTitleProps,
   AlertDescriptionProps
-} from './shadcn/alert/types.js';
+} from './ui/alert/types.js';
 
 // Card types
 export type {
@@ -28,10 +28,10 @@ export type {
   CardDescriptionProps,
   CardContentProps,
   CardFooterProps
-} from './shadcn/card/types.js';
+} from './ui/card/types.js';
 
 // Sheet types
-export type { SheetSide, SheetProps } from './shadcn/sheet/types.js';
+export type { SheetSide, SheetProps } from './ui/sheet/types.js';
 
 // Table types
 export type {
@@ -41,7 +41,7 @@ export type {
   TableRowProps,
   TableHeadProps,
   TableCellProps
-} from './shadcn/table/types.js';
+} from './ui/table/types.js';
 
 // Input types (HTML native types can be imported as needed)
 export type AutoFillHint = HTMLInputElement['autocomplete'];

@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { Check } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { superForm } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
+  import { settingsSchema } from '$lib/schemas/settings';
   import { Button, Badge } from '$lib/components';
   import type {
     SettingsDto,
@@ -8,8 +12,7 @@
     Currency,
     MeasureUnit,
     PowerMethod,
-    Scale,
-    LanguageCode
+    Scale
   } from '$lib/services';
 
   let {
@@ -22,32 +25,35 @@
     onsubmit: (payload: UpdateSettingsPayload) => void;
   }>();
 
-  const initialForm = $derived.by(
-    (): UpdateSettingsPayload => ({
-      currency: initialSettings.currency,
-      lengthUnit: initialSettings.lengthUnit,
-      favoriteScale: initialSettings.favoriteScale,
-      favoritePowerMethod: initialSettings.favoritePowerMethod,
-      languageCode: initialSettings.languageCode
-    })
+  // Capture initial values as snapshot to avoid Svelte 5 reactivity warnings
+  const settingsSnapshot = untrack(() => $state.snapshot(initialSettings));
+
+  const formObj = superForm(
+    {
+      currency: settingsSnapshot.currency,
+      lengthUnit: settingsSnapshot.lengthUnit,
+      favoriteScale: settingsSnapshot.favoriteScale,
+      favoritePowerMethod: settingsSnapshot.favoritePowerMethod,
+      languageCode: settingsSnapshot.languageCode
+    },
+    {
+      SPA: true,
+      dataType: 'json',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      validators: zodClient(settingsSchema as any),
+      onUpdate: async ({ form: formData }) => {
+        if (formData.valid) {
+          onsubmit(formData.data);
+        }
+      }
+    }
   );
 
-  let form = $state<UpdateSettingsPayload>({
-    currency: 'EUR',
-    lengthUnit: 'MILLIMETERS',
-    favoriteScale: 'H0',
-    favoritePowerMethod: 'AC',
-    languageCode: 'en'
-  });
+  const { form, enhance, tainted } = formObj;
 
-  $effect(() => {
-    const next = initialForm;
-    form.currency = next.currency;
-    form.lengthUnit = next.lengthUnit;
-    form.favoriteScale = next.favoriteScale;
-    form.favoritePowerMethod = next.favoritePowerMethod;
-    form.languageCode = next.languageCode;
-  });
+  const hasUnsavedChanges = $derived(
+    typeof $tainted === 'boolean' ? $tainted : Object.keys($tainted ?? {}).length > 0
+  );
 
   const currencyOptions: { label: string; value: Currency }[] = [
     { label: 'EUR (€)', value: 'EUR' },
@@ -84,15 +90,10 @@
     { label: 'H0e', value: 'H0e' }
   ];
 
-  const languageOptions: { label: string; value: LanguageCode }[] = [
+  const languageOptions: { label: string; value: 'en' | 'it' }[] = [
     { label: 'English', value: 'en' },
     { label: 'Italiano', value: 'it' }
   ];
-
-  function handleSubmit(event: Event) {
-    event.preventDefault();
-    onsubmit(form);
-  }
 </script>
 
 <section class="card border-surface-700/60 bg-surface-900/50 border shadow-xl">
@@ -109,7 +110,7 @@
     </Badge>
   </header>
 
-  <form class="space-y-8 p-6" onsubmit={handleSubmit}>
+  <form class="space-y-8 p-6" method="POST" use:enhance>
     <div class="grid gap-6 md:grid-cols-2">
       <div class="space-y-2">
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="currency">
@@ -118,7 +119,7 @@
         <select
           id="currency"
           class="variant-filled-primary-500 select w-full"
-          bind:value={form.currency}
+          bind:value={$form.currency}
         >
           {#each currencyOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
@@ -133,7 +134,7 @@
         <select
           id="language"
           class="variant-filled-primary-500 select w-full"
-          bind:value={form.languageCode}
+          bind:value={$form.languageCode}
         >
           {#each languageOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
@@ -150,7 +151,7 @@
         <select
           id="length-unit"
           class="variant-filled-primary-500 select w-full"
-          bind:value={form.lengthUnit}
+          bind:value={$form.lengthUnit}
         >
           {#each lengthUnitOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
@@ -165,7 +166,7 @@
         <select
           id="scale"
           class="variant-filled-primary-500 select w-full"
-          bind:value={form.favoriteScale}
+          bind:value={$form.favoriteScale}
         >
           {#each scaleOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
@@ -184,7 +185,7 @@
             class={[
               'group rounded-container relative flex gap-3 border p-4 transition',
               'bg-surface-800/60 hover:border-primary-400/70 hover:bg-surface-800/90',
-              form.favoritePowerMethod === option.value
+              $form.favoritePowerMethod === option.value
                 ? 'border-primary-400/90 ring-primary-500/30 ring-1'
                 : 'border-surface-700/60'
             ]}
@@ -194,14 +195,14 @@
               type="radio"
               name="power-method"
               value={option.value}
-              bind:group={form.favoritePowerMethod}
+              bind:group={$form.favoritePowerMethod}
             />
 
             <span
               aria-hidden="true"
               class={[
                 'mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border transition',
-                form.favoritePowerMethod === option.value
+                $form.favoritePowerMethod === option.value
                   ? 'border-primary-300 bg-primary-500/30'
                   : 'border-surface-500 bg-surface-900'
               ]}
@@ -209,7 +210,7 @@
               <span
                 class={[
                   'bg-primary-400 h-2 w-2 rounded-full transition',
-                  form.favoritePowerMethod === option.value ? 'opacity-100' : 'opacity-0'
+                  $form.favoritePowerMethod === option.value ? 'opacity-100' : 'opacity-0'
                 ]}
               ></span>
             </span>
@@ -224,6 +225,10 @@
         {/each}
       </div>
     </div>
+
+    {#if hasUnsavedChanges}
+      <p class="text-warning text-sm">You have unsaved changes</p>
+    {/if}
 
     <div class="border-surface-700/60 flex items-center justify-end gap-4 border-t pt-4">
       <Button variant="default" type="submit" disabled={saving}>

@@ -1,18 +1,11 @@
 <script lang="ts">
-  import {
-    Accordion,
-    AccordionItem,
-    AccordionItemTrigger,
-    AccordionItemContent,
-    AccordionItemIndicator
-  } from '$lib/components/accordion';
-  import { safeInvoke, getErrorMessage, isValidationError } from '$lib/services';
-  import {
-    createRailwayModelSchema,
-    type CreateRailwayModelInput
-  } from '$lib/schemas/railway-model';
+  import { untrack } from 'svelte';
+  import * as Accordion from '$lib/components/ui/accordion';
+  import { superForm } from 'sveltekit-superforms';
+  import { safeInvoke, getErrorMessage } from '$lib/services';
+  import type { CreateRailwayModelInput } from '$lib/schemas/railway-model';
   import { formLabels } from './constants';
-  import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
+  import { createDefaultRollingStock, normalizeRollingStock } from './utils';
   import FormField from '$lib/components/ui/FormField.svelte';
   import { Input, Textarea, Badge } from '$lib/components';
   import manufacturersData from '$lib/data/manufacturers.json';
@@ -33,53 +26,82 @@
   import { resolveLabel } from '../../../utils/resolveLabel';
   import type { ConstantItem } from './constants';
   import RollingStockSection from './components/RollingStockSection.svelte';
-  import type { ZodError } from 'zod';
-
-  type FormState = {
-    manufacturer_id: string;
-    product_code: string;
-    description: string;
-    details: string | null;
-    power_method: CreateRailwayModelInput['power_method'] | '';
-    scale: CreateRailwayModelInput['scale'] | '';
-    epoch: CreateRailwayModelInput['epoch'] | '';
-    category: CreateRailwayModelInput['category'] | '';
-    delivery_date: string | null;
-    availability_status: CreateRailwayModelInput['availability_status'] | '' | null;
-    rolling_stocks: RollingStockForm[];
-  };
 
   let accordionValues = $state<string[]>(['basic-info', 'delivery-availability', 'rolling-stock']);
 
-  let formData = $state<FormState>({
+  const initialData: CreateRailwayModelInput = {
     manufacturer_id: '',
     product_code: '',
     description: '',
     details: null,
-    power_method: '',
-    scale: '',
+    power_method: 'AC',
+    scale: 'H0',
     epoch: '',
-    category: '',
+    category: 'LOCOMOTIVES',
     delivery_date: null,
     availability_status: null,
     rolling_stocks: []
-  });
+  };
 
-  let errors = $state<Record<string, string>>({});
-  let isSubmitting = $state(false);
-  const hasRollingStock = $derived(formData.rolling_stocks.length > 0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const formObj = superForm(
+    untrack(() => $state.snapshot(initialData as any)),
+    {
+      SPA: true,
+      dataType: 'json',
+      // Skip client-side Zod validation since RollingStockForm doesn't match schema exactly
+      // Server-side validation via Tauri will catch any issues
+      onUpdate: async ({ form }) => {
+        // Validate structure manually
+        if (!form.data.manufacturer_id || !form.data.product_code || !form.data.description) {
+          generalError = 'Please fill in all required fields';
+          return;
+        }
+
+        if (form.data.rolling_stocks.length === 0) {
+          generalError = 'At least one rolling stock is required';
+          return;
+        }
+
+        try {
+          // Normalize rolling stocks before submission
+
+          const normalizedData = {
+            ...form.data,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            rolling_stocks: form.data.rolling_stocks.map((rs: any) => normalizeRollingStock(rs))
+          };
+
+          const result = await safeInvoke<string>('create_railway_model', { args: normalizedData });
+
+          if (result.ok) {
+            navigate(`/models/${result.data}`);
+          } else {
+            // Set general error
+            generalError = getErrorMessage(result.error);
+          }
+        } catch (err) {
+          generalError = err instanceof Error ? err.message : 'An unexpected error occurred';
+        }
+      }
+    }
+  );
+
+  const { form, errors, enhance, submitting } = formObj;
+  const hasRollingStock = $derived($form.rolling_stocks.length > 0);
+  let generalError = $state<string | null>(null);
 
   function addRollingStock() {
-    formData.rolling_stocks.push(createDefaultRollingStock());
+    $form.rolling_stocks.push(createDefaultRollingStock());
   }
 
   function deleteRollingStock(index: number) {
-    formData.rolling_stocks.splice(index, 1);
+    $form.rolling_stocks.splice(index, 1);
   }
 
   function duplicateRollingStock(index: number) {
-    const copy = structuredClone(formData.rolling_stocks[index]);
-    formData.rolling_stocks.push(copy);
+    const copy = structuredClone($form.rolling_stocks[index]);
+    $form.rolling_stocks.push(copy);
   }
 
   function navigate(path: string) {
@@ -91,54 +113,16 @@
     return resolveLabel(option as ConstantItem);
   }
 
-  async function handleSubmit() {
-    isSubmitting = true;
-    errors = {};
+  // Helper to get field-specific errors
+  function fieldError(name: string): string | undefined {
+    const err = $errors[name as keyof typeof $errors];
+    return err ? String(err) : undefined;
+  }
 
-    try {
-      const payload: CreateRailwayModelInput = {
-        manufacturer_id: formData.manufacturer_id,
-        product_code: formData.product_code,
-        description: formData.description,
-        details: formData.details,
-        power_method: formData.power_method as CreateRailwayModelInput['power_method'],
-        scale: formData.scale as CreateRailwayModelInput['scale'],
-        epoch: formData.epoch,
-        category: formData.category as CreateRailwayModelInput['category'],
-        delivery_date: formData.delivery_date,
-        availability_status:
-          formData.availability_status === ''
-            ? null
-            : (formData.availability_status as CreateRailwayModelInput['availability_status']),
-        rolling_stocks: formData.rolling_stocks.map(normalizeRollingStock)
-      } as CreateRailwayModelInput;
-
-      const validated = createRailwayModelSchema.parse(payload);
-      const result = await safeInvoke<string>('create_railway_model', { args: validated });
-
-      if (result.ok) {
-        navigate(`/models/${result.data}`);
-      } else {
-        // Handle validation errors by mapping to form fields
-        if (isValidationError(result.error)) {
-          errors = { ...result.error.fields };
-        }
-        // Always set a general error message
-        errors.general = getErrorMessage(result.error);
-      }
-    } catch (err) {
-      if ((err as ZodError).issues) {
-        const zodErr = err as ZodError;
-        zodErr.issues.forEach((issue) => {
-          const path = issue.path.join('.');
-          errors[path] = issue.message;
-        });
-      } else {
-        errors.general = typeof err === 'string' ? err : 'An unexpected error occurred';
-      }
-    } finally {
-      isSubmitting = false;
-    }
+  function rollingStockFieldError(index: number, fieldName: string): string | undefined {
+    const key = `rolling_stocks.${index}.${fieldName}` as keyof typeof $errors;
+    const err = $errors[key];
+    return err ? String(err) : undefined;
   }
 </script>
 
@@ -167,154 +151,140 @@
 
 <div class="container mx-auto p-8">
   <h1 class="h2 mb-8">{resolveLabel(formLabels.title)}</h1>
-  {#if errors.general}
-    <div class="variant-filled-error card mb-4 p-4">{errors.general}</div>
+  {#if generalError}
+    <div class="variant-filled-error card mb-4 p-4">{generalError}</div>
   {/if}
 
-  <form
-    onsubmit={(e) => {
-      e.preventDefault();
-      handleSubmit();
-    }}
-  >
-    <Accordion
-      value={accordionValues}
-      onValueChange={(details) => (accordionValues = details.value)}
-      multiple
-      collapsible
-      class="space-y-3"
-    >
-      <AccordionItem value="basic-info" class="border-surface-600 rounded-lg border">
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+  <form method="POST" use:enhance>
+    <Accordion.Root bind:value={accordionValues} type="multiple" class="space-y-3">
+      <Accordion.Item value="basic-info" class="border-surface-600 rounded-lg border">
+        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.basicInfo)}</h3>
-          <AccordionItemIndicator class="text-sm text-muted" />
-        </AccordionItemTrigger>
+        </Accordion.Trigger>
 
-        <AccordionItemContent class="px-3 pt-1 pb-4">
+        <Accordion.Content class="px-3 pt-1 pb-4">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {@render selectField(
               formLabels.manufacturer,
-              errors.manufacturer_id,
+              fieldError('manufacturer_id'),
               true,
-              formData.manufacturer_id,
+              $form.manufacturer_id,
               manufacturersData,
-              (next) => (formData.manufacturer_id = next)
+              (next) => ($form.manufacturer_id = next)
             )}
 
-            <FormField label={formLabels.productCode} error={errors.product_code} required>
+            <FormField label={formLabels.productCode} error={fieldError('product_code')} required>
               <Input
                 type="text"
-                bind:value={formData.product_code}
+                bind:value={$form.product_code}
                 placeholder={resolveLabel(formLabels.productCodePlaceholder)}
                 class="font-mono"
               />
             </FormField>
 
-            <FormField label={formLabels.description} error={errors.description} required>
+            <FormField label={formLabels.description} error={fieldError('description')} required>
               <Input
                 type="text"
-                bind:value={formData.description}
+                bind:value={$form.description}
                 placeholder={resolveLabel(formLabels.descriptionPlaceholder)}
               />
             </FormField>
 
             {@render selectField(
               formLabels.category,
-              errors.category,
+              fieldError('category'),
               true,
-              formData.category,
+              $form.category,
               categoriesData,
-              (next) => (formData.category = next as CreateRailwayModelInput['category'])
+              (next) => ($form.category = next as CreateRailwayModelInput['category'])
             )}
 
             {@render selectField(
               formLabels.scale,
-              errors.scale,
+              fieldError('scale'),
               true,
-              formData.scale,
+              $form.scale,
               scalesData,
-              (next) => (formData.scale = next as CreateRailwayModelInput['scale'])
+              (next) => ($form.scale = next as CreateRailwayModelInput['scale'])
             )}
 
             {@render selectField(
               formLabels.powerMethod,
-              errors.power_method,
+              fieldError('power_method'),
               true,
-              formData.power_method,
+              $form.power_method,
               powerMethodsData,
-              (next) => (formData.power_method = next as CreateRailwayModelInput['power_method'])
+              (next) => ($form.power_method = next as CreateRailwayModelInput['power_method'])
             )}
 
             {@render selectField(
               formLabels.epoch,
-              errors.epoch,
+              fieldError('epoch'),
               true,
-              formData.epoch,
+              $form.epoch,
               epochsData,
-              (next) => (formData.epoch = next)
+              (next) => ($form.epoch = next)
             )}
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
+        </Accordion.Content>
+      </Accordion.Item>
 
-      <AccordionItem value="delivery-availability" class="border-surface-600 rounded-lg border">
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+      <Accordion.Item value="delivery-availability" class="border-surface-600 rounded-lg border">
+        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.deliveryAvailability)}</h3>
-          <AccordionItemIndicator class="text-sm text-muted" />
-        </AccordionItemTrigger>
+        </Accordion.Trigger>
 
-        <AccordionItemContent class="px-3 pt-1 pb-4">
+        <Accordion.Content class="px-3 pt-1 pb-4">
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <FormField label={formLabels.deliveryDate} error={errors.delivery_date}>
+            <FormField label={formLabels.deliveryDate} error={fieldError('delivery_date')}>
               <Input
                 type="text"
-                bind:value={formData.delivery_date}
+                bind:value={$form.delivery_date}
                 placeholder={resolveLabel(formLabels.deliveryDatePlaceholder)}
               />
             </FormField>
 
             {@render selectField(
               formLabels.availabilityStatus,
-              errors.availability_status,
+              fieldError('availability_status'),
               false,
-              formData.availability_status ?? '',
+              $form.availability_status ?? '',
               availabilityStatusesData,
               (next) =>
-                (formData.availability_status = (next ||
+                ($form.availability_status = (next ||
                   null) as CreateRailwayModelInput['availability_status'])
             )}
 
-            <FormField label={formLabels.additionalDetails} error={errors.details}>
+            <FormField label={formLabels.additionalDetails} error={fieldError('details')}>
               <Textarea
                 rows={3}
-                bind:value={formData.details}
+                bind:value={$form.details}
                 placeholder={resolveLabel(formLabels.detailsPlaceholder)}
               />
             </FormField>
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
+        </Accordion.Content>
+      </Accordion.Item>
 
-      <AccordionItem value="rolling-stock" class="border-surface-600 rounded-lg border">
-        <AccordionItemTrigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+      <Accordion.Item value="rolling-stock" class="border-surface-600 rounded-lg border">
+        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">
             {resolveLabel(formLabels.rollingStock)}
-            <Badge variant="default" class="ml-2">{formData.rolling_stocks.length}</Badge>
+            <Badge variant="default" class="ml-2">{$form.rolling_stocks.length}</Badge>
           </h3>
-          <AccordionItemIndicator class="text-sm text-muted" />
-        </AccordionItemTrigger>
+        </Accordion.Trigger>
 
-        <AccordionItemContent class="px-3 pt-1 pb-4">
+        <Accordion.Content class="px-3 pt-1 pb-4">
           <div class="space-y-4">
             {#if !hasRollingStock}
               <div class="text-sm text-muted">Add at least one rolling stock item to continue.</div>
             {/if}
 
-            {#each formData.rolling_stocks as rs, index (index)}
+            {#each $form.rolling_stocks as rs, index (index)}
               <RollingStockSection
                 {rs}
                 {index}
-                {errors}
+                errorsFn={(field) => rollingStockFieldError(index, field)}
                 {rollingStockCategoriesData}
                 {railwayCompaniesData}
                 {locomotiveTypesData}
@@ -334,13 +304,13 @@
               + {resolveLabel(formLabels.addRollingStock)}
             </button>
           </div>
-        </AccordionItemContent>
-      </AccordionItem>
-    </Accordion>
+        </Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
 
     <div class="mt-8 flex gap-4">
-      <button type="submit" class="cta-btn cta-primary btn" disabled={isSubmitting}>
-        {isSubmitting ? `${resolveLabel(formLabels.create)}...` : resolveLabel(formLabels.create)}
+      <button type="submit" class="cta-btn cta-primary btn" disabled={$submitting}>
+        {$submitting ? `${resolveLabel(formLabels.create)}...` : resolveLabel(formLabels.create)}
       </button>
       <button type="button" class="cta-btn cta-secondary btn" onclick={() => navigate('/')}>
         {resolveLabel(formLabels.cancel)}

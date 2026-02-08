@@ -21,11 +21,9 @@ function randomId() {
 }
 
 function toastError(id: string, message?: string) {
-  toaster.error({
-    id,
-    title: message || m.collection_toast_error(),
-    duration: 5000
-  });
+  // Note: Sonner API uses the first parameter as message, not an object
+  // The id parameter is kept for backward compatibility but not used
+  toaster.error(message || m.collection_toast_error(), { duration: 5000 });
 }
 
 /**
@@ -136,11 +134,7 @@ export class CollectionState {
     const result = await safeInvoke('add_railway_model_to_collection', { args });
 
     if (result.ok) {
-      toaster.success({
-        id: randomId(),
-        title: m.add_model_success(),
-        duration: 3000
-      });
+      toaster.success(m.add_model_success(), { duration: 3000 });
       await this.fetchCollection();
       return true;
     }

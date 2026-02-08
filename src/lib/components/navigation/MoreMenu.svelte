@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { resolve } from '$app/paths';
-  import { Sheet } from '$lib/components/shadcn/sheet';
+  import { Sheet } from '$lib/components/ui/sheet';
   import type { MoreMenuProps } from './types';
   import { isActive } from './utils';
 

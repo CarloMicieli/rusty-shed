@@ -13,4 +13,3 @@ export * from './domain';
 // Components (will be added as they're moved)
 export { default as SmartImage } from './components/SmartImage.svelte';
 export { default as SearchBar } from './components/SearchBar.svelte';
-export { default as ToastHost } from './components/ToastHost.svelte';

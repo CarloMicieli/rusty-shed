@@ -21,7 +21,7 @@
   } from '$lib/features/dashboard/DashboardState.svelte';
   import { createDepotState, setDepotContext } from '$lib/features/depot/DepotState.svelte';
   import { TrackInventoryService, setTrackInventoryContext } from '$lib/features/track-inventory';
-  import ToastHost from '$lib/components/ToastHost.svelte';
+  import { Toaster } from '$lib/components/ui/sonner';
   import { safeInvoke } from '$lib/services';
   import { onMount } from 'svelte';
 
@@ -165,7 +165,7 @@
 
       <!-- Footer / Bottom Nav -->
       <BottomNavigation />
-      <ToastHost />
+      <Toaster richColors position="top-right" />
     </div>
   </div>
 {/if}

@@ -6,12 +6,7 @@
    * Each year shows a full BudgetTable with 12-month breakdown.
    */
 
-  import {
-    Accordion,
-    AccordionItem,
-    AccordionItemTrigger,
-    AccordionItemContent
-  } from '$lib/components/accordion';
+  import * as Accordion from '$lib/components/ui/accordion';
   import type { BudgetState } from '../BudgetState.svelte';
   import BudgetTable from './BudgetTable.svelte';
   import * as m from '$lib/paraglide/messages.js';
@@ -55,48 +50,42 @@
   {#if historicalYears.length === 0}
     <p class="text-surface-400 text-sm">No historical data available.</p>
   {:else}
-    <Accordion>
-      {#snippet children(_context: { isExpanded: (value: string) => boolean })}
-        {#each historicalYears as year (year)}
-          <AccordionItem value={year.toString()}>
-            {#snippet children({ isExpanded }: { isExpanded: boolean })}
-              <AccordionItemTrigger value={year.toString()}>
-                <div class="flex w-full items-center justify-between">
-                  <span class="text-surface-100 font-semibold">{formatYearRange(year)}</span>
-                  {#if loadingYear === year}
-                    <span class="text-surface-400 text-xs"
-                      >{m.budget_loading?.() || 'Loading...'}</span
-                    >
-                  {/if}
-                </div>
-              </AccordionItemTrigger>
+    <Accordion.Root type="multiple">
+      {#each historicalYears as year (year)}
+        <Accordion.Item value={year.toString()}>
+          <Accordion.Trigger value={year.toString()}>
+            <div class="flex w-full items-center justify-between">
+              <span class="text-surface-100 font-semibold">{formatYearRange(year)}</span>
+              {#if loadingYear === year}
+                <span class="text-surface-400 text-xs">{m.budget_loading?.() || 'Loading...'}</span>
+              {/if}
+            </div>
+          </Accordion.Trigger>
 
-              <AccordionItemContent value={year.toString()} {isExpanded}>
-                <div class="p-4">
-                  {#if budgetState.hasRecords && budgetState.monthlyRecords.length > 0 && budgetState.monthlyRecords[0].year === year}
-                    <BudgetTable
-                      records={budgetState.monthlyRecords}
-                      {budgetState}
-                      currency={budgetState.currency}
-                    />
-                  {:else}
-                    <button
-                      type="button"
-                      class="variant-ghost-primary btn btn-sm"
-                      onclick={() => handleYearExpand(year)}
-                      disabled={loadingYear !== null}
-                    >
-                      {loadingYear === year
-                        ? m.budget_loading?.() || 'Loading...'
-                        : m.budget_mode_yearly?.() || `Load ${year} data`}
-                    </button>
-                  {/if}
-                </div>
-              </AccordionItemContent>
-            {/snippet}
-          </AccordionItem>
-        {/each}
-      {/snippet}
-    </Accordion>
+          <Accordion.Content>
+            <div class="p-4">
+              {#if budgetState.hasRecords && budgetState.monthlyRecords.length > 0 && budgetState.monthlyRecords[0].year === year}
+                <BudgetTable
+                  records={budgetState.monthlyRecords}
+                  {budgetState}
+                  currency={budgetState.currency}
+                />
+              {:else}
+                <button
+                  type="button"
+                  class="variant-ghost-primary btn btn-sm"
+                  onclick={() => handleYearExpand(year)}
+                  disabled={loadingYear !== null}
+                >
+                  {loadingYear === year
+                    ? m.budget_loading?.() || 'Loading...'
+                    : m.budget_mode_yearly?.() || `Load ${year} data`}
+                </button>
+              {/if}
+            </div>
+          </Accordion.Content>
+        </Accordion.Item>
+      {/each}
+    </Accordion.Root>
   {/if}
 </div>

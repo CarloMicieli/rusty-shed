@@ -6,71 +6,112 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #1a1614;
-  --foreground: #e2d1c3;
-  --card: #24201e;
-  --card-foreground: #e2d1c3;
-  --popover: #24201e;
-  --popover-foreground: #e2d1c3;
-  --primary: #d48a3e;
-  --primary-foreground: #1a1614;
-  --secondary: #2f2a27;
-  --secondary-foreground: #e2d1c3;
-  --muted: #2b2623;
-  --muted-foreground: #b9a89a;
-  --accent: #b87333;
-  --accent-foreground: #1a1614;
-  --destructive: #b9493a;
-  --border: #3a312c;
-  --input: #3a312c;
-  --ring: #d48a3e;
-  --chart-1: #d48a3e;
-  --chart-2: #b87333;
-  --chart-3: #a56532;
-  --chart-4: #e2a05c;
-  --chart-5: #8b5a2b;
-  --sidebar: #1d1816;
-  --sidebar-foreground: #e2d1c3;
-  --sidebar-primary: #d48a3e;
-  --sidebar-primary-foreground: #1a1614;
-  --sidebar-accent: #2b2623;
-  --sidebar-accent-foreground: #e2d1c3;
-  --sidebar-border: #3a312c;
-  --sidebar-ring: #d48a3e;
+
+  /* Background & Surface (Zinc-based Dark) */
+  --background: hsl(240 10% 3.9%); /* zinc-950 */
+  --foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  --card: hsl(240 10% 7%); /* zinc-900 */
+  --card-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  --popover: hsl(240 10% 7%); /* zinc-900 */
+  --popover-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Primary - Copper/Brass accent */
+  --primary: hsl(30 50% 50%); /* Copper tone */
+  --primary-foreground: hsl(240 10% 3.9%); /* zinc-950 */
+
+  /* Secondary */
+  --secondary: hsl(240 5.9% 15%); /* zinc-800 */
+  --secondary-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Muted */
+  --muted: hsl(240 5.9% 15%); /* zinc-800 */
+  --muted-foreground: hsl(240 5% 64.9%); /* zinc-400 */
+
+  /* Accent */
+  --accent: hsl(240 5.9% 15%); /* zinc-800 */
+  --accent-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Destructive */
+  --destructive: hsl(0 62.8% 30.6%); /* red-800 */
+  --destructive-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Border & Input */
+  --border: hsl(240 5.9% 20%); /* zinc-700 */
+  --input: hsl(240 5.9% 20%); /* zinc-700 */
+  --ring: hsl(30 50% 50%); /* Matches primary */
+
+  /* Chart colors (optional, for layerchart) */
+  --chart-1: hsl(30 50% 50%);
+  --chart-2: hsl(25 45% 45%);
+  --chart-3: hsl(20 40% 40%);
+  --chart-4: hsl(35 55% 55%);
+  --chart-5: hsl(30 35% 35%);
+
+  /* Sidebar (High-Contrast Darker) */
+  --sidebar: hsl(240 10% 2%); /* Darker than background */
+  --sidebar-foreground: hsl(0 0% 90%); /* Slightly dimmed */
+  --sidebar-primary: hsl(30 50% 50%); /* Copper accent */
+  --sidebar-primary-foreground: hsl(240 10% 2%);
+  --sidebar-accent: hsl(240 5.9% 12%); /* Hover state */
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(240 5.9% 15%); /* Subtle border */
+  --sidebar-ring: hsl(30 50% 50%);
 }
 
 .dark {
-  --background: #1a1614;
-  --foreground: #e2d1c3;
-  --card: #24201e;
-  --card-foreground: #e2d1c3;
-  --popover: #24201e;
-  --popover-foreground: #e2d1c3;
-  --primary: #d48a3e;
-  --primary-foreground: #1a1614;
-  --secondary: #2f2a27;
-  --secondary-foreground: #e2d1c3;
-  --muted: #2b2623;
-  --muted-foreground: #b9a89a;
-  --accent: #b87333;
-  --accent-foreground: #1a1614;
-  --destructive: #b9493a;
-  --border: #3a312c;
-  --input: #3a312c;
-  --ring: #d48a3e;
-  --chart-1: #d48a3e;
-  --chart-2: #b87333;
-  --chart-3: #a56532;
-  --chart-4: #e2a05c;
-  --chart-5: #8b5a2b;
-  --sidebar: #1d1816;
-  --sidebar-foreground: #e2d1c3;
-  --sidebar-primary: #d48a3e;
-  --sidebar-primary-foreground: #1a1614;
-  --sidebar-accent: #2b2623;
-  --sidebar-accent-foreground: #e2d1c3;
-  --sidebar-border: #3a312c;
-  --sidebar-ring: #d48a3e;
+  /* Background & Surface (Zinc-based Dark) */
+  --background: hsl(240 10% 3.9%); /* zinc-950 */
+  --foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  --card: hsl(240 10% 7%); /* zinc-900 */
+  --card-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  --popover: hsl(240 10% 7%); /* zinc-900 */
+  --popover-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Primary - Copper/Brass accent */
+  --primary: hsl(30 50% 50%); /* Copper tone */
+  --primary-foreground: hsl(240 10% 3.9%); /* zinc-950 */
+
+  /* Secondary */
+  --secondary: hsl(240 5.9% 15%); /* zinc-800 */
+  --secondary-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Muted */
+  --muted: hsl(240 5.9% 15%); /* zinc-800 */
+  --muted-foreground: hsl(240 5% 64.9%); /* zinc-400 */
+
+  /* Accent */
+  --accent: hsl(240 5.9% 15%); /* zinc-800 */
+  --accent-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Destructive */
+  --destructive: hsl(0 62.8% 30.6%); /* red-800 */
+  --destructive-foreground: hsl(0 0% 98%); /* zinc-50 */
+
+  /* Border & Input */
+  --border: hsl(240 5.9% 20%); /* zinc-700 */
+  --input: hsl(240 5.9% 20%); /* zinc-700 */
+  --ring: hsl(30 50% 50%); /* Matches primary */
+
+  /* Chart colors */
+  --chart-1: hsl(30 50% 50%);
+  --chart-2: hsl(25 45% 45%);
+  --chart-3: hsl(20 40% 40%);
+  --chart-4: hsl(35 55% 55%);
+  --chart-5: hsl(30 35% 35%);
+
+  /* Sidebar (High-Contrast Darker) */
+  --sidebar: hsl(240 10% 2%); /* Darker than background */
+  --sidebar-foreground: hsl(0 0% 90%); /* Slightly dimmed */
+  --sidebar-primary: hsl(30 50% 50%); /* Copper accent */
+  --sidebar-primary-foreground: hsl(240 10% 2%);
+  --sidebar-accent: hsl(240 5.9% 12%); /* Hover state */
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(240 5.9% 15%); /* Subtle border */
+  --sidebar-ring: hsl(30 50% 50%);
 }
 
 @theme inline {
