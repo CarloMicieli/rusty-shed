@@ -5,14 +5,18 @@
   type MonthlySpendingPoint = { month: number; amount: number };
   type HistoryPoint = { year: number; month: number; value: number };
 
-  const props = $props<{
+  interface DashboardChartsProps {
+    /** ISO 4217 currency code for formatting. @default 'EUR' */
     currencyCode?: string;
+    /** Chart data overrides – falls back to mock data when omitted. */
     data?: {
       budget?: number;
       monthlySpending?: MonthlySpendingPoint[];
       history?: HistoryPoint[];
     };
-  }>();
+  }
+
+  let { currencyCode: currencyCodeProp, data: dataProp }: DashboardChartsProps = $props();
 
   // --- Mock Data ---
   const budgetMock = 0.75;
@@ -40,8 +44,8 @@
   });
 
   // --- Reactive Derived Logic ---
-  const currencyCode = $derived(props.currencyCode ?? 'EUR');
-  const data = $derived(props.data ?? {});
+  const currencyCode = $derived(currencyCodeProp ?? 'EUR');
+  const data = $derived(dataProp ?? {});
   const budget = $derived<number>(data.budget ?? budgetMock);
   const monthlySpending = $derived<MonthlySpendingPoint[]>(
     data.monthlySpending ?? monthlySpendingMock
@@ -74,6 +78,7 @@
 </script>
 
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <!-- Budget Gauge (PieChart) -->
   <div class={chartCardClass}>
     <div class="mb-3 space-y-1">
       <p class="text-xs font-semibold tracking-wide uppercase opacity-80">
@@ -87,8 +92,10 @@
         data={[{ key: 'available', value: budget }]}
         key="key"
         value="value"
+        maxValue={1}
         innerRadius={0.65}
         padAngle={0.02}
+        tooltip={false}
         props={{
           svg: { class: 'w-full h-full overflow-visible' },
           arc: {
@@ -98,14 +105,16 @@
           }
         }}
       >
-        <LinearGradient
-          id={budgetGradientId}
-          stops={[
-            ['0%', '#d48a3e'],
-            ['100%', '#b87333']
-          ]}
-          vertical
-        />
+        {#snippet belowMarks(_snippetProps)}
+          <LinearGradient
+            id={budgetGradientId}
+            stops={[
+              ['0%', '#d48a3e'],
+              ['100%', '#b87333']
+            ]}
+            vertical
+          />
+        {/snippet}
       </PieChart>
 
       <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -117,6 +126,7 @@
     </div>
   </div>
 
+  <!-- Monthly Spending (BarChart) -->
   <div class={chartCardClass}>
     <div class="mb-3 space-y-1">
       <p class="text-xs font-semibold tracking-wide uppercase opacity-80">
@@ -128,32 +138,32 @@
     <div class="relative h-64 w-full">
       <BarChart
         data={monthlySpending}
-        x="month"
-        y="amount"
+        x={(d) => d.month}
+        y={(d) => d.amount}
         yDomain={[0, monthlyYMax * 1.1]}
         padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
         props={{
           svg: { class: 'w-full h-full overflow-visible' },
           bars: { fill: '#d48a3e', radius: 4, strokeWidth: 0 },
           grid: {
-            y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 4 4;' },
-            x: false
+            y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 4 4;' }
           },
           xAxis: {
-            format: formatMonthIndex
+            format: (v: unknown) => formatMonthIndex(Number(v))
           },
           yAxis: {
-            format: formatCurrency
+            format: (v: unknown) => formatCurrency(Number(v))
           },
           tooltip: {
-            header: { format: (v) => formatMonthIndex(Number(v)) },
-            item: { format: (v) => formatCurrency(Number(v)) }
+            header: { format: (v: unknown) => formatMonthIndex(Number(v)) },
+            item: { format: (v: unknown) => formatCurrency(Number(v)) }
           }
         }}
       />
     </div>
   </div>
 
+  <!-- Punchcard (ScatterChart) -->
   <div class={chartCardClass}>
     <div class="mb-3 space-y-1">
       <p class="text-xs font-semibold tracking-wide uppercase opacity-80">
@@ -165,9 +175,9 @@
     <div class="relative h-64 w-full">
       <ScatterChart
         data={historyData}
-        x="month"
-        y="year"
-        r="value"
+        x={(d) => d.month}
+        y={(d) => d.year}
+        r={(d) => d.value}
         rDomain={[0, historyValueMax]}
         rRange={[3, 12]}
         padding={{ top: 10, right: 15, bottom: 30, left: 45 }}
@@ -184,20 +194,13 @@
             y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 2 2;' }
           },
           xAxis: {
-            format: formatMonthNumber
+            format: (v: unknown) => formatMonthNumber(Number(v))
           },
           tooltip: {
-            header: { format: (v) => formatMonthNumber(Number(v)) }
+            header: { format: (v: unknown) => formatMonthNumber(Number(v)) }
           }
         }}
       />
     </div>
   </div>
 </div>
-
-<style>
-  /* Ensure the SVG container itself is visible if Tailwind classes are purged */
-  :global(.layercake-container svg) {
-    overflow: visible !important;
-  }
-</style>
