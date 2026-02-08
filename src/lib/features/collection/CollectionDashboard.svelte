@@ -2,6 +2,7 @@
   import { Plus, Tag, X, Filter } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { getCollectionContext, availableScales } from './CollectionState.svelte';
   import { Button } from '$lib/components';
 
@@ -138,6 +139,10 @@
     await collectionService.deleteItem(ui.confirmDeleteId);
     ui.clearDelete();
   }
+
+  function handleCardClick(item: CollectionItemView) {
+    goto(`/models/${item.railwayModel.railwayModelId}`);
+  }
 </script>
 
 {#snippet LoadingSkeleton()}
@@ -246,7 +251,12 @@
         {:else}
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {#each filteredItems as item (item.id)}
-              <ItemCard {item} onEdit={ui.edit} onDelete={ui.requestDelete} />
+              <ItemCard
+                {item}
+                onEdit={ui.edit}
+                onDelete={ui.requestDelete}
+                onClick={handleCardClick}
+              />
             {/each}
           </div>
         {/if}

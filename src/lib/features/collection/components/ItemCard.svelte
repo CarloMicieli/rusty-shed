@@ -5,27 +5,45 @@
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import type { CollectionItemView } from '$lib/bindings';
 
-  const { item, onEdit, onDelete } = $props<{
+  const { item, onEdit, onDelete, onClick } = $props<{
     item: CollectionItemView;
     onEdit?: (item: CollectionItemView) => void;
     onDelete?: (id: string) => void;
+    onClick?: (item: CollectionItemView) => void;
   }>();
 
   const primaryTag = 'default';
   const PrimaryIcon = $derived(tagIcon(primaryTag));
 
-  function handleEdit() {
+  function handleEdit(e: MouseEvent) {
+    e.stopPropagation();
     onEdit?.(item);
   }
 
-  function handleDelete() {
+  function handleDelete(e: MouseEvent) {
+    e.stopPropagation();
     onDelete?.(item.id);
+  }
+
+  function handleClick() {
+    onClick?.(item);
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
   }
 </script>
 
-<article
-  class="group hover:border-accent-500/60 border-surface-700/60 bg-surface-900 shadow-surface-900/40 flex h-96 flex-col rounded-xl border p-4 shadow-lg transition hover:-translate-y-1"
+<div
+  class="group hover:border-accent-500/60 border-surface-700/60 bg-surface-900 shadow-surface-900/40 flex h-96 w-full cursor-pointer flex-col rounded-xl border p-4 shadow-lg transition hover:-translate-y-1"
   in:fade
+  onclick={handleClick}
+  onkeydown={handleKeyDown}
+  role="button"
+  tabindex={0}
 >
   <div
     class={`relative mb-3 h-32 overflow-hidden rounded-lg ${resolveTagMeta(primaryTag).gradient}`}
@@ -65,4 +83,4 @@
       <p class="text-surface-300 line-clamp-3 flex-1 text-sm">{item.notes}</p>
     {/if}
   </div>
-</article>
+</div>
