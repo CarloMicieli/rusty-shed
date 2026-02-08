@@ -39,14 +39,13 @@
     "layerchart": "^1.0.13",
     "shadcn-svelte": "1.1.1",
     "tailwind-merge": "^3.4.0",
-    "uuid": "^13.0.0",
-    "zod": "^4.3.6"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.2",
     "@eslint/js": "^9.39.2",
     "@inlang/paraglide-js": "2.7.1",
-    "@lucide/svelte": "^0.563.1",
+    "@lucide/svelte": "^0.561.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.50.2",
@@ -68,12 +67,15 @@
     "globals": "^16.5.0",
     "happy-dom": "^20.5.0",
     "lucide-svelte": "^0.562.0",
+    "mode-watcher": "^1.1.0",
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "prettier-plugin-svelte": "^3.4.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "svelte": "^5.50.0",
     "svelte-check": "^4.3.6",
+    "svelte-sonner": "^1.0.7",
+    "sveltekit-superforms": "^2.29.1",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.18",
     "tw-animate-css": "^1.4.0",
@@ -81,12 +83,13 @@
     "typescript-eslint": "^8.54.0",
     "vite": "^7.3.1",
     "vitest": "^4.0.18",
-    "vitest-browser-svelte": "^2.0.2"
+    "vitest-browser-svelte": "^2.0.2",
+    "zod": "^4.3.6"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
     ]
   },
-  "packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264"
+  "packageManager": "pnpm@10.29.1+sha512.48dae233635a645768a3028d19545cacc1688639eeb1f3734e42d6d6b971afbf22aa1ac9af52a173d9c3a20c15857cfa400f19994d79a2f626fcc73fccda9bbc"
 }
