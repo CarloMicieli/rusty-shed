@@ -5,7 +5,7 @@
   import { safeInvoke, getErrorMessage } from '$lib/services';
   import type { CreateRailwayModelInput } from '$lib/schemas/railway-model';
   import { formLabels } from './constants';
-  import { createDefaultRollingStock, normalizeRollingStock } from './utils';
+  import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
   import FormField from '$lib/components/ui/FormField.svelte';
   import { Input, Textarea, Badge } from '$lib/components';
   import manufacturersData from '$lib/data/manufacturers.json';
@@ -27,9 +27,14 @@
   import type { ConstantItem } from './constants';
   import RollingStockSection from './components/RollingStockSection.svelte';
 
+  // Custom form type that uses RollingStockForm for UI state
+  type CreateRailwayModelFormInput = Omit<CreateRailwayModelInput, 'rolling_stocks'> & {
+    rolling_stocks: RollingStockForm[];
+  };
+
   let accordionValues = $state<string[]>(['basic-info', 'delivery-availability', 'rolling-stock']);
 
-  const initialData: CreateRailwayModelInput = {
+  const initialData: CreateRailwayModelFormInput = {
     manufacturer_id: '',
     product_code: '',
     description: '',
@@ -43,9 +48,8 @@
     rolling_stocks: []
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formObj = superForm(
-    untrack(() => $state.snapshot(initialData as any)),
+  const formObj = superForm<CreateRailwayModelFormInput>(
+    untrack(() => $state.snapshot(initialData)),
     {
       SPA: true,
       dataType: 'json',
@@ -68,8 +72,7 @@
 
           const normalizedData = {
             ...form.data,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            rolling_stocks: form.data.rolling_stocks.map((rs: any) => normalizeRollingStock(rs))
+            rolling_stocks: form.data.rolling_stocks.map((rs) => normalizeRollingStock(rs))
           };
 
           const result = await safeInvoke<string>('create_railway_model', { args: normalizedData });

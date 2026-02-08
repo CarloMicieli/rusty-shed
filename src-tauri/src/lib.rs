@@ -13,6 +13,7 @@ pub mod sellers;
 pub mod settings;
 pub mod state;
 pub mod tracks_inventory;
+pub mod viewport;
 pub mod wishlist;
 
 #[cfg(test)]
@@ -265,6 +266,13 @@ pub fn run() {
             app.manage(AppState::new(pool.clone(), models_dir));
 
             start_connectivity_monitor(app.handle().clone());
+
+            // Setup viewport for main window
+            if let Some(window) = app.get_webview_window("main")
+                && let Err(e) = crate::viewport::setup_viewport(&window)
+            {
+                log::warn!("Failed to setup viewport: {}", e);
+            }
 
             Ok(())
         })

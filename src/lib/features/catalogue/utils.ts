@@ -26,7 +26,7 @@ export type RollingStockForm = {
   service_level?: NullableEnum<
     Extract<RollingStockInput, { category: 'PassengerCar' }>['service_level']
   >;
-  is_dummy?: boolean;
+  is_dummy: boolean | null;
   control?: NullableEnum<
     Extract<
       CreateRailwayModelInput['rolling_stocks'][number],
@@ -58,7 +58,7 @@ export function createDefaultRollingStock(): RollingStockForm {
     freight_car_type: '',
     electric_multiple_unit_type: '',
     service_level: '',
-    is_dummy: false,
+    is_dummy: null,
     control: '',
     dcc_interface: '',
     length_over_buffers: null,
@@ -86,7 +86,7 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
         series: rs.series || null,
         depot: rs.depot || null,
         locomotive_type: rs.locomotive_type || '',
-        is_dummy: rs.is_dummy ?? false,
+        is_dummy: rs.is_dummy ?? null,
         control: rs.control || null,
         dcc_interface: rs.dcc_interface || null
       } as RollingStockInput;
@@ -135,7 +135,7 @@ export function normalizeRollingStock(rs: RollingStockForm): RollingStockInput {
         series: rs.series || null,
         depot: rs.depot ?? null,
         electric_multiple_unit_type: rs.electric_multiple_unit_type || '',
-        is_dummy: rs.is_dummy ?? false,
+        is_dummy: rs.is_dummy ?? null,
         control: rs.control || null,
         dcc_interface: rs.dcc_interface || null
       } as RollingStockInput;
