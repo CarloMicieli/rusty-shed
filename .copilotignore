@@ -27,3 +27,12 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+
+# --- 6. IDE and Editor Configurations ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- 7. Miscellaneous ---
+specs/
