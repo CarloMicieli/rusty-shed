@@ -95,6 +95,76 @@
 
 ---
 
+### 2.5 Filename Sanitization Strategy
+
+**Question**: What is the proper approach to sanitize filenames for cross-platform compatibility (Windows, macOS, Linux)?
+
+**Research Needed**:
+
+- [x] Identify reserved characters per OS
+- [x] Define sanitization rules for UTF-8 and Unicode
+- [x] Test with special characters
+- [x] Document expected behavior
+
+**Findings**: ✅ **COMPLETED**
+
+**Sanitization Rules**:
+
+1. **Reserved Characters (remove/replace)**:
+   - Windows: `< > : " / \ | ? *` → replace with `-`
+   - macOS: `/` → replace with `-`
+   - Linux: `/` and null byte `\0` → replace with `-`
+   - Cross-platform: Replace all with `-` to be safe
+
+2. **Reserved Names (Windows)**:
+   - Cannot use: CON, PRN, AUX, NUL, COM1-9, LPT1-9
+   - If detected as filename, prefix with `_` (e.g., `_CON.zip`)
+
+3. **UTF-8 & Unicode**:
+   - ✅ Keep valid UTF-8 characters as-is (emoji, accents, etc.)
+   - Replace control characters (`\x00-\x1F`, `\x7F`) with `-`
+   - Normalize Unicode combining sequences (NFKC) to ensure consistency
+
+4. **Edge Cases**:
+   - Leading/trailing spaces: trim
+   - Leading/trailing dots: remove (Windows)
+   - Multiple consecutive spaces: collapse to single space
+   - Maximum length: 255 bytes on most filesystems (enforce in validation)
+
+**Implementation Pattern**:
+
+```rust
+fn sanitize_filename(name: &str) -> String {
+    let mut result = name
+        .chars()
+        .map(|c| match c {
+            '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' => '-',
+            c if c.is_control() => '-',
+            c => c,
+        })
+        .collect::<String>();
+
+    // Remove leading/trailing spaces and dots
+    result = result.trim_matches(|c| c == ' ' || c == '.').to_string();
+
+    // Check for reserved names (Windows)
+    if is_reserved_name(&result) {
+        result = format!("_{}", result);
+    }
+
+    // Enforce max length
+    if result.len() > 255 {
+        result.truncate(255);
+    }
+
+    result
+}
+```
+
+**Testing**: Add to T058 (security hardening) - test with filenames containing emojis, accents, special chars
+
+---
+
 ### 3. ZIP Creation Library Selection
 
 **Question**: Which Rust ZIP library is most suitable for streaming archive creation with progress updates?

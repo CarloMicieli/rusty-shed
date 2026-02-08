@@ -162,7 +162,7 @@ A user has images in their media directory that are not referenced by any record
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can complete a standard export (50 records, 20 images) in under 15 seconds from dialog open to file saved.
+- **SC-001**: Users can complete a standard export (50 records, 20 images) in under 15 seconds from dialog open to file saved. (Baseline: Intel i5 6th-gen or equivalent, SSD, 16GB RAM; see T055 for performance profiling on varied hardware)
 - **SC-002**: 100% of exported archives can be successfully imported back into the application without data loss.
 - **SC-003**: Users can identify what will be exported before confirming the operation by reviewing the preview summary.
 - **SC-004**: Export operations handle interruptions gracefully with zero partial files left on disk after cancellation or failure.
