@@ -75,7 +75,7 @@ impl<'conn> SqliteDashboardRepository<'conn> {
         number_of_entries: u8,
     ) -> Result<Vec<DashboardDepotEntryRow>, DomainError> {
         let sql = r#"
-            SELECT
+            SELECT DISTINCT
                 rm.id,
                 rm.manufacturer_id,
                 m.name AS manufacturer_name,
