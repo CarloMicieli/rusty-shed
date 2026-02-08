@@ -1403,6 +1403,32 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Delete a model image.
+   *
+   * # Arguments
+   *
+   * * `state` - Application state containing models directory path
+   * * `args` - Delete arguments (model ID)
+   *
+   * # Returns
+   *
+   * Returns `Ok(())` on success (idempotent - no error if image doesn't exist)
+   *
+   * # Errors
+   *
+   * Returns `CommandError` if:
+   * - Model doesn't exist
+   * - Storage operations fail
+   */
+  async deleteModelImage(args: DeleteModelImageArgs): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('delete_model_image', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
   async getImagePath(id: string, category: string): Promise<Result<string, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_image_path', { id, category }) };
@@ -2810,6 +2836,10 @@ export type DecoderView = {
    */
   decoder_interface: DccInterface;
 };
+/**
+ * Arguments for deleting a model image
+ */
+export type DeleteModelImageArgs = { modelId: string };
 /**
  * Represents the expected delivery timeframe for a railway model.
  *

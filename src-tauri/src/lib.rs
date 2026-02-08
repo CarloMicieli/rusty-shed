@@ -214,6 +214,7 @@ pub fn run() {
         media_command_handlers::get_railway_model_image,
         media_command_handlers::upload_model_image,
         media_command_handlers::upload_model_image_bytes,
+        media_command_handlers::delete_model_image,
         get_image_path,
         get_settings,
         update_settings
@@ -229,6 +230,7 @@ pub fn run() {
         .expect("Failed to export typescript bindings");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
@@ -263,6 +265,8 @@ pub fn run() {
                 ))
                 .into());
             }
+
+            log::info!("Models directory: {}", models_dir.display());
 
             // Initial management of state
             app.manage(AppState::new(pool.clone(), models_dir));

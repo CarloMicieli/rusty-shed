@@ -5,6 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:path:default",
     "core:webview:allow-internal-toggle-devtools",
     "core:webview:allow-set-webview-zoom",
     "log:default",
@@ -12,10 +13,8 @@
     "fs:default",
     "fs:allow-applocaldata-read-recursive",
     "fs:allow-applocaldata-write-recursive",
-    {
-      "identifier": "fs:scope-applocaldata-recursive",
-      "allow": [{ "path": "models/**" }]
-    },
+    "fs:scope-applocaldata-recursive",
+    "dialog:default",
     {
       "identifier": "http:allow-fetch",
       "allow": [

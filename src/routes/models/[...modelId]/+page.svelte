@@ -16,7 +16,8 @@
   import ModelDetailsContent from '$lib/components/model-details/ModelDetailsContent.svelte';
   import RollingStockList from '$lib/components/model-details/RollingStockList.svelte';
 
-  // Get model ID from route params
+  // Get model ID from route params - with [...modelId], it captures the full path
+  // The param will be "trn:railway-model:manufacturer:product"
   const modelId = $page.params.modelId as RailwayModelId;
 
   // State
@@ -33,6 +34,17 @@
 
   function goBack() {
     goto('/my-collection');
+  }
+
+  async function refreshImage() {
+    try {
+      const imageResult = await commands.getRailwayModelImage(modelId);
+      if (imageResult.status === 'ok') {
+        imageResponse = imageResult.data;
+      }
+    } catch (imgError) {
+      console.warn('Failed to refresh image:', imgError);
+    }
   }
 
   // Load data on mount
@@ -120,7 +132,7 @@
     </button>
 
     <!-- Hero Section with Image -->
-    <ModelDetailsHeader {model} {imageResponse} />
+    <ModelDetailsHeader {model} {imageResponse} onImageChange={refreshImage} />
 
     <!-- Tabs -->
     <ModelDetailsTabs {activeTab} onTabChange={handleTabChange} />

@@ -9,7 +9,16 @@ vi.mock('@tauri-apps/api/core', () => ({
 // Mock paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
   model_image_alt_no_image: () => 'No image available',
-  model_image_placeholder: () => 'No image yet'
+  model_image_placeholder: () => 'No image yet',
+  upload_image: () => 'Upload Image',
+  replace_image: () => 'Replace Image',
+  drag_and_drop_hint: () => 'Drag and drop an image here',
+  drop_image_here: () => 'Drop image here',
+  uploading: () => 'Uploading...',
+  upload_success: () => 'Image uploaded successfully',
+  upload_error_model_not_found: () => 'Model not found',
+  upload_error_unknown: () => 'An unknown error occurred',
+  upload_error_multiple_files: () => 'Please upload only one file at a time'
 }));
 
 import ModelDetailsHeader from '../ModelDetailsHeader.svelte';

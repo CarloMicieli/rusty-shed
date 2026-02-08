@@ -2,10 +2,12 @@
 //!
 //! Contains use cases that orchestrate domain logic and coordinate infrastructure services.
 
+pub mod delete_model_image;
 pub mod get_image_placeholder;
 pub mod get_railway_model_image;
 pub mod upload_model_image;
 
+pub use delete_model_image::{DeleteError, DeleteImageInput, DeleteModelImage};
 pub use get_image_placeholder::GetImagePlaceholder;
 pub use get_railway_model_image::GetRailwayModelImage;
 pub use upload_model_image::{

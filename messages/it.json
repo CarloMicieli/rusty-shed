@@ -666,5 +666,22 @@
   "model_rolling_stock_field_digital_setup": "Configurazione Digitale",
   "model_rolling_stock_digital_interface": "Interfaccia",
   "model_rolling_stock_digital_address": "Indirizzo",
-  "model_rolling_stock_digital_decoder_id": "ID Decoder"
+  "model_rolling_stock_digital_decoder_id": "ID Decoder",
+  "upload_image": "Carica Immagine",
+  "upload_image_filter_name": "Immagini",
+  "uploading": "Caricamento...",
+  "upload_success": "Immagine caricata con successo!",
+  "replace_image": "Sostituisci Immagine",
+  "upload_error_model_not_found": "Modello non trovato",
+  "upload_error_unknown": "Si è verificato un errore durante il caricamento dell'immagine",
+  "drag_and_drop_hint": "Trascina e Rilascia Immagine Qui",
+  "drop_image_here": "Rilascia immagine qui",
+  "upload_error_corrupted": "Questo file immagine sembra essere danneggiato o incompleto. Prova con un file diverso.",
+  "upload_error_multiple_files": "Solo un'immagine alla volta",
+  "upload_error_unsupported_format": "Formato immagine non supportato. Utilizza solo file JPEG, PNG o WebP.",
+  "delete_image": "Elimina Immagine",
+  "deleting": "Eliminazione...",
+  "confirm_delete_image_title": "Elimina Immagine",
+  "confirm_delete_image_description": "Sei sicuro di voler eliminare questa immagine? Questa azione non può essere annullata.",
+  "image_deleted": "Immagine eliminata con successo"
 }

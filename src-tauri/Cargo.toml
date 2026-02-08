@@ -49,8 +49,9 @@ specta-typescript      = "0.0.9"
 sqlx                   = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls", "macros", "chrono", "uuid", "rust_decimal"] }
 strum                  = "0.27.2"
 strum_macros           = "0.27.2"
-tauri                  = { version = "2.10.2", features = [] }
+tauri                  = { version = "2.10.2", features = ["protocol-asset"] }
 tauri-plugin-deep-link = "2"
+tauri-plugin-dialog    = "2"
 tauri-plugin-fs        = "2.4.5"
 tauri-plugin-http      = "2.5.7"
 tauri-plugin-log       = "2.8.0"

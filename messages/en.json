@@ -667,5 +667,22 @@
   "model_rolling_stock_field_digital_setup": "Digital Setup",
   "model_rolling_stock_digital_interface": "Interface",
   "model_rolling_stock_digital_address": "Address",
-  "model_rolling_stock_digital_decoder_id": "Decoder ID"
+  "model_rolling_stock_digital_decoder_id": "Decoder ID",
+  "upload_image": "Upload Image",
+  "upload_image_filter_name": "Images",
+  "uploading": "Uploading...",
+  "upload_success": "Image uploaded successfully!",
+  "replace_image": "Replace Image",
+  "upload_error_model_not_found": "Model not found",
+  "upload_error_unknown": "An error occurred while uploading the image",
+  "drag_and_drop_hint": "Drag & Drop Image Here",
+  "drop_image_here": "Drop image here",
+  "upload_error_corrupted": "This image file appears to be corrupted or incomplete. Please try a different file.",
+  "upload_error_multiple_files": "Only one image at a time",
+  "upload_error_unsupported_format": "Unsupported image format. Please use JPEG, PNG, or WebP files only.",
+  "delete_image": "Delete Image",
+  "deleting": "Deleting...",
+  "confirm_delete_image_title": "Delete Image",
+  "confirm_delete_image_description": "Are you sure you want to delete this image? This action cannot be undone.",
+  "image_deleted": "Image deleted successfully"
 }

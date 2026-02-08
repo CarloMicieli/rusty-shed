@@ -2,13 +2,16 @@
   import { convertFileSrc } from '@tauri-apps/api/core';
   import * as m from '$lib/paraglide/messages.js';
   import type { RailwayModelView, RailwayModelImageResponse } from '$lib/bindings';
+  import ImageUpload from './ImageUpload.svelte';
+  import ImageDropZone from './ImageDropZone.svelte';
 
   interface Props {
     model: RailwayModelView;
     imageResponse?: RailwayModelImageResponse | null;
+    onImageChange?: () => void;
   }
 
-  let { model, imageResponse }: Props = $props();
+  let { model, imageResponse, onImageChange }: Props = $props();
 
   // Convert filesystem path to Tauri asset protocol
   const imageSrc = $derived(
@@ -41,6 +44,23 @@
         <p class="text-muted-foreground">{m.model_image_placeholder()}</p>
       </div>
     {/if}
+  </div>
+
+  <!-- Image Upload Component -->
+  <div class="mb-6 grid gap-4 md:grid-cols-2">
+    <!-- File Explorer Upload -->
+    <div>
+      <ImageUpload
+        modelId={model.id}
+        hasExistingImage={imageResponse?.hasImage ?? false}
+        onUploadSuccess={onImageChange}
+      />
+    </div>
+
+    <!-- Drag & Drop Upload -->
+    <div>
+      <ImageDropZone modelId={model.id} onUploadSuccess={onImageChange} />
+    </div>
   </div>
 
   <!-- Header Text -->

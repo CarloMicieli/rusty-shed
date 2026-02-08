@@ -5,8 +5,8 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
 use crate::media::application::{
-    GetImagePlaceholder, GetRailwayModelImage, UploadError, UploadImageBytesInput,
-    UploadImageInput, UploadModelImage, UploadModelImageBytes,
+    DeleteError, DeleteImageInput, DeleteModelImage, GetImagePlaceholder, GetRailwayModelImage,
+    UploadError, UploadImageBytesInput, UploadImageInput, UploadModelImage, UploadModelImageBytes,
 };
 use crate::media::domain::ImageError;
 use crate::media::domain::image_validation::{StorageError, ValidationError};
@@ -112,36 +112,53 @@ pub async fn upload_model_image(
     state: tauri::State<'_, AppState>,
     args: UploadModelImageArgs,
 ) -> Result<(), CommandError> {
-    debug!("Uploading image for model: {}", args.model_id);
+    debug!(
+        "Uploading image for model: {} from path: {}",
+        args.model_id, args.file_path
+    );
 
     // Validate arguments
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid upload arguments: {}", e)))?;
+    args.validate().map_err(|e| {
+        let err_msg = format!("Invalid upload arguments: {}", e);
+        warn!("{}", err_msg);
+        CommandError::BusinessRule(err_msg)
+    })?;
 
     // Parse model ID
-    let model_id = RailwayModelId::try_from(args.model_id.as_str())
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid model ID: {}", e)))?;
+    let model_id = RailwayModelId::try_from(args.model_id.as_str()).map_err(|e| {
+        let err_msg = format!("Invalid model ID: {}", e);
+        warn!("{}", err_msg);
+        CommandError::BusinessRule(err_msg)
+    })?;
 
     // Get storage directory
     let models_dir = state.models_dir();
-    let storage = FileStorage::new(models_dir.clone()).map_err(|e| map_storage_error(e))?;
+    debug!("Using models directory: {:?}", models_dir);
+    let storage = FileStorage::new(models_dir.clone()).map_err(map_storage_error)?;
 
     // Execute use case
     let use_case = UploadModelImage::new(storage);
     let input = UploadImageInput {
-        model_id,
-        file_path: PathBuf::from(args.file_path),
+        model_id: model_id.clone(),
+        file_path: PathBuf::from(&args.file_path),
     };
 
+    debug!("Executing upload use case...");
     let mut unit_of_work = state.unit_of_work().await?;
     use_case
         .execute(input, &mut unit_of_work)
         .await
-        .map_err(map_upload_error)?;
+        .map_err(|e| {
+            warn!("Upload failed: {:?}", e);
+            map_upload_error(e)
+        })?;
 
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
-    debug!("Image uploaded successfully");
+    debug!(
+        "Image uploaded successfully for model: {}",
+        model_id.as_ref()
+    );
     Ok(())
 }
 
@@ -180,7 +197,7 @@ pub async fn upload_model_image_bytes(
 
     // Get storage directory
     let models_dir = state.models_dir();
-    let storage = FileStorage::new(models_dir.clone()).map_err(|e| map_storage_error(e))?;
+    let storage = FileStorage::new(models_dir.clone()).map_err(map_storage_error)?;
 
     // Execute use case
     let use_case = UploadModelImageBytes::new(storage);
@@ -202,9 +219,69 @@ pub async fn upload_model_image_bytes(
     Ok(())
 }
 
+/// Delete a model image.
+///
+/// # Arguments
+///
+/// * `state` - Application state containing models directory path
+/// * `args` - Delete arguments (model ID)
+///
+/// # Returns
+///
+/// Returns `Ok(())` on success (idempotent - no error if image doesn't exist)
+///
+/// # Errors
+///
+/// Returns `CommandError` if:
+/// - Model doesn't exist
+/// - Storage operations fail
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_model_image(
+    state: tauri::State<'_, AppState>,
+    args: DeleteModelImageArgs,
+) -> Result<(), CommandError> {
+    debug!("Deleting image for model: {}", args.model_id);
+
+    // Validate arguments
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid delete arguments: {}", e)))?;
+
+    // Parse model ID
+    let model_id = RailwayModelId::try_from(args.model_id.as_str())
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid model ID: {}", e)))?;
+
+    // Get storage directory
+    let models_dir = state.models_dir();
+    let storage = FileStorage::new(models_dir.clone()).map_err(map_storage_error)?;
+
+    // Execute use case
+    let use_case = DeleteModelImage::new(storage);
+    let input = DeleteImageInput { model_id };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    use_case
+        .execute(input, &mut unit_of_work)
+        .await
+        .map_err(map_delete_error)?;
+
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    debug!("Image deleted successfully");
+    Ok(())
+}
+
 // ============================================================================
 // DTOs
 // ============================================================================
+
+/// Arguments for deleting a model image
+#[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteModelImageArgs {
+    #[garde(length(min = 1))]
+    pub model_id: String,
+}
 
 /// Arguments for uploading a model image from file path
 #[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
@@ -242,6 +319,15 @@ fn map_upload_error(err: UploadError) -> CommandError {
         UploadError::Validation(e) => map_validation_error(e),
         UploadError::Storage(e) => map_storage_error(e),
         UploadError::Domain(e) => CommandError::from(e),
+    }
+}
+
+/// Map DeleteError to CommandError
+fn map_delete_error(err: DeleteError) -> CommandError {
+    match err {
+        DeleteError::ModelNotFound(msg) => CommandError::NotFound(msg),
+        DeleteError::Storage(e) => map_storage_error(e),
+        DeleteError::Domain(e) => CommandError::from(e),
     }
 }
 

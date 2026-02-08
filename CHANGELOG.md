@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Feature 015: Model Image Upload System
+
+#### Image Management Architecture
+
+- **Model Image Upload System** with comprehensive validation and management:
+  - **File Upload**: Upload JPEG, PNG, or WebP images via file dialog
+    - File size validation (max 50MB)
+    - Format validation using magic byte detection
+    - Filename sanitization for cross-platform compatibility
+  - **Drag & Drop**: Intuitive drag-and-drop interface
+    - Visual feedback for drag states (hover, uploading)
+    - Single-file enforcement with clear error messages
+    - Support for all three image formats
+  - **Image Replacement**: Seamless image replacement with automatic cleanup
+    - Multi-format deletion (removes any existing format before upload)
+    - Prevents orphaned files during format changes
+    - Dynamic button label ("Upload Image" vs "Replace Image")
+  - **Image Deletion**: Explicit deletion with confirmation dialog
+    - Confirmation dialog using AlertDialog component
+    - Idempotent deletion (no error if image doesn't exist)
+    - Immediate UI update after successful deletion
+
+#### Backend Implementation
+
+- **Domain Layer** (`src-tauri/src/media/domain/`):
+  - `ImageFormat` enum: JPEG, PNG, WebP with magic byte detection
+  - `FileSize` value object: Validates max 50MB limit
+  - `ModelImagePath`: Deterministic path generation (`{model_id}.{ext}`)
+  - `ImageValidator`: Format and size validation with detailed errors
+  - `ValidationError` and `StorageError` types for robust error handling
+
+- **Application Layer** (`src-tauri/src/media/application/`):
+  - `UploadModelImage`: Upload from file path with model validation
+  - `UploadModelImageBytes`: Upload from drag-drop bytes
+  - `DeleteModelImage`: Delete image with format-agnostic resolution
+  - Unit tests: 32 validation tests, 13 upload tests, 5 delete tests
+
+- **Infrastructure Layer** (`src-tauri/src/media/infrastructure/`):
+  - `FileStorage`: Async file operations with tokio::fs
+  - Configurable storage directory via Tauri config
+  - Atomic file operations with proper error handling
+
+- **Interface Layer** (`src-tauri/src/media/interface/`):
+  - Tauri commands: `upload_model_image`, `upload_model_image_bytes`, `delete_model_image`
+  - TypeScript bindings auto-generated via specta
+  - Comprehensive error mapping for UI display
+
+#### Frontend Implementation
+
+- **ImageUpload Component** (`src/lib/components/model-details/ImageUpload.svelte`):
+  - File dialog with format filter (.jpg, .jpeg, .png, .webp)
+  - Conditional rendering: Upload vs Replace button based on image state
+  - Delete button with destructive variant (red/warning color)
+  - Loading states with disabled buttons during operations
+  - Toast notifications for success/error feedback
+
+- **ImageDropZone Component** (`src/lib/components/model-details/ImageDropZone.svelte`):
+  - Drag-and-drop interface with visual feedback
+  - Multi-file rejection with user-friendly error
+  - Format validation via MIME type checking
+  - Progress indicator during upload
+
+- **ModelDetailsHeader Component**: Integrated image display with upload/replace controls
+
+#### Localization
+
+- **English Messages** (`messages/en.json`):
+  - `upload_image`, `replace_image`, `delete_image`
+  - `drag_and_drop_hint`, `drop_image_here`, `uploading`, `deleting`
+  - Error messages: `upload_error_corrupted`, `upload_error_unsupported_format`, etc.
+  - Confirmation: `confirm_delete_image_title`, `confirm_delete_image_description`
+
+- **Italian Translations** (`messages/it.json`):
+  - Complete translations for all upload, replace, and delete messages
+  - User-friendly error messages in Italian
+
+#### Testing
+
+- **Backend Tests**: 1069 total tests (50 new tests for image upload feature)
+  - Format validation: JPEG, PNG, WebP detection via magic bytes
+  - Invalid format rejection: TIFF, BMP, PDF, TXT, GIF, corrupted files
+  - File size validation: Empty files, oversized files, edge cases
+  - Replacement flow: Cross-format replacement, orphan prevention
+  - Delete flow: Model existence, idempotent deletion, all formats
+
+- **Frontend Tests**: 211 total tests (22 new tests for image components)
+  - ImageUpload: File dialog filter, upload flow, delete button visibility
+  - ImageDropZone: Multi-file rejection, MIME validation, drag states
+  - Error handling: Model not found, validation errors, unknown errors
+
+- **Type Safety**: 0 TypeScript errors, full type coverage via bindings
+
 ### Added - Feature 013: Responsive Navigation System
 
 #### Navigation Architecture

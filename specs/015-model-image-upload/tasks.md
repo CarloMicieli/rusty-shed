@@ -83,22 +83,22 @@
 
 ### Backend Implementation for US1
 
-- [ ] T021 [P] [US1] Create UploadModelImageArgs DTO in src-tauri/src/media/interface/commands.rs
-- [ ] T022 [P] [US1] Create UploadImageInput use case input in src-tauri/src/media/application/upload_model_image.rs
-- [ ] T023 [US1] Implement UploadModelImage use case in src-tauri/src/media/application/upload_model_image.rs
-- [ ] T024 [US1] Add model existence validation in upload use case (query railway_models table)
-- [ ] T025 [US1] Add file validation step (call ImageValidator) in upload use case
-- [ ] T026 [US1] Add destination path computation with sanitization (: → \_) in upload use case (no database update needed)
-- [ ] T027 [US1] Add old image deletion logic (if exists) in upload use case
-- [ ] T028 [US1] Add file copy operation (FileStorage::copy_image) in upload use case
-- [ ] T029 [US1] Write unit tests for UploadModelImage use case (happy path, validation failures, storage errors)
-- [ ] T030 [US1] Create upload_model_image Tauri command in src-tauri/src/media/interface/commands.rs
-- [ ] T031 [US1] Add argument validation (args.validate()) in command handler
-- [ ] T032 [US1] Map ValidationError and StorageError to CommandError in command handler
-- [ ] T033 [US1] Register upload_model_image command in src-tauri/src/lib.rs
-- [ ] T034 [US1] Add #[specta::specta] macro to command for type generation
-- [ ] T035 [US1] Update src-tauri/src/media/application/mod.rs to export use case
-- [ ] T036 [US1] Update src-tauri/src/media/interface/mod.rs to export command
+- [x] T021 [P] [US1] Create UploadModelImageArgs DTO in src-tauri/src/media/interface/commands.rs
+- [x] T022 [P] [US1] Create UploadImageInput use case input in src-tauri/src/media/application/upload_model_image.rs
+- [x] T023 [US1] Implement UploadModelImage use case in src-tauri/src/media/application/upload_model_image.rs
+- [x] T024 [US1] Add model existence validation in upload use case (query railway_models table)
+- [x] T025 [US1] Add file validation step (call ImageValidator) in upload use case
+- [x] T026 [US1] Add destination path computation with sanitization (: → \_) in upload use case (no database update needed)
+- [x] T027 [US1] Add old image deletion logic (if exists) in upload use case
+- [x] T028 [US1] Add file copy operation (FileStorage::copy_image) in upload use case
+- [x] T029 [US1] Write unit tests for UploadModelImage use case (happy path, validation failures, storage errors)
+- [x] T030 [US1] Create upload_model_image Tauri command in src-tauri/src/media/interface/commands.rs
+- [x] T031 [US1] Add argument validation (args.validate()) in command handler
+- [x] T032 [US1] Map ValidationError and StorageError to CommandError in command handler
+- [x] T033 [US1] Register upload_model_image command in src-tauri/src/lib.rs
+- [x] T034 [US1] Add #[specta::specta] macro to command for type generation
+- [x] T035 [US1] Update src-tauri/src/media/application/mod.rs to export use case
+- [x] T036 [US1] Update src-tauri/src/media/interface/mod.rs to export command
 
 **File Paths**:
 
@@ -110,21 +110,21 @@
 
 ### Frontend Implementation for US1
 
-- [ ] T037 [P] [US1] Generate TypeScript bindings by running pnpm run generate:types
-- [ ] T038 [US1] Create ImageUpload.svelte component in src/lib/components/model-details/ImageUpload.svelte
-- [ ] T039 [US1] Add upload button with click handler in ImageUpload component
-- [ ] T040 [US1] Implement file selection using @tauri-apps/plugin-dialog open() method
-- [ ] T041 [US1] Add file filter for images (jpg, jpeg, png, webp) in dialog configuration
-- [ ] T042 [US1] Add isUploading state with $state rune in ImageUpload component
-- [ ] T043 [US1] Add error state with $state rune for error messages
-- [ ] T044 [US1] Call commands.uploadModelImage with modelId and filePath
-- [ ] T045 [US1] Add loading indicator (spinner or disabled button) during upload
-- [ ] T046 [US1] Add error message display using Alert component from shadcn-svelte
-- [ ] T047 [US1] Add success feedback and trigger image refresh after upload
-- [ ] T048 [US1] Handle CommandError mapping (ValidationError, NotFound, InfrastructureError)
-- [ ] T049 [US1] Integrate ImageUpload component into src/routes/models/[modelId]/+page.svelte
-- [ ] T050 [US1] Position upload button near model image display area
-- [ ] T051 [US1] Add conditional rendering (show upload button if no image, or show replace option)
+- [x] T037 [P] [US1] Generate TypeScript bindings by running pnpm run generate:types
+- [x] T038 [US1] Create ImageUpload.svelte component in src/lib/components/model-details/ImageUpload.svelte
+- [x] T039 [US1] Add upload button with click handler in ImageUpload component
+- [x] T040 [US1] Implement file selection using @tauri-apps/plugin-dialog open() method
+- [x] T041 [US1] Add file filter for images (jpg, jpeg, png, webp) in dialog configuration
+- [x] T042 [US1] Add isUploading state with $state rune in ImageUpload component
+- [x] T043 [US1] Add error state with $state rune for error messages
+- [x] T044 [US1] Call commands.uploadModelImage with modelId and filePath
+- [x] T045 [US1] Add loading indicator (spinner or disabled button) during upload
+- [x] T046 [US1] Add error message display using Alert component from shadcn-svelte
+- [x] T047 [US1] Add success feedback and trigger image refresh after upload
+- [x] T048 [US1] Handle CommandError mapping (ValidationError, NotFound, InfrastructureError)
+- [x] T049 [US1] Integrate ImageUpload component into src/routes/models/[modelId]/+page.svelte
+- [x] T050 [US1] Position upload button near model image display area
+- [x] T051 [US1] Add conditional rendering (show upload button if no image, or show replace option)
 
 **File Paths**:
 
@@ -134,11 +134,11 @@
 
 ### Localization for US1
 
-- [ ] T052 [P] [US1] Add upload_image message to messages/en.json
-- [ ] T053 [P] [US1] Add uploading message to messages/en.json
-- [ ] T054 [P] [US1] Add upload_success message to messages/en.json
-- [ ] T055 [P] [US1] Add upload*error*\* messages (unsupported_format, file_too_large, unknown) to messages/en.json
-- [ ] T056 [P] [US1] Add Italian translations for all upload messages to messages/it.json
+- [x] T052 [P] [US1] Add upload_image message to messages/en.json
+- [x] T053 [P] [US1] Add uploading message to messages/en.json
+- [x] T054 [P] [US1] Add upload_success message to messages/en.json
+- [x] T055 [P] [US1] Add upload*error*\* messages (unsupported_format, file_too_large, unknown) to messages/en.json
+- [x] T056 [P] [US1] Add Italian translations for all upload messages to messages/it.json
 
 **File Paths**:
 
@@ -157,20 +157,20 @@
 
 ### Backend Implementation for US2
 
-- [ ] T057 [P] [US2] Create UploadModelImageBytesArgs DTO in src-tauri/src/media/interface/commands.rs
-- [ ] T058 [P] [US2] Create UploadImageBytesInput use case input in src-tauri/src/media/application/upload_model_image.rs
-- [ ] T059 [US2] Implement UploadModelImageBytes use case in src-tauri/src/media/application/upload_model_image.rs
-- [ ] T060 [US2] Add temporary file creation in OS temp dir in use case
-- [ ] T061 [US2] Add file data write to temporary file in use case
-- [ ] T062 [US2] Add validation step (reuse ImageValidator) on temporary file
-- [ ] T063 [US2] Add destination path resolution (same logic as US1)
-- [ ] T064 [US2] Add old image deletion (same logic as US1)
-- [ ] T065 [US2] Add file move from temp to destination
-- [ ] T066 [US2] Add temporary file cleanup (even on error)
-- [ ] T067 [US2] Write unit tests for UploadModelImageBytes use case
-- [ ] T068 [US2] Create upload_model_image_bytes Tauri command in src-tauri/src/media/interface/commands.rs
-- [ ] T069 [US2] Add validation and error mapping in command handler
-- [ ] T070 [US2] Register upload_model_image_bytes command in src-tauri/src/lib.rs
+- [x] T057 [P] [US2] Create UploadModelImageBytesArgs DTO in src-tauri/src/media/interface/commands.rs
+- [x] T058 [P] [US2] Create UploadImageBytesInput use case input in src-tauri/src/media/application/upload_model_image.rs
+- [x] T059 [US2] Implement UploadModelImageBytes use case in src-tauri/src/media/application/upload_model_image.rs
+- [x] T060 [US2] Add temporary file creation in OS temp dir in use case
+- [x] T061 [US2] Add file data write to temporary file in use case
+- [x] T062 [US2] Add validation step (reuse ImageValidator) on temporary file
+- [x] T063 [US2] Add destination path resolution (same logic as US1)
+- [x] T064 [US2] Add old image deletion (same logic as US1)
+- [x] T065 [US2] Add file move from temp to destination
+- [x] T066 [US2] Add temporary file cleanup (even on error)
+- [x] T067 [US2] Write unit tests for UploadModelImageBytes use case
+- [x] T068 [US2] Create upload_model_image_bytes Tauri command in src-tauri/src/media/interface/commands.rs
+- [x] T069 [US2] Add validation and error mapping in command handler
+- [x] T070 [US2] Register upload_model_image_bytes command in src-tauri/src/lib.rs
 
 **File Paths**:
 
@@ -180,22 +180,22 @@
 
 ### Frontend Implementation for US2
 
-- [ ] T071 [US2] Generate TypeScript bindings (pnpm run generate:types)
-- [ ] T072 [US2] Create ImageDropZone.svelte component in src/lib/components/model-details/ImageDropZone.svelte
-- [ ] T073 [US2] Add isDragging state with $state rune
-- [ ] T074 [US2] Implement ondragover handler with preventDefault
-- [ ] T075 [US2] Implement ondragleave handler to clear isDragging state
-- [ ] T076 [US2] Implement ondrop handler to extract dropped files
-- [ ] T077 [US2] Add file validation (check files.length === 1, check MIME type hint)
-- [ ] T078 [US2] Read file as ArrayBuffer using file.arrayBuffer()
-- [ ] T079 [US2] Convert ArrayBuffer to number[] for Tauri command
-- [ ] T080 [US2] Call commands.uploadModelImageBytes with modelId, fileName, fileData
-- [ ] T081 [US2] Add visual feedback for drag states (border, background color change)
-- [ ] T082 [US2] Add drop zone styling with Tailwind classes
-- [ ] T083 [US2] Add loading state during upload
-- [ ] T084 [US2] Add error handling and display
-- [ ] T085 [US2] Integrate ImageDropZone component into src/routes/models/[modelId]/+page.svelte
-- [ ] T086 [US2] Position drop zone near or combined with upload button
+- [x] T071 [US2] Generate TypeScript bindings (pnpm run generate:types)
+- [x] T072 [US2] Create ImageDropZone.svelte component in src/lib/components/model-details/ImageDropZone.svelte
+- [x] T073 [US2] Add isDragging state with $state rune
+- [x] T074 [US2] Implement ondragover handler with preventDefault
+- [x] T075 [US2] Implement ondragleave handler to clear isDragging state
+- [x] T076 [US2] Implement ondrop handler to extract dropped files
+- [x] T077 [US2] Add file validation (check files.length === 1, check MIME type hint)
+- [x] T078 [US2] Read file as ArrayBuffer using file.arrayBuffer()
+- [x] T079 [US2] Convert ArrayBuffer to number[] for Tauri command
+- [x] T080 [US2] Call commands.uploadModelImageBytes with modelId, fileName, fileData
+- [x] T081 [US2] Add visual feedback for drag states (border, background color change)
+- [x] T082 [US2] Add drop zone styling with Tailwind classes
+- [x] T083 [US2] Add loading state during upload
+- [x] T084 [US2] Add error handling and display
+- [x] T085 [US2] Integrate ImageDropZone component into src/routes/models/[modelId]/+page.svelte
+- [x] T086 [US2] Position drop zone near or combined with upload button
 
 **File Paths**:
 
@@ -204,9 +204,9 @@
 
 ### Localization for US2
 
-- [ ] T087 [P] [US2] Add drag_and_drop_hint message to messages/en.json
-- [ ] T088 [P] [US2] Add drop_image_here message to messages/en.json
-- [ ] T089 [P] [US2] Add Italian translations to messages/it.json
+- [x] T087 [P] [US2] Add drag_and_drop_hint message to messages/en.json
+- [x] T088 [P] [US2] Add drop_image_here message to messages/en.json
+- [x] T089 [P] [US2] Add Italian translations to messages/it.json
 
 **File Paths**:
 
@@ -227,14 +227,14 @@
 
 ### Enhancement & Testing for US3
 
-- [ ] T090 [P] [US3] Add comprehensive format validation tests in ImageValidator tests (TIFF, BMP, RAW, PDF, TXT)
-- [ ] T091 [P] [US3] Test corrupted image file rejection in ImageValidator tests
-- [ ] T092 [P] [US3] Test multiple file drop rejection in ImageDropZone component
-- [ ] T093 [US3] Verify file dialog filter works correctly (only shows JPEG, PNG, WEBP)
-- [ ] T094 [US3] Add error message refinement - list supported formats clearly
-- [ ] T095 [US3] Add error message for corrupted files - user-friendly explanation
-- [ ] T096 [US3] Add error message for multiple files - "only one image at a time"
-- [ ] T097 [US3] Verify frontend MIME type hint check in drag & drop (pre-validation before upload)
+- [x] T090 [P] [US3] Add comprehensive format validation tests in ImageValidator tests (TIFF, BMP, RAW, PDF, TXT)
+- [x] T091 [P] [US3] Test corrupted image file rejection in ImageValidator tests
+- [x] T092 [P] [US3] Test multiple file drop rejection in ImageDropZone component
+- [x] T093 [US3] Verify file dialog filter works correctly (only shows JPEG, PNG, WEBP)
+- [x] T094 [US3] Add error message refinement - list supported formats clearly
+- [x] T095 [US3] Add error message for corrupted files - user-friendly explanation
+- [x] T096 [US3] Add error message for multiple files - "only one image at a time"
+- [x] T097 [US3] Verify frontend MIME type hint check in drag & drop (pre-validation before upload)
 
 **File Paths**:
 
@@ -246,9 +246,9 @@
 
 ### Additional Error Messages
 
-- [ ] T098 [P] [US3] Add upload_error_corrupted message to messages/en.json
-- [ ] T099 [P] [US3] Add upload_error_multiple_files message to messages/en.json
-- [ ] T100 [P] [US3] Add Italian translations to messages/it.json
+- [x] T098 [P] [US3] Add upload_error_corrupted message to messages/en.json
+- [x] T099 [P] [US3] Add upload_error_multiple_files message to messages/en.json
+- [x] T100 [P] [US3] Add Italian translations to messages/it.json
 
 **File Paths**:
 
@@ -257,11 +257,11 @@
 
 ### Edge Case Testing for US3
 
-- [ ] T101 [US3] Test special characters in filenames (spaces, unicode, emojis) are sanitized correctly
+- [x] T101 [US3] Test special characters in filenames (spaces, unicode, emojis) are sanitized correctly
 - [ ] T102 [US3] Test unusual aspect ratios (10000x100 pixels, 100x10000 pixels) are handled gracefully
-- [ ] T103 [US3] Test corrupted image files (truncated, invalid headers) are rejected with clear errors
-- [ ] T104 [US3] Test extremely large valid files (49MB, 50MB, 51MB) respect size limit
-- [ ] T105 [US3] Test filename collision scenario (same filename for different models) is handled by deterministic naming
+- [x] T103 [US3] Test corrupted image files (truncated, invalid headers) are rejected with clear errors
+- [x] T104 [US3] Test extremely large valid files (49MB, 50MB, 51MB) respect size limit
+- [x] T105 [US3] Test filename collision scenario (same filename for different models) is handled by deterministic naming
 
 **Checkpoint**: Robust validation in place - all invalid formats rejected with clear, helpful error messages, edge cases handled
 
@@ -277,13 +277,13 @@
 
 ### Testing & UX Enhancement for US4
 
-- [ ] T106 [US4] Test image replacement flow - verify old file deleted from filesystem
-- [ ] T107 [US4] Add integration test for replacement scenario (upload → replace → verify cleanup)
-- [ ] T108 [US4] Verify no orphaned files remain after multiple replacements
+- [x] T106 [US4] Test image replacement flow - verify old file deleted from filesystem
+- [x] T107 [US4] Add integration test for replacement scenario (upload → replace → verify cleanup)
+- [x] T108 [US4] Verify no orphaned files remain after multiple replacements
 - [ ] T109 [US4] Add visual confirmation when replacing (optional: "Replace existing image?" confirmation)
-- [ ] T110 [US4] Update button label to "Replace Image" when image exists
-- [ ] T111 [US4] Test replacement with different format (JPEG → PNG, PNG → WEBP)
-- [ ] T112 [US4] Verify destination path changes extension based on new format
+- [x] T110 [US4] Update button label to "Replace Image" when image exists
+- [x] T111 [US4] Test replacement with different format (JPEG → PNG, PNG → WEBP)
+- [x] T112 [US4] Verify destination path changes extension based on new format
 
 **File Paths**:
 
@@ -292,9 +292,9 @@
 
 ### Localization for US4
 
-- [ ] T113 [P] [US4] Add replace_image message to messages/en.json
+- [x] T113 [P] [US4] Add replace_image message to messages/en.json
 - [ ] T114 [P] [US4] Add replace_image_confirm message (if confirmation added) to messages/en.json
-- [ ] T115 [P] [US4] Add Italian translations to messages/it.json
+- [x] T115 [P] [US4] Add Italian translations to messages/it.json
 
 **File Paths**:
 
@@ -313,16 +313,16 @@
 
 ### Backend Implementation for US5
 
-- [ ] T111 [P] [US5] Create DeleteModelImageArgs DTO in src-tauri/src/media/interface/commands.rs
-- [ ] T112 [US5] Implement DeleteModelImage use case in src-tauri/src/media/application/delete_model_image.rs
-- [ ] T113 [US5] Add model existence validation in use case
-- [ ] T114 [US5] Add image path resolution (all supported extensions)
-- [ ] T115 [US5] Add image deletion (FileStorage::delete_image) - idempotent (no error if not exists)
-- [ ] T116 [US5] Write unit tests for DeleteModelImage use case
-- [ ] T117 [US5] Create delete_model_image Tauri command in src-tauri/src/media/interface/commands.rs
-- [ ] T118 [US5] Add validation and error mapping in command handler
-- [ ] T119 [US5] Register delete_model_image command in src-tauri/src/lib.rs
-- [ ] T120 [US5] Update src-tauri/src/media/application/mod.rs to export use case
+- [x] T111 [P] [US5] Create DeleteModelImageArgs DTO in src-tauri/src/media/interface/commands.rs
+- [x] T112 [US5] Implement DeleteModelImage use case in src-tauri/src/media/application/delete_model_image.rs
+- [x] T113 [US5] Add model existence validation in use case
+- [x] T114 [US5] Add image path resolution (all supported extensions)
+- [x] T115 [US5] Add image deletion (FileStorage::delete_image) - idempotent (no error if not exists)
+- [x] T116 [US5] Write unit tests for DeleteModelImage use case
+- [x] T117 [US5] Create delete_model_image Tauri command in src-tauri/src/media/interface/commands.rs
+- [x] T118 [US5] Add validation and error mapping in command handler
+- [x] T119 [US5] Register delete_model_image command in src-tauri/src/lib.rs
+- [x] T120 [US5] Update src-tauri/src/media/application/mod.rs to export use case
 
 **File Paths**:
 
@@ -333,14 +333,14 @@
 
 ### Frontend Implementation for US5
 
-- [ ] T126 [US5] Generate TypeScript bindings (pnpm run generate:types)
-- [ ] T127 [US5] Add delete button to ImageUpload component (conditional: only show if image exists)
-- [ ] T128 [US5] Add confirmation dialog using AlertDialog from shadcn-svelte
-- [ ] T129 [US5] Implement delete handler calling commands.deleteModelImage
-- [ ] T130 [US5] Add isDeleting state for loading indicator
-- [ ] T131 [US5] Update image display after successful deletion (clear image, show upload button)
-- [ ] T132 [US5] Add error handling for delete operation
-- [ ] T133 [US5] Style delete button with destructive variant (red/warning color)
+- [x] T126 [US5] Generate TypeScript bindings (pnpm run generate:types)
+- [x] T127 [US5] Add delete button to ImageUpload component (conditional: only show if image exists)
+- [x] T128 [US5] Add confirmation dialog using AlertDialog from shadcn-svelte
+- [x] T129 [US5] Implement delete handler calling commands.deleteModelImage
+- [x] T130 [US5] Add isDeleting state for loading indicator
+- [x] T131 [US5] Update image display after successful deletion (clear image, show upload button)
+- [x] T132 [US5] Add error handling for delete operation
+- [x] T133 [US5] Style delete button with destructive variant (red/warning color)
 
 **File Paths**:
 
@@ -349,12 +349,12 @@
 
 ### Localization for US5
 
-- [ ] T134 [P] [US5] Add delete_image message to messages/en.json
-- [ ] T135 [P] [US5] Add deleting message to messages/en.json
-- [ ] T136 [P] [US5] Add confirm_delete_image_title message to messages/en.json
-- [ ] T137 [P] [US5] Add confirm_delete_image_description message to messages/en.json
-- [ ] T138 [P] [US5] Add image_deleted message (success) to messages/en.json
-- [ ] T139 [P] [US5] Add Italian translations to messages/it.json
+- [x] T134 [P] [US5] Add delete_image message to messages/en.json
+- [x] T135 [P] [US5] Add deleting message to messages/en.json
+- [x] T136 [P] [US5] Add confirm_delete_image_title message to messages/en.json
+- [x] T137 [P] [US5] Add confirm_delete_image_description message to messages/en.json
+- [x] T138 [P] [US5] Add image_deleted message (success) to messages/en.json
+- [x] T139 [P] [US5] Add Italian translations to messages/it.json
 
 **File Paths**:
 
@@ -371,13 +371,13 @@
 
 ### Code Quality
 
-- [ ] T140 [P] Run cargo fmt on all Rust files (src-tauri/src/media/\*\*)
-- [ ] T141 [P] Run cargo clippy -D warnings and fix all warnings
-- [ ] T142 [P] Run cargo test to verify all unit tests pass
-- [ ] T143 [P] Run pnpm format to format all frontend files
-- [ ] T144 [P] Run pnpm lint and fix all linting errors
-- [ ] T145 [P] Run pnpm check to verify TypeScript types
-- [ ] T146 [P] Verify no TypeScript errors in bindings.ts
+- [x] T140 [P] Run cargo fmt on all Rust files (src-tauri/src/media/\*\*)
+- [x] T141 [P] Run cargo clippy -D warnings and fix all warnings
+- [x] T142 [P] Run cargo test to verify all unit tests pass
+- [x] T143 [P] Run pnpm format to format all frontend files
+- [x] T144 [P] Run pnpm lint and fix all linting errors
+- [x] T145 [P] Run pnpm check to verify TypeScript types
+- [x] T146 [P] Verify no TypeScript errors in bindings.ts
 
 **Terminal Commands**:
 
@@ -405,9 +405,9 @@ pnpm check
 
 ### Documentation
 
-- [ ] T157 [P] Update CHANGELOG.md with feature description
-- [ ] T158 [P] Verify quickstart.md is accurate for current implementation
-- [ ] T159 [P] Add inline documentation comments to complex validation logic
+- [x] T157 [P] Update CHANGELOG.md with feature description
+- [x] T158 [P] Verify quickstart.md is accurate for current implementation
+- [x] T159 [P] Add inline documentation comments to complex validation logic
 
 **File Paths**:
 
