@@ -168,8 +168,9 @@
       <!-- Visual Separator between Stats and Charts -->
       <div class="border-surface-700/50 my-6 border-t"></div>
 
+      <!-- Compact Command Deck: Charts + Action Bar -->
       <div class="mt-6 space-y-6">
-        <!-- Command Center for mobile (moved above charts) -->
+        <!-- Mobile: Command Center above charts -->
         <div class="lg:hidden">
           <div class="gauge-frame space-y-3 p-4">
             <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
@@ -179,69 +180,97 @@
           </div>
         </div>
 
-        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-          Charts & Analytics
-        </h3>
-        <DashboardCharts />
+        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">Command Deck</h3>
+
+        <!-- Desktop: Side-by-side layout -->
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+          <!-- Charts Column (3/4 width) -->
+          <div>
+            <DashboardCharts compact={true} />
+          </div>
+
+          <!-- Action Bar Column (1/4 width) - Desktop only -->
+          <aside class="hidden lg:block">
+            <div class="gauge-frame h-full space-y-3 p-4">
+              <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
+                {m.dashboard_command_center()}
+              </p>
+              <div class="flex flex-col gap-3">
+                {#each actions as action (action.id)}
+                  {@const Icon = action.icon}
+                  <button
+                    type="button"
+                    onclick={action.onClick}
+                    class="group border-surface-700/60 bg-surface-900/50 hover:border-accent-500/50 hover:bg-surface-800/70 hover:shadow-accent-500/10 relative flex flex-col items-center gap-2 rounded-lg border p-4 text-center transition-all duration-200 hover:shadow-lg {action.id ===
+                    'add-railway-model'
+                      ? 'border-accent-500/40 bg-accent-950/30'
+                      : ''}"
+                  >
+                    <div
+                      class="flex h-10 w-10 items-center justify-center rounded-full {action.id ===
+                      'add-railway-model'
+                        ? 'bg-accent-500/20 text-accent-400'
+                        : 'bg-surface-800 text-surface-300'} transition-colors group-hover:scale-110"
+                    >
+                      <Icon class="h-5 w-5" />
+                    </div>
+                    <span
+                      class="text-xs font-semibold {action.id === 'add-railway-model'
+                        ? 'text-accent-400'
+                        : 'text-surface-200'}">{action.label}</span
+                    >
+                  </button>
+                {/each}
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
 
-    <div class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-      <div class="space-y-8">
-        <section>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-              {m.dashboard_recent_acquisitions()}
-            </h3>
-            <a
-              href={resolve('/my-collection')}
-              class="text-accent-500 text-sm font-bold hover:underline">{m.dashboard_view_all()}</a
-            >
-          </div>
-
-          {#if dashboard.isLoading}
-            <div class="space-y-4">
-              {#each Array(2) as _item, index (index)}
-                <div class="skeleton rounded-container h-48"></div>
-              {/each}
-            </div>
-          {:else if !purchaseGroups.length}
-            <div
-              class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
-            >
-              <div
-                class="border-surface-600/60 text-surface-200 mx-auto mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
-              >
-                {m.dashboard_blueprint_label()}
-              </div>
-              <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
-              <p class="text-surface-300 mt-2 mb-5 text-sm">
-                {m.dashboard_empty_acquisitions_message()}
-              </p>
-              <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
-                <Plus class="mr-2" />
-                {m.actions_add_railway_model()}
-              </Button>
-            </div>
-          {:else}
-            <div class="space-y-4">
-              {#each purchaseGroups as group (group.id)}
-                <PurchaseGroupCard {group} onModelClick={handleModelClick} />
-              {/each}
-            </div>
-          {/if}
-        </section>
+    <section>
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
+          {m.dashboard_recent_acquisitions()}
+        </h3>
+        <a
+          href={resolve('/my-collection')}
+          class="text-accent-500 text-sm font-bold hover:underline">{m.dashboard_view_all()}</a
+        >
       </div>
 
-      <aside class="hidden lg:block">
-        <div class="gauge-frame sticky top-24 space-y-4 p-4">
-          <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-            {m.dashboard_command_center()}
-          </h3>
-          <QuickActionButtons {actions} />
+      {#if dashboard.isLoading}
+        <div class="space-y-4">
+          {#each Array(2) as _item, index (index)}
+            <div class="skeleton rounded-container h-48"></div>
+          {/each}
         </div>
-      </aside>
-    </div>
+      {:else if !purchaseGroups.length}
+        <div
+          class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
+        >
+          <div
+            class="border-surface-600/60 text-surface-200 mx-auto mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
+          >
+            {m.dashboard_blueprint_label()}
+          </div>
+          <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
+          <p class="text-surface-300 mt-2 mb-5 text-sm">
+            {m.dashboard_empty_acquisitions_message()}
+          </p>
+          <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
+            <Plus class="mr-2" />
+            {m.actions_add_railway_model()}
+          </Button>
+        </div>
+      {:else}
+        <div class="space-y-4">
+          {#each purchaseGroups as group (group.id)}
+            <PurchaseGroupCard {group} onModelClick={handleModelClick} />
+          {/each}
+        </div>
+      {/if}
+    </section>
   </div>
 {/if}
 

@@ -14,9 +14,15 @@
       monthlySpending?: MonthlySpendingPoint[];
       history?: HistoryPoint[];
     };
+    /** Enable compact mode with reduced chart heights. @default false */
+    compact?: boolean;
   }
 
-  let { currencyCode: currencyCodeProp, data: dataProp }: DashboardChartsProps = $props();
+  let {
+    currencyCode: currencyCodeProp,
+    data: dataProp,
+    compact = false
+  }: DashboardChartsProps = $props();
 
   // --- Mock Data ---
   const budgetMock = 0.75;
@@ -73,6 +79,8 @@
   const monthlyYMax = $derived(Math.max(...monthlySpending.map((d) => d.amount), 1));
   const historyValueMax = $derived(Math.max(...historyData.map((d) => d.value), 1));
 
+  // Compact mode reduces chart height by ~30%
+  const chartHeight = $derived(compact ? 'h-44' : 'h-64');
   const chartCardClass =
     'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm bg-zinc-900/50 border border-zinc-800';
 </script>
@@ -87,7 +95,7 @@
       <p class="text-lg font-bold">{m.dashboard_chart_budget_title()}</p>
     </div>
 
-    <div class="relative h-64 w-full">
+    <div class="relative {chartHeight} w-full">
       <PieChart
         data={[{ key: 'available', value: budget }]}
         key="key"
