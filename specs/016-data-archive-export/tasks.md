@@ -24,19 +24,19 @@
 
 **Purpose**: Project initialization, dependencies, and module structure
 
-- [ ] T001 No new dependencies needed: `zip` crate already in `src-tauri/Cargo.toml`
-- [ ] T002 [P] Create export module directory structure in `src-tauri/src/export/{domain,application,infrastructure,interface}/`
-- [ ] T003 [P] Create export module entry points: `src-tauri/src/export/mod.rs` and layer mod.rs files
-- [ ] T004 Register export module in `src-tauri/src/lib.rs` alongside import module
-- [ ] T005 [P] Create frontend feature directory structure: `src/lib/features/export/components/`
-- [ ] T005b [SPIKE] Verify Tauri file picker compatibility on Windows, macOS, Linux:
+- [x] T001 No new dependencies needed: `zip` crate already in `src-tauri/Cargo.toml`
+- [x] T002 [P] Create export module directory structure in `src-tauri/src/export/{domain,application,infrastructure,interface}/`
+- [x] T003 [P] Create export module entry points: `src-tauri/src/export/mod.rs` and layer mod.rs files
+- [x] T004 Register export module in `src-tauri/src/lib.rs` alongside import module
+- [x] T005 [P] Create frontend feature directory structure: `src/lib/features/export/components/`
+- [x] T005b [SPIKE] Verify Tauri file picker compatibility on Windows, macOS, Linux:
   - Test `app.dialog().file().blocking_save_file()` on each platform
   - Verify native dialogs appear and work as expected
   - Document any platform-specific behavior or limitations
   - Duration: 2-4 hours | Blocks: T016, T030 (file picker infrastructure)
-- [ ] T006 [P] Add Paraglide i18n keys for export feature to `messages/en.json` and `messages/it.json`:
+- [x] T006 [P] Add Paraglide i18n keys for export feature to `messages/en.json` and `messages/it.json`:
   - Keys: `export.dialog_title`, `export.button_export`, `export.button_cancel`, `export.success_notification`, `export.error_*`
-- [ ] T007 Create test fixtures directory: `src-tauri/fixtures/export/` with sample data files
+- [x] T007 Create test fixtures directory: `src-tauri/fixtures/export/` with sample data files
 
 ---
 
@@ -48,18 +48,18 @@
 
 ### Domain Layer
 
-- [ ] T008 [P] Create error types in `src-tauri/src/export/domain/error.rs`: `ExportError`, `ValidationError`, `DiskSpaceError`
-- [ ] T009 [P] Create `ExportEntitySelection` struct in `src-tauri/src/export/domain/entity_selection.rs`:
+- [x] T008 [P] Create error types in `src-tauri/src/export/domain/error.rs`: `ExportError`, `ValidationError`, `DiskSpaceError`
+- [x] T009 [P] Create `ExportEntitySelection` struct in `src-tauri/src/export/domain/entity_selection.rs`:
   - Boolean fields: `include_railway_models`, `include_collection_items`, `include_sellers`, `include_maintenance_logs`, `include_dcc_roster`, `include_orphaned_images`
   - Validation: at least one entity type selected
-- [ ] T010 [P] Create `ExportSession` aggregate in `src-tauri/src/export/domain/export_session.rs`:
+- [x] T010 [P] Create `ExportSession` aggregate in `src-tauri/src/export/domain/export_session.rs`:
   - State: Selecting → Previewing → Exporting → Completed
   - Fields: entity selection, destination path, estimated size, progress tracking
-- [ ] T011 [P] Create `ExportConfig` value object in `src-tauri/src/export/domain/export_config.rs`:
+- [x] T011 [P] Create `ExportConfig` value object in `src-tauri/src/export/domain/export_config.rs`:
   - Fields: destination_path, custom_filename, include_orphaned_images
-- [ ] T012 [P] Create `ExportProgress` value object in `src-tauri/src/export/domain/export_progress.rs`:
+- [x] T012 [P] Create `ExportProgress` value object in `src-tauri/src/export/domain/export_progress.rs`:
   - Fields: phase (collecting|compressing|finalizing), percentage, current_item, estimated_seconds_remaining
-- [ ] T013 [P] Create `ExportResult` value object in `src-tauri/src/export/domain/export_result.rs`:
+- [x] T013 [P] Create `ExportResult` value object in `src-tauri/src/export/domain/export_result.rs`:
   - Fields: archive_path, file_size_bytes, records_exported, warnings
 
 ### Infrastructure Layer - File System
@@ -72,7 +72,7 @@
   - Function: `collect_media_files(include_orphaned: bool) -> Result<Vec<MediaFile>>`
   - Scan media directory for image files
   - Detect orphaned images (not referenced by any record)
-- [ ] T016 [P] Create file picker integration in `src-tauri/src/export/infrastructure/file_picker.rs`:
+- [x] T016 [P] Create file picker integration in `src-tauri/src/export/infrastructure/file_picker.rs`:
   - Function: `open_save_dialog(default_filename: &str) -> Result<Option<PathBuf>>`
   - Use Tauri dialog API: `app.dialog().file().set_file_name().add_filter().blocking_save_file()`
   - Return None on cancel

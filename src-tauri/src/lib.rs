@@ -6,6 +6,7 @@ pub mod commands;
 pub mod core;
 pub mod dashboard;
 pub mod dcc_inventory;
+pub mod export;
 pub mod import;
 pub mod maintenance;
 pub mod media;

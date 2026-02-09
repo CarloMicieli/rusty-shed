@@ -258,7 +258,7 @@
 ### Edge Case Testing for US3
 
 - [x] T101 [US3] Test special characters in filenames (spaces, unicode, emojis) are sanitized correctly
-- [ ] T102 [US3] Test unusual aspect ratios (10000x100 pixels, 100x10000 pixels) are handled gracefully
+- [x] T102 [US3] Test unusual aspect ratios (10000x100 pixels, 100x10000 pixels) are handled gracefully
 - [x] T103 [US3] Test corrupted image files (truncated, invalid headers) are rejected with clear errors
 - [x] T104 [US3] Test extremely large valid files (49MB, 50MB, 51MB) respect size limit
 - [x] T105 [US3] Test filename collision scenario (same filename for different models) is handled by deterministic naming
@@ -280,7 +280,7 @@
 - [x] T106 [US4] Test image replacement flow - verify old file deleted from filesystem
 - [x] T107 [US4] Add integration test for replacement scenario (upload → replace → verify cleanup)
 - [x] T108 [US4] Verify no orphaned files remain after multiple replacements
-- [ ] T109 [US4] Add visual confirmation when replacing (optional: "Replace existing image?" confirmation)
+- [x] T109 [US4] Add visual confirmation when replacing (optional: "Replace existing image?" confirmation) [SKIPPED - Optional enhancement]
 - [x] T110 [US4] Update button label to "Replace Image" when image exists
 - [x] T111 [US4] Test replacement with different format (JPEG → PNG, PNG → WEBP)
 - [x] T112 [US4] Verify destination path changes extension based on new format
@@ -293,7 +293,7 @@
 ### Localization for US4
 
 - [x] T113 [P] [US4] Add replace_image message to messages/en.json
-- [ ] T114 [P] [US4] Add replace_image_confirm message (if confirmation added) to messages/en.json
+- [x] T114 [P] [US4] Add replace_image_confirm message (if confirmation added) to messages/en.json [SKIPPED - Depends on T109]
 - [x] T115 [P] [US4] Add Italian translations to messages/it.json
 
 **File Paths**:
