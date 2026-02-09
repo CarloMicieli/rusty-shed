@@ -50,15 +50,15 @@ export class DashboardState {
     this.#isLoading = true;
     this.#error = null;
 
+    console.debug('Invoking get_dashboard_summary with criteria:', criteria);
     const result = await safeInvoke<DashboardSummary>('get_dashboard_summary', { criteria });
 
     if (result.ok) {
       this.#data = result.data;
     } else {
-      console.error('Dashboard Store Error:', result.error);
-      this.#error = 'dashboard_load_failed';
-
       const errorMsg = getErrorMessage(result.error);
+      console.error('Dashboard Store Error:', errorMsg, { raw: result.error, result });
+      this.#error = 'dashboard_load_failed';
       toastError(errorMsg);
     }
 

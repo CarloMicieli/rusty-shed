@@ -2650,6 +2650,10 @@ export type DashboardSummary = {
    * List of depot items in the user's collection.
    */
   depotItems: DashboardDepotEntry[];
+  /**
+   * Recent purchase groups (replaces or supplements recentItems)
+   */
+  purchaseGroups: PurchaseGroup[];
 };
 /**
  * Aggregated totals for the user's dashboard.
@@ -3718,6 +3722,36 @@ export type MeasureUnit = 'Millimeters' | 'Inches' | 'Meters' | 'Miles' | 'Kilom
  */
 export type Metadata = { version: number; created_at: string; updated_at: string };
 /**
+ * Compact view of a railway model for dashboard card display
+ */
+export type ModelCard = {
+  /**
+   * Unique model identifier (format: "trn:railway-model:{manufacturer}:{product_code}")
+   */
+  id: RailwayModelId;
+  /**
+   * Path to thumbnail image (relative to data directory)
+   */
+  thumbnailPath: string | null;
+  /**
+   * Manufacturer name (e.g., "Roco", "Fleischmann")
+   */
+  manufacturer: string;
+  /**
+   * Product code from manufacturer
+   */
+  productCode: string;
+  /**
+   * Purchase condition status
+   */
+  condition: PurchaseCondition;
+  /**
+   * Model description or auto-generated title
+   * Frontend will truncate to ~100 characters
+   */
+  description: string;
+};
+/**
  * This represents the physical and mechanical state of the locomotive or rolling stock.
  */
 export type ModelCondition =
@@ -4077,6 +4111,35 @@ export type PurchaseCondition =
    * The item was purchased second-hand from another collector or seller.
    */
   | 'PRE_OWNED';
+/**
+ * A group of models acquired together (same purchase date + seller)
+ */
+export type PurchaseGroup = {
+  /**
+   * Unique identifier for display purposes (format: "purchase-YYYY-MM-DD-{seller_id}")
+   */
+  id: string;
+  /**
+   * Date when the models were purchased (ISO 8601 date string)
+   */
+  purchaseDate: string;
+  /**
+   * Name of the seller/shop (optional)
+   */
+  sellerName: string | null;
+  /**
+   * User notes about this purchase transaction
+   */
+  notes: string | null;
+  /**
+   * List of model cards in this purchase (max 3 for display)
+   */
+  modelCards: ModelCard[];
+  /**
+   * Total number of models in this purchase (for "+N more" indicator)
+   */
+  totalCount: bigint;
+};
 /**
  * Purchase information associated with a `CollectionItem`.
  *

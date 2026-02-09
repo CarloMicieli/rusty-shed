@@ -11,10 +11,9 @@
   import PageHeader from '$lib/components/PageHeader.svelte';
   import StatsCard from '$lib/components/StatsCard.svelte';
   import QuickActionButtons, { type QuickAction } from '$lib/components/QuickActionButtons.svelte';
-  import RecentItemCard from '$lib/components/RecentItemCard.svelte';
   import DepotView from '$lib/components/DepotView.svelte';
   import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
-  import { DashboardCharts } from '$lib/features/dashboard';
+  import { DashboardCharts, PurchaseGroupCard } from '$lib/features/dashboard';
 
   // Stores
   import { getDashboardContext } from '$lib/features/dashboard/DashboardState.svelte';
@@ -26,8 +25,8 @@
   // Data derived from store
   const totals = $derived(dashboard.data?.totals ?? null);
   const stats = $derived(byStats(totals));
-  const recent = $derived(dashboard.data?.recentItems ?? []);
   const depot = $derived(dashboard.data?.depotItems ?? []);
+  const purchaseGroups = $derived(dashboard.data?.purchaseGroups ?? []);
 
   let showWishlistModal = $state(false);
 
@@ -43,6 +42,12 @@
   // ESCAPE HATCH: Redirects to root with error_reset flag to prevent infinite loops
   function handleReturn() {
     goto(resolve('/'));
+  }
+
+  function handleModelClick(modelId: string) {
+    // Navigate to model detail page
+    // cast via unknown/never to satisfy strict route typing without using `any`
+    goto(`/catalogue/models/${modelId}` as unknown as never);
   }
 
   function formatMoney(amount?: { amount: bigint; currency: string } | null) {
@@ -188,7 +193,7 @@
         <section>
           <div class="mb-4 flex items-center justify-between">
             <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-              {m.dashboard_recently_added()}
+              {m.dashboard_recent_acquisitions()}
             </h3>
             <a
               href={resolve('/my-collection')}
@@ -197,12 +202,12 @@
           </div>
 
           {#if dashboard.isLoading}
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {#each Array(2) as _item, index (index)}<div
-                  class="skeleton rounded-container aspect-video w-full"
-                ></div>{/each}
+            <div class="space-y-4">
+              {#each Array(2) as _item, index (index)}
+                <div class="skeleton rounded-container h-48"></div>
+              {/each}
             </div>
-          {:else if !recent.length}
+          {:else if !purchaseGroups.length}
             <div
               class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
             >
@@ -211,15 +216,19 @@
               >
                 {m.dashboard_blueprint_label()}
               </div>
-              <p class="text-base font-semibold">{m.dashboard_empty_recent_blueprint_title()}</p>
-              <p class="text-surface-300 mt-2 text-sm">
-                {m.dashboard_empty_recent_blueprint_message()}
+              <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
+              <p class="text-surface-300 mt-2 mb-5 text-sm">
+                {m.dashboard_empty_acquisitions_message()}
               </p>
+              <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
+                <Plus class="mr-2" />
+                {m.actions_add_railway_model()}
+              </Button>
             </div>
           {:else}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {#each recent as item (item.id)}
-                <RecentItemCard {item} />
+            <div class="space-y-4">
+              {#each purchaseGroups as group (group.id)}
+                <PurchaseGroupCard {group} onModelClick={handleModelClick} />
               {/each}
             </div>
           {/if}

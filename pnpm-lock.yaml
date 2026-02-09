@@ -38,6 +38,9 @@ importers:
       d3-scale:
         specifier: ^4.0.2
         version: 4.0.2
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       layerchart:
         specifier: 2.0.0-next.44
         version: 2.0.0-next.44(svelte@5.50.0)
@@ -1369,6 +1372,9 @@ packages:
   d3-tricontour@1.1.0:
     resolution: {integrity: sha512-G7gHKj89n2owmkGb6WX6ixcnQ0Kf/0wpa9VIh9DGdbHu8wdrlaHU4ir3/bFNERl8N8nn4G7e7qbtBG8N9caihQ==}
     engines: {node: '>=12'}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   dayjs@1.11.19:
     resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
@@ -3569,6 +3575,8 @@ snapshots:
     dependencies:
       d3-delaunay: 6.0.4
       d3-scale: 4.0.2
+
+  date-fns@4.1.0: {}
 
   dayjs@1.11.19:
     optional: true

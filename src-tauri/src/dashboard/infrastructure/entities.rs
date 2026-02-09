@@ -2,11 +2,12 @@ use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::{Category, Epoch, PowerMethod, RailwayModelId};
 use crate::catalog::domain::scale::Scale;
+use crate::collecting::domain::PurchaseCondition;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::dashboard::domain::{
     DashboardDepotEntry, DashboardDepotManufacturerEntry, DashboardDepotRailwayCompanyEntry,
-    DashboardRecentItem, DashboardTotals, Source,
+    DashboardRecentItem, DashboardTotals, ModelCard, PurchaseGroup, Source,
 };
 use chrono::NaiveDateTime;
 use sqlx::FromRow;
@@ -97,6 +98,68 @@ impl TryFrom<DashboardTotalsRow> for DashboardTotals {
                 _ => None,
             },
         })
+    }
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct PurchaseGroupRow {
+    pub purchase_date: String,
+    pub seller_id: Option<String>,
+    pub seller_name: Option<String>,
+    pub notes: Option<String>,
+    pub model_count: i64,
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct ModelCardRow {
+    pub model_id: RailwayModelId,
+    pub manufacturer_name: String,
+    pub product_code: String,
+    pub description: String,
+    pub image_path: Option<String>,
+    pub purchase_condition: Option<String>,
+}
+
+impl From<ModelCardRow> for ModelCard {
+    fn from(row: ModelCardRow) -> Self {
+        let condition = row
+            .purchase_condition
+            .as_deref()
+            .and_then(|s| s.parse::<PurchaseCondition>().ok())
+            .unwrap_or_default();
+
+        Self {
+            id: row.model_id,
+            thumbnail_path: row.image_path,
+            manufacturer: row.manufacturer_name,
+            product_code: row.product_code,
+            condition,
+            description: row.description,
+        }
+    }
+}
+
+impl From<(PurchaseGroupRow, Vec<ModelCardRow>)> for PurchaseGroup {
+    fn from(value: (PurchaseGroupRow, Vec<ModelCardRow>)) -> Self {
+        let (group_row, model_rows) = value;
+
+        // Generate stable ID from purchase_date and seller_id
+        let id = match &group_row.seller_id {
+            Some(seller_id) => format!("purchase-{}-{}", group_row.purchase_date, seller_id),
+            None => format!("purchase-{}-unknown", group_row.purchase_date),
+        };
+
+        // Take only first 3 model cards for display
+        let model_cards: Vec<ModelCard> = model_rows.into_iter().take(3).map(Into::into).collect();
+
+        Self {
+            id,
+            purchase_date: group_row.purchase_date,
+            seller_name: group_row.seller_name,
+            notes: group_row.notes,
+            model_cards,
+            total_count: group_row.model_count as usize,
+        }
     }
 }
 

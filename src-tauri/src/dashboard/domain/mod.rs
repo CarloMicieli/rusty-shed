@@ -2,6 +2,8 @@ mod dashboard_depot_entry;
 mod dashboard_recent_item;
 mod dashboard_summary;
 mod dashboard_totals;
+mod model_card;
+mod purchase_group;
 mod repository;
 
 pub use dashboard_depot_entry::DashboardDepotEntry;
@@ -11,6 +13,8 @@ pub use dashboard_recent_item::DashboardRecentItem;
 pub use dashboard_recent_item::Source;
 pub use dashboard_summary::DashboardSummary;
 pub use dashboard_totals::DashboardTotals;
+pub use model_card::ModelCard;
+pub use purchase_group::PurchaseGroup;
 pub use repository::DashboardRepository;
 pub use repository::DashboardUowExt;
 pub use repository::QueryParams;

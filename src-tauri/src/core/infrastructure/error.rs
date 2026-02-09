@@ -71,7 +71,13 @@ impl From<DomainError> for CommandError {
                 "{} with identifier '{}' not found",
                 resource, identifier
             )),
-            DomainError::Validation(_) => CommandError::ValidationError(HashMap::new()),
+            DomainError::Validation(_msg) => {
+                // DomainError::Validation represents a general validation failure
+                // without field-specific messages. Map remains empty so callers
+                // can distinguish between general validation and field errors.
+                let map: HashMap<String, Vec<ValidationError>> = HashMap::new();
+                CommandError::ValidationError(map)
+            }
             DomainError::Infrastructure(inner) => CommandError::DatabaseError(inner.to_string()),
             DomainError::BusinessRule(msg) => CommandError::BusinessRule(msg),
             DomainError::ValidationError(errors) => CommandError::ValidationError(errors),

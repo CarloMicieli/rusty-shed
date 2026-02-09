@@ -137,6 +137,88 @@ impl<'conn> SqliteDashboardRepository<'conn> {
 
         Ok(rows)
     }
+
+    /// Fetches purchase groups (models grouped by purchase date + seller).
+    ///
+    /// This query groups collection items by their purchase date and seller,
+    /// limiting to the 3 most recent purchase events.
+    ///
+    /// # Returns
+    /// - A vector of tuples (PurchaseGroupRow, Vec<ModelCardRow>) on success.
+    /// - A `DomainError` if the query fails.
+    async fn fetch_purchase_groups(
+        &mut self,
+    ) -> Result<
+        Vec<(
+            crate::dashboard::infrastructure::entities::PurchaseGroupRow,
+            Vec<crate::dashboard::infrastructure::entities::ModelCardRow>,
+        )>,
+        DomainError,
+    > {
+        // First, get the top 3 purchase groups
+        let groups_sql = r#"
+            SELECT
+                pi.purchase_date,
+                pi.seller_id,
+                s.name AS seller_name,
+                ci.notes,
+                COUNT(DISTINCT ci.id) AS model_count
+            FROM purchase_infos pi
+            JOIN collection_items ci ON pi.collection_item_id = ci.id
+            LEFT JOIN sellers s ON pi.seller_id = s.id
+            WHERE ci.removed_date IS NULL
+            GROUP BY pi.purchase_date, pi.seller_id
+            ORDER BY pi.purchase_date DESC
+            LIMIT 3
+        "#;
+
+        let groups = sqlx::query_as::<
+            _,
+            crate::dashboard::infrastructure::entities::PurchaseGroupRow,
+        >(groups_sql)
+        .fetch_all(&mut *self.executor)
+        .await?;
+
+        let mut result = Vec::new();
+
+        // For each group, fetch up to 3 model cards
+        for group in groups {
+            let models_sql = r#"
+                SELECT
+                    rm.id AS model_id,
+                    m.name AS manufacturer_name,
+                    rm.product_code,
+                    rm.description,
+                    NULL AS image_path,
+                    ci.purchase_condition
+                FROM purchase_infos pi
+                JOIN collection_items ci ON pi.collection_item_id = ci.id
+                JOIN railway_models rm ON ci.railway_model_id = rm.id
+                JOIN manufacturers m ON rm.manufacturer_id = m.id
+                WHERE pi.purchase_date = ?1
+                  AND (
+                    (pi.seller_id IS NULL AND ?2 IS NULL)
+                    OR (pi.seller_id = ?2)
+                  )
+                  AND ci.removed_date IS NULL
+                ORDER BY ci.added_date DESC
+                LIMIT 3
+            "#;
+
+            let models = sqlx::query_as::<
+                _,
+                crate::dashboard::infrastructure::entities::ModelCardRow,
+            >(models_sql)
+            .bind(&group.purchase_date)
+            .bind(&group.seller_id)
+            .fetch_all(&mut *self.executor)
+            .await?;
+
+            result.push((group, models));
+        }
+
+        Ok(result)
+    }
 }
 
 #[async_trait::async_trait]
@@ -158,10 +240,18 @@ impl<'conn> DashboardRepository for SqliteDashboardRepository<'conn> {
             .map(|row| row.try_into())
             .collect::<Result<Vec<DashboardDepotEntry>, DomainError>>()?;
 
+        let purchase_groups: Vec<crate::dashboard::domain::PurchaseGroup> = self
+            .fetch_purchase_groups()
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect();
+
         Ok(DashboardSummary {
             totals,
             recent_items,
             depot_items,
+            purchase_groups,
         })
     }
 }

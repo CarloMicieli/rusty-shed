@@ -29,9 +29,9 @@ This is a Tauri 2 + SvelteKit project:
 
 **Purpose**: Project initialization and i18n message keys
 
-- [ ] T001 [P] Add English i18n message keys for purchase groups in messages/en.json (11 keys: dashboard_purchase_group_title, dashboard_purchase_on, dashboard_seller_from, dashboard_seller_unknown, dashboard_purchase_notes, dashboard_more_items, dashboard_condition_new, dashboard_condition_preowned, dashboard_condition_unknown, dashboard_empty_purchases, dashboard_add_first_purchase)
-- [ ] T002 [P] Add Italian i18n message keys for purchase groups in messages/it.json (translations for all 11 keys)
-- [ ] T003 Regenerate Paraglide types by running pnpm prepare
+- [x] T001 [P] Add English i18n message keys for purchase groups in messages/en.json (11 keys: dashboard_purchase_group_title, dashboard_purchase_on, dashboard_seller_from, dashboard_seller_unknown, dashboard_purchase_notes, dashboard_more_items, dashboard_condition_new, dashboard_condition_preowned, dashboard_condition_unknown, dashboard_empty_purchases, dashboard_add_first_purchase)
+- [x] T002 [P] Add Italian i18n message keys for purchase groups in messages/it.json (translations for all 11 keys)
+- [x] T003 Regenerate Paraglide types by running pnpm prepare
 
 **Checkpoint**: i18n messages ready for use in components
 
@@ -43,12 +43,12 @@ This is a Tauri 2 + SvelteKit project:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create PurchaseCondition enum in src-tauri/src/dashboard/domain/purchase_condition.rs with variants (New, PreOwned, Unknown) and From<Option<String>> implementation
-- [ ] T005 [P] Create ModelCard entity in src-tauri/src/dashboard/domain/model_card.rs with fields (id, thumbnail_path, manufacturer, product_code, condition, description)
-- [ ] T006 Create PurchaseGroup entity in src-tauri/src/dashboard/domain/purchase_group.rs with fields (id, purchase_date, seller_name, notes, model_cards, total_count)
-- [ ] T007 Extend DashboardSummary entity in src-tauri/src/dashboard/domain/dashboard_summary.rs by adding purchase_groups field Vec<PurchaseGroup>
-- [ ] T008 Export new domain types in src-tauri/src/dashboard/domain/mod.rs (PurchaseCondition, ModelCard, PurchaseGroup)
-- [ ] T009 Verify domain layer compiles with cargo check in src-tauri/
+- [x] T004 [P] Create PurchaseCondition enum in src-tauri/src/dashboard/domain/purchase_condition.rs with variants (New, PreOwned, Unknown) and From<Option<String>> implementation
+- [x] T005 [P] Create ModelCard entity in src-tauri/src/dashboard/domain/model_card.rs with fields (id, thumbnail_path, manufacturer, product_code, condition, description)
+- [x] T006 Create PurchaseGroup entity in src-tauri/src/dashboard/domain/purchase_group.rs with fields (id, purchase_date, seller_name, notes, model_cards, total_count)
+- [x] T007 Extend DashboardSummary entity in src-tauri/src/dashboard/domain/dashboard_summary.rs by adding purchase_groups field Vec<PurchaseGroup>
+- [x] T008 Export new domain types in src-tauri/src/dashboard/domain/mod.rs (PurchaseCondition, ModelCard, PurchaseGroup)
+- [x] T009 Verify domain layer compiles with cargo check in src-tauri/
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -62,27 +62,27 @@ This is a Tauri 2 + SvelteKit project:
 
 ### Backend Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Create PurchaseGroupRow entity in src-tauri/src/dashboard/infrastructure/entities.rs with fields (purchase_date, seller_id, seller_name, notes, model_count)
-- [ ] T011 [P] [US1] Create ModelCardRow entity in src-tauri/src/dashboard/infrastructure/entities.rs with fields (model_id, manufacturer_id, manufacturer_name, product_code, description, image_path, purchase_condition, purchase_date, seller_id)
-- [ ] T012 [US1] Implement TryFrom<(PurchaseGroupRow, Vec<ModelCardRow>)> for PurchaseGroup in src-tauri/src/dashboard/infrastructure/entities.rs with purchase group ID generation and LIMIT 3 model cards
-- [ ] T013 [US1] Implement TryFrom<ModelCardRow> for ModelCard in src-tauri/src/dashboard/infrastructure/entities.rs with RailwayModelId parsing and PurchaseCondition conversion
-- [ ] T014 [US1] Add fetch_purchase_groups method to DashboardRepository in src-tauri/src/dashboard/infrastructure/dashboard_repository.rs with GROUP BY (purchase_date, seller_id), ORDER BY purchase_date DESC, LIMIT 3 groups
-- [ ] T015 [US1] Add nested query in fetch_purchase_groups to fetch up to 3 model cards per group in src-tauri/src/dashboard/infrastructure/dashboard_repository.rs with JOIN across purchase_infos, collection_items, railway_models, manufacturers tables
-- [ ] T016 [US1] Update get_dashboard_summary method in src-tauri/src/dashboard/infrastructure/dashboard_repository.rs to call fetch_purchase_groups and include in DashboardSummary
-- [ ] T017 [US1] Run cargo clippy and cargo fmt on backend code
-- [ ] T018 [US1] Regenerate TypeScript types by running pnpm run tauri:gen-types to export PurchaseGroup, ModelCard, PurchaseCondition to src/lib/bindings.ts
+- [x] T010 [P] [US1] Create PurchaseGroupRow entity in src-tauri/src/dashboard/infrastructure/entities.rs with fields (purchase_date, seller_id, seller_name, notes, model_count)
+- [x] T011 [P] [US1] Create ModelCardRow entity in src-tauri/src/dashboard/infrastructure/entities.rs with fields (model_id, manufacturer_id, manufacturer_name, product_code, description, image_path, purchase_condition, purchase_date, seller_id)
+- [x] T012 [US1] Implement TryFrom<(PurchaseGroupRow, Vec<ModelCardRow>)> for PurchaseGroup in src-tauri/src/dashboard/infrastructure/entities.rs with purchase group ID generation and LIMIT 3 model cards
+- [x] T013 [US1] Implement TryFrom<ModelCardRow> for ModelCard in src-tauri/src/dashboard/infrastructure/entities.rs with RailwayModelId parsing and PurchaseCondition conversion
+- [x] T014 [US1] Add fetch_purchase_groups method to DashboardRepository in src-tauri/src/dashboard/infrastructure/dashboard_repository.rs with GROUP BY (purchase_date, seller_id), ORDER BY purchase_date DESC, LIMIT 3 groups
+- [x] T015 [US1] Add nested query in fetch_purchase_groups to fetch up to 3 model cards per group in src-tauri/src/dashboard/infrastructure/dashboard_repository.rs with JOIN across purchase_infos, collection_items, railway_models, manufacturers tables
+- [x] T016 [US1] Update get_dashboard_summary method in src-tauri/src/dashboard/infrastructure/dashboard_repository.rs to call fetch_purchase_groups and include in DashboardSummary
+- [x] T017 [US1] Run cargo clippy and cargo fmt on backend code
+- [x] T018 [US1] Regenerate TypeScript types by running pnpm run tauri:gen-types to export PurchaseGroup, ModelCard, PurchaseCondition to src/lib/bindings.ts
 
 ### Frontend Implementation for User Story 1
 
-- [ ] T019 [P] [US1] Create PurchaseGroupCard component in src/lib/features/dashboard/components/PurchaseGroupCard.svelte with purchase header (date with 📅, seller with 🏪, notes in italic) and model cards grid (grid-cols-1 md:grid-cols-3 gap-4) using industrial-luxe styling (border-white/10, bg-black/20, text-zinc-400)
-- [ ] T020 [P] [US1] Add "+N more models..." indicator logic in PurchaseGroupCard component when group.totalCount > group.modelCards.length
-- [ ] T021 [P] [US1] Implement date formatting in PurchaseGroupCard using date-fns format(new Date(isoDate), 'MMMM d, yyyy')
-- [ ] T022 [P] [US1] Add seller name fallback to "Unknown source" message in PurchaseGroupCard when sellerName is null
-- [ ] T023 [US1] Export PurchaseGroupCard in src/lib/features/dashboard/index.ts
-- [ ] T024 [US1] Update dashboard page in src/routes/my-dashboard/+page.svelte to replace "Recently Added" section with purchase groups section using PurchaseGroupCard component
-- [ ] T025 [US1] Add empty state handling in dashboard page when purchaseGroups.length === 0 with "No recent acquisitions" message and "Add your first model" button
-- [ ] T026 [US1] Add loading skeleton in dashboard page with 2 skeleton cards while dashboard.isLoading
-- [ ] T027 [US1] Run pnpm lint and pnpm check on frontend code
+- [x] T019 [P] [US1] Create PurchaseGroupCard component in src/lib/features/dashboard/components/PurchaseGroupCard.svelte with purchase header (date with 📅, seller with 🏪, notes in italic) and model cards grid (grid-cols-1 md:grid-cols-3 gap-4) using industrial-luxe styling (border-white/10, bg-black/20, text-zinc-400)
+- [x] T020 [P] [US1] Add "+N more models..." indicator logic in PurchaseGroupCard component when group.totalCount > group.modelCards.length
+- [x] T021 [P] [US1] Implement date formatting in PurchaseGroupCard using date-fns format(new Date(isoDate), 'MMMM d, yyyy')
+- [x] T022 [P] [US1] Add seller name fallback to "Unknown source" message in PurchaseGroupCard when sellerName is null
+- [x] T023 [US1] Export PurchaseGroupCard in src/lib/features/dashboard/index.ts
+- [x] T024 [US1] Update dashboard page in src/routes/my-dashboard/+page.svelte to replace "Recently Added" section with purchase groups section using PurchaseGroupCard component
+- [x] T025 [US1] Add empty state handling in dashboard page when purchaseGroups.length === 0 with "No recent acquisitions" message and "Add your first model" button
+- [x] T026 [US1] Add loading skeleton in dashboard page with 2 skeleton cards while dashboard.isLoading
+- [x] T027 [US1] Run pnpm lint and pnpm check on frontend code
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - dashboard displays recent purchase groups with metadata
 
@@ -96,15 +96,15 @@ This is a Tauri 2 + SvelteKit project:
 
 ### Frontend Implementation for User Story 2
 
-- [ ] T028 [P] [US2] Create ModelCard component in src/lib/features/dashboard/components/ModelCard.svelte as horizontal button with flex gap-3 layout, 16:9 aspect ratio thumbnail (w-40 aspect-video), manufacturer in text-orange-400, product code, and description
-- [ ] T029 [P] [US2] Add thumbnail image handling in ModelCard with convertFileSrc for valid paths or TrainFront icon placeholder for null paths using lucide-svelte
-- [ ] T030 [P] [US2] Add condition badge rendering in ModelCard with absolute positioning (top-2 right-2), variant mapping (New→default, PreOwned→secondary, Unknown→outline), using shadcn-svelte Badge component
-- [ ] T031 [P] [US2] Implement description truncation in ModelCard to show ~100 characters with graceful line-clamp-2 CSS
-- [ ] T032 [P] [US2] Apply industrial-luxe styling to ModelCard (bg-zinc-900/50, hover:bg-zinc-800/70, border-zinc-800, text-zinc-300, transition-colors duration-200)
-- [ ] T033 [US2] Export ModelCard in src/lib/features/dashboard/index.ts
-- [ ] T034 [US2] Import and use ModelCard in PurchaseGroupCard component grid section in src/lib/features/dashboard/components/PurchaseGroupCard.svelte
-- [ ] T035 [US2] Verify all model cards maintain consistent height with flex layout (not grid) in PurchaseGroupCard
-- [ ] T036 [US2] Run pnpm lint and pnpm check on frontend code
+- [x] T028 [P] [US2] Create ModelCard component in src/lib/features/dashboard/components/ModelCard.svelte as horizontal button with flex gap-3 layout, 16:9 aspect ratio thumbnail (w-40 aspect-video), manufacturer in text-orange-400, product code, and description
+- [x] T029 [P] [US2] Add thumbnail image handling in ModelCard with convertFileSrc for valid paths or TrainFront icon placeholder for null paths using lucide-svelte
+- [x] T030 [P] [US2] Add condition badge rendering in ModelCard with absolute positioning (top-2 right-2), variant mapping (New→default, PreOwned→secondary, Unknown→outline), using shadcn-svelte Badge component
+- [x] T031 [P] [US2] Implement description truncation in ModelCard to show ~100 characters with graceful line-clamp-2 CSS
+- [x] T032 [P] [US2] Apply industrial-luxe styling to ModelCard (bg-zinc-900/50, hover:bg-zinc-800/70, border-zinc-800, text-zinc-300, transition-colors duration-200)
+- [x] T033 [US2] Export ModelCard in src/lib/features/dashboard/index.ts
+- [x] T034 [US2] Import and use ModelCard in PurchaseGroupCard component grid section in src/lib/features/dashboard/components/PurchaseGroupCard.svelte
+- [x] T035 [US2] Verify all model cards maintain consistent height with flex layout (not grid) in PurchaseGroupCard
+- [x] T036 [US2] Run pnpm lint and pnpm check on frontend code
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - dashboard displays purchase groups with visually rich horizontal model cards
 
@@ -118,13 +118,13 @@ This is a Tauri 2 + SvelteKit project:
 
 ### Frontend Implementation for User Story 3
 
-- [ ] T037 [P] [US3] Add onclick navigation handler to ModelCard button in src/lib/features/dashboard/components/ModelCard.svelte using goto(resolve('/railway-model/' + model.id))
-- [ ] T038 [P] [US3] Import goto from $app/navigation and resolve from $lib/utils/paths in ModelCard component
-- [ ] T039 [P] [US3] Add cursor-pointer class and hover state to ModelCard button for visual affordance
+- [x] T037 [P] [US3] Add onclick navigation handler to ModelCard button in src/lib/features/dashboard/components/ModelCard.svelte using goto(resolve('/railway-model/' + model.id))
+- [x] T038 [P] [US3] Import goto from $app/navigation and resolve from $lib/utils/paths in ModelCard component
+- [x] T039 [P] [US3] Add cursor-pointer class and hover state to ModelCard button for visual affordance
 - [ ] T040 [US3] Implement scroll position preservation in src/routes/my-dashboard/+page.svelte using sessionStorage.setItem('dashboard-scroll', window.scrollY.toString()) in afterNavigate hook
 - [ ] T041 [US3] Add scroll position restoration in dashboard page using onMount to read sessionStorage.getItem('dashboard-scroll') and call window.scrollTo(0, scrollY)
 - [ ] T042 [US3] Test navigation flow: dashboard → model details → browser back → dashboard (scroll position preserved)
-- [ ] T043 [US3] Run pnpm lint and pnpm check on frontend code
+- [x] T043 [US3] Run pnpm lint and pnpm check on frontend code
 
 **Checkpoint**: All user stories (US1, US2, US3) should now work together - full navigation flow with scroll preservation
 
@@ -138,11 +138,11 @@ This is a Tauri 2 + SvelteKit project:
 
 ### Frontend Implementation for User Story 4
 
-- [ ] T044 [P] [US4] Add "View All" link in dashboard page header in src/routes/my-dashboard/+page.svelte with href={resolve('/my-collection')} and styling (text-orange-400, hover:underline)
-- [ ] T045 [P] [US4] Verify navigation to collection page works and displays full collection table
+- [x] T044 [P] [US4] Add "View All" link in dashboard page header in src/routes/my-dashboard/+page.svelte with href={resolve('/my-collection')} and styling (text-orange-400, hover:underline)
+- [x] T045 [P] [US4] Verify navigation to collection page works and displays full collection table
 - [ ] T046 [P] [US4] Add breadcrumb or back link on collection page header to return to dashboard (if not already present)
 - [ ] T047 [US4] Test navigation flow: dashboard → "View All" → collection page → back to dashboard
-- [ ] T048 [US4] Run pnpm lint and pnpm check on frontend code
+- [x] T048 [US4] Run pnpm lint and pnpm check on frontend code
 
 **Checkpoint**: All user stories should now be independently functional with complete navigation between dashboard and collection views
 
