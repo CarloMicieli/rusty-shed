@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
-  import { Input } from '$lib/components';
+  import { Input, Button } from '$lib/components';
   import type { RailwayCompany } from '$lib/bindings';
   import type { RollingStockFormEntry } from '../types';
   import { ROLLING_STOCK_CATEGORIES } from '../constants';
@@ -33,18 +33,18 @@
 </script>
 
 <div
-  class="rolling-stock-entry border-surface-700/60 bg-surface-800 grid grid-cols-1 gap-4 rounded-lg border p-4"
+  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 text-card-foreground"
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
     <div>
       <label for="railway-company-{entry.id}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.wishlist_field_railway_company()}</span>
+        <span class="text-sm text-muted-foreground">{m.wishlist_field_railway_company()}</span>
       </label>
       <select
         id="railway-company-{entry.id}"
         bind:value={entry.railwayCompanyId}
-        class="input bg-surface-700 w-full"
+        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         required
       >
         <option value="">-- {m.wishlist_field_railway_company()} --</option>
@@ -57,7 +57,7 @@
     <!-- Series Code -->
     <div>
       <label for="series-code-{entry.id}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.wishlist_field_series_code()}</span>
+        <span class="text-sm text-muted-foreground">{m.wishlist_field_series_code()}</span>
       </label>
       <Input
         id="series-code-{entry.id}"
@@ -74,12 +74,12 @@
     <!-- Category -->
     <div>
       <label for="category-{entry.id}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.wishlist_field_category()}</span>
+        <span class="text-sm text-muted-foreground">{m.wishlist_field_category()}</span>
       </label>
       <select
         id="category-{entry.id}"
         bind:value={entry.category}
-        class="input bg-surface-700 w-full"
+        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         required
       >
         <option value="">-- {m.wishlist_field_category()} --</option>
@@ -93,7 +93,7 @@
     <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.id}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.wishlist_field_road_number()}</span>
+        <span class="text-sm text-muted-foreground">{m.wishlist_field_road_number()}</span>
       </label>
       <Input
         id="road-number-{entry.id}"
@@ -107,15 +107,17 @@
 
   <!-- Remove Button -->
   <div class="flex justify-end">
-    <button
+    <Button
       type="button"
-      class="variant-ghost-error btn btn-sm"
+      variant="ghost"
+      size="sm"
+      class="text-destructive hover:bg-destructive/10"
       disabled={!canRemove}
       onclick={onRemove}
       aria-label={m.wishlist_rolling_stock_remove()}
     >
       <X size={16} />
       <span>{m.wishlist_rolling_stock_remove()}</span>
-    </button>
+    </Button>
   </div>
 </div>

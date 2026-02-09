@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
-  import { Input } from '$lib/components';
+  import { Input, Button } from '$lib/components';
   import type { RailwayCompany } from '$lib/bindings';
   import type { RollingStockFormEntry } from '$lib/features/collection/types/AddModelFormTypes';
   import rollingStockCategories from '$lib/data/constants/rollingStockCategories.json';
@@ -38,18 +38,18 @@
 </script>
 
 <div
-  class="rolling-stock-entry border-surface-700/60 bg-surface-800 grid grid-cols-1 gap-4 rounded-lg border p-4"
+  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 text-card-foreground"
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
     <div>
       <label for="railway-company-{entry.uid}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.add_model_railway_company()}</span>
+        <span class="text-sm text-muted-foreground">{m.add_model_railway_company()}</span>
       </label>
       <select
         id="railway-company-{entry.uid}"
         bind:value={entry.railwayCompanyId}
-        class="input bg-surface-700 w-full"
+        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         class:input-error={errors?.railwayCompanyId}
         aria-describedby={errors?.railwayCompanyId
           ? `railway-company-error-{entry.uid}`
@@ -70,7 +70,7 @@
     <!-- Series Code -->
     <div>
       <label for="series-code-{entry.uid}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.add_model_series_code()}</span>
+        <span class="text-sm text-muted-foreground">{m.add_model_series_code()}</span>
       </label>
       <Input
         id="series-code-{entry.uid}"
@@ -92,12 +92,12 @@
     <!-- Category -->
     <div>
       <label for="category-{entry.uid}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.add_model_rs_category()}</span>
+        <span class="text-sm text-muted-foreground">{m.add_model_rs_category()}</span>
       </label>
       <select
         id="category-{entry.uid}"
         bind:value={entry.category}
-        class="input bg-surface-700 w-full"
+        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         class:input-error={errors?.category}
         aria-describedby={errors?.category ? `category-error-{entry.uid}` : undefined}
       >
@@ -117,8 +117,8 @@
     <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.add_model_road_number()}</span>
-        <span class="text-surface-500 ml-1 text-xs">(optional)</span>
+        <span class="text-sm text-muted-foreground">{m.add_model_road_number()}</span>
+        <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
       </label>
       <Input
         id="road-number-{entry.uid}"
@@ -134,12 +134,12 @@
   {#if showLocomotiveType}
     <div>
       <label for="locomotive-type-{entry.uid}" class="block space-y-1">
-        <span class="text-surface-300 text-sm">{m.add_model_locomotive_type()}</span>
+        <span class="text-sm text-muted-foreground">{m.add_model_locomotive_type()}</span>
       </label>
       <select
         id="locomotive-type-{entry.uid}"
         bind:value={entry.locomotiveType}
-        class="input bg-surface-700 w-full"
+        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       >
         <option value={null}>-- {m.add_model_locomotive_type()} --</option>
         {#each locomotiveTypes as type (type.id)}
@@ -152,16 +152,18 @@
 
   <!-- Remove Button -->
   <div class="flex justify-end">
-    <button
+    <Button
       type="button"
-      class="variant-ghost-error btn btn-sm"
+      variant="ghost"
+      size="sm"
+      class="text-destructive hover:bg-destructive/10"
       disabled={!canRemove}
       onclick={onRemove}
       aria-label={m.add_model_remove_rolling_stock()}
     >
       <X size={16} />
       <span>{m.add_model_remove_rolling_stock()}</span>
-    </button>
+    </Button>
   </div>
 </div>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X, Plus } from 'lucide-svelte';
-  import { Input } from '$lib/components';
+  import { Input, Button } from '$lib/components';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -293,7 +293,7 @@
 <!-- Drawer Overlay -->
 {#if open}
   <div
-    class="fixed inset-0 z-50 bg-black/50"
+    class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
     onclick={handleCloseRequest}
     role="presentation"
   ></div>
@@ -308,38 +308,37 @@
   aria-modal="true"
   aria-labelledby="drawer-title"
 >
-  <div
-    class="border-surface-700/60 bg-surface-900 flex h-full flex-col overflow-y-auto border-l shadow-2xl"
-  >
+  <div class="flex h-full flex-col overflow-y-auto border-l border-border bg-background shadow-2xl">
     <!-- Header -->
-    <div class="border-surface-700/60 flex items-center justify-between border-b p-6">
+    <div class="flex items-center justify-between border-b border-border p-6">
       <div>
-        <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
+        <p class="using-track text-xs text-muted-foreground uppercase">
           {m.add_model_subtitle()}
         </p>
         <h2 id="drawer-title" class="text-xl font-semibold">{m.add_model_title()}</h2>
       </div>
-      <button
+      <Button
         type="button"
-        class="variant-ghost-surface btn-icon btn btn-icon-sm"
+        variant="ghost"
+        size="icon-sm"
         onclick={handleCloseRequest}
         aria-label={m.add_model_cancel()}
       >
         <X size={16} />
-      </button>
+      </Button>
     </div>
 
     <!-- Content (scrollable) -->
     <div class="flex-1 overflow-y-auto p-6">
       {#if isLoadingData}
         <div class="flex items-center justify-center py-8">
-          <p class="text-surface-400">Loading...</p>
+          <p class="text-muted-foreground">Loading...</p>
         </div>
       {:else}
         <form id="add-model-form" class="space-y-6">
           <!-- Railway Model Section -->
           <section>
-            <h3 class="text-surface-100 mb-4 text-lg font-semibold">
+            <h3 class="mb-4 text-lg font-semibold text-foreground">
               {m.add_model_section_model()}
             </h3>
             <div class="space-y-4">
@@ -347,12 +346,12 @@
                 <!-- Manufacturer -->
                 <div>
                   <label for="manufacturer" class="block space-y-1">
-                    <span class="text-surface-300 text-sm">{m.add_model_manufacturer()}</span>
+                    <span class="text-sm text-muted-foreground">{m.add_model_manufacturer()}</span>
                   </label>
                   <select
                     id="manufacturer"
                     bind:value={form.manufacturerId}
-                    class="input bg-surface-800 w-full"
+                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     class:input-error={validationErrors.manufacturerId}
                     aria-describedby={validationErrors.manufacturerId
                       ? 'manufacturer-error'
@@ -373,7 +372,7 @@
                 <!-- Product Code -->
                 <div>
                   <label for="product-code" class="block space-y-1">
-                    <span class="text-surface-300 text-sm">{m.add_model_product_code()}</span>
+                    <span class="text-sm text-muted-foreground">{m.add_model_product_code()}</span>
                   </label>
                   <Input
                     id="product-code"
@@ -396,7 +395,7 @@
               <!-- Description -->
               <div>
                 <label for="description" class="block space-y-1">
-                  <span class="text-surface-300 text-sm">{m.add_model_description()}</span>
+                  <span class="text-sm text-muted-foreground">{m.add_model_description()}</span>
                 </label>
                 <Input
                   id="description"
@@ -417,12 +416,12 @@
                 <!-- Category -->
                 <div>
                   <label for="category" class="block space-y-1">
-                    <span class="text-surface-300 text-sm">{m.add_model_category()}</span>
+                    <span class="text-sm text-muted-foreground">{m.add_model_category()}</span>
                   </label>
                   <select
                     id="category"
                     bind:value={form.category}
-                    class="input bg-surface-800 w-full"
+                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     class:input-error={validationErrors.category}
                     aria-describedby={validationErrors.category ? 'category-error' : undefined}
                   >
@@ -442,12 +441,12 @@
                 <!-- Scale -->
                 <div>
                   <label for="scale" class="block space-y-1">
-                    <span class="text-surface-300 text-sm">{m.add_model_scale()}</span>
+                    <span class="text-sm text-muted-foreground">{m.add_model_scale()}</span>
                   </label>
                   <select
                     id="scale"
                     bind:value={form.scale}
-                    class="input bg-surface-800 w-full"
+                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     class:input-error={validationErrors.scale}
                     aria-describedby={validationErrors.scale ? 'scale-error' : undefined}
                   >
@@ -468,12 +467,12 @@
                 <!-- Power Method -->
                 <div>
                   <label for="power-method" class="block space-y-1">
-                    <span class="text-surface-300 text-sm">{m.add_model_power_method()}</span>
+                    <span class="text-sm text-muted-foreground">{m.add_model_power_method()}</span>
                   </label>
                   <select
                     id="power-method"
                     bind:value={form.powerMethod}
-                    class="input bg-surface-800 w-full"
+                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     class:input-error={validationErrors.powerMethod}
                     aria-describedby={validationErrors.powerMethod
                       ? 'power-method-error'
@@ -494,12 +493,12 @@
                 <!-- Epoch -->
                 <div>
                   <label for="epoch" class="block space-y-1">
-                    <span class="text-surface-300 text-sm">{m.add_model_epoch()}</span>
+                    <span class="text-sm text-muted-foreground">{m.add_model_epoch()}</span>
                   </label>
                   <select
                     id="epoch"
                     bind:value={form.epoch}
-                    class="input bg-surface-800 w-full"
+                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     class:input-error={validationErrors.epoch}
                     aria-describedby={validationErrors.epoch ? 'epoch-error' : undefined}
                   >
@@ -521,17 +520,13 @@
           <!-- Rolling Stocks Section -->
           <section>
             <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-surface-100 text-lg font-semibold">
+              <h3 class="text-lg font-semibold text-foreground">
                 {m.add_model_section_rolling_stock()}
               </h3>
-              <button
-                type="button"
-                class="variant-filled-primary btn btn-sm"
-                onclick={handleAddRollingStock}
-              >
+              <Button type="button" variant="default" size="sm" onclick={handleAddRollingStock}>
                 <Plus size={16} />
                 <span>{m.add_model_add_rolling_stock()}</span>
-              </button>
+              </Button>
             </div>
 
             {#if validationErrors.rollingStocks}
@@ -563,41 +558,38 @@
     </div>
 
     <!-- Footer -->
-    <div class="border-surface-700/60 flex items-center justify-end gap-3 border-t p-6">
-      <button
-        type="button"
-        class="variant-ghost-surface btn"
-        onclick={handleCloseRequest}
-        disabled={isSubmitting}
-      >
+    <div class="flex items-center justify-end gap-3 border-t border-border p-6">
+      <Button type="button" variant="ghost" onclick={handleCloseRequest} disabled={isSubmitting}>
         {m.add_model_cancel()}
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
         form="add-model-form"
-        class="variant-filled-primary btn"
+        variant="default"
         onclick={handleSubmit}
         disabled={isSubmitting || isLoadingData}
       >
         {isSubmitting ? m.add_model_submitting() : m.add_model_submit()}
-      </button>
+      </Button>
     </div>
   </div>
 </div>
 
 <!-- Discard Changes Dialog -->
 {#if showDiscardDialog}
-  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-    <div class="border-surface-700 bg-surface-900 w-full max-w-md rounded-lg border p-6 shadow-xl">
-      <h3 class="text-surface-100 mb-2 text-lg font-bold">{m.add_model_discard_title()}</h3>
-      <p class="text-surface-400 mb-4">{m.add_model_discard_message()}</p>
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+  >
+    <div class="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-xl">
+      <h3 class="mb-2 text-lg font-bold text-foreground">{m.add_model_discard_title()}</h3>
+      <p class="mb-4 text-muted-foreground">{m.add_model_discard_message()}</p>
       <div class="flex justify-end gap-3">
-        <button type="button" class="variant-ghost-surface btn" onclick={handleDiscardCancel}>
+        <Button type="button" variant="ghost" onclick={handleDiscardCancel}>
           {m.add_model_discard_cancel()}
-        </button>
-        <button type="button" class="variant-filled-error btn" onclick={handleDiscardConfirm}>
+        </Button>
+        <Button type="button" variant="destructive" onclick={handleDiscardConfirm}>
           {m.add_model_discard_confirm()}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

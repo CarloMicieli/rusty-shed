@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { X, Plus } from 'lucide-svelte';
-  import { Textarea } from '$lib/components';
+  import { Textarea, Button } from '$lib/components';
   import { getWishlistContext } from '../WishlistState.svelte';
   import type { AddRailwayModelFormState, RollingStockFormEntry } from '../types';
   import type {
@@ -276,7 +276,7 @@
 <!-- Drawer Overlay -->
 {#if open}
   <div
-    class="fixed inset-0 z-50 bg-black/50"
+    class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
     onclick={handleCloseRequest}
     role="presentation"
   ></div>
@@ -284,7 +284,7 @@
 
 <!-- Drawer -->
 <div
-  class="drawer bg-surface-800 fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl transform flex-col shadow-xl transition-transform duration-300 {open
+  class="drawer fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl transform flex-col border-l border-border bg-background shadow-xl transition-transform duration-300 {open
     ? 'translate-x-0'
     : 'translate-x-full'}"
   role="dialog"
@@ -292,38 +292,44 @@
   aria-labelledby="drawer-title"
 >
   <!-- Header -->
-  <div class="border-surface-700 flex items-center justify-between border-b p-4">
+  <div class="flex items-center justify-between border-b border-border p-4">
     <div>
-      <h2 id="drawer-title" class="text-surface-50 text-xl font-bold">
+      <h2 id="drawer-title" class="text-xl font-bold text-foreground">
         {m.wishlist_drawer_title()}
       </h2>
-      <p class="text-surface-400 mt-1 text-sm">{m.wishlist_drawer_subtitle()}</p>
+      <p class="mt-1 text-sm text-muted-foreground">{m.wishlist_drawer_subtitle()}</p>
     </div>
-    <button
+    <Button
       type="button"
-      class="variant-ghost btn-icon"
+      variant="ghost"
+      size="icon-sm"
       onclick={handleCloseRequest}
       aria-label={m.wishlist_drawer_cancel()}
     >
       <X size={20} />
-    </button>
+    </Button>
   </div>
 
   <!-- Form Content -->
   <div class="flex-1 overflow-y-auto p-4">
     {#if isLoadingData}
-      <p class="text-surface-400 text-center">{m.wishlist_loading_data()}</p>
+      <p class="text-center text-muted-foreground">{m.wishlist_loading_data()}</p>
     {:else}
       <form onsubmit={(e) => e.preventDefault()} class="space-y-6">
         <!-- Wishlist Selection -->
         <div>
           <label for="wishlist" class="block space-y-1">
-            <span class="text-surface-300 text-sm font-medium">
+            <span class="text-sm font-medium text-muted-foreground">
               {m.wishlist_field_wishlist()}
               <span class="text-error-500">*</span>
             </span>
           </label>
-          <select id="wishlist" bind:value={form.wishlistId} class="input w-full" required>
+          <select
+            id="wishlist"
+            bind:value={form.wishlistId}
+            class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            required
+          >
             <option value="">-- {m.wishlist_field_wishlist()} --</option>
             {#each wishlists as wishlist (wishlist.id)}
               <option value={wishlist.id}>{wishlist.name}</option>
@@ -332,13 +338,13 @@
         </div>
 
         <!-- Railway Model Section -->
-        <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
-          <h3 class="text-surface-100 text-lg font-semibold">Railway Model Details</h3>
+        <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">
+          <h3 class="text-lg font-semibold text-foreground">Railway Model Details</h3>
 
           <!-- Manufacturer -->
           <div>
             <label for="manufacturer" class="block space-y-1">
-              <span class="text-surface-300 text-sm font-medium">
+              <span class="text-sm font-medium text-muted-foreground">
                 {m.wishlist_field_manufacturer()}
                 <span class="text-error-500">*</span>
               </span>
@@ -346,7 +352,7 @@
             <select
               id="manufacturer"
               bind:value={form.manufacturerId}
-              class="input w-full"
+              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
               <option value="">-- {m.wishlist_field_manufacturer()} --</option>
@@ -359,7 +365,7 @@
           <!-- Product Code -->
           <div>
             <label for="product-code" class="block space-y-1">
-              <span class="text-surface-300 text-sm font-medium">
+              <span class="text-sm font-medium text-muted-foreground">
                 {m.wishlist_field_product_code()}
                 <span class="text-error-500">*</span>
               </span>
@@ -368,7 +374,7 @@
               id="product-code"
               type="text"
               bind:value={form.productCode}
-              class="input w-full font-mono"
+              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="e.g., 37171"
               required
             />
@@ -377,7 +383,7 @@
           <!-- Description -->
           <div>
             <label for="description" class="block space-y-1">
-              <span class="text-surface-300 text-sm font-medium">
+              <span class="text-sm font-medium text-muted-foreground">
                 {m.wishlist_field_description()}
                 <span class="text-error-500">*</span>
               </span>
@@ -386,7 +392,7 @@
               id="description"
               type="text"
               bind:value={form.description}
-              class="input w-full"
+              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="e.g., DB BR 218 diesel locomotive"
               required
             />
@@ -396,12 +402,17 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label for="category" class="block space-y-1">
-                <span class="text-surface-300 text-sm font-medium">
+                <span class="text-sm font-medium text-muted-foreground">
                   {m.wishlist_field_category()}
                   <span class="text-error-500">*</span>
                 </span>
               </label>
-              <select id="category" bind:value={form.category} class="input w-full" required>
+              <select
+                id="category"
+                bind:value={form.category}
+                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
                 <option value="">-- {m.wishlist_field_category()} --</option>
                 {#each CATEGORIES as cat (cat)}
                   <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
@@ -412,12 +423,17 @@
 
             <div>
               <label for="scale" class="block space-y-1">
-                <span class="text-surface-300 text-sm font-medium">
+                <span class="text-sm font-medium text-muted-foreground">
                   {m.wishlist_field_scale()}
                   <span class="text-error-500">*</span>
                 </span>
               </label>
-              <select id="scale" bind:value={form.scale} class="input w-full" required>
+              <select
+                id="scale"
+                bind:value={form.scale}
+                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
                 <option value="">-- {m.wishlist_field_scale()} --</option>
                 {#each SCALES as scale (scale)}
                   <option value={scale}>{scale}</option>
@@ -430,12 +446,17 @@
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label for="power-method" class="block space-y-1">
-                <span class="text-surface-300 text-sm font-medium">
+                <span class="text-sm font-medium text-muted-foreground">
                   {m.wishlist_field_power_method()}
                   <span class="text-error-500">*</span>
                 </span>
               </label>
-              <select id="power-method" bind:value={form.powerMethod} class="input w-full" required>
+              <select
+                id="power-method"
+                bind:value={form.powerMethod}
+                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
                 <option value="">-- {m.wishlist_field_power_method()} --</option>
                 {#each POWER_METHODS as method (method)}
                   <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
@@ -446,12 +467,17 @@
 
             <div>
               <label for="epoch" class="block space-y-1">
-                <span class="text-surface-300 text-sm font-medium">
+                <span class="text-sm font-medium text-muted-foreground">
                   {m.wishlist_field_epoch()}
                   <span class="text-error-500">*</span>
                 </span>
               </label>
-              <select id="epoch" bind:value={form.epoch} class="input w-full" required>
+              <select
+                id="epoch"
+                bind:value={form.epoch}
+                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
                 <option value={null}>-- {m.wishlist_field_epoch()} --</option>
                 {#each epochs as epoch (epoch.id)}
                   <option value={epoch.id}>{epoch.display}</option>
@@ -462,19 +488,19 @@
         </div>
 
         <!-- Rolling Stocks Section -->
-        <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
+        <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">
           <div class="flex items-center justify-between">
-            <h3 class="text-surface-100 text-lg font-semibold">
+            <h3 class="text-lg font-semibold text-foreground">
               {m.wishlist_rolling_stocks_title()}
             </h3>
-            <button type="button" class="variant-soft btn btn-sm" onclick={addRollingStock}>
+            <Button type="button" variant="secondary" size="sm" onclick={addRollingStock}>
               <Plus size={16} />
               <span>{m.wishlist_rolling_stock_add()}</span>
-            </button>
+            </Button>
           </div>
 
           {#if form.rollingStocks.length === 0}
-            <p class="text-surface-400 text-sm">No rolling stocks added yet.</p>
+            <p class="text-sm text-muted-foreground">No rolling stocks added yet.</p>
           {:else}
             <div class="space-y-4">
               {#each form.rollingStocks as entry, i (entry.id)}
@@ -490,16 +516,21 @@
         </div>
 
         <!-- Wishlist Item Details -->
-        <div class="border-surface-700 bg-surface-900 space-y-4 rounded-lg border p-4">
-          <h3 class="text-surface-100 text-lg font-semibold">Wishlist Details</h3>
+        <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">
+          <h3 class="text-lg font-semibold text-foreground">Wishlist Details</h3>
 
           <!-- Priority -->
           <div>
             <label for="priority" class="block space-y-1">
-              <span class="text-surface-300 text-sm font-medium">{m.wishlist_field_priority()}</span
+              <span class="text-sm font-medium text-muted-foreground"
+                >{m.wishlist_field_priority()}</span
               >
             </label>
-            <select id="priority" bind:value={form.priority} class="input w-full">
+            <select
+              id="priority"
+              bind:value={form.priority}
+              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
               {#each PRIORITIES as priority (priority)}
                 <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
                 <option value={priority}>{(m as any)[getPriorityLabelKey(priority)]()}</option>
@@ -510,7 +541,7 @@
           <!-- Desired Price -->
           <div>
             <label for="desired-price" class="block space-y-1">
-              <span class="text-surface-300 text-sm font-medium"
+              <span class="text-sm font-medium text-muted-foreground"
                 >{m.wishlist_field_desired_price()}</span
               >
             </label>
@@ -520,7 +551,7 @@
               step="0.01"
               min="0"
               bind:value={form.desiredPriceAmount}
-              class="input w-full"
+              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="0.00"
             />
           </div>
@@ -528,7 +559,9 @@
           <!-- Notes -->
           <div>
             <label for="notes" class="block space-y-1">
-              <span class="text-surface-300 text-sm font-medium">{m.wishlist_field_notes()}</span>
+              <span class="text-sm font-medium text-muted-foreground"
+                >{m.wishlist_field_notes()}</span
+              >
             </label>
             <Textarea
               id="notes"
@@ -544,13 +577,13 @@
   </div>
 
   <!-- Footer -->
-  <div class="border-surface-700 flex items-center justify-end gap-2 border-t p-4">
-    <button type="button" class="variant-ghost btn" onclick={handleCloseRequest}>
+  <div class="flex items-center justify-end gap-2 border-t border-border p-4">
+    <Button type="button" variant="ghost" onclick={handleCloseRequest}>
       {m.wishlist_drawer_cancel()}
-    </button>
-    <button
+    </Button>
+    <Button
       type="button"
-      class="variant-filled-primary btn"
+      variant="default"
       disabled={!isFormValid || isSubmitting}
       onclick={handleSubmit}
     >
@@ -559,7 +592,7 @@
       {:else}
         <span>{m.wishlist_drawer_submit()}</span>
       {/if}
-    </button>
+    </Button>
   </div>
 </div>
 

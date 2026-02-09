@@ -2,7 +2,7 @@
   import { Heart, Star, Plus } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
-  import { Input } from '$lib/components';
+  import { Input, Button } from '$lib/components';
 
   const { wishlist, onRename, onSetDefault, onAddModel } = $props<{
     wishlist: WishlistPreview | null;
@@ -65,18 +65,17 @@
       {/if}
     </div>
     <div class="flex items-center gap-2">
-      <button class="variant-soft-primary btn" onclick={() => onAddModel?.()}>
+      <Button variant="secondary" onclick={() => onAddModel?.()}>
         <Plus size={16} />
         <span>{m.wishlist_add_model_button()}</span>
-      </button>
-      <button
-        class="variant-soft-primary btn"
-        class:variant-filled-primary={wishlist.is_default}
+      </Button>
+      <Button
+        variant={wishlist.is_default ? 'default' : 'secondary'}
         onclick={() => onSetDefault?.()}
       >
         <Star size={16} />
         <span>Set as Default</span>
-      </button>
+      </Button>
     </div>
   </div>
 {:else}
