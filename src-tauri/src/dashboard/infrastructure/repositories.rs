@@ -1,10 +1,8 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::dashboard::domain::{
-    DashboardDepotEntry, DashboardRecentItem, DashboardRepository, DashboardSummary,
-    DashboardUowExt, QueryParams,
+    DashboardRecentItem, DashboardRepository, DashboardSummary, DashboardUowExt, QueryParams,
 };
-use crate::dashboard::infrastructure::DashboardDepotEntryRow;
 use crate::dashboard::infrastructure::entities::{DashboardRecentItemRow, DashboardTotalsRow};
 use sqlx::SqliteConnection;
 
@@ -57,51 +55,6 @@ impl<'conn> SqliteDashboardRepository<'conn> {
             .await?;
 
         Ok(row.unwrap_or_default())
-    }
-
-    /// Fetches a list of dashboard depot entries limited by the specified number of entries.
-    ///
-    /// It should retrieve some pseudo-random selection of depot entries for display on the dashboard.
-    /// If the number of elements in the depot is less than the requested number, it returns all available entries.
-    ///
-    /// # Arguments
-    /// * `number_of_entries` - The maximum number of depot entries to retrieve.
-    ///
-    /// # Returns
-    /// - A vector of `DashboardDepotEntry` instances on success.
-    /// - A `DomainError` if the query fails.
-    async fn find_depot_entries(
-        &mut self,
-        number_of_entries: u8,
-    ) -> Result<Vec<DashboardDepotEntryRow>, DomainError> {
-        let sql = r#"
-            SELECT DISTINCT
-                rm.id,
-                rm.manufacturer_id,
-                m.name AS manufacturer_name,
-                rm.product_code,
-                rm.category,
-                rm.scale,
-                rm.epoch,
-                rs.railway_company_id,
-                rc.name AS railway_company_name,
-                rc.country_code AS railway_company_country_code,
-                rm.description,
-                rm.power_method
-            FROM railway_models rm
-            JOIN rolling_stocks rs ON rm.id = rs.railway_model_id
-            JOIN manufacturers m ON rm.manufacturer_id = m.id
-            JOIN railway_companies rc ON rs.railway_company_id = rc.id
-            ORDER BY RANDOM()
-            LIMIT ?1
-        "#;
-
-        let rows = sqlx::query_as::<_, DashboardDepotEntryRow>(sql)
-            .bind(number_of_entries)
-            .fetch_all(&mut *self.executor)
-            .await?;
-
-        Ok(rows)
     }
 
     /// Fetches the most recently added item to the user's depot.
@@ -233,13 +186,6 @@ impl<'conn> DashboardRepository for SqliteDashboardRepository<'conn> {
             .map(|row| row.try_into())
             .collect::<Result<Vec<DashboardRecentItem>, DomainError>>()?;
 
-        let depot_items = self
-            .find_depot_entries(params.number_of_depot_entries)
-            .await?
-            .into_iter()
-            .map(|row| row.try_into())
-            .collect::<Result<Vec<DashboardDepotEntry>, DomainError>>()?;
-
         let purchase_groups: Vec<crate::dashboard::domain::PurchaseGroup> = self
             .fetch_purchase_groups()
             .await?
@@ -250,7 +196,6 @@ impl<'conn> DashboardRepository for SqliteDashboardRepository<'conn> {
         Ok(DashboardSummary {
             totals,
             recent_items,
-            depot_items,
             purchase_groups,
         })
     }
@@ -281,7 +226,6 @@ mod tests {
         let mut repo = SqliteDashboardRepository::new(&mut conn);
         let params = QueryParams {
             number_of_recent_items: 1,
-            number_of_depot_entries: 1,
         };
 
         let summary = repo
@@ -297,9 +241,6 @@ mod tests {
 
         let recent_items = summary.recent_items;
         assert_eq!(recent_items.len(), 0);
-
-        let depot_items = summary.depot_items;
-        assert_eq!(depot_items.len(), 0);
     }
 
     #[sqlx::test(
@@ -312,7 +253,6 @@ mod tests {
         let mut repo = SqliteDashboardRepository::new(&mut conn);
         let params = QueryParams {
             number_of_recent_items: 1,
-            number_of_depot_entries: 1,
         };
 
         let summary = repo
@@ -332,8 +272,5 @@ mod tests {
 
         let recent_items = summary.recent_items;
         assert_eq!(recent_items.len(), 1);
-
-        let depot_items = summary.depot_items;
-        assert_eq!(depot_items.len(), 1);
     }
 }

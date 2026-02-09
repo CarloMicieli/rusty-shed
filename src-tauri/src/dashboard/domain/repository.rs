@@ -34,6 +34,4 @@ pub trait DashboardUowExt: Send {
 pub struct QueryParams {
     /// Number of recent items to retrieve for the dashboard.
     pub number_of_recent_items: u8,
-    /// Number of depot entries to retrieve for the dashboard.
-    pub number_of_depot_entries: u8,
 }

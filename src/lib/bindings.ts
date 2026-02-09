@@ -2541,77 +2541,6 @@ export type Currency =
    * Japanese Yen
    */
   | 'JPY';
-/**
- * Represents a railway model entry in the user's dashboard depot view.
- */
-export type DashboardDepotEntry = {
-  /**
-   * Unique identifier for the railway model.
-   */
-  id: RailwayModelId;
-  /**
-   * Railway model manufacturer.
-   */
-  manufacturer: DashboardDepotManufacturerEntry;
-  /**
-   * Railway model product code.
-   */
-  productCode: string;
-  /**
-   * Railway model category.
-   */
-  category: Category;
-  /**
-   * Railway model scale.
-   */
-  scale: Scale;
-  /**
-   * Railway model epoch.
-   */
-  epoch: Epoch;
-  /**
-   * Railway model railway company.
-   */
-  railwayCompany: DashboardDepotRailwayCompanyEntry;
-  /**
-   * Railway model description.
-   */
-  description: string;
-  /**
-   * Railway model power method.
-   */
-  powerMethod: PowerMethod;
-};
-/**
- * Represents a manufacturer entry in the user's dashboard depot view.
- */
-export type DashboardDepotManufacturerEntry = {
-  /**
-   * Unique identifier for the manufacturer.
-   */
-  manufacturerId: ManufacturerId;
-  /**
-   * Manufacturer name.
-   */
-  name: string;
-};
-/**
- * Represents a railway company entry in the user's dashboard depot view.
- */
-export type DashboardDepotRailwayCompanyEntry = {
-  /**
-   * Unique identifier for the railway company.
-   */
-  railwayCompanyId: RailwayCompanyId;
-  /**
-   * Railway company name.
-   */
-  name: string;
-  /**
-   * ISO 3166-1 alpha-2 country code where the railway company is registered (nullable).
-   */
-  countryCode: string | null;
-};
 export type DashboardRecentItem = {
   /**
    * Unique identifier for the recent item.
@@ -2646,10 +2575,6 @@ export type DashboardSummary = {
    * List of recent items for quick access.
    */
   recentItems: DashboardRecentItem[];
-  /**
-   * List of depot items in the user's collection.
-   */
-  depotItems: DashboardDepotEntry[];
   /**
    * Recent purchase groups (replaces or supplements recentItems)
    */
@@ -4281,10 +4206,6 @@ export type QueryCriteria = {
    * Number of recent items to retrieve for the dashboard.
    */
   numberOfRecentItems: number | null;
-  /**
-   * Number of depot entries to retrieve for the dashboard.
-   */
-  numberOfDepotEntries: number | null;
 };
 /**
  * Domain types for handling minimum drivable radii.

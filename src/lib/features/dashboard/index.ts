@@ -19,8 +19,5 @@ export {
 export { default as DashboardCharts } from './components/DashboardCharts.svelte';
 export { default as StatsCard } from './components/StatsCard.svelte';
 export { default as RecentItemCard } from './components/RecentItemCard.svelte';
-export { default as DepotView } from './components/DepotView.svelte';
-export { default as DepotTable } from './components/DepotTable.svelte';
-export { default as DepotListCard } from './components/DepotListCard.svelte';
 export { default as ModelCard } from './components/ModelCard.svelte';
 export { default as PurchaseGroupCard } from './components/PurchaseGroupCard.svelte';

@@ -1,6 +1,4 @@
-use crate::dashboard::domain::{
-    DashboardDepotEntry, DashboardRecentItem, DashboardTotals, PurchaseGroup,
-};
+use crate::dashboard::domain::{DashboardRecentItem, DashboardTotals, PurchaseGroup};
 use serde::Serialize;
 
 /// Comprehensive summary data for the user's dashboard.
@@ -11,8 +9,6 @@ pub struct DashboardSummary {
     pub totals: DashboardTotals,
     /// List of recent items for quick access.
     pub recent_items: Vec<DashboardRecentItem>,
-    /// List of depot items in the user's collection.
-    pub depot_items: Vec<DashboardDepotEntry>,
     /// Recent purchase groups (replaces or supplements recentItems)
     pub purchase_groups: Vec<PurchaseGroup>,
 }

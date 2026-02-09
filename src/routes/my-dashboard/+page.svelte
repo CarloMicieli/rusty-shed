@@ -11,7 +11,6 @@
   import PageHeader from '$lib/components/PageHeader.svelte';
   import StatsCard from '$lib/components/StatsCard.svelte';
   import QuickActionButtons, { type QuickAction } from '$lib/components/QuickActionButtons.svelte';
-  import DepotView from '$lib/components/DepotView.svelte';
   import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
   import { DashboardCharts, PurchaseGroupCard } from '$lib/features/dashboard';
 
@@ -25,7 +24,6 @@
   // Data derived from store
   const totals = $derived(dashboard.data?.totals ?? null);
   const stats = $derived(byStats(totals));
-  const depot = $derived(dashboard.data?.depotItems ?? []);
   const purchaseGroups = $derived(dashboard.data?.purchaseGroups ?? []);
 
   let showWishlistModal = $state(false);
@@ -231,34 +229,6 @@
                 <PurchaseGroupCard {group} onModelClick={handleModelClick} />
               {/each}
             </div>
-          {/if}
-        </section>
-
-        <section>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-              {m.dashboard_the_depot()}
-            </h3>
-          </div>
-
-          {#if !dashboard.isLoading && depot.length === 0}
-            <div class="blueprint-panel card p-8 text-center">
-              <div
-                class="border-surface-600/60 text-surface-200 mx-auto mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
-              >
-                {m.dashboard_blueprint_label()}
-              </div>
-              <p class="text-base font-semibold">{m.dashboard_empty_depot_blueprint_title()}</p>
-              <p class="text-surface-300 mt-2 mb-5 text-sm">
-                {m.dashboard_empty_depot_blueprint_message()}
-              </p>
-              <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
-                <Plus class="mr-2" />
-                {m.actions_add_railway_model()}
-              </Button>
-            </div>
-          {:else}
-            <DepotView data={depot} isLoading={dashboard.isLoading} />
           {/if}
         </section>
       </div>

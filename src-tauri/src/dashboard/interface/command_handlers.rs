@@ -33,16 +33,9 @@ pub async fn get_dashboard_summary(
     let number_of_recent_items = criteria
         .number_of_recent_items
         .unwrap_or(DEFAULT_RECENT_ITEMS);
-    let number_of_depot_entries = criteria
-        .number_of_depot_entries
-        .unwrap_or(DEFAULT_DEPOT_ENTRIES);
 
-    let dashboard_summary = GetDashboardSummary::execute(
-        &mut unit_of_work,
-        number_of_recent_items,
-        number_of_depot_entries,
-    )
-    .await?;
+    let dashboard_summary =
+        GetDashboardSummary::execute(&mut unit_of_work, number_of_recent_items).await?;
 
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
@@ -50,7 +43,6 @@ pub async fn get_dashboard_summary(
 }
 
 const DEFAULT_RECENT_ITEMS: u8 = 4;
-const DEFAULT_DEPOT_ENTRIES: u8 = 10;
 
 /// Query criteria for retrieving the dashboard summary.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, specta::Type)]
@@ -58,8 +50,6 @@ const DEFAULT_DEPOT_ENTRIES: u8 = 10;
 pub struct QueryCriteria {
     /// Number of recent items to retrieve for the dashboard.
     pub number_of_recent_items: Option<u8>,
-    /// Number of depot entries to retrieve for the dashboard.
-    pub number_of_depot_entries: Option<u8>,
 }
 
 /// Default values for QueryCriteria.
@@ -67,7 +57,6 @@ impl Default for QueryCriteria {
     fn default() -> Self {
         Self {
             number_of_recent_items: Some(DEFAULT_RECENT_ITEMS),
-            number_of_depot_entries: Some(DEFAULT_DEPOT_ENTRIES),
         }
     }
 }

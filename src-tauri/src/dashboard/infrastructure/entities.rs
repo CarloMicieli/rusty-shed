@@ -1,57 +1,12 @@
-use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::railway_company::RailwayCompanyId;
-use crate::catalog::domain::railway_model::{Category, Epoch, PowerMethod, RailwayModelId};
-use crate::catalog::domain::scale::Scale;
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::collecting::domain::PurchaseCondition;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::dashboard::domain::{
-    DashboardDepotEntry, DashboardDepotManufacturerEntry, DashboardDepotRailwayCompanyEntry,
     DashboardRecentItem, DashboardTotals, ModelCard, PurchaseGroup, Source,
 };
 use chrono::NaiveDateTime;
 use sqlx::FromRow;
-
-#[derive(Debug, Clone, FromRow)]
-pub struct DashboardDepotEntryRow {
-    pub id: RailwayModelId,
-    pub manufacturer_id: ManufacturerId,
-    pub manufacturer_name: String,
-    pub product_code: String,
-    pub category: Category,
-    pub scale: Scale,
-    pub epoch: Epoch,
-    pub railway_company_id: RailwayCompanyId,
-    pub railway_company_name: String,
-    pub railway_company_country_code: Option<String>,
-    pub description: String,
-    pub power_method: PowerMethod,
-}
-
-impl TryFrom<DashboardDepotEntryRow> for DashboardDepotEntry {
-    type Error = DomainError;
-
-    fn try_from(row: DashboardDepotEntryRow) -> Result<Self, Self::Error> {
-        Ok(Self {
-            id: row.id,
-            manufacturer: DashboardDepotManufacturerEntry {
-                manufacturer_id: row.manufacturer_id,
-                name: row.manufacturer_name,
-            },
-            product_code: row.product_code,
-            category: row.category,
-            scale: row.scale,
-            epoch: row.epoch,
-            railway_company: DashboardDepotRailwayCompanyEntry {
-                railway_company_id: row.railway_company_id,
-                name: row.railway_company_name,
-                country_code: row.railway_company_country_code,
-            },
-            description: row.description,
-            power_method: row.power_method,
-        })
-    }
-}
 
 #[derive(Debug, Clone, FromRow)]
 pub struct DashboardRecentItemRow {
@@ -166,45 +121,7 @@ impl From<(PurchaseGroupRow, Vec<ModelCardRow>)> for PurchaseGroup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_company::RailwayCompanyId;
-    use crate::catalog::domain::railway_model::{Category, PowerMethod};
-    use crate::catalog::domain::scale::Scale;
     use crate::core::domain::Currency;
-
-    #[test]
-    fn it_should_convert_row_to_dashboard_depot_entry() {
-        let manufacturer_id = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
-        let railway_company_id = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
-        let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:12345").unwrap();
-
-        let row = DashboardDepotEntryRow {
-            id: railway_model_id.clone(),
-            manufacturer_id: manufacturer_id.clone(),
-            manufacturer_name: "Test Manufacturer".to_string(),
-            product_code: "TM123".to_string(),
-            category: Category::Locomotives,
-            scale: Scale::H0,
-            epoch: "IV".into(),
-            railway_company_id: railway_company_id.clone(),
-            railway_company_name: "Test Railway".to_string(),
-            railway_company_country_code: Some("US".to_string()),
-            description: "A test railway model".to_string(),
-            power_method: PowerMethod::DC,
-        };
-
-        let entry: DashboardDepotEntry = row.try_into().unwrap();
-        assert_eq!(entry.id, railway_model_id);
-        assert_eq!(entry.product_code, "TM123");
-        assert_eq!(entry.category, Category::Locomotives);
-        assert_eq!(entry.scale, Scale::H0);
-        assert_eq!(entry.epoch, "IV".into());
-        assert_eq!(entry.description, "A test railway model");
-        assert_eq!(entry.power_method, PowerMethod::DC);
-        assert_eq!(entry.manufacturer.manufacturer_id, manufacturer_id);
-        assert_eq!(entry.manufacturer.name, "Test Manufacturer");
-        assert_eq!(entry.railway_company.railway_company_id, railway_company_id);
-        assert_eq!(entry.railway_company.name, "Test Railway");
-    }
 
     #[test]
     fn it_should_convert_row_to_dashboard_recent_item() {

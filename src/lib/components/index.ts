@@ -36,9 +36,6 @@ export { default as SmartImage } from './SmartImage.svelte';
 
 // Feature-specific components
 export { default as AddWishlistItemModal } from './AddWishlistItemModal.svelte';
-export { default as DepotListCard } from './DepotListCard.svelte';
-export { default as DepotTable } from './DepotTable.svelte';
-export { default as DepotView } from './DepotView.svelte';
 export { default as SellerForm } from './SellerForm.svelte';
 export { default as SettingsForm } from './SettingsForm.svelte';
 
