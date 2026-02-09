@@ -160,12 +160,13 @@ pub async fn get_monthly_spending(
 ) -> Result<Vec<(i32, i64)>, DomainError> {
     let sql = r#"
         SELECT
-            CAST(strftime('%m', purchase_date) AS INTEGER) AS month,
-            SUM(price_amount) AS total_amount
-        FROM collection_items
-        WHERE purchase_date IS NOT NULL
-            AND strftime('%Y', purchase_date) = ?1
-            AND price_currency = ?2
+            CAST(strftime('%m', pi.purchase_date) AS INTEGER) AS month,
+            SUM(pi.purchased_price_amount) AS total_amount
+        FROM collection_items ci
+        JOIN purchase_infos pi ON ci.id = pi.collection_item_id
+        WHERE pi.purchase_date IS NOT NULL
+            AND strftime('%Y', pi.purchase_date) = ?1
+            AND pi.purchased_price_currency = ?2
         GROUP BY month
         ORDER BY month ASC
     "#;
@@ -189,19 +190,21 @@ pub async fn get_quarterly_spending_by_category(
     let sql = r#"
         SELECT
             CASE
-                WHEN CAST(strftime('%m', purchase_date) AS INTEGER) BETWEEN 1 AND 3 THEN 1
-                WHEN CAST(strftime('%m', purchase_date) AS INTEGER) BETWEEN 4 AND 6 THEN 2
-                WHEN CAST(strftime('%m', purchase_date) AS INTEGER) BETWEEN 7 AND 9 THEN 3
+                WHEN CAST(strftime('%m', pi.purchase_date) AS INTEGER) BETWEEN 1 AND 3 THEN 1
+                WHEN CAST(strftime('%m', pi.purchase_date) AS INTEGER) BETWEEN 4 AND 6 THEN 2
+                WHEN CAST(strftime('%m', pi.purchase_date) AS INTEGER) BETWEEN 7 AND 9 THEN 3
                 ELSE 4
             END AS quarter,
-            category,
-            SUM(price_amount) AS total_amount
-        FROM collection_items
-        WHERE purchase_date IS NOT NULL
-            AND strftime('%Y', purchase_date) = ?1
-            AND price_currency = ?2
-        GROUP BY quarter, category
-        ORDER BY quarter ASC, category ASC
+            rm.category,
+            SUM(pi.purchased_price_amount) AS total_amount
+        FROM collection_items ci
+        JOIN purchase_infos pi ON ci.id = pi.collection_item_id
+        JOIN railway_models rm ON ci.railway_model_id = rm.id
+        WHERE pi.purchase_date IS NOT NULL
+            AND strftime('%Y', pi.purchase_date) = ?1
+            AND pi.purchased_price_currency = ?2
+        GROUP BY quarter, rm.category
+        ORDER BY quarter ASC, rm.category ASC
     "#;
 
     let rows: Vec<(i32, String, i64)> = sqlx::query_as(sql)

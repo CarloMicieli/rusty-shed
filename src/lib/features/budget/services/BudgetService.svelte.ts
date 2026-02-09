@@ -225,10 +225,9 @@ export class BudgetService {
     this.#isLoading = true;
     try {
       const args: GetMonthlyBudgetRecordsArgs = { year };
-      const result = await safeInvoke<MonthlyBudgetRecordDto[]>(
-        'get_monthly_budget_records',
-        args as unknown as Record<string, unknown>
-      );
+      const result = await safeInvoke<MonthlyBudgetRecordDto[]>('get_monthly_budget_records', {
+        args
+      });
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));
@@ -297,10 +296,7 @@ export class BudgetService {
     this.#isLoading = true;
 
     try {
-      const result = await safeInvoke<BudgetConfigDto>(
-        'set_budget_config',
-        args as unknown as Record<string, unknown>
-      );
+      const result = await safeInvoke<BudgetConfigDto>('set_budget_config', { args });
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));
@@ -335,10 +331,7 @@ export class BudgetService {
 
     this.#isLoading = true;
     try {
-      const result = await safeInvoke<ExtraBudgetDto>(
-        'add_extra_budget',
-        args as unknown as Record<string, unknown>
-      );
+      const result = await safeInvoke<ExtraBudgetDto>('add_extra_budget', { args });
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));
@@ -369,10 +362,7 @@ export class BudgetService {
     this.#isLoading = true;
     try {
       const args: RemoveExtraBudgetArgs = { id };
-      const result = await safeInvoke<void>(
-        'remove_extra_budget',
-        args as unknown as Record<string, unknown>
-      );
+      const result = await safeInvoke<void>('remove_extra_budget', { args });
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));
@@ -400,10 +390,7 @@ export class BudgetService {
     this.#isLoading = true;
     try {
       const args: GetExtraBudgetsArgs = { year };
-      const result = await safeInvoke<ExtraBudgetDto[]>(
-        'get_extra_budgets',
-        args as unknown as Record<string, unknown>
-      );
+      const result = await safeInvoke<ExtraBudgetDto[]>('get_extra_budgets', { args });
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));
@@ -428,10 +415,7 @@ export class BudgetService {
     this.#isLoading = true;
     try {
       const args: GetQuarterlySummariesArgs = { year, currency };
-      const result = await safeInvoke<QuarterlySummary[]>(
-        'get_quarterly_summaries',
-        args as unknown as Record<string, unknown>
-      );
+      const result = await safeInvoke<QuarterlySummary[]>('get_quarterly_summaries', { args });
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));
