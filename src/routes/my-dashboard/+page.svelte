@@ -180,8 +180,6 @@
           </div>
         </div>
 
-        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">Command Deck</h3>
-
         <!-- Desktop: Side-by-side layout -->
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
           <!-- Charts Column (3/4 width) -->
