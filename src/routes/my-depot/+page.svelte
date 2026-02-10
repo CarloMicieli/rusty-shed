@@ -91,10 +91,10 @@
   </div>
 
   <div class="rounded-xl border border-border bg-card p-3">
-    <div class="input-group items-center gap-2">
+    <div class="flex items-center gap-2">
       <Search size={18} class="text-muted-foreground" />
       <input
-        class="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         placeholder={m.depot_search_placeholder()}
         value={searchInput}
         oninput={(event) => handleInput(event.currentTarget.value)}
