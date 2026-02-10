@@ -584,6 +584,7 @@
   "budget_quarterly_category_label": "By Category",
   "budget_history_title": "Historical Archive",
   "budget_history_year_label": "Year",
+  "budget_last_reset_year": "Last Reset Year",
   "budget_loading": "Loading budget data...",
   "budget_error_load": "Failed to load budget data",
   "budget_error_retry": "Retry",

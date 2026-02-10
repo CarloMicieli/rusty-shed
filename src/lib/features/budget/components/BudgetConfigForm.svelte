@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Check } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
   import type { BudgetMode } from '../services/BudgetService.svelte';
 
   let {
@@ -153,14 +154,10 @@
 
     <!-- Submit Button -->
     <div class="flex items-center gap-3">
-      <button
-        type="submit"
-        disabled={saving}
-        class="bg-primary-600 hover:bg-primary-700 focus:ring-primary-500/50 flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-white shadow-lg transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <Check class="h-5 w-5" />
+      <Button type="submit" variant="secondary" disabled={saving}>
+        <Check size={16} />
         <span>{saving ? m.budget_config_saving_button() : m.budget_config_save_button()}</span>
-      </button>
+      </Button>
 
       {#if saving}
         <div class="text-surface-400 flex items-center gap-2 text-sm">

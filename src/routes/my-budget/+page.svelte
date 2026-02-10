@@ -155,7 +155,7 @@
             {m.budget_table_status_header()}:
             {new Date(budgetState.config.updatedAt).toLocaleString()}
           </p>
-          <p>{m.budget_error_load()}: {budgetState.config.lastResetYear}</p>
+          <p>{m.budget_last_reset_year()}: {budgetState.config.lastResetYear}</p>
         </div>
       </section>
 

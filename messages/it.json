@@ -582,6 +582,7 @@
   "budget_quarterly_category_label": "Per Categoria",
   "budget_history_title": "Archivio Storico",
   "budget_history_year_label": "Anno",
+  "budget_last_reset_year": "Anno Ultimo Ripristino",
   "budget_loading": "Caricamento dati budget...",
   "budget_error_load": "Impossibile caricare i dati budget",
   "budget_error_retry": "Riprova",
