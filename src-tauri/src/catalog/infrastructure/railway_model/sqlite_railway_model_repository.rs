@@ -145,7 +145,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .bind(&railway_model.description)
             .bind(&railway_model.details)
             .bind(railway_model.power_method.to_string())
-            .bind(railway_model.scale.to_string())
+            .bind(&railway_model.scale) // Let SQLx serialize the enum
             .bind(&railway_model.epoch.0) // Access inner String
             .bind(railway_model.category.to_string())
             .bind(railway_model.delivery_date.as_ref().map(|d| d.to_string()))
@@ -824,7 +824,7 @@ mod tests {
         assert_eq!(manufacturer_id, "trn:manufacturer:acme");
         assert_eq!(product_code, "9999");
         assert_eq!(description, "Test Model");
-        assert_eq!(scale, "H0 (1:87)");
+        assert_eq!(scale, "H0"); // SQLx stores the enum variant name, not Display format
         assert_eq!(power_method, "DC");
         assert_eq!(epoch, "IV");
         assert_eq!(category, "LOCOMOTIVES");

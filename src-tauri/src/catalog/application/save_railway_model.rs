@@ -4,7 +4,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelId, RailwayModelParams, RailwayModelUowExt,
-    RollingStockParams,
+    RollingStock, RollingStockParams,
 };
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::domain::{manufacturer::ManufacturerId, railway_company::RailwayCompanyId};
@@ -118,10 +118,33 @@ impl SaveRailwayModel {
                 aggregate.push_event(ev);
             }
 
-            // Append rolling stocks
+            // Append rolling stocks (but skip duplicates)
             for rs in input.rolling_stocks.into_iter() {
                 let company_id = RailwayCompanyId::try_from(&rs.railway_company_id)
                     .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+                // Check if a rolling stock with the same series_code, road_number, and railway_id already exists
+                let already_exists = aggregate.rolling_stocks.iter().any(|existing_rs| {
+                    // Get series_code from existing rolling stock
+                    let existing_series_code = match existing_rs {
+                        RollingStock::ElectricMultipleUnit { series_code, .. } => {
+                            series_code.as_str()
+                        }
+                        RollingStock::Locomotive { series_code, .. } => series_code.as_str(),
+                        RollingStock::FreightCar { series_code, .. } => series_code.as_str(),
+                        RollingStock::PassengerCar { series_code, .. } => series_code.as_str(),
+                        RollingStock::Railcar { series_code, .. } => series_code.as_str(),
+                    };
+
+                    existing_series_code == rs.series_code
+                        && existing_rs.road_number() == rs.road_number.as_deref()
+                        && existing_rs.railway_id() == &company_id
+                });
+
+                if already_exists {
+                    // Skip this rolling stock as it's already in the catalog
+                    continue;
+                }
 
                 // minimal mapping: treat category to select variant
                 let params = match rs.category.parse::<RollingStockCategory>() {

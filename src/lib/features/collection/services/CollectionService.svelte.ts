@@ -206,8 +206,41 @@ export class CollectionService {
    * @returns True if successful
    */
   async deleteItem(id: string): Promise<boolean> {
-    console.warn('CollectionService.deleteItem not implemented yet', id);
-    return false;
+    try {
+      // Find the item to get its category
+      const item = this.#collection?.items.find((i) => i.id === id);
+      if (!item) {
+        toaster.error('Item not found');
+        return false;
+      }
+
+      // Use today's date as removed date
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity
+      const removedDate = new Date().toISOString().split('T')[0];
+
+      const result = await safeInvoke('removeCollectionItem', {
+        args: {
+          collectionItemId: id,
+          category: item.railwayModel.category,
+          removedDate
+        }
+      });
+
+      if (!result.ok) {
+        const errorMessage = getErrorMessage(result.error);
+        toaster.error(`Failed to remove item: ${errorMessage}`);
+        return false;
+      }
+
+      // Refresh collection after successful deletion
+      await this.fetchCollection('');
+      toaster.success('Item removed from collection');
+      return true;
+    } catch (error) {
+      console.error('Error removing collection item:', error);
+      toaster.error('Failed to remove item');
+      return false;
+    }
   }
 }
 

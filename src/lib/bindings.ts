@@ -199,6 +199,32 @@ export const commands = {
     }
   },
   /**
+   * Tauri command to remove an item from the collection.
+   *
+   * This handler constructs the repository and command handler, executes the command
+   * asynchronously and returns the removed `CollectionItemId` on success. On failure, it
+   * converts the error into a `CommandError` preserving the error
+   * message for logging/debugging.
+   *
+   * Parameters:
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `args`: Input parameters for removing the collection item.
+   *
+   * Returns:
+   * - `Ok(CollectionItemId)` when removal succeeds.
+   * - `Err(CommandError)` when the use-case returns an error.
+   */
+  async removeCollectionItem(
+    args: RemoveCollectionItemArgs
+  ): Promise<Result<CollectionItemId, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('remove_collection_item', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Simplified flow: save (merge) the railway model and add it to the default wishlist.
    */
   async addRailwayModelToWishList(
@@ -4418,6 +4444,23 @@ export type RecordCounts = {
   collectionItems: number;
   sellers: number;
   maintenanceCards: number;
+};
+/**
+ * Arguments structure for removing an item from the collection.
+ */
+export type RemoveCollectionItemArgs = {
+  /**
+   * The ID of the collection item to remove.
+   */
+  collectionItemId: string;
+  /**
+   * The category of the item.
+   */
+  category: string;
+  /**
+   * The date the item was removed from the collection (YYYY-MM-DD).
+   */
+  removedDate: string;
 };
 /**
  * Arguments for removing an extra budget entry.

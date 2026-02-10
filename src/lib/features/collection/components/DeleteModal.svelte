@@ -1,17 +1,29 @@
 <script lang="ts">
+  import { Dialog as DialogPrimitive } from 'bits-ui';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import { Button } from '$lib/components/ui/button';
+  import { AlertTriangle } from 'lucide-svelte';
+
   const {
-    open,
+    open = false,
     title = 'Delete item',
     message = 'Are you sure?',
     onClose,
     onConfirm
   } = $props<{
-    open: boolean;
+    open?: boolean;
     title?: string;
     message?: string;
     onClose?: () => void;
     onConfirm?: () => void;
   }>();
+
+  function handleOpenChange(newOpen: boolean) {
+    // Only call onClose when the dialog is being closed
+    if (!newOpen) {
+      onClose?.();
+    }
+  }
 
   function handleClose() {
     onClose?.();
@@ -22,33 +34,34 @@
   }
 </script>
 
-{#if open}
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-    role="presentation"
-    tabindex="-1"
-    onclick={handleClose}
-    onkeydown={(event) => event.key === 'Escape' && handleClose()}
-  >
-    <div
-      class="border-surface-700/70 bg-surface-900 w-full max-w-md rounded-xl border p-6"
-      role="dialog"
-      aria-modal="true"
-      tabindex="-1"
-      onclick={(event) => event.stopPropagation()}
-      onkeydown={(event) => {
-        if (event.key === 'Escape') {
-          event.stopPropagation();
-          handleClose();
-        }
-      }}
+<Dialog.Root {open} onOpenChange={handleOpenChange}>
+  <Dialog.Portal>
+    <!-- Custom overlay with backdrop blur -->
+    <Dialog.Overlay class="bg-black/80 backdrop-blur-sm" />
+
+    <!-- Dialog content -->
+    <DialogPrimitive.Content
+      class="bg-surface-900 fixed top-[50%] left-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border border-white/10 p-6 shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
     >
-      <h3 class="text-lg font-semibold">{title}</h3>
-      <p class="text-surface-400 mt-2 text-sm">{message}</p>
-      <div class="mt-5 flex justify-end gap-3">
-        <button class="variant-ghost-surface btn" onclick={handleClose}>Cancel</button>
-        <button class="variant-filled-error btn" onclick={handleConfirm}>Confirm</button>
-      </div>
-    </div>
-  </div>
-{/if}
+      <Dialog.Header class="gap-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/20">
+            <AlertTriangle class="size-5 text-destructive" />
+          </div>
+          <Dialog.Title class="text-lg font-bold text-white">
+            {title}
+          </Dialog.Title>
+        </div>
+      </Dialog.Header>
+
+      <Dialog.Description class="text-sm text-muted-foreground">
+        {message}
+      </Dialog.Description>
+
+      <Dialog.Footer class="mt-2 flex justify-end gap-3">
+        <Button variant="ghost" onclick={handleClose}>Cancel</Button>
+        <Button variant="destructive" onclick={handleConfirm}>Confirm</Button>
+      </Dialog.Footer>
+    </DialogPrimitive.Content>
+  </Dialog.Portal>
+</Dialog.Root>

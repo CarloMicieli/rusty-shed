@@ -141,9 +141,17 @@ impl Collection {
                 // --- 1. Update Summary & Totals ---
                 self.summary.update_count(*category, 1u16);
 
-                let current_total = self.total_value.take().unwrap_or_default();
-                // TODO: handle the unwrap safely or log the error
-                self.total_value = Some(current_total.add_same_currency(price).unwrap());
+                // Handle total value update, accounting for currency
+                self.total_value = match self.total_value.take() {
+                    Some(current_total) => {
+                        // Add to existing total (same currency required)
+                        Some(current_total.add_same_currency(price).unwrap())
+                    }
+                    None => {
+                        // First item - just set the price as the total
+                        Some(price.clone())
+                    }
+                };
 
                 // --- 2. Reconstruct Internal Objects ---
                 // We map from the event data back into our internal structs

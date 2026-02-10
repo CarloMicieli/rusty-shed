@@ -20,14 +20,16 @@ use strum_macros::{Display, EnumString};
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[strum(ascii_case_insensitive)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "TEXT", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PowerMethod {
     /// Alternating current (AC) power collection.
+    #[serde(rename = "AC")]
     AC,
     /// Direct current (DC) power collection.
+    #[serde(rename = "DC")]
     DC,
     /// Trix Express three-rail power pickup system.
+    #[serde(rename = "TRIX_EXPRESS")]
     TrixExpress,
 }
 

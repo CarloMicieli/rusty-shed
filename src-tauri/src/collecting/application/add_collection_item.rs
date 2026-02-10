@@ -51,10 +51,31 @@ impl AddCollectionItem {
         let collection_id = CollectionId::default();
         let collection = repo.find_by_id(&collection_id).await?;
 
-        let mut collection = collection.ok_or(DomainError::NotFound {
-            resource: "Collection".to_string(),
-            identifier: collection_id.to_string(),
-        })?;
+        // Auto-create the default collection if it doesn't exist
+        let mut collection = match collection {
+            Some(c) => c,
+            None => {
+                use crate::collecting::domain::{Collection, CollectionEvent, CollectionSummary};
+                use crate::core::domain::EventEnvelope;
+                use crate::core::domain::metadata::Metadata;
+
+                let create_event = CollectionEvent::CollectionCreated {
+                    aggregate_id: collection_id.clone(),
+                    name: "My Collection".to_string(),
+                };
+
+                // Create the collection in memory only - will be saved later with the item
+                Collection {
+                    id: collection_id.clone(),
+                    name: "My Collection".to_string(),
+                    summary: CollectionSummary::default(),
+                    total_value: None,
+                    items: vec![],
+                    pending_events: vec![EventEnvelope::new(create_event)],
+                    metadata: Metadata::default(),
+                }
+            }
+        };
 
         let collection_item_id = collection_item_id_provider.next_id();
         let purchase_info_id = purchase_info_id_provider.next_id();
