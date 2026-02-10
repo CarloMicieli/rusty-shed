@@ -12,7 +12,7 @@
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
   import { Plus } from 'lucide-svelte';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
 
   // Initialize state and controller
   const rosterState = new DigitalRosterState();
@@ -76,23 +76,18 @@
 
 <div class="container mx-auto space-y-6 p-4">
   <!-- Page Header -->
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">
-        {m.app_digital_dcc()}
-      </p>
-      <h1 class="h2 font-bold">{m.app_digital_roster()}</h1>
-      <p class="text-sm text-muted-foreground">
-        {m.depot_subtitle()}
-      </p>
-    </div>
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
-      <Button type="button" class="bg-orange-600 hover:bg-orange-700" onclick={openInstallDrawer}>
+  <PageHeader
+    title={m.app_digital_roster()}
+    subtitle={m.app_digital_dcc()}
+    description={m.depot_subtitle()}
+  >
+    {#snippet actions()}
+      <Button type="button" onclick={openInstallDrawer}>
         <Plus size={18} />
         <span>{m.digital_roster_install_decoder()}</span>
       </Button>
-    </div>
-  </div>
+    {/snippet}
+  </PageHeader>
 
   <!-- Summary Section -->
   <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />

@@ -3,7 +3,7 @@
   import { Sparkles } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
@@ -101,19 +101,18 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_wishlists()}</p>
-      <h1 class="h2 font-bold">{m.wishlists_title()}</h1>
-      <p class="text-sm text-muted-foreground">{m.wishlists_subtitle()}</p>
-    </div>
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+  <PageHeader
+    title={m.wishlists_title()}
+    subtitle={m.app_wishlists()}
+    description={m.wishlists_subtitle()}
+  >
+    {#snippet actions()}
       <Button onclick={handleCreate}>
         <Sparkles size={18} />
         {m.wishlists_create_button()}
       </Button>
-    </div>
-  </div>
+    {/snippet}
+  </PageHeader>
 
   <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
     <WishlistSidebar

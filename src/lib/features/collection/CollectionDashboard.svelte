@@ -148,36 +148,33 @@
 {#snippet LoadingSkeleton()}
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
     {#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
-      <div
-        class="bg-surface-800/80 h-56 animate-pulse rounded-xl"
-        aria-label={`loading-card-${i}`}
-      ></div>
+      <div class="h-56 animate-pulse rounded-xl bg-muted" aria-label={`loading-card-${i}`}></div>
     {/each}
   </div>
 {/snippet}
 
 {#snippet EmptyState()}
   <div
-    class="border-surface-700/60 bg-surface-900 flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed p-10 text-center"
+    class="flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed border-border bg-card p-10 text-center"
   >
-    <Tag class="text-surface-500" size={32} />
+    <Tag class="text-muted-foreground" size={32} />
     <h3 class="text-lg font-semibold">{m.collection_add_first()}</h3>
-    <p class="text-surface-400 text-sm">{m.collection_empty_caption()}</p>
-    <button class="variant-filled-primary btn" onclick={ui.startCreate}>
+    <p class="text-sm text-muted-foreground">{m.collection_empty_caption()}</p>
+    <Button onclick={ui.startCreate}>
       {m.collection_add_item()}
-    </button>
+    </Button>
   </div>
 {/snippet}
 
 {#snippet NoResults()}
   <div
-    class="border-warning-500/40 bg-surface-900 flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed p-8 text-center"
+    class="flex flex-col items-center justify-center space-y-3 rounded-xl border border-dashed border-border bg-card p-8 text-center"
   >
-    <X class="text-warning-400" size={28} />
+    <X class="text-muted-foreground" size={28} />
     <h3 class="text-lg font-semibold">{m.collection_no_results()}</h3>
-    <button class="variant-soft-warning btn" onclick={handleClear}>
+    <Button variant="outline" onclick={handleClear}>
       {m.collection_clear_filters()}
-    </button>
+    </Button>
   </div>
 {/snippet}
 
@@ -185,26 +182,28 @@
   <title>{m.collection_title()}</title>
 </svelte:head>
 
-<div class="bg-surface-950 flex h-screen flex-col overflow-hidden">
+<div class="flex h-screen flex-col overflow-hidden bg-background">
   <!-- Sticky Header (Full Width) -->
   <header
-    class="border-surface-700/60 bg-surface-900/95 sticky top-0 z-30 flex-shrink-0 border-b backdrop-blur-sm"
+    class="sticky top-0 z-30 flex-shrink-0 border-b border-border bg-card/95 backdrop-blur-sm"
   >
     <div class="px-4 py-3 sm:px-6">
       <div class="mb-3 flex items-center justify-between gap-4">
         <div>
-          <p class="text-surface-400 text-xs tracking-[0.2em] uppercase">{m.app_collection()}</p>
-          <h1 class="text-surface-50 text-lg font-bold">{m.collection_title()}</h1>
+          <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
+            {m.app_collection()}
+          </p>
+          <h1 class="text-lg font-bold">{m.collection_title()}</h1>
         </div>
         <div class="flex items-center gap-2">
           <div class="text-right">
-            <p class="text-surface-400 text-xs tracking-widest uppercase">Collection Value</p>
-            <p class="text-primary-200 text-xl font-bold">{totalValue}</p>
+            <p class="text-xs tracking-widest text-muted-foreground uppercase">Collection Value</p>
+            <p class="text-xl font-bold text-primary">{totalValue}</p>
           </div>
-          <div class="bg-surface-700/60 h-12 w-px"></div>
+          <div class="h-12 w-px bg-border"></div>
           <div class="text-right">
-            <p class="text-surface-400 text-xs tracking-widest uppercase">Total Units</p>
-            <p class="text-primary-200 text-xl font-bold">{totalUnits}</p>
+            <p class="text-xs tracking-widest text-muted-foreground uppercase">Total Units</p>
+            <p class="text-xl font-bold text-primary">{totalUnits}</p>
           </div>
         </div>
       </div>
@@ -265,9 +264,7 @@
 
     <!-- Sidebar (Right) -->
     {#if ui.showFilterSidebar}
-      <aside
-        class="border-surface-700/60 bg-surface-900 w-80 flex-shrink-0 overflow-y-auto border-l"
-      >
+      <aside class="w-80 flex-shrink-0 overflow-y-auto border-l border-border bg-card">
         <FilterPanel
           {filters}
           {availableTags}
@@ -301,9 +298,9 @@
 
 {#snippet StatChip(label: string, count: number)}
   <div
-    class="bg-surface-800/60 border-surface-700/80 hover:border-primary-500/40 w-36 flex-shrink-0 rounded-full border px-3 py-1.5 transition-colors"
+    class="w-36 flex-shrink-0 rounded-full border border-border bg-muted/60 px-3 py-1.5 transition-colors hover:border-primary/40"
   >
-    <p class="text-surface-300 truncate text-xs font-medium">{label}</p>
-    <p class="text-primary-200 text-sm font-bold">{count}</p>
+    <p class="truncate text-xs font-medium text-muted-foreground">{label}</p>
+    <p class="text-sm font-bold text-primary">{count}</p>
   </div>
 {/snippet}

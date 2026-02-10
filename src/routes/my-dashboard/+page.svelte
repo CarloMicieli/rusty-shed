@@ -26,10 +26,28 @@
   const stats = $derived(byStats(totals));
   const purchaseGroups = $derived(dashboard.data?.purchaseGroups ?? []);
 
+  // Budget data for charts
+  const budgetChartData = $derived.by(() => {
+    const budgetData = dashboard.budgetData;
+    if (!budgetData) return undefined;
+
+    return {
+      budget: budgetData.remainingPercentage / 100, // Convert 0-100 to 0-1
+      monthlySpending: budgetData.monthlySpending.map((point) => ({
+        month: point.month - 1, // Convert 1-12 to 0-11 for chart
+        amount: Number(point.amount) / 100 // Convert minor units to major units
+      }))
+    };
+  });
+
+  // Currency code from budget data
+  const currencyCode = $derived(dashboard.budgetData?.currency ?? 'EUR');
+
   let showWishlistModal = $state(false);
 
   onMount(() => {
     void dashboard.load();
+    void dashboard.loadBudget();
   });
 
   // Actionable logic
@@ -184,7 +202,7 @@
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
           <!-- Charts Column (3/4 width) -->
           <div>
-            <DashboardCharts compact={true} />
+            <DashboardCharts compact={true} data={budgetChartData} {currencyCode} />
           </div>
 
           <!-- Action Bar Column (1/4 width) - Desktop only -->

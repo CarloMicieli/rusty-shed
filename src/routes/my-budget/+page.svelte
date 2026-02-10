@@ -20,7 +20,8 @@
     TableRow,
     TableHead,
     TableCell,
-    Dialog
+    Dialog,
+    PageHeader
   } from '$lib/components';
   import BudgetConfigSheet from '$lib/features/budget/components/BudgetConfigSheet.svelte';
   import type { BudgetMode } from '$lib/features/budget/services/BudgetService.svelte';
@@ -155,9 +156,9 @@
   }
 
   function getRowClasses(year: number, month: number): string {
-    const baseClasses = 'border-zinc-800 transition-colors hover:bg-zinc-900/30';
+    const baseClasses = 'transition-colors hover:bg-muted/30';
     const currentMonthClasses = isCurrentMonth(year, month)
-      ? 'bg-amber-950/20 border-l-4 border-l-amber-600'
+      ? 'bg-primary/10 border-l-4 border-l-primary'
       : '';
     return `${baseClasses} ${currentMonthClasses}`;
   }
@@ -197,15 +198,16 @@
 
 <div class="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
   <!-- Page Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold tracking-tight text-zinc-50">{m.budget_title()}</h1>
-    <p class="mt-2 text-sm text-zinc-400">{m.budget_subtitle()}</p>
-  </div>
+  <PageHeader
+    title={m.budget_title()}
+    subtitle="Budget Management"
+    description={m.budget_subtitle()}
+  />
 
   <!-- Error Alert -->
   {#if error && !loading}
-    <Alert variant="destructive" class="border-red-900/50 bg-red-950/50">
-      <AlertDescription class="text-red-200">{error}</AlertDescription>
+    <Alert variant="destructive">
+      <AlertDescription>{error}</AlertDescription>
     </Alert>
   {/if}
 
@@ -214,57 +216,53 @@
     <div class="flex items-center justify-center py-24">
       <div class="text-center">
         <div
-          class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-zinc-800 border-t-amber-500"
+          class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-primary"
         ></div>
-        <p class="text-zinc-400">{m.budget_loading()}</p>
+        <p class="text-muted-foreground">{m.budget_loading()}</p>
       </div>
     </div>
   {:else if budgetState.hasConfig && budgetState.config}
     <!-- Top Summary Cards -->
     <div class="grid gap-6 md:grid-cols-3">
       <!-- Card 1: Monthly Allocation -->
-      <Card class="border-zinc-800 bg-zinc-950">
+      <Card>
         <CardHeader class="pb-3">
-          <CardTitle class="flex items-center gap-2 text-sm font-medium text-zinc-400">
-            <CalendarDays class="h-4 w-4 text-amber-500" />
+          <CardTitle class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <CalendarDays class="h-4 w-4 text-primary" />
             {m.budget_config_mode_monthly()}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div class="text-3xl font-bold text-zinc-50">
+          <div class="text-3xl font-bold">
             {budgetState.formattedMonthlyBudget}
           </div>
         </CardContent>
       </Card>
 
       <!-- Card 2: Yearly Total -->
-      <Card class="border-zinc-800 bg-zinc-950">
+      <Card>
         <CardHeader class="pb-3">
-          <CardTitle class="flex items-center gap-2 text-sm font-medium text-zinc-400">
-            <TrendingUp class="h-4 w-4 text-amber-500" />
+          <CardTitle class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <TrendingUp class="h-4 w-4 text-primary" />
             {m.budget_config_mode_yearly()}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div class="text-3xl font-bold text-zinc-50">
+          <div class="text-3xl font-bold">
             {budgetState.formattedYearlyBudget}
           </div>
         </CardContent>
       </Card>
 
       <!-- Card 3: Budget Control -->
-      <Card class="border-zinc-800 bg-zinc-950">
+      <Card>
         <CardHeader class="pb-3">
-          <CardTitle class="text-sm font-medium text-zinc-400">
+          <CardTitle class="text-sm font-medium text-muted-foreground">
             {m.budget_config_title()}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Button
-            variant="secondary"
-            class="w-full bg-amber-600 text-white hover:bg-amber-700"
-            onclick={() => (configSheetOpen = true)}
-          >
+          <Button class="w-full" onclick={() => (configSheetOpen = true)}>
             <Settings2 size={16} />
             Configure Budget
           </Button>
@@ -286,16 +284,16 @@
     <Card class="border-zinc-800 bg-zinc-950">
       <CardHeader class="pb-4">
         <div class="flex items-center justify-between">
-          <CardTitle class="text-lg font-semibold text-zinc-50">
+          <CardTitle class="text-lg font-semibold">
             {selectedYear} Budget Breakdown
           </CardTitle>
           <div class="flex items-center gap-2">
-            <label for="year-selector" class="text-sm text-zinc-400">Year:</label>
+            <label for="year-selector" class="text-sm text-muted-foreground">Year:</label>
             <select
               id="year-selector"
               bind:value={selectedYear}
               onchange={() => handleYearChange(selectedYear)}
-              class="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              class="h-9 rounded-md border border-input bg-background px-3 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
               disabled={loadingRecords}
             >
               {#each Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i) as year (year)}
@@ -309,55 +307,53 @@
         {#if loadingRecords}
           <div class="flex items-center justify-center py-12">
             <div
-              class="h-8 w-8 animate-spin rounded-full border-4 border-zinc-800 border-t-amber-500"
+              class="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary"
             ></div>
           </div>
         {:else if budgetState.hasRecords}
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto rounded-lg">
             <Table>
-              <TableHeader class="bg-zinc-900/50">
-                <TableRow class="border-zinc-800 hover:bg-transparent">
-                  <TableHead class="text-zinc-400">Month</TableHead>
-                  <TableHead class="text-right text-zinc-400">Base</TableHead>
-                  <TableHead class="text-right text-zinc-400">Extra</TableHead>
-                  <TableHead class="text-right text-zinc-400">Rollover In</TableHead>
-                  <TableHead class="text-right text-zinc-400">Available</TableHead>
-                  <TableHead class="text-right text-zinc-400">Spent</TableHead>
-                  <TableHead class="text-right text-zinc-400">Remaining</TableHead>
-                  <TableHead class="text-right text-zinc-400">Remaining %</TableHead>
-                  <TableHead class="text-right text-zinc-400">Rollover Out</TableHead>
-                  <TableHead class="text-zinc-400">Status</TableHead>
-                  <TableHead class="text-zinc-400">Actions</TableHead>
+              <TableHeader>
+                <TableRow class="hover:bg-transparent">
+                  <TableHead>Month</TableHead>
+                  <TableHead class="text-right">Base</TableHead>
+                  <TableHead class="text-right">Extra</TableHead>
+                  <TableHead class="text-right">Rollover In</TableHead>
+                  <TableHead class="text-right">Available</TableHead>
+                  <TableHead class="text-right">Spent</TableHead>
+                  <TableHead class="text-right">Remaining</TableHead>
+                  <TableHead class="text-right">Remaining %</TableHead>
+                  <TableHead class="text-right">Rollover Out</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {#each budgetState.monthlyRecords as record (record.month)}
                   <TableRow class={getRowClasses(record.year, record.month)}>
-                    <TableCell class="py-2 font-medium text-zinc-200">
+                    <TableCell class="py-2 font-medium">
                       {monthNames[record.month - 1]}
                       {#if isCurrentMonth(record.year, record.month)}
-                        <Badge variant="outline" class="ml-2 border-amber-600 text-amber-500"
-                          >Current</Badge
-                        >
+                        <Badge variant="outline" class="ml-2">Current</Badge>
                       {/if}
                     </TableCell>
-                    <TableCell class="py-2 text-right text-zinc-300">
+                    <TableCell class="py-2 text-right">
                       {formatAmount(record.baseBudget, record.currency)}
                     </TableCell>
-                    <TableCell class="py-2 text-right text-zinc-300">
+                    <TableCell class="py-2 text-right">
                       {record.extraBudget > 0
                         ? formatAmount(record.extraBudget, record.currency)
                         : '—'}
                     </TableCell>
-                    <TableCell class="py-2 text-right text-zinc-300">
+                    <TableCell class="py-2 text-right">
                       {record.rolloverIn > 0
                         ? formatAmount(record.rolloverIn, record.currency)
                         : '—'}
                     </TableCell>
-                    <TableCell class="py-2 text-right font-semibold text-zinc-100">
+                    <TableCell class="py-2 text-right font-semibold">
                       {formatAmount(record.available, record.currency)}
                     </TableCell>
-                    <TableCell class="py-2 text-right text-zinc-300">
+                    <TableCell class="py-2 text-right">
                       {formatAmount(record.actualSpend, record.currency)}
                     </TableCell>
                     <TableCell
@@ -374,7 +370,7 @@
                     >
                       {record.remainingPercentage.toFixed(1)}%
                     </TableCell>
-                    <TableCell class="py-2 text-right text-zinc-300">
+                    <TableCell class="py-2 text-right">
                       {record.rolloverOut > 0
                         ? formatAmount(record.rolloverOut, record.currency)
                         : '—'}
@@ -392,7 +388,7 @@
                       <Button
                         variant="ghost"
                         size="sm"
-                        class="h-8 text-amber-500 hover:text-amber-400"
+                        class="h-8"
                         onclick={() => handleAddExtraBudget(record.year, record.month)}
                       >
                         <Plus size={14} />
@@ -405,7 +401,7 @@
             </Table>
           </div>
         {:else}
-          <div class="py-12 text-center text-zinc-400">
+          <div class="py-12 text-center text-muted-foreground">
             No budget records available for this year.
           </div>
         {/if}
@@ -413,9 +409,9 @@
     </Card>
 
     <!-- Budget Info -->
-    <Card class="border-zinc-800 bg-zinc-950">
+    <Card>
       <CardContent class="pt-6">
-        <div class="flex items-center justify-between text-xs text-zinc-500">
+        <div class="flex items-center justify-between text-xs text-muted-foreground">
           <div class="flex items-center gap-4">
             <span>
               {m.budget_table_status_header()}:
@@ -432,17 +428,13 @@
   {:else}
     <!-- No Configuration State -->
     <div class="flex items-center justify-center py-24">
-      <Card class="max-w-md border-zinc-800 bg-zinc-950">
+      <Card class="max-w-md">
         <CardHeader>
-          <CardTitle class="text-center text-zinc-50">No Budget Configuration</CardTitle>
+          <CardTitle class="text-center">No Budget Configuration</CardTitle>
         </CardHeader>
         <CardContent class="text-center">
-          <p class="mb-6 text-zinc-400">Set up your budget to start tracking.</p>
-          <Button
-            variant="secondary"
-            class="bg-amber-600 text-white hover:bg-amber-700"
-            onclick={() => (configSheetOpen = true)}
-          >
+          <p class="mb-6 text-muted-foreground">Set up your budget to start tracking.</p>
+          <Button onclick={() => (configSheetOpen = true)}>
             <Settings2 size={16} />
             Configure Budget
           </Button>
@@ -519,7 +511,7 @@
               <Button type="button" variant="outline" onclick={closeExtraBudgetModal}>
                 {m.budget_extra_cancel_button()}
               </Button>
-              <Button type="submit" class="bg-amber-600 hover:bg-amber-700">
+              <Button type="submit">
                 {m.budget_extra_save_button()}
               </Button>
             </div>

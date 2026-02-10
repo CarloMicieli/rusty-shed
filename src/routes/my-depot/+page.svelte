@@ -10,7 +10,7 @@
     List
   } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
   import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
   import DepotTable from '$lib/features/depot/components/DepotTable.svelte';
   import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
@@ -60,13 +60,8 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_depot()}</p>
-      <h1 class="h2 font-bold">{m.depot_title()}</h1>
-      <p class="text-sm text-muted-foreground">{m.depot_subtitle()}</p>
-    </div>
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
+    {#snippet actions()}
       <div class="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
         <button
           class="btn-icon btn-icon-sm rounded-md {viewMode === 'table'
@@ -87,8 +82,8 @@
           <LayoutGrid size={18} />
         </button>
       </div>
-    </div>
-  </div>
+    {/snippet}
+  </PageHeader>
 
   <div class="rounded-xl border border-border bg-card p-3">
     <div class="flex items-center gap-2">

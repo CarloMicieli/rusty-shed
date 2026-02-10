@@ -1,7 +1,7 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import { safeInvoke, getErrorMessage } from '$lib/services';
-import type { DashboardSummary, QueryCriteria } from '$lib/bindings';
+import type { DashboardSummary, QueryCriteria, BudgetDashboardSummary } from '$lib/bindings';
 
 function toastError(message?: string) {
   toaster.error({
@@ -18,12 +18,16 @@ function toastError(message?: string) {
 export class DashboardState {
   // 1. Reactive State
   #data = $state<DashboardSummary | null>(null);
+  #budgetData = $state<BudgetDashboardSummary | null>(null);
   #isLoading = $state(false);
   #error = $state<string | null>(null);
 
   // 2. Getters (providing read-only reactive access)
   get data() {
     return this.#data;
+  }
+  get budgetData() {
+    return this.#budgetData;
   }
   get isLoading() {
     return this.#isLoading;
@@ -66,11 +70,29 @@ export class DashboardState {
   }
 
   /**
+   * Loads budget dashboard data
+   */
+  async loadBudget() {
+    console.debug('Invoking get_budget_dashboard');
+    const result = await safeInvoke<BudgetDashboardSummary | null>('get_budget_dashboard');
+
+    if (result.ok) {
+      this.#budgetData = result.data;
+    } else {
+      const errorMsg = getErrorMessage(result.error);
+      console.warn('Budget Dashboard Error:', errorMsg, { raw: result.error });
+      // Don't show error toast for budget - it's optional data
+      this.#budgetData = null;
+    }
+  }
+
+  /**
    * Public alias for load to be used in UI retry buttons
    */
   async retry() {
     this.#data = null; // Clear old data on manual retry to trigger skeletons
     await this.load();
+    await this.loadBudget();
   }
 }
 
