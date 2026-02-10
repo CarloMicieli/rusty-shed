@@ -199,6 +199,8 @@
   "wishlists_subtitle": "Track models you'd like to acquire for your collection.",
   "wishlists_create_button": "Create new List",
   "wishlists_default_name": "My Wish List",
+  "wishlists_empty_state": "Select a wishlist to get started",
+  "wishlists_items_empty": "This wishlist is empty",
   "wishlist_modal_title": "Add Item to Wishlist",
   "wishlist_modal_close": "Close",
   "wishlist_modal_choose_or_create": "Choose or Create Wishlist",

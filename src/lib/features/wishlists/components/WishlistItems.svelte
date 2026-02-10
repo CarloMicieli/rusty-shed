@@ -2,6 +2,7 @@
   import { Heart } from 'lucide-svelte';
   import type { WishlistItem, WishlistPreview } from '$lib/bindings';
   import { resolveTagIcon } from '$lib/config/icons';
+  import * as m from '$lib/paraglide/messages.js';
 
   const { items, activeWishlistId, otherTargets, onRemove, onMove } = $props<{
     items: WishlistItem[];
@@ -28,13 +29,13 @@
   }
 </script>
 
-{#if items.length === 0}
+{#if activeWishlistId && items.length === 0}
   <div
     class="border-surface-700/60 text-surface-400 col-span-full rounded-xl border border-dashed p-6 text-center"
   >
-    Wishlist is empty
+    {m.wishlists_items_empty()}
   </div>
-{:else}
+{:else if items.length > 0}
   {#each items as item (item.id)}
     <div class="border-surface-700/50 bg-surface-800 rounded-xl border p-4 shadow-sm">
       <div class="mb-3 flex items-center gap-2">

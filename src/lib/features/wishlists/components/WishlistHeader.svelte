@@ -82,6 +82,6 @@
   <div
     class="border-surface-700/60 text-surface-400 rounded-xl border border-dashed p-8 text-center"
   >
-    Wishlist is empty
+    {m.wishlists_empty_state()}
   </div>
 {/if}
