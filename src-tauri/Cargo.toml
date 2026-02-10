@@ -17,56 +17,57 @@ name = "rusty_shed_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build            = { version = "2.5.5", features = [] }
+tauri-build             = { version = "2.5.5", features = [] }
 
 [dependencies]
-anyhow                 = "1.0.101"
-async-trait            = "0.1.89"
-chrono                 = { version = "0.4.43", features = ["serde"] }
-csv                    = "1.4.0"
-flexi_logger           = "0.31.8"
-garde                  = { version = "0.22.1", features = ["derive"] }
-flate2                 = "1.1"
-google-drive3          = "7.0"
-isocountry             = "0.3.2"
-oauth2                 = { version = "5", features = ["reqwest"] }
-online                 = { version = "4.0.2", default-features = false, features = ["tokio", "tokio-runtime"] }
-secrecy                = { version = "0.10", features = ["serde"] }
-zeroize                = "1"
-itertools              = "0.14"
-jsonschema             = { version = "0.29", default-features = false }
-log                    = "0.4.29"
-once_cell              = "1.21.3"
-regex                  = "1.12.3"
-reqwest                = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-rust_decimal           = { version = "1.40.0", features = ["serde-with-float"] }
-rust_decimal_macros    = "1.40.0"
-serde                  = { version = "1.0.228", features = ["derive"] }
-serde_json             = "1.0.149"
-slug                   = "0.1.6"
-specta                 = { version = "2.0.0-rc.22", features = ["derive", "chrono", "rust_decimal", "uuid", "url"] }
-specta-typescript      = "0.0.9"
-sqlx                   = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls", "macros", "chrono", "uuid", "rust_decimal"] }
-strum                  = "0.27.2"
-strum_macros           = "0.27.2"
-tauri                  = { version = "2.10.2", features = ["protocol-asset"] }
-tauri-plugin-deep-link = "2"
-tauri-plugin-dialog    = "2"
-tauri-plugin-fs        = "2.4.5"
-tauri-plugin-http      = "2.5.7"
-tauri-plugin-log       = "2.8.0"
-tauri-plugin-oauth     = "2"
-tauri-plugin-opener    = "2.5.3"
+anyhow                  = "1.0.101"
+async-trait             = "0.1.89"
+chrono                  = { version = "0.4.43", features = ["serde"] }
+csv                     = "1.4.0"
+flate2                  = "1.1"
+flexi_logger            = "0.31.8"
+garde                   = { version = "0.22.1", features = ["derive"] }
+google-drive3           = "7.0"
+image                   = "0.25"
+isocountry              = "0.3.2"
+itertools               = "0.14"
+jsonschema              = { version = "0.29", default-features = false }
+log                     = "0.4.29"
+oauth2                  = { version = "5", features = ["reqwest"] }
+once_cell               = "1.21.3"
+online                  = { version = "4.0.2", default-features = false, features = ["tokio", "tokio-runtime"] }
+regex                   = "1.12.3"
+reqwest                 = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+rust_decimal            = { version = "1.40.0", features = ["serde-with-float"] }
+rust_decimal_macros     = "1.40.0"
+secrecy                 = { version = "0.10", features = ["serde"] }
+serde                   = { version = "1.0.228", features = ["derive"] }
+serde_json              = "1.0.149"
+slug                    = "0.1.6"
+specta                  = { version = "2.0.0-rc.22", features = ["derive", "chrono", "rust_decimal", "uuid", "url"] }
+specta-typescript       = "0.0.9"
+sqlx                    = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls", "macros", "chrono", "uuid", "rust_decimal"] }
+strum                   = "0.27.2"
+strum_macros            = "0.27.2"
+tar                     = "0.4"
+tauri                   = { version = "2.10.2", features = ["protocol-asset"] }
+tauri-plugin-deep-link  = "2"
+tauri-plugin-dialog     = "2"
+tauri-plugin-fs         = "2.4.5"
+tauri-plugin-http       = "2.5.7"
+tauri-plugin-log        = "2.8.0"
+tauri-plugin-mcp-bridge = "0.8.1"
+tauri-plugin-oauth      = "2"
+tauri-plugin-opener     = "2.5.3"
 tauri-plugin-stronghold = "2"
-tauri-specta           = { version = "2.0.0-rc.21", features = ["typescript"] }
-tar                    = "0.4"
-thiserror              = "2.0.18"
-tokio                  = { version = "1.49.0", features = ["rt-multi-thread", "macros", "fs"] }
-image                  = "0.25"
-url                    = { version = "2.5.8", features = ["serde"] }
-uuid                   = { version = "1.20.0", features = ["v4", "serde", "fast-rng"] }
-zip                    = "0.6"
-urlencoding = "2.1.3"
+tauri-specta            = { version = "2.0.0-rc.21", features = ["typescript"] }
+thiserror               = "2.0.18"
+tokio                   = { version = "1.49.0", features = ["rt-multi-thread", "macros", "fs"] }
+url                     = { version = "2.5.8", features = ["serde"] }
+urlencoding             = "2.1.3"
+uuid                    = { version = "1.20.0", features = ["v4", "serde", "fast-rng"] }
+zeroize                 = "1"
+zip                     = "0.6"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 keyring                = { version = "3", features = ["windows-native", "sync-secret-service", "crypto-rust"] }

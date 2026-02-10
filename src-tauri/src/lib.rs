@@ -230,7 +230,7 @@ pub fn run() {
         .export(ts_config, "../src/lib/bindings.ts")
         .expect("Failed to export typescript bindings");
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -282,7 +282,15 @@ pub fn run() {
             }
 
             Ok(())
-        })
+        });
+
+    // Only enable the bridge in debug mode for safety
+    #[cfg(debug_assertions)]
+    {
+        builder = builder.plugin(tauri_plugin_mcp_bridge::init());
+    }
+
+    builder
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }

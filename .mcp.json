@@ -29,6 +29,13 @@
         "mcp-server-sqlite-npx",
         "/home/carlo/.local/share/io.github.carlomicieli.rustyshed/database.sqlite"
       ]
+    },
+    "tauri-development": {
+      "command": "npx",
+      "args": ["-y", "@hypothesi/tauri-mcp-server"],
+      "env": {
+        "TAURI_PROJECT_ROOT": "."
+      }
     }
   }
 }
