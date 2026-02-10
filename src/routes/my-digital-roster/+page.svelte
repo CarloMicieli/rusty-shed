@@ -76,17 +76,22 @@
 
 <div class="container mx-auto space-y-6 p-4">
   <!-- Page Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div>
-      <h1 class="h1 font-bold">{m.app_digital_roster()}</h1>
-      <p class="mt-1 text-sm opacity-75">
+      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">
+        {m.app_digital_dcc()}
+      </p>
+      <h1 class="h2 font-bold">{m.app_digital_roster()}</h1>
+      <p class="text-sm text-muted-foreground">
         {m.depot_subtitle()}
       </p>
     </div>
-    <Button type="button" variant="default" onclick={openInstallDrawer}>
-      <Plus class="h-4 w-4" />
-      <span>{m.digital_roster_install_decoder()}</span>
-    </Button>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+      <Button type="button" variant="default" onclick={openInstallDrawer}>
+        <Plus size={18} />
+        <span>{m.digital_roster_install_decoder()}</span>
+      </Button>
+    </div>
   </div>
 
   <!-- Summary Section -->
@@ -100,16 +105,6 @@
     onFilterChange={handleFilterChange}
     onEdit={handleEdit}
   />
-
-  <!-- Error Display -->
-  {#if rosterState.error}
-    <aside class="alert variant-filled-error">
-      <div class="alert-message">
-        <h3 class="h3">{m.digital_roster_error()}</h3>
-        <p>{rosterState.error}</p>
-      </div>
-    </aside>
-  {/if}
 </div>
 
 <!-- DCC Address Editor Modal -->

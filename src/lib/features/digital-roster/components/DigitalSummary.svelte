@@ -48,7 +48,5 @@
         </div>
       </div>
     </div>
-  {:else}
-    <p class="text-center opacity-75">{m.digital_roster_loading()}</p>
   {/if}
 </div>
