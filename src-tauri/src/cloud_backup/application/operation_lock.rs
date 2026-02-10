@@ -69,14 +69,17 @@ impl Drop for OperationLockGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn test_acquire_lock_succeeds() {
         let guard = try_acquire_lock(OperationType::Backup);
         assert!(guard.is_ok());
     }
 
     #[test]
+    #[serial]
     fn test_lock_prevents_concurrent_operations() {
         let _guard1 = try_acquire_lock(OperationType::Backup).unwrap();
         let result = try_acquire_lock(OperationType::Restore);
@@ -84,6 +87,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_lock_released_on_drop() {
         {
             let _guard = try_acquire_lock(OperationType::Backup).unwrap();
