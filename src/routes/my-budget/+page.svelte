@@ -19,7 +19,8 @@
     TableBody,
     TableRow,
     TableHead,
-    TableCell
+    TableCell,
+    Dialog
   } from '$lib/components';
   import BudgetConfigSheet from '$lib/features/budget/components/BudgetConfigSheet.svelte';
   import type { BudgetMode } from '$lib/features/budget/services/BudgetService.svelte';
@@ -34,6 +35,10 @@
   let selectedYear = $state(new Date().getFullYear());
   let loadingRecords = $state(false);
   let configSheetOpen = $state(false);
+
+  // Extra budget modal state
+  let extraBudgetModalOpen = $state(false);
+  let selectedMonthForExtra: { year: number; month: number } | null = $state(null);
 
   // Form bindings
   let formMode = $state<BudgetMode>('MONTHLY');
@@ -155,6 +160,34 @@
       ? 'bg-amber-950/20 border-l-4 border-l-amber-600'
       : '';
     return `${baseClasses} ${currentMonthClasses}`;
+  }
+
+  function handleAddExtraBudget(year: number, month: number) {
+    selectedMonthForExtra = { year, month };
+    extraBudgetModalOpen = true;
+  }
+
+  function closeExtraBudgetModal() {
+    extraBudgetModalOpen = false;
+    selectedMonthForExtra = null;
+  }
+
+  async function handleExtraBudgetSubmit(amount: number, reason?: string) {
+    if (!selectedMonthForExtra) return;
+
+    try {
+      await budgetState.addExtraBudget({
+        year: selectedMonthForExtra.year,
+        month: selectedMonthForExtra.month,
+        amount,
+        reason
+      });
+      closeExtraBudgetModal();
+      toaster.success({ title: 'Extra budget added successfully', duration: 2000 });
+    } catch (error) {
+      console.error('Failed to add extra budget:', error);
+      // Error toast already shown by service
+    }
   }
 </script>
 
@@ -360,6 +393,7 @@
                         variant="ghost"
                         size="sm"
                         class="h-8 text-amber-500 hover:text-amber-400"
+                        onclick={() => handleAddExtraBudget(record.year, record.month)}
                       >
                         <Plus size={14} />
                         <span class="hidden sm:inline">Extra</span>
@@ -425,5 +459,73 @@
       {saving}
       onsubmit={handleSubmit}
     />
+  {/if}
+
+  <!-- Extra Budget Modal -->
+  {#if selectedMonthForExtra}
+    <Dialog.Root bind:open={extraBudgetModalOpen}>
+      <Dialog.Content class="sm:max-w-md">
+        <Dialog.Header>
+          <Dialog.Title>
+            {m.budget_extra_modal_title()} - {monthNames[selectedMonthForExtra.month - 1]}
+            {selectedMonthForExtra.year}
+          </Dialog.Title>
+        </Dialog.Header>
+        <div class="space-y-4 py-4">
+          <form
+            onsubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const amount = parseFloat(formData.get('amount') as string) || 0;
+              const reason = formData.get('reason') as string;
+              handleExtraBudgetSubmit(Math.round(amount * 100), reason || undefined);
+            }}
+            class="space-y-4"
+          >
+            <div>
+              <label for="extra-amount" class="mb-2 block text-sm font-medium">
+                {m.budget_extra_amount_label()}
+              </label>
+              <div class="relative">
+                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
+                  {budgetState.currency === 'EUR' ? '€' : '$'}
+                </span>
+                <input
+                  id="extra-amount"
+                  name="amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="flex h-10 w-full rounded-md border border-input bg-background py-2 pr-4 pl-8 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label for="extra-reason" class="mb-2 block text-sm font-medium">
+                {m.budget_extra_reason_label()}
+              </label>
+              <textarea
+                id="extra-reason"
+                name="reason"
+                rows="3"
+                maxlength="500"
+                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder={m.budget_extra_reason_placeholder()}
+              ></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+              <Button type="button" variant="outline" onclick={closeExtraBudgetModal}>
+                {m.budget_extra_cancel_button()}
+              </Button>
+              <Button type="submit" class="bg-amber-600 hover:bg-amber-700">
+                {m.budget_extra_save_button()}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Dialog.Content>
+    </Dialog.Root>
   {/if}
 </div>
