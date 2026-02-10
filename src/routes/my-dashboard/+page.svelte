@@ -265,11 +265,6 @@
         <div
           class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
         >
-          <div
-            class="border-surface-600/60 text-surface-200 mx-auto mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
-          >
-            {m.dashboard_blueprint_label()}
-          </div>
           <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
           <p class="text-surface-300 mt-2 mb-5 text-sm">
             {m.dashboard_empty_acquisitions_message()}
