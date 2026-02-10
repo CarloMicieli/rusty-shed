@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { DigitalSummary } from '$lib/bindings';
-  import * as m from '$lib/paraglide/messages';
 
   interface Props {
     summary: DigitalSummary | null;
@@ -12,41 +11,46 @@
   const formattedPercentage = $derived(summary ? summary.percentage.toFixed(1) : '0.0');
 </script>
 
-<div class="card space-y-4 p-6">
-  <h2 class="h3 font-bold">{m.digital_roster_summary_title()}</h2>
-
-  {#if loading}
-    <div class="flex items-center justify-center py-8">
-      <div class="border-primary-500 h-8 w-8 animate-spin rounded-full border-b-2"></div>
-    </div>
-  {:else if summary}
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <!-- Percentage Card -->
-      <div class="variant-ghost-primary card p-4 text-center">
-        <div class="text-primary-500 text-4xl font-bold">
-          {formattedPercentage}%
-        </div>
-        <div class="mt-2 text-sm opacity-75">
-          {m.digital_roster_percentage({ percentage: formattedPercentage })}
-        </div>
+{#if loading}
+  <div class="flex items-center justify-center py-8">
+    <div class="border-primary-500 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+  </div>
+{:else if summary}
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <!-- Digitalization Rate Card -->
+    <div
+      class="card gauge-frame space-y-3 p-5 text-foreground ring-1 ring-border/40 transition-all duration-200"
+    >
+      <div class="text-surface-400 flex items-center justify-between">
+        <span class="text-xs font-bold tracking-[0.2em] uppercase">Digitalization Rate</span>
       </div>
-
-      <!-- Total Non-Dummy Count -->
-      <div class="variant-ghost-surface card p-4 text-center">
-        <div class="text-3xl font-semibold">
-          {summary.total_non_dummy}
-        </div>
-      </div>
-
-      <!-- Digital Count -->
-      <div class="variant-ghost-success card p-4 text-center">
-        <div class="text-success-500 text-3xl font-semibold">
-          {summary.digital_count}
-        </div>
-        <div class="mt-2 text-sm opacity-75">
-          {m.digital_roster_digital_count({ count: summary.digital_count.toString() })}
-        </div>
+      <div class="flex items-end gap-2">
+        <h3 class="h2 font-bold text-orange-500">{formattedPercentage}%</h3>
       </div>
     </div>
-  {/if}
-</div>
+
+    <!-- Total Fleet Card -->
+    <div
+      class="card gauge-frame space-y-3 p-5 text-foreground ring-1 ring-border/40 transition-all duration-200"
+    >
+      <div class="text-surface-400 flex items-center justify-between">
+        <span class="text-xs font-bold tracking-[0.2em] uppercase">Total Fleet</span>
+      </div>
+      <div class="flex items-end gap-2">
+        <h3 class="h2 font-bold text-primary">{summary.total_non_dummy}</h3>
+      </div>
+    </div>
+
+    <!-- Active Decoders Card -->
+    <div
+      class="card gauge-frame space-y-3 p-5 text-foreground ring-1 ring-border/40 transition-all duration-200"
+    >
+      <div class="text-surface-400 flex items-center justify-between">
+        <span class="text-xs font-bold tracking-[0.2em] uppercase">Active Decoders</span>
+      </div>
+      <div class="flex items-end gap-2">
+        <h3 class="h2 font-bold text-green-500">{summary.digital_count}</h3>
+      </div>
+    </div>
+  </div>
+{/if}

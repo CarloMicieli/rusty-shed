@@ -87,7 +87,7 @@
       </p>
     </div>
     <div class="flex flex-col gap-3 md:flex-row md:items-center">
-      <Button type="button" variant="default" onclick={openInstallDrawer}>
+      <Button type="button" class="bg-orange-600 hover:bg-orange-700" onclick={openInstallDrawer}>
         <Plus size={18} />
         <span>{m.digital_roster_install_decoder()}</span>
       </Button>
