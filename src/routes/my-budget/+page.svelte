@@ -1,13 +1,27 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { Settings2, Plus, TrendingUp, CalendarDays } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { PageHeader } from '$lib/components';
   import { toaster } from '$lib/toaster';
   import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
   import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
-  import BudgetConfigForm from '$lib/features/budget/components/BudgetConfigForm.svelte';
-  import BudgetTable from '$lib/features/budget/components/BudgetTable.svelte';
-  import HistoricalArchive from '$lib/features/budget/components/HistoricalArchive.svelte';
+  import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+    Button,
+    Alert,
+    AlertDescription,
+    Badge,
+    Table,
+    TableHeader,
+    TableBody,
+    TableRow,
+    TableHead,
+    TableCell
+  } from '$lib/components';
+  import BudgetConfigSheet from '$lib/features/budget/components/BudgetConfigSheet.svelte';
   import type { BudgetMode } from '$lib/features/budget/services/BudgetService.svelte';
 
   // Create service and state in component context
@@ -19,10 +33,31 @@
   let error: string | null = $state(null);
   let selectedYear = $state(new Date().getFullYear());
   let loadingRecords = $state(false);
+  let configSheetOpen = $state(false);
 
   // Form bindings
   let formMode = $state<BudgetMode>('MONTHLY');
   let formBaseAmount = $state<number>(0);
+
+  // Get current month for highlighting
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  // Month names
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
 
   onMount(async () => {
     await loadBudgetConfig();
@@ -72,12 +107,54 @@
     try {
       await budgetState.save(mode, amount);
       error = null;
+      configSheetOpen = false;
+      toaster.success({ title: m.budget_config_saved_toast(), duration: 2000 });
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
-      // Error toast is handled by BudgetService
     } finally {
       saving = false;
     }
+  }
+
+  function formatAmount(minorUnits: number, currencyCode: string): string {
+    const major = minorUnits / 100;
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(major);
+  }
+
+  function getStatusVariant(status: string): 'default' | 'secondary' | 'outline' {
+    switch (status) {
+      case 'COMPLETED':
+        return 'default';
+      case 'IN_PROGRESS':
+        return 'secondary';
+      case 'PROJECTED':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  }
+
+  function getRemainingClass(remainingPercentage: number): string {
+    if (remainingPercentage >= 50) return 'text-emerald-500';
+    if (remainingPercentage >= 25) return 'text-amber-500';
+    return 'text-red-500';
+  }
+
+  function isCurrentMonth(year: number, month: number): boolean {
+    return year === currentYear && month === currentMonth;
+  }
+
+  function getRowClasses(year: number, month: number): string {
+    const baseClasses = 'border-zinc-800 transition-colors hover:bg-zinc-900/30';
+    const currentMonthClasses = isCurrentMonth(year, month)
+      ? 'bg-amber-950/20 border-l-4 border-l-amber-600'
+      : '';
+    return `${baseClasses} ${currentMonthClasses}`;
   }
 </script>
 
@@ -85,40 +162,86 @@
   <title>{m.app_name()} | {m.budget_title()}</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div class="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
   <!-- Page Header -->
-  <PageHeader
-    title={m.budget_config_title()}
-    subtitle={m.budget_title()}
-    description={m.budget_subtitle()}
-  />
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold tracking-tight text-zinc-50">{m.budget_title()}</h1>
+    <p class="mt-2 text-sm text-zinc-400">{m.budget_subtitle()}</p>
+  </div>
+
+  <!-- Error Alert -->
+  {#if error && !loading}
+    <Alert variant="destructive" class="border-red-900/50 bg-red-950/50">
+      <AlertDescription class="text-red-200">{error}</AlertDescription>
+    </Alert>
+  {/if}
 
   <!-- Loading State -->
   {#if loading}
-    <div class="flex items-center justify-center py-12">
+    <div class="flex items-center justify-center py-24">
       <div class="text-center">
         <div
-          class="border-surface-700 border-t-primary-500 mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4"
+          class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-zinc-800 border-t-amber-500"
         ></div>
-        <p class="text-surface-400">{m.budget_loading()}</p>
+        <p class="text-zinc-400">{m.budget_loading()}</p>
       </div>
     </div>
+  {:else if budgetState.hasConfig && budgetState.config}
+    <!-- Top Summary Cards -->
+    <div class="grid gap-6 md:grid-cols-3">
+      <!-- Card 1: Monthly Allocation -->
+      <Card class="border-zinc-800 bg-zinc-950">
+        <CardHeader class="pb-3">
+          <CardTitle class="flex items-center gap-2 text-sm font-medium text-zinc-400">
+            <CalendarDays class="h-4 w-4 text-amber-500" />
+            {m.budget_config_mode_monthly()}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="text-3xl font-bold text-zinc-50">
+            {budgetState.formattedMonthlyBudget}
+          </div>
+        </CardContent>
+      </Card>
 
-    <!-- Error State -->
-  {:else if error}
-    <div class="border-error-500 bg-error-500/10 rounded-lg border p-6 text-center">
-      <p class="text-error-400 mb-4">{error}</p>
-      <button
-        onclick={loadBudgetConfig}
-        class="bg-error-600 hover:bg-error-700 rounded-lg px-4 py-2 font-semibold text-white"
-      >
-        {m.budget_error_retry()}
-      </button>
+      <!-- Card 2: Yearly Total -->
+      <Card class="border-zinc-800 bg-zinc-950">
+        <CardHeader class="pb-3">
+          <CardTitle class="flex items-center gap-2 text-sm font-medium text-zinc-400">
+            <TrendingUp class="h-4 w-4 text-amber-500" />
+            {m.budget_config_mode_yearly()}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="text-3xl font-bold text-zinc-50">
+            {budgetState.formattedYearlyBudget}
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Card 3: Budget Control -->
+      <Card class="border-zinc-800 bg-zinc-950">
+        <CardHeader class="pb-3">
+          <CardTitle class="text-sm font-medium text-zinc-400">
+            {m.budget_config_title()}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="secondary"
+            class="w-full bg-amber-600 text-white hover:bg-amber-700"
+            onclick={() => (configSheetOpen = true)}
+          >
+            <Settings2 size={16} />
+            Configure Budget
+          </Button>
+        </CardContent>
+      </Card>
     </div>
 
-    <!-- Budget Configuration Form -->
-  {:else}
-    <BudgetConfigForm
+    <!-- Budget Configuration Sheet -->
+    <BudgetConfigSheet
+      bind:open={configSheetOpen}
       bind:mode={formMode}
       bind:baseAmount={formBaseAmount}
       currency={budgetState.currency}
@@ -126,52 +249,20 @@
       onsubmit={handleSubmit}
     />
 
-    <!-- Current Configuration Display (if exists) -->
-    {#if budgetState.hasConfig && budgetState.config}
-      <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
-        <h3 class="text-surface-100 mb-4 text-lg font-semibold">
-          {m.budget_config_summary_title()}
-        </h3>
-
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div class="border-surface-700 bg-surface-800/50 rounded-lg border p-4">
-            <p class="text-surface-400 text-sm">{m.budget_config_mode_label()}</p>
-            <p class="text-primary-400 text-xl font-bold">{budgetState.modeLabel}</p>
-          </div>
-
-          <div class="border-surface-700 bg-surface-800/50 rounded-lg border p-4">
-            <p class="text-surface-400 text-sm">{m.budget_config_mode_monthly()}</p>
-            <p class="text-primary-400 text-xl font-bold">{budgetState.formattedMonthlyBudget}</p>
-          </div>
-
-          <div class="border-surface-700 bg-surface-800/50 rounded-lg border p-4">
-            <p class="text-surface-400 text-sm">{m.budget_config_mode_yearly()}</p>
-            <p class="text-primary-400 text-xl font-bold">{budgetState.formattedYearlyBudget}</p>
-          </div>
-        </div>
-
-        <div class="text-surface-400 mt-4 text-xs">
-          <p>
-            {m.budget_table_status_header()}:
-            {new Date(budgetState.config.updatedAt).toLocaleString()}
-          </p>
-          <p>{m.budget_last_reset_year()}: {budgetState.config.lastResetYear}</p>
-        </div>
-      </section>
-
-      <!-- Year Selector and Budget Table -->
-      <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-surface-100 text-lg font-semibold">
-            {m.budget_mode_yearly?.() || 'Monthly Budget Breakdown'}
-          </h3>
+    <!-- Main Data Table -->
+    <Card class="border-zinc-800 bg-zinc-950">
+      <CardHeader class="pb-4">
+        <div class="flex items-center justify-between">
+          <CardTitle class="text-lg font-semibold text-zinc-50">
+            {selectedYear} Budget Breakdown
+          </CardTitle>
           <div class="flex items-center gap-2">
-            <label for="year-selector" class="text-surface-400 text-sm">Year:</label>
+            <label for="year-selector" class="text-sm text-zinc-400">Year:</label>
             <select
               id="year-selector"
               bind:value={selectedYear}
               onchange={() => handleYearChange(selectedYear)}
-              class="variant-form-material select"
+              class="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
               disabled={loadingRecords}
             >
               {#each Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i) as year (year)}
@@ -180,34 +271,159 @@
             </select>
           </div>
         </div>
-
+      </CardHeader>
+      <CardContent class="p-0">
         {#if loadingRecords}
-          <div class="flex items-center justify-center py-8">
+          <div class="flex items-center justify-center py-12">
             <div
-              class="border-surface-700 border-t-primary-500 h-8 w-8 animate-spin rounded-full border-4"
+              class="h-8 w-8 animate-spin rounded-full border-4 border-zinc-800 border-t-amber-500"
             ></div>
           </div>
         {:else if budgetState.hasRecords}
-          <BudgetTable
-            records={budgetState.monthlyRecords}
-            {budgetState}
-            currency={budgetState.currency}
-          />
+          <div class="overflow-x-auto">
+            <Table>
+              <TableHeader class="bg-zinc-900/50">
+                <TableRow class="border-zinc-800 hover:bg-transparent">
+                  <TableHead class="text-zinc-400">Month</TableHead>
+                  <TableHead class="text-right text-zinc-400">Base</TableHead>
+                  <TableHead class="text-right text-zinc-400">Extra</TableHead>
+                  <TableHead class="text-right text-zinc-400">Rollover In</TableHead>
+                  <TableHead class="text-right text-zinc-400">Available</TableHead>
+                  <TableHead class="text-right text-zinc-400">Spent</TableHead>
+                  <TableHead class="text-right text-zinc-400">Remaining</TableHead>
+                  <TableHead class="text-right text-zinc-400">Remaining %</TableHead>
+                  <TableHead class="text-right text-zinc-400">Rollover Out</TableHead>
+                  <TableHead class="text-zinc-400">Status</TableHead>
+                  <TableHead class="text-zinc-400">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {#each budgetState.monthlyRecords as record (record.month)}
+                  <TableRow class={getRowClasses(record.year, record.month)}>
+                    <TableCell class="py-2 font-medium text-zinc-200">
+                      {monthNames[record.month - 1]}
+                      {#if isCurrentMonth(record.year, record.month)}
+                        <Badge variant="outline" class="ml-2 border-amber-600 text-amber-500"
+                          >Current</Badge
+                        >
+                      {/if}
+                    </TableCell>
+                    <TableCell class="py-2 text-right text-zinc-300">
+                      {formatAmount(record.baseBudget, record.currency)}
+                    </TableCell>
+                    <TableCell class="py-2 text-right text-zinc-300">
+                      {record.extraBudget > 0
+                        ? formatAmount(record.extraBudget, record.currency)
+                        : '—'}
+                    </TableCell>
+                    <TableCell class="py-2 text-right text-zinc-300">
+                      {record.rolloverIn > 0
+                        ? formatAmount(record.rolloverIn, record.currency)
+                        : '—'}
+                    </TableCell>
+                    <TableCell class="py-2 text-right font-semibold text-zinc-100">
+                      {formatAmount(record.available, record.currency)}
+                    </TableCell>
+                    <TableCell class="py-2 text-right text-zinc-300">
+                      {formatAmount(record.actualSpend, record.currency)}
+                    </TableCell>
+                    <TableCell
+                      class="py-2 text-right font-medium {getRemainingClass(
+                        record.remainingPercentage
+                      )}"
+                    >
+                      {formatAmount(record.remaining, record.currency)}
+                    </TableCell>
+                    <TableCell
+                      class="py-2 text-right font-medium {getRemainingClass(
+                        record.remainingPercentage
+                      )}"
+                    >
+                      {record.remainingPercentage.toFixed(1)}%
+                    </TableCell>
+                    <TableCell class="py-2 text-right text-zinc-300">
+                      {record.rolloverOut > 0
+                        ? formatAmount(record.rolloverOut, record.currency)
+                        : '—'}
+                    </TableCell>
+                    <TableCell class="py-2">
+                      <Badge variant={getStatusVariant(record.status)}>
+                        {record.status === 'COMPLETED'
+                          ? 'Completed'
+                          : record.status === 'IN_PROGRESS'
+                            ? 'In Progress'
+                            : 'Projected'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell class="py-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        class="h-8 text-amber-500 hover:text-amber-400"
+                      >
+                        <Plus size={14} />
+                        <span class="hidden sm:inline">Extra</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                {/each}
+              </TableBody>
+            </Table>
+          </div>
         {:else}
-          <div class="text-surface-400 py-8 text-center">
-            {m.dashboard_empty_recent?.() || 'No budget records available for this year.'}
+          <div class="py-12 text-center text-zinc-400">
+            No budget records available for this year.
           </div>
         {/if}
-      </section>
+      </CardContent>
+    </Card>
 
-      <!-- Historical Archive -->
-      <section class="card border-surface-700/60 bg-surface-900/50 border p-6 shadow-xl">
-        <HistoricalArchive
-          {budgetState}
-          currentYear={selectedYear}
-          onYearSelect={handleYearChange}
-        />
-      </section>
-    {/if}
+    <!-- Budget Info -->
+    <Card class="border-zinc-800 bg-zinc-950">
+      <CardContent class="pt-6">
+        <div class="flex items-center justify-between text-xs text-zinc-500">
+          <div class="flex items-center gap-4">
+            <span>
+              {m.budget_table_status_header()}:
+              {new Date(budgetState.config.updatedAt).toLocaleString()}
+            </span>
+            <span>
+              {m.budget_last_reset_year()}: {budgetState.config.lastResetYear}
+            </span>
+          </div>
+          <span class="font-mono">v{budgetState.config.version}</span>
+        </div>
+      </CardContent>
+    </Card>
+  {:else}
+    <!-- No Configuration State -->
+    <div class="flex items-center justify-center py-24">
+      <Card class="max-w-md border-zinc-800 bg-zinc-950">
+        <CardHeader>
+          <CardTitle class="text-center text-zinc-50">No Budget Configuration</CardTitle>
+        </CardHeader>
+        <CardContent class="text-center">
+          <p class="mb-6 text-zinc-400">Set up your budget to start tracking.</p>
+          <Button
+            variant="secondary"
+            class="bg-amber-600 text-white hover:bg-amber-700"
+            onclick={() => (configSheetOpen = true)}
+          >
+            <Settings2 size={16} />
+            Configure Budget
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Budget Configuration Sheet (for initial setup) -->
+    <BudgetConfigSheet
+      bind:open={configSheetOpen}
+      bind:mode={formMode}
+      bind:baseAmount={formBaseAmount}
+      currency={budgetState.currency || 'EUR'}
+      {saving}
+      onsubmit={handleSubmit}
+    />
   {/if}
 </div>
