@@ -267,7 +267,7 @@ export class WishlistState {
     this.#wishlists = this.#wishlists.map((w) => (w.id === id ? { ...w, name } : w));
     toastLoading(toastId);
 
-    const result = await safeInvoke('rename_wishlist', { input: { id, name } });
+    const result = await safeInvoke('rename_wishlist', { input: { wishlistId: id, name } });
 
     if (!result.ok) {
       console.error('Failed to rename wishlist:', result.error);
