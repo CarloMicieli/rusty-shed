@@ -195,6 +195,8 @@
   "collection_tag_freight": "Merci",
   "wishlists_title": "Le Mie Liste dei Desideri",
   "wishlists_subtitle": "Tieni traccia dei modelli che desideri acquisire per la tua collezione.",
+  "wishlists_create_button": "Crea nuova Lista",
+  "wishlists_default_name": "La Mia Lista dei Desideri",
   "wishlist_modal_title": "Aggiungi Elemento alla Lista Desideri",
   "wishlist_modal_close": "Chiudi",
   "wishlist_modal_choose_or_create": "Scegli o Crea Lista Desideri",

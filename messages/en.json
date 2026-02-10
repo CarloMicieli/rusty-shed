@@ -197,6 +197,8 @@
   "collection_tag_freight": "Freight",
   "wishlists_title": "My Wishlists",
   "wishlists_subtitle": "Track models you'd like to acquire for your collection.",
+  "wishlists_create_button": "Create new List",
+  "wishlists_default_name": "My Wish List",
   "wishlist_modal_title": "Add Item to Wishlist",
   "wishlist_modal_close": "Close",
   "wishlist_modal_choose_or_create": "Choose or Create Wishlist",

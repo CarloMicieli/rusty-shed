@@ -24,8 +24,32 @@
     void wishlistService.fetchWishlists();
   });
 
+  /**
+   * Generate the next available wishlist name following the pattern:
+   * "My Wish List (1)", "My Wish List (2)", etc.
+   * The base name is localized (e.g., "La Mia Lista dei Desideri" in Italian).
+   */
+  function getNextWishlistName(): string {
+    const baseName = m.wishlists_default_name();
+    const pattern = new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\((\\d+)\\)$`);
+
+    // Find all existing wishlist names that match the pattern
+    const numbers: number[] = [];
+    for (const wishlist of wishlists) {
+      const match = wishlist.name.match(pattern);
+      if (match && match[1]) {
+        numbers.push(parseInt(match[1], 10));
+      }
+    }
+
+    // Find the next available number
+    const nextNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+    return `${baseName} (${nextNumber})`;
+  }
+
   function handleCreate() {
-    void wishlistService.createWishlist('Create New List');
+    const name = getNextWishlistName();
+    void wishlistService.createWishlist(name);
   }
 
   function handleSelect(id: string) {
@@ -86,7 +110,7 @@
     <div class="flex flex-col gap-3 md:flex-row md:items-center">
       <Button onclick={handleCreate}>
         <Sparkles size={18} />
-        Create new List
+        {m.wishlists_create_button()}
       </Button>
     </div>
   </div>
