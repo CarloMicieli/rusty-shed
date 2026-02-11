@@ -92,3 +92,12 @@ src-tauri/
 - **Icons**: lucide-svelte
 - **Toasts**: Custom toaster service (`$lib/toaster`)
 - **Theme**: Skeleton UI 4.x with custom surface/primary colors
+
+## Active Technologies
+
+- TypeScript 5.9.3 (frontend), Rust edition 2024 / 1.93.0 (backend) + SvelteKit (Svelte 5.48.2), Tauri 2.9.x, Tailwind CSS 4.1.18, shadcn-svelte, specta, sqlx
+- SQLite via sqlx (existing railway_model and rolling_stock tables)
+
+## Recent Changes
+
+- 018-railway-model-component: Added TypeScript 5.9.3 (frontend), Rust edition 2024 / 1.93.0 (backend) + SvelteKit (Svelte 5.48.2), Tauri 2.9.x, Tailwind CSS 4.1.18, shadcn-svelte, specta, sqlx
