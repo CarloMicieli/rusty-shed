@@ -95,7 +95,32 @@
   $effect(() => {
     if (open) {
       handleOpen();
+
+      // Lock scroll on both body and main content area
+      const mainElement = document.querySelector('main');
+
+      document.body.style.overflow = 'hidden';
+      if (mainElement) {
+        mainElement.style.overflow = 'hidden';
+      }
+    } else {
+      // Restore scroll when drawer closes
+      const mainElement = document.querySelector('main');
+
+      document.body.style.overflow = '';
+      if (mainElement) {
+        mainElement.style.overflow = '';
+      }
     }
+
+    // Cleanup on unmount
+    return () => {
+      const mainElement = document.querySelector('main');
+      document.body.style.overflow = '';
+      if (mainElement) {
+        mainElement.style.overflow = '';
+      }
+    };
   });
 
   function createDefaultFormState(): AddModelFormState {

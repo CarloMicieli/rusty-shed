@@ -99,6 +99,30 @@
       // Reset when drawer closes
       hasLoadedData = false;
     }
+
+    // Lock/unlock scroll on both body and main content area
+    const mainElement = document.querySelector('main');
+
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      if (mainElement) {
+        mainElement.style.overflow = 'hidden';
+      }
+    } else {
+      document.body.style.overflow = '';
+      if (mainElement) {
+        mainElement.style.overflow = '';
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      const mainElement = document.querySelector('main');
+      document.body.style.overflow = '';
+      if (mainElement) {
+        mainElement.style.overflow = '';
+      }
+    };
   });
 
   function createDefaultFormState(): AddRailwayModelFormState {
