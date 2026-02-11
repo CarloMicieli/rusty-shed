@@ -181,7 +181,7 @@ export class CollectionState {
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
       const removedDate = new Date().toISOString().split('T')[0];
 
-      const result = await safeInvoke('removeCollectionItem', {
+      const result = await safeInvoke('remove_collection_item', {
         args: {
           collectionItemId: id,
           category: item.railwayModel.category,

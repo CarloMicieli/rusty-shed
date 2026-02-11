@@ -72,7 +72,8 @@ pub async fn get_collection_items(
    FROM collection_items ci
    JOIN railway_models rm ON rm.id = ci.railway_model_id
    JOIN manufacturers m ON m.id = rm.manufacturer_id
-   WHERE ci.collection_id = ?1"#;
+   WHERE ci.collection_id = ?1
+     AND ci.removed_date IS NULL"#;
 
     let rows = sqlx::query_as::<_, CollectionItemRow>(sql)
         .bind(collection_id.to_string())
@@ -158,7 +159,8 @@ pub async fn get_owned_rolling_stocks(
    LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id
    LEFT JOIN railway_companies AS rc ON rc.id = rs.railway_company_id
    LEFT JOIN decoders d ON d.id = ors.installed_decoder_id
-   WHERE ci.collection_id = ?1"#;
+   WHERE ci.collection_id = ?1
+     AND ci.removed_date IS NULL"#;
 
     let rows = sqlx::query_as::<_, OwnedRollingStockRow>(sql)
         .bind(collection_id.to_string())
@@ -196,7 +198,8 @@ pub async fn get_purchase_infos(
              pi.expected_date
    FROM purchase_infos pi
    JOIN collection_items ci ON ci.id = pi.collection_item_id
-   WHERE ci.collection_id = ?1"#;
+   WHERE ci.collection_id = ?1
+     AND ci.removed_date IS NULL"#;
 
     let rows = sqlx::query_as::<_, PurchaseInfoRow>(sql)
         .bind(collection_id.to_string())

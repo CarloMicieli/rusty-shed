@@ -922,12 +922,17 @@ mod tests {
         uow2.commit().await.expect("commit remove");
 
         // Verify DB: item removed_date set
+        // Note: We query directly without the removed_date filter since get_collection_items
+        // now filters out soft-deleted items
         let mut conn2 = conn.acquire().await.expect("acquire conn");
-        let items = database::get_collection_items(&mut conn2, &CollectionId::default())
-            .await
-            .expect("query collection_items");
-        assert!(!items.is_empty());
-        assert!(items[0].removed_date.is_some());
+        let removed_date: Option<NaiveDate> = sqlx::query_scalar(
+            "SELECT removed_date FROM collection_items WHERE collection_id = ? LIMIT 1",
+        )
+        .bind(CollectionId::default().to_string())
+        .fetch_one(&mut *conn2)
+        .await
+        .expect("query collection_items");
+        assert!(removed_date.is_some());
 
         // Verify collection summary/total updated
         let coll_row = database::get_collection(&mut conn2, &CollectionId::default())
