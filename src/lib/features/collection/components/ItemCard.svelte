@@ -1,24 +1,18 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { PencilLine, Trash2 } from 'lucide-svelte';
+  import { Trash2 } from 'lucide-svelte';
   import { Badge } from '$lib/components';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import type { CollectionItemView } from '$lib/bindings';
 
-  const { item, onEdit, onDelete, onClick } = $props<{
+  const { item, onDelete, onClick } = $props<{
     item: CollectionItemView;
-    onEdit?: (item: CollectionItemView) => void;
     onDelete?: (id: string) => void;
     onClick?: (item: CollectionItemView) => void;
   }>();
 
   const primaryTag = 'default';
   const PrimaryIcon = $derived(tagIcon(primaryTag));
-
-  function handleEdit(e: MouseEvent) {
-    e.stopPropagation();
-    onEdit?.(item);
-  }
 
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
@@ -65,9 +59,6 @@
         <h3 class="text-lg leading-tight font-semibold">{item.railwayModel.description}</h3>
       </div>
       <div class="flex gap-2 opacity-0 transition group-hover:opacity-100">
-        <button class="variant-soft-surface btn-icon btn btn-icon-sm" onclick={handleEdit}>
-          <PencilLine size={16} />
-        </button>
         <button class="variant-soft-error btn-icon btn btn-icon-sm" onclick={handleDelete}>
           <Trash2 size={16} />
         </button>

@@ -252,7 +252,6 @@
             {#each filteredItems as item (item.id)}
               <ItemCard
                 {item}
-                onEdit={ui.edit}
                 onDelete={ui.requestDelete}
                 onClick={handleCardClick}
               />
