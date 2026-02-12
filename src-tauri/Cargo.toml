@@ -29,6 +29,7 @@ flexi_logger            = "0.31.8"
 garde                   = { version = "0.22.1", features = ["derive"] }
 google-drive3           = "7.0"
 image                   = "0.25"
+infer                   = "0.16"
 isocountry              = "0.3.2"
 itertools               = "0.14"
 jsonschema              = { version = "0.29", default-features = false }
