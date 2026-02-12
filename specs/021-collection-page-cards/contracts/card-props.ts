@@ -206,10 +206,12 @@ export interface RailcarData {
   technical_specifications: TechnicalSpecifications | null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface FreightCarData {
   // No technical specifications
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface PassengerCarData {
   // No technical specifications
 }

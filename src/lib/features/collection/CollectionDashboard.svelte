@@ -13,7 +13,8 @@
     CollectionItemView
   } from '$lib/bindings';
 
-  import ItemCard from './components/ItemCard.svelte';
+  import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
+  import { collectionItemToCardData } from './utils/cardDataMapper';
   import FilterPanel from './components/FilterPanel.svelte';
   import AddModelDrawer from './components/AddModelDrawer.svelte';
   import DeleteModal from './components/DeleteModal.svelte';
@@ -250,7 +251,23 @@
         {:else}
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {#each filteredItems as item (item.id)}
-              <ItemCard {item} onDelete={ui.requestDelete} onClick={handleCardClick} />
+              <div
+                role="button"
+                tabindex={0}
+                class="cursor-pointer"
+                onclick={() => handleCardClick(item)}
+                onkeydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCardClick(item);
+                  }
+                }}
+              >
+                <RailwayModelPreviewCard
+                  model={collectionItemToCardData(item)}
+                  onDelete={() => ui.requestDelete(item.id)}
+                />
+              </div>
             {/each}
           </div>
         {/if}

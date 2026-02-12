@@ -1,4 +1,5 @@
 <script lang="ts">
+  /** @deprecated Use RailwayModelPreviewCard with collectionItemToCardData() instead */
   import { fade } from 'svelte/transition';
   import { Trash2 } from 'lucide-svelte';
   import { Badge } from '$lib/components';

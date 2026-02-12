@@ -1,14 +1,8 @@
-<script lang="ts">
-  /**
-   * Railway Model Preview Card Component
-   * Displays a compact visual summary of a railway model with thumbnail,
-   * metadata badges, and optional delete functionality.
-   */
-
+<script lang="ts" module>
   /**
    * Model categories for placeholder icon selection
    */
-  type ModelCategory =
+  export type ModelCategory =
     | 'SteamLocomotive'
     | 'ElectricLocomotive'
     | 'DieselLocomotive'
@@ -22,7 +16,7 @@
   /**
    * Digital features for overlay badges
    */
-  type DigitalFeature =
+  export type DigitalFeature =
     | 'Sound' // Speaker icon overlay
     | 'DCC' // Digital Command Control (bolt icon)
     | 'Smoke' // Smoke generator
@@ -31,7 +25,7 @@
   /**
    * Railway model data for display in the card
    */
-  interface RailwayModelCardData {
+  export interface RailwayModelCardData {
     /** Unique identifier for the model */
     id: string;
     /** Manufacturer name (e.g., "A.C.M.E.", "Märklin") */
@@ -59,6 +53,14 @@
     /** Digital features available on the model */
     digitalFeatures: DigitalFeature[];
   }
+</script>
+
+<script lang="ts">
+  /**
+   * Railway Model Preview Card Component
+   * Displays a compact visual summary of a railway model with thumbnail,
+   * metadata badges, and optional delete functionality.
+   */
 
   /**
    * Component props interface
@@ -82,14 +84,14 @@
   import { Button } from '$lib/components/ui/button';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
   import { Volume2, Zap, Trash2, Train, Box, Users, Layers } from 'lucide-svelte';
-  import type { Component } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   // Derived state for display values
   const displayManufacturer = $derived(model.manufacturer || m.components_unknownManufacturer());
 
   // Category-to-icon mapping for placeholders
-  let PlaceholderIcon: Component = $derived.by(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let PlaceholderIcon: any = $derived.by(() => {
     switch (model.category) {
       case 'SteamLocomotive':
         return Train;
@@ -180,7 +182,7 @@
         <!-- Digital Features Overlay (top-left) -->
         {#if model.digitalFeatures.length > 0}
           <div class="absolute top-2 left-2 z-10 flex gap-1" aria-label="Digital features">
-            {#each model.digitalFeatures as feature}
+            {#each model.digitalFeatures as feature (feature)}
               {#if feature === 'Sound'}
                 <div class="rounded-full bg-black/60 p-1" title="Sound equipped">
                   <Volume2 class="h-4 w-4 text-white" aria-hidden="true" />

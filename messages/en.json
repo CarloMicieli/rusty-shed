@@ -621,6 +621,7 @@
   "import.warning.missingImage": "Image not found: {filename}",
   "common_save": "Save",
   "common_cancel": "Cancel",
+  "common_delete": "Delete",
   "common_dismiss": "Dismiss",
   "cloud_backup_title": "Cloud Backup",
   "cloud_backup_subtitle": "Sync your collection to Google Drive for safekeeping.",
