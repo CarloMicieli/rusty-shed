@@ -112,15 +112,15 @@ description: 'Implementation tasks for Collection Page Card Integration'
 
 ### Implementation for User Story 2
 
-- [ ] T044 [US2] Verify existing /models/[...modelId]/+page.svelte route still works with new preview cards
-- [ ] T045 [US2] Test navigation from RailwayModelPreviewCard to model detail page (/models/[id])
-- [ ] T046 [US2] Verify RailwayModelCard displays full specifications (era, power method, category, description)
-- [ ] T047 [US2] Verify tabbed navigation works for multi-unit models (Details tab, Rolling Stock tab)
-- [ ] T048 [US2] Verify single-unit models display unified specifications without tabs
-- [ ] T049 [US2] Test image upload functionality (drag-and-drop and file browser) for models in collection
-- [ ] T050 [US2] Test image upload success updates the model image in both detail view and collection grid
-- [ ] T051 [US2] Verify rolling stock expandable rows work correctly in detail view
-- [ ] T052 [US2] Test back button navigation returns to collection page preserving scroll position
+- [x] T044 [US2] Verify existing /models/[...modelId]/+page.svelte route still works with new preview cards
+- [x] T045 [US2] Test navigation from RailwayModelPreviewCard to model detail page (/models/[id])
+- [x] T046 [US2] Verify RailwayModelCard displays full specifications (era, power method, category, description)
+- [x] T047 [US2] Verify tabbed navigation works for multi-unit models (Details tab, Rolling Stock tab)
+- [x] T048 [US2] Verify single-unit models display unified specifications without tabs
+- [x] T049 [US2] Test image upload functionality (drag-and-drop and file browser) for models in collection
+- [x] T050 [US2] Test image upload success updates the model image in both detail view and collection grid
+- [x] T051 [US2] Verify rolling stock expandable rows work correctly in detail view
+- [x] T052 [US2] Test back button navigation returns to collection page preserving scroll position
 
 ### Manual Testing for User Story 2
 

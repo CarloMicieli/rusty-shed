@@ -30,7 +30,7 @@ describe('RailwayModelCard', () => {
   beforeEach(() => {
     // Single-unit model fixture
     mockModelSingleUnit = {
-      id: 1,
+      id: 'trn:railway-model:rivarossi:hr2873',
       manufacturer: 'Rivarossi',
       product_code: 'HR2906',
       scale: 'H0',
@@ -42,7 +42,7 @@ describe('RailwayModelCard', () => {
       status: 'InCollection',
       rolling_stock: [
         {
-          id: 1,
+          id: 'trn:rolling-stock:rivarossi:hr2873:1',
           railway_model_id: 1,
           series_code: 'E.656',
           series_name: 'I Serie',
@@ -60,7 +60,7 @@ describe('RailwayModelCard', () => {
 
     // Multi-unit model fixture (will be used in Phase 5 tests)
     _mockModelMultiUnit = {
-      id: 2,
+      id: 'trn:railway-model:roco:72198',
       manufacturer: 'Roco',
       product_code: '74141',
       scale: 'H0',
@@ -72,7 +72,7 @@ describe('RailwayModelCard', () => {
       status: 'InCollection',
       rolling_stock: [
         {
-          id: 2,
+          id: 'trn:rolling-stock:roco:72198:1',
           railway_model_id: 2,
           series_code: 'Railjet',
           series_name: 'Control Car',
@@ -86,7 +86,7 @@ describe('RailwayModelCard', () => {
           coupling_type: 'NEM 362'
         },
         {
-          id: 3,
+          id: 'trn:rolling-stock:roco:72198:2',
           railway_model_id: 2,
           series_code: 'Railjet',
           series_name: 'Bistro Car',
@@ -100,7 +100,7 @@ describe('RailwayModelCard', () => {
           coupling_type: 'NEM 362'
         },
         {
-          id: 4,
+          id: 'trn:rolling-stock:roco:72198:3',
           railway_model_id: 2,
           series_code: 'Railjet',
           series_name: 'Standard Car',

@@ -11,10 +11,8 @@
     CollectionItemView,
     RailwayModelImageResponse
   } from '$lib/bindings';
-  import ModelDetailsHeader from '$lib/components/model-details/ModelDetailsHeader.svelte';
-  import ModelDetailsTabs from '$lib/components/model-details/ModelDetailsTabs.svelte';
-  import ModelDetailsContent from '$lib/components/model-details/ModelDetailsContent.svelte';
-  import RollingStockList from '$lib/components/model-details/RollingStockList.svelte';
+  import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
+  import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
 
   // Get model ID from route params - with [...modelId], it captures the full path
   // The param will be "trn:railway-model:manufacturer:product"
@@ -26,14 +24,24 @@
   let imageResponse = $state<RailwayModelImageResponse | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
-  let activeTab = $state<'details' | 'rolling-stock'>('details');
 
-  function handleTabChange(tab: 'details' | 'rolling-stock') {
-    activeTab = tab;
-  }
+  // Derived reactive model for display
+  let displayModel = $derived(
+    model ? toRailwayModel(model, collectionItem, imageResponse) : null
+  );
 
   function goBack() {
     goto('/my-collection');
+  }
+
+  async function handleImageUploaded(_imagePath: string) {
+    // Refresh image after upload
+    await refreshImage();
+  }
+
+  function handleImageError(errorMessage: string) {
+    console.error('Image upload error:', errorMessage);
+    error = errorMessage;
   }
 
   async function refreshImage() {
@@ -131,19 +139,14 @@
       {m.model_back_to_collection()}
     </button>
 
-    <!-- Hero Section with Image -->
-    <ModelDetailsHeader {model} {imageResponse} onImageChange={refreshImage} />
-
-    <!-- Tabs -->
-    <ModelDetailsTabs {activeTab} onTabChange={handleTabChange} />
-
-    <!-- Tab Content -->
-    <div class="mt-6">
-      {#if activeTab === 'details'}
-        <ModelDetailsContent details={model.details} />
-      {:else if activeTab === 'rolling-stock'}
-        <RollingStockList rollingStocks={collectionItem?.rollingStocks} />
-      {/if}
-    </div>
+    <!-- Railway Model Card -->
+    {#if displayModel}
+      <RailwayModelCard
+        model={displayModel}
+        editable={true}
+        onImageUploaded={handleImageUploaded}
+        onError={handleImageError}
+      />
+    {/if}
   </div>
 {/if}

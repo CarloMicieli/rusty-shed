@@ -19,7 +19,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
   import { ImageIcon, Upload, Loader2, ChevronDown } from 'lucide-svelte';
-  import { invoke } from '@tauri-apps/api/core';
+  import { invoke, convertFileSrc } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import { SvelteSet } from 'svelte/reactivity';
   import * as m from '$lib/paraglide/messages';
@@ -51,7 +51,7 @@
 
   // Component-local state
   let activeTab = $state<'details' | 'rolling-stock'>('details'); // T073
-  let expandedRows = new SvelteSet<number>();
+  let expandedRows = new SvelteSet<string>();
   let isDragging = $state(false);
   let isUploading = $state(false);
   let _uploadProgress = $state(0);
@@ -66,7 +66,7 @@
    *
    * @param rowId - The unique ID of the rolling stock unit to toggle
    */
-  function toggleRow(rowId: number) {
+  function toggleRow(rowId: string) {
     if (expandedRows.has(rowId)) {
       expandedRows.delete(rowId);
     } else {
@@ -165,7 +165,7 @@
 
         await invoke('upload_model_image_bytes', {
           args: {
-            modelId: `trn:railway-model:${model.manufacturer.toLowerCase()}:${model.product_code}`,
+            modelId: model.id,
             fileName: file.name,
             fileData: bytes
           }
@@ -195,7 +195,7 @@
 
       await invoke('upload_model_image', {
         args: {
-          modelId: `trn:railway-model:${model.manufacturer.toLowerCase()}:${model.product_code}`,
+          modelId: model.id,
           filePath: filePath
         }
       });
@@ -246,7 +246,7 @@
   >
     {#if model.image_path}
       <img
-        src={model.image_path}
+        src={convertFileSrc(model.image_path)}
         alt="{model.manufacturer} {model.product_code}"
         class="h-full w-full object-contain"
       />

@@ -5,7 +5,7 @@
  * TODO: Map from RailwayModelView (bindings.ts) to this simplified structure
  */
 export interface RailwayModel {
-  id: number;
+  id: string;
   manufacturer: string;
   product_code: string;
   scale: string;
@@ -19,7 +19,7 @@ export interface RailwayModel {
 }
 
 export interface RollingStock {
-  id: number;
+  id: string;
   railway_model_id: number;
   series_code: string;
   series_name: string | null;
