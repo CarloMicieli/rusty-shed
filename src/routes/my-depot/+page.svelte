@@ -1,28 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import {
-    Box as BoxIcon,
-    Search,
-    TrainFront,
-    TramFront,
-    X,
-    LayoutGrid,
-    List
-  } from 'lucide-svelte';
+  import { Box as BoxIcon, Search, TrainFront, TramFront, Users, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button, PageHeader } from '$lib/components';
-  import DepotSection from '$lib/features/depot/components/DepotSection.svelte';
+  import * as Accordion from '$lib/components/ui/accordion';
+  import { Badge, Button, PageHeader } from '$lib/components';
   import DepotTable from '$lib/features/depot/components/DepotTable.svelte';
-  import LocomotiveCard from '$lib/features/depot/components/LocomotiveCard.svelte';
-  import TrainCard from '$lib/features/depot/components/TrainCard.svelte';
-  import CarCard from '$lib/features/depot/components/CarCard.svelte';
   import { getDepotContext } from '$lib/features/depot/DepotState.svelte';
   import { debounce } from '$lib/utils/debounce';
 
   const depot = getDepotContext();
 
   let searchInput = $state('');
-  const stickyOffset = $state('var(--header-offset, 4rem)');
 
   const debouncedSearch = debounce((value: string) => {
     depot.setQuery(value);
@@ -39,16 +27,12 @@
   }
 
   const filteredLocomotives = $derived(depot.filteredLocomotives);
-  const filteredTrains = $derived(depot.filteredTrains);
-  const filteredCars = $derived(depot.filteredCars);
+  const filteredRailcarsEmuDmu = $derived(depot.filteredRailcarsEmuDmu);
+  const filteredPassengerCars = $derived(depot.filteredPassengerCars);
+  const filteredFreightCars = $derived(depot.filteredFreightCars);
   const totalFiltered = $derived(depot.totalFiltered);
   const isLoading = $derived(depot.isLoading);
   const error = $derived(depot.error);
-  const viewMode = $derived(depot.viewMode);
-
-  function handleViewModeChange(mode: 'table' | 'grid') {
-    depot.setViewMode(mode);
-  }
 
   onMount(() => {
     void depot.load();
@@ -60,30 +44,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
-    {#snippet actions()}
-      <div class="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
-        <button
-          class="btn-icon btn-icon-sm rounded-md {viewMode === 'table'
-            ? 'bg-sidebar-accent text-sidebar-foreground'
-            : 'text-muted-foreground hover:text-foreground'}"
-          title="Table view"
-          onclick={() => handleViewModeChange('table')}
-        >
-          <List size={18} />
-        </button>
-        <button
-          class="btn-icon btn-icon-sm rounded-md {viewMode === 'grid'
-            ? 'bg-sidebar-accent text-sidebar-foreground'
-            : 'text-muted-foreground hover:text-foreground'}"
-          title="Grid view"
-          onclick={() => handleViewModeChange('grid')}
-        >
-          <LayoutGrid size={18} />
-        </button>
-      </div>
-    {/snippet}
-  </PageHeader>
+  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()} />
 
   <div class="rounded-xl border border-border bg-card p-3">
     <div class="flex items-center gap-2">
@@ -136,68 +97,82 @@
       </Button>
     </div>
   {:else}
-    <div class="space-y-8">
-      {#if viewMode === 'grid'}
-        <DepotSection
-          title={m.depot_locomotives_title()}
-          items={filteredLocomotives}
-          icon={TrainFront}
-          card={LocomotiveCard}
-          toneClass="default"
-          {stickyOffset}
-          emptyMessage={m.depot_empty_locomotives()}
-        />
-
-        <DepotSection
-          title={m.depot_trains_title()}
-          items={filteredTrains}
-          icon={TramFront}
-          card={TrainCard}
-          toneClass="secondary"
-          {stickyOffset}
-          emptyMessage={m.depot_empty_trains()}
-        />
-
-        <DepotSection
-          title={m.depot_cars_title()}
-          items={filteredCars}
-          icon={BoxIcon}
-          card={CarCard}
-          toneClass="outline"
-          {stickyOffset}
-          emptyMessage={m.depot_empty_cars()}
-        />
-      {:else}
-        <DepotTable
-          title={m.depot_locomotives_title()}
-          items={filteredLocomotives}
-          icon={TrainFront}
-          type="locomotive"
-          toneClass="default"
-          {stickyOffset}
-          emptyMessage={m.depot_empty_locomotives()}
-        />
-
-        <DepotTable
-          title={m.depot_trains_title()}
-          items={filteredTrains}
-          icon={TramFront}
-          type="train"
-          toneClass="secondary"
-          {stickyOffset}
-          emptyMessage={m.depot_empty_trains()}
-        />
-
-        <DepotTable
-          title={m.depot_cars_title()}
-          items={filteredCars}
-          icon={BoxIcon}
-          type="car"
-          toneClass="outline"
-          {stickyOffset}
-          emptyMessage={m.depot_empty_cars()}
-        />
+    <Accordion.Root
+      type="multiple"
+      value={['locomotives', 'railcarsEmuDmu', 'passengerCars', 'freightCars']}
+      class="space-y-4"
+    >
+      <!-- Category 1: Locomotives -->
+      {#if filteredLocomotives.length > 0}
+        <Accordion.Item value="locomotives" class="rounded-lg border border-border bg-card">
+          <Accordion.Trigger
+            class="bg-surface-900/95 sticky top-[var(--header-offset,4rem)] z-10 flex w-full items-center justify-between px-4 py-3 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <TrainFront size={20} class="text-primary" />
+              <h3 class="text-lg font-semibold">{m.depot_locomotives_title()}</h3>
+              <Badge variant="secondary">{filteredLocomotives.length}</Badge>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Content class="px-0 pt-0">
+            <DepotTable items={filteredLocomotives} type="locomotive" />
+          </Accordion.Content>
+        </Accordion.Item>
       {/if}
-    </div>
+
+      <!-- Category 2: Railcars & EMU/DMU -->
+      {#if filteredRailcarsEmuDmu.length > 0}
+        <Accordion.Item value="railcarsEmuDmu" class="rounded-lg border border-border bg-card">
+          <Accordion.Trigger
+            class="bg-surface-900/95 sticky top-[var(--header-offset,4rem)] z-10 flex w-full items-center justify-between px-4 py-3 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <TramFront size={20} class="text-primary" />
+              <h3 class="text-lg font-semibold">{m.depot_railcars_and_emu_title()}</h3>
+              <Badge variant="secondary">{filteredRailcarsEmuDmu.length}</Badge>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Content class="px-0 pt-0">
+            <DepotTable items={filteredRailcarsEmuDmu} type="train" />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+
+      <!-- Category 3: Passenger Cars -->
+      {#if filteredPassengerCars.length > 0}
+        <Accordion.Item value="passengerCars" class="rounded-lg border border-border bg-card">
+          <Accordion.Trigger
+            class="bg-surface-900/95 sticky top-[var(--header-offset,4rem)] z-10 flex w-full items-center justify-between px-4 py-3 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <Users size={20} class="text-primary" />
+              <h3 class="text-lg font-semibold">{m.depot_passenger_cars_title()}</h3>
+              <Badge variant="secondary">{filteredPassengerCars.length}</Badge>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Content class="px-0 pt-0">
+            <DepotTable items={filteredPassengerCars} type="car" />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+
+      <!-- Category 4: Freight Cars -->
+      {#if filteredFreightCars.length > 0}
+        <Accordion.Item value="freightCars" class="rounded-lg border border-border bg-card">
+          <Accordion.Trigger
+            class="bg-surface-900/95 sticky top-[var(--header-offset,4rem)] z-10 flex w-full items-center justify-between px-4 py-3 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <BoxIcon size={20} class="text-primary" />
+              <h3 class="text-lg font-semibold">{m.depot_freight_cars_title()}</h3>
+              <Badge variant="secondary">{filteredFreightCars.length}</Badge>
+            </div>
+          </Accordion.Trigger>
+          <Accordion.Content class="px-0 pt-0">
+            <DepotTable items={filteredFreightCars} type="car" />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+    </Accordion.Root>
   {/if}
 </div>

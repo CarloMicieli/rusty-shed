@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::{Control, ProductCode, RollingStockCategory};
+use crate::catalog::domain::railway_model::{Control, Epoch, ProductCode, RollingStockCategory};
 use crate::collecting::domain::OwnedRollingStockId;
 use serde::Serialize;
 
@@ -54,4 +54,7 @@ pub struct DepotRollingStockView {
 
     /// Optional railway company name for display purposes.
     pub railway_company_name: Option<String>,
+
+    /// Epoch/era (e.g., "IV", "III/IV", "Vm") for display purposes.
+    pub epoch: Option<Epoch>,
 }

@@ -14,14 +14,14 @@
     stickyOffset = 'var(--header-offset, 4rem)',
     emptyMessage
   }: {
-    title: string;
+    title?: string;
     items: T[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    icon: Component<any> | any;
+    icon?: Component<any> | any;
     type: 'locomotive' | 'train' | 'car';
     toneClass?: BadgeVariant;
     stickyOffset?: string;
-    emptyMessage: string;
+    emptyMessage?: string;
   } = $props();
 
   let viewAll = $state(false);
@@ -52,6 +52,7 @@
       category: str(it.categoryLabel ?? it.category_label ?? '-'),
       roadNumber: str(it.roadNumber ?? it.road_number ?? '-'),
       railway: str(it.railwayCompany ?? it.railway_company ?? '-'),
+      epoch: str(it.epoch ?? '-'),
       livery: str(it.livery ?? '-'),
       control: str(it.control ?? '-'),
       serviceLevel: str(it.serviceLevel ?? '-')
@@ -88,6 +89,11 @@
         label: 'Product code',
         key: 'productCode',
         class: 'w-50 cursor-pointer hover:bg-surface-500/10'
+      },
+      {
+        label: m.depot_era(),
+        key: 'epoch',
+        class: 'hidden xl:table-cell w-20 cursor-pointer hover:bg-surface-500/10'
       },
       {
         label: 'Category',
@@ -134,29 +140,31 @@
 </script>
 
 <section class="space-y-2 pt-2">
-  <div
-    class="border-surface-500/10 bg-surface-50/80 sticky z-10 border-b backdrop-blur-sm"
-    style:top={stickyOffset}
-  >
-    <div class="flex items-center gap-3 rounded-lg px-2 py-2">
-      <Badge variant={toneClass} class="flex items-center justify-center p-1.5">
-        {#if Icon}
-          <Icon size={16} />
-        {/if}
-      </Badge>
-      <div class="flex items-center gap-2">
-        <h2 class="text-lg font-semibold tracking-tight">{title}</h2>
-        <Badge variant="outline" class="font-mono text-xs">{items.length}</Badge>
+  {#if title}
+    <div
+      class="border-surface-500/10 bg-surface-50/80 sticky z-10 border-b backdrop-blur-sm"
+      style:top={stickyOffset}
+    >
+      <div class="flex items-center gap-3 rounded-lg px-2 py-2">
+        <Badge variant={toneClass} class="flex items-center justify-center p-1.5">
+          {#if Icon}
+            <Icon size={16} />
+          {/if}
+        </Badge>
+        <div class="flex items-center gap-2">
+          <h2 class="text-lg font-semibold tracking-tight">{title}</h2>
+          <Badge variant="outline" class="font-mono text-xs">{items.length}</Badge>
+        </div>
       </div>
     </div>
-  </div>
+  {/if}
 
   <div class="space-y-3">
-    {#if items.length === 0}
+    {#if items.length === 0 && emptyMessage}
       <div class="border-surface-500/20 rounded-xl border border-dashed p-8 text-center">
         <p class="text-surface-500 text-sm">{emptyMessage}</p>
       </div>
-    {:else}
+    {:else if items.length > 0}
       <div
         class="table-container border-surface-500/10 bg-surface-900/40 overflow-hidden rounded-xl border"
       >
@@ -196,6 +204,9 @@
                     {#if props.railway !== '-'}<span>• {props.railway}</span>{/if}
                     {#if props.roadNumber !== '-'}<span>• {props.roadNumber}</span>{/if}
                   </div>
+                </td>
+                <td class="text-surface-400 hidden align-middle text-sm xl:table-cell">
+                  {props.epoch}
                 </td>
                 <td
                   class="text-surface-400 hidden align-middle text-xs tracking-wide uppercase lg:table-cell"

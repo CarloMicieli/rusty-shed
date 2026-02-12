@@ -38,22 +38,22 @@
 
 ### Backend: Add Epoch Field to Depot View
 
-- [ ] T001 [P] Add `pub epoch: Option<Epoch>` field to DepotRollingStockView in src-tauri/src/collecting/domain/depot_view.rs
-- [ ] T002 [P] Add import for Epoch type in src-tauri/src/collecting/domain/depot_view.rs
-- [ ] T003 Update mapper to include epoch in src-tauri/src/collecting/infrastructure/mappers.rs (add `epoch: Some(collection_item.railway_model.epoch.clone())`)
-- [ ] T004 Rebuild backend to regenerate TypeScript bindings with `cd src-tauri && cargo build`
-- [ ] T005 Verify TypeScript bindings include epoch field in generated types
+- [x] T001 [P] Add `pub epoch: Option<Epoch>` field to DepotRollingStockView in src-tauri/src/collecting/domain/depot_view.rs
+- [x] T002 [P] Add import for Epoch type in src-tauri/src/collecting/domain/depot_view.rs
+- [x] T003 Update mapper to include epoch in src-tauri/src/collecting/infrastructure/mappers.rs (add `epoch: Some(collection_item.railway_model.epoch.clone())`)
+- [x] T004 Rebuild backend to regenerate TypeScript bindings with `cd src-tauri && cargo build`
+- [x] T005 Verify TypeScript bindings include epoch field in generated types
 
 ### Frontend: Add i18n Messages
 
-- [ ] T006 [P] Add `depot_railcars_and_emu_title` message to messages/en.json
-- [ ] T007 [P] Add `depot_passenger_cars_title` message to messages/en.json
-- [ ] T008 [P] Add `depot_freight_cars_title` message to messages/en.json
-- [ ] T009 [P] Add `depot_empty_railcars_and_emu` message to messages/en.json
-- [ ] T010 [P] Add `depot_empty_passenger_cars` message to messages/en.json
-- [ ] T011 [P] Add `depot_empty_freight_cars` message to messages/en.json
-- [ ] T012 [P] Add `depot_era` message to messages/en.json (for Era column header)
-- [ ] T013 Rebuild Paraglide messages with `pnpm run paraglide:compile`
+- [x] T006 [P] Add `depot_railcars_and_emu_title` message to messages/en.json
+- [x] T007 [P] Add `depot_passenger_cars_title` message to messages/en.json
+- [x] T008 [P] Add `depot_freight_cars_title` message to messages/en.json
+- [x] T009 [P] Add `depot_empty_railcars_and_emu` message to messages/en.json
+- [x] T010 [P] Add `depot_empty_passenger_cars` message to messages/en.json
+- [x] T011 [X] Add `depot_empty_freight_cars` message to messages/en.json
+- [x] T012 [P] Add `depot_era` message to messages/en.json (for Era column header)
+- [x] T013 Rebuild Paraglide messages with `pnpm run paraglide:compile`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -69,13 +69,13 @@
 
 **Note**: Search functionality already exists with 150ms debounce. This story verifies search works with new 4-category structure.
 
-- [ ] T014 [US1] Update filteredLocomotives derived in src/lib/features/depot/DepotState.svelte.ts (verify existing filter logic)
-- [ ] T015 [US1] Add filteredRailcarsEmuDmu derived (rename from filteredTrains) in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T016 [US1] Add filteredPassengerCars derived in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T017 [US1] Add filteredFreightCars derived in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T018 [US1] Update totalFiltered calculation to sum all 4 categories in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T019 [US1] Update return object to export new filtered category getters in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T020 [US1] Update derived state variables in src/routes/my-depot/+page.svelte (add filteredRailcarsEmuDmu, filteredPassengerCars, filteredFreightCars)
+- [x] T014 [US1] Update filteredLocomotives derived in src/lib/features/depot/DepotState.svelte.ts (verify existing filter logic)
+- [x] T015 [US1] Add filteredRailcarsEmuDmu derived (rename from filteredTrains) in src/lib/features/depot/DepotState.svelte.ts
+- [x] T016 [US1] Add filteredPassengerCars derived in src/lib/features/depot/DepotState.svelte.ts
+- [x] T017 [US1] Add filteredFreightCars derived in src/lib/features/depot/DepotState.svelte.ts
+- [x] T018 [US1] Update totalFiltered calculation to sum all 4 categories in src/lib/features/depot/DepotState.svelte.ts
+- [x] T019 [US1] Update return object to export new filtered category getters in src/lib/features/depot/DepotState.svelte.ts
+- [x] T020 [US1] Update derived state variables in src/routes/my-depot/+page.svelte (add filteredRailcarsEmuDmu, filteredPassengerCars, filteredFreightCars)
 
 **Manual Test for User Story 1**:
 
@@ -103,26 +103,26 @@
 
 #### Frontend: Category Reorganization
 
-- [ ] T021 [P] [US2] Update locomotives derived getter in src/lib/features/depot/DepotState.svelte.ts (verify existing logic)
-- [ ] T022 [P] [US2] Add railcarsEmuDmu derived getter (rename from trains) in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T023 [P] [US2] Add passengerCars derived getter (split from cars) in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T024 [P] [US2] Add freightCars derived getter (split from cars) in src/lib/features/depot/DepotState.svelte.ts
-- [ ] T025 [US2] Update return object to export all 4 category getters in src/lib/features/depot/DepotState.svelte.ts
+- [x] T021 [P] [US2] Update locomotives derived getter in src/lib/features/depot/DepotState.svelte.ts (verify existing logic)
+- [x] T022 [P] [US2] Add railcarsEmuDmu derived getter (rename from trains) in src/lib/features/depot/DepotState.svelte.ts
+- [x] T023 [P] [US2] Add passengerCars derived getter (split from cars) in src/lib/features/depot/DepotState.svelte.ts
+- [x] T024 [P] [US2] Add freightCars derived getter (split from cars) in src/lib/features/depot/DepotState.svelte.ts
+- [x] T025 [US2] Update return object to export all 4 category getters in src/lib/features/depot/DepotState.svelte.ts
 
 #### Frontend: Accordion UI Implementation
 
-- [ ] T026 [US2] Import Accordion component from shadcn-svelte in src/routes/my-depot/+page.svelte
-- [ ] T027 [US2] Import Users icon for passenger cars in src/routes/my-depot/+page.svelte
-- [ ] T028 [US2] Remove grid/table toggle buttons from PageHeader actions in src/routes/my-depot/+page.svelte
-- [ ] T029 [US2] Remove viewMode state and handleViewModeChange function in src/routes/my-depot/+page.svelte
-- [ ] T030 [US2] Replace grid/table conditional rendering with Accordion.Root component in src/routes/my-depot/+page.svelte
-- [ ] T031 [P] [US2] Create Locomotives accordion item with TrainFront icon and count badge in src/routes/my-depot/+page.svelte
-- [ ] T032 [P] [US2] Create Railcars & EMU/DMU accordion item with TramFront icon and count badge in src/routes/my-depot/+page.svelte
-- [ ] T033 [P] [US2] Create Passenger Cars accordion item with Users icon and count badge in src/routes/my-depot/+page.svelte
-- [ ] T034 [P] [US2] Create Freight Cars accordion item with Box icon and count badge in src/routes/my-depot/+page.svelte
-- [ ] T035 [US2] Add sticky header styling to all Accordion.Trigger components (sticky top-[var(--header-offset)] z-10 bg-surface-900/95 backdrop-blur-sm) in src/routes/my-depot/+page.svelte
-- [ ] T036 [US2] Update each Accordion.Content to render DepotTable instead of DepotSection in src/routes/my-depot/+page.svelte
-- [ ] T037 [US2] Add conditional rendering to hide empty categories (if filteredItems.length > 0) in src/routes/my-depot/+page.svelte
+- [x] T026 [US2] Import Accordion component from shadcn-svelte in src/routes/my-depot/+page.svelte
+- [x] T027 [US2] Import Users icon for passenger cars in src/routes/my-depot/+page.svelte
+- [x] T028 [US2] Remove grid/table toggle buttons from PageHeader actions in src/routes/my-depot/+page.svelte
+- [x] T029 [US2] Remove viewMode state and handleViewModeChange function in src/routes/my-depot/+page.svelte
+- [x] T030 [US2] Replace grid/table conditional rendering with Accordion.Root component in src/routes/my-depot/+page.svelte
+- [x] T031 [P] [US2] Create Locomotives accordion item with TrainFront icon and count badge in src/routes/my-depot/+page.svelte
+- [x] T032 [P] [US2] Create Railcars & EMU/DMU accordion item with TramFront icon and count badge in src/routes/my-depot/+page.svelte
+- [x] T033 [P] [US2] Create Passenger Cars accordion item with Users icon and count badge in src/routes/my-depot/+page.svelte
+- [x] T034 [P] [US2] Create Freight Cars accordion item with Box icon and count badge in src/routes/my-depot/+page.svelte
+- [x] T035 [US2] Add sticky header styling to all Accordion.Trigger components (sticky top-[var(--header-offset)] z-10 bg-surface-900/95 backdrop-blur-sm) in src/routes/my-depot/+page.svelte
+- [x] T036 [US2] Update each Accordion.Content to render DepotTable instead of DepotSection in src/routes/my-depot/+page.svelte
+- [x] T037 [US2] Add conditional rendering to hide empty categories (if filteredItems.length > 0) in src/routes/my-depot/+page.svelte
 
 **Manual Test for User Story 2**:
 
@@ -149,15 +149,15 @@
 
 #### Frontend: Add Era Column to Table
 
-- [ ] T038 [P] [US3] Add Era column header after Product Code in src/lib/features/depot/components/DepotTable.svelte
-- [ ] T039 [P] [US3] Add Era column data cell displaying item.epoch with null fallback in src/lib/features/depot/components/DepotTable.svelte
-- [ ] T040 [US3] Apply muted foreground styling to Era column (text-muted-foreground) in src/lib/features/depot/components/DepotTable.svelte
+- [x] T038 [P] [US3] Add Era column header after Product Code in src/lib/features/depot/components/DepotTable.svelte
+- [x] T039 [P] [US3] Add Era column data cell displaying item.epoch with null fallback in src/lib/features/depot/components/DepotTable.svelte
+- [x] T040 [US3] Apply muted foreground styling to Era column (text-muted-foreground) in src/lib/features/depot/components/DepotTable.svelte
 
 #### Frontend: Table Visual Hierarchy
 
-- [ ] T041 [P] [US3] Verify primary information (Series, Road Number) uses default text styling in src/lib/features/depot/components/DepotTable.svelte
-- [ ] T042 [P] [US3] Verify secondary information (Product Code, Era) uses muted styling in src/lib/features/depot/components/DepotTable.svelte
-- [ ] T043 [US3] Test table readability with 50+ items per category
+- [x] T041 [P] [US3] Verify primary information (Series, Road Number) uses default text styling in src/lib/features/depot/components/DepotTable.svelte
+- [x] T042 [P] [US3] Verify secondary information (Product Code, Era) uses muted styling in src/lib/features/depot/components/DepotTable.svelte
+- [x] T043 [US3] Test table readability with 50+ items per category
 
 **Manual Test for User Story 3**:
 
@@ -178,19 +178,19 @@
 
 ### Code Cleanup
 
-- [ ] T044 [P] Delete LocomotiveCard.svelte component (grid view removed) from src/lib/features/depot/components/
-- [ ] T045 [P] Delete TrainCard.svelte component (grid view removed) from src/lib/features/depot/components/
-- [ ] T046 [P] Delete CarCard.svelte component (grid view removed) from src/lib/features/depot/components/
-- [ ] T047 Review and update/remove DepotSection.svelte if only used for grid view in src/lib/features/depot/components/
+- [X] T044 [P] Delete LocomotiveCard.svelte component (grid view removed) from src/lib/features/depot/components/
+- [X] T045 [P] Delete TrainCard.svelte component (grid view removed) from src/lib/features/depot/components/
+- [X] T046 [P] Delete CarCard.svelte component (grid view removed) from src/lib/features/depot/components/
+- [X] T047 Review and update/remove DepotSection.svelte if only used for grid view in src/lib/features/depot/components/
 
 ### Verification & Quality Checks
 
-- [ ] T048 Run frontend linter with `pnpm lint` → verify no errors
-- [ ] T049 Run TypeScript type checking with `pnpm check` → verify no errors
-- [ ] T050 Run frontend formatter with `pnpm format`
-- [ ] T051 Run backend formatter with `cargo fmt` in src-tauri/
-- [ ] T052 Run backend linter with `cargo clippy` in src-tauri/ → verify no warnings
-- [ ] T053 Run backend tests with `cargo test` in src-tauri/ → verify all pass
+- [X] T048 Run frontend linter with `pnpm lint` → verify no errors
+- [X] T049 Run TypeScript type checking with `pnpm check` → verify no errors
+- [X] T050 Run frontend formatter with `pnpm format`
+- [X] T051 Run backend formatter with `cargo fmt` in src-tauri/
+- [X] T052 Run backend linter with `cargo clippy` in src-tauri/ → verify no warnings
+- [X] T053 Run backend tests with `cargo test` in src-tauri/ → verify all pass
 - [ ] T054 Run manual testing checklist from quickstart.md
 
 ### Performance Validation

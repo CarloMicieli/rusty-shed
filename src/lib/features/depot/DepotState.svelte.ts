@@ -33,17 +33,24 @@ export class DepotState {
       .map((item) => this.mapToLocomotive(item));
   });
 
-  trains = $derived.by(() => {
+  railcarsEmuDmu = $derived.by(() => {
     if (!this.#depot) return [];
     return this.#depot.rollingStocks
       .filter((item) => item.category === 'ELECTRIC_MULTIPLE_UNIT' || item.category === 'RAILCAR')
       .map((item) => this.mapToTrainSet(item));
   });
 
-  cars = $derived.by(() => {
+  passengerCars = $derived.by(() => {
     if (!this.#depot) return [];
     return this.#depot.rollingStocks
-      .filter((item) => item.category === 'PASSENGER_CAR' || item.category === 'FREIGHT_CAR')
+      .filter((item) => item.category === 'PASSENGER_CAR')
+      .map((item) => this.mapToCar(item));
+  });
+
+  freightCars = $derived.by(() => {
+    if (!this.#depot) return [];
+    return this.#depot.rollingStocks
+      .filter((item) => item.category === 'FREIGHT_CAR')
       .map((item) => this.mapToCar(item));
   });
 
@@ -53,20 +60,30 @@ export class DepotState {
     return this.locomotives.filter((item) => this.filterMatch(item, q));
   });
 
-  filteredTrains = $derived.by(() => {
+  filteredRailcarsEmuDmu = $derived.by(() => {
     const q = this.#query.trim().toLowerCase();
-    if (!q) return this.trains;
-    return this.trains.filter((item) => this.filterMatch(item, q));
+    if (!q) return this.railcarsEmuDmu;
+    return this.railcarsEmuDmu.filter((item) => this.filterMatch(item, q));
   });
 
-  filteredCars = $derived.by(() => {
+  filteredPassengerCars = $derived.by(() => {
     const q = this.#query.trim().toLowerCase();
-    if (!q) return this.cars;
-    return this.cars.filter((item) => this.filterMatch(item, q));
+    if (!q) return this.passengerCars;
+    return this.passengerCars.filter((item) => this.filterMatch(item, q));
+  });
+
+  filteredFreightCars = $derived.by(() => {
+    const q = this.#query.trim().toLowerCase();
+    if (!q) return this.freightCars;
+    return this.freightCars.filter((item) => this.filterMatch(item, q));
   });
 
   totalFiltered = $derived.by(
-    () => this.filteredLocomotives.length + this.filteredTrains.length + this.filteredCars.length
+    () =>
+      this.filteredLocomotives.length +
+      this.filteredRailcarsEmuDmu.length +
+      this.filteredPassengerCars.length +
+      this.filteredFreightCars.length
   );
 
   private filterMatch(item: Locomotive | TrainSet | Car, query: string): boolean {

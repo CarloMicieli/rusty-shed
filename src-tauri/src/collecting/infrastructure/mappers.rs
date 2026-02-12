@@ -290,6 +290,7 @@ impl CollectionMapper {
             control: owned.control,
             livery: owned.livery.clone(),
             railway_company_name: owned.railway_company_name.clone(),
+            epoch: Some(collection_item.railway_model.epoch.clone()),
         })
     }
 }
