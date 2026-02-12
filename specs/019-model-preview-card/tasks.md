@@ -38,9 +38,9 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 **Tasks**:
 
-- [X] T001 [P] Add i18n message keys for component in messages/en.json
-- [X] T002 [P] Create component props type interface in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T003 [P] Set up test file structure in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T001 [P] Add i18n message keys for component in messages/en.json
+- [x] T002 [P] Create component props type interface in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T003 [P] Set up test file structure in src/**tests**/components/RailwayModelPreviewCard.test.ts
 
 **Parallel Execution**: All tasks can run in parallel (different concerns, no dependencies)
 
@@ -54,9 +54,9 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 **Tasks**:
 
-- [X] T004 Create base component skeleton with TypeScript props in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T005 Add shadcn-svelte Card wrapper with base styling (card, gauge-frame, ring-1 ring-border/40) in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T006 Implement basic component rendering test in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T004 Create base component skeleton with TypeScript props in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T005 Add shadcn-svelte Card wrapper with base styling (card, gauge-frame, ring-1 ring-border/40) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T006 Implement basic component rendering test in src/**tests**/components/RailwayModelPreviewCard.test.ts
 
 **Dependencies**: Phase 1 must complete first
 
@@ -76,20 +76,20 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 #### Tests
 
-- [X] T007 [P] [US1] Write test for displaying manufacturer and product code in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T008 [P] [US1] Write test for displaying series and category as title in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T009 [P] [US1] Write test for displaying road number in identification plate in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T010 [P] [US1] Write test for 16:9 aspect ratio thumbnail with photo in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T011 [P] [US1] Write test for long road number truncation (>25 chars) in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T007 [P] [US1] Write test for displaying manufacturer and product code in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T008 [P] [US1] Write test for displaying series and category as title in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T009 [P] [US1] Write test for displaying road number in identification plate in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T010 [P] [US1] Write test for 16:9 aspect ratio thumbnail with photo in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T011 [P] [US1] Write test for long road number truncation (>25 chars) in src/**tests**/components/RailwayModelPreviewCard.test.ts
 
 #### Implementation
 
-- [X] T012 [P] [US1] Implement thumbnail container with aspect-video class in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T013 [P] [US1] Implement manufacturer and product code display line in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T014 [P] [US1] Implement series and category title display in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T015 [US1] Implement road number identification plate with monospaced font in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T016 [US1] Implement road number truncation logic (>25 chars) with click/hover expansion in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T017 [US1] Add fallback display for missing road number ("# ---") in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T012 [P] [US1] Implement thumbnail container with aspect-video class in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T013 [P] [US1] Implement manufacturer and product code display line in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T014 [P] [US1] Implement series and category title display in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T015 [US1] Implement road number identification plate with monospaced font in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T016 [US1] Implement road number truncation logic (>25 chars) with click/hover expansion in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T017 [US1] Add fallback display for missing road number ("# ---") in src/lib/components/RailwayModelPreviewCard.svelte
 
 **Parallel Execution**:
 
@@ -121,21 +121,21 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 #### Tests
 
-- [X] T018 [P] [US2] Write test for scale and power method badges in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T019 [P] [US2] Write test for era and purchase date badges in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T020 [P] [US2] Write test for unit count badge (×3) in bottom-right corner in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T021 [P] [US2] Write test for digital feature icons (sound, DCC) in top-left corner in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T022 [P] [US2] Write test for multiple digital features stacking horizontally in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T023 [P] [US2] Write test for omitting badges when data is missing in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T018 [P] [US2] Write test for scale and power method badges in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T019 [P] [US2] Write test for era and purchase date badges in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T020 [P] [US2] Write test for unit count badge (×3) in bottom-right corner in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T021 [P] [US2] Write test for digital feature icons (sound, DCC) in top-left corner in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T022 [P] [US2] Write test for multiple digital features stacking horizontally in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T023 [P] [US2] Write test for omitting badges when data is missing in src/**tests**/components/RailwayModelPreviewCard.test.ts
 
 #### Implementation
 
-- [X] T024 [P] [US2] Implement metadata badge section with flexbox layout in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T025 [P] [US2] Add scale and power method Badge components in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T026 [P] [US2] Add era and purchase date Badge components with i18n in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T027 [P] [US2] Implement unit count overlay badge (absolute positioning, bottom-right) in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T028 [P] [US2] Implement digital features overlay icons (absolute positioning, top-left) in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T029 [US2] Add conditional rendering to omit missing metadata badges in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T024 [P] [US2] Implement metadata badge section with flexbox layout in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T025 [P] [US2] Add scale and power method Badge components in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T026 [P] [US2] Add era and purchase date Badge components with i18n in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T027 [P] [US2] Implement unit count overlay badge (absolute positioning, bottom-right) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T028 [P] [US2] Implement digital features overlay icons (absolute positioning, top-left) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T029 [US2] Add conditional rendering to omit missing metadata badges in src/lib/components/RailwayModelPreviewCard.svelte
 
 **Parallel Execution**:
 
@@ -167,18 +167,18 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 #### Tests
 
-- [X] T030 [P] [US4] Write test for delete button rendering when onDelete prop provided in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T031 [P] [US4] Write test for delete button hidden when onDelete prop omitted in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T032 [P] [US4] Write test for confirmation dialog opening on delete button click in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T033 [P] [US4] Write test for onDelete callback when user confirms in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T034 [P] [US4] Write test for dialog cancellation (no callback) in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T030 [P] [US4] Write test for delete button rendering when onDelete prop provided in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T031 [P] [US4] Write test for delete button hidden when onDelete prop omitted in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T032 [P] [US4] Write test for confirmation dialog opening on delete button click in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T033 [P] [US4] Write test for onDelete callback when user confirms in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T034 [P] [US4] Write test for dialog cancellation (no callback) in src/**tests**/components/RailwayModelPreviewCard.test.ts
 
 #### Implementation
 
-- [X] T035 [P] [US4] Add delete button with Trash2 icon in card header in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T036 [P] [US4] Implement AlertDialog component for delete confirmation in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T037 [US4] Add onDelete event handler with model ID parameter in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T038 [US4] Add conditional rendering for delete button (only show if onDelete prop exists) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T035 [P] [US4] Add delete button with Trash2 icon in card header in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T036 [P] [US4] Implement AlertDialog component for delete confirmation in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T037 [US4] Add onDelete event handler with model ID parameter in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T038 [US4] Add conditional rendering for delete button (only show if onDelete prop exists) in src/lib/components/RailwayModelPreviewCard.svelte
 
 **Parallel Execution**:
 
@@ -210,18 +210,18 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 #### Tests
 
-- [X] T039 [P] [US3] Write test for steam locomotive placeholder icon in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T040 [P] [US3] Write test for electric locomotive placeholder icon in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T041 [P] [US3] Write test for wagon/freight car placeholder icon in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T042 [P] [US3] Write test for generic train placeholder when category unknown in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T043 [P] [US3] Write test for photo display when photoUrl provided in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T039 [P] [US3] Write test for steam locomotive placeholder icon in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T040 [P] [US3] Write test for electric locomotive placeholder icon in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T041 [P] [US3] Write test for wagon/freight car placeholder icon in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T042 [P] [US3] Write test for generic train placeholder when category unknown in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T043 [P] [US3] Write test for photo display when photoUrl provided in src/**tests**/components/RailwayModelPreviewCard.test.ts
 
 #### Implementation
 
-- [X] T044 [P] [US3] Create category-to-icon mapping with lucide-svelte icons in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T045 [P] [US3] Implement placeholder icon display logic (conditional on missing photo) in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T046 [US3] Add img element for photo display with object-cover styling in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T047 [US3] Implement conditional rendering (photo vs placeholder) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T044 [P] [US3] Create category-to-icon mapping with lucide-svelte icons in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T045 [P] [US3] Implement placeholder icon display logic (conditional on missing photo) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T046 [US3] Add img element for photo display with object-cover styling in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T047 [US3] Implement conditional rendering (photo vs placeholder) in src/lib/components/RailwayModelPreviewCard.svelte
 
 **Parallel Execution**:
 
@@ -247,15 +247,15 @@ This document contains implementation tasks for the Railway Model Preview Card c
 
 **Tasks**:
 
-- [X] T048 [P] Add responsive grid examples to component documentation in specs/019-model-preview-card/quickstart.md
-- [X] T049 [P] Add ARIA labels for delete button and thumbnail in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T050 [P] Implement hover states and transitions (scale-102, ring-primary-500) in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T051 [P] Add loading="lazy" decoding="async" to img elements in src/lib/components/RailwayModelPreviewCard.svelte
-- [X] T052 [P] Verify all user-facing strings use Paraglide i18n in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T048 [P] Add responsive grid examples to component documentation in specs/019-model-preview-card/quickstart.md
+- [x] T049 [P] Add ARIA labels for delete button and thumbnail in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T050 [P] Implement hover states and transitions (scale-102, ring-primary-500) in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T051 [P] Add loading="lazy" decoding="async" to img elements in src/lib/components/RailwayModelPreviewCard.svelte
+- [x] T052 [P] Verify all user-facing strings use Paraglide i18n in src/lib/components/RailwayModelPreviewCard.svelte
 - [ ] T053 Run pnpm lint and fix any linting errors
 - [ ] T054 Run pnpm check and fix any TypeScript errors
-- [X] T055 [P] Write accessibility tests (ARIA attributes, semantic HTML) in src/**tests**/components/RailwayModelPreviewCard.test.ts
-- [X] T056 [P] Write responsive design tests (Tailwind class verification) in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T055 [P] Write accessibility tests (ARIA attributes, semantic HTML) in src/**tests**/components/RailwayModelPreviewCard.test.ts
+- [x] T056 [P] Write responsive design tests (Tailwind class verification) in src/**tests**/components/RailwayModelPreviewCard.test.ts
 - [ ] T057 Run pnpm test:coverage and verify 60%+ coverage for component
 
 **Parallel Execution**: All [P] tasks can run in parallel, verification tasks (T053-T054, T057) run at the end

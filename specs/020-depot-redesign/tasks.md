@@ -178,19 +178,19 @@
 
 ### Code Cleanup
 
-- [X] T044 [P] Delete LocomotiveCard.svelte component (grid view removed) from src/lib/features/depot/components/
-- [X] T045 [P] Delete TrainCard.svelte component (grid view removed) from src/lib/features/depot/components/
-- [X] T046 [P] Delete CarCard.svelte component (grid view removed) from src/lib/features/depot/components/
-- [X] T047 Review and update/remove DepotSection.svelte if only used for grid view in src/lib/features/depot/components/
+- [x] T044 [P] Delete LocomotiveCard.svelte component (grid view removed) from src/lib/features/depot/components/
+- [x] T045 [P] Delete TrainCard.svelte component (grid view removed) from src/lib/features/depot/components/
+- [x] T046 [P] Delete CarCard.svelte component (grid view removed) from src/lib/features/depot/components/
+- [x] T047 Review and update/remove DepotSection.svelte if only used for grid view in src/lib/features/depot/components/
 
 ### Verification & Quality Checks
 
-- [X] T048 Run frontend linter with `pnpm lint` → verify no errors
-- [X] T049 Run TypeScript type checking with `pnpm check` → verify no errors
-- [X] T050 Run frontend formatter with `pnpm format`
-- [X] T051 Run backend formatter with `cargo fmt` in src-tauri/
-- [X] T052 Run backend linter with `cargo clippy` in src-tauri/ → verify no warnings
-- [X] T053 Run backend tests with `cargo test` in src-tauri/ → verify all pass
+- [x] T048 Run frontend linter with `pnpm lint` → verify no errors
+- [x] T049 Run TypeScript type checking with `pnpm check` → verify no errors
+- [x] T050 Run frontend formatter with `pnpm format`
+- [x] T051 Run backend formatter with `cargo fmt` in src-tauri/
+- [x] T052 Run backend linter with `cargo clippy` in src-tauri/ → verify no warnings
+- [x] T053 Run backend tests with `cargo test` in src-tauri/ → verify all pass
 - [ ] T054 Run manual testing checklist from quickstart.md
 
 ### Performance Validation
