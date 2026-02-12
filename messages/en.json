@@ -734,5 +734,11 @@
   "export_progress_collecting": "Collecting data",
   "export_progress_compressing": "Compressing files",
   "export_progress_finalizing": "Finalizing archive",
-  "export_select_destination": "Select export location"
+  "export_select_destination": "Select export location",
+  "components_deleteConfirmTitle": "Delete Model?",
+  "components_deleteConfirmMessage": "Are you sure you want to delete {model}? This action cannot be undone.",
+  "components_unknownManufacturer": "Unknown",
+  "components_noRoadNumber": "---",
+  "components_purchaseDate": "PURCHASED",
+  "components_deleteButton": "Delete model"
 }
