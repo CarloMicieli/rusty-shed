@@ -8,6 +8,8 @@ vi.mock('$lib/paraglide/messages', () => ({
   railway_model_details: () => 'Railway Model Details',
   rolling_stock_list: () => 'Rolling Stock List',
   upload_image: () => 'Upload Image',
+  replace_image: () => 'Change Image',
+  no_additional_details: () => 'No additional details',
   drag_drop_image_here: () => 'Drag and drop an image here',
   series_code: () => 'Series Code',
   road_number: () => 'Road Number',
@@ -38,6 +40,7 @@ describe('RailwayModelCard', () => {
       power_method: 'DC',
       category: 'Locomotive',
       description: 'Electric locomotive E.656 in original green livery',
+      details: null,
       image_path: null,
       status: 'InCollection',
       rolling_stock: [
@@ -68,6 +71,7 @@ describe('RailwayModelCard', () => {
       power_method: null,
       category: 'Passenger Set',
       description: 'ÖBB Railjet 3-car set',
+      details: null,
       image_path: 'images/railway_models/2/railjet.jpg',
       status: 'InCollection',
       rolling_stock: [
@@ -130,18 +134,42 @@ describe('RailwayModelCard', () => {
       const card = container.querySelector('.railway-model-card');
       expect(card?.classList.contains('custom-class')).toBe(true);
     });
+
+    it('does not use the decorative gauge-frame (removes orange border)', () => {
+      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
+      const card = container.querySelector('.railway-model-card');
+      expect(card?.classList.contains('gauge-frame')).toBe(false);
+    });
+
+    it('removes outer ring/border classes from the card root', () => {
+      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
+      const card = container.querySelector('.railway-model-card');
+      // should not have the decorative ring or ring-border utility classes
+      expect(card?.classList.contains('ring-1')).toBe(false);
+      expect(card?.classList.contains('ring-border/40')).toBe(false);
+    });
+
+    it('shows "Change Image" when an image exists and editable=true', () => {
+      const { container } = render(RailwayModelCard, {
+        props: { model: _mockModelMultiUnit, editable: true }
+      });
+
+      const heroBtn = container.querySelector('.hero-section button');
+      expect(heroBtn).toBeTruthy();
+      expect((heroBtn as HTMLElement).textContent).toContain('Change Image');
+    });
   });
 
   // Tests for User Story 1: View Basic Model Information
   describe('User Story 1: Basic Model Information', () => {
-    it('renders header with manufacturer, product code, scale', () => {
+    it('renders header with manufacturer and product code; scale is in specifications', () => {
       const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
 
       // Check for manufacturer
       expect(container.textContent).toContain('Rivarossi');
       // Check for product code
       expect(container.textContent).toContain('HR2906');
-      // Check for scale
+      // Scale should still appear in the card (now in the specs row)
       expect(container.textContent).toContain('H0');
     });
 
@@ -155,6 +183,24 @@ describe('RailwayModelCard', () => {
       // Check for placeholder (no <img> tag with actual src)
       const img = container.querySelector('img[src*="images/"]');
       expect(img).toBeFalsy();
+    });
+
+    it('centers the hero image when image_path is present and centers the hero container', () => {
+      const { container } = render(RailwayModelCard, { props: { model: _mockModelMultiUnit } });
+      const hero = container.querySelector('.hero-section');
+      const img = container.querySelector('.hero-section img');
+      expect(hero).toBeTruthy();
+      expect(img).toBeTruthy();
+
+      // hero container should be centered within its parent at md+ sizes
+      expect(hero?.classList.contains('mx-auto')).toBe(true);
+
+      // verify the image uses centering sizing utilities and fills the hero area
+      expect(img?.classList.contains('object-center')).toBe(true);
+      expect(img?.classList.contains('object-cover')).toBe(true);
+      expect(img?.classList.contains('w-full')).toBe(true);
+      expect(img?.classList.contains('h-full')).toBe(true);
+      expect(img?.classList.contains('block')).toBe(true);
     });
 
     it('renders global specs section with era, power_method, category, description', () => {
@@ -206,7 +252,46 @@ describe('RailwayModelCard', () => {
 
   // Tests for User Story 4 will be added in Phase 6
   describe('User Story 4: Tabbed Navigation', () => {
-    it.todo('multi-unit model displays tabs (Railway Model Details, Rolling Stock List)');
+    it('multi-unit model displays tabs (Railway Model Details, Rolling Stock List) inside a boxed container', () => {
+      const { container, getByTestId } = render(RailwayModelCard, {
+        props: { model: _mockModelMultiUnit }
+      });
+
+      // Tabs text
+      expect(container.textContent).toContain('Railway Model Details');
+      expect(container.textContent).toContain('Rolling Stock List');
+
+      // Box wrapper exists and contains the tabs
+      const box = getByTestId('tabs-box');
+      expect(box).toBeTruthy();
+      expect(box.querySelector('[role="tablist"]')).toBeTruthy();
+    });
+
+    it('compact specs row is present above the tabs for multi-unit models', () => {
+      const { container } = render(RailwayModelCard, { props: { model: _mockModelMultiUnit } });
+
+      const html = container.innerHTML || '';
+      const idxSpecs = html.indexOf('data-testid="specs"');
+      const idxDetailsTab = (container.textContent || '').indexOf('Railway Model Details');
+
+      expect(idxSpecs).toBeGreaterThan(-1);
+      expect(idxDetailsTab).toBeGreaterThan(-1);
+      expect(idxSpecs).toBeLessThan(html.indexOf('Railway Model Details'));
+    });
+
+    it('shows placeholder when details are empty (multi-unit)', () => {
+      const noDetailsModel = { ..._mockModelMultiUnit, description: null } as RailwayModel;
+      const { container } = render(RailwayModelCard, { props: { model: noDetailsModel } });
+
+      // Placeholder text should be visible in the Details tab content for multi-unit models
+      expect(container.textContent).toContain('No additional details');
+    });
+
+    it('does NOT show placeholder when description exists', () => {
+      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
+      expect(container.textContent).not.toContain('No additional details');
+    });
+
     it.todo('single-unit model does NOT display tabs');
     it.todo('tab switching changes displayed content');
     it.todo('default tab is Railway Model Details for multi-unit models');

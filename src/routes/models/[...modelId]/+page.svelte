@@ -26,9 +26,7 @@
   let error = $state<string | null>(null);
 
   // Derived reactive model for display
-  let displayModel = $derived(
-    model ? toRailwayModel(model, collectionItem, imageResponse) : null
-  );
+  let displayModel = $derived(model ? toRailwayModel(model, collectionItem, imageResponse) : null);
 
   function goBack() {
     goto('/my-collection');

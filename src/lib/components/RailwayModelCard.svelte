@@ -58,7 +58,6 @@
 
   // Derived/computed values (T058, T074)
   let isSingleUnit = $derived(model.rolling_stock?.length === 1);
-  let showTabs = $derived(!isSingleUnit);
 
   /**
    * Toggles the expansion state of a rolling stock row.
@@ -212,19 +211,19 @@
 </script>
 
 <!-- Card container following MEMORY.md conventions -->
-<div class="railway-model-card card gauge-frame ring-1 ring-border/40 {className}">
+<div class="railway-model-card card {className}">
   <!-- Header Section (T012) -->
   <header
     class="flex flex-col gap-2 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between"
   >
     <div class="flex flex-col gap-1">
-      <h2 class="text-lg font-semibold md:text-xl">
-        {model.manufacturer}
-        {model.product_code}
-      </h2>
-      <p class="text-sm text-muted-foreground">
-        {model.scale}
-      </p>
+      <h2 class="text-lg font-semibold md:text-xl">{model.manufacturer} {model.product_code}</h2>
+
+      {#if model.description}
+        <p class="mt-1 text-sm text-muted-foreground">{model.description}</p>
+      {:else}
+        <p class="mt-1 text-sm text-muted-foreground/50 italic">{m.no_additional_details()}</p>
+      {/if}
     </div>
 
     <!-- Status Badge (T013 partial) -->
@@ -235,7 +234,7 @@
 
   <!-- Hero Section with Image/Upload (T013, T044-T052) -->
   <div
-    class="hero-section relative mt-4 aspect-video w-full overflow-hidden rounded-lg border bg-black/20 md:max-w-2xl {isDragging
+    class="hero-section relative mx-auto mt-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg border bg-black/20 md:max-w-2xl {isDragging
       ? 'border-primary bg-primary/10'
       : 'border-white/10'}"
     role="img"
@@ -248,7 +247,7 @@
       <img
         src={convertFileSrc(model.image_path)}
         alt="{model.manufacturer} {model.product_code}"
-        class="h-full w-full object-contain"
+        class="block h-full w-full object-cover object-center"
       />
 
       <!-- Replace image button (when editable) -->
@@ -259,14 +258,14 @@
             size="sm"
             onclick={handleBrowseImage}
             disabled={isUploading}
-            aria-label={m.upload_image()}
+            aria-label={m.replace_image()}
           >
             {#if isUploading}
               <Loader2 class="h-4 w-4 animate-spin" />
             {:else}
               <Upload class="h-4 w-4" />
             {/if}
-            <span class="ml-2">{m.upload_image()}</span>
+            <span class="ml-2">{m.replace_image()}</span>
           </Button>
         </div>
       {/if}
@@ -302,285 +301,212 @@
     {/if}
   </div>
 
-  <!-- Content Section: Tabs for multi-unit, unified for single-unit (T075-T079) -->
-  {#if showTabs && model.rolling_stock && model.rolling_stock.length > 0}
-    <!-- Multi-unit model: Tabbed interface (T076) -->
-    <Tabs bind:value={activeTab} class="mt-6 w-full">
-      <!-- Tab navigation (T080: mobile-friendly) -->
+  <!-- Content Section: Specs + Tabs (always shown) -->
+  <div data-testid="specs" class="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
+    <dl class="grid grid-cols-2 gap-2 text-sm font-medium md:grid-cols-4">
+      {#if model.category}
+        <div class="flex flex-col gap-1">
+          <dt class="text-xs text-muted-foreground">Category</dt>
+          <dd class="text-sm">{model.category}</dd>
+        </div>
+      {/if}
+
+      {#if model.scale}
+        <div class="flex flex-col gap-1">
+          <dt class="text-xs text-muted-foreground">Scale</dt>
+          <dd class="text-sm">{model.scale}</dd>
+        </div>
+      {/if}
+
+      {#if model.era}
+        <div class="flex flex-col gap-1">
+          <dt class="text-xs text-muted-foreground">Era</dt>
+          <dd class="text-sm">{model.era}</dd>
+        </div>
+      {/if}
+
+      {#if model.power_method}
+        <div class="flex flex-col gap-1">
+          <dt class="text-xs text-muted-foreground">Power Method</dt>
+          <dd class="text-sm">{model.power_method}</dd>
+        </div>
+      {/if}
+    </dl>
+  </div>
+
+  <div data-testid="tabs-box" class="mt-4 rounded-lg border border-white/10 bg-black/10 p-3">
+    <Tabs bind:value={activeTab} class="w-full">
       <TabsList class="grid w-full grid-cols-2">
         <TabsTrigger value="details">{m.railway_model_details()}</TabsTrigger>
         <TabsTrigger value="rolling-stock">{m.rolling_stock_list()}</TabsTrigger>
       </TabsList>
 
-      <!-- Tab 1: Railway Model Details (T077) -->
-      <TabsContent value="details" class="mt-4">
-        <div class="rounded-lg border border-white/10 bg-black/20 p-4">
-          <h3 class="mb-3 text-sm font-medium tracking-wide text-muted-foreground uppercase">
-            Specifications
-          </h3>
+      <!-- Tab 1: Railway Model Details -->
+      <TabsContent value="details" class="mt-2">
+        {#if model.details}
+          <div class="rounded-lg bg-black/20 p-4">
+            <div class="prose mt-0 text-sm leading-relaxed text-muted-foreground">
+              {model.details}
+            </div>
+          </div>
+        {:else}
+          <div class="rounded-lg bg-black/10 p-4">
+            <p class="text-sm text-muted-foreground italic">{m.no_additional_details()}</p>
+          </div>
+        {/if}
+      </TabsContent>
 
-          <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <!-- Era (if present) -->
-            {#if model.era}
-              <div class="flex flex-col gap-1">
-                <dt class="text-xs text-muted-foreground">Era</dt>
-                <dd class="text-sm">{model.era}</dd>
+      <!-- Tab 2: Rolling Stock -->
+      <TabsContent value="rolling-stock" class="mt-2">
+        {#if model.rolling_stock && model.rolling_stock.length > 0}
+          {#if isSingleUnit}
+            <!-- Single unit: inline display, no expand/collapse -->
+            {@const unit = model.rolling_stock[0]}
+            <div class="rounded-lg bg-black/20 p-4">
+              <h3 class="sr-only">{m.rolling_stock_list()}</h3>
+              <div class="space-y-3">
+                <div class="flex flex-col gap-1">
+                  <dt class="text-xs text-muted-foreground">{m.series_code()}</dt>
+                  <dd class="text-sm font-medium">
+                    {unit.series_code}{unit.series_name ? ` - ${unit.series_name}` : ''}
+                  </dd>
+                </div>
+                <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {#if unit.category}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">Category</dt>
+                      <dd class="text-sm">{unit.category}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.subcategory}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">Subcategory</dt>
+                      <dd class="text-sm">{unit.subcategory}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.road_number}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">{m.road_number()}</dt>
+                      <dd class="text-sm">{unit.road_number}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.depot}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">{m.depot()}</dt>
+                      <dd class="text-sm">{unit.depot}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.livery}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">{m.livery()}</dt>
+                      <dd class="text-sm">{unit.livery}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.control_type}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">{m.control_type()}</dt>
+                      <dd class="text-sm">{unit.control_type}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.dcc_interface}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">{m.dcc_interface()}</dt>
+                      <dd class="text-sm">{unit.dcc_interface}</dd>
+                    </div>
+                  {/if}
+                  {#if unit.coupling_type}
+                    <div class="flex flex-col gap-1">
+                      <dt class="text-xs text-muted-foreground">{m.coupling_type()}</dt>
+                      <dd class="text-sm">{unit.coupling_type}</dd>
+                    </div>
+                  {/if}
+                </dl>
               </div>
-            {/if}
-
-            <!-- Power Method (if present) -->
-            {#if model.power_method}
-              <div class="flex flex-col gap-1">
-                <dt class="text-xs text-muted-foreground">Power Method</dt>
-                <dd class="text-sm">{model.power_method}</dd>
+            </div>
+          {:else}
+            <!-- Multi-unit: expandable rows -->
+            <div class="rounded-lg border border-white/10 bg-black/20 p-4">
+              <h3 class="sr-only">{m.rolling_stock_list()}</h3>
+              <div class="space-y-2">
+                {#each model.rolling_stock as unit (unit.id)}
+                  {@const isExpanded = expandedRows.has(unit.id)}
+                  <div class="rounded-lg border border-white/10 bg-black/10">
+                    <button
+                      class="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
+                      onclick={() => toggleRow(unit.id)}
+                      aria-expanded={isExpanded}
+                      aria-label="Toggle rolling stock details for {unit.series_code}"
+                    >
+                      <div class="flex-1">
+                        <span class="text-sm font-medium">
+                          {unit.series_code}{unit.series_name ? ` - ${unit.series_name}` : ''}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        class="h-4 w-4 transition-transform {isExpanded ? 'rotate-180' : ''}"
+                      />
+                    </button>
+                    {#if isExpanded}
+                      <div class="border-t border-white/10 p-3">
+                        <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                          {#if unit.category}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">Category</dt>
+                              <dd class="text-sm">{unit.category}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.subcategory}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">Subcategory</dt>
+                              <dd class="text-sm">{unit.subcategory}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.road_number}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">{m.road_number()}</dt>
+                              <dd class="text-sm">{unit.road_number}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.depot}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">{m.depot()}</dt>
+                              <dd class="text-sm">{unit.depot}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.livery}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">{m.livery()}</dt>
+                              <dd class="text-sm">{unit.livery}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.control_type}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">{m.control_type()}</dt>
+                              <dd class="text-sm">{unit.control_type}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.dcc_interface}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">{m.dcc_interface()}</dt>
+                              <dd class="text-sm">{unit.dcc_interface}</dd>
+                            </div>
+                          {/if}
+                          {#if unit.coupling_type}
+                            <div class="flex flex-col gap-1">
+                              <dt class="text-xs text-muted-foreground">{m.coupling_type()}</dt>
+                              <dd class="text-sm">{unit.coupling_type}</dd>
+                            </div>
+                          {/if}
+                        </dl>
+                      </div>
+                    {/if}
+                  </div>
+                {/each}
               </div>
-            {/if}
-
-            <!-- Category (if present) -->
-            {#if model.category}
-              <div class="flex flex-col gap-1">
-                <dt class="text-xs text-muted-foreground">Category</dt>
-                <dd class="text-sm">{model.category}</dd>
-              </div>
-            {/if}
-          </dl>
-
-          <!-- Description (if present) -->
-          {#if model.description}
-            <div class="mt-4 border-t border-white/10 pt-4">
-              <h4 class="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Description
-              </h4>
-              <p class="text-sm leading-relaxed">{model.description}</p>
             </div>
           {/if}
-        </div>
-      </TabsContent>
-
-      <!-- Tab 2: Rolling Stock List (T078) -->
-      <TabsContent value="rolling-stock" class="mt-4">
-        <div class="rounded-lg border border-white/10 bg-black/20 p-4">
-          <h3 class="mb-3 text-sm font-medium tracking-wide text-muted-foreground uppercase">
-            {m.rolling_stock_list()}
-          </h3>
-
-          <!-- Rolling stock list with expand/collapse -->
-          <div class="space-y-2">
-            {#each model.rolling_stock as unit (unit.id)}
-              {@const isExpanded = expandedRows.has(unit.id)}
-
-              <!-- RollingStockRow -->
-              <div class="rounded-lg border border-white/10 bg-black/10">
-                <!-- Row header with expand/collapse -->
-                <button
-                  class="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/5"
-                  onclick={() => toggleRow(unit.id)}
-                  aria-expanded={isExpanded}
-                  aria-label="Toggle rolling stock details for {unit.series_code}"
-                >
-                  <div class="flex-1">
-                    <span class="text-sm font-medium">
-                      {unit.series_code}{unit.series_name ? ` - ${unit.series_name}` : ''}
-                    </span>
-                  </div>
-                  <ChevronDown
-                    class="h-4 w-4 transition-transform {isExpanded ? 'rotate-180' : ''}"
-                  />
-                </button>
-
-                <!-- Expanded content -->
-                {#if isExpanded}
-                  <div class="border-t border-white/10 p-3">
-                    <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      {#if unit.category}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">Category</dt>
-                          <dd class="text-sm">{unit.category}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.subcategory}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">Subcategory</dt>
-                          <dd class="text-sm">{unit.subcategory}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.road_number}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">{m.road_number()}</dt>
-                          <dd class="text-sm">{unit.road_number}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.depot}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">{m.depot()}</dt>
-                          <dd class="text-sm">{unit.depot}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.livery}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">{m.livery()}</dt>
-                          <dd class="text-sm">{unit.livery}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.control_type}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">{m.control_type()}</dt>
-                          <dd class="text-sm">{unit.control_type}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.dcc_interface}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">{m.dcc_interface()}</dt>
-                          <dd class="text-sm">{unit.dcc_interface}</dd>
-                        </div>
-                      {/if}
-
-                      {#if unit.coupling_type}
-                        <div class="flex flex-col gap-1">
-                          <dt class="text-xs text-muted-foreground">{m.coupling_type()}</dt>
-                          <dd class="text-sm">{unit.coupling_type}</dd>
-                        </div>
-                      {/if}
-                    </dl>
-                  </div>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        </div>
+        {/if}
       </TabsContent>
     </Tabs>
-  {:else}
-    <!-- Single-unit model OR no tabs: Unified display (T079) -->
-    <!-- Global Specifications Section -->
-    <div class="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-      <h3 class="mb-3 text-sm font-medium tracking-wide text-muted-foreground uppercase">
-        Specifications
-      </h3>
-
-      <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <!-- Era (if present) -->
-        {#if model.era}
-          <div class="flex flex-col gap-1">
-            <dt class="text-xs text-muted-foreground">Era</dt>
-            <dd class="text-sm">{model.era}</dd>
-          </div>
-        {/if}
-
-        <!-- Power Method (if present) -->
-        {#if model.power_method}
-          <div class="flex flex-col gap-1">
-            <dt class="text-xs text-muted-foreground">Power Method</dt>
-            <dd class="text-sm">{model.power_method}</dd>
-          </div>
-        {/if}
-
-        <!-- Category (if present) -->
-        {#if model.category}
-          <div class="flex flex-col gap-1">
-            <dt class="text-xs text-muted-foreground">Category</dt>
-            <dd class="text-sm">{model.category}</dd>
-          </div>
-        {/if}
-      </dl>
-
-      <!-- Description (if present) -->
-      {#if model.description}
-        <div class="mt-4 border-t border-white/10 pt-4">
-          <h4 class="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Description
-          </h4>
-          <p class="text-sm leading-relaxed">{model.description}</p>
-        </div>
-      {/if}
-    </div>
-
-    <!-- Rolling Stock Section (for single-unit unified view) -->
-    {#if model.rolling_stock && model.rolling_stock.length > 0}
-      {#if isSingleUnit}
-        <!-- Single-unit display mode: Show rolling stock details directly -->
-        {@const unit = model.rolling_stock[0]}
-        <div class="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-          <h3 class="mb-3 text-sm font-medium tracking-wide text-muted-foreground uppercase">
-            {m.rolling_stock_list()}
-          </h3>
-
-          <div class="space-y-3">
-            <!-- Series identification -->
-            <div class="flex flex-col gap-1">
-              <dt class="text-xs text-muted-foreground">{m.series_code()}</dt>
-              <dd class="text-sm font-medium">
-                {unit.series_code}{unit.series_name ? ` - ${unit.series_name}` : ''}
-              </dd>
-            </div>
-
-            <!-- All specifications -->
-            <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {#if unit.category}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">Category</dt>
-                  <dd class="text-sm">{unit.category}</dd>
-                </div>
-              {/if}
-
-              {#if unit.subcategory}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">Subcategory</dt>
-                  <dd class="text-sm">{unit.subcategory}</dd>
-                </div>
-              {/if}
-
-              {#if unit.road_number}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">{m.road_number()}</dt>
-                  <dd class="text-sm">{unit.road_number}</dd>
-                </div>
-              {/if}
-
-              {#if unit.depot}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">{m.depot()}</dt>
-                  <dd class="text-sm">{unit.depot}</dd>
-                </div>
-              {/if}
-
-              {#if unit.livery}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">{m.livery()}</dt>
-                  <dd class="text-sm">{unit.livery}</dd>
-                </div>
-              {/if}
-
-              {#if unit.control_type}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">{m.control_type()}</dt>
-                  <dd class="text-sm">{unit.control_type}</dd>
-                </div>
-              {/if}
-
-              {#if unit.dcc_interface}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">{m.dcc_interface()}</dt>
-                  <dd class="text-sm">{unit.dcc_interface}</dd>
-                </div>
-              {/if}
-
-              {#if unit.coupling_type}
-                <div class="flex flex-col gap-1">
-                  <dt class="text-xs text-muted-foreground">{m.coupling_type()}</dt>
-                  <dd class="text-sm">{unit.coupling_type}</dd>
-                </div>
-              {/if}
-            </dl>
-          </div>
-        </div>
-      {/if}
-    {/if}
-  {/if}
+  </div>
 </div>

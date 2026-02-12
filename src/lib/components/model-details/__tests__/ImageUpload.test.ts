@@ -20,7 +20,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   upload_image_filter_name: () => 'Images',
   uploading: () => 'Uploading...',
   upload_success: () => 'Image uploaded successfully',
-  replace_image: () => 'Replace Image',
+  replace_image: () => 'Change Image',
   upload_error_model_not_found: () => 'Model not found',
   upload_error_unknown: () => 'An unknown error occurred',
   delete_image: () => 'Delete Image',
@@ -241,9 +241,9 @@ describe('ImageUpload - Delete Flow', () => {
       }
     });
 
-    // Should show "Upload Image" not "Replace Image"
+    // Should show "Upload Image" not "Change Image"
     expect(screen.getByText('Upload Image')).toBeInTheDocument();
-    expect(screen.queryByText('Replace Image')).not.toBeInTheDocument();
+    expect(screen.queryByText('Change Image')).not.toBeInTheDocument();
   });
 
   it('should show replace button when image exists', () => {
@@ -254,7 +254,7 @@ describe('ImageUpload - Delete Flow', () => {
       }
     });
 
-    // Should show "Replace Image"
-    expect(screen.getByText('Replace Image')).toBeInTheDocument();
+    // Should show "Change Image"
+    expect(screen.getByText('Change Image')).toBeInTheDocument();
   });
 });

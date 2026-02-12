@@ -739,5 +739,6 @@
   "data_management_file_picker_export_title": "Esporta Database",
   "data_management_file_picker_import_title": "Importa Database",
   "data_management_exporting": "Esportazione in corso...",
-  "data_management_importing": "Importazione in corso..."
+  "data_management_importing": "Importazione in corso...",
+  "no_additional_details": "Nessun dettaglio aggiuntivo"
 }
