@@ -1,5 +1,5 @@
 ---
-name: UX Expert
+name: ux-expert
 description: Use this skill when generating UI components to ensure they follow desktop-native usability standards.
 ---
 

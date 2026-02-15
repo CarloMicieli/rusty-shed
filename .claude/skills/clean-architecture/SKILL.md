@@ -28,11 +28,11 @@ Use this skill when:
 
 ```
 ┌─────────────────────────────────────────┐
-│         Infrastructure (Adapters)        │ ← Tauri commands, DB, File system
+│         Infrastructure (Adapters)       │ ← Tauri commands, DB, File system
 ├─────────────────────────────────────────┤
-│         Application (Use Cases)          │ ← Orchestration, workflows
+│         Application (Use Cases)         │ ← Orchestration, workflows
 ├─────────────────────────────────────────┤
-│         Domain (Business Logic)          │ ← Entities, Value Objects, Rules
+│         Domain (Business Logic)         │ ← Entities, Value Objects, Rules
 └─────────────────────────────────────────┘
 ```
 
