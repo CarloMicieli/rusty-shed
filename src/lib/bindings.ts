@@ -2891,7 +2891,7 @@ export type DepotRollingStockView = {
   /**
    * Epoch/era (e.g., "IV", "III/IV", "Vm") for display purposes.
    */
-  epoch: string | null;
+  epoch: Epoch | null;
 };
 /**
  * A read-only representation of the depot contents.
