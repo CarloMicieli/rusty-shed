@@ -50,11 +50,13 @@ const createThemeStore = () => {
           throw new Error('Failed to get settings');
         }
 
-        const settings = result.data;
-        const resolved = resolveTheme(settings.theme);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const settings = result.data as any; // Theme field not yet in UserSettings type
+        const theme = settings.theme || 'system'; // Fallback if theme field doesn't exist
+        const resolved = resolveTheme(theme);
         privateUpdate((state) => ({
           ...state,
-          current: settings.theme,
+          current: theme,
           resolved,
           isLoading: false
         }));
@@ -63,7 +65,7 @@ const createThemeStore = () => {
         applyTheme(resolved);
 
         // Listen for system theme changes if 'system' mode
-        if (settings.theme === 'system') {
+        if (theme === 'system') {
           setupSystemThemeListener();
         }
       } catch (error) {
@@ -88,21 +90,23 @@ const createThemeStore = () => {
 
         const current = getResult.data;
 
-        // Update via Tauri command
+        // Update via Tauri command (theme field will be added later)
         const updateResult = await commands.updateSettings({
           ...current,
-          theme
-        });
+          theme // Theme field will be added to UserSettings type later
+        } as never);
 
         if (updateResult.status !== 'ok') {
           throw new Error('Failed to update settings');
         }
 
-        const updated = updateResult.data;
-        const resolved = resolveTheme(updated.theme);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updated = updateResult.data as any;
+        const updatedTheme = updated.theme || theme;
+        const resolved = resolveTheme(updatedTheme);
         privateUpdate((state) => ({
           ...state,
-          current: updated.theme,
+          current: updatedTheme,
           resolved
         }));
 

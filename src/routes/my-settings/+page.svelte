@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { resolve } from '$app/paths';
   import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
   import { Button, PageHeader } from '$lib/components';
   import SettingsForm from '$lib/components/SettingsForm.svelte';
@@ -47,7 +46,7 @@
     const result = await fetchSettings();
     if (result.ok) {
       settings = result.data;
-      await syncLocale(result.data.languageCode);
+      await syncLocale(result.data.language);
       error = null;
     } else {
       error = getToastMessage(result.error);
@@ -55,12 +54,15 @@
     loading = false;
   }
 
+  import { themeStore } from '$lib/stores/themeStore.svelte';
+
   async function handleSubmit(payload: UpdateSettingsPayload) {
     saving = true;
     const result = await saveSettings(payload);
     if (result.ok) {
       settings = result.data;
-      await syncLocale(result.data.languageCode);
+      await syncLocale(result.data.language);
+      await themeStore.setTheme(result.data.theme);
       toaster.success({ title: m.settings_saved_toast() });
     } else {
       toaster.error({ title: getToastMessage(result.error) });
@@ -68,8 +70,8 @@
     saving = false;
   }
 
-  async function syncLocale(languageCode: LanguageCode) {
-    const nextLocale = languageCode === 'en' || languageCode === 'it' ? languageCode : null;
+  async function syncLocale(language: LanguageCode) {
+    const nextLocale = language === 'en' || language === 'it' ? language : null;
     if (!nextLocale) return;
 
     const current = getLocale();
@@ -117,16 +119,7 @@
     title={m.settings_heading()}
     subtitle={m.app_settings()}
     description={m.settings_description()}
-  >
-    {#snippet actions()}
-      <a
-        class="text-accent-500 text-sm font-semibold hover:underline"
-        href={resolve('/my-dashboard')}
-      >
-        {m.settings_back_to_dashboard()}
-      </a>
-    {/snippet}
-  </PageHeader>
+  />
 
   {#if loading}
     <div class="card border-surface-700/40 border p-8 shadow-xl">
@@ -149,7 +142,7 @@
     </div>
   {:else if settings}
     <div class="space-y-6">
-      {#key `${settings.languageCode}-${settings.currency}-${settings.lengthUnit}-${settings.favoriteScale}-${settings.favoritePowerMethod}`}
+      {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerSystem}`}
         <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
       {/key}
 

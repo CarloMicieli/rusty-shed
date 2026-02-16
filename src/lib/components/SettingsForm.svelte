@@ -12,7 +12,8 @@
     Currency,
     MeasureUnit,
     PowerMethod,
-    Scale
+    Scale,
+    ThemeValue
   } from '$lib/services';
 
   let {
@@ -31,10 +32,11 @@
   const formObj = superForm(
     {
       currency: settingsSnapshot.currency,
-      lengthUnit: settingsSnapshot.lengthUnit,
-      favoriteScale: settingsSnapshot.favoriteScale,
-      favoritePowerMethod: settingsSnapshot.favoritePowerMethod,
-      languageCode: settingsSnapshot.languageCode
+      measureUnit: settingsSnapshot.measureUnit,
+      favouriteScale: settingsSnapshot.favouriteScale,
+      powerSystem: settingsSnapshot.powerSystem,
+      language: settingsSnapshot.language,
+      theme: settingsSnapshot.theme
     },
     {
       SPA: true,
@@ -42,14 +44,21 @@
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       validators: zodClient(settingsSchema as any),
       onUpdate: async ({ form: formData }) => {
+        console.log('[SettingsForm] onUpdate', formData);
         if (formData.valid) {
+          console.log('[SettingsForm] form is valid, submitting...');
           onsubmit(formData.data);
+        } else {
+          console.error('[SettingsForm] form is invalid', formData.errors);
         }
+      },
+      onError: (err) => {
+        console.error('[SettingsForm] superForm error', err);
       }
     }
   );
 
-  const { form, enhance, tainted } = formObj;
+  const { form, enhance, tainted, errors } = formObj;
 
   const hasUnsavedChanges = $derived(
     typeof $tainted === 'boolean' ? $tainted : Object.keys($tainted ?? {}).length > 0
@@ -63,17 +72,17 @@
   ];
 
   const lengthUnitOptions: { label: string; value: MeasureUnit }[] = [
-    { label: m.settings_unit_metric(), value: 'MILLIMETERS' },
-    { label: m.settings_unit_imperial(), value: 'INCHES' }
+    { label: m.settings_unit_metric(), value: 'Metric' },
+    { label: m.settings_unit_imperial(), value: 'Imperial' }
   ];
 
   const powerMethodOptions: { label: string; value: PowerMethod; helper?: string }[] = [
     { label: m.settings_power_ac(), value: 'AC', helper: m.settings_power_ac_helper() },
     { label: m.settings_power_dc(), value: 'DC', helper: m.settings_power_dc_helper() },
     {
-      label: m.settings_power_trix(),
-      value: 'TRIX_EXPRESS',
-      helper: m.settings_power_trix_helper()
+      label: m.settings_power_dcc(),
+      value: 'DCC',
+      helper: m.settings_power_dcc_helper()
     }
   ];
 
@@ -88,6 +97,11 @@
     { label: '1', value: '1' },
     { label: 'H0m', value: 'H0m' },
     { label: 'H0e', value: 'H0e' }
+  ];
+
+  const themeOptions: { label: string; value: ThemeValue }[] = [
+    { label: m.settings_theme_light(), value: 'steampunk-light' },
+    { label: m.settings_theme_dark(), value: 'steampunk-dark' }
   ];
 
   const languageOptions: { label: string; value: 'en' | 'it' }[] = [
@@ -120,11 +134,15 @@
           id="currency"
           class="variant-filled-primary-500 select w-full"
           bind:value={$form.currency}
+          class:input-error={$errors.currency}
         >
           {#each currencyOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
+        {#if $errors.currency}
+          <p class="text-error-500 text-xs">{$errors.currency}</p>
+        {/if}
       </div>
 
       <div class="space-y-2">
@@ -134,12 +152,16 @@
         <select
           id="language"
           class="variant-filled-primary-500 select w-full"
-          bind:value={$form.languageCode}
+          bind:value={$form.language}
+          class:input-error={$errors.language}
         >
           {#each languageOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
+        {#if $errors.language}
+          <p class="text-error-500 text-xs">{$errors.language}</p>
+        {/if}
       </div>
     </div>
 
@@ -151,14 +173,39 @@
         <select
           id="length-unit"
           class="variant-filled-primary-500 select w-full"
-          bind:value={$form.lengthUnit}
+          bind:value={$form.measureUnit}
+          class:input-error={$errors.measureUnit}
         >
           {#each lengthUnitOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
+        {#if $errors.measureUnit}
+          <p class="text-error-500 text-xs">{$errors.measureUnit}</p>
+        {/if}
       </div>
 
+      <div class="space-y-2">
+        <label class="text-surface-200 text-sm font-semibold tracking-wide" for="theme">
+          {m.settings_theme_label()}
+        </label>
+        <select
+          id="theme"
+          class="variant-filled-primary-500 select w-full"
+          bind:value={$form.theme}
+          class:input-error={$errors.theme}
+        >
+          {#each themeOptions as option (option.value)}
+            <option value={option.value}>{option.label}</option>
+          {/each}
+        </select>
+        {#if $errors.theme}
+          <p class="text-error-500 text-xs">{$errors.theme}</p>
+        {/if}
+      </div>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
       <div class="space-y-2">
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="scale">
           {m.settings_scale_label()}
@@ -166,12 +213,16 @@
         <select
           id="scale"
           class="variant-filled-primary-500 select w-full"
-          bind:value={$form.favoriteScale}
+          bind:value={$form.favouriteScale}
+          class:input-error={$errors.favouriteScale}
         >
           {#each scaleOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
+        {#if $errors.favouriteScale}
+          <p class="text-error-500 text-xs">{$errors.favouriteScale}</p>
+        {/if}
       </div>
     </div>
 
@@ -179,15 +230,19 @@
       <p class="text-surface-200 text-sm font-semibold tracking-wide">
         {m.settings_power_label()}
       </p>
+      {#if $errors.powerSystem}
+        <p class="text-error-500 text-xs">{$errors.powerSystem}</p>
+      {/if}
       <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
         {#each powerMethodOptions as option (option.value)}
           <label
             class={[
               'group rounded-container relative flex gap-3 border p-4 transition',
               'bg-surface-800/60 hover:border-primary-400/70 hover:bg-surface-800/90',
-              $form.favoritePowerMethod === option.value
+              $form.powerSystem === option.value
                 ? 'border-primary-400/90 ring-primary-500/30 ring-1'
-                : 'border-surface-700/60'
+                : 'border-surface-700/60',
+              $errors.powerSystem ? 'border-error-500' : ''
             ]}
           >
             <input
@@ -195,14 +250,14 @@
               type="radio"
               name="power-method"
               value={option.value}
-              bind:group={$form.favoritePowerMethod}
+              bind:group={$form.powerSystem}
             />
 
             <span
               aria-hidden="true"
               class={[
                 'mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border transition',
-                $form.favoritePowerMethod === option.value
+                $form.powerSystem === option.value
                   ? 'border-primary-300 bg-primary-500/30'
                   : 'border-surface-500 bg-surface-900'
               ]}
@@ -210,7 +265,7 @@
               <span
                 class={[
                   'bg-primary-400 h-2 w-2 rounded-full transition',
-                  $form.favoritePowerMethod === option.value ? 'opacity-100' : 'opacity-0'
+                  $form.powerSystem === option.value ? 'opacity-100' : 'opacity-0'
                 ]}
               ></span>
             </span>

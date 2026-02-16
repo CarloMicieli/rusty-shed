@@ -1,22 +1,24 @@
+import type { ThemeValue } from '$lib/types/theme';
+export type { ThemeValue };
 import type { SafeResult } from './errors';
 import { safeInvoke } from './tauri';
 
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'JPY';
-export type MeasureUnit = 'MILLIMETERS' | 'INCHES' | 'METERS' | 'MILES' | 'KILOMETERS';
-export type PowerMethod = 'AC' | 'DC' | 'TRIX_EXPRESS';
+export type MeasureUnit = 'Metric' | 'Imperial';
+export type PowerMethod = 'AC' | 'DC' | 'DCC';
 export type Scale = 'H0' | 'H0m' | 'H0e' | 'N' | 'TT' | 'Z' | 'G' | '1' | '0' | '00';
 export type LanguageCode = 'en' | 'it' | string;
 
 export interface SettingsDto {
-  id: number;
   currency: Currency;
-  lengthUnit: MeasureUnit;
-  favoriteScale: Scale;
-  favoritePowerMethod: PowerMethod;
-  languageCode: LanguageCode;
+  language: LanguageCode;
+  theme: ThemeValue;
+  measureUnit: MeasureUnit;
+  favouriteScale: Scale;
+  powerSystem: PowerMethod;
 }
 
-export type UpdateSettingsPayload = Omit<SettingsDto, 'id'>;
+export type UpdateSettingsPayload = Partial<SettingsDto>;
 
 export async function fetchSettings(): Promise<SafeResult<SettingsDto>> {
   return safeInvoke<SettingsDto>('get_settings');
@@ -25,5 +27,5 @@ export async function fetchSettings(): Promise<SafeResult<SettingsDto>> {
 export async function saveSettings(
   payload: UpdateSettingsPayload
 ): Promise<SafeResult<SettingsDto>> {
-  return safeInvoke<SettingsDto>('update_settings', { payload });
+  return safeInvoke<SettingsDto>('update_settings', { input: payload });
 }

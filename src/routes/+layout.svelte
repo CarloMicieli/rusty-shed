@@ -24,6 +24,7 @@
   import { Toaster } from '$lib/components/ui/sonner';
   import { safeInvoke } from '$lib/services';
   import { onMount } from 'svelte';
+  import { settingsState } from '$lib/features/settings/SettingsState.svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
@@ -43,23 +44,30 @@
   setTrackInventoryContext(trackInventoryService);
 
   onMount(async () => {
-    // 0. Initialize theme from settings
+    // 0. Initialize settings on first run (detects OS language)
+    try {
+      await settingsState.initialize();
+    } catch (err) {
+      console.warn('Failed to initialize settings, using defaults:', err);
+    }
+
+    // 1. Initialize theme from settings
     await themeStore.initializeFromSettings();
 
-    // 1. Show main window immediately so the user sees *something* (loading state)
+    // 2. Show main window immediately so the user sees *something* (loading state)
     // We don't block on this failing, but log it if it does.
     safeInvoke<void>('show_main_window').then((res) => {
       if (!res.ok) console.warn('Failed to show main window:', res.error);
     });
 
     try {
-      // 2. Fetch app version (non-critical, but good to have early)
+      // 3. Fetch app version (non-critical, but good to have early)
       const versionResult = await safeInvoke<string>('get_app_version');
       if (versionResult.ok) {
         setAppVersion(versionResult.data);
       }
 
-      // 3. Initialize Database (Critical)
+      // 4. Initialize Database (Critical)
       const initResult = await safeInvoke<void>('init_database');
       if (!initResult.ok) {
         const message =
@@ -67,7 +75,7 @@
         throw new Error(message);
       }
 
-      // 4. Preload data (only if DB is ready)
+      // 5. Preload data (only if DB is ready)
       await Promise.all([collectionState.fetchCollection(), wishlistState.fetchWishlists()]);
     } catch (err) {
       console.error('Startup failed', err);

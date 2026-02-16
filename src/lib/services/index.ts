@@ -22,5 +22,6 @@ export type {
   MeasureUnit,
   PowerMethod,
   Scale,
-  LanguageCode
+  LanguageCode,
+  ThemeValue
 } from './settings';

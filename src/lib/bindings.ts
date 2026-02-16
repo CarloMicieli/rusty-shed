@@ -1463,7 +1463,21 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
-  async getSettings(): Promise<Result<SettingsDto, CommandError>> {
+  /**
+   * Initialize settings on first run
+   */
+  async initializeSettings(): Promise<Result<UserSettings, string>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('initialize_settings') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Get current user settings
+   */
+  async getSettings(): Promise<Result<UserSettings, string>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_settings') };
     } catch (e) {
@@ -1471,9 +1485,12 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
-  async updateSettings(payload: UpdateSettingsPayload): Promise<Result<SettingsDto, CommandError>> {
+  /**
+   * Update user settings (partial update supported)
+   */
+  async updateSettings(input: UpdateSettingsInput): Promise<Result<UserSettings, string>> {
     try {
-      return { status: 'ok', data: await TAURI_INVOKE('update_settings', { payload }) };
+      return { status: 'ok', data: await TAURI_INVOKE('update_settings', { input }) };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -1753,6 +1770,10 @@ export type AnalyzeImportPackageResponse = {
    */
   imagesFound: string[];
 };
+/**
+ * Application theme preference
+ */
+export type AppTheme = 'steampunk-dark' | 'steampunk-light' | 'system';
 /**
  * Archive format detection.
  */
@@ -3417,6 +3438,10 @@ export type InstallableRollingStockView = {
   has_decoder: boolean;
 };
 /**
+ * Application display language
+ */
+export type Language = 'en' | 'it';
+/**
  * A physical length value paired with its measure unit.
  *
  * The `Length` enum is the canonical representation for lengths in the
@@ -3671,7 +3696,10 @@ export type ManufacturerId = string;
  * Serialized as SCREAMING_SNAKE_CASE; parsing is case-insensitive.
  */
 export type ManufacturerStatus = 'ACTIVE' | 'MERGED' | 'OUT_OF_BUSINESS';
-export type MeasureUnit = 'Millimeters' | 'Inches' | 'Meters' | 'Miles' | 'Kilometers';
+/**
+ * Measurement system for dimensions
+ */
+export type MeasureUnit = 'Metric' | 'Imperial';
 /**
  * The metadata information for the current resource
  */
@@ -4006,6 +4034,10 @@ export type PowerMethod =
    * Trix Express three-rail power pickup system.
    */
   | 'TRIX_EXPRESS';
+/**
+ * Electrical system for model railways
+ */
+export type PowerSystem = 'DC' | 'AC' | 'DCC';
 /**
  * Details for a pre-order entry.
  *
@@ -5117,15 +5149,6 @@ export type SetTrackItemQuantityArgs = {
    */
   quantity: bigint;
 };
-export type SettingsDto = {
-  id: bigint;
-  currency: Currency;
-  lengthUnit: MeasureUnit;
-  favoriteScale: Scale;
-  favoritePowerMethod: PowerMethod;
-  languageCode: string;
-  theme: ThemeValue;
-};
 /**
  * Simplified arguments for creating a railway model and optionally a small set
  * of rolling stocks. This is a lighter-weight payload used by the
@@ -5281,7 +5304,6 @@ export type TechnicalSpecificationsArgs = {
    */
   sprungBuffers: string | null;
 };
-export type ThemeValue = 'steampunk-light' | 'steampunk-dark' | 'system';
 /**
  * Rail profile code for a track product.
  *
@@ -5493,13 +5515,16 @@ export type UpdateSellerPayload = {
   countryCode: string | null;
   createdAt: string | null;
 };
-export type UpdateSettingsPayload = {
-  currency: Currency;
-  lengthUnit: MeasureUnit;
-  favoriteScale: Scale;
-  favoritePowerMethod: PowerMethod;
-  languageCode: string;
-  theme: ThemeValue;
+/**
+ * Input for partial settings updates
+ */
+export type UpdateSettingsInput = {
+  currency: string | null;
+  language: Language | null;
+  measureUnit: MeasureUnit | null;
+  favouriteScale: string | null;
+  powerSystem: PowerSystem | null;
+  theme: AppTheme | null;
 };
 /**
  * Arguments for uploading a model image from file path
@@ -5509,6 +5534,39 @@ export type UploadModelImageArgs = { modelId: string; filePath: string };
  * Arguments for uploading a model image from bytes
  */
 export type UploadModelImageBytesArgs = { modelId: string; fileName: string; fileData: number[] };
+/**
+ * User-configurable application preferences
+ */
+export type UserSettings = {
+  /**
+   * User's preferred currency for displaying prices (e.g., "EUR", "USD")
+   */
+  currency: string;
+  /**
+   * Application display language
+   */
+  language: Language;
+  /**
+   * Application theme preference
+   */
+  theme: AppTheme;
+  /**
+   * Measurement system for dimensions
+   */
+  measureUnit: MeasureUnit;
+  /**
+   * User's preferred model railway scale (e.g., "HO", "N", "OO")
+   */
+  favouriteScale: string;
+  /**
+   * Preferred electrical system for model railways
+   */
+  powerSystem: PowerSystem;
+  /**
+   * Flag indicating if this is the user's first app launch
+   */
+  firstRun: boolean;
+};
 /**
  * A validation error returned by application use-cases.
  *

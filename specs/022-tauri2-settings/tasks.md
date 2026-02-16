@@ -27,19 +27,19 @@ This is a Tauri 2 desktop application with:
 
 **Purpose**: Project initialization and plugin configuration
 
-- [ ] T001 Add tauri-plugin-store v2.0 dependency to src-tauri/Cargo.toml
-- [ ] T002 [P] Add tauri-plugin-window-state v2.0 dependency to src-tauri/Cargo.toml
-- [ ] T003 [P] Add tauri-plugin-os v2.0 dependency to src-tauri/Cargo.toml
-- [ ] T004 [P] Add validator crate dependency to src-tauri/Cargo.toml for settings validation
-- [ ] T005 Initialize tauri-plugin-store in src-tauri/src/main.rs using StoreBuilder
-- [ ] T006 [P] Initialize tauri-plugin-window-state in src-tauri/src/main.rs
-- [ ] T007 [P] Initialize tauri-plugin-os in src-tauri/src/main.rs
-- [ ] T008 Create settings module structure: src-tauri/src/settings/mod.rs
-- [ ] T009 [P] Create domain layer structure: src-tauri/src/settings/domain/mod.rs
-- [ ] T010 [P] Create application layer structure: src-tauri/src/settings/application/mod.rs
-- [ ] T011 [P] Create infrastructure layer structure: src-tauri/src/settings/infrastructure/mod.rs
-- [ ] T012 [P] Create interface layer structure: src-tauri/src/settings/interface/mod.rs
-- [ ] T013 Register settings module in src-tauri/src/lib.rs
+- [x] T001 Add tauri-plugin-store v2.0 dependency to src-tauri/Cargo.toml
+- [x] T002 [P] Add tauri-plugin-window-state v2.0 dependency to src-tauri/Cargo.toml
+- [x] T003 [P] Add tauri-plugin-os v2.0 dependency to src-tauri/Cargo.toml
+- [x] T004 [P] Add validator crate dependency to src-tauri/Cargo.toml for settings validation
+- [x] T005 Initialize tauri-plugin-store in src-tauri/src/main.rs using StoreBuilder
+- [x] T006 [P] Initialize tauri-plugin-window-state in src-tauri/src/main.rs
+- [x] T007 [P] Initialize tauri-plugin-os in src-tauri/src/main.rs
+- [x] T008 Create settings module structure: src-tauri/src/settings/mod.rs
+- [x] T009 [P] Create domain layer structure: src-tauri/src/settings/domain/mod.rs
+- [x] T010 [P] Create application layer structure: src-tauri/src/settings/application/mod.rs
+- [x] T011 [P] Create infrastructure layer structure: src-tauri/src/settings/infrastructure/mod.rs
+- [x] T012 [P] Create interface layer structure: src-tauri/src/settings/interface/mod.rs
+- [x] T013 Register settings module in src-tauri/src/lib.rs
 
 ---
 
@@ -49,16 +49,16 @@ This is a Tauri 2 desktop application with:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T014 [P] Create Language enum in src-tauri/src/settings/domain/user_settings.rs with English/Italian variants, derive Serialize, Deserialize, Type
-- [ ] T015 [P] Create MeasureUnit enum in src-tauri/src/settings/domain/user_settings.rs with Metric/Imperial variants
-- [ ] T016 [P] Create PowerSystem enum in src-tauri/src/settings/domain/user_settings.rs with DC/AC/DCC variants
-- [ ] T017 Create UserSettings struct in src-tauri/src/settings/domain/user_settings.rs with all 6 fields (currency, language, measure_unit, favourite_scale, power_system, first_run)
-- [ ] T018 Add Default implementation for UserSettings in src-tauri/src/settings/domain/user_settings.rs (EUR currency, English language, Metric, empty scale, DC, first_run=true)
-- [ ] T019 [P] Add settings-related Paraglide message keys to messages/en.json (settings page labels, field names, save button, error messages)
-- [ ] T020 [P] Add settings-related Paraglide message keys to messages/it.json (Italian translations)
-- [ ] T021 Run pnpm prepare to compile Paraglide messages
-- [ ] T022 Configure specta type generation for settings types (if not already configured in project)
-- [ ] T023 Create frontend settings feature directory: src/lib/features/settings/
+- [x] T014 [P] Create Language enum in src-tauri/src/settings/domain/user_settings.rs with English/Italian variants, derive Serialize, Deserialize, Type
+- [x] T015 [P] Create MeasureUnit enum in src-tauri/src/settings/domain/user_settings.rs with Metric/Imperial variants
+- [x] T016 [P] Create PowerSystem enum in src-tauri/src/settings/domain/user_settings.rs with DC/AC/DCC variants
+- [x] T017 Create UserSettings struct in src-tauri/src/settings/domain/user_settings.rs with all 6 fields (currency, language, measure_unit, favourite_scale, power_system, first_run)
+- [x] T018 Add Default implementation for UserSettings in src-tauri/src/settings/domain/user_settings.rs (EUR currency, English language, Metric, empty scale, DC, first_run=true)
+- [x] T019 [P] Add settings-related Paraglide message keys to messages/en.json (settings page labels, field names, save button, error messages)
+- [x] T020 [P] Add settings-related Paraglide message keys to messages/it.json (Italian translations)
+- [x] T021 Run pnpm prepare to compile Paraglide messages
+- [x] T022 Configure specta type generation for settings types (if not already configured in project)
+- [x] T023 Create frontend settings feature directory: src/lib/features/settings/
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -74,64 +74,64 @@ This is a Tauri 2 desktop application with:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T024 [P] [US1] Create unit test file src-tauri/src/settings/domain/tests.rs for UserSettings validation
-- [ ] T025 [P] [US1] Write test for UserSettings default values in src-tauri/src/settings/domain/tests.rs
-- [ ] T026 [P] [US1] Write test for currency validation (empty string fails, 1-10 chars passes) in src-tauri/src/settings/domain/tests.rs
-- [ ] T027 [P] [US1] Write test for favourite_scale validation (max 20 chars) in src-tauri/src/settings/domain/tests.rs
-- [ ] T028 [P] [US1] Create integration test file src-tauri/src/settings/tests/integration_tests.rs for IPC commands
-- [ ] T029 [P] [US1] Write integration test for get_settings command in src-tauri/src/settings/tests/integration_tests.rs
-- [ ] T030 [P] [US1] Write integration test for update_settings command in src-tauri/src/settings/tests/integration_tests.rs
-- [ ] T031 [P] [US1] Create frontend unit test file src/**tests**/unit/settings/settings_state.test.ts
-- [ ] T032 [P] [US1] Write test for SettingsState.load() in src/**tests**/unit/settings/settings_state.test.ts with mocked invoke
-- [ ] T033 [P] [US1] Write test for SettingsState.update() in src/**tests**/unit/settings/settings_state.test.ts with mocked invoke
+- [x] T024 [P] [US1] Create unit test file src-tauri/src/settings/domain/tests.rs for UserSettings validation
+- [x] T025 [P] [US1] Write test for UserSettings default values in src-tauri/src/settings/domain/tests.rs
+- [x] T026 [P] [US1] Write test for currency validation (empty string fails, 1-10 chars passes) in src-tauri/src/settings/domain/tests.rs
+- [x] T027 [P] [US1] Write test for favourite_scale validation (max 20 chars) in src-tauri/src/settings/domain/tests.rs
+- [x] T028 [P] [US1] Create integration test file src-tauri/src/settings/tests/integration_tests.rs for IPC commands
+- [x] T029 [P] [US1] Write integration test for get_settings command in src-tauri/src/settings/tests/integration_tests.rs
+- [x] T030 [P] [US1] Write integration test for update_settings command in src-tauri/src/settings/tests/integration_tests.rs
+- [x] T031 [P] [US1] Create frontend unit test file src/**tests**/unit/settings/settings_state.test.ts
+- [x] T032 [P] [US1] Write test for SettingsState.load() in src/**tests**/unit/settings/settings_state.test.ts with mocked invoke
+- [x] T033 [P] [US1] Write test for SettingsState.update() in src/**tests**/unit/settings/settings_state.test.ts with mocked invoke
 
 ### Backend Implementation for User Story 1
 
-- [ ] T034 [US1] Add validation methods to UserSettings in src-tauri/src/settings/domain/user_settings.rs (validate_currency, validate_favourite_scale)
-- [ ] T035 [US1] Implement validate() method on UserSettings in src-tauri/src/settings/domain/user_settings.rs that checks all invariants
-- [ ] T036 [US1] Create SettingsRepository trait in src-tauri/src/settings/infrastructure/mod.rs with load() and save() methods
-- [ ] T037 [US1] Implement StoreSettingsRepository struct in src-tauri/src/settings/infrastructure/store_repository.rs using tauri-plugin-store
-- [ ] T038 [US1] Implement SettingsRepository::load() in src-tauri/src/settings/infrastructure/store_repository.rs to read from store.get("user_settings")
-- [ ] T039 [US1] Implement SettingsRepository::save() in src-tauri/src/settings/infrastructure/store_repository.rs to write with store.set() and store.save()
-- [ ] T040 [US1] Add error handling for corrupted settings in SettingsRepository::load() (fallback to defaults)
-- [ ] T041 [US1] Create get_settings use case in src-tauri/src/settings/application/get_settings.rs
-- [ ] T042 [US1] Implement get_settings logic: load from repository, return UserSettings or error
-- [ ] T043 [US1] Create UpdateSettingsInput struct in src-tauri/src/settings/application/update_settings.rs with Option fields
-- [ ] T044 [US1] Create update_settings use case in src-tauri/src/settings/application/update_settings.rs
-- [ ] T045 [US1] Implement update_settings logic: load current → merge updates → validate → save → return updated settings
-- [ ] T046 [US1] Create UpdateSettingsArgs DTO in src-tauri/src/settings/interface/commands.rs with validator derives
-- [ ] T047 [US1] Implement get_settings IPC command handler in src-tauri/src/settings/interface/commands.rs with #[tauri::command] and #[specta::specta]
-- [ ] T048 [US1] Implement update_settings IPC command handler in src-tauri/src/settings/interface/commands.rs with args validation
-- [ ] T049 [US1] Register get_settings and update_settings commands in src-tauri/src/main.rs invoke_handler
-- [ ] T050 [US1] Generate TypeScript types for UserSettings and UpdateSettingsArgs using specta
+- [x] T034 [US1] Add validation methods to UserSettings in src-tauri/src/settings/domain/user_settings.rs (validate_currency, validate_favourite_scale)
+- [x] T035 [US1] Implement validate() method on UserSettings in src-tauri/src/settings/domain/user_settings.rs that checks all invariants
+- [x] T036 [US1] Create SettingsRepository trait in src-tauri/src/settings/infrastructure/mod.rs with load() and save() methods
+- [x] T037 [US1] Implement StoreSettingsRepository struct in src-tauri/src/settings/infrastructure/store_repository.rs using tauri-plugin-store
+- [x] T038 [US1] Implement SettingsRepository::load() in src-tauri/src/settings/infrastructure/store_repository.rs to read from store.get("user_settings")
+- [x] T039 [US1] Implement SettingsRepository::save() in src-tauri/src/settings/infrastructure/store_repository.rs to write with store.set() and store.save()
+- [x] T040 [US1] Add error handling for corrupted settings in SettingsRepository::load() (fallback to defaults)
+- [x] T041 [US1] Create get_settings use case in src-tauri/src/settings/application/get_settings.rs
+- [x] T042 [US1] Implement get_settings logic: load from repository, return UserSettings or error
+- [x] T043 [US1] Create UpdateSettingsInput struct in src-tauri/src/settings/application/update_settings.rs with Option fields
+- [x] T044 [US1] Create update_settings use case in src-tauri/src/settings/application/update_settings.rs
+- [x] T045 [US1] Implement update_settings logic: load current → merge updates → validate → save → return updated settings
+- [x] T046 [US1] Create UpdateSettingsArgs DTO in src-tauri/src/settings/interface/commands.rs with validator derives
+- [x] T047 [US1] Implement get_settings IPC command handler in src-tauri/src/settings/interface/commands.rs with #[tauri::command] and #[specta::specta]
+- [x] T048 [US1] Implement update_settings IPC command handler in src-tauri/src/settings/interface/commands.rs with args validation
+- [x] T049 [US1] Register get_settings and update_settings commands in src-tauri/src/main.rs invoke_handler
+- [x] T050 [US1] Generate TypeScript types for UserSettings and UpdateSettingsArgs using specta
 
 ### Frontend Implementation for User Story 1
 
-- [ ] T051 [P] [US1] Create SettingsState class in src/lib/features/settings/SettingsState.svelte.ts with $state rune for settings
-- [ ] T052 [US1] Implement SettingsState.load() method in src/lib/features/settings/SettingsState.svelte.ts to call invoke('get_settings')
-- [ ] T053 [US1] Implement SettingsState.update() method in src/lib/features/settings/SettingsState.svelte.ts to call invoke('update_settings')
-- [ ] T054 [US1] Export singleton settingsState instance in src/lib/features/settings/SettingsState.svelte.ts
-- [ ] T055 [P] [US1] Create LanguageSelector component in src/lib/features/settings/components/LanguageSelector.svelte
-- [ ] T056 [P] [US1] Create CurrencySelector component in src/lib/features/settings/components/CurrencySelector.svelte (text input)
-- [ ] T057 [P] [US1] Create MeasureUnitSelector component in src/lib/features/settings/components/MeasureUnitSelector.svelte
-- [ ] T058 [P] [US1] Create ScaleSelector component in src/lib/features/settings/components/ScaleSelector.svelte (text input)
-- [ ] T059 [P] [US1] Create PowerSystemSelector component in src/lib/features/settings/components/PowerSystemSelector.svelte
-- [ ] T060 [US1] Create SettingsForm component in src/lib/features/settings/components/SettingsForm.svelte that uses all 5 selectors
-- [ ] T061 [US1] Add form submission logic to SettingsForm.svelte that calls settingsState.update()
-- [ ] T062 [US1] Add error handling and toast notifications to SettingsForm.svelte
-- [ ] T063 [US1] Create Settings page route: src/routes/settings/+page.svelte
-- [ ] T064 [US1] Import and render SettingsForm in src/routes/settings/+page.svelte
-- [ ] T065 [US1] Add settings loading on mount in src/routes/settings/+page.svelte
-- [ ] T066 [US1] Add $effect in SettingsController to sync language changes with Paraglide setLanguageTag() for reactive UI updates
-- [ ] T067 [US1] Verify all settings components use Paraglide messages (no hardcoded strings)
+- [x] T051 [P] [US1] Create SettingsState class in src/lib/features/settings/SettingsState.svelte.ts with $state rune for settings
+- [x] T052 [US1] Implement SettingsState.load() method in src/lib/features/settings/SettingsState.svelte.ts to call invoke('get_settings')
+- [x] T053 [US1] Implement SettingsState.update() method in src/lib/features/settings/SettingsState.svelte.ts to call invoke('update_settings')
+- [x] T054 [US1] Export singleton settingsState instance in src/lib/features/settings/SettingsState.svelte.ts
+- [x] T055 [P] [US1] Create LanguageSelector component in src/lib/features/settings/components/LanguageSelector.svelte
+- [x] T056 [P] [US1] Create CurrencySelector component in src/lib/features/settings/components/CurrencySelector.svelte (text input)
+- [x] T057 [P] [US1] Create MeasureUnitSelector component in src/lib/features/settings/components/MeasureUnitSelector.svelte
+- [x] T058 [P] [US1] Create ScaleSelector component in src/lib/features/settings/components/ScaleSelector.svelte (text input)
+- [x] T059 [P] [US1] Create PowerSystemSelector component in src/lib/features/settings/components/PowerSystemSelector.svelte
+- [x] T060 [US1] Create SettingsForm component in src/lib/features/settings/components/SettingsForm.svelte that uses all 5 selectors
+- [x] T061 [US1] Add form submission logic to SettingsForm.svelte that calls settingsState.update()
+- [x] T062 [US1] Add error handling and toast notifications to SettingsForm.svelte
+- [x] T063 [US1] Create Settings page route: src/routes/settings/+page.svelte
+- [x] T064 [US1] Import and render SettingsForm in src/routes/settings/+page.svelte
+- [x] T065 [US1] Add settings loading on mount in src/routes/settings/+page.svelte
+- [x] T066 [US1] Add $effect in SettingsController to sync language changes with Paraglide setLanguageTag() for reactive UI updates
+- [x] T067 [US1] Verify all settings components use Paraglide messages (no hardcoded strings)
 
 ### Validation for User Story 1
 
-- [ ] T068 [US1] Run cargo test in src-tauri to verify all backend unit tests pass
-- [ ] T069 [US1] Run pnpm test to verify all frontend unit tests pass
-- [ ] T070 [US1] Manual test: Open Settings page, change all 5 settings, verify immediate UI update
-- [ ] T071 [US1] Manual test: Restart application, verify all settings persisted
-- [ ] T072 [US1] Manual test: Change language setting, verify UI text updates without restart
+- [x] T068 [US1] Run cargo test in src-tauri to verify all backend unit tests pass
+- [x] T069 [US1] Run pnpm test to verify all frontend unit tests pass
+- [x] T070 [US1] Manual test: Open Settings page, change all 5 settings, verify immediate UI update
+- [x] T071 [US1] Manual test: Restart application, verify all settings persisted
+- [x] T072 [US1] Manual test: Change language setting, verify UI text updates without restart
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently - this is the MVP!
 
@@ -145,36 +145,36 @@ This is a Tauri 2 desktop application with:
 
 ### Tests for User Story 2
 
-- [ ] T073 [P] [US2] Write unit test for OS locale parsing (e.g., "it-IT" → "it") in src-tauri/src/settings/infrastructure/tests.rs
-- [ ] T074 [P] [US2] Write unit test for language fallback logic (unsupported locale → English) in src-tauri/src/settings/infrastructure/tests.rs
-- [ ] T075 [P] [US2] Write integration test for initialize_settings with mocked OS locale in src-tauri/src/settings/tests/integration_tests.rs
-- [ ] T076 [P] [US2] Write integration test for first_run flag transition (true → false) in src-tauri/src/settings/tests/integration_tests.rs
+- [x] T073 [P] [US2] Write unit test for OS locale parsing (e.g., "it-IT" → "it") in src-tauri/src/settings/infrastructure/tests.rs
+- [x] T074 [P] [US2] Write unit test for language fallback logic (unsupported locale → English) in src-tauri/src/settings/infrastructure/tests.rs
+- [x] T075 [P] [US2] Write integration test for initialize_settings with mocked OS locale in src-tauri/src/settings/tests/integration_tests.rs
+- [x] T076 [P] [US2] Write integration test for first_run flag transition (true → false) in src-tauri/src/settings/tests/integration_tests.rs
 
 ### Backend Implementation for User Story 2
 
-- [ ] T077 [US2] Create os_language module in src-tauri/src/settings/infrastructure/os_language.rs
-- [ ] T078 [US2] Implement detect_os_language() function in src-tauri/src/settings/infrastructure/os_language.rs using tauri_plugin_os::locale()
-- [ ] T079 [US2] Implement parse_language_code() helper in src-tauri/src/settings/infrastructure/os_language.rs to extract language from locale (e.g., "it-IT" → Language::Italian)
-- [ ] T080 [US2] Add fallback logic to parse_language_code() for unsupported languages (default to Language::English)
-- [ ] T081 [US2] Create initialize_settings use case in src-tauri/src/settings/application/initialize_settings.rs
-- [ ] T082 [US2] Implement initialize_settings logic: check if settings exist → if not, detect OS language → create defaults with detected language → save → set first_run=true
-- [ ] T083 [US2] Add idempotency to initialize_settings (if settings already exist, return them unchanged)
-- [ ] T084 [US2] Implement initialize_settings IPC command handler in src-tauri/src/settings/interface/commands.rs
-- [ ] T085 [US2] Register initialize_settings command in src-tauri/src/main.rs invoke_handler
+- [x] T077 [US2] Create os_language module in src-tauri/src/settings/infrastructure/os_language.rs
+- [x] T078 [US2] Implement detect_os_language() function in src-tauri/src/settings/infrastructure/os_language.rs using tauri_plugin_os::locale()
+- [x] T079 [US2] Implement parse_language_code() helper in src-tauri/src/settings/infrastructure/os_language.rs to extract language from locale (e.g., "it-IT" → Language::Italian)
+- [x] T080 [US2] Add fallback logic to parse_language_code() for unsupported languages (default to Language::English)
+- [x] T081 [US2] Create initialize_settings use case in src-tauri/src/settings/application/initialize_settings.rs
+- [x] T082 [US2] Implement initialize_settings logic: check if settings exist → if not, detect OS language → create defaults with detected language → save → set first_run=true
+- [x] T083 [US2] Add idempotency to initialize_settings (if settings already exist, return them unchanged)
+- [x] T084 [US2] Implement initialize_settings IPC command handler in src-tauri/src/settings/interface/commands.rs
+- [x] T085 [US2] Register initialize_settings command in src-tauri/src/main.rs invoke_handler
 
 ### Frontend Implementation for User Story 2
 
-- [ ] T086 [US2] Add initialization logic to app root layout: src/routes/+layout.svelte
-- [ ] T087 [US2] Call invoke('initialize_settings') in onMount of src/routes/+layout.svelte before loading other data
-- [ ] T088 [US2] Set initial Paraglide language based on initialized settings in src/routes/+layout.svelte
-- [ ] T089 [US2] Add error handling for initialization failures in src/routes/+layout.svelte (log and continue with defaults)
+- [x] T086 [US2] Add initialization logic to app root layout: src/routes/+layout.svelte
+- [x] T087 [US2] Call invoke('initialize_settings') in onMount of src/routes/+layout.svelte before loading other data
+- [x] T088 [US2] Set initial Paraglide language based on initialized settings in src/routes/+layout.svelte
+- [x] T089 [US2] Add error handling for initialization failures in src/routes/+layout.svelte (log and continue with defaults)
 
 ### Validation for User Story 2
 
-- [ ] T090 [US2] Run cargo test to verify OS language detection tests pass
-- [ ] T091 [US2] Manual test: Clear settings file → Set OS to Italian → Launch app → Verify UI in Italian
-- [ ] T092 [US2] Manual test: Clear settings file → Set OS to Spanish → Launch app → Verify UI in English (fallback)
-- [ ] T093 [US2] Manual test: Launch app second time → Verify language preference persisted (not re-detected from OS)
+- [x] T090 [US2] Run cargo test to verify OS language detection tests pass
+- [x] T091 [US2] Manual test: Clear settings file → Set OS to Italian → Launch app → Verify UI in Italian
+- [x] T092 [US2] Manual test: Clear settings file → Set OS to Spanish → Launch app → Verify UI in English (fallback)
+- [x] T093 [US2] Manual test: Launch app second time → Verify language preference persisted (not re-detected from OS)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -190,16 +190,16 @@ This is a Tauri 2 desktop application with:
 
 **Note**: Most functionality is automatic via tauri-plugin-window-state, minimal code required
 
-- [ ] T094 [US3] Verify tauri-plugin-window-state is initialized in src-tauri/src/main.rs (already done in T006)
-- [ ] T095 [US3] Add window-state plugin configuration to src-tauri/tauri.conf.json if needed (check plugin docs)
-- [ ] T096 [US3] Test window state file location and verify it's created on first run
+- [x] T094 [US3] Verify tauri-plugin-window-state is initialized in src-tauri/src/main.rs (already done in T006)
+- [x] T095 [US3] Add window-state plugin configuration to src-tauri/tauri.conf.json if needed (check plugin docs)
+- [x] T096 [US3] Test window state file location and verify it's created on first run
 
 ### Validation for User Story 3
 
-- [ ] T097 [US3] Manual test: Launch app → Move window to top-right corner → Close app → Relaunch → Verify window at top-right
-- [ ] T098 [US3] Manual test: Launch app → Resize window to small size → Close → Relaunch → Verify small size preserved
-- [ ] T099 [US3] Manual test: Launch app → Maximize window → Close → Relaunch → Verify window maximized
-- [ ] T100 [US3] Manual test: Move window to secondary monitor → Disconnect monitor → Relaunch → Verify window appears on primary monitor (edge case)
+- [x] T097 [US3] Manual test: Launch app → Move window to top-right corner → Close app → Relaunch → Verify window at top-right
+- [x] T098 [US3] Manual test: Launch app → Resize window to small size → Close → Relaunch → Verify small size preserved
+- [x] T099 [US3] Manual test: Launch app → Maximize window → Close → Relaunch → Verify window maximized
+- [x] T100 [US3] Manual test: Move window to secondary monitor → Disconnect monitor → Relaunch → Verify window appears on primary monitor (edge case)
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -209,23 +209,23 @@ This is a Tauri 2 desktop application with:
 
 **Purpose**: Improvements that affect multiple user stories and final quality checks
 
-- [ ] T101 [P] Run cargo fmt on src-tauri/ to format Rust code
-- [ ] T102 [P] Run cargo clippy on src-tauri/ and fix all warnings
-- [ ] T103 [P] Run pnpm format to format frontend code
-- [ ] T104 [P] Run pnpm lint and fix all linting issues
-- [ ] T105 Run pnpm check to verify TypeScript types across all settings components
-- [ ] T106 Run cargo test --all to verify all Rust tests pass
-- [ ] T107 Run pnpm test to verify all frontend tests pass
-- [ ] T108 Verify test coverage: Run cargo tarpaulin or coverage tool and ensure settings module has ≥80% coverage (SC-005)
-- [ ] T109 [P] Add rustdoc comments to all public types and functions in src-tauri/src/settings/
-- [ ] T110 [P] Add TSDoc comments to SettingsState and SettingsController in frontend
-- [ ] T111 Create optional reset_settings IPC command in src-tauri/src/settings/interface/commands.rs (factory reset feature)
-- [ ] T112 Add "Reset to Defaults" button to Settings page UI if reset_settings command implemented
-- [ ] T113 Run quickstart.md validation: Verify all code examples in specs/022-tauri2-settings/quickstart.md are accurate
-- [ ] T114 Update CLAUDE.md if new patterns emerged during implementation (optional)
-- [ ] T115 Final manual testing: Run through all 3 user stories end-to-end
-- [ ] T116 Verify FR-017: Audit all UI components to ensure zero hardcoded English strings (all use Paraglide)
-- [ ] T117 Performance check: Measure settings read/write latency (should be <200ms per technical context)
+- [x] T101 [P] Run cargo fmt on src-tauri/ to format Rust code
+- [x] T102 [P] Run cargo clippy on src-tauri/ and fix all warnings
+- [x] T103 [P] Run pnpm format to format frontend code
+- [x] T104 [P] Run pnpm lint and fix all linting issues
+- [x] T105 Run pnpm check to verify TypeScript types across all settings components
+- [x] T106 Run cargo test --all to verify all Rust tests pass
+- [x] T107 Run pnpm test to verify all frontend tests pass
+- [x] T108 Verify test coverage: Run cargo tarpaulin or coverage tool and ensure settings module has ≥80% coverage (SC-005)
+- [x] T109 [P] Add rustdoc comments to all public types and functions in src-tauri/src/settings/
+- [x] T110 [P] Add TSDoc comments to SettingsState and SettingsController in frontend
+- [x] T111 Create optional reset_settings IPC command in src-tauri/src/settings/interface/commands.rs (factory reset feature)
+- [x] T112 Add "Reset to Defaults" button to Settings page UI if reset_settings command implemented
+- [x] T113 Run quickstart.md validation: Verify all code examples in specs/022-tauri2-settings/quickstart.md are accurate
+- [x] T114 Update CLAUDE.md if new patterns emerged during implementation (optional)
+- [x] T115 Final manual testing: Run through all 3 user stories end-to-end
+- [x] T116 Verify FR-017: Audit all UI components to ensure zero hardcoded English strings (all use Paraglide)
+- [x] T117 Performance check: Measure settings read/write latency (should be <200ms per technical context)
 
 ---
 
@@ -378,7 +378,7 @@ During implementation:
 - [ ] Implement code to make tests PASS
 - [ ] Run linting and formatting after each task group
 - [ ] Commit after completing each user story phase
-- [ ] Test each user story independently before moving to next
+- [x] Test each user story independently before moving to next
 
 After implementation:
 

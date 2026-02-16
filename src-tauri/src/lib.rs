@@ -37,7 +37,8 @@ use crate::import::interface::command_handlers as import_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::media::interface::command_handlers as media_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
-use crate::settings::{ensure_default_settings, get_settings, update_settings};
+use crate::settings::ensure_default_settings;
+use crate::settings::interface::commands::{get_settings, initialize_settings, update_settings};
 use crate::state::AppState;
 use crate::tracks_inventory::interface::command_handlers as tracks_inventory_command_handlers;
 use crate::tracks_inventory::interface::query_handlers as tracks_inventory_query_handlers;
@@ -218,6 +219,7 @@ pub fn run() {
         media_command_handlers::upload_model_image_bytes,
         media_command_handlers::delete_model_image,
         get_image_path,
+        initialize_settings,
         get_settings,
         update_settings
     ]);
@@ -232,6 +234,9 @@ pub fn run() {
         .expect("Failed to export typescript bindings");
 
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())

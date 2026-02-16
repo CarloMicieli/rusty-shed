@@ -62,6 +62,7 @@ pub async fn get_budget_config(
 #[tauri::command]
 #[specta::specta]
 pub async fn set_budget_config(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     args: SetBudgetConfigArgs,
 ) -> Result<BudgetConfigDto, CommandError> {
@@ -73,9 +74,12 @@ pub async fn set_budget_config(
             Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
         }
         None => {
-            // Get currency from settings
-            let settings = crate::settings::get_settings(state.clone()).await?;
-            settings.currency
+            // Get currency from new settings system (returns String)
+            let settings = crate::settings::get_settings(app)
+                .await
+                .map_err(|e| CommandError::validation_field("currency", e))?;
+            Currency::from_code(&settings.currency)
+                .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
         }
     };
 
@@ -190,6 +194,7 @@ pub async fn get_budget_dashboard(
 #[tauri::command]
 #[specta::specta]
 pub async fn add_extra_budget(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     args: AddExtraBudgetArgs,
 ) -> Result<ExtraBudgetDto, CommandError> {
@@ -204,8 +209,12 @@ pub async fn add_extra_budget(
             Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
         }
         None => {
-            let settings = crate::settings::get_settings(state.clone()).await?;
-            settings.currency
+            // Get currency from new settings system (returns String)
+            let settings = crate::settings::get_settings(app)
+                .await
+                .map_err(|e| CommandError::validation_field("currency", e))?;
+            Currency::from_code(&settings.currency)
+                .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
         }
     };
 
@@ -311,6 +320,7 @@ pub async fn get_extra_budgets(
 #[tauri::command]
 #[specta::specta]
 pub async fn get_quarterly_summaries(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     args: GetQuarterlySummariesArgs,
 ) -> Result<Vec<QuarterlySummary>, CommandError> {
@@ -322,8 +332,11 @@ pub async fn get_quarterly_summaries(
     let currency_code = match args.currency {
         Some(ref code) => code.clone(),
         None => {
-            let settings = crate::settings::get_settings(state.clone()).await?;
-            settings.currency.to_code().to_string()
+            // New settings system: currency is already a String
+            let settings = crate::settings::get_settings(app)
+                .await
+                .map_err(|e| CommandError::validation_field("currency", e))?;
+            settings.currency
         }
     };
 
