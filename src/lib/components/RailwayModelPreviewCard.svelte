@@ -85,6 +85,8 @@
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
   import { Volume2, Zap, Trash2, TrainFront, Box, Users, Layers } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { commands } from '$lib/bindings';
 
   const displayManufacturer = $derived(model.manufacturer ?? m.components_unknownManufacturer());
 
@@ -130,6 +132,32 @@
   });
 
   let showDeleteDialog = $state(false);
+  let resolvedPhotoUrl = $state<string | null>(null);
+
+  $effect(() => {
+    if (model.photoUrl) {
+      resolvedPhotoUrl =
+        model.photoUrl.startsWith('/') || model.photoUrl.includes('\\')
+          ? convertFileSrc(model.photoUrl)
+          : model.photoUrl;
+    } else {
+      void fetchImage(model.id);
+    }
+  });
+
+  async function fetchImage(id: string) {
+    try {
+      const result = await commands.getRailwayModelImage(id);
+      if (result.status === 'ok' && result.data.hasImage && result.data.imagePath) {
+        resolvedPhotoUrl = convertFileSrc(result.data.imagePath);
+      } else {
+        resolvedPhotoUrl = null;
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch image for model ${id}:`, e);
+      resolvedPhotoUrl = null;
+    }
+  }
 
   function handleDeleteConfirm() {
     onDelete?.(model.id);
@@ -186,9 +214,9 @@
       class="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900"
       style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
     >
-      {#if model.photoUrl}
+      {#if resolvedPhotoUrl}
         <img
-          src={model.photoUrl}
+          src={resolvedPhotoUrl}
           alt={model.series ?? 'Railway model'}
           class="h-full w-full object-cover"
           loading="lazy"
