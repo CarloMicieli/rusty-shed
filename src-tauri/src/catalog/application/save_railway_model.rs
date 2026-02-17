@@ -368,7 +368,7 @@ impl SaveRailwayModel {
                 availability_status: None,
                 description: input.description,
                 details: None,
-                rolling_stocks: rolling_stocks.clone(),
+                rolling_stocks,
             };
 
             let mut aggregate = RailwayModel {
@@ -391,14 +391,10 @@ impl SaveRailwayModel {
                 event_id: uuid::Uuid::new_v4(),
                 railway_model_id: railway_model_id.clone(),
                 timestamp: Utc::now().naive_utc(),
-                params: railway_model_params.clone(),
+                params: railway_model_params,
             };
 
             aggregate.push_event(created_event);
-
-            for p in rolling_stocks.into_iter() {
-                aggregate.add_rolling_stock(p);
-            }
 
             repo.save(&mut aggregate).await.map(|_| railway_model_id)
         }
