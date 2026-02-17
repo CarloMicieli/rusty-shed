@@ -9,6 +9,7 @@
   import BackupList from '$lib/features/cloud-backup/components/BackupList.svelte';
   import RestoreConfirmModal from '$lib/features/cloud-backup/components/RestoreConfirmModal.svelte';
   import { getCloudBackupController } from '$lib/features/cloud-backup';
+  import DataManagementSection from '$lib/features/database-backup/components/DataManagementSection.svelte';
   import {
     fetchSettings,
     saveSettings,
@@ -145,6 +146,9 @@
       {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerSystem}`}
         <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
       {/key}
+
+      <!-- Data Management Section -->
+      <DataManagementSection />
 
       <!-- Cloud Backup Section -->
       <div class="card border-surface-700/40 border p-6 shadow-xl">

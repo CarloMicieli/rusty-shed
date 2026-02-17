@@ -25,3 +25,5 @@ export type {
   LanguageCode,
   ThemeValue
 } from './settings';
+export { exportDatabase, importDatabase } from './database-backup';
+export type { ExportDatabaseResponse, ImportDatabaseResponse } from './database-backup';

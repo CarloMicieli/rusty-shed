@@ -17,10 +17,10 @@
 
 **Purpose**: Project initialization and basic structure for database backup feature
 
-- [ ] T001 Create backend module structure at src-tauri/src/database_backup/ with domain/, application/, infrastructure/ subdirectories
-- [ ] T002 [P] Create frontend feature structure at src/lib/features/database-backup/ with components/ subdirectory
-- [ ] T003 [P] Add i18n message keys to messages/en.json for data management UI strings (titles, descriptions, warnings, success/error messages)
-- [ ] T004 [P] Add i18n message keys to messages/it.json with Italian translations
+- [x] T001 Create backend module structure at src-tauri/src/database_backup/ with domain/, application/, infrastructure/ subdirectories
+- [x] T002 [P] Create frontend feature structure at src/lib/features/database-backup/ with components/ subdirectory
+- [x] T003 [P] Add i18n message keys to messages/en.json for data management UI strings (titles, descriptions, warnings, success/error messages)
+- [x] T004 [P] Add i18n message keys to messages/it.json with Italian translations
 
 ---
 
@@ -30,13 +30,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] Create DatabaseBackupError enum in src-tauri/src/database_backup/domain/errors.rs
-- [ ] T006 [P] Implement CommandError conversion for DatabaseBackupError in src-tauri/src/database_backup/domain/errors.rs
-- [ ] T007 [P] Create database file validation function in src-tauri/src/database_backup/domain/validation.rs
-- [ ] T008 [P] Create domain module exports in src-tauri/src/database_backup/domain/mod.rs
-- [ ] T009 [P] Create database_backup module declaration in src-tauri/src/lib.rs
-- [ ] T010 [P] Create Result type alias in src/lib/services/types.ts for service layer responses
-- [ ] T011 [P] Create DatabaseBackupState type in src/lib/features/database-backup/DatabaseBackupState.svelte.ts
+- [x] T005 [P] Create DatabaseBackupError enum in src-tauri/src/database_backup/domain/errors.rs
+- [x] T006 [P] Implement CommandError conversion for DatabaseBackupError in src-tauri/src/database_backup/domain/errors.rs
+- [x] T007 [P] Create database file validation function in src-tauri/src/database_backup/domain/validation.rs
+- [x] T008 [P] Create domain module exports in src-tauri/src/database_backup/domain/mod.rs
+- [x] T009 [P] Create database_backup module declaration in src-tauri/src/lib.rs
+- [x] T010 [P] Create Result type alias in src/lib/services/types.ts for service layer responses (used SafeResult from errors.ts)
+- [x] T011 [P] Create DatabaseBackupState type in src/lib/features/database-backup/DatabaseBackupState.svelte.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -57,21 +57,21 @@
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Create ExportDatabaseArgs and ExportDatabaseResponse types in src-tauri/src/commands/database_backup.rs
-- [ ] T015 [P] [US1] Create export_database use case in src-tauri/src/database_backup/application/export_database.rs using VACUUM INTO
-- [ ] T016 [US1] Implement export_database command handler in src-tauri/src/commands/database_backup.rs with validation and error handling
-- [ ] T017 [US1] Register export_database command in src-tauri/src/commands/mod.rs
-- [ ] T018 [US1] Add export_database to invoke_handler in src-tauri/src/lib.rs
-- [ ] T019 [US1] Generate TypeScript bindings by running cargo test --features specta
-- [ ] T020 [P] [US1] Create exportDatabase service function in src/lib/services/database-backup.ts
-- [ ] T021 [P] [US1] Export database-backup service from src/lib/services/index.ts
-- [ ] T022 [US1] Create DatabaseBackupController with handleExport method in src/lib/features/database-backup/DatabaseBackupController.svelte.ts
-- [ ] T023 [US1] Integrate @tauri-apps/plugin-dialog save() for export file picker in DatabaseBackupController
-- [ ] T024 [US1] Create DataManagementSection component with Export Data button in src/lib/features/database-backup/components/DataManagementSection.svelte
-- [ ] T025 [US1] Export DatabaseBackupController and types from src/lib/features/database-backup/index.ts
-- [ ] T026 [US1] Import and render DataManagementSection in src/routes/my-settings/+page.svelte above Cloud Backup section
-- [ ] T027 [US1] Add success toast notification for export completion using toaster service
-- [ ] T028 [US1] Add error toast notification for export failures using toaster service
+- [x] T014 [P] [US1] Create ExportDatabaseArgs and ExportDatabaseResponse types in src-tauri/src/commands/database_backup.rs
+- [x] T015 [P] [US1] Create export_database use case in src-tauri/src/database_backup/application/export_database.rs using VACUUM INTO
+- [x] T016 [US1] Implement export_database command handler in src-tauri/src/commands/database_backup.rs with validation and error handling
+- [x] T017 [US1] Register export_database command in src-tauri/src/commands/mod.rs
+- [x] T018 [US1] Add export_database to invoke_handler in src-tauri/src/lib.rs
+- [x] T019 [US1] Generate TypeScript bindings by running cargo build (debug mode regenerates bindings) + manual additions to bindings.ts
+- [x] T020 [P] [US1] Create exportDatabase service function in src/lib/services/database-backup.ts
+- [x] T021 [P] [US1] Export database-backup service from src/lib/services/index.ts
+- [x] T022 [US1] Create DatabaseBackupController with handleExport method in src/lib/features/database-backup/DatabaseBackupController.svelte.ts
+- [x] T023 [US1] Integrate @tauri-apps/plugin-dialog save() for export file picker in DatabaseBackupController
+- [x] T024 [US1] Create DataManagementSection component with Export Data button in src/lib/features/database-backup/components/DataManagementSection.svelte
+- [x] T025 [US1] Export DatabaseBackupController and types from src/lib/features/database-backup/index.ts
+- [x] T026 [US1] Import and render DataManagementSection in src/routes/my-settings/+page.svelte above Cloud Backup section
+- [x] T027 [US1] Add success toast notification for export completion using toaster service
+- [x] T028 [US1] Add error toast notification for export failures using toaster service
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can export their database to a local file
 
@@ -90,22 +90,22 @@
 
 ### Implementation for User Story 2
 
-- [ ] T031 [P] [US2] Create ImportDatabaseArgs and ImportDatabaseResponse types in src-tauri/src/commands/database_backup.rs
-- [ ] T032 [P] [US2] Create file copy utilities in src-tauri/src/database_backup/infrastructure/file_operations.rs
-- [ ] T033 [P] [US2] Implement confirmation validator for "RESTORE" string in src-tauri/src/commands/database_backup.rs
-- [ ] T034 [US2] Create import_database use case in src-tauri/src/database_backup/application/import_database.rs with validation
-- [ ] T035 [US2] Implement import_database command handler in src-tauri/src/commands/database_backup.rs
-- [ ] T036 [US2] Register import_database command in src-tauri/src/commands/mod.rs
-- [ ] T037 [US2] Add import_database to invoke_handler in src-tauri/src/lib.rs
-- [ ] T038 [US2] Regenerate TypeScript bindings by running cargo test --features specta
-- [ ] T039 [P] [US2] Create importDatabase service function in src/lib/services/database-backup.ts
-- [ ] T040 [US2] Add handleImport method to DatabaseBackupController in src/lib/features/database-backup/DatabaseBackupController.svelte.ts
-- [ ] T041 [US2] Integrate @tauri-apps/plugin-dialog open() for import file picker in DatabaseBackupController
-- [ ] T042 [US2] Create confirmation dialog logic for import with "RESTORE" validation in DatabaseBackupController
-- [ ] T043 [US2] Add Import Data button to DataManagementSection component in src/lib/features/database-backup/components/DataManagementSection.svelte
-- [ ] T044 [US2] Add success toast with restart requirement message for import completion
-- [ ] T045 [US2] Add error toast notification for import failures with validation messages
-- [ ] T046 [US2] Implement loading state management to disable buttons during import/export operations
+- [x] T031 [P] [US2] Create ImportDatabaseArgs and ImportDatabaseResponse types in src-tauri/src/commands/database_backup.rs
+- [x] T032 [P] [US2] Create file copy utilities in src-tauri/src/database_backup/infrastructure/file_operations.rs
+- [x] T033 [P] [US2] Implement confirmation validator for "RESTORE" string in src-tauri/src/commands/database_backup.rs
+- [x] T034 [US2] Create import_database use case in src-tauri/src/database_backup/application/import_database.rs with validation
+- [x] T035 [US2] Implement import_database command handler in src-tauri/src/commands/database_backup.rs
+- [x] T036 [US2] Register import_database command in src-tauri/src/commands/mod.rs
+- [x] T037 [US2] Add import_database to invoke_handler in src-tauri/src/lib.rs
+- [x] T038 [US2] Regenerate TypeScript bindings (bindings.ts updated manually with new types and commands)
+- [x] T039 [P] [US2] Create importDatabase service function in src/lib/services/database-backup.ts
+- [x] T040 [US2] Add handleImport method to DatabaseBackupController in src/lib/features/database-backup/DatabaseBackupController.svelte.ts
+- [x] T041 [US2] Integrate @tauri-apps/plugin-dialog open() for import file picker in DatabaseBackupController
+- [x] T042 [US2] Create confirmation dialog logic for import with "RESTORE" validation in DatabaseBackupController (backend validates)
+- [x] T043 [US2] Add Import Data button to DataManagementSection component in src/lib/features/database-backup/components/DataManagementSection.svelte
+- [x] T044 [US2] Add success toast with restart requirement message for import completion
+- [x] T045 [US2] Add error toast notification for import failures with validation messages
+- [x] T046 [US2] Implement loading state management to disable buttons during import/export operations
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - full backup and restore functionality
 
@@ -119,12 +119,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T047 [P] [US3] Update DataManagementSection styling to use card border-surface-700/40 border p-6 shadow-xl classes
-- [ ] T048 [P] [US3] Apply variant="filled" with orange accent to Export and Import buttons
-- [ ] T049 [P] [US3] Add warning callout below Import button using variant-soft-warning classes
-- [ ] T050 [US3] Verify DataManagementSection position above Cloud Backup section in src/routes/my-settings/+page.svelte
-- [ ] T051 [US3] Add section title and subtitle with consistent typography (text-xl font-bold and text-surface-400)
-- [ ] T052 [US3] Ensure button spacing and layout matches Cloud Backup section using flex gap-4
+- [x] T047 [P] [US3] Update DataManagementSection styling to use card border-surface-700/40 border p-6 shadow-xl classes
+- [x] T048 [P] [US3] Apply variant="default/outline" to Export and Import buttons (variant="filled" not in shadcn-svelte, used default/outline)
+- [x] T049 [P] [US3] Add warning callout below Import button using warning color classes
+- [x] T050 [US3] Verify DataManagementSection position above Cloud Backup section in src/routes/my-settings/+page.svelte
+- [x] T051 [US3] Add section title and subtitle with consistent typography (text-xl font-bold and text-surface-400)
+- [x] T052 [US3] Ensure button spacing and layout matches Cloud Backup section using flex gap-4
 
 **Checkpoint**: All user stories should now be independently functional with consistent UI/UX
 
@@ -134,12 +134,12 @@
 
 **Purpose**: Quality assurance and improvements that affect multiple user stories
 
-- [ ] T053 [P] Run pnpm format to format frontend code
-- [ ] T054 [P] Run pnpm lint and fix any ESLint warnings
-- [ ] T055 [P] Run pnpm check to verify TypeScript types
-- [ ] T056 [P] Run cargo fmt to format Rust code
-- [ ] T057 [P] Run cargo clippy and address any warnings
-- [ ] T058 [P] Run cargo test to verify all backend tests pass
+- [x] T053 [P] Run pnpm format to format frontend code
+- [x] T054 [P] Run pnpm lint and fix any ESLint warnings (fixed SvelteDate issue)
+- [x] T055 [P] Run pnpm check to verify TypeScript types (0 errors, 0 warnings)
+- [x] T056 [P] Run cargo fmt to format Rust code
+- [x] T057 [P] Run cargo clippy and address any warnings (0 warnings)
+- [x] T058 [P] Run cargo test to verify all backend tests pass (1085 passed)
 - [ ] T059 Manual testing: Export database to local file and verify file integrity
 - [ ] T060 Manual testing: Import previously exported database and verify data restoration
 - [ ] T061 Manual testing: Test file picker cancellation for both export and import

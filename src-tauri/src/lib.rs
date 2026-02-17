@@ -5,6 +5,7 @@ pub mod collecting;
 pub mod commands;
 pub mod core;
 pub mod dashboard;
+pub mod database_backup;
 pub mod dcc_inventory;
 pub mod export;
 pub mod import;
@@ -27,6 +28,7 @@ use crate::catalog::interface::railway_companies as railway_companies_command_ha
 use crate::cloud_backup::infrastructure::start_connectivity_monitor;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::commands::cloud_backup as cloud_backup_command_handlers;
+use crate::commands::database_backup as database_backup_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::logging;
@@ -221,7 +223,9 @@ pub fn run() {
         get_image_path,
         initialize_settings,
         get_settings,
-        update_settings
+        update_settings,
+        database_backup_command_handlers::export_database,
+        database_backup_command_handlers::import_database
     ]);
 
     #[allow(unused_variables)]

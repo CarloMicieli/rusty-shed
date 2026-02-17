@@ -1495,6 +1495,32 @@ export const commands = {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
     }
+  },
+  /**
+   * Export the database to a user-selected file location
+   */
+  async exportDatabase(
+    args: ExportDatabaseArgs
+  ): Promise<Result<ExportDatabaseResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('export_database', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Import (restore) the database from a user-selected backup file
+   */
+  async importDatabase(
+    args: ImportDatabaseArgs
+  ): Promise<Result<ImportDatabaseResponse, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('import_database', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
   }
 };
 
@@ -3096,6 +3122,13 @@ export type ExecuteImportArgs = {
    */
   sessionId: string;
 };
+export type ExportDatabaseArgs = { destination_path: string };
+export type ExportDatabaseResponse = {
+  file_path: string;
+  file_size_bytes: bigint;
+  duration_ms: bigint;
+  message: string;
+};
 /**
  * Extra budget entry DTO.
  */
@@ -3284,6 +3317,14 @@ export type GetQuarterlySummariesArgs = {
  * Details about a failed image import
  */
 export type ImageFailureDto = { filename: string; reason: string };
+export type ImportDatabaseArgs = { source_path: string; confirmation: string };
+export type ImportDatabaseResponse = {
+  file_path: string;
+  file_size_bytes: bigint;
+  duration_ms: bigint;
+  message: string;
+  requires_restart: boolean;
+};
 /**
  * Import outcome
  */

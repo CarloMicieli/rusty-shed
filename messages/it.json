@@ -722,5 +722,22 @@
   "export_progress_collecting": "Raccolta dati",
   "export_progress_compressing": "Compressione file",
   "export_progress_finalizing": "Finalizzazione archivio",
-  "export_select_destination": "Seleziona posizione esportazione"
+  "export_select_destination": "Seleziona posizione esportazione",
+  "data_management_title": "Gestione Dati",
+  "data_management_subtitle": "Esporta e importa i dati della tua collezione ferroviaria",
+  "data_management_export_button": "Esporta Dati",
+  "data_management_export_description": "Salva un backup completo del database in un file locale",
+  "data_management_import_button": "Importa Dati",
+  "data_management_import_description": "Ripristina il database da un file precedentemente esportato",
+  "data_management_import_warning": "⚠️ L'importazione dei dati sovrascriverà il database locale corrente",
+  "data_management_import_confirm_title": "Conferma Importazione Database",
+  "data_management_import_confirm_message": "Questo sostituirà il database corrente con il file di backup. Tutti i dati esistenti verranno sovrascritti. Digita 'RESTORE' per confermare.",
+  "data_management_export_success": "Database esportato con successo in {path}",
+  "data_management_export_error": "Esportazione del database fallita: {error}",
+  "data_management_import_success": "Database importato con successo. Si prega di riavviare l'app.",
+  "data_management_import_error": "Importazione del database fallita: {error}",
+  "data_management_file_picker_export_title": "Esporta Database",
+  "data_management_file_picker_import_title": "Importa Database",
+  "data_management_exporting": "Esportazione in corso...",
+  "data_management_importing": "Importazione in corso..."
 }
