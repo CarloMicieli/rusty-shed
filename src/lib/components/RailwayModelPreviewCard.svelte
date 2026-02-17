@@ -142,7 +142,7 @@
   Amber ring glow appears on hover; delete button fades in.
 -->
 <Card
-  class="group card gauge-frame ring-1 ring-zinc-700/50 transition-all duration-200 hover:ring-2 hover:ring-[#E2994F]/50 hover:shadow-[0_0_24px_rgba(226,153,79,0.12)] {className ??
+  class="group card rounded-2xl border-2 border-[rgba(212,138,62,0.35)] shadow-xl transition-all duration-200 hover:border-[rgba(226,153,79,0.65)] hover:shadow-[0_0_20px_rgba(226,153,79,0.2)] {className ??
     ''}"
 >
   <CardHeader class="p-3 pb-2">
@@ -157,7 +157,7 @@
           {/if}
         </div>
         <!-- Locomotive class / series name -->
-        <h3 class="mt-0.5 truncate text-sm font-medium leading-tight text-zinc-100">
+        <h3 class="mt-0.5 truncate text-sm leading-tight font-medium text-zinc-100">
           {displaySeries}
         </h3>
       </div>
@@ -167,7 +167,7 @@
         <Button
           variant="ghost"
           size="icon"
-          class="-mr-1 -mt-1 h-7 w-7 shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          class="-mt-1 -mr-1 h-7 w-7 shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
           aria-label={m.components_deleteButton()}
           onclick={() => (showDeleteDialog = true)}
         >
@@ -183,7 +183,7 @@
       Subtle grid pattern via inline background-image; bg-zinc-900 as base.
     -->
     <div
-      class="relative aspect-video w-full overflow-hidden rounded-md bg-zinc-900"
+      class="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900"
       style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
     >
       {#if model.photoUrl}
@@ -203,7 +203,7 @@
 
       <!-- Digital features overlay (top-left) -->
       {#if model.digitalFeatures.length > 0}
-        <div class="absolute left-2 top-2 z-10 flex gap-1" aria-label="Digital features">
+        <div class="absolute top-2 left-2 z-10 flex gap-1" aria-label="Digital features">
           {#each model.digitalFeatures as feature (feature)}
             {#if feature === 'Sound'}
               <div class="rounded-full bg-black/70 p-1" title="Sound equipped">
@@ -220,7 +220,7 @@
 
       <!-- Power method badge (top-right): amber on black, prominent -->
       {#if model.powerMethod}
-        <div class="absolute right-2 top-2 z-10">
+        <div class="absolute top-2 right-2 z-10">
           <Badge
             class="border-transparent bg-[#E2994F] px-1.5 py-0.5 text-[10px] font-bold text-black"
           >
@@ -231,7 +231,7 @@
 
       <!-- Unit count badge (bottom-right): shown only when > 1 -->
       {#if model.unitCount && model.unitCount > 1}
-        <div class="absolute bottom-2 right-2 z-10">
+        <div class="absolute right-2 bottom-2 z-10">
           <Badge class="border-transparent bg-zinc-800/90 px-1.5 py-0.5 text-xs text-zinc-300">
             ×{model.unitCount}
           </Badge>
@@ -245,19 +245,19 @@
     <!-- Technical specs grid: Road Number · Scale · Era -->
     <div class="grid grid-cols-3 divide-x divide-zinc-800">
       <div class="flex flex-col items-center gap-0.5 pr-2">
-        <span class="text-[10px] uppercase tracking-wider text-zinc-500">
+        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
           {m.depot_road_number()}
         </span>
         <span class="font-mono text-xs text-zinc-300">{model.roadNumber ?? '—'}</span>
       </div>
       <div class="flex flex-col items-center gap-0.5 px-2">
-        <span class="text-[10px] uppercase tracking-wider text-zinc-500">
+        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
           {m.depot_scale()}
         </span>
         <span class="font-mono text-xs text-zinc-300">{model.scale ?? '—'}</span>
       </div>
       <div class="flex flex-col items-center gap-0.5 pl-2">
-        <span class="text-[10px] uppercase tracking-wider text-zinc-500">Era</span>
+        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">Era</span>
         <span class="font-mono text-xs text-zinc-300">{model.era ?? '—'}</span>
       </div>
     </div>
