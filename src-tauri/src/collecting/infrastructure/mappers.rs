@@ -156,6 +156,7 @@ impl CollectionMapper {
             product_code: row.product_code,
             manufacturer: row.manufacturer,
             railway_model_id: row.railway_model_id,
+            power_method: row.power_method,
         };
 
         Ok(CollectionItemView {
@@ -298,7 +299,7 @@ impl CollectionMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_model::{Category, RailwayModelId, RollingStockId};
+    use crate::catalog::domain::railway_model::{Category, PowerMethod, RailwayModelId, RollingStockId};
     use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::CollectionItemId;
     use crate::collecting::domain::OwnedRollingStockId;
@@ -368,6 +369,7 @@ mod tests {
             collection_id: CollectionId::default(),
             category: Category::Locomotives,
             scale: Scale::H0,
+            power_method: PowerMethod::DC,
             epoch: "VI".into(),
             description: "Some description".to_string(),
             product_code: "60100".to_string(),

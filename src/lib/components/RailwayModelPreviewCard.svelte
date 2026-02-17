@@ -89,6 +89,15 @@
   // Derived state for display values
   const displayManufacturer = $derived(model.manufacturer || m.components_unknownManufacturer());
 
+  // Power method badge color
+  const powerMethodBadgeClass = $derived.by((): string => {
+    const pm = model.powerMethod?.toLowerCase();
+    if (pm === 'ac') return 'bg-red-700 text-white';
+    if (pm === 'dc') return 'bg-orange-500 text-white';
+    if (pm === 'trix_express') return 'bg-green-600 text-white';
+    return 'bg-muted text-muted-foreground';
+  });
+
   // Series truncated to max 30 characters
   const displaySeries = $derived(
     model.series
@@ -135,13 +144,18 @@
 >
   <CardContent class="p-4">
     <div class="flex flex-col gap-3">
-      <!-- Row 1: manufacturer · productCode + trash icon -->
+      <!-- Row 1: power method badge · manufacturer · productCode + trash icon -->
       <div class="flex items-start justify-between gap-2">
-        <div class="text-surface-600 min-w-0 text-sm">
-          <span class="font-medium">{displayManufacturer}</span>
+        <div class="flex min-w-0 flex-wrap items-center gap-1.5 text-sm">
+          {#if model.powerMethod}
+            <span class="rounded px-1.5 py-0.5 text-xs font-medium {powerMethodBadgeClass}">
+              {model.powerMethod}
+            </span>
+          {/if}
+          <span class="text-surface-600 font-medium">{displayManufacturer}</span>
           {#if model.productCode}
-            <span class="text-surface-400 mx-1">·</span>
-            <span>{model.productCode}</span>
+            <span class="text-surface-400">·</span>
+            <span class="text-surface-600">{model.productCode}</span>
           {/if}
         </div>
         {#if onDelete}
@@ -158,7 +172,7 @@
       </div>
 
       <!-- Row 2: Description (series, max 30 chars) -->
-      <h3 class="text-base font-semibold leading-snug">
+      <h3 class="text-base font-normal leading-snug">
         {displaySeries}
       </h3>
 
@@ -207,16 +221,25 @@
         {/if}
       </div>
 
-      <!-- Row 3: # roadNumber · scale · era -->
-      <div class="text-surface-600 flex flex-wrap items-center gap-3 font-mono text-sm">
+      <!-- Row 3: labeled road number, scale, era -->
+      <div class="flex flex-wrap gap-4">
         {#if model.roadNumber}
-          <span># {model.roadNumber}</span>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-surface-400 text-xs">Road Number</span>
+            <span class="font-mono text-sm"># {model.roadNumber}</span>
+          </div>
         {/if}
         {#if model.scale}
-          <span>{model.scale}</span>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-surface-400 text-xs">Scale</span>
+            <span class="font-mono text-sm">{model.scale}</span>
+          </div>
         {/if}
         {#if model.era}
-          <span>Era {model.era}</span>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-surface-400 text-xs">Era</span>
+            <span class="font-mono text-sm">{model.era}</span>
+          </div>
         {/if}
       </div>
     </div>

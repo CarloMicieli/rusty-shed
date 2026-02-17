@@ -68,6 +68,7 @@ pub async fn get_collection_items(
              rm.scale,
              rm.epoch,
              rm.description,
+             rm.power_method,
              m.name AS manufacturer
    FROM collection_items ci
    JOIN railway_models rm ON rm.id = ci.railway_model_id

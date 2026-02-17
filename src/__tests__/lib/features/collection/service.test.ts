@@ -144,7 +144,8 @@ describe('CollectionState (Read-Only)', () => {
           description: 'BR 185 Electric Locomotive',
           scale: 'H0',
           epoch: 'VI',
-          category: 'LOCOMOTIVES'
+          category: 'LOCOMOTIVES',
+          powerMethod: 'AC'
         },
         addedDate: '2024-01-01',
         removedDate: null,
@@ -164,7 +165,8 @@ describe('CollectionState (Read-Only)', () => {
           description: 'ICE 3 High Speed Train',
           scale: 'H0',
           epoch: 'VI',
-          category: 'TRAIN_SETS'
+          category: 'TRAIN_SETS',
+          powerMethod: 'DC'
         },
         addedDate: '2024-01-02',
         removedDate: null,
@@ -184,7 +186,8 @@ describe('CollectionState (Read-Only)', () => {
           description: 'Tank Wagon',
           scale: 'N',
           epoch: 'IV',
-          category: 'FREIGHT_CARS'
+          category: 'FREIGHT_CARS',
+          powerMethod: 'DC'
         },
         addedDate: '2024-01-03',
         removedDate: null,

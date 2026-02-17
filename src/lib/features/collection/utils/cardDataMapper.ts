@@ -25,7 +25,7 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
     category: mapCategory(railwayModel.category),
     roadNumber: rollingStocks[0]?.roadNumber ?? null,
     scale: railwayModel.scale,
-    powerMethod: null,
+    powerMethod: railwayModel.powerMethod,
     era: railwayModel.epoch,
     purchaseDate: extractPurchaseDate(purchaseInfo),
     photoUrl: null,

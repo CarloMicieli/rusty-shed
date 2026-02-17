@@ -36,7 +36,8 @@ function makeItem(overrides: Partial<CollectionItemView> = {}): CollectionItemVi
       scale: 'H0',
       epoch: 'III',
       description: 'BR 89.0',
-      category: 'LOCOMOTIVES'
+      category: 'LOCOMOTIVES',
+      powerMethod: 'AC'
     },
     addedDate: '2024-03-16',
     removedDate: null,

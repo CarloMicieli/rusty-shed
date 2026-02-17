@@ -2067,7 +2067,11 @@ description: string;
 /**
  * The category of the railway model, if specified.
  */
-category: Category }
+category: Category; 
+/**
+ * The power method of the railway model (e.g. AC, DC, Trix Express).
+ */
+powerMethod: PowerMethod }
 /**
  * A statistical summary of a model railway collection.
  * 

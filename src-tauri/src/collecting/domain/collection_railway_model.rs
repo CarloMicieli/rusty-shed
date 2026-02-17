@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::{Category, Epoch, RailwayModelId};
+use crate::catalog::domain::railway_model::{Category, Epoch, PowerMethod, RailwayModelId};
 use crate::catalog::domain::scale::Scale;
 use serde::{Deserialize, Serialize};
 
@@ -23,4 +23,6 @@ pub struct CollectionRailwayModel {
     pub description: String,
     /// The category of the railway model, if specified.
     pub category: Category,
+    /// The power method of the railway model (e.g. AC, DC, Trix Express).
+    pub power_method: PowerMethod,
 }

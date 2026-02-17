@@ -1,6 +1,6 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_model::{
-    Category, DccInterface, Epoch, RailwayModelId, RollingStockId,
+    Category, DccInterface, Epoch, PowerMethod, RailwayModelId, RollingStockId,
 };
 use crate::catalog::domain::scale::Scale;
 use crate::collecting::domain::CollectionItemId;
@@ -54,6 +54,7 @@ pub struct CollectionItemRow {
     pub scale: Scale,
     pub epoch: Epoch,
     pub description: String,
+    pub power_method: PowerMethod,
 }
 
 /// Row mapping for the `owned_rolling_stocks` table.
