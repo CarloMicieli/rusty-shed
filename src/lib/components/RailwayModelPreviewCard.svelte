@@ -60,17 +60,15 @@
    * Railway Model Preview Card Component
    * Displays a compact visual summary of a railway model with thumbnail,
    * metadata badges, and optional delete functionality.
+   * Premium technical aesthetic matching the Rusty Shed dark theme.
    */
 
-  /**
-   * Component props interface
-   */
   interface Props {
     /** The railway model data to display in the card */
     model: RailwayModelCardData;
     /**
-     * Optional callback invoked when user confirms deletion
-     * If not provided, delete button will not be rendered
+     * Optional callback invoked when user confirms deletion.
+     * If not provided, delete button will not be rendered.
      */
     onDelete?: (modelId: string) => void;
     /** Optional CSS class to apply to the card root element */
@@ -80,42 +78,44 @@
   // eslint-disable-next-line svelte/no-unused-props
   let { model, onDelete, class: className }: Props = $props();
 
-  import { Card, CardContent } from '$lib/components/ui/card';
+  import { Card, CardHeader, CardContent } from '$lib/components/ui/card';
+  import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
+  import { Separator } from '$lib/components/ui/separator';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
-  import { Volume2, Zap, Trash2, Train, Box, Users, Layers } from 'lucide-svelte';
+  import { Volume2, Zap, Trash2, TrainFront, Box, Users, Layers } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
 
-  // Derived state for display values
-  const displayManufacturer = $derived(model.manufacturer || m.components_unknownManufacturer());
+  const displayManufacturer = $derived(model.manufacturer ?? m.components_unknownManufacturer());
 
-  // Power method badge color
-  const powerMethodBadgeClass = $derived.by((): string => {
-    const pm = model.powerMethod?.toLowerCase();
-    if (pm === 'ac') return 'bg-red-700 text-white';
-    if (pm === 'dc') return 'bg-orange-500 text-white';
-    if (pm === 'trix_express') return 'bg-green-600 text-white';
-    return 'bg-muted text-muted-foreground';
-  });
-
-  // Series truncated to max 30 characters
   const displaySeries = $derived(
     model.series
       ? model.series.length > 30
-        ? model.series.substring(0, 30) + '...'
+        ? model.series.substring(0, 30) + '…'
         : model.series
       : 'Railway Model'
   );
 
-  // Category-to-icon mapping for placeholders
+  // Compact display label for power method badge
+  const powerMethodLabel = $derived.by((): string => {
+    if (!model.powerMethod) return '';
+    const labels: Record<string, string> = {
+      ac: 'AC',
+      dc: 'DC',
+      dcc: 'DCC',
+      trix_express: 'TX'
+    };
+    return labels[model.powerMethod.toLowerCase()] ?? model.powerMethod.toUpperCase();
+  });
+
+  // Category-to-icon mapping for technical drawing placeholder
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let PlaceholderIcon: any = $derived.by(() => {
+  const PlaceholderIcon: any = $derived.by(() => {
     switch (model.category) {
       case 'SteamLocomotive':
-        return Train;
       case 'ElectricLocomotive':
       case 'DieselLocomotive':
-        return Zap;
+        return TrainFront;
       case 'Wagon':
       case 'FreightCar':
         return Box;
@@ -125,11 +125,10 @@
       case 'TrainSet':
         return Layers;
       default:
-        return Train; // Generic fallback
+        return TrainFront;
     }
   });
 
-  // Delete dialog state
   let showDeleteDialog = $state(false);
 
   function handleDeleteConfirm() {
@@ -138,122 +137,141 @@
   }
 </script>
 
+<!--
+  Card uses `group` so child elements can react to card-level hover via group-hover:*.
+  Amber ring glow appears on hover; delete button fades in.
+-->
 <Card
-  class="card gauge-frame hover:ring-primary-500 ring-1 ring-border/40 transition-all duration-200 hover:scale-[1.02] hover:ring-2 {className ||
+  class="group card gauge-frame ring-1 ring-zinc-700/50 transition-all duration-200 hover:ring-2 hover:ring-[#E2994F]/50 hover:shadow-[0_0_24px_rgba(226,153,79,0.12)] {className ??
     ''}"
 >
-  <CardContent class="p-4">
-    <div class="flex flex-col gap-3">
-      <!-- Row 1: power method badge · manufacturer · productCode + trash icon -->
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex min-w-0 flex-wrap items-center gap-1.5 text-sm">
-          {#if model.powerMethod}
-            <span class="rounded px-1.5 py-0.5 text-xs font-medium {powerMethodBadgeClass}">
-              {model.powerMethod}
-            </span>
-          {/if}
-          <span class="text-surface-600 font-medium">{displayManufacturer}</span>
+  <CardHeader class="p-3 pb-2">
+    <div class="flex items-start justify-between gap-2">
+      <!-- Manufacturer · product code -->
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-1">
+          <span class="text-xs font-semibold text-zinc-200">{displayManufacturer}</span>
           {#if model.productCode}
-            <span class="text-surface-400">·</span>
-            <span class="text-surface-600">{model.productCode}</span>
+            <span class="text-zinc-600" aria-hidden="true">·</span>
+            <span class="font-mono text-xs text-zinc-500">{model.productCode}</span>
           {/if}
         </div>
-        {#if onDelete}
-          <Button
-            variant="ghost"
-            size="icon"
-            class="-mr-2 -mt-2 h-8 w-8 shrink-0"
-            aria-label={m.components_deleteButton()}
-            onclick={() => (showDeleteDialog = true)}
-          >
-            <Trash2 class="h-4 w-4" />
-          </Button>
-        {/if}
+        <!-- Locomotive class / series name -->
+        <h3 class="mt-0.5 truncate text-sm font-medium leading-tight text-zinc-100">
+          {displaySeries}
+        </h3>
       </div>
 
-      <!-- Row 2: Description (series, max 30 chars) -->
-      <h3 class="text-base font-normal leading-snug">
-        {displaySeries}
-      </h3>
+      <!-- Delete button: hidden by default, revealed on card hover -->
+      {#if onDelete}
+        <Button
+          variant="ghost"
+          size="icon"
+          class="-mr-1 -mt-1 h-7 w-7 shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          aria-label={m.components_deleteButton()}
+          onclick={() => (showDeleteDialog = true)}
+        >
+          <Trash2 class="h-3.5 w-3.5 text-zinc-500 hover:text-red-400" />
+        </Button>
+      {/if}
+    </div>
+  </CardHeader>
 
-      <!-- Image -->
-      <div class="bg-surface-200 relative aspect-video w-full overflow-hidden rounded-lg">
-        {#if model.photoUrl}
-          <img
-            src={model.photoUrl}
-            alt={model.series || 'Railway model'}
-            class="h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        {:else}
-          <!-- Category-specific placeholder icon -->
-          <div class="flex h-full w-full items-center justify-center">
-            <PlaceholderIcon class="text-surface-500 size-16" />
-          </div>
-        {/if}
+  <CardContent class="p-3 pt-0">
+    <!--
+      Centerpiece: "technical drawing" area.
+      Subtle grid pattern via inline background-image; bg-zinc-900 as base.
+    -->
+    <div
+      class="relative aspect-video w-full overflow-hidden rounded-md bg-zinc-900"
+      style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
+    >
+      {#if model.photoUrl}
+        <img
+          src={model.photoUrl}
+          alt={model.series ?? 'Railway model'}
+          class="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+      {:else}
+        <!-- Category placeholder icon: dimmed for the "blueprint" feel -->
+        <div class="flex h-full w-full items-center justify-center">
+          <PlaceholderIcon class="size-12 text-zinc-600/70" />
+        </div>
+      {/if}
 
-        <!-- Digital Features Overlay (top-left) -->
-        {#if model.digitalFeatures.length > 0}
-          <div class="absolute top-2 left-2 z-10 flex gap-1" aria-label="Digital features">
-            {#each model.digitalFeatures as feature (feature)}
-              {#if feature === 'Sound'}
-                <div class="rounded-full bg-black/60 p-1" title="Sound equipped">
-                  <Volume2 class="h-4 w-4 text-white" aria-hidden="true" />
-                </div>
-              {:else if feature === 'DCC'}
-                <div class="rounded-full bg-black/60 p-1" title="DCC equipped">
-                  <Zap class="h-4 w-4 text-white" aria-hidden="true" />
-                </div>
-              {/if}
-            {/each}
-          </div>
-        {/if}
+      <!-- Digital features overlay (top-left) -->
+      {#if model.digitalFeatures.length > 0}
+        <div class="absolute left-2 top-2 z-10 flex gap-1" aria-label="Digital features">
+          {#each model.digitalFeatures as feature (feature)}
+            {#if feature === 'Sound'}
+              <div class="rounded-full bg-black/70 p-1" title="Sound equipped">
+                <Volume2 class="h-3.5 w-3.5 text-zinc-300" aria-hidden="true" />
+              </div>
+            {:else if feature === 'DCC'}
+              <div class="rounded-full bg-black/70 p-1" title="DCC equipped">
+                <Zap class="h-3.5 w-3.5 text-zinc-300" aria-hidden="true" />
+              </div>
+            {/if}
+          {/each}
+        </div>
+      {/if}
 
-        <!-- Unit Count Overlay (bottom-right) -->
-        {#if model.unitCount && model.unitCount > 1}
-          <div
-            class="absolute right-2 bottom-2 z-10 rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white"
-            aria-label="{model.unitCount} units"
+      <!-- Power method badge (top-right): amber on black, prominent -->
+      {#if model.powerMethod}
+        <div class="absolute right-2 top-2 z-10">
+          <Badge
+            class="border-transparent bg-[#E2994F] px-1.5 py-0.5 text-[10px] font-bold text-black"
           >
+            {powerMethodLabel}
+          </Badge>
+        </div>
+      {/if}
+
+      <!-- Unit count badge (bottom-right): shown only when > 1 -->
+      {#if model.unitCount && model.unitCount > 1}
+        <div class="absolute bottom-2 right-2 z-10">
+          <Badge class="border-transparent bg-zinc-800/90 px-1.5 py-0.5 text-xs text-zinc-300">
             ×{model.unitCount}
-          </div>
-        {/if}
-      </div>
+          </Badge>
+        </div>
+      {/if}
+    </div>
 
-      <!-- Row 3: labeled road number, scale, era -->
-      <div class="flex flex-wrap gap-4">
-        {#if model.roadNumber}
-          <div class="flex flex-col gap-0.5">
-            <span class="text-surface-400 text-xs">Road Number</span>
-            <span class="font-mono text-sm"># {model.roadNumber}</span>
-          </div>
-        {/if}
-        {#if model.scale}
-          <div class="flex flex-col gap-0.5">
-            <span class="text-surface-400 text-xs">Scale</span>
-            <span class="font-mono text-sm">{model.scale}</span>
-          </div>
-        {/if}
-        {#if model.era}
-          <div class="flex flex-col gap-0.5">
-            <span class="text-surface-400 text-xs">Era</span>
-            <span class="font-mono text-sm">{model.era}</span>
-          </div>
-        {/if}
+    <!-- Separator between image and technical specs -->
+    <Separator class="my-2.5 bg-zinc-800" />
+
+    <!-- Technical specs grid: Road Number · Scale · Era -->
+    <div class="grid grid-cols-3 divide-x divide-zinc-800">
+      <div class="flex flex-col items-center gap-0.5 pr-2">
+        <span class="text-[10px] uppercase tracking-wider text-zinc-500">
+          {m.depot_road_number()}
+        </span>
+        <span class="font-mono text-xs text-zinc-300">{model.roadNumber ?? '—'}</span>
+      </div>
+      <div class="flex flex-col items-center gap-0.5 px-2">
+        <span class="text-[10px] uppercase tracking-wider text-zinc-500">
+          {m.depot_scale()}
+        </span>
+        <span class="font-mono text-xs text-zinc-300">{model.scale ?? '—'}</span>
+      </div>
+      <div class="flex flex-col items-center gap-0.5 pl-2">
+        <span class="text-[10px] uppercase tracking-wider text-zinc-500">Era</span>
+        <span class="font-mono text-xs text-zinc-300">{model.era ?? '—'}</span>
       </div>
     </div>
   </CardContent>
 </Card>
 
-<!-- Delete Confirmation Dialog -->
+<!-- Delete confirmation dialog -->
 {#if onDelete}
   <AlertDialog.Root bind:open={showDeleteDialog}>
     <AlertDialog.Content>
       <AlertDialog.Header>
         <AlertDialog.Title>{m.components_deleteConfirmTitle()}</AlertDialog.Title>
         <AlertDialog.Description>
-          {m.components_deleteConfirmMessage({ model: model.series || 'this model' })}
+          {m.components_deleteConfirmMessage({ model: model.series ?? 'this model' })}
         </AlertDialog.Description>
       </AlertDialog.Header>
       <AlertDialog.Footer>
