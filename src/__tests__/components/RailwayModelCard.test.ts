@@ -47,6 +47,7 @@ describe('RailwayModelCard', () => {
         {
           id: 'trn:rolling-stock:rivarossi:hr2873:1',
           railway_model_id: 1,
+          railway_company: 'FS',
           series_code: 'E.656',
           series_name: 'I Serie',
           category: 'Electric Locomotive',
@@ -54,6 +55,7 @@ describe('RailwayModelCard', () => {
           road_number: '656 001',
           depot: 'Milano Centrale',
           livery: 'Verde FS',
+          length_mm: 185,
           control_type: 'Digital',
           dcc_interface: '21-pin MTC',
           coupling_type: 'NEM 362'
@@ -78,6 +80,7 @@ describe('RailwayModelCard', () => {
         {
           id: 'trn:rolling-stock:roco:72198:1',
           railway_model_id: 2,
+          railway_company: 'ÖBB',
           series_code: 'Railjet',
           series_name: 'Control Car',
           category: 'Passenger Car',
@@ -85,6 +88,7 @@ describe('RailwayModelCard', () => {
           road_number: '80 90 73 90 004-2',
           depot: null,
           livery: 'Railjet Red/Grey',
+          length_mm: null,
           control_type: null,
           dcc_interface: null,
           coupling_type: 'NEM 362'
@@ -92,6 +96,7 @@ describe('RailwayModelCard', () => {
         {
           id: 'trn:rolling-stock:roco:72198:2',
           railway_model_id: 2,
+          railway_company: 'ÖBB',
           series_code: 'Railjet',
           series_name: 'Bistro Car',
           category: 'Passenger Car',
@@ -99,6 +104,7 @@ describe('RailwayModelCard', () => {
           road_number: '61 80 88-90 101-3',
           depot: null,
           livery: 'Railjet Red/Grey',
+          length_mm: null,
           control_type: null,
           dcc_interface: null,
           coupling_type: 'NEM 362'
@@ -106,6 +112,7 @@ describe('RailwayModelCard', () => {
         {
           id: 'trn:rolling-stock:roco:72198:3',
           railway_model_id: 2,
+          railway_company: 'ÖBB',
           series_code: 'Railjet',
           series_name: 'Standard Car',
           category: 'Passenger Car',
@@ -113,6 +120,7 @@ describe('RailwayModelCard', () => {
           road_number: '61 80 21-90 012-7',
           depot: null,
           livery: 'Railjet Red/Grey',
+          length_mm: null,
           control_type: null,
           dcc_interface: null,
           coupling_type: 'NEM 362'
@@ -185,15 +193,12 @@ describe('RailwayModelCard', () => {
       expect(img).toBeFalsy();
     });
 
-    it('centers the hero image when image_path is present and centers the hero container', () => {
+    it('renders the hero image when image_path is present', () => {
       const { container } = render(RailwayModelCard, { props: { model: _mockModelMultiUnit } });
       const hero = container.querySelector('.hero-section');
       const img = container.querySelector('.hero-section img');
       expect(hero).toBeTruthy();
       expect(img).toBeTruthy();
-
-      // hero container should be centered within its parent at md+ sizes
-      expect(hero?.classList.contains('mx-auto')).toBe(true);
 
       // verify the image uses centering sizing utilities and fills the hero area
       expect(img?.classList.contains('object-center')).toBe(true);

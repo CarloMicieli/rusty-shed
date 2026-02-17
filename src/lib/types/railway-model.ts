@@ -22,6 +22,7 @@ export interface RailwayModel {
 export interface RollingStock {
   id: string;
   railway_model_id: number;
+  railway_company: string | null;
   series_code: string;
   series_name: string | null;
   category: string | null;
@@ -29,6 +30,7 @@ export interface RollingStock {
   road_number: string | null;
   depot: string | null;
   livery: string | null;
+  length_mm: number | null;
   control_type: string | null;
   dcc_interface: string | null;
   coupling_type: string | null;

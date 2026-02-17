@@ -3,7 +3,8 @@ import type {
   CollectionItemView,
   RailwayModelImageResponse,
   RollingStockView,
-  OwnedRollingStockView
+  OwnedRollingStockView,
+  LengthOverBuffers
 } from '$lib/bindings';
 
 import type { RailwayModel, RollingStock } from '$lib/types/railway-model';
@@ -69,6 +70,7 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
     return {
       id: common.id,
       railway_model_id: 0, // Not available from view
+      railway_company: common.railway_company,
       series_code: common.series_code,
       series_name: common.series ?? null,
       category: extractCategory(view),
@@ -76,6 +78,7 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
       road_number: common.road_number,
       depot: common.depot,
       livery: common.livery,
+      length_mm: common.length_mm,
       control_type: common.control,
       dcc_interface: common.dcc_interface,
       coupling_type: null // Not available from view
@@ -110,6 +113,7 @@ function transformOwnedRollingStock(
     return {
       id: owned.id,
       railway_model_id: 0, // Not used
+      railway_company: common?.railway_company ?? null,
       series_code: common?.series_code ?? '',
       series_name: common?.series ?? null,
       category: view ? extractCategory(view) : null,
@@ -117,11 +121,21 @@ function transformOwnedRollingStock(
       road_number: owned.roadNumber,
       depot: common?.depot ?? null,
       livery: common?.livery ?? null,
+      length_mm: common?.length_mm ?? null,
       control_type: owned.control,
       dcc_interface: owned.digital?.interface ?? null,
       coupling_type: null // Not available
     };
   });
+}
+
+/**
+ * Extract millimeter length from a LengthOverBuffers value.
+ */
+function extractMm(len: LengthOverBuffers | null): number | null {
+  const mm = len?.millimeters;
+  if (mm && 'Millimeters' in mm) return Number(mm.Millimeters);
+  return null;
 }
 
 /**
@@ -135,10 +149,12 @@ function transformOwnedRollingStock(
  */
 function extractRollingStockData(view: RollingStockView): {
   id: string;
+  railway_company: string;
   series_code: string;
   road_number: string | null;
   depot: string | null;
   livery: string | null;
+  length_mm: number | null;
   control: string | null;
   dcc_interface: string | null;
   series: string | null;
@@ -146,10 +162,12 @@ function extractRollingStockData(view: RollingStockView): {
   if ('locomotive' in view) {
     return {
       id: view.locomotive.id,
+      railway_company: view.locomotive.railway.display,
       series_code: view.locomotive.series_code,
       road_number: view.locomotive.road_number,
       depot: view.locomotive.depot,
       livery: view.locomotive.livery,
+      length_mm: extractMm(view.locomotive.length_over_buffer),
       control: view.locomotive.control,
       dcc_interface: view.locomotive.dcc_interface,
       series: view.locomotive.series
@@ -157,10 +175,12 @@ function extractRollingStockData(view: RollingStockView): {
   } else if ('electricMultipleUnit' in view) {
     return {
       id: view.electricMultipleUnit.id,
+      railway_company: view.electricMultipleUnit.railway.display,
       series_code: view.electricMultipleUnit.series_code,
       road_number: view.electricMultipleUnit.road_number,
       depot: view.electricMultipleUnit.depot,
       livery: view.electricMultipleUnit.livery,
+      length_mm: extractMm(view.electricMultipleUnit.length_over_buffer),
       control: view.electricMultipleUnit.control,
       dcc_interface: view.electricMultipleUnit.dcc_interface,
       series: view.electricMultipleUnit.series
@@ -168,10 +188,12 @@ function extractRollingStockData(view: RollingStockView): {
   } else if ('railcar' in view) {
     return {
       id: view.railcar.id,
+      railway_company: view.railcar.railway.display,
       series_code: view.railcar.series_code,
       road_number: view.railcar.road_number,
       depot: view.railcar.depot,
       livery: view.railcar.livery,
+      length_mm: extractMm(view.railcar.length_over_buffer),
       control: view.railcar.control,
       dcc_interface: view.railcar.dcc_interface,
       series: view.railcar.series
@@ -179,10 +201,12 @@ function extractRollingStockData(view: RollingStockView): {
   } else if ('passengerCar' in view) {
     return {
       id: view.passengerCar.id,
+      railway_company: view.passengerCar.railway.display,
       series_code: view.passengerCar.series_code,
       road_number: view.passengerCar.road_number,
-      depot: null, // Not available for passenger cars
+      depot: null,
       livery: view.passengerCar.livery,
+      length_mm: extractMm(view.passengerCar.length_over_buffer),
       control: null,
       dcc_interface: null,
       series: view.passengerCar.series
@@ -190,23 +214,27 @@ function extractRollingStockData(view: RollingStockView): {
   } else if ('freightCar' in view) {
     return {
       id: view.freightCar.id,
+      railway_company: view.freightCar.railway.display,
       series_code: view.freightCar.series_code,
       road_number: view.freightCar.road_number,
-      depot: null, // Not available for freight cars
+      depot: null,
       livery: view.freightCar.livery,
+      length_mm: extractMm(view.freightCar.length_over_buffer),
       control: null,
       dcc_interface: null,
-      series: null // Not available for freight cars
+      series: null
     };
   }
 
   // Fallback for unknown types
   return {
     id: '',
+    railway_company: '',
     series_code: '',
     road_number: null,
     depot: null,
     livery: null,
+    length_mm: null,
     control: null,
     dcc_interface: null,
     series: null
