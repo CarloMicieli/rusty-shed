@@ -77,10 +77,10 @@
     class?: string;
   }
 
+  // eslint-disable-next-line svelte/no-unused-props
   let { model, onDelete, class: className }: Props = $props();
 
-  import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
-  import { Badge } from '$lib/components/ui/badge';
+  import { Card, CardContent } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import * as AlertDialog from '$lib/components/ui/alert-dialog';
   import { Volume2, Zap, Trash2, Train, Box, Users, Layers } from 'lucide-svelte';
@@ -88,6 +88,15 @@
 
   // Derived state for display values
   const displayManufacturer = $derived(model.manufacturer || m.components_unknownManufacturer());
+
+  // Series truncated to max 30 characters
+  const displaySeries = $derived(
+    model.series
+      ? model.series.length > 30
+        ? model.series.substring(0, 30) + '...'
+        : model.series
+      : 'Railway Model'
+  );
 
   // Category-to-icon mapping for placeholders
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,28 +120,6 @@
     }
   });
 
-  // Road number truncation logic
-  const shouldTruncateRoadNumber = $derived(
-    model.roadNumber !== null && model.roadNumber.length > 25
-  );
-
-  const displayRoadNumber = $derived(
-    model.roadNumber
-      ? shouldTruncateRoadNumber
-        ? model.roadNumber.substring(0, 22) + '...'
-        : model.roadNumber
-      : m.components_noRoadNumber()
-  );
-
-  // State for expanded road number
-  let roadNumberExpanded = $state(false);
-
-  function toggleRoadNumber() {
-    if (shouldTruncateRoadNumber) {
-      roadNumberExpanded = !roadNumberExpanded;
-    }
-  }
-
   // Delete dialog state
   let showDeleteDialog = $state(false);
 
@@ -146,24 +133,37 @@
   class="card gauge-frame hover:ring-primary-500 ring-1 ring-border/40 transition-all duration-200 hover:scale-[1.02] hover:ring-2 {className ||
     ''}"
 >
-  {#if onDelete}
-    <CardHeader class="flex flex-row items-center justify-between p-4 pb-0">
-      <div></div>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={m.components_deleteButton()}
-        onclick={() => (showDeleteDialog = true)}
-      >
-        <Trash2 class="h-4 w-4" />
-      </Button>
-    </CardHeader>
-  {/if}
+  <CardContent class="p-4">
+    <div class="flex flex-col gap-3">
+      <!-- Row 1: manufacturer · productCode + trash icon -->
+      <div class="flex items-start justify-between gap-2">
+        <div class="text-surface-600 min-w-0 text-sm">
+          <span class="font-medium">{displayManufacturer}</span>
+          {#if model.productCode}
+            <span class="text-surface-400 mx-1">·</span>
+            <span>{model.productCode}</span>
+          {/if}
+        </div>
+        {#if onDelete}
+          <Button
+            variant="ghost"
+            size="icon"
+            class="-mr-2 -mt-2 h-8 w-8 shrink-0"
+            aria-label={m.components_deleteButton()}
+            onclick={() => (showDeleteDialog = true)}
+          >
+            <Trash2 class="h-4 w-4" />
+          </Button>
+        {/if}
+      </div>
 
-  <CardContent class="p-4 {onDelete ? 'pt-2' : ''}">
-    <div class="grid gap-4 sm:grid-cols-1 lg:grid-cols-[auto_1fr]">
-      <!-- Thumbnail (16:9 aspect ratio) -->
-      <div class="bg-surface-200 relative aspect-video w-full overflow-hidden rounded-lg lg:w-48">
+      <!-- Row 2: Description (series, max 30 chars) -->
+      <h3 class="text-base font-semibold leading-snug">
+        {displaySeries}
+      </h3>
+
+      <!-- Image -->
+      <div class="bg-surface-200 relative aspect-video w-full overflow-hidden rounded-lg">
         {#if model.photoUrl}
           <img
             src={model.photoUrl}
@@ -207,59 +207,17 @@
         {/if}
       </div>
 
-      <!-- Content -->
-      <div class="flex flex-col gap-2">
-        <!-- Manufacturer and Product Code -->
-        <div class="text-surface-600 text-sm">
-          <span class="font-medium">{displayManufacturer}</span>
-          {#if model.productCode}
-            <span class="text-surface-400">·</span>
-            <span>{model.productCode}</span>
-          {/if}
-        </div>
-
-        <!-- Series and Category Title -->
-        <h3 class="text-base font-semibold">
-          {model.series || 'Railway Model'}
-        </h3>
-
-        <!-- Road Number Identification Plate -->
-        <div class="mt-1">
-          {#if shouldTruncateRoadNumber}
-            <button
-              type="button"
-              onclick={toggleRoadNumber}
-              class="bg-surface-100 hover:bg-surface-200 rounded px-2 py-1 font-mono text-sm"
-            >
-              # {roadNumberExpanded ? model.roadNumber : displayRoadNumber}
-            </button>
-          {:else}
-            <span class="bg-surface-100 inline-block rounded px-2 py-1 font-mono text-sm">
-              # {displayRoadNumber}
-            </span>
-          {/if}
-        </div>
-
-        <!-- Metadata Badges -->
-        <div class="mt-2 flex flex-wrap gap-2">
-          {#if model.scale}
-            <Badge variant="secondary">{model.scale}</Badge>
-          {/if}
-
-          {#if model.powerMethod}
-            <Badge variant="secondary">{model.powerMethod}</Badge>
-          {/if}
-
-          {#if model.era}
-            <Badge variant="secondary">Era {model.era}</Badge>
-          {/if}
-
-          {#if model.purchaseDate}
-            <Badge variant="secondary">
-              {m.components_purchaseDate()}: {model.purchaseDate}
-            </Badge>
-          {/if}
-        </div>
+      <!-- Row 3: # roadNumber · scale · era -->
+      <div class="text-surface-600 flex flex-wrap items-center gap-3 font-mono text-sm">
+        {#if model.roadNumber}
+          <span># {model.roadNumber}</span>
+        {/if}
+        {#if model.scale}
+          <span>{model.scale}</span>
+        {/if}
+        {#if model.era}
+          <span>Era {model.era}</span>
+        {/if}
       </div>
     </div>
   </CardContent>
