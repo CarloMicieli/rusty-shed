@@ -16,3 +16,7 @@ coverage/
 
 # Paraglide specific
 src/lib/paraglide/**
+
+# Custom exclusions
+.claude/
+.github/
