@@ -76,9 +76,9 @@ describe('collectionItemToCardData', () => {
     expect(collectionItemToCardData(item).series).toBe('Class 140');
   });
 
-  it('sets powerMethod and photoUrl to null (not available)', () => {
+  it('sets powerMethod and photoUrl when available', () => {
     const result = collectionItemToCardData(makeItem());
-    expect(result.powerMethod).toBeNull();
+    expect(result.powerMethod).toBe('AC');
     expect(result.photoUrl).toBeNull();
   });
 

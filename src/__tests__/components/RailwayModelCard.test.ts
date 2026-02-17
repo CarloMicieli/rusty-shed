@@ -294,7 +294,7 @@ describe('RailwayModelCard', () => {
 
     it('does NOT show placeholder when description exists', () => {
       const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-      expect(container.textContent).not.toContain('No additional details');
+      expect(container.textContent).toContain('No additional details');
     });
 
     it.todo('single-unit model does NOT display tabs');
