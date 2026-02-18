@@ -2943,12 +2943,13 @@ export type DepotRollingStockView = {
    * Epoch/era (e.g., "IV", "III/IV", "Vm") for display purposes.
    */
   epoch: Epoch | null;
+  /**
+   * The DCC address assigned to the digital rolling stock, if any.
+   */
+  dccAddress: number | null;
 };
 /**
- * A read-only representation of the depot contents.
- *
- * This view is intended for use by the interface layer (API/IPC/UI) and
- * serializes the minimal information required to display the depot and its
+ * Compact read-only representation of the depot content, listing all
  * rolling stock entries.
  */
 export type DepotView = {

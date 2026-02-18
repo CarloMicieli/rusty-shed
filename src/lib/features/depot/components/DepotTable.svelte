@@ -1,31 +1,27 @@
 <script lang="ts" generics="T extends { id: string }">
-  import type { Component } from 'svelte';
-  import type { BadgeVariant } from '$lib/components/ui/badge/Badge.svelte';
-  import * as m from '$lib/paraglide/messages.js';
-  import { ArrowUpDown, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-svelte';
-  import { Badge, Button } from '$lib/components';
+  import {
+    ArrowUpNarrowWide,
+    ArrowDownWideNarrow,
+    Cpu,
+    Trash2,
+    Settings2,
+    Info,
+    TrainFront
+  } from 'lucide-svelte';
+  import { Button } from '$lib/components';
+  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { Sheet } from '$lib/components/ui/sheet';
 
   let {
-    title,
-    items,
-    icon: Icon,
-    type,
-    toneClass = 'secondary',
-    stickyOffset = 'var(--header-offset, 4rem)',
-    emptyMessage
+    items
   }: {
-    title?: string;
     items: T[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    icon?: Component<any> | any;
-    type: 'locomotive' | 'train' | 'car';
-    toneClass?: BadgeVariant;
-    stickyOffset?: string;
-    emptyMessage?: string;
   } = $props();
 
   let viewAll = $state(false);
-  const hasOverflow = $derived(!viewAll && items.length > 100);
+  const hasOverflow = $derived(!viewAll && items.length > 50);
+
+  let selectedItemId = $state<string | null>(null);
 
   // Sorting state
   let sortField = $state<string | null>(null);
@@ -40,33 +36,43 @@
     }
   }
 
-  // Helper to safely access properties that might differ between types
+  // Helper to safely access properties
   function getItemProps(item: T) {
     const it = item as unknown as Record<string, unknown>;
     const str = (v: unknown) => (v === undefined || v === null ? '-' : String(v));
+
+    // Construct image path: models/Manufacturer_ProductCode.jpg
+    const manufacturer = str(it.manufacturer ?? '');
+    const productCode = str(it.productCode ?? '');
+    const imagePath = `models/${manufacturer}_${productCode}.jpg`;
+
     return {
-      productCode: str(it.productCode ?? it.product_code ?? '-'),
-      model: str(it.group ?? it.type ?? '-'),
-      manufacturer: str(it.manufacturer ?? '-'),
-      // series: str(it.seriesCode ?? it.series_code ?? '-'), // Removed as column is removed
-      category: str(it.categoryLabel ?? it.category_label ?? '-'),
-      roadNumber: str(it.roadNumber ?? it.road_number ?? '-'),
-      railway: str(it.railwayCompany ?? it.railway_company ?? '-'),
+      id: str(it.id),
+      productCode,
+      manufacturer,
+      category: str(it.categoryLabel ?? '-'),
+      roadNumber: str(it.roadNumber ?? '-'),
+      railway: str(it.railwayCompany ?? '-'),
       epoch: str(it.epoch ?? '-'),
       livery: str(it.livery ?? '-'),
       control: str(it.control ?? '-'),
-      serviceLevel: str(it.serviceLevel ?? '-')
+      dccAddress: it.dccAddress as number | null,
+      serviceLevel: str(it.serviceLevel ?? '-'),
+      imagePath,
+      // Status simulation (or use real data if available)
+      status: it.depot ? 'On Track' : 'In Storage'
     };
   }
 
   const sortedItems = $derived.by(() => {
     if (!sortField) return items;
 
-    // We sort a shallow copy to stay pure-ish regarding 'items'
     return [...items].sort((a, b) => {
       const propA = getItemProps(a)[sortField as keyof ReturnType<typeof getItemProps>];
       const propB = getItemProps(b)[sortField as keyof ReturnType<typeof getItemProps>];
 
+      if (propA == null) return 1;
+      if (propB == null) return -1;
       if (propA < propB) return sortDirection === 'asc' ? -1 : 1;
       if (propA > propB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -74,187 +80,228 @@
   });
 
   const visibleItems = $derived(
-    viewAll || sortedItems.length <= 100 ? sortedItems : sortedItems.slice(0, 100)
+    viewAll || sortedItems.length <= 50 ? sortedItems : sortedItems.slice(0, 50)
   );
 
-  // Table headers based on type
-  const headers = $derived.by(() => {
-    const base = [
-      {
-        label: 'Manufacturer',
-        key: 'manufacturer',
-        class: 'hidden sm:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
-      },
-      {
-        label: 'Product code',
-        key: 'productCode',
-        class: 'w-50 cursor-pointer hover:bg-surface-500/10'
-      },
-      {
-        label: m.depot_era(),
-        key: 'epoch',
-        class: 'hidden xl:table-cell w-20 cursor-pointer hover:bg-surface-500/10'
-      },
-      {
-        label: 'Category',
-        key: 'category',
-        class: 'hidden lg:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
-      },
-      {
-        label: 'Railway',
-        key: 'railway',
-        class: 'hidden sm:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
-      },
-      {
-        label: 'Road #',
-        key: 'roadNumber',
-        class: 'hidden md:table-cell w-full cursor-pointer hover:bg-surface-500/10'
-      }
-    ];
-
-    // Add specific columns
-    if (type === 'car') {
-      base.push({
-        label: 'Service',
-        key: 'serviceLevel',
-        class: 'hidden lg:table-cell w-24 cursor-pointer hover:bg-surface-500/10'
-      });
-    } else {
-      // Control for locos/trains
-      base.push({
-        label: 'Control',
-        key: 'control',
-        class: 'hidden lg:table-cell w-24 text-center cursor-pointer hover:bg-surface-500/10'
-      });
-    }
-
-    // Livery is always nice if space permits
-    base.push({
-      label: 'Livery',
-      key: 'livery',
-      class: 'hidden 2xl:table-cell w-32 cursor-pointer hover:bg-surface-500/10'
-    });
-
-    return base;
-  });
+  // Table headers
+  const headers = [
+    { label: 'STATUS', key: 'status', class: 'w-16' },
+    { label: 'VISUAL', key: 'imagePath', class: 'w-24' },
+    { label: 'ROAD NUMBER / MOD. INFO', key: 'roadNumber', class: 'min-w-[200px]' },
+    { label: 'DCC ADDR', key: 'dccAddress', class: 'w-32' },
+    { label: 'SYSTEM', key: 'control', class: 'w-32 hidden md:table-cell' },
+    { label: 'RAILWAY', key: 'railway', class: 'w-40 hidden lg:table-cell' },
+    { label: 'ACTIONS', key: null, class: 'w-32 text-right' }
+  ];
 </script>
 
-<section class="space-y-2 pt-2">
-  {#if title}
-    <div
-      class="border-surface-500/10 bg-surface-50/80 sticky z-10 border-b backdrop-blur-sm"
-      style:top={stickyOffset}
-    >
-      <div class="flex items-center gap-3 rounded-lg px-2 py-2">
-        <Badge variant={toneClass} class="flex items-center justify-center p-1.5">
-          {#if Icon}
-            <Icon size={16} />
-          {/if}
-        </Badge>
-        <div class="flex items-center gap-2">
-          <h2 class="text-lg font-semibold tracking-tight">{title}</h2>
-          <Badge variant="outline" class="font-mono text-xs">{items.length}</Badge>
-        </div>
-      </div>
+<div class="px-6 py-4">
+  <table class="w-full border-separate border-spacing-y-3">
+    <thead>
+      <tr>
+        {#each headers as col (col.label)}
+          <th
+            class="px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase {col.class}"
+            onclick={col.key ? () => toggleSort(col.key) : undefined}
+            class:cursor-pointer={col.key}
+          >
+            <div class="flex items-center gap-2">
+              {col.label}
+              {#if sortField === col.key && col.key}
+                {#if sortDirection === 'asc'}
+                  <ArrowUpNarrowWide size={12} class="text-[#f59e0b]" />
+                {:else}
+                  <ArrowDownWideNarrow size={12} class="text-[#f59e0b]" />
+                {/if}
+              {/if}
+            </div>
+          </th>
+        {/each}
+      </tr>
+    </thead>
+    <tbody>
+      {#each visibleItems as item (item.id)}
+        {@const props = getItemProps(item)}
+        <tr class="group transition-all duration-300">
+          <!-- Status LED -->
+          <td
+            class="relative rounded-l-xl border-y border-l border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30"
+          >
+            <div
+              class="absolute top-1/4 bottom-1/4 left-0 w-1 bg-transparent transition-all group-hover:bg-[#f59e0b]"
+            ></div>
+            <div class="flex items-center justify-center">
+              <div
+                class="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] transition-all"
+                class:bg-emerald-500={props.status === 'On Track'}
+                class:shadow-emerald-500-glow={props.status === 'On Track'}
+                class:bg-zinc-700={props.status !== 'On Track'}
+              ></div>
+            </div>
+          </td>
+
+          <!-- Thumbnail -->
+          <td class="border-y border-white/5 bg-white/5 px-2 py-4 group-hover:border-[#f59e0b]/30">
+            <div
+              class="flex h-10 w-16 items-center justify-center overflow-hidden rounded border border-white/10 bg-black"
+            >
+              <img
+                src={convertFileSrc(props.imagePath)}
+                alt={props.productCode}
+                class="h-full w-full object-cover contrast-125 grayscale transition-all group-hover:contrast-100 group-hover:grayscale-0"
+                onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+              />
+              <TrainFront size={16} class="text-zinc-800" />
+            </div>
+          </td>
+
+          <!-- Model Info -->
+          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30">
+            <div class="flex flex-col">
+              <span
+                class="font-mono text-base font-bold text-white transition-colors group-hover:text-[#f59e0b]"
+                >{props.roadNumber}</span
+              >
+              <div class="mt-0.5 flex items-center gap-1.5">
+                <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase"
+                  >{props.manufacturer}</span
+                >
+                <span class="h-1 w-1 rounded-full bg-zinc-700"></span>
+                <span class="font-mono text-[10px] tracking-tighter text-zinc-500 uppercase"
+                  >{props.productCode}</span
+                >
+              </div>
+            </div>
+          </td>
+
+          <!-- DCC Address -->
+          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30">
+            {#if props.dccAddress !== null}
+              <div class="flex items-center gap-2">
+                <div
+                  class="flex h-7 w-12 items-center justify-center rounded border border-[#f59e0b]/30 bg-[#f59e0b]/10"
+                >
+                  <span class="font-mono text-sm font-bold text-[#f59e0b]">{props.dccAddress}</span>
+                </div>
+              </div>
+            {:else}
+              <span class="font-mono text-xs text-zinc-700">---</span>
+            {/if}
+          </td>
+
+          <!-- Control System -->
+          <td
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 md:table-cell"
+          >
+            <span class="font-mono text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
+              >{props.control.replace('_', ' ')}</span
+            >
+          </td>
+
+          <!-- Railway -->
+          <td
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 lg:table-cell"
+          >
+            <span class="text-xs font-semibold text-zinc-400">{props.railway}</span>
+          </td>
+
+          <!-- Actions -->
+          <td
+            class="rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 text-right group-hover:border-[#f59e0b]/30"
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              class="h-8 w-8 text-zinc-500 hover:bg-[#f59e0b]/10 hover:text-[#f59e0b]"
+              onclick={() => (selectedItemId = props.id)}
+            >
+              <Settings2 size={16} />
+            </Button>
+
+            <Sheet
+              open={selectedItemId === props.id}
+              onOpenChange={(open) => !open && (selectedItemId = null)}
+              class="border-white/10 bg-[#0c0c0c]/90 backdrop-blur-xl"
+            >
+              <div class="p-6 text-white">
+                <div class="mb-6">
+                  <h3 class="font-mono text-sm tracking-widest text-[#f59e0b] uppercase">
+                    System_Operations
+                  </h3>
+                  <p class="text-xs text-zinc-500">
+                    Managing {props.roadNumber} ({props.manufacturer}
+                    {props.productCode})
+                  </p>
+                </div>
+                <div class="space-y-8 py-10">
+                  <div class="rounded-lg border border-white/5 bg-white/5 p-4">
+                    <h4 class="mb-4 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+                      DCC Controller
+                    </h4>
+                    <div class="flex items-center justify-between">
+                      <div class="flex flex-col gap-1">
+                        <span class="text-xs text-zinc-400">Current Address</span>
+                        <span class="font-mono text-2xl font-bold text-[#f59e0b]"
+                          >{props.dccAddress ?? 'NONE'}</span
+                        >
+                      </div>
+                      <Button class="bg-[#f59e0b] text-black">Update ADDR</Button>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <Button variant="outline" class="border-white/10 hover:bg-white/5">
+                      <Cpu size={14} class="mr-2" />
+                      Diagnostics
+                    </Button>
+                    <Button variant="outline" class="border-white/10 hover:bg-white/5">
+                      <Info size={14} class="mr-2" />
+                      Model Logs
+                    </Button>
+                  </div>
+
+                  <div class="pt-10">
+                    <Button
+                      variant="outline"
+                      class="w-full border-red-500/20 text-red-500 hover:bg-red-500/10"
+                    >
+                      <Trash2 size={14} class="mr-2" />
+                      Decommission from Depot
+                    </Button>
+                  </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3 border-t border-white/5 pt-8">
+                  <Button variant="ghost" onclick={() => (selectedItemId = null)}>Close</Button>
+                </div>
+              </div>
+            </Sheet>
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+
+  {#if hasOverflow}
+    <div class="mt-8 flex items-center justify-between border-t border-white/5 py-4">
+      <p class="font-mono text-[10px] tracking-widest text-zinc-500 uppercase">
+        Displaying_Limit_Reached [{visibleItems.length}/{items.length}]
+      </p>
+      <Button
+        variant="ghost"
+        size="sm"
+        onclick={() => (viewAll = true)}
+        class="text-[#f59e0b] hover:bg-[#f59e0b]/5"
+      >
+        Load Complete Buffer
+      </Button>
     </div>
   {/if}
+</div>
 
-  <div class="space-y-3">
-    {#if items.length === 0 && emptyMessage}
-      <div class="border-surface-500/20 rounded-xl border border-dashed p-8 text-center">
-        <p class="text-surface-500 text-sm">{emptyMessage}</p>
-      </div>
-    {:else if items.length > 0}
-      <div
-        class="table-container border-surface-500/10 bg-surface-900/40 overflow-hidden rounded-xl border"
-      >
-        <table class="table-hover table-compact table w-full">
-          <thead class="bg-surface-900/60 text-surface-400 font-medium">
-            <tr>
-              {#each headers as col (col.label)}
-                <th class="{col.class} group select-none" onclick={() => toggleSort(col.key)}>
-                  <div class="flex items-center gap-1">
-                    {col.label}
-                    {#if sortField === col.key}
-                      {#if sortDirection === 'asc'}
-                        <ArrowUpNarrowWide size={14} class="opacity-70" />
-                      {:else}
-                        <ArrowDownWideNarrow size={14} class="opacity-70" />
-                      {/if}
-                    {:else}
-                      <ArrowUpDown size={14} class="opacity-0 group-hover:opacity-30" />
-                    {/if}
-                  </div>
-                </th>
-              {/each}
-            </tr>
-          </thead>
-          <tbody class="divide-surface-500/10 divide-y">
-            {#each visibleItems as item (item.id)}
-              {@const props = getItemProps(item)}
-              <tr class="group">
-                <td class="text-surface-300 hidden align-middle sm:table-cell">
-                  {props.manufacturer}
-                </td>
-                <td class="text-surface-200 align-middle font-medium">
-                  <div class="font-mono text-sm">{props.productCode}</div>
-                  <!-- Mobile-only details -->
-                  <div class="text-surface-400 mt-0.5 space-x-1 text-xs font-normal sm:hidden">
-                    <span>{props.manufacturer}</span>
-                    {#if props.railway !== '-'}<span>• {props.railway}</span>{/if}
-                    {#if props.roadNumber !== '-'}<span>• {props.roadNumber}</span>{/if}
-                  </div>
-                </td>
-                <td class="text-surface-400 hidden align-middle text-sm xl:table-cell">
-                  {props.epoch}
-                </td>
-                <td
-                  class="text-surface-400 hidden align-middle text-xs tracking-wide uppercase lg:table-cell"
-                >
-                  {props.category}
-                </td>
-                <td class="text-surface-300 hidden align-middle sm:table-cell">
-                  {props.railway}
-                </td>
-                <td class="text-surface-300 hidden align-middle font-mono text-sm md:table-cell">
-                  {props.roadNumber}
-                </td>
-                {#if type === 'car'}
-                  <td class="text-surface-400 hidden align-middle text-sm lg:table-cell">
-                    {props.serviceLevel}
-                  </td>
-                {:else}
-                  <td class="hidden text-center align-middle lg:table-cell">
-                    {#if props.control !== '-'}
-                      <Badge
-                        variant="secondary"
-                        class="max-w-[120px] truncate font-mono text-xs"
-                        title={props.control}>{props.control}</Badge
-                      >
-                    {:else}
-                      <span class="text-surface-500">-</span>
-                    {/if}
-                  </td>
-                {/if}
-                <td class="text-surface-400 hidden align-middle text-sm 2xl:table-cell">
-                  {props.livery}
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-
-      {#if hasOverflow}
-        <div
-          class="border-surface-500/10 text-surface-400 flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs"
-        >
-          <p>{m.depot_overflow_note({ showing: 100, total: items.length })}</p>
-          <Button type="button" variant="ghost" size="sm" onclick={() => (viewAll = true)}>
-            {m.depot_view_all()}
-          </Button>
-        </div>
-      {/if}
-    {/if}
-  </div>
-</section>
+<style>
+  .shadow-emerald-500-glow {
+    box-shadow:
+      0 0 10px rgba(16, 185, 129, 0.4),
+      0 0 20px rgba(16, 185, 129, 0.2);
+  }
+</style>

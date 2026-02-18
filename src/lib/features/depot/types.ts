@@ -9,6 +9,7 @@ export type Locomotive = {
   railwayCompany: string | null;
   livery: string | null;
   control: string | null;
+  dccAddress: number | null;
 };
 
 export type TrainSet = {
@@ -22,6 +23,7 @@ export type TrainSet = {
   railwayCompany: string | null;
   livery: string | null;
   control: string | null;
+  dccAddress: number | null;
 };
 
 export type CarCategory = 'passenger' | 'freight';
@@ -39,4 +41,5 @@ export type Car = {
   category: CarCategory;
   serviceLevel?: string | null;
   control: string | null;
+  dccAddress: number | null;
 };

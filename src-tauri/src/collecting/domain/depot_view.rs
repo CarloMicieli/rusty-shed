@@ -57,4 +57,7 @@ pub struct DepotRollingStockView {
 
     /// Epoch/era (e.g., "IV", "III/IV", "Vm") for display purposes.
     pub epoch: Option<Epoch>,
+
+    /// The DCC address assigned to the digital rolling stock, if any.
+    pub dcc_address: Option<u16>,
 }

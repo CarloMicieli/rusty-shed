@@ -106,7 +106,8 @@ export class DepotService {
       item.productCode,
       'seriesCode' in item ? item.seriesCode : null,
       'control' in item ? item.control : null,
-      'serviceLevel' in item ? item.serviceLevel : null
+      'serviceLevel' in item ? item.serviceLevel : null,
+      item.dccAddress
     ];
     return fields.some((field) => {
       if (field === null || field === undefined) return false;
@@ -132,7 +133,8 @@ export class DepotService {
       roadNumber: item.roadNumber,
       railwayCompany: item.railwayCompanyName,
       livery: item.livery,
-      control: item.control
+      control: item.control,
+      dccAddress: item.dccAddress
     };
   }
 
@@ -147,7 +149,8 @@ export class DepotService {
       roadNumber: item.roadNumber,
       railwayCompany: item.railwayCompanyName,
       livery: item.livery,
-      control: item.control
+      control: item.control,
+      dccAddress: item.dccAddress
     };
   }
 
@@ -164,7 +167,8 @@ export class DepotService {
       livery: item.livery,
       category: item.category === 'PASSENGER_CAR' ? 'passenger' : 'freight',
       serviceLevel: null,
-      control: item.control
+      control: item.control,
+      dccAddress: item.dccAddress
     };
   }
 

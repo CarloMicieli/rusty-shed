@@ -122,7 +122,8 @@ export class DepotState {
       roadNumber: item.roadNumber,
       railwayCompany: item.railwayCompanyName,
       livery: item.livery,
-      control: item.control
+      control: item.control,
+      dccAddress: item.dccAddress
     };
   }
 
@@ -137,7 +138,8 @@ export class DepotState {
       roadNumber: item.roadNumber,
       railwayCompany: item.railwayCompanyName,
       livery: item.livery,
-      control: item.control
+      control: item.control,
+      dccAddress: item.dccAddress
     };
   }
 
@@ -154,7 +156,8 @@ export class DepotState {
       livery: item.livery,
       category: item.category === 'PASSENGER_CAR' ? 'passenger' : 'freight',
       serviceLevel: null,
-      control: item.control
+      control: item.control,
+      dccAddress: item.dccAddress
     };
   }
 
