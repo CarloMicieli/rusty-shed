@@ -25,15 +25,29 @@ impl TryFrom<MaintenanceCardRow> for MaintenanceCard {
         let last = row.last_maintenance_date;
         let next = row.next_maintenance_date;
 
-        // Map NaiveDateTime -> DateTime<Utc> for metadata; fall back to now when missing
+        // Parse the stored TEXT timestamp into DateTime<Utc>. The column may contain either a
+        // full datetime ("YYYY-MM-DD HH:MM:SS") or a plain date ("YYYY-MM-DD") depending on
+        // how the row was originally inserted. Fall back to Utc::now() for any missing/invalid value.
+        let parse_dt = |s: &str| -> DateTime<Utc> {
+            chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
+                .or_else(|_| {
+                    chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d")
+                        .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
+                })
+                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+                .unwrap_or_else(|_| Utc::now())
+        };
+
         let created_at: DateTime<Utc> = row
             .created_at
-            .map(|d| DateTime::from_naive_utc_and_offset(d, Utc))
+            .as_deref()
+            .map(parse_dt)
             .unwrap_or_else(Utc::now);
 
         let updated_at: DateTime<Utc> = row
             .updated_at
-            .map(|d| DateTime::from_naive_utc_and_offset(d, Utc))
+            .as_deref()
+            .map(parse_dt)
             .unwrap_or_else(Utc::now);
 
         Ok(MaintenanceCard {

@@ -246,6 +246,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?"#;
 
+        let owned_rolling_stock_id = maintenance_card.owned_rolling_stock_id.to_string();
+
         for ev in maintenance_card.pending_events.into_iter() {
             match ev {
                 MaintenanceCardEvent::MaintenanceRecorded {
@@ -286,6 +288,30 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                     let event_trn = format!("trn:maintenance-event:{}", id);
                     let card_trn = format!("trn:maintenance-card:{}", maintenance_card_id);
 
+                    // Insert the maintenance card row first (required by the FK constraint
+                    // on maintenance_events.maintenance_card_id → maintenance_cards.id)
+                    let insert_card_sql = r#"INSERT INTO maintenance_cards (
+                        id,
+                        owned_rolling_stock_id,
+                        created_at,
+                        updated_at,
+                        version
+                    ) VALUES (?, ?, ?, ?, 0)"#;
+
+                    let now_dt = chrono::Local::now()
+                        .naive_local()
+                        .format("%Y-%m-%d %H:%M:%S")
+                        .to_string();
+
+                    sqlx::query(insert_card_sql)
+                        .bind(&card_trn)
+                        .bind(&owned_rolling_stock_id)
+                        .bind(&now_dt)
+                        .bind(&now_dt)
+                        .execute(&mut *self.executor)
+                        .await
+                        .with_domain_context("Error inserting maintenance card row")?;
+
                     sqlx::query(insert_sql)
                         .bind(event_trn)
                         .bind(&card_trn)
@@ -317,6 +343,10 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                next_maintenance_date IS NULL
                AND last_maintenance_date IS NOT NULL
                AND last_maintenance_date <= date('now')
+           )
+           OR (
+               next_maintenance_date IS NULL
+               AND last_maintenance_date IS NULL
            )"#;
 
         let rows = sqlx::query_as::<_, MaintenanceCardRow>(q)
@@ -351,6 +381,10 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                next_maintenance_date IS NULL
                AND last_maintenance_date IS NOT NULL
                AND last_maintenance_date <= date('now')
+           )
+           OR (
+               next_maintenance_date IS NULL
+               AND last_maintenance_date IS NULL
            )"#;
 
         let rows = sqlx::query_as::<_, MaintenanceCardRow>(q)

@@ -6,7 +6,7 @@
 
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::maintenance::domain::{MaintenanceCardId, MaintenanceEventId};
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -25,11 +25,11 @@ pub struct MaintenanceCardRow {
     /// Next maintenance date stored as TEXT (YYYY-MM-DD) or NULL.
     pub next_maintenance_date: Option<NaiveDate>,
 
-    /// Created timestamp stored as TEXT (optional, kept as TEXT here).
-    pub created_at: Option<NaiveDateTime>,
+    /// Created timestamp stored as TEXT (kept as String to tolerate any stored format).
+    pub created_at: Option<String>,
 
-    /// Updated timestamp stored as TEXT (optional).
-    pub updated_at: Option<NaiveDateTime>,
+    /// Updated timestamp stored as TEXT (kept as String to tolerate any stored format).
+    pub updated_at: Option<String>,
 
     /// Row version for optimistic concurrency control.
     pub version: i64,
