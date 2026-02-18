@@ -1,9 +1,9 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Sparkles } from 'lucide-svelte';
+  import { Sparkles, Heart } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
-  import { Button, PageHeader } from '$lib/components';
+  import { Button } from '$lib/components';
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
@@ -100,46 +100,113 @@
   <title>{m.app_wishlists()}</title>
 </svelte:head>
 
-<div class="space-y-6">
-  <PageHeader
-    title={m.wishlists_title()}
-    subtitle={m.app_wishlists()}
-    description={m.wishlists_subtitle()}
-  >
-    {#snippet actions()}
-      <Button onclick={handleCreate}>
-        <Sparkles size={18} />
-        {m.wishlists_create_button()}
-      </Button>
-    {/snippet}
-  </PageHeader>
+<div class="flex h-screen flex-col overflow-hidden bg-background">
+  <!-- Page Header (Full Width) -->
+  <header class="flex-shrink-0 border-b border-white/10 bg-[#0c0c0c]/95 backdrop-blur-sm">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-white">{m.wishlists_title()}</h1>
+          <p class="text-sm text-zinc-400">{m.wishlists_subtitle()}</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- Summary Pills -->
+          <div class="hidden items-center gap-2 md:flex">
+            <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+              <span class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase"
+                >Items</span
+              >
+              <span class="ml-2 font-mono text-sm font-bold text-amber-500"
+                >{wishlists.reduce((acc, w) => acc + Number(w.count), 0)}</span
+              >
+            </div>
+          </div>
+          <Button
+            onclick={handleCreate}
+            class="bg-amber-500 font-bold text-black hover:bg-amber-600"
+          >
+            <Sparkles size={18} class="mr-2" />
+            {m.wishlists_create_button()}
+          </Button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-  <div class="grid gap-6 lg:grid-cols-[320px,1fr]">
-    <WishlistSidebar
-      {wishlists}
-      activeId={activeWishlistId}
-      onSelect={handleSelect}
-      onDelete={_handleDelete}
-    />
-
-    <section class="space-y-4 rounded-2xl border border-border bg-card p-6">
-      <WishlistHeader
-        wishlist={activeWishlist}
-        onRename={handleRename}
-        onSetDefault={handleSetDefault}
-        onAddModel={openAddModelDrawer}
-      />
-
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <WishlistItems
-          items={wishlistItems}
-          {activeWishlistId}
-          {otherTargets}
-          onRemove={handleRemove}
-          onMove={handleMove}
+  <div class="flex flex-1 overflow-hidden">
+    <!-- List Navigator (Left Column) -->
+    <aside class="w-80 flex-shrink-0 overflow-y-auto border-r border-white/10 bg-[#0c0c0c]">
+      <div class="p-4">
+        <WishlistSidebar
+          {wishlists}
+          activeId={activeWishlistId}
+          onSelect={handleSelect}
+          onDelete={_handleDelete}
         />
       </div>
-    </section>
+    </aside>
+
+    <!-- Wishlist Content Area (Right Column) -->
+    <main class="flex-1 overflow-y-auto bg-background">
+      <div class="p-6">
+        {#if wishlistService.isLoading}
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {#each Array.from({ length: 8 }) as _, i (i)}
+              <div
+                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-2xl border-2 border-white/5 bg-[#0c0c0c] p-4"
+              >
+                <div class="h-2 w-1/2 rounded bg-white/5"></div>
+                <div class="h-4 w-3/4 rounded bg-white/5"></div>
+                <div class="aspect-[4/3] rounded-xl bg-white/5"></div>
+                <div class="flex gap-2">
+                  <div class="h-8 flex-1 rounded-lg bg-white/5"></div>
+                  <div class="h-8 flex-1 rounded-lg bg-white/5"></div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {:else if activeWishlist}
+          <div class="space-y-6">
+            <WishlistHeader
+              wishlist={activeWishlist}
+              onRename={handleRename}
+              onSetDefault={handleSetDefault}
+              onAddModel={openAddModelDrawer}
+              onDelete={_handleDelete}
+            />
+
+            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <WishlistItems
+                items={wishlistItems}
+                {activeWishlistId}
+                {otherTargets}
+                onRemove={handleRemove}
+                onMove={handleMove}
+              />
+            </div>
+          </div>
+        {:else}
+          <div class="flex h-[60vh] flex-col items-center justify-center space-y-6 text-center">
+            <div class="relative">
+              <div
+                class="absolute inset-0 -m-4 animate-pulse rounded-full bg-amber-500/10 blur-2xl"
+              ></div>
+              <Heart size={64} class="relative text-zinc-800" />
+            </div>
+            <div class="space-y-2">
+              <h2 class="text-3xl font-bold tracking-tight text-white">Rusty Shed Wishlists</h2>
+              <p class="mx-auto max-w-xs text-zinc-500">
+                Select a wishlist from the left or create a new one to start building your dream
+                collection.
+              </p>
+            </div>
+            <Button variant="outline" class="border-zinc-800 text-zinc-400" onclick={handleCreate}>
+              Create your first list
+            </Button>
+          </div>
+        {/if}
+      </div>
+    </main>
   </div>
 </div>
 

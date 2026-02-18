@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { Heart } from 'lucide-svelte';
+  import { Heart, Trash2 } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import { Badge } from '$lib/components';
+  import * as m from '$lib/paraglide/messages.js';
+  import { cn } from '$lib/utils';
 
   const { wishlists, activeId, onSelect, onDelete } = $props<{
     wishlists: WishlistPreview[];
@@ -11,48 +13,66 @@
   }>();
 </script>
 
-<aside class="space-y-4 rounded-2xl border border-border bg-sidebar p-4">
-  <div class="flex items-center justify-between">
-    <h2 class="h5 font-semibold tracking-tight">Wishlists</h2>
+<aside class="space-y-4">
+  <div class="flex items-center justify-between px-2">
+    <h2 class="text-xs font-bold tracking-[0.2em] text-zinc-500 uppercase">My Lists</h2>
   </div>
 
-  <div class="space-y-2">
+  <div class="space-y-1">
     {#if wishlists.length === 0}
-      <p class="text-surface-400 text-sm">Wishlist is empty</p>
+      <div class="flex flex-col items-center justify-center py-8 text-center text-zinc-600">
+        <Heart size={32} class="mb-2 opacity-20" />
+        <p class="text-xs font-medium tracking-widest uppercase">{m.wishlists_items_empty()}</p>
+      </div>
     {:else}
       {#each wishlists as wl (wl.id)}
         <div
           role="button"
           tabindex="0"
-          class="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors"
-          class:bg-primary={wl.id === activeId}
-          class:bg-sidebar-accent={wl.id === activeId}
-          class:text-primary-foreground={wl.id === activeId}
-          class:hover:bg-sidebar-accent={wl.id !== activeId}
-          class:text-sidebar-foreground={wl.id !== activeId}
+          class={cn(
+            'group relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-3 text-left transition-all duration-200',
+            wl.id === activeId
+              ? 'border-l-2 border-amber-500 bg-amber-500/10 text-white shadow-[0_0_15px_rgba(245,158,11,0.05)]'
+              : 'text-zinc-400 hover:bg-white/5'
+          )}
           onclick={() => onSelect?.(wl.id)}
           onkeydown={(e) => e.key === 'Enter' && onSelect?.(wl.id)}
         >
-          <div class="flex items-center gap-2">
-            <Heart size={16} />
-            <div class="flex flex-col">
-              <span class="font-semibold">{wl.name}</span>
-              <span class="text-xs opacity-75">{wl.count} items</span>
+          <div class="flex items-center gap-3">
+            <Heart
+              size={18}
+              class={wl.id === activeId
+                ? 'text-amber-500'
+                : 'text-zinc-600 transition-colors group-hover:text-zinc-400'}
+            />
+            <div class="flex min-w-0 flex-col">
+              <span class="truncate font-bold tracking-tight">{wl.name}</span>
+              <span class="font-mono text-[10px] tracking-wider text-zinc-500">
+                {wl.count}
+                {m.stats_rolling_stocks()}
+              </span>
             </div>
           </div>
+
           <div class="flex items-center gap-2">
             {#if wl.is_default}
-              <Badge variant="secondary" class="text-[10px] uppercase">Default</Badge>
+              <Badge
+                class="border-amber-500/20 bg-amber-500/10 text-[9px] font-bold text-amber-500 uppercase ring-1 ring-amber-500/20"
+              >
+                Default
+              </Badge>
             {/if}
+
             <button
-              class="h-6 w-6 rounded hover:bg-accent"
+              class="rounded p-1 text-zinc-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-zinc-800 hover:text-red-400"
               type="button"
+              title="Delete List"
               onclick={(event) => {
                 event.stopPropagation();
                 onDelete?.(wl.id);
               }}
             >
-              ✕
+              <Trash2 size={14} />
             </button>
           </div>
         </div>
