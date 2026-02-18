@@ -43,14 +43,14 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+  <div class="flex items-start justify-between">
     <div>
-      <p class="text-sm tracking-[0.2em] text-muted-foreground uppercase">{m.app_tracks()}</p>
-      <h1 class="h2 font-bold">{m.track_inventories_title()}</h1>
-      <p class="text-sm text-muted-foreground">{m.track_inventories_subtitle()}</p>
+      <p class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">{m.app_tracks()}</p>
+      <h1 class="mt-1 text-4xl font-bold text-zinc-100">{m.track_inventories_title()}</h1>
+      <p class="mt-1 text-sm text-zinc-400">{m.track_inventories_subtitle()}</p>
     </div>
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
-      <Button onclick={() => (createDialogOpen = true)} disabled={loading}>
+    <div class="flex items-center gap-3">
+      <Button variant="rusty" onclick={() => (createDialogOpen = true)} disabled={loading}>
         <Plus size={18} />
         <span>{m.track_inventories_create_button()}</span>
       </Button>

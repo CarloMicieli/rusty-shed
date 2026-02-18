@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { AlertTriangle, X } from 'lucide-svelte';
+  import { AlertTriangle, X, Loader2 } from 'lucide-svelte';
+  import { Button } from '$lib/components';
 
   interface Props {
     open?: boolean;
@@ -9,12 +10,24 @@
     onConfirm?: () => void;
   }
 
-  const { open = $bindable(false), inventoryName = '', onClose, onConfirm }: Props = $props();
+  let { open = $bindable(false), inventoryName = '', onClose, onConfirm }: Props = $props();
 
   let deleting = $state(false);
 
+  $effect(() => {
+    if (open) {
+      // Prevent background scrolling
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  });
+
   function handleClose() {
     if (deleting) return;
+    open = false;
     onClose?.();
   }
 
@@ -29,71 +42,96 @@
       deleting = false;
     }
   }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && open) handleClose();
+  }
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 {#if open}
+  <!-- Overlay -->
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md transition-all duration-300"
+    onclick={handleClose}
+    aria-hidden="true"
+  ></div>
+
+  <!-- Dialog -->
+  <div
+    class="fixed top-1/2 left-1/2 z-[101] w-full max-w-md -translate-x-1/2 -translate-y-1/2 p-4"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="delete-inventory-title"
-    tabindex="-1"
-    onclick={(e) => {
-      if (e.target === e.currentTarget) handleClose();
-    }}
-    onkeydown={(e) => {
-      if (e.key === 'Escape') handleClose();
-    }}
+    aria-labelledby="delete-modal-title"
   >
-    <div class="variant-filled-surface card w-full max-w-md space-y-4 p-6">
-      <div class="flex items-center justify-between">
+    <div
+      class="flex flex-col overflow-hidden rounded-2xl border border-red-500/20 bg-[#0c0c0c] shadow-2xl"
+    >
+      <div class="flex items-center justify-between border-b border-white/5 p-6">
         <div class="flex items-center gap-3">
-          <div class="variant-filled-error flex h-10 w-10 items-center justify-center rounded-full">
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500"
+          >
             <AlertTriangle size={20} />
           </div>
-          <h2 id="delete-inventory-title" class="h3 font-bold">
+          <h2
+            id="delete-modal-title"
+            class="text-lg font-bold tracking-tight text-zinc-100 uppercase"
+          >
             {m.track_inventory_delete_confirm_title()}
           </h2>
         </div>
         <button
           onclick={handleClose}
-          class="variant-ghost-surface btn-icon btn-icon-sm"
+          class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
           disabled={deleting}
         >
           <X size={20} />
         </button>
       </div>
 
-      <div class="space-y-2">
-        <p class="text-surface-300">
-          {m.track_inventory_delete_confirm_message()}
-        </p>
-        {#if inventoryName}
-          <p class="font-semibold">"{inventoryName}"</p>
-        {/if}
-      </div>
-
-      <div class="flex justify-end gap-2">
-        <button
-          type="button"
-          onclick={handleClose}
-          class="variant-ghost-surface btn"
-          disabled={deleting}
-        >
-          {m.track_inventory_delete_cancel()}
-        </button>
-        <button
-          type="button"
-          onclick={handleConfirm}
-          class="variant-filled-error btn"
-          disabled={deleting}
-        >
-          {#if deleting}
-            <span class="animate-pulse">...</span>
-          {:else}
-            {m.track_inventory_delete_confirm()}
+      <div class="p-6">
+        <div class="space-y-4">
+          <p class="text-sm leading-relaxed text-zinc-400">
+            {m.track_inventory_delete_confirm_message()}
+          </p>
+          {#if inventoryName}
+            <div class="rounded-xl border border-white/5 bg-zinc-950 p-4">
+              <span
+                class="mb-1 block text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
+                >Deleting Inventory</span
+              >
+              <p class="text-lg font-bold text-red-400">"{inventoryName}"</p>
+            </div>
           {/if}
-        </button>
+        </div>
+
+        <div class="mt-8 flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            onclick={handleClose}
+            class="px-6 text-zinc-500 hover:bg-transparent hover:text-white"
+            disabled={deleting}
+          >
+            {m.track_inventory_delete_cancel()}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            class="h-11 min-w-[120px] bg-red-600 px-8 font-bold text-white hover:bg-red-500"
+            onclick={handleConfirm}
+            disabled={deleting}
+          >
+            {#if deleting}
+              <Loader2 size={18} class="mr-2 animate-spin" />
+              <span>Deleting...</span>
+            {:else}
+              {m.track_inventory_delete_confirm()}
+            {/if}
+          </Button>
+        </div>
       </div>
     </div>
   </div>

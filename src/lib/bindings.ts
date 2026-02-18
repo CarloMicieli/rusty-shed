@@ -2949,7 +2949,10 @@ export type DepotRollingStockView = {
   dccAddress: number | null;
 };
 /**
- * Compact read-only representation of the depot content, listing all
+ * A read-only representation of the depot contents.
+ *
+ * This view is intended for use by the interface layer (API/IPC/UI) and
+ * serializes the minimal information required to display the depot and its
  * rolling stock entries.
  */
 export type DepotView = {

@@ -9,7 +9,7 @@
   const { inventories }: Props = $props();
 </script>
 
-<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
   {#each inventories as inventory (inventory.id)}
     <InventoryCard {inventory} />
   {/each}

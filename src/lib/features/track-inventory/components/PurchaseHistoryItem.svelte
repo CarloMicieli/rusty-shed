@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { TrackPurchaseView } from '$lib/features/track-inventory';
-  import * as m from '$lib/paraglide/messages';
-  import { Package } from 'lucide-svelte';
+  import { Store, ArrowRight } from 'lucide-svelte';
 
   interface Props {
     purchase: TrackPurchaseView;
@@ -9,71 +8,74 @@
 
   const { purchase }: Props = $props();
 
-  const formattedDate = $derived(
-    new Date(purchase.purchase_date).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+  const formattedPrice = $derived(
+    new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: purchase.price.currency
+    }).format(Number(purchase.price.amount) / 100)
   );
-
-  const formattedPrice = $derived((purchase.price.amount / 100n).toString());
 </script>
 
 <div
-  class="variant-ghost-surface group border-surface-700 hover:border-surface-600 rounded-lg border p-4 transition-all"
+  class="group flex items-center justify-between gap-4 rounded-xl border border-transparent p-3 transition-all hover:border-white/5 hover:bg-white/5"
 >
-  <div class="flex items-start justify-between gap-4">
-    <div class="flex flex-1 items-start gap-3">
-      <div
-        class="variant-filled-surface flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-      >
-        <Package size={20} />
-      </div>
-
-      <div class="flex flex-1 flex-col gap-1">
-        <div class="flex items-start justify-between">
-          <div>
-            <h4 class="font-medium">
-              {purchase.track_product.description || purchase.track_product.product_code}
-            </h4>
-            <p class="text-surface-400 text-sm">
-              {purchase.track_product.manufacturer_name}
-            </p>
-          </div>
-        </div>
-
-        <div class="text-surface-300 flex flex-wrap items-center gap-3 text-sm">
-          <div class="flex items-center gap-1">
-            <span class="text-surface-100 font-semibold">{purchase.quantity}×</span>
-            <span>{m.track_purchase_history_item_quantity()}</span>
-          </div>
-
-          <span class="text-surface-600">•</span>
-
-          <div class="flex items-center gap-1">
-            <span class="text-surface-100 font-semibold">
-              {formattedPrice}
-              {purchase.price.currency}
-            </span>
-            <span class="text-surface-400">({m.track_purchase_history_item_price()})</span>
-          </div>
-
-          {#if purchase.seller_name}
-            <span class="text-surface-600">•</span>
-            <div class="flex items-center gap-1">
-              <span class="text-surface-400">from</span>
-              <span class="text-surface-100 font-medium">{purchase.seller_name}</span>
-            </div>
-          {/if}
-        </div>
-      </div>
+  <div class="flex items-center gap-4">
+    <!-- Icon or Date -->
+    <div
+      class="flex min-w-[50px] flex-col items-center justify-center rounded-lg border border-white/5 bg-zinc-900 px-2 py-1.5"
+    >
+      <span class="text-[10px] font-bold tracking-tighter text-zinc-500 uppercase">
+        {new Date(purchase.purchase_date).toLocaleDateString(undefined, { month: 'short' })}
+      </span>
+      <span class="text-sm font-bold text-zinc-100">
+        {new Date(purchase.purchase_date).getDate()}
+      </span>
     </div>
 
-    <div class="flex shrink-0 flex-col items-end gap-1">
-      <time class="text-surface-200 text-sm font-medium" datetime={purchase.purchase_date}>
-        {formattedDate}
-      </time>
+    <div>
+      <h4 class="text-sm font-bold text-zinc-100 transition-colors group-hover:text-amber-500">
+        {purchase.track_product.description || purchase.track_product.product_code}
+      </h4>
+      <div
+        class="flex items-center gap-2 text-[10px] font-medium tracking-wider text-zinc-500 uppercase"
+      >
+        <span class="text-zinc-600">{purchase.track_product.manufacturer_name}</span>
+        {#if purchase.seller_name}
+          <span class="h-1 w-1 rounded-full bg-zinc-800"></span>
+          <div class="flex items-center gap-1">
+            <Store size={10} class="text-zinc-700" />
+            <span>{purchase.seller_name}</span>
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-6">
+    <!-- Quantity -->
+    <div class="flex flex-col items-end">
+      <span class="mb-1 text-[9px] leading-none font-bold tracking-widest text-zinc-600 uppercase"
+        >Qty</span
+      >
+      <span class="font-mono text-base font-bold text-zinc-400">
+        {purchase.quantity.toString().padStart(2, '0')}
+      </span>
+    </div>
+
+    <!-- Price -->
+    <div class="flex min-w-[80px] flex-col items-end">
+      <span class="mb-1 text-[9px] leading-none font-bold tracking-widest text-zinc-600 uppercase"
+        >Total</span
+      >
+      <span class="font-mono text-base font-bold tracking-tighter text-amber-500/80">
+        {formattedPrice}
+      </span>
+    </div>
+
+    <div
+      class="-translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+    >
+      <ArrowRight size={14} class="text-zinc-700" />
     </div>
   </div>
 </div>
