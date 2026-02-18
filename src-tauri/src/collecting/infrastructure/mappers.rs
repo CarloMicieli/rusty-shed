@@ -299,7 +299,9 @@ impl CollectionMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::railway_model::{Category, PowerMethod, RailwayModelId, RollingStockId};
+    use crate::catalog::domain::railway_model::{
+        Category, PowerMethod, RailwayModelId, RollingStockId,
+    };
     use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::CollectionItemId;
     use crate::collecting::domain::OwnedRollingStockId;
