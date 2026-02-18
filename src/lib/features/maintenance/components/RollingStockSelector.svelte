@@ -51,23 +51,31 @@
 </script>
 
 <div class="space-y-2">
-  <label for="rolling-stock-select" class="label">
+  <label
+    for="rolling-stock-select"
+    class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
+  >
     {m.maintenance_create_card_select_rolling_stock()}
   </label>
   {#if isLoading}
-    <p class="text-surface-400 text-sm">{m.app_loading()}</p>
+    <div class="flex h-10 items-center px-3 text-sm text-zinc-500">
+      <span
+        class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent"
+      ></span>
+      {m.app_loading()}
+    </div>
   {:else if error}
-    <p class="text-error-500 text-sm">{error}</p>
+    <p class="text-xs font-medium text-red-400">{error}</p>
   {:else}
     <select
       id="rolling-stock-select"
-      class="select"
+      class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       value={selectedId ?? ''}
       onchange={handleChange}
     >
-      <option value="">{m.maintenance_create_card_placeholder()}</option>
+      <option value="" disabled>{m.maintenance_create_card_placeholder()}</option>
       {#each rollingStocks as rs (rs.id)}
-        <option value={rs.id}>
+        <option value={rs.id} class="bg-zinc-950 text-zinc-100">
           {formatRollingStock(rs)}
         </option>
       {/each}
