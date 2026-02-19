@@ -22,6 +22,8 @@
   import { invoke, convertFileSrc } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import * as m from '$lib/paraglide/messages';
+  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import { commands } from '$lib/bindings';
 
   interface RailwayModelCardProps {
     /** The railway model to display */
@@ -54,6 +56,14 @@
   let isUploading = $state(false);
   let _uploadProgress = $state(0);
 
+  // Local copies of editable text fields — updated optimistically on successful save
+  let localDescription = $state('');
+  let localDetails = $state('');
+  $effect(() => {
+    localDescription = model.description ?? '';
+    localDetails = model.details ?? '';
+  });
+
   // Derived values
   let isSingleUnit = $derived(model.rolling_stock?.length === 1);
 
@@ -79,6 +89,30 @@
     if (cat.includes('railcar') || cat.includes('train_set')) return Layers;
     return TrainFront;
   });
+
+  async function saveDescription(value: string) {
+    const result = await commands.updateRailwayModelText({
+      railwayModelId: model.id,
+      field: 'Description',
+      value
+    });
+    if (result.status === 'error') {
+      throw new Error('Failed to save');
+    }
+    localDescription = value;
+  }
+
+  async function saveDetails(value: string) {
+    const result = await commands.updateRailwayModelText({
+      railwayModelId: model.id,
+      field: 'Details',
+      value
+    });
+    if (result.status === 'error') {
+      throw new Error('Failed to save');
+    }
+    localDetails = value;
+  }
 
   async function handleBrowseImage() {
     try {
@@ -164,7 +198,15 @@
         <span class="text-zinc-700" aria-hidden="true">·</span>
         <span class="font-mono text-xs text-zinc-500">{model.product_code}</span>
       </div>
-      {#if model.description}
+      {#if editable}
+        <div class="mt-0.5">
+          <InPlaceEdit
+            value={localDescription}
+            placeholder={m.railway_model_field_description()}
+            onSave={saveDescription}
+          />
+        </div>
+      {:else if model.description}
         <p class="mt-0.5 line-clamp-1 text-sm text-zinc-400">{model.description}</p>
       {/if}
     </div>
@@ -292,15 +334,20 @@
 
       <!-- ── Tab 1: Model Details ─────────────────────────────────────── -->
       <TabsContent value="details" class="mt-2">
-        {#if model.details}
-          <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+        <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+          {#if editable}
+            <InPlaceEdit
+              value={localDetails}
+              placeholder={m.railway_model_field_details()}
+              multiline={true}
+              onSave={saveDetails}
+            />
+          {:else if model.details}
             <p class="line-clamp-6 text-sm leading-relaxed text-zinc-400">{model.details}</p>
-          </div>
-        {:else}
-          <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+          {:else}
             <p class="text-sm text-zinc-600 italic">{m.no_additional_details()}</p>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </TabsContent>
 
       <!-- ── Tab 2: Rolling Stock ─────────────────────────────────────── -->
