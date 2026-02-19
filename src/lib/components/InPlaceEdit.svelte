@@ -101,7 +101,7 @@
     {#if multiline}
       <textarea
         bind:this={inputEl}
-        class="w-full border border-[#D48A42] ring-1 ring-[#D48A42]/30 bg-[#0F0F0F] rounded outline-none p-1 text-sm text-[#E0E0E0] resize-none"
+        class="w-full resize-none rounded border border-[#D48A42] bg-[#0F0F0F] p-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
         bind:value={editValue}
         onblur={handleBlur}
         onkeydown={handleKeydown}
@@ -112,7 +112,7 @@
       <input
         bind:this={inputEl}
         type="text"
-        class="w-full border border-[#D48A42] ring-1 ring-[#D48A42]/30 bg-[#0F0F0F] rounded outline-none p-1 text-sm text-[#E0E0E0]"
+        class="w-full rounded border border-[#D48A42] bg-[#0F0F0F] p-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
         bind:value={editValue}
         onblur={handleBlur}
         onkeydown={handleKeydown}
@@ -122,7 +122,7 @@
 
     <!-- Floating Save/Cancel pill — absolute positioned to avoid card layout shift -->
     <div
-      class="absolute top-full left-0 mt-1 z-50 flex gap-1 bg-[#0F0F0F] border border-[#1F1F1F] rounded px-2 py-1 shadow-lg"
+      class="absolute top-full left-0 z-50 mt-1 flex gap-1 rounded border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 shadow-lg"
     >
       <button
         type="button"
@@ -165,7 +165,7 @@
     {#if value}
       <span class="text-sm text-[#E0E0E0]">{value}</span>
     {:else}
-      <span class="text-sm italic text-[#808080]"
+      <span class="text-sm text-[#808080] italic"
         >{placeholder ?? m.edit_field_placeholder_empty()}</span
       >
     {/if}

@@ -185,6 +185,10 @@ export const commands = {
   /**
    * Update a single free-text field (description or details) of a railway model.
    *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, field, and new value.
+   *
    * # Returns
    * - `Ok(())` on success.
    * - `Err(CommandError::NotFound)` when the railway model does not exist.
@@ -195,10 +199,7 @@ export const commands = {
     args: UpdateRailwayModelTextArgs
   ): Promise<Result<null, CommandError>> {
     try {
-      return {
-        status: 'ok',
-        data: await TAURI_INVOKE('update_railway_model_text', { args })
-      };
+      return { status: 'ok', data: await TAURI_INVOKE('update_railway_model_text', { args }) };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
@@ -207,6 +208,16 @@ export const commands = {
   /**
    * Update the identification fields (series_code, road_number, livery, depot) of a single
    * rolling stock unit within a railway model.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, rolling stock, and new identification values.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+   * - `Err(CommandError::ValidationError)` when `series_code` is empty.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
    */
   async updateRollingStockIdentification(
     args: UpdateRollingStockIdentificationArgs
@@ -223,6 +234,16 @@ export const commands = {
   },
   /**
    * Update the constrained classification fields (scale and/or epoch) of a railway model.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model with optional scale and epoch values.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model does not exist.
+   * - `Err(CommandError::ValidationError)` when neither scale nor epoch is provided.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
    */
   async updateRailwayModelClassification(
     args: UpdateRailwayModelClassificationArgs
@@ -239,6 +260,15 @@ export const commands = {
   },
   /**
    * Update the railway company of a single rolling stock unit.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, rolling stock, and new railway company id.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway company, model, or rolling stock does not exist.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
    */
   async updateRollingStockRailwayCompany(
     args: UpdateRollingStockRailwayCompanyArgs
@@ -247,6 +277,32 @@ export const commands = {
       return {
         status: 'ok',
         data: await TAURI_INVOKE('update_rolling_stock_railway_company', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Update the full technical specifications of a single rolling stock unit (drawer save).
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - All four specification sections: identification, technical, control, coupling.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+   * - `Err(CommandError::ValidationError)` when `series_code` is empty or enum values are invalid.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRollingStockSpecifications(
+    args: UpdateRollingStockSpecificationsArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_rolling_stock_specifications', { args })
       };
     } catch (e) {
       if (e instanceof Error) throw e;
@@ -4518,6 +4574,20 @@ export type RailwayModelManufacturer = {
   display: string;
 };
 /**
+ * Identifies which free-text field on a [`RailwayModel`] is being updated.
+ *
+ * Used by both the application use case input and the Tauri command args.
+ */
+export type RailwayModelTextField =
+  /**
+   * The `description` field (required, non-empty).
+   */
+  | 'Description'
+  /**
+   * The `details` field (optional; an empty string is stored as `NULL`).
+   */
+  | 'Details';
+/**
  * A UI-focused view of a railway model used by the frontend.
  */
 export type RailwayModelView = {
@@ -5620,6 +5690,123 @@ export type TrackPurchaseView = {
   purchase_date: string;
 };
 export type TrackType = 'STRAIGHT' | 'CURVE' | 'TURNOUT' | 'FLEX_TRACK';
+/**
+ * Arguments for updating the constrained classification fields (scale and/or epoch) of a
+ * railway model via a badge picker.
+ */
+export type UpdateRailwayModelClassificationArgs = {
+  /**
+   * The railway model to update.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * New scale value, if being updated.
+   */
+  scale: Scale | null;
+  /**
+   * New epoch value, if being updated.
+   */
+  epoch: Epoch | null;
+};
+/**
+ * Transport args for updating a single free-text field on a `RailwayModel`.
+ */
+export type UpdateRailwayModelTextArgs = {
+  /**
+   * The railway model to update.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * Which free-text field to update.
+   */
+  field: RailwayModelTextField;
+  /**
+   * New value. An empty string for `Details` clears the field; an empty
+   * string for `Description` is rejected by the domain.
+   */
+  value: string;
+};
+/**
+ * Arguments for updating a rolling stock's identification fields (series_code, road_number,
+ * livery, depot) via an in-place inline edit.
+ */
+export type UpdateRollingStockIdentificationArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * New series code (required, non-empty).
+   */
+  seriesCode: string;
+  /**
+   * Optional road number; empty string or absent means clear.
+   */
+  roadNumber: string | null;
+  /**
+   * Optional livery; empty string or absent means clear.
+   */
+  livery: string | null;
+  /**
+   * Optional depot; empty string or absent means clear.
+   */
+  depot: string | null;
+};
+/**
+ * Arguments for updating the railway company of a rolling stock unit via a badge picker.
+ */
+export type UpdateRollingStockRailwayCompanyArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * The new railway company id (must exist in the database).
+   */
+  railwayCompanyId: RailwayCompanyId;
+};
+/**
+ * Full technical specification payload for a RollingStock unit.
+ * Saves all four drawer sections (Identification, Technical, Control, Coupling) atomically.
+ */
+export type UpdateRollingStockSpecificationsArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * Required — must be non-empty.
+   */
+  seriesCode: string;
+  roadNumber: string | null;
+  livery: string | null;
+  depot: string | null;
+  flywheelFitted: boolean | null;
+  bodyShell: string | null;
+  chassis: string | null;
+  interiorLights: string | null;
+  lights: string | null;
+  /**
+   * Only relevant for motorised rolling stock (Locomotive, EMU, Railcar).
+   */
+  dccInterface: DccInterface | null;
+  control: Control | null;
+  couplingSocket: string | null;
+  closeCouplers: boolean | null;
+  digitalShunting: boolean | null;
+};
 export type UpdateSellerPayload = {
   id: string;
   name: string;
@@ -5635,46 +5822,6 @@ export type UpdateSellerPayload = {
   countryCode: string | null;
   createdAt: string | null;
 };
-/**
- * Transport args for updating a single free-text field on a RailwayModel.
- */
-export type UpdateRailwayModelTextArgs = {
-  railwayModelId: RailwayModelId;
-  field: RailwayModelTextField;
-  value: string;
-};
-/**
- * Arguments for updating a rolling stock's identification fields via inline edit.
- */
-export type UpdateRollingStockIdentificationArgs = {
-  railwayModelId: RailwayModelId;
-  rollingStockId: RollingStockId;
-  seriesCode: string;
-  roadNumber: string | null;
-  livery: string | null;
-  depot: string | null;
-};
-/**
- * Arguments for updating the constrained classification fields (scale and/or epoch) of a
- * railway model via a badge picker.
- */
-export type UpdateRailwayModelClassificationArgs = {
-  railwayModelId: RailwayModelId;
-  scale: Scale | null;
-  epoch: Epoch | null;
-};
-/**
- * Arguments for updating the railway company of a rolling stock unit via a badge picker.
- */
-export type UpdateRollingStockRailwayCompanyArgs = {
-  railwayModelId: RailwayModelId;
-  rollingStockId: RollingStockId;
-  railwayCompanyId: RailwayCompanyId;
-};
-/**
- * Identifies which free-text field on a RailwayModel is being updated.
- */
-export type RailwayModelTextField = 'Description' | 'Details';
 /**
  * Input for partial settings updates
  */

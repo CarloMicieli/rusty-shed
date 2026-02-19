@@ -1,11 +1,11 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModelEvent;
+use crate::catalog::domain::railway_model::rolling_stock::RollingStockSpecPatch;
 use crate::catalog::domain::railway_model::{
     AvailabilityStatus, Category, DeliveryDate, Epoch, PowerMethod, ProductCode, RailwayModelId,
     RollingStock,
 };
-use crate::catalog::domain::railway_model::rolling_stock::RollingStockSpecPatch;
 use crate::catalog::domain::railway_model::{RollingStockId, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
@@ -315,8 +315,7 @@ mod tests {
     }
 
     fn make_test_locomotive(id: RollingStockId) -> RollingStock {
-        let railway =
-            RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
+        let railway = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
         RollingStock::Locomotive {
             id,
             railway_id: railway,
@@ -395,7 +394,11 @@ mod tests {
         let events = model.pull_events();
         assert_eq!(events.len(), 1);
         match &events[0] {
-            RailwayModelEvent::RollingStockUpdated { changed, rolling_stock_id, .. } => {
+            RailwayModelEvent::RollingStockUpdated {
+                changed,
+                rolling_stock_id,
+                ..
+            } => {
                 assert_eq!(*rolling_stock_id, rs_id);
                 assert_eq!(changed["series_code"], "SC-NEW");
                 assert_eq!(changed["road_number"], "456");
@@ -411,13 +414,8 @@ mod tests {
         let loco = make_test_locomotive(rs_id.clone());
         model.rolling_stocks.push(loco);
 
-        let result = model.update_rolling_stock_identification(
-            &rs_id,
-            "".to_string(),
-            None,
-            None,
-            None,
-        );
+        let result =
+            model.update_rolling_stock_identification(&rs_id, "".to_string(), None, None, None);
         assert!(result.is_err());
     }
 
@@ -466,7 +464,11 @@ mod tests {
         let events = model.pull_events();
         assert_eq!(events.len(), 1);
         match &events[0] {
-            RailwayModelEvent::RollingStockUpdated { changed, rolling_stock_id, .. } => {
+            RailwayModelEvent::RollingStockUpdated {
+                changed,
+                rolling_stock_id,
+                ..
+            } => {
                 assert_eq!(*rolling_stock_id, rs_id);
                 assert_eq!(changed["railway_company_id"], "trn:railway-company:sncf");
             }

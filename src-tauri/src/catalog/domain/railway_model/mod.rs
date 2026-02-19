@@ -58,6 +58,7 @@ pub use railway_model_view::{
 pub use repository::RailwayModelRepository;
 pub use repository::RailwayModelUowExt;
 pub use rolling_stock::RollingStock;
+pub use rolling_stock::RollingStockSpecPatch;
 pub use rolling_stock_id::RollingStockId;
 pub use rolling_stock_params::RollingStockParams;
 pub use service_level::ServiceLevel;

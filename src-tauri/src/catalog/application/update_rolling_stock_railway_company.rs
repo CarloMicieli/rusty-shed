@@ -72,7 +72,7 @@ mod tests {
     use crate::catalog::domain::railway_company::{
         MockRailwayCompanyRepository, RailwayCompany, RailwayCompanyId,
     };
-    use crate::catalog::domain::railway_model::category::LocomotiveType;
+    use crate::catalog::domain::railway_model::LocomotiveType;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
         RailwayModelId, RollingStock,
@@ -133,9 +133,11 @@ mod tests {
 
     #[tokio::test]
     async fn updates_railway_company_successfully() {
-        let model_id =
-            RailwayModelId::new(&ManufacturerId::try_from("trn:manufacturer:acme").unwrap(), "P100")
-                .unwrap();
+        let model_id = RailwayModelId::new(
+            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
+            "P100",
+        )
+        .unwrap();
         let rs_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
         let old_company = RailwayCompanyId::try_from("trn:railway-company:fs").unwrap();
         let new_company = RailwayCompanyId::try_from("trn:railway-company:sncf").unwrap();
@@ -171,9 +173,11 @@ mod tests {
 
     #[tokio::test]
     async fn returns_not_found_when_company_missing() {
-        let model_id =
-            RailwayModelId::new(&ManufacturerId::try_from("trn:manufacturer:acme").unwrap(), "P100")
-                .unwrap();
+        let model_id = RailwayModelId::new(
+            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
+            "P100",
+        )
+        .unwrap();
         let rs_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
         let company_id = RailwayCompanyId::try_from("trn:railway-company:unknown").unwrap();
 

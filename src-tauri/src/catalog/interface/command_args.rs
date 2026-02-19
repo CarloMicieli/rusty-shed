@@ -7,10 +7,13 @@ use crate::{
         RailwayModelTextField, SaveRailwayModelInput, SimplifiedRollingStockInput,
         TechnicalSpecificationsInput, UpdateRailwayModelClassificationInput,
         UpdateRailwayModelTextInput, UpdateRollingStockIdentificationInput,
-        UpdateRollingStockRailwayCompanyInput,
+        UpdateRollingStockRailwayCompanyInput, UpdateRollingStockSpecificationsInput,
     },
     catalog::domain::railway_company::RailwayCompanyId,
-    catalog::domain::railway_model::{Epoch, RailwayModelId, RollingStockId},
+    catalog::domain::railway_model::{
+        BodyShellType, ChassisType, Control, CouplingSocket, DccInterface, Epoch, FeatureFlag,
+        RailwayModelId, RollingStockId, RollingStockSpecPatch,
+    },
     catalog::domain::scale::Scale,
     core::domain::domain_error::DomainError,
 };
@@ -1004,5 +1007,92 @@ impl From<UpdateRollingStockRailwayCompanyArgs> for UpdateRollingStockRailwayCom
             rolling_stock_id: args.rolling_stock_id,
             railway_company_id: args.railway_company_id,
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRollingStockSpecifications args
+// ---------------------------------------------------------------------------
+
+/// Full technical specification payload for a RollingStock unit.
+/// Saves all four drawer sections (Identification, Technical, Control, Coupling) atomically.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockSpecificationsArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+
+    // ── Identification ─────────────────────────────────────────────────────
+    /// Required — must be non-empty.
+    pub series_code: String,
+    pub road_number: Option<String>,
+    pub livery: Option<String>,
+    pub depot: Option<String>,
+
+    // ── Technical ──────────────────────────────────────────────────────────
+    pub flywheel_fitted: Option<bool>,
+    pub body_shell: Option<String>,
+    pub chassis: Option<String>,
+    pub interior_lights: Option<String>,
+    pub lights: Option<String>,
+
+    // ── Control ────────────────────────────────────────────────────────────
+    /// Only relevant for motorised rolling stock (Locomotive, EMU, Railcar).
+    pub dcc_interface: Option<DccInterface>,
+    pub control: Option<Control>,
+
+    // ── Coupling ───────────────────────────────────────────────────────────
+    pub coupling_socket: Option<String>,
+    pub close_couplers: Option<bool>,
+    pub digital_shunting: Option<bool>,
+}
+
+impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecificationsInput {
+    type Error = DomainError;
+
+    fn try_from(args: UpdateRollingStockSpecificationsArgs) -> Result<Self, Self::Error> {
+        fn bool_to_flag(b: Option<bool>) -> Option<FeatureFlag> {
+            b.map(|v| if v { FeatureFlag::Yes } else { FeatureFlag::No })
+        }
+
+        fn parse_opt<T: std::str::FromStr>(
+            s: Option<String>,
+            field: &str,
+        ) -> Result<Option<T>, DomainError> {
+            match s {
+                None => Ok(None),
+                Some(ref v) if v.is_empty() => Ok(None),
+                Some(v) => v.parse::<T>().map(Some).map_err(|_| {
+                    DomainError::Validation(format!("invalid value for {field}: {v}"))
+                }),
+            }
+        }
+
+        Ok(Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            spec: RollingStockSpecPatch {
+                series_code: args.series_code,
+                road_number: args.road_number,
+                livery: args.livery,
+                depot: args.depot,
+                flywheel_fitted: bool_to_flag(args.flywheel_fitted),
+                body_shell: parse_opt::<BodyShellType>(args.body_shell, "body_shell")?,
+                chassis: parse_opt::<ChassisType>(args.chassis, "chassis")?,
+                interior_lights: parse_opt::<FeatureFlag>(args.interior_lights, "interior_lights")?,
+                lights: parse_opt::<FeatureFlag>(args.lights, "lights")?,
+                dcc_interface: args.dcc_interface,
+                control: args.control,
+                coupling_socket: parse_opt::<CouplingSocket>(
+                    args.coupling_socket,
+                    "coupling_socket",
+                )?,
+                close_couplers: bool_to_flag(args.close_couplers),
+                digital_shunting: bool_to_flag(args.digital_shunting),
+            },
+        })
     }
 }

@@ -23,7 +23,8 @@
   import { open } from '@tauri-apps/plugin-dialog';
   import * as m from '$lib/paraglide/messages';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
-  import { commands } from '$lib/bindings';
+  import BadgePicker from '$lib/components/BadgePicker.svelte';
+  import { commands, type Scale } from '$lib/bindings';
 
   interface RailwayModelCardProps {
     /** The railway model to display */
@@ -59,10 +60,46 @@
   // Local copies of editable text fields — updated optimistically on successful save
   let localDescription = $state('');
   let localDetails = $state('');
+  let localScale = $state('');
+  let localEra = $state('');
   $effect(() => {
     localDescription = model.description ?? '';
     localDetails = model.details ?? '';
+    localScale = model.scale ?? '';
+    localEra = model.era ?? '';
   });
+
+  const scaleOptions = [
+    { id: 'H0', label: 'H0 (1:87)' },
+    { id: 'H0m', label: 'H0m (1:87)' },
+    { id: 'H0e', label: 'H0e (1:87)' },
+    { id: 'N', label: 'N (1:160)' },
+    { id: 'TT', label: 'TT (1:120)' },
+    { id: 'Z', label: 'Z (1:220)' },
+    { id: 'G', label: 'G (1:22.5)' },
+    { id: 'Scale1', label: '1 (1:32)' },
+    { id: 'Scale0', label: '0 (1:43.5)' },
+    { id: 'Scale00', label: '00 (1:76.2)' }
+  ];
+
+  const eraOptions = [
+    'I',
+    'II',
+    'IIa',
+    'IIb',
+    'IIc',
+    'III',
+    'IIIa',
+    'IIIb',
+    'IV',
+    'IVa',
+    'IVb',
+    'V',
+    'Va',
+    'Vb',
+    'Vc',
+    'VI'
+  ].map((e) => ({ id: e, label: e }));
 
   // Derived values
   let isSingleUnit = $derived(model.rolling_stock?.length === 1);
@@ -112,6 +149,30 @@
       throw new Error('Failed to save');
     }
     localDetails = value;
+  }
+
+  async function saveScale(id: string) {
+    const result = await commands.updateRailwayModelClassification({
+      railwayModelId: model.id,
+      scale: id as Scale,
+      epoch: null
+    });
+    if (result.status === 'error') {
+      throw new Error('Failed to save scale');
+    }
+    localScale = id;
+  }
+
+  async function saveEra(id: string) {
+    const result = await commands.updateRailwayModelClassification({
+      railwayModelId: model.id,
+      scale: null,
+      epoch: id
+    });
+    if (result.status === 'error') {
+      throw new Error('Failed to save era');
+    }
+    localEra = id;
   }
 
   async function handleBrowseImage() {
@@ -295,12 +356,24 @@
       <span class="text-xs text-zinc-200">{model.category ?? '—'}</span>
     </div>
     <div class="flex flex-col items-center gap-0.5 px-2">
-      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Scale</span>
-      <span class="font-mono text-xs text-zinc-200">{model.scale ?? '—'}</span>
+      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_scale()}</span
+      >
+      {#if editable}
+        <BadgePicker value={localScale || '—'} options={scaleOptions} onSelect={saveScale} />
+      {:else}
+        <span class="font-mono text-xs text-zinc-200">{model.scale ?? '—'}</span>
+      {/if}
     </div>
     <div class="flex flex-col items-center gap-0.5 px-2">
-      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Era</span>
-      <span class="font-mono text-xs text-zinc-200">{model.era ?? '—'}</span>
+      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_era()}</span
+      >
+      {#if editable}
+        <BadgePicker value={localEra || '—'} options={eraOptions} onSelect={saveEra} />
+      {:else}
+        <span class="font-mono text-xs text-zinc-200">{model.era ?? '—'}</span>
+      {/if}
     </div>
     <div class="flex flex-col items-center gap-0.5 px-2">
       <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Status</span>

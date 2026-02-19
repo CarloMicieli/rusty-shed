@@ -9,6 +9,7 @@ mod update_railway_model_classification;
 mod update_railway_model_text;
 mod update_rolling_stock_identification;
 mod update_rolling_stock_railway_company;
+mod update_rolling_stock_specifications;
 
 #[cfg(test)]
 mod testing;
@@ -34,3 +35,5 @@ pub use update_rolling_stock_identification::UpdateRollingStockIdentification;
 pub use update_rolling_stock_identification::UpdateRollingStockIdentificationInput;
 pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompany;
 pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompanyInput;
+pub use update_rolling_stock_specifications::UpdateRollingStockSpecifications;
+pub use update_rolling_stock_specifications::UpdateRollingStockSpecificationsInput;

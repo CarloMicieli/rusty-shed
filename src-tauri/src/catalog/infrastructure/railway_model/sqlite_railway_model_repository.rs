@@ -144,17 +144,18 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                 .get("railway_company_id")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            sqlx::query(
-                "UPDATE rolling_stocks SET railway_company_id = ?1 WHERE id = ?2",
-            )
-            .bind(company_id)
-            .bind(rolling_stock_id)
-            .execute(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
+            sqlx::query("UPDATE rolling_stocks SET railway_company_id = ?1 WHERE id = ?2")
+                .bind(company_id)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
         } else if map.contains_key("series_code") && map.contains_key("flywheel_fitted") {
             // Full specifications patch (14 columns)
-            let series_code = map.get("series_code").and_then(|v| v.as_str()).unwrap_or("");
+            let series_code = map
+                .get("series_code")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             let road_number = map.get("road_number").and_then(|v| v.as_str());
             let livery = map.get("livery").and_then(|v| v.as_str());
             let depot = map.get("depot").and_then(|v| v.as_str());
@@ -169,7 +170,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             let close_couplers = map.get("close_couplers").and_then(|v| v.as_str());
             let digital_shunting = map.get("digital_shunting").and_then(|v| v.as_str());
 
-            sqlx::query(r#"
+            sqlx::query(
+                r#"
                 UPDATE rolling_stocks
                 SET series_code = ?1,
                     road_number = ?2,
@@ -186,7 +188,8 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                     technical_coupling_close_couplers = ?13,
                     technical_coupling_digital_shunting = ?14
                 WHERE id = ?15
-            "#)
+            "#,
+            )
             .bind(series_code)
             .bind(road_number)
             .bind(livery)
@@ -207,19 +210,24 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .map_err(DomainError::from)?;
         } else if map.contains_key("series_code") {
             // Identification patch (4 columns)
-            let series_code = map.get("series_code").and_then(|v| v.as_str()).unwrap_or("");
+            let series_code = map
+                .get("series_code")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             let road_number = map.get("road_number").and_then(|v| v.as_str());
             let livery = map.get("livery").and_then(|v| v.as_str());
             let depot = map.get("depot").and_then(|v| v.as_str());
 
-            sqlx::query(r#"
+            sqlx::query(
+                r#"
                 UPDATE rolling_stocks
                 SET series_code = ?1,
                     road_number = ?2,
                     livery = ?3,
                     depot = ?4
                 WHERE id = ?5
-            "#)
+            "#,
+            )
             .bind(series_code)
             .bind(road_number)
             .bind(livery)

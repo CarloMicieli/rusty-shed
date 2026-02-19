@@ -18,6 +18,11 @@ vi.mock('$lib/paraglide/messages', () => ({
   control_type: () => 'Control Type',
   dcc_interface: () => 'DCC Interface',
   coupling_type: () => 'Coupling Type',
+  railway_model_field_description: () => 'Description',
+  railway_model_field_scale: () => 'Scale',
+  railway_model_field_era: () => 'Era',
+  railway_model_field_details: () => 'Details',
+  upload_error_unknown: () => 'Unknown upload error',
   error_invalid_image_format: () =>
     'Invalid image format. Please upload a JPEG, PNG, WebP, or GIF file.',
   error_image_too_large: () => 'Image file is too large. Maximum size is {maxSize} MB.',

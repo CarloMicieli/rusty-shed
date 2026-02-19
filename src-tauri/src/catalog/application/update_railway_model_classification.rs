@@ -93,9 +93,11 @@ mod tests {
 
     #[tokio::test]
     async fn updates_scale_only() {
-        let id =
-            RailwayModelId::new(&ManufacturerId::try_from("trn:manufacturer:acme").unwrap(), "P100")
-                .unwrap();
+        let id = RailwayModelId::new(
+            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
+            "P100",
+        )
+        .unwrap();
         let model = make_model(id.clone());
 
         let mut mock = MockRailwayModelRepository::new();
@@ -120,9 +122,11 @@ mod tests {
 
     #[tokio::test]
     async fn updates_epoch_only() {
-        let id =
-            RailwayModelId::new(&ManufacturerId::try_from("trn:manufacturer:acme").unwrap(), "P100")
-                .unwrap();
+        let id = RailwayModelId::new(
+            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
+            "P100",
+        )
+        .unwrap();
         let model = make_model(id.clone());
 
         let mut mock = MockRailwayModelRepository::new();
@@ -147,9 +151,11 @@ mod tests {
 
     #[tokio::test]
     async fn both_none_returns_validation_error() {
-        let id =
-            RailwayModelId::new(&ManufacturerId::try_from("trn:manufacturer:acme").unwrap(), "P100")
-                .unwrap();
+        let id = RailwayModelId::new(
+            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
+            "P100",
+        )
+        .unwrap();
 
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id().times(0);
@@ -176,9 +182,11 @@ mod tests {
 
     #[tokio::test]
     async fn returns_not_found_when_model_is_missing() {
-        let id =
-            RailwayModelId::new(&ManufacturerId::try_from("trn:manufacturer:acme").unwrap(), "P999")
-                .unwrap();
+        let id = RailwayModelId::new(
+            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
+            "P999",
+        )
+        .unwrap();
 
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id().times(1).returning(|_| Ok(None));

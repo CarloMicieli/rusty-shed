@@ -83,24 +83,26 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Design Tokens
 
-| Token | Value | Usage |
-| --- | --- | --- |
-| Surface (cards/modals) | `#0F0F0F` | `bg-[#0F0F0F]` — all drawer panels, pickers |
-| Border | `#1F1F1F` | `border-[#1F1F1F]` — card, picker, input borders |
-| Accent (amber) | `#D48A42` | Primary actions, focus rings, active states |
-| Accent-muted | `rgba(212,138,66,0.15)` | Hover backgrounds on interactive elements |
-| Text-main | `#E0E0E0` | Field values |
-| Text-muted | `#808080` | Field labels, placeholders |
+| Token                  | Value                   | Usage                                            |
+| ---------------------- | ----------------------- | ------------------------------------------------ |
+| Surface (cards/modals) | `#0F0F0F`               | `bg-[#0F0F0F]` — all drawer panels, pickers      |
+| Border                 | `#1F1F1F`               | `border-[#1F1F1F]` — card, picker, input borders |
+| Accent (amber)         | `#D48A42`               | Primary actions, focus rings, active states      |
+| Accent-muted           | `rgba(212,138,66,0.15)` | Hover backgrounds on interactive elements        |
+| Text-main              | `#E0E0E0`               | Field values                                     |
+| Text-muted             | `#808080`               | Field labels, placeholders                       |
 
 ---
 
 ### InPlaceEdit.svelte — Visual State Contract
 
 #### Idle state (read-only display)
+
 - Render value as plain text; no border; no background.
 - Empty field: show placeholder `"Click to add..."` as `text-[#808080] italic text-sm`.
 
 #### Hover state (field is editable, cursor over it)
+
 ```
 bg-[rgba(212,138,66,0.15)]
 border border-dashed border-[#D48A42]/40
@@ -110,6 +112,7 @@ transition-colors duration-150
 ```
 
 #### Active edit state (input is focused)
+
 ```
 border border-[#D48A42]
 ring-1 ring-[#D48A42]/30
@@ -119,6 +122,7 @@ outline-none
 ```
 
 #### Floating Save / Cancel pill
+
 - When the input is active, render a `position: absolute` pill **below** the input (`top-full left-0 mt-1 z-50`) — never inline — to avoid card layout shift.
 - Save: `<Button size="xs" class="bg-[#D48A42] text-black hover:bg-[#D48A42]/90">Save</Button>`
 - Cancel: `<Button size="xs" variant="ghost">Cancel</Button>`
@@ -129,6 +133,7 @@ outline-none
 ### BadgePicker.svelte — Visual State Contract
 
 #### Badge / trigger element (hover)
+
 - Apply amber-muted background + `cursor-pointer` to the badge container on hover:
   ```
   hover:bg-[rgba(212,138,66,0.15)] cursor-pointer transition-colors duration-150
@@ -136,6 +141,7 @@ outline-none
 - Show a `✏` micro-icon (lucide `Pencil`, size 10px, `text-[#808080]`) to the right of the badge text on hover — hidden at rest (`opacity-0 group-hover:opacity-100`).
 
 #### Picker panel
+
 ```
 bg-[#0F0F0F]
 border border-[#1F1F1F]
@@ -145,11 +151,14 @@ min-w-[160px]
 ```
 
 #### Option rows
+
 - Default: `px-3 py-2 text-sm text-[#E0E0E0] hover:bg-[rgba(212,138,66,0.15)] cursor-pointer`
 - Selected / current value: `bg-[rgba(212,138,66,0.15)] text-[#D48A42] font-medium`
 
 #### Keyboard navigation (REQUIRED)
+
 The `BadgePicker` component MUST handle:
+
 - `ArrowDown` / `ArrowUp` — move focus through options
 - `Enter` — confirm selection (same as click)
 - `Escape` — dismiss without selecting (existing requirement)
@@ -159,28 +168,34 @@ The `BadgePicker` component MUST handle:
 ### RollingStockSpecsDrawer.svelte — Visual State Contract
 
 #### Backdrop overlay
+
 ```
 bg-black/80 backdrop-blur-sm
 ```
+
 > Previous `ItemDrawer.svelte` uses `bg-black/40` — this drawer MUST use `bg-black/80` to satisfy the Anti-Bleed rule.
 
 #### Drawer panel surface
+
 ```
 bg-[#0F0F0F]
 border-l border-[#1F1F1F]
 ```
 
 #### Section field labels (all four sections: Identification, Technical, Control, Coupling)
+
 ```
 text-[10px] uppercase tracking-wider text-[#808080]
 ```
 
 #### Section field values
+
 ```
 text-[12px] text-[#E0E0E0]
 ```
 
 #### Constrained selectors inside drawer (Control Type, DCC Interface, Coupling Socket)
+
 - **Do NOT use a native `<select>`** — OS-native styling breaks the charcoal aesthetic.
 - Use the shadcn-svelte `Select` component with these overrides:
   ```
@@ -190,6 +205,7 @@ text-[12px] text-[#E0E0E0]
 - Alternatively, use `BadgePicker` if the field is displayed in a badge context.
 
 #### Unsaved-changes confirmation Dialog
+
 - This dialog sits **above** the drawer — its backdrop MUST use `bg-black/90` (higher than the drawer's `bg-black/80`) to maintain clear z-order.
 
 ---
@@ -199,7 +215,11 @@ text-[12px] text-[#E0E0E0]
 FR-021 requires an "Edit Specs" action on each rolling stock card. This MUST be rendered as:
 
 ```svelte
-<Button variant="outline" size="sm" class="gap-1.5 border-[#1F1F1F] text-[#E0E0E0] hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]">
+<Button
+  variant="outline"
+  size="sm"
+  class="gap-1.5 border-[#1F1F1F] text-[#E0E0E0] hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
+>
   <PencilLine size={14} />
   {m.rolling_stock_edit_specs_button()}
 </Button>

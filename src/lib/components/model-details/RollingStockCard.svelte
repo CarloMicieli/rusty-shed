@@ -1,9 +1,14 @@
 <script lang="ts">
-  import type { OwnedRollingStockView, RailwayModelId } from '$lib/bindings';
+  import type { OwnedRollingStockView, RailwayCompanyId, RailwayModelId } from '$lib/bindings';
   import { commands } from '$lib/bindings';
+  import { onMount } from 'svelte';
   import { ChevronDown, ChevronUp } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Settings } from 'lucide-svelte';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import BadgePicker from '$lib/components/BadgePicker.svelte';
+  import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
+  import { toaster } from '$lib/toaster';
 
   interface Props {
     rollingStock: OwnedRollingStockView;
@@ -20,10 +25,26 @@
   let localSeries = $state('');
   let localRoadNumber = $state('');
   let localLivery = $state('');
+  let localRailwayCompanyName = $state('');
   $effect(() => {
     localSeries = rollingStock.series ?? '';
     localRoadNumber = rollingStock.roadNumber ?? '';
     localLivery = rollingStock.livery ?? '';
+    localRailwayCompanyName = rollingStock.railwayCompanyName ?? '';
+  });
+
+  // Railway company options for the picker
+  let companyOptions = $state<{ id: string; label: string }[]>([]);
+
+  // Specs drawer state
+  let specsDrawerOpen = $state(false);
+
+  onMount(async () => {
+    if (!editable) return;
+    const result = await commands.getRailwayCompanies();
+    if (result.status === 'ok') {
+      companyOptions = result.data.map((c) => ({ id: c.id, label: c.name }));
+    }
   });
 
   function toggleExpand() {
@@ -36,13 +57,10 @@
     return `${series} — ${roadNumber}`;
   }
 
-  async function saveIdentificationField(
-    field: 'series' | 'roadNumber' | 'livery',
-    value: string
-  ) {
+  async function saveIdentificationField(field: 'series' | 'roadNumber' | 'livery', value: string) {
     const seriesCode = field === 'series' ? value : localSeries;
-    const roadNumber = field === 'roadNumber' ? (value || null) : (localRoadNumber || null);
-    const livery = field === 'livery' ? (value || null) : (localLivery || null);
+    const roadNumber = field === 'roadNumber' ? value || null : localRoadNumber || null;
+    const livery = field === 'livery' ? value || null : localLivery || null;
 
     const result = await commands.updateRollingStockIdentification({
       railwayModelId,
@@ -60,6 +78,21 @@
     if (field === 'series') localSeries = value;
     else if (field === 'roadNumber') localRoadNumber = value;
     else if (field === 'livery') localLivery = value;
+  }
+
+  async function saveRailwayCompany(id: string) {
+    const result = await commands.updateRollingStockRailwayCompany({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      railwayCompanyId: id as RailwayCompanyId
+    });
+
+    if (result.status === 'error') {
+      toaster.error(m.rolling_stock_field_railway_company());
+      throw new Error('Failed to save railway company');
+    }
+
+    localRailwayCompanyName = companyOptions.find((c) => c.id === id)?.label ?? id;
   }
 </script>
 
@@ -88,6 +121,21 @@
     <div class="border-t border-border p-4">
       {#if rollingStock.notes}
         <p class="mb-4 text-muted-foreground">{rollingStock.notes}</p>
+      {/if}
+
+      {#if editable}
+        <div class="mb-3 flex justify-end">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#E2994F]/50 hover:text-[#E2994F]"
+            onclick={() => {
+              specsDrawerOpen = true;
+            }}
+          >
+            <Settings size={12} />
+            {m.rolling_stock_edit_specs_button()}
+          </button>
+        </div>
       {/if}
 
       <dl class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
@@ -125,29 +173,41 @@
           </dd>
         </div>
 
-        <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_livery()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <InPlaceEdit
-                value={localLivery}
-                placeholder={m.rolling_stock_field_livery()}
-                onSave={(v) => saveIdentificationField('livery', v)}
-              />
-            {:else}
-              {localLivery || '—'}
-            {/if}
-          </dd>
-        </div>
+        {#if editable || rollingStock.livery}
+          <div>
+            <dt class="text-sm font-medium text-muted-foreground">
+              {m.model_rolling_stock_field_livery()}
+            </dt>
+            <dd class="mt-1 text-sm">
+              {#if editable}
+                <InPlaceEdit
+                  value={localLivery}
+                  placeholder={m.rolling_stock_field_livery()}
+                  onSave={(v) => saveIdentificationField('livery', v)}
+                />
+              {:else}
+                {localLivery || '—'}
+              {/if}
+            </dd>
+          </div>
+        {/if}
 
-        {#if rollingStock.railwayCompanyName}
+        {#if editable || rollingStock.railwayCompanyName}
           <div>
             <dt class="text-sm font-medium text-muted-foreground">
               {m.model_rolling_stock_field_company()}
             </dt>
-            <dd class="mt-1 text-sm">{rollingStock.railwayCompanyName}</dd>
+            <dd class="mt-1 text-sm">
+              {#if editable && companyOptions.length > 0}
+                <BadgePicker
+                  value={localRailwayCompanyName || '—'}
+                  options={companyOptions}
+                  onSelect={saveRailwayCompany}
+                />
+              {:else}
+                {localRailwayCompanyName || '—'}
+              {/if}
+            </dd>
           </div>
         {/if}
 
@@ -179,3 +239,14 @@
     </div>
   {/if}
 </div>
+
+{#if editable}
+  <RollingStockSpecsDrawer
+    open={specsDrawerOpen}
+    {railwayModelId}
+    rollingStockId={rollingStock.rollingStockId}
+    onClose={() => {
+      specsDrawerOpen = false;
+    }}
+  />
+{/if}

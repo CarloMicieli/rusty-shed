@@ -1,37 +1,32 @@
-use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt, RollingStockId};
+use crate::catalog::domain::railway_model::{
+    RailwayModelId, RailwayModelUowExt, RollingStockId, RollingStockSpecPatch,
+};
 use crate::core::domain::domain_error::DomainError;
 
-/// Input for [`UpdateRollingStockIdentification::execute`].
-pub struct UpdateRollingStockIdentificationInput {
+/// Input for [`UpdateRollingStockSpecifications::execute`].
+pub struct UpdateRollingStockSpecificationsInput {
     /// The parent railway model.
     pub railway_model_id: RailwayModelId,
     /// The rolling stock unit to update.
     pub rolling_stock_id: RollingStockId,
-    /// New series code (required, non-empty).
-    pub series_code: String,
-    /// Optional road number; `None` clears the field.
-    pub road_number: Option<String>,
-    /// Optional livery; `None` clears the field.
-    pub livery: Option<String>,
-    /// Optional depot; `None` clears the field.
-    pub depot: Option<String>,
+    /// Full specification patch to apply.
+    pub spec: RollingStockSpecPatch,
 }
 
-/// Use case that updates the identification fields (series_code, road_number, livery, depot)
-/// of a single rolling stock unit within a [`RailwayModel`] aggregate.
-pub struct UpdateRollingStockIdentification;
+/// Use case that updates the full technical specifications of a single rolling stock unit.
+pub struct UpdateRollingStockSpecifications;
 
-impl UpdateRollingStockIdentification {
+impl UpdateRollingStockSpecifications {
     /// Execute the use case.
     ///
     /// # Errors
     /// - [`DomainError::NotFound`] when no railway model with the given id exists.
     /// - [`DomainError::NotFound`] when no rolling stock with `rolling_stock_id` exists.
-    /// - [`DomainError::Validation`] when `series_code` is empty.
+    /// - [`DomainError::Validation`] when `spec.series_code` is empty.
     /// - [`DomainError::Infrastructure`] on database failure.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        input: UpdateRollingStockIdentificationInput,
+        input: UpdateRollingStockSpecificationsInput,
     ) -> Result<(), DomainError>
     where
         U: RailwayModelUowExt + Send,
@@ -46,13 +41,7 @@ impl UpdateRollingStockIdentification {
                 identifier: input.railway_model_id.to_string(),
             })?;
 
-        model.update_rolling_stock_identification(
-            &input.rolling_stock_id,
-            input.series_code,
-            input.road_number,
-            input.livery,
-            input.depot,
-        )?;
+        model.update_rolling_stock_specifications(&input.rolling_stock_id, input.spec)?;
 
         repo.save(&mut model).await
     }
@@ -109,7 +98,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn updates_identification_fields() {
+    async fn updates_specifications_successfully() {
         let model_id = RailwayModelId::new(
             &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
             "P100",
@@ -126,15 +115,27 @@ mod tests {
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
 
-        UpdateRollingStockIdentification::execute(
+        UpdateRollingStockSpecifications::execute(
             &mut uow,
-            UpdateRollingStockIdentificationInput {
+            UpdateRollingStockSpecificationsInput {
                 railway_model_id: model_id,
                 rolling_stock_id: rs_id,
-                series_code: "SC-NEW".to_string(),
-                road_number: Some("456".to_string()),
-                livery: None,
-                depot: None,
+                spec: RollingStockSpecPatch {
+                    series_code: "SC-UPDATED".to_string(),
+                    road_number: Some("999".to_string()),
+                    livery: None,
+                    depot: None,
+                    flywheel_fitted: None,
+                    body_shell: None,
+                    chassis: None,
+                    interior_lights: None,
+                    lights: None,
+                    dcc_interface: None,
+                    control: None,
+                    coupling_socket: None,
+                    close_couplers: None,
+                    digital_shunting: None,
+                },
             },
         )
         .await
@@ -159,15 +160,27 @@ mod tests {
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
 
-        let err = UpdateRollingStockIdentification::execute(
+        let err = UpdateRollingStockSpecifications::execute(
             &mut uow,
-            UpdateRollingStockIdentificationInput {
+            UpdateRollingStockSpecificationsInput {
                 railway_model_id: model_id,
                 rolling_stock_id: rs_id,
-                series_code: "".to_string(),
-                road_number: None,
-                livery: None,
-                depot: None,
+                spec: RollingStockSpecPatch {
+                    series_code: "".to_string(),
+                    road_number: None,
+                    livery: None,
+                    depot: None,
+                    flywheel_fitted: None,
+                    body_shell: None,
+                    chassis: None,
+                    interior_lights: None,
+                    lights: None,
+                    dcc_interface: None,
+                    control: None,
+                    coupling_socket: None,
+                    close_couplers: None,
+                    digital_shunting: None,
+                },
             },
         )
         .await
@@ -176,41 +189,6 @@ mod tests {
         assert!(
             matches!(err, DomainError::Validation(_)),
             "expected Validation error, got {err:?}"
-        );
-    }
-
-    #[tokio::test]
-    async fn returns_not_found_when_model_is_missing() {
-        let model_id = RailwayModelId::new(
-            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
-            "P999",
-        )
-        .unwrap();
-        let rs_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
-
-        let mut mock = MockRailwayModelRepository::new();
-        mock.expect_find_by_id().times(1).returning(|_| Ok(None));
-        mock.expect_save().times(0);
-
-        let mut uow = FakeUow::with_railway_models_repo(mock);
-
-        let err = UpdateRollingStockIdentification::execute(
-            &mut uow,
-            UpdateRollingStockIdentificationInput {
-                railway_model_id: model_id,
-                rolling_stock_id: rs_id,
-                series_code: "SC-1".to_string(),
-                road_number: None,
-                livery: None,
-                depot: None,
-            },
-        )
-        .await
-        .expect_err("missing model should return NotFound");
-
-        assert!(
-            matches!(err, DomainError::NotFound { .. }),
-            "expected NotFound, got {err:?}"
         );
     }
 }

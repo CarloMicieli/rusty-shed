@@ -16,6 +16,7 @@
    * />
    * ```
    */
+  import { untrack } from 'svelte';
   import * as m from '$lib/paraglide/messages';
   import { Pencil } from 'lucide-svelte';
 
@@ -38,14 +39,10 @@
   let isOpen = $state(false);
   let isSaving = $state(false);
   /** Optimistic display value — reverted if onSelect rejects. */
-  let displayValue = $state(value);
+  let displayValue = $state(untrack(() => value));
   let focusedIndex = $state(0);
   let triggerEl = $state<HTMLDivElement | null>(null);
   let listEl = $state<HTMLUListElement | null>(null);
-
-  $effect(() => {
-    displayValue = value;
-  });
 
   $effect(() => {
     if (isOpen && listEl) {
@@ -166,6 +163,12 @@
               {i === focusedIndex ? 'bg-[rgba(212,138,66,0.1)]' : ''}
               hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
             onclick={() => void select(option.id)}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                void select(option.id);
+              }
+            }}
           >
             {option.label}
           </li>

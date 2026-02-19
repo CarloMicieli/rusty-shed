@@ -1,12 +1,14 @@
 use crate::catalog::application::{
     AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelClassification,
     UpdateRailwayModelText, UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
+    UpdateRollingStockSpecifications,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::interface::{
     CreateRailwayModelArgs, UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs,
     UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
+    UpdateRollingStockSpecificationsArgs,
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -184,6 +186,35 @@ pub async fn update_rolling_stock_railway_company(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRollingStockRailwayCompany::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update the full technical specifications of a single rolling stock unit (drawer save).
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - All four specification sections: identification, technical, control, coupling.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+/// - `Err(CommandError::ValidationError)` when `series_code` is empty or enum values are invalid.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_specifications(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockSpecificationsArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating rolling stock specifications for {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockSpecifications::execute(&mut unit_of_work, args.try_into()?).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())
