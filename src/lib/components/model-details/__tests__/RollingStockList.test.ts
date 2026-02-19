@@ -54,6 +54,7 @@ describe('RollingStockList', () => {
     it('should render all rolling stock cards when provided', () => {
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: mockRollingStocks
         }
       });
@@ -65,6 +66,7 @@ describe('RollingStockList', () => {
     it('should render cards in order', () => {
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: mockRollingStocks
         }
       });
@@ -77,6 +79,7 @@ describe('RollingStockList', () => {
     it('should apply spacing between cards', () => {
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: mockRollingStocks
         }
       });
@@ -90,6 +93,7 @@ describe('RollingStockList', () => {
     it('should render empty state when rollingStocks is undefined', () => {
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: undefined
         }
       });
@@ -100,6 +104,7 @@ describe('RollingStockList', () => {
     it('should render empty state when rollingStocks is empty array', () => {
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: []
         }
       });
@@ -110,6 +115,7 @@ describe('RollingStockList', () => {
     it('should render empty state with proper styling', () => {
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: []
         }
       });
@@ -125,6 +131,7 @@ describe('RollingStockList', () => {
     it('should apply muted foreground to empty message', () => {
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: []
         }
       });
@@ -138,6 +145,7 @@ describe('RollingStockList', () => {
     it('should render correctly with one rolling stock', () => {
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: [mockRollingStocks[0]]
         }
       });
@@ -151,6 +159,7 @@ describe('RollingStockList', () => {
     it('should use unique keys for each card', () => {
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: mockRollingStocks
         }
       });
@@ -165,6 +174,7 @@ describe('RollingStockList', () => {
     it('should render semantic list structure', () => {
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: mockRollingStocks
         }
       });
@@ -176,6 +186,7 @@ describe('RollingStockList', () => {
     it('should have readable empty state', () => {
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: []
         }
       });
@@ -189,6 +200,7 @@ describe('RollingStockList', () => {
     it('should apply responsive spacing', () => {
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: mockRollingStocks
         }
       });
@@ -214,6 +226,7 @@ describe('RollingStockList', () => {
 
       render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: [stockWithNulls]
         }
       });
@@ -237,6 +250,7 @@ describe('RollingStockList', () => {
 
       const { container } = render(RollingStockList, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStocks: manyStocks
         }
       });

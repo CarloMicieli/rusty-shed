@@ -1,7 +1,12 @@
-use crate::catalog::application::{AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelText};
+use crate::catalog::application::{
+    AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelText,
+    UpdateRollingStockIdentification,
+};
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
-use crate::catalog::interface::{CreateRailwayModelArgs, UpdateRailwayModelTextArgs};
+use crate::catalog::interface::{
+    CreateRailwayModelArgs, UpdateRailwayModelTextArgs, UpdateRollingStockIdentificationArgs,
+};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use log::info;
@@ -91,6 +96,36 @@ pub async fn update_railway_model_text(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRailwayModelText::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update the identification fields (series_code, road_number, livery, depot) of a single
+/// rolling stock unit within a railway model.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, rolling stock, and new identification values.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+/// - `Err(CommandError::ValidationError)` when `series_code` is empty.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_identification(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockIdentificationArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating rolling stock identification for {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockIdentification::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())

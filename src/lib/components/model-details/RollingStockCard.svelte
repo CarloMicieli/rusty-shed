@@ -1,23 +1,65 @@
 <script lang="ts">
-  import type { OwnedRollingStockView } from '$lib/bindings';
+  import type { OwnedRollingStockView, RailwayModelId } from '$lib/bindings';
+  import { commands } from '$lib/bindings';
   import { ChevronDown, ChevronUp } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
 
   interface Props {
     rollingStock: OwnedRollingStockView;
+    /** Parent railway model id — required to save identification changes. */
+    railwayModelId: RailwayModelId;
+    /** When true, identification fields are editable in-place. */
+    editable?: boolean;
   }
 
-  let { rollingStock }: Props = $props();
+  let { rollingStock, railwayModelId, editable = false }: Props = $props();
   let isExpanded = $state(false);
+
+  // Local copies of editable identification fields
+  let localSeries = $state('');
+  let localRoadNumber = $state('');
+  let localLivery = $state('');
+  $effect(() => {
+    localSeries = rollingStock.series ?? '';
+    localRoadNumber = rollingStock.roadNumber ?? '';
+    localLivery = rollingStock.livery ?? '';
+  });
 
   function toggleExpand() {
     isExpanded = !isExpanded;
   }
 
   function formatSeriesRoadNumber() {
-    const series = rollingStock.series || m.model_rolling_stock_unknown_series();
-    const roadNumber = rollingStock.roadNumber || m.model_rolling_stock_na();
+    const series = localSeries || m.model_rolling_stock_unknown_series();
+    const roadNumber = localRoadNumber || m.model_rolling_stock_na();
     return `${series} — ${roadNumber}`;
+  }
+
+  async function saveIdentificationField(
+    field: 'series' | 'roadNumber' | 'livery',
+    value: string
+  ) {
+    const seriesCode = field === 'series' ? value : localSeries;
+    const roadNumber = field === 'roadNumber' ? (value || null) : (localRoadNumber || null);
+    const livery = field === 'livery' ? (value || null) : (localLivery || null);
+
+    const result = await commands.updateRollingStockIdentification({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      seriesCode,
+      roadNumber,
+      livery,
+      depot: null
+    });
+
+    if (result.status === 'error') {
+      throw new Error('Failed to save');
+    }
+
+    if (field === 'series') localSeries = value;
+    else if (field === 'roadNumber') localRoadNumber = value;
+    else if (field === 'livery') localLivery = value;
   }
 </script>
 
@@ -49,32 +91,56 @@
       {/if}
 
       <dl class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
-        {#if rollingStock.series}
-          <div>
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_series()}
-            </dt>
-            <dd class="mt-1 text-sm">{rollingStock.series}</dd>
-          </div>
-        {/if}
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_series()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <InPlaceEdit
+                value={localSeries}
+                placeholder={m.rolling_stock_field_series_code()}
+                onSave={(v) => saveIdentificationField('series', v)}
+              />
+            {:else}
+              {localSeries || '—'}
+            {/if}
+          </dd>
+        </div>
 
-        {#if rollingStock.roadNumber}
-          <div>
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_road_number()}
-            </dt>
-            <dd class="mt-1 text-sm">{rollingStock.roadNumber}</dd>
-          </div>
-        {/if}
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_road_number()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <InPlaceEdit
+                value={localRoadNumber}
+                placeholder={m.rolling_stock_field_road_number()}
+                onSave={(v) => saveIdentificationField('roadNumber', v)}
+              />
+            {:else}
+              {localRoadNumber || '—'}
+            {/if}
+          </dd>
+        </div>
 
-        {#if rollingStock.livery}
-          <div>
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_livery()}
-            </dt>
-            <dd class="mt-1 text-sm">{rollingStock.livery}</dd>
-          </div>
-        {/if}
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_livery()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <InPlaceEdit
+                value={localLivery}
+                placeholder={m.rolling_stock_field_livery()}
+                onSave={(v) => saveIdentificationField('livery', v)}
+              />
+            {:else}
+              {localLivery || '—'}
+            {/if}
+          </dd>
+        </div>
 
         {#if rollingStock.railwayCompanyName}
           <div>

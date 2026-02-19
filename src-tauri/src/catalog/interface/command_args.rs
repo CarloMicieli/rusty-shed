@@ -6,8 +6,9 @@ use crate::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
         RailwayModelTextField, SaveRailwayModelInput, SimplifiedRollingStockInput,
         TechnicalSpecificationsInput, UpdateRailwayModelTextInput,
+        UpdateRollingStockIdentificationInput,
     },
-    catalog::domain::railway_model::RailwayModelId,
+    catalog::domain::railway_model::{RailwayModelId, RollingStockId},
     core::domain::domain_error::DomainError,
 };
 
@@ -911,6 +912,39 @@ impl From<UpdateRailwayModelTextArgs> for UpdateRailwayModelTextInput {
             railway_model_id: args.railway_model_id,
             field: args.field,
             value: args.value,
+        }
+    }
+}
+
+/// Arguments for updating a rolling stock's identification fields (series_code, road_number,
+/// livery, depot) via an in-place inline edit.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockIdentificationArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+    /// New series code (required, non-empty).
+    pub series_code: String,
+    /// Optional road number; empty string or absent means clear.
+    pub road_number: Option<String>,
+    /// Optional livery; empty string or absent means clear.
+    pub livery: Option<String>,
+    /// Optional depot; empty string or absent means clear.
+    pub depot: Option<String>,
+}
+
+impl From<UpdateRollingStockIdentificationArgs> for UpdateRollingStockIdentificationInput {
+    fn from(args: UpdateRollingStockIdentificationArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            series_code: args.series_code,
+            road_number: args.road_number,
+            livery: args.livery,
+            depot: args.depot,
         }
     }
 }

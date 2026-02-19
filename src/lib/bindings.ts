@@ -205,6 +205,23 @@ export const commands = {
     }
   },
   /**
+   * Update the identification fields (series_code, road_number, livery, depot) of a single
+   * rolling stock unit within a railway model.
+   */
+  async updateRollingStockIdentification(
+    args: UpdateRollingStockIdentificationArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_rolling_stock_identification', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Simplified flow: save (merge) the railway model and add it to the default collection.
    */
   async addRailwayModelToCollection(
@@ -5593,6 +5610,17 @@ export type UpdateRailwayModelTextArgs = {
   railwayModelId: RailwayModelId;
   field: RailwayModelTextField;
   value: string;
+};
+/**
+ * Arguments for updating a rolling stock's identification fields via inline edit.
+ */
+export type UpdateRollingStockIdentificationArgs = {
+  railwayModelId: RailwayModelId;
+  rollingStockId: RollingStockId;
+  seriesCode: string;
+  roadNumber: string | null;
+  livery: string | null;
+  depot: string | null;
 };
 /**
  * Identifies which free-text field on a RailwayModel is being updated.

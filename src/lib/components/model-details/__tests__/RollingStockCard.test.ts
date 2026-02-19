@@ -44,6 +44,7 @@ describe('RollingStockCard', () => {
     it('should render card header with series and road number', () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -58,6 +59,7 @@ describe('RollingStockCard', () => {
       } as unknown as OwnedRollingStockView;
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: stockWithoutSeries
         }
       });
@@ -72,6 +74,7 @@ describe('RollingStockCard', () => {
       } as unknown as OwnedRollingStockView;
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: stockWithoutRoadNumber
         }
       });
@@ -82,6 +85,7 @@ describe('RollingStockCard', () => {
     it('should not render expanded content initially', () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -94,6 +98,7 @@ describe('RollingStockCard', () => {
     it('should expand card when header is clicked', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -109,6 +114,7 @@ describe('RollingStockCard', () => {
     it('should collapse card when clicked again', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -127,6 +133,7 @@ describe('RollingStockCard', () => {
     it('should toggle chevron icon on expand/collapse', async () => {
       const { container } = render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -148,6 +155,7 @@ describe('RollingStockCard', () => {
     it('should render all fields when expanded', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -173,6 +181,7 @@ describe('RollingStockCard', () => {
     it('should render digital setup when present', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -189,6 +198,7 @@ describe('RollingStockCard', () => {
     it('should render notes when present', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -214,6 +224,7 @@ describe('RollingStockCard', () => {
 
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: minimalStock
         }
       });
@@ -233,6 +244,7 @@ describe('RollingStockCard', () => {
     it('should have button role for header', () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -244,6 +256,7 @@ describe('RollingStockCard', () => {
     it('should have aria-expanded attribute', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -258,6 +271,7 @@ describe('RollingStockCard', () => {
     it('should be keyboard accessible', async () => {
       render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -274,6 +288,7 @@ describe('RollingStockCard', () => {
     it('should use semantic HTML for definition list', async () => {
       const { container } = render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -296,6 +311,7 @@ describe('RollingStockCard', () => {
     it('should use responsive grid layout', async () => {
       const { container } = render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });
@@ -311,6 +327,7 @@ describe('RollingStockCard', () => {
     it('should apply hover effects to header', () => {
       const { container } = render(RollingStockCard, {
         props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
           rollingStock: mockRollingStock
         }
       });

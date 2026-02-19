@@ -11,3 +11,4 @@ pub use command_args::SimplifiedRailwayModelArgs;
 pub use command_args::SimplifiedRollingStockArgs;
 pub use command_args::TechnicalSpecificationsArgs;
 pub use command_args::UpdateRailwayModelTextArgs;
+pub use command_args::UpdateRollingStockIdentificationArgs;
