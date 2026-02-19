@@ -1,11 +1,12 @@
 use crate::catalog::application::{
-    AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelText,
-    UpdateRollingStockIdentification,
+    AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelClassification,
+    UpdateRailwayModelText, UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::interface::{
-    CreateRailwayModelArgs, UpdateRailwayModelTextArgs, UpdateRollingStockIdentificationArgs,
+    CreateRailwayModelArgs, UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs,
+    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -126,6 +127,63 @@ pub async fn update_rolling_stock_identification(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRollingStockIdentification::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update the constrained classification fields (scale and/or epoch) of a railway model.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model with optional scale and epoch values.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model does not exist.
+/// - `Err(CommandError::ValidationError)` when neither scale nor epoch is provided.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_railway_model_classification(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRailwayModelClassificationArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating railway model classification for {}",
+        args.railway_model_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRailwayModelClassification::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update the railway company of a single rolling stock unit.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, rolling stock, and new railway company id.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway company, model, or rolling stock does not exist.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_railway_company(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockRailwayCompanyArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating railway company for rolling stock {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockRailwayCompany::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())

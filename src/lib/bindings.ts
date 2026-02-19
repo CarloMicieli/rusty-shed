@@ -222,6 +222,38 @@ export const commands = {
     }
   },
   /**
+   * Update the constrained classification fields (scale and/or epoch) of a railway model.
+   */
+  async updateRailwayModelClassification(
+    args: UpdateRailwayModelClassificationArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_railway_model_classification', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Update the railway company of a single rolling stock unit.
+   */
+  async updateRollingStockRailwayCompany(
+    args: UpdateRollingStockRailwayCompanyArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_rolling_stock_railway_company', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Simplified flow: save (merge) the railway model and add it to the default collection.
    */
   async addRailwayModelToCollection(
@@ -5621,6 +5653,23 @@ export type UpdateRollingStockIdentificationArgs = {
   roadNumber: string | null;
   livery: string | null;
   depot: string | null;
+};
+/**
+ * Arguments for updating the constrained classification fields (scale and/or epoch) of a
+ * railway model via a badge picker.
+ */
+export type UpdateRailwayModelClassificationArgs = {
+  railwayModelId: RailwayModelId;
+  scale: Scale | null;
+  epoch: Epoch | null;
+};
+/**
+ * Arguments for updating the railway company of a rolling stock unit via a badge picker.
+ */
+export type UpdateRollingStockRailwayCompanyArgs = {
+  railwayModelId: RailwayModelId;
+  rollingStockId: RollingStockId;
+  railwayCompanyId: RailwayCompanyId;
 };
 /**
  * Identifies which free-text field on a RailwayModel is being updated.

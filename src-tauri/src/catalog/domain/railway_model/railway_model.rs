@@ -451,6 +451,38 @@ mod tests {
         }
     }
 
+    // --- T022: US3 tests (update_rolling_stock_railway_company) ---
+
+    #[test]
+    fn update_rolling_stock_railway_company_emits_event() {
+        let mut model = make_test_model();
+        let rs_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
+        let loco = make_test_locomotive(rs_id.clone());
+        model.rolling_stocks.push(loco);
+
+        let new_company = RailwayCompanyId::try_from("trn:railway-company:sncf").unwrap();
+        let result = model.update_rolling_stock_railway_company(&rs_id, new_company);
+        assert!(result.is_ok());
+        let events = model.pull_events();
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            RailwayModelEvent::RollingStockUpdated { changed, rolling_stock_id, .. } => {
+                assert_eq!(*rolling_stock_id, rs_id);
+                assert_eq!(changed["railway_company_id"], "trn:railway-company:sncf");
+            }
+            _ => panic!("expected RollingStockUpdated"),
+        }
+    }
+
+    #[test]
+    fn update_rolling_stock_railway_company_not_found_returns_error() {
+        let mut model = make_test_model();
+        let missing_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
+        let company = RailwayCompanyId::try_from("trn:railway-company:db").unwrap();
+        let result = model.update_rolling_stock_railway_company(&missing_id, company);
+        assert!(matches!(result, Err(DomainError::NotFound { .. })));
+    }
+
     // --- T034: US4 tests (update_rolling_stock_specifications) ---
 
     #[test]

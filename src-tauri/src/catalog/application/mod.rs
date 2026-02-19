@@ -5,8 +5,10 @@ mod get_railway_companies;
 mod get_railway_company_by_id;
 mod get_railway_model_by_id;
 mod save_railway_model;
+mod update_railway_model_classification;
 mod update_railway_model_text;
 mod update_rolling_stock_identification;
+mod update_rolling_stock_railway_company;
 
 #[cfg(test)]
 mod testing;
@@ -24,7 +26,11 @@ pub use get_railway_model_by_id::GetRailwayModelById;
 pub use get_railway_model_by_id::GetRailwayModelViewById;
 pub use save_railway_model::SaveRailwayModel;
 pub use save_railway_model::{SaveRailwayModelInput, SimplifiedRollingStockInput};
+pub use update_railway_model_classification::UpdateRailwayModelClassification;
+pub use update_railway_model_classification::UpdateRailwayModelClassificationInput;
 pub use update_railway_model_text::UpdateRailwayModelText;
 pub use update_railway_model_text::{RailwayModelTextField, UpdateRailwayModelTextInput};
 pub use update_rolling_stock_identification::UpdateRollingStockIdentification;
 pub use update_rolling_stock_identification::UpdateRollingStockIdentificationInput;
+pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompany;
+pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompanyInput;

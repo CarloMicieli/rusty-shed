@@ -156,6 +156,8 @@ pub fn run() {
         catalog_command_handlers::create_railway_model,
         catalog_command_handlers::update_railway_model_text,
         catalog_command_handlers::update_rolling_stock_identification,
+        catalog_command_handlers::update_railway_model_classification,
+        catalog_command_handlers::update_rolling_stock_railway_company,
         collecting_command_handlers::add_railway_model_to_collection,
         collecting_command_handlers::remove_collection_item,
         wishlist_command_handlers::add_railway_model_to_wish_list,

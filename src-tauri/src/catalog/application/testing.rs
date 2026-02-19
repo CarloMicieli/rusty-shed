@@ -38,6 +38,17 @@ impl FakeUow {
             ..Default::default()
         }
     }
+
+    pub fn with_company_and_model_repos(
+        railway_companies_repo: MockRailwayCompanyRepository,
+        railway_models_repo: MockRailwayModelRepository,
+    ) -> Self {
+        Self {
+            manufacturers_repo: None,
+            railway_companies_repo: Some(railway_companies_repo),
+            railway_models_repo: Some(railway_models_repo),
+        }
+    }
 }
 
 impl ManufacturerUowExt for FakeUow {

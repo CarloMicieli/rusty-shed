@@ -5,10 +5,13 @@ use crate::{
     catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
         RailwayModelTextField, SaveRailwayModelInput, SimplifiedRollingStockInput,
-        TechnicalSpecificationsInput, UpdateRailwayModelTextInput,
-        UpdateRollingStockIdentificationInput,
+        TechnicalSpecificationsInput, UpdateRailwayModelClassificationInput,
+        UpdateRailwayModelTextInput, UpdateRollingStockIdentificationInput,
+        UpdateRollingStockRailwayCompanyInput,
     },
-    catalog::domain::railway_model::{RailwayModelId, RollingStockId},
+    catalog::domain::railway_company::RailwayCompanyId,
+    catalog::domain::railway_model::{Epoch, RailwayModelId, RollingStockId},
+    catalog::domain::scale::Scale,
     core::domain::domain_error::DomainError,
 };
 
@@ -945,6 +948,61 @@ impl From<UpdateRollingStockIdentificationArgs> for UpdateRollingStockIdentifica
             road_number: args.road_number,
             livery: args.livery,
             depot: args.depot,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRailwayModelClassification args
+// ---------------------------------------------------------------------------
+
+/// Arguments for updating the constrained classification fields (scale and/or epoch) of a
+/// railway model via a badge picker.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRailwayModelClassificationArgs {
+    /// The railway model to update.
+    pub railway_model_id: RailwayModelId,
+    /// New scale value, if being updated.
+    pub scale: Option<Scale>,
+    /// New epoch value, if being updated.
+    pub epoch: Option<Epoch>,
+}
+
+impl From<UpdateRailwayModelClassificationArgs> for UpdateRailwayModelClassificationInput {
+    fn from(args: UpdateRailwayModelClassificationArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            scale: args.scale,
+            epoch: args.epoch,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRollingStockRailwayCompany args
+// ---------------------------------------------------------------------------
+
+/// Arguments for updating the railway company of a rolling stock unit via a badge picker.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockRailwayCompanyArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+    /// The new railway company id (must exist in the database).
+    pub railway_company_id: RailwayCompanyId,
+}
+
+impl From<UpdateRollingStockRailwayCompanyArgs> for UpdateRollingStockRailwayCompanyInput {
+    fn from(args: UpdateRollingStockRailwayCompanyArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            railway_company_id: args.railway_company_id,
         }
     }
 }
