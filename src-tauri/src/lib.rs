@@ -154,6 +154,7 @@ pub fn run() {
         railway_companies_command_handlers::get_railway_companies,
         railway_companies_command_handlers::get_railway_company_by_id,
         catalog_command_handlers::create_railway_model,
+        catalog_command_handlers::update_railway_model_text,
         collecting_command_handlers::add_railway_model_to_collection,
         collecting_command_handlers::remove_collection_item,
         wishlist_command_handlers::add_railway_model_to_wish_list,

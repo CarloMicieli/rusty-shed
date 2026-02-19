@@ -5,6 +5,7 @@ mod get_railway_companies;
 mod get_railway_company_by_id;
 mod get_railway_model_by_id;
 mod save_railway_model;
+mod update_railway_model_text;
 
 #[cfg(test)]
 mod testing;
@@ -22,3 +23,5 @@ pub use get_railway_model_by_id::GetRailwayModelById;
 pub use get_railway_model_by_id::GetRailwayModelViewById;
 pub use save_railway_model::SaveRailwayModel;
 pub use save_railway_model::{SaveRailwayModelInput, SimplifiedRollingStockInput};
+pub use update_railway_model_text::UpdateRailwayModelText;
+pub use update_railway_model_text::{RailwayModelTextField, UpdateRailwayModelTextInput};

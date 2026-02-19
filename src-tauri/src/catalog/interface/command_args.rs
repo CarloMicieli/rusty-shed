@@ -4,8 +4,10 @@ use serde::Deserialize;
 use crate::{
     catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
-        SaveRailwayModelInput, SimplifiedRollingStockInput, TechnicalSpecificationsInput,
+        RailwayModelTextField, SaveRailwayModelInput, SimplifiedRollingStockInput,
+        TechnicalSpecificationsInput, UpdateRailwayModelTextInput,
     },
+    catalog::domain::railway_model::RailwayModelId,
     core::domain::domain_error::DomainError,
 };
 
@@ -881,6 +883,34 @@ mod tests {
                 assert_eq!(passenger_car_type, "Coach");
             }
             _ => panic!("expected passenger car in second position"),
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRailwayModelText args
+// ---------------------------------------------------------------------------
+
+/// Transport args for updating a single free-text field on a `RailwayModel`.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRailwayModelTextArgs {
+    /// The railway model to update.
+    pub railway_model_id: RailwayModelId,
+    /// Which free-text field to update.
+    pub field: RailwayModelTextField,
+    /// New value. An empty string for `Details` clears the field; an empty
+    /// string for `Description` is rejected by the domain.
+    pub value: String,
+}
+
+impl From<UpdateRailwayModelTextArgs> for UpdateRailwayModelTextInput {
+    fn from(args: UpdateRailwayModelTextArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            field: args.field,
+            value: args.value,
         }
     }
 }

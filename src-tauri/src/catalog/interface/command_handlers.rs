@@ -1,7 +1,7 @@
-use crate::catalog::application::{AddRailwayModel, GetRailwayModelViewById};
+use crate::catalog::application::{AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelText};
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
-use crate::catalog::interface::CreateRailwayModelArgs;
+use crate::catalog::interface::{CreateRailwayModelArgs, UpdateRailwayModelTextArgs};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use log::info;
@@ -65,4 +65,33 @@ pub async fn create_railway_model(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model_id)
+}
+
+/// Update a single free-text field (description or details) of a railway model.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, field, and new value.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model does not exist.
+/// - `Err(CommandError::ValidationError)` when the value is invalid (e.g., empty description).
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_railway_model_text(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRailwayModelTextArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating railway model text field {:?} for {}",
+        args.field, args.railway_model_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRailwayModelText::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
 }

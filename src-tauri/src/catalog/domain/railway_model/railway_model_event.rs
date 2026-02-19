@@ -35,4 +35,13 @@ pub enum RailwayModelEvent {
         timestamp: NaiveDateTime,
         rolling_stock_id: RollingStockId,
     },
+    /// Emitted when a rolling stock's fields are updated.
+    RollingStockUpdated {
+        event_id: Uuid,
+        railway_model_id: RailwayModelId,
+        rolling_stock_id: RollingStockId,
+        timestamp: NaiveDateTime,
+        /// Minimal patch describing changed fields (same convention as RailwayModelUpdated.changed).
+        changed: serde_json::Value,
+    },
 }

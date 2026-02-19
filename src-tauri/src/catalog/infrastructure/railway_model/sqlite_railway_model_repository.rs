@@ -122,6 +122,117 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         Ok(rows)
     }
 
+    /// Apply a minimal patch update to a rolling stock row from a `changed` JSON object.
+    ///
+    /// Detects the patch type from the keys present in `changed`:
+    /// - Only `railway_company_id` → railway company patch (1 column)
+    /// - `series_code` but no `flywheel_fitted` → identification patch (4 columns)
+    /// - `series_code` with `flywheel_fitted` → full specifications patch (14 columns)
+    async fn update_rolling_stock_from_patch(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        changed: &serde_json::Value,
+    ) -> Result<(), DomainError> {
+        let map = match changed {
+            serde_json::Value::Object(m) => m,
+            _ => return Ok(()),
+        };
+
+        if map.contains_key("railway_company_id") {
+            // Railway company patch
+            let company_id = map
+                .get("railway_company_id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            sqlx::query(
+                "UPDATE rolling_stocks SET railway_company_id = ?1 WHERE id = ?2",
+            )
+            .bind(company_id)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        } else if map.contains_key("series_code") && map.contains_key("flywheel_fitted") {
+            // Full specifications patch (14 columns)
+            let series_code = map.get("series_code").and_then(|v| v.as_str()).unwrap_or("");
+            let road_number = map.get("road_number").and_then(|v| v.as_str());
+            let livery = map.get("livery").and_then(|v| v.as_str());
+            let depot = map.get("depot").and_then(|v| v.as_str());
+            let flywheel = map.get("flywheel_fitted").and_then(|v| v.as_str());
+            let body_shell = map.get("body_shell").and_then(|v| v.as_str());
+            let chassis = map.get("chassis").and_then(|v| v.as_str());
+            let interior_lights = map.get("interior_lights").and_then(|v| v.as_str());
+            let lights = map.get("lights").and_then(|v| v.as_str());
+            let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
+            let control = map.get("control").and_then(|v| v.as_str());
+            let coupling_socket = map.get("coupling_socket").and_then(|v| v.as_str());
+            let close_couplers = map.get("close_couplers").and_then(|v| v.as_str());
+            let digital_shunting = map.get("digital_shunting").and_then(|v| v.as_str());
+
+            sqlx::query(r#"
+                UPDATE rolling_stocks
+                SET series_code = ?1,
+                    road_number = ?2,
+                    livery = ?3,
+                    depot = ?4,
+                    technical_flywheel_fitted = ?5,
+                    technical_body_shell = ?6,
+                    technical_chassis = ?7,
+                    technical_interior_lights = ?8,
+                    technical_lights = ?9,
+                    dcc_interface = ?10,
+                    control = ?11,
+                    technical_coupling_socket = ?12,
+                    technical_coupling_close_couplers = ?13,
+                    technical_coupling_digital_shunting = ?14
+                WHERE id = ?15
+            "#)
+            .bind(series_code)
+            .bind(road_number)
+            .bind(livery)
+            .bind(depot)
+            .bind(flywheel)
+            .bind(body_shell)
+            .bind(chassis)
+            .bind(interior_lights)
+            .bind(lights)
+            .bind(dcc_interface)
+            .bind(control)
+            .bind(coupling_socket)
+            .bind(close_couplers)
+            .bind(digital_shunting)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        } else if map.contains_key("series_code") {
+            // Identification patch (4 columns)
+            let series_code = map.get("series_code").and_then(|v| v.as_str()).unwrap_or("");
+            let road_number = map.get("road_number").and_then(|v| v.as_str());
+            let livery = map.get("livery").and_then(|v| v.as_str());
+            let depot = map.get("depot").and_then(|v| v.as_str());
+
+            sqlx::query(r#"
+                UPDATE rolling_stocks
+                SET series_code = ?1,
+                    road_number = ?2,
+                    livery = ?3,
+                    depot = ?4
+                WHERE id = ?5
+            "#)
+            .bind(series_code)
+            .bind(road_number)
+            .bind(livery)
+            .bind(depot)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        }
+
+        Ok(())
+    }
+
     /// Inserts a new railway model into the database.
     async fn insert_railway_model(
         &mut self,
@@ -709,6 +820,26 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                                 .await
                                 .map_err(DomainError::from)?;
                         }
+
+                        if let Some(serde_json::Value::String(scale)) = map.get("scale") {
+                            let update_cmd = r#"UPDATE railway_models SET scale = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(scale)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+
+                        if let Some(serde_json::Value::String(epoch)) = map.get("epoch") {
+                            let update_cmd = r#"UPDATE railway_models SET epoch = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(epoch)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
                     }
                 }
                 RailwayModelEvent::RollingStockAdded {
@@ -729,6 +860,14 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                         .execute(&mut *self.executor)
                         .await
                         .map_err(DomainError::from)?;
+                }
+                RailwayModelEvent::RollingStockUpdated {
+                    rolling_stock_id,
+                    changed,
+                    ..
+                } => {
+                    self.update_rolling_stock_from_patch(&rolling_stock_id, &changed)
+                        .await?;
                 }
             }
         }

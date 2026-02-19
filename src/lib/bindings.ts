@@ -183,6 +183,28 @@ export const commands = {
     }
   },
   /**
+   * Update a single free-text field (description or details) of a railway model.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model does not exist.
+   * - `Err(CommandError::ValidationError)` when the value is invalid (e.g., empty description).
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRailwayModelText(
+    args: UpdateRailwayModelTextArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_railway_model_text', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Simplified flow: save (merge) the railway model and add it to the default collection.
    */
   async addRailwayModelToCollection(
@@ -5564,6 +5586,18 @@ export type UpdateSellerPayload = {
   countryCode: string | null;
   createdAt: string | null;
 };
+/**
+ * Transport args for updating a single free-text field on a RailwayModel.
+ */
+export type UpdateRailwayModelTextArgs = {
+  railwayModelId: RailwayModelId;
+  field: RailwayModelTextField;
+  value: string;
+};
+/**
+ * Identifies which free-text field on a RailwayModel is being updated.
+ */
+export type RailwayModelTextField = 'Description' | 'Details';
 /**
  * Input for partial settings updates
  */

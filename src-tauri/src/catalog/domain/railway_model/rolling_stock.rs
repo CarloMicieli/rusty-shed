@@ -1,14 +1,52 @@
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::ServiceLevel;
+use crate::catalog::domain::railway_model::body_shell_type::BodyShellType;
 use crate::catalog::domain::railway_model::category::{
     ElectricMultipleUnitType, FreightCarType, LocomotiveType, PassengerCarType, RailcarType,
     RollingStockCategory,
 };
+use crate::catalog::domain::railway_model::chassis_type::ChassisType;
 use crate::catalog::domain::railway_model::control::Control;
+use crate::catalog::domain::railway_model::coupling::Coupling;
+use crate::catalog::domain::railway_model::coupling_socket::CouplingSocket;
 use crate::catalog::domain::railway_model::dcc_interface::DccInterface;
+use crate::catalog::domain::railway_model::feature_flag::FeatureFlag;
 use crate::catalog::domain::railway_model::length_over_buffers::LengthOverBuffers;
 use crate::catalog::domain::railway_model::rolling_stock_id::RollingStockId;
 use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecifications;
+
+/// A patch containing all fields that can be updated in the technical specification drawer.
+#[derive(Debug, Clone)]
+pub struct RollingStockSpecPatch {
+    /// Series code — required, non-empty.
+    pub series_code: String,
+    /// Optional road number.
+    pub road_number: Option<String>,
+    /// Optional livery description.
+    pub livery: Option<String>,
+    /// Optional depot name.
+    pub depot: Option<String>,
+    /// Optional flywheel flag.
+    pub flywheel_fitted: Option<FeatureFlag>,
+    /// Optional body shell material.
+    pub body_shell: Option<BodyShellType>,
+    /// Optional chassis material.
+    pub chassis: Option<ChassisType>,
+    /// Optional interior lights flag.
+    pub interior_lights: Option<FeatureFlag>,
+    /// Optional lights flag.
+    pub lights: Option<FeatureFlag>,
+    /// Optional DCC interface type.
+    pub dcc_interface: Option<DccInterface>,
+    /// Optional control type.
+    pub control: Option<Control>,
+    /// Optional coupling socket type.
+    pub coupling_socket: Option<CouplingSocket>,
+    /// Optional close couplers flag.
+    pub close_couplers: Option<FeatureFlag>,
+    /// Optional digital shunting flag.
+    pub digital_shunting: Option<FeatureFlag>,
+}
 
 #[derive(Debug, Clone)]
 pub enum RollingStock {
@@ -293,6 +331,228 @@ impl RollingStock {
             } => Some(*dcc_interface),
             _ => None,
         }
+    }
+
+    /// Apply an identification patch (series_code, road_number, livery, depot) to this rolling
+    /// stock and return a JSON object representing only the changed fields.
+    pub fn apply_identification_patch(
+        &mut self,
+        series_code: String,
+        road_number: Option<String>,
+        livery: Option<String>,
+        depot: Option<String>,
+    ) -> serde_json::Value {
+        macro_rules! set_field {
+            ($variant_field:expr, $value:expr) => {
+                $variant_field = $value;
+            };
+        }
+
+        match self {
+            RollingStock::Locomotive {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                ..
+            } => {
+                set_field!(*sc, series_code.clone());
+                set_field!(*rn, road_number.clone());
+                set_field!(*lv, livery.clone());
+                set_field!(*dp, depot.clone());
+            }
+            RollingStock::ElectricMultipleUnit {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                ..
+            } => {
+                set_field!(*sc, series_code.clone());
+                set_field!(*rn, road_number.clone());
+                set_field!(*lv, livery.clone());
+                set_field!(*dp, depot.clone());
+            }
+            RollingStock::Railcar {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                ..
+            } => {
+                set_field!(*sc, series_code.clone());
+                set_field!(*rn, road_number.clone());
+                set_field!(*lv, livery.clone());
+                set_field!(*dp, depot.clone());
+            }
+            RollingStock::FreightCar {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                ..
+            } => {
+                set_field!(*sc, series_code.clone());
+                set_field!(*rn, road_number.clone());
+                set_field!(*lv, livery.clone());
+            }
+            RollingStock::PassengerCar {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                ..
+            } => {
+                set_field!(*sc, series_code.clone());
+                set_field!(*rn, road_number.clone());
+                set_field!(*lv, livery.clone());
+            }
+        }
+
+        serde_json::json!({
+            "series_code": series_code,
+            "road_number": road_number,
+            "livery": livery,
+            "depot": depot,
+        })
+    }
+
+    /// Apply a railway company change to this rolling stock and return a JSON patch.
+    pub fn apply_railway_company(&mut self, company_id: RailwayCompanyId) -> serde_json::Value {
+        let id_str = company_id.to_string();
+
+        match self {
+            RollingStock::Locomotive { railway_id, .. } => *railway_id = company_id,
+            RollingStock::ElectricMultipleUnit { railway_id, .. } => *railway_id = company_id,
+            RollingStock::FreightCar { railway_id, .. } => *railway_id = company_id,
+            RollingStock::PassengerCar { railway_id, .. } => *railway_id = company_id,
+            RollingStock::Railcar { railway_id, .. } => *railway_id = company_id,
+        }
+
+        serde_json::json!({ "railway_company_id": id_str })
+    }
+
+    /// Apply a full technical specification patch to this rolling stock and return a JSON patch.
+    pub fn apply_specifications(&mut self, spec: RollingStockSpecPatch) -> serde_json::Value {
+        let coupling = if spec.coupling_socket.is_some()
+            || spec.close_couplers.is_some()
+            || spec.digital_shunting.is_some()
+        {
+            Some(Coupling {
+                socket: spec.coupling_socket,
+                close_couplers: spec.close_couplers,
+                digital_shunting: spec.digital_shunting,
+            })
+        } else {
+            None
+        };
+
+        let tech_specs = TechnicalSpecifications {
+            minimum_radius: None,
+            coupling,
+            flywheel_fitted: spec.flywheel_fitted,
+            body_shell: spec.body_shell,
+            chassis: spec.chassis,
+            interior_lights: spec.interior_lights,
+            lights: spec.lights,
+            sprung_buffers: None,
+        };
+
+        match self {
+            RollingStock::Locomotive {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                technical_specifications: ts,
+                dcc_interface: di,
+                control: ct,
+                ..
+            } => {
+                *sc = spec.series_code.clone();
+                *rn = spec.road_number.clone();
+                *lv = spec.livery.clone();
+                *dp = spec.depot.clone();
+                *ts = Some(tech_specs);
+                *di = spec.dcc_interface;
+                *ct = spec.control;
+            }
+            RollingStock::ElectricMultipleUnit {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                technical_specifications: ts,
+                dcc_interface: di,
+                control: ct,
+                ..
+            } => {
+                *sc = spec.series_code.clone();
+                *rn = spec.road_number.clone();
+                *lv = spec.livery.clone();
+                *dp = spec.depot.clone();
+                *ts = Some(tech_specs);
+                *di = spec.dcc_interface;
+                *ct = spec.control;
+            }
+            RollingStock::Railcar {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                depot: dp,
+                technical_specifications: ts,
+                dcc_interface: di,
+                control: ct,
+                ..
+            } => {
+                *sc = spec.series_code.clone();
+                *rn = spec.road_number.clone();
+                *lv = spec.livery.clone();
+                *dp = spec.depot.clone();
+                *ts = Some(tech_specs);
+                *di = spec.dcc_interface;
+                *ct = spec.control;
+            }
+            RollingStock::FreightCar {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                technical_specifications: ts,
+                ..
+            } => {
+                *sc = spec.series_code.clone();
+                *rn = spec.road_number.clone();
+                *lv = spec.livery.clone();
+                *ts = Some(tech_specs);
+            }
+            RollingStock::PassengerCar {
+                series_code: sc,
+                road_number: rn,
+                livery: lv,
+                technical_specifications: ts,
+                ..
+            } => {
+                *sc = spec.series_code.clone();
+                *rn = spec.road_number.clone();
+                *lv = spec.livery.clone();
+                *ts = Some(tech_specs);
+            }
+        }
+
+        serde_json::json!({
+            "series_code": spec.series_code,
+            "road_number": spec.road_number,
+            "livery": spec.livery,
+            "depot": spec.depot,
+            "flywheel_fitted": spec.flywheel_fitted.map(|f| f.to_string()),
+            "body_shell": spec.body_shell.map(|b| b.to_string()),
+            "chassis": spec.chassis.map(|c| c.to_string()),
+            "interior_lights": spec.interior_lights.map(|f| f.to_string()),
+            "lights": spec.lights.map(|f| f.to_string()),
+            "dcc_interface": spec.dcc_interface.map(|d| d.to_string()),
+            "control": spec.control.map(|c| c.to_string()),
+            "coupling_socket": spec.coupling_socket.map(|s| s.to_string()),
+            "close_couplers": spec.close_couplers.map(|f| f.to_string()),
+            "digital_shunting": spec.digital_shunting.map(|f| f.to_string()),
+        })
     }
 
     /// Return true if the rolling stock has a decoder, false otherwise
