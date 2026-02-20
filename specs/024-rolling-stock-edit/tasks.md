@@ -78,7 +78,7 @@
 > Write these tests BEFORE implementing T015–T021 and verify they fail first
 
 - [x] T013 [P] [US2] Write `#[cfg(test)]` unit tests in `src-tauri/src/catalog/domain/railway_model/railway_model.rs` covering: `update_rolling_stock_identification` with `RoadNumber` emits `RollingStockUpdated` with `{"road_number": "123"}`; clearing road number (empty string) emits `{"road_number": null}`; empty `SeriesCode` returns `DomainError::Validation`
-- [ ] T014 [P] [US2] Create Vitest test file `src/__tests__/components/RollingStockCard.test.ts` covering: InPlaceEdit on series code field triggers save callback; after a successful card save, subsequent drawer open shows the updated value (FR-013 verification)
+- [x] T014 [P] [US2] Create Vitest test file `src/__tests__/components/RollingStockCard.test.ts` covering: InPlaceEdit on series code field triggers save callback; after a successful card save, subsequent drawer open shows the updated value (FR-013 verification)
 
 ### Implementation for User Story 2
 
@@ -107,7 +107,7 @@
 > Write these tests BEFORE implementing T024–T033 and verify they fail first
 
 - [x] T022 [P] [US3] Write `#[cfg(test)]` unit tests in `src-tauri/src/catalog/domain/railway_model/railway_model.rs` covering: `update_scale(Scale::N)` emits `RailwayModelUpdated` with `{"scale": "N"}`; `update_epoch(Epoch::IV)` emits `{"epoch": "IV"}`; `update_rolling_stock_railway_company` emits `RollingStockUpdated` with `{"railway_company_id": "sncf"}`; invalid `railway_company_id` (not in DB) returns `DomainError::NotFound`
-- [ ] T023 [P] [US3] Create Vitest component test file `src/__tests__/components/BadgePicker.test.ts` covering: picker opens on trigger click; selecting an option calls `onSelect` with the selected id and closes the picker; pressing Escape closes the picker without calling `onSelect`; if `onSelect` rejects, the displayed value reverts to the original
+- [x] T023 [P] [US3] Create Vitest component test file `src/__tests__/components/BadgePicker.test.ts` covering: picker opens on trigger click; selecting an option calls `onSelect` with the selected id and closes the picker; pressing Escape closes the picker without calling `onSelect`; if `onSelect` rejects, the displayed value reverts to the original
 
 ### Implementation for User Story 3
 
@@ -139,7 +139,7 @@
 > Write these tests BEFORE implementing T036–T042 and verify they fail first
 
 - [x] T034 [P] [US4] Write `#[cfg(test)]` unit tests in `src-tauri/src/catalog/domain/railway_model/railway_model.rs` covering: `update_rolling_stock_specifications` with full payload emits `RollingStockUpdated` with all 14 section fields in `changed`; empty `series_code` on drawer save returns `DomainError::Validation`; payload where all optional fields are `None` is accepted without error
-- [ ] T035 [P] [US4] Create Vitest component test file `src/__tests__/components/RollingStockSpecsDrawer.test.ts` covering: drawer populates all fields from mocked `getRailwayModelById` response; dirty-check triggers confirmation dialog when attempting to close with unsaved changes (FR-027); inline error is shown and drawer stays open when `updateRollingStockSpecifications` rejects with all entered values preserved (FR-028)
+- [x] T035 [P] [US4] Create Vitest component test file `src/__tests__/components/RollingStockSpecsDrawer.test.ts` covering: drawer populates all fields from mocked `getRailwayModelById` response; dirty-check triggers confirmation dialog when attempting to close with unsaved changes (FR-027); inline error is shown and drawer stays open when `updateRollingStockSpecifications` rejects with all entered values preserved (FR-028)
 
 ### Implementation for User Story 4
 
