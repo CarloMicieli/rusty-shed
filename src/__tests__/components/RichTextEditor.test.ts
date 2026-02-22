@@ -49,7 +49,6 @@ function getLastEditorInstance(): MockEditorInstance | null {
   return results[results.length - 1].value as MockEditorInstance;
 }
 
- 
 function setupEditorMock(overrides?: Partial<MockEditorInstance>): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (vi.mocked(Editor) as any).mockImplementation(function (options: any) {
