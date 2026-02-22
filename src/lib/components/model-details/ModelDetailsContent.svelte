@@ -8,7 +8,7 @@
   let { details }: Props = $props();
 </script>
 
-<div class="prose dark:prose-invert max-w-none">
+<div class="prose max-w-none dark:prose-invert">
   {#if details}
     <p>{details}</p>
   {:else}

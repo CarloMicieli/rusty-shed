@@ -3,6 +3,12 @@ import { render } from '@testing-library/svelte';
 import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
 import type { RailwayModel } from '$lib/types/railway-model';
 
+// Mock Tiptap and marked (pulled in transitively by RichTextEditor)
+vi.mock('@tiptap/core', () => ({ Editor: vi.fn() }));
+vi.mock('@tiptap/starter-kit', () => ({ default: {} }));
+vi.mock('@tiptap/markdown', () => ({ Markdown: {} }));
+vi.mock('marked', () => ({ marked: { parse: vi.fn((s: string) => `<p>${s}</p>`) } }));
+
 // Mock Paraglide messages
 vi.mock('$lib/paraglide/messages', () => ({
   railway_model_details: () => 'Railway Model Details',
@@ -22,6 +28,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   railway_model_field_scale: () => 'Scale',
   railway_model_field_era: () => 'Era',
   railway_model_field_details: () => 'Details',
+  details_placeholder: () => 'Add maintenance notes, DCC addresses, or other details...',
   upload_error_unknown: () => 'Unknown upload error',
   error_invalid_image_format: () =>
     'Invalid image format. Please upload a JPEG, PNG, WebP, or GIF file.',
@@ -294,12 +301,16 @@ describe('RailwayModelCard', () => {
       const { container } = render(RailwayModelCard, { props: { model: noDetailsModel } });
 
       // Placeholder text should be visible in the Details tab content for multi-unit models
-      expect(container.textContent).toContain('No additional details');
+      expect(container.textContent).toContain(
+        'Add maintenance notes, DCC addresses, or other details...'
+      );
     });
 
     it('does NOT show placeholder when description exists', () => {
       const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-      expect(container.textContent).toContain('No additional details');
+      expect(container.textContent).toContain(
+        'Add maintenance notes, DCC addresses, or other details...'
+      );
     });
 
     it.todo('single-unit model does NOT display tabs');

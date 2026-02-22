@@ -806,5 +806,7 @@
   "specs_drawer_unsaved_message": "You have unsaved changes. Discard them?",
   "specs_drawer_unsaved_confirm": "Discard",
   "specs_drawer_save_success": "Specifications saved",
-  "specs_drawer_save_error": "Failed to save specifications. Please try again."
+  "specs_drawer_save_error": "Failed to save specifications. Please try again.",
+  "details_placeholder": "Add maintenance notes, DCC addresses, or other details...",
+  "details_save_failed": "Failed to save details. Please try again."
 }

@@ -23,6 +23,7 @@
   import { open } from '@tauri-apps/plugin-dialog';
   import * as m from '$lib/paraglide/messages';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import { commands, type Scale } from '$lib/bindings';
 
@@ -408,18 +409,12 @@
       <!-- ── Tab 1: Model Details ─────────────────────────────────────── -->
       <TabsContent value="details" class="mt-2">
         <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-          {#if editable}
-            <InPlaceEdit
-              value={localDetails}
-              placeholder={m.railway_model_field_details()}
-              multiline={true}
-              onSave={saveDetails}
-            />
-          {:else if model.details}
-            <p class="line-clamp-6 text-sm leading-relaxed text-zinc-400">{model.details}</p>
-          {:else}
-            <p class="text-sm text-zinc-600 italic">{m.no_additional_details()}</p>
-          {/if}
+          <RichTextEditor
+            value={localDetails}
+            {editable}
+            placeholder={m.details_placeholder()}
+            onSave={saveDetails}
+          />
         </div>
       </TabsContent>
 
