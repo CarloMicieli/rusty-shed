@@ -108,7 +108,7 @@ impl RailwayModel {
     /// Update scale and emit a RailwayModelUpdated event.
     pub fn update_scale(&mut self, scale: Scale) {
         self.scale = scale.clone();
-        let changed = json!({ "scale": scale.to_string() });
+        let changed = json!({ "scale": scale.as_code() });
         let ev = RailwayModelEvent::RailwayModelUpdated {
             event_id: uuid::Uuid::new_v4(),
             railway_model_id: self.id.clone(),
@@ -429,7 +429,7 @@ mod tests {
         assert_eq!(events.len(), 1);
         match &events[0] {
             RailwayModelEvent::RailwayModelUpdated { changed, .. } => {
-                assert_eq!(changed["scale"], "N (1:160)");
+                assert_eq!(changed["scale"], "N");
             }
             _ => panic!("expected RailwayModelUpdated"),
         }

@@ -6,6 +6,7 @@ use crate::catalog::domain::railway_model::{
 use crate::catalog::domain::railway_model::{
     RailwayModelView, RollingStockRailway, RollingStockView,
 };
+use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
@@ -829,10 +830,12 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                                 .map_err(DomainError::from)?;
                         }
 
-                        if let Some(serde_json::Value::String(scale)) = map.get("scale") {
+                        if let Some(serde_json::Value::String(scale_str)) = map.get("scale") {
+                            let scale = Scale::try_from(scale_str.as_str())
+                                .map_err(|e| DomainError::Validation(e.to_string()))?;
                             let update_cmd = r#"UPDATE railway_models SET scale = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
                             sqlx::query(update_cmd)
-                                .bind(scale)
+                                .bind(&scale)
                                 .bind(&railway_model_id)
                                 .execute(&mut *self.executor)
                                 .await

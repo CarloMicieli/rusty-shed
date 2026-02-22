@@ -35,6 +35,26 @@ pub enum Scale {
 }
 
 impl Scale {
+    /// Returns the short code string used for database storage and parsing.
+    ///
+    /// These codes match the inputs accepted by [`Scale::try_from`] (the
+    /// same labels used by `from_short`). They are distinct from the
+    /// [`Display`] output, which appends the ratio (e.g. `"H0 (1:87)"`).
+    pub fn as_code(&self) -> &'static str {
+        match self {
+            Scale::H0 => "H0",
+            Scale::H0m => "H0m",
+            Scale::H0e => "H0e",
+            Scale::N => "N",
+            Scale::TT => "TT",
+            Scale::Z => "Z",
+            Scale::G => "G",
+            Scale::Scale1 => "1",
+            Scale::Scale0 => "0",
+            Scale::Scale00 => "00",
+        }
+    }
+
     /// Returns the scale `Ratio` (the denominator in `1:ratio`).
     ///
     /// Examples: `Scale::H0` -> `1:87`, `Scale::G` -> `1:22.5`.
