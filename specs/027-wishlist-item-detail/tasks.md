@@ -18,7 +18,7 @@
 
 **Purpose**: Add the i18n foundation required by all user story phases.
 
-- [ ] T001 Add `wishlist_item_*` message keys to `messages/en.json` — keys: `wishlist_item_back`, `wishlist_item_not_found`, `wishlist_item_not_found_message`, `wishlist_item_loading`, `wishlist_item_error`, `wishlist_item_section_details`, `wishlist_item_wishlist_name`, `wishlist_item_status`, `wishlist_item_purchased_price`, `wishlist_item_price_not_set`, `wishlist_item_section_personal_context`, `wishlist_item_added_date`, `wishlist_item_notes`, `wishlist_item_status_wanted`, `wishlist_item_status_on_order`, `wishlist_item_status_purchased`, `wishlist_item_status_ignored`
+- [x] T001 Add `wishlist_item_*` message keys to `messages/en.json` — keys: `wishlist_item_back`, `wishlist_item_not_found`, `wishlist_item_not_found_message`, `wishlist_item_loading`, `wishlist_item_error`, `wishlist_item_section_details`, `wishlist_item_wishlist_name`, `wishlist_item_status`, `wishlist_item_purchased_price`, `wishlist_item_price_not_set`, `wishlist_item_section_personal_context`, `wishlist_item_added_date`, `wishlist_item_notes`, `wishlist_item_status_wanted`, `wishlist_item_status_on_order`, `wishlist_item_status_purchased`, `wishlist_item_status_ignored`
 
 ---
 
@@ -28,7 +28,7 @@
 
 **⚠️ CRITICAL**: The navigation active state gate must pass before US1 is considered done.
 
-- [ ] T002 Add `additionalPrefixes: ['/wishlists']` to the wishlists entry in `src/lib/components/navigation/config.ts` so the "Wishlists" nav item stays highlighted on all `/wishlists/*` paths
+- [x] T002 Add `additionalPrefixes: ['/wishlists']` to the wishlists entry in `src/lib/components/navigation/config.ts` so the "Wishlists" nav item stays highlighted on all `/wishlists/*` paths
 
 **Checkpoint**: Foundation ready — user story implementation can begin.
 
@@ -42,9 +42,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Add `wishlistId: string` prop to `WishlistItems.svelte` and pass it to each `<WishlistItemCard>` in `src/lib/features/wishlists/components/WishlistItems.svelte` — also update any parent components (`WishlistsDashboard.svelte`) that render `<WishlistItems>` to supply the active wishlist ID
-- [ ] T004 [US1] Add `wishlistId: string` to the `Props` interface and `onclick={() => goto('/wishlists/${wishlistId}/items/${item.id}')}` on the card container in `src/lib/features/wishlists/components/WishlistItemCard.svelte`; add `onclick={(e) => e.stopPropagation()}` on the Remove/Move/Purchase action buttons to prevent bubbling (depends on T003)
-- [ ] T005 [P] [US1] Create `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte` — extract route params (`wishlistId`, `itemId`), call `commands.getWishlistById(wishlistId)`, look up item by id from `wishlistView.items`, implement loading/error/notFound page states, and add back button calling `goto('/my-wishlists')` using `m.wishlist_item_back()` label (depends on T001)
+- [x] T003 [US1] Add `wishlistId: string` prop to `WishlistItems.svelte` and pass it to each `<WishlistItemCard>` in `src/lib/features/wishlists/components/WishlistItems.svelte` — also update any parent components (`WishlistsDashboard.svelte`) that render `<WishlistItems>` to supply the active wishlist ID
+- [x] T004 [US1] Add `wishlistId: string` to the `Props` interface and `onclick={() => goto('/wishlists/${wishlistId}/items/${item.id}')}` on the card container in `src/lib/features/wishlists/components/WishlistItemCard.svelte`; add `onclick={(e) => e.stopPropagation()}` on the Remove/Move/Purchase action buttons to prevent bubbling (depends on T003)
+- [x] T005 [P] [US1] Create `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte` — extract route params (`wishlistId`, `itemId`), call `commands.getWishlistById(wishlistId)`, look up item by id from `wishlistView.items`, implement loading/error/notFound page states, and add back button calling `goto('/my-wishlists')` using `m.wishlist_item_back()` label (depends on T001)
 
 **Checkpoint**: Clicking a wishlist item card navigates to the correct URL; "Wishlists" nav remains highlighted; back button works; error states display without crashes.
 
@@ -58,7 +58,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T006 [US2] Extend the detail page to fetch model details and image in parallel after the wishlist item is found — `const [model, imageResponse] = await Promise.all([commands.getRailwayModelById(...), commands.getRailwayModelImage(...)])` — map via `toRailwayModel(model, null, imageResponse)` and render `<RailwayModelCard>` in the main content area in `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte` (depends on T005)
+- [x] T006 [US2] Extend the detail page to fetch model details and image in parallel after the wishlist item is found — `const [model, imageResponse] = await Promise.all([commands.getRailwayModelById(...), commands.getRailwayModelImage(...)])` — map via `toRailwayModel(model, null, imageResponse)` and render `<RailwayModelCard>` in the main content area in `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte` (depends on T005)
 
 **Checkpoint**: The model card renders with all catalogue data. Two-panel layout scaffold is in place.
 
@@ -72,8 +72,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T007 [P] [US3] Create `src/lib/features/wishlists/components/WishlistItemSidebar.svelte` — props: `item: WishlistItem`, `wishlistName: string`; render a "Wish List Details" section (`<section class="rounded-lg border border-white/10 bg-black/20 p-4">`) with definition-list rows for: List name, Priority (badge with `wishlist_priority_*` labels), Status (badge with `wishlist_item_status_*` labels), Desired Price (formatted via `Intl.NumberFormat` with currency, or `m.wishlist_item_price_not_set()` if null), Purchased Price (row visible only when `item.purchasedPrice !== null`) (depends on T001)
-- [ ] T008 [US3] Integrate `<WishlistItemSidebar>` into the detail page — pass `item={wishlistItem}` and `wishlistName={wishlistView.name}` — use two-column layout (model card left, sidebar right) matching the collection item detail page layout in `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte` (depends on T006, T007)
+- [x] T007 [P] [US3] Create `src/lib/features/wishlists/components/WishlistItemSidebar.svelte` — props: `item: WishlistItem`, `wishlistName: string`; render a "Wish List Details" section (`<section class="rounded-lg border border-white/10 bg-black/20 p-4">`) with definition-list rows for: List name, Priority (badge with `wishlist_priority_*` labels), Status (badge with `wishlist_item_status_*` labels), Desired Price (formatted via `Intl.NumberFormat` with currency, or `m.wishlist_item_price_not_set()` if null), Purchased Price (row visible only when `item.purchasedPrice !== null`) (depends on T001)
+- [x] T008 [US3] Integrate `<WishlistItemSidebar>` into the detail page — pass `item={wishlistItem}` and `wishlistName={wishlistView.name}` — use two-column layout (model card left, sidebar right) matching the collection item detail page layout in `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte` (depends on T006, T007)
 
 **Checkpoint**: Sidebar "Wish List Details" section renders correctly for items with and without prices.
 
@@ -87,7 +87,7 @@
 
 ### Implementation for User Story 4
 
-- [ ] T009 [US4] Add "Personal Context" section to `src/lib/features/wishlists/components/WishlistItemSidebar.svelte` — display `item.addedDate` formatted via `Intl.DateTimeFormat` with `{ dateStyle: 'medium' }`, and `item.notes` text (truncated if very long); hide the section or show empty state gracefully when `item.notes === null` (depends on T007)
+- [x] T009 [US4] Add "Personal Context" section to `src/lib/features/wishlists/components/WishlistItemSidebar.svelte` — display `item.addedDate` formatted via `Intl.DateTimeFormat` with `{ dateStyle: 'medium' }`, and `item.notes` text (truncated if very long); hide the section or show empty state gracefully when `item.notes === null` (depends on T007)
 
 **Checkpoint**: All four user stories are complete and independently functional.
 
@@ -97,11 +97,11 @@
 
 **Purpose**: Code quality, tests, and final validation.
 
-- [ ] T010 [P] Run `pnpm lint` and fix any ESLint errors across modified files (`config.ts`, `WishlistItemCard.svelte`, `WishlistItems.svelte`, `WishlistItemSidebar.svelte`, `+page.svelte`)
-- [ ] T011 [P] Run `pnpm check` and resolve all `svelte-check` and TypeScript errors across the same files
-- [ ] T012 [P] Write Vitest unit tests for `WishlistItemSidebar` in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts` — cover: renders wishlist name, renders correct priority label, renders desired price, renders "Not set" for null price, hides purchased price row when null, shows purchased price when non-null
-- [ ] T013 [P] Write Vitest unit tests for updated navigation config in `src/__tests__/components/navigation/config.test.ts` — cover: `isActive()` returns `true` for `/wishlists/abc/items/xyz` with `additionalPrefixes: ['/wishlists']`, returns `false` for unrelated paths
-- [ ] T014 Validate all items in quickstart.md manual QA checklist — navigate to detail page, verify model card, sidebar, back nav, not-found state
+- [x] T010 [P] Run `pnpm lint` and fix any ESLint errors across modified files (`config.ts`, `WishlistItemCard.svelte`, `WishlistItems.svelte`, `WishlistItemSidebar.svelte`, `+page.svelte`)
+- [x] T011 [P] Run `pnpm check` and resolve all `svelte-check` and TypeScript errors across the same files
+- [x] T012 [P] Write Vitest unit tests for `WishlistItemSidebar` in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts` — cover: renders wishlist name, renders correct priority label, renders desired price, renders "Not set" for null price, hides purchased price row when null, shows purchased price when non-null
+- [x] T013 [P] Write Vitest unit tests for updated navigation config in `src/__tests__/components/navigation/config.test.ts` — cover: `isActive()` returns `true` for `/wishlists/abc/items/xyz` with `additionalPrefixes: ['/wishlists']`, returns `false` for unrelated paths
+- [x] T014 Validate all items in quickstart.md manual QA checklist — navigate to detail page, verify model card, sidebar, back nav, not-found state
 
 ---
 

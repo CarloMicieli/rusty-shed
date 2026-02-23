@@ -14,6 +14,8 @@
     onMove?: (detail: { itemId: string; fromId: string; toId: string }) => void;
   }>();
 
+  const wishlistId = $derived(activeWishlistId ?? '');
+
   let movingItemId = $state<string | null>(null);
 
   function handleRemove(itemId: string) {
@@ -55,6 +57,7 @@
   {#each items as item (item.id)}
     <WishlistItemCard
       {item}
+      {wishlistId}
       onRemove={handleRemove}
       onMove={handleMoveTrigger}
       onPurchase={() => {

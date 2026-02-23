@@ -43,7 +43,8 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: () => m.app_wishlists(),
     icon: Heart,
     href: '/my-wishlists',
-    isPrimary: true
+    isPrimary: true,
+    additionalPrefixes: ['/wishlists']
   },
   {
     id: 'maintenance',
