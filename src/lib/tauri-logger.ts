@@ -1,5 +1,5 @@
 // Lightweight Tauri-aware logger wrapper
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Exports: debug, info, warn, error, trace (and `log` object)
 // Behavior:
 // - Tries to detect running inside Tauri and lazily import @tauri-apps/api/log
@@ -9,90 +9,76 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'trace';
 
 const isBrowser = typeof window !== 'undefined';
-const tauriDetected = isBrowser && (!!(window as any).__TAURI__ || !!(window as any).__TAURI_IPC__);
+// More robust Tauri check
+const isTauri = isBrowser && (window as any).__TAURI_INTERNALS__ !== undefined;
 
-let tauriLogModule: any = null;
-let loader: Promise<void> | null = null;
+let tauriLog: any = null;
+let isImporting = false;
 
-function safeSerialize(arg: unknown): unknown {
-  if (arg === null || arg === undefined) return arg;
-  const t = typeof arg;
-  if (t === 'string' || t === 'number' || t === 'boolean') return arg;
-  // Try structured cloning via JSON; fall back to string
-  try {
-    return JSON.parse(JSON.stringify(arg));
-  } catch {
+function serialize(arg: unknown): any {
+  const cleanArg = arg;
+
+  // 1. Check if it's an Error first
+  if (cleanArg instanceof Error) {
+    return { name: cleanArg.name, message: cleanArg.message, stack: cleanArg.stack };
+  }
+
+  // 2. Handle Svelte 5 Proxies safely
+  // We check for the internal Proxy marker that Svelte 5 uses
+  // or use JSON.stringify which naturally unwraps Proxies.
+  if (cleanArg !== null && typeof cleanArg === 'object') {
     try {
-      return String(arg);
+      // In Svelte 5, JSON.stringify on a $state proxy
+      // automatically produces the raw underlying data.
+      return JSON.parse(JSON.stringify(cleanArg));
     } catch {
-      return '[unserializable]';
+      // Fallback for circular references or complex objects
+      return String(cleanArg);
     }
   }
+
+  return cleanArg;
 }
 
-function ensureTauriLog() {
-  if (!isBrowser || !tauriDetected) return;
-  if (tauriLogModule || loader) return;
-  // Lazy import the tauri log module; don't await — we fall back to console until loaded
-  loader = import('@tauri-apps/api')
-    .then((m: any) => {
-      // Prefer the named `log` export if present
-      uriLogModuleSetter(m?.log ?? m);
-    })
-    .catch(() => {
-      // ignore — will fall back to console
-      tauriLogModule = null;
-    });
-}
-
-function uriLogModuleSetter(m: any) {
-  // Support both named exports and a default export container
-  if (!m) return;
-  // if the module exports functions directly, use it; otherwise, check default
-  tauriLogModule = m;
-}
-
-function callTauriOrConsole(level: LogLevel, args: unknown[]) {
-  if (tauriLogModule && typeof tauriLogModule[level] === 'function') {
-    try {
-      (tauriLogModule[level] as Function)(...args.map(safeSerialize));
-      return;
-    } catch {
-      // fall through to console
-    }
-  }
-  const cons = (console as any)[level] ?? console.log;
+async function initTauriLog() {
+  if (!isTauri || tauriLog || isImporting) return;
+  isImporting = true;
   try {
-    cons.apply(console, args);
-  } catch {
-    // last resort: stringify
-    cons(String(args));
+    // Import everything as a namespace
+    const m = await import('@tauri-apps/plugin-log');
+
+    // In Tauri v2, the functions (info, error, etc.) are top-level exports
+    tauriLog = m;
+
+    log.debug('[Logger] Tauri log plugin attached');
+  } catch (e) {
+    console.error('[Logger] Failed to load Tauri log plugin', e);
+  } finally {
+    isImporting = false;
   }
 }
 
-export function debug(...args: unknown[]) {
-  ensureTauriLog();
-  callTauriOrConsole('debug', args);
-}
+const createLogFn =
+  (level: LogLevel) =>
+  (...args: unknown[]) => {
+    // Trigger async load, but don't await it to keep logging synchronous
+    initTauriLog();
 
-export function info(...args: unknown[]) {
-  ensureTauriLog();
-  callTauriOrConsole('info', args);
-}
+    const serialized = args.map(serialize);
 
-export function warn(...args: unknown[]) {
-  ensureTauriLog();
-  callTauriOrConsole('warn', args);
-}
+    if (tauriLog && typeof tauriLog[level] === 'function') {
+      tauriLog[level](...serialized);
+    } else {
+      // Fallback to browser console
+      const method = level === 'trace' ? 'debug' : level;
+      (console as any)[method]?.(...args);
+    }
+  };
 
-export function error(...args: unknown[]) {
-  ensureTauriLog();
-  callTauriOrConsole('error', args);
-}
-
-export function trace(...args: unknown[]) {
-  ensureTauriLog();
-  callTauriOrConsole('trace', args);
-}
-
-export const log = { debug, info, warn, error, trace };
+export const log = {
+  debug: createLogFn('debug'),
+  info: createLogFn('info'),
+  warn: createLogFn('warn'),
+  error: createLogFn('error'),
+  trace: createLogFn('trace')
+};
