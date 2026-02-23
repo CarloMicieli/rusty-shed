@@ -75,7 +75,6 @@
     class?: string;
   }
 
-  // eslint-disable-next-line svelte/no-unused-props
   let { model, onDelete, class: className }: Props = $props();
 
   import { Card, CardHeader, CardContent } from '$lib/components/ui/card';
@@ -98,6 +97,15 @@
       : 'Railway Model'
   );
 
+  const displayPurchaseDate = $derived.by((): string | null => {
+    if (!model.purchaseDate) return null;
+
+    const parsedDate = new Date(model.purchaseDate);
+    return Number.isNaN(parsedDate.getTime())
+      ? model.purchaseDate
+      : parsedDate.toLocaleDateString();
+  });
+
   // Compact display label for power method badge
   const powerMethodLabel = $derived.by((): string => {
     if (!model.powerMethod) return '';
@@ -111,8 +119,7 @@
   });
 
   // Category-to-icon mapping for technical drawing placeholder
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const PlaceholderIcon: any = $derived.by(() => {
+  const PlaceholderIcon = $derived.by(() => {
     switch (model.category) {
       case 'SteamLocomotive':
       case 'ElectricLocomotive':
@@ -148,8 +155,10 @@
   async function fetchImage(id: string) {
     try {
       const result = await commands.getRailwayModelImage(id);
-      if (result.status === 'ok' && result.data.hasImage && result.data.imagePath) {
-        resolvedPhotoUrl = convertFileSrc(result.data.imagePath);
+      const imageData = result.status === 'ok' ? result.data : null;
+
+      if (imageData?.hasImage && imageData.imagePath) {
+        resolvedPhotoUrl = convertFileSrc(imageData.imagePath);
       } else {
         resolvedPhotoUrl = null;
       }
@@ -289,6 +298,15 @@
         <span class="font-mono text-xs text-zinc-300">{model.era ?? '—'}</span>
       </div>
     </div>
+
+    {#if displayPurchaseDate}
+      <div class="mt-2.5 text-center">
+        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
+          {m.components_purchaseDate()}
+        </span>
+        <div class="mt-0.5 font-mono text-xs text-zinc-300">{displayPurchaseDate}</div>
+      </div>
+    {/if}
   </CardContent>
 </Card>
 

@@ -17,6 +17,19 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   common_cancel: () => 'Cancel'
 }));
 
+vi.mock('$lib/bindings', () => ({
+  commands: {
+    getRailwayModelImage: vi.fn().mockResolvedValue({
+      status: 'ok',
+      data: {
+        hasImage: false,
+        imagePath: null,
+        placeholderHtml: null
+      }
+    })
+  }
+}));
+
 describe('RailwayModelPreviewCard', () => {
   const mockModel = {
     id: 'test-001',
