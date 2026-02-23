@@ -1,0 +1,66 @@
+/* --- 1. LOCAL FONTS (Offline-Ready) --- */
+
+/* Inter - Latin Regular (400) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-v20-latin-regular.woff2') format('woff2');
+}
+
+/* Courier Prime - Latin Regular (400) */
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/courier-prime-v11-latin-regular.woff2') format('woff2');
+}
+
+/* Cinzel - Latin Regular (400) */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/cinzel-v26-latin-regular.woff2') format('woff2');
+}
+
+/* --- 2. GLOBAL THEME STYLES --- */
+
+:root {
+  --bg-dark: #1a1a1a;
+  --text-light: #e5e5e5;
+  --brass: #b5a642;
+  --copper: #b87333;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  /* Default font */
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Steampunk Typography */
+[data-theme='steampunk-dark'] h1,
+[data-theme='steampunk-dark'] h2,
+[data-theme='steampunk-dark'] .heading {
+  font-family: 'Cinzel', serif;
+  color: var(--brass);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='steampunk-dark'] code,
+[data-theme='steampunk-dark'] pre,
+[data-theme='steampunk-dark'] .typewriter {
+  font-family: 'Courier Prime', monospace;
+  color: var(--copper);
+}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import '../app.css';
   import './layout.css';
   import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
   import BottomNavigation from '$lib/components/BottomNavigation.svelte';
@@ -59,6 +60,12 @@
     safeInvoke<void>('show_main_window').then((res) => {
       if (!res.ok) console.warn('Failed to show main window:', res.error);
     });
+
+    // Ensure the initial app-loading spinner from app.html is removed
+    const loader = document.getElementById('app-loading');
+    if (loader) {
+      loader.remove();
+    }
 
     try {
       // 3. Fetch app version (non-critical, but good to have early)
