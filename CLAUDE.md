@@ -1,103 +1,126 @@
-# Claude Code Instructions for Rusty Shed
+# CLAUDE.md
 
-This file contains project-specific instructions and conventions for working on the Rusty Shed model railway management application.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 Rusty Shed is a Tauri 2.x desktop application for managing model railway collections, built with:
 
-- **Backend**: Rust with clean architecture and domain-driven design
-- **Frontend**: SvelteKit with Svelte 5 (runes), Tailwind CSS 4, Skeleton UI 4.x
-- **Database**: SQLite with sqlx migrations
-- **Type Safety**: specta/tauri-specta for TypeScript bindings
-- **Internationalization**: Paraglide i18n
+- **Backend**: Rust (edition 2024, 1.93.0) with clean architecture and domain-driven design
+- **Frontend**: SvelteKit with Svelte 5 (runes), Tailwind CSS 4, shadcn-svelte
+- **Database**: SQLite with sqlx (compile-time checked queries, async)
+- **Type Safety**: specta/tauri-specta for auto-generated TypeScript bindings from Rust commands
+- **Internationalization**: Paraglide-JS (all user-facing strings must use it — hardcoded text is forbidden)
 
-## Code Quality Workflow
+## Commands
 
-**ALWAYS run these verifications after making code changes:**
+### Running the App
 
-1. **Lint**: Run `pnpm lint` to check for ESLint issues
-2. **Type Check**: Run `pnpm check` to verify TypeScript/Svelte types
-3. **Fix Issues**: Address all errors and warnings before considering work complete
-
-This is non-negotiable and catches issues early.
-
-## File Organization
-
-```
-src/
-├── lib/
-│   ├── components/          # Shared UI components
-│   │   └── ui/              # shadcn-svelte components
-│   ├── features/            # Feature modules
-│   │   └── feature-name/
-│   │       ├── components/  # Feature-specific components
-│   │       ├── FeatureController.svelte.ts
-│   │       └── FeatureState.svelte.ts
-│   └── paraglide/           # i18n messages
-└── routes/                  # SvelteKit routes
-
-src-tauri/
-├── src/
-│   ├── domain_name/
-│   │   ├── domain/          # Aggregates, value objects, repositories
-│   │   ├── application/     # Use cases
-│   │   ├── infrastructure/  # Repository implementations
-│   │   └── interface/       # Tauri commands
-│   └── core/                # Shared domain primitives
-└── migrations/              # SQLx migrations
+```bash
+pnpm dev          # Start Vite dev server (frontend only)
+pnpm tauri dev    # Launch full desktop app (runs pnpm dev + Tauri in parallel)
+pnpm tauri build  # Production build
 ```
 
-## Development Workflow
+### Frontend Quality
 
-### Before Committing
+```bash
+pnpm format       # Prettier
+pnpm lint         # ESLint (must pass)
+pnpm check        # svelte-check + TypeScript (must pass)
+pnpm test         # Vitest (single run, happy-dom)
+pnpm test:unit    # Vitest in watch mode
+pnpm test:coverage
+```
 
-1. Run `pnpm format` - to format UI code
-2. Run `pnpm lint` - must pass
-3. Run `pnpm check` - must pass
-4. Run `cargo fmt` - to format rust code
-5. Run `cargo clippy` - address warnings
-6. Run `cargo test` - all tests must pass
-7. Test the UI manually if you made UI changes
+### Backend Quality (Rust workspace is in `src-tauri/`)
 
-### Making Changes
+```bash
+pnpm rust:fmt     # cargo fmt
+pnpm rust:build   # cargo build
+pnpm rust:test    # cargo test (all Rust tests)
+pnpm rust:clippy  # cargo clippy -D warnings (must pass)
+```
 
-1. **Read before modifying**: Always read files before editing them
-2. **Understand context**: Check related files and patterns
-3. **Match existing style**: Follow the conventions already in the codebase
-4. **Test thoroughly**: Verify changes work as expected
-5. **Run verifications**: Lint and type check before considering work complete
+To run a single Rust test:
 
-## Common Pitfalls
+```bash
+cargo test --manifest-path src-tauri/Cargo.toml <test_name>
+cargo test --manifest-path src-tauri/Cargo.toml -p rusty_shed_lib <module>::tests::<test_fn>
+```
 
-❌ **Don't**:
+### Migrations
 
-- Hardcode English strings in components (use Paraglide)
-- Create new migrations without rebuilding (`cargo build`)
-- Skip lint/check after code changes
-- Use `any` types in TypeScript
-- Add unused imports
+After adding a new `.sql` file in `src-tauri/migrations/`, you must `pnpm rust:build` to regenerate the SQLx migration runner. SQLx validates all SQL at compile time.
 
-✅ **Do**:
+## Architecture
 
-- Use Paraglide for all user-facing text
-- Rebuild after creating SQLx migrations
-- Run `pnpm lint` and `pnpm check` after changes
-- Use proper TypeScript types from bindings
-- Remove unused imports immediately
+### Frontend (`src/`)
 
-## Component Library
+Feature-based modular structure. Each feature in `src/lib/features/<name>/` contains:
 
-- **UI Components**: shadcn-svelte (Card, Button, Input, Badge, etc.)
-- **Icons**: lucide-svelte
-- **Toasts**: Custom toaster service (`$lib/toaster`)
-- **Theme**: Skeleton UI 4.x with custom surface/primary colors
+- `FeatureState.svelte.ts` — reactive state using Svelte 5 runes (`$state`, `$derived`)
+- `FeatureController.svelte.ts` — business logic, calls Tauri commands
+- `components/` — feature-scoped UI components
+- `index.ts` — barrel export
 
-## Active Technologies
+Shared UI components live in `src/lib/components/`. shadcn-svelte components are in `src/lib/components/ui/`.
 
-- TypeScript 5.9.3 (frontend), Rust edition 2024 / 1.93.0 (backend) + SvelteKit (Svelte 5.48.2), Tauri 2.9.x, Tailwind CSS 4.1.18, shadcn-svelte, specta, sqlx
-- SQLite via sqlx (existing railway_model and rolling_stock tables)
+All Tauri IPC types are auto-generated by specta into `src/lib/` — use them directly, never redefine.
 
-## Recent Changes
+### Backend (`src-tauri/src/`)
 
-- 018-railway-model-component: Added TypeScript 5.9.3 (frontend), Rust edition 2024 / 1.93.0 (backend) + SvelteKit (Svelte 5.48.2), Tauri 2.9.x, Tailwind CSS 4.1.18, shadcn-svelte, specta, sqlx
+Every domain module follows a strict 4-layer hexagonal architecture:
+
+```
+<domain>/
+  domain/         # Aggregates, value objects, repository traits (no I/O)
+  application/    # Use cases, business rules, command handlers
+  infrastructure/ # SQLx repository implementations, external services
+  interface/      # Tauri command handlers, request/response DTOs
+```
+
+Domains: `catalog`, `collecting`, `budget`, `dashboard`, `dcc_inventory`, `export`, `import`, `maintenance`, `media`, `sellers`, `settings`, `tracks_inventory`, `wishlist`, `cloud_backup`, `database_backup`.
+
+Shared primitives (IDs, monetary amounts, validation, errors, unit-of-work) live in `core/`.
+
+App state is in `state.rs`; all Tauri commands are registered in `lib.rs`.
+
+### Backend Testing
+
+Rust tests use inline `#[cfg(test)] mod tests` blocks. Common patterns:
+
+```rust
+#[sqlx::test(migrations = "./migrations")]              // full DB with migrations
+#[sqlx::test(fixtures("path/to/fixture.sql"))]          // load test data
+#[rstest]                                               // parameterized tests
+#[cfg_attr(test, mockall::automock)]                    // mock trait implementations
+```
+
+Test fixtures (SQL files) are in `src-tauri/fixtures/`.
+
+### Frontend Testing
+
+Tests live in `src/__tests__/`. Uses `@testing-library/svelte` with `happy-dom`. Mocks for Tauri, Paraglide, and TipTap are in `src/__tests__/mocks/`.
+
+## Before Committing
+
+1. `pnpm format` — format frontend
+2. `pnpm lint` — must pass
+3. `pnpm check` — must pass
+4. `pnpm rust:fmt` — format Rust
+5. `pnpm rust:clippy` — must pass (warnings = errors)
+6. `pnpm rust:test` — all tests must pass
+7. Manually test UI if visual changes were made
+
+Use Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, etc.).
+
+## Key Conventions
+
+- **Svelte 5 Runes only**: use `$state`, `$derived`, `$props` — no legacy Svelte stores for component state
+- **All `<script>` tags**: must have `lang="ts"`
+- **Complex component logic**: extract to `.svelte.ts` files
+- **Rust errors**: use `thiserror` for domain errors, `anyhow` for application layer; never `unwrap()`/`expect()` in production code
+- **Rich text**: TipTap 3.x with `@tiptap/markdown` (editor in `src/lib/components/RichTextEditor.svelte`)
+- **Forms**: sveltekit-superforms + formsnap + Zod (frontend validation) + garde (Rust-side validation)
+- **Avoid custom CSS**: use Tailwind 4 utilities and shadcn-svelte components
