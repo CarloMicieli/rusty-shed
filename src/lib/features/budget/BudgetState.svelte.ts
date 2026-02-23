@@ -1,9 +1,7 @@
 /**
  * Budget State Controller
- *
- * Manages budget configuration state and derived calculations.
- * This is a lightweight controller that wraps BudgetService
- * and provides computed values for the UI.
+ * * Svelte 5 logic for managing budget configuration and records.
+ * Provides pre-formatted strings and derived safety checks for the UI.
  */
 
 import { setContext, getContext } from 'svelte';
@@ -20,13 +18,27 @@ import {
 import * as m from '$lib/paraglide/messages.js';
 
 // ─────────────────────────────────────────────────────────────
-// CONTEXT KEY
+// TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────
+
+export interface EnhancedMonthlyRecord extends MonthlyBudgetRecordDto {
+  formattedBase: string;
+  formattedExtra: string;
+  formattedRolloverIn: string;
+  formattedAvailable: string;
+  formattedSpent: string;
+  formattedRemaining: string;
+  formattedRolloverOut: string;
+  remainingPercentage: number;
+  statusLabel: string;
+}
+
 const STATE_KEY = Symbol('budget-state');
 
 // ─────────────────────────────────────────────────────────────
 // STATE CLASS
 // ─────────────────────────────────────────────────────────────
+
 export class BudgetState {
   #service: BudgetService;
 
@@ -35,125 +47,87 @@ export class BudgetState {
   }
 
   // ───────────────────────────────────────────────────────────
-  // REACTIVE GETTERS (Proxied from service)
+  // REACTIVE GETTERS (Proxied from Service)
   // ───────────────────────────────────────────────────────────
 
   get config(): BudgetConfigDto | null {
     return this.#service.config;
   }
-
   get isLoading(): boolean {
     return this.#service.isLoading;
   }
-
   get hasConfig(): boolean {
     return this.#service.hasConfig;
+  }
+  get dashboardSummary(): BudgetDashboardSummary | null {
+    return this.#service.dashboardSummary;
+  }
+  get extraBudgets(): ExtraBudgetDto[] {
+    return this.#service.extraBudgets;
+  }
+  get quarterlySummaries(): QuarterlySummary[] {
+    return this.#service.quarterlySummaries;
   }
 
   get monthlyRecords(): MonthlyBudgetRecordDto[] {
     return this.#service.monthlyRecords;
   }
 
+  // ───────────────────────────────────────────────────────────
+  // THE ENHANCED RECORD MAPPER
+  // ───────────────────────────────────────────────────────────
+
+  /**
+   * Returns records with pre-formatted currency and calculated safety values.
+   * This is the primary data source for the Budget Table.
+   */
+  get enhancedMonthlyRecords(): EnhancedMonthlyRecord[] {
+    return this.#service.monthlyRecords.map((record) => ({
+      ...record,
+      formattedBase: this.formatAmount(record.baseBudget),
+      formattedExtra: this.formatAmount(record.extraBudget),
+      formattedRolloverIn: this.formatAmount(record.rolloverIn),
+      formattedAvailable: this.formatAmount(record.available),
+      formattedSpent: this.formatAmount(record.actualSpend),
+      formattedRemaining: this.formatAmount(record.remaining),
+      formattedRolloverOut: this.formatAmount(record.rolloverOut),
+
+      // Calculate remaining percentage (clamped 0-100)
+      remainingPercentage:
+        record.available > 0
+          ? Math.max(0, Math.min(100, (record.remaining / record.available) * 100))
+          : 0,
+
+      statusLabel: this.mapStatus(record.status)
+    }));
+  }
+
   get hasRecords(): boolean {
-    return this.monthlyRecords.length > 0;
-  }
-
-  get dashboardSummary(): BudgetDashboardSummary | null {
-    return this.#service.dashboardSummary;
-  }
-
-  get hasDashboard(): boolean {
-    return this.dashboardSummary !== null;
-  }
-
-  get extraBudgets(): ExtraBudgetDto[] {
-    return this.#service.extraBudgets;
-  }
-
-  get hasExtraBudgets(): boolean {
-    return this.extraBudgets.length > 0;
-  }
-
-  get quarterlySummaries(): QuarterlySummary[] {
-    return this.#service.quarterlySummaries;
-  }
-
-  get hasQuarterlySummaries(): boolean {
-    return this.quarterlySummaries.length > 0;
+    return this.#service.monthlyRecords.length > 0;
   }
 
   // ───────────────────────────────────────────────────────────
-  // DERIVED CALCULATIONS
+  // DERIVED CALCULATIONS (Financial)
   // ───────────────────────────────────────────────────────────
 
-  /**
-   * Get the monthly budget amount in minor units (cents).
-   */
-  get monthlyBudget(): number {
-    return this.config?.monthlyAmount ?? 0;
-  }
-
-  /**
-   * Get the yearly budget amount in minor units (cents).
-   */
-  get yearlyBudget(): number {
-    return this.config?.yearlyAmount ?? 0;
-  }
-
-  /**
-   * Get the currency code.
-   */
   get currency(): string {
     return this.config?.currency ?? 'EUR';
   }
 
-  /**
-   * Get the base amount in major units (e.g., dollars, euros).
-   */
-  get baseAmountMajor(): number {
-    if (!this.config) return 0;
-    return this.config.baseAmount / 100;
+  get monthlyBudget(): number {
+    return this.config?.monthlyAmount ?? 0;
+  }
+  get yearlyBudget(): number {
+    return this.config?.yearlyAmount ?? 0;
   }
 
-  /**
-   * Get the monthly amount in major units.
-   */
-  get monthlyBudgetMajor(): number {
-    return this.monthlyBudget / 100;
-  }
-
-  /**
-   * Get the yearly amount in major units.
-   */
-  get yearlyBudgetMajor(): number {
-    return this.yearlyBudget / 100;
-  }
-
-  /**
-   * Get formatted base amount with currency symbol.
-   */
-  get formattedBaseAmount(): string {
-    if (!this.config) return this.formatAmount(0);
-    return this.formatAmount(this.config.baseAmount);
-  }
-
-  /**
-   * Get formatted monthly budget with currency symbol.
-   */
   get formattedMonthlyBudget(): string {
     return this.formatAmount(this.monthlyBudget);
   }
-
-  /**
-   * Get formatted yearly budget with currency symbol.
-   */
   get formattedYearlyBudget(): string {
     return this.formatAmount(this.yearlyBudget);
   }
 
-  /**
-   * Get the current budget mode display label.
-   */
   get modeLabel(): string {
     if (!this.config) return '';
     return this.config.mode === 'YEARLY' ? m.budget_mode_yearly() : m.budget_mode_monthly();
@@ -163,81 +137,42 @@ export class BudgetState {
   // COMMAND METHODS
   // ───────────────────────────────────────────────────────────
 
-  /**
-   * Load the budget configuration from the backend.
-   */
   async load(): Promise<void> {
     await this.#service.loadConfig();
   }
 
-  /**
-   * Load monthly budget records for a specific year.
-   */
   async loadMonthlyRecords(year?: number): Promise<void> {
     await this.#service.loadMonthlyRecords(year);
   }
 
-  /**
-   * Load budget dashboard summary.
-   */
-  async loadDashboard(): Promise<void> {
-    await this.#service.loadDashboard();
-  }
-
-  /**
-   * Load extra budgets for a specific year.
-   */
-  async loadExtraBudgets(year: number): Promise<void> {
-    await this.#service.loadExtraBudgets(year);
-  }
-
-  /**
-   * Load quarterly summaries with category breakdown.
-   */
   async loadQuarterlySummaries(year?: number, currency?: string): Promise<void> {
     await this.#service.loadQuarterlySummaries(year, currency);
   }
 
-  /**
-   * Add a one-time budget injection to a specific month.
-   */
+  async loadDashboard(): Promise<void> {
+    await this.#service.loadDashboard();
+  }
+
   async addExtraBudget(args: AddExtraBudgetArgs): Promise<ExtraBudgetDto> {
     return await this.#service.addExtraBudget(args);
   }
 
-  /**
-   * Remove an extra budget entry.
-   */
-  async removeExtraBudget(id: string, year: number): Promise<void> {
-    await this.#service.removeExtraBudget(id, year);
-  }
-
-  /**
-   * Save or update the budget configuration.
-   */
   async save(mode: BudgetMode, baseAmount: number, currency?: string): Promise<void> {
-    await this.#service.setBudgetConfig({
-      mode,
-      baseAmount,
-      currency
-    });
+    await this.#service.setBudgetConfig({ mode, baseAmount, currency });
   }
 
-  /**
-   * Reset the state (for testing or logout).
-   */
   reset(): void {
     this.#service.reset();
   }
 
   // ───────────────────────────────────────────────────────────
-  // UTILITY METHODS
+  // PRIVATE UTILITIES
   // ───────────────────────────────────────────────────────────
 
   /**
-   * Format an amount in minor units to a currency string.
+   * Formats minor units (cents) into a localized currency string.
    */
-  private formatAmount(minorUnits: number): string {
+  public formatAmount(minorUnits: number): string {
     const major = minorUnits / 100;
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
@@ -246,24 +181,29 @@ export class BudgetState {
       maximumFractionDigits: 2
     }).format(major);
   }
+
+  private mapStatus(status: string): string {
+    switch (status) {
+      case 'COMPLETED':
+        return m.budget_status_completed();
+      case 'IN_PROGRESS':
+        return m.budget_status_in_progress();
+      default:
+        return m.budget_status_projected();
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
 // CONTEXT HELPERS
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Create and register BudgetState in Svelte context.
- */
 export function createBudgetState(service: BudgetService): BudgetState {
   const state = new BudgetState(service);
   setContext(STATE_KEY, state);
   return state;
 }
 
-/**
- * Retrieve BudgetState from Svelte context.
- */
 export function getBudgetState(): BudgetState {
   const state = getContext<BudgetState>(STATE_KEY);
   if (!state) {
