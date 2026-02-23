@@ -28,7 +28,8 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: () => m.app_collection(),
     icon: TrainFront,
     href: '/my-collection',
-    isPrimary: true
+    isPrimary: true,
+    additionalPrefixes: ['/collection']
   },
   {
     id: 'finance',

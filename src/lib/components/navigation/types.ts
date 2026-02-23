@@ -45,6 +45,13 @@ export interface NavigationItem {
    * @example true for '/my-tracks' to match '/my-tracks/all', '/my-tracks/n-scale', etc.
    */
   usePrefixMatch?: boolean;
+
+  /**
+   * Optional: Additional route prefixes that should mark this item as active.
+   * Useful when a feature has sub-routes at a different path (e.g. /collection/{id}).
+   * @example ['/collection'] for the 'collection' nav item to stay active on detail pages
+   */
+  additionalPrefixes?: string[];
 }
 
 /**

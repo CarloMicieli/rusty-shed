@@ -142,7 +142,7 @@
   }
 
   function handleCardClick(item: CollectionItemView) {
-    goto(`/models/${item.railwayModel.railwayModelId}`);
+    goto(`/collection/${item.id}`);
   }
 </script>
 

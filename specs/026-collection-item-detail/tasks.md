@@ -17,7 +17,7 @@ No new Rust backend changes are required. All IPC commands used are existing.
 
 **Purpose**: Add Paraglide i18n keys required by all sidebar sections before any component is written.
 
-- [ ] T001 Add Paraglide message keys for detail page and sidebar UI strings in `messages/en.json` (back button, not-found state, section headings: Acquisition, Condition, Operational, Personal Context, empty-state labels)
+- [x] T001 Add Paraglide message keys for detail page and sidebar UI strings in `messages/en.json` (back button, not-found state, section headings: Acquisition, Condition, Operational, Personal Context, empty-state labels)
 
 **Checkpoint**: `pnpm check` passes. Message keys resolve without type errors.
 
@@ -31,11 +31,11 @@ before any user story page work begins.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 Create `src/lib/state/collection.svelte.ts` — Svelte 5 class-based module singleton with `$state` fields `items`, `collection`, `loading`; methods `fetch()` (cache-gated), `refresh()`, `getItemById(id)`; export `collectionStore` instance
-- [ ] T003 [P] Add `additionalPrefixes?: string[]` field to `NavigationItem` type in `src/lib/components/navigation/types.ts`
-- [ ] T004 [P] Update `isActive()` in `src/lib/components/navigation/utils.ts` to check `item.additionalPrefixes?.some(p => pathname.startsWith(p))` before the href equality check
-- [ ] T005 Add `additionalPrefixes: ['/collection']` to the `'collection'` entry in `src/lib/components/navigation/config.ts` (depends on T003 and T004)
-- [ ] T006 [P] Update `src/routes/+layout.svelte` startup preload (line 79) to call `collectionStore.fetch()` from `$lib/state/collection.svelte` and remove the direct `collectionState.fetchCollection()` call for the collection; keep the existing `CollectionState` context wiring intact for `CollectionDashboard` mutations
+- [x] T002 Create `src/lib/state/collection.svelte.ts` — Svelte 5 class-based module singleton with `$state` fields `items`, `collection`, `loading`; methods `fetch()` (cache-gated), `refresh()`, `getItemById(id)`; export `collectionStore` instance
+- [x] T003 [P] Add `additionalPrefixes?: string[]` field to `NavigationItem` type in `src/lib/components/navigation/types.ts`
+- [x] T004 [P] Update `isActive()` in `src/lib/components/navigation/utils.ts` to check `item.additionalPrefixes?.some(p => pathname.startsWith(p))` before the href equality check
+- [x] T005 Add `additionalPrefixes: ['/collection']` to the `'collection'` entry in `src/lib/components/navigation/config.ts` (depends on T003 and T004)
+- [x] T006 [P] Update `src/routes/+layout.svelte` startup preload (line 79) to call `collectionStore.fetch()` from `$lib/state/collection.svelte` and remove the direct `collectionState.fetchCollection()` call for the collection; keep the existing `CollectionState` context wiring intact for `CollectionDashboard` mutations
 
 **Checkpoint**: Foundation ready. `pnpm check` and `pnpm lint` pass. Navigation type is extended.
 
@@ -51,9 +51,9 @@ state. Old `/models/` route is removed.
 nav "Collection" item highlighted. Press back → `/my-collection`. Direct URL to
 `/collection/nonexistent` → not-found message with back link.
 
-- [ ] T007 [US1] Create directory `src/routes/collection/[itemId]/` and `+page.svelte` with: loading spinner, error state, not-found state, and a working back button that calls `goto('/my-collection')` — no model card or sidebar yet, just page shell that calls `collectionStore.fetch()` and resolves the item by `itemId`
-- [ ] T008 [US1] Update `handleCardClick` in `src/lib/features/collection/CollectionDashboard.svelte` (line 145) to navigate to `/collection/${item.id}` instead of `/models/${item.railwayModel.railwayModelId}`
-- [ ] T009 [US1] Verify no other file references `/models/` via `grep -r '"/models/' src/` then remove `src/routes/models/[...modelId]/+page.svelte` (and parent directory if empty)
+- [x] T007 [US1] Create directory `src/routes/collection/[itemId]/` and `+page.svelte` with: loading spinner, error state, not-found state, and a working back button that calls `goto('/my-collection')` — no model card or sidebar yet, just page shell that calls `collectionStore.fetch()` and resolves the item by `itemId`
+- [x] T008 [US1] Update `handleCardClick` in `src/lib/features/collection/CollectionDashboard.svelte` (line 145) to navigate to `/collection/${item.id}` instead of `/models/${item.railwayModel.railwayModelId}`
+- [x] T009 [US1] Verify no other file references `/models/` via `grep -r '"/models/' src/` then remove `src/routes/models/[...modelId]/+page.svelte` (and parent directory if empty)
 
 **Checkpoint**: US1 fully functional and independently testable. No model card or sidebar yet.
 
@@ -67,7 +67,7 @@ all model details and image via `getRailwayModelById` + `getRailwayModelImage`.
 **Independent Test**: Navigate to a collection item → model name, manufacturer, scale, epoch,
 category and image (if present) are all visible in the main content area.
 
-- [ ] T010 [US2] Extend `src/routes/collection/[itemId]/+page.svelte` to: (a) parallel-fetch `getRailwayModelById(railwayModelId)` and `getRailwayModelImage(railwayModelId)` after resolving the collection item; (b) wire `$derived displayModel` via the existing `toRailwayModel()` mapper; (c) render `<RailwayModelCard>` in a two-panel flex container (`flex-col lg:flex-row`), left panel `flex-1`
+- [x] T010 [US2] Extend `src/routes/collection/[itemId]/+page.svelte` to: (a) parallel-fetch `getRailwayModelById(railwayModelId)` and `getRailwayModelImage(railwayModelId)` after resolving the collection item; (b) wire `$derived displayModel` via the existing `toRailwayModel()` mapper; (c) render `<RailwayModelCard>` in a two-panel flex container (`flex-col lg:flex-row`), left panel `flex-1`
 
 **Checkpoint**: US2 functional. Model card renders. Loading and error states covered.
 
@@ -82,9 +82,9 @@ and price with currency. Missing purchase data shows a graceful "not recorded" s
 name, "Feb 22, 2026"-style date, and formatted price. Seller with `websiteUrl` renders as `<a>`.
 Item with no `purchaseInfo` → "not recorded" state, no crash.
 
-- [ ] T011 [US3] Create `src/lib/features/collection/components/CollectionItemSidebar.svelte` — shell component accepting `item: CollectionItemView` and `seller: SellerView | null` props; renders an `<aside>` right panel (`w-80 flex-shrink-0`) with a section placeholder structure
-- [ ] T012 [US3] Add `AcquisitionSection` inside `CollectionItemSidebar.svelte`: seller name rendered as `<a href={websiteUrl}>` when URL present, else plain text; `purchaseDate` formatted with `Intl.DateTimeFormat`; `price.amount / 100` with `price.currency` symbol; full "not recorded" empty state when `purchaseInfo` is null or not `kind: 'purchased'`; all labels via Paraglide
-- [ ] T013 [US3] Wire sidebar and seller fetch into `src/routes/collection/[itemId]/+page.svelte`: extract `sellerId` from `purchaseInfo.data.seller`, include `getSellerById(sellerId)` in the `Promise.all` batch, pass resolved `seller` to `<CollectionItemSidebar>` as right panel inside the two-panel layout
+- [x] T011 [US3] Create `src/lib/features/collection/components/CollectionItemSidebar.svelte` — shell component accepting `item: CollectionItemView` and `seller: SellerView | null` props; renders an `<aside>` right panel (`w-80 flex-shrink-0`) with a section placeholder structure
+- [x] T012 [US3] Add `AcquisitionSection` inside `CollectionItemSidebar.svelte`: seller name rendered as `<a href={websiteUrl}>` when URL present, else plain text; `purchaseDate` formatted with `Intl.DateTimeFormat`; `price.amount / 100` with `price.currency` symbol; full "not recorded" empty state when `purchaseInfo` is null or not `kind: 'purchased'`; all labels via Paraglide
+- [x] T013 [US3] Wire sidebar and seller fetch into `src/routes/collection/[itemId]/+page.svelte`: extract `sellerId` from `purchaseInfo.data.seller`, include `getSellerById(sellerId)` in the `Promise.all` batch, pass resolved `seller` to `<CollectionItemSidebar>` as right panel inside the two-panel layout
 
 **Checkpoint**: US3 functional. Sidebar visible with acquisition section. Seller link works.
 
@@ -98,7 +98,7 @@ second-hand) as distinct labels or badges. Missing data shows "not recorded" sta
 **Independent Test**: Navigate to an item with all three condition fields set → sidebar shows
 three clearly labelled condition values with distinct badge styling.
 
-- [ ] T014 [US4] Add `ConditionSection` inside `CollectionItemSidebar.svelte`: three badge/label rows for `modelCondition`, `boxCondition`, `purchaseCondition`; each renders its enum value as a human-readable label (e.g., `LIKE_NEW` → "Like New"); graceful "not recorded" when any field is null; section hidden when all three are null; labels via Paraglide
+- [x] T014 [US4] Add `ConditionSection` inside `CollectionItemSidebar.svelte`: three badge/label rows for `modelCondition`, `boxCondition`, `purchaseCondition`; each renders its enum value as a human-readable label (e.g., `LIKE_NEW` → "Like New"); graceful "not recorded" when any field is null; section hidden when all three are null; labels via Paraglide
 
 **Checkpoint**: US4 functional. Condition badges render. Section absent when no data.
 
@@ -113,7 +113,7 @@ owned rolling stock entry. Missing DCC data shows "not configured" state.
 DCC number displayed prominently. `installed_decoder_id` URN parsed and displayed (e.g.,
 "esu / 54621"). Item with no rolling stock or no `digital` → "not configured" state.
 
-- [ ] T015 [US5] Add `OperationalSection` inside `CollectionItemSidebar.svelte`: map over `item.rollingStocks`; for each entry, if `digital` is non-null display `dcc_address` as a prominent number and parse `installed_decoder_id` URN (`trn:decoder:{mfr}:{code}`) to display "{mfr} / {code}"; section shows "not configured" when `rollingStocks` is empty or all entries have `digital: null`; labels via Paraglide
+- [x] T015 [US5] Add `OperationalSection` inside `CollectionItemSidebar.svelte`: map over `item.rollingStocks`; for each entry, if `digital` is non-null display `dcc_address` as a prominent number and parse `installed_decoder_id` URN (`trn:decoder:{mfr}:{code}`) to display "{mfr} / {code}"; section shows "not configured" when `rollingStocks` is empty or all entries have `digital: null`; labels via Paraglide
 
 **Checkpoint**: US5 functional. DCC address renders. Decoder URN parsed client-side.
 
@@ -128,7 +128,7 @@ preview of the `notes` field. Empty notes omits the notes section.
 formatted as "Feb 22, 2026", notes truncated at three lines. Item with no notes → no notes
 section shown (or clear empty state).
 
-- [ ] T016 [US6] Add `PersonalContextSection` inside `CollectionItemSidebar.svelte`: `addedDate` formatted with `Intl.DateTimeFormat`; `notes` rendered in a `<p class="line-clamp-3">` element; notes section hidden when `notes` is null; section always visible (addedDate is always present); labels via Paraglide
+- [x] T016 [US6] Add `PersonalContextSection` inside `CollectionItemSidebar.svelte`: `addedDate` formatted with `Intl.DateTimeFormat`; `notes` rendered in a `<p class="line-clamp-3">` element; notes section hidden when `notes` is null; section always visible (addedDate is always present); labels via Paraglide
 
 **Checkpoint**: All six user stories functional. Full sidebar with four sections visible.
 
@@ -138,11 +138,11 @@ section shown (or clear empty state).
 
 **Purpose**: Code quality verification, constitution-required tests, and manual smoke tests.
 
-- [ ] T017 [P] Add Vitest unit tests for `CollectionStore` cache behaviour in `src/__tests__/state/collection.svelte.test.ts`: (a) `fetch()` calls `getCollection` only once when called twice; (b) `refresh()` always calls `getCollection` regardless of cache; (c) `getItemById()` returns correct item or `undefined`
-- [ ] T018 [P] Add Vitest unit tests for the updated `isActive()` in `src/__tests__/navigation/utils.test.ts`: (a) returns true for `/collection/123` when `additionalPrefixes: ['/collection']`; (b) still returns true for exact `href` match; (c) still returns false for unrelated paths
-- [ ] T019 Run `pnpm check` and resolve any TypeScript / Svelte type errors across all changed files
-- [ ] T020 Run `pnpm lint` and resolve any ESLint warnings across all changed files
-- [ ] T021 Manual smoke test per `quickstart.md` verification checklist: navigation highlight, direct URL refresh, empty-state sidebar, DCC display
+- [x] T017 [P] Add Vitest unit tests for `CollectionStore` cache behaviour in `src/__tests__/state/collection.svelte.test.ts`: (a) `fetch()` calls `getCollection` only once when called twice; (b) `refresh()` always calls `getCollection` regardless of cache; (c) `getItemById()` returns correct item or `undefined`
+- [x] T018 [P] Add Vitest unit tests for the updated `isActive()` in `src/__tests__/navigation/utils.test.ts`: (a) returns true for `/collection/123` when `additionalPrefixes: ['/collection']`; (b) still returns true for exact `href` match; (c) still returns false for unrelated paths
+- [x] T019 Run `pnpm check` and resolve any TypeScript / Svelte type errors across all changed files
+- [x] T020 Run `pnpm lint` and resolve any ESLint warnings across all changed files
+- [x] T021 Manual smoke test per `quickstart.md` verification checklist: navigation highlight, direct URL refresh, empty-state sidebar, DCC display
 
 ---
 

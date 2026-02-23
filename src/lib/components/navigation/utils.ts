@@ -7,9 +7,8 @@ import type { NavigationItem } from './types';
  * @returns true if the item is active
  */
 export function isActive(item: NavigationItem, pathname: string): boolean {
-  if (item.usePrefixMatch) {
-    return pathname.startsWith(item.href);
-  }
+  if (item.usePrefixMatch && pathname.startsWith(item.href)) return true;
+  if (item.additionalPrefixes?.some((p) => pathname.startsWith(p))) return true;
   return pathname === item.href;
 }
 

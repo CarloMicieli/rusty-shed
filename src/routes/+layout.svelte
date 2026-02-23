@@ -26,6 +26,7 @@
   import { safeInvoke } from '$lib/services';
   import { onMount } from 'svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
+  import { collectionStore } from '$lib/state/collection.svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
@@ -83,7 +84,7 @@
       }
 
       // 5. Preload data (only if DB is ready)
-      await Promise.all([collectionState.fetchCollection(), wishlistState.fetchWishlists()]);
+      await Promise.all([collectionStore.fetch(), wishlistState.fetchWishlists()]);
     } catch (err) {
       console.error('Startup failed', err);
       // Capture the error to show in the UI
