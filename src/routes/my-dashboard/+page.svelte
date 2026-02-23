@@ -14,90 +14,36 @@
   import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
   import { DashboardCharts, PurchaseGroupCard } from '$lib/features/dashboard';
 
-  // Stores
+  // Refactored Components
+  import DashboardAction from '$lib/features/dashboard/components/DashboardAction.svelte';
+  import DashboardSectionHeader from '$lib/features/dashboard/components/DashboardSectionHeader.svelte';
+
+  // Contexts
   import { getDashboardContext } from '$lib/features/dashboard/DashboardState.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
 
   const dashboard = getDashboardContext();
   const wishlistService = getWishlistContext();
 
-  // Data derived from store
+  // State & Derived
+  let showWishlistModal = $state(false);
   const totals = $derived(dashboard.data?.totals ?? null);
-  const stats = $derived(byStats(totals));
   const purchaseGroups = $derived(dashboard.data?.purchaseGroups ?? []);
+  const currencyCode = $derived(dashboard.budgetData?.currency ?? 'EUR');
 
-  // Budget data for charts
+  const stats = $derived(byStats(totals));
+
   const budgetChartData = $derived.by(() => {
     const budgetData = dashboard.budgetData;
     if (!budgetData) return undefined;
-
     return {
-      budget: budgetData.remainingPercentage / 100, // Convert 0-100 to 0-1
-      monthlySpending: budgetData.monthlySpending.map((point) => ({
-        month: point.month - 1, // Convert 1-12 to 0-11 for chart
-        amount: Number(point.amount) / 100 // Convert minor units to major units
+      budget: budgetData.remainingPercentage / 100,
+      monthlySpending: budgetData.monthlySpending.map((p) => ({
+        month: p.month - 1,
+        amount: Number(p.amount) / 100
       }))
     };
   });
-
-  // Currency code from budget data
-  const currencyCode = $derived(dashboard.budgetData?.currency ?? 'EUR');
-
-  let showWishlistModal = $state(false);
-
-  onMount(() => {
-    void dashboard.load();
-    void dashboard.loadBudget();
-  });
-
-  // Actionable logic
-  function handleRetry() {
-    void dashboard.retry();
-  }
-
-  // ESCAPE HATCH: Redirects to root with error_reset flag to prevent infinite loops
-  function handleReturn() {
-    goto(resolve('/'));
-  }
-
-  function handleModelClick(modelId: string) {
-    // Navigate to model detail page
-    // cast via unknown/never to satisfy strict route typing without using `any`
-    goto(`/catalogue/models/${modelId}` as unknown as never);
-  }
-
-  function formatMoney(amount?: { amount: bigint; currency: string } | null) {
-    if (!amount) return '—';
-    const major = Number(amount.amount) / 100;
-    return `${amount.currency} ${major.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-
-  function byStats(data: typeof totals) {
-    const collectionValue = formatMoney(data?.totalValue ?? null);
-    const rollingStocks = data?.collectionItems ?? 0;
-    const maintenance = data?.maintenanceDue ?? 0;
-
-    return [
-      {
-        label: m.stats_total_collection_value(),
-        value: collectionValue,
-        trend: 'neutral' as const,
-        trendValue: ''
-      },
-      {
-        label: m.stats_rolling_stocks(),
-        value: `${rollingStocks}`,
-        trend: 'neutral' as const,
-        trendValue: ''
-      },
-      {
-        label: m.stats_maintenance_alerts(),
-        value: `${maintenance}`,
-        trend: maintenance > 0 ? ('down' as const) : ('neutral' as const),
-        trendValue: maintenance > 0 ? `${maintenance} ${m.dashboard_due()}` : '—'
-      }
-    ];
-  }
 
   const actions = $derived<QuickAction[]>([
     {
@@ -120,13 +66,48 @@
       label: m.actions_log_maintenance(),
       icon: Wrench,
       onClick: () => {
-        toaster.info({
-          title: m.actions_maintenance_coming_soon(),
-          duration: 3000
-        });
+        toaster.info({ title: m.actions_maintenance_coming_soon(), duration: 3000 });
       }
     }
   ]);
+
+  onMount(() => {
+    void dashboard.load();
+    void dashboard.loadBudget();
+  });
+
+  // Helpers
+  function formatMoney(amount?: { amount: bigint; currency: string } | null) {
+    if (!amount) return '—';
+    const major = Number(amount.amount) / 100;
+    return `${amount.currency} ${major.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  function byStats(data: typeof totals) {
+    return [
+      {
+        label: m.stats_total_collection_value(),
+        value: formatMoney(data?.totalValue ?? null),
+        trend: 'neutral' as const,
+        trendValue: ''
+      },
+      {
+        label: m.stats_rolling_stocks(),
+        value: `${data?.collectionItems ?? 0}`,
+        trend: 'neutral' as const,
+        trendValue: ''
+      },
+      {
+        label: m.stats_maintenance_alerts(),
+        value: `${data?.maintenanceDue ?? 0}`,
+        trend: (data?.maintenanceDue ?? 0) > 0 ? ('down' as const) : ('neutral' as const),
+        trendValue:
+          (data?.maintenanceDue ?? 0) > 0 ? `${data?.maintenanceDue} ${m.dashboard_due()}` : '—'
+      }
+    ];
+  }
+
+  const handleModelClick = (id: string) => goto(`/catalogue/models/${id}` as unknown as never);
 </script>
 
 <svelte:head>
@@ -141,18 +122,16 @@
     <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
     <p class="text-surface-200 mt-2">{m.errors_dashboard_message()}</p>
     <div class="mt-6 flex gap-4">
-      <Button variant="default" size="lg" onclick={handleRetry}>
-        {m.errors_retry_page()}
-      </Button>
-      <Button variant="ghost" size="lg" onclick={handleReturn}>
-        <House class="mr-2 h-4 w-4" />
-        {m.errors_return_dashboard()}
-      </Button>
+      <Button variant="default" size="lg" onclick={() => dashboard.retry()}
+        >{m.errors_retry_page()}</Button
+      >
+      <Button variant="ghost" size="lg" onclick={() => goto(resolve('/'))}
+        ><House class="mr-2 h-4 w-4" />{m.errors_return_dashboard()}</Button
+      >
     </div>
   </div>
 {:else}
   <div class="space-y-8">
-    <!-- Page Header with Title and Description -->
     <PageHeader
       title={m.dashboard_title()}
       subtitle={m.dashboard_subtitle()}
@@ -160,22 +139,16 @@
     />
 
     <section>
-      <div class="mb-4 flex items-center justify-between">
-        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-          {m.dashboard_yard_statistics()}
-        </h3>
-        {#if totals?.maintenanceDue}
-          <Badge variant="destructive" class="animate-pulse font-semibold"
-            >{totals.maintenanceDue} {m.dashboard_due_soon()}</Badge
-          >
-        {/if}
-      </div>
+      <DashboardSectionHeader
+        title={m.dashboard_yard_statistics()}
+        badgeValue={totals?.maintenanceDue}
+      />
 
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {#if dashboard.isLoading}
-          {#each Array(3) as _item, index (index)}<div
-              class="skeleton rounded-container h-28"
-            ></div>{/each}
+          {#each Array(3) as _, i (i)}
+            <div class="skeleton rounded-container h-28"></div>
+          {/each}
         {:else}
           {#each stats as stat (stat.label)}
             <StatsCard {stat} />
@@ -183,81 +156,45 @@
         {/if}
       </div>
 
-      <!-- Visual Separator between Stats and Charts -->
       <div class="border-surface-700/50 my-6 border-t"></div>
 
-      <!-- Compact Command Deck: Charts + Action Bar -->
-      <div class="mt-6 space-y-6">
-        <!-- Mobile: Command Center above charts -->
-        <div class="lg:hidden">
-          <div class="gauge-frame space-y-3 p-4">
-            <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
-              {m.dashboard_command_center()}
-            </p>
-            <QuickActionButtons {actions} class="gap-2" />
-          </div>
-        </div>
-
-        <!-- Desktop: Side-by-side layout -->
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
-          <!-- Charts Column (3/4 width) -->
-          <div>
-            <DashboardCharts compact={true} data={budgetChartData} {currencyCode} />
-          </div>
-
-          <!-- Action Bar Column (1/4 width) - Desktop only -->
-          <aside class="hidden lg:block">
-            <div class="gauge-frame h-full space-y-3 p-4">
+      <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+        <div class="space-y-6">
+          <div class="lg:hidden">
+            <div class="gauge-frame space-y-3 p-4">
               <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
                 {m.dashboard_command_center()}
               </p>
-              <div class="flex flex-col gap-3">
-                {#each actions as action (action.id)}
-                  {@const Icon = action.icon}
-                  <button
-                    type="button"
-                    onclick={action.onClick}
-                    class="group border-surface-700/60 bg-surface-900/50 hover:border-accent-500/50 hover:bg-surface-800/70 hover:shadow-accent-500/10 relative flex flex-col items-center gap-2 rounded-lg border p-4 text-center transition-all duration-200 hover:shadow-lg {action.id ===
-                    'add-railway-model'
-                      ? 'border-accent-500/40 bg-accent-950/30'
-                      : ''}"
-                  >
-                    <div
-                      class="flex h-10 w-10 items-center justify-center rounded-full {action.id ===
-                      'add-railway-model'
-                        ? 'bg-accent-500/20 text-accent-400'
-                        : 'bg-surface-800 text-surface-300'} transition-colors group-hover:scale-110"
-                    >
-                      <Icon class="h-5 w-5" />
-                    </div>
-                    <span
-                      class="text-xs font-semibold {action.id === 'add-railway-model'
-                        ? 'text-accent-400'
-                        : 'text-surface-200'}">{action.label}</span
-                    >
-                  </button>
-                {/each}
-              </div>
+              <QuickActionButtons {actions} class="gap-2" />
             </div>
-          </aside>
+          </div>
+          <DashboardCharts compact={true} data={budgetChartData} {currencyCode} />
         </div>
+
+        <aside class="hidden lg:block">
+          <div class="gauge-frame h-full space-y-3 p-4">
+            <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
+              {m.dashboard_command_center()}
+            </p>
+            <div class="flex flex-col gap-3">
+              {#each actions as action (action.id)}
+                <DashboardAction {action} isPrimary={action.id === 'add-railway-model'} />
+              {/each}
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
 
     <section>
-      <div class="mb-4 flex items-center justify-between">
-        <h3 class="h3 text-surface-300 text-sm font-bold tracking-wider uppercase">
-          {m.dashboard_recent_acquisitions()}
-        </h3>
-        <a
-          href={resolve('/my-collection')}
-          class="text-accent-500 text-sm font-bold hover:underline">{m.dashboard_view_all()}</a
-        >
-      </div>
+      <DashboardSectionHeader
+        title={m.dashboard_recent_acquisitions()}
+        link={{ href: '/my-collection', label: m.dashboard_view_all() }}
+      />
 
       {#if dashboard.isLoading}
         <div class="space-y-4">
-          {#each Array(2) as _item, index (index)}
+          {#each Array(2) as _, i (i)}
             <div class="skeleton rounded-container h-48"></div>
           {/each}
         </div>
@@ -269,10 +206,9 @@
           <p class="text-surface-300 mt-2 mb-5 text-sm">
             {m.dashboard_empty_acquisitions_message()}
           </p>
-          <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}>
-            <Plus class="mr-2" />
-            {m.actions_add_railway_model()}
-          </Button>
+          <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}
+            ><Plus class="mr-2" />{m.actions_add_railway_model()}</Button
+          >
         </div>
       {:else}
         <div class="space-y-4">

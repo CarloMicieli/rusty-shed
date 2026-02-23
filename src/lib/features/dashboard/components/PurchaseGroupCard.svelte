@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Calendar, Store } from 'lucide-svelte';
-  import { format } from 'date-fns';
+  import { format, isValid } from 'date-fns';
   import type { PurchaseGroup } from '$lib/bindings';
   import ModelCard from './ModelCard.svelte';
   import * as m from '$lib/paraglide/messages.js';
@@ -8,46 +8,59 @@
   let { group, onModelClick }: { group: PurchaseGroup; onModelClick?: (modelId: string) => void } =
     $props();
 
-  const formattedDate = $derived(format(new Date(group.purchaseDate), 'MMMM d, yyyy'));
+  const formattedDate = $derived.by(() => {
+    const d = new Date(group.purchaseDate);
+    return isValid(d) ? format(d, 'MMMM d, yyyy') : '---';
+  });
+
   const sellerDisplay = $derived(group.sellerName ?? m.dashboard_unknown_source());
-  const hasMoreModels = $derived(Number(group.totalCount) > group.modelCards.length);
   const additionalCount = $derived(Number(group.totalCount) - group.modelCards.length);
 </script>
 
-<div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
-  <!-- Purchase Header -->
-  <div class="space-y-2">
-    <!-- Purchase Date -->
-    <div class="flex items-center gap-2">
-      <Calendar class="h-4 w-4 text-zinc-400" />
-      <span class="text-sm font-semibold text-zinc-300">{formattedDate}</span>
+<div
+  class="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-white/20"
+>
+  <header
+    class="flex flex-wrap items-start justify-between gap-4 border-l-2 border-[#f59e0b]/30 pl-4"
+  >
+    <div class="space-y-1">
+      <div class="flex items-center gap-2 text-zinc-300">
+        <Calendar class="h-3.5 w-3.5 text-[#f59e0b]/70" />
+        <span class="font-mono text-xs font-bold tracking-tight">{formattedDate}</span>
+      </div>
+
+      <div class="flex items-center gap-2 text-zinc-500">
+        <Store class="h-3.5 w-3.5" />
+        <span class="text-xs tracking-wider uppercase">{sellerDisplay}</span>
+      </div>
+
+      {#if group.notes}
+        <p class="max-w-md text-[11px] leading-relaxed text-zinc-600 italic">
+          // {group.notes}
+        </p>
+      {/if}
     </div>
 
-    <!-- Seller Name -->
-    <div class="flex items-center gap-2">
-      <Store class="h-4 w-4 text-zinc-400" />
-      <span class="text-sm text-zinc-400">{sellerDisplay}</span>
+    <div class="hidden sm:block">
+      <span class="rounded bg-white/5 px-2 py-1 font-mono text-[9px] text-zinc-500 uppercase">
+        ID: {group.id.split('-')[0]}
+      </span>
     </div>
+  </header>
 
-    <!-- Notes (if present) -->
-    {#if group.notes}
-      <p class="mt-2 text-xs text-zinc-500 italic">{group.notes}</p>
-    {/if}
-  </div>
-
-  <!-- Model Cards Grid -->
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
     {#each group.modelCards as card (card.id)}
       <ModelCard {card} onclick={() => onModelClick?.(card.id)} />
     {/each}
   </div>
 
-  <!-- "+N more models..." indicator -->
-  {#if hasMoreModels}
-    <div class="text-center">
-      <p class="text-xs text-zinc-500">
-        {m.dashboard_more_models({ count: additionalCount })}
+  {#if additionalCount > 0}
+    <div class="flex items-center gap-4 py-2">
+      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+      <p class="font-mono text-[10px] tracking-widest text-zinc-500 uppercase">
+        + {m.dashboard_more_models({ count: additionalCount })}
       </p>
+      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
     </div>
   {/if}
 </div>
