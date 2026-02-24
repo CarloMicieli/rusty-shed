@@ -25,7 +25,7 @@ export interface NavigationItem {
 
   /**
    * Route path for navigation
-   * @example '/my-dashboard', '/my-collection'
+   * @example '/dashboard', '/collection'
    */
   href: string;
 
@@ -42,7 +42,7 @@ export interface NavigationItem {
   /**
    * Optional: Use prefix matching for active state (for routes with subroutes)
    * @default false (uses exact match)
-   * @example true for '/my-tracks' to match '/my-tracks/all', '/my-tracks/n-scale', etc.
+   * @example true for '/railway-tracks' to match '/my-tracks/all', '/my-tracks/n-scale', etc.
    */
   usePrefixMatch?: boolean;
 

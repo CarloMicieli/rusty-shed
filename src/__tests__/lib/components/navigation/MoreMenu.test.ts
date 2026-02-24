@@ -8,7 +8,7 @@ vi.mock('$app/stores', () => ({
     subscribe: vi.fn((cb) => {
       cb({
         url: {
-          pathname: '/my-maintenance'
+          pathname: '/maintenance'
         }
       });
       return () => {};
@@ -47,28 +47,28 @@ const mockSecondaryItems: NavigationItem[] = [
     id: 'maintenance',
     label: () => 'Maintenance',
     icon: MockIcon,
-    href: '/my-maintenance',
+    href: '/maintenance',
     isPrimary: false
   },
   {
     id: 'depot',
     label: () => 'Depot',
     icon: MockIcon,
-    href: '/my-depot',
+    href: '/depot',
     isPrimary: false
   },
   {
     id: 'digital-dcc',
     label: () => 'Digital (DCC)',
     icon: MockIcon,
-    href: '/my-digital-roster',
+    href: '/digital-dcc',
     isPrimary: false
   },
   {
     id: 'railway-tracks',
     label: () => 'Railway Tracks',
     icon: MockIcon,
-    href: '/my-tracks',
+    href: '/railway-tracks',
     isPrimary: false,
     usePrefixMatch: true
   }
@@ -110,7 +110,7 @@ describe('MoreMenu', () => {
   });
 
   it('secondary items have correct routes', () => {
-    const expectedRoutes = ['/my-maintenance', '/my-depot', '/my-digital-roster', '/my-tracks'];
+    const expectedRoutes = ['/maintenance', '/depot', '/digital-dcc', '/railway-tracks'];
 
     mockSecondaryItems.forEach((item, index) => {
       expect(item.href).toBe(expectedRoutes[index]);

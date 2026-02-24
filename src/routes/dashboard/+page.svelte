@@ -189,7 +189,7 @@
     <section>
       <DashboardSectionHeader
         title={m.dashboard_recent_acquisitions()}
-        link={{ href: '/my-collection', label: m.dashboard_view_all() }}
+        link={{ href: '/collection', label: m.dashboard_view_all() }}
       />
 
       {#if dashboard.isLoading}

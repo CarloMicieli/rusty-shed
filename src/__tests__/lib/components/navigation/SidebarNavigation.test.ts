@@ -8,7 +8,7 @@ vi.mock('$app/stores', () => ({
     subscribe: vi.fn((cb) => {
       cb({
         url: {
-          pathname: '/my-dashboard'
+          pathname: '/dashboard'
         }
       });
       return () => {};
@@ -144,16 +144,16 @@ describe('SidebarNavigation', () => {
     render(SidebarNavigation);
 
     const homeLink = screen.getByText('Home').closest('a');
-    expect(homeLink?.getAttribute('href')).toBe('/my-dashboard');
+    expect(homeLink?.getAttribute('href')).toBe('/dashboard');
 
     const collectionLink = screen.getByText('Collection').closest('a');
-    expect(collectionLink?.getAttribute('href')).toBe('/my-collection');
+    expect(collectionLink?.getAttribute('href')).toBe('/collection');
 
     const financeLink = screen.getByText('Finance').closest('a');
-    expect(financeLink?.getAttribute('href')).toBe('/my-budget');
+    expect(financeLink?.getAttribute('href')).toBe('/finance');
 
     const railwayTracksLink = screen.getByText('Railway Tracks').closest('a');
-    expect(railwayTracksLink?.getAttribute('href')).toBe('/my-tracks');
+    expect(railwayTracksLink?.getAttribute('href')).toBe('/railway-tracks');
   });
 
   it('displays app name and version info', () => {

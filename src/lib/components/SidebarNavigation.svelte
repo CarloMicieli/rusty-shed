@@ -43,7 +43,7 @@
       {#each NAVIGATION_ITEMS as item (item.id)}
         <li>
           <a
-            href={resolve(item.href as '/my-dashboard')}
+            href={resolve(item.href as '/dashboard')}
             class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
             class:bg-primary={isActive(item, pathname)}
             class:text-primary-foreground={isActive(item, pathname)}
@@ -63,13 +63,13 @@
 
     <div class="mt-auto space-y-2 border-t border-border pt-4">
       <a
-        href={resolve('/my-settings')}
+        href={resolve('/settings')}
         class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-        class:bg-primary={pathname === '/my-settings'}
-        class:text-primary-foreground={pathname === '/my-settings'}
-        class:text-sidebar-foreground={pathname !== '/my-settings'}
-        class:hover:bg-sidebar-accent={pathname !== '/my-settings'}
-        aria-current={pathname === '/my-settings' ? 'page' : undefined}
+        class:bg-primary={pathname === '/settings'}
+        class:text-primary-foreground={pathname === '/settings'}
+        class:text-sidebar-foreground={pathname !== '/settings'}
+        class:hover:bg-sidebar-accent={pathname !== '/settings'}
+        aria-current={pathname === '/settings' ? 'page' : undefined}
       >
         <Settings size={20} />
         <span class="tracking-wide">{m.app_settings()}</span>

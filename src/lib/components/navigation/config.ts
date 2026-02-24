@@ -20,58 +20,57 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     id: 'home',
     label: () => m.app_home(),
     icon: LayoutDashboard,
-    href: '/my-dashboard',
+    href: '/dashboard',
     isPrimary: true
   },
   {
     id: 'collection',
     label: () => m.app_collection(),
     icon: TrainFront,
-    href: '/my-collection',
-    isPrimary: true,
-    additionalPrefixes: ['/collection']
+    href: '/collection',
+    isPrimary: true
   },
   {
     id: 'finance',
     label: () => m.app_finance(),
     icon: Wallet,
-    href: '/my-budget',
+    href: '/finance',
     isPrimary: true
   },
   {
     id: 'wishlists',
     label: () => m.app_wishlists(),
     icon: Heart,
-    href: '/my-wishlists',
+    href: '/wishlists',
     isPrimary: true,
-    additionalPrefixes: ['/wishlists']
+    usePrefixMatch: true
   },
   {
     id: 'maintenance',
     label: () => m.app_maintenance(),
     icon: Wrench,
-    href: '/my-maintenance',
+    href: '/maintenance',
     isPrimary: false
   },
   {
     id: 'depot',
     label: () => m.app_depot(),
     icon: Warehouse,
-    href: '/my-depot',
+    href: '/depot',
     isPrimary: false
   },
   {
     id: 'digital-dcc',
     label: () => m.app_digital_dcc(),
     icon: Cpu,
-    href: '/my-digital-roster',
+    href: '/digital-dcc',
     isPrimary: false
   },
   {
     id: 'railway-tracks',
     label: () => m.app_railway_tracks(),
     icon: TrainTrack,
-    href: '/my-tracks',
+    href: '/railway-tracks',
     isPrimary: false,
     usePrefixMatch: true
   }

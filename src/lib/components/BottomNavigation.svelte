@@ -41,7 +41,7 @@
     <div class="flex h-16 items-center justify-around">
       {#each PRIMARY_ITEMS as item (item.id)}
         <a
-          href={resolve(item.href as '/my-dashboard')}
+          href={resolve(item.href as '/dashboard')}
           class="relative flex h-full w-full flex-col items-center justify-center gap-1 transition-all active:scale-95 {getInactiveClass(
             isActive(item, pathname)
           )}"

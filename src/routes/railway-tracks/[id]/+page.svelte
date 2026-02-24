@@ -43,7 +43,7 @@
   async function handleDelete() {
     if (!inventoryId) return;
     await service.deleteInventory(inventoryId);
-    goto('/my-tracks');
+    goto('/railway-tracks');
   }
 
   onMount(() => {

@@ -62,7 +62,7 @@
   <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
     <div class="flex items-start gap-4">
       <a
-        href={resolve('/my-tracks')}
+        href={resolve('/railway-tracks')}
         class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
         aria-label="Back to inventories"
       >

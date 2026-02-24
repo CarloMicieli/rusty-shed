@@ -40,10 +40,10 @@
     <ul class="space-y-2">
       <li>
         <a
-          href={resolve('/my-dashboard')}
+          href={resolve('/dashboard')}
           class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/my-dashboard'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/my-dashboard'}
+          class:variant-filled-primary={($page.url.pathname as string) === '/dashboard'}
+          class:variant-ghost-surface={($page.url.pathname as string) !== '/dashboard'}
         >
           <LayoutDashboard size={20} />
           <span class="font-medium tracking-wide">{m.app_dashboard()}</span>
@@ -51,10 +51,10 @@
       </li>
       <li>
         <a
-          href={resolve('/my-collection')}
+          href={resolve('/collection')}
           class="hover:variant-soft-primary btn flex w-full items-center justify-between gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/my-collection'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/my-collection'}
+          class:variant-filled-primary={($page.url.pathname as string) === '/collection'}
+          class:variant-ghost-surface={($page.url.pathname as string) !== '/collection'}
         >
           <div class="flex items-center gap-3">
             <Library size={20} />
@@ -65,10 +65,10 @@
       </li>
       <li>
         <a
-          href={resolve('/my-wishlists')}
+          href={resolve('/wishlists')}
           class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/my-wishlists'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/my-wishlists'}
+          class:variant-filled-primary={($page.url.pathname as string) === '/wishlists'}
+          class:variant-ghost-surface={($page.url.pathname as string) !== '/wishlists'}
         >
           <Heart size={20} />
           <span class="font-medium tracking-wide">{m.app_wishlists()}</span>
@@ -79,10 +79,10 @@
       </li>
       <li>
         <a
-          href={resolve('/my-budget')}
+          href={resolve('/finance')}
           class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/my-budget'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/my-budget'}
+          class:variant-filled-primary={($page.url.pathname as string) === '/finance'}
+          class:variant-ghost-surface={($page.url.pathname as string) !== '/finance'}
         >
           <Wallet size={20} />
           <span class="font-medium tracking-wide">{m.budget_title()}</span>
@@ -90,10 +90,14 @@
       </li>
       <li>
         <a
-          href={resolve('/my-tracks')}
+          href={resolve('/railway-tracks')}
           class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string).startsWith('/my-tracks')}
-          class:variant-ghost-surface={!($page.url.pathname as string).startsWith('/my-tracks')}
+          class:variant-filled-primary={($page.url.pathname as string).startsWith(
+            '/railway-tracks'
+          )}
+          class:variant-ghost-surface={!($page.url.pathname as string).startsWith(
+            '/railway-tracks'
+          )}
         >
           <Train size={20} />
           <span class="font-medium tracking-wide">{m.app_tracks()}</span>
@@ -101,10 +105,10 @@
       </li>
       <li>
         <a
-          href={resolve('/my-depot')}
+          href={resolve('/depot')}
           class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/my-depot'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/my-depot'}
+          class:variant-filled-primary={($page.url.pathname as string) === '/depot'}
+          class:variant-ghost-surface={($page.url.pathname as string) !== '/depot'}
         >
           <Box size={20} />
           <span class="font-medium tracking-wide">{m.app_depot()}</span>
@@ -112,10 +116,10 @@
       </li>
       <li>
         <a
-          href={resolve('/my-maintenance')}
+          href={resolve('/maintenance')}
           class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/my-maintenance'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/my-maintenance'}
+          class:variant-filled-primary={($page.url.pathname as string) === '/maintenance'}
+          class:variant-ghost-surface={($page.url.pathname as string) !== '/maintenance'}
         >
           <Wrench size={20} />
           <span class="font-medium tracking-wide">{m.app_maintenance()}</span>
@@ -125,9 +129,9 @@
 
     <div class="border-surface-700/50 mt-auto space-y-2 border-t pt-4">
       <a
-        href={resolve('/my-settings')}
+        href={resolve('/settings')}
         class="hover:variant-soft-primary variant-ghost-surface btn w-full justify-start gap-3"
-        class:variant-filled-primary={($page.url.pathname as string) === '/my-settings'}
+        class:variant-filled-primary={($page.url.pathname as string) === '/settings'}
       >
         <Settings size={20} />
         <span class="font-medium tracking-wide">{m.app_settings()}</span>

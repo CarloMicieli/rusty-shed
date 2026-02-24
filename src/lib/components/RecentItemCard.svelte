@@ -18,9 +18,9 @@
     if (!item.source) return;
 
     if (item.source === 'Collection') {
-      goto(resolve('/my-collection'));
+      goto(resolve('/collection'));
     } else {
-      goto(resolve('/my-wishlists'));
+      goto(resolve('/wishlists'));
     }
   }
 </script>

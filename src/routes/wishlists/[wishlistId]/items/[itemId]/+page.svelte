@@ -29,7 +29,7 @@
   const displayModel = $derived(model ? toRailwayModel(model, null, imageResponse) : null);
 
   function goBack() {
-    goto('/my-wishlists');
+    goto('/wishlists');
   }
 
   function normalizeItem(v: WishlistItemView): WishlistItem {

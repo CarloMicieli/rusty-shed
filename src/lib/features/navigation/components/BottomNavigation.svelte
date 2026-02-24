@@ -21,28 +21,28 @@
   {#key locale}
     <div class="flex h-16 items-center justify-around">
       <a
-        href={resolve('/my-dashboard')}
+        href={resolve('/dashboard')}
         class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-        class:text-accent-500={pathname === '/my-dashboard'}
-        class:text-surface-400={pathname !== '/my-dashboard'}
+        class:text-accent-500={pathname === '/dashboard'}
+        class:text-surface-400={pathname !== '/dashboard'}
       >
         <LayoutDashboard size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_dashboard()}</span>
       </a>
       <a
-        href={resolve('/my-collection')}
+        href={resolve('/collection')}
         class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-        class:text-accent-500={pathname === '/my-collection'}
-        class:text-surface-400={pathname !== '/my-collection'}
+        class:text-accent-500={pathname === '/collection'}
+        class:text-surface-400={pathname !== '/collection'}
       >
         <Library size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_collection()}</span>
       </a>
       <a
-        href={resolve('/my-wishlists')}
+        href={resolve('/wishlists')}
         class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-        class:text-accent-500={pathname === '/my-wishlists'}
-        class:text-surface-400={pathname !== '/my-wishlists'}
+        class:text-accent-500={pathname === '/wishlists'}
+        class:text-surface-400={pathname !== '/wishlists'}
       >
         <Heart size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_wishlists()}</span>
@@ -51,19 +51,19 @@
         {/if}
       </a>
       <a
-        href={resolve('/my-budget')}
+        href={resolve('/finance')}
         class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-        class:text-accent-500={pathname === '/my-budget'}
-        class:text-surface-400={pathname !== '/my-budget'}
+        class:text-accent-500={pathname === '/finance'}
+        class:text-surface-400={pathname !== '/finance'}
       >
         <Wallet size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.budget_title()}</span>
       </a>
       <a
-        href={resolve('/my-settings')}
+        href={resolve('/settings')}
         class="flex h-full w-full flex-col items-center justify-center gap-1 transition-transform active:scale-95"
-        class:text-accent-500={pathname === '/my-settings'}
-        class:text-surface-400={pathname !== '/my-settings'}
+        class:text-accent-500={pathname === '/settings'}
+        class:text-surface-400={pathname !== '/settings'}
       >
         <Settings size={20} />
         <span class="text-[10px] font-bold tracking-wider uppercase">{m.app_settings()}</span>

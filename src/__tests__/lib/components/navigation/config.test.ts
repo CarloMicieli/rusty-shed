@@ -9,8 +9,9 @@ import { isActive } from '$lib/components/navigation/utils';
 describe('Navigation config - wishlists additionalPrefixes', () => {
   const wishlistsItem = NAVIGATION_ITEMS.find((item) => item.id === 'wishlists');
 
-  it('wishlists nav item has additionalPrefixes including /wishlists', () => {
-    expect(wishlistsItem?.additionalPrefixes).toContain('/wishlists');
+  it('wishlists nav item uses prefix match for /wishlists', () => {
+    expect(wishlistsItem?.usePrefixMatch).toBe(true);
+    expect(wishlistsItem?.href).toBe('/wishlists');
   });
 
   it('isActive returns true for /wishlists/abc/items/xyz', () => {
@@ -18,15 +19,15 @@ describe('Navigation config - wishlists additionalPrefixes', () => {
     expect(isActive(wishlistsItem!, '/wishlists/abc/items/xyz')).toBe(true);
   });
 
-  it('isActive returns true for exact /my-wishlists match', () => {
+  it('isActive returns true for exact /wishlists match', () => {
     expect(wishlistsItem).toBeDefined();
-    expect(isActive(wishlistsItem!, '/my-wishlists')).toBe(true);
+    expect(isActive(wishlistsItem!, '/wishlists')).toBe(true);
   });
 
   it('isActive returns false for unrelated paths', () => {
     expect(wishlistsItem).toBeDefined();
-    expect(isActive(wishlistsItem!, '/my-collection')).toBe(false);
-    expect(isActive(wishlistsItem!, '/my-dashboard')).toBe(false);
-    expect(isActive(wishlistsItem!, '/my-budget')).toBe(false);
+    expect(isActive(wishlistsItem!, '/collection')).toBe(false);
+    expect(isActive(wishlistsItem!, '/dashboard')).toBe(false);
+    expect(isActive(wishlistsItem!, '/finance')).toBe(false);
   });
 });

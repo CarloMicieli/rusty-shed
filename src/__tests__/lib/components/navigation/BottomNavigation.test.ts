@@ -8,7 +8,7 @@ vi.mock('$app/stores', () => ({
     subscribe: vi.fn((cb) => {
       cb({
         url: {
-          pathname: '/my-dashboard'
+          pathname: '/dashboard'
         }
       });
       return () => {};
@@ -85,7 +85,7 @@ describe('BottomNavigation', () => {
     render(BottomNavigation);
 
     const homeLink = screen.getAllByRole('link')[0];
-    expect(homeLink?.getAttribute('href')).toBe('/my-dashboard');
+    expect(homeLink?.getAttribute('href')).toBe('/dashboard');
   });
 
   it('hides bottom bar on desktop viewport', () => {

@@ -31,7 +31,7 @@
   );
 
   function goBack() {
-    goto('/my-collection');
+    goto('/collection');
   }
 
   onMount(async () => {

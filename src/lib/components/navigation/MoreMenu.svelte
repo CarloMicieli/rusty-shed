@@ -30,7 +30,7 @@
     <div class="space-y-2">
       {#each items as item (item.id)}
         <a
-          href={resolve(item.href as '/my-dashboard')}
+          href={resolve(item.href as '/dashboard')}
           onclick={() => handleItemClick()}
           class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors"
           class:bg-primary={isActive(item, pathname)}
