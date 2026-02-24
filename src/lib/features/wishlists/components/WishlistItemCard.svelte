@@ -82,7 +82,7 @@
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 overflow-hidden">
             <span class="truncate text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
-              {modelDetails?.manufacturer ?? 'Searching...'}
+              {modelDetails?.manufacturer.display ?? 'Searching...'}
             </span>
           </div>
           <h3 class="truncate text-sm font-bold text-white">
