@@ -15,3 +15,5 @@ pub use command_args::UpdateRailwayModelTextArgs;
 pub use command_args::UpdateRollingStockIdentificationArgs;
 pub use command_args::UpdateRollingStockRailwayCompanyArgs;
 pub use command_args::UpdateRollingStockSpecificationsArgs;
+pub use command_args::UpsertRailwayModelTranslationArgs;
+pub use command_args::SearchRailwayModelsArgs;

@@ -1,14 +1,17 @@
 use crate::catalog::application::{
-    AddRailwayModel, GetRailwayModelViewById, UpdateRailwayModelClassification,
-    UpdateRailwayModelText, UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
-    UpdateRollingStockSpecifications,
+    AddRailwayModel, GetRailwayModelTranslations, GetRailwayModelViewById, SearchRailwayModels,
+    UpdateRailwayModelClassification, UpdateRailwayModelText, UpdateRollingStockIdentification,
+    UpdateRollingStockRailwayCompany, UpdateRollingStockSpecifications,
+    UpsertRailwayModelTranslation,
 };
+use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::interface::{
-    CreateRailwayModelArgs, UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs,
-    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
-    UpdateRollingStockSpecificationsArgs,
+    CreateRailwayModelArgs, SearchRailwayModelsArgs, UpdateRailwayModelClassificationArgs,
+    UpdateRailwayModelTextArgs, UpdateRollingStockIdentificationArgs,
+    UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockSpecificationsArgs,
+    UpsertRailwayModelTranslationArgs,
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -37,13 +40,15 @@ use log::info;
 pub async fn get_railway_model_by_id(
     state: tauri::State<'_, AppState>,
     railway_model_id: RailwayModelId,
+    lang: String,
 ) -> Result<Option<RailwayModelView>, CommandError> {
     info!("Fetching railway model with ID: {}", railway_model_id);
 
+    let lang = if lang == "it" { "it" } else { "en" };
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model =
-        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id).await?;
+        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id, lang).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model)
@@ -218,4 +223,58 @@ pub async fn update_rolling_stock_specifications(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())
+}
+
+/// Retrieve all stored translations for a railway model (used to pre-populate the edit form).
+#[tauri::command]
+#[specta::specta]
+pub async fn get_railway_model_translations(
+    state: tauri::State<'_, AppState>,
+    railway_model_id: RailwayModelId,
+) -> Result<Option<RailwayModelTranslations>, CommandError> {
+    info!("Fetching translations for railway model {}", railway_model_id);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let translations =
+        GetRailwayModelTranslations::execute(&mut unit_of_work, &railway_model_id).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(translations)
+}
+
+/// Create or replace a translation for one language on a railway model.
+#[tauri::command]
+#[specta::specta]
+pub async fn upsert_railway_model_translation(
+    state: tauri::State<'_, AppState>,
+    args: UpsertRailwayModelTranslationArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Upserting {} translation for railway model {}",
+        args.lang, args.railway_model_id
+    );
+
+    args.validate()?;
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpsertRailwayModelTranslation::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Search railway models using FTS5 full-text search across all language translations.
+#[tauri::command]
+#[specta::specta]
+pub async fn search_railway_models(
+    state: tauri::State<'_, AppState>,
+    args: SearchRailwayModelsArgs,
+) -> Result<Vec<RailwayModelId>, CommandError> {
+    info!("Searching railway models with query: {}", args.query);
+
+    args.validate()?;
+    let mut unit_of_work = state.unit_of_work().await?;
+    let ids = SearchRailwayModels::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(ids)
 }

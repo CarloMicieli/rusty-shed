@@ -45,7 +45,9 @@ export function toRailwayModel(
     power_method: modelView.powerMethod,
     category: modelView.category,
     description: modelView.description,
+    descriptionLang: modelView.descriptionLang,
     details: modelView.details,
+    detailsLang: modelView.detailsLang,
     image_path: imagePath,
     status,
     rolling_stock: rollingStock

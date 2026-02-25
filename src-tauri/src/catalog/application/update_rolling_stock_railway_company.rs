@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayCompanyUowExt};
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt, RollingStockId};
 use crate::core::domain::domain_error::DomainError;
 
@@ -48,7 +49,7 @@ impl UpdateRollingStockRailwayCompany {
         let mut model_repo = unit_of_work.railway_model_repository();
 
         let mut model = model_repo
-            .find_by_id(&input.railway_model_id)
+            .find_by_id(&input.railway_model_id, "en")
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),
@@ -107,7 +108,10 @@ mod tests {
             id: model_id,
             manufacturer_id: manufacturer,
             product_code: product,
-            description: "Test".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -154,7 +158,7 @@ mod tests {
         mock_model
             .expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(model.clone())));
+            .returning(move |_, _| Ok(Some(model.clone())));
         mock_model.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_company_and_model_repos(mock_company, mock_model);

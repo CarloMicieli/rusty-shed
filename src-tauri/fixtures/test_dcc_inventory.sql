@@ -47,11 +47,18 @@ CREATE TABLE IF NOT EXISTS railway_models (
   id TEXT PRIMARY KEY,
   manufacturer_id TEXT NOT NULL,
   product_code TEXT NOT NULL,
-  description TEXT NOT NULL,
   epoch TEXT NOT NULL,
   category TEXT NOT NULL,
   scale TEXT NOT NULL,
   power_method TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS railway_model_translations (
+  railway_model_id TEXT NOT NULL,
+  language_code TEXT NOT NULL,
+  description TEXT NOT NULL,
+  details TEXT,
+  PRIMARY KEY (railway_model_id, language_code)
 );
 
 CREATE TABLE IF NOT EXISTS digital_rolling_stocks (
@@ -74,8 +81,11 @@ INSERT INTO railway_companies (id, name)
 VALUES ('trn:railway-company:test', 'Test Railway');
 
 -- sample railway model
-INSERT INTO railway_models (id, manufacturer_id, product_code, description, epoch, category, scale, power_method)
-VALUES ('trn:railway-model:test', 'trn:manufacturer:acme', 'TEST-001', 'Test Model', 'III', 'STARTER_SET', 'H0', 'AC');
+INSERT INTO railway_models (id, manufacturer_id, product_code, epoch, category, scale, power_method)
+VALUES ('trn:railway-model:test', 'trn:manufacturer:acme', 'TEST-001', 'III', 'STARTER_SET', 'H0', 'AC');
+
+INSERT INTO railway_model_translations (railway_model_id, language_code, description)
+VALUES ('trn:railway-model:test', 'en', 'Test Model');
 
 -- sample rolling stock
 INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id, series_code, series, road_number, control, is_dummy)

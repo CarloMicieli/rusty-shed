@@ -11,6 +11,7 @@ impl GetRailwayModelById {
     /// # Arguments
     /// * `unit_of_work` - The unit of work managing the database transaction.
     /// * `railway_model_id` - The identifier of the railway model to retrieve.
+    /// * `lang` - The preferred language code ("en" or "it").
     ///
     /// # Returns
     /// - `Ok(Some(RailwayModel))` when the railway model is found.
@@ -22,12 +23,13 @@ impl GetRailwayModelById {
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_model_id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModel>, DomainError>
     where
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        repository.find_by_id(railway_model_id).await
+        repository.find_by_id(railway_model_id, lang).await
     }
 }
 
@@ -40,6 +42,7 @@ impl GetRailwayModelViewById {
     /// # Arguments
     /// * `unit_of_work` - The unit of work managing the database transaction.
     /// * `railway_model_id` - The identifier of the railway model to retrieve the view for.
+    /// * `lang` - The preferred language code ("en" or "it").
     ///
     /// # Returns
     /// - `Ok(Some(RailwayModelView))` when the railway model view is found.
@@ -51,12 +54,13 @@ impl GetRailwayModelViewById {
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_model_id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModelView>, DomainError>
     where
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        repository.find_view_by_id(railway_model_id).await
+        repository.find_view_by_id(railway_model_id, lang).await
     }
 }
 
@@ -73,7 +77,6 @@ mod tests {
     use crate::catalog::domain::scale::Scale;
     use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::metadata::Metadata;
-    use mockall::predicate::eq;
 
     #[tokio::test]
     async fn it_returns_railway_model_by_id() {
@@ -89,7 +92,9 @@ mod tests {
             },
             product_code: ProductCode::try_from("12345").unwrap(),
             description: "A test railway model".to_string(),
+            description_lang: "en".to_string(),
             details: None,
+            details_lang: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
             epoch: "IV".into(),
@@ -101,12 +106,11 @@ mod tests {
         };
 
         mock.expect_find_view_by_id()
-            .with(eq(railway_model_id.clone()))
             .times(1)
-            .returning(move |_| Ok(Some(railway_model.clone())));
+            .returning(move |_, _| Ok(Some(railway_model.clone())));
         let mut fake_uow = FakeUow::with_railway_models_repo(mock);
 
-        let result = GetRailwayModelViewById::execute(&mut fake_uow, &railway_model_id)
+        let result = GetRailwayModelViewById::execute(&mut fake_uow, &railway_model_id, "en")
             .await
             .expect("it should return");
 

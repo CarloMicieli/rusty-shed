@@ -80,10 +80,10 @@ pub struct RailwayCompanyRow {
     pub version: i64,
 }
 
-/// Row mapping for the `railway_models` table.
+/// Row mapping for railway model queries with language-resolved text.
 ///
-/// Represents a single row returned from queries against the `railway_models`
-/// table. Field names correspond to the table columns.
+/// Returned by COALESCE double-LEFT-JOIN queries that resolve description/details
+/// to the requested language with EN fallback.
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct RailwayModelRow {
     /// Primary identifier for the railway model.
@@ -98,10 +98,14 @@ pub struct RailwayModelRow {
     /// Product code assigned by manufacturer (SKU or catalogue code).
     pub product_code: ProductCode,
 
-    /// Short textual description of the model.
-    pub description: String,
+    /// The language code that was actually resolved (may be "en" fallback).
+    pub resolved_lang: String,
 
-    /// Extended details or notes about the model, optional.
+    /// Short textual description of the model in the resolved language.
+    /// `None` if both requested and EN translations are absent.
+    pub description: Option<String>,
+
+    /// Extended details or notes about the model in the resolved language.
     pub details: Option<String>,
 
     /// Power method of the model (e.g., electric, steam, diesel).

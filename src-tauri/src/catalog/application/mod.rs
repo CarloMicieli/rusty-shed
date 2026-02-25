@@ -4,12 +4,15 @@ mod get_manufacturers;
 mod get_railway_companies;
 mod get_railway_company_by_id;
 mod get_railway_model_by_id;
+mod get_railway_model_translations;
 mod save_railway_model;
+mod search_railway_models;
 mod update_railway_model_classification;
 mod update_railway_model_text;
 mod update_rolling_stock_identification;
 mod update_rolling_stock_railway_company;
 mod update_rolling_stock_specifications;
+mod upsert_railway_model_translation;
 
 #[cfg(test)]
 mod testing;
@@ -25,7 +28,12 @@ pub use get_railway_companies::GetRailwayCompanies;
 pub use get_railway_company_by_id::GetRailwayCompanyById;
 pub use get_railway_model_by_id::GetRailwayModelById;
 pub use get_railway_model_by_id::GetRailwayModelViewById;
+pub use get_railway_model_translations::GetRailwayModelTranslations;
 pub use save_railway_model::SaveRailwayModel;
+pub use search_railway_models::{SearchRailwayModels, SearchRailwayModelsInput};
+pub use upsert_railway_model_translation::{
+    UpsertRailwayModelTranslation, UpsertRailwayModelTranslationInput,
+};
 pub use save_railway_model::{SaveRailwayModelInput, SimplifiedRollingStockInput};
 pub use update_railway_model_classification::UpdateRailwayModelClassification;
 pub use update_railway_model_classification::UpdateRailwayModelClassificationInput;

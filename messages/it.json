@@ -776,5 +776,12 @@
   "specs_drawer_unsaved_message": "Hai modifiche non salvate. Scartarle?",
   "specs_drawer_unsaved_confirm": "Scarta",
   "specs_drawer_save_success": "Specifiche salvate",
-  "specs_drawer_save_error": "Salvataggio delle specifiche fallito. Riprova."
+  "specs_drawer_save_error": "Salvataggio delle specifiche fallito. Riprova.",
+  "railway_model_content_in_english_fallback": "(EN)",
+  "translation_section_english": "Inglese",
+  "translation_section_italian": "Italiano",
+  "translation_section_description": "Descrizione",
+  "translation_section_details": "Dettagli",
+  "translation_section_required": "Obbligatorio",
+  "translation_section_optional": "Facoltativo"
 }

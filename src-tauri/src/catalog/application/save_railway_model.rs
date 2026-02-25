@@ -2,6 +2,7 @@ use crate::catalog::domain::railway_model::{
     Category, ElectricMultipleUnitType, Epoch, LocomotiveType, PassengerCarType, PowerMethod,
     ProductCode, RailcarType, RollingStockCategory,
 };
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelId, RailwayModelParams, RailwayModelUowExt,
     RollingStock, RollingStockParams,
@@ -78,14 +79,17 @@ impl SaveRailwayModel {
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
         // Try to find an existing aggregate
-        let existing = repo.find_by_id(&railway_model_id).await?;
+        let existing = repo.find_by_id(&railway_model_id, "en").await?;
 
         if let Some(mut aggregate) = existing {
             // Merge: incoming wins for main fields
             let mut changed = serde_json::Map::new();
 
-            if aggregate.description != input.description {
-                aggregate.description = input.description.clone();
+            if aggregate.description.value != input.description {
+                aggregate.description = LocalizedField {
+                    lang: aggregate.description.lang.clone(),
+                    value: input.description.clone(),
+                };
                 changed.insert("description".to_string(), json!(input.description));
             }
 
@@ -375,8 +379,14 @@ impl SaveRailwayModel {
                 id: railway_model_id.clone(),
                 manufacturer_id: railway_model_params.manufacturer_id.clone(),
                 product_code: railway_model_params.product_code.clone(),
-                description: railway_model_params.description.clone(),
-                details: railway_model_params.details.clone(),
+                description: LocalizedField {
+                    lang: "en".to_string(),
+                    value: railway_model_params.description.clone(),
+                },
+                details: railway_model_params
+                    .details
+                    .clone()
+                    .map(|v| LocalizedField { lang: "en".to_string(), value: v }),
                 power_method: railway_model_params.power_method,
                 scale: railway_model_params.scale.clone(),
                 epoch: railway_model_params.epoch.clone(),
@@ -414,7 +424,7 @@ mod tests {
     #[tokio::test]
     async fn it_creates_new_railway_model_when_missing() {
         let mut mock = MockRailwayModelRepository::new();
-        mock.expect_find_by_id().times(1).returning(|_| Ok(None));
+        mock.expect_find_by_id().times(1).returning(|_, _| Ok(None));
         mock.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
@@ -453,7 +463,10 @@ mod tests {
             id: existing_id.clone(),
             manufacturer_id: manufacturer.clone(),
             product_code: product.clone(),
-            description: "Old desc".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Old desc".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -467,7 +480,7 @@ mod tests {
 
         mock.expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(existing.clone())));
+            .returning(move |_, _| Ok(Some(existing.clone())));
         mock.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_railway_models_repo(mock);

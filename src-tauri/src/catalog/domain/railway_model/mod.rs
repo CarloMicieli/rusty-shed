@@ -10,6 +10,7 @@ mod delivery_date;
 mod epoch;
 mod feature_flag;
 mod length_over_buffers;
+pub mod localized_field;
 mod power_method;
 mod product_code;
 mod radius;
@@ -18,6 +19,7 @@ mod railway_model;
 mod railway_model_event;
 mod railway_model_id;
 mod railway_model_params;
+pub mod railway_model_translation;
 mod railway_model_view;
 mod repository;
 mod rolling_stock;
@@ -48,10 +50,12 @@ pub use length_over_buffers::LengthOverBuffers;
 pub use power_method::PowerMethod;
 pub use product_code::ProductCode;
 pub use radius::{Radius, RadiusError};
+pub use localized_field::LocalizedField;
 pub use railway_model::RailwayModel;
 pub use railway_model_event::RailwayModelEvent;
 pub use railway_model_id::RailwayModelId;
 pub use railway_model_params::RailwayModelParams;
+pub use railway_model_translation::{RailwayModelTranslationEntry, RailwayModelTranslations};
 pub use railway_model_view::{
     RailwayModelManufacturer, RailwayModelView, RollingStockRailway, RollingStockView,
 };

@@ -1,4 +1,5 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::Category;
 use crate::catalog::domain::railway_model::DeliveryDate;
 use crate::catalog::domain::railway_model::Epoch;
@@ -97,8 +98,14 @@ impl AddRailwayModel {
             id: railway_model_id.clone(),
             manufacturer_id: railway_model_params.manufacturer_id.clone(),
             product_code: railway_model_params.product_code.clone(),
-            description: railway_model_params.description.clone(),
-            details: railway_model_params.details.clone(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: railway_model_params.description.clone(),
+            },
+            details: railway_model_params
+                .details
+                .clone()
+                .map(|v| LocalizedField { lang: "en".to_string(), value: v }),
             power_method: railway_model_params.power_method,
             scale: railway_model_params.scale.clone(),
             epoch: railway_model_params.epoch.clone(),

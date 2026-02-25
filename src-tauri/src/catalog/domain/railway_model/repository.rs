@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelParams};
 use crate::core::domain::domain_error::DomainError;
@@ -28,10 +29,11 @@ pub trait RailwayModelRepository: Send + Sync {
     ///   database schema (e.g., `railway_models` and `rolling_stocks` tables).
     async fn create(&mut self, params: &RailwayModelParams) -> Result<RailwayModelId, DomainError>;
 
-    /// Retrieves a Railway Model aggregate by its unique identifier.
+    /// Retrieves a Railway Model aggregate by its unique identifier with language-aware text.
     ///
     /// # Arguments
     /// * `id` - The unique identifier of the Railway Model to retrieve.
+    /// * `lang` - The preferred language code ("en" or "it"). Falls back to "en" if unavailable.
     ///
     /// # Returns
     /// * Returns `Ok(Some(RailwayModel))` if found.
@@ -40,20 +42,48 @@ pub trait RailwayModelRepository: Send + Sync {
     async fn find_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModel>, DomainError>;
 
-    /// Retrieves a UI-focused view of a Railway Model by id. This method is
-    /// intended for read-only scenarios where the frontend needs a serialized
-    /// view without domain-only metadata.
+    /// Retrieves a UI-focused view of a Railway Model by id with language-aware text.
+    /// This method is intended for read-only scenarios where the frontend needs a
+    /// serialized view without domain-only metadata.
+    ///
+    /// # Arguments
+    /// * `id` - The unique identifier of the Railway Model.
+    /// * `lang` - The preferred language code ("en" or "it"). Falls back to "en" if unavailable.
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModelView>, DomainError>;
+
+    /// Retrieves all stored translations for a railway model (used by the edit form).
+    ///
+    /// # Arguments
+    /// * `id` - The unique identifier of the Railway Model.
+    ///
+    /// # Returns
+    /// * Returns `Ok(Some(RailwayModelTranslations))` if the model exists with translations.
+    /// * Returns `Ok(None)` if the model does not exist.
+    async fn find_translations(
+        &mut self,
+        id: &RailwayModelId,
+    ) -> Result<Option<RailwayModelTranslations>, DomainError>;
 
     /// Persists changes from a `RailwayModel` aggregate by applying its
     /// pending domain events to storage. Implementations should pull events
     /// from the aggregate and map them to appropriate SQL statements.
     async fn save(&mut self, aggregate: &mut RailwayModel) -> Result<(), DomainError>;
+
+    /// Search for railway models using FTS5 full-text search across all languages.
+    ///
+    /// # Arguments
+    /// * `query` - The search query (minimum 2 characters).
+    ///
+    /// # Returns
+    /// * Returns a list of matching `RailwayModelId`s ordered by relevance.
+    async fn search(&mut self, query: &str) -> Result<Vec<RailwayModelId>, DomainError>;
 }
 
 /// An extension trait that provides access to the `RailwayModelRepository`.

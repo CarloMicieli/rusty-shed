@@ -5,15 +5,17 @@
 -- Add manufacturer and railway_model referenced by the wishlist item
 INSERT INTO manufacturers (id, name) VALUES ('trn:manufacturer:acme', 'ACME');
 
-INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category)
+INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category)
 VALUES ('trn:railway-model:acme:60100',
         'trn:manufacturer:acme',
         '60100',
-        'Test model',
         'DC',
         'H0',
         'IV',
         'LOCOMOTIVES');
+
+INSERT INTO railway_model_translations (railway_model_id, language_code, description)
+VALUES ('trn:railway-model:acme:60100', 'en', 'Test model');
 
 INSERT INTO wishlists(id, name, notes, is_default, created_at, updated_at)
 VALUES ('trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9',

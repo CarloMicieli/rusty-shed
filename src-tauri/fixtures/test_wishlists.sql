@@ -10,10 +10,13 @@ VALUES ('trn:railway-company:fs', 'FS', 'Ferrovie dello Stato Italiane (Trenital
         '2025-12-26T15:50:13.995410967+00:00', '2025-12-26 15:50:14');
 
 -- 1. Insert the FS E.444.005 "Tartaruga" (Electric Locomotive)
-INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category,
+INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category,
                             availability_status)
-VALUES ('trn:railway-model:acme:60100', 'trn:manufacturer:acme', '60100', 'Locomotiva elettrica E.444.005 Tartaruga',
+VALUES ('trn:railway-model:acme:60100', 'trn:manufacturer:acme', '60100',
         'DC', 'H0', 'IV', 'Locomotives', 'Available');
+
+INSERT INTO railway_model_translations (railway_model_id, language_code, description)
+VALUES ('trn:railway-model:acme:60100', 'en', 'Locomotiva elettrica E.444.005 Tartaruga');
 
 INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
                             livery, length_millimeters, technical_lights, series_code, friendly_name, road_number,

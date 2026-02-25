@@ -23,11 +23,18 @@ pub struct RailwayModelView {
     /// Manufacturer-assigned product code.
     pub product_code: ProductCode,
 
-    /// Human-readable description of the model.
+    /// Human-readable description of the model (resolved text).
     pub description: String,
 
-    /// Optional longer details or notes about the model.
+    /// The actual language code of the resolved description.
+    /// May differ from the requested language when fallback to English applies.
+    pub description_lang: String,
+
+    /// Optional longer details or notes about the model (resolved text).
     pub details: Option<String>,
+
+    /// The actual language code of the resolved details, if details are present.
+    pub details_lang: Option<String>,
 
     /// Power method used by the model (e.g. DC, AC).
     pub power_method: PowerMethod,
@@ -312,7 +319,9 @@ mod tests {
             manufacturer: sample_manufacturer(),
             product_code: ProductCode::try_from("PC-1").unwrap(),
             description: "desc".into(),
+            description_lang: "en".into(),
             details: None,
+            details_lang: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
             epoch: Epoch::from("IV"),
@@ -336,7 +345,9 @@ mod tests {
             manufacturer: sample_manufacturer(),
             product_code: ProductCode::try_from("PC-1").unwrap(),
             description: "desc".into(),
+            description_lang: "en".into(),
             details: None,
+            details_lang: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
             epoch: Epoch::from("IV"),

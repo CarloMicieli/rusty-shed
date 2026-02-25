@@ -1,5 +1,6 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::rolling_stock::RollingStockSpecPatch;
 use crate::catalog::domain::railway_model::{
@@ -28,11 +29,11 @@ pub struct RailwayModel {
     /// Manufacturer-assigned product code.
     pub product_code: ProductCode,
 
-    /// Human-readable description of the model.
-    pub description: String,
+    /// Human-readable description of the model (localized).
+    pub description: LocalizedField,
 
-    /// Additional details about the model (e.g. special features, variations).
-    pub details: Option<String>,
+    /// Additional details about the model, localized (e.g. special features, variations).
+    pub details: Option<LocalizedField>,
 
     /// The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
     pub power_method: PowerMethod,
@@ -70,7 +71,28 @@ impl RailwayModel {
         self.pending_events.push(ev);
     }
 
-    /// Update the description and emit a RailwayModelUpdated event.
+    /// Upsert a translation for the given language and emit a `TranslationUpserted` event.
+    ///
+    /// At least one of `description` or `details` should be `Some` with a non-empty value;
+    /// when both resolve to `None` the repository will delete the translation row.
+    pub fn upsert_translation(
+        &mut self,
+        lang: String,
+        description: Option<String>,
+        details: Option<String>,
+    ) {
+        let ev = RailwayModelEvent::TranslationUpserted {
+            event_id: Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            lang,
+            description,
+            details,
+        };
+        self.push_event(ev);
+    }
+
+    /// Update the description and emit a `TranslationUpserted` event for the aggregate's current language.
     ///
     /// Returns `Err(DomainError::Validation)` when `description` is empty after trimming.
     pub fn update_description(&mut self, description: String) -> Result<(), DomainError> {
@@ -80,29 +102,23 @@ impl RailwayModel {
                 "description must not be empty".to_string(),
             ));
         }
-        self.description = trimmed.clone();
-        let changed = json!({ "description": trimmed });
-        let ev = RailwayModelEvent::RailwayModelUpdated {
-            event_id: uuid::Uuid::new_v4(),
-            railway_model_id: self.id.clone(),
-            timestamp: chrono::Utc::now().naive_utc(),
-            changed,
+        let lang = self.description.lang.clone();
+        self.description = LocalizedField {
+            lang: lang.clone(),
+            value: trimmed.clone(),
         };
-        self.push_event(ev);
+        self.upsert_translation(lang, Some(trimmed), None);
         Ok(())
     }
 
-    /// Update details and emit a RailwayModelUpdated event.
+    /// Update details and emit a `TranslationUpserted` event for the aggregate's current language.
     pub fn update_details(&mut self, details: Option<String>) {
-        self.details = details.clone();
-        let changed = json!({ "details": details });
-        let ev = RailwayModelEvent::RailwayModelUpdated {
-            event_id: uuid::Uuid::new_v4(),
-            railway_model_id: self.id.clone(),
-            timestamp: chrono::Utc::now().naive_utc(),
-            changed,
-        };
-        self.push_event(ev);
+        let lang = self.description.lang.clone();
+        self.details = details.clone().map(|v| LocalizedField {
+            lang: lang.clone(),
+            value: v,
+        });
+        self.upsert_translation(lang, None, details);
     }
 
     /// Update scale and emit a RailwayModelUpdated event.
@@ -301,8 +317,14 @@ mod tests {
             id,
             manufacturer_id,
             product_code,
-            description: "A test model".to_string(),
-            details: Some("Some details".to_string()),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "A test model".to_string(),
+            },
+            details: Some(LocalizedField {
+                lang: "en".to_string(),
+                value: "Some details".to_string(),
+            }),
             power_method: PowerMethod::DC,
             scale: Scale::H0,
             epoch: Epoch::from("IV"),
@@ -337,17 +359,21 @@ mod tests {
     // --- T005: US1 tests (update_description, update_details) ---
 
     #[test]
-    fn update_description_emits_event_with_new_value() {
+    fn update_description_emits_translation_upserted_event() {
         let mut model = make_test_model();
         let result = model.update_description("new description".to_string());
         assert!(result.is_ok());
+        assert_eq!(model.description.value, "new description");
         let events = model.pull_events();
         assert_eq!(events.len(), 1);
         match &events[0] {
-            RailwayModelEvent::RailwayModelUpdated { changed, .. } => {
-                assert_eq!(changed["description"], "new description");
+            RailwayModelEvent::TranslationUpserted {
+                description, lang, ..
+            } => {
+                assert_eq!(description.as_deref(), Some("new description"));
+                assert_eq!(lang, "en");
             }
-            _ => panic!("expected RailwayModelUpdated"),
+            _ => panic!("expected TranslationUpserted"),
         }
     }
 
@@ -361,16 +387,16 @@ mod tests {
     }
 
     #[test]
-    fn update_details_none_emits_null_patch() {
+    fn update_details_none_emits_translation_upserted_event() {
         let mut model = make_test_model();
         model.update_details(None);
         let events = model.pull_events();
         assert_eq!(events.len(), 1);
         match &events[0] {
-            RailwayModelEvent::RailwayModelUpdated { changed, .. } => {
-                assert!(changed["details"].is_null());
+            RailwayModelEvent::TranslationUpserted { details, .. } => {
+                assert!(details.is_none());
             }
-            _ => panic!("expected RailwayModelUpdated"),
+            _ => panic!("expected TranslationUpserted"),
         }
     }
 

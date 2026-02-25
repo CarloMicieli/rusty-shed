@@ -4,10 +4,11 @@ use serde::Deserialize;
 use crate::{
     catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
-        RailwayModelTextField, SaveRailwayModelInput, SimplifiedRollingStockInput,
-        TechnicalSpecificationsInput, UpdateRailwayModelClassificationInput,
-        UpdateRailwayModelTextInput, UpdateRollingStockIdentificationInput,
-        UpdateRollingStockRailwayCompanyInput, UpdateRollingStockSpecificationsInput,
+        RailwayModelTextField, SaveRailwayModelInput, SearchRailwayModelsInput,
+        SimplifiedRollingStockInput, TechnicalSpecificationsInput,
+        UpdateRailwayModelClassificationInput, UpdateRailwayModelTextInput,
+        UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
+        UpdateRollingStockSpecificationsInput, UpsertRailwayModelTranslationInput,
     },
     catalog::domain::railway_company::RailwayCompanyId,
     catalog::domain::railway_model::{
@@ -910,6 +911,9 @@ pub struct UpdateRailwayModelTextArgs {
     /// New value. An empty string for `Details` clears the field; an empty
     /// string for `Description` is rejected by the domain.
     pub value: String,
+    /// Language code for the translation to update ("en" or "it").
+    #[garde(pattern(r"^(en|it)$"))]
+    pub lang: String,
 }
 
 impl From<UpdateRailwayModelTextArgs> for UpdateRailwayModelTextInput {
@@ -918,6 +922,7 @@ impl From<UpdateRailwayModelTextArgs> for UpdateRailwayModelTextInput {
             railway_model_id: args.railway_model_id,
             field: args.field,
             value: args.value,
+            lang: args.lang,
         }
     }
 }
@@ -1094,5 +1099,57 @@ impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecifi
                 digital_shunting: bool_to_flag(args.digital_shunting),
             },
         })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpsertRailwayModelTranslation args
+// ---------------------------------------------------------------------------
+
+/// Arguments for creating or replacing a translation for one language on a railway model.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UpsertRailwayModelTranslationArgs {
+    /// The railway model to update.
+    #[garde(skip)]
+    pub railway_model_id: RailwayModelId,
+    /// Language code ("en" or "it").
+    #[garde(pattern(r"^(en|it)$"))]
+    pub lang: String,
+    /// Description text. Required non-empty for "en"; optional for "it".
+    #[garde(skip)]
+    pub description: Option<String>,
+    /// Details text. Optional for all languages.
+    #[garde(skip)]
+    pub details: Option<String>,
+}
+
+impl From<UpsertRailwayModelTranslationArgs> for UpsertRailwayModelTranslationInput {
+    fn from(args: UpsertRailwayModelTranslationArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            lang: args.lang,
+            description: args.description,
+            details: args.details,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SearchRailwayModels args
+// ---------------------------------------------------------------------------
+
+/// Arguments for full-text search across railway model translations.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchRailwayModelsArgs {
+    /// Search query. Minimum 2 characters.
+    #[garde(length(min = 2, max = 500))]
+    pub query: String,
+}
+
+impl From<SearchRailwayModelsArgs> for SearchRailwayModelsInput {
+    fn from(args: SearchRailwayModelsArgs) -> Self {
+        Self { query: args.query }
     }
 }

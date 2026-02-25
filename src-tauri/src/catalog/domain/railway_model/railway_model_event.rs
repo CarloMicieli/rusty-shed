@@ -44,4 +44,16 @@ pub enum RailwayModelEvent {
         /// Minimal patch describing changed fields (same convention as RailwayModelUpdated.changed).
         changed: serde_json::Value,
     },
+    /// Emitted when a translation is created or updated for a specific language.
+    TranslationUpserted {
+        event_id: Uuid,
+        railway_model_id: RailwayModelId,
+        timestamp: NaiveDateTime,
+        /// The language code being upserted ("en" or "it").
+        lang: String,
+        /// New description for this language. `None` means leave unchanged; `Some("")` clears it.
+        description: Option<String>,
+        /// New details for this language. `None` means leave unchanged; `Some("")` clears it.
+        details: Option<String>,
+    },
 }

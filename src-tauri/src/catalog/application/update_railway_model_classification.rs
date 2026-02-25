@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{Epoch, RailwayModelId, RailwayModelUowExt};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
@@ -42,7 +43,7 @@ impl UpdateRailwayModelClassification {
         let mut repo = unit_of_work.railway_model_repository();
 
         let mut model = repo
-            .find_by_id(&input.railway_model_id)
+            .find_by_id(&input.railway_model_id, "en")
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),
@@ -78,7 +79,10 @@ mod tests {
             id,
             manufacturer_id: manufacturer,
             product_code: product,
-            description: "Test model".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test model".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -103,7 +107,7 @@ mod tests {
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(model.clone())));
+            .returning(move |_, _| Ok(Some(model.clone())));
         mock.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
@@ -132,7 +136,7 @@ mod tests {
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(model.clone())));
+            .returning(move |_, _| Ok(Some(model.clone())));
         mock.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
@@ -189,7 +193,7 @@ mod tests {
         .unwrap();
 
         let mut mock = MockRailwayModelRepository::new();
-        mock.expect_find_by_id().times(1).returning(|_| Ok(None));
+        mock.expect_find_by_id().times(1).returning(|_, _| Ok(None));
         mock.expect_save().times(0);
 
         let mut uow = FakeUow::with_railway_models_repo(mock);

@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 use serde::Deserialize;
@@ -23,6 +24,8 @@ pub struct UpdateRailwayModelTextInput {
     /// New value.  For `Details`, an empty string means "clear to `None`".
     /// For `Description`, must be non-empty (validated by the domain).
     pub value: String,
+    /// Language code for the translation to update ("en" or "it").
+    pub lang: String,
 }
 
 /// Use case that updates a single free-text field on a [`RailwayModel`] aggregate.
@@ -45,7 +48,7 @@ impl UpdateRailwayModelText {
         let mut repo = unit_of_work.railway_model_repository();
 
         let mut model = repo
-            .find_by_id(&input.railway_model_id)
+            .find_by_id(&input.railway_model_id, &input.lang)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),
@@ -75,6 +78,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
         RailwayModelId,
@@ -88,7 +92,10 @@ mod tests {
             id,
             manufacturer_id: manufacturer,
             product_code: product,
-            description: description.to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: description.to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -113,7 +120,7 @@ mod tests {
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(model.clone())));
+            .returning(move |_, _| Ok(Some(model.clone())));
         mock.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
@@ -124,6 +131,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Description,
                 value: "New description".to_string(),
+                lang: "en".to_string(),
             },
         )
         .await
@@ -142,7 +150,7 @@ mod tests {
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(model.clone())));
+            .returning(move |_, _| Ok(Some(model.clone())));
         // save should NOT be called when validation fails
         mock.expect_save().times(0);
 
@@ -154,6 +162,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Description,
                 value: "".to_string(),
+                lang: "en".to_string(),
             },
         )
         .await
@@ -173,12 +182,15 @@ mod tests {
         )
         .unwrap();
         let mut model = make_model(id.clone(), "Desc");
-        model.details = Some("Old details".to_string());
+        model.details = Some(LocalizedField {
+            lang: "en".to_string(),
+            value: "Old details".to_string(),
+        });
 
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id()
             .times(1)
-            .returning(move |_| Ok(Some(model.clone())));
+            .returning(move |_, _| Ok(Some(model.clone())));
         mock.expect_save().times(1).returning(|_| Ok(()));
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
@@ -189,6 +201,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Details,
                 value: "".to_string(),
+                lang: "en".to_string(),
             },
         )
         .await
@@ -204,7 +217,7 @@ mod tests {
         .unwrap();
 
         let mut mock = MockRailwayModelRepository::new();
-        mock.expect_find_by_id().times(1).returning(|_| Ok(None));
+        mock.expect_find_by_id().times(1).returning(|_, _| Ok(None));
         mock.expect_save().times(0);
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
@@ -215,6 +228,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Description,
                 value: "anything".to_string(),
+                lang: "en".to_string(),
             },
         )
         .await

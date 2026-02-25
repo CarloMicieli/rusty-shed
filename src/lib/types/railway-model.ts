@@ -13,7 +13,9 @@ export interface RailwayModel {
   power_method: string | null;
   category: string | null;
   description: string | null;
+  descriptionLang: string;
   details: string | null;
+  detailsLang: string | null;
   image_path: string | null;
   status: 'InCollection' | 'Wishlist';
   rolling_stock: RollingStock[];

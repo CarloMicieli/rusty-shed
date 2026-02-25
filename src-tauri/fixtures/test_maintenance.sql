@@ -14,10 +14,13 @@ VALUES ('trn:railway-company:fs', 'FS', 'Ferrovie dello Stato Italiane (Trenital
         '2025-12-26T15:50:13.995410967+00:00', '2025-12-26 15:50:14');
 
 -- 1. Insert the FS E.444.005 "Tartaruga" (Electric Locomotive)
-INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category,
+INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category,
                             availability_status)
-VALUES ('trn:railway-model:acme:60100', 'trn:manufacturer:acme', '60100', 'Locomotiva elettrica E.444.005 Tartaruga',
+VALUES ('trn:railway-model:acme:60100', 'trn:manufacturer:acme', '60100',
         'DC', 'H0', 'IV', 'Locomotives', 'Available');
+
+INSERT INTO railway_model_translations (railway_model_id, language_code, description)
+VALUES ('trn:railway-model:acme:60100', 'en', 'Locomotiva elettrica E.444.005 Tartaruga');
 
 INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
                             livery, length_millimeters, technical_lights, series_code, road_number,
@@ -27,10 +30,13 @@ VALUES ('trn:rolling-stock:rs-001', 'trn:railway-model:acme:60100', 'Locomotive'
         'Electric', 'MTC21', 'Analog', 0);
 
 -- 2. Insert an FS UIC-Z1 Passenger Coach (Biglietto proiettile style)
-INSERT INTO railway_models (id, manufacturer_id, product_code, description, power_method, scale, epoch, category,
+INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category,
                             availability_status)
 VALUES ('trn:railway-model:rivarossi:hr4315', 'trn:manufacturer:rivarossi', 'HR4315',
-        'Carrozza passeggeri UIC-Z1 1a classe', 'DC', 'H0', 'V', 'Passenger_Cars', 'Available');
+        'DC', 'H0', 'V', 'Passenger_Cars', 'Available');
+
+INSERT INTO railway_model_translations (railway_model_id, language_code, description)
+VALUES ('trn:railway-model:rivarossi:hr4315', 'en', 'Carrozza passeggeri UIC-Z1 1a classe');
 
 INSERT INTO rolling_stocks (id, railway_model_id, category, railway_company_id,
                             livery, length_millimeters, passenger_car_type, service_level, series_code, is_dummy)

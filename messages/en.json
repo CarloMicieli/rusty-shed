@@ -880,5 +880,12 @@
   "purchase_dialog_error_price_required": "Price is required",
   "purchase_dialog_error_future_date_forbidden": "Purchase date cannot be in the future",
   "purchase_dialog_error_save_failed": "Failed to save purchase. Please try again.",
-  "purchase_dialog_success": "Purchase recorded"
+  "purchase_dialog_success": "Purchase recorded",
+  "railway_model_content_in_english_fallback": "(EN)",
+  "translation_section_english": "English",
+  "translation_section_italian": "Italian",
+  "translation_section_description": "Description",
+  "translation_section_details": "Details",
+  "translation_section_required": "Required",
+  "translation_section_optional": "Optional"
 }

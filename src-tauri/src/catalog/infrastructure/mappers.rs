@@ -3,6 +3,7 @@ use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::railway_company::PeriodOfActivity;
 use crate::catalog::domain::railway_company::RailwayCompany;
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
@@ -67,12 +68,20 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
     type Error = DomainError;
 
     fn try_from(row: RailwayModelRow) -> Result<Self, Self::Error> {
+        let description = LocalizedField {
+            lang: row.resolved_lang.clone(),
+            value: row.description.unwrap_or_default(),
+        };
+        let details = row.details.map(|v| LocalizedField {
+            lang: row.resolved_lang.clone(),
+            value: v,
+        });
         Ok(RailwayModel {
             id: row.id,
             manufacturer_id: row.manufacturer_id,
             product_code: row.product_code,
-            description: row.description,
-            details: row.details,
+            description,
+            details,
             power_method: row.power_method,
             scale: row.scale,
             epoch: row.epoch,
@@ -350,7 +359,8 @@ mod tests {
                 manufacturer_id: manufacturer_id.clone(),
                 manufacturer_name: "ACME Models".to_string(),
                 product_code: product_code.clone(),
-                description: "Test model".to_string(),
+                resolved_lang: "en".to_string(),
+                description: Some("Test model".to_string()),
                 details: Some("Detailed description".to_string()),
                 power_method: PowerMethod::DC,
                 scale: Scale::H0,
@@ -367,8 +377,9 @@ mod tests {
             assert_eq!(domain.id, id);
             assert_eq!(domain.manufacturer_id, manufacturer_id);
             assert_eq!(domain.product_code, product_code);
-            assert_eq!(domain.description, "Test model");
-            assert_eq!(domain.details.as_deref(), Some("Detailed description"));
+            assert_eq!(domain.description.value, "Test model");
+            assert_eq!(domain.description.lang, "en");
+            assert_eq!(domain.details.as_ref().map(|d| d.value.as_str()), Some("Detailed description"));
             assert_eq!(domain.power_method, PowerMethod::DC);
             assert_eq!(domain.scale, Scale::H0);
             assert_eq!(domain.epoch, "III".into());

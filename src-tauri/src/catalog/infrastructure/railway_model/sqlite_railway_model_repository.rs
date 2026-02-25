@@ -1,3 +1,6 @@
+use crate::catalog::domain::railway_model::railway_model_translation::{
+    RailwayModelTranslationEntry, RailwayModelTranslations,
+};
 use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelId, RailwayModelParams, RailwayModelRepository, RailwayModelUowExt,
@@ -12,6 +15,7 @@ use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use chrono::TimeZone;
 use sqlx::SqliteConnection;
+use sqlx::Row;
 use uuid::Uuid;
 
 /// An SQLite-specific implementation of the `RailwayModelRepository`.
@@ -35,34 +39,44 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
         Self { executor }
     }
 
-    /// Fetch a railway model row by its ID.
+    /// Fetch a railway model row by its ID with language-aware text resolution.
+    ///
+    /// Uses COALESCE double-LEFT-JOIN to resolve description/details in `lang`,
+    /// falling back to the English translation when the requested language is absent.
     async fn select_railway_model_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModelRow>, DomainError> {
         let sql = r#"
-            SELECT 
-                rm.id, 
-                rm.manufacturer_id, 
+            SELECT
+                rm.id,
+                rm.manufacturer_id,
                 m.name AS manufacturer_name,
-                rm.product_code, 
-                rm.description, 
-                rm.details, 
-                rm.power_method, 
-                rm.scale, 
-                rm.epoch, 
-                rm.category, 
-                rm.delivery_date, 
-                rm.availability_status, 
-                rm.created_at, 
+                rm.product_code,
+                COALESCE(t_req.language_code, t_en.language_code, 'en') AS resolved_lang,
+                COALESCE(t_req.description,  t_en.description)          AS description,
+                COALESCE(t_req.details,      t_en.details)               AS details,
+                rm.power_method,
+                rm.scale,
+                rm.epoch,
+                rm.category,
+                rm.delivery_date,
+                rm.availability_status,
+                rm.created_at,
                 rm.updated_at,
                 rm.version
             FROM railway_models AS rm
-            JOIN manufacturers AS m ON rm.manufacturer_id = m.id
-            WHERE rm.id = ?1 
+            JOIN manufacturers AS m ON m.id = rm.manufacturer_id
+            LEFT JOIN railway_model_translations AS t_req
+                ON t_req.railway_model_id = rm.id AND t_req.language_code = ?1
+            LEFT JOIN railway_model_translations AS t_en
+                ON t_en.railway_model_id = rm.id AND t_en.language_code = 'en'
+            WHERE rm.id = ?2
             LIMIT 1"#;
 
         let row = sqlx::query_as::<_, RailwayModelRow>(sql)
+            .bind(lang)
             .bind(id)
             .fetch_optional(&mut *self.executor)
             .await
@@ -249,12 +263,11 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
     ) -> Result<RailwayModelId, DomainError> {
         let insert_cmd = r#"
         INSERT INTO railway_models (
-            id, manufacturer_id, product_code, description, details, 
-            power_method, scale, epoch, category, delivery_date, availability_status, created_at, updated_at) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            id, manufacturer_id, product_code,
+            power_method, scale, epoch, category, delivery_date, availability_status, created_at, updated_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         "#;
 
-        //TODO: fix me
         let id = RailwayModelId::new(&railway_model.manufacturer_id, &railway_model.product_code)
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
@@ -262,11 +275,9 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .bind(&id)
             .bind(&railway_model.manufacturer_id)
             .bind(railway_model.product_code.to_string())
-            .bind(&railway_model.description)
-            .bind(&railway_model.details)
             .bind(railway_model.power_method.to_string())
-            .bind(&railway_model.scale) // Let SQLx serialize the enum
-            .bind(&railway_model.epoch.0) // Access inner String
+            .bind(&railway_model.scale)
+            .bind(&railway_model.epoch.0)
             .bind(railway_model.category.to_string())
             .bind(railway_model.delivery_date.as_ref().map(|d| d.to_string()))
             .bind(
@@ -278,6 +289,18 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
+
+        // Insert the EN translation for description/details
+        sqlx::query(
+            r#"INSERT INTO railway_model_translations (railway_model_id, language_code, description, details)
+               VALUES (?1, 'en', ?2, ?3)"#,
+        )
+        .bind(&id)
+        .bind(&railway_model.description)
+        .bind(&railway_model.details)
+        .execute(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
 
         Ok(id)
     }
@@ -620,8 +643,9 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
     async fn find_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModel>, DomainError> {
-        let row_opt = self.select_railway_model_by_id(id).await?;
+        let row_opt = self.select_railway_model_by_id(id, lang).await?;
 
         if let Some(row) = row_opt {
             let mut rm = RailwayModel::try_from(row)?;
@@ -646,8 +670,9 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModelView>, DomainError> {
-        let row_opt = self.select_railway_model_by_id(id).await?;
+        let row_opt = self.select_railway_model_by_id(id, lang).await?;
 
         if let Some(row) = row_opt {
             // fetch rolling stocks
@@ -753,12 +778,16 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 updated_at: chrono::Utc.from_utc_datetime(&row.updated_at),
             };
 
+            let description_lang = row.resolved_lang.clone();
+            let details_lang = row.details.as_ref().map(|_| row.resolved_lang.clone());
             let view = RailwayModelView {
                 id: row.id,
                 manufacturer,
                 product_code: row.product_code,
-                description: row.description,
+                description: row.description.unwrap_or_default(),
+                description_lang,
                 details: row.details,
+                details_lang,
                 power_method: row.power_method,
                 scale: row.scale,
                 epoch: row.epoch,
@@ -797,27 +826,6 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     // Apply a minimal set of updates for common fields. The
                     // `changed` payload is expected to be a JSON object.
                     if let serde_json::Value::Object(map) = changed {
-                        if let Some(serde_json::Value::String(description)) = map.get("description")
-                        {
-                            let update_cmd = r#"UPDATE railway_models SET description = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(description)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-
-                        if let Some(serde_json::Value::String(details)) = map.get("details") {
-                            let update_cmd = r#"UPDATE railway_models SET details = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
-                            sqlx::query(update_cmd)
-                                .bind(details)
-                                .bind(&railway_model_id)
-                                .execute(&mut *self.executor)
-                                .await
-                                .map_err(DomainError::from)?;
-                        }
-
                         if let Some(serde_json::Value::String(availability)) =
                             map.get("availability_status")
                         {
@@ -853,6 +861,52 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                         }
                     }
                 }
+                RailwayModelEvent::TranslationUpserted {
+                    railway_model_id,
+                    lang,
+                    description,
+                    details,
+                    ..
+                } => {
+                    // When both fields are None, delete the translation row.
+                    // Otherwise upsert using INSERT OR REPLACE.
+                    let desc_empty = description.as_deref().map(|s| s.is_empty()).unwrap_or(true);
+                    let details_empty = details.as_deref().map(|s| s.is_empty()).unwrap_or(true);
+
+                    if description.is_none() && details.is_none() {
+                        // No-op: neither field was changed (only one side of upsert_translation fired)
+                    } else if desc_empty && details_empty {
+                        // Both cleared — delete the translation row
+                        sqlx::query(
+                            r#"DELETE FROM railway_model_translations
+                               WHERE railway_model_id = ?1 AND language_code = ?2"#,
+                        )
+                        .bind(&railway_model_id)
+                        .bind(&lang)
+                        .execute(&mut *self.executor)
+                        .await
+                        .map_err(DomainError::from)?;
+                    } else {
+                        // Upsert translation — INSERT OR REPLACE keeps FTS triggers firing
+                        sqlx::query(
+                            r#"INSERT INTO railway_model_translations
+                                   (railway_model_id, language_code, description, details, updated_at)
+                               VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)
+                               ON CONFLICT(railway_model_id, language_code)
+                               DO UPDATE SET
+                                   description = CASE WHEN ?3 IS NOT NULL THEN ?3 ELSE description END,
+                                   details     = CASE WHEN ?4 IS NOT NULL THEN ?4 ELSE details END,
+                                   updated_at  = CURRENT_TIMESTAMP"#,
+                        )
+                        .bind(&railway_model_id)
+                        .bind(&lang)
+                        .bind(&description)
+                        .bind(&details)
+                        .execute(&mut *self.executor)
+                        .await
+                        .map_err(DomainError::from)?;
+                    }
+                }
                 RailwayModelEvent::RollingStockAdded {
                     railway_model_id,
                     rolling_stock_params,
@@ -884,6 +938,77 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         }
 
         Ok(())
+    }
+
+    async fn find_translations(
+        &mut self,
+        id: &RailwayModelId,
+    ) -> Result<Option<RailwayModelTranslations>, DomainError> {
+        // Check if the model exists first
+        let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM railway_models WHERE id = ?1)")
+            .bind(id)
+            .fetch_one(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        if !exists {
+            return Ok(None);
+        }
+
+        let rows = sqlx::query(
+            "SELECT language_code, description, details FROM railway_model_translations WHERE railway_model_id = ?1",
+        )
+        .bind(id)
+        .fetch_all(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
+
+        let mut en: Option<RailwayModelTranslationEntry> = None;
+        let mut it: Option<RailwayModelTranslationEntry> = None;
+
+        for row in rows {
+            let lang_code: String = row.get("language_code");
+            let description: Option<String> = row.get("description");
+            let details: Option<String> = row.get("details");
+            let entry = RailwayModelTranslationEntry { description, details };
+            match lang_code.as_str() {
+                "en" => en = Some(entry),
+                "it" => it = Some(entry),
+                _ => {}
+            }
+        }
+
+        Ok(Some(RailwayModelTranslations {
+            railway_model_id: id.clone(),
+            en,
+            it,
+        }))
+    }
+
+    async fn search(&mut self, query: &str) -> Result<Vec<RailwayModelId>, DomainError> {
+        // Use runtime query (not query!) for FTS5 MATCH — see research R-001
+        let rows = sqlx::query(
+            r#"SELECT DISTINCT railway_model_id
+               FROM railway_model_search_idx
+               WHERE railway_model_search_idx MATCH ?1
+               ORDER BY rank
+               LIMIT 200"#,
+        )
+        .bind(query)
+        .fetch_all(&mut *self.executor)
+        .await
+        .map_err(DomainError::from)?;
+
+        let ids = rows
+            .into_iter()
+            .map(|row| {
+                let id_str: String = row.get("railway_model_id");
+                RailwayModelId::try_from(id_str.as_str())
+                    .map_err(|e| DomainError::Validation(e.to_string()))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(ids)
     }
 }
 
@@ -963,13 +1088,22 @@ mod tests {
 
         let manufacturer_id: String = row.get("manufacturer_id");
         let product_code: String = row.get("product_code");
-        let description: String = row.get("description");
         let scale: String = row.get("scale");
         let power_method: String = row.get("power_method");
         let epoch: String = row.get("epoch");
         let category: String = row.get("category");
         let delivery_date: Option<String> = row.get("delivery_date");
         let availability_status: Option<String> = row.get("availability_status");
+
+        // Verify EN translation was inserted into railway_model_translations
+        let translation_row = sqlx::query(
+            "SELECT description FROM railway_model_translations WHERE railway_model_id = ?1 AND language_code = 'en'",
+        )
+        .bind(&railway_model_id)
+        .fetch_one(&mut *conn)
+        .await
+        .expect("should find EN translation");
+        let description: String = translation_row.get("description");
 
         assert_eq!(manufacturer_id, "trn:manufacturer:acme");
         assert_eq!(product_code, "9999");
