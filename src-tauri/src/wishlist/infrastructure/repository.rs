@@ -57,6 +57,22 @@ impl<'conn> SqliteWishlistRepository<'conn> {
                 item_id,
                 destination,
             } => self.move_item(item_id, destination).await,
+            WishlistEvent::ItemPurchased {
+                item_id,
+                purchased_price,
+            } => {
+                let affected =
+                    database::mark_item_purchased(&mut *self.executor, item_id, purchased_price)
+                        .await
+                        .with_domain_context("Error marking wishlist item as purchased")?;
+                if affected == 0 {
+                    return Err(DomainError::NotFound {
+                        resource: "WishlistItem".to_string(),
+                        identifier: item_id.to_string(),
+                    });
+                }
+                Ok(())
+            }
             WishlistEvent::MarkedDefault { is_default } => {
                 if *is_default {
                     database::set_default_wishlist(&mut *self.executor, wishlist_id)

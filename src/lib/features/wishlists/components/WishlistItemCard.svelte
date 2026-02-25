@@ -161,18 +161,20 @@
           <MoveRight size={12} />
           <span class="ml-1.5">Move</span>
         </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          class="h-8 flex-1 border-zinc-700 bg-zinc-800 text-[11px] font-bold hover:bg-zinc-700"
-          onclick={(e: MouseEvent) => {
-            e.stopPropagation();
-            onPurchase?.(item.id);
-          }}
-        >
-          <ShoppingCart size={12} />
-          <span class="ml-1.5">Purchase</span>
-        </Button>
+        {#if item.status === 'WANTED' || item.status === 'ON_ORDER'}
+          <Button
+            variant="secondary"
+            size="sm"
+            class="h-8 flex-1 border-zinc-700 bg-zinc-800 text-[11px] font-bold hover:bg-zinc-700"
+            onclick={(e: MouseEvent) => {
+              e.stopPropagation();
+              onPurchase?.(item.id);
+            }}
+          >
+            <ShoppingCart size={12} />
+            <span class="ml-1.5">Purchase</span>
+          </Button>
+        {/if}
       </div>
     </CardContent>
   </Card>

@@ -4341,33 +4341,34 @@ export type PurchaseInfoId = string;
  */
 export type PurchaseWishlistArgs = {
   /**
-   * The ID of the collection to add the purchased item to.
-   */
-  collectionId: string;
-  /**
    * The ID of the wishlist containing the item.
    */
   wishlistId: string;
   /**
    * The ID of the wishlist item being purchased.
    */
-  itemId: string;
+  wishlistItemId: string;
   /**
    * Purchase price amount in the smallest currency unit (e.g., cents).
    */
-  purchasePriceAmount: bigint;
+  priceAmount: bigint;
   /**
-   * Purchase price currency code (e.g., "USD").
+   * Purchase price currency code (e.g., "EUR", "USD", "GBP", "JPY").
    */
-  purchasePriceCurrency: string;
+  priceCurrency: string;
   /**
-   * The date the purchase occurred.
+   * The date the purchase occurred (ISO 8601: YYYY-MM-DD).
    */
-  purchaseDate: string | null;
+  purchaseDate: string;
   /**
    * Optional seller id string.
    */
   sellerId: string | null;
+  /**
+   * Combined condition selection. Valid values:
+   * "New" | "PreOwnedLikeNew" | "PreOwnedVeryGood" | "PreOwnedGood" | "PreOwnedAcceptable"
+   */
+  condition: string | null;
 };
 /**
  * Details for a purchased item.

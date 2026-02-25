@@ -480,6 +480,11 @@ export class WishlistState {
    * @param args - The complete arguments for the command
    * @returns Promise<boolean> - true on success, false on failure
    */
+  async onPurchaseSuccess(wishlistId: string) {
+    await this.loadWishlistItems(wishlistId);
+    toaster.success(m.purchase_dialog_success(), { duration: 2000 });
+  }
+
   async addRailwayModelToWishlist(args: AddRailwayModelToWishListArgs): Promise<boolean> {
     const toastId = randomId();
     toastLoading(toastId);

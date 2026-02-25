@@ -1,7 +1,9 @@
 use crate::catalog::domain::railway_model::RailwayModelUowExt;
 use crate::collecting::application::AddCollectionItem;
 use crate::collecting::application::AddCollectionItemInput;
-use crate::collecting::domain::{CollectionId, CollectionUowExt};
+use crate::collecting::domain::CollectionUowExt;
+use crate::collecting::domain::ModelCondition;
+use crate::collecting::domain::PurchaseCondition;
 use crate::collecting::domain::{CollectionItemId, PurchaseInfoId};
 use crate::core::domain::IdProvider;
 use crate::core::domain::MonetaryAmount;
@@ -10,18 +12,15 @@ use crate::sellers::domain::seller_id::SellerId;
 use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
-use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use chrono::NaiveDate;
 
-/// Command object carrying the information required to move (purchase)
-/// a wishlist item into the collection.
+/// Command object carrying the information required to purchase
+/// a wishlist item and move it into the collection.
 #[derive(Debug, Clone)]
-pub struct MoveWishlistItemId {
-    /// The target collection ID where the item will be added.
-    pub collection_id: CollectionId,
-    /// The wishlist ID from which the item is being moved.
+pub struct PurchaseWishlistItemCommand {
+    /// The wishlist ID from which the item is being purchased.
     pub wishlist_id: WishlistId,
-    /// The specific wishlist item ID to be moved.
+    /// The specific wishlist item ID to be purchased.
     pub wishlist_item_id: WishlistItemId,
     /// The purchase price paid for the item.
     pub purchase_price: MonetaryAmount,
@@ -29,25 +28,28 @@ pub struct MoveWishlistItemId {
     pub purchase_date: NaiveDate,
     /// Optional seller ID from whom the item was purchased.
     pub seller_id: Option<SellerId>,
+    /// The purchase condition (New or Pre-Owned).
+    pub purchase_condition: Option<PurchaseCondition>,
+    /// The model condition grade (for pre-owned items).
+    pub model_condition: Option<ModelCondition>,
 }
 
-/// Service that orchestrates moving a wishlist item into the collection
+/// Service that orchestrates purchasing a wishlist item into the collection
 /// (i.e. recording the purchase and creating the corresponding collection item).
 pub struct PurchaseWishlistItemService;
 
 impl PurchaseWishlistItemService {
-    /// Move a wishlist item into the collection inside the provided unit of work.
+    /// Purchase a wishlist item and move it into the collection inside the provided unit of work.
     ///
     /// This function performs the following steps atomically within the UoW:
-    /// 1. Load the wishlist aggregate and locate the wishlist item.
-    /// 2. Create an `AddCollectionItemInput` and call `AddCollectionItem::execute`.
-    /// 3. Update the wishlist item to `Purchased` and store the `purchased_price`.
-    /// 4. Persist the modified wishlist via the wishlist repository.
-    pub async fn move_wishlist_item<U, P, Q>(
+    /// 1. Load the wishlist aggregate and call `purchase_item()` to validate and emit the event.
+    /// 2. Create an `AddCollectionItemInput` (with condition data) and call `AddCollectionItem::execute`.
+    /// 3. Persist the modified wishlist via the wishlist repository.
+    pub async fn execute<U, P, Q>(
         unit_of_work: &mut U,
         collection_item_id_provider: P,
         purchase_info_id_provider: Q,
-        cmd: MoveWishlistItemId,
+        cmd: PurchaseWishlistItemCommand,
     ) -> Result<(), DomainError>
     where
         U: WishlistUowExt + CollectionUowExt + RailwayModelUowExt + Send,
@@ -66,36 +68,36 @@ impl PurchaseWishlistItemService {
                 })?
         };
 
-        // Find the mutable item inside the wishlist
-        let maybe_item = wishlist
-            .items
-            .iter_mut()
-            .find(|i| i.id == cmd.wishlist_item_id);
-
-        let item = match maybe_item {
-            Some(i) => i.clone(),
-            None => {
-                return Err(DomainError::NotFound {
+        // Snapshot the item's railway_model_id and notes before calling purchase_item
+        let (railway_model_id, item_notes) = {
+            let item = wishlist
+                .items
+                .iter()
+                .find(|i| i.id == cmd.wishlist_item_id)
+                .ok_or(DomainError::NotFound {
                     resource: "WishlistItem".to_string(),
                     identifier: cmd.wishlist_item_id.to_string(),
-                });
-            }
+                })?;
+            (item.railway_model_id.clone(), item.notes.clone())
         };
 
-        // 2. Build AddCollectionItemInput from wishlist item data and provided purchase info
+        // 2. Validate and transition item status via domain method
+        wishlist.purchase_item(&cmd.wishlist_item_id, cmd.purchase_price.clone())?;
+
+        // 3. Build AddCollectionItemInput from wishlist item data and provided purchase info
         let add_input = AddCollectionItemInput {
-            railway_model_id: item.railway_model_id.clone(),
+            railway_model_id,
             price: cmd.purchase_price.clone(),
             seller_id: cmd.seller_id.clone(),
             added_date: cmd.purchase_date,
             purchase_date: cmd.purchase_date,
-            purchase_condition: None,
-            model_condition: None,
+            purchase_condition: cmd.purchase_condition,
+            model_condition: cmd.model_condition,
             box_condition: None,
-            notes: item.notes.clone(),
+            notes: item_notes,
         };
 
-        // 3. Execute the collecting use-case to add the item to the collection
+        // 4. Execute the collecting use-case to add the item to the collection
         let _collection_item_id = AddCollectionItem::execute(
             unit_of_work,
             collection_item_id_provider,
@@ -104,17 +106,7 @@ impl PurchaseWishlistItemService {
         )
         .await?;
 
-        // 4. Update wishlist item to mark purchased and set purchased_price
-        if let Some(it) = wishlist
-            .items
-            .iter_mut()
-            .find(|i| i.id == cmd.wishlist_item_id)
-        {
-            it.purchased_price = Some(cmd.purchase_price.clone());
-            it.status = WishlistStatus::Purchased;
-        }
-
-        // Persist the wishlist changes (reacquire repo after collecting use-case)
+        // 5. Persist the wishlist changes (reacquire repo after collecting use-case)
         let mut wishlist_repo = unit_of_work.wishlist_repository();
         wishlist_repo.save_wishlist(&wishlist).await?;
 
@@ -144,20 +136,14 @@ mod tests {
     use crate::wishlist::domain::wishlist_item::WishlistItem;
     use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
     use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+    use crate::wishlist::domain::wishlist_status::WishlistStatus;
 
-    #[tokio::test]
-    async fn it_should_move_wishlist_item_to_collection() {
-        // Prepare mocks
-        let mut wishlist_mock = MockWishlistRepository::new();
-        let wid = WishlistId::default();
-        let wid_clone = wid.clone();
-        let item_id = WishlistItemId::try_from("trn:wishlist-item:it1").unwrap();
-
+    fn make_wishlist(wid: WishlistId, item_id: WishlistItemId, status: WishlistStatus) -> Wishlist {
         let wishlist_item = WishlistItem {
-            id: item_id.clone(),
+            id: item_id,
             railway_model_id: RailwayModelId::try_from("trn:railway-model:rm:test").unwrap(),
             priority: WishlistPriority::default(),
-            status: WishlistStatus::Wanted,
+            status,
             added_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
             removed_date: None,
             notes: Some("note".to_string()),
@@ -165,16 +151,44 @@ mod tests {
             purchased_price: None,
         };
 
-        let wishlist = Wishlist {
-            id: wid.clone(),
+        Wishlist {
+            id: wid,
             name: "My wishlist".to_string(),
             notes: None,
             is_default: false,
-            items: vec![wishlist_item.clone()],
+            items: vec![wishlist_item],
             pending_events: vec![],
             metadata: Default::default(),
-        };
+        }
+    }
 
+    fn make_railway_model(rm_id: RailwayModelId) -> RailwayModel {
+        RailwayModel {
+            id: rm_id,
+            manufacturer_id: ManufacturerId::try_from("trn:manufacturer:not-a-trn").unwrap(),
+            product_code: ProductCode::try_from("P100").unwrap(),
+            description: "Test model".to_string(),
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+            pending_events: vec![],
+        }
+    }
+
+    #[tokio::test]
+    async fn it_should_purchase_wishlist_item_into_collection() {
+        let mut wishlist_mock = MockWishlistRepository::new();
+        let wid = WishlistId::default();
+        let wid_clone = wid.clone();
+        let item_id = WishlistItemId::try_from("trn:wishlist-item:it1").unwrap();
+        let item_id_clone = item_id.clone();
+
+        let wishlist = make_wishlist(wid.clone(), item_id.clone(), WishlistStatus::Wanted);
         wishlist_mock
             .expect_find_by_id()
             .withf(move |id| *id == wid_clone)
@@ -186,7 +200,6 @@ mod tests {
             .times(1)
             .returning(move |_w| Ok(()));
 
-        // Collection mock
         let mut collection_mock = MockCollectionRepository::new();
         collection_mock
             .expect_find_by_id()
@@ -209,47 +222,157 @@ mod tests {
             .times(1)
             .returning(move |_c| Ok(()));
 
-        // Railway model mock
         let mut railway_mock = MockRailwayModelRepository::new();
         let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
-        let railway_model = RailwayModel {
-            id: rm_id.clone(),
-            manufacturer_id: ManufacturerId::try_from("trn:manufacturer:not-a-trn").unwrap(),
-            product_code: ProductCode::try_from("P100").unwrap(),
-            description: "Test model".to_string(),
-            details: None,
-            power_method: PowerMethod::DC,
-            scale: Scale::H0,
-            epoch: "IV".into(),
-            category: Category::Locomotives,
-            delivery_date: None,
-            availability_status: None,
-            rolling_stocks: vec![],
-            pending_events: vec![],
-        };
+        let rm_id_clone = rm_id.clone();
+        let railway_model = make_railway_model(rm_id.clone());
 
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == rm_id)
+            .withf(move |id| *id == rm_id_clone)
             .times(1)
             .returning(move |_| Ok(Some(railway_model.clone())));
 
-        // Build combined fake uow
         let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
-
         let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
         let purchase_info_provider = DefaultMockIdProvider::<PurchaseInfoId>::new();
 
-        let cmd = MoveWishlistItemId {
-            collection_id: CollectionId::default(),
+        let cmd = PurchaseWishlistItemCommand {
             wishlist_id: wid.clone(),
-            wishlist_item_id: item_id.clone(),
+            wishlist_item_id: item_id_clone,
             purchase_price: MonetaryAmount::new(100, Currency::USD),
             purchase_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
             seller_id: None,
+            purchase_condition: None,
+            model_condition: None,
         };
 
-        let res = PurchaseWishlistItemService::move_wishlist_item(
+        let res = PurchaseWishlistItemService::execute(
+            &mut uow,
+            cid_provider,
+            purchase_info_provider,
+            cmd,
+        )
+        .await;
+
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn it_should_fail_when_item_is_already_purchased() {
+        let mut wishlist_mock = MockWishlistRepository::new();
+        let wid = WishlistId::default();
+        let wid_clone = wid.clone();
+        let item_id = WishlistItemId::try_from("trn:wishlist-item:it-purchased").unwrap();
+        let item_id_clone = item_id.clone();
+
+        let wishlist = make_wishlist(wid.clone(), item_id.clone(), WishlistStatus::Purchased);
+        wishlist_mock
+            .expect_find_by_id()
+            .withf(move |id| *id == wid_clone)
+            .times(1)
+            .returning(move |_| Ok(Some(wishlist.clone())));
+
+        let collection_mock = MockCollectionRepository::new();
+        let railway_mock = MockRailwayModelRepository::new();
+
+        let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
+        let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
+        let purchase_info_provider = DefaultMockIdProvider::<PurchaseInfoId>::new();
+
+        let cmd = PurchaseWishlistItemCommand {
+            wishlist_id: wid.clone(),
+            wishlist_item_id: item_id_clone,
+            purchase_price: MonetaryAmount::new(100, Currency::USD),
+            purchase_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
+            seller_id: None,
+            purchase_condition: None,
+            model_condition: None,
+        };
+
+        let res = PurchaseWishlistItemService::execute(
+            &mut uow,
+            cid_provider,
+            purchase_info_provider,
+            cmd,
+        )
+        .await;
+
+        assert!(res.is_err());
+        match res.err().unwrap() {
+            DomainError::BusinessRule(_) => {}
+            other => panic!("expected BusinessRule, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn it_should_forward_condition_to_collection_item() {
+        let mut wishlist_mock = MockWishlistRepository::new();
+        let wid = WishlistId::default();
+        let wid_clone = wid.clone();
+        let item_id = WishlistItemId::try_from("trn:wishlist-item:it-cond").unwrap();
+        let item_id_clone = item_id.clone();
+
+        let wishlist = make_wishlist(wid.clone(), item_id.clone(), WishlistStatus::Wanted);
+        wishlist_mock
+            .expect_find_by_id()
+            .withf(move |id| *id == wid_clone)
+            .times(1)
+            .returning(move |_| Ok(Some(wishlist.clone())));
+
+        wishlist_mock
+            .expect_save_wishlist()
+            .times(1)
+            .returning(move |_w| Ok(()));
+
+        let mut collection_mock = MockCollectionRepository::new();
+        collection_mock
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |_id| {
+                let coll = Collection {
+                    id: CollectionId::default(),
+                    name: "My Collection".to_string(),
+                    summary: CollectionSummary::default(),
+                    total_value: None,
+                    items: vec![],
+                    pending_events: vec![],
+                    metadata: Default::default(),
+                };
+                Ok(Some(coll))
+            });
+
+        collection_mock
+            .expect_save()
+            .times(1)
+            .returning(move |_c| Ok(()));
+
+        let mut railway_mock = MockRailwayModelRepository::new();
+        let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
+        let rm_id_clone = rm_id.clone();
+        let railway_model = make_railway_model(rm_id.clone());
+
+        railway_mock
+            .expect_find_by_id()
+            .withf(move |id| *id == rm_id_clone)
+            .times(1)
+            .returning(move |_| Ok(Some(railway_model.clone())));
+
+        let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
+        let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
+        let purchase_info_provider = DefaultMockIdProvider::<PurchaseInfoId>::new();
+
+        let cmd = PurchaseWishlistItemCommand {
+            wishlist_id: wid.clone(),
+            wishlist_item_id: item_id_clone,
+            purchase_price: MonetaryAmount::new(200, Currency::EUR),
+            purchase_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
+            seller_id: None,
+            purchase_condition: Some(PurchaseCondition::PreOwned),
+            model_condition: Some(ModelCondition::NearMint),
+        };
+
+        let res = PurchaseWishlistItemService::execute(
             &mut uow,
             cid_provider,
             purchase_info_provider,
@@ -266,63 +389,41 @@ mod tests {
         let wid = WishlistId::default();
         let wid_clone = wid.clone();
         let item_id = WishlistItemId::try_from("trn:wishlist-item:it2").unwrap();
+        let item_id_clone = item_id.clone();
 
-        let wishlist_item = WishlistItem {
-            id: item_id.clone(),
-            railway_model_id: RailwayModelId::try_from("trn:railway-model:rm:notfound").unwrap(),
-            priority: WishlistPriority::default(),
-            status: WishlistStatus::Wanted,
-            added_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
-            removed_date: None,
-            notes: Some("note".to_string()),
-            desired_price: None,
-            purchased_price: None,
-        };
-
-        let wishlist = Wishlist {
-            id: wid.clone(),
-            name: "WL".to_string(),
-            notes: None,
-            is_default: false,
-            items: vec![wishlist_item.clone()],
-            pending_events: vec![],
-            metadata: Default::default(),
-        };
-
+        let wishlist = make_wishlist(wid.clone(), item_id.clone(), WishlistStatus::Wanted);
         wishlist_mock
             .expect_find_by_id()
             .withf(move |id| *id == wid_clone)
             .times(1)
             .returning(move |_| Ok(Some(wishlist.clone())));
 
-        // railway returns not found
         let mut railway_mock = MockRailwayModelRepository::new();
-        let rm_id = RailwayModelId::try_from("trn:railway-model:rm:notfound").unwrap();
+        let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
         railway_mock
             .expect_find_by_id()
             .withf(move |id| *id == rm_id)
             .times(1)
             .returning(move |_| Ok(None));
 
-        // collection not involved for this failure, but provide a default
         let mut collection_mock = MockCollectionRepository::new();
         collection_mock.expect_find_by_id().times(0);
 
         let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
-
         let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
         let purchase_info_provider = DefaultMockIdProvider::<PurchaseInfoId>::new();
 
-        let cmd = MoveWishlistItemId {
-            collection_id: CollectionId::default(),
+        let cmd = PurchaseWishlistItemCommand {
             wishlist_id: wid.clone(),
-            wishlist_item_id: item_id.clone(),
+            wishlist_item_id: item_id_clone,
             purchase_price: MonetaryAmount::new(100, Currency::USD),
             purchase_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
             seller_id: None,
+            purchase_condition: None,
+            model_condition: None,
         };
 
-        let res = PurchaseWishlistItemService::move_wishlist_item(
+        let res = PurchaseWishlistItemService::execute(
             &mut uow,
             cid_provider,
             purchase_info_provider,
@@ -343,36 +444,15 @@ mod tests {
         let wid = WishlistId::default();
         let wid_clone = wid.clone();
         let item_id = WishlistItemId::try_from("trn:wishlist-item:it3").unwrap();
+        let item_id_clone = item_id.clone();
 
-        let wishlist_item = WishlistItem {
-            id: item_id.clone(),
-            railway_model_id: RailwayModelId::try_from("trn:railway-model:rm:test").unwrap(),
-            priority: WishlistPriority::default(),
-            status: WishlistStatus::Wanted,
-            added_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
-            removed_date: None,
-            notes: Some("note".to_string()),
-            desired_price: None,
-            purchased_price: None,
-        };
-
-        let wishlist = Wishlist {
-            id: wid.clone(),
-            name: "WL2".to_string(),
-            notes: None,
-            is_default: false,
-            items: vec![wishlist_item.clone()],
-            pending_events: vec![],
-            metadata: Default::default(),
-        };
-
+        let wishlist = make_wishlist(wid.clone(), item_id.clone(), WishlistStatus::Wanted);
         wishlist_mock
             .expect_find_by_id()
             .withf(move |id| *id == wid_clone)
             .times(1)
             .returning(move |_| Ok(Some(wishlist.clone())));
 
-        // Collection save will fail
         let mut collection_mock = MockCollectionRepository::new();
         collection_mock
             .expect_find_by_id()
@@ -395,46 +475,32 @@ mod tests {
             .times(1)
             .returning(move |_c| Err(DomainError::Infrastructure(sqlx::Error::RowNotFound)));
 
-        // Railway model present
         let mut railway_mock = MockRailwayModelRepository::new();
         let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
-        let railway_model = RailwayModel {
-            id: rm_id.clone(),
-            manufacturer_id: ManufacturerId::try_from("trn:manufacturer:not-a-trn").unwrap(),
-            product_code: ProductCode::try_from("P100").unwrap(),
-            description: "Test model".to_string(),
-            details: None,
-            power_method: PowerMethod::DC,
-            scale: Scale::H0,
-            epoch: "IV".into(),
-            category: Category::Locomotives,
-            delivery_date: None,
-            availability_status: None,
-            rolling_stocks: vec![],
-            pending_events: vec![],
-        };
+        let rm_id_clone = rm_id.clone();
+        let railway_model = make_railway_model(rm_id.clone());
 
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == rm_id)
+            .withf(move |id| *id == rm_id_clone)
             .times(1)
             .returning(move |_| Ok(Some(railway_model.clone())));
 
         let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
-
         let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
         let purchase_info_provider = DefaultMockIdProvider::<PurchaseInfoId>::new();
 
-        let cmd = MoveWishlistItemId {
-            collection_id: CollectionId::default(),
+        let cmd = PurchaseWishlistItemCommand {
             wishlist_id: wid.clone(),
-            wishlist_item_id: item_id.clone(),
+            wishlist_item_id: item_id_clone,
             purchase_price: MonetaryAmount::new(100, Currency::USD),
             purchase_date: NaiveDate::from_ymd_opt(2024, 6, 1).unwrap(),
             seller_id: None,
+            purchase_condition: None,
+            model_condition: None,
         };
 
-        let res = PurchaseWishlistItemService::move_wishlist_item(
+        let res = PurchaseWishlistItemService::execute(
             &mut uow,
             cid_provider,
             purchase_info_provider,

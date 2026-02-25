@@ -8,6 +8,8 @@
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
   import AddRailwayModelDrawer from './components/AddRailwayModelDrawer.svelte';
+  import PurchaseDialog from './components/PurchaseDialog.svelte';
+  import type { WishlistItem } from '$lib/bindings';
 
   const wishlistService = getWishlistContext();
 
@@ -19,6 +21,10 @@
 
   // Drawer state
   let showAddModelDrawer = $state(false);
+
+  // Purchase dialog state
+  let purchaseDialogOpen = $state(false);
+  let purchaseDialogItem = $state<WishlistItem | null>(null);
 
   onMount(() => {
     void wishlistService.fetchWishlists();
@@ -80,6 +86,25 @@
   function handleMove(detail: { itemId: string; fromId: string; toId: string }) {
     const { itemId, fromId, toId } = detail;
     void wishlistService.moveItemToList(itemId, fromId, toId);
+  }
+
+  function handlePurchaseTrigger(itemId: string) {
+    const item = wishlistItems.find((i) => i.id === itemId) ?? null;
+    if (!item) return;
+    purchaseDialogItem = item;
+    purchaseDialogOpen = true;
+  }
+
+  function handlePurchaseClose() {
+    purchaseDialogOpen = false;
+    purchaseDialogItem = null;
+  }
+
+  async function handlePurchaseSuccess() {
+    handlePurchaseClose();
+    if (activeWishlistId) {
+      await wishlistService.onPurchaseSuccess(activeWishlistId);
+    }
   }
 
   function openAddModelDrawer() {
@@ -182,6 +207,7 @@
                 {otherTargets}
                 onRemove={handleRemove}
                 onMove={handleMove}
+                onPurchase={handlePurchaseTrigger}
               />
             </div>
           </div>
@@ -218,3 +244,14 @@
   onClose={closeAddModelDrawer}
   onSuccess={handleAddModelSuccess}
 />
+
+{#if purchaseDialogOpen && purchaseDialogItem && activeWishlistId}
+  <PurchaseDialog
+    open={purchaseDialogOpen}
+    wishlistId={activeWishlistId}
+    wishlistItemId={purchaseDialogItem.id}
+    itemName={purchaseDialogItem.railwayModelId}
+    onClose={handlePurchaseClose}
+    onSuccess={handlePurchaseSuccess}
+  />
+{/if}

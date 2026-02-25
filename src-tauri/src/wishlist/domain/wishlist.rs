@@ -1,7 +1,11 @@
+use crate::core::domain::MonetaryAmount;
+use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::metadata::Metadata;
 use crate::wishlist::domain::wishlist_event::WishlistEvent;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
+use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
+use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use serde::{Deserialize, Serialize};
 
 /// Domain model representing a user's wishlist.
@@ -40,6 +44,39 @@ impl Wishlist {
         self.apply_event(&ev);
     }
 
+    /// Validate and transition a wishlist item to the `Purchased` status.
+    ///
+    /// Returns `DomainError::BusinessRule` if the item is not found or is already
+    /// in a terminal status (`Purchased` or `Ignored`).
+    pub fn purchase_item(
+        &mut self,
+        item_id: &WishlistItemId,
+        purchased_price: MonetaryAmount,
+    ) -> Result<(), DomainError> {
+        let item = self
+            .items
+            .iter()
+            .find(|i| i.id == *item_id)
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "WishlistItem".to_string(),
+                identifier: item_id.to_string(),
+            })?;
+
+        if item.status != WishlistStatus::Wanted && item.status != WishlistStatus::OnOrder {
+            return Err(DomainError::BusinessRule(
+                "Item is not available for purchase".to_string(),
+            ));
+        }
+
+        let ev = WishlistEvent::ItemPurchased {
+            item_id: item_id.clone(),
+            purchased_price,
+        };
+        self.pending_events.push(ev.clone());
+        self.apply_event(&ev);
+        Ok(())
+    }
+
     /// Emit a `Renamed` event and apply it to the aggregate state.
     pub fn rename(&mut self, name: &str) {
         let ev = WishlistEvent::Renamed {
@@ -76,6 +113,15 @@ impl Wishlist {
                 self.items.retain(|i| i.id != *item_id);
             }
             WishlistEvent::MarkedDefault { is_default } => self.is_default = *is_default,
+            WishlistEvent::ItemPurchased {
+                item_id,
+                purchased_price,
+            } => {
+                if let Some(item) = self.items.iter_mut().find(|i| i.id == *item_id) {
+                    item.status = WishlistStatus::Purchased;
+                    item.purchased_price = Some(purchased_price.clone());
+                }
+            }
         }
     }
 

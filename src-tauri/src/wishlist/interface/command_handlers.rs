@@ -11,12 +11,11 @@ use crate::wishlist::application::MoveWishlistItemUseCase;
 use crate::wishlist::application::RemoveWishlistItemUseCase;
 use crate::wishlist::application::RenameWishlistUseCase;
 use crate::wishlist::application::SetDefaultWishlistUseCase;
-use crate::wishlist::application::inputs::PurchaseWishlistItemInput;
 use crate::wishlist::application::inputs::{
     AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
     RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput,
 };
-use crate::wishlist::application::purchase_wishlist_item::MoveWishlistItemId;
+use crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCommand;
 use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::application::{AddToWishlistUseCase, PurchaseWishlistItemService};
 use crate::wishlist::domain::wishlist_id::WishlistId;
@@ -345,22 +344,13 @@ pub async fn purchase_wishlist_item(
     let collection_item_id_provider = RuntimeIdProvider::new();
     let purchase_info_id_provider = RuntimeIdProvider::new();
 
-    let cmd = PurchaseWishlistItemInput::try_from(input).map_err(CommandError::from)?;
+    let cmd = PurchaseWishlistItemCommand::try_from(input).map_err(CommandError::from)?;
 
-    let move_cmd = MoveWishlistItemId {
-        collection_id: cmd.collection_id.clone(),
-        wishlist_id: cmd.wishlist_id.clone(),
-        wishlist_item_id: cmd.item_id.clone(),
-        purchase_price: cmd.purchase_price.clone(),
-        purchase_date: cmd.purchase_date,
-        seller_id: cmd.seller_id.clone(),
-    };
-
-    PurchaseWishlistItemService::move_wishlist_item(
+    PurchaseWishlistItemService::execute(
         &mut unit_of_work,
         collection_item_id_provider,
         purchase_info_id_provider,
-        move_cmd,
+        cmd,
     )
     .await?;
 

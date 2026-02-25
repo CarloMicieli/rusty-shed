@@ -1,4 +1,6 @@
+use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist_id::WishlistId;
+use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::infrastructure::entities::{
     WishlistItemRow, WishlistPreviewProjection, WishlistRow,
 };
@@ -214,9 +216,32 @@ pub async fn delete_wishlist_item(
     Ok(res.rows_affected())
 }
 
+pub async fn mark_item_purchased(
+    executor: &mut sqlx::SqliteConnection,
+    item_id: &WishlistItemId,
+    purchased_price: &MonetaryAmount,
+) -> Result<u64, sqlx::Error> {
+    let sql = r#"
+        UPDATE wishlist_items
+        SET status = 'PURCHASED',
+            purchased_price_amount = ?,
+            purchased_price_currency = ?
+        WHERE id = ?
+    "#;
+
+    let res = sqlx::query(sql)
+        .bind(purchased_price.amount)
+        .bind(purchased_price.currency.to_code())
+        .bind(item_id.to_string())
+        .execute(executor)
+        .await?;
+
+    Ok(res.rows_affected())
+}
+
 pub async fn move_wishlist_item(
     executor: &mut sqlx::SqliteConnection,
-    id: &crate::wishlist::domain::wishlist_item_id::WishlistItemId,
+    id: &WishlistItemId,
     destination: &WishlistId,
 ) -> Result<u64, sqlx::Error> {
     let sql = r#"

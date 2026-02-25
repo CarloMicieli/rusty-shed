@@ -79,20 +79,22 @@ pub struct RenameWishlistArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct PurchaseWishlistArgs {
-    /// The ID of the collection to add the purchased item to.
-    pub collection_id: String,
     /// The ID of the wishlist containing the item.
     pub wishlist_id: String,
     /// The ID of the wishlist item being purchased.
-    pub item_id: String,
+    pub wishlist_item_id: String,
     /// Purchase price amount in the smallest currency unit (e.g., cents).
-    pub purchase_price_amount: i64,
-    /// Purchase price currency code (e.g., "USD").
-    pub purchase_price_currency: String,
-    /// The date the purchase occurred.
-    pub purchase_date: Option<NaiveDate>,
+    #[garde(range(min = 0))]
+    pub price_amount: i64,
+    /// Purchase price currency code (e.g., "EUR", "USD", "GBP", "JPY").
+    pub price_currency: String,
+    /// The date the purchase occurred (ISO 8601: YYYY-MM-DD).
+    pub purchase_date: NaiveDate,
     /// Optional seller id string.
     pub seller_id: Option<String>,
+    /// Combined condition selection. Valid values:
+    /// "New" | "PreOwnedLikeNew" | "PreOwnedVeryGood" | "PreOwnedGood" | "PreOwnedAcceptable"
+    pub condition: Option<String>,
 }
 
 impl TryFrom<CreateWishlistArgs> for CreateWishlistInput {
@@ -199,31 +201,26 @@ impl TryFrom<MoveWishlistItemArgs> for MoveWishlistItemInput {
 }
 
 impl TryFrom<PurchaseWishlistArgs>
-    for crate::wishlist::application::inputs::PurchaseWishlistItemInput
+    for crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCommand
 {
     type Error = DomainError;
 
     fn try_from(input: PurchaseWishlistArgs) -> Result<Self, Self::Error> {
-        use crate::collecting::domain::CollectionId;
+        use crate::collecting::domain::ModelCondition;
+        use crate::collecting::domain::PurchaseCondition;
         use crate::sellers::domain::seller_id::SellerId;
-
-        let collection_id = CollectionId::try_from(input.collection_id.as_str())
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        use crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCommand;
 
         let wishlist_id = WishlistId::try_from(input.wishlist_id.as_str())
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-        let item_id = WishlistItemId::try_from(input.item_id.as_str())
+        let wishlist_item_id = WishlistItemId::try_from(input.wishlist_item_id.as_str())
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-        let currency = Currency::from_code(&input.purchase_price_currency)
+        let currency = Currency::from_code(&input.price_currency)
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-        let price = MonetaryAmount::new(input.purchase_price_amount, currency);
-
-        let purchase_date = input
-            .purchase_date
-            .unwrap_or(chrono::Utc::now().date_naive());
+        let price = MonetaryAmount::new(input.price_amount, currency);
 
         let seller = match input.seller_id {
             Some(s) => Some(
@@ -233,16 +230,41 @@ impl TryFrom<PurchaseWishlistArgs>
             None => None,
         };
 
-        Ok(
-            crate::wishlist::application::inputs::PurchaseWishlistItemInput {
-                collection_id,
-                wishlist_id,
-                item_id,
-                purchase_price: price,
-                purchase_date,
-                seller_id: seller,
-            },
-        )
+        let (purchase_condition, model_condition) = match input.condition.as_deref() {
+            None => (None, None),
+            Some("New") => (Some(PurchaseCondition::New), None),
+            Some("PreOwnedLikeNew") => (
+                Some(PurchaseCondition::PreOwned),
+                Some(ModelCondition::NearMint),
+            ),
+            Some("PreOwnedVeryGood") => (
+                Some(PurchaseCondition::PreOwned),
+                Some(ModelCondition::VeryGood),
+            ),
+            Some("PreOwnedGood") => (
+                Some(PurchaseCondition::PreOwned),
+                Some(ModelCondition::Good),
+            ),
+            Some("PreOwnedAcceptable") => (
+                Some(PurchaseCondition::PreOwned),
+                Some(ModelCondition::Fair),
+            ),
+            Some(other) => {
+                return Err(DomainError::Validation(format!(
+                    "Unknown condition value: {other}"
+                )));
+            }
+        };
+
+        Ok(PurchaseWishlistItemCommand {
+            wishlist_id,
+            wishlist_item_id,
+            purchase_price: price,
+            purchase_date: input.purchase_date,
+            seller_id: seller,
+            purchase_condition,
+            model_condition,
+        })
     }
 }
 

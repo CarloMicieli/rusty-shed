@@ -3,11 +3,12 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { commands } from '$lib/bindings';
-  import { ArrowLeft } from 'lucide-svelte';
+  import { ArrowLeft, ShoppingCart } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
+  import PurchaseDialog from '$lib/features/wishlists/components/PurchaseDialog.svelte';
   import type {
     RailwayModelView,
     RailwayModelImageResponse,
@@ -25,6 +26,7 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
   let notFound = $state(false);
+  let purchaseDialogOpen = $state(false);
 
   const displayModel = $derived(model ? toRailwayModel(model, null, imageResponse) : null);
 
@@ -44,6 +46,18 @@
       desiredPrice: v.desired_price,
       purchasedPrice: v.purchased_price
     };
+  }
+
+  async function reloadItem() {
+    const wishlistResult = await commands.getWishlistById(wishlistId);
+    if (wishlistResult.status !== 'ok' || !wishlistResult.data) return;
+    const foundView = wishlistResult.data.items?.find((i) => i.id === itemId) ?? null;
+    if (foundView) wishlistItem = normalizeItem(foundView);
+  }
+
+  function handlePurchaseSuccess() {
+    purchaseDialogOpen = false;
+    void reloadItem();
   }
 
   onMount(async () => {
@@ -142,7 +156,30 @@
       </div>
 
       <!-- Right panel: Sidebar -->
-      <WishlistItemSidebar item={wishlistItem} {wishlistName} />
+      <div class="flex w-full shrink-0 flex-col gap-4 lg:w-80">
+        <WishlistItemSidebar item={wishlistItem} {wishlistName} />
+        {#if wishlistItem.status === 'WANTED' || wishlistItem.status === 'ON_ORDER'}
+          <button
+            type="button"
+            onclick={() => (purchaseDialogOpen = true)}
+            class="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-amber-400"
+          >
+            <ShoppingCart class="h-4 w-4" />
+            {m.purchase_dialog_submit()}
+          </button>
+        {/if}
+      </div>
     </div>
   </div>
+
+  {#if purchaseDialogOpen}
+    <PurchaseDialog
+      open={purchaseDialogOpen}
+      {wishlistId}
+      wishlistItemId={itemId}
+      itemName={model?.description ?? itemId}
+      onClose={() => (purchaseDialogOpen = false)}
+      onSuccess={handlePurchaseSuccess}
+    />
+  {/if}
 {/if}

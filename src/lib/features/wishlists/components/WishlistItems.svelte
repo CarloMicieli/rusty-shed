@@ -6,12 +6,13 @@
   import * as Dialog from '$lib/components/ui/dialog';
   import { Button } from '$lib/components';
 
-  const { items, activeWishlistId, otherTargets, onRemove, onMove } = $props<{
+  const { items, activeWishlistId, otherTargets, onRemove, onMove, onPurchase } = $props<{
     items: WishlistItem[];
     activeWishlistId: string | null;
     otherTargets: WishlistPreview[];
     onRemove?: (detail: { itemId: string; wishlistId: string }) => void;
     onMove?: (detail: { itemId: string; fromId: string; toId: string }) => void;
+    onPurchase?: (itemId: string) => void;
   }>();
 
   const wishlistId = $derived(activeWishlistId ?? '');
@@ -60,9 +61,7 @@
       {wishlistId}
       onRemove={handleRemove}
       onMove={handleMoveTrigger}
-      onPurchase={() => {
-        /* Purchase logic could be added here */
-      }}
+      onPurchase={onPurchase ? (itemId) => onPurchase(itemId) : undefined}
     />
   {/each}
 {/if}

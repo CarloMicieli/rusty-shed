@@ -1,3 +1,4 @@
+use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
@@ -31,5 +32,11 @@ pub enum WishlistEvent {
     },
     MarkedDefault {
         is_default: bool,
+    },
+    /// Emitted when a wishlist item is successfully marked as purchased
+    /// and the item has been moved to the collection.
+    ItemPurchased {
+        item_id: WishlistItemId,
+        purchased_price: MonetaryAmount,
     },
 }

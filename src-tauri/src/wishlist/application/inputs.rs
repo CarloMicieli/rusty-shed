@@ -1,7 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
-use crate::collecting::domain::CollectionId;
 use crate::core::domain::MonetaryAmount;
-use crate::sellers::domain::seller_id::SellerId;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
@@ -77,21 +75,4 @@ pub struct MoveWishlistItemInput {
     pub destination_wishlist_id: WishlistId,
     /// The unique identifier of the source wishlist.
     pub wishlist_id: WishlistId,
-}
-
-/// Input structure for purchasing an item from a wishlist.
-#[derive(Debug, Clone)]
-pub struct PurchaseWishlistItemInput {
-    /// The unique identifier of the collection where the purchased item will be added.
-    pub collection_id: CollectionId,
-    /// The unique identifier of the wishlist from which the item is being purchased.
-    pub wishlist_id: WishlistId,
-    /// The unique identifier of the wishlist item being purchased.
-    pub item_id: WishlistItemId,
-    /// The purchase price of the item.
-    pub purchase_price: MonetaryAmount,
-    /// The date the item was purchased.
-    pub purchase_date: NaiveDate,
-    /// Optional unique identifier of the seller from whom the item was purchased.
-    pub seller_id: Option<SellerId>,
 }
