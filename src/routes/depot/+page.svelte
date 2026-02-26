@@ -57,37 +57,47 @@
   });
 </script>
 
-<div class="space-y-8">
-  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
-    {#snippet actions()}
-      <Button variant="outline"><Funnel size={16} class="mr-2" /> {m.depot_filter_button()}</Button>
-      <Button variant="default"><Plus size={18} /> {m.actions_add_railway_model()}</Button>
-    {/snippet}
-  </PageHeader>
+<div class="flex flex-col">
+  <div
+    class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
+  >
+    <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
+      {#snippet actions()}
+        <Button variant="outline" size="sm"
+          ><Funnel size={16} class="mr-2" /> {m.depot_filter_button()}</Button
+        >
+        <Button variant="default" size="sm"
+          ><Plus size={18} class="mr-2" /> {m.actions_add_railway_model()}</Button
+        >
+      {/snippet}
+    </PageHeader>
+  </div>
 
-  <DepotControls
-    bind:searchInput
-    bind:viewMode={depot.viewMode}
-    onClear={() => (searchInput = '')}
-  />
+  <div class="space-y-8">
+    <DepotControls
+      bind:searchInput
+      bind:viewMode={depot.viewMode}
+      onClear={() => (searchInput = '')}
+    />
 
-  {#if depot.isLoading}{:else if depot.error}{:else}
-    <Accordion.Root
-      type="multiple"
-      value={['locomotives', 'railcarsEmuDmu', 'passengerCars', 'freightCars']}
-      class="space-y-6"
-    >
-      {#each categoryMap as cat (cat.id)}
-        <DepotCategory
-          value={cat.val}
-          title={cat.title}
-          icon={cat.icon}
-          items={cat.data}
-          categoryId={`Category_${cat.id}`}
-        />
-      {/each}
-    </Accordion.Root>
+    {#if depot.isLoading}{:else if depot.error}{:else}
+      <Accordion.Root
+        type="multiple"
+        value={['locomotives', 'railcarsEmuDmu', 'passengerCars', 'freightCars']}
+        class="space-y-6"
+      >
+        {#each categoryMap as cat (cat.id)}
+          <DepotCategory
+            value={cat.val}
+            title={cat.title}
+            icon={cat.icon}
+            items={cat.data}
+            categoryId={`Category_${cat.id}`}
+          />
+        {/each}
+      </Accordion.Root>
 
-    <DepotStatusFooter total={depot.totalFiltered} />
-  {/if}
+      <DepotStatusFooter total={depot.totalFiltered} />
+    {/if}
+  </div>
 </div>

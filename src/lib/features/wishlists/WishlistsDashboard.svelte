@@ -126,9 +126,9 @@
   <title>{m.app_wishlists()}</title>
 </svelte:head>
 
-<div class="flex h-screen flex-col overflow-hidden bg-background">
+<div class="mb-10 flex flex-col">
   <!-- Page Header -->
-  <div class="flex-shrink-0 border-b border-border px-6 py-4">
+  <div class="-mx-4 -mt-4 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8">
     <PageHeader
       title={m.wishlists_title()}
       subtitle={m.wishlists_subtitle()}
@@ -143,10 +143,10 @@
     </PageHeader>
   </div>
 
-  <div class="flex flex-1 overflow-hidden">
+  <div class="-mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
     <!-- List Navigator (Left Column) -->
-    <aside class="w-80 flex-shrink-0 overflow-y-auto border-r border-white/10 bg-[#0c0c0c]">
-      <div class="p-4">
+    <aside class="flex-shrink-0 border-r border-border bg-card md:w-80">
+      <div class="sticky top-4 p-4">
         <WishlistSidebar
           {wishlists}
           activeId={activeWishlistId}
@@ -157,20 +157,20 @@
     </aside>
 
     <!-- Wishlist Content Area (Right Column) -->
-    <main class="flex-1 overflow-y-auto bg-background">
+    <div class="flex-1 bg-background">
       <div class="p-6">
         {#if wishlistService.isLoading}
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {#each Array.from({ length: 8 }) as _, i (i)}
               <div
-                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-2xl border-2 border-white/5 bg-[#0c0c0c] p-4"
+                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-2xl border-2 border-border/50 bg-card p-4"
               >
-                <div class="h-2 w-1/2 rounded bg-white/5"></div>
-                <div class="h-4 w-3/4 rounded bg-white/5"></div>
-                <div class="aspect-[4/3] rounded-xl bg-white/5"></div>
+                <div class="h-2 w-1/2 rounded bg-muted"></div>
+                <div class="h-4 w-3/4 rounded bg-muted"></div>
+                <div class="aspect-[4/3] rounded-xl bg-muted"></div>
                 <div class="flex gap-2">
-                  <div class="h-8 flex-1 rounded-lg bg-white/5"></div>
-                  <div class="h-8 flex-1 rounded-lg bg-white/5"></div>
+                  <div class="h-8 flex-1 rounded-lg bg-muted"></div>
+                  <div class="h-8 flex-1 rounded-lg bg-muted"></div>
                 </div>
               </div>
             {/each}
@@ -217,7 +217,7 @@
           </div>
         {/if}
       </div>
-    </main>
+    </div>
   </div>
 </div>
 

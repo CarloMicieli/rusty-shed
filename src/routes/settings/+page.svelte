@@ -115,84 +115,92 @@
   <title>{m.app_name()} | {m.app_settings()}</title>
 </svelte:head>
 
-<div class="space-y-6">
-  <PageHeader
-    title={m.settings_heading()}
-    subtitle={m.app_settings()}
-    description={m.settings_description()}
-  />
+<div class="flex flex-col">
+  <div
+    class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
+  >
+    <PageHeader
+      title={m.settings_heading()}
+      subtitle={m.app_settings()}
+      description={m.settings_description()}
+    />
+  </div>
 
-  {#if loading}
-    <div class="rounded-lg border border-border bg-card p-8 shadow-xl">
-      <div class="animate-pulse space-y-4">
-        <div class="h-4 w-1/3 rounded bg-muted"></div>
-        <div class="h-4 w-1/2 rounded bg-muted"></div>
-        <div class="grid gap-4 md:grid-cols-2">
-          {#each Array(4) as _item, index (index)}
-            <div class="h-20 rounded bg-muted/60"></div>
-          {/each}
-        </div>
-      </div>
-    </div>
-  {:else if error}
-    <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-6">
-      <p class="font-semibold text-destructive">{error}</p>
-      <Button variant="default" class="mt-4" onclick={loadSettings}>
-        {m.errors_retry_page()}
-      </Button>
-    </div>
-  {:else if settings}
-    <div class="space-y-6">
-      {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerSystem}`}
-        <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
-      {/key}
-
-      <!-- Data Management Section -->
-      <DataManagementSection />
-
-      <!-- Cloud Backup Section -->
-      <div class="rounded-lg border border-border bg-card p-6 shadow-xl">
-        <div class="space-y-4">
-          <div>
-            <h2 class="text-xl font-bold">{m.cloud_backup_title()}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">{m.cloud_backup_subtitle()}</p>
+  <div class="space-y-6">
+    {#if loading}
+      <div class="rounded-lg border border-border bg-card p-8 shadow-xl">
+        <div class="animate-pulse space-y-4">
+          <div class="h-4 w-1/3 rounded bg-muted"></div>
+          <div class="h-4 w-1/2 rounded bg-muted"></div>
+          <div class="grid gap-4 md:grid-cols-2">
+            {#each Array(4) as _item, index (index)}
+              <div class="h-20 rounded bg-muted/60"></div>
+            {/each}
           </div>
-
-          <GoogleConnectButton />
-
-          {#if isConnected}
-            <div class="border-t border-border pt-4">
-              <ConnectivityIndicator />
-              <SyncButton />
-
-              {#if lastSyncAt}
-                <div class="text-sm text-muted-foreground">
-                  <p>
-                    {m.cloud_backup_last_sync({ timestamp: new Date(lastSyncAt).toLocaleString() })}
-                  </p>
-                </div>
-              {/if}
-
-              {#if backupCount > 0}
-                <div class="text-sm text-muted-foreground">
-                  {#if backupCount === 1}
-                    <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
-                  {:else}
-                    <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
-                  {/if}
-                </div>
-              {/if}
-
-              <!-- Backup List Section -->
-              <div class="border-t border-border pt-4">
-                <BackupList onRestore={handleRestoreClick} />
-              </div>
-            </div>
-          {/if}
         </div>
       </div>
-    </div>
-  {/if}
+    {:else if error}
+      <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-6">
+        <p class="font-semibold text-destructive">{error}</p>
+        <Button variant="default" class="mt-4" onclick={loadSettings}>
+          {m.errors_retry_page()}
+        </Button>
+      </div>
+    {:else if settings}
+      <div class="space-y-6">
+        {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerSystem}`}
+          <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
+        {/key}
+
+        <!-- Data Management Section -->
+        <DataManagementSection />
+
+        <!-- Cloud Backup Section -->
+        <div class="rounded-lg border border-border bg-card p-6 shadow-xl">
+          <div class="space-y-4">
+            <div>
+              <h2 class="text-xl font-bold">{m.cloud_backup_title()}</h2>
+              <p class="mt-1 text-sm text-muted-foreground">{m.cloud_backup_subtitle()}</p>
+            </div>
+
+            <GoogleConnectButton />
+
+            {#if isConnected}
+              <div class="border-t border-border pt-4">
+                <ConnectivityIndicator />
+                <SyncButton />
+
+                {#if lastSyncAt}
+                  <div class="text-sm text-muted-foreground">
+                    <p>
+                      {m.cloud_backup_last_sync({
+                        timestamp: new Date(lastSyncAt).toLocaleString()
+                      })}
+                    </p>
+                  </div>
+                {/if}
+
+                {#if backupCount > 0}
+                  <div class="text-sm text-muted-foreground">
+                    {#if backupCount === 1}
+                      <p>{m.cloud_backup_backups_count_single({ count: backupCount })}</p>
+                    {:else}
+                      <p>{m.cloud_backup_backups_count_multiple({ count: backupCount })}</p>
+                    {/if}
+                  </div>
+                {/if}
+
+                <!-- Backup List Section -->
+                <div class="border-t border-border pt-4">
+                  <BackupList onRestore={handleRestoreClick} />
+                </div>
+              </div>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
+  </div>
 </div>
 
 <!-- Restore Confirmation Modal -->

@@ -74,32 +74,37 @@
   <title>{m.app_digital_roster()} - {m.app_name()}</title>
 </svelte:head>
 
-<div class="space-y-6">
-  <!-- Page Header -->
-  <PageHeader
-    title={m.app_digital_roster()}
-    subtitle={m.app_digital_dcc()}
-    description={m.depot_subtitle()}
+<div class="flex flex-col">
+  <div
+    class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
   >
-    {#snippet actions()}
-      <Button type="button" onclick={openInstallDrawer}>
-        <Plus size={18} />
-        <span>{m.digital_roster_install_decoder()}</span>
-      </Button>
-    {/snippet}
-  </PageHeader>
+    <PageHeader
+      title={m.app_digital_roster()}
+      subtitle={m.app_digital_dcc()}
+      description={m.depot_subtitle()}
+    >
+      {#snippet actions()}
+        <Button size="sm" type="button" onclick={openInstallDrawer}>
+          <Plus size={18} class="mr-2" />
+          <span>{m.digital_roster_install_decoder()}</span>
+        </Button>
+      {/snippet}
+    </PageHeader>
+  </div>
 
-  <!-- Summary Section -->
-  <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />
+  <div class="space-y-6">
+    <!-- Summary Section -->
+    <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />
 
-  <!-- Roster Table -->
-  <DigitalRosterTable
-    rollingStocks={rosterState.filteredRollingStocks}
-    filterText={rosterState.filterText}
-    loading={rosterState.isLoading}
-    onFilterChange={handleFilterChange}
-    onEdit={handleEdit}
-  />
+    <!-- Roster Table -->
+    <DigitalRosterTable
+      rollingStocks={rosterState.filteredRollingStocks}
+      filterText={rosterState.filterText}
+      loading={rosterState.isLoading}
+      onFilterChange={handleFilterChange}
+      onEdit={handleEdit}
+    />
+  </div>
 </div>
 
 <!-- DCC Address Editor Modal -->

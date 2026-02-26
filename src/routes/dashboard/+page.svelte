@@ -131,93 +131,101 @@
     </div>
   </div>
 {:else}
-  <div class="space-y-8">
-    <PageHeader
-      title={m.dashboard_title()}
-      subtitle={m.dashboard_subtitle()}
-      description={m.dashboard_description()}
-    />
-
-    <section>
-      <DashboardSectionHeader
-        title={m.dashboard_yard_statistics()}
-        badgeValue={totals?.maintenanceDue}
+  <div class="flex flex-col">
+    <div
+      class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
+    >
+      <PageHeader
+        title={m.dashboard_title()}
+        subtitle={m.dashboard_subtitle()}
+        description={m.dashboard_description()}
       />
+    </div>
 
-      <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        {#if dashboard.isLoading}
-          {#each Array(3) as _, i (i)}
-            <div class="skeleton rounded-container h-28"></div>
-          {/each}
-        {:else}
-          {#each stats as stat (stat.label)}
-            <StatsCard {stat} />
-          {/each}
-        {/if}
-      </div>
+    <div class="space-y-8">
+      <section>
+        <DashboardSectionHeader
+          title={m.dashboard_yard_statistics()}
+          badgeValue={totals?.maintenanceDue}
+        />
 
-      <div class="border-surface-700/50 my-6 border-t"></div>
+        <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          {#if dashboard.isLoading}
+            {#each Array(3) as _, i (i)}
+              <div class="skeleton rounded-container h-28"></div>
+            {/each}
+          {:else}
+            {#each stats as stat (stat.label)}
+              <StatsCard {stat} />
+            {/each}
+          {/if}
+        </div>
 
-      <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
-        <div class="space-y-6">
-          <div class="lg:hidden">
-            <div class="gauge-frame space-y-3 p-4">
+        <div class="border-surface-700/50 my-6 border-t"></div>
+
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+          <div class="space-y-6">
+            <div class="lg:hidden">
+              <div class="gauge-frame space-y-3 p-4">
+                <p
+                  class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
+                >
+                  {m.dashboard_command_center()}
+                </p>
+                <QuickActionButtons {actions} class="gap-2" />
+              </div>
+            </div>
+            <DashboardCharts compact={true} data={budgetChartData} {currencyCode} />
+          </div>
+
+          <aside class="hidden lg:block">
+            <div class="gauge-frame h-full space-y-3 p-4">
               <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
                 {m.dashboard_command_center()}
               </p>
-              <QuickActionButtons {actions} class="gap-2" />
+              <div class="flex flex-col gap-3">
+                {#each actions as action (action.id)}
+                  <DashboardAction {action} isPrimary={action.id === 'add-railway-model'} />
+                {/each}
+              </div>
             </div>
-          </div>
-          <DashboardCharts compact={true} data={budgetChartData} {currencyCode} />
+          </aside>
         </div>
+      </section>
 
-        <aside class="hidden lg:block">
-          <div class="gauge-frame h-full space-y-3 p-4">
-            <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
-              {m.dashboard_command_center()}
-            </p>
-            <div class="flex flex-col gap-3">
-              {#each actions as action (action.id)}
-                <DashboardAction {action} isPrimary={action.id === 'add-railway-model'} />
-              {/each}
-            </div>
+      <section>
+        <DashboardSectionHeader
+          title={m.dashboard_recent_acquisitions()}
+          link={{ href: '/collection', label: m.dashboard_view_all() }}
+        />
+
+        {#if dashboard.isLoading}
+          <div class="space-y-4">
+            {#each Array(2) as _, i (i)}
+              <div class="skeleton rounded-container h-48"></div>
+            {/each}
           </div>
-        </aside>
-      </div>
-    </section>
-
-    <section>
-      <DashboardSectionHeader
-        title={m.dashboard_recent_acquisitions()}
-        link={{ href: '/collection', label: m.dashboard_view_all() }}
-      />
-
-      {#if dashboard.isLoading}
-        <div class="space-y-4">
-          {#each Array(2) as _, i (i)}
-            <div class="skeleton rounded-container h-48"></div>
-          {/each}
-        </div>
-      {:else if !purchaseGroups.length}
-        <div
-          class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
-        >
-          <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
-          <p class="text-surface-300 mt-2 mb-5 text-sm">
-            {m.dashboard_empty_acquisitions_message()}
-          </p>
-          <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}
-            ><Plus class="mr-2" />{m.actions_add_railway_model()}</Button
+        {:else if !purchaseGroups.length}
+          <div
+            class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
           >
-        </div>
-      {:else}
-        <div class="space-y-4">
-          {#each purchaseGroups as group (group.id)}
-            <PurchaseGroupCard {group} onModelClick={handleModelClick} />
-          {/each}
-        </div>
-      {/if}
-    </section>
+            <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
+            <p class="text-surface-300 mt-2 mb-5 text-sm">
+              {m.dashboard_empty_acquisitions_message()}
+            </p>
+            <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}
+              ><Plus class="mr-2" />{m.actions_add_railway_model()}</Button
+            >
+          </div>
+        {:else}
+          <div class="space-y-4">
+            {#each purchaseGroups as group (group.id)}
+              <PurchaseGroupCard {group} onModelClick={handleModelClick} />
+            {/each}
+          </div>
+        {/if}
+      </section>
+    </div>
   </div>
 {/if}
 

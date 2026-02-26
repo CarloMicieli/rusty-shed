@@ -167,9 +167,9 @@
   <title>{m.collection_title()}</title>
 </svelte:head>
 
-<div class="flex h-screen flex-col overflow-hidden bg-background">
+<div class="mb-10 flex flex-col">
   <!-- Page Header -->
-  <div class="flex-shrink-0 border-b border-border px-4 py-4 sm:px-6">
+  <div class="-mx-4 -mt-4 border-b border-border bg-card/50 px-6 py-4 sm:px-6 lg:-mx-8 lg:-mt-8">
     <PageHeader
       title={m.collection_title()}
       subtitle={m.collection_subtitle()}
@@ -198,9 +198,9 @@
   </div>
 
   <!-- Content Area with Sidebar -->
-  <div class="flex flex-1 overflow-hidden">
+  <div class="relative -mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
+    <div class="flex-1">
       <div class="px-4 py-6 sm:px-6">
         {#if isLoading && rawItems.length === 0}
           {@render LoadingSkeleton()}
@@ -232,21 +232,25 @@
           </div>
         {/if}
       </div>
-    </main>
+    </div>
 
     <!-- Sidebar (Right) -->
     {#if ui.showFilterSidebar}
-      <aside class="w-80 flex-shrink-0 overflow-y-auto border-l border-border bg-card">
-        <FilterPanel
-          {filters}
-          {availableTags}
-          {availableScales}
-          onSearch={handleSearch}
-          onSetScale={handleScale}
-          onToggleTag={handleTag}
-          onClear={handleClear}
-          onToggleSidebar={ui.toggleFilterSidebar}
-        />
+      <aside
+        class="w-full flex-shrink-0 border-t border-border bg-card md:w-80 md:border-t-0 md:border-l"
+      >
+        <div class="sticky top-4">
+          <FilterPanel
+            {filters}
+            {availableTags}
+            {availableScales}
+            onSearch={handleSearch}
+            onSetScale={handleScale}
+            onToggleTag={handleTag}
+            onClear={handleClear}
+            onToggleSidebar={ui.toggleFilterSidebar}
+          />
+        </div>
       </aside>
     {/if}
   </div>
