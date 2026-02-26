@@ -23,21 +23,22 @@ pub async fn global_search(
 ```typescript
 async function globalSearch(
   args: GlobalSearchArgs
-): Promise<Result<GlobalSearchResultView[], CommandError>>
+): Promise<Result<GlobalSearchResultView[], CommandError>>;
 ```
 
 ---
 
 ## Request: `GlobalSearchArgs`
 
-| Field | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| `query` | `string` | min 2, max 500 chars | Raw search term entered by the user |
-| `lang` | `string` | min 2, max 10 chars | BCP-47 language tag (e.g. `"en"`, `"it"`) |
+| Field   | Type     | Constraints          | Description                               |
+| ------- | -------- | -------------------- | ----------------------------------------- |
+| `query` | `string` | min 2, max 500 chars | Raw search term entered by the user       |
+| `lang`  | `string` | min 2, max 10 chars  | BCP-47 language tag (e.g. `"en"`, `"it"`) |
 
 **Validation**: garde validates at the transport boundary. A `query` shorter than 2 characters returns a `ValidationError` without hitting the database.
 
 **Example request**:
+
 ```json
 {
   "query": "A.C.M.E",
@@ -51,19 +52,20 @@ async function globalSearch(
 
 Each element:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `railwayModelId` | `string` | UUID of the underlying railway model |
-| `source` | `"collection" \| "wishlist"` | Where this item was found |
-| `itemId` | `string` | UUID of the `collection_item` or `wishlist_item` |
-| `displayName` | `string` | Localised model description (language-resolved with English fallback) |
-| `manufacturerName` | `string` | Brand name (e.g. "A.C.M.E.", "Fleischmann") |
+| Field              | Type                         | Description                                                           |
+| ------------------ | ---------------------------- | --------------------------------------------------------------------- |
+| `railwayModelId`   | `string`                     | UUID of the underlying railway model                                  |
+| `source`           | `"collection" \| "wishlist"` | Where this item was found                                             |
+| `itemId`           | `string`                     | UUID of the `collection_item` or `wishlist_item`                      |
+| `displayName`      | `string`                     | Localised model description (language-resolved with English fallback) |
+| `manufacturerName` | `string`                     | Brand name (e.g. "A.C.M.E.", "Fleischmann")                           |
 
 **Ordering**: BM25 relevance score, most relevant first.
 **Limit**: At most 50 elements total.
 **Duplication**: A model appearing in both collection and wishlist produces two elements (one per source).
 
 **Example response**:
+
 ```json
 [
   {
@@ -84,6 +86,7 @@ Each element:
 ```
 
 **Empty result** (no matches or both collection and wishlist are empty for matched models):
+
 ```json
 []
 ```
@@ -92,10 +95,10 @@ Each element:
 
 ## Error Responses: `CommandError`
 
-| Variant | When | Frontend behaviour |
-| --- | --- | --- |
-| `ValidationError` | `query` < 2 chars or > 500 chars; `lang` out of bounds | Show inline validation message; do not navigate |
-| `DatabaseError` | SQLite unavailable or FTS5 query failure | Show error toast; results area shows error state |
+| Variant           | When                                                   | Frontend behaviour                               |
+| ----------------- | ------------------------------------------------------ | ------------------------------------------------ |
+| `ValidationError` | `query` < 2 chars or > 500 chars; `lang` out of bounds | Show inline validation message; do not navigate  |
+| `DatabaseError`   | SQLite unavailable or FTS5 query failure               | Show error toast; results area shows error state |
 
 ---
 
@@ -103,23 +106,23 @@ Each element:
 
 The frontend derives the detail page URL from the result:
 
-| `source` | Route pattern | Example |
-| --- | --- | --- |
-| `"collection"` | `/collection/{itemId}` | `/collection/01HXL...` |
-| `"wishlist"` | `/wishlists/{wishlistId}/items/{itemId}` | Requires wishlist ID — see note below |
+| `source`       | Route pattern                            | Example                               |
+| -------------- | ---------------------------------------- | ------------------------------------- |
+| `"collection"` | `/collection/{itemId}`                   | `/collection/01HXL...`                |
+| `"wishlist"`   | `/wishlists/{wishlistId}/items/{itemId}` | Requires wishlist ID — see note below |
 
 > **Note on wishlist routing**: The current wishlist detail route is `/wishlists/[wishlistId]/items/[itemId]`. Because `GlobalSearchResultView` returns `itemId` (the `wishlist_item.id`) but not the parent `wishlistId`, the frontend must either: (a) include `wishlistId` in the result view, or (b) navigate to a flat `/wishlist-items/{itemId}` redirect route. **Recommended**: add `wishlistId` to `GlobalSearchResultView` to avoid a secondary lookup.
 
 ### Updated `GlobalSearchResultView` (with wishlist parent)
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `railwayModelId` | `string` | UUID of the underlying railway model |
-| `source` | `"collection" \| "wishlist"` | Where this item was found |
-| `itemId` | `string` | UUID of the `collection_item` or `wishlist_item` |
-| `parentId` | `string \| null` | For wishlist items: `wishlist_id`; for collection items: `null` (collection is singleton) |
-| `displayName` | `string` | Localised model description |
-| `manufacturerName` | `string` | Brand name |
+| Field              | Type                         | Description                                                                               |
+| ------------------ | ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `railwayModelId`   | `string`                     | UUID of the underlying railway model                                                      |
+| `source`           | `"collection" \| "wishlist"` | Where this item was found                                                                 |
+| `itemId`           | `string`                     | UUID of the `collection_item` or `wishlist_item`                                          |
+| `parentId`         | `string \| null`             | For wishlist items: `wishlist_id`; for collection items: `null` (collection is singleton) |
+| `displayName`      | `string`                     | Localised model description                                                               |
+| `manufacturerName` | `string`                     | Brand name                                                                                |
 
 ---
 
@@ -155,13 +158,13 @@ export async function load({ url }) {
 
 ## Paraglide Message Keys (New)
 
-| Key | English value |
-| --- | --- |
-| `search_page_title` | `Search Results` |
-| `search_results_for` | `Results for "{query}"` |
-| `search_source_collection` | `Collection` |
-| `search_source_wishlist` | `Wishlist` |
-| `search_no_results_title` | `No models found` |
-| `search_no_results_body` | `No items in your collection or wishlist match "{query}".` |
-| `search_add_new_model` | `Add a new model` |
-| `search_result_count` | `{count} result(s) found` |
+| Key                        | English value                                              |
+| -------------------------- | ---------------------------------------------------------- |
+| `search_page_title`        | `Search Results`                                           |
+| `search_results_for`       | `Results for "{query}"`                                    |
+| `search_source_collection` | `Collection`                                               |
+| `search_source_wishlist`   | `Wishlist`                                                 |
+| `search_no_results_title`  | `No models found`                                          |
+| `search_no_results_body`   | `No items in your collection or wishlist match "{query}".` |
+| `search_add_new_model`     | `Add a new model`                                          |
+| `search_result_count`      | `{count} result(s) found`                                  |

@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { Search, X } from 'lucide-svelte';
+  import { Search, X, Loader2 } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import { goto } from '$app/navigation';
   import { Button, Input } from '$lib/components';
   import { commands, type RailwayModelView } from '$lib/bindings';
   import { collectionStore } from '$lib/state/collection.svelte';
@@ -71,6 +72,11 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && query.trim().length >= 2) {
+      showResults = false;
+      goto(`/search?q=${encodeURIComponent(query.trim())}`);
+      return;
+    }
     if (e.key === 'Escape') {
       showResults = false;
       query = '';
@@ -80,7 +86,14 @@
 
 <!-- Desktop: Inline Input -->
 <div class="relative hidden w-64 items-center lg:flex xl:w-96">
-  <Search class="text-surface-400 pointer-events-none absolute left-3 z-10" size={18} />
+  {#if isSearching}
+    <Loader2
+      class="text-surface-400 pointer-events-none absolute left-3 z-10 animate-spin"
+      size={18}
+    />
+  {:else}
+    <Search class="text-surface-400 pointer-events-none absolute left-3 z-10" size={18} />
+  {/if}
   <Input
     type="text"
     value={query}

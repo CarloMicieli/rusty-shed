@@ -29,20 +29,20 @@ Implement a global search experience that lets collectors locate any item across
 
 _GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design._
 
-| Principle | Status | Notes |
-| --- | --- | --- |
-| **Modular, Library-First** | ✅ Pass | New `search` domain follows the existing 4-layer hexagonal pattern; reuses existing `catalog` FTS5 infrastructure |
-| **Deterministic Interfaces / Observability** | ✅ Pass | New Tauri command defined with `#[specta::specta]`; TS types auto-generated; all IPC payloads typed |
-| **Test-First Emphasis** | ✅ Pass | Unit tests for use-case logic; `#[sqlx::test]` integration tests for repository search query; Vitest component tests for search page |
-| **Code Quality** | ✅ Pass | Clippy + fmt required; garde validation at transport boundary; no `unwrap()` in production paths |
-| **Testing Standards** | ✅ Pass | Business logic isolated in use-case; repository tests use fixture SQL; frontend tests mock Tauri commands |
-| **UX Consistency** | ✅ Pass | Paraglide for all strings; shadcn-svelte components; loading state follows existing patterns |
-| **Performance Requirements** | ✅ Pass | FTS5 is sub-100 ms at scale; debounce prevents excessive calls; search runs off UI thread via Tauri |
-| **Safe Rust Practices** | ✅ Pass | Result-based error handling throughout; no panics; sqlx compile-time SQL validation |
-| **Database (Persistence)** | ✅ Pass | New migration 0014 extends FTS5 index via sqlx migration; no ad-hoc schema changes |
-| **State Management / Domain Events** | ✅ Pass | Search is a read-only query; no aggregate mutation; no event-sourcing required for search index — index updated via DB triggers (existing established pattern) |
-| **API Design / Transport Boundary** | ✅ Pass | New `GlobalSearchArgs` follows `Args` convention; validated with garde; response DTO follows `View` naming; specta type generation included |
-| **Domain Logic Location** | ✅ Pass | FTS5 query and context-join SQL live in Rust infrastructure; frontend only renders and routes |
+| Principle                                    | Status  | Notes                                                                                                                                                          |
+| -------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Modular, Library-First**                   | ✅ Pass | New `search` domain follows the existing 4-layer hexagonal pattern; reuses existing `catalog` FTS5 infrastructure                                              |
+| **Deterministic Interfaces / Observability** | ✅ Pass | New Tauri command defined with `#[specta::specta]`; TS types auto-generated; all IPC payloads typed                                                            |
+| **Test-First Emphasis**                      | ✅ Pass | Unit tests for use-case logic; `#[sqlx::test]` integration tests for repository search query; Vitest component tests for search page                           |
+| **Code Quality**                             | ✅ Pass | Clippy + fmt required; garde validation at transport boundary; no `unwrap()` in production paths                                                               |
+| **Testing Standards**                        | ✅ Pass | Business logic isolated in use-case; repository tests use fixture SQL; frontend tests mock Tauri commands                                                      |
+| **UX Consistency**                           | ✅ Pass | Paraglide for all strings; shadcn-svelte components; loading state follows existing patterns                                                                   |
+| **Performance Requirements**                 | ✅ Pass | FTS5 is sub-100 ms at scale; debounce prevents excessive calls; search runs off UI thread via Tauri                                                            |
+| **Safe Rust Practices**                      | ✅ Pass | Result-based error handling throughout; no panics; sqlx compile-time SQL validation                                                                            |
+| **Database (Persistence)**                   | ✅ Pass | New migration 0014 extends FTS5 index via sqlx migration; no ad-hoc schema changes                                                                             |
+| **State Management / Domain Events**         | ✅ Pass | Search is a read-only query; no aggregate mutation; no event-sourcing required for search index — index updated via DB triggers (existing established pattern) |
+| **API Design / Transport Boundary**          | ✅ Pass | New `GlobalSearchArgs` follows `Args` convention; validated with garde; response DTO follows `View` naming; specta type generation included                    |
+| **Domain Logic Location**                    | ✅ Pass | FTS5 query and context-join SQL live in Rust infrastructure; frontend only renders and routes                                                                  |
 
 ---
 

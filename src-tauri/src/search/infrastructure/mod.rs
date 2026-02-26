@@ -1,0 +1,4 @@
+pub mod sqlite_global_search_repository;
+
+pub use sqlite_global_search_repository::SqliteGlobalSearchRepository;
+pub use sqlite_global_search_repository::rebuild_search_index;

@@ -118,10 +118,10 @@ impl PurchaseWishlistItemService {
 mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
-    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::ProductCode;
     use crate::catalog::domain::railway_model::RailwayModel;
     use crate::catalog::domain::railway_model::RailwayModelId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod,
     };

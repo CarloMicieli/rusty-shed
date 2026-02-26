@@ -783,5 +783,15 @@
   "translation_section_description": "Descrizione",
   "translation_section_details": "Dettagli",
   "translation_section_required": "Obbligatorio",
-  "translation_section_optional": "Facoltativo"
+  "translation_section_optional": "Facoltativo",
+  "search_page_title": "Risultati di ricerca",
+  "search_results_for": "Risultati per \"{query}\"",
+  "search_source_collection": "Collezione",
+  "search_source_wishlist": "Lista dei desideri",
+  "search_no_results_title": "Nessun modello trovato",
+  "search_no_results_body": "Nessun elemento nella tua collezione o lista dei desideri corrisponde a \"{query}\".",
+  "search_add_new_model": "Aggiungi un nuovo modello",
+  "search_result_count": "{count} risultati trovati",
+  "search_min_length_hint": "Digita almeno 2 caratteri per cercare",
+  "search_loading": "Ricerca in corso…"
 }

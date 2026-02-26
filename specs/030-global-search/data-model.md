@@ -303,6 +303,7 @@ The Rust mapper iterates over rows: if a row has both `collection_item_id` and `
 ### Query Term Transformation
 
 The raw user query must be appended with `*` to enable prefix matching:
+
 - Input: `"A.C.M.E"` → FTS5 query: `"A.C.M.E"*` (quoted phrase + prefix)
 - Input: `"diesel loco"` → FTS5 query: `"diesel loco"*`
 - Input: `"class 47"` → FTS5 query: `"class 47"*`
@@ -324,10 +325,10 @@ interface GlobalSearchResultView {
 }
 
 interface SearchPageState {
-  query: string;           // from URL ?q=
+  query: string; // from URL ?q=
   results: GlobalSearchResultView[];
   isLoading: boolean;
-  hasSearched: boolean;    // true after first query completes
+  hasSearched: boolean; // true after first query completes
 }
 ```
 
@@ -335,13 +336,13 @@ interface SearchPageState {
 
 ## Entities Not Changed
 
-| Entity | Change |
-| --- | --- |
-| `railway_models` | None |
-| `railway_model_translations` | None (triggers updated) |
-| `rolling_stocks` | None (new triggers added) |
-| `manufacturers` | None |
-| `collection_items` | None (read-only join) |
-| `wishlist_items` | None (read-only join) |
-| `collections` | None |
-| `wishlists` | None |
+| Entity                       | Change                    |
+| ---------------------------- | ------------------------- |
+| `railway_models`             | None                      |
+| `railway_model_translations` | None (triggers updated)   |
+| `rolling_stocks`             | None (new triggers added) |
+| `manufacturers`              | None                      |
+| `collection_items`           | None (read-only join)     |
+| `wishlist_items`             | None (read-only join)     |
+| `collections`                | None                      |
+| `wishlists`                  | None                      |

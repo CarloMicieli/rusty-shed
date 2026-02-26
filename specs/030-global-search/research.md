@@ -13,9 +13,10 @@
 **Note on migration 0013 triggers**: The existing triggers (`tr_rmt_fts_insert`, `tr_rmt_fts_update`, `tr_rmt_fts_delete`) from migration 0013 are removed in migration 0014 because they are replaced by the domain-event indexing strategy (see Decision 2 below). Removing them prevents double-write conflicts.
 
 **Alternatives considered**:
-- *Separate `global_search_idx` table* — rejected: duplicates index maintenance logic; harder to keep consistent.
-- *Content table / external content FTS5* — rejected: adds complexity without benefit for a desktop single-user app.
-- *Search at query time with LIKE across all tables* — rejected: does not scale past ~500 rows; user requirement specifies 5,000 items remain responsive.
+
+- _Separate `global_search_idx` table_ — rejected: duplicates index maintenance logic; harder to keep consistent.
+- _Content table / external content FTS5_ — rejected: adds complexity without benefit for a desktop single-user app.
+- _Search at query time with LIKE across all tables_ — rejected: does not scale past ~500 rows; user requirement specifies 5,000 items remain responsive.
 
 ---
 
@@ -37,9 +38,10 @@
 **Manufacturer name**: Indexed in a dedicated `manufacturer_name` column. Since `Manufacturer` is a separate aggregate, its repository's save path must similarly rebuild the FTS5 rows for all `railway_models` associated with that manufacturer when a `ManufacturerNameUpdated` event is processed.
 
 **Alternatives considered**:
-- *SQLite AFTER INSERT/UPDATE/DELETE triggers* — rejected: violates the Domain Event Tracking architectural law; hides side-effects in the database layer; makes testing harder; original migration 0013 triggers are removed for the same reason.
-- *Background async task* — rejected: introduces eventual consistency; a collector who just edits a road number expects it to be findable immediately.
-- *One FTS5 row per rolling stock* — rejected: requires de-duplication on the query result path; the per-model granularity is sufficient.
+
+- _SQLite AFTER INSERT/UPDATE/DELETE triggers_ — rejected: violates the Domain Event Tracking architectural law; hides side-effects in the database layer; makes testing harder; original migration 0013 triggers are removed for the same reason.
+- _Background async task_ — rejected: introduces eventual consistency; a collector who just edits a road number expects it to be findable immediately.
+- _One FTS5 row per rolling stock_ — rejected: requires de-duplication on the query result path; the per-model granularity is sufficient.
 
 ---
 
@@ -52,8 +54,9 @@
 **Manufacturer index update**: Manufacturers rarely change their name. When a `ManufacturerNameUpdated` domain event is processed by the manufacturer repository, a bulk `rebuild_search_index` for all `railway_model_id` values linked to that manufacturer is executed within the same transaction. The cost is proportional to model count per manufacturer, which is bounded.
 
 **Alternatives considered**:
-- *Concatenate manufacturer into `rolling_stocks_text`* — rejected: mixing entity types in one column reduces future extensibility (field-specific search weighting).
-- *Join at query time without indexing manufacturer name* — rejected: `manufacturers.name` is not a FTS5-indexed column; a LIKE would be required, defeating the performance goal.
+
+- _Concatenate manufacturer into `rolling_stocks_text`_ — rejected: mixing entity types in one column reduces future extensibility (field-specific search weighting).
+- _Join at query time without indexing manufacturer name_ — rejected: `manufacturers.name` is not a FTS5-indexed column; a LIKE would be required, defeating the performance goal.
 
 ---
 
@@ -64,6 +67,7 @@
 **Rationale**: A model can appear in both collection and wishlist simultaneously (confirmed by spec assumption). The LEFT JOIN approach is correct: if a model is in both, two result rows are produced. SQLite query planner can use the existing indexes on `collection_items.railway_model_id` and `wishlist_items.railway_model_id` (both defined in migrations 0002/0003).
 
 **Query pattern (simplified)**:
+
 ```sql
 SELECT DISTINCT
     si.railway_model_id,
@@ -84,8 +88,9 @@ LIMIT 50
 A Rust-side mapper converts each row: if both `collection_item_id` and `wishlist_item_id` are non-null, two `GlobalSearchResult` values are emitted.
 
 **Alternatives considered**:
-- *Store context in FTS5 index* — rejected: would require per-context rows in the FTS5 table; triggers become complex when an item is added to/removed from a collection or wishlist.
-- *Two separate Tauri commands (searchCollection / searchWishlist)* — rejected: the spec requires a single unified result list from one query.
+
+- _Store context in FTS5 index_ — rejected: would require per-context rows in the FTS5 table; triggers become complex when an item is added to/removed from a collection or wishlist.
+- _Two separate Tauri commands (searchCollection / searchWishlist)_ — rejected: the spec requires a single unified result list from one query.
 
 ---
 
@@ -108,8 +113,9 @@ A Rust-side mapper converts each row: if both `collection_item_id` and `wishlist
 **Rationale**: SvelteKit's `load` function is the idiomatic place for data fetching in page components. This keeps the page component reactive to URL changes (back/forward navigation preserves search state).
 
 **Alternatives considered**:
-- *`SearchService.svelte.ts` calls command directly in `$effect`* — rejected: SvelteKit `load` is more testable and integrates with the router's navigation lifecycle.
-- *Global search context in layout* — rejected: search is a page-level concern, not an app-level concern.
+
+- _`SearchService.svelte.ts` calls command directly in `$effect`_ — rejected: SvelteKit `load` is more testable and integrates with the router's navigation lifecycle.
+- _Global search context in layout_ — rejected: search is a page-level concern, not an app-level concern.
 
 ---
 
@@ -120,8 +126,9 @@ A Rust-side mapper converts each row: if both `collection_item_id` and `wishlist
 **Rationale**: This matches the pattern used by `get_railway_model_by_id`. Consistent language handling prevents missing results for users of non-English locales.
 
 **Alternatives considered**:
-- *Concatenate all language translations into one FTS5 row* — feasible but increases index size; mixed-language tokens can cause false positives for multi-language collections.
-- *Query both languages simultaneously with OR* — rejected: `MATCH` operators in FTS5 don't support parameterised language-OR cleanly; two separate queries are simpler and deterministic.
+
+- _Concatenate all language translations into one FTS5 row_ — feasible but increases index size; mixed-language tokens can cause false positives for multi-language collections.
+- _Query both languages simultaneously with OR_ — rejected: `MATCH` operators in FTS5 don't support parameterised language-OR cleanly; two separate queries are simpler and deterministic.
 
 ---
 
@@ -138,8 +145,9 @@ A Rust-side mapper converts each row: if both `collection_item_id` and `wishlist
 **Decision**: Results are grouped by source context (Collection first, then Wishlist) with a section header for each group. Each result card shows: model name/description, manufacturer, source badge (Collection | Wishlist), and clicking navigates to the item's detail page.
 
 **Alternatives considered**:
-- *Interleaved results sorted by rank only* — rejected: harder for the user to understand which items are in their collection vs. wishlist at a glance.
-- *Separate tabs per source* — possible future enhancement, deferred to avoid scope creep.
+
+- _Interleaved results sorted by rank only_ — rejected: harder for the user to understand which items are in their collection vs. wishlist at a glance.
+- _Separate tabs per source_ — possible future enhancement, deferred to avoid scope creep.
 
 ---
 

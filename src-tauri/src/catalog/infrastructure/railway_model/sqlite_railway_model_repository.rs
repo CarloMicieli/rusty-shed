@@ -13,6 +13,7 @@ use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::search::infrastructure::rebuild_search_index;
 use chrono::TimeZone;
 use sqlx::Row;
 use sqlx::SqliteConnection;
@@ -936,6 +937,10 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 }
             }
         }
+
+        // Rebuild the FTS5 search index for this model within the same transaction.
+        // This keeps the full-text search index in sync with all domain mutations applied above.
+        rebuild_search_index(aggregate.id.as_ref(), self.executor).await?;
 
         Ok(())
     }

@@ -11,6 +11,7 @@ pub mod export;
 pub mod import;
 pub mod maintenance;
 pub mod media;
+pub mod search;
 pub mod sellers;
 pub mod settings;
 pub mod state;
@@ -38,6 +39,7 @@ use crate::dcc_inventory::interface::command_handlers as dcc_inventory_command_h
 use crate::import::interface::command_handlers as import_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::media::interface::command_handlers as media_command_handlers;
+use crate::search::interface::command_handlers as search_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::ensure_default_settings;
 use crate::settings::interface::commands::{get_settings, initialize_settings, update_settings};
@@ -233,7 +235,8 @@ pub fn run() {
         get_settings,
         update_settings,
         database_backup_command_handlers::export_database,
-        database_backup_command_handlers::import_database
+        database_backup_command_handlers::import_database,
+        search_command_handlers::global_search
     ]);
 
     #[allow(unused_variables)]

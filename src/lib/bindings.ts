@@ -1694,6 +1694,28 @@ export const commands = {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };
     }
+  },
+  /**
+   * Perform a cross-domain full-text search over the user's collection and wishlist.
+   *
+   * # Arguments
+   * - `state` - Tauri-managed application state providing the DB pool.
+   * - `args`  - Validated search input (query string and locale).
+   *
+   * # Returns
+   * An ordered list of at most 50 `GlobalSearchResultView` items, ranked by
+   * FTS5 BM25 relevance. A model appearing in both collection and wishlist
+   * produces two separate result entries.
+   */
+  async globalSearch(
+    args: GlobalSearchArgs
+  ): Promise<Result<GlobalSearchResultView[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('global_search', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
   }
 };
 
@@ -3493,6 +3515,53 @@ export type GetQuarterlySummariesArgs = {
    * Currency code (defaults to settings currency if not provided)
    */
   currency: string | null;
+};
+/**
+ * Transport arguments for the `global_search` Tauri command.
+ *
+ * Validated with `garde` at the transport boundary before any database access.
+ */
+export type GlobalSearchArgs = {
+  /**
+   * Raw search term entered by the user. Must be 2–500 characters.
+   */
+  query: string;
+  /**
+   * BCP-47 language tag forwarded from the frontend locale (e.g. "en", "it").
+   */
+  lang: string;
+};
+/**
+ * A single search result item returned by the `global_search` command.
+ *
+ * Contains enough information for the frontend to render a result card
+ * and navigate to the correct detail page.
+ */
+export type GlobalSearchResultView = {
+  /**
+   * UUID of the underlying railway model.
+   */
+  railwayModelId: string;
+  /**
+   * `"collection"` or `"wishlist"` — where this result was found.
+   */
+  source: string;
+  /**
+   * UUID of the `collection_item` or `wishlist_item`.
+   */
+  itemId: string;
+  /**
+   * For wishlist items: the parent `wishlist_id`. `None` for collection items.
+   */
+  parentId: string | null;
+  /**
+   * Language-resolved model description (falls back to English).
+   */
+  displayName: string;
+  /**
+   * Manufacturer brand name (e.g. "A.C.M.E.", "Fleischmann").
+   */
+  manufacturerName: string;
 };
 /**
  * Details about a failed image import

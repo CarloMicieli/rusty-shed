@@ -49,20 +49,24 @@ cargo sqlx prepare    # only needed if SQLX_OFFLINE=true in CI
 ### 2a. Create Domain Layer
 
 File: `src-tauri/src/search/domain/global_search_result.rs`
+
 - Define `GlobalSearchResult` struct and `SearchSource` enum (see [data-model.md](./data-model.md)).
 
 File: `src-tauri/src/search/domain/repository.rs`
+
 - Define `GlobalSearchRepository` async trait.
 
 ### 2b. Create Application Layer
 
 File: `src-tauri/src/search/application/global_search.rs`
+
 - `GlobalSearchInput { query: String, lang: String }`
 - `GlobalSearch::execute(uow, input)` — transforms query to FTS5 prefix format, calls repository.
 
 ### 2c. Create Infrastructure Layer
 
 File: `src-tauri/src/search/infrastructure/sqlite_global_search_repository.rs`
+
 - Implement `GlobalSearchRepository` for `SqliteUnitOfWork`.
 - Use the SQL from [data-model.md](./data-model.md) (`MATCH ?1` with prefix-transformed query).
 - Map rows to `GlobalSearchResult` — emit two items per row when both collection and wishlist IDs are non-null.
@@ -70,10 +74,12 @@ File: `src-tauri/src/search/infrastructure/sqlite_global_search_repository.rs`
 ### 2d. Create Interface Layer
 
 File: `src-tauri/src/search/interface/command_args.rs`
+
 - `GlobalSearchArgs` (garde + specta derivations).
 - `GlobalSearchResultView` (serde Serialize + specta).
 
 File: `src-tauri/src/search/interface/command_handlers.rs`
+
 - `global_search` Tauri command.
 
 ### 2e. Wire into `lib.rs`
@@ -113,6 +119,7 @@ pnpm rust:test         # all tests must pass
 ```
 
 Write `#[sqlx::test(migrations = "./migrations")]` tests for:
+
 - `rebuild_search_index` correctly populates FTS5 rows for a model with translations and rolling stocks
 - Search matching by description, road_number, and manufacturer name
 - Empty result when no collection/wishlist item exists for a matched model
@@ -170,10 +177,12 @@ function handleKeydown(e: KeyboardEvent) {
 ### 5d. Add Paraglide Message Keys
 
 Add keys listed in [contracts/global_search.md](./contracts/global_search.md) to:
+
 - `messages/en.json`
 - `messages/it.json`
 
 Then run:
+
 ```bash
 pnpm prepare    # recompiles Paraglide messages
 ```
@@ -190,6 +199,7 @@ pnpm test      # Vitest
 ```
 
 Write Vitest tests for:
+
 - `SearchResultCard` renders source badge correctly for `"collection"` and `"wishlist"`
 - `SearchEmptyState` shows the add-model CTA
 - `/search` page shows results when load returns data
@@ -211,14 +221,14 @@ Write Vitest tests for:
 
 ## Useful References
 
-| Artifact | Path |
-| --- | --- |
-| Feature spec | [spec.md](./spec.md) |
-| Research decisions | [research.md](./research.md) |
-| Data model + SQL | [data-model.md](./data-model.md) |
-| IPC contract | [contracts/global_search.md](./contracts/global_search.md) |
-| Existing search use-case | `src-tauri/src/catalog/application/search_railway_models.rs` |
-| Existing FTS5 migration | `src-tauri/migrations/0013_add_railway_model_translations.sql` |
-| Existing search command | `src-tauri/src/catalog/interface/command_handlers.rs` |
-| SearchBar component | `src/lib/components/SearchBar.svelte` |
-| Bindings (after regen) | `src/lib/bindings.ts` |
+| Artifact                 | Path                                                           |
+| ------------------------ | -------------------------------------------------------------- |
+| Feature spec             | [spec.md](./spec.md)                                           |
+| Research decisions       | [research.md](./research.md)                                   |
+| Data model + SQL         | [data-model.md](./data-model.md)                               |
+| IPC contract             | [contracts/global_search.md](./contracts/global_search.md)     |
+| Existing search use-case | `src-tauri/src/catalog/application/search_railway_models.rs`   |
+| Existing FTS5 migration  | `src-tauri/migrations/0013_add_railway_model_translations.sql` |
+| Existing search command  | `src-tauri/src/catalog/interface/command_handlers.rs`          |
+| SearchBar component      | `src/lib/components/SearchBar.svelte`                          |
+| Bindings (after regen)   | `src/lib/bindings.ts`                                          |

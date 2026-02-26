@@ -887,5 +887,15 @@
   "translation_section_description": "Description",
   "translation_section_details": "Details",
   "translation_section_required": "Required",
-  "translation_section_optional": "Optional"
+  "translation_section_optional": "Optional",
+  "search_page_title": "Search Results",
+  "search_results_for": "Results for \"{query}\"",
+  "search_source_collection": "Collection",
+  "search_source_wishlist": "Wishlist",
+  "search_no_results_title": "No models found",
+  "search_no_results_body": "No items in your collection or wishlist match \"{query}\".",
+  "search_add_new_model": "Add a new model",
+  "search_result_count": "{count} results found",
+  "search_min_length_hint": "Type at least 2 characters to search",
+  "search_loading": "Searching…"
 }
