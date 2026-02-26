@@ -207,6 +207,8 @@
   "wishlists_title": "Wishlist",
   "wishlists_subtitle": "WISHLIST / MONITORAGGIO",
   "wishlists_description": "Tieni traccia dei modelli che desideri acquisire per la tua collezione.",
+  "wishlists_stat_lists": "Liste",
+  "wishlists_stat_items": "Elementi",
   "wishlists_create_button": "Crea nuova Lista",
   "wishlists_default_name": "La Mia Lista dei Desideri",
   "wishlists_empty_state": "Seleziona una lista per iniziare",

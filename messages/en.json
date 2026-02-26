@@ -216,6 +216,8 @@
   "wishlists_title": "Wishlists",
   "wishlists_subtitle": "WISHLISTS / TRACKER",
   "wishlists_description": "Track models you'd like to acquire for your collection.",
+  "wishlists_stat_lists": "Lists",
+  "wishlists_stat_items": "Items",
   "wishlists_create_button": "Create new List",
   "wishlists_default_name": "My Wish List",
   "wishlists_empty_state": "Select a wishlist to get started",

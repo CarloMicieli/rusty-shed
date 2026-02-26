@@ -184,17 +184,17 @@
           <Filter size={18} />
         </Button>
       {/snippet}
+      <div
+        class="grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
+      >
+        {@render StatChip('Locomotives', summaryData.locomotivesCount)}
+        {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
+        {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
+        {@render StatChip('Train Sets', summaryData.trainSetsCount)}
+        {@render StatChip('Railcars', summaryData.railcarsCount)}
+        {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
+      </div>
     </PageHeader>
-
-    <!-- Horizontal Stat Chips -->
-    <div class="scrollbar-hide -mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1">
-      {@render StatChip('Locomotives', summaryData.locomotivesCount)}
-      {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
-      {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
-      {@render StatChip('Train Sets', summaryData.trainSetsCount)}
-      {@render StatChip('Railcars', summaryData.railcarsCount)}
-      {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
-    </div>
   </div>
 
   <!-- Content Area with Sidebar -->
@@ -270,9 +270,9 @@
 
 {#snippet StatChip(label: string, count: number)}
   <div
-    class="w-36 flex-shrink-0 rounded-full border border-border bg-muted/60 px-3 py-1.5 transition-colors hover:border-primary/40"
+    class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/40"
   >
-    <p class="truncate text-xs font-medium text-muted-foreground">{label}</p>
-    <p class="text-sm font-bold text-primary">{count}</p>
+    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{label}</p>
+    <p class="mt-1 text-lg font-bold text-primary">{count}</p>
   </div>
 {/snippet}
