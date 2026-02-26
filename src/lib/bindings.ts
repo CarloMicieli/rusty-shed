@@ -310,6 +310,9 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Retrieve all stored translations for a railway model (used to pre-populate the edit form).
+   */
   async getRailwayModelTranslations(
     railwayModelId: RailwayModelId
   ): Promise<Result<RailwayModelTranslations | null, CommandError>> {
@@ -323,6 +326,9 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Create or replace a translation for one language on a railway model.
+   */
   async upsertRailwayModelTranslation(
     args: UpsertRailwayModelTranslationArgs
   ): Promise<Result<null, CommandError>> {
@@ -336,6 +342,9 @@ export const commands = {
       else return { status: 'error', error: e as any };
     }
   },
+  /**
+   * Search railway models using FTS5 full-text search across all language translations.
+   */
   async searchRailwayModels(
     args: SearchRailwayModelsArgs
   ): Promise<Result<RailwayModelId[], CommandError>> {
@@ -4626,6 +4635,19 @@ export type RailwayModelTextField =
    */
   | 'Details';
 /**
+ * A single language entry with optional description and details.
+ */
+export type RailwayModelTranslationEntry = { description: string | null; details: string | null };
+/**
+ * All stored translations for a single railway model.
+ * Used by the edit form to pre-populate language-specific input fields.
+ */
+export type RailwayModelTranslations = {
+  railway_model_id: RailwayModelId;
+  en: RailwayModelTranslationEntry | null;
+  it: RailwayModelTranslationEntry | null;
+};
+/**
  * A UI-focused view of a railway model used by the frontend.
  */
 export type RailwayModelView = {
@@ -4647,6 +4669,7 @@ export type RailwayModelView = {
   description: string;
   /**
    * The actual language code of the resolved description.
+   * May differ from the requested language when fallback to English applies.
    */
   descriptionLang: string;
   /**
@@ -4706,19 +4729,6 @@ export type RailwayStatus =
    * The railway company has merged with another entity.
    */
   | 'MERGED';
-/**
- * All stored translations for a single railway model.
- * Used by the edit form to pre-populate language-specific input fields.
- */
-export type RailwayModelTranslations = {
-  railwayModelId: RailwayModelId;
-  en: RailwayModelTranslationEntry | null;
-  it: RailwayModelTranslationEntry | null;
-};
-/**
- * A single language entry with optional description and details.
- */
-export type RailwayModelTranslationEntry = { description: string | null; details: string | null };
 /**
  * Counts of records by entity type.
  */
@@ -5175,10 +5185,14 @@ export type Scale =
    */
   | 'Scale00';
 /**
-/**
  * Arguments for full-text search across railway model translations.
  */
-export type SearchRailwayModelsArgs = { query: string };
+export type SearchRailwayModelsArgs = {
+  /**
+   * Search query. Minimum 2 characters.
+   */
+  query: string;
+};
 /**
  * Represents a seller (a shop, private seller or distributor) in the system.
  *
@@ -5906,18 +5920,30 @@ export type UpdateSettingsInput = {
  */
 export type UploadModelImageArgs = { modelId: string; filePath: string };
 /**
- * Arguments for creating or replacing a translation for one language on a railway model.
- */
-export type UpsertRailwayModelTranslationArgs = {
-  railwayModelId: RailwayModelId;
-  lang: string;
-  description: string | null;
-  details: string | null;
-};
-/**
  * Arguments for uploading a model image from bytes
  */
 export type UploadModelImageBytesArgs = { modelId: string; fileName: string; fileData: number[] };
+/**
+ * Arguments for creating or replacing a translation for one language on a railway model.
+ */
+export type UpsertRailwayModelTranslationArgs = {
+  /**
+   * The railway model to update.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * Language code ("en" or "it").
+   */
+  lang: string;
+  /**
+   * Description text. Required non-empty for "en"; optional for "it".
+   */
+  description: string | null;
+  /**
+   * Details text. Optional for all languages.
+   */
+  details: string | null;
+};
 /**
  * User-configurable application preferences
  */
