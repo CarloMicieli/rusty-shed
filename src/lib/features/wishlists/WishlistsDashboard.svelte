@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
   import { Button } from '$lib/components';
+  import PageHeader from '$lib/components/PageHeader.svelte';
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
@@ -126,37 +127,21 @@
 </svelte:head>
 
 <div class="flex h-screen flex-col overflow-hidden bg-background">
-  <!-- Page Header (Full Width) -->
-  <header class="flex-shrink-0 border-b border-white/10 bg-[#0c0c0c]/95 backdrop-blur-sm">
-    <div class="px-6 py-4">
-      <div class="flex items-center justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-white">{m.wishlists_title()}</h1>
-          <p class="text-sm text-zinc-400">{m.wishlists_subtitle()}</p>
-        </div>
-        <div class="flex items-center gap-4">
-          <!-- Summary Pills -->
-          <div class="hidden items-center gap-2 md:flex">
-            <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              <span class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase"
-                >Items</span
-              >
-              <span class="ml-2 font-mono text-sm font-bold text-amber-500"
-                >{wishlists.reduce((acc, w) => acc + Number(w.count), 0)}</span
-              >
-            </div>
-          </div>
-          <Button
-            onclick={handleCreate}
-            class="bg-amber-500 font-bold text-black hover:bg-amber-600"
-          >
-            <Sparkles size={18} class="mr-2" />
-            {m.wishlists_create_button()}
-          </Button>
-        </div>
-      </div>
-    </div>
-  </header>
+  <!-- Page Header -->
+  <div class="flex-shrink-0 border-b border-border px-6 py-4">
+    <PageHeader
+      title={m.wishlists_title()}
+      subtitle={m.wishlists_subtitle()}
+      description={m.wishlists_description()}
+    >
+      {#snippet actions()}
+        <Button onclick={handleCreate} size="sm">
+          <Sparkles size={18} />
+          {m.wishlists_create_button()}
+        </Button>
+      {/snippet}
+    </PageHeader>
+  </div>
 
   <div class="flex flex-1 overflow-hidden">
     <!-- List Navigator (Left Column) -->

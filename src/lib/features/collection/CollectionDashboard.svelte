@@ -5,6 +5,7 @@
   import { goto } from '$app/navigation';
   import { getCollectionContext, availableScales } from './CollectionState.svelte';
   import { Button } from '$lib/components';
+  import PageHeader from '$lib/components/PageHeader.svelte';
 
   const collectionService = getCollectionContext();
 
@@ -89,23 +90,6 @@
     starterSetsCount: 0
   });
   const summaryData = $derived(collectionService.summary ?? defaultSummary);
-  const totalValue = $derived(
-    collectionService.collection?.totalValue
-      ? new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: collectionService.collection.totalValue.currency
-        }).format(Number(collectionService.collection.totalValue.amount) / 100)
-      : '--'
-  );
-
-  const totalUnits = $derived(
-    summaryData.locomotivesCount +
-      summaryData.passengerCarsCount +
-      summaryData.freightCarsCount +
-      summaryData.trainSetsCount +
-      summaryData.railcarsCount +
-      summaryData.electricMultipleUnitsCount
-  );
 
   const rawItems = $derived(collectionService.rawItems);
   const filteredItems = $derived(collectionService.filteredItems);
@@ -184,64 +168,40 @@
 </svelte:head>
 
 <div class="flex h-screen flex-col overflow-hidden bg-background">
-  <!-- Sticky Header (Full Width) -->
-  <header
-    class="sticky top-0 z-30 flex-shrink-0 border-b border-border bg-card/95 backdrop-blur-sm"
-  >
-    <div class="px-4 py-3 sm:px-6">
-      <div class="mb-3 flex items-center justify-between gap-4">
-        <div>
-          <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
-            {m.app_collection()}
-          </p>
-          <h1 class="text-lg font-bold">{m.collection_title()}</h1>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="text-right">
-            <p class="text-xs tracking-widest text-muted-foreground uppercase">Collection Value</p>
-            <p class="text-xl font-bold text-primary">{totalValue}</p>
-          </div>
-          <div class="h-12 w-px bg-border"></div>
-          <div class="text-right">
-            <p class="text-xs tracking-widest text-muted-foreground uppercase">Total Units</p>
-            <p class="text-xl font-bold text-primary">{totalUnits}</p>
-          </div>
-        </div>
-      </div>
+  <!-- Page Header -->
+  <div class="flex-shrink-0 border-b border-border px-4 py-4 sm:px-6">
+    <PageHeader
+      title={m.collection_title()}
+      subtitle={m.collection_subtitle()}
+      description={m.collection_description()}
+    >
+      {#snippet actions()}
+        <Button onclick={ui.startCreate} size="sm">
+          <Plus size={18} />
+          {m.collection_add_model()}
+        </Button>
+        <Button onclick={ui.toggleFilterSidebar} variant="outline" size="sm" title="Toggle filters">
+          <Filter size={18} />
+        </Button>
+      {/snippet}
+    </PageHeader>
 
-      <!-- Horizontal Stat Chips -->
-      <div class="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1">
-        {@render StatChip('Locomotives', summaryData.locomotivesCount)}
-        {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
-        {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
-        {@render StatChip('Train Sets', summaryData.trainSetsCount)}
-        {@render StatChip('Railcars', summaryData.railcarsCount)}
-        {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
-      </div>
+    <!-- Horizontal Stat Chips -->
+    <div class="scrollbar-hide -mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1">
+      {@render StatChip('Locomotives', summaryData.locomotivesCount)}
+      {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
+      {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
+      {@render StatChip('Train Sets', summaryData.trainSetsCount)}
+      {@render StatChip('Railcars', summaryData.railcarsCount)}
+      {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
     </div>
-  </header>
+  </div>
 
   <!-- Content Area with Sidebar -->
   <div class="flex flex-1 overflow-hidden">
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto">
       <div class="px-4 py-6 sm:px-6">
-        <!-- Add Button and Filter Toggle -->
-        <div class="mb-6 flex items-center justify-end gap-3">
-          <Button onclick={ui.startCreate} size="sm">
-            <Plus size={18} />
-            {m.collection_add_model()}
-          </Button>
-          <Button
-            onclick={ui.toggleFilterSidebar}
-            variant="outline"
-            size="sm"
-            title="Toggle filters"
-          >
-            <Filter size={18} />
-          </Button>
-        </div>
-
         {#if isLoading && rawItems.length === 0}
           {@render LoadingSkeleton()}
         {:else if !isLoading && rawItems.length === 0}
