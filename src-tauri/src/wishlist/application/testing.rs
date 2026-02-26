@@ -5,6 +5,7 @@ use crate::catalog::domain::railway_model::RailwayModelParams;
 use crate::catalog::domain::railway_model::RailwayModelRepository;
 use crate::catalog::domain::railway_model::RailwayModelUowExt;
 use crate::catalog::domain::railway_model::RailwayModelView;
+use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::CollectionRepository;
@@ -161,19 +162,32 @@ impl<'a> RailwayModelRepository for RailwayRepoRef<'a> {
     async fn find_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModel>, DomainError> {
-        self.inner.find_by_id(id).await
+        self.inner.find_by_id(id, lang).await
     }
 
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,
+        lang: &str,
     ) -> Result<Option<RailwayModelView>, DomainError> {
-        self.inner.find_view_by_id(id).await
+        self.inner.find_view_by_id(id, lang).await
+    }
+
+    async fn find_translations(
+        &mut self,
+        id: &RailwayModelId,
+    ) -> Result<Option<RailwayModelTranslations>, DomainError> {
+        self.inner.find_translations(id).await
     }
 
     async fn save(&mut self, aggregate: &mut RailwayModel) -> Result<(), DomainError> {
         self.inner.save(aggregate).await
+    }
+
+    async fn search(&mut self, query: &str) -> Result<Vec<RailwayModelId>, DomainError> {
+        self.inner.search(query).await
     }
 }
 

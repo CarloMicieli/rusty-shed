@@ -5,6 +5,7 @@
   import { commands } from '$lib/bindings';
   import { ArrowLeft, ShoppingCart } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
@@ -80,7 +81,7 @@
       wishlistItem = normalizeItem(foundView);
 
       const [modelResult, imageResult] = await Promise.all([
-        commands.getRailwayModelById(wishlistItem.railwayModelId),
+        commands.getRailwayModelById(wishlistItem.railwayModelId, getLocale()),
         commands.getRailwayModelImage(wishlistItem.railwayModelId)
       ]);
 

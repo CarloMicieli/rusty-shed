@@ -35,6 +35,7 @@ CREATE TABLE railway_model_translations (
 ```
 
 **Constraints**:
+
 - `(railway_model_id, language_code)` composite primary key — one row per model per language.
 - `ON DELETE CASCADE` — deleting a railway model removes all its translations automatically.
 - `language_code` is a free-text column validated at the application boundary (not a DB enum). Accepted values: `'en'`, `'it'`.
@@ -55,6 +56,7 @@ CREATE VIRTUAL TABLE railway_model_search_idx USING fts5 (
 ```
 
 **Notes**:
+
 - `UNINDEXED` columns are stored but not tokenized; they allow the FTS5 result to carry the model ID and language for JOIN-back to `railway_models`.
 - `tokenize = 'unicode61'` handles accented characters in Italian (e.g., "locomotiva", "ferrovia").
 - The FTS5 table is kept in sync by three triggers (see below); no application-layer writes are needed.
@@ -243,13 +245,13 @@ pub trait RailwayModelRepository: Send + Sync {
 
 ## Validation Rules
 
-| Rule | Enforced At |
-| ---- | ----------- |
-| `lang` must be `"en"` or `"it"` | Rust IPC boundary (`garde` validator on `Args`) |
-| `description` (EN) must not be empty on create | Domain: `RailwayModel::new()` / application use case |
-| `description` (IT) may be `None` or non-empty; empty string treated as remove | Application use case |
+| Rule                                                                           | Enforced At                                                |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `lang` must be `"en"` or `"it"`                                                | Rust IPC boundary (`garde` validator on `Args`)            |
+| `description` (EN) must not be empty on create                                 | Domain: `RailwayModel::new()` / application use case       |
+| `description` (IT) may be `None` or non-empty; empty string treated as remove  | Application use case                                       |
 | A translation with both `description IS NULL` and `details IS NULL` is deleted | Application use case before emitting `TranslationUpserted` |
-| FTS5 index kept in sync by DB triggers — no application rule needed | Database triggers |
+| FTS5 index kept in sync by DB triggers — no application rule needed            | Database triggers                                          |
 
 ---
 

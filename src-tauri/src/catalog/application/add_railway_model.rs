@@ -1,11 +1,11 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::Category;
 use crate::catalog::domain::railway_model::DeliveryDate;
 use crate::catalog::domain::railway_model::Epoch;
 use crate::catalog::domain::railway_model::PowerMethod;
 use crate::catalog::domain::railway_model::ProductCode;
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{AvailabilityStatus, RailwayModelUowExt};
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelParams, RollingStockParams,
@@ -105,7 +105,10 @@ impl AddRailwayModel {
             details: railway_model_params
                 .details
                 .clone()
-                .map(|v| LocalizedField { lang: "en".to_string(), value: v }),
+                .map(|v| LocalizedField {
+                    lang: "en".to_string(),
+                    value: v,
+                }),
             power_method: railway_model_params.power_method,
             scale: railway_model_params.scale.clone(),
             epoch: railway_model_params.epoch.clone(),

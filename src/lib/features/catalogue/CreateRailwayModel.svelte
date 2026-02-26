@@ -3,11 +3,13 @@
   import * as Accordion from '$lib/components/ui/accordion';
   import { superForm } from 'sveltekit-superforms';
   import { safeInvoke, getErrorMessage } from '$lib/services';
+  import { commands } from '$lib/bindings';
   import type { CreateRailwayModelInput } from '$lib/schemas/railway-model';
   import { formLabels } from './constants';
   import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
   import FormField from '$lib/components/ui/FormField.svelte';
-  import { Input, Textarea, Badge } from '$lib/components';
+  import { Input, Badge } from '$lib/components';
+  import TranslationsSection from './components/TranslationsSection.svelte';
   import manufacturersData from '$lib/data/manufacturers.json';
   import railwayCompaniesData from '$lib/data/railway-companies.json';
   import availabilityStatusesData from '$lib/data/constants/availabilityStatuses.json';
@@ -32,7 +34,12 @@
     rolling_stocks: RollingStockForm[];
   };
 
-  let accordionValues = $state<string[]>(['basic-info', 'delivery-availability', 'rolling-stock']);
+  let accordionValues = $state<string[]>([
+    'basic-info',
+    'delivery-availability',
+    'translations',
+    'rolling-stock'
+  ]);
 
   const initialData: CreateRailwayModelFormInput = {
     manufacturer_id: '',
@@ -57,8 +64,8 @@
       // Server-side validation via Tauri will catch any issues
       onUpdate: async ({ form }) => {
         // Validate structure manually
-        if (!form.data.manufacturer_id || !form.data.product_code || !form.data.description) {
-          generalError = 'Please fill in all required fields';
+        if (!form.data.manufacturer_id || !form.data.product_code || !enDescription) {
+          generalError = 'Please fill in all required fields (including English description)';
           return;
         }
 
@@ -78,6 +85,15 @@
           const result = await safeInvoke<string>('create_railway_model', { args: normalizedData });
 
           if (result.ok) {
+            // After creation, upsert IT translation if any IT fields were provided
+            if (itDescription || itDetails) {
+              await commands.upsertRailwayModelTranslation({
+                railwayModelId: result.data,
+                lang: 'it',
+                description: itDescription ?? null,
+                details: itDetails ?? null
+              });
+            }
             navigate(`/models/${result.data}`);
           } else {
             // Set general error
@@ -93,6 +109,18 @@
   const { form, errors, enhance, submitting } = formObj;
   const hasRollingStock = $derived($form.rolling_stocks.length > 0);
   let generalError = $state<string | null>(null);
+
+  // Translation state: EN values stay in $form; IT is local state
+  let enDescription = $state<string | null>($form.description ?? '');
+  let enDetails = $state<string | null>($form.details ?? null);
+  let itDescription = $state<string | null>(null);
+  let itDetails = $state<string | null>(null);
+
+  // Sync EN translation state back to superForm fields
+  $effect(() => {
+    $form.description = enDescription ?? '';
+    $form.details = enDetails;
+  });
 
   function addRollingStock() {
     $form.rolling_stocks.push(createDefaultRollingStock());
@@ -185,14 +213,6 @@
               />
             </FormField>
 
-            <FormField label={formLabels.description} error={fieldError('description')} required>
-              <Input
-                type="text"
-                bind:value={$form.description}
-                placeholder={resolveLabel(formLabels.descriptionPlaceholder)}
-              />
-            </FormField>
-
             {@render selectField(
               formLabels.category,
               fieldError('category'),
@@ -257,15 +277,21 @@
                 ($form.availability_status = (next ||
                   null) as CreateRailwayModelInput['availability_status'])
             )}
-
-            <FormField label={formLabels.additionalDetails} error={fieldError('details')}>
-              <Textarea
-                rows={3}
-                bind:value={$form.details}
-                placeholder={resolveLabel(formLabels.detailsPlaceholder)}
-              />
-            </FormField>
           </div>
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="translations" class="border-surface-600 rounded-lg border">
+        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+          <h3 class="h4 mb-0">{resolveLabel(formLabels.description)}</h3>
+        </Accordion.Trigger>
+        <Accordion.Content class="px-3 pt-1 pb-4">
+          <TranslationsSection
+            bind:enDescription
+            bind:enDetails
+            bind:itDescription
+            bind:itDetails
+          />
         </Accordion.Content>
       </Accordion.Item>
 

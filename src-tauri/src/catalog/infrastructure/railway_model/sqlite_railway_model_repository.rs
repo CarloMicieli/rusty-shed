@@ -1,7 +1,7 @@
+use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::railway_model_translation::{
     RailwayModelTranslationEntry, RailwayModelTranslations,
 };
-use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelId, RailwayModelParams, RailwayModelRepository, RailwayModelUowExt,
     RollingStock, RollingStockCategory, RollingStockId, RollingStockParams,
@@ -14,8 +14,8 @@ use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow}
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use chrono::TimeZone;
-use sqlx::SqliteConnection;
 use sqlx::Row;
+use sqlx::SqliteConnection;
 use uuid::Uuid;
 
 /// An SQLite-specific implementation of the `RailwayModelRepository`.
@@ -945,11 +945,12 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         id: &RailwayModelId,
     ) -> Result<Option<RailwayModelTranslations>, DomainError> {
         // Check if the model exists first
-        let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM railway_models WHERE id = ?1)")
-            .bind(id)
-            .fetch_one(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
+        let exists: bool =
+            sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM railway_models WHERE id = ?1)")
+                .bind(id)
+                .fetch_one(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
 
         if !exists {
             return Ok(None);
@@ -970,7 +971,10 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
             let lang_code: String = row.get("language_code");
             let description: Option<String> = row.get("description");
             let details: Option<String> = row.get("details");
-            let entry = RailwayModelTranslationEntry { description, details };
+            let entry = RailwayModelTranslationEntry {
+                description,
+                details,
+            };
             match lang_code.as_str() {
                 "en" => en = Some(entry),
                 "it" => it = Some(entry),

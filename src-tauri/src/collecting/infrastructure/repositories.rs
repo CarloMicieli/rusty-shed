@@ -531,6 +531,7 @@ mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
     use crate::catalog::domain::railway_company::RailwayCompanyId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
         Category, LocomotiveType, PowerMethod, ProductCode, RailwayModel, RollingStock,
     };
@@ -707,7 +708,10 @@ mod tests {
                 "trn:manufacturer:not-a-trn".to_string(),
             ),
             product_code: ProductCode::try_from("P100").unwrap(),
-            description: "Test model".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test model".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -816,7 +820,10 @@ mod tests {
                 "trn:manufacturer:not-a-trn".to_string(),
             ),
             product_code: ProductCode::try_from("P100").unwrap(),
-            description: "Test model".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test model".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,

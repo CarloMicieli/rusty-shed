@@ -1,8 +1,8 @@
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{
     Category, ElectricMultipleUnitType, Epoch, LocomotiveType, PassengerCarType, PowerMethod,
     ProductCode, RailcarType, RollingStockCategory,
 };
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelId, RailwayModelParams, RailwayModelUowExt,
     RollingStock, RollingStockParams,
@@ -386,7 +386,10 @@ impl SaveRailwayModel {
                 details: railway_model_params
                     .details
                     .clone()
-                    .map(|v| LocalizedField { lang: "en".to_string(), value: v }),
+                    .map(|v| LocalizedField {
+                        lang: "en".to_string(),
+                        value: v,
+                    }),
                 power_method: railway_model_params.power_method,
                 scale: railway_model_params.scale.clone(),
                 epoch: railway_model_params.epoch.clone(),

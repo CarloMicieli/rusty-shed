@@ -30,11 +30,8 @@ pub use get_railway_model_by_id::GetRailwayModelById;
 pub use get_railway_model_by_id::GetRailwayModelViewById;
 pub use get_railway_model_translations::GetRailwayModelTranslations;
 pub use save_railway_model::SaveRailwayModel;
-pub use search_railway_models::{SearchRailwayModels, SearchRailwayModelsInput};
-pub use upsert_railway_model_translation::{
-    UpsertRailwayModelTranslation, UpsertRailwayModelTranslationInput,
-};
 pub use save_railway_model::{SaveRailwayModelInput, SimplifiedRollingStockInput};
+pub use search_railway_models::{SearchRailwayModels, SearchRailwayModelsInput};
 pub use update_railway_model_classification::UpdateRailwayModelClassification;
 pub use update_railway_model_classification::UpdateRailwayModelClassificationInput;
 pub use update_railway_model_text::UpdateRailwayModelText;
@@ -45,3 +42,6 @@ pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompany;
 pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompanyInput;
 pub use update_rolling_stock_specifications::UpdateRollingStockSpecifications;
 pub use update_rolling_stock_specifications::UpdateRollingStockSpecificationsInput;
+pub use upsert_railway_model_translation::{
+    UpsertRailwayModelTranslation, UpsertRailwayModelTranslationInput,
+};

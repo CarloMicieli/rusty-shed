@@ -1,4 +1,3 @@
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{Epoch, RailwayModelId, RailwayModelUowExt};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
@@ -66,6 +65,7 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
         RailwayModelId,

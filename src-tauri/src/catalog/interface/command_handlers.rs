@@ -4,9 +4,9 @@ use crate::catalog::application::{
     UpdateRollingStockRailwayCompany, UpdateRollingStockSpecifications,
     UpsertRailwayModelTranslation,
 };
-use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
+use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::interface::{
     CreateRailwayModelArgs, SearchRailwayModelsArgs, UpdateRailwayModelClassificationArgs,
     UpdateRailwayModelTextArgs, UpdateRollingStockIdentificationArgs,
@@ -15,6 +15,7 @@ use crate::catalog::interface::{
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
+use garde::Validate;
 use log::info;
 
 /// Retrieve a railway model by its identifier.
@@ -232,7 +233,10 @@ pub async fn get_railway_model_translations(
     state: tauri::State<'_, AppState>,
     railway_model_id: RailwayModelId,
 ) -> Result<Option<RailwayModelTranslations>, CommandError> {
-    info!("Fetching translations for railway model {}", railway_model_id);
+    info!(
+        "Fetching translations for railway model {}",
+        railway_model_id
+    );
 
     let mut unit_of_work = state.unit_of_work().await?;
     let translations =
@@ -254,7 +258,8 @@ pub async fn upsert_railway_model_translation(
         args.lang, args.railway_model_id
     );
 
-    args.validate()?;
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid translation args: {e}")))?;
     let mut unit_of_work = state.unit_of_work().await?;
     UpsertRailwayModelTranslation::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
@@ -271,7 +276,8 @@ pub async fn search_railway_models(
 ) -> Result<Vec<RailwayModelId>, CommandError> {
     info!("Searching railway models with query: {}", args.query);
 
-    args.validate()?;
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid search args: {e}")))?;
     let mut unit_of_work = state.unit_of_work().await?;
     let ids = SearchRailwayModels::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;

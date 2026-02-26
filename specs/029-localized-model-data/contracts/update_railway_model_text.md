@@ -35,18 +35,18 @@ pub struct UpdateRailwayModelTextArgs {
 
 ## Parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `railwayModelId` | `RailwayModelId` | Yes | Target railway model |
-| `field` | `"Description" \| "Details"` | Yes | Which field to update |
-| `value` | `string` | Yes | New text value (empty string clears `Details`; rejected for `Description` + `"en"`) |
-| `lang` | `"en" \| "it"` | Yes | Language for which the field is updated |
+| Name             | Type                         | Required | Description                                                                         |
+| ---------------- | ---------------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `railwayModelId` | `RailwayModelId`             | Yes      | Target railway model                                                                |
+| `field`          | `"Description" \| "Details"` | Yes      | Which field to update                                                               |
+| `value`          | `string`                     | Yes      | New text value (empty string clears `Details`; rejected for `Description` + `"en"`) |
+| `lang`           | `"en" \| "it"`               | Yes      | Language for which the field is updated                                             |
 
 ## Validation Rules
 
-| Rule | Error |
-| ---- | ----- |
-| `lang` must be `"en"` or `"it"` | `VALIDATION_ERROR` |
+| Rule                                                        | Error                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------ |
+| `lang` must be `"en"` or `"it"`                             | `VALIDATION_ERROR`                                           |
 | `value` empty + `field === "Description"` + `lang === "en"` | `VALIDATION_ERROR` — "English description must not be empty" |
 
 ## Behaviour
@@ -69,6 +69,6 @@ await commands.updateRailwayModelText({
   railwayModelId: modelId,
   field: 'Description',
   value: newDescription,
-  lang: getLocaleService().currentLocale,
+  lang: getLocaleService().currentLocale
 });
 ```

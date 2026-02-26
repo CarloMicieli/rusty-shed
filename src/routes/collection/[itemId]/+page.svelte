@@ -6,6 +6,7 @@
   import { commands } from '$lib/bindings';
   import { ArrowLeft } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import CollectionItemSidebar from '$lib/features/collection/components/CollectionItemSidebar.svelte';
@@ -55,7 +56,7 @@
 
       // 2. Parallel fetch: model card data + seller
       const [modelResult, imageResult, sellerResult] = await Promise.all([
-        commands.getRailwayModelById(railwayModelId),
+        commands.getRailwayModelById(railwayModelId, getLocale()),
         commands.getRailwayModelImage(railwayModelId),
         sellerId
           ? commands.getSellerById(sellerId)

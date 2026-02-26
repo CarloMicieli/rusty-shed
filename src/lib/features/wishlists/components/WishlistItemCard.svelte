@@ -6,6 +6,7 @@
   import { commands } from '$lib/bindings';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { goto } from '$app/navigation';
+  import { getLocale } from '$lib/paraglide/runtime.js';
 
   interface Props {
     item: WishlistItem;
@@ -23,7 +24,7 @@
   onMount(async () => {
     try {
       const [modelResult, imageResult] = await Promise.all([
-        commands.getRailwayModelById(item.railwayModelId),
+        commands.getRailwayModelById(item.railwayModelId, getLocale()),
         commands.getRailwayModelImage(item.railwayModelId)
       ]);
 

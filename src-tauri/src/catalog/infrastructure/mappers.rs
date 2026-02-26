@@ -3,10 +3,10 @@ use super::entities::{ManufacturerRow, RailwayModelRow, RollingStockRow};
 use crate::catalog::domain::manufacturer::Manufacturer;
 use crate::catalog::domain::railway_company::PeriodOfActivity;
 use crate::catalog::domain::railway_company::RailwayCompany;
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::metadata::Metadata;
 use chrono::{DateTime, Utc};
@@ -379,7 +379,10 @@ mod tests {
             assert_eq!(domain.product_code, product_code);
             assert_eq!(domain.description.value, "Test model");
             assert_eq!(domain.description.lang, "en");
-            assert_eq!(domain.details.as_ref().map(|d| d.value.as_str()), Some("Detailed description"));
+            assert_eq!(
+                domain.details.as_ref().map(|d| d.value.as_str()),
+                Some("Detailed description")
+            );
             assert_eq!(domain.power_method, PowerMethod::DC);
             assert_eq!(domain.scale, Scale::H0);
             assert_eq!(domain.epoch, "III".into());

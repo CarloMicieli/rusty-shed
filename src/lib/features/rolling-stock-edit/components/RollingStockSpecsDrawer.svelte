@@ -2,6 +2,7 @@
   import { X } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as m from '$lib/paraglide/messages';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import { toaster } from '$lib/toaster';
   import {
     commands,
@@ -177,7 +178,7 @@
     isLoading = true;
     inlineError = null;
     try {
-      const result = await commands.getRailwayModelById(railwayModelId);
+      const result = await commands.getRailwayModelById(railwayModelId, getLocale());
       if (result.status === 'error') {
         toaster.error(m.specs_drawer_save_error());
         onClose();

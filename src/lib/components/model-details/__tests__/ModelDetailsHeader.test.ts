@@ -18,7 +18,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   upload_success: () => 'Image uploaded successfully',
   upload_error_model_not_found: () => 'Model not found',
   upload_error_unknown: () => 'An unknown error occurred',
-  upload_error_multiple_files: () => 'Please upload only one file at a time'
+  upload_error_multiple_files: () => 'Please upload only one file at a time',
+  railway_model_content_in_english_fallback: () => '(EN)'
 }));
 
 import ModelDetailsHeader from '../ModelDetailsHeader.svelte';
@@ -28,6 +29,7 @@ describe('ModelDetailsHeader', () => {
   const mockModel: RailwayModelView = {
     id: 'trn:railway-model:maer:37858',
     description: 'Class 218 Diesel Locomotive',
+    descriptionLang: 'en',
     manufacturer: {
       manufacturerId: 'maer',
       display: 'Märklin'
@@ -40,6 +42,7 @@ describe('ModelDetailsHeader', () => {
     deliveryDate: null,
     availabilityStatus: null,
     details: null,
+    detailsLang: null,
     metadata: {
       version: 1,
       created_at: '2024-01-01T00:00:00Z',

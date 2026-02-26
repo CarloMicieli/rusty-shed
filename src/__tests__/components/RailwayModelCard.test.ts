@@ -34,7 +34,14 @@ vi.mock('$lib/paraglide/messages', () => ({
     'Invalid image format. Please upload a JPEG, PNG, WebP, or GIF file.',
   error_image_too_large: () => 'Image file is too large. Maximum size is {maxSize} MB.',
   error_image_dimensions_invalid: () =>
-    'Image dimensions are invalid. Must be between {minDim}x{minDim} and {maxDim}x{maxDim} pixels.'
+    'Image dimensions are invalid. Must be between {minDim}x{minDim} and {maxDim}x{maxDim} pixels.',
+  railway_model_content_in_english_fallback: () => '(EN)',
+  translation_section_description: () => 'Description',
+  translation_section_details: () => 'Details',
+  translation_section_required: () => 'Required',
+  translation_section_optional: () => 'Optional',
+  translation_section_english: () => 'English',
+  translation_section_italian: () => 'Italian'
 }));
 
 describe('RailwayModelCard', () => {
@@ -52,7 +59,9 @@ describe('RailwayModelCard', () => {
       power_method: 'DC',
       category: 'Locomotive',
       description: 'Electric locomotive E.656 in original green livery',
+      descriptionLang: 'en',
       details: null,
+      detailsLang: null,
       image_path: null,
       status: 'InCollection',
       rolling_stock: [
@@ -85,7 +94,9 @@ describe('RailwayModelCard', () => {
       power_method: null,
       category: 'Passenger Set',
       description: 'ÖBB Railjet 3-car set',
+      descriptionLang: 'en',
       details: null,
+      detailsLang: null,
       image_path: 'images/railway_models/2/railjet.jpg',
       status: 'InCollection',
       rolling_stock: [

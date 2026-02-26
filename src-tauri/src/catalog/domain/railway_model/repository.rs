@@ -1,5 +1,5 @@
-use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::domain::railway_model::RailwayModelView;
+use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelParams};
 use crate::core::domain::domain_error::DomainError;
 

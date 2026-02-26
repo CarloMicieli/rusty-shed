@@ -1,4 +1,3 @@
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 use serde::Deserialize;

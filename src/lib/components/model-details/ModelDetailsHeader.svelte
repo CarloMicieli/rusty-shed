@@ -1,9 +1,11 @@
 <script lang="ts">
   import { convertFileSrc } from '@tauri-apps/api/core';
   import * as m from '$lib/paraglide/messages.js';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import type { RailwayModelView, RailwayModelImageResponse } from '$lib/bindings';
   import ImageUpload from './ImageUpload.svelte';
   import ImageDropZone from './ImageDropZone.svelte';
+  import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
 
   interface Props {
     model: RailwayModelView;
@@ -67,6 +69,9 @@
   <div class="mb-4">
     <h1 class="mb-2 text-3xl font-bold tracking-tight sm:text-4xl">
       {model.description}
+      {#if model.descriptionLang !== getLocale()}
+        <LanguageFallbackBadge lang={model.descriptionLang} />
+      {/if}
     </h1>
     <p class="text-lg text-muted-foreground">
       {model.manufacturer.display} | {model.productCode}

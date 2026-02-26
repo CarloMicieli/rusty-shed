@@ -318,7 +318,7 @@ describe('RollingStockCard', () => {
 
       // Wait for the drawer to fetch data
       await waitFor(() => {
-        expect(commands.getRailwayModelById).toHaveBeenCalledWith(RAILWAY_MODEL_ID);
+        expect(commands.getRailwayModelById).toHaveBeenCalledWith(RAILWAY_MODEL_ID, expect.any(String));
       });
 
       // Drawer should be visible with the updated series code

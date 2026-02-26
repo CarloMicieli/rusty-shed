@@ -19,6 +19,7 @@ Five technical unknowns were identified from the Technical Context and spec requ
 **Rationale**: This is the established community pattern. Compile-time safety is preserved for the high-traffic CRUD path (reads, upserts); only the FTS5 search path uses runtime queries, which are deterministic and covered by integration tests using `#[sqlx::test(migrations)]`.
 
 **Alternatives considered**:
+
 - Use `sqlx::query!` for FTS5 — rejected: known incompatibility with `MATCH` predicates.
 - Use a separate search library (e.g., `tantivy`) — rejected: over-engineering; SQLite FTS5 meets the <2 s SC-004 target at 10 000 rows and avoids an additional dependency.
 
@@ -35,6 +36,7 @@ Five technical unknowns were identified from the Technical Context and spec requ
 **Rationale**: Reuses the existing `LocaleService` without new state. The Tauri command validates the input at the boundary, so the fallback to `"en"` ensures robustness against future locale additions that are not yet supported by the translations system.
 
 **Alternatives considered**:
+
 - Detect language server-side from a stored setting — rejected: would require an extra DB read per command; the frontend already knows the active locale.
 - Read locale from a persistent setting table — acceptable but adds indirection; deferred to a future settings-driven preference feature.
 
@@ -71,6 +73,7 @@ The `resolved_lang` column tells the mapper which language was actually resolved
 **Rationale**: Single SQL round-trip for the common read path. `COALESCE` is O(1) at the DB layer. The `resolved_lang` metadata avoids a second query to determine the display language.
 
 **Alternatives considered**:
+
 - Two separate queries (fetch requested lang, then fallback if NULL) — rejected: two round-trips; more complex Rust control flow.
 - Store denormalized `resolved_lang` in the aggregate — rejected: violates separation of concerns; the resolved language changes with the user's locale preference.
 
@@ -100,6 +103,7 @@ The aggregate method `upsert_translation(lang, description, details)` pushes thi
 **Rationale**: Follows the same event-per-mutation pattern already used for rolling stocks. One event covers both create and update (upsert semantics). The repository remains the only place with SQL knowledge.
 
 **Alternatives considered**:
+
 - Re-use `RailwayModelUpdated` with a JSON key like `"translations"` — rejected: the existing `update_from_patch` logic would need special-casing; a dedicated event is cleaner and easier to test.
 - Separate `TranslationCreated` and `TranslationUpdated` events — rejected: over-engineering; the domain has no need to distinguish create from update for translations.
 
@@ -112,6 +116,7 @@ The aggregate method `upsert_translation(lang, description, details)` pushes thi
 **Research**: SQLite 3.35.0+ supports `ALTER TABLE ... DROP COLUMN`. Tauri 2 bundles SQLite ≥ 3.35 (bundled via `libsqlite3-sys`). The migration can therefore directly `INSERT INTO railway_model_translations SELECT ... FROM railway_models` and then drop the columns in the same migration file.
 
 **Decision**: Migration `0013_add_railway_model_translations.sql` will:
+
 1. Create `railway_model_translations` table.
 2. Create FTS5 virtual table `railway_model_search_idx`.
 3. Create triggers (`AFTER INSERT`, `AFTER UPDATE`, `AFTER DELETE` on `railway_model_translations`).
@@ -124,5 +129,6 @@ All six steps are in one migration file to keep the schema transition atomic. Th
 **Rationale**: Single migration keeps the transition atomic and reversible (via sqlx `down` migrations if needed). Dropping the old columns removes the risk of stale data divergence between the old columns and the new table.
 
 **Alternatives considered**:
+
 - Keep `railway_models.description`/`details` as a denormalized cache — rejected: creates a dual source of truth; the COALESCE query already provides the EN fallback efficiently.
 - Multiple migration files — rejected: split migrations risk partial state if one fails; SQLite migrations run in a transaction anyway.

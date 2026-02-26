@@ -129,6 +129,7 @@ pub struct AddCollectionItemInput {
 mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
         RailwayModelId,
@@ -170,7 +171,10 @@ mod tests {
                 "trn:manufacturer:not-a-trn".to_string(),
             ),
             product_code: ProductCode::try_from("P100").unwrap(),
-            description: "Test model".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test model".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -184,9 +188,9 @@ mod tests {
 
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == railway_model_id)
+            .withf(move |id, _lang| *id == railway_model_id)
             .times(1)
-            .returning(move |_| Ok(Some(railway_model.clone())));
+            .returning(move |_, _| Ok(Some(railway_model.clone())));
 
         let mut unit_of_work = FakeUow::new(mock, railway_mock);
 

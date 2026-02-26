@@ -25,23 +25,23 @@ pub async fn get_railway_model_translations(
 
 ## Parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `railway_model_id` | `RailwayModelId` (String) | Yes | TRN identifier of the railway model |
+| Name               | Type                      | Required | Description                         |
+| ------------------ | ------------------------- | -------- | ----------------------------------- |
+| `railway_model_id` | `RailwayModelId` (String) | Yes      | TRN identifier of the railway model |
 
 ## Response: `RailwayModelTranslations`
 
 ```typescript
 export type RailwayModelTranslations = {
   railwayModelId: RailwayModelId;
-  en: RailwayModelTranslationEntry | null;  // null if no EN translation stored
-  it: RailwayModelTranslationEntry | null;  // null if no IT translation stored
-}
+  en: RailwayModelTranslationEntry | null; // null if no EN translation stored
+  it: RailwayModelTranslationEntry | null; // null if no IT translation stored
+};
 
 export type RailwayModelTranslationEntry = {
   description: string | null;
   details: string | null;
-}
+};
 ```
 
 ## Behaviour

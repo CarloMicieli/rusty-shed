@@ -26,9 +26,9 @@ pub struct SearchRailwayModelsArgs {
 
 ## Parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `query` | `string` | Yes | Search term (minimum 2 chars). Matches against description and details in all languages. |
+| Name    | Type     | Required | Description                                                                              |
+| ------- | -------- | -------- | ---------------------------------------------------------------------------------------- |
+| `query` | `string` | Yes      | Search term (minimum 2 chars). Matches against description and details in all languages. |
 
 ## Response
 

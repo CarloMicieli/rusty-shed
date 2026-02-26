@@ -228,6 +228,7 @@ Parallel frontend: T037 (independent of all Rust tasks)
 ### Parallel Team Strategy
 
 With two developers after Phase 2:
+
 - **Developer A**: US1 (Phase 3) — display + fallback badge
 - **Developer B**: US2 (Phase 4) — create form + translation management
 - US3 follows US2; US4 can run alongside either

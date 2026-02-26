@@ -22,9 +22,11 @@
   import { invoke, convertFileSrc } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import * as m from '$lib/paraglide/messages';
-  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
+  import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
+  import TranslationsSection from '$lib/features/catalogue/components/TranslationsSection.svelte';
   import { commands, type Scale } from '$lib/bindings';
 
   interface RailwayModelCardProps {
@@ -69,6 +71,60 @@
     localScale = model.scale ?? '';
     localEra = model.era ?? '';
   });
+
+  // Translation edit state (used when editable=true)
+  let enDescription = $state<string | null>(null);
+  let enDetails = $state<string | null>(null);
+  let itDescription = $state<string | null>(null);
+  let itDetails = $state<string | null>(null);
+  let isSavingTranslations = $state(false);
+  let translationsLoaded = $state(false);
+
+  $effect(() => {
+    if (editable && model.id && !translationsLoaded) {
+      void loadTranslations();
+    }
+  });
+
+  async function loadTranslations() {
+    const result = await commands.getRailwayModelTranslations(model.id);
+    if (result.status === 'ok' && result.data) {
+      enDescription = result.data.en?.description ?? model.description ?? null;
+      enDetails = result.data.en?.details ?? model.details ?? null;
+      itDescription = result.data.it?.description ?? null;
+      itDetails = result.data.it?.details ?? null;
+    } else {
+      enDescription = model.description ?? null;
+      enDetails = model.details ?? null;
+    }
+    translationsLoaded = true;
+  }
+
+  async function saveTranslations() {
+    isSavingTranslations = true;
+    try {
+      // Save EN
+      await commands.upsertRailwayModelTranslation({
+        railwayModelId: model.id,
+        lang: 'en',
+        description: enDescription ?? null,
+        details: enDetails ?? null
+      });
+      // Save IT (only if at least one field has content)
+      if (itDescription || itDetails) {
+        await commands.upsertRailwayModelTranslation({
+          railwayModelId: model.id,
+          lang: 'it',
+          description: itDescription ?? null,
+          details: itDetails ?? null
+        });
+      }
+      localDescription = enDescription ?? localDescription;
+      localDetails = enDetails ?? localDetails;
+    } finally {
+      isSavingTranslations = false;
+    }
+  }
 
   const scaleOptions = [
     { id: 'H0', label: 'H0 (1:87)' },
@@ -128,23 +184,12 @@
     return TrainFront;
   });
 
-  async function saveDescription(value: string) {
-    const result = await commands.updateRailwayModelText({
-      railwayModelId: model.id,
-      field: 'Description',
-      value
-    });
-    if (result.status === 'error') {
-      throw new Error('Failed to save');
-    }
-    localDescription = value;
-  }
-
   async function saveDetails(value: string) {
     const result = await commands.updateRailwayModelText({
       railwayModelId: model.id,
       field: 'Details',
-      value
+      value,
+      lang: getLocale()
     });
     if (result.status === 'error') {
       throw new Error('Failed to save');
@@ -260,16 +305,13 @@
         <span class="text-zinc-700" aria-hidden="true">·</span>
         <span class="font-mono text-xs text-zinc-500">{model.product_code}</span>
       </div>
-      {#if editable}
-        <div class="mt-0.5">
-          <InPlaceEdit
-            value={localDescription}
-            placeholder={m.railway_model_field_description()}
-            onSave={saveDescription}
-          />
-        </div>
-      {:else if model.description}
-        <p class="mt-0.5 line-clamp-1 text-sm text-zinc-400">{model.description}</p>
+      {#if model.description}
+        <p class="mt-0.5 line-clamp-1 text-sm text-zinc-400">
+          {model.description}
+          {#if model.descriptionLang !== getLocale()}
+            <LanguageFallbackBadge lang={model.descriptionLang} />
+          {/if}
+        </p>
       {/if}
     </div>
 
@@ -408,14 +450,45 @@
 
       <!-- ── Tab 1: Model Details ─────────────────────────────────────── -->
       <TabsContent value="details" class="mt-2">
-        <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-          <RichTextEditor
-            value={localDetails}
-            {editable}
-            placeholder={m.details_placeholder()}
-            onSave={saveDetails}
-          />
-        </div>
+        {#if editable}
+          <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+            {#if translationsLoaded}
+              <TranslationsSection
+                bind:enDescription
+                bind:enDetails
+                bind:itDescription
+                bind:itDetails
+              />
+              <div class="mt-3 flex justify-end">
+                <Button
+                  size="sm"
+                  disabled={isSavingTranslations}
+                  onclick={saveTranslations}
+                  class="bg-[#E2994F] text-black hover:bg-[#E2994F]/90"
+                >
+                  {isSavingTranslations ? '...' : 'Save Translations'}
+                </Button>
+              </div>
+            {:else}
+              <p class="text-xs text-zinc-500">Loading translations...</p>
+            {/if}
+          </div>
+        {:else}
+          <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+            {#if model.detailsLang && model.detailsLang !== getLocale()}
+              <div class="mb-2 flex items-center gap-1 text-xs text-zinc-500">
+                <span>{m.railway_model_field_details()}</span>
+                <LanguageFallbackBadge lang={model.detailsLang} />
+              </div>
+            {/if}
+            <RichTextEditor
+              value={localDetails}
+              editable={false}
+              placeholder={m.details_placeholder()}
+              onSave={saveDetails}
+            />
+          </div>
+        {/if}
       </TabsContent>
 
       <!-- ── Tab 2: Rolling Stock ─────────────────────────────────────── -->

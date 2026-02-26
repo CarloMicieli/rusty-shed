@@ -67,12 +67,13 @@ pub async fn get_collection_items(
              rm.product_code,
              rm.scale,
              rm.epoch,
-             rm.description,
+             COALESCE(t.description, '') AS description,
              rm.power_method,
              m.name AS manufacturer
    FROM collection_items ci
    JOIN railway_models rm ON rm.id = ci.railway_model_id
    JOIN manufacturers m ON m.id = rm.manufacturer_id
+   LEFT JOIN railway_model_translations t ON t.railway_model_id = rm.id AND t.language_code = 'en'
    WHERE ci.collection_id = ?1
      AND ci.removed_date IS NULL"#;
 

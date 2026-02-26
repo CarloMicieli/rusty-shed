@@ -1,5 +1,4 @@
 use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayCompanyUowExt};
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt, RollingStockId};
 use crate::core::domain::domain_error::DomainError;
 
@@ -73,6 +72,7 @@ mod tests {
     use crate::catalog::domain::railway_company::{
         MockRailwayCompanyRepository, RailwayCompany, RailwayCompanyId,
     };
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::LocomotiveType;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,

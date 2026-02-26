@@ -27,10 +27,10 @@ pub async fn get_railway_model_by_id(
 
 ## Parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `railway_model_id` | `RailwayModelId` (String) | Yes | TRN identifier of the railway model |
-| `lang` | `String` | Yes | Requested language code (`"en"` or `"it"`). Unknown values fall back to `"en"`. |
+| Name               | Type                      | Required | Description                                                                     |
+| ------------------ | ------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `railway_model_id` | `RailwayModelId` (String) | Yes      | TRN identifier of the railway model                                             |
+| `lang`             | `String`                  | Yes      | Requested language code (`"en"` or `"it"`). Unknown values fall back to `"en"`. |
 
 ## Response: `RailwayModelView` (updated)
 
@@ -41,10 +41,10 @@ export type RailwayModelView = {
   id: RailwayModelId;
   manufacturer: RailwayModelManufacturer;
   productCode: ProductCode;
-  description: string;              // resolved text (may be EN fallback)
-  descriptionLang: string;          // NEW: "en" | "it" — actual resolved language
+  description: string; // resolved text (may be EN fallback)
+  descriptionLang: string; // NEW: "en" | "it" — actual resolved language
   details: string | null;
-  detailsLang: string | null;       // NEW: "en" | "it" | null (null if no details)
+  detailsLang: string | null; // NEW: "en" | "it" | null (null if no details)
   powerMethod: PowerMethod;
   scale: Scale;
   epoch: Epoch;
@@ -52,7 +52,7 @@ export type RailwayModelView = {
   deliveryDate: DeliveryDate | null;
   availabilityStatus: AvailabilityStatus | null;
   metadata: Metadata;
-}
+};
 ```
 
 ## Behaviour

@@ -97,7 +97,7 @@ impl DeleteModelImage {
     {
         let mut repository = unit_of_work.railway_model_repository();
         let model = repository
-            .find_by_id(model_id)
+            .find_by_id(model_id, "en")
             .await
             .map_err(DeleteError::Domain)?;
 
@@ -133,6 +133,7 @@ pub enum DeleteError {
 mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
         Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
         RailwayModelRepository,
@@ -174,7 +175,10 @@ mod tests {
                 "trn:manufacturer:marklin".to_string(),
             ),
             product_code: ProductCode::try_from("39216").unwrap(),
-            description: "Test model".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test model".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -206,9 +210,9 @@ mod tests {
         let test_model = create_test_railway_model(model_id_str);
         mock_repo
             .expect_find_by_id()
-            .withf(move |id| id.as_ref() == model_id_str)
+            .withf(move |id, _lang| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_| Ok(Some(test_model.clone())));
+            .returning(move |_, _| Ok(Some(test_model.clone())));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -239,9 +243,9 @@ mod tests {
         let test_model = create_test_railway_model(model_id_str);
         mock_repo
             .expect_find_by_id()
-            .withf(move |id| id.as_ref() == model_id_str)
+            .withf(move |id, _lang| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_| Ok(Some(test_model.clone())));
+            .returning(move |_, _| Ok(Some(test_model.clone())));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -275,9 +279,9 @@ mod tests {
         let test_model = create_test_railway_model(model_id_str);
         mock_repo
             .expect_find_by_id()
-            .withf(move |id| id.as_ref() == model_id_str)
+            .withf(move |id, _lang| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_| Ok(Some(test_model.clone())));
+            .returning(move |_, _| Ok(Some(test_model.clone())));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -301,9 +305,9 @@ mod tests {
         let mut mock_repo = MockRailwayModelRepository::new();
         mock_repo
             .expect_find_by_id()
-            .withf(move |id| id.as_ref() == model_id_str)
+            .withf(move |id, _lang| id.as_ref() == model_id_str)
             .times(1)
-            .returning(|_| Ok(None));
+            .returning(|_, _| Ok(None));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -334,9 +338,9 @@ mod tests {
         let test_model = create_test_railway_model(model_id_str);
         mock_repo
             .expect_find_by_id()
-            .withf(move |id| id.as_ref() == model_id_str)
+            .withf(move |id, _lang| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_| Ok(Some(test_model.clone())));
+            .returning(move |_, _| Ok(Some(test_model.clone())));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 

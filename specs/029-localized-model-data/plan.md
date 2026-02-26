@@ -22,12 +22,12 @@ Add per-language storage of `description` and `details` for railway models, supp
 
 _GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design._
 
-| Law | Status | Evidence |
-| ------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Database / Persistence** — SQLite via `sqlx`, migrations, FK enforcement | ✅ PASS | New migration `0013_add_railway_model_translations.sql` added to `/migrations/`; FK from translations table to `railway_models` enforced; schema changes only via migration files |
-| **State Management — Domain Event Tracking** | ✅ PASS | New `RailwayModelEvent::TranslationUpserted` event emitted by aggregate; repository drains and persists events atomically inside a transaction via existing Unit-of-Work pattern |
-| **API Design & Transport Boundary — Tauri IPC + specta** | ✅ PASS | New `UpsertRailwayModelTranslationArgs` and `GetRailwayModelTranslationsArgs` derive `Debug, Clone, specta::Type, serde::Deserialize`; validated at boundary via `garde`; TS types auto-generated |
-| **Domain Logic Location** | ✅ PASS | COALESCE fallback logic lives entirely in the Rust repository layer; frontend receives resolved `LocalizedField { lang, value }` and never re-implements fallback |
+| Law                                                                        | Status  | Evidence                                                                                                                                                                                          |
+| -------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Database / Persistence** — SQLite via `sqlx`, migrations, FK enforcement | ✅ PASS | New migration `0013_add_railway_model_translations.sql` added to `/migrations/`; FK from translations table to `railway_models` enforced; schema changes only via migration files                 |
+| **State Management — Domain Event Tracking**                               | ✅ PASS | New `RailwayModelEvent::TranslationUpserted` event emitted by aggregate; repository drains and persists events atomically inside a transaction via existing Unit-of-Work pattern                  |
+| **API Design & Transport Boundary — Tauri IPC + specta**                   | ✅ PASS | New `UpsertRailwayModelTranslationArgs` and `GetRailwayModelTranslationsArgs` derive `Debug, Clone, specta::Type, serde::Deserialize`; validated at boundary via `garde`; TS types auto-generated |
+| **Domain Logic Location**                                                  | ✅ PASS | COALESCE fallback logic lives entirely in the Rust repository layer; frontend receives resolved `LocalizedField { lang, value }` and never re-implements fallback                                 |
 
 **Post-Phase 1 re-check**: All four laws still pass. No violations detected in the Phase 1 design.
 

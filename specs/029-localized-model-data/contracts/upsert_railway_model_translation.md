@@ -36,22 +36,22 @@ pub struct UpsertRailwayModelTranslationArgs {
 
 ## Parameters
 
-| Name | Type | Required | Description |
-| ---- | ---- | -------- | ----------- |
-| `railwayModelId` | `RailwayModelId` | Yes | Target railway model |
-| `lang` | `"en" \| "it"` | Yes | Language being written |
-| `description` | `string \| null` | Conditional | Required non-empty for `"en"`; optional for `"it"` |
-| `details` | `string \| null` | No | Optional for all languages |
+| Name             | Type             | Required    | Description                                        |
+| ---------------- | ---------------- | ----------- | -------------------------------------------------- |
+| `railwayModelId` | `RailwayModelId` | Yes         | Target railway model                               |
+| `lang`           | `"en" \| "it"`   | Yes         | Language being written                             |
+| `description`    | `string \| null` | Conditional | Required non-empty for `"en"`; optional for `"it"` |
+| `details`        | `string \| null` | No          | Optional for all languages                         |
 
 ## Validation Rules
 
-| Rule | Error |
-| ---- | ----- |
-| `lang` must be `"en"` or `"it"` | `VALIDATION_ERROR` |
-| `description` must be non-empty when `lang === "en"` | `VALIDATION_ERROR` — "English description is required" |
-| `description` may be `null` or non-empty for `"it"` | — |
-| Both `description` and `details` being `null` for `"it"` deletes the IT translation row | — (silent removal, not an error) |
-| Railway model must exist | `NOT_FOUND` |
+| Rule                                                                                    | Error                                                  |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `lang` must be `"en"` or `"it"`                                                         | `VALIDATION_ERROR`                                     |
+| `description` must be non-empty when `lang === "en"`                                    | `VALIDATION_ERROR` — "English description is required" |
+| `description` may be `null` or non-empty for `"it"`                                     | —                                                      |
+| Both `description` and `details` being `null` for `"it"` deletes the IT translation row | — (silent removal, not an error)                       |
+| Railway model must exist                                                                | `NOT_FOUND`                                            |
 
 ## Behaviour
 
@@ -71,6 +71,6 @@ await commands.upsertRailwayModelTranslation({
   railwayModelId: modelId,
   lang: 'it',
   description: itDescription || null,
-  details: itDetails || null,
+  details: itDetails || null
 });
 ```

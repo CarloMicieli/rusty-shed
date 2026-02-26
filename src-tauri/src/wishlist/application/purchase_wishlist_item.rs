@@ -118,6 +118,7 @@ impl PurchaseWishlistItemService {
 mod tests {
     use super::*;
     use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::ProductCode;
     use crate::catalog::domain::railway_model::RailwayModel;
     use crate::catalog::domain::railway_model::RailwayModelId;
@@ -167,7 +168,10 @@ mod tests {
             id: rm_id,
             manufacturer_id: ManufacturerId::try_from("trn:manufacturer:not-a-trn").unwrap(),
             product_code: ProductCode::try_from("P100").unwrap(),
-            description: "Test model".to_string(),
+            description: LocalizedField {
+                lang: "en".to_string(),
+                value: "Test model".to_string(),
+            },
             details: None,
             power_method: PowerMethod::DC,
             scale: Scale::H0,
@@ -229,9 +233,9 @@ mod tests {
 
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == rm_id_clone)
+            .withf(move |id, _lang| *id == rm_id_clone)
             .times(1)
-            .returning(move |_| Ok(Some(railway_model.clone())));
+            .returning(move |_, _| Ok(Some(railway_model.clone())));
 
         let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
         let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
@@ -354,9 +358,9 @@ mod tests {
 
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == rm_id_clone)
+            .withf(move |id, _lang| *id == rm_id_clone)
             .times(1)
-            .returning(move |_| Ok(Some(railway_model.clone())));
+            .returning(move |_, _| Ok(Some(railway_model.clone())));
 
         let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
         let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();
@@ -402,9 +406,9 @@ mod tests {
         let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == rm_id)
+            .withf(move |id, _lang| *id == rm_id)
             .times(1)
-            .returning(move |_| Ok(None));
+            .returning(move |_, _| Ok(None));
 
         let mut collection_mock = MockCollectionRepository::new();
         collection_mock.expect_find_by_id().times(0);
@@ -482,9 +486,9 @@ mod tests {
 
         railway_mock
             .expect_find_by_id()
-            .withf(move |id| *id == rm_id_clone)
+            .withf(move |id, _lang| *id == rm_id_clone)
             .times(1)
-            .returning(move |_| Ok(Some(railway_model.clone())));
+            .returning(move |_, _| Ok(Some(railway_model.clone())));
 
         let mut uow = FakeCombinedUow::new(wishlist_mock, collection_mock, railway_mock);
         let cid_provider = DefaultMockIdProvider::<CollectionItemId>::new();

@@ -1,7 +1,7 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
-use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::RailwayModelEvent;
+use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::rolling_stock::RollingStockSpecPatch;
 use crate::catalog::domain::railway_model::{
     AvailabilityStatus, Category, DeliveryDate, Epoch, PowerMethod, ProductCode, RailwayModelId,

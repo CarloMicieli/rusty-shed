@@ -75,10 +75,11 @@ impl<'conn> SqliteDashboardRepository<'conn> {
             SELECT
                 rm.id,
                 rm.category AS title,
-                rm.description AS subtitle,
+                t.description AS subtitle,
                 'COLLECTION' AS source,
                 rm.created_at
             FROM railway_models rm
+            LEFT JOIN railway_model_translations t ON t.railway_model_id = rm.id AND t.language_code = 'en'
             ORDER BY rm.created_at DESC
             LIMIT ?1
         "#;
@@ -141,13 +142,14 @@ impl<'conn> SqliteDashboardRepository<'conn> {
                     rm.id AS model_id,
                     m.name AS manufacturer_name,
                     rm.product_code,
-                    rm.description,
+                    COALESCE(t.description, '') AS description,
                     NULL AS image_path,
                     ci.purchase_condition
                 FROM purchase_infos pi
                 JOIN collection_items ci ON pi.collection_item_id = ci.id
                 JOIN railway_models rm ON ci.railway_model_id = rm.id
                 JOIN manufacturers m ON rm.manufacturer_id = m.id
+                LEFT JOIN railway_model_translations t ON t.railway_model_id = rm.id AND t.language_code = 'en'
                 WHERE pi.purchase_date = ?1
                   AND (
                     (pi.seller_id IS NULL AND ?2 IS NULL)
