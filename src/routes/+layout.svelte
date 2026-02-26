@@ -97,47 +97,47 @@
 
 {#if error}
   <div
-    class="text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans"
+    class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
     in:fade
   >
     <div class="flex max-w-md flex-col items-center gap-6 p-6 text-center">
       <div class="mb-2 flex items-center gap-3">
-        <TrainFront class="text-error-500" size={48} />
+        <TrainFront class="text-destructive" size={48} />
       </div>
-      <h1 class="h2 text-error-500 font-bold">Startup Failed</h1>
-      <p class="text-surface-200">The application could not start correctly.</p>
+      <h1 class="text-2xl font-bold text-destructive">Startup Failed</h1>
+      <p class="text-muted-foreground">The application could not start correctly.</p>
       <div
-        class="border-error-500/30 bg-surface-800/50 max-h-48 w-full overflow-auto rounded border p-4 text-left font-mono text-xs"
+        class="max-h-48 w-full overflow-auto rounded border border-destructive/30 bg-card p-4 text-left font-mono text-xs"
       >
         {error}
       </div>
-      <p class="text-surface-400 text-sm">
+      <p class="text-sm text-muted-foreground">
         Please check your database connection or logs for more details.
       </p>
     </div>
   </div>
 {:else if loading}
   <div
-    class="text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans"
+    class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
     in:fade
     out:fade
   >
     <div class="flex flex-col items-center gap-4">
       <div class="flex items-center gap-3">
         <div
-          class="border-accent-500 h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
+          class="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent"
         ></div>
         <div class="flex items-center gap-2">
-          <TrainFront class="text-accent-500" size={28} />
+          <TrainFront class="text-primary" size={28} />
           <span class="text-lg font-semibold tracking-wide">Rusty Shed</span>
         </div>
       </div>
-      <p class="text-surface-300 text-sm">Preparing your collection...</p>
+      <p class="text-sm text-muted-foreground">Preparing your collection...</p>
     </div>
   </div>
 {:else}
   <div
-    class="text-surface-50 selection:bg-primary-500/30 flex h-screen w-full flex-col overflow-hidden bg-background font-sans lg:flex-row"
+    class="flex h-screen w-full flex-col overflow-hidden bg-background font-sans text-foreground lg:flex-row"
     in:fade
   >
     <!-- Sidebar Left (Desktop) -->
@@ -149,13 +149,13 @@
     <div class="relative flex h-full min-w-0 flex-1 flex-col">
       <!-- Header -->
       <header
-        class="border-surface-700/50 sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md"
+        class="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md"
         data-tauri-drag-region
       >
         <div class="flex items-center justify-between p-4">
           <!-- Mobile: Logo / Brand (Visible only when sidebar is hidden) -->
           <div class="flex items-center gap-2 lg:hidden">
-            <TrainFront class="text-accent-500" size={24} />
+            <TrainFront class="text-primary" size={24} />
             <span class="text-sm font-bold tracking-widest uppercase">Rusty Shed</span>
           </div>
 
@@ -163,9 +163,12 @@
           <div class="ml-auto flex items-center gap-4">
             <SearchBar />
 
-            <button class="variant-ghost-surface btn-icon btn-icon-sm relative">
+            <button
+              class="relative rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
+              aria-label="Notifications"
+            >
               <Bell size={20} />
-              <span class="bg-error-500 absolute top-0 right-0 h-2 w-2 animate-pulse rounded-full"
+              <span class="absolute top-1 right-1 h-2 w-2 animate-pulse rounded-full bg-destructive"
               ></span>
             </button>
           </div>

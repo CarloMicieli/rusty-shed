@@ -3,7 +3,7 @@
   import { TrainFront, TramFront, Users, Box as BoxIcon, Funnel, Plus } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Accordion from '$lib/components/ui/accordion';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
   import { getDepotContext } from '$lib/features/depot/DepotState.svelte';
 
   // Custom Components
@@ -57,22 +57,13 @@
   });
 </script>
 
-<div class="min-h-screen space-y-8 bg-[#0c0c0c] p-6 text-zinc-100">
-  <header class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-    <div class="space-y-1">
-      <div class="flex items-center gap-2">
-        <div class="h-1 w-8 bg-[#f59e0b]"></div>
-        <span class="text-[10px] font-bold tracking-[0.2em] text-[#f59e0b] uppercase"
-          >System Depot</span
-        >
-      </div>
-      <h1 class="text-4xl font-bold tracking-tight text-white">{m.depot_title()}</h1>
-    </div>
-    <div class="flex gap-3">
-      <Button variant="outline"><Funnel size={16} class="mr-2" /> Filter</Button>
-      <Button class="bg-[#f59e0b] text-black"><Plus size={18} /> Add Model</Button>
-    </div>
-  </header>
+<div class="space-y-8">
+  <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
+    {#snippet actions()}
+      <Button variant="outline"><Funnel size={16} class="mr-2" /> {m.depot_filter_button()}</Button>
+      <Button variant="default"><Plus size={18} /> {m.actions_add_railway_model()}</Button>
+    {/snippet}
+  </PageHeader>
 
   <DepotControls
     bind:searchInput

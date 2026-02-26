@@ -51,16 +51,16 @@
   });
 </script>
 
-<div class="container mx-auto space-y-6 p-4">
+<div class="space-y-6">
   {#if loading}
     <div class="flex items-center justify-center py-16">
       <div
-        class="variant-filled-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
+        class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
       ></div>
     </div>
   {:else if error}
-    <div class="variant-filled-error rounded-lg p-4">
-      <p class="font-medium">{error}</p>
+    <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+      <p class="font-medium text-destructive">{error}</p>
     </div>
   {:else if inventory}
     <InventoryDetail
@@ -70,8 +70,8 @@
       onAddPurchase={() => (addPurchaseDialogOpen = true)}
     />
   {:else}
-    <div class="variant-ghost-surface rounded-lg p-8 text-center">
-      <p class="text-surface-400">Inventory not found</p>
+    <div class="rounded-xl border border-dashed border-border p-8 text-center">
+      <p class="text-muted-foreground">Inventory not found</p>
     </div>
   {/if}
 </div>

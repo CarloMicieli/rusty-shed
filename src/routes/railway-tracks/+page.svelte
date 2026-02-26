@@ -6,7 +6,7 @@
   import CreateInventoryDialog from '$lib/features/track-inventory/components/CreateInventoryDialog.svelte';
   import { onMount } from 'svelte';
   import { Plus } from 'lucide-svelte';
-  import { Button } from '$lib/components';
+  import { Button, PageHeader } from '$lib/components';
 
   const service = getTrackInventoryContext();
 
@@ -43,19 +43,18 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex items-start justify-between">
-    <div>
-      <p class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">{m.app_tracks()}</p>
-      <h1 class="mt-1 text-4xl font-bold text-zinc-100">{m.track_inventories_title()}</h1>
-      <p class="mt-1 text-sm text-zinc-400">{m.track_inventories_subtitle()}</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <Button variant="rusty" onclick={() => (createDialogOpen = true)} disabled={loading}>
+  <PageHeader
+    title={m.track_inventories_title()}
+    subtitle={m.app_tracks()}
+    description={m.track_inventories_subtitle()}
+  >
+    {#snippet actions()}
+      <Button variant="default" onclick={() => (createDialogOpen = true)} disabled={loading}>
         <Plus size={18} />
         <span>{m.track_inventories_create_button()}</span>
       </Button>
-    </div>
-  </div>
+    {/snippet}
+  </PageHeader>
 
   {#if loading}
     <div class="flex items-center justify-center py-16">

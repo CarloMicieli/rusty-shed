@@ -4,6 +4,7 @@
   import ImportPreview from '$lib/features/import/components/ImportPreview.svelte';
   import ImportReport from '$lib/features/import/components/ImportReport.svelte';
   import { createImportController } from '$lib/features/import/import.controller.svelte';
+  import * as m from '$lib/paraglide/messages.js';
 
   const controller = createImportController();
   const sessionId = controller.sessionId$;
@@ -55,18 +56,16 @@
 </script>
 
 <PageHeader
-  title="Import Data"
-  subtitle="Settings"
-  description="Import your railway collection data from .zip or .tar.gz archives"
+  title={m['import.title']()}
+  subtitle={m.app_settings()}
+  description={m.import_page_description()}
 />
 
-<div class="import-container">
+<div class="mt-8 space-y-6">
   {#if $result}
     <ImportReport result={$result} onClose={handleCloseReport} />
   {:else if !$sessionId}
-    <div class="dropzone-section">
-      <ImportDropZone onFilesSelected={handleFilesSelected} disabled={isProcessing} />
-    </div>
+    <ImportDropZone onFilesSelected={handleFilesSelected} disabled={isProcessing} />
   {:else if $preview}
     <ImportPreview
       preview={$preview}
@@ -76,15 +75,3 @@
     />
   {/if}
 </div>
-
-<style>
-  .import-container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 1rem;
-  }
-
-  .dropzone-section {
-    width: 100%;
-  }
-</style>

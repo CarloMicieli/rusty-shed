@@ -42,30 +42,30 @@
   <!-- Page header -->
   <header class="mb-6">
     {#if query}
-      <h1 class="text-xl font-semibold text-zinc-100">
+      <h1 class="text-xl font-semibold text-foreground">
         {m.search_results_for({ query })}
       </h1>
       {#if !service.isLoading && !isNavigating && service.results.length > 0}
-        <p class="mt-1 text-sm text-zinc-500">
+        <p class="mt-1 text-sm text-muted-foreground">
           {m.search_result_count({ count: service.results.length })}
         </p>
       {/if}
     {:else}
-      <h1 class="text-xl font-semibold text-zinc-100">{m.search_page_title()}</h1>
-      <p class="mt-1 text-sm text-zinc-500">{m.search_min_length_hint()}</p>
+      <h1 class="text-xl font-semibold text-foreground">{m.search_page_title()}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{m.search_min_length_hint()}</p>
     {/if}
   </header>
 
   <!-- Loading state -->
   {#if service.isLoading || isNavigating}
     <div class="flex items-center justify-center py-16">
-      <Loader2 class="animate-spin text-amber-500" size={32} />
-      <span class="ml-3 text-sm text-zinc-400">{m.search_loading()}</span>
+      <Loader2 class="animate-spin text-primary" size={32} />
+      <span class="ml-3 text-sm text-muted-foreground">{m.search_loading()}</span>
     </div>
 
     <!-- Error state -->
   {:else if service.error}
-    <p class="py-8 text-center text-sm text-red-400">{service.error}</p>
+    <p class="py-8 text-center text-sm text-destructive">{service.error}</p>
 
     <!-- Results -->
   {:else if service.results.length > 0}

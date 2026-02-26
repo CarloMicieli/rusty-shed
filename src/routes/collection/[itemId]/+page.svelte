@@ -10,6 +10,7 @@
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import CollectionItemSidebar from '$lib/features/collection/components/CollectionItemSidebar.svelte';
+  import { Button } from '$lib/components';
   import type {
     RailwayModelView,
     RailwayModelImageResponse,
@@ -95,38 +96,26 @@
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{m.collection_item_not_found()}</p>
     <p class="text-sm text-muted-foreground">{m.collection_item_not_found_message()}</p>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      onclick={goBack}
-    >
+    <Button variant="ghost" size="sm" onclick={goBack}>
       <ArrowLeft class="h-4 w-4" />
       {m.collection_item_back()}
-    </button>
+    </Button>
   </div>
 {:else if error}
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{error}</p>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      onclick={goBack}
-    >
+    <Button variant="ghost" size="sm" onclick={goBack}>
       <ArrowLeft class="h-4 w-4" />
       {m.collection_item_back()}
-    </button>
+    </Button>
   </div>
 {:else if collectionItem}
-  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl">
     <!-- Back button -->
-    <button
-      type="button"
-      class="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      onclick={goBack}
-    >
+    <Button variant="ghost" size="sm" class="mb-6" onclick={goBack}>
       <ArrowLeft class="h-4 w-4" />
       {m.collection_item_back()}
-    </button>
+    </Button>
 
     <!-- Two-panel layout -->
     <div class="flex flex-col gap-6 lg:flex-row">

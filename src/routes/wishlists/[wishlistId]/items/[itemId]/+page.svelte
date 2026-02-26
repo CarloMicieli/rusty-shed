@@ -10,6 +10,7 @@
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
   import PurchaseDialog from '$lib/features/wishlists/components/PurchaseDialog.svelte';
+  import { Button } from '$lib/components';
   import type {
     RailwayModelView,
     RailwayModelImageResponse,
@@ -114,38 +115,26 @@
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{m.wishlist_item_not_found()}</p>
     <p class="text-sm text-muted-foreground">{m.wishlist_item_not_found_message()}</p>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      onclick={goBack}
-    >
+    <Button variant="ghost" size="sm" onclick={goBack}>
       <ArrowLeft class="h-4 w-4" />
       {m.wishlist_item_back()}
-    </button>
+    </Button>
   </div>
 {:else if error}
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{error}</p>
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      onclick={goBack}
-    >
+    <Button variant="ghost" size="sm" onclick={goBack}>
       <ArrowLeft class="h-4 w-4" />
       {m.wishlist_item_back()}
-    </button>
+    </Button>
   </div>
 {:else if wishlistItem}
-  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl">
     <!-- Back button -->
-    <button
-      type="button"
-      class="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      onclick={goBack}
-    >
+    <Button variant="ghost" size="sm" class="mb-6" onclick={goBack}>
       <ArrowLeft class="h-4 w-4" />
       {m.wishlist_item_back()}
-    </button>
+    </Button>
 
     <!-- Two-panel layout -->
     <div class="flex flex-col gap-6 lg:flex-row">
@@ -160,14 +149,10 @@
       <div class="flex w-full shrink-0 flex-col gap-4 lg:w-80">
         <WishlistItemSidebar item={wishlistItem} {wishlistName} />
         {#if wishlistItem.status === 'WANTED' || wishlistItem.status === 'ON_ORDER'}
-          <button
-            type="button"
-            onclick={() => (purchaseDialogOpen = true)}
-            class="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-amber-400"
-          >
+          <Button variant="default" class="w-full" onclick={() => (purchaseDialogOpen = true)}>
             <ShoppingCart class="h-4 w-4" />
             {m.purchase_dialog_submit()}
-          </button>
+          </Button>
         {/if}
       </div>
     </div>

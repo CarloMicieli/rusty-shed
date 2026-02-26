@@ -74,7 +74,7 @@
   <title>{m.app_digital_roster()} - {m.app_name()}</title>
 </svelte:head>
 
-<div class="container mx-auto space-y-6 p-4">
+<div class="space-y-6">
   <!-- Page Header -->
   <PageHeader
     title={m.app_digital_roster()}
