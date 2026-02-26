@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { flushSync } from 'svelte';
 
 vi.mock('$lib/shared/services/TauriAdapter', () => ({
   safeInvoke: vi.fn()

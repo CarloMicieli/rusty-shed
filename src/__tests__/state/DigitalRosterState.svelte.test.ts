@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { flushSync } from 'svelte';
 import { DigitalRosterState } from '$lib/features/digital-roster/DigitalRosterState.svelte';
 import type { DigitalRollingStockView, DigitalSummary } from '$lib/bindings';

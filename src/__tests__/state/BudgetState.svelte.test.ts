@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('$lib/paraglide/messages.js', () => ({
   budget_mode_yearly: () => 'Yearly',

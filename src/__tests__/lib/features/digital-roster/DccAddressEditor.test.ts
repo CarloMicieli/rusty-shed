@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
-import { flushSync } from 'svelte';
 import DccAddressEditor from '$lib/features/digital-roster/components/DccAddressEditor.svelte';
 
 // ── Paraglide messages ───────────────────────────────────────────────────────

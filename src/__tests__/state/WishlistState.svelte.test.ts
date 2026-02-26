@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { flushSync } from 'svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn()
