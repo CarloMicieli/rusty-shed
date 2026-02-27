@@ -4,7 +4,7 @@ import BudgetTable from '$lib/features/budget/components/BudgetTable.svelte';
 import type { MonthlyBudgetRecordDto } from '$lib/features/budget/services/BudgetService.svelte';
 
 // ── Mock modal store ─────────────────────────────────────────────────────────
-const mockModalTrigger = vi.fn();
+const mockModalTrigger = vi.hoisted(() => vi.fn());
 vi.mock('$lib/stores/modal', () => ({
   getModalStore: () => ({ trigger: mockModalTrigger })
 }));

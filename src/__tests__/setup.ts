@@ -32,6 +32,39 @@ globalWithTauri.__TAURI_INTERNALS__ = {
   }
 };
 
+// happy-dom doesn't implement the Web Animations API used by Svelte transitions.
+// Provide a minimal stub so `element.animate()` doesn't crash and transitions
+// complete immediately (required for loading-state tests).
+if (!Element.prototype.animate) {
+  Element.prototype.animate = function () {
+    const listeners: Record<string, EventListenerOrEventListenerObject[]> = {};
+    const animation = {
+      play: vi.fn(),
+      pause: vi.fn(),
+      cancel: vi.fn(),
+      finish: vi.fn(),
+      onfinish: null as (() => void) | null,
+      oncancel: null as (() => void) | null,
+      finished: Promise.resolve({} as Animation),
+      addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+        (listeners[type] ??= []).push(listener);
+      },
+      removeEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+        listeners[type] = (listeners[type] ?? []).filter((l) => l !== listener);
+      },
+      dispatchEvent: vi.fn()
+    };
+    // Fire 'finish' asynchronously so Svelte's out-transitions clean up the DOM.
+    Promise.resolve().then(() => {
+      if (animation.onfinish) animation.onfinish();
+      (listeners['finish'] ?? []).forEach((l) =>
+        typeof l === 'function' ? l({} as Event) : l.handleEvent({} as Event)
+      );
+    });
+    return animation as unknown as Animation;
+  };
+}
+
 // Reset all mocks between tests
 beforeEach(() => {
   vi.clearAllMocks();
