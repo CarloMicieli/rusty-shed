@@ -4047,9 +4047,9 @@ export type Metadata = { version: number; created_at: string; updated_at: string
  */
 export type ModelCard = {
   /**
-   * Unique model identifier (format: "trn:railway-model:{manufacturer}:{product_code}")
+   * Unique collection item identifier (format: "trn:collection-item:{uuid}")
    */
-  id: RailwayModelId;
+  id: CollectionItemId;
   /**
    * Path to thumbnail image (relative to data directory)
    */

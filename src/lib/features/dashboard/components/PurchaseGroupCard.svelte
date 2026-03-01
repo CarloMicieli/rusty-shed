@@ -5,8 +5,10 @@
   import ModelCard from './ModelCard.svelte';
   import * as m from '$lib/paraglide/messages.js';
 
-  let { group, onModelClick }: { group: PurchaseGroup; onModelClick?: (modelId: string) => void } =
-    $props();
+  let {
+    group,
+    onModelClick
+  }: { group: PurchaseGroup; onModelClick?: (collectionItemId: string) => void } = $props();
 
   const formattedDate = $derived.by(() => {
     const d = new Date(group.purchaseDate);

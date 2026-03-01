@@ -107,7 +107,8 @@
     ];
   }
 
-  const handleModelClick = (id: string) => goto(resolve(`/collection/${id}`));
+  const handleModelClick = (collectionItemId: string) =>
+    goto(resolve(`/collection/${collectionItemId}`));
 </script>
 
 <svelte:head>

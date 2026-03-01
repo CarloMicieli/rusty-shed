@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::PurchaseCondition;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
@@ -67,7 +68,7 @@ pub struct PurchaseGroupRow {
 
 #[derive(Debug, Clone, FromRow)]
 pub struct ModelCardRow {
-    pub model_id: RailwayModelId,
+    pub collection_item_id: CollectionItemId,
     pub manufacturer_name: String,
     pub product_code: String,
     pub description: String,
@@ -84,7 +85,7 @@ impl From<ModelCardRow> for ModelCard {
             .unwrap_or_default();
 
         Self {
-            id: row.model_id,
+            id: row.collection_item_id,
             thumbnail_path: row.image_path,
             manufacturer: row.manufacturer_name,
             product_code: row.product_code,

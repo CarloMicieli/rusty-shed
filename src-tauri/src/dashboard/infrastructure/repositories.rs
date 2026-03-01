@@ -139,7 +139,7 @@ impl<'conn> SqliteDashboardRepository<'conn> {
         for group in groups {
             let models_sql = r#"
                 SELECT
-                    rm.id AS model_id,
+                    ci.id AS collection_item_id,
                     m.name AS manufacturer_name,
                     rm.product_code,
                     COALESCE(t.description, '') AS description,
@@ -216,6 +216,7 @@ impl<'conn> DashboardUowExt for SqliteUnitOfWork<'conn> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::collecting::domain::CollectionItemId;
     use crate::core::domain::Currency;
     use pretty_assertions::assert_eq;
 
@@ -274,5 +275,16 @@ mod tests {
 
         let recent_items = summary.recent_items;
         assert_eq!(recent_items.len(), 1);
+
+        let purchase_groups = summary.purchase_groups;
+        assert_eq!(purchase_groups.len(), 2);
+
+        let first_group = &purchase_groups[0];
+        assert_eq!(first_group.model_cards.len(), 1);
+
+        let expected_collection_item_id =
+            CollectionItemId::try_from("trn:collection-item:a6d749a5-f3e9-44e1-9963-35ad90d4b83a")
+                .expect("fixture should contain a valid collection item id");
+        assert_eq!(first_group.model_cards[0].id, expected_collection_item_id);
     }
 }
