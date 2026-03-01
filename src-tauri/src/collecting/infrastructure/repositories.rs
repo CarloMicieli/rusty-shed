@@ -8,7 +8,9 @@ use crate::collecting::domain::{
     OwnedRollingStock, OwnedRollingStockId, PurchaseCondition, PurchaseInfoId,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionSummary, DepotView};
-use crate::collecting::domain::{CollectionRepository, CollectionUowExt};
+use crate::collecting::domain::{
+    CollectionItemUpdate, CollectionRepository, CollectionUowExt, UpdateCollectionItemInput,
+};
 use crate::collecting::infrastructure::database;
 use crate::collecting::infrastructure::entities::{OwnedRollingStockRow, PurchaseInfoRow};
 use crate::collecting::infrastructure::mappers::CollectionMapper;
@@ -231,6 +233,143 @@ impl<'conn> SqliteCollectionRepository<'conn> {
 
         Ok(())
     }
+
+    async fn update_collection_item_field<T>(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        field_name: &str,
+        value: Option<T>,
+    ) -> Result<(), DomainError>
+    where
+        T: Send + Sync + for<'q> sqlx::Encode<'q, sqlx::Sqlite> + sqlx::Type<sqlx::Sqlite>,
+    {
+        let sql = format!("UPDATE collection_items SET {field_name} = ?1 WHERE id = ?2");
+        let result = sqlx::query(&sql)
+            .bind(value)
+            .bind(collection_item_id)
+            .execute(&mut *self.executor)
+            .await
+            .with_domain_context("Error updating collection item field")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "CollectionItem".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
+    async fn update_purchase_info_seller(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        seller_id: Option<&SellerId>,
+    ) -> Result<(), DomainError> {
+        let result =
+            sqlx::query("UPDATE purchase_infos SET seller_id = ?1 WHERE collection_item_id = ?2")
+                .bind(seller_id)
+                .bind(collection_item_id)
+                .execute(&mut *self.executor)
+                .await
+                .with_domain_context("Error updating purchase info seller")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "PurchaseInfo".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
+    async fn update_purchase_info_price(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        price: Option<&MonetaryAmount>,
+    ) -> Result<(), DomainError> {
+        let (amount, currency) = match price {
+            Some(monetary_amount) => (Some(monetary_amount.amount), Some(monetary_amount.currency)),
+            None => (None, None),
+        };
+
+        let result = sqlx::query(
+            "UPDATE purchase_infos SET purchased_price_amount = ?1, purchased_price_currency = ?2 WHERE collection_item_id = ?3",
+        )
+        .bind(amount)
+        .bind(currency)
+        .bind(collection_item_id)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error updating purchase info price")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "PurchaseInfo".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
+    async fn update_purchase_info_date(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        purchase_date: Option<NaiveDate>,
+    ) -> Result<(), DomainError> {
+        let result = sqlx::query(
+            "UPDATE purchase_infos SET purchase_date = ?1 WHERE collection_item_id = ?2",
+        )
+        .bind(purchase_date)
+        .bind(collection_item_id)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error updating purchase info purchase_date")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "PurchaseInfo".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
+    async fn recalculate_collection_total_value(
+        &mut self,
+        collection_id: &CollectionId,
+    ) -> Result<(), DomainError> {
+        let sql = r#"
+            UPDATE collections
+               SET total_value_amount = COALESCE((
+                       SELECT SUM(COALESCE(pi.purchased_price_amount, 0))
+                         FROM purchase_infos pi
+                         JOIN collection_items ci ON ci.id = pi.collection_item_id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                   ), 0),
+                   total_value_currency = COALESCE((
+                       SELECT MAX(pi.purchased_price_currency)
+                         FROM purchase_infos pi
+                         JOIN collection_items ci ON ci.id = pi.collection_item_id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND pi.purchased_price_currency IS NOT NULL
+                   ), total_value_currency)
+             WHERE id = ?1;
+        "#;
+
+        sqlx::query(sql)
+            .bind(collection_id)
+            .execute(&mut *self.executor)
+            .await
+            .with_domain_context("Error recalculating collection total value")?;
+
+        Ok(())
+    }
 }
 
 impl<'conn> CollectionUowExt for SqliteUnitOfWork<'conn> {
@@ -431,6 +570,70 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         Ok(DepotView {
             rolling_stocks: depot_items,
         })
+    }
+
+    async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError> {
+        match &input.update {
+            CollectionItemUpdate::Seller(seller_id) => {
+                self.update_purchase_info_seller(&input.collection_item_id, seller_id.as_ref())
+                    .await?;
+            }
+            CollectionItemUpdate::Price(price) => {
+                self.update_purchase_info_price(&input.collection_item_id, price.as_ref())
+                    .await?;
+                self.recalculate_collection_total_value(&CollectionId::default())
+                    .await?;
+            }
+            CollectionItemUpdate::PurchaseDate(purchase_date) => {
+                self.update_purchase_info_date(&input.collection_item_id, *purchase_date)
+                    .await?;
+            }
+            CollectionItemUpdate::AddedDate(added_date) => {
+                self.update_collection_item_field(
+                    &input.collection_item_id,
+                    "added_date",
+                    *added_date,
+                )
+                .await?;
+            }
+            CollectionItemUpdate::Notes(notes) => {
+                self.update_collection_item_field(
+                    &input.collection_item_id,
+                    "notes",
+                    notes.as_ref().map(std::string::ToString::to_string),
+                )
+                .await?;
+            }
+            CollectionItemUpdate::PurchaseCondition(purchase_condition) => {
+                self.update_collection_item_field(
+                    &input.collection_item_id,
+                    "purchase_condition",
+                    *purchase_condition,
+                )
+                .await?;
+            }
+            CollectionItemUpdate::ModelCondition(model_condition) => {
+                self.update_collection_item_field(
+                    &input.collection_item_id,
+                    "model_condition",
+                    *model_condition,
+                )
+                .await?;
+            }
+            CollectionItemUpdate::BoxCondition(box_condition) => {
+                self.update_collection_item_field(
+                    &input.collection_item_id,
+                    "box_condition",
+                    *box_condition,
+                )
+                .await?;
+            }
+        }
+
+        self.update_collection_metadata(&CollectionId::default())
+            .await?;
+
+        Ok(())
     }
 
     /// Retrieve a full `Collection` aggregate by id, returning `None` when

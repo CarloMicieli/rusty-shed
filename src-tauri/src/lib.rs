@@ -165,6 +165,7 @@ pub fn run() {
         catalog_command_handlers::upsert_railway_model_translation,
         catalog_command_handlers::search_railway_models,
         collecting_command_handlers::add_railway_model_to_collection,
+        collecting_command_handlers::update_collection_item,
         collecting_command_handlers::remove_collection_item,
         wishlist_command_handlers::add_railway_model_to_wish_list,
         collecting_command_handlers::get_collection,

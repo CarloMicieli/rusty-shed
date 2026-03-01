@@ -12,6 +12,7 @@ use crate::collecting::domain::CollectionRepository;
 use crate::collecting::domain::CollectionUowExt;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::MockCollectionRepository;
+use crate::collecting::domain::UpdateCollectionItemInput;
 use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::MockWishlistRepository;
 use crate::wishlist::domain::repository::WishlistRepository;
@@ -145,6 +146,10 @@ impl<'a> CollectionRepository for CollectionRepoRef<'a> {
         &mut self,
     ) -> Result<crate::collecting::domain::DepotView, DomainError> {
         self.inner.find_depot_view().await
+    }
+
+    async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError> {
+        self.inner.update_item(input).await
     }
 }
 

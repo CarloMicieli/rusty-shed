@@ -1,5 +1,6 @@
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::UpdateCollectionItemInput;
 use crate::collecting::domain::collection_view::CollectionView;
 use crate::collecting::domain::depot_view::DepotView;
 use crate::core::domain::domain_error::DomainError;
@@ -38,6 +39,12 @@ pub trait CollectionRepository: Send + Sync {
     ///
     /// Returns a `DepotView` on success or a `DomainError` on failure.
     async fn find_depot_view(&mut self) -> Result<DepotView, DomainError>;
+
+    /// Applies a mutable field update to a single collection item.
+    ///
+    /// Implementations should persist only the targeted field and keep
+    /// collection metadata coherent after the mutation.
+    async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError>;
 }
 
 /// An extension trait that provides access to the `CollectionRepository`.

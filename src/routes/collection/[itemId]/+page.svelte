@@ -148,7 +148,7 @@
       </div>
 
       <!-- Right panel: Sidebar -->
-      <CollectionItemSidebar item={collectionItem} {seller} />
+      <CollectionItemSidebar item={collectionItem} {seller} onItemUpdated={handleModelUpdated} />
     </div>
   </div>
 {/if}

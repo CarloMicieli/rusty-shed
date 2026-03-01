@@ -3,12 +3,18 @@ use crate::catalog::domain::railway_model::Category;
 use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
 use crate::collecting::application::{
     AddCollectionItem, GetCollection, GetDepot, RemoveCollectionItem,
-    RemoveCollectionItemInput as DomainRemoveCollectionItemInput,
+    RemoveCollectionItemInput as DomainRemoveCollectionItemInput, UpdateCollectionItem,
 };
-use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
+use crate::collecting::domain::{
+    BoxCondition, CollectionItemUpdate, ModelCondition, PurchaseCondition,
+    UpdateCollectionItemInput,
+};
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
 use crate::collecting::interface::command_args::AddRailwayModelToCollectionArgs;
-use crate::collecting::interface::{AddCollectionItemArgs, RemoveCollectionItemArgs};
+use crate::collecting::interface::{
+    AddCollectionItemArgs, CollectionItemUpdateArgs, RemoveCollectionItemArgs,
+    UpdateCollectionItemArgs,
+};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::core::infrastructure::error::CommandError;
@@ -119,6 +125,100 @@ pub async fn remove_collection_item(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(removed_id)
+}
+
+/// Tauri command to update mutable fields of an existing collection item.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_collection_item(
+    state: tauri::State<'_, AppState>,
+    args: UpdateCollectionItemArgs,
+) -> Result<(), CommandError> {
+    info!("Updating collection item: {:?}", args);
+
+    let collection_item_id = CollectionItemId::try_from(args.collection_item_id)
+        .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
+
+    let update = match args.update {
+        CollectionItemUpdateArgs::Seller { seller_id } => {
+            let parsed_seller = match seller_id {
+                Some(raw) => Some(
+                    SellerId::try_from(raw.as_str())
+                        .map_err(|_| CommandError::validation_field("seller_id", "invalid"))?,
+                ),
+                None => None,
+            };
+            CollectionItemUpdate::Seller(parsed_seller)
+        }
+        CollectionItemUpdateArgs::Price { amount, currency } => {
+            let price = match (amount, currency) {
+                (Some(raw_amount), Some(raw_currency)) => {
+                    if raw_amount < 0 {
+                        return Err(CommandError::validation_field("amount", "must_be_positive"));
+                    }
+                    let parsed_currency = Currency::from_code(&raw_currency)
+                        .map_err(|_| CommandError::validation_field("currency", "invalid"))?;
+                    Some(MonetaryAmount::new(raw_amount, parsed_currency))
+                }
+                (None, None) => None,
+                _ => {
+                    return Err(CommandError::validation_field(
+                        "price",
+                        "amount_and_currency_must_be_both_present_or_null",
+                    ));
+                }
+            };
+            CollectionItemUpdate::Price(price)
+        }
+        CollectionItemUpdateArgs::PurchaseDate { purchase_date } => {
+            CollectionItemUpdate::PurchaseDate(purchase_date)
+        }
+        CollectionItemUpdateArgs::AddedDate { added_date } => {
+            CollectionItemUpdate::AddedDate(added_date)
+        }
+        CollectionItemUpdateArgs::Notes { notes } => CollectionItemUpdate::Notes(notes),
+        CollectionItemUpdateArgs::PurchaseCondition { purchase_condition } => {
+            let parsed = match purchase_condition {
+                Some(value) => Some(value.parse::<PurchaseCondition>().map_err(|_| {
+                    CommandError::validation_field("purchase_condition", "invalid")
+                })?),
+                None => None,
+            };
+            CollectionItemUpdate::PurchaseCondition(parsed)
+        }
+        CollectionItemUpdateArgs::ModelCondition { model_condition } => {
+            let parsed =
+                match model_condition {
+                    Some(value) => Some(value.parse::<ModelCondition>().map_err(|_| {
+                        CommandError::validation_field("model_condition", "invalid")
+                    })?),
+                    None => None,
+                };
+            CollectionItemUpdate::ModelCondition(parsed)
+        }
+        CollectionItemUpdateArgs::BoxCondition { box_condition } => {
+            let parsed = match box_condition {
+                Some(value) => Some(
+                    value
+                        .parse::<BoxCondition>()
+                        .map_err(|_| CommandError::validation_field("box_condition", "invalid"))?,
+                ),
+                None => None,
+            };
+            CollectionItemUpdate::BoxCondition(parsed)
+        }
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let input = UpdateCollectionItemInput {
+        collection_item_id,
+        update,
+    };
+
+    UpdateCollectionItem::execute(&mut unit_of_work, input).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
 }
 
 /// Tauri command to add a new item to the collection.

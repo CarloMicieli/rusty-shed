@@ -23,6 +23,42 @@ pub struct RemoveCollectionItemArgs {
     pub removed_date: String,
 }
 
+/// Arguments structure for updating a single mutable field of a collection item.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateCollectionItemArgs {
+    /// The ID of the collection item to update.
+    pub collection_item_id: String,
+    /// The concrete field update payload.
+    pub update: CollectionItemUpdateArgs,
+}
+
+/// Tagged payload for a collection item update operation.
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(tag = "kind", content = "data", rename_all = "camelCase")]
+pub enum CollectionItemUpdateArgs {
+    /// Set or clear seller id in purchase info.
+    Seller { seller_id: Option<String> },
+    /// Set or clear purchased price in minor units.
+    Price {
+        amount: Option<i64>,
+        currency: Option<String>,
+    },
+    /// Set or clear purchase date.
+    PurchaseDate { purchase_date: Option<NaiveDate> },
+    /// Set or clear added date.
+    AddedDate { added_date: Option<NaiveDate> },
+    /// Set or clear notes.
+    Notes { notes: Option<String> },
+    /// Set or clear purchase condition.
+    PurchaseCondition { purchase_condition: Option<String> },
+    /// Set or clear model condition.
+    ModelCondition { model_condition: Option<String> },
+    /// Set or clear box condition.
+    BoxCondition { box_condition: Option<String> },
+}
+
 /// Arguments structure for adding an item to the collection.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]

@@ -842,6 +842,7 @@
   "collection_item_loading": "Loading item details...",
   "collection_item_error": "Failed to load item",
   "collection_item_section_acquisition": "Acquisition",
+  "collection_item_section_history_acquisition": "History & Acquisition",
   "collection_item_section_condition": "Condition",
   "collection_item_section_operational": "Operational",
   "collection_item_section_personal_context": "Personal Context",
