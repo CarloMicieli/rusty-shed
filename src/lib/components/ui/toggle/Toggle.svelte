@@ -34,10 +34,10 @@
     lg: 'h-11 px-4 text-base'
   };
 
-  const baseStyles = `inline-flex items-center justify-center rounded-md font-medium ring-offset-background transition-colors hover:bg-surface-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50`;
+  const baseStyles = `inline-flex items-center justify-center rounded-md font-medium ring-offset-background transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50`;
 
   const variantStyles = $derived(
-    pressed ? 'bg-primary-600 text-primary-foreground' : 'bg-transparent border border-surface-600'
+    pressed ? 'bg-primary-600 text-primary-foreground' : 'bg-transparent border border-border'
   );
 
   const buttonClass = $derived(twMerge(baseStyles, sizeStyles[size], variantStyles, className));

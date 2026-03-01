@@ -7,8 +7,8 @@
    */
 
   import { SvelteMap } from 'svelte/reactivity';
-  import { getModalStore } from '$lib/stores/modal';
-  import type { QuarterlyActivityPoint } from '../services/BudgetService.svelte';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import type { QuarterlyActivityPoint, QuarterlySummary } from '../services/BudgetService.svelte';
   import type { BudgetState } from '../BudgetState.svelte';
   import QuarterlySummaryModal from './QuarterlySummaryModal.svelte';
 
@@ -20,7 +20,8 @@
 
   let { quarterlyActivity, currency, budgetState }: Props = $props();
 
-  const modalStore = getModalStore();
+  let dialogOpen = $state(false);
+  let selectedSummary = $state<QuarterlySummary | null>(null);
 
   // Group activities by year and quarter (reactive)
   const activityMap = $derived.by(() => {
@@ -43,7 +44,7 @@
   function getLevelColor(level: string): string {
     switch (level) {
       case 'NONE':
-        return 'bg-surface-200';
+        return 'bg-muted';
       case 'LOW':
         return 'bg-success-200';
       case 'MEDIUM':
@@ -51,7 +52,7 @@
       case 'HIGH':
         return 'bg-error-400';
       default:
-        return 'bg-surface-200';
+        return 'bg-muted';
     }
   }
 
@@ -70,11 +71,11 @@
     }
   }
 
-  function formatAmount(minorUnits: number): string {
+  function formatAmount(minorUnits: number, currencyCode: string = currency): string {
     const major = minorUnits / 100;
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency: currency,
+      currency: currencyCode,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(major);
@@ -90,20 +91,16 @@
     );
 
     if (summary) {
-      modalStore.trigger({
-        type: 'component',
-        component: {
-          ref: QuarterlySummaryModal,
-          props: {
-            summary
-          }
-        }
-      });
+      selectedSummary = summary;
+      dialogOpen = true;
+    } else {
+      selectedSummary = null;
+      dialogOpen = false;
     }
   }
 </script>
 
-<div class="bg-surface-50 rounded-lg p-6">
+<div class="rounded-lg bg-card p-6">
   <h3 class="text-surface-900 mb-4 text-lg font-semibold">5-Year Quarterly Activity</h3>
   <div class="space-y-1">
     <!-- Header row with quarter labels -->
@@ -126,7 +123,7 @@
             type="button"
             class="hover:ring-primary-500 relative flex aspect-square cursor-pointer items-center justify-center rounded transition-all duration-200 hover:z-10 hover:ring-2 {activity
               ? getLevelColor(activity.spendingLevel)
-              : 'bg-surface-200'}"
+              : 'bg-muted'}"
             title={activity
               ? `${year} ${quarter}: ${formatAmount(activity.amount)} (${getLevelLabel(activity.spendingLevel)})`
               : `${year} ${quarter}: No data`}
@@ -144,11 +141,11 @@
   </div>
 
   <!-- Legend -->
-  <div class="border-surface-200 mt-4 flex items-center gap-4 border-t pt-4">
+  <div class="mt-4 flex items-center gap-4 border-t border-border/20 pt-4">
     <span class="text-surface-700 text-sm font-medium">Spending Level:</span>
     <div class="flex gap-3">
       <div class="flex items-center gap-1.5">
-        <div class="bg-surface-200 h-4 w-4 rounded"></div>
+        <div class="h-4 w-4 rounded bg-muted"></div>
         <span class="text-surface-600 text-xs">None</span>
       </div>
       <div class="flex items-center gap-1.5">
@@ -166,3 +163,17 @@
     </div>
   </div>
 </div>
+
+{#if selectedSummary}
+  <Dialog.Root bind:open={dialogOpen}>
+    <Dialog.Content class="max-w-2xl">
+      <QuarterlySummaryModal
+        summary={selectedSummary}
+        onClose={() => {
+          dialogOpen = false;
+          selectedSummary = null;
+        }}
+      />
+    </Dialog.Content>
+  </Dialog.Root>
+{/if}

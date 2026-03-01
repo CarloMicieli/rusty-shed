@@ -27,7 +27,7 @@
     default: 'border-transparent bg-primary-600 text-white hover:bg-primary-700',
     secondary: 'border-transparent bg-secondary-600 text-white hover:bg-secondary-700',
     destructive: 'border-transparent bg-error-600 text-white hover:bg-error-700',
-    outline: 'border-surface-600 text-surface-100',
+    outline: 'border-border text-surface-100',
     success: 'border-transparent bg-green-600 text-white hover:bg-green-700'
   };
 

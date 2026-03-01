@@ -12,14 +12,14 @@
 <button
   type="button"
   onclick={() => action.onClick()}
-  class="group border-surface-700/60 bg-surface-900/50 hover:border-accent-500/50 hover:bg-surface-800/70 relative flex flex-col items-center gap-2 rounded-lg border p-4 text-center transition-all {isPrimary
+  class="group hover:border-accent-500/50 relative flex flex-col items-center gap-2 rounded-lg border border-border/60 bg-card/50 p-4 text-center transition-all hover:bg-muted/70 {isPrimary
     ? 'border-accent-500/40 bg-accent-950/30'
     : ''}"
 >
   <div
     class="flex h-10 w-10 items-center justify-center rounded-full transition-colors group-hover:scale-110 {isPrimary
       ? 'bg-accent-500/20 text-accent-400'
-      : 'bg-surface-800 text-surface-300'}"
+      : 'text-surface-300 bg-muted'}"
   >
     <action.icon class="h-5 w-5" />
   </div>

@@ -6,17 +6,15 @@
    * Displays total spending and category-by-category breakdown with percentages.
    */
 
-  import { getModalStore } from '$lib/stores/modal';
   import type { QuarterlySummary } from '../services/BudgetService.svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {
     summary: QuarterlySummary;
+    onClose?: () => void;
   }
 
-  let { summary }: Props = $props();
-
-  const modalStore = getModalStore();
+  let { summary, onClose }: Props = $props();
 
   // @ts-expect-error - paraglide message may not exist yet
   const noSpendingText = m.budget_no_spending?.() || 'No spending data for this quarter';
@@ -58,17 +56,17 @@
       'bg-success-500',
       'bg-warning-500',
       'bg-error-500',
-      'bg-surface-500'
+      'bg-muted'
     ];
     return colors[index % colors.length];
   }
 
   function closeModal() {
-    modalStore.close();
+    onClose?.();
   }
 </script>
 
-<div class="modal-content bg-surface-900 max-w-2xl rounded-lg p-6 shadow-xl">
+<div class="modal-content max-w-2xl rounded-lg bg-card p-6 shadow-xl">
   <!-- Header -->
   <header class="mb-6">
     <h2 class="text-surface-50 text-2xl font-bold">
@@ -78,7 +76,7 @@
   </header>
 
   <!-- Total Spending -->
-  <div class="border-surface-700 bg-surface-800 mb-6 rounded-lg border p-4">
+  <div class="mb-6 rounded-lg border border-border bg-muted p-4">
     <p class="text-surface-400 text-sm">Total Spending</p>
     <p class="text-primary-400 text-3xl font-bold">
       {formatAmount(summary.totalSpending.amount, summary.totalSpending.currency)}
@@ -91,7 +89,7 @@
       <h3 class="text-surface-100 mb-3 text-lg font-semibold">By Category</h3>
 
       {#each summary.categoryBreakdown as category, index (category.category)}
-        <div class="category-item border-surface-700 bg-surface-800 rounded-lg border p-3">
+        <div class="category-item rounded-lg border border-border bg-muted p-3">
           <div class="mb-2 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <div class="h-3 w-3 rounded-full {getCategoryColor(index)}"></div>
@@ -104,7 +102,7 @@
           </div>
 
           <!-- Progress Bar -->
-          <div class="bg-surface-700 h-2 w-full overflow-hidden rounded-full">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
               class="h-full {getCategoryColor(index)} transition-all duration-300"
               style="width: {category.percentage}%"

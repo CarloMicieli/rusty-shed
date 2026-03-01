@@ -64,9 +64,9 @@ export function getUrgencyColors(urgency: UrgencyLevel): {
       };
     case 'normal':
       return {
-        bg: 'bg-surface-200-700',
-        text: 'text-surface-700-200',
-        border: 'border-surface-300'
+        bg: 'bg-muted',
+        text: 'text-muted-foreground',
+        border: 'border-border'
       };
   }
 }

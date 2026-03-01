@@ -10,7 +10,7 @@
   let isDisabled = $derived(controller.isOperationInProgress);
 </script>
 
-<div class="card border-surface-700/40 border p-6 shadow-xl">
+<div class="card border border-border/40 p-6 shadow-xl">
   <div class="space-y-4">
     <div>
       <h2 class="text-xl font-bold">{m.data_management_title()}</h2>

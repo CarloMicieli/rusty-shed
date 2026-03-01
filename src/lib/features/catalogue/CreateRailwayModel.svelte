@@ -168,7 +168,7 @@
   {@const selected = value}
   <FormField {label} {error} {required}>
     <select
-      class="select border-surface-600 bg-surface-800"
+      class="select border-input bg-background"
       value={selected}
       onchange={(event) => onChange((event.currentTarget as HTMLSelectElement).value)}
     >
@@ -188,7 +188,7 @@
 
   <form method="POST" use:enhance>
     <Accordion.Root bind:value={accordionValues} type="multiple" class="space-y-3">
-      <Accordion.Item value="basic-info" class="border-surface-600 rounded-lg border">
+      <Accordion.Item value="basic-info" class="rounded-lg border border-border">
         <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.basicInfo)}</h3>
         </Accordion.Trigger>
@@ -252,7 +252,7 @@
         </Accordion.Content>
       </Accordion.Item>
 
-      <Accordion.Item value="delivery-availability" class="border-surface-600 rounded-lg border">
+      <Accordion.Item value="delivery-availability" class="rounded-lg border border-border">
         <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.deliveryAvailability)}</h3>
         </Accordion.Trigger>
@@ -281,7 +281,7 @@
         </Accordion.Content>
       </Accordion.Item>
 
-      <Accordion.Item value="translations" class="border-surface-600 rounded-lg border">
+      <Accordion.Item value="translations" class="rounded-lg border border-border">
         <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">{resolveLabel(formLabels.description)}</h3>
         </Accordion.Trigger>
@@ -295,7 +295,7 @@
         </Accordion.Content>
       </Accordion.Item>
 
-      <Accordion.Item value="rolling-stock" class="border-surface-600 rounded-lg border">
+      <Accordion.Item value="rolling-stock" class="rounded-lg border border-border">
         <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
           <h3 class="h4 mb-0">
             {resolveLabel(formLabels.rollingStock)}

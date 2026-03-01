@@ -63,7 +63,7 @@
   options: Option[]
 )}
   <FormField {label} error={fieldError(fieldName as string)} {required}>
-    <select class="select border-surface-600 bg-surface-800" bind:value={rs[fieldName]}>
+    <select class="select border-input bg-background" bind:value={rs[fieldName]}>
       <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
       {#each options as option (option.id)}
         <option value={option.id}>{'name' in option ? option.name : resolveLabel(option)}</option>
@@ -89,7 +89,7 @@
 
   <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
     <Input
-      class="border-surface-600 bg-surface-800"
+      class="border-input bg-background"
       type="text"
       value={rs.road_number || ''}
       oninput={(e) => (rs.road_number = e.currentTarget.value)}
@@ -98,7 +98,7 @@
 
   <FormField label={formLabels.series} error={fieldError('series')}>
     <Input
-      class="border-surface-600 bg-surface-800"
+      class="border-input bg-background"
       type="text"
       value={rs.series || ''}
       oninput={(e) => (rs.series = e.currentTarget.value)}
@@ -107,7 +107,7 @@
 
   <FormField label={formLabels.depot} error={fieldError('depot')}>
     <Input
-      class="border-surface-600 bg-surface-800"
+      class="border-input bg-background"
       type="text"
       value={rs.depot || ''}
       oninput={(e) => (rs.depot = e.currentTarget.value)}

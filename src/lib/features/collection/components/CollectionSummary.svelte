@@ -22,9 +22,9 @@
 {#snippet StatCard(label: string, value: number | string, Icon: IconComponent, accentClass: string)}
   {@const iconClass = accentClass.replace('border-', 'text-').replace('500', '300')}
   <div
-    class={`variant-soft-surface card flex items-center justify-between gap-3 border-l-4 p-4 ${accentClass}`}
+    class={`card flex items-center justify-between gap-3 border-l-4 bg-muted/40 p-4 ${accentClass}`}
   >
-    <div class={`bg-surface-800/60 rounded-lg p-3 ${iconClass}`}>
+    <div class={`rounded-lg bg-muted p-3 ${iconClass}`}>
       <Icon size={20} />
     </div>
     <div class="text-right">

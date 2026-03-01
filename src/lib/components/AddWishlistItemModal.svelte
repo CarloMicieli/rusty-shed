@@ -78,10 +78,8 @@
 </script>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-  <div
-    class="rounded-container border-surface-700/70 bg-surface-900 w-full max-w-lg border shadow-xl"
-  >
-    <div class="border-surface-800 flex items-center justify-between border-b px-4 py-3">
+  <div class="rounded-container w-full max-w-lg border border-border/70 bg-card shadow-xl">
+    <div class="flex items-center justify-between border-b border-border px-4 py-3">
       <h3 class="text-base font-semibold tracking-wide uppercase">{m.wishlist_modal_title()}</h3>
       <Button variant="ghost" size="sm" onclick={close} aria-label="close">
         {m.wishlist_modal_close()}
@@ -162,7 +160,7 @@
       {/if}
     </div>
 
-    <div class="border-surface-800 flex items-center justify-end gap-2 border-t px-4 py-3">
+    <div class="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
       <Button variant="ghost" size="sm" onclick={close} disabled={isSubmitting}>
         {m.wishlist_modal_cancel()}
       </Button>

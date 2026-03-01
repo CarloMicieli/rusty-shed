@@ -1,17 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import ActivityHeatmap from '$lib/features/budget/components/ActivityHeatmap.svelte';
-import type { QuarterlyActivityPoint } from '$lib/features/budget/services/BudgetService.svelte';
+import type {
+  QuarterlyActivityPoint,
+  QuarterlySummary
+} from '$lib/features/budget/services/BudgetService.svelte';
 
 // ── Mock modal store ─────────────────────────────────────────────────────────
 const mockModalTrigger = vi.fn();
 vi.mock('$lib/stores/modal', () => ({
   getModalStore: () => ({ trigger: mockModalTrigger })
-}));
-
-// ── Mock QuarterlySummaryModal ───────────────────────────────────────────────
-vi.mock('$lib/features/budget/components/QuarterlySummaryModal.svelte', () => ({
-  default: {}
 }));
 
 function makePoint(
@@ -23,8 +22,21 @@ function makePoint(
   return { year, quarter, spendingLevel, amount };
 }
 
-const mockBudgetState = {
-  quarterlySummaries: [{ year: 2025, quarter: 'Q1', totalSpent: 5000 }],
+const mockBudgetState: {
+  quarterlySummaries: QuarterlySummary[];
+  loadQuarterlySummaries: ReturnType<typeof vi.fn>;
+} = {
+  quarterlySummaries: [
+    {
+      year: 2025,
+      quarter: 'Q1',
+      totalSpending: {
+        amount: 5000,
+        currency: 'EUR'
+      },
+      categoryBreakdown: []
+    }
+  ],
   loadQuarterlySummaries: vi.fn().mockResolvedValue(undefined)
 };
 
@@ -121,7 +133,18 @@ describe('ActivityHeatmap.svelte', () => {
   });
 
   it('calls loadQuarterlySummaries and triggers modal on cell click', async () => {
-    mockBudgetState.quarterlySummaries = [{ year: 2025, quarter: 'Q1', totalSpent: 5000 }];
+    const user = userEvent.setup();
+    mockBudgetState.quarterlySummaries = [
+      {
+        year: 2025,
+        quarter: 'Q1',
+        totalSpending: {
+          amount: 5000,
+          currency: 'EUR'
+        },
+        categoryBreakdown: []
+      }
+    ];
     const activity = [makePoint(2025, 'Q1', 'LOW', 5000)];
     render(ActivityHeatmap, {
       props: {
@@ -133,9 +156,12 @@ describe('ActivityHeatmap.svelte', () => {
 
     const cell = document.querySelector('button[title*="2025 Q1"]') as HTMLButtonElement;
     if (cell) {
-      await fireEvent.click(cell);
+      await user.click(cell);
       await waitFor(() => {
         expect(mockBudgetState.loadQuarterlySummaries).toHaveBeenCalledWith(2025, 'EUR');
+      });
+      await waitFor(() => {
+        expect(screen.getByText('Category Spending Breakdown')).toBeInTheDocument();
       });
     }
   });

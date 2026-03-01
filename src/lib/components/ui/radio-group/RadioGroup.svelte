@@ -50,7 +50,7 @@
         checked={value === option.value}
         disabled={disabled || option.disabled}
         onchange={() => handleChange(option.value)}
-        class="border-surface-600 text-primary-600 focus:ring-primary-600 h-4 w-4 focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        class="text-primary-600 focus:ring-primary-600 h-4 w-4 border-input focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       />
       <span class="text-sm {disabled || option.disabled ? 'opacity-50' : ''}">
         {option.label}

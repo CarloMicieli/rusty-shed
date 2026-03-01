@@ -29,9 +29,7 @@
 </script>
 
 {#key locale}
-  <nav
-    class="border-surface-700/50 bg-surface-900 hidden h-full w-64 flex-col border-r p-4 lg:flex"
-  >
+  <nav class="hidden h-full w-64 flex-col border-r border-border/50 bg-card p-4 lg:flex">
     <div class="mb-8 flex items-center gap-3 px-4">
       <TrainFront class="text-accent-500" size={32} />
       <h2 class="h3 font-bold tracking-tight uppercase">{m.app_name()}</h2>
@@ -127,7 +125,7 @@
       </li>
     </ul>
 
-    <div class="border-surface-700/50 mt-auto space-y-2 border-t pt-4">
+    <div class="mt-auto space-y-2 border-t border-border/50 pt-4">
       <a
         href={resolve('/settings')}
         class="hover:variant-soft-primary variant-ghost-surface btn w-full justify-start gap-3"

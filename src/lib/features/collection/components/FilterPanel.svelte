@@ -54,7 +54,7 @@
 
 <div class="flex h-full w-full flex-col">
   <div
-    class="border-surface-700/60 bg-surface-800 flex flex-shrink-0 items-center justify-between border-b p-4 sm:p-6"
+    class="flex flex-shrink-0 items-center justify-between border-b border-border/60 bg-muted p-4 sm:p-6"
   >
     <h3 class="text-surface-100 text-sm font-semibold tracking-wide uppercase">
       {m.collection_filters_title()}
@@ -89,7 +89,7 @@
         <Input
           id="search-input"
           type="text"
-          class="input-md bg-surface-800 border-surface-700 text-surface-100 placeholder-surface-500 w-full border"
+          class="input-md text-surface-100 placeholder-surface-500 w-full border-border"
           placeholder={m.collection_search_placeholder()}
           value={query}
           oninput={(e) => handleSearch((e.target as HTMLInputElement).value)}

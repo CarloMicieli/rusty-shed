@@ -33,7 +33,7 @@
 </script>
 
 <div
-  class="group hover:border-accent-500/60 border-surface-700/60 bg-surface-900 shadow-surface-900/40 flex h-96 w-full cursor-pointer flex-col rounded-xl border p-4 shadow-lg transition hover:-translate-y-1"
+  class="group hover:border-accent-500/60 shadow-surface-900/40 flex h-96 w-full cursor-pointer flex-col rounded-xl border border-border/60 bg-card p-4 shadow-lg transition hover:-translate-y-1"
   in:fade
   onclick={handleClick}
   onkeydown={handleKeyDown}
@@ -43,8 +43,8 @@
   <div
     class={`relative mb-3 h-32 overflow-hidden rounded-lg ${resolveTagMeta(primaryTag).gradient}`}
   >
-    <div class="from-surface-900/80 absolute inset-0 bg-gradient-to-t to-transparent"></div>
-    <div class="bg-surface-900/60 absolute top-3 left-3 rounded-full p-2">
+    <div class="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
+    <div class="absolute top-3 left-3 rounded-full bg-card/60 p-2">
       {#if PrimaryIcon}
         <PrimaryIcon size={20} class="text-accent-300" />
       {/if}

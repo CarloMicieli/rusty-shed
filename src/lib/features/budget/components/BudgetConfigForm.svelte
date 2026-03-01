@@ -69,8 +69,8 @@
   }
 </script>
 
-<section class="card border-surface-700/60 bg-surface-900/50 border shadow-xl">
-  <header class="border-surface-700/60 flex items-center justify-between gap-4 border-b p-6">
+<section class="card border border-border/60 bg-card/50 shadow-xl">
+  <header class="flex items-center justify-between gap-4 border-b border-border/60 p-6">
     <div>
       <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.budget_config_title()}
@@ -88,9 +88,9 @@
       <div id="budget-mode" class="flex gap-3">
         {#each modeOptions as option (option.value)}
           <label
-            class="border-surface-700 bg-surface-800/50 hover:border-primary-500 hover:bg-surface-800 flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 transition-all"
+            class="hover:border-primary-500 flex flex-1 cursor-pointer items-center gap-3 rounded-lg border border-border bg-muted/50 p-4 transition-all hover:bg-muted"
             class:border-primary-500={mode === option.value}
-            class:bg-surface-800={mode === option.value}
+            class:bg-muted={mode === option.value}
           >
             <input
               type="radio"
@@ -103,7 +103,7 @@
               class="flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors"
               class:border-primary-500={mode === option.value}
               class:bg-primary-500={mode === option.value}
-              class:border-surface-500={mode !== option.value}
+              class:border-border={mode !== option.value}
             >
               {#if mode === option.value}
                 <div class="h-2 w-2 rounded-full bg-white"></div>
@@ -129,7 +129,7 @@
         bind:value={amountInputValue}
         required
         disabled={saving}
-        class="border-surface-700 bg-surface-800 placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500/50 text-surface-100 w-full rounded-lg border px-4 py-3 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500/50 text-surface-100 w-full rounded-lg border border-input bg-background px-4 py-3 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         placeholder="0.00"
       />
       <p class="text-surface-400 text-xs">
@@ -138,7 +138,7 @@
     </div>
 
     <!-- Derived Calculations Display -->
-    <div class="border-surface-700 bg-surface-800/30 space-y-2 rounded-lg border p-4">
+    <div class="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
       <h3 class="text-surface-300 text-sm font-semibold">{m.budget_config_summary_title()}</h3>
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
@@ -162,7 +162,7 @@
       {#if saving}
         <div class="text-surface-400 flex items-center gap-2 text-sm">
           <div
-            class="border-surface-600 border-t-primary-500 h-4 w-4 animate-spin rounded-full border-2"
+            class="border-t-primary-500 h-4 w-4 animate-spin rounded-full border-2 border-border"
           ></div>
           <span>{m.budget_config_saving_status()}</span>
         </div>

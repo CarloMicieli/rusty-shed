@@ -307,11 +307,9 @@
   aria-modal="true"
   aria-labelledby="drawer-title"
 >
-  <div
-    class="border-surface-700/60 bg-surface-900 flex h-full flex-col overflow-y-auto border-l shadow-2xl"
-  >
+  <div class="flex h-full flex-col overflow-y-auto border-l border-border/60 bg-card shadow-2xl">
     <!-- Header -->
-    <div class="border-surface-700/60 flex items-center justify-between border-b p-6">
+    <div class="flex items-center justify-between border-b border-border/60 p-6">
       <div>
         <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
           {m.app_digital_roster()}
@@ -426,7 +424,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="border-surface-700/60 border-t p-6">
+    <div class="border-t border-border/60 p-6">
       <div class="flex justify-end gap-3">
         <button
           type="button"

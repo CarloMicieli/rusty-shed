@@ -78,7 +78,7 @@
     onkeydown={(event) => event.key === 'Escape' && handleClose()}
   >
     <div
-      class="border-surface-700/60 bg-surface-900 h-full w-full max-w-xl overflow-y-auto border-l p-6 shadow-2xl"
+      class="h-full w-full max-w-xl overflow-y-auto border-l border-border/60 bg-card p-6 shadow-2xl"
       role="dialog"
       aria-modal="true"
       tabindex="-1"
@@ -120,7 +120,7 @@
         <div class="grid grid-cols-2 gap-3">
           <label class="block space-y-1">
             <span class="text-surface-300 text-sm">Scale</span>
-            <select class="input bg-surface-800 w-full" bind:value={form.scale}>
+            <select class="input w-full bg-background" bind:value={form.scale}>
               {#each availableScales as scaleOpt (scaleOpt.id)}
                 <option value={scaleOpt.id}>{scaleOpt.display}</option>
               {/each}

@@ -47,7 +47,7 @@
   const offset = $derived(circumference - (remainingPercentage / 100) * circumference);
 </script>
 
-<div class="bg-surface-50 flex flex-col items-center gap-4 rounded-lg p-6">
+<div class="flex flex-col items-center gap-4 rounded-lg bg-card p-6">
   <div class="relative">
     <svg width={size} height={size} class="transform transition-transform duration-300">
       <!-- Background circle -->

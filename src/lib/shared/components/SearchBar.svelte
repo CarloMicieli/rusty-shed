@@ -16,7 +16,7 @@
   <Input
     type="text"
     placeholder={m.app_search_placeholder()}
-    class="border-surface-600 bg-surface-800 focus:border-primary-500 rounded-full py-2 pl-10 text-sm transition-colors"
+    class="focus:border-primary-500 rounded-full border-border bg-background py-2 pl-10 text-sm transition-colors"
   />
 </div>
 
@@ -39,7 +39,7 @@
         <Input
           type="text"
           placeholder={m.app_search_mobile_placeholder()}
-          class="border-primary-500 bg-surface-900 rounded-xl py-4 pl-12 text-lg shadow-xl"
+          class="border-primary-500 rounded-xl bg-card py-4 pl-12 text-lg shadow-xl"
           autoFocus
         />
       </div>

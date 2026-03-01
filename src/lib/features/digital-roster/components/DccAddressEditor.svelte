@@ -79,7 +79,7 @@
     onkeydown={(event) => event.key === 'Escape' && handleClose()}
   >
     <div
-      class="border-surface-700/70 bg-surface-900 w-full max-w-md space-y-4 rounded-xl border p-6"
+      class="w-full max-w-md space-y-4 rounded-xl border border-border/70 bg-card p-6"
       role="dialog"
       aria-modal="true"
       tabindex="-1"

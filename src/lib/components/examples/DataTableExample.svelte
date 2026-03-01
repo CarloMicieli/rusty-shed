@@ -82,11 +82,11 @@
 <div class="space-y-4 p-4">
   <h1 class="text-2xl font-bold">User Management</h1>
 
-  <div class="border-surface-700 rounded-lg border">
+  <div class="rounded-lg border border-border">
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead class="hover:bg-surface-700/50 cursor-pointer">
+          <TableHead class="cursor-pointer hover:bg-muted/50">
             <button
               type="button"
               onclick={() => toggleSort('name')}
@@ -104,7 +104,7 @@
               {/if}
             </button>
           </TableHead>
-          <TableHead class="hover:bg-surface-700/50 cursor-pointer">
+          <TableHead class="cursor-pointer hover:bg-muted/50">
             <button
               type="button"
               onclick={() => toggleSort('email')}

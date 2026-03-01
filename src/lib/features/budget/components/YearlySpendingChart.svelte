@@ -53,11 +53,11 @@
   function getBarColor(month: number, amount: number): string {
     if (month === currentMonth) return 'bg-primary-500';
     if (amount > monthlyGoal) return 'bg-error-400';
-    return 'bg-surface-400';
+    return 'bg-muted';
   }
 </script>
 
-<div class="bg-surface-50 rounded-lg p-6">
+<div class="rounded-lg bg-card p-6">
   <h3 class="text-surface-900 mb-4 text-lg font-semibold">Monthly Spending</h3>
   <div class="relative h-64">
     <!-- Goal line -->
@@ -65,7 +65,7 @@
       class="border-success-500 absolute right-0 left-0 z-10 border-t-2 border-dashed"
       style="bottom: {getBarHeight(monthlyGoal)}%"
     >
-      <span class="bg-surface-50 text-success-700 absolute -top-5 right-0 px-2 text-xs">
+      <span class="text-success-700 absolute -top-5 right-0 bg-card px-2 text-xs">
         {formatAmount(monthlyGoal)} goal
       </span>
     </div>

@@ -111,8 +111,8 @@
   ];
 </script>
 
-<section class="card border-surface-700/60 bg-surface-900/50 border shadow-xl">
-  <header class="border-surface-700/60 flex items-center justify-between gap-4 border-b p-6">
+<section class="card border border-border/60 bg-card/50 shadow-xl">
+  <header class="flex items-center justify-between gap-4 border-b border-border/60 p-6">
     <div>
       <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.settings_title()}
@@ -133,7 +133,7 @@
         </label>
         <select
           id="currency"
-          class="variant-filled-primary-500 select w-full"
+          class="select w-full"
           bind:value={$form.currency}
           class:input-error={$errors.currency}
         >
@@ -152,7 +152,7 @@
         </label>
         <select
           id="language"
-          class="variant-filled-primary-500 select w-full"
+          class="select w-full"
           bind:value={$form.language}
           class:input-error={$errors.language}
         >
@@ -173,7 +173,7 @@
         </label>
         <select
           id="length-unit"
-          class="variant-filled-primary-500 select w-full"
+          class="select w-full"
           bind:value={$form.measureUnit}
           class:input-error={$errors.measureUnit}
         >
@@ -192,7 +192,7 @@
         </label>
         <select
           id="theme"
-          class="variant-filled-primary-500 select w-full"
+          class="select w-full"
           bind:value={$form.theme}
           class:input-error={$errors.theme}
         >
@@ -213,7 +213,7 @@
         </label>
         <select
           id="scale"
-          class="variant-filled-primary-500 select w-full"
+          class="select w-full"
           bind:value={$form.favouriteScale}
           class:input-error={$errors.favouriteScale}
         >
@@ -239,10 +239,10 @@
           <label
             class={[
               'group rounded-container relative flex gap-3 border p-4 transition',
-              'bg-surface-800/60 hover:border-primary-400/70 hover:bg-surface-800/90',
+              'hover:border-primary-400/70 bg-muted/60 hover:bg-muted/90',
               $form.powerSystem === option.value
                 ? 'border-primary-400/90 ring-primary-500/30 ring-1'
-                : 'border-surface-700/60',
+                : 'border-border/60',
               $errors.powerSystem ? 'border-error-500' : ''
             ]}
           >
@@ -260,7 +260,7 @@
                 'mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border transition',
                 $form.powerSystem === option.value
                   ? 'border-primary-300 bg-primary-500/30'
-                  : 'border-surface-500 bg-surface-900'
+                  : 'border-border bg-card'
               ]}
             >
               <span
@@ -286,7 +286,7 @@
       <p class="text-warning text-sm">You have unsaved changes</p>
     {/if}
 
-    <div class="border-surface-700/60 flex items-center justify-end gap-4 border-t pt-4">
+    <div class="flex items-center justify-end gap-4 border-t border-border/60 pt-4">
       <Button variant="default" type="submit" disabled={saving}>
         {saving ? m.settings_saving_button() : m.save_button()}
       </Button>

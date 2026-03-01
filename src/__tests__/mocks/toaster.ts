@@ -1,29 +1,27 @@
 import { vi } from 'vitest';
 
-// Mock toaster instance matching the structure from @skeletonlabs/skeleton-svelte
+// Mock toaster instance matching the svelte-sonner-based API from $lib/toaster
 export const toaster = {
-  toast: vi.fn(
-    (options: {
-      id?: string;
-      message?: string;
-      variant?: 'info' | 'success' | 'warning' | 'error';
-      duration?: number;
-      action?: { label: string; onClick: () => void };
-    }) => {
-      console.log(`[Mock Toast] ${options.variant}: ${options.message}`);
-    }
-  ),
-  close: vi.fn((id: string) => {
-    console.log(`[Mock Toast] Closed: ${id}`);
-  }),
-  clear: vi.fn(() => {
-    console.log(`[Mock Toast] Cleared all`);
-  })
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn(),
+  loading: vi.fn(),
+  promise: vi.fn(),
+  custom: vi.fn(),
+  message: vi.fn(),
+  dismiss: vi.fn()
 };
 
 // Helper to reset toast mocks between tests
 export function resetToasterMocks() {
-  toaster.toast.mockClear();
-  toaster.close.mockClear();
-  toaster.clear.mockClear();
+  toaster.success.mockClear();
+  toaster.error.mockClear();
+  toaster.info.mockClear();
+  toaster.warning.mockClear();
+  toaster.loading.mockClear();
+  toaster.promise.mockClear();
+  toaster.custom.mockClear();
+  toaster.message.mockClear();
+  toaster.dismiss.mockClear();
 }

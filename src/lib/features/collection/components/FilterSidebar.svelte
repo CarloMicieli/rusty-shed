@@ -48,7 +48,7 @@
   }
 </script>
 
-<aside class="border-surface-700/60 bg-surface-900 space-y-4 rounded-xl border p-4">
+<aside class="space-y-4 rounded-xl border border-border/60 bg-card p-4">
   <div class="flex items-center justify-between">
     <h3 class="text-surface-300 text-sm font-semibold tracking-wide uppercase">
       {m.collection_filters_title()}
@@ -63,7 +63,7 @@
       {m.collection_search_placeholder()}
     </p>
     <Input
-      class="input-md bg-surface-900 w-full"
+      class="input-md w-full"
       placeholder={m.collection_search_placeholder()}
       value={query}
       oninput={(e) => handleSearch((e.target as HTMLInputElement).value)}

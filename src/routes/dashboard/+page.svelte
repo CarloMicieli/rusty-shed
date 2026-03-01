@@ -161,7 +161,7 @@
           {/if}
         </div>
 
-        <div class="border-surface-700/50 my-6 border-t"></div>
+        <div class="my-6 border-t border-border/50"></div>
 
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
           <div class="space-y-6">
@@ -207,7 +207,7 @@
           </div>
         {:else if !purchaseGroups.length}
           <div
-            class="blueprint-panel rounded-container border-surface-700/60 text-surface-200 p-10 text-center"
+            class="blueprint-panel rounded-container text-surface-200 border-border/60 p-10 text-center"
           >
             <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
             <p class="text-surface-300 mt-2 mb-5 text-sm">
