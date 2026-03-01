@@ -6,7 +6,8 @@
   import { sellerSchema } from '$lib/schemas/seller';
   import * as Form from '$lib/components/ui/form';
   import type { ControlAttrs } from 'formsnap';
-  import { Button, Input } from '$lib/components';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
   import * as sellerService from '$lib/services/sellerService';
   import type { FormSeller } from '$lib/services/sellerAdapter';
   import { toaster } from '$lib/toaster';

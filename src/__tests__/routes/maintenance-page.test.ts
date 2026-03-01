@@ -5,7 +5,12 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/toaster', () => ({
   toaster: { success: vi.fn(), error: vi.fn(), loading: vi.fn() }
@@ -27,26 +32,25 @@ const mockStateInstance = vi.hoisted(() => ({
 }));
 
 vi.mock('$lib/features/maintenance/MaintenanceState.svelte', () => ({
-  default: vi.fn(() => mockStateInstance),
+  default: function MockMaintenanceState() {
+    return mockStateInstance;
+  },
   setMaintenanceState: vi.fn(),
   getMaintenanceState: vi.fn(() => mockStateInstance)
 }));
 
 // Stub complex children
 vi.mock('$lib/features/maintenance/components/MaintenanceCardList.svelte', () => ({
-  default: { name: 'MaintenanceCardListStub', _: { props: [] } }
+  default: function MaintenanceCardListStub() {}
 }));
 vi.mock('$lib/features/maintenance/components/EmptyMaintenanceState.svelte', () => ({
-  default: { name: 'EmptyMaintenanceStateStub', _: { props: [] } }
+  default: function EmptyMaintenanceStateStub() {}
 }));
 vi.mock('$lib/features/maintenance/components/AddMaintenanceCardModal.svelte', () => ({
-  default: { name: 'AddMaintenanceCardModalStub', _: { props: [] } }
+  default: function AddMaintenanceCardModalStub() {}
 }));
 vi.mock('$lib/features/maintenance/components/AddMaintenanceEventModal.svelte', () => ({
-  default: { name: 'AddMaintenanceEventModalStub', _: { props: [] } }
-}));
-vi.mock('$lib/components/PageHeader.svelte', () => ({
-  default: { name: 'PageHeaderStub', _: { props: [] } }
+  default: function AddMaintenanceEventModalStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────

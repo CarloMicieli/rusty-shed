@@ -5,7 +5,12 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/toaster', () => ({
   toaster: { success: vi.fn(), error: vi.fn(), loading: vi.fn() }
@@ -45,26 +50,26 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', () => ({
 
 // Stub heavy UI children
 vi.mock('$lib/components/PageHeader.svelte', () => ({
-  default: { name: 'PageHeaderStub', _: { props: [] } }
+  default: function PageHeaderStub() {}
 }));
 vi.mock('$lib/components/StatsCard.svelte', () => ({
-  default: { name: 'StatsCardStub', _: { props: [] } }
+  default: function StatsCardStub() {}
 }));
 vi.mock('$lib/components/QuickActionButtons.svelte', () => ({
-  default: { name: 'QuickActionButtonsStub', _: { props: [] } }
+  default: function QuickActionButtonsStub() {}
 }));
 vi.mock('$lib/components/AddWishlistItemModal.svelte', () => ({
-  default: { name: 'AddWishlistItemModalStub', _: { props: [] } }
+  default: function AddWishlistItemModalStub() {}
 }));
 vi.mock('$lib/features/dashboard', () => ({
-  DashboardCharts: { name: 'DashboardChartsStub', _: { props: [] } },
-  PurchaseGroupCard: { name: 'PurchaseGroupCardStub', _: { props: [] } }
+  DashboardCharts: function DashboardChartsStub() {},
+  PurchaseGroupCard: function PurchaseGroupCardStub() {}
 }));
 vi.mock('$lib/features/dashboard/components/DashboardAction.svelte', () => ({
-  default: { name: 'DashboardActionStub', _: { props: [] } }
+  default: function DashboardActionStub() {}
 }));
 vi.mock('$lib/features/dashboard/components/DashboardSectionHeader.svelte', () => ({
-  default: { name: 'DashboardSectionHeaderStub', _: { props: [] } }
+  default: function DashboardSectionHeaderStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────

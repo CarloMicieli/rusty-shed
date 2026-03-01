@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Button, Input, Textarea } from '$lib/components';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Textarea } from '$lib/components/ui/textarea';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
 
   const wishlistService = getWishlistContext();

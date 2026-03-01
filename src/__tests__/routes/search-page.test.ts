@@ -6,7 +6,12 @@ import { flushSync } from 'svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
   getLocale: vi.fn(() => 'en')
@@ -34,10 +39,10 @@ vi.mock('$lib/features/search', () => ({
 }));
 
 vi.mock('$lib/features/search/components/SearchResultCard.svelte', () => ({
-  default: { name: 'SearchResultCardStub', _: { props: [] } }
+  default: function SearchResultCardStub() {}
 }));
 vi.mock('$lib/features/search/components/SearchEmptyState.svelte', () => ({
-  default: { name: 'SearchEmptyStateStub', _: { props: [] } }
+  default: function SearchEmptyStateStub() {}
 }));
 
 // ── $app/stores: use the alias mock directly (vitest.config resolves $app →

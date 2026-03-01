@@ -5,7 +5,8 @@
   import { superForm } from 'sveltekit-superforms';
   import { zodClient } from 'sveltekit-superforms/adapters';
   import { settingsSchema } from '$lib/schemas/settings';
-  import { Button, Badge } from '$lib/components';
+  import { Button } from '$lib/components/ui/button';
+  import { Badge } from '$lib/components/ui/badge';
   import type {
     SettingsDto,
     UpdateSettingsPayload,

@@ -5,7 +5,12 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
   getLocale: vi.fn(() => 'en'),
@@ -32,13 +37,13 @@ vi.mock('$lib/features/collection/utils/modelViewMapper', () => ({
 
 // Stub heavy child components
 vi.mock('$lib/components/RailwayModelCard.svelte', () => ({
-  default: { name: 'RailwayModelCardStub', _: { props: [] } }
+  default: function RailwayModelCardStub() {}
 }));
 vi.mock('$lib/features/wishlists/components/WishlistItemSidebar.svelte', () => ({
-  default: { name: 'WishlistItemSidebarStub', _: { props: [] } }
+  default: function WishlistItemSidebarStub() {}
 }));
 vi.mock('$lib/features/wishlists/components/PurchaseDialog.svelte', () => ({
-  default: { name: 'PurchaseDialogStub', _: { props: [] } }
+  default: function PurchaseDialogStub() {}
 }));
 
 // ── Explicit $app/stores mock ─────────────────────────────────

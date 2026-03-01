@@ -5,7 +5,12 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/paraglide/runtime.js', () => ({
   getLocale: vi.fn(() => 'en'),
@@ -59,28 +64,28 @@ vi.mock('$lib/features/cloud-backup', () => ({
 
 // Stub complex child components
 vi.mock('$lib/components/SettingsForm.svelte', () => ({
-  default: { name: 'SettingsFormStub', _: { props: [] } }
+  default: function SettingsFormStub() {}
 }));
 vi.mock('$lib/features/cloud-backup/components/GoogleConnectButton.svelte', () => ({
-  default: { name: 'GoogleConnectButtonStub', _: { props: [] } }
+  default: function GoogleConnectButtonStub() {}
 }));
 vi.mock('$lib/features/cloud-backup/components/ConnectivityIndicator.svelte', () => ({
-  default: { name: 'ConnectivityIndicatorStub', _: { props: [] } }
+  default: function ConnectivityIndicatorStub() {}
 }));
 vi.mock('$lib/features/cloud-backup/components/SyncButton.svelte', () => ({
-  default: { name: 'SyncButtonStub', _: { props: [] } }
+  default: function SyncButtonStub() {}
 }));
 vi.mock('$lib/features/cloud-backup/components/BackupList.svelte', () => ({
-  default: { name: 'BackupListStub', _: { props: [] } }
+  default: function BackupListStub() {}
 }));
 vi.mock('$lib/features/cloud-backup/components/RestoreConfirmModal.svelte', () => ({
-  default: { name: 'RestoreConfirmModalStub', _: { props: [] } }
+  default: function RestoreConfirmModalStub() {}
 }));
 vi.mock('$lib/features/database-backup/components/DataManagementSection.svelte', () => ({
-  default: { name: 'DataManagementSectionStub', _: { props: [] } }
+  default: function DataManagementSectionStub() {}
 }));
 vi.mock('$lib/components/PageHeader.svelte', () => ({
-  default: { name: 'PageHeaderStub', _: { props: [] } }
+  default: function PageHeaderStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────

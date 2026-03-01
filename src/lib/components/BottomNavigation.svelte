@@ -4,7 +4,7 @@
   import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
-  import { Badge } from '$lib/components';
+  import { Badge } from '$lib/components/ui/badge';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { localeStore } from '$lib/stores/locale';
   import { PRIMARY_ITEMS, SECONDARY_ITEMS } from './navigation/config';

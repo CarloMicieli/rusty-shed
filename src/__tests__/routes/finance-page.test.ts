@@ -5,7 +5,12 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/toaster', () => ({
   toaster: { success: vi.fn(), error: vi.fn(), loading: vi.fn() }
@@ -48,16 +53,16 @@ vi.mock('$lib/stores/modal', () => ({
 
 // Stub heavy children
 vi.mock('$lib/features/budget/components/BudgetConfigSheet.svelte', () => ({
-  default: { name: 'BudgetConfigSheetStub', _: { props: [] } }
+  default: function BudgetConfigSheetStub() {}
 }));
 vi.mock('$lib/features/budget/components/BudgetMonthRow.svelte', () => ({
-  default: { name: 'BudgetMonthRowStub', _: { props: [] } }
+  default: function BudgetMonthRowStub() {}
 }));
 vi.mock('$lib/features/budget/components/ExtraBudgetModal.svelte', () => ({
-  default: { name: 'ExtraBudgetModalStub', _: { props: [] } }
+  default: function ExtraBudgetModalStub() {}
 }));
 vi.mock('$lib/components/PageHeader.svelte', () => ({
-  default: { name: 'PageHeaderStub', _: { props: [] } }
+  default: function PageHeaderStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────

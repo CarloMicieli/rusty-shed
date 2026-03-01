@@ -5,13 +5,16 @@ import { render } from '@testing-library/svelte';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
 
 vi.mock('$lib/toaster', () => ({
   toaster: { success: vi.fn(), error: vi.fn(), loading: vi.fn() }
 }));
-
-vi.mock('lucide-svelte', () => new Proxy({}, { get: () => () => '' }));
 
 // Provide a stable mock context so CollectionDashboard renders without the
 // full context hierarchy from the layout.
@@ -22,12 +25,16 @@ vi.mock('$lib/features/collection/CollectionState.svelte', () => ({
     error: null,
     filters: { query: '', scale: null, tags: new Set() },
     filteredItems: [],
+    rawItems: [],
     items: [],
     summary: null,
     availableTags: [],
     filterCount: 0,
     fetchCollection: vi.fn(),
     setFilter: vi.fn(),
+    setQuery: vi.fn(),
+    setScale: vi.fn(),
+    toggleTag: vi.fn(),
     clearFilters: vi.fn(),
     deleteItem: vi.fn(),
     addItem: vi.fn(),
@@ -39,23 +46,23 @@ vi.mock('$lib/features/collection/CollectionState.svelte', () => ({
 }));
 
 vi.mock('$lib/features/collection/components/AddModelDrawer.svelte', () => ({
-  default: { name: 'AddModelDrawerStub', _: { props: [] } }
+  default: function AddModelDrawerStub() {}
 }));
 
 vi.mock('$lib/features/collection/components/DeleteModal.svelte', () => ({
-  default: { name: 'DeleteModalStub', _: { props: [] } }
+  default: function DeleteModalStub() {}
 }));
 
 vi.mock('$lib/features/collection/components/FilterPanel.svelte', () => ({
-  default: { name: 'FilterPanelStub', _: { props: [] } }
+  default: function FilterPanelStub() {}
 }));
 
 vi.mock('$lib/components/RailwayModelPreviewCard.svelte', () => ({
-  default: { name: 'RailwayModelPreviewCardStub', _: { props: [] } }
+  default: function RailwayModelPreviewCardStub() {}
 }));
 
 vi.mock('$lib/components/PageHeader.svelte', () => ({
-  default: { name: 'PageHeaderStub', _: { props: [] } }
+  default: function PageHeaderStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────

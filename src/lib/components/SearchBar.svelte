@@ -3,7 +3,8 @@
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { goto } from '$app/navigation';
-  import { Button, Input } from '$lib/components';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
   import { commands, type RailwayModelView } from '$lib/bindings';
   import { collectionStore } from '$lib/state/collection.svelte';
 
