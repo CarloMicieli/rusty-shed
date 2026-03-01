@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
-import { writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
+import type { Page } from '@sveltejs/kit';
 
 // Mock $app/navigation
 export const goto = vi.fn(async (url: string) => {
@@ -34,7 +35,7 @@ export const assets = '';
 export const resolve = vi.fn((path: string) => path);
 
 // Mock $app/stores
-export const page = writable({
+export const page: Writable<Page> = writable({
   url: new URL('http://localhost/'),
   params: {},
   route: { id: null },
@@ -43,7 +44,8 @@ export const page = writable({
   data: {},
   state: {},
   form: undefined
-});
+} as unknown as Page);
 
-export const navigating = writable(null);
-export const updated = writable(false);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const navigating: Writable<any> = writable(null);
+export const updated: Writable<boolean> = writable(false);

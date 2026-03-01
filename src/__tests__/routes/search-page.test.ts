@@ -47,7 +47,11 @@ vi.mock('$lib/features/search/components/SearchEmptyState.svelte', () => ({
 
 // ── $app/stores: use the alias mock directly (vitest.config resolves $app →
 // src/__tests__/mocks/sveltekit which exports writable page/navigating stores)
-import { page as mockPageStore, navigating as mockNavigatingStore } from '$app/stores';
+import { page as mockPageStoreRaw } from '$app/stores';
+
+// Cast to any to bypass strict SvelteKit types in tests
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPageStore = mockPageStoreRaw as any;
 
 // ── Helpers ───────────────────────────────────────────────────
 

@@ -54,7 +54,11 @@ const MODEL_ID = 'trn:railway-model:acme:60100';
 
 // Use the alias mock directly (vitest.config resolves $app →
 // src/__tests__/mocks/sveltekit which exports writable stores)
-import { page as mockPageStore } from '$app/stores';
+import { page as mockPageStoreRaw } from '$app/stores';
+
+// Cast to any to bypass strict SvelteKit types in tests
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPageStore = mockPageStoreRaw as any;
 
 vi.mock('$app/navigation', () => ({
   goto: vi.fn().mockResolvedValue(undefined)

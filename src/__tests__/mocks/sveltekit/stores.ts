@@ -1,6 +1,7 @@
-import { writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
+import type { Page } from '@sveltejs/kit';
 
-export const page = writable({
+export const page: Writable<Page> = writable({
   url: new URL('http://localhost/'),
   params: {},
   route: { id: null },
@@ -9,7 +10,8 @@ export const page = writable({
   data: {},
   state: {},
   form: undefined
-});
+} as unknown as Page);
 
-export const navigating = writable(null);
-export const updated = writable(false);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const navigating: Writable<any> = writable(null);
+export const updated: Writable<boolean> = writable(false);

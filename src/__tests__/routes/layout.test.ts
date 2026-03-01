@@ -119,6 +119,14 @@ function mockSuccessfulStartup() {
   });
 }
 
+// Helper to create an empty children snippet
+function createChildrenSnippet() {
+  return createRawSnippet(() => ({
+    render: () => '<span data-testid="layout-slot"></span>',
+    setup: () => {}
+  }));
+}
+
 describe('routes/+layout.svelte', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -128,19 +136,19 @@ describe('routes/+layout.svelte', () => {
 
   it('renders without throwing', () => {
     mockSafeInvoke.mockImplementation(() => new Promise(() => {}));
-    expect(() => render(Layout)).not.toThrow();
+    expect(() => render(Layout, { children: createChildrenSnippet() })).not.toThrow();
   });
 
   it('shows a loading spinner during application initialisation', () => {
     mockSafeInvoke.mockImplementation(() => new Promise(() => {})); // never resolves
-    const { container } = render(Layout);
+    const { container } = render(Layout, { children: createChildrenSnippet() });
     const spinner = container.querySelector('.animate-spin');
     expect(spinner).not.toBeNull();
   });
 
   it('shows "Rusty Shed" brand during loading', () => {
     mockSafeInvoke.mockImplementation(() => new Promise(() => {}));
-    render(Layout);
+    render(Layout, { children: createChildrenSnippet() });
     expect(screen.getByText('Rusty Shed')).toBeInTheDocument();
   });
 
@@ -152,7 +160,7 @@ describe('routes/+layout.svelte', () => {
       return { ok: true, data: undefined };
     });
 
-    render(Layout);
+    render(Layout, { children: createChildrenSnippet() });
 
     await waitFor(() => expect(screen.getByText('Startup Failed')).toBeInTheDocument(), {
       timeout: 2000
@@ -161,13 +169,7 @@ describe('routes/+layout.svelte', () => {
 
   it('renders the main application shell after successful startup', async () => {
     mockSuccessfulStartup();
-    // Provide an empty children snippet so {@render children()} in the main
-    // shell doesn't throw invalid_snippet once loading resolves.
-    const children = createRawSnippet(() => ({
-      render: () => '<span data-testid="layout-slot"></span>',
-      setup: () => {}
-    }));
-    const { container } = render(Layout, { children });
+    const { container } = render(Layout, { children: createChildrenSnippet() });
     await waitFor(
       () => {
         expect(container.querySelector('.animate-spin')).toBeNull();
@@ -179,7 +181,7 @@ describe('routes/+layout.svelte', () => {
 
   it('calls init_database during startup', async () => {
     mockSuccessfulStartup();
-    render(Layout);
+    render(Layout, { children: createChildrenSnippet() });
     await waitFor(() => expect(mockSafeInvoke).toHaveBeenCalledWith('init_database'), {
       timeout: 2000
     });
@@ -190,7 +192,7 @@ describe('routes/+layout.svelte', () => {
     loader.id = 'app-loading';
     document.body.appendChild(loader);
     mockSuccessfulStartup();
-    render(Layout);
+    render(Layout, { children: createChildrenSnippet() });
     await waitFor(() => expect(document.getElementById('app-loading')).toBeNull(), {
       timeout: 2000
     });
@@ -199,7 +201,7 @@ describe('routes/+layout.svelte', () => {
   it('calls settingsState.initialize on mount', async () => {
     const { settingsState } = await import('$lib/features/settings/SettingsState.svelte');
     mockSuccessfulStartup();
-    render(Layout);
+    render(Layout, { children: createChildrenSnippet() });
     await waitFor(() => expect(settingsState.initialize).toHaveBeenCalled(), { timeout: 2000 });
   });
 });
