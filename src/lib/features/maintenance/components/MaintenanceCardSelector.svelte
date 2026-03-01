@@ -32,7 +32,12 @@
   <label for="card-select" class="label">
     {m.maintenance_add_event_select_card()}
   </label>
-  <select id="card-select" class="select" value={selectedId ?? ''} onchange={handleChange}>
+  <select
+    id="card-select"
+    class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+    value={selectedId ?? ''}
+    onchange={handleChange}
+  >
     <option value="">{m.maintenance_add_event_card_placeholder()}</option>
     {#each cards as card (card.id)}
       <option value={card.id}>

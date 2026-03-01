@@ -44,13 +44,6 @@ vi.mock('$lib/features/budget/BudgetState.svelte', () => ({
   BudgetState: vi.fn(() => mockBudgetState)
 }));
 
-vi.mock('$lib/stores/modal', () => ({
-  getModalStore: vi.fn(() => ({
-    trigger: vi.fn(),
-    close: vi.fn()
-  }))
-}));
-
 // Stub heavy children
 vi.mock('$lib/features/budget/components/BudgetConfigSheet.svelte', () => ({
   default: function BudgetConfigSheetStub() {}

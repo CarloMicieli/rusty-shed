@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ImportResultResponse, RecordCounts } from '$lib/bindings';
+  import { Button } from '$lib/components';
 
   interface Props {
     result: ImportResultResponse;
@@ -120,7 +121,7 @@
 
   <!-- Actions -->
   <div class="report-actions">
-    <button class="btn btn-primary" onclick={onClose} type="button"> Close </button>
+    <Button onclick={onClose} type="button">Close</Button>
   </div>
 </div>
 
@@ -261,23 +262,5 @@
     justify-content: center;
     padding-top: 1rem;
     border-top: 1px solid hsl(var(--border));
-  }
-
-  .btn {
-    padding: 0.75rem 2rem;
-    border-radius: var(--radius-md);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    border: none;
-  }
-
-  .btn-primary:hover {
-    background: hsl(var(--primary) / 0.9);
   }
 </style>

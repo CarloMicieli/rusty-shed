@@ -51,7 +51,7 @@ export const FIXED_TAG_META: Record<FixedTagKey, TagMeta> = {
 
 export const DEFAULT_TAG_META: TagMeta = {
   key: 'default',
-  label: () => 'Tag',
+  label: () => '',
   variant: 'secondary',
   gradient: 'bg-gradient-to-br from-muted to-background',
   iconKey: 'default'
@@ -59,7 +59,7 @@ export const DEFAULT_TAG_META: TagMeta = {
 
 export function resolveTagMeta(tag: string): TagMeta {
   const key = tag.toLowerCase() as FixedTagKey;
-  return FIXED_TAG_META[key] ?? { ...DEFAULT_TAG_META, key: tag };
+  return FIXED_TAG_META[key] ?? { ...DEFAULT_TAG_META, key: tag, label: () => tag };
 }
 
 export function sortAvailableTags(tags: string[]): string[] {

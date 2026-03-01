@@ -2,7 +2,7 @@
   import * as Accordion from '$lib/components/ui/accordion';
 
   import FormField from '$lib/components/ui/FormField.svelte';
-  import { Input } from '$lib/components';
+  import { Button, Input } from '$lib/components';
   import type { ConstantItem } from '../constants';
   import type { RollingStockForm } from '../utils';
   import { resolveLabel } from '../../../../utils/resolveLabel';
@@ -63,7 +63,10 @@
   options: Option[]
 )}
   <FormField {label} error={fieldError(fieldName as string)} {required}>
-    <select class="select border-input bg-background" bind:value={rs[fieldName]}>
+    <select
+      class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+      bind:value={rs[fieldName]}
+    >
       <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
       {#each options as option (option.id)}
         <option value={option.id}>{'name' in option ? option.name : resolveLabel(option)}</option>
@@ -304,12 +307,24 @@
   </div>
 {/snippet}
 
-<div class="variant-filled-surface card p-4">
+<div class="rounded-lg border border-border bg-card p-4">
   <div class="mb-4 flex items-center justify-between">
     <h4 class="h5">{resolveLabel(formLabels.rollingStock)} #{index + 1}</h4>
     <div class="flex gap-2">
-      <button type="button" class="btn-icon btn-sm" onclick={() => onDuplicate(index)}>📋</button>
-      <button type="button" class="btn-icon btn-sm" onclick={() => onDelete(index)}>🗑️</button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        class="h-8 w-8"
+        onclick={() => onDuplicate(index)}>📋</Button
+      >
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        class="h-8 w-8"
+        onclick={() => onDelete(index)}>🗑️</Button
+      >
     </div>
   </div>
 

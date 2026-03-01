@@ -2,7 +2,7 @@
   /** @deprecated Use RailwayModelPreviewCard with collectionItemToCardData() instead */
   import { fade } from 'svelte/transition';
   import { Trash2 } from 'lucide-svelte';
-  import { Badge } from '$lib/components';
+  import { Badge, Button } from '$lib/components';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import type { CollectionItemView } from '$lib/bindings';
 
@@ -60,19 +60,19 @@
         <h3 class="text-lg leading-tight font-semibold">{item.railwayModel.description}</h3>
       </div>
       <div class="flex gap-2 opacity-0 transition group-hover:opacity-100">
-        <button class="variant-soft-error btn-icon btn btn-icon-sm" onclick={handleDelete}>
+        <Button variant="destructive" size="icon" class="h-8 w-8" onclick={handleDelete}>
           <Trash2 size={16} />
-        </button>
+        </Button>
       </div>
     </div>
 
-    <div class="text-surface-400 flex flex-wrap gap-2 text-xs">
+    <div class="flex flex-wrap gap-2 text-xs text-muted-foreground">
       <Badge variant="outline">{item.railwayModel.scale}</Badge>
       <Badge variant="outline">{new Date(item.addedDate).toLocaleDateString()}</Badge>
     </div>
 
     {#if item.notes}
-      <p class="text-surface-300 line-clamp-3 flex-1 text-sm">{item.notes}</p>
+      <p class="line-clamp-3 flex-1 text-sm text-muted-foreground">{item.notes}</p>
     {/if}
   </div>
 </div>

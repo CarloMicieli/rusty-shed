@@ -16,6 +16,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { appVersion } from '$lib/stores/app';
   import { Badge } from '$lib/components';
+  import { cn } from '$lib/utils';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { localeStore } from '$lib/stores/locale';
@@ -26,6 +27,16 @@
   const totalCount = $derived(collectionService.totalCount);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const locale = $derived($localeStore);
+
+  function navLinkClasses(active: boolean, withSpaceBetween = false): string {
+    return cn(
+      'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium tracking-wide transition-colors',
+      withSpaceBetween ? 'justify-between' : 'justify-start',
+      active
+        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+    );
+  }
 </script>
 
 {#key locale}
@@ -39,9 +50,7 @@
       <li>
         <a
           href={resolve('/dashboard')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/dashboard'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/dashboard'}
+          class={navLinkClasses(($page.url.pathname as string) === '/dashboard')}
         >
           <LayoutDashboard size={20} />
           <span class="font-medium tracking-wide">{m.app_dashboard()}</span>
@@ -50,9 +59,7 @@
       <li>
         <a
           href={resolve('/collection')}
-          class="hover:variant-soft-primary btn flex w-full items-center justify-between gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/collection'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/collection'}
+          class={navLinkClasses(($page.url.pathname as string) === '/collection', true)}
         >
           <div class="flex items-center gap-3">
             <Library size={20} />
@@ -64,9 +71,7 @@
       <li>
         <a
           href={resolve('/wishlists')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/wishlists'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/wishlists'}
+          class={navLinkClasses(($page.url.pathname as string) === '/wishlists')}
         >
           <Heart size={20} />
           <span class="font-medium tracking-wide">{m.app_wishlists()}</span>
@@ -78,9 +83,7 @@
       <li>
         <a
           href={resolve('/finance')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/finance'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/finance'}
+          class={navLinkClasses(($page.url.pathname as string) === '/finance')}
         >
           <Wallet size={20} />
           <span class="font-medium tracking-wide">{m.budget_title()}</span>
@@ -89,13 +92,7 @@
       <li>
         <a
           href={resolve('/railway-tracks')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string).startsWith(
-            '/railway-tracks'
-          )}
-          class:variant-ghost-surface={!($page.url.pathname as string).startsWith(
-            '/railway-tracks'
-          )}
+          class={navLinkClasses(($page.url.pathname as string).startsWith('/railway-tracks'))}
         >
           <Train size={20} />
           <span class="font-medium tracking-wide">{m.app_tracks()}</span>
@@ -104,9 +101,7 @@
       <li>
         <a
           href={resolve('/depot')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/depot'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/depot'}
+          class={navLinkClasses(($page.url.pathname as string) === '/depot')}
         >
           <Box size={20} />
           <span class="font-medium tracking-wide">{m.app_depot()}</span>
@@ -115,9 +110,7 @@
       <li>
         <a
           href={resolve('/maintenance')}
-          class="hover:variant-soft-primary btn w-full justify-start gap-3"
-          class:variant-filled-primary={($page.url.pathname as string) === '/maintenance'}
-          class:variant-ghost-surface={($page.url.pathname as string) !== '/maintenance'}
+          class={navLinkClasses(($page.url.pathname as string) === '/maintenance')}
         >
           <Wrench size={20} />
           <span class="font-medium tracking-wide">{m.app_maintenance()}</span>
@@ -128,13 +121,12 @@
     <div class="mt-auto space-y-2 border-t border-border/50 pt-4">
       <a
         href={resolve('/settings')}
-        class="hover:variant-soft-primary variant-ghost-surface btn w-full justify-start gap-3"
-        class:variant-filled-primary={($page.url.pathname as string) === '/settings'}
+        class={navLinkClasses(($page.url.pathname as string) === '/settings')}
       >
         <Settings size={20} />
         <span class="font-medium tracking-wide">{m.app_settings()}</span>
       </a>
-      <div class="text-surface-400 px-4 py-2 text-center text-xs tracking-widest uppercase">
+      <div class="px-4 py-2 text-center text-xs tracking-widest text-muted-foreground uppercase">
         {m.app_version_prefix()}
         {$appVersion || '—'}
       </div>

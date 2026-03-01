@@ -111,7 +111,11 @@
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
             <Form.Label required>Seller Type</Form.Label>
-            <select {...props} bind:value={$form.sellerType} class="select">
+            <select
+              {...props}
+              bind:value={$form.sellerType}
+              class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
               <option value="SHOP">Shop</option>
               <option value="PRIVATE">Private</option>
               <option value="MANUFACTURER">Manufacturer</option>

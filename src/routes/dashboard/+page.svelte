@@ -5,7 +5,7 @@
   import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { toaster } from '$lib/toaster';
-  import { Badge, Button } from '$lib/components';
+  import { Button, Card, CardContent, Skeleton } from '$lib/components';
 
   // Components
   import PageHeader from '$lib/components/PageHeader.svelte';
@@ -107,7 +107,7 @@
     ];
   }
 
-  const handleModelClick = (id: string) => goto(`/catalogue/models/${id}` as unknown as never);
+  const handleModelClick = (id: string) => goto(resolve(`/collection/${id}`));
 </script>
 
 <svelte:head>
@@ -115,21 +115,21 @@
 </svelte:head>
 
 {#if dashboard.error}
-  <div
-    class="variant-soft-error rounded-container border-error-500/30 flex flex-col items-center justify-center border p-12 text-center"
-  >
-    <Badge variant="destructive" class="mb-4 h-12 w-12 rounded-full"><RefreshCw /></Badge>
-    <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
-    <p class="text-surface-200 mt-2">{m.errors_dashboard_message()}</p>
-    <div class="mt-6 flex gap-4">
-      <Button variant="default" size="lg" onclick={() => dashboard.retry()}
-        >{m.errors_retry_page()}</Button
-      >
-      <Button variant="ghost" size="lg" onclick={() => goto(resolve('/'))}
-        ><House class="mr-2 h-4 w-4" />{m.errors_return_dashboard()}</Button
-      >
-    </div>
-  </div>
+  <Card class="border-destructive/40 bg-destructive/5">
+    <CardContent class="flex flex-col items-center justify-center p-12 text-center">
+      <div class="mb-4 rounded-full bg-destructive/15 p-3 text-destructive"><RefreshCw /></div>
+      <h2 class="h2 font-bold">{m.errors_dashboard_title()}</h2>
+      <p class="mt-2 text-muted-foreground">{m.errors_dashboard_message()}</p>
+      <div class="mt-6 flex gap-4">
+        <Button variant="default" size="lg" onclick={() => dashboard.retry()}
+          >{m.errors_retry_page()}</Button
+        >
+        <Button variant="ghost" size="lg" onclick={() => goto(resolve('/'))}
+          ><House class="mr-2 h-4 w-4" />{m.errors_return_dashboard()}</Button
+        >
+      </div>
+    </CardContent>
+  </Card>
 {:else}
   <div class="flex flex-col">
     <div
@@ -152,7 +152,7 @@
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {#if dashboard.isLoading}
             {#each Array(3) as _, i (i)}
-              <div class="skeleton rounded-container h-28"></div>
+              <Skeleton class="h-28 w-full" />
             {/each}
           {:else}
             {#each stats as stat (stat.label)}
@@ -168,7 +168,7 @@
             <div class="lg:hidden">
               <div class="gauge-frame space-y-3 p-4">
                 <p
-                  class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase"
+                  class="text-[0.65rem] font-semibold tracking-[0.35em] text-muted-foreground uppercase"
                 >
                   {m.dashboard_command_center()}
                 </p>
@@ -180,7 +180,9 @@
 
           <aside class="hidden lg:block">
             <div class="gauge-frame h-full space-y-3 p-4">
-              <p class="text-surface-300 text-[0.65rem] font-semibold tracking-[0.35em] uppercase">
+              <p
+                class="text-[0.65rem] font-semibold tracking-[0.35em] text-muted-foreground uppercase"
+              >
                 {m.dashboard_command_center()}
               </p>
               <div class="flex flex-col gap-3">
@@ -202,21 +204,21 @@
         {#if dashboard.isLoading}
           <div class="space-y-4">
             {#each Array(2) as _, i (i)}
-              <div class="skeleton rounded-container h-48"></div>
+              <Skeleton class="h-48 w-full" />
             {/each}
           </div>
         {:else if !purchaseGroups.length}
-          <div
-            class="blueprint-panel rounded-container text-surface-200 border-border/60 p-10 text-center"
-          >
-            <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
-            <p class="text-surface-300 mt-2 mb-5 text-sm">
-              {m.dashboard_empty_acquisitions_message()}
-            </p>
-            <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}
-              ><Plus class="mr-2" />{m.actions_add_railway_model()}</Button
-            >
-          </div>
+          <Card class="blueprint-panel border-border/60">
+            <CardContent class="p-10 text-center">
+              <p class="text-base font-semibold">{m.dashboard_empty_acquisitions()}</p>
+              <p class="mt-2 mb-5 text-sm text-muted-foreground">
+                {m.dashboard_empty_acquisitions_message()}
+              </p>
+              <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}
+                ><Plus class="mr-2" />{m.actions_add_railway_model()}</Button
+              >
+            </CardContent>
+          </Card>
         {:else}
           <div class="space-y-4">
             {#each purchaseGroups as group (group.id)}

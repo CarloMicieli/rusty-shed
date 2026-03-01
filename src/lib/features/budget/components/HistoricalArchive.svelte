@@ -7,8 +7,11 @@
    */
 
   import * as Accordion from '$lib/components/ui/accordion';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import { Button } from '$lib/components';
   import type { BudgetState } from '../BudgetState.svelte';
   import BudgetTable from './BudgetTable.svelte';
+  import ExtraBudgetModal from './ExtraBudgetModal.svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {
@@ -25,6 +28,8 @@
   );
 
   let loadingYear: number | null = $state(null);
+  let extraBudgetDialogOpen = $state(false);
+  let selectedExtraBudget = $state<{ year: number; month: number } | null>(null);
 
   async function handleYearExpand(year: number) {
     if (loadingYear) return; // Prevent concurrent loads
@@ -41,6 +46,16 @@
 
   function formatYearRange(year: number): string {
     return `${year}`;
+  }
+
+  function openExtraBudgetDialog(year: number, month: number) {
+    selectedExtraBudget = { year, month };
+    extraBudgetDialogOpen = true;
+  }
+
+  function closeExtraBudgetDialog() {
+    extraBudgetDialogOpen = false;
+    selectedExtraBudget = null;
   }
 </script>
 
@@ -69,18 +84,20 @@
                   records={budgetState.monthlyRecords}
                   {budgetState}
                   currency={budgetState.currency}
+                  onAddExtra={openExtraBudgetDialog}
                 />
               {:else}
-                <button
+                <Button
                   type="button"
-                  class="variant-ghost-primary btn btn-sm"
+                  variant="outline"
+                  size="sm"
                   onclick={() => handleYearExpand(year)}
                   disabled={loadingYear !== null}
                 >
                   {loadingYear === year
                     ? m.budget_loading?.() || 'Loading...'
                     : m.budget_mode_yearly?.() || `Load ${year} data`}
-                </button>
+                </Button>
               {/if}
             </div>
           </Accordion.Content>
@@ -89,3 +106,16 @@
     </Accordion.Root>
   {/if}
 </div>
+
+{#if selectedExtraBudget}
+  <Dialog.Root bind:open={extraBudgetDialogOpen}>
+    <Dialog.Content class="max-w-md">
+      <ExtraBudgetModal
+        {budgetState}
+        year={selectedExtraBudget.year}
+        month={selectedExtraBudget.month}
+        onClose={closeExtraBudgetDialog}
+      />
+    </Dialog.Content>
+  </Dialog.Root>
+{/if}

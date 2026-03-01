@@ -9,7 +9,7 @@
     DigitalRollingStockView
   } from '$lib/bindings';
   import { getDigitalRosterContext } from '../DigitalRosterState.svelte';
-  import { Input } from '$lib/components';
+  import { Button, Input } from '$lib/components';
 
   interface Props {
     /** Controls drawer visibility */
@@ -311,21 +311,23 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-border/60 p-6">
       <div>
-        <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
+        <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
           {m.app_digital_roster()}
         </p>
         <h2 id="drawer-title" class="text-xl font-semibold">
           {m.digital_roster_install_decoder()}
         </h2>
       </div>
-      <button
+      <Button
         type="button"
-        class="variant-ghost-surface btn-icon btn btn-icon-sm"
+        variant="ghost"
+        size="icon"
+        class="h-8 w-8"
         onclick={handleCloseRequest}
         aria-label={m.add_model_cancel()}
       >
         <X size={16} />
-      </button>
+      </Button>
     </div>
 
     <!-- Content (scrollable) -->
@@ -339,12 +341,14 @@
           <!-- Rolling Stock Selection -->
           <div>
             <label for="rolling-stock" class="block space-y-1">
-              <span class="text-surface-300 text-sm">{m.digital_roster_rolling_stock_label()}</span>
+              <span class="text-sm text-muted-foreground"
+                >{m.digital_roster_rolling_stock_label()}</span
+              >
             </label>
             <select
               id="rolling-stock"
               bind:value={selectedRollingStockId}
-              class="select"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
               class:input-error={touched && validationErrors.rollingStock}
             >
               <option value={null}>{m.form_new_model_select_placeholder()}</option>
@@ -365,12 +369,12 @@
           <!-- Decoder Selection -->
           <div>
             <label for="decoder" class="block space-y-1">
-              <span class="text-surface-300 text-sm">{m.digital_roster_decoder_label()}</span>
+              <span class="text-sm text-muted-foreground">{m.digital_roster_decoder_label()}</span>
             </label>
             <select
               id="decoder"
               bind:value={selectedDecoderId}
-              class="select"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
               class:input-error={touched && validationErrors.decoder}
             >
               <option value={null}>{m.form_new_model_select_placeholder()}</option>
@@ -388,7 +392,7 @@
           <!-- DCC Address -->
           <div>
             <label for="dcc-address" class="block space-y-1">
-              <span class="text-surface-300 text-sm">{m.digital_roster_address_label()}</span>
+              <span class="text-sm text-muted-foreground">{m.digital_roster_address_label()}</span>
             </label>
             <Input
               id="dcc-address"
@@ -410,7 +414,7 @@
           <!-- Installation Date (for future use, not currently stored) -->
           <div>
             <label for="installation-date" class="block space-y-1">
-              <span class="text-surface-300 text-sm">{m.digital_roster_date_label()}</span>
+              <span class="text-sm text-muted-foreground">{m.digital_roster_date_label()}</span>
             </label>
             <Input
               id="installation-date"
@@ -426,17 +430,12 @@
     <!-- Footer -->
     <div class="border-t border-border/60 p-6">
       <div class="flex justify-end gap-3">
-        <button
-          type="button"
-          class="variant-ghost-surface btn"
-          onclick={handleCloseRequest}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="ghost" onclick={handleCloseRequest} disabled={isSubmitting}>
           {m.add_model_cancel()}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          class="variant-filled-primary btn"
+          variant="default"
           onclick={handleSubmit}
           disabled={isSubmitting || isLoadingData || (!touched && !isFormValid)}
         >
@@ -445,7 +444,7 @@
           {:else}
             {m.digital_roster_save()}
           {/if}
-        </button>
+        </Button>
       </div>
     </div>
   </div>
@@ -454,28 +453,23 @@
 <!-- Confirmation Dialog for Replacing Decoder -->
 {#if showConfirmDialog}
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-    <div class="card mx-4 max-w-md space-y-4 p-6">
+    <div class="mx-4 max-w-md space-y-4 rounded-lg border border-border bg-card p-6">
       <h3 class="text-lg font-semibold">{m.digital_roster_confirm_replace_title()}</h3>
-      <p class="text-surface-400 text-sm">
+      <p class="text-sm text-muted-foreground">
         {m.digital_roster_confirm_replace()}
       </p>
       <div class="flex justify-end gap-3">
-        <button
-          type="button"
-          class="variant-ghost-surface btn"
-          onclick={handleCancelReplace}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="ghost" onclick={handleCancelReplace} disabled={isSubmitting}>
           {m.add_model_cancel()}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          class="variant-filled-primary btn"
+          variant="default"
           onclick={handleConfirmReplace}
           disabled={isSubmitting}
         >
           {m.digital_roster_replace()}
-        </button>
+        </Button>
       </div>
     </div>
   </div>
@@ -484,18 +478,18 @@
 <!-- Discard Changes Dialog -->
 {#if showDiscardDialog}
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
-    <div class="card mx-4 max-w-md space-y-4 p-6">
+    <div class="mx-4 max-w-md space-y-4 rounded-lg border border-border bg-card p-6">
       <h3 class="text-lg font-semibold">{m.add_model_discard_title()}</h3>
-      <p class="text-surface-400 text-sm">
+      <p class="text-sm text-muted-foreground">
         {m.add_model_discard_message()}
       </p>
       <div class="flex justify-end gap-3">
-        <button type="button" class="variant-ghost-surface btn" onclick={handleDiscardCancel}>
+        <Button type="button" variant="ghost" onclick={handleDiscardCancel}>
           {m.add_model_cancel()}
-        </button>
-        <button type="button" class="variant-filled-error btn" onclick={handleDiscardConfirm}>
+        </Button>
+        <Button type="button" variant="destructive" onclick={handleDiscardConfirm}>
           {m.digital_roster_cancel()}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

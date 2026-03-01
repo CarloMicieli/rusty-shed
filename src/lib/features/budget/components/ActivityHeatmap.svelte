@@ -8,6 +8,7 @@
 
   import { SvelteMap } from 'svelte/reactivity';
   import * as Dialog from '$lib/components/ui/dialog';
+  import * as m from '$lib/paraglide/messages.js';
   import type { QuarterlyActivityPoint, QuarterlySummary } from '../services/BudgetService.svelte';
   import type { BudgetState } from '../BudgetState.svelte';
   import QuarterlySummaryModal from './QuarterlySummaryModal.svelte';
@@ -41,19 +42,15 @@
     return activityMap.get(`${year}-${quarter}`);
   }
 
+  const levelColorMap: Record<string, string> = {
+    NONE: 'bg-muted',
+    LOW: 'bg-emerald-300',
+    MEDIUM: 'bg-amber-300',
+    HIGH: 'bg-rose-400'
+  };
+
   function getLevelColor(level: string): string {
-    switch (level) {
-      case 'NONE':
-        return 'bg-muted';
-      case 'LOW':
-        return 'bg-success-200';
-      case 'MEDIUM':
-        return 'bg-warning-300';
-      case 'HIGH':
-        return 'bg-error-400';
-      default:
-        return 'bg-muted';
-    }
+    return levelColorMap[level] ?? 'bg-muted';
   }
 
   function getLevelLabel(level: string): string {
@@ -101,20 +98,22 @@
 </script>
 
 <div class="rounded-lg bg-card p-6">
-  <h3 class="text-surface-900 mb-4 text-lg font-semibold">5-Year Quarterly Activity</h3>
+  <h3 class="mb-4 text-lg font-semibold">{m.budget_dashboard_heatmap_title()}</h3>
   <div class="space-y-1">
     <!-- Header row with quarter labels -->
     <div class="grid grid-cols-[80px_repeat(4,1fr)] gap-1">
-      <div class="text-surface-700 flex items-center justify-end pr-2 text-sm font-medium"></div>
+      <div
+        class="flex items-center justify-end pr-2 text-sm font-medium text-muted-foreground"
+      ></div>
       {#each quarters as quarter (quarter)}
-        <div class="text-surface-600 pb-1 text-center text-xs font-medium">{quarter}</div>
+        <div class="pb-1 text-center text-xs font-medium text-muted-foreground">{quarter}</div>
       {/each}
     </div>
 
     <!-- Data rows -->
     {#each years as year (year)}
       <div class="grid grid-cols-[80px_repeat(4,1fr)] gap-1">
-        <div class="text-surface-700 flex items-center justify-end pr-2 text-sm font-medium">
+        <div class="flex items-center justify-end pr-2 text-sm font-medium text-muted-foreground">
           {year}
         </div>
         {#each quarters as quarter (quarter)}
@@ -130,7 +129,7 @@
             onclick={() => handleCellClick(year, quarter)}
           >
             {#if activity && activity.amount > 0}
-              <span class="text-surface-900 text-xs font-medium">
+              <span class="text-xs font-medium text-foreground">
                 {formatAmount(activity.amount)}
               </span>
             {/if}
@@ -142,23 +141,23 @@
 
   <!-- Legend -->
   <div class="mt-4 flex items-center gap-4 border-t border-border/20 pt-4">
-    <span class="text-surface-700 text-sm font-medium">Spending Level:</span>
+    <span class="text-sm font-medium text-muted-foreground">Spending Level:</span>
     <div class="flex gap-3">
       <div class="flex items-center gap-1.5">
         <div class="h-4 w-4 rounded bg-muted"></div>
-        <span class="text-surface-600 text-xs">None</span>
+        <span class="text-xs text-muted-foreground">None</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <div class="bg-success-200 h-4 w-4 rounded"></div>
-        <span class="text-surface-600 text-xs">Low</span>
+        <div class="h-4 w-4 rounded bg-emerald-300"></div>
+        <span class="text-xs text-muted-foreground">Low</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <div class="bg-warning-300 h-4 w-4 rounded"></div>
-        <span class="text-surface-600 text-xs">Medium</span>
+        <div class="h-4 w-4 rounded bg-amber-300"></div>
+        <span class="text-xs text-muted-foreground">Medium</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <div class="bg-error-400 h-4 w-4 rounded"></div>
-        <span class="text-surface-600 text-xs">High</span>
+        <div class="h-4 w-4 rounded bg-rose-400"></div>
+        <span class="text-xs text-muted-foreground">High</span>
       </div>
     </div>
   </div>

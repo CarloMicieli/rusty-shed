@@ -10,20 +10,18 @@
    * - Error handling with toast feedback
    */
 
-  import { getModalStore } from '$lib/stores/modal';
   import * as m from '$lib/paraglide/messages.js';
-  import { Input, Textarea } from '$lib/components';
+  import { Button, Input, Textarea } from '$lib/components';
   import type { BudgetState } from '../BudgetState.svelte';
 
   interface Props {
     budgetState: BudgetState;
     year: number;
     month: number;
+    onClose?: () => void;
   }
 
-  const { budgetState, year, month }: Props = $props();
-
-  const modalStore = getModalStore();
+  const { budgetState, year, month, onClose }: Props = $props();
 
   // Form state
   let amount = $state(0);
@@ -90,7 +88,7 @@
         reason: reason || undefined
       });
 
-      modalStore.close();
+      onClose?.();
     } catch (error) {
       console.error('Failed to add extra budget:', error);
       // Error toast is already shown by the service
@@ -103,7 +101,7 @@
    * Handle cancel action.
    */
   function handleCancel() {
-    modalStore.close();
+    onClose?.();
   }
 </script>
 
@@ -167,17 +165,12 @@
 
     <!-- Action Buttons -->
     <footer class="flex justify-end gap-3 pt-4">
-      <button
-        type="button"
-        onclick={handleCancel}
-        disabled={isSubmitting}
-        class="variant-ghost-surface btn"
-      >
+      <Button type="button" onclick={handleCancel} disabled={isSubmitting} variant="ghost">
         {m.budget_extra_cancel_button()}
-      </button>
-      <button type="submit" disabled={isSubmitting} class="variant-filled-primary btn">
+      </Button>
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? m.budget_config_saving_button() : m.budget_extra_save_button()}
-      </button>
+      </Button>
     </footer>
   </form>
 </div>

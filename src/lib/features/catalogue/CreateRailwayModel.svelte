@@ -8,7 +8,7 @@
   import { formLabels } from './constants';
   import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
   import FormField from '$lib/components/ui/FormField.svelte';
-  import { Input, Badge } from '$lib/components';
+  import { Button, Input, Badge } from '$lib/components';
   import TranslationsSection from './components/TranslationsSection.svelte';
   import manufacturersData from '$lib/data/manufacturers.json';
   import railwayCompaniesData from '$lib/data/railway-companies.json';
@@ -168,7 +168,7 @@
   {@const selected = value}
   <FormField {label} {error} {required}>
     <select
-      class="select border-input bg-background"
+      class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
       value={selected}
       onchange={(event) => onChange((event.currentTarget as HTMLSelectElement).value)}
     >
@@ -183,7 +183,11 @@
 <div class="container mx-auto p-8">
   <h1 class="h2 mb-8">{resolveLabel(formLabels.title)}</h1>
   {#if generalError}
-    <div class="variant-filled-error card mb-4 p-4">{generalError}</div>
+    <div
+      class="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-destructive"
+    >
+      {generalError}
+    </div>
   {/if}
 
   <form method="POST" use:enhance>
@@ -329,59 +333,21 @@
               />
             {/each}
 
-            <button type="button" class="cta-btn cta-primary btn" onclick={addRollingStock}>
+            <Button type="button" onclick={addRollingStock}>
               + {resolveLabel(formLabels.addRollingStock)}
-            </button>
+            </Button>
           </div>
         </Accordion.Content>
       </Accordion.Item>
     </Accordion.Root>
 
     <div class="mt-8 flex gap-4">
-      <button type="submit" class="cta-btn cta-primary btn" disabled={$submitting}>
+      <Button type="submit" disabled={$submitting}>
         {$submitting ? `${resolveLabel(formLabels.create)}...` : resolveLabel(formLabels.create)}
-      </button>
-      <button type="button" class="cta-btn cta-secondary btn" onclick={() => navigate('/')}>
+      </Button>
+      <Button type="button" variant="outline" onclick={() => navigate('/')}>
         {resolveLabel(formLabels.cancel)}
-      </button>
+      </Button>
     </div>
   </form>
 </div>
-
-<style>
-  .cta-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: 700;
-    text-decoration: none;
-    border: 1px solid transparent;
-    transition:
-      background-color 150ms ease,
-      border-color 150ms ease,
-      color 150ms ease;
-  }
-
-  .cta-primary {
-    background-color: var(--primary-500, #2563eb);
-    color: var(--on-primary, #0b1224);
-    border-color: var(--primary-600, #1d4ed8);
-  }
-
-  .cta-primary:hover {
-    background-color: var(--primary-600, #1d4ed8);
-  }
-
-  .cta-secondary {
-    background-color: var(--surface-700, #2d2f36);
-    color: var(--on-surface, #f8fafc);
-    border-color: var(--surface-500, #3f4148);
-  }
-
-  .cta-secondary:hover {
-    background-color: var(--surface-600, #32343b);
-  }
-</style>

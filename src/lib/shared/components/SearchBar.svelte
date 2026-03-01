@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Search, X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Input } from '$lib/components';
+  import { Button, Input } from '$lib/components';
 
   let isExpanded = $state(false);
 
@@ -12,7 +12,7 @@
 
 <!-- Desktop: Inline Input -->
 <div class="relative hidden w-64 items-center lg:flex xl:w-96">
-  <Search class="text-surface-400 pointer-events-none absolute left-3" size={18} />
+  <Search class="pointer-events-none absolute left-3 text-muted-foreground" size={18} />
   <Input
     type="text"
     placeholder={m.app_search_placeholder()}
@@ -22,19 +22,19 @@
 
 <!-- Mobile: Icon Trigger + Overlay -->
 <div class="lg:hidden">
-  <button class="variant-ghost-surface btn-icon" onclick={toggleSearch}>
+  <Button variant="ghost" size="icon" onclick={toggleSearch}>
     <Search size={20} />
-  </button>
+  </Button>
 
   {#if isExpanded}
     <div
       class="animate-fade-in fixed inset-0 z-50 flex flex-col bg-background/95 p-4 pt-20 backdrop-blur-sm"
     >
-      <button class="btn-icon absolute top-4 right-4" onclick={toggleSearch}>
+      <Button variant="ghost" size="icon" class="absolute top-4 right-4" onclick={toggleSearch}>
         <X size={24} />
-      </button>
+      </Button>
       <div class="relative w-full">
-        <Search class="text-surface-400 absolute top-1/2 left-4 -translate-y-1/2" size={20} />
+        <Search class="absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground" size={20} />
 
         <Input
           type="text"
@@ -43,7 +43,7 @@
           autoFocus
         />
       </div>
-      <div class="text-surface-400 mt-8 text-center text-sm tracking-widest uppercase">
+      <div class="mt-8 text-center text-sm tracking-widest text-muted-foreground uppercase">
         {m.app_search_instruction()}
       </div>
     </div>

@@ -6,21 +6,33 @@
    * Shows base budget, extra budget, spending, rollover, and status for each month.
    */
 
-  import { getModalStore } from '$lib/stores/modal';
+  import { Plus } from 'lucide-svelte';
   import type { BudgetState } from '../BudgetState.svelte';
   import type { MonthlyBudgetRecordDto } from '../services/BudgetService.svelte';
-  import ExtraBudgetModal from './ExtraBudgetModal.svelte';
-  import { Badge } from '$lib/components';
+  import {
+    Badge,
+    Button,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
+  } from '$lib/components';
 
   interface Props {
     records: MonthlyBudgetRecordDto[];
-    budgetState: BudgetState;
+    budgetState?: BudgetState;
     currency?: string;
+    onAddExtra?: (year: number, month: number) => void;
   }
 
-  let { records, budgetState, currency: _currency = 'EUR' }: Props = $props();
-
-  const modalStore = getModalStore();
+  let {
+    records,
+    budgetState: _budgetState,
+    currency: _currency = 'EUR',
+    onAddExtra
+  }: Props = $props();
 
   // Month names for display
   const monthNames = [
@@ -48,16 +60,16 @@
     }).format(major);
   }
 
-  function getStatusBadgeClass(status: string): string {
+  function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'outline' {
     switch (status) {
       case 'COMPLETED':
-        return 'badge-success';
+        return 'default';
       case 'IN_PROGRESS':
-        return 'badge-primary';
+        return 'secondary';
       case 'PROJECTED':
-        return 'badge-ghost';
+        return 'outline';
       default:
-        return 'badge-ghost';
+        return 'outline';
     }
   }
 
@@ -80,156 +92,80 @@
     return 'text-error-500';
   }
 
-  /**
-   * Open modal to add extra budget for a specific month.
-   */
-  function openExtraBudgetModal(year: number, month: number) {
-    modalStore.trigger({
-      type: 'component',
-      component: {
-        ref: ExtraBudgetModal,
-        props: {
-          budgetState,
-          year,
-          month
-        }
-      }
-    });
+  function handleAddExtra(year: number, month: number) {
+    onAddExtra?.(year, month);
   }
 </script>
 
 <div class="budget-table-container">
   <div class="overflow-x-auto">
-    <table class="table-hover table-compact table w-full">
-      <thead>
-        <tr>
-          <th>Month</th>
-          <th class="text-right">Base Budget</th>
-          <th class="text-right">Extra Budget</th>
-          <th class="text-right">Rollover In</th>
-          <th class="text-right">Available</th>
-          <th class="text-right">Spent</th>
-          <th class="text-right">Remaining</th>
-          <th class="text-right">Remaining %</th>
-          <th class="text-right">Rollover Out</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Month</TableHead>
+          <TableHead class="text-right">Base Budget</TableHead>
+          <TableHead class="text-right">Extra Budget</TableHead>
+          <TableHead class="text-right">Rollover In</TableHead>
+          <TableHead class="text-right">Available</TableHead>
+          <TableHead class="text-right">Spent</TableHead>
+          <TableHead class="text-right">Remaining</TableHead>
+          <TableHead class="text-right">Remaining %</TableHead>
+          <TableHead class="text-right">Rollover Out</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {#each records as record (record.month)}
-          <tr>
-            <td class="font-semibold">{monthNames[record.month - 1]}</td>
-            <td class="text-right">{formatAmount(record.baseBudget, record.currency)}</td>
-            <td class="text-right">
-              {record.extraBudget > 0 ? formatAmount(record.extraBudget, record.currency) : '—'}
-            </td>
-            <td class="text-right">
-              {record.rolloverIn > 0 ? formatAmount(record.rolloverIn, record.currency) : '—'}
-            </td>
-            <td class="text-right font-semibold"
-              >{formatAmount(record.available, record.currency)}</td
+          <TableRow>
+            <TableCell class="font-semibold">{monthNames[record.month - 1]}</TableCell>
+            <TableCell class="text-right"
+              >{formatAmount(record.baseBudget, record.currency)}</TableCell
             >
-            <td class="text-right">{formatAmount(record.actualSpend, record.currency)}</td>
-            <td class="text-right {getRemainingClass(record.remainingPercentage)}">
+            <TableCell class="text-right">
+              {record.extraBudget > 0 ? formatAmount(record.extraBudget, record.currency) : '—'}
+            </TableCell>
+            <TableCell class="text-right">
+              {record.rolloverIn > 0 ? formatAmount(record.rolloverIn, record.currency) : '—'}
+            </TableCell>
+            <TableCell class="text-right font-semibold"
+              >{formatAmount(record.available, record.currency)}</TableCell
+            >
+            <TableCell class="text-right"
+              >{formatAmount(record.actualSpend, record.currency)}</TableCell
+            >
+            <TableCell class="text-right {getRemainingClass(record.remainingPercentage)}">
               {formatAmount(record.remaining, record.currency)}
-            </td>
-            <td class="text-right {getRemainingClass(record.remainingPercentage)}">
+            </TableCell>
+            <TableCell class="text-right {getRemainingClass(record.remainingPercentage)}">
               {record.remainingPercentage.toFixed(1)}%
-            </td>
-            <td class="text-right">
+            </TableCell>
+            <TableCell class="text-right">
               {record.rolloverOut > 0 ? formatAmount(record.rolloverOut, record.currency) : '—'}
-            </td>
-            <td>
-              <Badge variant="outline" class={getStatusBadgeClass(record.status)}>
+            </TableCell>
+            <TableCell>
+              <Badge variant={getStatusBadgeVariant(record.status)}>
                 {getStatusLabel(record.status)}
               </Badge>
-            </td>
-            <td>
-              <button
+            </TableCell>
+            <TableCell>
+              <Button
                 type="button"
-                class="variant-ghost-primary btn btn-sm"
-                onclick={() => openExtraBudgetModal(record.year, record.month)}
+                size="sm"
+                variant="ghost"
+                onclick={() => handleAddExtra(record.year, record.month)}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="h-4 w-4"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
+                <Plus class="h-4 w-4" />
                 <span class="hidden sm:inline">Extra</span>
-              </button>
-            </td>
-          </tr>
+              </Button>
+            </TableCell>
+          </TableRow>
         {/each}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   </div>
 
   {#if records.length === 0}
-    <div class="text-surface-500 py-8 text-center">No budget records available</div>
+    <div class="py-8 text-center text-muted-foreground">No budget records available</div>
   {/if}
 </div>
-
-<style>
-  .table {
-    min-width: 100%;
-    border-collapse: collapse;
-  }
-
-  .table > :not([hidden]) ~ :not([hidden]) {
-    border-top-width: 1px;
-    border-color: rgb(228 228 231);
-  }
-
-  thead {
-    background-color: rgb(63 63 70);
-  }
-
-  th {
-    padding: 0.75rem 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    color: rgb(161 161 170);
-    text-transform: uppercase;
-  }
-
-  td {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    color: rgb(250 250 250);
-  }
-
-  tr:hover {
-    background-color: rgb(82 82 91);
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 9999px;
-    padding: 0.125rem 0.625rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  .badge-success {
-    background-color: rgb(220 252 231);
-    color: rgb(22 101 52);
-  }
-
-  .badge-primary {
-    background-color: rgb(219 234 254);
-    color: rgb(30 64 175);
-  }
-
-  .badge-ghost {
-    background-color: rgb(63 63 70);
-    color: rgb(161 161 170);
-  }
-</style>

@@ -3,7 +3,7 @@
   import * as m from '$lib/paraglide/messages';
   import { AlertTriangle } from 'lucide-svelte';
   import { untrack } from 'svelte';
-  import { Input } from '$lib/components';
+  import { Button, Input } from '$lib/components';
 
   interface Props {
     open: boolean;
@@ -121,14 +121,12 @@
         {/if}
 
         {#if isDuplicateWarning}
-          <div class="alert variant-ghost-warning">
-            <div class="alert-message">
-              <div class="flex items-start gap-2">
-                <AlertTriangle class="mt-0.5 h-5 w-5 flex-shrink-0" />
-                <div>
-                  <p class="font-semibold">{m.digital_roster_duplicate_address_warning()}</p>
-                  <p class="text-sm opacity-90">{m.digital_roster_duplicate_address_message()}</p>
-                </div>
+          <div class="border-warning-500/40 bg-warning-500/10 rounded-md border p-3">
+            <div class="flex items-start gap-2">
+              <AlertTriangle class="mt-0.5 h-5 w-5 flex-shrink-0" />
+              <div>
+                <p class="font-semibold">{m.digital_roster_duplicate_address_warning()}</p>
+                <p class="text-sm opacity-90">{m.digital_roster_duplicate_address_message()}</p>
               </div>
             </div>
           </div>
@@ -136,12 +134,12 @@
       </div>
 
       <div class="flex justify-end gap-2">
-        <button type="button" class="variant-ghost btn" onclick={handleClose} disabled={isSaving}>
+        <Button type="button" variant="ghost" onclick={handleClose} disabled={isSaving}>
           {m.app_cancel()}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          class="variant-filled-primary btn"
+          variant="default"
           onclick={handleSubmit}
           disabled={isSaving || !!validationError}
         >
@@ -150,7 +148,7 @@
           {:else}
             {m.digital_roster_edit_address_save()}
           {/if}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

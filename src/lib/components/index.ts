@@ -15,6 +15,7 @@ export { Textarea } from './ui/textarea';
 export { Checkbox } from './ui/checkbox';
 export { RadioGroup } from './ui/radio-group';
 export { Toggle } from './ui/toggle';
+export { Skeleton } from './ui/skeleton';
 export { Sheet } from './ui/sheet';
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';

@@ -151,8 +151,7 @@ describe('DccAddressEditor.svelte', () => {
       props: { open: true, stock: mockStock as never, onSave, onCheckDuplicate, onClose }
     });
     // Click save without changing address (same as current)
-    const saveBtn = document.querySelector('button[class*="filled"]') as HTMLButtonElement;
-    if (saveBtn) await fireEvent.click(saveBtn);
+    await fireEvent.click(screen.getByText('Save Address'));
 
     // onSave should NOT be called, onClose should be called
     expect(onSave).not.toHaveBeenCalled();

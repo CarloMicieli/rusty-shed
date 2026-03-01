@@ -78,7 +78,7 @@
 </script>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-  <div class="rounded-container w-full max-w-lg border border-border/70 bg-card shadow-xl">
+  <div class="w-full max-w-lg rounded-lg border border-border/70 bg-card shadow-xl">
     <div class="flex items-center justify-between border-b border-border px-4 py-3">
       <h3 class="text-base font-semibold tracking-wide uppercase">{m.wishlist_modal_title()}</h3>
       <Button variant="ghost" size="sm" onclick={close} aria-label="close">
@@ -90,14 +90,14 @@
       <div class="space-y-2">
         <label
           for="wishlist-select"
-          class="text-surface-300 text-xs font-semibold tracking-wide uppercase"
+          class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
         >
           {m.wishlist_modal_choose_or_create()}
         </label>
         <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
           <select
             id="wishlist-select"
-            class="select"
+            class="h-9 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
             bind:value={selectedId}
             aria-label={m.wishlist_modal_select_list()}
           >
@@ -124,7 +124,7 @@
       <div class="space-y-2">
         <label
           for="model-id"
-          class="text-surface-300 text-xs font-semibold tracking-wide uppercase"
+          class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
         >
           {m.wishlist_modal_item_id_label()}
         </label>
@@ -139,7 +139,7 @@
       <div class="space-y-2">
         <label
           for="wishlist-notes"
-          class="text-surface-300 text-xs font-semibold tracking-wide uppercase"
+          class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
         >
           {m.wishlist_modal_notes_label()}
         </label>
@@ -153,7 +153,7 @@
 
       {#if formError}
         <div
-          class="variant-soft-error rounded-container border-error-700/40 text-error-100 border p-3 text-sm"
+          class="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
         >
           {formError}
         </div>

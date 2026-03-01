@@ -92,7 +92,9 @@
     </svg>
     <h3>Drop your import package here</h3>
     <p>Or click to select a .zip or .tar.gz file</p>
-    <button class="select-btn" onclick={handleClick} type="button" {disabled}> Select File </button>
+    <button class="file-action" onclick={handleClick} type="button" {disabled}>
+      Select File
+    </button>
   </div>
 </div>
 
@@ -155,7 +157,7 @@
     max-width: 300px;
   }
 
-  .select-btn {
+  .file-action {
     padding: 0.5rem 1.5rem;
     border-radius: var(--radius-md);
     background-color: hsl(var(--primary));
@@ -167,11 +169,11 @@
     pointer-events: auto;
   }
 
-  .select-btn:hover:not(:disabled) {
+  .file-action:hover:not(:disabled) {
     background-color: hsl(var(--primary) / 0.9);
   }
 
-  .select-btn:disabled {
+  .file-action:disabled {
     cursor: not-allowed;
     opacity: 0.6;
   }

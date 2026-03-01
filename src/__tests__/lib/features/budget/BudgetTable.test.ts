@@ -3,17 +3,6 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import BudgetTable from '$lib/features/budget/components/BudgetTable.svelte';
 import type { MonthlyBudgetRecordDto } from '$lib/features/budget/services/BudgetService.svelte';
 
-// ── Mock modal store ─────────────────────────────────────────────────────────
-const mockModalTrigger = vi.hoisted(() => vi.fn());
-vi.mock('$lib/stores/modal', () => ({
-  getModalStore: () => ({ trigger: mockModalTrigger })
-}));
-
-// ── Mock ExtraBudgetModal (only referenced, not rendered directly) ─────────
-vi.mock('$lib/features/budget/components/ExtraBudgetModal.svelte', () => ({
-  default: {}
-}));
-
 // ── Mock ui/Badge (simple passthrough) ──────────────────────────────────────
 vi.mock('$lib/components', async (importOriginal) => {
   const actual = await importOriginal<typeof import('$lib/components')>();
@@ -105,21 +94,17 @@ describe('BudgetTable.svelte', () => {
     expect(nonDashCells.length).toBeGreaterThan(0);
   });
 
-  it('triggers modal when Extra button is clicked', async () => {
+  it('calls onAddExtra when Extra button is clicked', async () => {
+    const onAddExtra = vi.fn();
     const record = makeRecord({ month: 3, year: 2026 });
-    render(BudgetTable, { props: { records: [record], budgetState: mockBudgetState as never } });
+    render(BudgetTable, {
+      props: { records: [record], budgetState: mockBudgetState as never, onAddExtra }
+    });
 
     const extraBtn = screen.getByRole('button', { name: /extra/i });
     await fireEvent.click(extraBtn);
 
-    expect(mockModalTrigger).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'component',
-        component: expect.objectContaining({
-          props: expect.objectContaining({ year: 2026, month: 3 })
-        })
-      })
-    );
+    expect(onAddExtra).toHaveBeenCalledWith(2026, 3);
   });
 
   it('renders multiple month rows for multiple records', () => {

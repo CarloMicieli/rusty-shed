@@ -8,6 +8,7 @@
 
   import type { QuarterlySummary } from '../services/BudgetService.svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { Button } from '$lib/components';
 
   interface Props {
     summary: QuarterlySummary;
@@ -69,15 +70,15 @@
 <div class="modal-content max-w-2xl rounded-lg bg-card p-6 shadow-xl">
   <!-- Header -->
   <header class="mb-6">
-    <h2 class="text-surface-50 text-2xl font-bold">
+    <h2 class="text-2xl font-bold text-foreground">
       {summary.year} - {summary.quarter}
     </h2>
-    <p class="text-surface-400 mt-1">Category Spending Breakdown</p>
+    <p class="mt-1 text-muted-foreground">Category Spending Breakdown</p>
   </header>
 
   <!-- Total Spending -->
   <div class="mb-6 rounded-lg border border-border bg-muted p-4">
-    <p class="text-surface-400 text-sm">Total Spending</p>
+    <p class="text-sm text-muted-foreground">Total Spending</p>
     <p class="text-primary-400 text-3xl font-bold">
       {formatAmount(summary.totalSpending.amount, summary.totalSpending.currency)}
     </p>
@@ -86,17 +87,16 @@
   <!-- Category Breakdown -->
   {#if summary.categoryBreakdown.length > 0}
     <div class="space-y-3">
-      <h3 class="text-surface-100 mb-3 text-lg font-semibold">By Category</h3>
+      <h3 class="mb-3 text-lg font-semibold text-foreground">By Category</h3>
 
       {#each summary.categoryBreakdown as category, index (category.category)}
         <div class="category-item rounded-lg border border-border bg-muted p-3">
           <div class="mb-2 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <div class="h-3 w-3 rounded-full {getCategoryColor(index)}"></div>
-              <span class="text-surface-100 font-medium">{getCategoryLabel(category.category)}</span
-              >
+              <span class="font-medium text-foreground">{getCategoryLabel(category.category)}</span>
             </div>
-            <span class="text-surface-50 font-bold">
+            <span class="font-bold text-foreground">
               {formatAmount(category.amount.amount, category.amount.currency)}
             </span>
           </div>
@@ -111,22 +111,22 @@
 
           <!-- Percentage -->
           <div class="mt-1 text-right">
-            <span class="text-surface-400 text-xs">{category.percentage.toFixed(1)}%</span>
+            <span class="text-xs text-muted-foreground">{category.percentage.toFixed(1)}%</span>
           </div>
         </div>
       {/each}
     </div>
   {:else}
-    <div class="text-surface-500 py-8 text-center">
+    <div class="py-8 text-center text-muted-foreground">
       {noSpendingText}
     </div>
   {/if}
 
   <!-- Footer -->
   <footer class="mt-6 flex justify-end">
-    <button type="button" class="variant-filled-primary btn" onclick={closeModal}>
+    <Button type="button" onclick={closeModal}>
       {closeText}
-    </button>
+    </Button>
   </footer>
 </div>
 
@@ -142,6 +142,6 @@
   }
 
   .category-item:hover {
-    background-color: rgb(63 63 70);
+    background-color: color-mix(in oklab, var(--color-muted) 75%, var(--color-accent) 25%);
   }
 </style>

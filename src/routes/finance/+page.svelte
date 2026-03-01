@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Settings2, CalendarDays, TrendingUp } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { getModalStore } from '$lib/stores/modal';
+  import * as Dialog from '$lib/components/ui/dialog';
 
   // State & Services
   import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
@@ -18,11 +18,11 @@
 
   const service = createBudgetService();
   const budgetState = createBudgetState(service);
-  const modalStore = getModalStore();
-
   // UI Local State
   let selectedYear = $state(new Date().getFullYear());
   let configSheetOpen = $state(false);
+  let extraBudgetDialogOpen = $state(false);
+  let selectedExtraBudget = $state<{ year: number; month: number } | null>(null);
 
   const monthNames = [
     'January',
@@ -52,17 +52,13 @@
   }
 
   function openExtraBudget(year: number, month: number) {
-    modalStore.trigger({
-      type: 'component',
-      component: {
-        ref: ExtraBudgetModal,
-        props: {
-          budgetState,
-          year,
-          month
-        }
-      }
-    });
+    selectedExtraBudget = { year, month };
+    extraBudgetDialogOpen = true;
+  }
+
+  function closeExtraBudgetDialog() {
+    extraBudgetDialogOpen = false;
+    selectedExtraBudget = null;
   }
 </script>
 
@@ -203,3 +199,16 @@
     await budgetState.save(mode, amount, budgetState.currency);
   }}
 />
+
+{#if selectedExtraBudget}
+  <Dialog.Root bind:open={extraBudgetDialogOpen}>
+    <Dialog.Content class="max-w-md">
+      <ExtraBudgetModal
+        {budgetState}
+        year={selectedExtraBudget.year}
+        month={selectedExtraBudget.month}
+        onClose={closeExtraBudgetDialog}
+      />
+    </Dialog.Content>
+  </Dialog.Root>
+{/if}

@@ -7,12 +7,6 @@ import type {
   QuarterlySummary
 } from '$lib/features/budget/services/BudgetService.svelte';
 
-// ── Mock modal store ─────────────────────────────────────────────────────────
-const mockModalTrigger = vi.fn();
-vi.mock('$lib/stores/modal', () => ({
-  getModalStore: () => ({ trigger: mockModalTrigger })
-}));
-
 function makePoint(
   year: number,
   quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4',
@@ -46,7 +40,7 @@ describe('ActivityHeatmap.svelte', () => {
     mockBudgetState.loadQuarterlySummaries.mockResolvedValue(undefined);
   });
 
-  it('renders "5-Year Quarterly Activity" heading', () => {
+  it('renders heatmap heading', () => {
     render(ActivityHeatmap, {
       props: {
         quarterlyActivity: [],
@@ -54,7 +48,7 @@ describe('ActivityHeatmap.svelte', () => {
         budgetState: mockBudgetState as never
       }
     });
-    expect(screen.getByText('5-Year Quarterly Activity')).toBeInTheDocument();
+    expect(screen.getByText('5-Year Activity')).toBeInTheDocument();
   });
 
   it('renders quarter column headers Q1–Q4', () => {
@@ -187,7 +181,7 @@ describe('ActivityHeatmap.svelte', () => {
       }
     });
     // Amount is shown as formatted currency inside the cell when amount > 0
-    const amountText = document.querySelector('.text-surface-900');
+    const amountText = document.querySelector('.text-foreground');
     expect(amountText).not.toBeNull();
   });
 });

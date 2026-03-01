@@ -118,13 +118,9 @@
                   {stock.decoder.product_code}
                 </td>
                 <td class="text-right">
-                  <button
-                    type="button"
-                    class="variant-ghost-surface btn btn-sm"
-                    onclick={() => handleEdit(stock)}
-                  >
+                  <Button type="button" variant="ghost" size="sm" onclick={() => handleEdit(stock)}>
                     {m.digital_roster_edit_address()}
-                  </button>
+                  </Button>
                 </td>
               </tr>
             {/each}

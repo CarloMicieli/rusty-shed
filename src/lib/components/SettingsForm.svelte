@@ -133,7 +133,7 @@
         </label>
         <select
           id="currency"
-          class="select w-full"
+          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
           bind:value={$form.currency}
           class:input-error={$errors.currency}
         >
@@ -152,7 +152,7 @@
         </label>
         <select
           id="language"
-          class="select w-full"
+          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
           bind:value={$form.language}
           class:input-error={$errors.language}
         >
@@ -173,7 +173,7 @@
         </label>
         <select
           id="length-unit"
-          class="select w-full"
+          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
           bind:value={$form.measureUnit}
           class:input-error={$errors.measureUnit}
         >
@@ -192,7 +192,7 @@
         </label>
         <select
           id="theme"
-          class="select w-full"
+          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
           bind:value={$form.theme}
           class:input-error={$errors.theme}
         >
@@ -213,7 +213,7 @@
         </label>
         <select
           id="scale"
-          class="select w-full"
+          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
           bind:value={$form.favouriteScale}
           class:input-error={$errors.favouriteScale}
         >
@@ -238,7 +238,7 @@
         {#each powerMethodOptions as option (option.value)}
           <label
             class={[
-              'group rounded-container relative flex gap-3 border p-4 transition',
+              'group relative flex gap-3 rounded-lg border p-4 transition',
               'hover:border-primary-400/70 bg-muted/60 hover:bg-muted/90',
               $form.powerSystem === option.value
                 ? 'border-primary-400/90 ring-primary-500/30 ring-1'

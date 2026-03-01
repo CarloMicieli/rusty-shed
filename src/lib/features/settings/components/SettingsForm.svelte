@@ -8,6 +8,7 @@
   import ScaleSelector from './ScaleSelector.svelte';
   import PowerSystemSelector from './PowerSystemSelector.svelte';
   import ThemeSelector from './ThemeSelector.svelte';
+  import { Button } from '$lib/components';
 
   // Local state for form inputs
   let currency = $state(settingsState.settings.currency);
@@ -88,9 +89,9 @@
 </script>
 
 <form onsubmit={handleSubmit} class="space-y-6">
-  <div class="card p-6">
+  <div class="rounded-lg border border-border bg-card p-6">
     <h2 class="h3 mb-4">{m.settings_heading()}</h2>
-    <p class="text-surface-600-300-token mb-6">{m.settings_description()}</p>
+    <p class="mb-6 text-muted-foreground">{m.settings_description()}</p>
 
     <div class="space-y-4">
       <CurrencySelector
@@ -127,21 +128,21 @@
     </div>
 
     {#if saveError}
-      <div class="alert variant-filled-error mt-4" role="alert">
+      <div class="mt-4 rounded-md border border-destructive/40 bg-destructive/10 p-3" role="alert">
         <p>{m.settings_update_failed()}: {saveError}</p>
       </div>
     {/if}
 
     {#if saveSuccess}
-      <div class="alert variant-filled-success mt-4" role="alert">
+      <div class="mt-4 rounded-md border border-emerald-500/40 bg-emerald-500/10 p-3" role="alert">
         <p>{m.settings_saved_toast()}</p>
       </div>
     {/if}
 
     <div class="mt-6">
-      <button
+      <Button
         type="submit"
-        class="btn variant-filled-primary"
+        variant="default"
         disabled={saving}
         onclick={() => console.log('[SettingsForm] Button clicked!')}
       >
@@ -150,7 +151,7 @@
         {:else}
           {m.save_button()}
         {/if}
-      </button>
+      </Button>
     </div>
   </div>
 </form>

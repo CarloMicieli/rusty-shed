@@ -1,6 +1,6 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
-  import { Input, Textarea } from '$lib/components';
+  import { Button, Input, Textarea } from '$lib/components';
   import type { CollectionItemView } from '$lib/bindings';
 
   type CreateCollectionItemInput = {
@@ -92,51 +92,54 @@
     >
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <p class="text-surface-500 text-xs tracking-[0.2em] uppercase">
+          <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
             {editing ? 'Edit item' : 'Add item'}
           </p>
           <h3 class="text-xl font-semibold">
             {editing ? editing.railwayModel.description : 'New item'}
           </h3>
         </div>
-        <button class="variant-ghost-surface btn-icon btn btn-icon-sm" onclick={handleClose}>
+        <Button variant="ghost" size="icon" class="h-8 w-8" onclick={handleClose}>
           <X size={16} />
-        </button>
+        </Button>
       </div>
 
       <div class="space-y-4">
         <label class="block space-y-1">
-          <span class="text-surface-300 text-sm">Brand</span>
+          <span class="text-sm text-muted-foreground">Brand</span>
           <Input bind:value={form.brand} class="w-full" />
         </label>
         <label class="block space-y-1">
-          <span class="text-surface-300 text-sm">Catalog Number</span>
+          <span class="text-sm text-muted-foreground">Catalog Number</span>
           <Input bind:value={form.catalogNumber} class="w-full" />
         </label>
         <label class="block space-y-1">
-          <span class="text-surface-300 text-sm">Title</span>
+          <span class="text-sm text-muted-foreground">Title</span>
           <Input bind:value={form.title} class="w-full" />
         </label>
         <div class="grid grid-cols-2 gap-3">
           <label class="block space-y-1">
-            <span class="text-surface-300 text-sm">Scale</span>
-            <select class="input w-full bg-background" bind:value={form.scale}>
+            <span class="text-sm text-muted-foreground">Scale</span>
+            <select
+              class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+              bind:value={form.scale}
+            >
               {#each availableScales as scaleOpt (scaleOpt.id)}
                 <option value={scaleOpt.id}>{scaleOpt.display}</option>
               {/each}
             </select>
           </label>
           <label class="block space-y-1">
-            <span class="text-surface-300 text-sm">Power</span>
+            <span class="text-sm text-muted-foreground">Power</span>
             <Input bind:value={form.powerSystem} class="w-full" />
           </label>
         </div>
         <label class="block space-y-1">
-          <span class="text-surface-300 text-sm">Description</span>
+          <span class="text-sm text-muted-foreground">Description</span>
           <Textarea rows={3} bind:value={form.description} class="w-full" />
         </label>
         <label class="block space-y-1">
-          <span class="text-surface-300 text-sm">Tags (comma separated)</span>
+          <span class="text-sm text-muted-foreground">Tags (comma separated)</span>
           <Input
             value={form.tags.join(', ')}
             oninput={(e) => handleTagsInput((e.target as HTMLInputElement).value)}
@@ -146,10 +149,10 @@
       </div>
 
       <div class="mt-6 flex justify-end gap-3">
-        <button class="variant-ghost-surface btn" onclick={handleClose}>Cancel</button>
-        <button class="variant-filled-primary btn" onclick={handleSubmit}>
+        <Button variant="ghost" onclick={handleClose}>Cancel</Button>
+        <Button onclick={handleSubmit}>
           {editing ? 'Save changes' : 'Add item'}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

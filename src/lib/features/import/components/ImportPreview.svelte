@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ImportPreviewResponse, RecordCounts } from '$lib/bindings';
+  import { Button } from '$lib/components';
 
   interface Props {
     preview: ImportPreviewResponse;
@@ -176,17 +177,10 @@
 
   <!-- Actions -->
   <div class="preview-actions">
-    <button class="btn btn-secondary" onclick={onCancel} disabled={loading} type="button">
-      Cancel
-    </button>
-    <button
-      class="btn btn-primary"
-      onclick={onConfirm}
-      disabled={!preview.canImport || loading}
-      type="button"
-    >
+    <Button variant="outline" onclick={onCancel} disabled={loading} type="button">Cancel</Button>
+    <Button onclick={onConfirm} disabled={!preview.canImport || loading} type="button">
       {loading ? 'Importing...' : 'Confirm Import'}
-    </button>
+    </Button>
   </div>
 </div>
 
@@ -395,38 +389,5 @@
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid hsl(var(--border));
-  }
-
-  .btn {
-    padding: 0.5rem 1.5rem;
-    border-radius: var(--radius-md);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary {
-    background: hsl(var(--secondary));
-    color: hsl(var(--secondary-foreground));
-    border: 1px solid hsl(var(--border));
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background: hsl(var(--secondary) / 0.8);
-  }
-
-  .btn-primary {
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    border: none;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: hsl(var(--primary) / 0.9);
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 </style>
