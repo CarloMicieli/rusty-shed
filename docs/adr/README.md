@@ -11,3 +11,4 @@
 | 0007 | Persistence Strategy via Domain Events                        | ✅ Accepted | 2026-01-20 |
 | 0008 | Standardize Tauri Command and Use Case Data Structures        | ✅ Accepted | 2026-01-23 |
 | 0009 | Localized Data Management and Full-Text Search Strategy       | ✅ Accepted | 2026-01-24 |
+| 0010 | Enforce Strongly Typed Command Arguments                      | ✅ Accepted | 2026-03-01 |
