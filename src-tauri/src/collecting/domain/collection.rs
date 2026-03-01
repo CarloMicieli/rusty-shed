@@ -219,7 +219,20 @@ impl Collection {
                     }
                 }
             }
-            _ => todo!("Handle other event types"),
+            CollectionEvent::RailwayModelSold {
+                collection_item_id,
+                removed_date,
+                ..
+            } => {
+                // Mark the item as sold (removed from collection)
+                if let Some(item) = self.items.iter_mut().find(|i| &i.id == collection_item_id) {
+                    item.removed_date = Some(*removed_date);
+
+                    // Note: We don't decrement the summary count because the event doesn't
+                    // include the category. Future enhancements could modify the event
+                    // structure to include category if summary tracking for sold items is needed.
+                }
+            }
         }
     }
 }

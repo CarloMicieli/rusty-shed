@@ -286,9 +286,9 @@ describe('CollectionState (Read-Only)', () => {
   });
 
   // CRUD operations are commented out in the service - tests disabled
-  describe.skip('CRUD operations (not yet implemented)', () => {
-    it('createItem - will be implemented when backend command is available', () => {});
-    it('updateItem - will be implemented when backend command is available', () => {});
-    it('deleteItem - will be implemented when backend command is available', () => {});
+  describe('CRUD operations (not yet implemented)', () => {
+    it.todo('createItem - will be implemented when backend command is available');
+    it.todo('updateItem - will be implemented when backend command is available');
+    it.todo('deleteItem - will be implemented when backend command is available');
   });
 });
