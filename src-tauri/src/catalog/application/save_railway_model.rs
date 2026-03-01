@@ -9,7 +9,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::domain::{manufacturer::ManufacturerId, railway_company::RailwayCompanyId};
-use crate::core::domain::{domain_error::DomainError, Language};
+use crate::core::domain::{Language, domain_error::DomainError};
 use chrono::Utc;
 use serde::Deserialize;
 use serde_json::json;

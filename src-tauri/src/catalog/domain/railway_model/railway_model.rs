@@ -9,7 +9,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::railway_model::{RollingStockId, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::{domain_error::DomainError, Language};
+use crate::core::domain::{Language, domain_error::DomainError};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -114,10 +114,7 @@ impl RailwayModel {
     /// Update details and emit a `TranslationUpserted` event for the aggregate's current language.
     pub fn update_details(&mut self, details: Option<String>) {
         let lang = self.description.lang;
-        self.details = details.clone().map(|v| LocalizedField {
-            lang,
-            value: v,
-        });
+        self.details = details.clone().map(|v| LocalizedField { lang, value: v });
         self.upsert_translation(lang, None, details);
     }
 

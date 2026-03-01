@@ -11,7 +11,7 @@ use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelParams, RollingStockParams,
 };
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::{domain_error::DomainError, validation::ValidationContext, Language};
+use crate::core::domain::{Language, domain_error::DomainError, validation::ValidationContext};
 use chrono::Utc;
 use uuid::Uuid;
 

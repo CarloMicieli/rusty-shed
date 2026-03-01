@@ -6,9 +6,9 @@ use crate::collecting::domain::{
     PurchaseInfo, PurchasedInfo,
 };
 use crate::collecting::domain::{CollectionItem, NewCollectionItem};
-use crate::core::domain::{EventEnvelope, MonetaryAmount, metadata::Metadata};
 #[allow(unused)]
 use crate::core::domain::Language;
+use crate::core::domain::{EventEnvelope, MonetaryAmount, metadata::Metadata};
 
 type CollectionDomainEvent = EventEnvelope<CollectionEvent>;
 

@@ -1,8 +1,8 @@
 use crate::catalog::domain::railway_model::{Epoch, RailwayModelId, RailwayModelUowExt};
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::domain_error::DomainError;
 #[allow(unused)]
 use crate::core::domain::Language;
+use crate::core::domain::domain_error::DomainError;
 
 /// Input for [`UpdateRailwayModelClassification::execute`].
 pub struct UpdateRailwayModelClassificationInput {

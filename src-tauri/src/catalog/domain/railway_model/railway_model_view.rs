@@ -7,7 +7,7 @@ use crate::catalog::domain::railway_model::{
     TechnicalSpecifications,
 };
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::{metadata::Metadata, Language};
+use crate::core::domain::{Language, metadata::Metadata};
 use serde::Serialize;
 
 /// A UI-focused view of a railway model used by the frontend.

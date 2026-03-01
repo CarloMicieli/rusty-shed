@@ -1,4 +1,4 @@
-use crate::core::domain::{domain_error::DomainError, Language};
+use crate::core::domain::{Language, domain_error::DomainError};
 use crate::search::domain::global_search_result::GlobalSearchResult;
 use crate::search::domain::repository::GlobalSearchUowExt;
 

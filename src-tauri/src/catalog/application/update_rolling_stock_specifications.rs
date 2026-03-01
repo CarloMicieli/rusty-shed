@@ -1,9 +1,9 @@
 use crate::catalog::domain::railway_model::{
     RailwayModelId, RailwayModelUowExt, RollingStockId, RollingStockSpecPatch,
 };
-use crate::core::domain::domain_error::DomainError;
 #[allow(unused)]
 use crate::core::domain::Language;
+use crate::core::domain::domain_error::DomainError;
 
 /// Input for [`UpdateRollingStockSpecifications::execute`].
 pub struct UpdateRollingStockSpecificationsInput {

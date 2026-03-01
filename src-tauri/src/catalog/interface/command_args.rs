@@ -16,7 +16,7 @@ use crate::{
         RailwayModelId, RollingStockId, RollingStockSpecPatch,
     },
     catalog::domain::scale::Scale,
-    core::domain::{domain_error::DomainError, Language},
+    core::domain::{Language, domain_error::DomainError},
 };
 
 /// Arguments for creating a new railway model (transport from IPC to application).

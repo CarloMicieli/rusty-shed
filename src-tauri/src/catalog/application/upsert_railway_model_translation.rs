@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
-use crate::core::domain::{domain_error::DomainError, Language};
+use crate::core::domain::{Language, domain_error::DomainError};
 
 /// Input for [`UpsertRailwayModelTranslation::execute`].
 pub struct UpsertRailwayModelTranslationInput {

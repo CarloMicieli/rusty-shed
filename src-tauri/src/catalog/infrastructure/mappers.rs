@@ -7,7 +7,7 @@ use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
 use crate::catalog::domain::railway_model::localized_field::LocalizedField;
-use crate::core::domain::{domain_error::DomainError, metadata::Metadata, Language};
+use crate::core::domain::{Language, domain_error::DomainError, metadata::Metadata};
 use chrono::{DateTime, Utc};
 use url::Url;
 
@@ -67,17 +67,13 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
     type Error = DomainError;
 
     fn try_from(row: RailwayModelRow) -> Result<Self, Self::Error> {
-        let lang = Language::try_from(row.resolved_lang.as_str())
-            .unwrap_or(Language::English);
+        let lang = Language::try_from(row.resolved_lang.as_str()).unwrap_or(Language::English);
 
         let description = LocalizedField {
             lang,
             value: row.description.unwrap_or_default(),
         };
-        let details = row.details.map(|v| LocalizedField {
-            lang,
-            value: v,
-        });
+        let details = row.details.map(|v| LocalizedField { lang, value: v });
         Ok(RailwayModel {
             id: row.id,
             manufacturer_id: row.manufacturer_id,

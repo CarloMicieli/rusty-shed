@@ -1,8 +1,8 @@
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelUowExt};
-use crate::core::domain::domain_error::DomainError;
 #[allow(unused)]
 use crate::core::domain::Language;
+use crate::core::domain::domain_error::DomainError;
 
 /// Query to retrieve a railway model by id.
 pub struct GetRailwayModelById;

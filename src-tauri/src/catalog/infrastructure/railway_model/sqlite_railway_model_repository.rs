@@ -11,7 +11,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
-use crate::core::domain::{domain_error::DomainError, Language};
+use crate::core::domain::{Language, domain_error::DomainError};
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::search::infrastructure::rebuild_search_index;
 use chrono::TimeZone;
@@ -779,8 +779,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 updated_at: chrono::Utc.from_utc_datetime(&row.updated_at),
             };
 
-            let lang = Language::try_from(row.resolved_lang.as_str())
-                .unwrap_or(Language::English);
+            let lang = Language::try_from(row.resolved_lang.as_str()).unwrap_or(Language::English);
 
             let details_lang = row.details.as_ref().map(|_| lang);
 
