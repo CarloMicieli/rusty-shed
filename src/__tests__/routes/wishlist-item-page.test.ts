@@ -57,7 +57,7 @@ const MODEL_ID = 'trn:railway-model:acme:60100';
 import { page as mockPageStoreRaw } from '$app/stores';
 
 // Cast to any to bypass strict SvelteKit types in tests
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockPageStore = mockPageStoreRaw as any;
 
 vi.mock('$app/navigation', () => ({

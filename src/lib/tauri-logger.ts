@@ -1,5 +1,4 @@
 // Lightweight Tauri-aware logger wrapper
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Exports: debug, info, warn, error, trace (and `log` object)
 // Behavior:
 // - Tries to detect running inside Tauri and lazily import @tauri-apps/api/log
@@ -7,15 +6,23 @@
 // - Safe-serializes objects to avoid circular errors
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'trace';
+type ConsoleMethod = Exclude<LogLevel, 'trace'> | 'debug';
+
+type TauriLogFunction = (message: string) => Promise<void>;
+type TauriLogModule = Partial<Record<LogLevel, TauriLogFunction>>;
+
+interface TauriAwareWindow extends Window {
+  __TAURI_INTERNALS__?: unknown;
+}
 
 const isBrowser = typeof window !== 'undefined';
 // More robust Tauri check
-const isTauri = isBrowser && (window as any).__TAURI_INTERNALS__ !== undefined;
+const isTauri = isBrowser && (window as TauriAwareWindow).__TAURI_INTERNALS__ !== undefined;
 
-let tauriLog: any = null;
+let tauriLog: TauriLogModule | null = null;
 let isImporting = false;
 
-function serialize(arg: unknown): any {
+function serialize(arg: unknown): unknown {
   const cleanArg = arg;
 
   // 1. Check if it's an Error first
@@ -40,6 +47,20 @@ function serialize(arg: unknown): any {
   return cleanArg;
 }
 
+function toLogMessage(args: unknown[]): string {
+  return args
+    .map((arg) => {
+      if (typeof arg === 'string') return arg;
+
+      try {
+        return JSON.stringify(arg);
+      } catch {
+        return String(arg);
+      }
+    })
+    .join(' ');
+}
+
 async function initTauriLog() {
   if (!isTauri || tauriLog || isImporting) return;
   isImporting = true;
@@ -48,7 +69,13 @@ async function initTauriLog() {
     const m = await import('@tauri-apps/plugin-log');
 
     // In Tauri v2, the functions (info, error, etc.) are top-level exports
-    tauriLog = m;
+    tauriLog = {
+      debug: m.debug,
+      info: m.info,
+      warn: m.warn,
+      error: m.error,
+      trace: m.trace
+    };
 
     log.debug('[Logger] Tauri log plugin attached');
   } catch (e) {
@@ -66,12 +93,14 @@ const createLogFn =
 
     const serialized = args.map(serialize);
 
-    if (tauriLog && typeof tauriLog[level] === 'function') {
-      tauriLog[level](...serialized);
+    const tauriLogFn = tauriLog?.[level];
+    if (typeof tauriLogFn === 'function') {
+      const message = toLogMessage(serialized);
+      void tauriLogFn(message);
     } else {
       // Fallback to browser console
-      const method = level === 'trace' ? 'debug' : level;
-      (console as any)[method]?.(...args);
+      const method: ConsoleMethod = level === 'trace' ? 'debug' : level;
+      console[method](...args);
     }
   };
 

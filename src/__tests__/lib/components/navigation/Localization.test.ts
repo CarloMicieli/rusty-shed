@@ -71,13 +71,13 @@ describe('User Story 5: Localized Navigation', () => {
       ];
 
       // These should NOT match the old English text
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(englishLabels.includes('Dashboard' as any)).toBe(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(englishLabels.includes('Budget Tracking' as any)).toBe(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(englishLabels.includes('My Digital Rolling Stocks' as any)).toBe(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(englishLabels.includes('My Tracks' as any)).toBe(false);
     });
   });

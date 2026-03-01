@@ -148,7 +148,6 @@ describe('User Story 4: Consistent Feature Identity', () => {
         expect(item.icon).toBeDefined();
         // Icon will be rendered with size={20} in all components
         expect(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (item.icon as any).name || (item.icon as any).__name || (item.icon as any).displayName
         ).toBeDefined();
       });

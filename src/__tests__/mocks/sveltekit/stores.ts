@@ -12,6 +12,5 @@ export const page: Writable<Page> = writable({
   form: undefined
 } as unknown as Page);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const navigating: Writable<any> = writable(null);
 export const updated: Writable<boolean> = writable(false);

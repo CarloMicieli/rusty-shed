@@ -10,6 +10,14 @@ import svelteConfig from './svelte.config.js';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
+const allowDefaultProject = [
+  'eslint.config.js',
+  'svelte.config.js',
+  'vitest.config.ts',
+  'tools/*.js',
+  'src/lib/types/*.d.ts'
+];
+
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
   {
@@ -17,10 +25,16 @@ export default defineConfig(
     ignores: [
       'src/lib/bindings.ts',
       'build/**',
-      // Generated paraglide message files (many contain eslint-disable comments)
+      'specs/**',
       'src/lib/paraglide/server.js',
       'src/lib/paraglide/messages.js',
+      'src/lib/paraglide/registry.js',
+      'src/lib/paraglide/runtime.js',
       'src/lib/paraglide/messages/**',
+      'src/paraglide/messages.js',
+      'src/paraglide/registry.js',
+      'src/paraglide/runtime.js',
+      'src/paraglide/server.js',
       'src/paraglide/messages/**'
     ]
   },
@@ -30,7 +44,17 @@ export default defineConfig(
   prettier,
   ...svelte.configs.prettier,
   {
-    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: {
+        // projectService: true is the modern way to handle type-aware linting
+        projectService: {
+          allowDefaultProject
+        },
+        extraFileExtensions: ['.svelte'],
+        svelteConfig
+      }
+    },
 
     rules: {
       // typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
@@ -38,6 +62,11 @@ export default defineConfig(
       'no-undef': 'off',
       // Disable for Tauri apps where base path handling is not needed
       'svelte/no-navigation-without-resolve': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
       // Allow unused variables that start with _
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -50,11 +79,49 @@ export default defineConfig(
 
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject
+        },
         extraFileExtensions: ['.svelte'],
         parser: ts.parser,
         svelteConfig
       }
+    },
+
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off'
+    }
+  },
+  {
+    files: ['**/__tests__/**', '**/*.test.ts', '**/*.test.svelte', '**/*.spec.ts'],
+
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off'
+    }
+  },
+  {
+    files: ['**/*.d.ts'],
+
+    rules: {
+      '@typescript-eslint/no-unsafe-return': 'off'
+    }
+  },
+  {
+    files: ['tools/**'],
+
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off'
     }
   }
 );

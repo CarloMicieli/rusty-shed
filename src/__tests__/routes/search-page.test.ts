@@ -50,7 +50,7 @@ vi.mock('$lib/features/search/components/SearchEmptyState.svelte', () => ({
 import { page as mockPageStoreRaw } from '$app/stores';
 
 // Cast to any to bypass strict SvelteKit types in tests
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockPageStore = mockPageStoreRaw as any;
 
 // ── Helpers ───────────────────────────────────────────────────

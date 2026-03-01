@@ -7,7 +7,7 @@ function makeItem(overrides: Partial<NavigationItem>): NavigationItem {
   return {
     id: 'test',
     label: () => 'Test',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     icon: null as any,
     href: '/test',
     isPrimary: false,

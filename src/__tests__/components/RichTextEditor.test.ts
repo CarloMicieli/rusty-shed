@@ -50,7 +50,6 @@ function getLastEditorInstance(): MockEditorInstance | null {
 }
 
 function setupEditorMock(overrides?: Partial<MockEditorInstance>): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (vi.mocked(Editor) as any).mockImplementation(function (options: any) {
     const instance: MockEditorInstance = {
       getMarkdown: vi.fn().mockReturnValue(options?.content ?? ''),

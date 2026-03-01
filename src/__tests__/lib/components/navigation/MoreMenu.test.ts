@@ -39,7 +39,7 @@ vi.mock('$lib/components/shadcn/sheet', () => ({
 }));
 
 // Mock icon component
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const MockIcon = class {} as any as typeof SvelteComponent<any>;
 
 const mockSecondaryItems: NavigationItem[] = [

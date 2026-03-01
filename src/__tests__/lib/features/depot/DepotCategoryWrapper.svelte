@@ -6,9 +6,9 @@
   let { value, title, icon, items, categoryId } = $props<{
     value: string;
     title: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     icon: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     items: any[];
     categoryId: string;
   }>();
