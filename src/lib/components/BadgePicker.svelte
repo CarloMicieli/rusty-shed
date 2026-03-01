@@ -16,7 +16,6 @@
    * />
    * ```
    */
-  import { untrack } from 'svelte';
   import * as m from '$lib/paraglide/messages';
   import { Pencil } from 'lucide-svelte';
 
@@ -38,11 +37,16 @@
 
   let isOpen = $state(false);
   let isSaving = $state(false);
-  /** Optimistic display value — reverted if onSelect rejects. */
-  let displayValue = $state(untrack(() => value));
+  /** Optimistic selected id/value — reverted if onSelect rejects. */
+  let selectedValue = $derived(value);
   let focusedIndex = $state(0);
   let triggerEl = $state<HTMLDivElement | null>(null);
   let listEl = $state<HTMLUListElement | null>(null);
+
+  let displayValue = $derived.by(() => {
+    const option = options.find((o) => o.id === selectedValue || o.label === selectedValue);
+    return option?.label ?? selectedValue;
+  });
 
   $effect(() => {
     if (isOpen && listEl) {
@@ -52,7 +56,7 @@
 
   function open() {
     if (isSaving) return;
-    focusedIndex = options.findIndex((o) => o.id === displayValue);
+    focusedIndex = options.findIndex((o) => o.id === selectedValue || o.label === selectedValue);
     if (focusedIndex < 0) focusedIndex = 0;
     isOpen = true;
   }
@@ -63,14 +67,14 @@
 
   async function select(id: string) {
     if (isSaving) return;
-    const previous = displayValue;
-    displayValue = options.find((o) => o.id === id)?.label ?? id;
+    const previous = selectedValue;
+    selectedValue = id;
     close();
     isSaving = true;
     try {
       await onSelect(id);
     } catch {
-      displayValue = previous;
+      selectedValue = previous;
     } finally {
       isSaving = false;
     }
@@ -155,9 +159,9 @@
         {#each options as option, i (option.id)}
           <li
             role="option"
-            aria-selected={option.label === displayValue || option.id === displayValue}
+            aria-selected={option.id === selectedValue || option.label === selectedValue}
             class="flex cursor-pointer items-center px-3 py-1.5 text-xs transition-colors
-              {option.label === displayValue || option.id === displayValue
+              {option.id === selectedValue || option.label === selectedValue
               ? 'bg-[rgba(212,138,66,0.2)] text-[#D48A42]'
               : 'text-[#E0E0E0]'}
               {i === focusedIndex ? 'bg-[rgba(212,138,66,0.1)]' : ''}

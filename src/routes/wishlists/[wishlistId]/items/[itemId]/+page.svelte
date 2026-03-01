@@ -32,6 +32,42 @@
 
   const displayModel = $derived(model ? toRailwayModel(model, null, imageResponse) : null);
 
+  async function loadData() {
+    const wishlistResult = await commands.getWishlistById(wishlistId);
+    if (wishlistResult.status !== 'ok' || !wishlistResult.data) {
+      notFound = true;
+      return;
+    }
+
+    const wishlistView = wishlistResult.data;
+    wishlistName = wishlistView.name;
+    const foundView = wishlistView.items?.find((i) => i.id === itemId) ?? null;
+
+    if (!foundView) {
+      notFound = true;
+      return;
+    }
+
+    notFound = false;
+    wishlistItem = normalizeItem(foundView);
+
+    const [modelResult, imageResult] = await Promise.all([
+      commands.getRailwayModelById(wishlistItem.railwayModelId, getLocale()),
+      commands.getRailwayModelImage(wishlistItem.railwayModelId)
+    ]);
+
+    if (modelResult.status === 'ok') model = modelResult.data;
+    if (imageResult.status === 'ok') imageResponse = imageResult.data;
+  }
+
+  async function handleModelUpdated() {
+    try {
+      await loadData();
+    } catch (e) {
+      error = e instanceof Error ? e.message : m.wishlist_item_error();
+    }
+  }
+
   function goBack() {
     goto('/wishlists');
   }
@@ -51,10 +87,7 @@
   }
 
   async function reloadItem() {
-    const wishlistResult = await commands.getWishlistById(wishlistId);
-    if (wishlistResult.status !== 'ok' || !wishlistResult.data) return;
-    const foundView = wishlistResult.data.items?.find((i) => i.id === itemId) ?? null;
-    if (foundView) wishlistItem = normalizeItem(foundView);
+    await loadData();
   }
 
   function handlePurchaseSuccess() {
@@ -64,30 +97,7 @@
 
   onMount(async () => {
     try {
-      const wishlistResult = await commands.getWishlistById(wishlistId);
-      if (wishlistResult.status !== 'ok' || !wishlistResult.data) {
-        notFound = true;
-        return;
-      }
-
-      const wishlistView = wishlistResult.data;
-      wishlistName = wishlistView.name;
-      const foundView = wishlistView.items?.find((i) => i.id === itemId) ?? null;
-
-      if (!foundView) {
-        notFound = true;
-        return;
-      }
-
-      wishlistItem = normalizeItem(foundView);
-
-      const [modelResult, imageResult] = await Promise.all([
-        commands.getRailwayModelById(wishlistItem.railwayModelId, getLocale()),
-        commands.getRailwayModelImage(wishlistItem.railwayModelId)
-      ]);
-
-      if (modelResult.status === 'ok') model = modelResult.data;
-      if (imageResult.status === 'ok') imageResponse = imageResult.data;
+      await loadData();
     } catch (e) {
       error = e instanceof Error ? e.message : m.wishlist_item_error();
     } finally {
@@ -141,7 +151,11 @@
       <!-- Left panel: Railway model card -->
       <div class="min-w-0 flex-1">
         {#if displayModel}
-          <RailwayModelCard model={displayModel} editable={true} />
+          <RailwayModelCard
+            model={displayModel}
+            editable={true}
+            onModelUpdated={handleModelUpdated}
+          />
         {/if}
       </div>
 

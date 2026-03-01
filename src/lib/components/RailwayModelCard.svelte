@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   /**
    * RailwayModelCard Component
    *
@@ -26,7 +27,6 @@
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
-  import TranslationsSection from '$lib/features/catalogue/components/TranslationsSection.svelte';
   import { commands, type Scale, type Language } from '$lib/bindings';
 
   interface RailwayModelCardProps {
@@ -44,6 +44,9 @@
 
     /** Callback when errors occur */
     onError?: (error: string) => void;
+
+    /** Callback after a successful model update */
+    onModelUpdated?: () => Promise<void> | void;
   }
 
   let {
@@ -51,7 +54,8 @@
     editable = false,
     class: className = '',
     onImageUploaded,
-    onError
+    onError,
+    onModelUpdated
   }: RailwayModelCardProps = $props();
 
   // Component-local state
@@ -68,6 +72,11 @@
   let localDetails = $state('');
   let localScale = $state('');
   let localEra = $state('');
+  let isEditingDescription = $state(false);
+  let descriptionDraft = $state('');
+  let isSavingDescription = $state(false);
+  let descriptionInput = $state<HTMLInputElement | null>(null);
+
   $effect(() => {
     localDescription = model.description ?? '';
     localDetails = model.details ?? '';
@@ -75,59 +84,17 @@
     localEra = model.era ?? '';
   });
 
-  // Translation edit state (used when editable=true)
-  let enDescription = $state<string | null>(null);
-  let enDetails = $state<string | null>(null);
-  let itDescription = $state<string | null>(null);
-  let itDetails = $state<string | null>(null);
-  let isSavingTranslations = $state(false);
-  let translationsLoaded = $state(false);
-
   $effect(() => {
-    if (editable && model.id && !translationsLoaded) {
-      void loadTranslations();
+    if (!isEditingDescription) {
+      descriptionDraft = localDescription;
     }
   });
 
-  async function loadTranslations() {
-    const result = await commands.getRailwayModelTranslations(model.id);
-    if (result.status === 'ok' && result.data) {
-      enDescription = result.data.en?.description ?? model.description ?? null;
-      enDetails = result.data.en?.details ?? model.details ?? null;
-      itDescription = result.data.it?.description ?? null;
-      itDetails = result.data.it?.details ?? null;
-    } else {
-      enDescription = model.description ?? null;
-      enDetails = model.details ?? null;
+  $effect(() => {
+    if (isEditingDescription) {
+      void tick().then(() => descriptionInput?.focus());
     }
-    translationsLoaded = true;
-  }
-
-  async function saveTranslations() {
-    isSavingTranslations = true;
-    try {
-      // Save EN
-      await commands.upsertRailwayModelTranslation({
-        railwayModelId: model.id,
-        lang: 'en',
-        description: enDescription ?? null,
-        details: enDetails ?? null
-      });
-      // Save IT (only if at least one field has content)
-      if (itDescription || itDetails) {
-        await commands.upsertRailwayModelTranslation({
-          railwayModelId: model.id,
-          lang: 'it',
-          description: itDescription ?? null,
-          details: itDetails ?? null
-        });
-      }
-      localDescription = enDescription ?? localDescription;
-      localDetails = enDetails ?? localDetails;
-    } finally {
-      isSavingTranslations = false;
-    }
-  }
+  });
 
   const scaleOptions = [
     { id: 'H0', label: 'H0 (1:87)' },
@@ -164,6 +131,10 @@
   // Derived values
   let isSingleUnit = $derived(model.rolling_stock?.length === 1);
 
+  async function notifyModelUpdated() {
+    await onModelUpdated?.();
+  }
+
   // Power method display label (amber badge)
   let powerMethodLabel = $derived.by((): string => {
     if (!model.power_method) return '';
@@ -195,9 +166,56 @@
       lang: getLocale()
     });
     if (result.status === 'error') {
-      throw new Error('Failed to save');
+      onError?.(m.details_save_failed());
+      throw new Error('Failed to save details');
     }
     localDetails = value;
+    await notifyModelUpdated();
+  }
+
+  function startDescriptionEditing() {
+    if (!editable || isSavingDescription) return;
+    descriptionDraft = localDescription;
+    isEditingDescription = true;
+  }
+
+  function cancelDescriptionEditing() {
+    descriptionDraft = localDescription;
+    isEditingDescription = false;
+  }
+
+  async function saveDescription() {
+    if (!isEditingDescription || isSavingDescription) return;
+
+    const value = descriptionDraft.trim();
+    if (!value) {
+      cancelDescriptionEditing();
+      return;
+    }
+
+    if (value === localDescription) {
+      isEditingDescription = false;
+      return;
+    }
+
+    isSavingDescription = true;
+    try {
+      const result = await commands.updateRailwayModelText({
+        railwayModelId: model.id,
+        field: 'Description',
+        value,
+        lang: getLocale()
+      });
+      if (result.status === 'error') {
+        onError?.(m.edit_save_error());
+        throw new Error('Failed to save description');
+      }
+      localDescription = value;
+      isEditingDescription = false;
+      await notifyModelUpdated();
+    } finally {
+      isSavingDescription = false;
+    }
   }
 
   async function saveScale(id: string) {
@@ -210,6 +228,7 @@
       throw new Error('Failed to save scale');
     }
     localScale = id;
+    await notifyModelUpdated();
   }
 
   async function saveEra(id: string) {
@@ -222,6 +241,7 @@
       throw new Error('Failed to save era');
     }
     localEra = id;
+    await notifyModelUpdated();
   }
 
   async function handleBrowseImage() {
@@ -274,6 +294,7 @@
           args: { modelId: model.id, fileName: file.name, fileData: bytes }
         });
         onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
+        await notifyModelUpdated();
       } catch (err) {
         console.error('Upload error:', err);
         onError?.(m.upload_error_unknown());
@@ -290,6 +311,7 @@
         args: { modelId: model.id, filePath: filePath }
       });
       onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
+      await notifyModelUpdated();
     } catch (err) {
       console.error('Upload error:', err);
       onError?.(m.upload_error_unknown());
@@ -308,14 +330,45 @@
         <span class="text-zinc-700" aria-hidden="true">·</span>
         <span class="font-mono text-xs text-zinc-500">{model.product_code}</span>
       </div>
-      {#if model.description}
-        <p class="mt-0.5 line-clamp-1 text-sm text-zinc-400">
-          {model.description}
-          {#if model.descriptionLang !== currentLocale}
-            <LanguageFallbackBadge lang={model.descriptionLang} />
+      <div class="mt-0.5">
+        {#if editable}
+          {#if isEditingDescription}
+            <input
+              bind:this={descriptionInput}
+              class="w-full rounded-sm border border-zinc-700 bg-zinc-900/70 px-1.5 py-0.5 text-sm text-zinc-200 outline-none focus:border-[#E2994F]"
+              bind:value={descriptionDraft}
+              onblur={saveDescription}
+              onkeydown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void saveDescription();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  cancelDescriptionEditing();
+                }
+              }}
+              disabled={isSavingDescription}
+            />
+          {:else}
+            <button
+              type="button"
+              class="line-clamp-1 cursor-text text-left text-sm text-zinc-400 transition-colors hover:text-zinc-300"
+              onclick={startDescriptionEditing}
+            >
+              {localDescription || m.details_placeholder()}
+            </button>
           {/if}
-        </p>
-      {/if}
+        {:else if localDescription}
+          <p class="line-clamp-1 text-sm text-zinc-400">{localDescription}</p>
+        {/if}
+
+        {#if localDescription && model.descriptionLang !== currentLocale}
+          <div class="mt-1">
+            <LanguageFallbackBadge lang={model.descriptionLang} />
+          </div>
+        {/if}
+      </div>
     </div>
 
     <!-- Amber power method badge -->
@@ -453,45 +506,20 @@
 
       <!-- ── Tab 1: Model Details ─────────────────────────────────────── -->
       <TabsContent value="details" class="mt-2">
-        {#if editable}
-          <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-            {#if translationsLoaded}
-              <TranslationsSection
-                bind:enDescription
-                bind:enDetails
-                bind:itDescription
-                bind:itDetails
-              />
-              <div class="mt-3 flex justify-end">
-                <Button
-                  size="sm"
-                  disabled={isSavingTranslations}
-                  onclick={saveTranslations}
-                  class="bg-[#E2994F] text-black hover:bg-[#E2994F]/90"
-                >
-                  {isSavingTranslations ? '...' : 'Save Translations'}
-                </Button>
-              </div>
-            {:else}
-              <p class="text-xs text-zinc-500">Loading translations...</p>
-            {/if}
-          </div>
-        {:else}
-          <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-            {#if model.detailsLang && model.detailsLang !== currentLocale}
-              <div class="mb-2 flex items-center gap-1 text-xs text-zinc-500">
-                <span>{m.railway_model_field_details()}</span>
-                <LanguageFallbackBadge lang={model.detailsLang} />
-              </div>
-            {/if}
-            <RichTextEditor
-              value={localDetails}
-              editable={false}
-              placeholder={m.details_placeholder()}
-              onSave={saveDetails}
-            />
-          </div>
-        {/if}
+        <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+          {#if model.detailsLang && model.detailsLang !== currentLocale}
+            <div class="mb-2 flex items-center gap-1 text-xs text-zinc-500">
+              <span>{m.railway_model_field_details()}</span>
+              <LanguageFallbackBadge lang={model.detailsLang} />
+            </div>
+          {/if}
+          <RichTextEditor
+            value={localDetails}
+            {editable}
+            placeholder={m.details_placeholder()}
+            onSave={saveDetails}
+          />
+        </div>
       </TabsContent>
 
       <!-- ── Tab 2: Rolling Stock ─────────────────────────────────────── -->

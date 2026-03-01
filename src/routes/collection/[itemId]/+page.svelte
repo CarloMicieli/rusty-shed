@@ -32,41 +32,58 @@
     model ? toRailwayModel(model, collectionItem, imageResponse) : null
   );
 
+  async function loadData(options: { forceCollectionRefresh?: boolean } = {}) {
+    const { forceCollectionRefresh = false } = options;
+
+    if (forceCollectionRefresh) {
+      await collectionStore.refresh();
+    } else {
+      await collectionStore.fetch();
+    }
+
+    const found = collectionStore.getItemById(itemId);
+    if (!found) {
+      notFound = true;
+      return;
+    }
+
+    notFound = false;
+    collectionItem = found;
+
+    const railwayModelId = collectionItem.railwayModel.railwayModelId;
+    const sellerId =
+      collectionItem.purchaseInfo?.kind === 'purchased'
+        ? collectionItem.purchaseInfo.data.seller
+        : null;
+
+    const [modelResult, imageResult, sellerResult] = await Promise.all([
+      commands.getRailwayModelById(railwayModelId, getLocale()),
+      commands.getRailwayModelImage(railwayModelId),
+      sellerId
+        ? commands.getSellerById(sellerId)
+        : Promise.resolve({ status: 'ok' as const, data: null })
+    ]);
+
+    if (modelResult.status === 'ok') model = modelResult.data;
+    if (imageResult.status === 'ok') imageResponse = imageResult.data;
+    if (sellerResult.status === 'ok') seller = sellerResult.data;
+  }
+
+  async function handleModelUpdated() {
+    try {
+      await loadData({ forceCollectionRefresh: true });
+    } catch (e) {
+      error = e instanceof Error ? e.message : m.collection_item_error();
+    }
+  }
+
   function goBack() {
     goto('/collection');
   }
 
   onMount(async () => {
     try {
-      // 1. Ensure collection is loaded (cache-first)
-      await collectionStore.fetch();
-      const found = collectionStore.getItemById(itemId);
-
-      if (!found) {
-        notFound = true;
-        return;
-      }
-
-      collectionItem = found;
-
-      const railwayModelId = collectionItem.railwayModel.railwayModelId;
-      const sellerId =
-        collectionItem.purchaseInfo?.kind === 'purchased'
-          ? collectionItem.purchaseInfo.data.seller
-          : null;
-
-      // 2. Parallel fetch: model card data + seller
-      const [modelResult, imageResult, sellerResult] = await Promise.all([
-        commands.getRailwayModelById(railwayModelId, getLocale()),
-        commands.getRailwayModelImage(railwayModelId),
-        sellerId
-          ? commands.getSellerById(sellerId)
-          : Promise.resolve({ status: 'ok' as const, data: null })
-      ]);
-
-      if (modelResult.status === 'ok') model = modelResult.data;
-      if (imageResult.status === 'ok') imageResponse = imageResult.data;
-      if (sellerResult.status === 'ok') seller = sellerResult.data;
+      await loadData();
     } catch (e) {
       error = e instanceof Error ? e.message : m.collection_item_error();
     } finally {
@@ -122,7 +139,11 @@
       <!-- Left panel: Railway model card -->
       <div class="min-w-0 flex-1">
         {#if displayModel}
-          <RailwayModelCard model={displayModel} editable={true} />
+          <RailwayModelCard
+            model={displayModel}
+            editable={true}
+            onModelUpdated={handleModelUpdated}
+          />
         {/if}
       </div>
 
