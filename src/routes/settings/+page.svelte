@@ -14,9 +14,9 @@
     fetchSettings,
     saveSettings,
     type SettingsDto,
-    type UpdateSettingsPayload,
-    type LanguageCode
+    type UpdateSettingsPayload
   } from '$lib/services';
+  import type { Language } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { getToastMessage } from '$lib/services/errors';
   import * as m from '$lib/paraglide/messages.js';
@@ -71,7 +71,7 @@
     saving = false;
   }
 
-  async function syncLocale(language: LanguageCode) {
+  async function syncLocale(language: Language) {
     const nextLocale = language === 'en' || language === 'it' ? language : null;
     if (!nextLocale) return;
 

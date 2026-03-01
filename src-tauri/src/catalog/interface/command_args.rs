@@ -16,7 +16,7 @@ use crate::{
         RailwayModelId, RollingStockId, RollingStockSpecPatch,
     },
     catalog::domain::scale::Scale,
-    core::domain::domain_error::DomainError,
+    core::domain::{domain_error::DomainError, Language},
 };
 
 /// Arguments for creating a new railway model (transport from IPC to application).
@@ -911,9 +911,8 @@ pub struct UpdateRailwayModelTextArgs {
     /// New value. An empty string for `Details` clears the field; an empty
     /// string for `Description` is rejected by the domain.
     pub value: String,
-    /// Language code for the translation to update ("en" or "it").
-    #[garde(pattern(r"^(en|it)$"))]
-    pub lang: String,
+    /// Language code for the translation to update.
+    pub lang: Language,
 }
 
 impl From<UpdateRailwayModelTextArgs> for UpdateRailwayModelTextInput {
@@ -1113,9 +1112,9 @@ pub struct UpsertRailwayModelTranslationArgs {
     /// The railway model to update.
     #[garde(skip)]
     pub railway_model_id: RailwayModelId,
-    /// Language code ("en" or "it").
-    #[garde(pattern(r"^(en|it)$"))]
-    pub lang: String,
+    /// Language code.
+    #[garde(skip)]
+    pub lang: Language,
     /// Description text. Required non-empty for "en"; optional for "it".
     #[garde(skip)]
     pub description: Option<String>,

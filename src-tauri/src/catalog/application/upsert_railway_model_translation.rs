@@ -1,12 +1,12 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{domain_error::DomainError, Language};
 
 /// Input for [`UpsertRailwayModelTranslation::execute`].
 pub struct UpsertRailwayModelTranslationInput {
     /// The railway model to update.
     pub railway_model_id: RailwayModelId,
-    /// Language code ("en" or "it").
-    pub lang: String,
+    /// Language code.
+    pub lang: Language,
     /// Description text. Required non-empty for "en".
     pub description: Option<String>,
     /// Details text. Optional for all languages.
@@ -30,7 +30,7 @@ impl UpsertRailwayModelTranslation {
     where
         U: RailwayModelUowExt + Send,
     {
-        if input.lang == "en" {
+        if input.lang == Language::English {
             let desc = input.description.as_deref().unwrap_or("").trim();
             if desc.is_empty() {
                 return Err(DomainError::Validation(
@@ -41,8 +41,13 @@ impl UpsertRailwayModelTranslation {
 
         let mut repo = unit_of_work.railway_model_repository();
 
+        let lang_str = match input.lang {
+            Language::English => "en",
+            Language::Italian => "it",
+        };
+
         let mut model = repo
-            .find_by_id(&input.railway_model_id, &input.lang)
+            .find_by_id(&input.railway_model_id, lang_str)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),

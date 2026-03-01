@@ -6,9 +6,9 @@ use crate::collecting::domain::{
     PurchaseInfo, PurchasedInfo,
 };
 use crate::collecting::domain::{CollectionItem, NewCollectionItem};
-use crate::core::domain::EventEnvelope;
-use crate::core::domain::MonetaryAmount;
-use crate::core::domain::metadata::Metadata;
+use crate::core::domain::{EventEnvelope, MonetaryAmount, metadata::Metadata};
+#[allow(unused)]
+use crate::core::domain::Language;
 
 type CollectionDomainEvent = EventEnvelope<CollectionEvent>;
 
@@ -300,7 +300,7 @@ mod tests {
             ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test model".to_string(),
             },
             details: None,
@@ -362,7 +362,7 @@ mod tests {
             ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test model".to_string(),
             },
             details: None,

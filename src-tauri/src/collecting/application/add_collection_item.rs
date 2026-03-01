@@ -3,9 +3,9 @@ use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::collecting::domain::{CollectionId, NewCollectionItem};
 use crate::collecting::domain::{CollectionItemId, CollectionUowExt, PurchaseInfoId};
-use crate::core::domain::IdProvider;
-use crate::core::domain::MonetaryAmount;
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{IdProvider, MonetaryAmount, domain_error::DomainError};
+#[allow(unused)]
+use crate::core::domain::Language;
 use crate::sellers::domain::seller_id::SellerId;
 
 /// Command handler for adding an item to the collection.
@@ -172,7 +172,7 @@ mod tests {
             ),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test model".to_string(),
             },
             details: None,

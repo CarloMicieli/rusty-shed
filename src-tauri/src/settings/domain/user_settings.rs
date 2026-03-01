@@ -3,16 +3,7 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-/// Application display language
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type, Default)]
-#[serde(rename_all = "lowercase")]
-pub enum Language {
-    #[serde(rename = "en")]
-    #[default]
-    English,
-    #[serde(rename = "it")]
-    Italian,
-}
+use crate::core::domain::Language;
 
 /// Measurement system for dimensions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type, Default)]

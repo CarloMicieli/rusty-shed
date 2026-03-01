@@ -98,7 +98,7 @@ export const commands = {
    */
   async getRailwayModelById(
     railwayModelId: RailwayModelId,
-    lang: string
+    lang: Language
   ): Promise<Result<RailwayModelView | null, CommandError>> {
     try {
       return {
@@ -3527,9 +3527,9 @@ export type GlobalSearchArgs = {
    */
   query: string;
   /**
-   * BCP-47 language tag forwarded from the frontend locale (e.g. "en", "it").
+   * Language for the search.
    */
-  lang: string;
+  lang: Language;
 };
 /**
  * A single search result item returned by the `global_search` command.
@@ -4740,7 +4740,7 @@ export type RailwayModelView = {
    * The actual language code of the resolved description.
    * May differ from the requested language when fallback to English applies.
    */
-  descriptionLang: string;
+  descriptionLang: Language;
   /**
    * Optional longer details or notes about the model (resolved text).
    */
@@ -4748,7 +4748,7 @@ export type RailwayModelView = {
   /**
    * The actual language code of the resolved details, if details are present.
    */
-  detailsLang: string | null;
+  detailsLang: Language | null;
   /**
    * Power method used by the model (e.g. DC, AC).
    */
@@ -5873,9 +5873,9 @@ export type UpdateRailwayModelTextArgs = {
    */
   value: string;
   /**
-   * Language code for the translation to update ("en" or "it").
+   * Language code for the translation to update.
    */
-  lang: string;
+  lang: Language;
 };
 /**
  * Arguments for updating a rolling stock's identification fields (series_code, road_number,
@@ -6001,9 +6001,9 @@ export type UpsertRailwayModelTranslationArgs = {
    */
   railwayModelId: RailwayModelId;
   /**
-   * Language code ("en" or "it").
+   * Language code.
    */
-  lang: string;
+  lang: Language;
   /**
    * Description text. Required non-empty for "en"; optional for "it".
    */

@@ -9,7 +9,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::railway_model::{RollingStockId, RollingStockParams};
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{domain_error::DomainError, Language};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -77,7 +77,7 @@ impl RailwayModel {
     /// when both resolve to `None` the repository will delete the translation row.
     pub fn upsert_translation(
         &mut self,
-        lang: String,
+        lang: Language,
         description: Option<String>,
         details: Option<String>,
     ) {
@@ -102,9 +102,9 @@ impl RailwayModel {
                 "description must not be empty".to_string(),
             ));
         }
-        let lang = self.description.lang.clone();
+        let lang = self.description.lang;
         self.description = LocalizedField {
-            lang: lang.clone(),
+            lang,
             value: trimmed.clone(),
         };
         self.upsert_translation(lang, Some(trimmed), None);
@@ -113,9 +113,9 @@ impl RailwayModel {
 
     /// Update details and emit a `TranslationUpserted` event for the aggregate's current language.
     pub fn update_details(&mut self, details: Option<String>) {
-        let lang = self.description.lang.clone();
+        let lang = self.description.lang;
         self.details = details.clone().map(|v| LocalizedField {
-            lang: lang.clone(),
+            lang,
             value: v,
         });
         self.upsert_translation(lang, None, details);
@@ -318,11 +318,11 @@ mod tests {
             manufacturer_id,
             product_code,
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "A test model".to_string(),
             },
             details: Some(LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Some details".to_string(),
             }),
             power_method: PowerMethod::DC,
@@ -371,7 +371,7 @@ mod tests {
                 description, lang, ..
             } => {
                 assert_eq!(description.as_deref(), Some("new description"));
-                assert_eq!(lang, "en");
+                assert_eq!(*lang, Language::English);
             }
             _ => panic!("expected TranslationUpserted"),
         }

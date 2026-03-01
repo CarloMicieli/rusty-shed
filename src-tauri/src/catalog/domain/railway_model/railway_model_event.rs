@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::catalog::domain::railway_model::{
     RailwayModelId, RailwayModelParams, RollingStockId, RollingStockParams,
 };
+use crate::core::domain::Language;
 
 /// Domain events for `RailwayModel` aggregate.
 #[derive(Debug, Clone)]
@@ -49,8 +50,8 @@ pub enum RailwayModelEvent {
         event_id: Uuid,
         railway_model_id: RailwayModelId,
         timestamp: NaiveDateTime,
-        /// The language code being upserted ("en" or "it").
-        lang: String,
+        /// The language code being upserted.
+        lang: Language,
         /// New description for this language. `None` means leave unchanged; `Some("")` clears it.
         description: Option<String>,
         /// New details for this language. `None` means leave unchanged; `Some("")` clears it.

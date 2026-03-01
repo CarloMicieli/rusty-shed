@@ -1,6 +1,8 @@
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 
+use crate::core::domain::Language;
+
 /// Transport arguments for the `global_search` Tauri command.
 ///
 /// Validated with `garde` at the transport boundary before any database access.
@@ -10,9 +12,9 @@ pub struct GlobalSearchArgs {
     /// Raw search term entered by the user. Must be 2–500 characters.
     #[garde(length(min = 2, max = 500))]
     pub query: String,
-    /// BCP-47 language tag forwarded from the frontend locale (e.g. "en", "it").
-    #[garde(length(min = 2, max = 10))]
-    pub lang: String,
+    /// Language for the search.
+    #[garde(skip)]
+    pub lang: Language,
 }
 
 /// A single search result item returned by the `global_search` command.

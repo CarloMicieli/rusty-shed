@@ -22,7 +22,6 @@ export type {
   MeasureUnit,
   PowerMethod,
   Scale,
-  LanguageCode,
   ThemeValue
 } from './settings';
 export { exportDatabase, importDatabase } from './database-backup';

@@ -1,6 +1,8 @@
 use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayCompanyUowExt};
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt, RollingStockId};
 use crate::core::domain::domain_error::DomainError;
+#[allow(unused)]
+use crate::core::domain::Language;
 
 /// Input for [`UpdateRollingStockRailwayCompany::execute`].
 pub struct UpdateRollingStockRailwayCompanyInput {
@@ -109,7 +111,7 @@ mod tests {
             manufacturer_id: manufacturer,
             product_code: product,
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test".to_string(),
             },
             details: None,

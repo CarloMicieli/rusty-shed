@@ -1,7 +1,8 @@
 //! Update settings use case
 
+use crate::core::domain::Language;
 use crate::settings::domain::user_settings::{
-    AppTheme, Language, MeasureUnit, PowerSystem, UserSettings,
+    AppTheme, MeasureUnit, PowerSystem, UserSettings,
 };
 use crate::settings::infrastructure::{SettingsRepository, StoreSettingsRepository};
 use serde::{Deserialize, Serialize};

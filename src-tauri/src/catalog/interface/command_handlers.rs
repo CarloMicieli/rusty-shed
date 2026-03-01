@@ -13,6 +13,7 @@ use crate::catalog::interface::{
     UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockSpecificationsArgs,
     UpsertRailwayModelTranslationArgs,
 };
+use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use garde::Validate;
@@ -41,15 +42,18 @@ use log::info;
 pub async fn get_railway_model_by_id(
     state: tauri::State<'_, AppState>,
     railway_model_id: RailwayModelId,
-    lang: String,
+    lang: Language,
 ) -> Result<Option<RailwayModelView>, CommandError> {
     info!("Fetching railway model with ID: {}", railway_model_id);
 
-    let lang = if lang == "it" { "it" } else { "en" };
+    let lang_str = match lang {
+        Language::English => "en",
+        Language::Italian => "it",
+    };
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model =
-        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id, lang).await?;
+        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id, lang_str).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model)

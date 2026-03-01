@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{domain_error::DomainError, Language};
 use serde::Deserialize;
 use specta::Type;
 
@@ -23,8 +23,8 @@ pub struct UpdateRailwayModelTextInput {
     /// New value.  For `Details`, an empty string means "clear to `None`".
     /// For `Description`, must be non-empty (validated by the domain).
     pub value: String,
-    /// Language code for the translation to update ("en" or "it").
-    pub lang: String,
+    /// Language code for the translation to update.
+    pub lang: Language,
 }
 
 /// Use case that updates a single free-text field on a [`RailwayModel`] aggregate.
@@ -46,8 +46,13 @@ impl UpdateRailwayModelText {
     {
         let mut repo = unit_of_work.railway_model_repository();
 
+        let lang_str = match input.lang {
+            Language::English => "en",
+            Language::Italian => "it",
+        };
+
         let mut model = repo
-            .find_by_id(&input.railway_model_id, &input.lang)
+            .find_by_id(&input.railway_model_id, lang_str)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),
@@ -92,7 +97,7 @@ mod tests {
             manufacturer_id: manufacturer,
             product_code: product,
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: description.to_string(),
             },
             details: None,
@@ -130,7 +135,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Description,
                 value: "New description".to_string(),
-                lang: "en".to_string(),
+                lang: Language::English,
             },
         )
         .await
@@ -161,7 +166,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Description,
                 value: "".to_string(),
-                lang: "en".to_string(),
+                lang: Language::English,
             },
         )
         .await
@@ -182,7 +187,7 @@ mod tests {
         .unwrap();
         let mut model = make_model(id.clone(), "Desc");
         model.details = Some(LocalizedField {
-            lang: "en".to_string(),
+            lang: Language::English,
             value: "Old details".to_string(),
         });
 
@@ -200,7 +205,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Details,
                 value: "".to_string(),
-                lang: "en".to_string(),
+                lang: Language::English,
             },
         )
         .await
@@ -227,7 +232,7 @@ mod tests {
                 railway_model_id: id,
                 field: RailwayModelTextField::Description,
                 value: "anything".to_string(),
-                lang: "en".to_string(),
+                lang: Language::English,
             },
         )
         .await

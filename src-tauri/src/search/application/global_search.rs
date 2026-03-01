@@ -1,4 +1,4 @@
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{domain_error::DomainError, Language};
 use crate::search::domain::global_search_result::GlobalSearchResult;
 use crate::search::domain::repository::GlobalSearchUowExt;
 
@@ -6,8 +6,8 @@ use crate::search::domain::repository::GlobalSearchUowExt;
 pub struct GlobalSearchInput {
     /// Raw query string, already validated (min 2, max 500 chars).
     pub query: String,
-    /// BCP-47 language tag, e.g. `"en"`, `"it"`.
-    pub lang: String,
+    /// Language for the search.
+    pub lang: Language,
 }
 
 /// Use case that performs a cross-domain full-text search over the collection and wishlist.
@@ -46,7 +46,12 @@ impl GlobalSearch {
         // so "diesel loco" becomes `"diesel loco"*` (phrase + prefix matching).
         let fts_query = format!("\"{}\"*", input.query.trim());
 
+        let lang_str = match input.lang {
+            Language::English => "en",
+            Language::Italian => "it",
+        };
+
         let mut repo = unit_of_work.global_search_repo();
-        repo.search(&fts_query, &input.lang).await
+        repo.search(&fts_query, lang_str).await
     }
 }

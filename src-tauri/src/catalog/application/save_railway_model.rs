@@ -9,7 +9,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::domain::{manufacturer::ManufacturerId, railway_company::RailwayCompanyId};
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{domain_error::DomainError, Language};
 use chrono::Utc;
 use serde::Deserialize;
 use serde_json::json;
@@ -87,7 +87,7 @@ impl SaveRailwayModel {
 
             if aggregate.description.value != input.description {
                 aggregate.description = LocalizedField {
-                    lang: aggregate.description.lang.clone(),
+                    lang: aggregate.description.lang,
                     value: input.description.clone(),
                 };
                 changed.insert("description".to_string(), json!(input.description));
@@ -380,14 +380,14 @@ impl SaveRailwayModel {
                 manufacturer_id: railway_model_params.manufacturer_id.clone(),
                 product_code: railway_model_params.product_code.clone(),
                 description: LocalizedField {
-                    lang: "en".to_string(),
+                    lang: Language::English,
                     value: railway_model_params.description.clone(),
                 },
                 details: railway_model_params
                     .details
                     .clone()
                     .map(|v| LocalizedField {
-                        lang: "en".to_string(),
+                        lang: Language::English,
                         value: v,
                     }),
                 power_method: railway_model_params.power_method,
@@ -467,7 +467,7 @@ mod tests {
             manufacturer_id: manufacturer.clone(),
             product_code: product.clone(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Old desc".to_string(),
             },
             details: None,

@@ -1,3 +1,4 @@
+import type { Language } from '$lib/bindings';
 import type { ThemeValue } from '$lib/types/theme';
 export type { ThemeValue };
 import type { SafeResult } from './errors';
@@ -7,11 +8,10 @@ export type Currency = 'EUR' | 'USD' | 'GBP' | 'JPY';
 export type MeasureUnit = 'Metric' | 'Imperial';
 export type PowerMethod = 'AC' | 'DC' | 'DCC';
 export type Scale = 'H0' | 'H0m' | 'H0e' | 'N' | 'TT' | 'Z' | 'G' | '1' | '0' | '00';
-export type LanguageCode = 'en' | 'it' | string;
 
 export interface SettingsDto {
   currency: Currency;
-  language: LanguageCode;
+  language: Language;
   theme: ThemeValue;
   measureUnit: MeasureUnit;
   favouriteScale: Scale;

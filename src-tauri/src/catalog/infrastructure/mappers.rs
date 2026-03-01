@@ -7,8 +7,7 @@ use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
 use crate::catalog::domain::railway_model::localized_field::LocalizedField;
-use crate::core::domain::domain_error::DomainError;
-use crate::core::domain::metadata::Metadata;
+use crate::core::domain::{domain_error::DomainError, metadata::Metadata, Language};
 use chrono::{DateTime, Utc};
 use url::Url;
 
@@ -68,12 +67,15 @@ impl TryFrom<RailwayModelRow> for RailwayModel {
     type Error = DomainError;
 
     fn try_from(row: RailwayModelRow) -> Result<Self, Self::Error> {
+        let lang = Language::try_from(row.resolved_lang.as_str())
+            .unwrap_or(Language::English);
+
         let description = LocalizedField {
-            lang: row.resolved_lang.clone(),
+            lang,
             value: row.description.unwrap_or_default(),
         };
         let details = row.details.map(|v| LocalizedField {
-            lang: row.resolved_lang.clone(),
+            lang,
             value: v,
         });
         Ok(RailwayModel {
@@ -378,7 +380,7 @@ mod tests {
             assert_eq!(domain.manufacturer_id, manufacturer_id);
             assert_eq!(domain.product_code, product_code);
             assert_eq!(domain.description.value, "Test model");
-            assert_eq!(domain.description.lang, "en");
+            assert_eq!(domain.description.lang, Language::English);
             assert_eq!(
                 domain.details.as_ref().map(|d| d.value.as_str()),
                 Some("Detailed description")

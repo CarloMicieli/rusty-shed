@@ -5,9 +5,9 @@ use crate::collecting::domain::CollectionUowExt;
 use crate::collecting::domain::ModelCondition;
 use crate::collecting::domain::PurchaseCondition;
 use crate::collecting::domain::{CollectionItemId, PurchaseInfoId};
-use crate::core::domain::IdProvider;
-use crate::core::domain::MonetaryAmount;
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{IdProvider, MonetaryAmount, domain_error::DomainError};
+#[allow(unused)]
+use crate::core::domain::Language;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::wishlist::domain::repository::WishlistUowExt;
 use crate::wishlist::domain::wishlist_id::WishlistId;
@@ -169,7 +169,7 @@ mod tests {
             manufacturer_id: ManufacturerId::try_from("trn:manufacturer:not-a-trn").unwrap(),
             product_code: ProductCode::try_from("P100").unwrap(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test model".to_string(),
             },
             details: None,

@@ -7,7 +7,7 @@ use crate::catalog::domain::railway_model::{
     TechnicalSpecifications,
 };
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::metadata::Metadata;
+use crate::core::domain::{metadata::Metadata, Language};
 use serde::Serialize;
 
 /// A UI-focused view of a railway model used by the frontend.
@@ -28,13 +28,13 @@ pub struct RailwayModelView {
 
     /// The actual language code of the resolved description.
     /// May differ from the requested language when fallback to English applies.
-    pub description_lang: String,
+    pub description_lang: Language,
 
     /// Optional longer details or notes about the model (resolved text).
     pub details: Option<String>,
 
     /// The actual language code of the resolved details, if details are present.
-    pub details_lang: Option<String>,
+    pub details_lang: Option<Language>,
 
     /// Power method used by the model (e.g. DC, AC).
     pub power_method: PowerMethod,
@@ -319,7 +319,7 @@ mod tests {
             manufacturer: sample_manufacturer(),
             product_code: ProductCode::try_from("PC-1").unwrap(),
             description: "desc".into(),
-            description_lang: "en".into(),
+            description_lang: Language::English,
             details: None,
             details_lang: None,
             power_method: PowerMethod::DC,
@@ -345,7 +345,7 @@ mod tests {
             manufacturer: sample_manufacturer(),
             product_code: ProductCode::try_from("PC-1").unwrap(),
             description: "desc".into(),
-            description_lang: "en".into(),
+            description_lang: Language::English,
             details: None,
             details_lang: None,
             power_method: PowerMethod::DC,

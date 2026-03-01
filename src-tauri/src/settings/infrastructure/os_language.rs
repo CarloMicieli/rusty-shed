@@ -1,6 +1,6 @@
 //! OS language detection using tauri-plugin-os
 
-use crate::settings::domain::user_settings::Language;
+use crate::core::domain::Language;
 
 /// Detect OS language using tauri-plugin-os
 pub fn detect_os_language() -> Language {

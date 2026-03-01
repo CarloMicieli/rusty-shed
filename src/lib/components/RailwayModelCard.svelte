@@ -27,7 +27,7 @@
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
   import TranslationsSection from '$lib/features/catalogue/components/TranslationsSection.svelte';
-  import { commands, type Scale } from '$lib/bindings';
+  import { commands, type Scale, type Language } from '$lib/bindings';
 
   interface RailwayModelCardProps {
     /** The railway model to display */
@@ -59,6 +59,9 @@
   let isDragging = $state(false);
   let isUploading = $state(false);
   let _uploadProgress = $state(0);
+
+  // Current locale as Language type
+  const currentLocale = getLocale() as Language;
 
   // Local copies of editable text fields — updated optimistically on successful save
   let localDescription = $state('');
@@ -308,7 +311,7 @@
       {#if model.description}
         <p class="mt-0.5 line-clamp-1 text-sm text-zinc-400">
           {model.description}
-          {#if model.descriptionLang !== getLocale()}
+          {#if model.descriptionLang !== currentLocale}
             <LanguageFallbackBadge lang={model.descriptionLang} />
           {/if}
         </p>
@@ -475,7 +478,7 @@
           </div>
         {:else}
           <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-            {#if model.detailsLang && model.detailsLang !== getLocale()}
+            {#if model.detailsLang && model.detailsLang !== currentLocale}
               <div class="mb-2 flex items-center gap-1 text-xs text-zinc-500">
                 <span>{m.railway_model_field_details()}</span>
                 <LanguageFallbackBadge lang={model.detailsLang} />

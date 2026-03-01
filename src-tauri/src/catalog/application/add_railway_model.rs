@@ -11,8 +11,7 @@ use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelParams, RollingStockParams,
 };
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::domain_error::DomainError;
-use crate::core::domain::validation::ValidationContext;
+use crate::core::domain::{domain_error::DomainError, validation::ValidationContext, Language};
 use chrono::Utc;
 use uuid::Uuid;
 
@@ -99,14 +98,14 @@ impl AddRailwayModel {
             manufacturer_id: railway_model_params.manufacturer_id.clone(),
             product_code: railway_model_params.product_code.clone(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: railway_model_params.description.clone(),
             },
             details: railway_model_params
                 .details
                 .clone()
                 .map(|v| LocalizedField {
-                    lang: "en".to_string(),
+                    lang: Language::English,
                     value: v,
                 }),
             power_method: railway_model_params.power_method,

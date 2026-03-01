@@ -4,6 +4,8 @@
  *
  * TODO: Map from RailwayModelView (bindings.ts) to this simplified structure
  */
+import type { Language } from '$lib/bindings';
+
 export interface RailwayModel {
   id: string;
   manufacturer: string;
@@ -13,9 +15,9 @@ export interface RailwayModel {
   power_method: string | null;
   category: string | null;
   description: string | null;
-  descriptionLang: string;
+  descriptionLang: Language;
   details: string | null;
-  detailsLang: string | null;
+  detailsLang: Language | null;
   image_path: string | null;
   status: 'InCollection' | 'Wishlist';
   rolling_stock: RollingStock[];

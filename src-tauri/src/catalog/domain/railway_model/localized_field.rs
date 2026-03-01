@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::core::domain::Language;
+
 /// A text value resolved to a specific language code.
 ///
 /// The `lang` field records which language was actually resolved,
@@ -7,8 +9,8 @@ use serde::{Deserialize, Serialize};
 /// from the user's requested language.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 pub struct LocalizedField {
-    /// The language code that was resolved (e.g. "en" or "it").
-    pub lang: String,
+    /// The language code that was resolved.
+    pub lang: Language,
     /// The text content in the resolved language.
     pub value: String,
 }

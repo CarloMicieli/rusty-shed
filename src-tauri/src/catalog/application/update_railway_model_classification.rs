@@ -1,6 +1,8 @@
 use crate::catalog::domain::railway_model::{Epoch, RailwayModelId, RailwayModelUowExt};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
+#[allow(unused)]
+use crate::core::domain::Language;
 
 /// Input for [`UpdateRailwayModelClassification::execute`].
 pub struct UpdateRailwayModelClassificationInput {
@@ -80,7 +82,7 @@ mod tests {
             manufacturer_id: manufacturer,
             product_code: product,
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test model".to_string(),
             },
             details: None,

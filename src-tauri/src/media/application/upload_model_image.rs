@@ -4,6 +4,8 @@
 
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
+#[allow(unused)]
+use crate::core::domain::Language;
 use crate::media::domain::image_validation::{
     ImageFormat, ImageValidator, ModelImagePath, StorageError, ValidationError,
 };
@@ -341,7 +343,7 @@ mod tests {
             ),
             product_code: ProductCode::try_from("39216").unwrap(),
             description: LocalizedField {
-                lang: "en".to_string(),
+                lang: Language::English,
                 value: "Test model".to_string(),
             },
             details: None,

@@ -11,7 +11,7 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
-use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::{domain_error::DomainError, Language};
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::search::infrastructure::rebuild_search_index;
 use chrono::TimeZone;
@@ -779,14 +779,17 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 updated_at: chrono::Utc.from_utc_datetime(&row.updated_at),
             };
 
-            let description_lang = row.resolved_lang.clone();
-            let details_lang = row.details.as_ref().map(|_| row.resolved_lang.clone());
+            let lang = Language::try_from(row.resolved_lang.as_str())
+                .unwrap_or(Language::English);
+
+            let details_lang = row.details.as_ref().map(|_| lang);
+
             let view = RailwayModelView {
                 id: row.id,
                 manufacturer,
                 product_code: row.product_code,
                 description: row.description.unwrap_or_default(),
-                description_lang,
+                description_lang: lang,
                 details: row.details,
                 details_lang,
                 power_method: row.power_method,
@@ -871,6 +874,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 } => {
                     // When both fields are None, delete the translation row.
                     // Otherwise upsert using INSERT OR REPLACE.
+                    let lang_str = lang.to_string();
                     let desc_empty = description.as_deref().map(|s| s.is_empty()).unwrap_or(true);
                     let details_empty = details.as_deref().map(|s| s.is_empty()).unwrap_or(true);
 
@@ -883,7 +887,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                                WHERE railway_model_id = ?1 AND language_code = ?2"#,
                         )
                         .bind(&railway_model_id)
-                        .bind(&lang)
+                        .bind(&lang_str)
                         .execute(&mut *self.executor)
                         .await
                         .map_err(DomainError::from)?;
@@ -900,7 +904,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                                    updated_at  = CURRENT_TIMESTAMP"#,
                         )
                         .bind(&railway_model_id)
-                        .bind(&lang)
+                        .bind(&lang_str)
                         .bind(&description)
                         .bind(&details)
                         .execute(&mut *self.executor)

@@ -1,9 +1,10 @@
 <script lang="ts">
+  import type { Language } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {
-    /** The actual language of the content (e.g. "en") */
-    lang: string;
+    /** The actual language of the content */
+    lang: Language;
   }
 
   let { lang }: Props = $props();

@@ -1,5 +1,5 @@
 import { getContext, setContext } from 'svelte';
-import { commands, type GlobalSearchResultView } from '$lib/bindings';
+import { commands, type GlobalSearchResultView, type Language } from '$lib/bindings';
 
 const SEARCH_CTX = Symbol('search-service');
 
@@ -39,9 +39,9 @@ export class SearchService {
    * Execute a global search.
    *
    * @param query - The user's search string (must be ≥ 2 characters)
-   * @param lang  - BCP-47 language tag for localised display names
+   * @param lang  - Language for localised display names
    */
-  async search(query: string, lang: string): Promise<void> {
+  async search(query: string, lang: Language): Promise<void> {
     const trimmed = query.trim();
     if (trimmed.length < 2) return;
 

@@ -1,8 +1,9 @@
 /**
- * Settings types (manual definitions until specta export is fixed)
+ * Settings types
  */
 
-export type Language = 'en' | 'it';
+import type { Language } from '$lib/bindings';
+
 export type MeasureUnit = 'Metric' | 'Imperial';
 export type PowerSystem = 'DC' | 'AC' | 'DCC';
 
