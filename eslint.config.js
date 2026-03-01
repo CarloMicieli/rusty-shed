@@ -23,6 +23,7 @@ export default defineConfig(
   {
     // Ignore auto-generated Tauri bindings and build output
     ignores: [
+      'eslint.config.js',
       'src/lib/bindings.ts',
       'build/**',
       'specs/**',
