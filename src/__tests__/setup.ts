@@ -1,6 +1,10 @@
 import { vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
+// Ensure BROWSER is set so bits-ui knows we're in a browser context
+const globalWithBrowser = globalThis as typeof globalThis & { BROWSER?: boolean };
+globalWithBrowser.BROWSER = true;
+
 type TauriInternals = {
   invoke: ReturnType<typeof vi.fn>;
   convertFileSrc: ReturnType<typeof vi.fn>;
@@ -71,5 +75,13 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // Clear any pending timers (bits-ui cleanup)
+  vi.clearAllTimers();
   vi.restoreAllMocks();
+
+  // Clean up any document/body styles set by bits-ui
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.removeAttribute('style');
+    document.body.style.removeProperty('--scrollbar-width');
+  }
 });
