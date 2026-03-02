@@ -71,12 +71,17 @@ if (!Element.prototype.animate) {
 
 // Reset all mocks between tests
 beforeEach(() => {
+  // Use fake timers so vi.clearAllTimers() can cancel bits-ui's deferred DOM
+  // cleanup (body-scroll-lock uses setTimeout). shouldAdvanceTime keeps the
+  // fake clock in sync with wall-clock time so userEvent/waitFor still work.
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.clearAllMocks();
 });
 
 afterEach(() => {
-  // Clear any pending timers (bits-ui cleanup)
+  // Clear any pending timers (bits-ui cleanup) — works because fake timers are active
   vi.clearAllTimers();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 
   // Clean up any document/body styles set by bits-ui
