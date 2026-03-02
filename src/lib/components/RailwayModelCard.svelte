@@ -27,7 +27,8 @@
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
-  import { commands, type Scale, type Language } from '$lib/bindings';
+  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import { commands, type Scale, type Language, type RollingStockView } from '$lib/bindings';
 
   interface RailwayModelCardProps {
     /** The railway model to display */
@@ -96,6 +97,17 @@
     }
   });
 
+  // Load rolling stock specs when editable=true
+  $effect(() => {
+    if (editable && model.rolling_stock) {
+      for (const unit of model.rolling_stock) {
+        if (!rollingStockSpecLoaded.has(unit.id)) {
+          void loadRollingStockSpec(unit.id);
+        }
+      }
+    }
+  });
+
   const scaleOptions = [
     { id: 'H0', label: 'H0 (1:87)' },
     { id: 'H0m', label: 'H0m (1:87)' },
@@ -130,6 +142,230 @@
 
   // Derived values
   let isSingleUnit = $derived(model.rolling_stock?.length === 1);
+
+  // ── Rolling Stock Edit State ────────────────────────────────────────────────────
+  // Per-unit spec state: maps unit.id → FormState
+  interface RsFormState {
+    seriesCode: string;
+    roadNumber: string;
+    livery: string;
+    depot: string;
+    flywheelFitted: boolean | null;
+    bodyShell: string;
+    chassis: string;
+    interiorLights: string;
+    lights: string;
+    dccInterface: string;
+    control: string;
+    couplingSocket: string;
+    closeCouplers: boolean | null;
+    digitalShunting: boolean | null;
+  }
+
+  let rollingStockFormState = $state<Map<string, RsFormState>>(new Map());
+  let rollingStockSpecLoaded = $state<Set<string>>(new Set());
+
+  // Option lists for rolling stock fields
+  const controlOptions = [
+    { id: '', label: '—' },
+    { id: 'DCC_READY', label: 'DCC Ready' },
+    { id: 'DCC_FITTED', label: 'DCC Fitted' },
+    { id: 'DCC_SOUND', label: 'DCC Sound' },
+    { id: 'NO_DCC', label: 'Analogue (No DCC)' }
+  ];
+
+  const dccInterfaceOptions = [
+    { id: '', label: '—' },
+    { id: 'NEM_651', label: 'NEM 651' },
+    { id: 'NEM_652', label: 'NEM 652' },
+    { id: 'NEM_654', label: 'NEM 654' },
+    { id: 'PLUX_8', label: 'PLUX 8' },
+    { id: 'PLUX_12', label: 'PLUX 12' },
+    { id: 'PLUX_16', label: 'PLUX 16' },
+    { id: 'PLUX_22', label: 'PLUX 22' },
+    { id: 'NEXT_18', label: 'Next18' },
+    { id: 'NEXT_18_S', label: 'Next18-S' },
+    { id: 'MTC_21', label: 'MTC 21' }
+  ];
+
+  const couplingSockeOptions = [
+    { id: '', label: '—' },
+    { id: 'NONE', label: 'None' },
+    { id: 'NEM_355', label: 'NEM 355' },
+    { id: 'NEM_356', label: 'NEM 356' },
+    { id: 'NEM_357', label: 'NEM 357' },
+    { id: 'NEM_359', label: 'NEM 359' },
+    { id: 'NEM_360', label: 'NEM 360' },
+    { id: 'NEM_362', label: 'NEM 362' },
+    { id: 'NEM_365', label: 'NEM 365' }
+  ];
+
+  function getEmptyRsForm(): RsFormState {
+    return {
+      seriesCode: '',
+      roadNumber: '',
+      livery: '',
+      depot: '',
+      flywheelFitted: null,
+      bodyShell: '',
+      chassis: '',
+      interiorLights: '',
+      lights: '',
+      dccInterface: '',
+      control: '',
+      couplingSocket: '',
+      closeCouplers: null,
+      digitalShunting: null
+    };
+  }
+
+  function extractRsDataFromView(view: RollingStockView): RsFormState {
+    let rs;
+    if ('locomotive' in view) rs = view.locomotive;
+    else if ('electricMultipleUnit' in view) rs = view.electricMultipleUnit;
+    else if ('freightCar' in view) rs = view.freightCar;
+    else if ('passengerCar' in view) rs = view.passengerCar;
+    else if ('railcar' in view) rs = view.railcar;
+    else return getEmptyRsForm();
+
+    const ts = rs.technical_specifications;
+    return {
+      seriesCode: rs.series_code,
+      roadNumber: rs.road_number ?? '',
+      livery: rs.livery ?? '',
+      depot: 'depot' in rs ? (rs.depot ?? '') : '',
+      flywheelFitted:
+        ts?.flywheel_fitted === 'YES' ? true : ts?.flywheel_fitted === 'NO' ? false : null,
+      bodyShell: ts?.body_shell ?? '',
+      chassis: ts?.chassis ?? '',
+      interiorLights: ts?.interior_lights ?? '',
+      lights: ts?.lights ?? '',
+      dccInterface: 'dcc_interface' in rs ? (rs.dcc_interface ?? '') : '',
+      control: 'control' in rs ? (rs.control ?? '') : '',
+      couplingSocket: ts?.coupling?.socket ?? '',
+      closeCouplers:
+        ts?.coupling?.close_couplers === 'YES'
+          ? true
+          : ts?.coupling?.close_couplers === 'NO'
+            ? false
+            : null,
+      digitalShunting:
+        ts?.coupling?.digital_shunting === 'YES'
+          ? true
+          : ts?.coupling?.digital_shunting === 'NO'
+            ? false
+            : null
+    };
+  }
+
+  async function loadRollingStockSpec(unitId: string) {
+    if (rollingStockSpecLoaded.has(unitId)) return;
+
+    try {
+      const result = await commands.getRailwayModelById(model.id, getLocale());
+      if (result.status === 'error' || !result.data) {
+        rollingStockFormState.set(unitId, getEmptyRsForm());
+        rollingStockSpecLoaded.add(unitId);
+        return;
+      }
+
+      const rsView = result.data.rollingStock.find((r) => {
+        if ('locomotive' in r) return r.locomotive.id === unitId;
+        if ('electricMultipleUnit' in r) return r.electricMultipleUnit.id === unitId;
+        if ('freightCar' in r) return r.freightCar.id === unitId;
+        if ('passengerCar' in r) return r.passengerCar.id === unitId;
+        if ('railcar' in r) return r.railcar.id === unitId;
+        return false;
+      });
+
+      if (!rsView) {
+        rollingStockFormState.set(unitId, getEmptyRsForm());
+      } else {
+        rollingStockFormState.set(unitId, extractRsDataFromView(rsView));
+      }
+      rollingStockSpecLoaded.add(unitId);
+    } catch {
+      rollingStockFormState.set(unitId, getEmptyRsForm());
+      rollingStockSpecLoaded.add(unitId);
+    }
+  }
+
+  async function saveRollingStockIdentification(
+    unitId: string,
+    field: 'series' | 'roadNumber' | 'livery' | 'depot',
+    value: string,
+    unit: (typeof model.rolling_stock)[0]
+  ) {
+    // Build the full request with current values
+    const currentForm = rollingStockFormState.get(unitId) || getEmptyRsForm();
+    const seriesCode = field === 'series' ? value : currentForm.seriesCode || unit.series_code;
+    const roadNumber =
+      field === 'roadNumber' ? value || null : currentForm.roadNumber || unit.road_number || null;
+    const livery = field === 'livery' ? value || null : currentForm.livery || unit.livery || null;
+    const depot = field === 'depot' ? value || null : currentForm.depot || unit.depot || null;
+
+    const result = await commands.updateRollingStockIdentification({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      seriesCode,
+      roadNumber,
+      livery,
+      depot
+    });
+
+    if (result.status === 'error') {
+      throw new Error('Failed to save');
+    }
+
+    // Update local form state
+    if (!currentForm) {
+      rollingStockFormState.set(unitId, getEmptyRsForm());
+    }
+    const form = rollingStockFormState.get(unitId)!;
+    form.seriesCode = seriesCode;
+    form.roadNumber = roadNumber ?? '';
+    form.livery = livery ?? '';
+    form.depot = depot ?? '';
+
+    await notifyModelUpdated();
+  }
+
+  async function saveRollingStockSpec(unitId: string, field: string, value: string) {
+    const form = rollingStockFormState.get(unitId);
+    if (!form) return;
+
+    // Update the field in form
+    (form as unknown as Record<string, string | boolean | null>)[field] = value;
+
+    const result = await commands.updateRollingStockSpecifications({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      seriesCode: form.seriesCode,
+      roadNumber: form.roadNumber || null,
+      livery: form.livery || null,
+      depot: form.depot || null,
+      flywheelFitted: form.flywheelFitted,
+      bodyShell: form.bodyShell || null,
+      chassis: form.chassis || null,
+      interiorLights: form.interiorLights || null,
+      lights: form.lights || null,
+      dccInterface: (form.dccInterface || null) as Parameters<
+        typeof commands.updateRollingStockSpecifications
+      >[0]['dccInterface'],
+      control: (form.control || null) as Parameters<
+        typeof commands.updateRollingStockSpecifications
+      >[0]['control'],
+      couplingSocket: form.couplingSocket || null,
+      closeCouplers: form.closeCouplers,
+      digitalShunting: form.digitalShunting
+    });
+
+    if (result.status === 'error') {
+      throw new Error('Failed to save');
+    }
+
+    await notifyModelUpdated();
+  }
 
   async function notifyModelUpdated() {
     await onModelUpdated?.();
@@ -537,9 +773,20 @@
                   <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.road_number()}
                   </span>
-                  <span class="font-mono text-base font-semibold text-zinc-100">
-                    {unit.road_number ?? '—'}
-                  </span>
+                  {#if editable}
+                    <div class="font-mono text-base font-semibold text-zinc-100">
+                      <InPlaceEdit
+                        value={unit.road_number ?? ''}
+                        placeholder={m.road_number()}
+                        onSave={(v) =>
+                          saveRollingStockIdentification(unit.id, 'roadNumber', v, unit)}
+                      />
+                    </div>
+                  {:else}
+                    <span class="font-mono text-base font-semibold text-zinc-100">
+                      {unit.road_number ?? '—'}
+                    </span>
+                  {/if}
                 </div>
                 {#if unit.railway_company}
                   <span class="text-[10px] font-medium tracking-wider text-zinc-400">
@@ -555,32 +802,88 @@
                     {m.series_code()}
                   </dt>
                   <dd class="text-xs text-zinc-200">
-                    {unit.series_code}{unit.series_name ? ` — ${unit.series_name}` : ''}
+                    {#if editable}
+                      <InPlaceEdit
+                        value={unit.series_code}
+                        placeholder={m.rolling_stock_field_series_code()}
+                        onSave={(v) => saveRollingStockIdentification(unit.id, 'series', v, unit)}
+                      />
+                    {:else}
+                      {unit.series_code}{unit.series_name ? ` — ${unit.series_name}` : ''}
+                    {/if}
                   </dd>
                 </div>
                 <div class="flex flex-col gap-0.5">
                   <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.depot()}
                   </dt>
-                  <dd class="text-xs text-zinc-200">{unit.depot ?? '—'}</dd>
+                  <dd class="text-xs text-zinc-200">
+                    {#if editable}
+                      <InPlaceEdit
+                        value={unit.depot ?? ''}
+                        placeholder={m.depot()}
+                        onSave={(v) => saveRollingStockIdentification(unit.id, 'depot', v, unit)}
+                      />
+                    {:else}
+                      {unit.depot ?? '—'}
+                    {/if}
+                  </dd>
                 </div>
                 <div class="flex flex-col gap-0.5">
                   <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.livery()}
                   </dt>
-                  <dd class="text-xs text-zinc-200">{unit.livery ?? '—'}</dd>
+                  <dd class="text-xs text-zinc-200">
+                    {#if editable}
+                      <InPlaceEdit
+                        value={unit.livery ?? ''}
+                        placeholder={m.livery()}
+                        onSave={(v) => saveRollingStockIdentification(unit.id, 'livery', v, unit)}
+                      />
+                    {:else}
+                      {unit.livery ?? '—'}
+                    {/if}
+                  </dd>
                 </div>
                 <div class="flex flex-col gap-0.5">
                   <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.control_type()}
                   </dt>
-                  <dd class="text-xs text-zinc-200">{unit.control_type ?? '—'}</dd>
+                  <dd class="text-xs text-zinc-200">
+                    {#if editable && rollingStockSpecLoaded.has(unit.id)}
+                      <BadgePicker
+                        value={rollingStockFormState.get(unit.id)?.control ??
+                          unit.control_type ??
+                          '—'}
+                        options={controlOptions}
+                        onSelect={(id) => saveRollingStockSpec(unit.id, 'control', id)}
+                      />
+                    {:else if editable}
+                      <span class="text-xs text-zinc-500 italic">Loading…</span>
+                    {:else}
+                      {unit.control_type ?? '—'}
+                    {/if}
+                  </dd>
                 </div>
                 <div class="flex flex-col gap-0.5">
                   <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.dcc_interface()}
                   </dt>
-                  <dd class="text-xs text-zinc-200">{unit.dcc_interface ?? '—'}</dd>
+                  <dd class="text-xs text-zinc-200">
+                    {#if editable && rollingStockSpecLoaded.has(unit.id)}
+                      <BadgePicker
+                        value={rollingStockFormState.get(unit.id)?.dccInterface ??
+                          unit.dcc_interface ??
+                          '—'}
+                        options={dccInterfaceOptions}
+                        onSelect={(id) => saveRollingStockSpec(unit.id, 'dccInterface', id)}
+                      />
+                    {:else if editable}
+                      <span class="text-xs text-zinc-500 italic">Loading…</span>
+                    {:else}
+                      {unit.dcc_interface ?? '—'}
+                    {/if}
+                  </dd>
                 </div>
                 <div class="flex flex-col gap-0.5">
                   <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
@@ -594,7 +897,21 @@
                   <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.coupling_type()}
                   </dt>
-                  <dd class="text-xs text-zinc-200">{unit.coupling_type ?? '—'}</dd>
+                  <dd class="text-xs text-zinc-200">
+                    {#if editable && rollingStockSpecLoaded.has(unit.id)}
+                      <BadgePicker
+                        value={rollingStockFormState.get(unit.id)?.couplingSocket ??
+                          unit.coupling_type ??
+                          '—'}
+                        options={couplingSockeOptions}
+                        onSelect={(id) => saveRollingStockSpec(unit.id, 'couplingSocket', id)}
+                      />
+                    {:else if editable}
+                      <span class="text-xs text-zinc-500 italic">Loading…</span>
+                    {:else}
+                      {unit.coupling_type ?? '—'}
+                    {/if}
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -609,12 +926,31 @@
                     class="mb-2.5 flex items-center justify-between border-b border-zinc-800/60 pb-2"
                   >
                     <div class="flex min-w-0 items-baseline gap-2">
-                      <span class="truncate text-xs font-medium text-zinc-200">
-                        {unit.series_code}{unit.series_name ? ` — ${unit.series_name}` : ''}
-                      </span>
-                      <span class="shrink-0 font-mono text-sm font-semibold text-zinc-100">
-                        {unit.road_number ?? '—'}
-                      </span>
+                      {#if editable}
+                        <div class="truncate text-xs font-medium text-zinc-200">
+                          <InPlaceEdit
+                            value={unit.series_code}
+                            placeholder={m.rolling_stock_field_series_code()}
+                            onSave={(v) =>
+                              saveRollingStockIdentification(unit.id, 'series', v, unit)}
+                          />
+                        </div>
+                        <div class="shrink-0 font-mono text-sm font-semibold text-zinc-100">
+                          <InPlaceEdit
+                            value={unit.road_number ?? ''}
+                            placeholder={m.road_number()}
+                            onSave={(v) =>
+                              saveRollingStockIdentification(unit.id, 'roadNumber', v, unit)}
+                          />
+                        </div>
+                      {:else}
+                        <span class="truncate text-xs font-medium text-zinc-200">
+                          {unit.series_code}{unit.series_name ? ` — ${unit.series_name}` : ''}
+                        </span>
+                        <span class="shrink-0 font-mono text-sm font-semibold text-zinc-100">
+                          {unit.road_number ?? '—'}
+                        </span>
+                      {/if}
                     </div>
                     {#if unit.railway_company}
                       <span class="ml-2 shrink-0 text-[10px] text-zinc-500">
@@ -628,13 +964,35 @@
                       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                         {m.depot()}
                       </dt>
-                      <dd class="text-xs text-zinc-200">{unit.depot ?? '—'}</dd>
+                      <dd class="text-xs text-zinc-200">
+                        {#if editable}
+                          <InPlaceEdit
+                            value={unit.depot ?? ''}
+                            placeholder={m.depot()}
+                            onSave={(v) =>
+                              saveRollingStockIdentification(unit.id, 'depot', v, unit)}
+                          />
+                        {:else}
+                          {unit.depot ?? '—'}
+                        {/if}
+                      </dd>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                         {m.livery()}
                       </dt>
-                      <dd class="truncate text-xs text-zinc-200">{unit.livery ?? '—'}</dd>
+                      <dd class="truncate text-xs text-zinc-200">
+                        {#if editable}
+                          <InPlaceEdit
+                            value={unit.livery ?? ''}
+                            placeholder={m.livery()}
+                            onSave={(v) =>
+                              saveRollingStockIdentification(unit.id, 'livery', v, unit)}
+                          />
+                        {:else}
+                          {unit.livery ?? '—'}
+                        {/if}
+                      </dd>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
@@ -648,19 +1006,61 @@
                       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                         {m.control_type()}
                       </dt>
-                      <dd class="text-xs text-zinc-200">{unit.control_type ?? '—'}</dd>
+                      <dd class="text-xs text-zinc-200">
+                        {#if editable && rollingStockSpecLoaded.has(unit.id)}
+                          <BadgePicker
+                            value={rollingStockFormState.get(unit.id)?.control ??
+                              unit.control_type ??
+                              '—'}
+                            options={controlOptions}
+                            onSelect={(id) => saveRollingStockSpec(unit.id, 'control', id)}
+                          />
+                        {:else if editable}
+                          <span class="text-xs text-zinc-500 italic">—</span>
+                        {:else}
+                          {unit.control_type ?? '—'}
+                        {/if}
+                      </dd>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                         {m.dcc_interface()}
                       </dt>
-                      <dd class="text-xs text-zinc-200">{unit.dcc_interface ?? '—'}</dd>
+                      <dd class="text-xs text-zinc-200">
+                        {#if editable && rollingStockSpecLoaded.has(unit.id)}
+                          <BadgePicker
+                            value={rollingStockFormState.get(unit.id)?.dccInterface ??
+                              unit.dcc_interface ??
+                              '—'}
+                            options={dccInterfaceOptions}
+                            onSelect={(id) => saveRollingStockSpec(unit.id, 'dccInterface', id)}
+                          />
+                        {:else if editable}
+                          <span class="text-xs text-zinc-500 italic">—</span>
+                        {:else}
+                          {unit.dcc_interface ?? '—'}
+                        {/if}
+                      </dd>
                     </div>
                     <div class="flex flex-col gap-0.5">
                       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                         {m.coupling_type()}
                       </dt>
-                      <dd class="text-xs text-zinc-200">{unit.coupling_type ?? '—'}</dd>
+                      <dd class="text-xs text-zinc-200">
+                        {#if editable && rollingStockSpecLoaded.has(unit.id)}
+                          <BadgePicker
+                            value={rollingStockFormState.get(unit.id)?.couplingSocket ??
+                              unit.coupling_type ??
+                              '—'}
+                            options={couplingSockeOptions}
+                            onSelect={(id) => saveRollingStockSpec(unit.id, 'couplingSocket', id)}
+                          />
+                        {:else if editable}
+                          <span class="text-xs text-zinc-500 italic">—</span>
+                        {:else}
+                          {unit.coupling_type ?? '—'}
+                        {/if}
+                      </dd>
                     </div>
                   </dl>
                 </div>
