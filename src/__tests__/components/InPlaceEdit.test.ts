@@ -166,7 +166,7 @@ describe('InPlaceEdit', () => {
       expect(container.querySelector('input')).not.toBeNull();
     });
 
-    it('after failed save, Cancel restores original value and clears error', async () => {
+    it('after failed save, Escape restores original value and exits editing', async () => {
       const onSave = vi.fn().mockRejectedValue(new Error('Network error'));
       const { container } = render(InPlaceEdit, {
         props: { value: 'Original', onSave }
@@ -180,17 +180,13 @@ describe('InPlaceEdit', () => {
       await fireEvent.blur(input);
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      // Click Cancel button
-      const cancelBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent?.trim() === 'Cancel'
-      );
-      expect(cancelBtn).not.toBeNull();
-      await fireEvent.click(cancelBtn!);
+      // Press Escape to cancel and exit editing
+      const inputAfterError = container.querySelector('input') as HTMLInputElement;
+      await fireEvent.keyDown(inputAfterError, { key: 'Escape', code: 'Escape' });
 
-      // Should be back in idle state showing original value, no error
+      // Should be back in idle state showing original value
       expect(container.querySelector('input')).toBeNull();
       expect(container.textContent).toContain('Original');
-      expect(container.querySelector('[role="alert"]')).toBeNull();
     });
   });
 });

@@ -40,4 +40,7 @@ pub struct OwnedRollingStockView {
 
     /// Optional digital setup information if a decoder is installed.
     pub digital: Option<DigitalSetup>,
+
+    /// Depot name derived from the catalog rolling stock data.
+    pub depot: Option<String>,
 }

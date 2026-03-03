@@ -1,4 +1,5 @@
 mod add_railway_model;
+mod add_rolling_stock_to_model;
 mod get_manufacturer_by_id;
 mod get_manufacturers;
 mod get_railway_companies;
@@ -21,6 +22,9 @@ pub use add_railway_model::AddRailwayModel;
 pub use add_railway_model::{
     CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
     TechnicalSpecificationsInput,
+};
+pub use add_rolling_stock_to_model::{
+    AddRollingStockToModel, AddRollingStockToModelInput, parse_add_rolling_stock_args,
 };
 pub use get_manufacturer_by_id::GetManufacturerById;
 pub use get_manufacturers::GetManufacturers;

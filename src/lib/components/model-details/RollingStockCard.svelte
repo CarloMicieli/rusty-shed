@@ -26,11 +26,13 @@
   let localRoadNumber = $state('');
   let localLivery = $state('');
   let localRailwayCompanyName = $state('');
+  let localDepot = $state('');
   $effect(() => {
     localSeries = rollingStock.series ?? '';
     localRoadNumber = rollingStock.roadNumber ?? '';
     localLivery = rollingStock.livery ?? '';
     localRailwayCompanyName = rollingStock.railwayCompanyName ?? '';
+    localDepot = rollingStock.depot ?? '';
   });
 
   // Railway company options for the picker
@@ -57,10 +59,14 @@
     return `${series} — ${roadNumber}`;
   }
 
-  async function saveIdentificationField(field: 'series' | 'roadNumber' | 'livery', value: string) {
+  async function saveIdentificationField(
+    field: 'series' | 'roadNumber' | 'livery' | 'depot',
+    value: string
+  ) {
     const seriesCode = field === 'series' ? value : localSeries;
     const roadNumber = field === 'roadNumber' ? value || null : localRoadNumber || null;
     const livery = field === 'livery' ? value || null : localLivery || null;
+    const depot = field === 'depot' ? value || null : localDepot || null;
 
     const result = await commands.updateRollingStockIdentification({
       railwayModelId,
@@ -68,7 +74,7 @@
       seriesCode,
       roadNumber,
       livery,
-      depot: null
+      depot
     });
 
     if (result.status === 'error') {
@@ -78,6 +84,7 @@
     if (field === 'series') localSeries = value;
     else if (field === 'roadNumber') localRoadNumber = value;
     else if (field === 'livery') localLivery = value;
+    else if (field === 'depot') localDepot = value;
   }
 
   async function saveRailwayCompany(id: string) {
@@ -173,52 +180,63 @@
           </dd>
         </div>
 
-        {#if editable || rollingStock.livery}
-          <div>
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_livery()}
-            </dt>
-            <dd class="mt-1 text-sm">
-              {#if editable}
-                <InPlaceEdit
-                  value={localLivery}
-                  placeholder={m.rolling_stock_field_livery()}
-                  onSave={(v) => saveIdentificationField('livery', v)}
-                />
-              {:else}
-                {localLivery || '—'}
-              {/if}
-            </dd>
-          </div>
-        {/if}
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_livery()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <InPlaceEdit
+                value={localLivery}
+                placeholder={m.rolling_stock_field_livery()}
+                onSave={(v) => saveIdentificationField('livery', v)}
+              />
+            {:else}
+              {localLivery || '—'}
+            {/if}
+          </dd>
+        </div>
 
-        {#if editable || rollingStock.railwayCompanyName}
-          <div>
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_company()}
-            </dt>
-            <dd class="mt-1 text-sm">
-              {#if editable && companyOptions.length > 0}
-                <BadgePicker
-                  value={localRailwayCompanyName || '—'}
-                  options={companyOptions}
-                  onSelect={saveRailwayCompany}
-                />
-              {:else}
-                {localRailwayCompanyName || '—'}
-              {/if}
-            </dd>
-          </div>
-        {/if}
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_company()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable && companyOptions.length > 0}
+              <BadgePicker
+                value={localRailwayCompanyName || '—'}
+                options={companyOptions}
+                onSelect={saveRailwayCompany}
+              />
+            {:else}
+              {localRailwayCompanyName || '—'}
+            {/if}
+          </dd>
+        </div>
 
-        {#if rollingStock.control}
-          <div>
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_control()}
-            </dt>
-            <dd class="mt-1 text-sm">{rollingStock.control}</dd>
-          </div>
-        {/if}
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_control()}
+          </dt>
+          <dd class="mt-1 text-sm">{rollingStock.control ?? '—'}</dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.rolling_stock_field_depot()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <InPlaceEdit
+                value={localDepot}
+                placeholder={m.rolling_stock_field_depot()}
+                onSave={(v) => saveIdentificationField('depot', v)}
+              />
+            {:else}
+              {localDepot || '—'}
+            {/if}
+          </dd>
+        </div>
 
         {#if rollingStock.digital}
           <div class="sm:col-span-2">

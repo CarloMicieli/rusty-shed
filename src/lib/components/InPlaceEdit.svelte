@@ -37,12 +37,6 @@
   let isSaving = $state(false);
   let error = $state<string | null>(null);
 
-  /**
-   * Set to true from onmousedown on pill buttons to prevent the blur
-   * handler from triggering a duplicate save when a pill button is clicked.
-   */
-  let suppressBlurSave = false;
-
   let inputEl = $state<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   $effect(() => {
@@ -78,10 +72,6 @@
   }
 
   async function handleBlur() {
-    if (suppressBlurSave) {
-      suppressBlurSave = false;
-      return;
-    }
     await save();
   }
 
@@ -120,36 +110,8 @@
       />
     {/if}
 
-    <!-- Floating Save/Cancel pill — absolute positioned to avoid card layout shift -->
-    <div
-      class="absolute top-full left-0 z-50 mt-1 flex gap-1 rounded border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 shadow-lg"
-    >
-      <button
-        type="button"
-        class="h-6 rounded bg-[#D48A42] px-2 text-xs font-medium text-black hover:bg-[#D48A42]/90 disabled:opacity-50"
-        onmousedown={() => {
-          suppressBlurSave = true;
-        }}
-        onclick={() => void save()}
-        disabled={isSaving}
-      >
-        {m.edit_field_save()}
-      </button>
-      <button
-        type="button"
-        class="h-6 rounded px-2 text-xs text-[#E0E0E0] hover:bg-white/10 disabled:opacity-50"
-        onmousedown={() => {
-          suppressBlurSave = true;
-        }}
-        onclick={cancel}
-        disabled={isSaving}
-      >
-        {m.edit_field_cancel()}
-      </button>
-    </div>
-
     {#if error}
-      <p class="mt-7 text-xs text-red-400" role="alert">{error}</p>
+      <p class="mt-1 text-xs text-red-400" role="alert">{error}</p>
     {/if}
   </div>
 {:else}

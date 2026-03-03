@@ -13,7 +13,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_field_digital_setup: () => 'Digital Setup',
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
-  model_rolling_stock_digital_decoder_id: () => 'Decoder ID'
+  model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
+  rolling_stock_field_depot: () => 'Depot'
 }));
 
 import RollingStockCard from '../RollingStockCard.svelte';
@@ -209,7 +210,7 @@ describe('RollingStockCard', () => {
       expect(screen.getByText('Test notes')).toBeInTheDocument();
     });
 
-    it('should not render fields that are missing', async () => {
+    it('should render all fields with dash placeholder when values are missing', async () => {
       const minimalStock = {
         id: 'rs-2',
         rollingStockId: 'trn:rolling-stock:rs-2',
@@ -219,7 +220,8 @@ describe('RollingStockCard', () => {
         railwayCompanyName: null,
         control: null,
         notes: null,
-        digital: null
+        digital: null,
+        depot: null
       } as unknown as OwnedRollingStockView;
 
       render(RollingStockCard, {
@@ -232,10 +234,12 @@ describe('RollingStockCard', () => {
       const button = screen.getByRole('button');
       await fireEvent.click(button);
 
-      // These should not be present
-      expect(screen.queryByText('Livery')).not.toBeInTheDocument();
-      expect(screen.queryByText('Company')).not.toBeInTheDocument();
-      expect(screen.queryByText('Control')).not.toBeInTheDocument();
+      // Labels always render (US1: fields show "—" instead of being hidden)
+      expect(screen.getByText('Livery')).toBeInTheDocument();
+      expect(screen.getByText('Company')).toBeInTheDocument();
+      expect(screen.getByText('Control')).toBeInTheDocument();
+      expect(screen.getByText('Depot')).toBeInTheDocument();
+      // Digital Setup is still conditionally rendered (null → absent)
       expect(screen.queryByText('Digital Setup')).not.toBeInTheDocument();
     });
   });

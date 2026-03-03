@@ -87,6 +87,7 @@ pub struct OwnedRollingStockRow {
     pub livery: Option<String>,
     pub control: Option<String>,
     pub railway_company_name: Option<String>,
+    pub depot: Option<String>,
 }
 
 /// Row mapping for the `decoders` table.

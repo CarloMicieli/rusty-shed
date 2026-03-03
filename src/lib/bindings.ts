@@ -356,6 +356,27 @@ export const commands = {
     }
   },
   /**
+   * Add a new rolling stock variant to an existing Railway Model.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The rolling stock identification data and category.
+   *
+   * # Returns
+   * - `Ok(RollingStockId)` — the identifier of the newly created rolling stock on success.
+   * - `Err(CommandError)` — when validation fails, the model is not found, or a database error occurs.
+   */
+  async addRollingStockToModel(
+    args: AddRollingStockToModelArgs
+  ): Promise<Result<RollingStockId, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('add_rolling_stock_to_model', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Simplified flow: save (merge) the railway model and add it to the default collection.
    */
   async addRailwayModelToCollection(
@@ -1868,6 +1889,46 @@ export type AddRailwayModelToWishListArgs = {
    * The date the item was added to the wishlist (optional).
    */
   addedDate: string | null;
+};
+/**
+ * Arguments for adding a new rolling stock variant to an existing Railway Model.
+ *
+ * Follows ADR-8: Args suffix, derives Debug/Clone/Validate/Type/Deserialize.
+ */
+export type AddRollingStockToModelArgs = {
+  /**
+   * The parent railway model identifier (TRN string).
+   */
+  railwayModelId: string;
+  /**
+   * The railway company that operated this rolling stock (TRN string).
+   */
+  railwayCompanyId: string;
+  /**
+   * Rolling stock category. One of: LOCOMOTIVE, ELECTRIC_MULTIPLE_UNIT,
+   * FREIGHT_CAR, PASSENGER_CAR, RAILCAR.
+   */
+  category: string;
+  /**
+   * Series code identifying this variant (required, non-empty).
+   */
+  seriesCode: string;
+  /**
+   * Optional road/fleet number.
+   */
+  roadNumber: string | null;
+  /**
+   * Optional livery description.
+   */
+  livery: string | null;
+  /**
+   * Optional depot name.
+   */
+  depot: string | null;
+  /**
+   * Optional control type (Control enum serialized as string, e.g. "DCC_READY").
+   */
+  control: string | null;
 };
 /**
  * Arguments structure for adding an item to a wishlist.
@@ -4262,6 +4323,10 @@ export type OwnedRollingStockView = {
    * Optional digital setup information if a decoder is installed.
    */
   digital: DigitalSetup | null;
+  /**
+   * Depot name derived from the catalog rolling stock data.
+   */
+  depot: string | null;
 };
 /**
  * The types for passenger car rolling stocks

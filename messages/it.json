@@ -804,5 +804,11 @@
   "search_add_new_model": "Aggiungi un nuovo modello",
   "search_result_count": "{count} risultati trovati",
   "search_min_length_hint": "Digita almeno 2 caratteri per cercare",
-  "search_loading": "Ricerca in corso…"
+  "search_loading": "Ricerca in corso…",
+  "rolling_stock_create_drawer_title": "Aggiungi Materiale Rotabile",
+  "rolling_stock_create_success": "Materiale rotabile aggiunto con successo",
+  "rolling_stock_create_error": "Impossibile aggiungere il materiale rotabile",
+  "rolling_stock_add_cta": "Aggiungi Materiale Rotabile",
+  "rolling_stock_add_more": "+ Aggiungi Materiale Rotabile",
+  "rolling_stock_field_category": "Categoria"
 }

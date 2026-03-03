@@ -1152,3 +1152,37 @@ impl From<SearchRailwayModelsArgs> for SearchRailwayModelsInput {
         Self { query: args.query }
     }
 }
+
+/// Arguments for adding a new rolling stock variant to an existing Railway Model.
+///
+/// Follows ADR-8: Args suffix, derives Debug/Clone/Validate/Type/Deserialize.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct AddRollingStockToModelArgs {
+    /// The parent railway model identifier (TRN string).
+    pub railway_model_id: String,
+
+    /// The railway company that operated this rolling stock (TRN string).
+    pub railway_company_id: String,
+
+    /// Rolling stock category. One of: LOCOMOTIVE, ELECTRIC_MULTIPLE_UNIT,
+    /// FREIGHT_CAR, PASSENGER_CAR, RAILCAR.
+    pub category: String,
+
+    /// Series code identifying this variant (required, non-empty).
+    #[garde(length(min = 1))]
+    pub series_code: String,
+
+    /// Optional road/fleet number.
+    pub road_number: Option<String>,
+
+    /// Optional livery description.
+    pub livery: Option<String>,
+
+    /// Optional depot name.
+    pub depot: Option<String>,
+
+    /// Optional control type (Control enum serialized as string, e.g. "DCC_READY").
+    pub control: Option<String>,
+}

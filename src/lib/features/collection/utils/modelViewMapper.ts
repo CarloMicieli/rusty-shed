@@ -104,16 +104,19 @@ function transformOwnedRollingStock(
   rollingStockViews: RollingStockView[]
 ): RollingStock[] {
   return ownedViews.map((owned) => {
-    // Find matching rolling stock view by ID
+    // Match against the catalog rolling stock ID (rollingStockId), not the
+    // collecting-domain owned rolling stock ID (id) — these are different types.
     const view = rollingStockViews.find((v) => {
       const viewData = extractRollingStockData(v);
-      return viewData.id === owned.id;
+      return viewData.id === owned.rollingStockId;
     });
 
     const common = view ? extractRollingStockData(view) : null;
 
     return {
-      id: owned.id,
+      // Use the catalog rolling stock ID so the backend update command can
+      // locate the unit within the railway model aggregate.
+      id: owned.rollingStockId,
       railway_model_id: 0, // Not used
       railway_company: common?.railway_company ?? null,
       series_code: common?.series_code ?? '',

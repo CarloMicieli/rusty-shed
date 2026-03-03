@@ -1,17 +1,18 @@
 use crate::catalog::application::{
-    AddRailwayModel, GetRailwayModelTranslations, GetRailwayModelViewById, SearchRailwayModels,
-    UpdateRailwayModelClassification, UpdateRailwayModelText, UpdateRollingStockIdentification,
-    UpdateRollingStockRailwayCompany, UpdateRollingStockSpecifications,
-    UpsertRailwayModelTranslation,
+    AddRailwayModel, AddRollingStockToModel, GetRailwayModelTranslations, GetRailwayModelViewById,
+    SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelText,
+    UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
+    UpdateRollingStockSpecifications, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
+use crate::catalog::domain::railway_model::RollingStockId;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::interface::{
-    CreateRailwayModelArgs, SearchRailwayModelsArgs, UpdateRailwayModelClassificationArgs,
-    UpdateRailwayModelTextArgs, UpdateRollingStockIdentificationArgs,
-    UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockSpecificationsArgs,
-    UpsertRailwayModelTranslationArgs,
+    AddRollingStockToModelArgs, CreateRailwayModelArgs, SearchRailwayModelsArgs,
+    UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs,
+    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
+    UpdateRollingStockSpecificationsArgs, UpsertRailwayModelTranslationArgs,
 };
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
@@ -287,4 +288,45 @@ pub async fn search_railway_models(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(ids)
+}
+
+/// Add a new rolling stock variant to an existing Railway Model.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The rolling stock identification data and category.
+///
+/// # Returns
+/// - `Ok(RollingStockId)` — the identifier of the newly created rolling stock on success.
+/// - `Err(CommandError)` — when validation fails, the model is not found, or a database error occurs.
+#[tauri::command]
+#[specta::specta]
+pub async fn add_rolling_stock_to_model(
+    state: tauri::State<'_, AppState>,
+    args: AddRollingStockToModelArgs,
+) -> Result<RollingStockId, CommandError> {
+    info!(
+        "Adding rolling stock to model {} (category: {})",
+        args.railway_model_id, args.category
+    );
+
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid args: {e}")))?;
+
+    let input = parse_add_rolling_stock_args(
+        args.railway_model_id,
+        args.railway_company_id,
+        args.category,
+        args.series_code,
+        args.road_number,
+        args.livery,
+        args.depot,
+        args.control,
+    )?;
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let rs_id = AddRollingStockToModel::execute(&mut unit_of_work, input).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(rs_id)
 }

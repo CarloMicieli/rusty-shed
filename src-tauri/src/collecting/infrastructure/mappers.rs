@@ -112,6 +112,7 @@ impl CollectionMapper {
                                 .and_then(|c| Control::from_str(c).ok()),
                             railway_company_name: rs_row.railway_company_name.clone(),
                             digital: None,
+                            depot: rs_row.depot.clone(),
                         };
 
                         // If a decoder is installed (installed_decoder_id present), try to build DigitalSetup
@@ -410,6 +411,7 @@ mod tests {
             livery: None,
             control: None,
             railway_company_name: None,
+            depot: None,
         };
 
         let purchase_id =

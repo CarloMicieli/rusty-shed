@@ -22,6 +22,7 @@ function makeRollingStock(overrides: Partial<OwnedRollingStockView> = {}): Owned
     control: null,
     railwayCompanyName: null,
     digital: null,
+    depot: null,
     ...overrides
   };
 }

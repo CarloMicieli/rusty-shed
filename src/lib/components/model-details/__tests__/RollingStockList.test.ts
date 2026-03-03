@@ -1,6 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 
+// Mock bindings to prevent onMount API calls in RollingStockCreateDrawer
+vi.mock('$lib/bindings', () => ({
+  commands: {
+    getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    updateRollingStockIdentification: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    updateRollingStockRailwayCompany: vi.fn().mockResolvedValue({ status: 'ok', data: null })
+  }
+}));
+
 // Mock paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
   model_no_rolling_stock: () => 'No rolling stock units found for this model.',
@@ -14,7 +23,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_field_digital_setup: () => 'Digital Setup',
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
-  model_rolling_stock_digital_decoder_id: () => 'Decoder ID'
+  model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
+  rolling_stock_add_cta: () => 'Add Rolling Stock',
+  rolling_stock_add_more: () => '+ Add Rolling Stock',
+  rolling_stock_field_depot: () => 'Depot'
 }));
 
 import RollingStockList from '../RollingStockList.svelte';
@@ -31,7 +43,8 @@ describe('RollingStockList', () => {
       railwayCompanyName: 'Deutsche Bahn',
       control: 'Digital',
       notes: null,
-      digital: null
+      digital: null,
+      depot: null
     },
     {
       id: 'rs-2',
@@ -42,7 +55,8 @@ describe('RollingStockList', () => {
       railwayCompanyName: 'Deutsche Bahn',
       control: 'Analog',
       notes: null,
-      digital: null
+      digital: null,
+      depot: null
     }
   ] as unknown as OwnedRollingStockView[];
 
@@ -90,7 +104,7 @@ describe('RollingStockList', () => {
   });
 
   describe('Empty State', () => {
-    it('should render empty state when rollingStocks is undefined', () => {
+    it('should render plain message when rollingStocks is undefined and not editable', () => {
       render(RollingStockList, {
         props: {
           railwayModelId: 'trn:railway-model:acme:test-001',
@@ -101,7 +115,7 @@ describe('RollingStockList', () => {
       expect(screen.getByText('No rolling stock units found for this model.')).toBeInTheDocument();
     });
 
-    it('should render empty state when rollingStocks is empty array', () => {
+    it('should render plain message when rollingStocks is empty array and not editable', () => {
       render(RollingStockList, {
         props: {
           railwayModelId: 'trn:railway-model:acme:test-001',
@@ -110,6 +124,36 @@ describe('RollingStockList', () => {
       });
 
       expect(screen.getByText('No rolling stock units found for this model.')).toBeInTheDocument();
+    });
+
+    it('should render CTA button when rollingStocks is undefined and editable', () => {
+      render(RollingStockList, {
+        props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
+          rollingStocks: undefined,
+          editable: true
+        }
+      });
+
+      expect(screen.getByRole('button', { name: 'Add Rolling Stock' })).toBeInTheDocument();
+      expect(
+        screen.queryByText('No rolling stock units found for this model.')
+      ).not.toBeInTheDocument();
+    });
+
+    it('should render CTA button when rollingStocks is empty array and editable', () => {
+      render(RollingStockList, {
+        props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
+          rollingStocks: [],
+          editable: true
+        }
+      });
+
+      expect(screen.getByRole('button', { name: 'Add Rolling Stock' })).toBeInTheDocument();
+      expect(
+        screen.queryByText('No rolling stock units found for this model.')
+      ).not.toBeInTheDocument();
     });
 
     it('should render empty state with proper styling', () => {
@@ -128,7 +172,7 @@ describe('RollingStockList', () => {
       expect(emptyState?.className).toContain('text-center');
     });
 
-    it('should apply muted foreground to empty message', () => {
+    it('should apply muted foreground to empty message in non-editable mode', () => {
       render(RollingStockList, {
         props: {
           railwayModelId: 'trn:railway-model:acme:test-001',
@@ -138,6 +182,43 @@ describe('RollingStockList', () => {
 
       const message = screen.getByText('No rolling stock units found for this model.');
       expect(message.className).toContain('text-muted-foreground');
+    });
+  });
+
+  describe('Add Rolling Stock Button', () => {
+    it('should show "+ Add Rolling Stock" button when populated and editable', () => {
+      render(RollingStockList, {
+        props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
+          rollingStocks: mockRollingStocks,
+          editable: true
+        }
+      });
+
+      expect(screen.getByRole('button', { name: '+ Add Rolling Stock' })).toBeInTheDocument();
+    });
+
+    it('should not show "+ Add Rolling Stock" button when populated and non-editable', () => {
+      render(RollingStockList, {
+        props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
+          rollingStocks: mockRollingStocks,
+          editable: false
+        }
+      });
+
+      expect(screen.queryByRole('button', { name: '+ Add Rolling Stock' })).not.toBeInTheDocument();
+    });
+
+    it('should not show "+ Add Rolling Stock" button when editable is not set', () => {
+      render(RollingStockList, {
+        props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
+          rollingStocks: mockRollingStocks
+        }
+      });
+
+      expect(screen.queryByRole('button', { name: '+ Add Rolling Stock' })).not.toBeInTheDocument();
     });
   });
 
@@ -221,7 +302,8 @@ describe('RollingStockList', () => {
         railwayCompanyName: null,
         control: null,
         notes: null,
-        digital: null
+        digital: null,
+        depot: null
       } as unknown as OwnedRollingStockView;
 
       render(RollingStockList, {
@@ -245,7 +327,8 @@ describe('RollingStockList', () => {
         railwayCompanyName: 'Test Company',
         control: 'Digital',
         notes: null,
-        digital: null
+        digital: null,
+        depot: null
       })) as unknown as OwnedRollingStockView[];
 
       const { container } = render(RollingStockList, {

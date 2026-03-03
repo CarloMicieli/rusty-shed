@@ -908,5 +908,11 @@
   "search_add_new_model": "Add a new model",
   "search_result_count": "{count} results found",
   "search_min_length_hint": "Type at least 2 characters to search",
-  "search_loading": "Searching…"
+  "search_loading": "Searching…",
+  "rolling_stock_create_drawer_title": "Add Rolling Stock",
+  "rolling_stock_create_success": "Rolling stock added successfully",
+  "rolling_stock_create_error": "Failed to add rolling stock",
+  "rolling_stock_add_cta": "Add Rolling Stock",
+  "rolling_stock_add_more": "+ Add Rolling Stock",
+  "rolling_stock_field_category": "Category"
 }

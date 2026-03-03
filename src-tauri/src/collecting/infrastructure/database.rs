@@ -108,11 +108,12 @@ pub async fn get_owned_rolling_stock(
             d.decoder_type AS decoder_type,
             d.protocol AS decoder_protocol,
             d.decoder_interface AS decoder_interface,
-            rs.series,
+            rs.series_code AS series,
             rs.road_number,
             rs.livery,
             rs.control,
-            rc.name AS railway_company_name
+            rc.name AS railway_company_name,
+            rs.depot
        FROM owned_rolling_stocks AS ors
        LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id
        LEFT JOIN railway_companies AS rc ON rc.id = rs.railway_company_id
@@ -151,11 +152,12 @@ pub async fn get_owned_rolling_stocks(
              d.decoder_type AS decoder_type,
              d.protocol AS decoder_protocol,
              d.decoder_interface AS decoder_interface,
-             rs.series,
+             rs.series_code AS series,
              rs.road_number,
              rs.livery,
              rs.control,
-             rc.name AS railway_company_name
+             rc.name AS railway_company_name,
+             rs.depot
    FROM owned_rolling_stocks AS ors
    JOIN collection_items AS ci ON ci.id = ors.collection_item_id
    LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id

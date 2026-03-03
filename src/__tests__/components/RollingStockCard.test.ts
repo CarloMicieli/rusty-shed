@@ -128,7 +128,8 @@ const mockRollingStock: OwnedRollingStockView = {
   livery: 'Verde FS',
   control: null,
   railwayCompanyName: 'FS',
-  digital: null
+  digital: null,
+  depot: null
 };
 
 /** Minimal RailwayModelView for the specs drawer fixture */
@@ -216,6 +217,68 @@ describe('RollingStockCard', () => {
     it('does not show "Edit Specs" button when not editable', async () => {
       const { container } = await renderExpandedCard(false);
       expect(container.textContent).not.toContain('Edit Specs');
+    });
+  });
+
+  describe('US1: Empty field display shows "—"', () => {
+    it('shows "—" for Livery when value is null (read-only mode)', async () => {
+      const rs = { ...mockRollingStock, livery: null };
+      const result = render(RollingStockCard, {
+        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
+      });
+      const headerBtn = result.container.querySelector('button') as HTMLElement;
+      await fireEvent.click(headerBtn);
+      // Livery row must be present and show "—"
+      expect(result.getByText('Livery')).toBeTruthy();
+      // The "—" character appears for null livery
+      const dashes = Array.from(result.container.querySelectorAll('dd')).filter(
+        (el) => el.textContent?.trim() === '—'
+      );
+      expect(dashes.length).toBeGreaterThan(0);
+    });
+
+    it('shows "—" for Railway Company when value is null (read-only mode)', async () => {
+      const rs = { ...mockRollingStock, railwayCompanyName: null };
+      const result = render(RollingStockCard, {
+        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
+      });
+      const headerBtn = result.container.querySelector('button') as HTMLElement;
+      await fireEvent.click(headerBtn);
+      expect(result.getByText('Railway Company')).toBeTruthy();
+    });
+
+    it('shows "—" for Control when value is null (read-only mode)', async () => {
+      const rs = { ...mockRollingStock, control: null };
+      const result = render(RollingStockCard, {
+        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
+      });
+      const headerBtn = result.container.querySelector('button') as HTMLElement;
+      await fireEvent.click(headerBtn);
+      expect(result.getByText('Control')).toBeTruthy();
+    });
+
+    it('shows "—" for Depot when value is null (read-only mode)', async () => {
+      const rs = { ...mockRollingStock, depot: null };
+      const result = render(RollingStockCard, {
+        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
+      });
+      const headerBtn = result.container.querySelector('button') as HTMLElement;
+      await fireEvent.click(headerBtn);
+      expect(result.getByText('Depot')).toBeTruthy();
+    });
+
+    it('renders Depot row even in read-only mode when value is null', async () => {
+      const rs = { ...mockRollingStock, depot: null, livery: null, railwayCompanyName: null };
+      const result = render(RollingStockCard, {
+        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
+      });
+      const headerBtn = result.container.querySelector('button') as HTMLElement;
+      await fireEvent.click(headerBtn);
+      // All four fields must be present
+      expect(result.container.textContent).toContain('Livery');
+      expect(result.container.textContent).toContain('Railway Company');
+      expect(result.container.textContent).toContain('Control');
+      expect(result.container.textContent).toContain('Depot');
     });
   });
 
