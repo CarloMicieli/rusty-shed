@@ -23,6 +23,8 @@ function makeRollingStock(overrides: Partial<OwnedRollingStockView> = {}): Owned
     railwayCompanyName: null,
     digital: null,
     depot: null,
+    dccInterface: null,
+    lengthOverBuffers: null,
     ...overrides
   };
 }

@@ -1,5 +1,12 @@
 <script lang="ts">
-  import type { OwnedRollingStockView, RailwayCompanyId, RailwayModelId } from '$lib/bindings';
+  import type {
+    Control,
+    DccInterface,
+    LengthOverBuffers,
+    OwnedRollingStockView,
+    RailwayCompanyId,
+    RailwayModelId
+  } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import { onMount } from 'svelte';
   import { ChevronDown, ChevronUp } from 'lucide-svelte';
@@ -9,6 +16,7 @@
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
   import { toaster } from '$lib/toaster';
+  import { settingsState } from '$lib/features/settings/SettingsState.svelte';
 
   interface Props {
     rollingStock: OwnedRollingStockView;
@@ -27,13 +35,61 @@
   let localLivery = $state('');
   let localRailwayCompanyName = $state('');
   let localDepot = $state('');
+  // Local copies of DCC / length fields
+  let localControl = $state<Control | null>(null);
+  let localDccInterface = $state<DccInterface | null>(null);
+  let localLengthMm = $state('');
+  let localLengthInches = $state('');
+
   $effect(() => {
     localSeries = rollingStock.series ?? '';
     localRoadNumber = rollingStock.roadNumber ?? '';
     localLivery = rollingStock.livery ?? '';
     localRailwayCompanyName = rollingStock.railwayCompanyName ?? '';
     localDepot = rollingStock.depot ?? '';
+    localControl = rollingStock.control;
+    localDccInterface = rollingStock.dccInterface;
+    localLengthMm = extractMm(rollingStock.lengthOverBuffers);
+    localLengthInches = extractInches(rollingStock.lengthOverBuffers);
   });
+
+  function extractMm(lob: LengthOverBuffers | null): string {
+    if (!lob?.millimeters) return '';
+    const val = lob.millimeters;
+    return 'Millimeters' in val ? val.Millimeters : '';
+  }
+
+  function extractInches(lob: LengthOverBuffers | null): string {
+    if (!lob?.inches) return '';
+    const val = lob.inches;
+    return 'Inches' in val ? val.Inches : '';
+  }
+
+  function displayLength(): string {
+    return settingsState.settings.measureUnit === 'Metric' ? localLengthMm : localLengthInches;
+  }
+
+  const CONTROL_OPTIONS: { id: string; label: string }[] = [
+    { id: '', label: '—' },
+    { id: 'DCC_READY', label: 'DCC Ready' },
+    { id: 'DCC_FITTED', label: 'DCC Fitted' },
+    { id: 'DCC_SOUND', label: 'DCC Sound' },
+    { id: 'NO_DCC', label: 'Analogue (No DCC)' }
+  ];
+
+  const DCC_INTERFACE_OPTIONS: { id: string; label: string }[] = [
+    { id: '', label: '—' },
+    { id: 'NEM_651', label: 'NEM 651' },
+    { id: 'NEM_652', label: 'NEM 652' },
+    { id: 'NEM_654', label: 'NEM 654' },
+    { id: 'PLUX_8', label: 'PluX 8' },
+    { id: 'PLUX_12', label: 'PluX 12' },
+    { id: 'PLUX_16', label: 'PluX 16' },
+    { id: 'PLUX_22', label: 'PluX 22' },
+    { id: 'NEXT_18', label: 'Next18' },
+    { id: 'NEXT_18_S', label: 'Next18-S' },
+    { id: 'MTC_21', label: 'MTC 21' }
+  ];
 
   // Railway company options for the picker
   let companyOptions = $state<{ id: string; label: string }[]>([]);
@@ -85,6 +141,52 @@
     else if (field === 'roadNumber') localRoadNumber = value;
     else if (field === 'livery') localLivery = value;
     else if (field === 'depot') localDepot = value;
+  }
+
+  async function saveControl(id: string) {
+    const control = id === '' ? null : (id as Control);
+    const result = await commands.updateRollingStockDcc({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      control,
+      dccInterface: localDccInterface,
+      lengthMillimeters: localLengthMm ? parseFloat(localLengthMm) : null,
+      lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
+    });
+    if (result.status === 'error') throw new Error('Failed to save control');
+    localControl = control;
+  }
+
+  async function saveDccInterface(id: string) {
+    const dccInterface = id === '' ? null : (id as DccInterface);
+    const result = await commands.updateRollingStockDcc({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      control: localControl,
+      dccInterface,
+      lengthMillimeters: localLengthMm ? parseFloat(localLengthMm) : null,
+      lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
+    });
+    if (result.status === 'error') throw new Error('Failed to save DCC interface');
+    localDccInterface = dccInterface;
+  }
+
+  async function saveLength(v: string) {
+    const num = parseFloat(v);
+    const isMetric = settingsState.settings.measureUnit === 'Metric';
+    const lengthMillimeters = isMetric && !isNaN(num) && num > 0 ? num : null;
+    const lengthInches = !isMetric && !isNaN(num) && num > 0 ? num : null;
+    const result = await commands.updateRollingStockDcc({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      control: localControl,
+      dccInterface: localDccInterface,
+      lengthMillimeters,
+      lengthInches
+    });
+    if (result.status === 'error') throw new Error('Failed to save length');
+    if (isMetric) localLengthMm = num > 0 ? String(num) : '';
+    else localLengthInches = num > 0 ? String(num) : '';
   }
 
   async function saveRailwayCompany(id: string) {
@@ -218,7 +320,48 @@
           <dt class="text-sm font-medium text-muted-foreground">
             {m.model_rolling_stock_field_control()}
           </dt>
-          <dd class="mt-1 text-sm">{rollingStock.control ?? '—'}</dd>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <BadgePicker
+                value={localControl ?? ''}
+                options={CONTROL_OPTIONS}
+                onSelect={saveControl}
+              />
+            {:else}
+              {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
+            {/if}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.rolling_stock_field_dcc_interface()}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <BadgePicker
+                value={localDccInterface ?? ''}
+                options={DCC_INTERFACE_OPTIONS}
+                onSelect={saveDccInterface}
+              />
+            {:else}
+              {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
+            {/if}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-medium text-muted-foreground">
+            {m.rolling_stock_field_length()}
+            {settingsState.settings.measureUnit === 'Metric' ? '(mm)' : '(")'}
+          </dt>
+          <dd class="mt-1 text-sm">
+            {#if editable}
+              <InPlaceEdit value={displayLength()} placeholder="—" onSave={saveLength} />
+            {:else}
+              {displayLength() || '—'}
+            {/if}
+          </dd>
         </div>
 
         <div>

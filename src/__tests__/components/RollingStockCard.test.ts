@@ -9,9 +9,15 @@ vi.mock('$lib/bindings', () => ({
     getRailwayCompanies: vi.fn(),
     updateRollingStockIdentification: vi.fn(),
     updateRollingStockRailwayCompany: vi.fn(),
+    updateRollingStockDcc: vi.fn(),
     getRailwayModelById: vi.fn(),
     updateRollingStockSpecifications: vi.fn()
   }
+}));
+
+// ── Mock settings state ───────────────────────────────────────────────────────
+vi.mock('$lib/features/settings/SettingsState.svelte.ts', () => ({
+  settingsState: { settings: { measureUnit: 'Metric' } }
 }));
 
 // ── Mock Paraglide messages (both paths used by sub-components) ──────────────
@@ -34,6 +40,8 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_field_livery: () => 'Livery',
   rolling_stock_field_depot: () => 'Depot',
   rolling_stock_field_railway_company: () => 'Railway Company',
+  rolling_stock_field_length: () => 'Length',
+  rolling_stock_field_dcc_interface: () => 'DCC Interface',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_save: () => 'Save',
   edit_field_cancel: () => 'Cancel',
@@ -79,6 +87,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_field_livery: () => 'Livery',
   rolling_stock_field_depot: () => 'Depot',
   rolling_stock_field_railway_company: () => 'Railway Company',
+  rolling_stock_field_length: () => 'Length',
+  rolling_stock_field_dcc_interface: () => 'DCC Interface',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_save: () => 'Save',
   edit_field_cancel: () => 'Cancel',
@@ -129,7 +139,9 @@ const mockRollingStock: OwnedRollingStockView = {
   control: null,
   railwayCompanyName: 'FS',
   digital: null,
-  depot: null
+  depot: null,
+  dccInterface: null,
+  lengthOverBuffers: null
 };
 
 /** Minimal RailwayModelView for the specs drawer fixture */
@@ -175,6 +187,7 @@ beforeEach(() => {
     status: 'ok',
     data: null
   });
+  vi.mocked(commands.updateRollingStockDcc).mockResolvedValue({ status: 'ok', data: null });
   vi.mocked(commands.getRailwayModelById).mockResolvedValue({
     status: 'ok',
     data: mockRailwayModelView as never

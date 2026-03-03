@@ -6,7 +6,8 @@ vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
     updateRollingStockIdentification: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
-    updateRollingStockRailwayCompany: vi.fn().mockResolvedValue({ status: 'ok', data: null })
+    updateRollingStockRailwayCompany: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null })
   }
 }));
 
@@ -26,7 +27,13 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
   rolling_stock_add_cta: () => 'Add Rolling Stock',
   rolling_stock_add_more: () => '+ Add Rolling Stock',
-  rolling_stock_field_depot: () => 'Depot'
+  rolling_stock_field_depot: () => 'Depot',
+  rolling_stock_field_length: () => 'Length',
+  rolling_stock_field_dcc_interface: () => 'DCC Interface',
+  rolling_stock_edit_specs_button: () => 'Edit Specs',
+  edit_field_placeholder_empty: () => 'Click to add...',
+  edit_save_error: () => 'Failed to save.',
+  badge_picker_close: () => 'Close'
 }));
 
 import RollingStockList from '../RollingStockList.svelte';

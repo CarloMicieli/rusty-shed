@@ -1,21 +1,26 @@
 use garde::Validate;
 use serde::Deserialize;
 
+use rust_decimal::Decimal;
+use rust_decimal::prelude::FromPrimitive;
+
 use crate::{
     catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
         RailwayModelTextField, SaveRailwayModelInput, SearchRailwayModelsInput,
         SimplifiedRollingStockInput, TechnicalSpecificationsInput,
         UpdateRailwayModelClassificationInput, UpdateRailwayModelTextInput,
-        UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
-        UpdateRollingStockSpecificationsInput, UpsertRailwayModelTranslationInput,
+        UpdateRollingStockDccInput, UpdateRollingStockIdentificationInput,
+        UpdateRollingStockRailwayCompanyInput, UpdateRollingStockSpecificationsInput,
+        UpsertRailwayModelTranslationInput,
     },
     catalog::domain::railway_company::RailwayCompanyId,
     catalog::domain::railway_model::{
         BodyShellType, ChassisType, Control, CouplingSocket, DccInterface, Epoch, FeatureFlag,
-        RailwayModelId, RollingStockId, RollingStockSpecPatch,
+        LengthOverBuffers, RailwayModelId, RollingStockId, RollingStockSpecPatch,
     },
     catalog::domain::scale::Scale,
+    core::domain::length::Length,
     core::domain::{Language, domain_error::DomainError},
 };
 
@@ -1185,4 +1190,52 @@ pub struct AddRollingStockToModelArgs {
 
     /// Optional control type (Control enum serialized as string, e.g. "DCC_READY").
     pub control: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRollingStockDcc args
+// ---------------------------------------------------------------------------
+
+/// Arguments for updating the control type, DCC interface, and length of a single rolling stock
+/// unit. Only these three fields are updated; all other technical specifications remain unchanged.
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockDccArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+    /// Optional control type; `None` clears the field.
+    pub control: Option<Control>,
+    /// Optional DCC interface connector; `None` clears the field.
+    pub dcc_interface: Option<DccInterface>,
+    /// Optional length in millimeters; takes precedence over inches when both are provided.
+    pub length_millimeters: Option<f64>,
+    /// Optional length in inches; used only when `length_millimeters` is absent.
+    pub length_inches: Option<f64>,
+}
+
+impl From<UpdateRollingStockDccArgs> for UpdateRollingStockDccInput {
+    fn from(args: UpdateRollingStockDccArgs) -> Self {
+        let length_over_buffers = match (
+            args.length_millimeters.and_then(Decimal::from_f64),
+            args.length_inches.and_then(Decimal::from_f64),
+        ) {
+            (Some(mm), _) if mm > Decimal::ZERO => {
+                Some(LengthOverBuffers::from_millimeters(Length::Millimeters(mm)))
+            }
+            (_, Some(inches)) if inches > Decimal::ZERO => {
+                Some(LengthOverBuffers::from_inches(Length::Inches(inches)))
+            }
+            _ => None,
+        };
+
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            control: args.control,
+            dcc_interface: args.dcc_interface,
+            length_over_buffers,
+        }
+    }
 }

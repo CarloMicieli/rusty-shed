@@ -766,6 +766,8 @@
   "rolling_stock_field_livery": "Livrea",
   "rolling_stock_field_depot": "Deposito",
   "rolling_stock_field_railway_company": "Compagnia Ferroviaria",
+  "rolling_stock_field_length": "Lunghezza",
+  "rolling_stock_field_dcc_interface": "Interfaccia DCC",
   "rolling_stock_edit_specs_button": "Modifica Specifiche",
   "specs_drawer_title": "Specifiche del Materiale Rotabile",
   "specs_drawer_section_identification": "Identificazione",

@@ -88,6 +88,11 @@ pub struct OwnedRollingStockRow {
     pub control: Option<String>,
     pub railway_company_name: Option<String>,
     pub depot: Option<String>,
+    // Rolling stock DCC interface connector (aliased to avoid clash with decoder_interface)
+    pub rs_dcc_interface: Option<String>,
+    // Length over buffers stored as TEXT in the DB
+    pub length_millimeters: Option<String>,
+    pub length_inches: Option<String>,
 }
 
 /// Row mapping for the `decoders` table.

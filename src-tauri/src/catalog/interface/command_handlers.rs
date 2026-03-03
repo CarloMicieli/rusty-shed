@@ -1,7 +1,7 @@
 use crate::catalog::application::{
     AddRailwayModel, AddRollingStockToModel, GetRailwayModelTranslations, GetRailwayModelViewById,
     SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelText,
-    UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
+    UpdateRollingStockDcc, UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
     UpdateRollingStockSpecifications, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
@@ -10,7 +10,7 @@ use crate::catalog::domain::railway_model::RollingStockId;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::interface::{
     AddRollingStockToModelArgs, CreateRailwayModelArgs, SearchRailwayModelsArgs,
-    UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs,
+    UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs, UpdateRollingStockDccArgs,
     UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
     UpdateRollingStockSpecificationsArgs, UpsertRailwayModelTranslationArgs,
 };
@@ -197,6 +197,38 @@ pub async fn update_rolling_stock_railway_company(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRollingStockRailwayCompany::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update only the control type, DCC interface, and length of a single rolling stock unit.
+///
+/// Unlike `update_rolling_stock_specifications`, this command only touches these three fields
+/// and leaves all other technical specification fields (flywheel, body shell, etc.) unchanged.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, rolling stock, and new values.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_dcc(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockDccArgs,
+) -> Result<(), CommandError> {
+    log::info!(
+        "Updating DCC/length for rolling stock {} / {}",
+        args.railway_model_id,
+        args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockDcc::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())

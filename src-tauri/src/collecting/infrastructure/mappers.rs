@@ -1,4 +1,4 @@
-use crate::catalog::domain::railway_model::Control;
+use crate::catalog::domain::railway_model::{Control, DccInterface, LengthOverBuffers};
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRailwayModel;
 use crate::collecting::domain::CollectionSummary;
@@ -11,6 +11,7 @@ use crate::collecting::infrastructure::entities::{
 use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::identifiers::Identifier;
+use crate::core::domain::length::Length;
 use crate::dcc_inventory::domain::DecoderId;
 use anyhow::anyhow;
 use std::collections::HashMap;
@@ -98,6 +99,32 @@ impl CollectionMapper {
                 owned_rs_list
                     .iter()
                     .map(|rs_row| {
+                        // Parse DCC interface from rolling stock row
+                        let dcc_interface = rs_row
+                            .rs_dcc_interface
+                            .as_deref()
+                            .and_then(|s| DccInterface::from_str(s).ok());
+
+                        // Parse length over buffers from text columns
+                        let length_over_buffers = match (
+                            rs_row
+                                .length_millimeters
+                                .as_deref()
+                                .and_then(|s| s.parse::<rust_decimal::Decimal>().ok()),
+                            rs_row
+                                .length_inches
+                                .as_deref()
+                                .and_then(|s| s.parse::<rust_decimal::Decimal>().ok()),
+                        ) {
+                            (Some(mm), _) => {
+                                Some(LengthOverBuffers::from_millimeters(Length::Millimeters(mm)))
+                            }
+                            (None, Some(inches)) => {
+                                Some(LengthOverBuffers::from_inches(Length::Inches(inches)))
+                            }
+                            _ => None,
+                        };
+
                         // Basic fields
                         let mut ors = OwnedRollingStockView {
                             id: rs_row.id.clone(),
@@ -113,6 +140,8 @@ impl CollectionMapper {
                             railway_company_name: rs_row.railway_company_name.clone(),
                             digital: None,
                             depot: rs_row.depot.clone(),
+                            dcc_interface,
+                            length_over_buffers,
                         };
 
                         // If a decoder is installed (installed_decoder_id present), try to build DigitalSetup
@@ -412,6 +441,9 @@ mod tests {
             control: None,
             railway_company_name: None,
             depot: None,
+            rs_dcc_interface: None,
+            length_millimeters: None,
+            length_inches: None,
         };
 
         let purchase_id =

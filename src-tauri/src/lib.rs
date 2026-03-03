@@ -160,6 +160,7 @@ pub fn run() {
         catalog_command_handlers::update_rolling_stock_identification,
         catalog_command_handlers::update_railway_model_classification,
         catalog_command_handlers::update_rolling_stock_railway_company,
+        catalog_command_handlers::update_rolling_stock_dcc,
         catalog_command_handlers::update_rolling_stock_specifications,
         catalog_command_handlers::get_railway_model_translations,
         catalog_command_handlers::upsert_railway_model_translation,

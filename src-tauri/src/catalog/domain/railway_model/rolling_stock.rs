@@ -48,6 +48,18 @@ pub struct RollingStockSpecPatch {
     pub digital_shunting: Option<FeatureFlag>,
 }
 
+/// A focused patch for control type, DCC interface, and length — applied without
+/// touching any other technical specification fields.
+#[derive(Debug, Clone)]
+pub struct RollingStockDccPatch {
+    /// Optional control type.
+    pub control: Option<Control>,
+    /// Optional DCC interface connector.
+    pub dcc_interface: Option<DccInterface>,
+    /// Optional length over buffers.
+    pub length_over_buffers: Option<LengthOverBuffers>,
+}
+
 #[derive(Debug, Clone)]
 pub enum RollingStock {
     /// an electric multiple unit rolling stock
@@ -552,6 +564,53 @@ impl RollingStock {
             "coupling_socket": spec.coupling_socket.map(|s| s.to_string()),
             "close_couplers": spec.close_couplers.map(|f| f.to_string()),
             "digital_shunting": spec.digital_shunting.map(|f| f.to_string()),
+        })
+    }
+
+    /// Apply a focused DCC/length patch without touching any other specification fields.
+    ///
+    /// Only `Locomotive`, `ElectricMultipleUnit`, and `Railcar` variants have DCC fields;
+    /// `FreightCar` and `PassengerCar` only update `length_over_buffer`.
+    pub fn apply_dcc(&mut self, patch: RollingStockDccPatch) -> serde_json::Value {
+        match self {
+            RollingStock::Locomotive {
+                dcc_interface: di,
+                control: ct,
+                length_over_buffer: lob,
+                ..
+            }
+            | RollingStock::ElectricMultipleUnit {
+                dcc_interface: di,
+                control: ct,
+                length_over_buffer: lob,
+                ..
+            }
+            | RollingStock::Railcar {
+                dcc_interface: di,
+                control: ct,
+                length_over_buffer: lob,
+                ..
+            } => {
+                *di = patch.dcc_interface;
+                *ct = patch.control;
+                *lob = patch.length_over_buffers;
+            }
+            RollingStock::FreightCar {
+                length_over_buffer: lob,
+                ..
+            }
+            | RollingStock::PassengerCar {
+                length_over_buffer: lob,
+                ..
+            } => {
+                *lob = patch.length_over_buffers;
+            }
+        }
+
+        serde_json::json!({
+            "control": patch.control.map(|c| c.to_string()),
+            "dcc_interface": patch.dcc_interface.map(|d| d.to_string()),
+            "length_over_buffers": patch.length_over_buffers.map(|l| format!("{l:?}")),
         })
     }
 

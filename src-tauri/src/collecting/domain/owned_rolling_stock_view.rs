@@ -1,4 +1,6 @@
-use crate::catalog::domain::railway_model::{Control, RollingStockId};
+use crate::catalog::domain::railway_model::{
+    Control, DccInterface, LengthOverBuffers, RollingStockId,
+};
 use crate::collecting::domain::{DigitalSetup, OwnedRollingStockId};
 use serde::Serialize;
 
@@ -43,4 +45,10 @@ pub struct OwnedRollingStockView {
 
     /// Depot name derived from the catalog rolling stock data.
     pub depot: Option<String>,
+
+    /// DCC interface connector type from the catalog rolling stock data.
+    pub dcc_interface: Option<DccInterface>,
+
+    /// Length over buffers from the catalog rolling stock data.
+    pub length_over_buffers: Option<LengthOverBuffers>,
 }

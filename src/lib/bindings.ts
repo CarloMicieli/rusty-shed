@@ -285,6 +285,31 @@ export const commands = {
     }
   },
   /**
+   * Update only the control type, DCC interface, and length of a single rolling stock unit.
+   *
+   * Unlike `update_rolling_stock_specifications`, this command only touches these three fields
+   * and leaves all other technical specification fields (flywheel, body shell, etc.) unchanged.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, rolling stock, and new values.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRollingStockDcc(
+    args: UpdateRollingStockDccArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('update_rolling_stock_dcc', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Update the full technical specifications of a single rolling stock unit (drawer save).
    *
    * # Arguments
@@ -4327,6 +4352,14 @@ export type OwnedRollingStockView = {
    * Depot name derived from the catalog rolling stock data.
    */
   depot: string | null;
+  /**
+   * DCC interface connector type from the catalog rolling stock data.
+   */
+  dccInterface: DccInterface | null;
+  /**
+   * Length over buffers from the catalog rolling stock data.
+   */
+  lengthOverBuffers: LengthOverBuffers | null;
 };
 /**
  * The types for passenger car rolling stocks
@@ -6001,6 +6034,36 @@ export type UpdateRailwayModelTextArgs = {
    * Language code for the translation to update.
    */
   lang: Language;
+};
+/**
+ * Arguments for updating the control type, DCC interface, and length of a single rolling stock
+ * unit. Only these three fields are updated; all other technical specifications remain unchanged.
+ */
+export type UpdateRollingStockDccArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * Optional control type; `None` clears the field.
+   */
+  control: Control | null;
+  /**
+   * Optional DCC interface connector; `None` clears the field.
+   */
+  dccInterface: DccInterface | null;
+  /**
+   * Optional length in millimeters; takes precedence over inches when both are provided.
+   */
+  lengthMillimeters: number | null;
+  /**
+   * Optional length in inches; used only when `length_millimeters` is absent.
+   */
+  lengthInches: number | null;
 };
 /**
  * Arguments for updating a rolling stock's identification fields (series_code, road_number,

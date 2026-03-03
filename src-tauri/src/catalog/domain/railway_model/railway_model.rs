@@ -2,7 +2,9 @@ use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModelEvent;
 use crate::catalog::domain::railway_model::localized_field::LocalizedField;
-use crate::catalog::domain::railway_model::rolling_stock::RollingStockSpecPatch;
+use crate::catalog::domain::railway_model::rolling_stock::{
+    RollingStockDccPatch, RollingStockSpecPatch,
+};
 use crate::catalog::domain::railway_model::{
     AvailabilityStatus, Category, DeliveryDate, Epoch, PowerMethod, ProductCode, RailwayModelId,
     RollingStock,
@@ -241,6 +243,39 @@ impl RailwayModel {
             })?;
 
         let changed = rs.apply_specifications(spec);
+
+        let ev = RailwayModelEvent::RollingStockUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            rolling_stock_id: rolling_stock_id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            changed,
+        };
+        self.push_event(ev);
+        Ok(())
+    }
+
+    /// Update only the control type, DCC interface, and length of a single rolling stock unit.
+    ///
+    /// Unlike [`update_rolling_stock_specifications`], this method only touches these three
+    /// fields and leaves all other technical specification fields unchanged.
+    ///
+    /// Returns `Err(DomainError::NotFound)` when no rolling stock with `rolling_stock_id` exists.
+    pub fn update_rolling_stock_dcc(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        patch: RollingStockDccPatch,
+    ) -> Result<(), DomainError> {
+        let rs = self
+            .rolling_stocks
+            .iter_mut()
+            .find(|rs| rs.id_as_ref() == rolling_stock_id)
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "RollingStock".to_string(),
+                identifier: rolling_stock_id.to_string(),
+            })?;
+
+        let changed = rs.apply_dcc(patch);
 
         let ev = RailwayModelEvent::RollingStockUpdated {
             event_id: Uuid::new_v4(),

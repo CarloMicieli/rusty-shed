@@ -812,6 +812,8 @@
   "rolling_stock_field_livery": "Livery",
   "rolling_stock_field_depot": "Depot",
   "rolling_stock_field_railway_company": "Railway Company",
+  "rolling_stock_field_length": "Length",
+  "rolling_stock_field_dcc_interface": "DCC Interface",
   "rolling_stock_edit_specs_button": "Edit Specs",
   "specs_drawer_title": "Rolling Stock Specifications",
   "specs_drawer_section_identification": "Identification",

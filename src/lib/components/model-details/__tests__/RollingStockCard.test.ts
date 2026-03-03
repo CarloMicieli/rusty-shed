@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 
+// Mock bindings
+vi.mock('$lib/bindings', () => ({
+  commands: {
+    getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    updateRollingStockIdentification: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    updateRollingStockRailwayCompany: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    getRailwayModelById: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    updateRollingStockSpecifications: vi.fn().mockResolvedValue({ status: 'ok', data: null })
+  }
+}));
+
+// Mock settings state
+vi.mock('$lib/features/settings/SettingsState.svelte.ts', () => ({
+  settingsState: { settings: { measureUnit: 'Metric' } }
+}));
+
 // Mock paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_unknown_series: () => 'Unknown',
@@ -14,7 +31,13 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
   model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
-  rolling_stock_field_depot: () => 'Depot'
+  rolling_stock_field_depot: () => 'Depot',
+  rolling_stock_field_length: () => 'Length',
+  rolling_stock_field_dcc_interface: () => 'DCC Interface',
+  rolling_stock_edit_specs_button: () => 'Edit Specs',
+  edit_field_placeholder_empty: () => 'Click to add...',
+  edit_save_error: () => 'Failed to save.',
+  badge_picker_close: () => 'Close'
 }));
 
 import RollingStockCard from '../RollingStockCard.svelte';
@@ -28,13 +51,15 @@ describe('RollingStockCard', () => {
     roadNumber: '218 217-8',
     livery: 'DB Red',
     railwayCompanyName: 'Deutsche Bahn',
-    control: 'Digital',
+    control: 'DCC_FITTED',
     notes: 'Test notes',
     digital: {
       interface: 'MFX',
       dcc_address: 3,
       installed_decoder_id: 'decoder-123'
-    }
+    },
+    dccInterface: null,
+    lengthOverBuffers: null
   } as unknown as OwnedRollingStockView;
 
   beforeEach(() => {
@@ -176,7 +201,7 @@ describe('RollingStockCard', () => {
       expect(screen.getByText('218 217-8')).toBeInTheDocument();
       expect(screen.getByText('DB Red')).toBeInTheDocument();
       expect(screen.getByText('Deutsche Bahn')).toBeInTheDocument();
-      expect(screen.getByText('Digital')).toBeInTheDocument();
+      expect(screen.getByText('DCC Fitted')).toBeInTheDocument();
     });
 
     it('should render digital setup when present', async () => {
