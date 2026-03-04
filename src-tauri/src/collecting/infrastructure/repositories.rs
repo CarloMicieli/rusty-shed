@@ -129,8 +129,8 @@ impl<'conn> SqliteCollectionRepository<'conn> {
     ) -> Result<(), DomainError> {
         let insert_cmd = r#"
             INSERT INTO purchase_infos (
-                id, collection_item_id, purchased_price_amount, purchased_price_currency, seller_id, purchase_date)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6);
+                id, collection_item_id, purchase_type, purchased_price_amount, purchased_price_currency, seller_id, purchase_date)
+            VALUES (?1, ?2, 'PURCHASED', ?3, ?4, ?5, ?6);
         "#;
 
         let (price_amount, price_currency) = match price {

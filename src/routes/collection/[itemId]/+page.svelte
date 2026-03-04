@@ -51,10 +51,18 @@
     collectionItem = found;
 
     const railwayModelId = collectionItem.railwayModel.railwayModelId;
-    const sellerId =
-      collectionItem.purchaseInfo?.kind === 'purchased'
-        ? collectionItem.purchaseInfo.data.seller
-        : null;
+    const sellerId = (() => {
+      const info = collectionItem.purchaseInfo;
+      if (!info) return null;
+      switch (info.kind) {
+        case 'purchased':
+          return info.data.seller;
+        case 'preOrdered':
+          return info.data.seller;
+        case 'sold':
+          return info.data.seller;
+      }
+    })();
 
     const [modelResult, imageResult, sellerResult] = await Promise.all([
       commands.getRailwayModelById(railwayModelId, getLocale()),
