@@ -268,8 +268,8 @@ describe('RailwayModelCard', () => {
     it('displays status badge correctly (InCollection vs Wishlist)', () => {
       const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
 
-      // Check for InCollection status
-      expect(container.textContent).toContain('InCollection');
+      // Check for InCollection status (displayed as "In Collection")
+      expect(container.textContent).toContain('In Collection');
 
       // Test Wishlist status
       const wishlistModel = { ...mockModelSingleUnit, status: 'Wishlist' as const };

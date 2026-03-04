@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Button, Card, CardContent, CardHeader, CardTitle } from '$lib/components';
-  import { Separator } from '$lib/components/ui/separator';
+  import { Button } from '$lib/components';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
@@ -221,75 +220,97 @@
       data: { amount, currency: priceCurrencyDraft }
     });
   }
+
+  function isPositiveCondition(value: string): boolean {
+    return ['NEW', 'MINT', 'ORIGINAL_MINT'].includes(value);
+  }
 </script>
 
 <aside class="w-full shrink-0 space-y-4 lg:w-80">
-  <Card>
-    <CardHeader class="pb-3">
-      <CardTitle class="text-xs font-semibold tracking-widest uppercase"
-        >{m.collection_item_section_acquisition()}</CardTitle
-      >
-    </CardHeader>
-    <CardContent class="space-y-3">
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_seller()}</span>
-        <div class="text-right">
-          {#if editingField === 'seller'}
-            <div class="space-y-2">
-              <select
-                bind:value={sellerDraftId}
-                class="w-full rounded-md border bg-background px-2 py-1 text-sm"
-              >
-                <option value="">{m.collection_item_not_recorded()}</option>
-                {#each sellers as sellerOption (sellerOption.id)}
-                  <option value={sellerOption.id}>{sellerOption.name}</option>
-                {/each}
-              </select>
-              <div class="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  onclick={() =>
-                    saveUpdate('seller', {
-                      kind: 'seller',
-                      data: { seller_id: sellerDraftId || null }
-                    })}
-                  disabled={savingField === 'seller'}>{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
-            </div>
-          {:else}
-            <button
-              type="button"
-              class="text-right text-primary hover:underline"
-              onclick={() => startEditing('seller')}
+  <!-- ═══ Acquisition Card ═══════════════════════════════════════════════ -->
+  <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
+    <div class="border-b border-[#1F1F1F] px-4 py-3">
+      <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+        {m.collection_item_section_acquisition()}
+      </h3>
+    </div>
+
+    <div class="space-y-3 p-4">
+      <!-- Seller -->
+      <div class="space-y-1">
+        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          {m.collection_item_seller()}
+        </span>
+        {#if editingField === 'seller'}
+          <div class="space-y-2">
+            <select
+              bind:value={sellerDraftId}
+              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
             >
-              {seller?.name ?? m.collection_item_not_recorded()}
-            </button>
-          {/if}
-        </div>
+              <option value="">{m.collection_item_not_recorded()}</option>
+              {#each sellers as sellerOption (sellerOption.id)}
+                <option value={sellerOption.id}>{sellerOption.name}</option>
+              {/each}
+            </select>
+            <div class="flex justify-end gap-2">
+              <Button
+                size="sm"
+                onclick={() =>
+                  saveUpdate('seller', {
+                    kind: 'seller',
+                    data: { seller_id: sellerDraftId || null }
+                  })}
+                disabled={savingField === 'seller'}>{m.edit_field_save()}</Button
+              >
+              <Button variant="ghost" size="sm" onclick={cancelEditing}
+                >{m.edit_field_cancel()}</Button
+              >
+            </div>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="text-sm font-medium text-[#E0E0E0] hover:text-[#D48A42]"
+            onclick={() => startEditing('seller')}
+          >
+            {seller?.name ?? m.collection_item_not_recorded()}
+          </button>
+        {/if}
       </div>
 
-      <Separator />
+      <!-- Notes -->
+      <div class="space-y-1">
+        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          {m.collection_item_notes()}
+        </span>
+        <InPlaceEdit
+          value={item.notes ?? ''}
+          placeholder={m.collection_item_not_recorded()}
+          multiline={true}
+          onSave={saveNotes}
+        />
+      </div>
 
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_price()}</span>
-        <div class="text-right">
+      <!-- Three-column footer: Price | Purchase Date | Added Date -->
+      <div class="grid grid-cols-3 gap-x-3 border-t border-[#1F1F1F] pt-3">
+        <!-- Price -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.collection_item_price()}
+          </span>
           {#if editingField === 'price'}
-            <div class="space-y-2">
+            <div class="col-span-3 mt-1 space-y-2">
               <div class="grid grid-cols-[1fr,auto] gap-2">
                 <input
                   bind:value={priceDraft}
                   type="number"
                   min="0"
                   step="0.01"
-                  class="rounded-md border bg-background px-2 py-1 text-sm"
+                  class="rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
                 />
                 <select
                   bind:value={priceCurrencyDraft}
-                  class="rounded-md border bg-background px-2 py-1 text-sm"
+                  class="rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
                 >
                   {#each currencyOptions as currencyCode (currencyCode)}
                     <option value={currencyCode}>{currencyCode}</option>
@@ -308,30 +329,29 @@
           {:else}
             <button
               type="button"
-              class="text-right text-primary hover:underline"
+              class="text-left text-xs font-semibold text-[#E0E0E0] hover:text-[#D48A42]"
               onclick={() => startEditing('price')}
             >
               {#if purchasedInfo?.price}
                 {formatPrice(purchasedInfo.price.amount, purchasedInfo.price.currency)}
               {:else}
-                {m.collection_item_not_recorded()}
+                —
               {/if}
             </button>
           {/if}
         </div>
-      </div>
 
-      <Separator />
-
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_purchase_date()}</span>
-        <div class="text-right">
+        <!-- Purchase Date -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.collection_item_purchase_date()}
+          </span>
           {#if editingField === 'purchaseDate'}
             <div class="space-y-2">
               <input
                 bind:value={purchaseDateDraft}
                 type="date"
-                class="w-full rounded-md border bg-background px-2 py-1 text-sm"
+                class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
               />
               <div class="flex justify-end gap-2">
                 <Button
@@ -351,30 +371,29 @@
           {:else}
             <button
               type="button"
-              class="text-right text-primary hover:underline"
+              class="text-left text-xs font-semibold text-[#E0E0E0] hover:text-[#D48A42]"
               onclick={() => startEditing('purchaseDate')}
             >
               {#if purchasedInfo?.purchaseDate}
                 {formatDate(purchasedInfo.purchaseDate)}
               {:else}
-                {m.collection_item_not_recorded()}
+                —
               {/if}
             </button>
           {/if}
         </div>
-      </div>
 
-      <Separator />
-
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_added_date()}</span>
-        <div class="text-right">
+        <!-- Added Date -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.collection_item_added_date()}
+          </span>
           {#if editingField === 'addedDate'}
             <div class="space-y-2">
               <input
                 bind:value={addedDateDraft}
                 type="date"
-                class="w-full rounded-md border bg-background px-2 py-1 text-sm"
+                class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
               />
               <div class="flex justify-end gap-2">
                 <Button
@@ -394,7 +413,7 @@
           {:else}
             <button
               type="button"
-              class="text-right text-primary hover:underline"
+              class="text-left text-xs font-semibold text-[#E0E0E0] hover:text-[#D48A42]"
               onclick={() => startEditing('addedDate')}
             >
               {formatDate(item.addedDate)}
@@ -402,168 +421,166 @@
           {/if}
         </div>
       </div>
+    </div>
+  </div>
 
-      <Separator />
+  <!-- ═══ Condition Card ══════════════════════════════════════════════════ -->
+  <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
+    <div class="border-b border-[#1F1F1F] px-4 py-3">
+      <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+        {m.collection_item_section_condition()}
+      </h3>
+    </div>
 
-      <div class="space-y-2">
-        <span class="text-sm text-muted-foreground">{m.collection_item_notes()}</span>
-        <InPlaceEdit
-          value={item.notes ?? ''}
-          placeholder={m.collection_item_not_recorded()}
-          multiline={true}
-          onSave={saveNotes}
-        />
-      </div>
-    </CardContent>
-  </Card>
-
-  <Card>
-    <CardHeader class="pb-3">
-      <CardTitle class="text-xs font-semibold tracking-widest uppercase"
-        >{m.collection_item_section_condition()}</CardTitle
-      >
-    </CardHeader>
-    <CardContent class="space-y-3">
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_purchase_condition()}</span>
-        <div class="text-right">
-          {#if editingField === 'purchaseCondition'}
-            <div class="space-y-2">
-              <select
-                bind:value={purchaseConditionDraft}
-                class="w-full rounded-md border bg-background px-2 py-1 text-sm"
-              >
-                <option value="">{m.collection_item_not_recorded()}</option>
-                {#each purchaseConditionOptions as option (option)}
-                  <option value={option}>{purchaseConditionLabel(option)}</option>
-                {/each}
-              </select>
-              <div class="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  onclick={() =>
-                    saveUpdate('purchaseCondition', {
-                      kind: 'purchaseCondition',
-                      data: { purchase_condition: purchaseConditionDraft || null }
-                    })}
-                  disabled={savingField === 'purchaseCondition'}>{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
-            </div>
-          {:else}
-            <button
-              type="button"
-              class="text-right text-primary hover:underline"
-              onclick={() => startEditing('purchaseCondition')}
+    <div class="grid grid-cols-3 gap-x-3 p-4">
+      <!-- Purchase Condition -->
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          {m.collection_item_purchase_condition()}
+        </span>
+        {#if editingField === 'purchaseCondition'}
+          <div class="col-span-3 space-y-2">
+            <select
+              bind:value={purchaseConditionDraft}
+              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
             >
-              {#if item.purchaseCondition}
-                {purchaseConditionLabel(item.purchaseCondition)}
-              {:else}
-                {m.collection_item_not_recorded()}
-              {/if}
-            </button>
-          {/if}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_model_condition()}</span>
-        <div class="text-right">
-          {#if editingField === 'modelCondition'}
-            <div class="space-y-2">
-              <select
-                bind:value={modelConditionDraft}
-                class="w-full rounded-md border bg-background px-2 py-1 text-sm"
+              <option value="">{m.collection_item_not_recorded()}</option>
+              {#each purchaseConditionOptions as option (option)}
+                <option value={option}>{purchaseConditionLabel(option)}</option>
+              {/each}
+            </select>
+            <div class="flex justify-end gap-2">
+              <Button
+                size="sm"
+                onclick={() =>
+                  saveUpdate('purchaseCondition', {
+                    kind: 'purchaseCondition',
+                    data: { purchase_condition: purchaseConditionDraft || null }
+                  })}
+                disabled={savingField === 'purchaseCondition'}>{m.edit_field_save()}</Button
               >
-                <option value="">{m.collection_item_not_recorded()}</option>
-                {#each modelConditionOptions as option (option)}
-                  <option value={option}>{modelConditionLabel(option)}</option>
-                {/each}
-              </select>
-              <div class="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  onclick={() =>
-                    saveUpdate('modelCondition', {
-                      kind: 'modelCondition',
-                      data: { model_condition: modelConditionDraft || null }
-                    })}
-                  disabled={savingField === 'modelCondition'}>{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
-            </div>
-          {:else}
-            <button
-              type="button"
-              class="text-right text-primary hover:underline"
-              onclick={() => startEditing('modelCondition')}
-            >
-              {#if item.modelCondition}
-                {modelConditionLabel(item.modelCondition)}
-              {:else}
-                {m.collection_item_not_recorded()}
-              {/if}
-            </button>
-          {/if}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div class="grid grid-cols-[auto,1fr] items-start gap-2 text-sm">
-        <span class="text-muted-foreground">{m.collection_item_box_condition()}</span>
-        <div class="text-right">
-          {#if editingField === 'boxCondition'}
-            <div class="space-y-2">
-              <select
-                bind:value={boxConditionDraft}
-                class="w-full rounded-md border bg-background px-2 py-1 text-sm"
+              <Button variant="ghost" size="sm" onclick={cancelEditing}
+                >{m.edit_field_cancel()}</Button
               >
-                <option value="">{m.collection_item_not_recorded()}</option>
-                {#each boxConditionOptions as option (option)}
-                  <option value={option}>{boxConditionLabel(option)}</option>
-                {/each}
-              </select>
-              <div class="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  onclick={() =>
-                    saveUpdate('boxCondition', {
-                      kind: 'boxCondition',
-                      data: { box_condition: boxConditionDraft || null }
-                    })}
-                  disabled={savingField === 'boxCondition'}>{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
             </div>
-          {:else}
-            <button
-              type="button"
-              class="text-right text-primary hover:underline"
-              onclick={() => startEditing('boxCondition')}
-            >
-              {#if item.boxCondition}
-                {boxConditionLabel(item.boxCondition)}
-              {:else}
-                {m.collection_item_not_recorded()}
-              {/if}
-            </button>
-          {/if}
-        </div>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="text-left text-xs font-semibold transition-colors hover:opacity-80 {item.purchaseCondition &&
+            isPositiveCondition(item.purchaseCondition)
+              ? 'text-[#D48A42]'
+              : 'text-[#E0E0E0]'}"
+            onclick={() => startEditing('purchaseCondition')}
+          >
+            {#if item.purchaseCondition}
+              {purchaseConditionLabel(item.purchaseCondition)}
+            {:else}
+              —
+            {/if}
+          </button>
+        {/if}
       </div>
-    </CardContent>
-  </Card>
+
+      <!-- Model Condition -->
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          {m.collection_item_model_condition()}
+        </span>
+        {#if editingField === 'modelCondition'}
+          <div class="col-span-3 space-y-2">
+            <select
+              bind:value={modelConditionDraft}
+              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
+            >
+              <option value="">{m.collection_item_not_recorded()}</option>
+              {#each modelConditionOptions as option (option)}
+                <option value={option}>{modelConditionLabel(option)}</option>
+              {/each}
+            </select>
+            <div class="flex justify-end gap-2">
+              <Button
+                size="sm"
+                onclick={() =>
+                  saveUpdate('modelCondition', {
+                    kind: 'modelCondition',
+                    data: { model_condition: modelConditionDraft || null }
+                  })}
+                disabled={savingField === 'modelCondition'}>{m.edit_field_save()}</Button
+              >
+              <Button variant="ghost" size="sm" onclick={cancelEditing}
+                >{m.edit_field_cancel()}</Button
+              >
+            </div>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="text-left text-xs font-semibold transition-colors hover:opacity-80 {item.modelCondition &&
+            isPositiveCondition(item.modelCondition)
+              ? 'text-[#D48A42]'
+              : 'text-[#E0E0E0]'}"
+            onclick={() => startEditing('modelCondition')}
+          >
+            {#if item.modelCondition}
+              {modelConditionLabel(item.modelCondition)}
+            {:else}
+              —
+            {/if}
+          </button>
+        {/if}
+      </div>
+
+      <!-- Box Condition -->
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          {m.collection_item_box_condition()}
+        </span>
+        {#if editingField === 'boxCondition'}
+          <div class="col-span-3 space-y-2">
+            <select
+              bind:value={boxConditionDraft}
+              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
+            >
+              <option value="">{m.collection_item_not_recorded()}</option>
+              {#each boxConditionOptions as option (option)}
+                <option value={option}>{boxConditionLabel(option)}</option>
+              {/each}
+            </select>
+            <div class="flex justify-end gap-2">
+              <Button
+                size="sm"
+                onclick={() =>
+                  saveUpdate('boxCondition', {
+                    kind: 'boxCondition',
+                    data: { box_condition: boxConditionDraft || null }
+                  })}
+                disabled={savingField === 'boxCondition'}>{m.edit_field_save()}</Button
+              >
+              <Button variant="ghost" size="sm" onclick={cancelEditing}
+                >{m.edit_field_cancel()}</Button
+              >
+            </div>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="text-left text-xs font-semibold transition-colors hover:opacity-80 {item.boxCondition &&
+            isPositiveCondition(item.boxCondition)
+              ? 'text-[#D48A42]'
+              : 'text-[#E0E0E0]'}"
+            onclick={() => startEditing('boxCondition')}
+          >
+            {#if item.boxCondition}
+              {boxConditionLabel(item.boxCondition)}
+            {:else}
+              —
+            {/if}
+          </button>
+        {/if}
+      </div>
+    </div>
+  </div>
 
   {#if errorMessage}
     <p class="text-sm text-destructive">{errorMessage}</p>

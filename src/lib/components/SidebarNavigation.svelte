@@ -16,6 +16,12 @@
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const locale = $derived($localeStore);
   const pathname = $derived(($page.url.pathname as string) || '');
+
+  function navLinkClass(active: boolean): string {
+    return active
+      ? 'bg-[rgba(212,138,66,0.15)] text-[#D48A42]'
+      : 'text-sidebar-foreground hover:bg-sidebar-accent';
+  }
 </script>
 
 {#key locale}
@@ -41,14 +47,15 @@
 
     <ul class="space-y-2">
       {#each NAVIGATION_ITEMS as item (item.id)}
-        <li>
+        <li class="relative overflow-hidden">
+          {#if isActive(item, pathname)}
+            <div class="absolute inset-y-0 left-0 w-[2px] bg-[#D48A42]"></div>
+          {/if}
           <a
             href={resolve(item.href as '/dashboard')}
-            class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-            class:bg-primary={isActive(item, pathname)}
-            class:text-primary-foreground={isActive(item, pathname)}
-            class:text-sidebar-foreground={!isActive(item, pathname)}
-            class:hover:bg-sidebar-accent={!isActive(item, pathname)}
+            class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors {navLinkClass(
+              isActive(item, pathname)
+            )}"
             aria-current={isActive(item, pathname) ? 'page' : undefined}
           >
             <item.icon size={20} />
@@ -62,18 +69,21 @@
     </ul>
 
     <div class="mt-auto space-y-2 border-t border-border pt-4">
-      <a
-        href={resolve('/settings')}
-        class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
-        class:bg-primary={pathname === '/settings'}
-        class:text-primary-foreground={pathname === '/settings'}
-        class:text-sidebar-foreground={pathname !== '/settings'}
-        class:hover:bg-sidebar-accent={pathname !== '/settings'}
-        aria-current={pathname === '/settings' ? 'page' : undefined}
-      >
-        <Settings size={20} />
-        <span class="tracking-wide">{m.app_settings()}</span>
-      </a>
+      <div class="relative overflow-hidden">
+        {#if pathname === '/settings'}
+          <div class="absolute inset-y-0 left-0 w-[2px] bg-[#D48A42]"></div>
+        {/if}
+        <a
+          href={resolve('/settings')}
+          class="flex w-full items-center justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors {navLinkClass(
+            pathname === '/settings'
+          )}"
+          aria-current={pathname === '/settings' ? 'page' : undefined}
+        >
+          <Settings size={20} />
+          <span class="tracking-wide">{m.app_settings()}</span>
+        </a>
+      </div>
       <div class="px-4 py-2 text-center text-xs tracking-widest text-muted-foreground uppercase">
         {m.app_version_prefix()}
         {$appVersion || '—'}

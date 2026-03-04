@@ -720,7 +720,9 @@
     </div>
     <div class="flex flex-col items-center gap-0.5 px-2">
       <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Status</span>
-      <span class="text-xs text-zinc-200">{model.status}</span>
+      <span class="text-xs text-zinc-200"
+        >{model.status === 'InCollection' ? 'In Collection' : model.status}</span
+      >
     </div>
   </div>
 
@@ -797,7 +799,9 @@
                   {/if}
                 </div>
                 {#if unit.railway_company}
-                  <span class="text-[10px] font-medium tracking-wider text-zinc-400">
+                  <span
+                    class="inline-flex items-center rounded border border-[#1F1F1F] bg-[#0F0F0F] px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-[#D48A42] uppercase"
+                  >
                     {unit.railway_company}
                   </span>
                 {/if}
@@ -961,7 +965,9 @@
                       {/if}
                     </div>
                     {#if unit.railway_company}
-                      <span class="ml-2 shrink-0 text-[10px] text-zinc-500">
+                      <span
+                        class="ml-2 inline-flex shrink-0 items-center rounded border border-[#1F1F1F] bg-[#0F0F0F] px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-[#D48A42] uppercase"
+                      >
                         {unit.railway_company}
                       </span>
                     {/if}
@@ -1080,7 +1086,7 @@
             <div class="mt-4 flex justify-start">
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#E2994F]/50 hover:text-[#E2994F]"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-transparent px-3 py-1.5 text-xs font-medium text-[#E0E0E0] transition-colors hover:border-[#D48A42]/50 hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
                 onclick={() => {
                   createDrawerOpen = true;
                 }}
@@ -1093,7 +1099,7 @@
           <div class="rounded-lg border border-dashed border-border p-8 text-center">
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-md border border-[#E2994F]/30 bg-[#E2994F]/10 px-4 py-2 text-sm font-medium text-[#E2994F] transition-colors hover:border-[#E2994F]/60 hover:bg-[#E2994F]/20"
+              class="inline-flex items-center gap-2 rounded-lg border border-[#1F1F1F] bg-transparent px-4 py-2 text-sm font-medium text-[#E0E0E0] transition-colors hover:border-[#D48A42]/50 hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
               onclick={() => {
                 createDrawerOpen = true;
               }}

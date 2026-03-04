@@ -94,9 +94,8 @@ describe('SidebarNavigation', () => {
     // Get the link for Home
     const homeLink = screen.getByText('Home').closest('a');
 
-    // Check if active classes are applied
-    expect(homeLink?.classList.contains('bg-primary')).toBe(true);
-    expect(homeLink?.classList.contains('text-primary-foreground')).toBe(true);
+    // Check if active classes are applied (muted-amber + amber text)
+    expect(homeLink?.className).toContain('text-[#D48A42]');
   });
 
   it('does not apply active state to non-current routes', () => {
