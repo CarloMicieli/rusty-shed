@@ -28,7 +28,14 @@
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
-  import { commands, type Scale, type Language, type RollingStockView } from '$lib/bindings';
+  import RollingStockCreateDrawer from '$lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte';
+  import {
+    commands,
+    type Scale,
+    type Language,
+    type RollingStockView,
+    type RollingStockId
+  } from '$lib/bindings';
 
   interface RailwayModelCardProps {
     /** The railway model to display */
@@ -64,6 +71,7 @@
   let isDragging = $state(false);
   let isUploading = $state(false);
   let _uploadProgress = $state(0);
+  let createDrawerOpen = $state(false);
 
   // Current locale as Language type
   const currentLocale = getLocale() as Language;
@@ -1067,6 +1075,32 @@
               {/each}
             </div>
           {/if}
+
+          {#if editable}
+            <div class="mt-4 flex justify-start">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#E2994F]/50 hover:text-[#E2994F]"
+                onclick={() => {
+                  createDrawerOpen = true;
+                }}
+              >
+                {m.rolling_stock_add_more()}
+              </button>
+            </div>
+          {/if}
+        {:else if editable}
+          <div class="rounded-lg border border-dashed border-border p-8 text-center">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-md border border-[#E2994F]/30 bg-[#E2994F]/10 px-4 py-2 text-sm font-medium text-[#E2994F] transition-colors hover:border-[#E2994F]/60 hover:bg-[#E2994F]/20"
+              onclick={() => {
+                createDrawerOpen = true;
+              }}
+            >
+              {m.rolling_stock_add_cta()}
+            </button>
+          </div>
         {:else}
           <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
             <p class="text-sm text-zinc-600 italic">{m.no_additional_details()}</p>
@@ -1075,4 +1109,15 @@
       </TabsContent>
     </Tabs>
   </div>
+
+  <RollingStockCreateDrawer
+    open={createDrawerOpen}
+    railwayModelId={model.id}
+    onCreated={(_id: RollingStockId) => {
+      void notifyModelUpdated();
+    }}
+    onClose={() => {
+      createDrawerOpen = false;
+    }}
+  />
 </div>

@@ -18,6 +18,13 @@ vi.mock('@tauri-apps/api/core', () => ({
   convertFileSrc: vi.fn((p: string) => p)
 }));
 
+// Mock bindings/commands
+vi.mock('$lib/bindings', () => ({
+  commands: {
+    getRailwayCompanies: vi.fn(() => Promise.resolve({ status: 'ok', data: [] }))
+  }
+}));
+
 // Mock Paraglide messages
 vi.mock('$lib/paraglide/messages', () => ({
   railway_model_details: () => 'Railway Model Details',
@@ -50,7 +57,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   translation_section_required: () => 'Required',
   translation_section_optional: () => 'Optional',
   translation_section_english: () => 'English',
-  translation_section_italian: () => 'Italian'
+  translation_section_italian: () => 'Italian',
+  rolling_stock_add_cta: () => 'Add Rolling Stock',
+  rolling_stock_add_more: () => '+ Add Rolling Stock'
 }));
 
 describe('RailwayModelCard', () => {
