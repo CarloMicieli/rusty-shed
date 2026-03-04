@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Button } from '$lib/components';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
@@ -28,30 +28,14 @@
     day: 'numeric'
   });
 
-  type EditableField =
-    | null
-    | 'seller'
-    | 'price'
-    | 'purchaseDate'
-    | 'addedDate'
-    | 'notes'
-    | 'purchaseCondition'
-    | 'modelCondition'
-    | 'boxCondition';
-
-  let editingField = $state<EditableField>(null);
-  let savingField = $state<EditableField>(null);
-  let errorMessage = $state<string | null>(null);
-  let sellers = $state<SellerView[]>([]);
-
-  let sellerDraftId = $state('');
+  // Price field state (composite field, managed inline)
+  let isPriceEditing = $state(false);
+  let isSavingPrice = $state(false);
+  let priceError = $state<string | null>(null);
   let priceDraft = $state('');
   let priceCurrencyDraft = $state('EUR');
-  let purchaseDateDraft = $state('');
-  let addedDateDraft = $state('');
-  let purchaseConditionDraft = $state('');
-  let modelConditionDraft = $state('');
-  let boxConditionDraft = $state('');
+
+  let sellers = $state<SellerView[]>([]);
 
   function formatDate(iso: string): string {
     return dateFormatter.format(new Date(iso));
@@ -146,84 +130,86 @@
     return value.slice(0, 10);
   }
 
-  function startEditing(field: Exclude<EditableField, null>) {
-    if (savingField) return;
-    errorMessage = null;
-    editingField = field;
-    sellerDraftId = seller?.id ?? '';
-    const currentPrice = purchasedInfo?.price;
-    priceDraft = currentPrice ? (Number(currentPrice.amount) / 100).toFixed(2) : '';
-    priceCurrencyDraft = currentPrice?.currency ?? 'EUR';
-    purchaseDateDraft = toDateInputValue(purchasedInfo?.purchaseDate ?? null);
-    addedDateDraft = toDateInputValue(item.addedDate);
-    purchaseConditionDraft = item.purchaseCondition ?? '';
-    modelConditionDraft = item.modelCondition ?? '';
-    boxConditionDraft = item.boxCondition ?? '';
-  }
-
-  function cancelEditing() {
-    editingField = null;
-    errorMessage = null;
-  }
-
-  async function saveUpdate(
-    field: Exclude<EditableField, null>,
-    update: CollectionItemUpdateArgs
-  ): Promise<void> {
-    savingField = field;
-    errorMessage = null;
-
-    try {
-      const result = await commands.updateCollectionItem({
-        collectionItemId: item.id,
-        update
-      });
-      if (result.status === 'error') {
-        throw new Error('update_failed');
-      }
-      editingField = null;
-      await onItemUpdated?.();
-    } catch {
-      errorMessage = m.collection_item_error();
-    } finally {
-      savingField = null;
+  async function saveUpdate(update: CollectionItemUpdateArgs): Promise<void> {
+    const result = await commands.updateCollectionItem({
+      collectionItemId: item.id,
+      update
+    });
+    if (result.status === 'error') {
+      throw new Error('update_failed');
     }
+    await onItemUpdated?.();
   }
 
   async function saveNotes(value: string): Promise<void> {
     const notes = value.trim();
-    await saveUpdate('notes', {
+    await saveUpdate({
       kind: 'notes',
       data: { notes: notes.length > 0 ? notes : null }
     });
   }
 
+  function startEditingPrice() {
+    if (isSavingPrice) return;
+    priceError = null;
+    const currentPrice = purchasedInfo?.price;
+    priceDraft = currentPrice ? (Number(currentPrice.amount) / 100).toFixed(2) : '';
+    priceCurrencyDraft = currentPrice?.currency ?? 'EUR';
+    isPriceEditing = true;
+  }
+
   async function savePrice(): Promise<void> {
-    const normalized = priceDraft.trim();
-    if (!normalized) {
-      await saveUpdate('price', {
-        kind: 'price',
-        data: { amount: null, currency: null }
-      });
-      return;
-    }
+    if (isSavingPrice) return;
+    isSavingPrice = true;
+    priceError = null;
 
-    const parsed = Number(normalized);
-    if (Number.isNaN(parsed) || parsed < 0) {
-      errorMessage = m.collection_item_error();
-      return;
-    }
+    try {
+      const normalized = priceDraft.trim();
+      if (!normalized) {
+        await saveUpdate({ kind: 'price', data: { amount: null, currency: null } });
+        isPriceEditing = false;
+        return;
+      }
 
-    const amount = BigInt(Math.round(parsed * 100));
-    await saveUpdate('price', {
-      kind: 'price',
-      data: { amount, currency: priceCurrencyDraft }
-    });
+      const parsed = Number(normalized);
+      if (Number.isNaN(parsed) || parsed < 0) {
+        priceError = m.collection_item_error();
+        return;
+      }
+
+      const amount = BigInt(Math.round(parsed * 100));
+      await saveUpdate({ kind: 'price', data: { amount, currency: priceCurrencyDraft } });
+      isPriceEditing = false;
+    } catch {
+      priceError = m.collection_item_error();
+    } finally {
+      isSavingPrice = false;
+    }
   }
 
   function isPositiveCondition(value: string): boolean {
     return ['NEW', 'MINT', 'ORIGINAL_MINT'].includes(value);
   }
+
+  // Seller options for InPlaceSelectEdit
+  const sellerOptions = $derived([
+    { value: '', label: m.collection_item_not_recorded() },
+    ...sellers.map((s) => ({ value: s.id, label: s.name }))
+  ]);
+
+  // Condition options with empty "not recorded" entry
+  const purchaseConditionSelectOptions = $derived([
+    { value: '', label: m.collection_item_not_recorded() },
+    ...purchaseConditionOptions.map((o) => ({ value: o, label: purchaseConditionLabel(o) }))
+  ]);
+  const modelConditionSelectOptions = $derived([
+    { value: '', label: m.collection_item_not_recorded() },
+    ...modelConditionOptions.map((o) => ({ value: o, label: modelConditionLabel(o) }))
+  ]);
+  const boxConditionSelectOptions = $derived([
+    { value: '', label: m.collection_item_not_recorded() },
+    ...boxConditionOptions.map((o) => ({ value: o, label: boxConditionLabel(o) }))
+  ]);
 </script>
 
 <aside class="w-full shrink-0 space-y-4 lg:w-80">
@@ -241,41 +227,13 @@
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
           {m.collection_item_seller()}
         </span>
-        {#if editingField === 'seller'}
-          <div class="space-y-2">
-            <select
-              bind:value={sellerDraftId}
-              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
-            >
-              <option value="">{m.collection_item_not_recorded()}</option>
-              {#each sellers as sellerOption (sellerOption.id)}
-                <option value={sellerOption.id}>{sellerOption.name}</option>
-              {/each}
-            </select>
-            <div class="flex justify-end gap-2">
-              <Button
-                size="sm"
-                onclick={() =>
-                  saveUpdate('seller', {
-                    kind: 'seller',
-                    data: { seller_id: sellerDraftId || null }
-                  })}
-                disabled={savingField === 'seller'}>{m.edit_field_save()}</Button
-              >
-              <Button variant="ghost" size="sm" onclick={cancelEditing}
-                >{m.edit_field_cancel()}</Button
-              >
-            </div>
-          </div>
-        {:else}
-          <button
-            type="button"
-            class="text-sm font-medium text-[#E0E0E0] hover:text-[#D48A42]"
-            onclick={() => startEditing('seller')}
-          >
-            {seller?.name ?? m.collection_item_not_recorded()}
-          </button>
-        {/if}
+        <InPlaceSelectEdit
+          value={seller?.id ?? ''}
+          displayLabel={seller?.name ?? m.collection_item_not_recorded()}
+          options={sellerOptions}
+          placeholder={m.collection_item_not_recorded()}
+          onSave={(id) => saveUpdate({ kind: 'seller', data: { seller_id: id || null } })}
+        />
       </div>
 
       <!-- Notes -->
@@ -298,46 +256,68 @@
           <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
             {m.collection_item_price()}
           </span>
-          {#if editingField === 'price'}
-            <div class="col-span-3 mt-1 space-y-2">
-              <div class="grid grid-cols-[1fr,auto] gap-2">
+          {#if isPriceEditing}
+            <div
+              class="col-span-3 mt-1 flex flex-col gap-2"
+              onfocusout={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  void savePrice();
+                }
+              }}
+            >
+              <div class="grid grid-cols-[1fr,auto] gap-1">
                 <input
                   bind:value={priceDraft}
                   type="number"
                   min="0"
                   step="0.01"
-                  class="rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
+                  disabled={isSavingPrice}
+                  onkeydown={(e) => {
+                    if (e.key === 'Escape') {
+                      isPriceEditing = false;
+                      priceError = null;
+                    }
+                  }}
+                  class="rounded border border-[#D48A42] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
                 />
                 <select
                   bind:value={priceCurrencyDraft}
-                  class="rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
+                  disabled={isSavingPrice}
+                  onkeydown={(e) => {
+                    if (e.key === 'Escape') {
+                      isPriceEditing = false;
+                      priceError = null;
+                    }
+                  }}
+                  class="rounded border border-[#D48A42] bg-[#0F0F0F] px-1 py-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
                 >
                   {#each currencyOptions as currencyCode (currencyCode)}
                     <option value={currencyCode}>{currencyCode}</option>
                   {/each}
                 </select>
               </div>
-              <div class="flex justify-end gap-2">
-                <Button size="sm" onclick={savePrice} disabled={savingField === 'price'}
-                  >{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
+              {#if priceError}
+                <p class="text-xs text-red-400" role="alert">{priceError}</p>
+              {/if}
             </div>
           {:else}
-            <button
-              type="button"
-              class="text-left text-xs font-semibold text-[#E0E0E0] hover:text-[#D48A42]"
-              onclick={() => startEditing('price')}
+            <div
+              class="-mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+              onclick={startEditingPrice}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') startEditingPrice();
+              }}
+              role="button"
+              tabindex="0"
             >
               {#if purchasedInfo?.price}
-                {formatPrice(purchasedInfo.price.amount, purchasedInfo.price.currency)}
+                <span class="text-xs font-semibold text-[#E0E0E0]">
+                  {formatPrice(purchasedInfo.price.amount, purchasedInfo.price.currency)}
+                </span>
               {:else}
-                —
+                <span class="text-xs text-[#808080] italic">—</span>
               {/if}
-            </button>
+            </div>
           {/if}
         </div>
 
@@ -346,41 +326,15 @@
           <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
             {m.collection_item_purchase_date()}
           </span>
-          {#if editingField === 'purchaseDate'}
-            <div class="space-y-2">
-              <input
-                bind:value={purchaseDateDraft}
-                type="date"
-                class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
-              />
-              <div class="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  onclick={() =>
-                    saveUpdate('purchaseDate', {
-                      kind: 'purchaseDate',
-                      data: { purchase_date: purchaseDateDraft || null }
-                    })}
-                  disabled={savingField === 'purchaseDate'}>{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
-            </div>
-          {:else}
-            <button
-              type="button"
-              class="text-left text-xs font-semibold text-[#E0E0E0] hover:text-[#D48A42]"
-              onclick={() => startEditing('purchaseDate')}
-            >
-              {#if purchasedInfo?.purchaseDate}
-                {formatDate(purchasedInfo.purchaseDate)}
-              {:else}
-                —
-              {/if}
-            </button>
-          {/if}
+          <InPlaceEdit
+            type="date"
+            value={toDateInputValue(purchasedInfo?.purchaseDate ?? null)}
+            displayValue={purchasedInfo?.purchaseDate
+              ? formatDate(purchasedInfo.purchaseDate)
+              : undefined}
+            placeholder="—"
+            onSave={(v) => saveUpdate({ kind: 'purchaseDate', data: { purchase_date: v || null } })}
+          />
         </div>
 
         <!-- Added Date -->
@@ -388,37 +342,13 @@
           <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
             {m.collection_item_added_date()}
           </span>
-          {#if editingField === 'addedDate'}
-            <div class="space-y-2">
-              <input
-                bind:value={addedDateDraft}
-                type="date"
-                class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
-              />
-              <div class="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  onclick={() =>
-                    saveUpdate('addedDate', {
-                      kind: 'addedDate',
-                      data: { added_date: addedDateDraft || null }
-                    })}
-                  disabled={savingField === 'addedDate'}>{m.edit_field_save()}</Button
-                >
-                <Button variant="ghost" size="sm" onclick={cancelEditing}
-                  >{m.edit_field_cancel()}</Button
-                >
-              </div>
-            </div>
-          {:else}
-            <button
-              type="button"
-              class="text-left text-xs font-semibold text-[#E0E0E0] hover:text-[#D48A42]"
-              onclick={() => startEditing('addedDate')}
-            >
-              {formatDate(item.addedDate)}
-            </button>
-          {/if}
+          <InPlaceEdit
+            type="date"
+            value={toDateInputValue(item.addedDate)}
+            displayValue={formatDate(item.addedDate)}
+            placeholder="—"
+            onSave={(v) => saveUpdate({ kind: 'addedDate', data: { added_date: v || null } })}
+          />
         </div>
       </div>
     </div>
@@ -438,48 +368,19 @@
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
           {m.collection_item_purchase_condition()}
         </span>
-        {#if editingField === 'purchaseCondition'}
-          <div class="col-span-3 space-y-2">
-            <select
-              bind:value={purchaseConditionDraft}
-              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
-            >
-              <option value="">{m.collection_item_not_recorded()}</option>
-              {#each purchaseConditionOptions as option (option)}
-                <option value={option}>{purchaseConditionLabel(option)}</option>
-              {/each}
-            </select>
-            <div class="flex justify-end gap-2">
-              <Button
-                size="sm"
-                onclick={() =>
-                  saveUpdate('purchaseCondition', {
-                    kind: 'purchaseCondition',
-                    data: { purchase_condition: purchaseConditionDraft || null }
-                  })}
-                disabled={savingField === 'purchaseCondition'}>{m.edit_field_save()}</Button
-              >
-              <Button variant="ghost" size="sm" onclick={cancelEditing}
-                >{m.edit_field_cancel()}</Button
-              >
-            </div>
-          </div>
-        {:else}
-          <button
-            type="button"
-            class="text-left text-xs font-semibold transition-colors hover:opacity-80 {item.purchaseCondition &&
-            isPositiveCondition(item.purchaseCondition)
-              ? 'text-[#D48A42]'
-              : 'text-[#E0E0E0]'}"
-            onclick={() => startEditing('purchaseCondition')}
-          >
-            {#if item.purchaseCondition}
-              {purchaseConditionLabel(item.purchaseCondition)}
-            {:else}
-              —
-            {/if}
-          </button>
-        {/if}
+        <InPlaceSelectEdit
+          value={item.purchaseCondition ?? ''}
+          displayLabel={item.purchaseCondition
+            ? purchaseConditionLabel(item.purchaseCondition)
+            : m.collection_item_not_recorded()}
+          options={purchaseConditionSelectOptions}
+          placeholder={m.collection_item_not_recorded()}
+          class={item.purchaseCondition && isPositiveCondition(item.purchaseCondition)
+            ? 'text-[#D48A42]'
+            : ''}
+          onSave={(v) =>
+            saveUpdate({ kind: 'purchaseCondition', data: { purchase_condition: v || null } })}
+        />
       </div>
 
       <!-- Model Condition -->
@@ -487,48 +388,19 @@
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
           {m.collection_item_model_condition()}
         </span>
-        {#if editingField === 'modelCondition'}
-          <div class="col-span-3 space-y-2">
-            <select
-              bind:value={modelConditionDraft}
-              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
-            >
-              <option value="">{m.collection_item_not_recorded()}</option>
-              {#each modelConditionOptions as option (option)}
-                <option value={option}>{modelConditionLabel(option)}</option>
-              {/each}
-            </select>
-            <div class="flex justify-end gap-2">
-              <Button
-                size="sm"
-                onclick={() =>
-                  saveUpdate('modelCondition', {
-                    kind: 'modelCondition',
-                    data: { model_condition: modelConditionDraft || null }
-                  })}
-                disabled={savingField === 'modelCondition'}>{m.edit_field_save()}</Button
-              >
-              <Button variant="ghost" size="sm" onclick={cancelEditing}
-                >{m.edit_field_cancel()}</Button
-              >
-            </div>
-          </div>
-        {:else}
-          <button
-            type="button"
-            class="text-left text-xs font-semibold transition-colors hover:opacity-80 {item.modelCondition &&
-            isPositiveCondition(item.modelCondition)
-              ? 'text-[#D48A42]'
-              : 'text-[#E0E0E0]'}"
-            onclick={() => startEditing('modelCondition')}
-          >
-            {#if item.modelCondition}
-              {modelConditionLabel(item.modelCondition)}
-            {:else}
-              —
-            {/if}
-          </button>
-        {/if}
+        <InPlaceSelectEdit
+          value={item.modelCondition ?? ''}
+          displayLabel={item.modelCondition
+            ? modelConditionLabel(item.modelCondition)
+            : m.collection_item_not_recorded()}
+          options={modelConditionSelectOptions}
+          placeholder={m.collection_item_not_recorded()}
+          class={item.modelCondition && isPositiveCondition(item.modelCondition)
+            ? 'text-[#D48A42]'
+            : ''}
+          onSave={(v) =>
+            saveUpdate({ kind: 'modelCondition', data: { model_condition: v || null } })}
+        />
       </div>
 
       <!-- Box Condition -->
@@ -536,53 +408,19 @@
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
           {m.collection_item_box_condition()}
         </span>
-        {#if editingField === 'boxCondition'}
-          <div class="col-span-3 space-y-2">
-            <select
-              bind:value={boxConditionDraft}
-              class="w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0]"
-            >
-              <option value="">{m.collection_item_not_recorded()}</option>
-              {#each boxConditionOptions as option (option)}
-                <option value={option}>{boxConditionLabel(option)}</option>
-              {/each}
-            </select>
-            <div class="flex justify-end gap-2">
-              <Button
-                size="sm"
-                onclick={() =>
-                  saveUpdate('boxCondition', {
-                    kind: 'boxCondition',
-                    data: { box_condition: boxConditionDraft || null }
-                  })}
-                disabled={savingField === 'boxCondition'}>{m.edit_field_save()}</Button
-              >
-              <Button variant="ghost" size="sm" onclick={cancelEditing}
-                >{m.edit_field_cancel()}</Button
-              >
-            </div>
-          </div>
-        {:else}
-          <button
-            type="button"
-            class="text-left text-xs font-semibold transition-colors hover:opacity-80 {item.boxCondition &&
-            isPositiveCondition(item.boxCondition)
-              ? 'text-[#D48A42]'
-              : 'text-[#E0E0E0]'}"
-            onclick={() => startEditing('boxCondition')}
-          >
-            {#if item.boxCondition}
-              {boxConditionLabel(item.boxCondition)}
-            {:else}
-              —
-            {/if}
-          </button>
-        {/if}
+        <InPlaceSelectEdit
+          value={item.boxCondition ?? ''}
+          displayLabel={item.boxCondition
+            ? boxConditionLabel(item.boxCondition)
+            : m.collection_item_not_recorded()}
+          options={boxConditionSelectOptions}
+          placeholder={m.collection_item_not_recorded()}
+          class={item.boxCondition && isPositiveCondition(item.boxCondition)
+            ? 'text-[#D48A42]'
+            : ''}
+          onSave={(v) => saveUpdate({ kind: 'boxCondition', data: { box_condition: v || null } })}
+        />
       </div>
     </div>
   </div>
-
-  {#if errorMessage}
-    <p class="text-sm text-destructive">{errorMessage}</p>
-  {/if}
 </aside>

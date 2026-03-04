@@ -21,15 +21,26 @@
   interface InPlaceEditProps {
     /** Current value displayed and edited. */
     value: string;
+    /** Override the text shown in view mode (e.g. a formatted date). Falls back to value. */
+    displayValue?: string;
     /** Placeholder shown when value is empty. */
     placeholder?: string;
     /** Whether to render a <textarea> instead of an <input>. */
     multiline?: boolean;
+    /** Input type — 'text' (default) or 'date'. */
+    type?: 'text' | 'date';
     /** Called when the user commits the new value (blur or Save click). */
     onSave: (value: string) => Promise<void>;
   }
 
-  let { value, placeholder, multiline = false, onSave }: InPlaceEditProps = $props();
+  let {
+    value,
+    displayValue,
+    placeholder,
+    multiline = false,
+    type = 'text',
+    onSave
+  }: InPlaceEditProps = $props();
 
   let isEditing = $state(false);
   // Initialized to empty; always assigned from `value` prop inside startEditing()
@@ -101,7 +112,7 @@
     {:else}
       <input
         bind:this={inputEl}
-        type="text"
+        {type}
         class="w-full rounded border border-[#D48A42] bg-[#0F0F0F] p-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
         bind:value={editValue}
         onblur={handleBlur}
@@ -116,7 +127,7 @@
   </div>
 {:else}
   <div
-    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)] focus-visible:outline-none"
     onclick={startEditing}
     onkeydown={(e) => {
       if (e.key === 'Enter' || e.key === ' ') startEditing();
@@ -125,7 +136,7 @@
     tabindex="0"
   >
     {#if value}
-      <span class="text-sm text-[#E0E0E0]">{value}</span>
+      <span class="text-sm text-[#E0E0E0]">{displayValue ?? value}</span>
     {:else}
       <span class="text-sm text-[#808080] italic"
         >{placeholder ?? m.edit_field_placeholder_empty()}</span
