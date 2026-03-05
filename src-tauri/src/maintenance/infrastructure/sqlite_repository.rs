@@ -9,8 +9,8 @@ use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent;
 use crate::maintenance::domain::{MaintenanceCard, MaintenanceEventId};
 use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
-use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceEventRow};
-use crate::maintenance::interface::{MaintenanceCardEventView, MaintenanceCardView};
+use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceCardWithDisplayInfoRow, MaintenanceEventRow};
+use crate::maintenance::interface::{MaintenanceCardEventView, MaintenanceCardView, RollingStockDisplayInfo};
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
@@ -158,19 +158,24 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         id: &MaintenanceCardId,
     ) -> Result<Option<MaintenanceCardView>, DomainError> {
         let q = r#"SELECT
-            id,
-            owned_rolling_stock_id,
-            last_maintenance_date,
-            next_maintenance_date,
-            created_at,
-            updated_at,
-            version
-        FROM maintenance_cards
-        WHERE id = ?"#;
+            mc.id,
+            mc.owned_rolling_stock_id,
+            mc.last_maintenance_date,
+            mc.next_maintenance_date,
+            mfr.name            AS manufacturer_name,
+            rm.product_code     AS product_code,
+            rs.series_code      AS series_code,
+            rs.road_number      AS road_number
+        FROM maintenance_cards mc
+        LEFT JOIN owned_rolling_stocks ors ON mc.owned_rolling_stock_id = ors.id
+        LEFT JOIN rolling_stocks rs        ON ors.rolling_stock_id = rs.id
+        LEFT JOIN railway_models rm        ON rs.railway_model_id = rm.id
+        LEFT JOIN manufacturers mfr        ON rm.manufacturer_id = mfr.id
+        WHERE mc.id = ?"#;
 
         let trn = id.to_string();
 
-        let row = sqlx::query_as::<_, MaintenanceCardRow>(q)
+        let row = sqlx::query_as::<_, MaintenanceCardWithDisplayInfoRow>(q)
             .bind(trn)
             .fetch_optional(&mut *self.executor)
             .await
@@ -217,12 +222,28 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                     });
                 }
 
+                let display_info = if r.manufacturer_name.is_some()
+                    || r.product_code.is_some()
+                    || r.series_code.is_some()
+                    || r.road_number.is_some()
+                {
+                    Some(RollingStockDisplayInfo {
+                        manufacturer_name: r.manufacturer_name,
+                        product_code: r.product_code,
+                        series_code: r.series_code,
+                        road_number: r.road_number,
+                    })
+                } else {
+                    None
+                };
+
                 Some(MaintenanceCardView {
                     id: r.id,
                     owned_rolling_stock_id: r.owned_rolling_stock_id,
                     last_maintenance_date: r.last_maintenance_date,
                     next_maintenance_date: r.next_maintenance_date,
                     events,
+                    display_info,
                 })
             }
             None => None,
@@ -303,14 +324,23 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                         .format("%Y-%m-%d %H:%M:%S")
                         .to_string();
 
-                    sqlx::query(insert_card_sql)
+                    let insert_result = sqlx::query(insert_card_sql)
                         .bind(&card_trn)
                         .bind(&owned_rolling_stock_id)
                         .bind(&now_dt)
                         .bind(&now_dt)
                         .execute(&mut *self.executor)
-                        .await
-                        .with_domain_context("Error inserting maintenance card row")?;
+                        .await;
+
+                    if let Err(e) = insert_result {
+                        if e.to_string().contains("UNIQUE constraint failed") {
+                            return Err(DomainError::Conflict(
+                                "A maintenance card already exists for this rolling stock."
+                                    .to_string(),
+                            ));
+                        }
+                        return Err(DomainError::Infrastructure(e));
+                    }
 
                     sqlx::query(insert_sql)
                         .bind(event_trn)
@@ -368,26 +398,31 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         &mut self,
     ) -> Result<Vec<crate::maintenance::interface::MaintenanceCardView>, DomainError> {
         let q = r#"SELECT
-            id,
-            owned_rolling_stock_id,
-            last_maintenance_date,
-            next_maintenance_date,
-            created_at,
-            updated_at,
-            version
-        FROM maintenance_cards
-        WHERE next_maintenance_date <= date('now')
+            mc.id,
+            mc.owned_rolling_stock_id,
+            mc.last_maintenance_date,
+            mc.next_maintenance_date,
+            mfr.name            AS manufacturer_name,
+            rm.product_code     AS product_code,
+            rs.series_code      AS series_code,
+            rs.road_number      AS road_number
+        FROM maintenance_cards mc
+        LEFT JOIN owned_rolling_stocks ors ON mc.owned_rolling_stock_id = ors.id
+        LEFT JOIN rolling_stocks rs        ON ors.rolling_stock_id = rs.id
+        LEFT JOIN railway_models rm        ON rs.railway_model_id = rm.id
+        LEFT JOIN manufacturers mfr        ON rm.manufacturer_id = mfr.id
+        WHERE mc.next_maintenance_date <= date('now')
            OR (
-               next_maintenance_date IS NULL
-               AND last_maintenance_date IS NOT NULL
-               AND last_maintenance_date <= date('now')
+               mc.next_maintenance_date IS NULL
+               AND mc.last_maintenance_date IS NOT NULL
+               AND mc.last_maintenance_date <= date('now')
            )
            OR (
-               next_maintenance_date IS NULL
-               AND last_maintenance_date IS NULL
+               mc.next_maintenance_date IS NULL
+               AND mc.last_maintenance_date IS NULL
            )"#;
 
-        let rows = sqlx::query_as::<_, MaintenanceCardRow>(q)
+        let rows = sqlx::query_as::<_, MaintenanceCardWithDisplayInfoRow>(q)
             .fetch_all(&mut *self.executor)
             .await
             .with_domain_context("Error querying due maintenance cards for view")?;
@@ -433,12 +468,28 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                 });
             }
 
+            let display_info = if r.manufacturer_name.is_some()
+                || r.product_code.is_some()
+                || r.series_code.is_some()
+                || r.road_number.is_some()
+            {
+                Some(RollingStockDisplayInfo {
+                    manufacturer_name: r.manufacturer_name,
+                    product_code: r.product_code,
+                    series_code: r.series_code,
+                    road_number: r.road_number,
+                })
+            } else {
+                None
+            };
+
             views.push(MaintenanceCardView {
                 id: r.id,
                 owned_rolling_stock_id: r.owned_rolling_stock_id,
                 last_maintenance_date: r.last_maintenance_date,
                 next_maintenance_date: r.next_maintenance_date,
                 events,
+                display_info,
             });
         }
 
@@ -609,6 +660,114 @@ mod tests {
         assert_eq!(
             card_with_events.last_maintenance_date.expect("date"),
             evt_date
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
+    async fn repo_prevents_duplicate_card_for_same_stock(pool: SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
+            .await
+            .expect("should create unit of work");
+        let mut repo = unit_of_work.maintenance_repository();
+
+        // The fixture already has a maintenance card for this owned_rolling_stock_id.
+        // Attempt to create a second card for the same stock.
+        let duplicate_card_uuid = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
+        let event_uuid = Uuid::parse_str("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").unwrap();
+        let created_at = NaiveDate::from_ymd_opt(2025, 6, 1).unwrap();
+
+        let mut card = MaintenanceCard::from_id(duplicate_card_uuid);
+        card.owned_rolling_stock_id = OwnedRollingStockId::try_from(
+            "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-02c7ce47bc70",
+        )
+        .expect("should parse owned rolling stock id");
+        card.pending_events = vec![MaintenanceCardEvent::Created {
+            id: event_uuid,
+            maintenance_card_id: duplicate_card_uuid,
+            created_at,
+        }];
+
+        let result = repo.save(card).await;
+        assert!(
+            matches!(result, Err(crate::core::domain::domain_error::DomainError::Conflict(_))),
+            "Expected DomainError::Conflict for duplicate card, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
+    async fn repo_list_due_card_views_includes_display_info(pool: SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
+            .await
+            .expect("should create unit of work");
+        let mut repo = unit_of_work.maintenance_repository();
+
+        let views = repo.list_due_card_views().await.expect("list due card views");
+
+        // The fixture card is linked to ACME manufacturer / product code 60100
+        let card_view = views
+            .iter()
+            .find(|v| v.id.to_string().contains("3284cc76-1472-4b12-a7d4-62043416adc2"))
+            .expect("fixture card should be in due views");
+
+        let display_info = card_view
+            .display_info
+            .as_ref()
+            .expect("display_info should be Some");
+
+        assert_eq!(
+            display_info.manufacturer_name.as_deref(),
+            Some("ACME"),
+            "manufacturer_name should match fixture"
+        );
+        assert_eq!(
+            display_info.product_code.as_deref(),
+            Some("60100"),
+            "product_code should match fixture"
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
+    async fn repo_find_view_by_id_includes_display_info(pool: SqlitePool) {
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
+            .await
+            .expect("should create unit of work");
+        let mut repo = unit_of_work.maintenance_repository();
+
+        let card_id = MaintenanceCardId::try_from(
+            "trn:maintenance-card:3284cc76-1472-4b12-a7d4-62043416adc2",
+        )
+        .expect("should parse card id");
+
+        let view = repo
+            .find_view_by_id(&card_id)
+            .await
+            .expect("find_view_by_id should not error")
+            .expect("card should exist");
+
+        let display_info = view
+            .display_info
+            .as_ref()
+            .expect("display_info should be Some");
+
+        assert_eq!(
+            display_info.manufacturer_name.as_deref(),
+            Some("ACME"),
+            "manufacturer_name should match fixture"
+        );
+        assert_eq!(
+            display_info.product_code.as_deref(),
+            Some("60100"),
+            "product_code should match fixture"
         );
     }
 }

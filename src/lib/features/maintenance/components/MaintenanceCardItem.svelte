@@ -51,8 +51,9 @@
   });
 </script>
 
-<div
-  class="group relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0c] transition-all hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
+<a
+  href="/maintenance/{encodeURIComponent(card.id)}"
+  class="group relative block overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0c] transition-all hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
 >
   <!-- Status Stripe -->
   <div
@@ -75,27 +76,43 @@
           {/if}
         </div>
         <h3 class="text-lg leading-tight font-bold tracking-tight text-white">
-          {card.ownedRollingStockId}
+          {card.displayInfo?.manufacturerName ?? '—'}{card.displayInfo?.productCode
+            ? ` ${card.displayInfo.productCode}`
+            : ''}
         </h3>
+        {#if card.displayInfo?.seriesCode}
+          <div class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+            {card.displayInfo.seriesCode}
+          </div>
+        {/if}
       </div>
 
-      <!-- Days Remaining Badge -->
-      {#if daysRemaining !== null}
-        <div class="flex flex-col items-end">
+      <!-- Days Remaining Badge + Road Number -->
+      <div class="flex flex-col items-end gap-1">
+        {#if card.displayInfo?.roadNumber}
           <span
-            class="font-mono text-2xl font-bold {urgency === 'overdue'
-              ? 'text-red-500'
-              : urgency === 'warning'
-                ? 'text-amber-500'
-                : 'text-white'}"
+            class="rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-mono text-xs font-bold text-amber-400"
           >
-            {daysRemaining > 0 ? daysRemaining : Math.abs(daysRemaining)}
+            {card.displayInfo.roadNumber}
           </span>
-          <span class="bold text-[10px] tracking-widest text-zinc-500 uppercase">
-            {daysRemaining >= 0 ? 'Days Left' : 'Days Overdue'}
-          </span>
-        </div>
-      {/if}
+        {/if}
+        {#if daysRemaining !== null}
+          <div class="flex flex-col items-end">
+            <span
+              class="font-mono text-2xl font-bold {urgency === 'overdue'
+                ? 'text-red-500'
+                : urgency === 'warning'
+                  ? 'text-amber-500'
+                  : 'text-white'}"
+            >
+              {daysRemaining > 0 ? daysRemaining : Math.abs(daysRemaining)}
+            </span>
+            <span class="bold text-[10px] tracking-widest text-zinc-500 uppercase">
+              {daysRemaining >= 0 ? 'Days Left' : 'Days Overdue'}
+            </span>
+          </div>
+        {/if}
+      </div>
     </div>
 
     <!-- Health Bar -->
@@ -145,4 +162,4 @@
       </div>
     </div>
   </div>
-</div>
+</a>

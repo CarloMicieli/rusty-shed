@@ -56,4 +56,10 @@ pub enum DomainError {
     /// and the format is invalid or the prefix doesn't match.
     #[error("Invalid identifier: {0}")]
     InvalidIdentifier(#[from] IdParseError),
+
+    /// Indicates a conflict with existing data (e.g., a unique constraint violation).
+    ///
+    /// **Source:** Triggered when an operation would produce a duplicate entry.
+    #[error("Conflict: {0}")]
+    Conflict(String),
 }

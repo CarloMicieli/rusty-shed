@@ -35,6 +35,19 @@ pub struct MaintenanceCardRow {
     pub version: i64,
 }
 
+/// Row mapper for the `maintenance_cards` table joined with catalog tables to include display info.
+#[derive(Debug, Clone, FromRow)]
+pub struct MaintenanceCardWithDisplayInfoRow {
+    pub id: MaintenanceCardId,
+    pub owned_rolling_stock_id: OwnedRollingStockId,
+    pub last_maintenance_date: Option<NaiveDate>,
+    pub next_maintenance_date: Option<NaiveDate>,
+    pub manufacturer_name: Option<String>,
+    pub product_code: Option<String>,
+    pub series_code: Option<String>,
+    pub road_number: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, FromRow)]
 /// Row mapper for the `maintenance_events` table.
 pub struct MaintenanceEventRow {

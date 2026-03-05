@@ -131,7 +131,6 @@ describe('routes/maintenance/+page.svelte', () => {
 
   it('shows action buttons in the header', () => {
     render(MaintenancePage);
-    expect(screen.getByText('maintenance_add_event_button')).toBeInTheDocument();
     expect(screen.getByText('maintenance_add_card_button')).toBeInTheDocument();
   });
 });

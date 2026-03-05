@@ -18,7 +18,9 @@ type CommandError =
   | { NotFound: string }
   | { ValidationError: Record<string, string> }
   | { PermissionDenied: string }
-  | { Unknown: string };
+  | { Unknown: string }
+  | { BusinessRule: string }
+  | { Conflict: string };
 
 /**
  * Normalize a Rust CommandError into our application's NormalizedError format.
@@ -68,6 +70,22 @@ function normalizeError(error: unknown): NormalizedError {
       return {
         kind: 'unknown',
         message: err.Unknown,
+        retryable: false
+      };
+    }
+
+    if ('BusinessRule' in err && typeof err.BusinessRule === 'string') {
+      return {
+        kind: 'unknown',
+        message: err.BusinessRule,
+        retryable: false
+      };
+    }
+
+    if ('Conflict' in err && typeof err.Conflict === 'string') {
+      return {
+        kind: 'unknown',
+        message: err.Conflict,
         retryable: false
       };
     }

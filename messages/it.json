@@ -528,6 +528,7 @@
   "maintenance_create_card_cancel": "Annulla",
   "maintenance_create_card_success": "Scheda manutenzione creata",
   "maintenance_create_card_error": "Impossibile creare scheda manutenzione",
+  "maintenance_card_already_exists": "Esiste già una scheda manutenzione per questo rotabile.",
   "maintenance_create_card_validation": "Seleziona un rotabile",
   "maintenance_add_event_title": "Registra Manutenzione",
   "maintenance_add_event_select_card": "Seleziona Scheda Manutenzione",

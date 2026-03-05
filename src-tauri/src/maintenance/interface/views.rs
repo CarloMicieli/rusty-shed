@@ -18,6 +18,22 @@ pub struct MaintenanceCardEventView {
     pub notes: Option<String>,
 }
 
+/// Human-readable identity information sourced from the catalog rolling stock
+/// and railway model tables. All fields are optional because a rolling stock
+/// may not have a catalog entry.
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RollingStockDisplayInfo {
+    /// Manufacturer display name (e.g. "Bachmann", "Märklin").
+    pub manufacturer_name: Option<String>,
+    /// Catalog product code (e.g. "32-504").
+    pub product_code: Option<String>,
+    /// Series code from the rolling stock record (e.g. "Class 66").
+    pub series_code: Option<String>,
+    /// Road number / running number (e.g. "66001").
+    pub road_number: Option<String>,
+}
+
 /// Lightweight view representation of a maintenance card intended for the frontend.
 /// Does not include metadata or pending events.
 #[derive(Debug, Clone, Serialize, specta::Type)]
@@ -33,4 +49,7 @@ pub struct MaintenanceCardView {
     pub next_maintenance_date: Option<NaiveDate>,
     /// Historical maintenance events associated with this card.
     pub events: Vec<MaintenanceCardEventView>,
+    /// Human-readable identity derived from the catalog at query time.
+    /// None when the owned rolling stock has no catalog entry.
+    pub display_info: Option<RollingStockDisplayInfo>,
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Plus, CalendarPlus, Activity, CheckCircle2, Factory } from 'lucide-svelte';
+  import { Plus, Activity, CheckCircle2, Factory } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, PageHeader } from '$lib/components';
   import MaintenanceState, {
@@ -9,7 +9,6 @@
   import MaintenanceCardList from '$lib/features/maintenance/components/MaintenanceCardList.svelte';
   import EmptyMaintenanceState from '$lib/features/maintenance/components/EmptyMaintenanceState.svelte';
   import AddMaintenanceCardModal from '$lib/features/maintenance/components/AddMaintenanceCardModal.svelte';
-  import AddMaintenanceEventModal from '$lib/features/maintenance/components/AddMaintenanceEventModal.svelte';
 
   // Initialize state
   const maintenanceState = new MaintenanceState();
@@ -23,7 +22,6 @@
 
   // Modal states
   let showAddCardModal = $state(false);
-  let showAddEventModal = $state(false);
 
   // Stats calculation
   const stats = $derived.by(() => {
@@ -55,10 +53,6 @@
     showAddCardModal = true;
   }
 
-  function handleAddEvent() {
-    showAddEventModal = true;
-  }
-
   function handleRetry() {
     void maintenanceState.retry();
   }
@@ -82,10 +76,6 @@
       description={m.maintenance_subtitle()}
     >
       {#snippet actions()}
-        <Button variant="outline" size="sm" onclick={handleAddEvent}>
-          <CalendarPlus class="mr-2 h-4 w-4" />
-          {m.maintenance_add_event_button()}
-        </Button>
         <Button variant="default" size="sm" onclick={handleAddCard}>
           <Plus class="mr-2 h-4 w-4" />
           {m.maintenance_add_card_button()}
@@ -170,9 +160,4 @@
 <!-- Add Maintenance Card Modal -->
 {#if showAddCardModal}
   <AddMaintenanceCardModal open={showAddCardModal} onClose={() => (showAddCardModal = false)} />
-{/if}
-
-<!-- Add Maintenance Event Modal -->
-{#if showAddEventModal}
-  <AddMaintenanceEventModal open={showAddEventModal} onClose={() => (showAddEventModal = false)} />
 {/if}

@@ -553,6 +553,7 @@
   "maintenance_create_card_cancel": "Cancel",
   "maintenance_create_card_success": "Maintenance card created",
   "maintenance_create_card_error": "Failed to create maintenance card",
+  "maintenance_card_already_exists": "A maintenance card already exists for this locomotive.",
   "maintenance_create_card_validation": "Please select a rolling stock",
   "maintenance_add_event_title": "Add Maintenance Event",
   "maintenance_add_event_select_card": "Select Maintenance Card",

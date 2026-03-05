@@ -14,6 +14,28 @@ use crate::maintenance::interface::{
 use crate::state::AppState;
 use std::convert::TryInto;
 
+/// Command handler to retrieve a single maintenance card by its ID.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `card_id`: The ID of the maintenance card to retrieve.
+///
+/// # Returns
+/// The `MaintenanceCardView` if found, or `None`.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_maintenance_card(
+    state: tauri::State<'_, AppState>,
+    card_id: MaintenanceCardId,
+) -> Result<Option<MaintenanceCardView>, CommandError> {
+    let mut unit_of_work = state.unit_of_work().await?;
+    let mut repo = unit_of_work.maintenance_repository();
+    let view = repo.find_view_by_id(&card_id).await.map_err(CommandError::from)?;
+    drop(repo);
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+    Ok(view)
+}
+
 /// Command handler to retrieve maintenance cards that are due or overdue.
 ///
 /// # Arguments

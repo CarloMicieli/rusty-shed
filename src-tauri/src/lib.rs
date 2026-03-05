@@ -184,6 +184,7 @@ pub fn run() {
         wishlist_command_handlers::move_item_to_list,
         wishlist_command_handlers::purchase_wishlist_item,
         maintenance_command_handlers::get_maintenance_dashboard,
+        maintenance_command_handlers::get_maintenance_card,
         maintenance_command_handlers::add_maintenance_event,
         maintenance_command_handlers::add_maintenance_card,
         sellers_command_handlers::get_sellers,

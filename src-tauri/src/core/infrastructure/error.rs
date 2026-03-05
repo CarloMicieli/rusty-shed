@@ -59,6 +59,10 @@ pub enum CommandError {
     /// "Cannot cancel an invoice that has already been paid").
     #[error("Business rule violation: {0}")]
     BusinessRule(String),
+
+    /// Indicates a conflict with existing data (e.g., a unique constraint violation).
+    #[error("Conflict: {0}")]
+    Conflict(String),
 }
 
 impl From<DomainError> for CommandError {
@@ -84,6 +88,7 @@ impl From<DomainError> for CommandError {
             DomainError::InvalidIdentifier(e) => {
                 CommandError::validation_field("id", e.to_string())
             }
+            DomainError::Conflict(msg) => CommandError::Conflict(msg),
         }
     }
 }

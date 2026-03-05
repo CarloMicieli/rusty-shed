@@ -714,23 +714,43 @@ async purchaseWishlistItem(input: PurchaseWishlistArgs) : Promise<Result<null, C
  */
 async getMaintenanceDashboard() : Promise<Result<MaintenanceCardView[], CommandError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_maintenance_dashboard") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-/**
- * Command handler to add a maintenance event and update the card.
- * 
- * # Arguments
- * - `state`: The application state.
- * - `input`: The arguments required to add a maintenance event.
- * 
- * # Returns
- * nothing on success.
- */
-async addMaintenanceEvent(input: AddMaintenanceArgs) : Promise<Result<null, CommandError>> {
+      return { status: 'ok', data: await TAURI_INVOKE('get_maintenance_dashboard') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Command handler to retrieve a single maintenance card by its ID.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `card_id`: The ID of the maintenance card to retrieve.
+   *
+   * # Returns
+   * The `MaintenanceCardView` if found, or `None`.
+   */
+  async getMaintenanceCard(
+    cardId: MaintenanceCardId
+  ): Promise<Result<MaintenanceCardView | null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_maintenance_card', { cardId }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Command handler to add a maintenance event and update the card.
+   *
+   * # Arguments
+   * - `state`: The application state.
+   * - `input`: The arguments required to add a maintenance event.
+   *
+   * # Returns
+   * nothing on success.
+   */
+  async addMaintenanceEvent(input: AddMaintenanceArgs): Promise<Result<null, CommandError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("add_maintenance_event", { input }) };
 } catch (e) {
@@ -2434,49 +2454,53 @@ items: CollectionItemView[] }
  * intelligently to different error conditions. Each variant is serializable and
  * includes enough context for appropriate UI rendering.
  */
-export type CommandError = 
-/**
- * Represents an error coming from the database layer.
- * 
- * The inner `String` should contain a concise, non-sensitive description
- * of the underlying database failure.
- */
-{ DatabaseError: string } | 
-/**
- * Indicates a requested resource was not found.
- * 
- * Use this when a query returns no results for a specific ID or criteria.
- * The inner `String` should describe what resource was not found (e.g., "Wishlist not found").
- */
-{ NotFound: string } | 
-/**
- * Validation error with field-specific messages.
- * 
- * The map contains field names as keys and error messages as values.
- * This allows the frontend to display validation errors next to the appropriate form fields.
- * Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
- */
-{ ValidationError: Partial<{ [key in string]: ValidationError[] }> } | 
-/**
- * Permission denied for the requested operation.
- * 
- * Use this when the user lacks sufficient privileges to perform an action.
- */
-{ PermissionDenied: string } | 
-/**
- * A catch-all for unexpected errors that don't map to a specific variant.
- * 
- * The inner `String` can include a short debug message suitable for
- * logging; avoid placing secrets here.
- */
-{ Unknown: string } | 
-/**
- * Indicates a violation of a specific business invariant.
- * 
- * **Source:** Triggered by Domain Entities or Use Cases (e.g.,
- * "Cannot cancel an invoice that has already been paid").
- */
-{ BusinessRule: string }
+export type CommandError =
+  /**
+   * Represents an error coming from the database layer.
+   *
+   * The inner `String` should contain a concise, non-sensitive description
+   * of the underlying database failure.
+   */
+  | { DatabaseError: string }
+  /**
+   * Indicates a requested resource was not found.
+   *
+   * Use this when a query returns no results for a specific ID or criteria.
+   * The inner `String` should describe what resource was not found (e.g., "Wishlist not found").
+   */
+  | { NotFound: string }
+  /**
+   * Validation error with field-specific messages.
+   *
+   * The map contains field names as keys and error messages as values.
+   * This allows the frontend to display validation errors next to the appropriate form fields.
+   * Example: `{"email": "Invalid email format", "age": "Must be at least 18"}`
+   */
+  | { ValidationError: Partial<{ [key in string]: ValidationError[] }> }
+  /**
+   * Permission denied for the requested operation.
+   *
+   * Use this when the user lacks sufficient privileges to perform an action.
+   */
+  | { PermissionDenied: string }
+  /**
+   * A catch-all for unexpected errors that don't map to a specific variant.
+   *
+   * The inner `String` can include a short debug message suitable for
+   * logging; avoid placing secrets here.
+   */
+  | { Unknown: string }
+  /**
+   * Indicates a violation of a specific business invariant.
+   *
+   * **Source:** Triggered by Domain Entities or Use Cases (e.g.,
+   * "Cannot cancel an invoice that has already been paid").
+   */
+  | { BusinessRule: string }
+  /**
+   * Indicates a conflict with existing data (e.g., a unique constraint violation).
+   */
+  | { Conflict: string };
 /**
  * Connection status response
  */
@@ -3687,27 +3711,56 @@ export type MaintenanceCardId = string
  * Lightweight view representation of a maintenance card intended for the frontend.
  * Does not include metadata or pending events.
  */
-export type MaintenanceCardView = { 
+export type MaintenanceCardView = {
+  /**
+   * Unique identifier for the maintenance card.
+   */
+  id: MaintenanceCardId;
+  /**
+   * The owned rolling stock associated with this maintenance card.
+   */
+  ownedRollingStockId: OwnedRollingStockId;
+  /**
+   * Date of the last maintenance performed, if any.
+   */
+  lastMaintenanceDate: string | null;
+  /**
+   * Scheduled date for the next maintenance, if any.
+   */
+  nextMaintenanceDate: string | null;
+  /**
+   * Historical maintenance events associated with this card.
+   */
+  events: MaintenanceCardEventView[];
+  /**
+   * Human-readable identity derived from the catalog at query time.
+   * None when the owned rolling stock has no catalog entry.
+   */
+  displayInfo: RollingStockDisplayInfo | null;
+};
 /**
- * Unique identifier for the maintenance card.
+ * Human-readable identity information sourced from the catalog rolling stock
+ * and railway model tables. All fields are optional because a rolling stock
+ * may not have a catalog entry.
  */
-id: MaintenanceCardId; 
-/**
- * The owned rolling stock associated with this maintenance card.
- */
-ownedRollingStockId: OwnedRollingStockId; 
-/**
- * Date of the last maintenance performed, if any.
- */
-lastMaintenanceDate: string | null; 
-/**
- * Scheduled date for the next maintenance, if any.
- */
-nextMaintenanceDate: string | null; 
-/**
- * Historical maintenance events associated with this card.
- */
-events: MaintenanceCardEventView[] }
+export type RollingStockDisplayInfo = {
+  /**
+   * Manufacturer display name (e.g. "Bachmann", "Märklin").
+   */
+  manufacturerName: string | null;
+  /**
+   * Catalog product code (e.g. "32-504").
+   */
+  productCode: string | null;
+  /**
+   * Series code from the rolling stock record (e.g. "Class 66").
+   */
+  seriesCode: string | null;
+  /**
+   * Road number / running number (e.g. "66001").
+   */
+  roadNumber: string | null;
+};
 /**
  * Types of maintenance tasks commonly performed on rolling stock.
  */

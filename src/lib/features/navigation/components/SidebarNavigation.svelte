@@ -110,7 +110,7 @@
       <li>
         <a
           href={resolve('/maintenance')}
-          class={navLinkClasses(($page.url.pathname as string) === '/maintenance')}
+          class={navLinkClasses(($page.url.pathname as string).startsWith('/maintenance'))}
         >
           <Wrench size={20} />
           <span class="font-medium tracking-wide">{m.app_maintenance()}</span>

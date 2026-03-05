@@ -46,7 +46,12 @@
       selectedRollingStockId = null;
       onClose();
     } catch (err) {
-      error = err instanceof Error ? err.message : m.maintenance_create_card_error();
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('conflict')) {
+        error = m.maintenance_card_already_exists();
+      } else {
+        error = msg || m.maintenance_create_card_error();
+      }
       console.error('[AddMaintenanceCardModal] Submit error:', err);
     } finally {
       isSubmitting = false;
