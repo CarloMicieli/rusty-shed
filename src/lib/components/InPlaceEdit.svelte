@@ -31,6 +31,10 @@
     type?: 'text' | 'date';
     /** Called when the user commits the new value (blur or Save click). */
     onSave: (value: string) => Promise<void>;
+    /** Called when the user activates edit mode (for cross-card coordination). */
+    onActivate?: () => void;
+    /** Called when the user exits edit mode (for cross-card coordination). */
+    onDeactivate?: () => void;
   }
 
   let {
@@ -39,7 +43,9 @@
     placeholder,
     multiline = false,
     type = 'text',
-    onSave
+    onSave,
+    onActivate,
+    onDeactivate
   }: InPlaceEditProps = $props();
 
   let isEditing = $state(false);
@@ -60,12 +66,14 @@
     editValue = value;
     error = null;
     isEditing = true;
+    onActivate?.();
   }
 
   function cancel() {
     editValue = value;
     error = null;
     isEditing = false;
+    onDeactivate?.();
   }
 
   async function save() {
@@ -75,6 +83,7 @@
     try {
       await onSave(editValue);
       isEditing = false;
+      onDeactivate?.();
     } catch {
       error = m.edit_save_error();
     } finally {
@@ -121,6 +130,11 @@
       />
     {/if}
 
+    {#if isSaving}
+      <span
+        class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#D48A42] border-t-transparent"
+      ></span>
+    {/if}
     {#if error}
       <p class="mt-1 text-xs text-red-400" role="alert">{error}</p>
     {/if}

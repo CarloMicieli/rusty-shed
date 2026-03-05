@@ -37,6 +37,10 @@
     onSave: (value: string) => Promise<void>;
     /** Additional CSS classes applied to the view-mode element. */
     class?: string;
+    /** Called when the user activates edit mode (for cross-card coordination). */
+    onActivate?: () => void;
+    /** Called when the user exits edit mode (for cross-card coordination). */
+    onDeactivate?: () => void;
   }
 
   let {
@@ -45,7 +49,9 @@
     options,
     placeholder,
     onSave,
-    class: extraClass = ''
+    class: extraClass = '',
+    onActivate,
+    onDeactivate
   }: InPlaceSelectEditProps = $props();
 
   let isEditing = $state(false);
@@ -64,6 +70,7 @@
     if (isSaving) return;
     error = null;
     isEditing = true;
+    onActivate?.();
   }
 
   function cancel() {
@@ -71,6 +78,7 @@
     if (isSaving) return;
     error = null;
     isEditing = false;
+    onDeactivate?.();
   }
 
   async function handleChange(e: Event) {
@@ -80,6 +88,7 @@
     try {
       await onSave(newValue);
       isEditing = false;
+      onDeactivate?.();
     } catch {
       error = m.edit_save_error();
     } finally {

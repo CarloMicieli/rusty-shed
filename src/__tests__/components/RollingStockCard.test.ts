@@ -20,9 +20,14 @@ vi.mock('$lib/features/settings/SettingsState.svelte.ts', () => ({
   settingsState: { settings: { measureUnit: 'Metric' } }
 }));
 
+// ── Mock paraglide runtime ───────────────────────────────────────────────────
+vi.mock('$lib/paraglide/runtime.js', () => ({
+  getLocale: () => 'en'
+}));
+
 // ── Mock Paraglide messages (both paths used by sub-components) ──────────────
 // NOTE: vi.mock is hoisted so we cannot reference top-level variables here.
-//       The factory must be fully self-contained.
+//       The factory must be fully self-contained — no external const references.
 vi.mock('$lib/paraglide/messages', () => ({
   model_rolling_stock_unknown_series: () => 'Unknown',
   model_rolling_stock_na: () => 'N/A',
@@ -35,6 +40,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
   model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
+  rolling_stock_field_series: () => 'Series',
   rolling_stock_field_series_code: () => 'Series Code',
   rolling_stock_field_road_number: () => 'Road Number',
   rolling_stock_field_livery: () => 'Livery',
@@ -42,6 +48,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_field_railway_company: () => 'Railway Company',
   rolling_stock_field_length: () => 'Length',
   rolling_stock_field_dcc_interface: () => 'DCC Interface',
+  rolling_stock_field_control_type: () => 'Control Type',
+  rolling_stock_field_interior_lights: () => 'Interior Lights',
+  rolling_stock_field_lights: () => 'Lights',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_save: () => 'Save',
   edit_field_cancel: () => 'Cancel',
@@ -82,6 +91,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
   model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
+  rolling_stock_field_series: () => 'Series',
   rolling_stock_field_series_code: () => 'Series Code',
   rolling_stock_field_road_number: () => 'Road Number',
   rolling_stock_field_livery: () => 'Livery',
@@ -89,6 +99,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_field_railway_company: () => 'Railway Company',
   rolling_stock_field_length: () => 'Length',
   rolling_stock_field_dcc_interface: () => 'DCC Interface',
+  rolling_stock_field_control_type: () => 'Control Type',
+  rolling_stock_field_interior_lights: () => 'Interior Lights',
+  rolling_stock_field_lights: () => 'Lights',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_save: () => 'Save',
   edit_field_cancel: () => 'Cancel',
@@ -241,33 +254,23 @@ describe('RollingStockCard', () => {
       });
       const headerBtn = result.container.querySelector('button') as HTMLElement;
       await fireEvent.click(headerBtn);
-      // Livery row must be present and show "—"
+      // Livery row must be present
       expect(result.getByText('Livery')).toBeTruthy();
-      // The "—" character appears for null livery
-      const dashes = Array.from(result.container.querySelectorAll('dd')).filter(
+      // The "—" character appears for null livery in a span
+      const dashes = Array.from(result.container.querySelectorAll('span')).filter(
         (el) => el.textContent?.trim() === '—'
       );
       expect(dashes.length).toBeGreaterThan(0);
     });
 
-    it('shows "—" for Railway Company when value is null (read-only mode)', async () => {
-      const rs = { ...mockRollingStock, railwayCompanyName: null };
-      const result = render(RollingStockCard, {
-        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
-      });
-      const headerBtn = result.container.querySelector('button') as HTMLElement;
-      await fireEvent.click(headerBtn);
-      expect(result.getByText('Railway Company')).toBeTruthy();
-    });
-
-    it('shows "—" for Control when value is null (read-only mode)', async () => {
+    it('shows "—" for Control Type when value is null (read-only mode)', async () => {
       const rs = { ...mockRollingStock, control: null };
       const result = render(RollingStockCard, {
         props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
       });
       const headerBtn = result.container.querySelector('button') as HTMLElement;
       await fireEvent.click(headerBtn);
-      expect(result.getByText('Control')).toBeTruthy();
+      expect(result.getByText('Control Type')).toBeTruthy();
     });
 
     it('shows "—" for Depot when value is null (read-only mode)', async () => {
@@ -280,17 +283,16 @@ describe('RollingStockCard', () => {
       expect(result.getByText('Depot')).toBeTruthy();
     });
 
-    it('renders Depot row even in read-only mode when value is null', async () => {
+    it('renders all grid field labels even in read-only mode when values are null', async () => {
       const rs = { ...mockRollingStock, depot: null, livery: null, railwayCompanyName: null };
       const result = render(RollingStockCard, {
         props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
       });
       const headerBtn = result.container.querySelector('button') as HTMLElement;
       await fireEvent.click(headerBtn);
-      // All four fields must be present
+      // All grid field labels must be present
       expect(result.container.textContent).toContain('Livery');
-      expect(result.container.textContent).toContain('Railway Company');
-      expect(result.container.textContent).toContain('Control');
+      expect(result.container.textContent).toContain('Control Type');
       expect(result.container.textContent).toContain('Depot');
     });
   });

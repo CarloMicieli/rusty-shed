@@ -18,6 +18,11 @@ vi.mock('$lib/features/settings/SettingsState.svelte.ts', () => ({
   settingsState: { settings: { measureUnit: 'Metric' } }
 }));
 
+// Mock paraglide runtime
+vi.mock('$lib/paraglide/runtime.js', () => ({
+  getLocale: () => 'en'
+}));
+
 // Mock paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_unknown_series: () => 'Unknown',
@@ -31,13 +36,25 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
   model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
+  rolling_stock_field_series: () => 'Series',
+  rolling_stock_field_series_code: () => 'Series Code',
   rolling_stock_field_depot: () => 'Depot',
+  rolling_stock_field_livery: () => 'Livery',
   rolling_stock_field_length: () => 'Length',
   rolling_stock_field_dcc_interface: () => 'DCC Interface',
+  rolling_stock_field_control_type: () => 'Control Type',
+  rolling_stock_field_interior_lights: () => 'Interior Lights',
+  rolling_stock_field_lights: () => 'Lights',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_placeholder_empty: () => 'Click to add...',
   edit_save_error: () => 'Failed to save.',
-  badge_picker_close: () => 'Close'
+  badge_picker_close: () => 'Close',
+  specs_drawer_field_flywheel: () => 'Flywheel',
+  specs_drawer_field_body_material: () => 'Body Material',
+  specs_drawer_field_chassis_material: () => 'Chassis Material',
+  specs_drawer_field_coupling_socket: () => 'Coupling Socket',
+  specs_drawer_field_close_coupling: () => 'Close Couplers',
+  specs_drawer_field_digital_shunting: () => 'Digital Shunting'
 }));
 
 import RollingStockCard from '../RollingStockCard.svelte';
@@ -178,7 +195,7 @@ describe('RollingStockCard', () => {
   });
 
   describe('Expanded Content', () => {
-    it('should render all fields when expanded', async () => {
+    it('should render grid field labels when expanded', async () => {
       render(RollingStockCard, {
         props: {
           railwayModelId: 'trn:railway-model:acme:test-001',
@@ -189,18 +206,17 @@ describe('RollingStockCard', () => {
       const button = screen.getByRole('button');
       await fireEvent.click(button);
 
-      // Check field labels
+      // Check field labels present in the 5×3 grid
       expect(screen.getByText('Series')).toBeInTheDocument();
-      expect(screen.getByText('Road Number')).toBeInTheDocument();
       expect(screen.getByText('Livery')).toBeInTheDocument();
-      expect(screen.getByText('Company')).toBeInTheDocument();
-      expect(screen.getByText('Control')).toBeInTheDocument();
+      expect(screen.getByText('Control Type')).toBeInTheDocument();
 
-      // Check field values
+      // Field values
       expect(screen.getByText('218')).toBeInTheDocument();
-      expect(screen.getByText('218 217-8')).toBeInTheDocument();
       expect(screen.getByText('DB Red')).toBeInTheDocument();
+      // Railway company is now a header badge, not a grid row
       expect(screen.getByText('Deutsche Bahn')).toBeInTheDocument();
+      // Control value rendered via BadgePicker option label
       expect(screen.getByText('DCC Fitted')).toBeInTheDocument();
     });
 
@@ -235,7 +251,7 @@ describe('RollingStockCard', () => {
       expect(screen.getByText('Test notes')).toBeInTheDocument();
     });
 
-    it('should render all fields with dash placeholder when values are missing', async () => {
+    it('should render all grid field labels even when values are missing', async () => {
       const minimalStock = {
         id: 'rs-2',
         rollingStockId: 'trn:rolling-stock:rs-2',
@@ -261,8 +277,7 @@ describe('RollingStockCard', () => {
 
       // Labels always render (US1: fields show "—" instead of being hidden)
       expect(screen.getByText('Livery')).toBeInTheDocument();
-      expect(screen.getByText('Company')).toBeInTheDocument();
-      expect(screen.getByText('Control')).toBeInTheDocument();
+      expect(screen.getByText('Control Type')).toBeInTheDocument();
       expect(screen.getByText('Depot')).toBeInTheDocument();
       // Digital Setup is still conditionally rendered (null → absent)
       expect(screen.queryByText('Digital Setup')).not.toBeInTheDocument();
@@ -314,30 +329,7 @@ describe('RollingStockCard', () => {
       expect(button).toBeInTheDocument();
     });
 
-    it('should use semantic HTML for definition list', async () => {
-      const { container } = render(RollingStockCard, {
-        props: {
-          railwayModelId: 'trn:railway-model:acme:test-001',
-          rollingStock: mockRollingStock
-        }
-      });
-
-      const button = screen.getByRole('button');
-      await fireEvent.click(button);
-
-      const dl = container.querySelector('dl');
-      expect(dl).toBeInTheDocument();
-
-      const dt = container.querySelector('dt');
-      expect(dt).toBeInTheDocument();
-
-      const dd = container.querySelector('dd');
-      expect(dd).toBeInTheDocument();
-    });
-  });
-
-  describe('Responsive Design', () => {
-    it('should use responsive grid layout', async () => {
+    it('should use 3-column CSS grid layout', async () => {
       const { container } = render(RollingStockCard, {
         props: {
           railwayModelId: 'trn:railway-model:acme:test-001',
@@ -349,8 +341,24 @@ describe('RollingStockCard', () => {
       await fireEvent.click(button);
 
       const grid = container.querySelector('.grid');
-      expect(grid?.className).toContain('grid-cols-1');
-      expect(grid?.className).toContain('sm:grid-cols-2');
+      expect(grid?.className).toContain('grid-cols-3');
+    });
+  });
+
+  describe('Responsive Design', () => {
+    it('should use 3-column grid layout', async () => {
+      const { container } = render(RollingStockCard, {
+        props: {
+          railwayModelId: 'trn:railway-model:acme:test-001',
+          rollingStock: mockRollingStock
+        }
+      });
+
+      const button = screen.getByRole('button');
+      await fireEvent.click(button);
+
+      const grid = container.querySelector('.grid');
+      expect(grid?.className).toContain('grid-cols-3');
     });
 
     it('should apply hover effects to header', () => {

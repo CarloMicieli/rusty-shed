@@ -4,18 +4,19 @@
     DccInterface,
     LengthOverBuffers,
     OwnedRollingStockView,
-    RailwayCompanyId,
-    RailwayModelId
+    RailwayModelId,
+    RollingStockView,
+    TechnicalSpecifications
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
-  import { onMount } from 'svelte';
-  import { ChevronDown, ChevronUp } from 'lucide-svelte';
+  import { ChevronDown, ChevronUp, Settings } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Settings } from 'lucide-svelte';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
+  import InPlaceBooleanEdit from '$lib/components/InPlaceBooleanEdit.svelte';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
-  import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
 
   interface Props {
@@ -24,23 +25,49 @@
     railwayModelId: RailwayModelId;
     /** When true, identification fields are editable in-place. */
     editable?: boolean;
+    /** US5: ID of the card currently in edit mode (null = none active). */
+    activeEditId?: string | null;
+    /** US5: Callback to notify parent which card is actively being edited. */
+    setActiveEditId?: (id: string | null) => void;
   }
 
-  let { rollingStock, railwayModelId, editable = false }: Props = $props();
-  let isExpanded = $state(false);
+  let {
+    rollingStock,
+    railwayModelId,
+    editable = false,
+    activeEditId = null,
+    setActiveEditId
+  }: Props = $props();
 
-  // Local copies of editable identification fields
+  let isExpanded = $state(false);
+  let specsLoaded = $state(false);
+
+  // ── Identification / Control fields (from OwnedRollingStockView) ─────────────
   let localSeries = $state('');
   let localRoadNumber = $state('');
   let localLivery = $state('');
   let localRailwayCompanyName = $state('');
   let localDepot = $state('');
-  // Local copies of DCC / length fields
   let localControl = $state<Control | null>(null);
   let localDccInterface = $state<DccInterface | null>(null);
   let localLengthMm = $state('');
   let localLengthInches = $state('');
 
+  // ── Technical spec fields (loaded via getRailwayModelById on first expand) ───
+  let localFlywheelFitted = $state<'YES' | 'NO' | null>(null);
+  let localBodyShell = $state<string | null>(null);
+  let localChassis = $state<string | null>(null);
+  let localInteriorLights = $state<'YES' | 'NO' | null>(null);
+  let localLights = $state<'YES' | 'NO' | null>(null);
+  let localCouplingSocket = $state<string | null>(null);
+  let localCloseCouplers = $state<'YES' | 'NO' | null>(null);
+  let localDigitalShunting = $state<'YES' | 'NO' | null>(null);
+
+  // ── US5: derived edit-permission flag ────────────────────────────────────────
+  /** True when no other card is editing, or when this specific card is the active one. */
+  const canEdit = $derived(editable && (activeEditId === null || activeEditId === rollingStock.id));
+
+  // ── Prop sync ─────────────────────────────────────────────────────────────────
   $effect(() => {
     localSeries = rollingStock.series ?? '';
     localRoadNumber = rollingStock.roadNumber ?? '';
@@ -53,22 +80,7 @@
     localLengthInches = extractInches(rollingStock.lengthOverBuffers);
   });
 
-  function extractMm(lob: LengthOverBuffers | null): string {
-    if (!lob?.millimeters) return '';
-    const val = lob.millimeters;
-    return 'Millimeters' in val ? val.Millimeters : '';
-  }
-
-  function extractInches(lob: LengthOverBuffers | null): string {
-    if (!lob?.inches) return '';
-    const val = lob.inches;
-    return 'Inches' in val ? val.Inches : '';
-  }
-
-  function displayLength(): string {
-    return settingsState.settings.measureUnit === 'Metric' ? localLengthMm : localLengthInches;
-  }
-
+  // ── Option constants ──────────────────────────────────────────────────────────
   const CONTROL_OPTIONS: { id: string; label: string }[] = [
     { id: '', label: '—' },
     { id: 'DCC_READY', label: 'DCC Ready' },
@@ -91,22 +103,48 @@
     { id: 'MTC_21', label: 'MTC 21' }
   ];
 
-  // Railway company options for the picker
-  let companyOptions = $state<{ id: string; label: string }[]>([]);
+  const BODY_SHELL_OPTIONS = [
+    { value: '', label: '—' },
+    { value: 'PLASTIC', label: 'Plastic' },
+    { value: 'METAL_DIE_CAST', label: 'Metal Die-Cast' }
+  ] as const;
 
-  // Specs drawer state
+  const CHASSIS_OPTIONS = [
+    { value: '', label: '—' },
+    { value: 'PLASTIC', label: 'Plastic' },
+    { value: 'METAL_DIE_CAST', label: 'Metal Die-Cast' }
+  ] as const;
+
+  const COUPLING_SOCKET_OPTIONS = [
+    { value: '', label: '—' },
+    { value: 'NONE', label: 'None' },
+    { value: 'NEM_355', label: 'NEM 355' },
+    { value: 'NEM_356', label: 'NEM 356' },
+    { value: 'NEM_357', label: 'NEM 357' },
+    { value: 'NEM_359', label: 'NEM 359' },
+    { value: 'NEM_360', label: 'NEM 360' },
+    { value: 'NEM_362', label: 'NEM 362' },
+    { value: 'NEM_365', label: 'NEM 365' }
+  ] as const;
+
+  // ── Specs drawer ──────────────────────────────────────────────────────────────
   let specsDrawerOpen = $state(false);
 
-  onMount(async () => {
-    if (!editable) return;
-    const result = await commands.getRailwayCompanies();
-    if (result.status === 'ok') {
-      companyOptions = result.data.map((c) => ({ id: c.id, label: c.name }));
-    }
-  });
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  function extractMm(lob: LengthOverBuffers | null): string {
+    if (!lob?.millimeters) return '';
+    const val = lob.millimeters;
+    return 'Millimeters' in val ? String(val.Millimeters) : '';
+  }
 
-  function toggleExpand() {
-    isExpanded = !isExpanded;
+  function extractInches(lob: LengthOverBuffers | null): string {
+    if (!lob?.inches) return '';
+    const val = lob.inches;
+    return 'Inches' in val ? String(val.Inches) : '';
+  }
+
+  function displayLength(): string {
+    return settingsState.settings.measureUnit === 'Metric' ? localLengthMm : localLengthInches;
   }
 
   function formatSeriesRoadNumber() {
@@ -115,6 +153,74 @@
     return `${series} — ${roadNumber}`;
   }
 
+  function featureFlagToBool(v: 'YES' | 'NO' | null): boolean | null {
+    if (v === 'YES') return true;
+    if (v === 'NO') return false;
+    return null;
+  }
+
+  // ── Tech spec loading ─────────────────────────────────────────────────────────
+  async function loadTechSpecs() {
+    specsLoaded = true;
+    const result = await commands.getRailwayModelById(railwayModelId, getLocale());
+    if (result.status !== 'ok' || !result.data) return;
+
+    const rsView = result.data.rollingStock.find((r: RollingStockView) => {
+      if ('locomotive' in r) return r.locomotive.id === rollingStock.rollingStockId;
+      if ('electricMultipleUnit' in r)
+        return r.electricMultipleUnit.id === rollingStock.rollingStockId;
+      if ('freightCar' in r) return r.freightCar.id === rollingStock.rollingStockId;
+      if ('passengerCar' in r) return r.passengerCar.id === rollingStock.rollingStockId;
+      if ('railcar' in r) return r.railcar.id === rollingStock.rollingStockId;
+      return false;
+    });
+    if (!rsView) return;
+
+    let ts: TechnicalSpecifications | null = null;
+    if ('locomotive' in rsView) ts = rsView.locomotive.technical_specifications;
+    else if ('electricMultipleUnit' in rsView)
+      ts = rsView.electricMultipleUnit.technical_specifications;
+    else if ('freightCar' in rsView) ts = rsView.freightCar.technical_specifications;
+    else if ('passengerCar' in rsView) ts = rsView.passengerCar.technical_specifications;
+    else if ('railcar' in rsView) ts = rsView.railcar.technical_specifications;
+
+    const coupling = ts?.coupling;
+    localFlywheelFitted =
+      ts?.flywheel_fitted === 'YES' ? 'YES' : ts?.flywheel_fitted === 'NO' ? 'NO' : null;
+    localBodyShell = ts?.body_shell ?? null;
+    localChassis = ts?.chassis ?? null;
+    localInteriorLights =
+      ts?.interior_lights === 'YES' ? 'YES' : ts?.interior_lights === 'NO' ? 'NO' : null;
+    localLights = ts?.lights === 'YES' ? 'YES' : ts?.lights === 'NO' ? 'NO' : null;
+    localCouplingSocket = coupling?.socket ?? null;
+    localCloseCouplers =
+      coupling?.close_couplers === 'YES' ? 'YES' : coupling?.close_couplers === 'NO' ? 'NO' : null;
+    localDigitalShunting =
+      coupling?.digital_shunting === 'YES'
+        ? 'YES'
+        : coupling?.digital_shunting === 'NO'
+          ? 'NO'
+          : null;
+  }
+
+  // ── Card toggle ───────────────────────────────────────────────────────────────
+  function toggleExpand() {
+    isExpanded = !isExpanded;
+    if (isExpanded && !specsLoaded) {
+      void loadTechSpecs();
+    }
+  }
+
+  // ── US5: active-edit tracking ─────────────────────────────────────────────────
+  function onFieldActivate() {
+    setActiveEditId?.(rollingStock.id);
+  }
+
+  function onFieldDeactivate() {
+    setActiveEditId?.(null);
+  }
+
+  // ── Save: identification fields ───────────────────────────────────────────────
   async function saveIdentificationField(
     field: 'series' | 'roadNumber' | 'livery' | 'depot',
     value: string
@@ -133,9 +239,7 @@
       depot
     });
 
-    if (result.status === 'error') {
-      throw new Error('Failed to save');
-    }
+    if (result.status === 'error') throw new Error('Failed to save');
 
     if (field === 'series') localSeries = value;
     else if (field === 'roadNumber') localRoadNumber = value;
@@ -143,6 +247,7 @@
     else if (field === 'depot') localDepot = value;
   }
 
+  // ── Save: DCC / control fields ────────────────────────────────────────────────
   async function saveControl(id: string) {
     const control = id === '' ? null : (id as Control);
     const result = await commands.updateRollingStockDcc({
@@ -189,19 +294,27 @@
     else localLengthInches = num > 0 ? String(num) : '';
   }
 
-  async function saveRailwayCompany(id: string) {
-    const result = await commands.updateRollingStockRailwayCompany({
+  // ── Save: all spec fields atomically ─────────────────────────────────────────
+  async function saveAllSpecs() {
+    const result = await commands.updateRollingStockSpecifications({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
-      railwayCompanyId: id as RailwayCompanyId
+      seriesCode: localSeries || rollingStock.series || '',
+      roadNumber: localRoadNumber || null,
+      livery: localLivery || null,
+      depot: localDepot || null,
+      flywheelFitted: featureFlagToBool(localFlywheelFitted),
+      bodyShell: localBodyShell || null,
+      chassis: localChassis || null,
+      interiorLights: localInteriorLights,
+      lights: localLights,
+      dccInterface: localDccInterface,
+      control: localControl,
+      couplingSocket: localCouplingSocket || null,
+      closeCouplers: featureFlagToBool(localCloseCouplers),
+      digitalShunting: featureFlagToBool(localDigitalShunting)
     });
-
-    if (result.status === 'error') {
-      toaster.error(m.rolling_stock_field_railway_company());
-      throw new Error('Failed to save railway company');
-    }
-
-    localRailwayCompanyName = companyOptions.find((c) => c.id === id)?.label ?? id;
+    if (result.status === 'error') throw new Error('Failed to save specifications');
   }
 </script>
 
@@ -216,7 +329,12 @@
     <h3 class="text-lg font-semibold">
       {formatSeriesRoadNumber()}
     </h3>
-    <div class="ml-4 flex-shrink-0">
+    <div class="ml-4 flex flex-shrink-0 items-center gap-2">
+      {#if localRailwayCompanyName}
+        <span
+          class="rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300"
+        >{localRailwayCompanyName}</span>
+      {/if}
       {#if isExpanded}
         <ChevronUp class="h-5 w-5 text-muted-foreground" />
       {:else}
@@ -247,156 +365,427 @@
         </div>
       {/if}
 
-      <dl class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+      <!-- 5×3 Information Grid -->
+      <div class="grid grid-cols-3 gap-x-4 gap-y-3">
+        <!-- ── Row 1: Series · Depot · Livery ─────────────────────────────── -->
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_series()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <InPlaceEdit
-                value={localSeries}
-                placeholder={m.rolling_stock_field_series_code()}
-                onSave={(v) => saveIdentificationField('series', v)}
-              />
-            {:else}
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.rolling_stock_field_series()}
+          </p>
+          {#if canEdit}
+            <InPlaceEdit
+              value={localSeries}
+              placeholder={m.rolling_stock_field_series_code()}
+              onSave={(v) => saveIdentificationField('series', v)}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span class="text-sm {localSeries ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
               {localSeries || '—'}
-            {/if}
-          </dd>
+            </span>
+          {/if}
         </div>
 
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_road_number()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <InPlaceEdit
-                value={localRoadNumber}
-                placeholder={m.rolling_stock_field_road_number()}
-                onSave={(v) => saveIdentificationField('roadNumber', v)}
-              />
-            {:else}
-              {localRoadNumber || '—'}
-            {/if}
-          </dd>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.rolling_stock_field_depot()}
+          </p>
+          {#if canEdit}
+            <InPlaceEdit
+              value={localDepot}
+              placeholder={m.rolling_stock_field_depot()}
+              onSave={(v) => saveIdentificationField('depot', v)}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span class="text-sm {localDepot ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
+              {localDepot || '—'}
+            </span>
+          {/if}
         </div>
 
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_livery()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <InPlaceEdit
-                value={localLivery}
-                placeholder={m.rolling_stock_field_livery()}
-                onSave={(v) => saveIdentificationField('livery', v)}
-              />
-            {:else}
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.rolling_stock_field_livery()}
+          </p>
+          {#if canEdit}
+            <InPlaceEdit
+              value={localLivery}
+              placeholder={m.rolling_stock_field_livery()}
+              onSave={(v) => saveIdentificationField('livery', v)}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span class="text-sm {localLivery ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
               {localLivery || '—'}
-            {/if}
-          </dd>
+            </span>
+          {/if}
         </div>
 
+        <!-- ── Row 2: Control Type · DCC Interface · Length ───────────────── -->
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_company()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable && companyOptions.length > 0}
-              <BadgePicker
-                value={localRailwayCompanyName || '—'}
-                options={companyOptions}
-                onSelect={saveRailwayCompany}
-              />
-            {:else}
-              {localRailwayCompanyName || '—'}
-            {/if}
-          </dd>
-        </div>
-
-        <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_control()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <BadgePicker
-                value={localControl ?? ''}
-                options={CONTROL_OPTIONS}
-                onSelect={saveControl}
-              />
-            {:else}
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.rolling_stock_field_control_type()}
+          </p>
+          {#if canEdit}
+            <BadgePicker
+              value={localControl ?? ''}
+              options={CONTROL_OPTIONS}
+              onSelect={saveControl}
+            />
+          {:else}
+            <span class="text-sm text-[#E0E0E0]">
               {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
-            {/if}
-          </dd>
+            </span>
+          {/if}
         </div>
 
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
             {m.rolling_stock_field_dcc_interface()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <BadgePicker
-                value={localDccInterface ?? ''}
-                options={DCC_INTERFACE_OPTIONS}
-                onSelect={saveDccInterface}
-              />
-            {:else}
+          </p>
+          {#if canEdit}
+            <BadgePicker
+              value={localDccInterface ?? ''}
+              options={DCC_INTERFACE_OPTIONS}
+              onSelect={saveDccInterface}
+            />
+          {:else}
+            <span class="text-sm text-[#E0E0E0]">
               {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
-            {/if}
-          </dd>
+            </span>
+          {/if}
         </div>
 
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
             {m.rolling_stock_field_length()}
             {settingsState.settings.measureUnit === 'Metric' ? '(mm)' : '(")'}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <InPlaceEdit value={displayLength()} placeholder="—" onSave={saveLength} />
-            {:else}
+          </p>
+          {#if canEdit}
+            <InPlaceEdit
+              value={displayLength()}
+              placeholder="—"
+              onSave={saveLength}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span class="text-sm {displayLength() ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
               {displayLength() || '—'}
+            </span>
+          {/if}
+        </div>
+
+        <!-- ── Row 3: Flywheel Fitted · Body Shell · Chassis ──────────────── -->
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.specs_drawer_field_flywheel()}
+          </p>
+          {#if canEdit}
+            <InPlaceBooleanEdit
+              value={localFlywheelFitted}
+              onSave={async (v) => {
+                const prev = localFlywheelFitted;
+                localFlywheelFitted = v;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localFlywheelFitted = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            {#if localFlywheelFitted === 'YES'}
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
+                >✓ Yes</span
+              >
+            {:else if localFlywheelFitted === 'NO'}
+              <span
+                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
+                >No</span
+              >
+            {:else}
+              <span class="text-sm italic text-[#808080]">—</span>
             {/if}
-          </dd>
+          {/if}
         </div>
 
         <div>
-          <dt class="text-sm font-medium text-muted-foreground">
-            {m.rolling_stock_field_depot()}
-          </dt>
-          <dd class="mt-1 text-sm">
-            {#if editable}
-              <InPlaceEdit
-                value={localDepot}
-                placeholder={m.rolling_stock_field_depot()}
-                onSave={(v) => saveIdentificationField('depot', v)}
-              />
-            {:else}
-              {localDepot || '—'}
-            {/if}
-          </dd>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.specs_drawer_field_body_material()}
+          </p>
+          {#if canEdit}
+            <InPlaceSelectEdit
+              value={localBodyShell ?? ''}
+              displayLabel={BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? ''}
+              options={[...BODY_SHELL_OPTIONS]}
+              placeholder={m.specs_drawer_field_body_material()}
+              onSave={async (v) => {
+                const prev = localBodyShell;
+                localBodyShell = v || null;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localBodyShell = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span
+              class="text-sm {localBodyShell ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}"
+            >
+              {BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? '—'}
+            </span>
+          {/if}
         </div>
 
-        {#if rollingStock.digital}
-          <div class="sm:col-span-2">
-            <dt class="text-sm font-medium text-muted-foreground">
-              {m.model_rolling_stock_field_digital_setup()}
-            </dt>
-            <dd class="mt-1 text-sm">
-              {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
-              | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
-              {#if rollingStock.digital.installed_decoder_id}
-                | {m.model_rolling_stock_digital_decoder_id()}: {rollingStock.digital
-                  .installed_decoder_id}
-              {/if}
-            </dd>
-          </div>
-        {/if}
-      </dl>
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.specs_drawer_field_chassis_material()}
+          </p>
+          {#if canEdit}
+            <InPlaceSelectEdit
+              value={localChassis ?? ''}
+              displayLabel={CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? ''}
+              options={[...CHASSIS_OPTIONS]}
+              placeholder={m.specs_drawer_field_chassis_material()}
+              onSave={async (v) => {
+                const prev = localChassis;
+                localChassis = v || null;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localChassis = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span
+              class="text-sm {localChassis ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}"
+            >
+              {CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? '—'}
+            </span>
+          {/if}
+        </div>
+
+        <!-- ── Row 4: Interior Lights · Lights · (spacer) ─────────────────── -->
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.rolling_stock_field_interior_lights()}
+          </p>
+          {#if canEdit}
+            <InPlaceBooleanEdit
+              value={localInteriorLights}
+              onSave={async (v) => {
+                const prev = localInteriorLights;
+                localInteriorLights = v;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localInteriorLights = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            {#if localInteriorLights === 'YES'}
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
+                >✓ Yes</span
+              >
+            {:else if localInteriorLights === 'NO'}
+              <span
+                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
+                >No</span
+              >
+            {:else}
+              <span class="text-sm italic text-[#808080]">—</span>
+            {/if}
+          {/if}
+        </div>
+
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.rolling_stock_field_lights()}
+          </p>
+          {#if canEdit}
+            <InPlaceBooleanEdit
+              value={localLights}
+              onSave={async (v) => {
+                const prev = localLights;
+                localLights = v;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localLights = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            {#if localLights === 'YES'}
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
+                >✓ Yes</span
+              >
+            {:else if localLights === 'NO'}
+              <span
+                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
+                >No</span
+              >
+            {:else}
+              <span class="text-sm italic text-[#808080]">—</span>
+            {/if}
+          {/if}
+        </div>
+
+        <!-- Spacer: Row 4, Col 3 -->
+        <div></div>
+
+        <!-- ── Row 5: Coupling Socket · Close Couplers · Digital Shunting ─── -->
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.specs_drawer_field_coupling_socket()}
+          </p>
+          {#if canEdit}
+            <InPlaceSelectEdit
+              value={localCouplingSocket ?? ''}
+              displayLabel={COUPLING_SOCKET_OPTIONS.find(
+                (o) => o.value === localCouplingSocket
+              )?.label ?? ''}
+              options={[...COUPLING_SOCKET_OPTIONS]}
+              placeholder={m.specs_drawer_field_coupling_socket()}
+              onSave={async (v) => {
+                const prev = localCouplingSocket;
+                localCouplingSocket = v || null;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localCouplingSocket = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            <span
+              class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}"
+            >
+              {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
+            </span>
+          {/if}
+        </div>
+
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.specs_drawer_field_close_coupling()}
+          </p>
+          {#if canEdit}
+            <InPlaceBooleanEdit
+              value={localCloseCouplers}
+              onSave={async (v) => {
+                const prev = localCloseCouplers;
+                localCloseCouplers = v;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localCloseCouplers = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            {#if localCloseCouplers === 'YES'}
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
+                >✓ Yes</span
+              >
+            {:else if localCloseCouplers === 'NO'}
+              <span
+                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
+                >No</span
+              >
+            {:else}
+              <span class="text-sm italic text-[#808080]">—</span>
+            {/if}
+          {/if}
+        </div>
+
+        <div>
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.specs_drawer_field_digital_shunting()}
+          </p>
+          {#if canEdit}
+            <InPlaceBooleanEdit
+              value={localDigitalShunting}
+              onSave={async (v) => {
+                const prev = localDigitalShunting;
+                localDigitalShunting = v;
+                try {
+                  await saveAllSpecs();
+                } catch (e) {
+                  localDigitalShunting = prev;
+                  throw e;
+                }
+              }}
+              onActivate={onFieldActivate}
+              onDeactivate={onFieldDeactivate}
+            />
+          {:else}
+            {#if localDigitalShunting === 'YES'}
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
+                >✓ Yes</span
+              >
+            {:else if localDigitalShunting === 'NO'}
+              <span
+                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
+                >No</span
+              >
+            {:else}
+              <span class="text-sm italic text-[#808080]">—</span>
+            {/if}
+          {/if}
+        </div>
+      </div>
+
+      <!-- Digital Setup (when decoder is installed) -->
+      {#if rollingStock.digital}
+        <div class="mt-4 border-t border-border pt-3">
+          <p class="mb-1 text-xs font-medium text-muted-foreground">
+            {m.model_rolling_stock_field_digital_setup()}
+          </p>
+          <p class="text-sm text-[#E0E0E0]">
+            {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
+            | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
+            {#if rollingStock.digital.installed_decoder_id}
+              | {m.model_rolling_stock_digital_decoder_id()}: {rollingStock.digital
+                .installed_decoder_id}
+            {/if}
+          </p>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

@@ -14,12 +14,19 @@
   let { rollingStocks, railwayModelId, editable = false, onRollingStockAdded }: Props = $props();
 
   let createDrawerOpen = $state(false);
+  let activeEditId = $state<string | null>(null);
 </script>
 
 {#if rollingStocks && rollingStocks.length > 0}
   <div class="space-y-4">
     {#each rollingStocks as rollingStock (rollingStock.id)}
-      <RollingStockCard {rollingStock} {railwayModelId} {editable} />
+      <RollingStockCard
+        {rollingStock}
+        {railwayModelId}
+        {editable}
+        {activeEditId}
+        setActiveEditId={(id) => (activeEditId = id)}
+      />
     {/each}
   </div>
 
