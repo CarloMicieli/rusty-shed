@@ -19,7 +19,7 @@
 
 **Purpose**: Audit existing code before making changes.
 
-- [X] T001 Read and audit `src/lib/components/model-details/RollingStockCard.svelte` to document existing local state variables, save handlers, and current layout structure
+- [x] T001 Read and audit `src/lib/components/model-details/RollingStockCard.svelte` to document existing local state variables, save handlers, and current layout structure
 
 **Checkpoint**: Existing component understood — ready to add new fields and restructure.
 
@@ -31,7 +31,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until message keys exist — Paraglide compile will fail otherwise.
 
-- [X] T002 Add 5 new keys to `messages/en.json`: `rolling_stock_field_interior_lights`, `rolling_stock_field_lights`, `rolling_stock_field_control_type`, `rolling_stock_field_length`, `rolling_stock_field_series`
+- [x] T002 Add 5 new keys to `messages/en.json`: `rolling_stock_field_interior_lights`, `rolling_stock_field_lights`, `rolling_stock_field_control_type`, `rolling_stock_field_length`, `rolling_stock_field_series`
 
 **Checkpoint**: `pnpm run paraglide:compile` passes — all label keys resolvable.
 
@@ -45,13 +45,13 @@
 
 ### Implementation for User Story 1
 
-- [X] T003 [US1] Add local `$state` variables for 7 new fields (`localFlywheelFitted`, `localBodyShell`, `localChassis`, `localInteriorLights`, `localLights`, `localCouplingSocket`, `localCloseCouplers`, `localDigitalShunting`) in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T004 [US1] Extend the existing `$effect` / prop-sync block to extract all 7 new field values from `OwnedRollingStockView.technical_specifications` using the extraction mapping from `specs/033-rolling-stock-info-grid/data-model.md` in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T005 [US1] Replace the existing `<dl>` element with `<div class="grid grid-cols-3 gap-x-4 gap-y-3">` containing 15 labelled field cells (label above, value/placeholder below) following the Field Registry in `data-model.md` in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T006 [US1] Update the card header section to show Series Code and Road Number left-aligned and the Railway Company badge right-aligned in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T007 [US1] Render the 5 boolean fields (Flywheel Fitted, Interior Lights, Lights, Close Couplers, Digital Shunting) as static read-only chips: green "Yes" for YES, muted "No" for NO, italic "—" for null in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T008 [US1] Render the 3 enum-material fields (Body Shell, Chassis) and Coupling Socket as static text values, falling back to an italic "—" placeholder when null in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T009 [US1] Render italicised "Add [Field]" placeholder text in empty text/numeric cells (Depot, Livery, Road Number, Length) and add an empty spacer `<div>` for Row 4, Col 3 in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T003 [US1] Add local `$state` variables for 7 new fields (`localFlywheelFitted`, `localBodyShell`, `localChassis`, `localInteriorLights`, `localLights`, `localCouplingSocket`, `localCloseCouplers`, `localDigitalShunting`) in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T004 [US1] Extend the existing `$effect` / prop-sync block to extract all 7 new field values from `OwnedRollingStockView.technical_specifications` using the extraction mapping from `specs/033-rolling-stock-info-grid/data-model.md` in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T005 [US1] Replace the existing `<dl>` element with `<div class="grid grid-cols-3 gap-x-4 gap-y-3">` containing 15 labelled field cells (label above, value/placeholder below) following the Field Registry in `data-model.md` in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T006 [US1] Update the card header section to show Series Code and Road Number left-aligned and the Railway Company badge right-aligned in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T007 [US1] Render the 5 boolean fields (Flywheel Fitted, Interior Lights, Lights, Close Couplers, Digital Shunting) as static read-only chips: green "Yes" for YES, muted "No" for NO, italic "—" for null in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T008 [US1] Render the 3 enum-material fields (Body Shell, Chassis) and Coupling Socket as static text values, falling back to an italic "—" placeholder when null in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T009 [US1] Render italicised "Add [Field]" placeholder text in empty text/numeric cells (Depot, Livery, Road Number, Length) and add an empty spacer `<div>` for Row 4, Col 3 in `src/lib/components/model-details/RollingStockCard.svelte`
 
 **Checkpoint**: User Story 1 fully functional — all 15 fields visible in correct grid positions; empty fields show placeholders; header layout correct.
 
@@ -65,10 +65,10 @@
 
 ### Implementation for User Story 2
 
-- [X] T010 [US2] Wire `InPlaceEdit` (text variant) for Series Code, Road Number, Depot, and Livery grid cells with `onSave` calling `commands.updateRollingStockIdentification` in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T011 [US2] Wire `InPlaceEdit` (number variant) for the Length grid cell with `onSave` calling `commands.updateRollingStockDcc` (passing `lengthMillimeters` and `lengthInches`) in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T012 [US2] Confirm saving state indicator (spinner or colour pulse) and Escape-to-revert behaviour are provided by the existing `InPlaceEdit` component — document any gap and patch if needed in `src/lib/components/InPlaceEdit.svelte`
-- [X] T013 [US2] Add inline error display and local value revert on `Result.status === 'error'` for all text/numeric `onSave` handlers in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T010 [US2] Wire `InPlaceEdit` (text variant) for Series Code, Road Number, Depot, and Livery grid cells with `onSave` calling `commands.updateRollingStockIdentification` in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T011 [US2] Wire `InPlaceEdit` (number variant) for the Length grid cell with `onSave` calling `commands.updateRollingStockDcc` (passing `lengthMillimeters` and `lengthInches`) in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T012 [US2] Confirm saving state indicator (spinner or colour pulse) and Escape-to-revert behaviour are provided by the existing `InPlaceEdit` component — document any gap and patch if needed in `src/lib/components/InPlaceEdit.svelte`
+- [x] T013 [US2] Add inline error display and local value revert on `Result.status === 'error'` for all text/numeric `onSave` handlers in `src/lib/components/model-details/RollingStockCard.svelte`
 
 **Checkpoint**: User Story 2 fully functional — clicking any text/numeric field activates an input; blur/Enter saves; Escape reverts; errors shown inline.
 
@@ -82,11 +82,11 @@
 
 ### Implementation for User Story 3
 
-- [X] T014 [P] [US3] Define option set constants `BODY_SHELL_OPTIONS`, `CHASSIS_OPTIONS`, `COUPLING_SOCKET_OPTIONS` (as `const` arrays matching `data-model.md`) and the `featureFlagToBool` conversion helper in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T015 [US3] Implement `saveSpecField` async handler that builds the complete `UpdateRollingStockSpecificationsArgs` from current local state and calls `commands.updateRollingStockSpecifications` (call pattern from `contracts/tauri-commands.md`) in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T016 [US3] Wire `InPlaceSelectEdit` for Body Shell and Chassis grid cells using `BODY_SHELL_OPTIONS` / `CHASSIS_OPTIONS` and `onSave` → `saveSpecField` in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T017 [US3] Wire `InPlaceSelectEdit` for Coupling Socket grid cell using `COUPLING_SOCKET_OPTIONS` and `onSave` → `saveSpecField` in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T018 [US3] Add inline error indicator and local enum state revert on `saveSpecField` failure for Body Shell, Chassis, and Coupling Socket in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T014 [P] [US3] Define option set constants `BODY_SHELL_OPTIONS`, `CHASSIS_OPTIONS`, `COUPLING_SOCKET_OPTIONS` (as `const` arrays matching `data-model.md`) and the `featureFlagToBool` conversion helper in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T015 [US3] Implement `saveSpecField` async handler that builds the complete `UpdateRollingStockSpecificationsArgs` from current local state and calls `commands.updateRollingStockSpecifications` (call pattern from `contracts/tauri-commands.md`) in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T016 [US3] Wire `InPlaceSelectEdit` for Body Shell and Chassis grid cells using `BODY_SHELL_OPTIONS` / `CHASSIS_OPTIONS` and `onSave` → `saveSpecField` in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T017 [US3] Wire `InPlaceSelectEdit` for Coupling Socket grid cell using `COUPLING_SOCKET_OPTIONS` and `onSave` → `saveSpecField` in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T018 [US3] Add inline error indicator and local enum state revert on `saveSpecField` failure for Body Shell, Chassis, and Coupling Socket in `src/lib/components/model-details/RollingStockCard.svelte`
 
 **Checkpoint**: User Story 3 fully functional — clicking any enum field opens a searchable dropdown; selecting an option persists immediately; Escape closes without saving; errors shown inline.
 
@@ -100,13 +100,13 @@
 
 ### Tests for User Story 4 (TDD — write before implementing the component)
 
-- [X] T019 [P] [US4] Write Vitest unit tests for `InPlaceBooleanEdit` covering: null renders "—" chip; YES renders green "Yes" chip; NO renders muted "No" chip; clicking "Yes" button calls `onSave('YES')`; clicking "—" button calls `onSave(null)`; Escape key cancels without calling `onSave`; rejected `onSave` shows error and reverts at `src/lib/components/__tests__/InPlaceBooleanEdit.test.ts`
+- [x] T019 [P] [US4] Write Vitest unit tests for `InPlaceBooleanEdit` covering: null renders "—" chip; YES renders green "Yes" chip; NO renders muted "No" chip; clicking "Yes" button calls `onSave('YES')`; clicking "—" button calls `onSave(null)`; Escape key cancels without calling `onSave`; rejected `onSave` shows error and reverts at `src/lib/components/__tests__/InPlaceBooleanEdit.test.ts`
 
 ### Implementation for User Story 4
 
-- [X] T020 [US4] Create `src/lib/components/InPlaceBooleanEdit.svelte` implementing the component contract from `data-model.md`: props `value: 'YES' | 'NO' | null`, `placeholder?: string`, `onSave: (v: 'YES' | 'NO' | null) => Promise<void>`; view/edit/saving/error state machine; 3-button inline picker (`—` / `Yes` / `No`); Escape cancels; buttons disabled during save
-- [X] T021 [US4] Wire `InPlaceBooleanEdit` for Flywheel Fitted, Interior Lights, and Lights grid cells with `onSave` → `saveSpecField` (these fields pass as `string | null` directly) in `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T022 [US4] Wire `InPlaceBooleanEdit` for Close Couplers and Digital Shunting grid cells with `onSave` → `saveSpecField` (convert via `featureFlagToBool` since args type is `boolean | null`) in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T020 [US4] Create `src/lib/components/InPlaceBooleanEdit.svelte` implementing the component contract from `data-model.md`: props `value: 'YES' | 'NO' | null`, `placeholder?: string`, `onSave: (v: 'YES' | 'NO' | null) => Promise<void>`; view/edit/saving/error state machine; 3-button inline picker (`—` / `Yes` / `No`); Escape cancels; buttons disabled during save
+- [x] T021 [US4] Wire `InPlaceBooleanEdit` for Flywheel Fitted, Interior Lights, and Lights grid cells with `onSave` → `saveSpecField` (these fields pass as `string | null` directly) in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T022 [US4] Wire `InPlaceBooleanEdit` for Close Couplers and Digital Shunting grid cells with `onSave` → `saveSpecField` (convert via `featureFlagToBool` since args type is `boolean | null`) in `src/lib/components/model-details/RollingStockCard.svelte`
 
 **Checkpoint**: User Story 4 fully functional — all 5 boolean fields toggle on click; persist immediately; toggle is disabled during save; error reverts toggle; all unit tests pass.
 
@@ -120,9 +120,9 @@
 
 ### Implementation for User Story 5
 
-- [X] T023 [US5] Audit the parent component that renders multiple `RollingStockCard` instances to identify where shared `activeEditId` state should live in `src/lib/components/model-details/` (read relevant parent `.svelte` files)
-- [X] T024 [US5] Implement a shared `activeEditId` reactive variable (Svelte 5 `$state`) in the parent component that owns all rolling stock entries on a card, and pass it down as props to each `RollingStockCard` instance in the relevant parent component under `src/lib/components/model-details/`
-- [X] T025 [US5] Update `RollingStockCard.svelte` to accept `activeEditId` and `setActiveEditId` props; wire InPlace\* `onActivate`/`onDeactivate` callbacks (or equivalent) to enforce the single-active-field constraint across all entries in `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T023 [US5] Audit the parent component that renders multiple `RollingStockCard` instances to identify where shared `activeEditId` state should live in `src/lib/components/model-details/` (read relevant parent `.svelte` files)
+- [x] T024 [US5] Implement a shared `activeEditId` reactive variable (Svelte 5 `$state`) in the parent component that owns all rolling stock entries on a card, and pass it down as props to each `RollingStockCard` instance in the relevant parent component under `src/lib/components/model-details/`
+- [x] T025 [US5] Update `RollingStockCard.svelte` to accept `activeEditId` and `setActiveEditId` props; wire InPlace\* `onActivate`/`onDeactivate` callbacks (or equivalent) to enforce the single-active-field constraint across all entries in `src/lib/components/model-details/RollingStockCard.svelte`
 
 **Checkpoint**: User Story 5 fully functional — grid layout identical per entry; editing one field on one entry locks all other fields across all entries to read-only display.
 
@@ -132,10 +132,10 @@
 
 **Purpose**: Final verification, formatting, and manual acceptance test.
 
-- [X] T026 [P] Run `pnpm check` (svelte-check + tsc) and fix all TypeScript/Svelte type errors in modified files
-- [X] T027 [P] Run `pnpm lint` and fix all ESLint/Prettier warnings in `src/lib/components/InPlaceBooleanEdit.svelte` and `src/lib/components/model-details/RollingStockCard.svelte`
-- [X] T028 Run `pnpm test` and confirm all Vitest unit tests pass (including `InPlaceBooleanEdit.test.ts`)
-- [X] T029 Validate manual acceptance checklist from `quickstart.md`: grid visible · empty placeholder · text edit · enum edit · boolean edit · Escape cancels · save indicator · error handling · multi-entry consistency
+- [x] T026 [P] Run `pnpm check` (svelte-check + tsc) and fix all TypeScript/Svelte type errors in modified files
+- [x] T027 [P] Run `pnpm lint` and fix all ESLint/Prettier warnings in `src/lib/components/InPlaceBooleanEdit.svelte` and `src/lib/components/model-details/RollingStockCard.svelte`
+- [x] T028 Run `pnpm test` and confirm all Vitest unit tests pass (including `InPlaceBooleanEdit.test.ts`)
+- [x] T029 Validate manual acceptance checklist from `quickstart.md`: grid visible · empty placeholder · text edit · enum edit · boolean edit · Escape cancels · save indicator · error handling · multi-entry consistency
 
 **Checkpoint**: Zero linting errors, zero type errors, all tests green, manual checklist passed — feature complete.
 

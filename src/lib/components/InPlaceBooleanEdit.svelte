@@ -139,16 +139,18 @@
   >
     {#if value === 'YES'}
       <span
-        class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
+        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
       >
         ✓ Yes
       </span>
     {:else if value === 'NO'}
-      <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400">
+      <span
+        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+      >
         No
       </span>
     {:else}
-      <span class="text-sm italic text-[#808080]">{placeholder}</span>
+      <span class="text-sm text-[#808080] italic">{placeholder}</span>
     {/if}
   </div>
 {/if}

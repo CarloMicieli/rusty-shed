@@ -30,7 +30,10 @@ pub async fn get_maintenance_card(
 ) -> Result<Option<MaintenanceCardView>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
     let mut repo = unit_of_work.maintenance_repository();
-    let view = repo.find_view_by_id(&card_id).await.map_err(CommandError::from)?;
+    let view = repo
+        .find_view_by_id(&card_id)
+        .await
+        .map_err(CommandError::from)?;
     drop(repo);
     unit_of_work.commit().await.map_err(CommandError::from)?;
     Ok(view)

@@ -20,11 +20,11 @@
 {:else}
   <div class="space-y-3">
     {#each events as event (event.id)}
-      <div
-        class="rounded-xl border border-[#1F1F1F] bg-[#0c0c0c] p-4 space-y-2"
-      >
+      <div class="space-y-2 rounded-xl border border-[#1F1F1F] bg-[#0c0c0c] p-4">
         <div class="flex items-center justify-between">
-          <span class="font-mono text-sm font-bold text-zinc-200">{formatDate(event.datePerformed)}</span>
+          <span class="font-mono text-sm font-bold text-zinc-200"
+            >{formatDate(event.datePerformed)}</span
+          >
           {#if event.maintenanceType}
             <span
               class="rounded bg-zinc-800 px-2 py-0.5 text-[10px] font-bold tracking-widest text-zinc-500 uppercase"

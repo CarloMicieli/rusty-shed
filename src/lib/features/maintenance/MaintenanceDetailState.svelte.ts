@@ -6,7 +6,11 @@
 
 import { setContext, getContext } from 'svelte';
 import { safeInvoke } from '$lib/shared/services/TauriAdapter';
-import type { MaintenanceCardView, AddMaintenanceArgs, MaintenanceCardEventView } from '$lib/bindings';
+import type {
+  MaintenanceCardView,
+  AddMaintenanceArgs,
+  MaintenanceCardEventView
+} from '$lib/bindings';
 
 const STATE_KEY = Symbol('maintenance-detail-state');
 

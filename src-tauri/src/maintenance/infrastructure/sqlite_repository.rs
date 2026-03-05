@@ -9,8 +9,12 @@ use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent;
 use crate::maintenance::domain::{MaintenanceCard, MaintenanceEventId};
 use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
-use crate::maintenance::infrastructure::entities::{MaintenanceCardRow, MaintenanceCardWithDisplayInfoRow, MaintenanceEventRow};
-use crate::maintenance::interface::{MaintenanceCardEventView, MaintenanceCardView, RollingStockDisplayInfo};
+use crate::maintenance::infrastructure::entities::{
+    MaintenanceCardRow, MaintenanceCardWithDisplayInfoRow, MaintenanceEventRow,
+};
+use crate::maintenance::interface::{
+    MaintenanceCardEventView, MaintenanceCardView, RollingStockDisplayInfo,
+};
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
@@ -692,7 +696,10 @@ mod tests {
 
         let result = repo.save(card).await;
         assert!(
-            matches!(result, Err(crate::core::domain::domain_error::DomainError::Conflict(_))),
+            matches!(
+                result,
+                Err(crate::core::domain::domain_error::DomainError::Conflict(_))
+            ),
             "Expected DomainError::Conflict for duplicate card, got: {:?}",
             result
         );
@@ -708,12 +715,18 @@ mod tests {
             .expect("should create unit of work");
         let mut repo = unit_of_work.maintenance_repository();
 
-        let views = repo.list_due_card_views().await.expect("list due card views");
+        let views = repo
+            .list_due_card_views()
+            .await
+            .expect("list due card views");
 
         // The fixture card is linked to ACME manufacturer / product code 60100
         let card_view = views
             .iter()
-            .find(|v| v.id.to_string().contains("3284cc76-1472-4b12-a7d4-62043416adc2"))
+            .find(|v| {
+                v.id.to_string()
+                    .contains("3284cc76-1472-4b12-a7d4-62043416adc2")
+            })
             .expect("fixture card should be in due views");
 
         let display_info = card_view

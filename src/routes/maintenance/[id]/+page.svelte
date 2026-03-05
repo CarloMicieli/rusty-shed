@@ -60,11 +60,15 @@
 
   {#if isLoading}
     <div class="flex h-64 flex-col items-center justify-center gap-4">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"
+      ></div>
       <p class="font-mono text-sm text-zinc-500">{m.maintenance_loading()}</p>
     </div>
   {:else if error}
-    <div class="space-y-4 rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center">
+    <div
+      class="space-y-4 rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center"
+    >
       <p class="font-bold text-destructive">{m.maintenance_error_load()}</p>
       <p class="font-mono text-sm text-zinc-500">{error}</p>
       <Button
@@ -103,11 +107,7 @@
               <Hash size={12} class="mr-1 inline" />{card.displayInfo.roadNumber}
             </span>
           {/if}
-          <Button
-            variant="default"
-            size="sm"
-            onclick={() => (showAddEventModal = true)}
-          >
+          <Button variant="default" size="sm" onclick={() => (showAddEventModal = true)}>
             <CalendarPlus class="mr-2 h-4 w-4" />
             Add Event
           </Button>

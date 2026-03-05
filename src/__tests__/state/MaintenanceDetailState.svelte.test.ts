@@ -13,7 +13,8 @@ const mockSafeInvoke = vi.mocked(safeInvoke);
 function makeCard(id: string): MaintenanceCardView {
   return {
     id: id as MaintenanceCardView['id'],
-    ownedRollingStockId: 'trn:owned-rolling-stock:test' as MaintenanceCardView['ownedRollingStockId'],
+    ownedRollingStockId:
+      'trn:owned-rolling-stock:test' as MaintenanceCardView['ownedRollingStockId'],
     lastMaintenanceDate: null,
     nextMaintenanceDate: null,
     events: [],

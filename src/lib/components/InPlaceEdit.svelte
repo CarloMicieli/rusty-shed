@@ -132,7 +132,7 @@
 
     {#if isSaving}
       <span
-        class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#D48A42] border-t-transparent"
+        class="absolute top-1/2 right-1.5 inline-block h-3 w-3 -translate-y-1/2 animate-spin rounded-full border-2 border-[#D48A42] border-t-transparent"
       ></span>
     {/if}
     {#if error}

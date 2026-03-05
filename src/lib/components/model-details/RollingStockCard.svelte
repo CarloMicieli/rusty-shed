@@ -331,9 +331,9 @@
     </h3>
     <div class="ml-4 flex flex-shrink-0 items-center gap-2">
       {#if localRailwayCompanyName}
-        <span
-          class="rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300"
-        >{localRailwayCompanyName}</span>
+        <span class="rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300"
+          >{localRailwayCompanyName}</span
+        >
       {/if}
       {#if isExpanded}
         <ChevronUp class="h-5 w-5 text-muted-foreground" />
@@ -381,7 +381,7 @@
               onDeactivate={onFieldDeactivate}
             />
           {:else}
-            <span class="text-sm {localSeries ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
+            <span class="text-sm {localSeries ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
               {localSeries || '—'}
             </span>
           {/if}
@@ -400,7 +400,7 @@
               onDeactivate={onFieldDeactivate}
             />
           {:else}
-            <span class="text-sm {localDepot ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
+            <span class="text-sm {localDepot ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
               {localDepot || '—'}
             </span>
           {/if}
@@ -419,7 +419,7 @@
               onDeactivate={onFieldDeactivate}
             />
           {:else}
-            <span class="text-sm {localLivery ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
+            <span class="text-sm {localLivery ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
               {localLivery || '—'}
             </span>
           {/if}
@@ -474,7 +474,7 @@
               onDeactivate={onFieldDeactivate}
             />
           {:else}
-            <span class="text-sm {displayLength() ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}">
+            <span class="text-sm {displayLength() ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
               {displayLength() || '—'}
             </span>
           {/if}
@@ -501,20 +501,18 @@
               onActivate={onFieldActivate}
               onDeactivate={onFieldDeactivate}
             />
+          {:else if localFlywheelFitted === 'YES'}
+            <span
+              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
+              >✓ Yes</span
+            >
+          {:else if localFlywheelFitted === 'NO'}
+            <span
+              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+              >No</span
+            >
           {:else}
-            {#if localFlywheelFitted === 'YES'}
-              <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
-                >✓ Yes</span
-              >
-            {:else if localFlywheelFitted === 'NO'}
-              <span
-                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
-                >No</span
-              >
-            {:else}
-              <span class="text-sm italic text-[#808080]">—</span>
-            {/if}
+            <span class="text-sm text-[#808080] italic">—</span>
           {/if}
         </div>
 
@@ -542,9 +540,7 @@
               onDeactivate={onFieldDeactivate}
             />
           {:else}
-            <span
-              class="text-sm {localBodyShell ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}"
-            >
+            <span class="text-sm {localBodyShell ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
               {BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? '—'}
             </span>
           {/if}
@@ -574,9 +570,7 @@
               onDeactivate={onFieldDeactivate}
             />
           {:else}
-            <span
-              class="text-sm {localChassis ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}"
-            >
+            <span class="text-sm {localChassis ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
               {CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? '—'}
             </span>
           {/if}
@@ -603,20 +597,18 @@
               onActivate={onFieldActivate}
               onDeactivate={onFieldDeactivate}
             />
+          {:else if localInteriorLights === 'YES'}
+            <span
+              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
+              >✓ Yes</span
+            >
+          {:else if localInteriorLights === 'NO'}
+            <span
+              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+              >No</span
+            >
           {:else}
-            {#if localInteriorLights === 'YES'}
-              <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
-                >✓ Yes</span
-              >
-            {:else if localInteriorLights === 'NO'}
-              <span
-                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
-                >No</span
-              >
-            {:else}
-              <span class="text-sm italic text-[#808080]">—</span>
-            {/if}
+            <span class="text-sm text-[#808080] italic">—</span>
           {/if}
         </div>
 
@@ -640,20 +632,18 @@
               onActivate={onFieldActivate}
               onDeactivate={onFieldDeactivate}
             />
+          {:else if localLights === 'YES'}
+            <span
+              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
+              >✓ Yes</span
+            >
+          {:else if localLights === 'NO'}
+            <span
+              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+              >No</span
+            >
           {:else}
-            {#if localLights === 'YES'}
-              <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
-                >✓ Yes</span
-              >
-            {:else if localLights === 'NO'}
-              <span
-                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
-                >No</span
-              >
-            {:else}
-              <span class="text-sm italic text-[#808080]">—</span>
-            {/if}
+            <span class="text-sm text-[#808080] italic">—</span>
           {/if}
         </div>
 
@@ -668,9 +658,8 @@
           {#if canEdit}
             <InPlaceSelectEdit
               value={localCouplingSocket ?? ''}
-              displayLabel={COUPLING_SOCKET_OPTIONS.find(
-                (o) => o.value === localCouplingSocket
-              )?.label ?? ''}
+              displayLabel={COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)
+                ?.label ?? ''}
               options={[...COUPLING_SOCKET_OPTIONS]}
               placeholder={m.specs_drawer_field_coupling_socket()}
               onSave={async (v) => {
@@ -688,7 +677,7 @@
             />
           {:else}
             <span
-              class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'italic text-[#808080]'}"
+              class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}"
             >
               {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
             </span>
@@ -715,20 +704,18 @@
               onActivate={onFieldActivate}
               onDeactivate={onFieldDeactivate}
             />
+          {:else if localCloseCouplers === 'YES'}
+            <span
+              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
+              >✓ Yes</span
+            >
+          {:else if localCloseCouplers === 'NO'}
+            <span
+              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+              >No</span
+            >
           {:else}
-            {#if localCloseCouplers === 'YES'}
-              <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
-                >✓ Yes</span
-              >
-            {:else if localCloseCouplers === 'NO'}
-              <span
-                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
-                >No</span
-              >
-            {:else}
-              <span class="text-sm italic text-[#808080]">—</span>
-            {/if}
+            <span class="text-sm text-[#808080] italic">—</span>
           {/if}
         </div>
 
@@ -752,20 +739,18 @@
               onActivate={onFieldActivate}
               onDeactivate={onFieldDeactivate}
             />
+          {:else if localDigitalShunting === 'YES'}
+            <span
+              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
+              >✓ Yes</span
+            >
+          {:else if localDigitalShunting === 'NO'}
+            <span
+              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+              >No</span
+            >
           {:else}
-            {#if localDigitalShunting === 'YES'}
-              <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-950/50 text-emerald-400"
-                >✓ Yes</span
-              >
-            {:else if localDigitalShunting === 'NO'}
-              <span
-                class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400"
-                >No</span
-              >
-            {:else}
-              <span class="text-sm italic text-[#808080]">—</span>
-            {/if}
+            <span class="text-sm text-[#808080] italic">—</span>
           {/if}
         </div>
       </div>
