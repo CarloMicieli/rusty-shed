@@ -813,5 +813,9 @@
   "rolling_stock_create_error": "Impossibile aggiungere il materiale rotabile",
   "rolling_stock_add_cta": "Aggiungi Materiale Rotabile",
   "rolling_stock_add_more": "+ Aggiungi Materiale Rotabile",
-  "rolling_stock_field_category": "Categoria"
+  "rolling_stock_field_category": "Categoria",
+  "rolling_stock_field_series": "Serie",
+  "rolling_stock_field_control_type": "Tipo di Controllo",
+  "rolling_stock_field_interior_lights": "Luci Interne",
+  "rolling_stock_field_lights": "Luci"
 }
