@@ -362,65 +362,52 @@
       </h3>
     </div>
 
-    <div class="grid grid-cols-3 gap-x-3 p-4">
-      <!-- Purchase Condition -->
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
-          {m.collection_item_purchase_condition()}
-        </span>
-        <InPlaceSelectEdit
-          value={item.purchaseCondition ?? ''}
-          displayLabel={item.purchaseCondition
-            ? purchaseConditionLabel(item.purchaseCondition)
-            : m.collection_item_not_recorded()}
-          options={purchaseConditionSelectOptions}
-          placeholder={m.collection_item_not_recorded()}
-          class={item.purchaseCondition && isPositiveCondition(item.purchaseCondition)
-            ? 'text-[#D48A42]'
-            : ''}
-          onSave={(v) =>
-            saveUpdate({ kind: 'purchaseCondition', data: { purchase_condition: v || null } })}
-        />
-      </div>
+    <div class="grid grid-cols-3 grid-rows-[auto_auto] items-start gap-x-3 gap-y-0.5 p-4">
+      <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        {m.collection_item_purchase_condition()}
+      </span>
+      <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        {m.collection_item_model_condition()}
+      </span>
+      <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        {m.collection_item_box_condition()}
+      </span>
 
-      <!-- Model Condition -->
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
-          {m.collection_item_model_condition()}
-        </span>
-        <InPlaceSelectEdit
-          value={item.modelCondition ?? ''}
-          displayLabel={item.modelCondition
-            ? modelConditionLabel(item.modelCondition)
-            : m.collection_item_not_recorded()}
-          options={modelConditionSelectOptions}
-          placeholder={m.collection_item_not_recorded()}
-          class={item.modelCondition && isPositiveCondition(item.modelCondition)
-            ? 'text-[#D48A42]'
-            : ''}
-          onSave={(v) =>
-            saveUpdate({ kind: 'modelCondition', data: { model_condition: v || null } })}
-        />
-      </div>
-
-      <!-- Box Condition -->
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
-          {m.collection_item_box_condition()}
-        </span>
-        <InPlaceSelectEdit
-          value={item.boxCondition ?? ''}
-          displayLabel={item.boxCondition
-            ? boxConditionLabel(item.boxCondition)
-            : m.collection_item_not_recorded()}
-          options={boxConditionSelectOptions}
-          placeholder={m.collection_item_not_recorded()}
-          class={item.boxCondition && isPositiveCondition(item.boxCondition)
-            ? 'text-[#D48A42]'
-            : ''}
-          onSave={(v) => saveUpdate({ kind: 'boxCondition', data: { box_condition: v || null } })}
-        />
-      </div>
+      <InPlaceSelectEdit
+        value={item.purchaseCondition ?? ''}
+        displayLabel={item.purchaseCondition
+          ? purchaseConditionLabel(item.purchaseCondition)
+          : m.collection_item_not_recorded()}
+        options={purchaseConditionSelectOptions}
+        placeholder={m.collection_item_not_recorded()}
+        class={item.purchaseCondition && isPositiveCondition(item.purchaseCondition)
+          ? 'text-[#D48A42]'
+          : ''}
+        onSave={(v) =>
+          saveUpdate({ kind: 'purchaseCondition', data: { purchase_condition: v || null } })}
+      />
+      <InPlaceSelectEdit
+        value={item.modelCondition ?? ''}
+        displayLabel={item.modelCondition
+          ? modelConditionLabel(item.modelCondition)
+          : m.collection_item_not_recorded()}
+        options={modelConditionSelectOptions}
+        placeholder={m.collection_item_not_recorded()}
+        class={item.modelCondition && isPositiveCondition(item.modelCondition)
+          ? 'text-[#D48A42]'
+          : ''}
+        onSave={(v) => saveUpdate({ kind: 'modelCondition', data: { model_condition: v || null } })}
+      />
+      <InPlaceSelectEdit
+        value={item.boxCondition ?? ''}
+        displayLabel={item.boxCondition
+          ? boxConditionLabel(item.boxCondition)
+          : m.collection_item_not_recorded()}
+        options={boxConditionSelectOptions}
+        placeholder={m.collection_item_not_recorded()}
+        class={item.boxCondition && isPositiveCondition(item.boxCondition) ? 'text-[#D48A42]' : ''}
+        onSave={(v) => saveUpdate({ kind: 'boxCondition', data: { box_condition: v || null } })}
+      />
     </div>
   </div>
 </aside>

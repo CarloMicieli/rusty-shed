@@ -778,8 +778,8 @@
               <h3 class="sr-only">{m.rolling_stock_list()}</h3>
 
               <!-- Road number as primary identity element -->
-              <div class="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
-                <div class="flex items-baseline gap-2">
+              <div class="relative mb-4 border-b border-zinc-800 pb-3">
+                <div class="flex items-baseline gap-2 pr-16">
                   <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
                     {m.road_number()}
                   </span>
@@ -800,7 +800,7 @@
                 </div>
                 {#if unit.railway_company}
                   <span
-                    class="inline-flex items-center rounded border border-[#1F1F1F] bg-[#0F0F0F] px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-[#D48A42] uppercase"
+                    class="absolute top-0 right-0 inline-flex items-center rounded-full border border-[#1F1F1F] bg-[#D48A42] px-2 py-0.5 font-mono text-[9px] font-bold tracking-wider text-[#050505] uppercase"
                   >
                     {unit.railway_company}
                   </span>
@@ -934,10 +934,8 @@
               {#each model.rolling_stock as unit (unit.id)}
                 <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
                   <!-- Mini-card header: series name + railway company -->
-                  <div
-                    class="mb-2.5 flex items-center justify-between border-b border-zinc-800/60 pb-2"
-                  >
-                    <div class="flex min-w-0 items-baseline gap-2">
+                  <div class="relative mb-2.5 border-b border-zinc-800/60 pb-2">
+                    <div class="flex min-w-0 items-baseline gap-2 pr-16">
                       {#if editable}
                         <div class="truncate text-xs font-medium text-zinc-200">
                           <InPlaceEdit
@@ -966,7 +964,7 @@
                     </div>
                     {#if unit.railway_company}
                       <span
-                        class="ml-2 inline-flex shrink-0 items-center rounded border border-[#1F1F1F] bg-[#0F0F0F] px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-[#D48A42] uppercase"
+                        class="absolute top-0 right-0 inline-flex items-center rounded-full border border-[#1F1F1F] bg-[#D48A42] px-2 py-0.5 font-mono text-[9px] font-bold tracking-wider text-[#050505] uppercase"
                       >
                         {unit.railway_company}
                       </span>
