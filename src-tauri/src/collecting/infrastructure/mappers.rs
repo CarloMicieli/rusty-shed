@@ -227,7 +227,7 @@ impl CollectionMapper {
         let purchase_date = pi_row.purchase_date;
 
         match purchase_type {
-            Some("purchased") => {
+            Some("purchased") | None => {
                 let price = MonetaryAmount::from_db(
                     pi_row.purchased_price_amount.unwrap_or(0),
                     pi_row.purchased_price_currency.as_deref(),
@@ -532,6 +532,36 @@ mod tests {
                 assert_eq!(p.seller, Some(seller_id));
             }
             _ => panic!("expected Purchased variant"),
+        }
+    }
+
+    #[test]
+    fn it_should_map_row_null_type() {
+        let row = PurchaseInfoRow {
+            id: PurchaseInfoId::try_from("trn:purchase:1").unwrap(),
+            collection_item_id: CollectionItemId::try_from("trn:collection-item:1").unwrap(),
+            purchase_type: None,
+            purchase_date: NaiveDate::from_ymd_opt(2023, 10, 1).unwrap(),
+            seller_id: None,
+            buyer_id: None,
+            sale_date: None,
+            purchased_price_amount: Some(100),
+            purchased_price_currency: Some("EUR".to_string()),
+            sale_price_amount: None,
+            sale_price_currency: None,
+            deposit_amount: None,
+            deposit_currency: None,
+            preorder_total_amount: None,
+            preorder_total_currency: None,
+            expected_date: None,
+        };
+
+        let result = CollectionMapper::row_to_purchase_info(&row);
+        assert!(result.is_ok());
+        let info = result.unwrap();
+        match info {
+            PurchaseInfo::Purchased(_) => {}
+            _ => panic!("Expected Purchased variant"),
         }
     }
 

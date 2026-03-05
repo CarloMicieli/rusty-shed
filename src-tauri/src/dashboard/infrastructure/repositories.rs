@@ -3,8 +3,12 @@ use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::dashboard::domain::{
     DashboardRecentItem, DashboardRepository, DashboardSummary, DashboardUowExt, QueryParams,
 };
-use crate::dashboard::infrastructure::entities::{DashboardRecentItemRow, DashboardTotalsRow};
+use crate::dashboard::infrastructure::entities::{
+    DashboardRecentItemRow, DashboardTotalsRow, ModelCardRow, PurchaseGroupRow,
+};
+use crate::media::infrastructure::ImageRepository;
 use sqlx::SqliteConnection;
+use std::path::Path;
 
 /// An SQLite-specific implementation of the `DashboardRepository`.
 ///
@@ -102,13 +106,8 @@ impl<'conn> SqliteDashboardRepository<'conn> {
     /// - A `DomainError` if the query fails.
     async fn fetch_purchase_groups(
         &mut self,
-    ) -> Result<
-        Vec<(
-            crate::dashboard::infrastructure::entities::PurchaseGroupRow,
-            Vec<crate::dashboard::infrastructure::entities::ModelCardRow>,
-        )>,
-        DomainError,
-    > {
+        models_dir: &Path,
+    ) -> Result<Vec<(PurchaseGroupRow, Vec<ModelCardRow>)>, DomainError> {
         // First, get the top 3 purchase groups
         let groups_sql = r#"
             SELECT
@@ -140,6 +139,7 @@ impl<'conn> SqliteDashboardRepository<'conn> {
             let models_sql = r#"
                 SELECT
                     ci.id AS collection_item_id,
+                    rm.id AS railway_model_id,
                     m.name AS manufacturer_name,
                     rm.product_code,
                     COALESCE(t.description, '') AS description,
@@ -160,14 +160,22 @@ impl<'conn> SqliteDashboardRepository<'conn> {
                 LIMIT 3
             "#;
 
-            let models = sqlx::query_as::<
-                _,
-                crate::dashboard::infrastructure::entities::ModelCardRow,
-            >(models_sql)
-            .bind(&group.purchase_date)
-            .bind(&group.seller_id)
-            .fetch_all(&mut *self.executor)
-            .await?;
+            let mut models = sqlx::query_as::<_, ModelCardRow>(models_sql)
+                .bind(&group.purchase_date)
+                .bind(&group.seller_id)
+                .fetch_all(&mut *self.executor)
+                .await?;
+
+            // Resolve images
+            let image_repo = ImageRepository;
+            for model in &mut models {
+                if let Ok(path) = image_repo
+                    .find_image(&model.railway_model_id, models_dir)
+                    .await
+                {
+                    model.image_path = path.to_str().map(String::from);
+                }
+            }
 
             result.push((group, models));
         }
@@ -189,7 +197,7 @@ impl<'conn> DashboardRepository for SqliteDashboardRepository<'conn> {
             .collect::<Result<Vec<DashboardRecentItem>, DomainError>>()?;
 
         let purchase_groups: Vec<crate::dashboard::domain::PurchaseGroup> = self
-            .fetch_purchase_groups()
+            .fetch_purchase_groups(&params.models_dir)
             .await?
             .into_iter()
             .map(Into::into)
@@ -229,6 +237,7 @@ mod tests {
         let mut repo = SqliteDashboardRepository::new(&mut conn);
         let params = QueryParams {
             number_of_recent_items: 1,
+            models_dir: std::path::PathBuf::from("/tmp"),
         };
 
         let summary = repo
@@ -256,6 +265,7 @@ mod tests {
         let mut repo = SqliteDashboardRepository::new(&mut conn);
         let params = QueryParams {
             number_of_recent_items: 1,
+            models_dir: std::path::PathBuf::from("/tmp"),
         };
 
         let summary = repo

@@ -69,6 +69,7 @@ pub struct PurchaseGroupRow {
 #[derive(Debug, Clone, FromRow)]
 pub struct ModelCardRow {
     pub collection_item_id: CollectionItemId,
+    pub railway_model_id: RailwayModelId,
     pub manufacturer_name: String,
     pub product_code: String,
     pub description: String,

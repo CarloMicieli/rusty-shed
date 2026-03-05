@@ -34,8 +34,12 @@ pub async fn get_dashboard_summary(
         .number_of_recent_items
         .unwrap_or(DEFAULT_RECENT_ITEMS);
 
-    let dashboard_summary =
-        GetDashboardSummary::execute(&mut unit_of_work, number_of_recent_items).await?;
+    let dashboard_summary = GetDashboardSummary::execute(
+        &mut unit_of_work,
+        number_of_recent_items,
+        state.models_dir(),
+    )
+    .await?;
 
     unit_of_work.commit().await.map_err(CommandError::from)?;
 

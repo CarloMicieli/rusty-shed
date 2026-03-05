@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Textarea } from '$lib/components/ui/textarea';
+  import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
 
   interface Props {
@@ -10,6 +11,7 @@
     required?: boolean;
     placeholder?: string;
     rows?: number;
+    singleLine?: boolean;
   }
 
   let {
@@ -18,7 +20,8 @@
     value = $bindable(null),
     required = false,
     placeholder = '',
-    rows = 3
+    rows = 3,
+    singleLine = false
   }: Props = $props();
 
   const langLabel = $derived(
@@ -48,5 +51,14 @@
       <span class="text-xs text-zinc-500">{requiredLabel}</span>
     {/if}
   </div>
-  <Textarea bind:value {placeholder} {rows} class="resize-none" />
+  {#if singleLine}
+    <Input
+      type="text"
+      value={value ?? ''}
+      oninput={(e) => (value = e.currentTarget.value || null)}
+      {placeholder}
+    />
+  {:else}
+    <Textarea bind:value {placeholder} {rows} class="resize-none" />
+  {/if}
 </div>

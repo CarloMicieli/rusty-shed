@@ -21,12 +21,14 @@ impl GetDashboardSummary {
     pub async fn execute<U>(
         unit_of_work: &mut U,
         number_of_recent_items: u8,
+        models_dir: std::path::PathBuf,
     ) -> Result<DashboardSummary, DomainError>
     where
         U: DashboardUowExt + Send,
     {
         let params = QueryParams {
             number_of_recent_items,
+            models_dir,
         };
 
         let mut repository = unit_of_work.dashboard_repository();

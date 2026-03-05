@@ -30,8 +30,10 @@ pub trait DashboardUowExt: Send {
 }
 
 /// Query parameters for retrieving the dashboard summary.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueryParams {
     /// Number of recent items to retrieve for the dashboard.
     pub number_of_recent_items: u8,
+    /// Path to the directory where model images are stored.
+    pub models_dir: std::path::PathBuf,
 }

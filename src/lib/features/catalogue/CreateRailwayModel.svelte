@@ -28,6 +28,7 @@
   import { resolveLabel } from '../../../utils/resolveLabel';
   import type { ConstantItem } from './constants';
   import RollingStockSection from './components/RollingStockSection.svelte';
+  import * as Select from '$lib/components/ui/select';
 
   // Custom form type that uses RollingStockForm for UI state
   type CreateRailwayModelFormInput = Omit<CreateRailwayModelInput, 'rolling_stocks'> & {
@@ -165,189 +166,287 @@
   options: Array<ConstantItem | { id: string; name: string }>,
   onChange: (next: string) => void
 )}
-  {@const selected = value}
+  {@const found = options.find((o) => o.id === value)}
+  {@const displayLabel = found ? optionLabel(found) : null}
   <FormField {label} {error} {required}>
-    <select
-      class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-      value={selected}
-      onchange={(event) => onChange((event.currentTarget as HTMLSelectElement).value)}
+    <Select.Root
+      type="single"
+      value={value || undefined}
+      onValueChange={(v: string) => onChange(v)}
     >
-      <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
-      {#each options as option (option.id)}
-        <option value={option.id}>{optionLabel(option)}</option>
+      <Select.Trigger class="w-full">
+        {#if displayLabel}
+          {displayLabel}
+        {:else}
+          <span class="text-muted-foreground">{resolveLabel(formLabels.selectPlaceholder)}</span>
+        {/if}
+      </Select.Trigger>
+      <Select.Content>
+        {#each options as option (option.id)}
+          <Select.Item value={option.id} label={optionLabel(option)} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
+  </FormField>
+{/snippet}
+
+{#snippet powerMethodPills()}
+  <FormField label={formLabels.powerMethod} error={fieldError('power_method')} required>
+    <div class="flex gap-1.5 pt-0.5">
+      {#each powerMethodsData as pm (pm.id)}
+        <button
+          type="button"
+          class="rounded-full border px-3 py-1 text-xs font-semibold transition-colors {$form.power_method ===
+          pm.id
+            ? 'border-amber-500 bg-amber-500/15 text-amber-400'
+            : 'border-zinc-700 bg-zinc-800/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}"
+          onclick={() => ($form.power_method = pm.id as CreateRailwayModelInput['power_method'])}
+        >
+          {pm.display ?? pm.id}
+        </button>
       {/each}
-    </select>
+    </div>
   </FormField>
 {/snippet}
 
 <div class="container mx-auto p-8">
-  <h1 class="h2 mb-8">{resolveLabel(formLabels.title)}</h1>
-  {#if generalError}
-    <div
-      class="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-destructive"
-    >
-      {generalError}
-    </div>
-  {/if}
+  <h1 class="h2 mb-6">{resolveLabel(formLabels.title)}</h1>
 
-  <form method="POST" use:enhance>
-    <Accordion.Root bind:value={accordionValues} type="multiple" class="space-y-3">
-      <Accordion.Item value="basic-info" class="rounded-lg border border-border">
-        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="h4 mb-0">{resolveLabel(formLabels.basicInfo)}</h3>
-        </Accordion.Trigger>
+  <div class="flex items-start gap-6">
+    <!-- Main form -->
+    <form id="railway-model-form" method="POST" use:enhance class="min-w-0 flex-1">
+      {#if generalError}
+        <div
+          class="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-destructive"
+        >
+          {generalError}
+        </div>
+      {/if}
 
-        <Accordion.Content class="px-3 pt-1 pb-4">
-          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {@render selectField(
-              formLabels.manufacturer,
-              fieldError('manufacturer_id'),
-              true,
-              $form.manufacturer_id,
-              manufacturersData,
-              (next) => ($form.manufacturer_id = next)
-            )}
+      <Accordion.Root bind:value={accordionValues} type="multiple" class="space-y-3">
+        <Accordion.Item value="basic-info" class="rounded-lg border border-border">
+          <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+            <h3 class="h4 mb-0">{resolveLabel(formLabels.basicInfo)}</h3>
+          </Accordion.Trigger>
 
-            <FormField label={formLabels.productCode} error={fieldError('product_code')} required>
-              <Input
-                type="text"
-                bind:value={$form.product_code}
-                placeholder={resolveLabel(formLabels.productCodePlaceholder)}
-                class="font-mono"
-              />
-            </FormField>
+          <Accordion.Content class="px-3 pt-1 pb-4">
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {@render selectField(
+                formLabels.manufacturer,
+                fieldError('manufacturer_id'),
+                true,
+                $form.manufacturer_id,
+                manufacturersData,
+                (next) => ($form.manufacturer_id = next)
+              )}
 
-            {@render selectField(
-              formLabels.category,
-              fieldError('category'),
-              true,
-              $form.category,
-              categoriesData,
-              (next) => ($form.category = next as CreateRailwayModelInput['category'])
-            )}
+              <FormField label={formLabels.productCode} error={fieldError('product_code')} required>
+                <Input
+                  type="text"
+                  bind:value={$form.product_code}
+                  placeholder={resolveLabel(formLabels.productCodePlaceholder)}
+                  class="font-mono tracking-wider"
+                />
+              </FormField>
 
-            {@render selectField(
-              formLabels.scale,
-              fieldError('scale'),
-              true,
-              $form.scale,
-              scalesData,
-              (next) => ($form.scale = next as CreateRailwayModelInput['scale'])
-            )}
+              {@render selectField(
+                formLabels.category,
+                fieldError('category'),
+                true,
+                $form.category,
+                categoriesData,
+                (next) => ($form.category = next as CreateRailwayModelInput['category'])
+              )}
 
-            {@render selectField(
-              formLabels.powerMethod,
-              fieldError('power_method'),
-              true,
-              $form.power_method,
-              powerMethodsData,
-              (next) => ($form.power_method = next as CreateRailwayModelInput['power_method'])
-            )}
+              {@render selectField(
+                formLabels.scale,
+                fieldError('scale'),
+                true,
+                $form.scale,
+                scalesData,
+                (next) => ($form.scale = next as CreateRailwayModelInput['scale'])
+              )}
 
-            {@render selectField(
-              formLabels.epoch,
-              fieldError('epoch'),
-              true,
-              $form.epoch,
-              epochsData,
-              (next) => ($form.epoch = next)
-            )}
+              {@render powerMethodPills()}
+
+              {@render selectField(
+                formLabels.epoch,
+                fieldError('epoch'),
+                true,
+                $form.epoch,
+                epochsData,
+                (next) => ($form.epoch = next)
+              )}
+            </div>
+          </Accordion.Content>
+        </Accordion.Item>
+
+        <Accordion.Item value="delivery-availability" class="rounded-lg border border-border">
+          <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+            <h3 class="h4 mb-0">{resolveLabel(formLabels.deliveryAvailability)}</h3>
+          </Accordion.Trigger>
+
+          <Accordion.Content class="px-3 pt-1 pb-4">
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <FormField label={formLabels.deliveryDate} error={fieldError('delivery_date')}>
+                <Input
+                  type="text"
+                  bind:value={$form.delivery_date}
+                  placeholder={resolveLabel(formLabels.deliveryDatePlaceholder)}
+                />
+              </FormField>
+
+              {@render selectField(
+                formLabels.availabilityStatus,
+                fieldError('availability_status'),
+                false,
+                $form.availability_status ?? '',
+                availabilityStatusesData,
+                (next) =>
+                  ($form.availability_status = (next ||
+                    null) as CreateRailwayModelInput['availability_status'])
+              )}
+            </div>
+          </Accordion.Content>
+        </Accordion.Item>
+
+        <Accordion.Item value="translations" class="rounded-lg border border-border">
+          <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+            <h3 class="h4 mb-0">{resolveLabel(formLabels.description)}</h3>
+          </Accordion.Trigger>
+          <Accordion.Content class="px-3 pt-1 pb-4">
+            <TranslationsSection
+              bind:enDescription
+              bind:enDetails
+              bind:itDescription
+              bind:itDetails
+            />
+          </Accordion.Content>
+        </Accordion.Item>
+
+        <Accordion.Item value="rolling-stock" class="rounded-lg border border-border">
+          <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
+            <h3 class="h4 mb-0">
+              {resolveLabel(formLabels.rollingStock)}
+              <Badge variant="default" class="ml-2">{$form.rolling_stocks.length}</Badge>
+            </h3>
+          </Accordion.Trigger>
+
+          <Accordion.Content class="px-3 pt-1 pb-4">
+            <div class="space-y-4">
+              {#if !hasRollingStock}
+                <div class="rounded-md border border-dashed border-zinc-700 p-6 text-center">
+                  <p class="text-sm text-zinc-500">
+                    No rolling stock added yet. Use the Command Center to add items.
+                  </p>
+                </div>
+              {/if}
+
+              {#each $form.rolling_stocks as rs, index (index)}
+                <RollingStockSection
+                  {rs}
+                  {index}
+                  errorsFn={(field) => rollingStockFieldError(index, field)}
+                  {rollingStockCategoriesData}
+                  {railwayCompaniesData}
+                  {locomotiveTypesData}
+                  {passengerCarTypesData}
+                  {freightCarTypesData}
+                  {electricMultipleUnitTypesData}
+                  {controlsData}
+                  {dccInterfacesData}
+                  {serviceLevelsData}
+                  {formLabels}
+                  onDuplicate={() => duplicateRollingStock(index)}
+                  onDelete={() => deleteRollingStock(index)}
+                />
+              {/each}
+            </div>
+          </Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>
+    </form>
+
+    <!-- Command Center Sidebar -->
+    <aside class="sticky top-8 w-60 shrink-0">
+      <div class="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
+        <!-- Header -->
+        <div class="mb-4 flex items-center gap-2">
+          <div class="h-px flex-1 bg-zinc-800"></div>
+          <span class="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase"
+            >Command Center</span
+          >
+          <div class="h-px flex-1 bg-zinc-800"></div>
+        </div>
+
+        <!-- Model summary -->
+        <div class="mb-4 space-y-3">
+          {#if $form.product_code}
+            <div>
+              <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">
+                Product Code
+              </div>
+              <div class="font-mono text-sm tracking-wider text-amber-400">
+                {$form.product_code}
+              </div>
+            </div>
+          {/if}
+          {#if $form.scale}
+            {@const scaleDisplay =
+              scalesData.find((s) => s.id === $form.scale)?.display ?? $form.scale}
+            <div>
+              <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">Scale</div>
+              <div class="font-mono text-sm text-zinc-200">{scaleDisplay}</div>
+            </div>
+          {/if}
+          <div>
+            <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">Power</div>
+            <span
+              class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-400"
+              >{$form.power_method}</span
+            >
           </div>
-        </Accordion.Content>
-      </Accordion.Item>
+        </div>
 
-      <Accordion.Item value="delivery-availability" class="rounded-lg border border-border">
-        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="h4 mb-0">{resolveLabel(formLabels.deliveryAvailability)}</h3>
-        </Accordion.Trigger>
+        <div class="mb-4 h-px bg-zinc-800"></div>
 
-        <Accordion.Content class="px-3 pt-1 pb-4">
-          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <FormField label={formLabels.deliveryDate} error={fieldError('delivery_date')}>
-              <Input
-                type="text"
-                bind:value={$form.delivery_date}
-                placeholder={resolveLabel(formLabels.deliveryDatePlaceholder)}
-              />
-            </FormField>
-
-            {@render selectField(
-              formLabels.availabilityStatus,
-              fieldError('availability_status'),
-              false,
-              $form.availability_status ?? '',
-              availabilityStatusesData,
-              (next) =>
-                ($form.availability_status = (next ||
-                  null) as CreateRailwayModelInput['availability_status'])
-            )}
+        <!-- Rolling stock -->
+        <div class="mb-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] tracking-wider text-zinc-500 uppercase">Rolling Stock</span>
+            <span class="rounded-full bg-zinc-700 px-2 py-0.5 text-xs font-semibold text-zinc-200"
+              >{$form.rolling_stocks.length}</span
+            >
           </div>
-        </Accordion.Content>
-      </Accordion.Item>
+          <Button
+            type="button"
+            variant="outline"
+            class="w-full border-zinc-700 text-xs hover:border-amber-500/50 hover:text-amber-400"
+            onclick={addRollingStock}
+          >
+            + {resolveLabel(formLabels.addRollingStock)}
+          </Button>
+        </div>
 
-      <Accordion.Item value="translations" class="rounded-lg border border-border">
-        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="h4 mb-0">{resolveLabel(formLabels.description)}</h3>
-        </Accordion.Trigger>
-        <Accordion.Content class="px-3 pt-1 pb-4">
-          <TranslationsSection
-            bind:enDescription
-            bind:enDetails
-            bind:itDescription
-            bind:itDetails
-          />
-        </Accordion.Content>
-      </Accordion.Item>
+        <div class="mb-4 h-px bg-zinc-800"></div>
 
-      <Accordion.Item value="rolling-stock" class="rounded-lg border border-border">
-        <Accordion.Trigger class="flex w-full items-center justify-between px-3 py-2 text-left">
-          <h3 class="h4 mb-0">
-            {resolveLabel(formLabels.rollingStock)}
-            <Badge variant="default" class="ml-2">{$form.rolling_stocks.length}</Badge>
-          </h3>
-        </Accordion.Trigger>
-
-        <Accordion.Content class="px-3 pt-1 pb-4">
-          <div class="space-y-4">
-            {#if !hasRollingStock}
-              <div class="text-sm text-muted">Add at least one rolling stock item to continue.</div>
-            {/if}
-
-            {#each $form.rolling_stocks as rs, index (index)}
-              <RollingStockSection
-                {rs}
-                {index}
-                errorsFn={(field) => rollingStockFieldError(index, field)}
-                {rollingStockCategoriesData}
-                {railwayCompaniesData}
-                {locomotiveTypesData}
-                {passengerCarTypesData}
-                {freightCarTypesData}
-                {electricMultipleUnitTypesData}
-                {controlsData}
-                {dccInterfacesData}
-                {serviceLevelsData}
-                {formLabels}
-                onDuplicate={() => duplicateRollingStock(index)}
-                onDelete={() => deleteRollingStock(index)}
-              />
-            {/each}
-
-            <Button type="button" onclick={addRollingStock}>
-              + {resolveLabel(formLabels.addRollingStock)}
-            </Button>
-          </div>
-        </Accordion.Content>
-      </Accordion.Item>
-    </Accordion.Root>
-
-    <div class="mt-8 flex gap-4">
-      <Button type="submit" disabled={$submitting}>
-        {$submitting ? `${resolveLabel(formLabels.create)}...` : resolveLabel(formLabels.create)}
-      </Button>
-      <Button type="button" variant="outline" onclick={() => navigate('/')}>
-        {resolveLabel(formLabels.cancel)}
-      </Button>
-    </div>
-  </form>
+        <!-- Actions -->
+        <div class="space-y-2">
+          <Button type="submit" form="railway-model-form" class="w-full" disabled={$submitting}>
+            {$submitting
+              ? `${resolveLabel(formLabels.create)}...`
+              : resolveLabel(formLabels.create)}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            class="w-full text-zinc-400 hover:text-zinc-200"
+            onclick={() => navigate('/')}
+          >
+            {resolveLabel(formLabels.cancel)}
+          </Button>
+        </div>
+      </div>
+    </aside>
+  </div>
 </div>

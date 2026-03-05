@@ -3,6 +3,7 @@
 
   import FormField from '$lib/components/ui/FormField.svelte';
   import { Button, Input } from '$lib/components';
+  import * as Select from '$lib/components/ui/select';
   import type { ConstantItem } from '../constants';
   import type { RollingStockForm } from '../utils';
   import { resolveLabel } from '../../../../utils/resolveLabel';
@@ -62,16 +63,33 @@
   required: boolean,
   options: Option[]
 )}
+  {@const currentValue = (rs[fieldName] as string) || undefined}
+  {@const found = options.find((o) => o.id === currentValue)}
+  {@const displayLabel = found ? ('name' in found ? found.name : resolveLabel(found)) : null}
   <FormField {label} error={fieldError(fieldName as string)} {required}>
-    <select
-      class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-      bind:value={rs[fieldName]}
+    <Select.Root
+      type="single"
+      value={currentValue}
+      onValueChange={(v: string) => {
+        (rs as Record<string, unknown>)[fieldName as string] = v;
+      }}
     >
-      <option value="">{resolveLabel(formLabels.selectPlaceholder)}</option>
-      {#each options as option (option.id)}
-        <option value={option.id}>{'name' in option ? option.name : resolveLabel(option)}</option>
-      {/each}
-    </select>
+      <Select.Trigger class="w-full">
+        {#if displayLabel}
+          {displayLabel}
+        {:else}
+          <span class="text-muted-foreground">{resolveLabel(formLabels.selectPlaceholder)}</span>
+        {/if}
+      </Select.Trigger>
+      <Select.Content>
+        {#each options as option (option.id)}
+          <Select.Item
+            value={option.id}
+            label={'name' in option ? option.name : resolveLabel(option)}
+          />
+        {/each}
+      </Select.Content>
+    </Select.Root>
   </FormField>
 {/snippet}
 
