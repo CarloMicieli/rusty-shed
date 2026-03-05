@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS track_products
     length_mm                           INTEGER,
     radius_mm                           INTEGER,
     track_code                          TEXT,
+    track_type                          TEXT,
+    description                         TEXT,
     created_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version                             INTEGER NOT NULL DEFAULT 0,
@@ -35,12 +37,17 @@ CREATE TABLE IF NOT EXISTS track_inventory_items
     inventory_id                        TEXT NOT NULL,
     track_id                            TEXT NOT NULL,
     quantity                            INTEGER NOT NULL DEFAULT 0,
+    required                            INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (inventory_id, track_id),
     FOREIGN KEY (inventory_id)  REFERENCES track_inventories (id) ON DELETE CASCADE,
     FOREIGN KEY (track_id)      REFERENCES track_products (track_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_track_inventory_items_inventory_id ON track_inventory_items (inventory_id);
+
+CREATE INDEX idx_track_inventory_items_shortage 
+ON track_inventory_items(inventory_id, track_id) 
+WHERE quantity < required;
 
 CREATE TABLE IF NOT EXISTS track_purchases
 (

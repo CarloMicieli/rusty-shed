@@ -43,8 +43,6 @@ CREATE TABLE IF NOT EXISTS railway_models
     id                                   TEXT PRIMARY KEY,
     manufacturer_id                      TEXT NOT NULL,
     product_code                         TEXT NOT NULL,
-    description                          TEXT NOT NULL,
-    details                              TEXT,
     power_method                         TEXT NOT NULL,
     scale                                TEXT NOT NULL,
     epoch                                TEXT NOT NULL,

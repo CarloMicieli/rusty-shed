@@ -26,3 +26,6 @@ CREATE TABLE IF NOT EXISTS maintenance_events
 
 CREATE INDEX IF NOT EXISTS idx_maintenance_events_card
     ON maintenance_events (maintenance_card_id, date_performed DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_maintenance_cards_owned_rolling_stock_id
+    ON maintenance_cards (owned_rolling_stock_id);
