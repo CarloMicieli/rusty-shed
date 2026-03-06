@@ -17,7 +17,7 @@ name = "rusty_shed_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build             = { version = "2.5.5", features = [] }
+tauri-build             = { version = "2.5.6", features = [] }
 
 [dependencies]
 anyhow                  = "1.0.102"
@@ -51,7 +51,7 @@ sqlx                    = { version = "0.8.6", features = ["sqlite", "runtime-to
 strum                   = "0.27.2"
 strum_macros            = "0.27.2"
 tar                     = "0.4"
-tauri                   = { version = "2.10.2", features = ["protocol-asset"] }
+tauri                   = { version = "2.10.3", features = ["protocol-asset"] }
 tauri-plugin-deep-link  = "2"
 tauri-plugin-dialog     = "2"
 tauri-plugin-fs         = "2.4.5"
@@ -66,10 +66,10 @@ tauri-plugin-stronghold = "2"
 tauri-plugin-window-state = "2"
 tauri-specta            = { version = "2.0.0-rc.21", features = ["typescript"] }
 thiserror               = "2.0.18"
-tokio                   = { version = "1.49.0", features = ["rt-multi-thread", "macros", "fs"] }
+tokio                   = { version = "1.50.0", features = ["rt-multi-thread", "macros", "fs"] }
 url                     = { version = "2.5.8", features = ["serde"] }
 urlencoding             = "2.1.3"
-uuid                    = { version = "1.21.0", features = ["v4", "serde", "fast-rng"] }
+uuid                    = { version = "1.22.0", features = ["v4", "serde", "fast-rng"] }
 zeroize                 = "1"
 zip                     = "0.6"
 
