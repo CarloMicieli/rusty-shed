@@ -43,7 +43,7 @@ impl From<DatabaseBackupError> for CommandError {
                 CommandError::validation_field("confirmation", msg)
             }
             DatabaseBackupError::PermissionDenied(msg) => CommandError::PermissionDenied(msg),
-            _ => CommandError::Unknown(err.to_string()),
+            _ => CommandError::unknown(err.to_string()),
         }
     }
 }

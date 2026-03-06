@@ -15,18 +15,18 @@
 
 ## Key Files to Touch
 
-| File | Change type |
-|------|-------------|
-| `src-tauri/src/core/infrastructure/error.rs` | Update `Unknown` variant; add `ErrorId::generate()` factory |
-| `src/lib/services/errors.ts` | Add `errorId?` to `NormalizedError`; update `normalizeError()` |
-| `src/lib/services/error-id.ts` | **New** — pure TS Error ID generator |
-| `src/lib/services/module-label.ts` | **New** — pathname → module label utility |
-| `src/lib/components/signal-failure/SignalFailureView.svelte` | **New** — themed error component |
-| `src/routes/error/+page.svelte` | Replace with `<SignalFailureView>` |
-| `src/routes/+layout.svelte` | Replace inline startup error markup with `<SignalFailureView>` |
-| `src/lib/toaster.ts` | Add `signal()` method |
-| `src/app.css` (or equivalent global CSS) | Add `.toast-signal` Amber border rule |
-| `messages/en.json` | Add all `signal_*` and `module_label_*` keys |
+| File                                                         | Change type                                                    |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `src-tauri/src/core/infrastructure/error.rs`                 | Update `Unknown` variant; add `ErrorId::generate()` factory    |
+| `src/lib/services/errors.ts`                                 | Add `errorId?` to `NormalizedError`; update `normalizeError()` |
+| `src/lib/services/error-id.ts`                               | **New** — pure TS Error ID generator                           |
+| `src/lib/services/module-label.ts`                           | **New** — pathname → module label utility                      |
+| `src/lib/components/signal-failure/SignalFailureView.svelte` | **New** — themed error component                               |
+| `src/routes/error/+page.svelte`                              | Replace with `<SignalFailureView>`                             |
+| `src/routes/+layout.svelte`                                  | Replace inline startup error markup with `<SignalFailureView>` |
+| `src/lib/toaster.ts`                                         | Add `signal()` method                                          |
+| `src/app.css` (or equivalent global CSS)                     | Add `.toast-signal` Amber border rule                          |
+| `messages/en.json`                                           | Add all `signal_*` and `module_label_*` keys                   |
 
 ---
 
@@ -74,7 +74,7 @@
 2. In global CSS, add:
    ```css
    .toast-signal {
-     border: 1px solid #D48A42 !important;
+     border: 1px solid #d48a42 !important;
    }
    ```
 3. Migrate one existing non-fatal error call site (e.g., the DCC sync failure) to use `toaster.signal()` as a proof-of-concept.
@@ -86,15 +86,18 @@ Run `pnpm tauri dev` once to trigger specta type regeneration after the `Command
 ### Step 8 — Tests
 
 **Rust tests** (in `src-tauri/src/core/infrastructure/error.rs` or adjacent `tests/` module):
+
 - `test_error_id_format`: verify `ErrorId::generate()` matches `ERR-[1000-9999]-[A-Z]`.
 - `test_error_id_uniqueness`: generate 1000 IDs; assert no duplicates.
 - `test_unknown_factory_sets_error_id`: `CommandError::unknown("msg").error_id` is non-empty.
 
 **Vitest tests** (`src/__tests__/error-id.test.ts`):
+
 - `generateErrorId()` returns string matching `/^ERR-\d{4}-[A-Z]$/`.
 - Two consecutive calls return different IDs.
 
 **Vitest tests** (`src/__tests__/module-label.test.ts`):
+
 - Each URL prefix returns the correct Paraglide key.
 - Unknown pathname returns the fallback label.
 
@@ -123,15 +126,15 @@ During development, trigger the error view by:
 
 ## Design Token Reference (for the component)
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Base background | `#050505` | Page/window background |
-| Surface | `#0F0F0F` | Cards, metadata panel |
-| Amber | `#D48A42` | Headline text, primary button |
-| Border | `#1F1F1F` | 1px container borders |
-| Border radius | `8px` | All containers |
-| Muted | `#808080` | SVG icon, secondary text |
-| Monospace font | `font-mono` (Tailwind) | Error Code value |
+| Token           | Value                  | Usage                         |
+| --------------- | ---------------------- | ----------------------------- |
+| Base background | `#050505`              | Page/window background        |
+| Surface         | `#0F0F0F`              | Cards, metadata panel         |
+| Amber           | `#D48A42`              | Headline text, primary button |
+| Border          | `#1F1F1F`              | 1px container borders         |
+| Border radius   | `8px`                  | All containers                |
+| Muted           | `#808080`              | SVG icon, secondary text      |
+| Monospace font  | `font-mono` (Tailwind) | Error Code value              |
 
 ---
 

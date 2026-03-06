@@ -29,6 +29,7 @@ ErrorId
 ```
 
 **Validation rules**:
+
 - Format: `ERR-[1000–9999]-[A–Z]`
 - Generated at fault time; never persisted.
 - `Display` impl returns the raw string for logging and UI.
@@ -51,6 +52,7 @@ CommandError (enum)
 ```
 
 **State transitions**:
+
 ```
 Rust error occurs
   └─→ DomainError / sqlx::Error / anyhow::Error
@@ -68,10 +70,10 @@ Rust error occurs
 ### `ErrorId` (value type)
 
 ```typescript
-type ErrorId = string;  // format: "ERR-NNNN-X"
+type ErrorId = string; // format: "ERR-NNNN-X"
 
 // Generator utility (src/lib/services/error-id.ts)
-function generateErrorId(): ErrorId
+function generateErrorId(): ErrorId;
 ```
 
 ### `NormalizedError` (updated)
@@ -80,8 +82,8 @@ function generateErrorId(): ErrorId
 interface NormalizedError {
   kind: 'database' | 'not_found' | 'validation' | 'permission_denied' | 'unknown';
   message: string;
-  fields?: Record<string, string>;  // validation errors only
-  errorId?: ErrorId;                // ← NEW: present for unknown/fatal errors
+  fields?: Record<string, string>; // validation errors only
+  errorId?: ErrorId; // ← NEW: present for unknown/fatal errors
 }
 ```
 
@@ -92,12 +94,13 @@ Used to pass context into `SignalFailureView`:
 ```typescript
 interface SignalFaultContext {
   errorId: ErrorId;
-  moduleLabel: string;   // derived from URL pathname via getModuleLabel()
-  message?: string;      // optional additional context; not shown to user in production
+  moduleLabel: string; // derived from URL pathname via getModuleLabel()
+  message?: string; // optional additional context; not shown to user in production
 }
 ```
 
 **State transitions**:
+
 ```
 Tauri IPC error (Unknown variant)
   └─→ normalizeError() → NormalizedError { kind: 'unknown', errorId }
@@ -116,16 +119,16 @@ JS unhandled exception (Svelte boundary)
 
 This is a pure derivation (no storage) used by `getModuleLabel()`:
 
-| URL Prefix | Paraglide Key | Display Value (en) |
-|------------|---------------|-------------------|
-| `/dashboard` | `module_label_yard_overview` | Yard Overview |
-| `/collection` | `module_label_collection_depot` | Collection Depot |
-| `/wishlist` | `module_label_wishlist` | Wishlist |
-| `/maintenance` | `module_label_maintenance_log` | Maintenance Log |
-| `/finance` | `module_label_finance_ledger` | Finance Ledger |
-| `/search` | `module_label_global_search` | Global Search |
-| `/settings` | `module_label_settings` | Settings |
-| `*` (fallback) | `module_label_signal_box` | Signal Box |
+| URL Prefix     | Paraglide Key                   | Display Value (en) |
+| -------------- | ------------------------------- | ------------------ |
+| `/dashboard`   | `module_label_yard_overview`    | Yard Overview      |
+| `/collection`  | `module_label_collection_depot` | Collection Depot   |
+| `/wishlist`    | `module_label_wishlist`         | Wishlist           |
+| `/maintenance` | `module_label_maintenance_log`  | Maintenance Log    |
+| `/finance`     | `module_label_finance_ledger`   | Finance Ledger     |
+| `/search`      | `module_label_global_search`    | Global Search      |
+| `/settings`    | `module_label_settings`         | Settings           |
+| `*` (fallback) | `module_label_signal_box`       | Signal Box         |
 
 ---
 

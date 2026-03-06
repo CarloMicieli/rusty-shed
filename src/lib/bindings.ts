@@ -2630,10 +2630,10 @@ export type CommandError =
   /**
    * A catch-all for unexpected errors that don't map to a specific variant.
    *
-   * The inner `String` can include a short debug message suitable for
-   * logging; avoid placing secrets here.
+   * Contains a human-readable message and a unique Error ID for log correlation.
+   * Always construct via [`CommandError::unknown()`] to ensure logging.
    */
-  | { Unknown: string }
+  | { Unknown: { message: string; error_id: string } }
   /**
    * Indicates a violation of a specific business invariant.
    *

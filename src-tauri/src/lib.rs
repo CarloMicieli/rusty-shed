@@ -85,7 +85,7 @@ async fn get_image_path(
                 Ok(meta) if meta.is_file() => Ok(full_path
                     .to_str()
                     .map(|s| s.to_string())
-                    .ok_or_else(|| CommandError::Unknown("Non-Unicode path".into()))?),
+                    .ok_or_else(|| CommandError::unknown("Non-Unicode path"))?),
                 _ => Err(CommandError::NotFound(format!(
                     "No image found for railway model {id}"
                 ))),
@@ -136,10 +136,10 @@ fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
     log::info!("show_main_window: calling window.show()");
     window
         .show()
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::unknown(e.to_string()))?;
     window
         .set_focus()
-        .map_err(|e| CommandError::Unknown(e.to_string()))?;
+        .map_err(|e| CommandError::unknown(e.to_string()))?;
     Ok(())
 }
 

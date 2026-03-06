@@ -100,7 +100,7 @@
           } else if ('NotFound' in err) {
             error = upload_error_model_not_found();
           } else if ('Unknown' in err) {
-            error = err.Unknown;
+            error = (err.Unknown as { message: string }).message;
           } else {
             error = upload_error_unknown();
           }

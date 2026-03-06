@@ -1,15 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 
 // ── Mocks ────────────────────────────────────────────────────
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-vi.mock('$lib/paraglide/messages.js', () => new Proxy({}, { get: (_t, k) => () => String(k) }));
+// Use the same async importOriginal pattern as other test files.
+// A plain Proxy returning a function for *every* key (including ES module
+// symbols like Symbol.toStringTag) confuses Vitest's module introspection
+// and can cause the worker to hang before any test runs.
+vi.mock('$lib/paraglide/messages.js', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(actual).map(([k, v]) => [k, typeof v === 'function' ? () => k : v])
+  );
+});
+
+// Mock tauri-logger to prevent it from attempting `await import('@tauri-apps/plugin-log')`.
+// In the test environment __TAURI_INTERNALS__ is defined (set by setup.ts), so
+// isTauri=true and every log call would trigger the dynamic plugin import, which
+// hangs indefinitely in happy-dom.
+vi.mock('$lib/tauri-logger', () => ({
+  log: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    trace: vi.fn()
+  }
+}));
 
 vi.mock('$lib/toaster', () => ({
-  toaster: { success: vi.fn(), error: vi.fn(), loading: vi.fn() }
+  toaster: {
+    success: vi.fn(),
+    error: vi.fn(),
+    loading: vi.fn(),
+    signal: vi.fn(),
+    warning: vi.fn()
+  }
 }));
 
 // ── Settings state ──
@@ -92,6 +121,9 @@ vi.mock('$lib/features/track-inventory', () => ({
 
 // ── Heavy UI children ──
 
+vi.mock('$lib/services/error-id', () => ({
+  generateErrorId: vi.fn(() => 'test-error-id')
+}));
 vi.mock('$lib/components/SidebarNavigation.svelte', () => ({
   default: function SidebarNavigationStub() {}
 }));
@@ -129,25 +161,30 @@ function createChildrenSnippet() {
 
 describe('routes/+layout.svelte', () => {
   beforeEach(() => {
+    cleanup(); // Force unmount from previous test before clearing mocks
     vi.clearAllMocks();
     // Remove any leftover #app-loading nodes
     document.getElementById('app-loading')?.remove();
   });
 
+  // A deferred promise that never resolves within the test lifetime, used to
+  // keep the component in the "loading" state without flooding the microtask queue.
+  const pendingPromise = () => new Promise<never>((resolve) => setTimeout(resolve, 60_000));
+
   it('renders without throwing', () => {
-    mockSafeInvoke.mockImplementation(() => new Promise(() => {}));
+    mockSafeInvoke.mockImplementation(pendingPromise);
     expect(() => render(Layout, { children: createChildrenSnippet() })).not.toThrow();
   });
 
   it('shows a loading spinner during application initialisation', () => {
-    mockSafeInvoke.mockImplementation(() => new Promise(() => {})); // never resolves
+    mockSafeInvoke.mockImplementation(pendingPromise);
     const { container } = render(Layout, { children: createChildrenSnippet() });
     const spinner = container.querySelector('.animate-spin');
     expect(spinner).not.toBeNull();
   });
 
   it('shows "Rusty Shed" brand during loading', () => {
-    mockSafeInvoke.mockImplementation(() => new Promise(() => {}));
+    mockSafeInvoke.mockImplementation(pendingPromise);
     render(Layout, { children: createChildrenSnippet() });
     expect(screen.getByText('Rusty Shed')).toBeInTheDocument();
   });
@@ -162,7 +199,11 @@ describe('routes/+layout.svelte', () => {
 
     render(Layout, { children: createChildrenSnippet() });
 
-    await waitFor(() => expect(screen.getByText('Startup Failed')).toBeInTheDocument(), {
+    // Advance fake timers so the onMount async chain and the out:fade microtask
+    // sequence both complete before waitFor starts polling the DOM.
+    await vi.advanceTimersByTimeAsync(100);
+
+    await waitFor(() => expect(screen.getByText('signal_failure_headline')).toBeInTheDocument(), {
       timeout: 2000
     });
   });

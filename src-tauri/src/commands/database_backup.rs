@@ -91,7 +91,7 @@ pub async fn import_database(
     let db_path = app
         .path()
         .app_data_dir()
-        .map_err(|e| CommandError::Unknown(format!("Failed to resolve app data dir: {}", e)))?
+        .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
         .join("database.sqlite");
 
     let result =

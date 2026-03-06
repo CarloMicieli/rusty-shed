@@ -193,7 +193,7 @@ pub async fn check_dcc_address_duplicate(
 
     let exclude_id = if let Some(id_str) = args.exclude_id {
         let id = DigitalRollingStockId::try_from(id_str.as_str())
-            .map_err(|e| CommandError::Unknown(e.to_string()))?;
+            .map_err(|e| CommandError::unknown(e.to_string()))?;
         Some(id)
     } else {
         None

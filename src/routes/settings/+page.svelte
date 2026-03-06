@@ -66,7 +66,7 @@
       await themeStore.setTheme(result.data.theme);
       toaster.success({ title: m.settings_saved_toast() });
     } else {
-      toaster.error({ title: getToastMessage(result.error) });
+      toaster.signal(m.signal_toast_title(), { description: m.settings_update_failed() });
     }
     saving = false;
   }

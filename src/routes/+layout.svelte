@@ -4,11 +4,14 @@
   import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
   import BottomNavigation from '$lib/components/BottomNavigation.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
+  import SignalFailureView from '$lib/components/signal-failure/SignalFailureView.svelte';
   import { Bell, TrainFront } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import { setAppVersion } from '$lib/stores/app';
   import { themeStore } from '$lib/stores/themeStore.svelte';
   import { log } from '$lib/tauri-logger';
+  import * as m from '$lib/paraglide/messages.js';
+  import { generateErrorId } from '$lib/services/error-id';
   import {
     createCollectionState,
     setCollectionContext
@@ -97,26 +100,13 @@
 </script>
 
 {#if error}
-  <div
-    class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
-    in:fade
-  >
-    <div class="flex max-w-md flex-col items-center gap-6 p-6 text-center">
-      <div class="mb-2 flex items-center gap-3">
-        <TrainFront class="text-destructive" size={48} />
-      </div>
-      <h1 class="text-2xl font-bold text-destructive">Startup Failed</h1>
-      <p class="text-muted-foreground">The application could not start correctly.</p>
-      <div
-        class="max-h-48 w-full overflow-auto rounded border border-destructive/30 bg-card p-4 text-left font-mono text-xs"
-      >
-        {error}
-      </div>
-      <p class="text-sm text-muted-foreground">
-        Please check your database connection or logs for more details.
-      </p>
-    </div>
-  </div>
+  <SignalFailureView
+    errorId={generateErrorId()}
+    moduleLabel={m.module_label_signal_box()}
+    onReset={() => {
+      window.location.href = '/';
+    }}
+  />
 {:else if loading}
   <div
     class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"

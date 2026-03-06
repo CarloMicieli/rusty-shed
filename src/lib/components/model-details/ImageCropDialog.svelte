@@ -125,7 +125,7 @@
           if ('BusinessRule' in err) {
             saveError = err.BusinessRule;
           } else if ('Unknown' in err) {
-            saveError = err.Unknown;
+            saveError = (err.Unknown as { message: string }).message;
           } else {
             saveError = 'Upload failed';
           }

@@ -66,7 +66,7 @@ pub async fn get_railway_model_image(
                 .path()
                 .to_str()
                 .ok_or_else(|| {
-                    CommandError::Unknown("Failed to convert path to string".to_string())
+                    CommandError::unknown("Failed to convert path to string".to_string())
                 })?
                 .to_string();
 
@@ -346,7 +346,7 @@ fn map_validation_error(err: ValidationError) -> CommandError {
         ValidationError::CorruptedImage => {
             CommandError::BusinessRule("Image file is corrupted or invalid".to_string())
         }
-        ValidationError::IoError(msg) => CommandError::Unknown(msg),
+        ValidationError::IoError(msg) => CommandError::unknown(msg),
     }
 }
 
@@ -354,19 +354,19 @@ fn map_validation_error(err: ValidationError) -> CommandError {
 fn map_storage_error(err: StorageError) -> CommandError {
     match err {
         StorageError::DirectoryCreation(msg) => {
-            CommandError::Unknown(format!("Failed to create storage directory: {}", msg))
+            CommandError::unknown(format!("Failed to create storage directory: {}", msg))
         }
         StorageError::CopyFailed(msg) => {
-            CommandError::Unknown(format!("Failed to copy file: {}", msg))
+            CommandError::unknown(format!("Failed to copy file: {}", msg))
         }
         StorageError::WriteFailed(msg) => {
-            CommandError::Unknown(format!("Failed to write file: {}", msg))
+            CommandError::unknown(format!("Failed to write file: {}", msg))
         }
         StorageError::DeleteFailed(msg) => {
-            CommandError::Unknown(format!("Failed to delete file: {}", msg))
+            CommandError::unknown(format!("Failed to delete file: {}", msg))
         }
         StorageError::FileNotFound(msg) => CommandError::NotFound(msg),
-        StorageError::IoError(msg) => CommandError::Unknown(msg),
+        StorageError::IoError(msg) => CommandError::unknown(msg),
     }
 }
 

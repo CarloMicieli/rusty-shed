@@ -30,7 +30,7 @@ pub async fn cloud_backup_get_connection_status(
 
     application::get_connection_status(storage, user_email)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))
+        .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 /// Initiate Google OAuth flow
@@ -44,7 +44,7 @@ pub async fn cloud_backup_connect_google(
 
     application::connect_google(app, oauth_service)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))
+        .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 /// Disconnect Google account
@@ -59,7 +59,7 @@ pub async fn cloud_backup_disconnect_google(
 
     application::disconnect_google(user_email, oauth_service)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))
+        .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 /// Check internet connectivity
@@ -69,7 +69,7 @@ pub async fn cloud_backup_check_connectivity()
 -> std::result::Result<ConnectivityStatus, CommandError> {
     check_connectivity()
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))
+        .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 /// Sync (backup) to Google Drive
@@ -81,7 +81,7 @@ pub async fn cloud_backup_sync_now(
 ) -> std::result::Result<BackupListItem, CommandError> {
     // Check if online
     if !crate::cloud_backup::infrastructure::is_online().await {
-        return Err(CommandError::Unknown("No internet connection".to_string()));
+        return Err(CommandError::unknown("No internet connection".to_string()));
     }
 
     // Get access token from secure storage
@@ -91,10 +91,10 @@ pub async fn cloud_backup_sync_now(
     let tokens: Option<crate::cloud_backup::infrastructure::OAuthTokens> = storage
         .retrieve_tokens(user_id)
         .await
-        .map_err(|e| CommandError::Unknown(format!("Failed to load tokens: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Failed to load tokens: {}", e)))?;
 
     if tokens.is_none() {
-        return Err(CommandError::Unknown(
+        return Err(CommandError::unknown(
             "Not connected to Google Drive".to_string(),
         ));
     }
@@ -115,7 +115,7 @@ pub async fn cloud_backup_sync_now(
         // TODO: Emit progress event
     })
     .await
-    .map_err(|e| CommandError::Unknown(e.to_string()))
+    .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 /// Get list of available backups
@@ -126,7 +126,7 @@ pub async fn cloud_backup_list_backups(
 ) -> std::result::Result<BackupListResponse, CommandError> {
     // Check if online
     if !crate::cloud_backup::infrastructure::is_online().await {
-        return Err(CommandError::Unknown("No internet connection".to_string()));
+        return Err(CommandError::unknown("No internet connection".to_string()));
     }
 
     // Get storage and OAuth service
@@ -140,7 +140,7 @@ pub async fn cloud_backup_list_backups(
     let args = ListBackupsArgs {};
     application::list_backups(args, &oauth_service, storage.as_ref(), user_email)
         .await
-        .map_err(|e| CommandError::Unknown(e.to_string()))
+        .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 /// Get current sync operation status
@@ -174,7 +174,7 @@ pub async fn cloud_backup_restore(
 
     // Check if online
     if !crate::cloud_backup::infrastructure::is_online().await {
-        return Err(CommandError::Unknown("No internet connection".to_string()));
+        return Err(CommandError::unknown("No internet connection".to_string()));
     }
 
     // Get access token from secure storage
@@ -191,7 +191,7 @@ pub async fn cloud_backup_restore(
     let db_path = app
         .path()
         .app_data_dir()
-        .map_err(|e| CommandError::Unknown(format!("Failed to resolve app data dir: {}", e)))?
+        .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
         .join("database.sqlite");
 
     // Call restore use case
@@ -203,7 +203,7 @@ pub async fn cloud_backup_restore(
         user_email,
     )
     .await
-    .map_err(|e| CommandError::Unknown(e.to_string()))
+    .map_err(|e| CommandError::unknown(e.to_string()))
 }
 
 #[cfg(test)]

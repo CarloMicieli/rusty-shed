@@ -80,3 +80,9 @@ body {
   font-family: 'Courier Prime', monospace;
   color: var(--copper);
 }
+
+/* Signal Fault toast — Amber border for non-fatal background errors */
+.toast-signal {
+  border: 1px solid #d48a42 !important;
+  border-radius: 8px;
+}

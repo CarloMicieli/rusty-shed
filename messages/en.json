@@ -925,5 +925,26 @@
   "rolling_stock_create_error": "Failed to add rolling stock",
   "rolling_stock_add_cta": "Add Rolling Stock",
   "rolling_stock_add_more": "+ Add Rolling Stock",
-  "rolling_stock_field_category": "Category"
+  "rolling_stock_field_category": "Category",
+
+  "signal_failure_headline": "Signal Failure",
+  "signal_failure_subtext": "An unexpected fault has occurred. Use the error code below to report it to support.",
+  "signal_failure_action_reset": "Reset Signal",
+  "signal_failure_action_report": "Report to Depot",
+  "signal_failure_label_error_code": "ERROR CODE",
+  "signal_failure_label_module": "MODULE",
+  "signal_failure_label_status": "STATUS",
+  "signal_failure_status_value": "Out of Service",
+  "signal_failure_report_copied": "Error code copied to clipboard",
+  "signal_failure_report_copy_failed": "Failed to copy error code",
+  "signal_toast_title": "Signal Fault",
+
+  "module_label_yard_overview": "Yard Overview",
+  "module_label_collection_depot": "Collection Depot",
+  "module_label_wishlist": "Wishlist",
+  "module_label_maintenance_log": "Maintenance Log",
+  "module_label_finance_ledger": "Finance Ledger",
+  "module_label_global_search": "Global Search",
+  "module_label_settings": "Settings",
+  "module_label_signal_box": "Signal Box"
 }

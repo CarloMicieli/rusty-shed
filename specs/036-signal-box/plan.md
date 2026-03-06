@@ -27,22 +27,22 @@ Transform all system error experiences in Rusty Shed from generic states into th
 
 ## Constitution Check
 
-| Principle | Status | Notes |
-|-----------|--------|-------|
-| Modular, Library-First | PASS | `SignalFailureView` is a standalone component; `error-id.ts` and `module-label.ts` are pure utility modules |
-| Deterministic Interfaces & Observability | PASS | Error IDs logged via `tracing::error!` with structured fields; IPC contract updated in specta |
-| Test-First Emphasis | PASS | Unit tests required for ID generation (Rust + TS) and module label derivation |
-| Code Quality | PASS | All strings via Paraglide; Clippy/ESLint compliance required |
-| Testing Standards | PASS | Business logic (ID generation, label mapping) isolated and unit-testable |
-| User Experience Consistency | PASS | Uses design tokens from constitution; Paraglide for all copy; consistent toast pattern |
-| Performance Requirements | PASS | Error path only; no hot-path impact |
-| Safe Rust Practices | PASS | No `unwrap()`; `ErrorId::generate()` uses safe APIs; `CommandError::unknown()` factory handles logging |
-| Simplicity & Semantic Versioning | PASS | Minimal changes; extends existing patterns rather than replacing them |
-| **Architectural Laws** | | |
-| Database (Persistence) | N/A | No persistence changes |
-| State Management | N/A | No domain aggregates modified |
-| API Design / Transport Boundary | PASS | `Unknown` variant updated with struct fields; specta regeneration required |
-| Domain Logic in Rust | PASS | Error ID generation and logging happen in Rust for backend errors |
+| Principle                                | Status | Notes                                                                                                       |
+| ---------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
+| Modular, Library-First                   | PASS   | `SignalFailureView` is a standalone component; `error-id.ts` and `module-label.ts` are pure utility modules |
+| Deterministic Interfaces & Observability | PASS   | Error IDs logged via `tracing::error!` with structured fields; IPC contract updated in specta               |
+| Test-First Emphasis                      | PASS   | Unit tests required for ID generation (Rust + TS) and module label derivation                               |
+| Code Quality                             | PASS   | All strings via Paraglide; Clippy/ESLint compliance required                                                |
+| Testing Standards                        | PASS   | Business logic (ID generation, label mapping) isolated and unit-testable                                    |
+| User Experience Consistency              | PASS   | Uses design tokens from constitution; Paraglide for all copy; consistent toast pattern                      |
+| Performance Requirements                 | PASS   | Error path only; no hot-path impact                                                                         |
+| Safe Rust Practices                      | PASS   | No `unwrap()`; `ErrorId::generate()` uses safe APIs; `CommandError::unknown()` factory handles logging      |
+| Simplicity & Semantic Versioning         | PASS   | Minimal changes; extends existing patterns rather than replacing them                                       |
+| **Architectural Laws**                   |        |                                                                                                             |
+| Database (Persistence)                   | N/A    | No persistence changes                                                                                      |
+| State Management                         | N/A    | No domain aggregates modified                                                                               |
+| API Design / Transport Boundary          | PASS   | `Unknown` variant updated with struct fields; specta regeneration required                                  |
+| Domain Logic in Rust                     | PASS   | Error ID generation and logging happen in Rust for backend errors                                           |
 
 **Gate result: PASS — no violations. No Complexity Tracking entry required.**
 
@@ -106,6 +106,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: Every unhandled Rust error captures a unique ID and logs it.
 
 **Tasks**:
+
 1. Add `ErrorId` value type with `generate()` to `error.rs`
 2. Update `Unknown` variant to struct form: `Unknown { message: String, error_id: String }`
 3. Add `CommandError::unknown(msg)` factory method with integrated `tracing::error!` logging
@@ -121,6 +122,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: All user-facing error copy exists as Paraglide keys before any UI work.
 
 **Tasks**:
+
 1. Add all `signal_*` and `module_label_*` keys to `messages/en.json`
 2. Run `pnpm run prepare` to regenerate Paraglide bindings
 3. Verify `pnpm check` passes
@@ -132,6 +134,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: Error ID generation and module label derivation are pure, tested utilities.
 
 **Tasks**:
+
 1. Create `src/lib/services/error-id.ts` with `generateErrorId()`
 2. Create `src/lib/services/module-label.ts` with `getModuleLabel(pathname)`
 3. Update `src/lib/services/errors.ts`: add `errorId?` to `NormalizedError`; update `normalizeError()` to propagate from `Unknown.error_id`
@@ -146,6 +149,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: Reusable, fully styled error component matching the designer spec.
 
 **Tasks**:
+
 1. Create `src/lib/components/signal-failure/SignalFailureView.svelte`
 2. Accept props: `errorId: string`, `moduleLabel: string`, `onReset?: () => void`
 3. Implement inline SVG railway signal icon (2px stroke, `#808080`)
@@ -163,6 +167,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: Signal Failure view appears in both consumption points.
 
 **Tasks**:
+
 1. Replace `/src/routes/error/+page.svelte`: use `$page.error`, `generateErrorId()`, `getModuleLabel($page.url.pathname)`
 2. Update `/src/routes/+layout.svelte`: replace inline startup error markup with `<SignalFailureView>`
 
@@ -173,6 +178,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: Non-fatal errors use Amber-bordered toasts.
 
 **Tasks**:
+
 1. Add `signal()` method to `src/lib/toaster.ts`
 2. Add `.toast-signal { border: 1px solid #D48A42 !important; }` to global CSS
 3. Migrate one existing non-fatal error call site to `toaster.signal()` (proof-of-concept)
@@ -184,6 +190,7 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 **Goal**: TypeScript bindings match updated Rust types; full workflow passes.
 
 **Tasks**:
+
 1. Run `pnpm tauri dev` to trigger specta regeneration
 2. Verify `src/lib/bindings.ts` reflects new `Unknown` variant shape
 3. Run full verification sequence:
@@ -200,13 +207,13 @@ src-tauri/src/core/infrastructure/    # UPDATE: Rust unit tests for ErrorId
 
 ## Risk Register
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| `Unknown` variant shape change breaks existing `From<T>` impls | High | Medium | Fix all impls in Phase 1 before touching frontend |
-| Specta regeneration fails due to variant change | Medium | Medium | Update `normalizeError()` in Phase 3 before triggering regeneration in Phase 7 |
-| White flash on Signal Failure render | Low | Low | Root element carries `bg-[#050505]`; `<svelte:head>` body style as fallback |
-| Clipboard API unavailable | Low | Low | Try/catch with fallback toast showing selectable Error ID text |
-| Paraglide key missing during `pnpm check` | Medium | Low | Add all keys before writing any Svelte component that uses them (Phase 2 first) |
+| Risk                                                           | Likelihood | Impact | Mitigation                                                                      |
+| -------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------- |
+| `Unknown` variant shape change breaks existing `From<T>` impls | High       | Medium | Fix all impls in Phase 1 before touching frontend                               |
+| Specta regeneration fails due to variant change                | Medium     | Medium | Update `normalizeError()` in Phase 3 before triggering regeneration in Phase 7  |
+| White flash on Signal Failure render                           | Low        | Low    | Root element carries `bg-[#050505]`; `<svelte:head>` body style as fallback     |
+| Clipboard API unavailable                                      | Low        | Low    | Try/catch with fallback toast showing selectable Error ID text                  |
+| Paraglide key missing during `pnpm check`                      | Medium     | Low    | Add all keys before writing any Svelte component that uses them (Phase 2 first) |
 
 ---
 

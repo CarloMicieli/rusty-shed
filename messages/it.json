@@ -821,5 +821,26 @@
   "rolling_stock_field_series": "Serie",
   "rolling_stock_field_control_type": "Tipo di Controllo",
   "rolling_stock_field_interior_lights": "Luci Interne",
-  "rolling_stock_field_lights": "Luci"
+  "rolling_stock_field_lights": "Luci",
+
+  "signal_failure_headline": "Guasto al Segnale",
+  "signal_failure_subtext": "Si è verificato un errore imprevisto. Utilizza il codice errore qui sotto per segnalarlo al supporto.",
+  "signal_failure_action_reset": "Reimposta Segnale",
+  "signal_failure_action_report": "Segnala al Deposito",
+  "signal_failure_label_error_code": "CODICE ERRORE",
+  "signal_failure_label_module": "MODULO",
+  "signal_failure_label_status": "STATO",
+  "signal_failure_status_value": "Fuori Servizio",
+  "signal_failure_report_copied": "Codice errore copiato negli appunti",
+  "signal_failure_report_copy_failed": "Impossibile copiare il codice errore",
+  "signal_toast_title": "Guasto al Segnale",
+
+  "module_label_yard_overview": "Panoramica Deposito",
+  "module_label_collection_depot": "Deposito Collezione",
+  "module_label_wishlist": "Lista dei Desideri",
+  "module_label_maintenance_log": "Registro Manutenzione",
+  "module_label_finance_ledger": "Registro Finanziario",
+  "module_label_global_search": "Ricerca Globale",
+  "module_label_settings": "Impostazioni",
+  "module_label_signal_box": "Quadro dei Segnali"
 }

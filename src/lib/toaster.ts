@@ -38,6 +38,13 @@ export const toaster = {
     const [message, opts] = normalizeToast(messageOrOptions, options);
     return toast.loading(message, opts);
   },
+  /**
+   * Non-fatal Signal Fault toast — displays with an Amber border to surface
+   * background errors without interrupting the current view.
+   */
+  signal: (title: string, options?: { description?: string }): string | number => {
+    return toast(title, { ...options, class: 'toast-signal' });
+  },
   promise: toast.promise,
   custom: toast.custom,
   message: toast.message,

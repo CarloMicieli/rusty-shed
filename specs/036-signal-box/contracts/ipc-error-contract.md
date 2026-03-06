@@ -67,11 +67,13 @@ pub enum CommandError {
 ### Updated `Unknown` variant:
 
 **Before**:
+
 ```json
 { "kind": "unknown", "message": "Something went wrong" }
 ```
 
 **After**:
+
 ```json
 {
   "kind": "unknown",
@@ -87,13 +89,13 @@ pub enum CommandError {
 ```typescript
 // Auto-generated — do not edit manually
 export type CommandError =
-  | { kind: "databaseError"; message: string }
-  | { kind: "notFound"; message: string }
-  | { kind: "validationError"; fields: Record<string, ValidationError[]> }
-  | { kind: "permissionDenied"; message: string }
-  | { kind: "businessRule"; message: string }
-  | { kind: "conflict"; message: string }
-  | { kind: "unknown"; message: string; error_id: string };  // UPDATED
+  | { kind: 'databaseError'; message: string }
+  | { kind: 'notFound'; message: string }
+  | { kind: 'validationError'; fields: Record<string, ValidationError[]> }
+  | { kind: 'permissionDenied'; message: string }
+  | { kind: 'businessRule'; message: string }
+  | { kind: 'conflict'; message: string }
+  | { kind: 'unknown'; message: string; error_id: string }; // UPDATED
 ```
 
 ---
@@ -107,13 +109,14 @@ interface NormalizedError {
   kind: 'database' | 'not_found' | 'validation' | 'permission_denied' | 'unknown';
   message: string;
   fields?: Record<string, string>;
-  errorId?: string;  // NEW: present when kind === 'unknown'
+  errorId?: string; // NEW: present when kind === 'unknown'
 }
 ```
 
 ### `normalizeError()` update logic:
 
 When the incoming `CommandError` has `kind === 'unknown'`:
+
 - Map `error_id` → `errorId` in `NormalizedError`
 - Preserve all other mapping logic unchanged
 

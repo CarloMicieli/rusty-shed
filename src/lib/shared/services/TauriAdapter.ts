@@ -18,7 +18,7 @@ type CommandError =
   | { NotFound: string }
   | { ValidationError: Record<string, string> }
   | { PermissionDenied: string }
-  | { Unknown: string }
+  | { Unknown: { message: string; error_id: string } }
   | { BusinessRule: string }
   | { Conflict: string };
 
@@ -66,10 +66,12 @@ function normalizeError(error: unknown): NormalizedError {
       };
     }
 
-    if ('Unknown' in err && typeof err.Unknown === 'string') {
+    if ('Unknown' in err && err.Unknown !== null && typeof err.Unknown === 'object') {
+      const unknown = err.Unknown as { message: string; error_id: string };
       return {
         kind: 'unknown',
-        message: err.Unknown,
+        message: unknown.message,
+        errorId: unknown.error_id,
         retryable: false
       };
     }

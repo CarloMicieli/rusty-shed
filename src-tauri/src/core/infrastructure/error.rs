@@ -5,11 +5,44 @@
 //! other execution errors in a serializable, human-friendly way.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::SystemTime;
 
 use super::db::SqliteDbError;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationError;
 use serde::Serialize;
+
+/// A session-scoped unique identifier for errors.
+///
+/// Format: `ERR-NNNN-X` where NNNN is a 4-digit number (1000–9999)
+/// and X is an uppercase letter (A–Z).
+pub struct ErrorId(String);
+
+impl ErrorId {
+    /// Generate a new unique Error ID from the current system time.
+    ///
+    /// Combines epoch milliseconds with a monotonic counter to ensure
+    /// uniqueness even when called multiple times within the same millisecond.
+    pub fn generate() -> Self {
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+        let millis = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
+        let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
+        let combined = millis.wrapping_mul(10_000).wrapping_add(seq);
+        let n = (combined % 9000 + 1000) as u16;
+        let c = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ"[(combined / 9000 % 26) as usize] as char;
+        ErrorId(format!("ERR-{n:04}-{c}"))
+    }
+}
+
+impl std::fmt::Display for ErrorId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 /// Application-level error returned by command handlers in the core infrastructure.
 ///
@@ -48,10 +81,10 @@ pub enum CommandError {
 
     /// A catch-all for unexpected errors that don't map to a specific variant.
     ///
-    /// The inner `String` can include a short debug message suitable for
-    /// logging; avoid placing secrets here.
-    #[error("unknown error: {0}")]
-    Unknown(String),
+    /// Contains a human-readable message and a unique Error ID for log correlation.
+    /// Always construct via [`CommandError::unknown()`] to ensure logging.
+    #[error("unknown error: {message}")]
+    Unknown { message: String, error_id: String },
 
     /// Indicates a violation of a specific business invariant.
     ///
@@ -116,11 +149,26 @@ impl From<sqlx::Error> for CommandError {
 /// This allows using `?` operator directly on anyhow operations without manual `.map_err()`.
 impl From<anyhow::Error> for CommandError {
     fn from(err: anyhow::Error) -> Self {
-        CommandError::Unknown(err.to_string())
+        CommandError::unknown(err.to_string())
     }
 }
 
 impl CommandError {
+    /// Create an Unknown error with a generated Error ID and structured logging.
+    ///
+    /// This is the **only** correct way to construct `CommandError::Unknown`.
+    /// It generates a unique Error ID, emits a structured log entry, and
+    /// returns the error with the ID embedded for UI correlation.
+    pub fn unknown(msg: impl Into<String>) -> Self {
+        let id = ErrorId::generate();
+        let message = msg.into();
+        log::error!("Signal Fault: error_id={id}, message={message}");
+        CommandError::Unknown {
+            message,
+            error_id: id.to_string(),
+        }
+    }
+
     /// Helper to create a validation error for a single field.
     pub fn validation_field(field: impl Into<String>, _error: impl Into<String>) -> Self {
         let mut fields = HashMap::new();
@@ -149,6 +197,59 @@ mod tests {
     use pretty_assertions::assert_eq;
     use rstest::rstest;
     use std::collections::HashMap as StdHashMap;
+    use std::collections::HashSet;
+
+    // --- ErrorId Tests ---
+
+    #[test]
+    fn test_error_id_format() {
+        let id = ErrorId::generate().to_string();
+        let parts: Vec<&str> = id.split('-').collect();
+        assert_eq!(parts.len(), 3, "Expected 3 parts in ID: {id}");
+        assert_eq!(parts[0], "ERR", "Expected 'ERR' prefix: {id}");
+        assert_eq!(parts[1].len(), 4, "Expected 4-digit numeric segment: {id}");
+        assert!(
+            parts[1].chars().all(|c| c.is_ascii_digit()),
+            "Expected digits in numeric segment: {id}"
+        );
+        assert_eq!(parts[2].len(), 1, "Expected single letter suffix: {id}");
+        assert!(
+            parts[2].chars().all(|c| c.is_ascii_uppercase()),
+            "Expected uppercase letter: {id}"
+        );
+    }
+
+    #[test]
+    fn test_error_id_numeric_range() {
+        for _ in 0..100 {
+            let id = ErrorId::generate().to_string();
+            // Format is ERR-NNNN-X; numeric segment occupies chars 4..8
+            let numeric: u16 = id[4..8].parse().expect("Expected numeric segment");
+            assert!(
+                (1000..=9999).contains(&numeric),
+                "Numeric segment out of range: {numeric}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_error_id_uniqueness() {
+        let ids: HashSet<String> = (0..500).map(|_| ErrorId::generate().to_string()).collect();
+        assert_eq!(ids.len(), 500, "Expected 500 unique IDs, got {}", ids.len());
+    }
+
+    #[test]
+    fn test_unknown_factory_sets_error_id() {
+        let err = CommandError::unknown("test error");
+        match err {
+            CommandError::Unknown { error_id, .. } => {
+                assert!(!error_id.is_empty(), "error_id should not be empty");
+            }
+            _ => panic!("Expected Unknown variant"),
+        }
+    }
+
+    // --- DomainError / CommandError Tests ---
 
     #[test]
     fn it_should_test_domain_error_to_command_error_not_found() {

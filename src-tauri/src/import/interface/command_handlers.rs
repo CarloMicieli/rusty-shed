@@ -42,13 +42,13 @@ pub async fn analyze_import_package(
     } else if args.file_path.ends_with(".tar.gz") || args.file_path.ends_with(".tgz") {
         ArchiveFormat::TarGz
     } else {
-        return Err(CommandError::Unknown("Invalid archive format".to_string()));
+        return Err(CommandError::unknown("Invalid archive format".to_string()));
     };
 
     // Validate package using application layer
     let (_detected_format, _manifest, record_counts) = ValidatePackageUseCase::execute(&path)
         .await
-        .map_err(|e| CommandError::Unknown(format!("Validation failed: {}", e.code)))?;
+        .map_err(|e| CommandError::unknown(format!("Validation failed: {}", e.code)))?;
 
     // Create session
     let session = ImportSession::new(path, format);
@@ -93,22 +93,22 @@ pub async fn get_import_preview(
         sessions
             .get(&args.session_id)
             .cloned()
-            .ok_or_else(|| CommandError::Unknown("Session not found".to_string()))?
+            .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?
     };
 
     // Extract manifest from archive
     let manifest_bytes = ArchiveExtractor::extract_manifest(&session.source_path)
-        .map_err(|e| CommandError::Unknown(format!("Failed to extract manifest: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
 
     let manifest_json: serde_json::Value = serde_json::from_slice(&manifest_bytes)
-        .map_err(|e| CommandError::Unknown(format!("Failed to parse manifest: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?;
 
     // Generate preview using application layer
     let preview_use_case = PreviewImportUseCase::new(state.db_pool());
     let preview = preview_use_case
         .execute(manifest_json, Some(&session.source_path))
         .await
-        .map_err(|e| CommandError::Unknown(format!("Preview generation failed: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Preview generation failed: {}", e)))?;
 
     // Update session state
     {
@@ -181,25 +181,25 @@ pub async fn execute_import(
         sessions
             .get(&args.session_id)
             .cloned()
-            .ok_or_else(|| CommandError::Unknown("Session not found".to_string()))?
+            .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?
     };
 
     // Extract and parse manifest from archive
     let manifest_bytes = ArchiveExtractor::extract_manifest(&session.source_path)
-        .map_err(|e| CommandError::Unknown(format!("Failed to extract manifest: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
 
     let manifest_content = String::from_utf8(manifest_bytes)
-        .map_err(|e| CommandError::Unknown(format!("Invalid UTF-8 in manifest: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Invalid UTF-8 in manifest: {}", e)))?;
 
     let manifest: ManifestDto = serde_json::from_str(&manifest_content)
-        .map_err(|e| CommandError::Unknown(format!("Failed to parse manifest: {}", e)))?;
+        .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?;
 
     // Execute import
     let use_case = ExecuteImportUseCase::new(state.db_pool());
     let result = use_case
         .execute(&session, &manifest)
         .await
-        .map_err(CommandError::Unknown)?;
+        .map_err(|e| CommandError::unknown(e.to_string()))?;
 
     // Update session state
     {
@@ -251,7 +251,7 @@ pub async fn cancel_import_session(
             cancelled: true,
         })
     } else {
-        Err(CommandError::Unknown("Session not found".to_string()))
+        Err(CommandError::unknown("Session not found".to_string()))
     }
 }
 

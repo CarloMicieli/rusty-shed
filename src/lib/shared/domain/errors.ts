@@ -33,6 +33,11 @@ export interface NormalizedError {
   retryable: boolean;
 
   /**
+   * Unique error identifier for log correlation (only present on unknown errors).
+   */
+  errorId?: string;
+
+  /**
    * Field-specific validation errors.
    * Only populated for validation errors.
    * Key is the field name, value is the error message for that field.
