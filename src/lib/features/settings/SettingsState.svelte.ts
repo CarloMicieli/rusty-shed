@@ -6,6 +6,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import type { UserSettings, UpdateSettingsInput } from '$lib/bindings';
+import { log } from '$lib/tauri-logger';
 
 export class SettingsState {
   settings = $state<UserSettings>({
@@ -25,18 +26,18 @@ export class SettingsState {
    * Load settings from backend
    */
   async load(): Promise<void> {
-    console.log('[SettingsState] load() called');
+    log.debug('SettingsState: load() called');
     this.loading = true;
     this.error = null;
 
     try {
-      console.log('[SettingsState] Calling get_settings command...');
+      log.debug('SettingsState: Calling get_settings command...');
       const settings = await invoke<UserSettings>('get_settings');
-      console.log('[SettingsState] Settings received:', JSON.stringify(settings, null, 2));
+      log.debug('SettingsState: Settings received');
       this.settings = settings;
     } catch (err) {
       this.error = String(err);
-      console.error('[SettingsState] Failed to load settings:', err);
+      log.error(`SettingsState: Failed to load settings: ${String(err)}`);
       throw err;
     } finally {
       this.loading = false;
@@ -47,19 +48,18 @@ export class SettingsState {
    * Update settings (partial update supported)
    */
   async update(input: UpdateSettingsInput): Promise<void> {
-    console.log('[SettingsState] Updating settings with input:', JSON.stringify(input, null, 2));
+    log.debug('SettingsState: Updating settings');
     this.loading = true;
     this.error = null;
 
     try {
-      console.log('[SettingsState] Calling update_settings command...');
+      log.debug('SettingsState: Calling update_settings command...');
       const updated = await invoke<UserSettings>('update_settings', { input });
-      console.log('[SettingsState] Update successful, received:', JSON.stringify(updated, null, 2));
+      log.debug('SettingsState: Update successful');
       this.settings = updated;
     } catch (err) {
       this.error = String(err);
-      console.error('[SettingsState] Failed to update settings:', err);
-      console.error('[SettingsState] Error details:', JSON.stringify(err, null, 2));
+      log.error(`SettingsState: Failed to update settings: ${String(err)}`);
       throw err;
     } finally {
       this.loading = false;
@@ -74,7 +74,7 @@ export class SettingsState {
       const settings = await invoke<UserSettings>('initialize_settings');
       this.settings = settings;
     } catch (err) {
-      console.error('Failed to initialize settings:', err);
+      log.error(`Failed to initialize settings: ${String(err)}`);
       throw err;
     }
   }

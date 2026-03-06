@@ -24,63 +24,36 @@ pub fn update_settings(
     app: &AppHandle,
     input: UpdateSettingsInput,
 ) -> Result<UserSettings, String> {
-    eprintln!("[update_settings] Received input: {:?}", input);
-
     let repository = StoreSettingsRepository::new();
 
     // Load current settings
     let mut current = repository.load(app)?;
-    eprintln!("[update_settings] Current settings: {:?}", current);
 
     // Apply updates (only update provided fields)
     if let Some(currency) = input.currency {
-        eprintln!("[update_settings] Updating currency: {}", currency);
         current.set_currency(currency)?;
     }
     if let Some(language) = input.language {
-        eprintln!("[update_settings] Updating language: {:?}", language);
         current.language = language;
     }
     if let Some(measure_unit) = input.measure_unit {
-        eprintln!(
-            "[update_settings] Updating measure_unit: {:?}",
-            measure_unit
-        );
         current.measure_unit = measure_unit;
     }
     if let Some(favourite_scale) = input.favourite_scale {
-        eprintln!(
-            "[update_settings] Updating favourite_scale: {}",
-            favourite_scale
-        );
         current.set_favourite_scale(favourite_scale)?;
     }
     if let Some(power_system) = input.power_system {
-        eprintln!(
-            "[update_settings] Updating power_system: {:?}",
-            power_system
-        );
         current.power_system = power_system;
     }
     if let Some(theme) = input.theme {
-        eprintln!("[update_settings] Updating theme: {:?}", theme);
         current.theme = theme;
     }
-
-    eprintln!(
-        "[update_settings] Merged settings before validation: {:?}",
-        current
-    );
 
     // Validate merged settings
     current.validate()?;
 
-    eprintln!("[update_settings] Validation passed, saving...");
-
     // Save updated settings
     repository.save(app, &current)?;
-
-    eprintln!("[update_settings] Settings saved successfully");
 
     Ok(current)
 }

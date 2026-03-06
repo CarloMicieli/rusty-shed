@@ -1265,7 +1265,6 @@ mod tests {
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
         let result = repo.insert_rolling_stock(&railway_model_id, &params).await;
 
-        println!("Insert result: {:?}", result);
         assert!(result.is_ok(), "should insert rolling stock without errors");
 
         let row = sqlx::query(ROLLING_STOCK_QUERY)
@@ -1433,7 +1432,6 @@ mod tests {
                 .await
                 .expect("should run query without errors");
 
-            println!("{:#?}", result);
             assert!(result.is_some());
 
             let railway_model = result.unwrap();

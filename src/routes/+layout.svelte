@@ -8,6 +8,7 @@
   import { fade } from 'svelte/transition';
   import { setAppVersion } from '$lib/stores/app';
   import { themeStore } from '$lib/stores/themeStore.svelte';
+  import { log } from '$lib/tauri-logger';
   import {
     createCollectionState,
     setCollectionContext
@@ -50,7 +51,7 @@
     try {
       await settingsState.initialize();
     } catch (err) {
-      console.warn('Failed to initialize settings, using defaults:', err);
+      log.warn(`Failed to initialize settings, using defaults: ${String(err)}`);
     }
 
     // 1. Initialize theme from settings
@@ -59,7 +60,7 @@
     // 2. Show main window immediately so the user sees *something* (loading state)
     // We don't block on this failing, but log it if it does.
     safeInvoke<void>('show_main_window').then((res) => {
-      if (!res.ok) console.warn('Failed to show main window:', res.error);
+      if (!res.ok) log.warn(`Failed to show main window: ${String(res.error)}`);
     });
 
     // Ensure the initial app-loading spinner from app.html is removed
@@ -86,7 +87,7 @@
       // 5. Preload data (only if DB is ready)
       await Promise.all([collectionStore.fetch(), wishlistState.fetchWishlists()]);
     } catch (err) {
-      console.error('Startup failed', err);
+      log.error(`Startup failed: ${String(err)}`);
       // Capture the error to show in the UI
       error = err instanceof Error ? err.message : String(err);
     } finally {

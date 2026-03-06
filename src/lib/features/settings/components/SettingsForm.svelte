@@ -2,6 +2,7 @@
   import { settingsState } from '../SettingsState.svelte';
   import { setLocale } from '$lib/paraglide/runtime.js';
   import * as m from '$lib/paraglide/messages';
+  import { log } from '$lib/tauri-logger';
   import LanguageSelector from './LanguageSelector.svelte';
   import CurrencySelector from './CurrencySelector.svelte';
   import MeasureUnitSelector from './MeasureUnitSelector.svelte';
@@ -38,17 +39,8 @@
   });
 
   async function handleSubmit(event: Event) {
-    console.log('[SettingsForm] handleSubmit called - START');
     event.preventDefault();
-    console.log('[SettingsForm] Form submitted');
-    console.log('[SettingsForm] Current form values:', {
-      currency,
-      language,
-      theme,
-      measureUnit,
-      favouriteScale,
-      powerSystem
-    });
+    log.debug('SettingsForm: Form submitted');
 
     saving = true;
     saveError = null;
@@ -63,14 +55,13 @@
         favouriteScale,
         powerSystem
       };
-      console.log('[SettingsForm] Calling settingsState.update with:', inputData);
 
       await settingsState.update(inputData);
 
       const { themeStore } = await import('$lib/stores/themeStore.svelte');
       await themeStore.setTheme(theme);
 
-      console.log('[SettingsForm] Save successful');
+      log.debug('SettingsForm: Save successful');
       saveSuccess = true;
 
       // Clear success message after 3 seconds
@@ -79,9 +70,7 @@
       }, 3000);
     } catch (err) {
       saveError = String(err);
-      console.error('[SettingsForm] Failed to save settings:', err);
-      console.error('[SettingsForm] Error type:', typeof err);
-      console.error('[SettingsForm] Error details:', err);
+      log.error(`SettingsForm: Failed to save settings: ${String(err)}`);
     } finally {
       saving = false;
     }

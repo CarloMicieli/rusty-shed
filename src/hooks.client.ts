@@ -1,30 +1,42 @@
-console.log('[hooks.client.ts] File is loading - before import');
-
 import { attachConsole } from '@tauri-apps/plugin-log';
+import { log } from '$lib/tauri-logger';
 
-console.log('[hooks.client.ts] After import, checking __TAURI__:', '__TAURI__' in window);
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: unknown;
+  }
+}
 
 /**
  * SvelteKit client-side initialization hook.
  * This runs once when the app loads in the browser.
  *
- * Attaches Tauri's log plugin to intercept console.* calls
- * and forward them to the Rust backend for terminal output.
+ * Sets up:
+ * 1. Tauri log plugin to forward console.* calls to the backend
+ * 2. Global unhandled rejection handler
+ * 3. Global error handler for uncaught exceptions
  */
-
-// Attach console forwarding when running in Tauri
-if ('__TAURI__' in window) {
-  console.log('[hooks.client.ts] Tauri detected, calling attachConsole()');
-  // attachConsole() is async and returns a Promise<void>
-  // We await it to ensure it completes before any logs are sent
-  attachConsole()
-    .then(() => {
+export async function init() {
+  try {
+    // Attach console forwarding when running in Tauri
+    const windowObj = typeof window !== 'undefined' ? window : null;
+    if (windowObj && '__TAURI_INTERNALS__' in windowObj) {
+      await attachConsole();
       console.log('[hooks.client.ts] Console forwarding attached to Tauri backend');
-      console.log('[hooks.client.ts] Test log - you should see this in the terminal!');
-    })
-    .catch((err) => {
-      console.error('[hooks.client.ts] Failed to attach console:', err);
-    });
-} else {
-  console.log('[hooks.client.ts] NOT running in Tauri, __TAURI__ not found');
+    }
+  } catch (err) {
+    console.error('[hooks.client.ts] Failed to attach console:', err);
+  }
+
+  // Handle unhandled promise rejections
+  window.addEventListener('unhandledrejection', (event) => {
+    log.error(`Unhandled promise rejection: ${String(event.reason)}`);
+  });
+
+  // Handle uncaught exceptions
+  window.addEventListener('error', (event) => {
+    log.error(
+      `Uncaught error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`
+    );
+  });
 }
