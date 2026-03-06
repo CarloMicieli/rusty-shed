@@ -1,6 +1,6 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog';
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { readFile } from '@tauri-apps/plugin-fs';
   import { commands } from '$lib/bindings';
   import { Button } from '$lib/components/ui/button';
   import { Alert, AlertDescription } from '$lib/components/ui/alert';
@@ -38,7 +38,8 @@
   let { modelId, hasExistingImage = false, onUploadSuccess }: Props = $props();
 
   // State
-  let pendingFilePath = $state<string | null>(null);
+  let pendingBlobUrl = $state<string | null>(null);
+  let pendingFileName = $state<string | null>(null);
   let isDeleting = $state(false);
   let error = $state<string | null>(null);
   let showDeleteSuccess = $state(false);
@@ -66,7 +67,18 @@
       return;
     }
 
-    pendingFilePath = file;
+    const ext = file.split('.').pop()?.toLowerCase() ?? '';
+    const mimeMap: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp'
+    };
+    const mime = mimeMap[ext] ?? 'application/octet-stream';
+
+    const bytes = await readFile(file);
+    pendingBlobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    pendingFileName = file.split('/').pop() ?? 'image.jpg';
   }
 
   async function handleDelete() {
@@ -175,16 +187,18 @@
 
   <!-- Crop Dialog -->
   <ImageCropDialog
-    open={pendingFilePath !== null}
-    imageSrc={pendingFilePath ? convertFileSrc(pendingFilePath) : ''}
-    fileName={pendingFilePath ? (pendingFilePath.split('/').pop() ?? 'image.jpg') : 'image.jpg'}
+    open={pendingBlobUrl !== null}
+    imageSrc={pendingBlobUrl ?? ''}
+    fileName={pendingFileName ?? 'image.jpg'}
     {modelId}
     onSaveSuccess={() => {
-      pendingFilePath = null;
+      pendingBlobUrl = null;
+      pendingFileName = null;
       onUploadSuccess?.();
     }}
     onCancel={() => {
-      pendingFilePath = null;
+      pendingBlobUrl = null;
+      pendingFileName = null;
     }}
   />
 

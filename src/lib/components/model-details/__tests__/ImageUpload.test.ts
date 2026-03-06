@@ -6,9 +6,9 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
   open: vi.fn()
 }));
 
-// Mock Tauri core (convertFileSrc)
-vi.mock('@tauri-apps/api/core', () => ({
-  convertFileSrc: vi.fn((path: string) => `https://asset.localhost/${path}`)
+// Mock Tauri fs plugin used for reading file bytes before creating a blob URL
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  readFile: vi.fn(() => Promise.resolve(new Uint8Array([0xff, 0xd8])))
 }));
 
 // Mock ImageCropDialog to prevent rendering the actual dialog

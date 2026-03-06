@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { Upload } from 'lucide-svelte';
+  import { listen } from '@tauri-apps/api/event';
+  import { readFile } from '@tauri-apps/plugin-fs';
   import {
     drag_and_drop_hint,
     drop_here_to_update_photo,
@@ -21,6 +24,51 @@
   const isDragging = $derived(dragCounter > 0);
   let pendingFile = $state<File | null>(null);
   let blobUrl = $state<string | null>(null);
+
+  const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  const extMimeMap: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp'
+  };
+
+  // Tauri native drag-drop: on Linux/Windows the OS-level file drop is intercepted
+  // by the native layer and fires tauri://drag-drop instead of HTML5 ondrop.
+  onMount(() => {
+    let unlisten: (() => void) | undefined;
+
+    listen<{ paths: string[]; position: unknown }>('tauri://drag-drop', async (event) => {
+      dragCounter = 0;
+      const paths = event.payload.paths;
+
+      if (paths.length === 0) return;
+      if (paths.length > 1) {
+        toaster.error(upload_error_multiple_files());
+        return;
+      }
+
+      const filePath = paths[0];
+      const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+      const mime = extMimeMap[ext];
+
+      if (!mime || !validMimeTypes.includes(mime)) {
+        toaster.error(`Unsupported format: .${ext}. Supported formats: JPEG, PNG, WebP`);
+        return;
+      }
+
+      const bytes = await readFile(filePath);
+      blobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      // Create a synthetic File so pendingFile is non-null (used to open the dialog)
+      pendingFile = new File([bytes], filePath.split('/').pop() ?? 'image', { type: mime });
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      unlisten?.();
+    };
+  });
 
   function handleDragEnter(event: DragEvent) {
     event.preventDefault();
@@ -52,7 +100,6 @@
 
     const file = files[0];
 
-    const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (file.type && !validMimeTypes.includes(file.type)) {
       toaster.error(`Unsupported format: ${file.type}. Supported formats: JPEG, PNG, WebP`);
       return;

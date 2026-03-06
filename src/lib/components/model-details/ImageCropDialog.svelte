@@ -66,6 +66,10 @@
       .$ready()
       .then(() => {
         isReady = true;
+      })
+      .catch((err: unknown) => {
+        saveError = 'Failed to load image for cropping. Check the file format.';
+        console.error('[ImageCropDialog] CropperJS $ready() failed:', err);
       });
 
     return () => {

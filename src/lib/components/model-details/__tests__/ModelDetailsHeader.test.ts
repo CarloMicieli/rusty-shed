@@ -1,9 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 
-// Mock convertFileSrc
+// Mock convertFileSrc (still used by ModelDetailsHeader for the <img> src)
 vi.mock('@tauri-apps/api/core', () => ({
   convertFileSrc: vi.fn((path: string) => `asset://localhost/${path}`)
+}));
+
+// Mock Tauri event listener used by ImageDropZone's onMount
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: vi.fn(() => Promise.resolve(() => {}))
+}));
+
+// Mock Tauri fs plugin used by ImageDropZone and ImageUpload
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  readFile: vi.fn(() => Promise.resolve(new Uint8Array([0xff, 0xd8])))
+}));
+
+// Mock Tauri dialog plugin used by ImageUpload
+vi.mock('@tauri-apps/plugin-dialog', () => ({
+  open: vi.fn(() => Promise.resolve(null))
 }));
 
 // Mock paraglide messages

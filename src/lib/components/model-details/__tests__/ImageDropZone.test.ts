@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 
+// Mock Tauri event listener (tauri://drag-drop) — must return a cleanup fn
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: vi.fn(() => Promise.resolve(() => {}))
+}));
+
+// Mock Tauri fs plugin used for native drag-drop path reads
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  readFile: vi.fn(() => Promise.resolve(new Uint8Array([0xff, 0xd8])))
+}));
+
 // Mock Tauri commands — no longer called directly from ImageDropZone
 vi.mock('$lib/bindings', () => ({
   commands: {
