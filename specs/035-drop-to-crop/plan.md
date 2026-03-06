@@ -30,21 +30,21 @@ The drag-over visual state uses the app's `--primary` token (copper `hsl(30 50% 
 
 _GATE: Must pass before implementation. Re-check after Phase 1 design._
 
-| Principle | Status | Notes |
-|---|---|---|
-| Modular, Library-First Design | PASS | `ImageCropDialog` is self-contained, independently testable, with a stable prop interface |
-| Deterministic Interfaces & Observability | PASS | No new IPC commands; existing `uploadModelImageBytes` binding unchanged |
-| Test-First Emphasis | PASS | New component requires tests; modified components require test updates |
-| Code Quality | PASS | `pnpm lint`, `pnpm check`, Prettier required before merge |
-| Testing Standards | PASS | Unit tests for new component; existing tests updated (not deleted) |
-| User Experience Consistency | PASS | All strings via Paraglide; drag-over color via `--primary` theme token; shadcn-svelte Dialog for modal |
-| Performance Requirements | PASS | Crop is client-side (canvas); large images handled via `maxWidth: 2048` on `getCroppedCanvas()`; `isSaving` guard prevents double-submit |
-| Safe Rust Practices | PASS | No Rust changes |
-| Simplicity & Semantic Versioning | PASS | No new abstractions beyond minimum required; no over-engineering |
-| Architectural Laws — Database | PASS (N/A) | No new tables or migrations |
-| Architectural Laws — State Management | PASS (N/A) | No new aggregates or domain events |
-| Architectural Laws — API Design & Transport | PASS | No new Tauri commands; existing `uploadModelImageBytes` reused |
-| Architectural Laws — Domain Logic in Rust | PASS | Image validation stays in Rust backend |
+| Principle                                   | Status     | Notes                                                                                                                                    |
+| ------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Modular, Library-First Design               | PASS       | `ImageCropDialog` is self-contained, independently testable, with a stable prop interface                                                |
+| Deterministic Interfaces & Observability    | PASS       | No new IPC commands; existing `uploadModelImageBytes` binding unchanged                                                                  |
+| Test-First Emphasis                         | PASS       | New component requires tests; modified components require test updates                                                                   |
+| Code Quality                                | PASS       | `pnpm lint`, `pnpm check`, Prettier required before merge                                                                                |
+| Testing Standards                           | PASS       | Unit tests for new component; existing tests updated (not deleted)                                                                       |
+| User Experience Consistency                 | PASS       | All strings via Paraglide; drag-over color via `--primary` theme token; shadcn-svelte Dialog for modal                                   |
+| Performance Requirements                    | PASS       | Crop is client-side (canvas); large images handled via `maxWidth: 2048` on `getCroppedCanvas()`; `isSaving` guard prevents double-submit |
+| Safe Rust Practices                         | PASS       | No Rust changes                                                                                                                          |
+| Simplicity & Semantic Versioning            | PASS       | No new abstractions beyond minimum required; no over-engineering                                                                         |
+| Architectural Laws — Database               | PASS (N/A) | No new tables or migrations                                                                                                              |
+| Architectural Laws — State Management       | PASS (N/A) | No new aggregates or domain events                                                                                                       |
+| Architectural Laws — API Design & Transport | PASS       | No new Tauri commands; existing `uploadModelImageBytes` reused                                                                           |
+| Architectural Laws — Domain Logic in Rust   | PASS       | Image validation stays in Rust backend                                                                                                   |
 
 **Gate result**: PASS — no violations. Implementation may proceed.
 
@@ -88,6 +88,7 @@ messages/
 ```
 
 **Not changed**:
+
 - `src-tauri/` (all Rust code unchanged)
 - `src/lib/bindings.ts` (no new specta-generated types)
 - `src/lib/components/model-details/ModelDetailsHeader.svelte` (no layout changes)
@@ -101,20 +102,20 @@ messages/
 
 All research completed. See [research.md](research.md) for full details.
 
-| Question | Answer |
-|---|---|
-| Cropper.js v2 lifecycle in Svelte 5? | `onMount` + `bind:this` + cleanup return; Web Components API |
-| v2 constructor options? | None in constructor; set `sel.aspectRatio`, `sel.initialCoverage` post-construction |
-| v2 ready detection? | `cropperImage.$ready()` Promise — no callback in constructor |
-| v2 CSS import? | **None** — v2 uses Shadow DOM; no `cropper.css` needed |
-| Canvas → Tauri bytes? | `sel.$toCanvas()` (async) → `toBlob()` → `arrayBuffer()` → `Array.from(new Uint8Array(...))` |
-| Aspect ratio for catalog photos? | Free crop: `sel.aspectRatio = NaN` post-construction |
-| Drag-over accent color? | `border-primary` / `bg-primary/10` via `@theme inline` tokens; resolves to `hsl(30 50% 50%)` |
-| Nested drag-leave flickering? | `dragenter` counter pattern (more robust than `relatedTarget` check) |
-| Browse path image → Cropper? | `convertFileSrc(filePath)` from `@tauri-apps/api/core` |
-| Drop path image → Cropper? | `URL.createObjectURL(file)` — revoke on close |
-| Tauri WebView drag-and-drop? | HTML5 `dataTransfer.files` approach is proven working in this project; keep unchanged |
-| New dependency? | `cropperjs` v2.1.0 — installed and approved (T001 complete) |
+| Question                             | Answer                                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Cropper.js v2 lifecycle in Svelte 5? | `onMount` + `bind:this` + cleanup return; Web Components API                                 |
+| v2 constructor options?              | None in constructor; set `sel.aspectRatio`, `sel.initialCoverage` post-construction          |
+| v2 ready detection?                  | `cropperImage.$ready()` Promise — no callback in constructor                                 |
+| v2 CSS import?                       | **None** — v2 uses Shadow DOM; no `cropper.css` needed                                       |
+| Canvas → Tauri bytes?                | `sel.$toCanvas()` (async) → `toBlob()` → `arrayBuffer()` → `Array.from(new Uint8Array(...))` |
+| Aspect ratio for catalog photos?     | Free crop: `sel.aspectRatio = NaN` post-construction                                         |
+| Drag-over accent color?              | `border-primary` / `bg-primary/10` via `@theme inline` tokens; resolves to `hsl(30 50% 50%)` |
+| Nested drag-leave flickering?        | `dragenter` counter pattern (more robust than `relatedTarget` check)                         |
+| Browse path image → Cropper?         | `convertFileSrc(filePath)` from `@tauri-apps/api/core`                                       |
+| Drop path image → Cropper?           | `URL.createObjectURL(file)` — revoke on close                                                |
+| Tauri WebView drag-and-drop?         | HTML5 `dataTransfer.files` approach is proven working in this project; keep unchanged        |
+| New dependency?                      | `cropperjs` v2.1.0 — installed and approved (T001 complete)                                  |
 
 ---
 
@@ -125,6 +126,7 @@ All research completed. See [research.md](research.md) for full details.
 **Props**: `open: boolean`, `imageSrc: string`, `fileName: string`, `modelId: RailwayModelId`, `onSaveSuccess?: () => void`, `onCancel?: () => void`
 
 **Internal flow**:
+
 1. Modal shell: shadcn-svelte `Dialog` with `bind:open`
 2. `<img bind:this={imageEl} src={imageSrc}>` inside a `max-h-[70vh] overflow-hidden` container
 3. Cropper.js v2 initialized on `onMount` via `new Cropper(imageEl)`; post-construction: `sel.aspectRatio = NaN`, `sel.initialCoverage = 0.8`, `sel.movable = true`, `sel.resizable = true`; ready via `cropperImage.$ready()` Promise; destroyed in `onMount` cleanup return
@@ -141,35 +143,35 @@ All research completed. See [research.md](research.md) for full details.
 
 ### Modified: `ImageDropZone.svelte`
 
-| Change | Detail |
-|---|---|
-| Drag state | Replace `isDragging: $state(false)` with `dragCounter: $state(0)` + `isDragging = $derived(dragCounter > 0)` |
-| `ondragenter` handler | Add — increments `dragCounter` |
-| `ondragleave` handler | Replace `relatedTarget` check with `dragCounter--` |
-| `ondrop` handler | After validation: set `pendingFile = file` instead of calling `uploadModelImageBytes`; `dragCounter = 0` |
-| Drag-over classes | Array syntax: `isDragging ? 'border-primary bg-primary/10 ring-2 ring-primary ring-inset' : '...'` |
-| Overlay text | Change dragging overlay to use `drop_here_to_update_photo` key |
-| Remove | `isUploading`, `showSuccess`, `error` for upload path; `commands.uploadModelImageBytes` direct call |
-| Add | `<ImageCropDialog>` bound to `pendingFile !== null` |
-| Keep | `error` state for MIME validation rejection toast |
+| Change                | Detail                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Drag state            | Replace `isDragging: $state(false)` with `dragCounter: $state(0)` + `isDragging = $derived(dragCounter > 0)` |
+| `ondragenter` handler | Add — increments `dragCounter`                                                                               |
+| `ondragleave` handler | Replace `relatedTarget` check with `dragCounter--`                                                           |
+| `ondrop` handler      | After validation: set `pendingFile = file` instead of calling `uploadModelImageBytes`; `dragCounter = 0`     |
+| Drag-over classes     | Array syntax: `isDragging ? 'border-primary bg-primary/10 ring-2 ring-primary ring-inset' : '...'`           |
+| Overlay text          | Change dragging overlay to use `drop_here_to_update_photo` key                                               |
+| Remove                | `isUploading`, `showSuccess`, `error` for upload path; `commands.uploadModelImageBytes` direct call          |
+| Add                   | `<ImageCropDialog>` bound to `pendingFile !== null`                                                          |
+| Keep                  | `error` state for MIME validation rejection toast                                                            |
 
 ### Modified: `ImageUpload.svelte`
 
-| Change | Detail |
-|---|---|
-| After file select | Set `pendingFilePath = file` instead of calling `uploadModelImage` |
-| Add | `<ImageCropDialog>` bound to `pendingFilePath !== null`; `imageSrc = convertFileSrc(pendingFilePath)` |
-| Remove | Direct `uploadModelImage` call from the upload flow (delete flow keeps `deleteModelImage` unchanged) |
-| Keep | Delete flow — entirely unchanged |
+| Change            | Detail                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| After file select | Set `pendingFilePath = file` instead of calling `uploadModelImage`                                    |
+| Add               | `<ImageCropDialog>` bound to `pendingFilePath !== null`; `imageSrc = convertFileSrc(pendingFilePath)` |
+| Remove            | Direct `uploadModelImage` call from the upload flow (delete flow keeps `deleteModelImage` unchanged)  |
+| Keep              | Delete flow — entirely unchanged                                                                      |
 
 ### New i18n Keys
 
-| Key | English | Italian (suggested) |
-|---|---|---|
+| Key                         | English                     | Italian (suggested)                   |
+| --------------------------- | --------------------------- | ------------------------------------- |
 | `drop_here_to_update_photo` | `Drop here to update photo` | `Rilascia qui per aggiornare la foto` |
-| `crop_dialog_title` | `Crop Image` | `Ritaglia immagine` |
-| `crop_confirm` | `Apply Crop` | `Applica ritaglio` |
-| `crop_cancel` | `Cancel` | `Annulla` |
+| `crop_dialog_title`         | `Crop Image`                | `Ritaglia immagine`                   |
+| `crop_confirm`              | `Apply Crop`                | `Applica ritaglio`                    |
+| `crop_cancel`               | `Cancel`                    | `Annulla`                             |
 
 ---
 
@@ -181,10 +183,10 @@ All research completed. See [research.md](research.md) for full details.
 
 ## Risk & Mitigations
 
-| Risk | Likelihood | Mitigation |
-|---|---|---|
-| `cropperjs` CSS conflicts with Tailwind/shadcn styles | Low | Scope via `.cropper-container` specificity; Tailwind purge won't affect Cropper's own CSS |
-| Blob URL not revoked on abnormal close | Medium | Add `$effect` cleanup in `ImageCropDialog` that revokes on `open` going false |
-| `getCroppedCanvas()` called before `ready` | Low | `isReady` guard on confirm button; button disabled until Cropper fires `ready` |
-| Tauri `convertFileSrc` URL rejected by Cropper img load | Low | CSP already allows `https://asset.localhost`; confirmed in `tauri.conf.json` |
-| Test isolation for `ImageCropDialog` | Medium | Mock `cropperjs` in unit tests; test component logic independently of DOM rendering |
+| Risk                                                    | Likelihood | Mitigation                                                                                |
+| ------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------- |
+| `cropperjs` CSS conflicts with Tailwind/shadcn styles   | Low        | Scope via `.cropper-container` specificity; Tailwind purge won't affect Cropper's own CSS |
+| Blob URL not revoked on abnormal close                  | Medium     | Add `$effect` cleanup in `ImageCropDialog` that revokes on `open` going false             |
+| `getCroppedCanvas()` called before `ready`              | Low        | `isReady` guard on confirm button; button disabled until Cropper fires `ready`            |
+| Tauri `convertFileSrc` URL rejected by Cropper img load | Low        | CSP already allows `https://asset.localhost`; confirmed in `tauri.conf.json`              |
+| Test isolation for `ImageCropDialog`                    | Medium     | Mock `cropperjs` in unit tests; test component logic independently of DOM rendering       |

@@ -23,6 +23,7 @@ Follow this sequence to avoid broken intermediate states:
 ### Step 1 — Add i18n message keys
 
 Add to `messages/en.json`:
+
 ```json
 "drop_here_to_update_photo": "Drop here to update photo",
 "crop_dialog_title": "Crop Image",
@@ -37,12 +38,13 @@ Add equivalent translations to `messages/it.json`. Run `pnpm prepare` to regener
 Location: `src/lib/components/model-details/ImageCropDialog.svelte`
 
 **Cropper.js v2 notes** (breaking changes from v1):
+
 - Import: `import Cropper from 'cropperjs'` — same, but **no CSS import** (v2 uses Shadow DOM)
 - Constructor: `new Cropper(imageEl)` — no options object
 - Options set post-construction on element refs:
   ```ts
   const sel = cropperInstance.getCropperSelection()!;
-  sel.aspectRatio = NaN;        // free crop
+  sel.aspectRatio = NaN; // free crop
   sel.initialCoverage = 0.8;
   sel.movable = true;
   sel.resizable = true;
@@ -51,6 +53,7 @@ Location: `src/lib/components/model-details/ImageCropDialog.svelte`
 - Crop output: `const canvas = await sel.$toCanvas({ width: 2048, height: 2048 })` (async, v2 API)
 
 Responsibilities:
+
 - Accept `{ open, imageSrc, fileName, modelId, onSaveSuccess?, onCancel? }` props (see `contracts/component-interfaces.ts`).
 - Wrap a shadcn-svelte `Dialog` component for the modal shell.
 - Mount Cropper.js v2 on the `<img>` element inside a fixed-height container (`max-h-[70vh]`).
@@ -68,6 +71,7 @@ Responsibilities:
 ### Step 3 — Modify `ImageDropZone.svelte`
 
 Changes:
+
 1. Replace `isDragging` boolean state with `dragCounter` counter + `$derived(dragCounter > 0)`.
 2. Add `ondragenter` handler (increment counter).
 3. Change `ondragleave` to decrement counter (not `relatedTarget` check).
@@ -82,8 +86,13 @@ Changes:
      imageSrc={pendingFile ? URL.createObjectURL(pendingFile) : ''}
      fileName={pendingFile?.name ?? 'image.jpg'}
      {modelId}
-     onSaveSuccess={() => { pendingFile = null; onUploadSuccess?.(); }}
-     onCancel={() => { pendingFile = null; }}
+     onSaveSuccess={() => {
+       pendingFile = null;
+       onUploadSuccess?.();
+     }}
+     onCancel={() => {
+       pendingFile = null;
+     }}
    />
    ```
    **Note**: `URL.createObjectURL` should be called lazily (only when `pendingFile` is set) to avoid creating and immediately discarding blob URLs. Use a `$derived` for `blobSrc`.
@@ -93,6 +102,7 @@ Changes:
 ### Step 4 — Modify `ImageUpload.svelte`
 
 Changes:
+
 1. Add `pendingFilePath = $state<string | null>(null)`.
 2. In `handleUpload`: after `open()` returns a non-null path, instead of calling `uploadModelImage`:
    - Import `convertFileSrc` from `@tauri-apps/api/core`
@@ -103,10 +113,15 @@ Changes:
    <ImageCropDialog
      open={pendingFilePath !== null}
      imageSrc={pendingFilePath ? convertFileSrc(pendingFilePath) : ''}
-     fileName={pendingFilePath ? pendingFilePath.split('/').pop() ?? 'image.jpg' : 'image.jpg'}
+     fileName={pendingFilePath ? (pendingFilePath.split('/').pop() ?? 'image.jpg') : 'image.jpg'}
      {modelId}
-     onSaveSuccess={() => { pendingFilePath = null; onUploadSuccess?.(); }}
-     onCancel={() => { pendingFilePath = null; }}
+     onSaveSuccess={() => {
+       pendingFilePath = null;
+       onUploadSuccess?.();
+     }}
+     onCancel={() => {
+       pendingFilePath = null;
+     }}
    />
    ```
 4. Keep the delete flow entirely unchanged.
@@ -115,6 +130,7 @@ Changes:
 ### Step 5 — Write / Update Tests
 
 **New**: `src/lib/components/model-details/__tests__/ImageCropDialog.test.ts`
+
 - Test: cancel closes dialog without saving
 - Test: confirm triggers `uploadModelImageBytes` with correct `modelId`
 - Test: confirm calls `onSaveSuccess` on success
@@ -122,12 +138,14 @@ Changes:
 - Test: blob URL is revoked on close
 
 **Modify**: `src/lib/components/model-details/__tests__/ImageDropZone.test.ts`
+
 - Update mocks to include `ImageCropDialog` (mock the module)
 - Verify: valid drop opens crop dialog (not calls `uploadModelImageBytes` directly)
 - Verify: invalid file still shows error without opening dialog
 - Existing MIME type tests remain valid; update assertions where needed
 
 **Modify**: `src/lib/components/model-details/__tests__/ImageUpload.test.ts`
+
 - Update mocks to include `ImageCropDialog`
 - Verify: file selection opens crop dialog (not calls `uploadModelImage` directly)
 - Delete tests remain unchanged

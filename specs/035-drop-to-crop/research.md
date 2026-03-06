@@ -14,15 +14,15 @@
 
 **Key differences from v1**:
 
-| Concern | v1 | v2 (installed) |
-|---|---|---|
-| CSS import | `import 'cropperjs/dist/cropper.css'` | **None — Shadow DOM styles built-in** |
-| Constructor options | `{ aspectRatio, viewMode, dragMode, ... }` | `{}` — properties set post-construction on elements |
-| `aspectRatio` | constructor option | `sel.aspectRatio = NaN` on `<cropper-selection>` |
-| `autoCropArea` | constructor option | `sel.initialCoverage = 0.8` on `<cropper-selection>` |
-| `ready` event | constructor callback | `cropperImage.$ready(cb)` — Promise-based |
-| Crop output | `cropper.getCroppedCanvas()` — sync | `sel.$toCanvas()` — async `Promise<HTMLCanvasElement>` |
-| TypeScript types | `@types/cropperjs` (separate) | Built-in, bundled in package |
+| Concern             | v1                                         | v2 (installed)                                         |
+| ------------------- | ------------------------------------------ | ------------------------------------------------------ |
+| CSS import          | `import 'cropperjs/dist/cropper.css'`      | **None — Shadow DOM styles built-in**                  |
+| Constructor options | `{ aspectRatio, viewMode, dragMode, ... }` | `{}` — properties set post-construction on elements    |
+| `aspectRatio`       | constructor option                         | `sel.aspectRatio = NaN` on `<cropper-selection>`       |
+| `autoCropArea`      | constructor option                         | `sel.initialCoverage = 0.8` on `<cropper-selection>`   |
+| `ready` event       | constructor callback                       | `cropperImage.$ready(cb)` — Promise-based              |
+| Crop output         | `cropper.getCroppedCanvas()` — sync        | `sel.$toCanvas()` — async `Promise<HTMLCanvasElement>` |
+| TypeScript types    | `@types/cropperjs` (separate)              | Built-in, bundled in package                           |
 
 **Svelte 5 `onMount` pattern (v2)**:
 
@@ -43,17 +43,23 @@
 
     // Configure selection after construction
     const sel = cropperInstance.getCropperSelection()!;
-    sel.aspectRatio = NaN;          // free crop — best for varied catalog photos
+    sel.aspectRatio = NaN; // free crop — best for varied catalog photos
     sel.initialCoverage = 0.8;
     sel.movable = true;
     sel.resizable = true;
 
     // Wait for image load (v2 promise-based)
-    cropperInstance.getCropperImage()!.$ready().then(() => {
-      isReady = true;
-    });
+    cropperInstance
+      .getCropperImage()!
+      .$ready()
+      .then(() => {
+        isReady = true;
+      });
 
-    return () => { cropperInstance?.destroy(); cropperInstance = null; };
+    return () => {
+      cropperInstance?.destroy();
+      cropperInstance = null;
+    };
   });
 </script>
 ```
@@ -64,10 +70,14 @@
 const sel = cropperInstance!.getCropperSelection()!;
 const canvas = await sel.$toCanvas({ width: 2048, height: 2048 });
 const fileData = await new Promise<number[]>((resolve, reject) =>
-  canvas.toBlob(async (blob) => {
-    if (!blob) return reject(new Error('toBlob returned null'));
-    resolve(Array.from(new Uint8Array(await blob.arrayBuffer())));
-  }, 'image/jpeg', 0.9)
+  canvas.toBlob(
+    async (blob) => {
+      if (!blob) return reject(new Error('toBlob returned null'));
+      resolve(Array.from(new Uint8Array(await blob.arrayBuffer())));
+    },
+    'image/jpeg',
+    0.9
+  )
 );
 // Then call the existing Tauri command unchanged:
 await commands.uploadModelImageBytes({ modelId, fileName: 'cropped.jpg', fileData });
@@ -78,6 +88,7 @@ await commands.uploadModelImageBytes({ modelId, fileName: 'cropped.jpg', fileDat
 **Cleanup**: Always destroy via `onMount` cleanup return. Set `cropperInstance = null` to prevent stale references. Guard `$toCanvas()` behind `isReady` flag.
 
 **Alternatives considered**:
+
 - `svelte-easy-crop` — simpler API but fewer controls; Cropper.js is explicitly specified in the feature request.
 
 ---
@@ -86,10 +97,10 @@ await commands.uploadModelImageBytes({ modelId, fileName: 'cropped.jpg', fileDat
 
 **Decision**: The `ImageCropDialog` receives a pre-resolved `string` URL. The two entry points produce URLs differently:
 
-| Entry Point | File Access | URL for Cropper |
-|---|---|---|
-| Drag-and-drop (`ImageDropZone`) | Browser `File` object via `dataTransfer.files` | `URL.createObjectURL(file)` |
-| Browse dialog (`ImageUpload`) | Filesystem path string from Tauri dialog | `convertFileSrc(filePath)` from `@tauri-apps/api/core` |
+| Entry Point                     | File Access                                    | URL for Cropper                                        |
+| ------------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| Drag-and-drop (`ImageDropZone`) | Browser `File` object via `dataTransfer.files` | `URL.createObjectURL(file)`                            |
+| Browse dialog (`ImageUpload`)   | Filesystem path string from Tauri dialog       | `convertFileSrc(filePath)` from `@tauri-apps/api/core` |
 
 `convertFileSrc` produces `https://asset.localhost/...` URLs. The CSP in `tauri.conf.json` permits `img-src 'self' data: asset: https://asset.localhost`, so Cropper.js can load these URLs in the `<img>` element.
 
@@ -109,9 +120,18 @@ Blob URLs from `createObjectURL` must be revoked on dialog close (both confirm a
 let dragCounter = $state(0);
 const isDragging = $derived(dragCounter > 0);
 
-function onDragEnter(e: DragEvent) { e.preventDefault(); dragCounter++; }
-function onDragLeave(e: DragEvent) { e.preventDefault(); dragCounter--; }
-function onDrop(e: DragEvent) { e.preventDefault(); dragCounter = 0; /* handle */ }
+function onDragEnter(e: DragEvent) {
+  e.preventDefault();
+  dragCounter++;
+}
+function onDragLeave(e: DragEvent) {
+  e.preventDefault();
+  dragCounter--;
+}
+function onDrop(e: DragEvent) {
+  e.preventDefault();
+  dragCounter = 0; /* handle */
+}
 ```
 
 **Tauri `onDragDropEvent` API**: An alternative that gives file paths from OS drags via position-based hit testing. This would require replacing `dataTransfer.files` with a listener approach and manual DOM hit detection. **Not recommended for this feature** since the existing approach works and the overhead is unjustified. Flagged as a future fallback if platform compatibility issues arise on Windows/macOS.
@@ -147,12 +167,12 @@ The array syntax with boolean guards is the Svelte 5 idiomatic pattern — Tailw
 
 **Decision**: Add 4 keys to `messages/en.json` and `messages/it.json`.
 
-| Key | English value |
-|---|---|
+| Key                         | English value                 |
+| --------------------------- | ----------------------------- |
 | `drop_here_to_update_photo` | `"Drop here to update photo"` |
-| `crop_dialog_title` | `"Crop Image"` |
-| `crop_confirm` | `"Apply Crop"` |
-| `crop_cancel` | `"Cancel"` |
+| `crop_dialog_title`         | `"Crop Image"`                |
+| `crop_confirm`              | `"Apply Crop"`                |
+| `crop_cancel`               | `"Cancel"`                    |
 
 These are the minimum keys needed. Existing keys (`drop_image_here`, `uploading`, `upload_success`, etc.) are reused unchanged.
 
@@ -163,6 +183,7 @@ These are the minimum keys needed. Existing keys (`drop_image_here`, `uploading`
 **Decision**: No Rust code, IPC commands, SQL migrations, or `specta` bindings changes needed.
 
 **Rationale**:
+
 - `uploadModelImageBytes` already accepts `Vec<u8>` and handles all storage. Cropper output (canvas bytes) maps directly to this existing interface.
 - The spec requirement "Keep the current code to store/retrieve images" is fully satisfied by the crop-then-save pipeline.
 - No new domain events, aggregates, or repositories are needed for this frontend UX enhancement.
@@ -171,16 +192,16 @@ These are the minimum keys needed. Existing keys (`drop_image_here`, `uploading`
 
 ## Summary: All NEEDS CLARIFICATION Resolved
 
-| Item | Resolution |
-|---|---|
-| Cropper.js lifecycle in Svelte 5 | `onMount` + `bind:this` + cleanup return; **v2 Web Components API** |
-| Canvas → Tauri bytes | `sel.$toCanvas()` (async, v2) → `toBlob() → Uint8Array → number[]` |
-| Aspect ratio | Free crop: `sel.aspectRatio = NaN` set post-construction on `<cropper-selection>` |
-| v2 ready detection | `cropperImage.$ready()` (Promise) — no constructor callback |
-| v2 CSS | None needed — Shadow DOM styles built-in |
-| Drag-over color | `border-primary` / `bg-primary/10` via `@theme inline` tokens |
-| Nested drag-leave | `dragenter` counter pattern |
-| Browse path image loading | `convertFileSrc(filePath)` |
-| Drop path image loading | `URL.createObjectURL(file)` |
-| Save command | Unchanged: `uploadModelImageBytes` |
-| New dependency | `cropperjs` v2.1.0 — **installed and approved** |
+| Item                             | Resolution                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| Cropper.js lifecycle in Svelte 5 | `onMount` + `bind:this` + cleanup return; **v2 Web Components API**               |
+| Canvas → Tauri bytes             | `sel.$toCanvas()` (async, v2) → `toBlob() → Uint8Array → number[]`                |
+| Aspect ratio                     | Free crop: `sel.aspectRatio = NaN` set post-construction on `<cropper-selection>` |
+| v2 ready detection               | `cropperImage.$ready()` (Promise) — no constructor callback                       |
+| v2 CSS                           | None needed — Shadow DOM styles built-in                                          |
+| Drag-over color                  | `border-primary` / `bg-primary/10` via `@theme inline` tokens                     |
+| Nested drag-leave                | `dragenter` counter pattern                                                       |
+| Browse path image loading        | `convertFileSrc(filePath)`                                                        |
+| Drop path image loading          | `URL.createObjectURL(file)`                                                       |
+| Save command                     | Unchanged: `uploadModelImageBytes`                                                |
+| New dependency                   | `cropperjs` v2.1.0 — **installed and approved**                                   |

@@ -19,8 +19,8 @@
   import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
   import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
-  import { Upload, Loader2, TrainFront, Box, Users, Layers } from 'lucide-svelte';
-  import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+  import { Upload, TrainFront, Box, Users, Layers } from 'lucide-svelte';
+  import { convertFileSrc } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
@@ -29,6 +29,7 @@
   import LanguageFallbackBadge from '$lib/components/LanguageFallbackBadge.svelte';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
   import RollingStockCreateDrawer from '$lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte';
+  import ImageCropDialog from '$lib/components/model-details/ImageCropDialog.svelte';
   import {
     commands,
     type Scale,
@@ -69,8 +70,12 @@
   // Component-local state
   let activeTab = $state<'details' | 'rolling-stock'>('details');
   let isDragging = $state(false);
-  let isUploading = $state(false);
   let _uploadProgress = $state(0);
+  // Crop dialog state — drop path
+  let pendingDropFile = $state<File | null>(null);
+  let dropBlobUrl = $state<string | null>(null);
+  // Crop dialog state — browse path
+  let pendingBrowsePath = $state<string | null>(null);
   let createDrawerOpen = $state(false);
 
   // Current locale as Language type
@@ -495,7 +500,7 @@
         filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp'] }]
       });
       if (selected && typeof selected === 'string') {
-        await uploadImage(selected);
+        pendingBrowsePath = selected;
       }
     } catch (err) {
       console.error('File selection error:', err);
@@ -512,56 +517,27 @@
     isDragging = false;
   }
 
-  async function handleDrop(e: DragEvent) {
+  function handleDrop(e: DragEvent) {
     e.preventDefault();
     isDragging = false;
 
     const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const file = files[0];
+    if (!files || files.length === 0) return;
 
-      if (!file.type.startsWith('image/')) {
-        onError?.(m.error_invalid_image_format());
-        return;
-      }
+    const file = files[0];
 
-      if (file.size > 50 * 1024 * 1024) {
-        onError?.('File too large. Maximum size is 50 MB.');
-        return;
-      }
-
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const bytes = Array.from(new Uint8Array(arrayBuffer));
-        isUploading = true;
-        await invoke('upload_model_image_bytes', {
-          args: { modelId: model.id, fileName: file.name, fileData: bytes }
-        });
-        onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
-        await notifyModelUpdated();
-      } catch (err) {
-        console.error('Upload error:', err);
-        onError?.(m.upload_error_unknown());
-      } finally {
-        isUploading = false;
-      }
+    if (!file.type.startsWith('image/')) {
+      onError?.(m.error_invalid_image_format());
+      return;
     }
-  }
 
-  async function uploadImage(filePath: string) {
-    try {
-      isUploading = true;
-      await invoke('upload_model_image', {
-        args: { modelId: model.id, filePath: filePath }
-      });
-      onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
-      await notifyModelUpdated();
-    } catch (err) {
-      console.error('Upload error:', err);
-      onError?.(m.upload_error_unknown());
-    } finally {
-      isUploading = false;
+    if (file.size > 50 * 1024 * 1024) {
+      onError?.('File too large. Maximum size is 50 MB.');
+      return;
     }
+
+    dropBlobUrl = URL.createObjectURL(file);
+    pendingDropFile = file;
   }
 </script>
 
@@ -649,21 +625,16 @@
             variant="secondary"
             size="sm"
             onclick={handleBrowseImage}
-            disabled={isUploading}
             aria-label={m.replace_image()}
           >
-            {#if isUploading}
-              <Loader2 class="h-4 w-4 animate-spin" />
-            {:else}
-              <Upload class="h-4 w-4" />
-            {/if}
+            <Upload class="h-4 w-4" />
             <span class="ml-2">{m.replace_image()}</span>
           </Button>
         </div>
       {/if}
     {:else}
       <div class="flex h-full w-full items-center justify-center">
-        {#if editable && !isUploading}
+        {#if editable}
           <div class="flex flex-col items-center gap-3 text-zinc-600">
             <PlaceholderIcon class="size-12" />
             <p class="text-xs text-zinc-500">
@@ -673,11 +644,6 @@
               <Upload class="mr-2 h-4 w-4" />
               {m.upload_image()}
             </Button>
-          </div>
-        {:else if isUploading}
-          <div class="flex flex-col items-center gap-2">
-            <Loader2 class="size-10 animate-spin text-zinc-600" />
-            <p class="text-xs text-zinc-500">Uploading…</p>
           </div>
         {:else}
           <div class="flex flex-col items-center gap-2 text-zinc-600/70">
@@ -1122,6 +1088,40 @@
     }}
     onClose={() => {
       createDrawerOpen = false;
+    }}
+  />
+
+  <!-- Crop dialog — drop path -->
+  <ImageCropDialog
+    open={pendingDropFile !== null}
+    imageSrc={dropBlobUrl ?? ''}
+    fileName={pendingDropFile?.name ?? 'image.jpg'}
+    modelId={model.id}
+    onSaveSuccess={() => {
+      pendingDropFile = null;
+      dropBlobUrl = null;
+      onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
+      void notifyModelUpdated();
+    }}
+    onCancel={() => {
+      pendingDropFile = null;
+      dropBlobUrl = null;
+    }}
+  />
+
+  <!-- Crop dialog — browse path -->
+  <ImageCropDialog
+    open={pendingBrowsePath !== null}
+    imageSrc={pendingBrowsePath ? convertFileSrc(pendingBrowsePath) : ''}
+    fileName={pendingBrowsePath ? (pendingBrowsePath.split('/').pop() ?? 'image.jpg') : 'image.jpg'}
+    modelId={model.id}
+    onSaveSuccess={() => {
+      pendingBrowsePath = null;
+      onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
+      void notifyModelUpdated();
+    }}
+    onCancel={() => {
+      pendingBrowsePath = null;
     }}
   />
 </div>

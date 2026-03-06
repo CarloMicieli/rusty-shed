@@ -9,6 +9,30 @@ vi.mock('@tiptap/starter-kit', () => ({ default: {} }));
 vi.mock('@tiptap/markdown', () => ({ Markdown: {} }));
 vi.mock('marked', () => ({ marked: { parse: vi.fn((s: string) => `<p>${s}</p>`) } }));
 
+// Mock cropperjs — ImageCropDialog uses it but happy-dom has no canvas/img decoding
+vi.mock('cropperjs', () => {
+  const mockCanvas = {
+    toBlob: (cb: BlobCallback) => cb(new Blob([new Uint8Array([1, 2, 3])], { type: 'image/jpeg' }))
+  };
+  const mockSelection = {
+    aspectRatio: 0,
+    initialCoverage: 0,
+    movable: false,
+    resizable: false,
+    $toCanvas: () => Promise.resolve(mockCanvas)
+  };
+  class MockCropper {
+    getCropperSelection() {
+      return mockSelection;
+    }
+    getCropperImage() {
+      return { $ready: () => Promise.resolve() };
+    }
+    destroy() {}
+  }
+  return { default: MockCropper };
+});
+
 // Mock Tauri API
 vi.mock('@tauri-apps/plugin-dialog', () => ({
   open: vi.fn()
@@ -21,7 +45,8 @@ vi.mock('@tauri-apps/api/core', () => ({
 // Mock bindings/commands
 vi.mock('$lib/bindings', () => ({
   commands: {
-    getRailwayCompanies: vi.fn(() => Promise.resolve({ status: 'ok', data: [] }))
+    getRailwayCompanies: vi.fn(() => Promise.resolve({ status: 'ok', data: [] })),
+    uploadModelImageBytes: vi.fn(() => Promise.resolve({ status: 'ok', data: null }))
   }
 }));
 
@@ -59,7 +84,11 @@ vi.mock('$lib/paraglide/messages', () => ({
   translation_section_english: () => 'English',
   translation_section_italian: () => 'Italian',
   rolling_stock_add_cta: () => 'Add Rolling Stock',
-  rolling_stock_add_more: () => '+ Add Rolling Stock'
+  rolling_stock_add_more: () => '+ Add Rolling Stock',
+  crop_dialog_title: () => 'Crop Image',
+  crop_cancel: () => 'Cancel',
+  crop_confirm: () => 'Confirm',
+  uploading: () => 'Uploading...'
 }));
 
 describe('RailwayModelCard', () => {
@@ -321,25 +350,29 @@ describe('RailwayModelCard', () => {
     });
 
     it('onImageUploaded callback fires with correct path after successful upload', async () => {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const mockInvoke = vi.mocked(invoke);
-      mockInvoke.mockResolvedValue(null);
-
       const onImageUploadedSpy = vi.fn();
-      const { container } = render(RailwayModelCard, {
+      render(RailwayModelCard, {
         props: { model: mockModelSingleUnit, editable: true, onImageUploaded: onImageUploadedSpy }
       });
 
-      const heroSection = container.querySelector('.hero-section');
+      const heroSection = document.querySelector('.hero-section');
       expect(heroSection).toBeTruthy();
 
-      // Create a mock File
+      // Create a mock File and drop it onto the hero section
       const file = new File(['image data'], 'test.jpg', { type: 'image/jpeg' });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-
-      // Fire drop event
       await fireEvent.drop(heroSection!, { dataTransfer });
+
+      // The drop opens the ImageCropDialog — wait for the confirm button then click it
+      const confirmButton = await waitFor(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find((b) =>
+          b.textContent?.includes('Confirm')
+        );
+        expect(btn).toBeTruthy();
+        return btn!;
+      });
+      await fireEvent.click(confirmButton);
 
       await waitFor(() => {
         expect(onImageUploadedSpy).toHaveBeenCalledWith(expect.stringContaining('models/'));

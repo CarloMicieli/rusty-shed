@@ -126,7 +126,7 @@
   }
 
   function handleCardClick(item: CollectionItemView) {
-    goto(`/collection/${item.id}`);
+    goto(`/collection/${item.id.split(':').pop()}`);
   }
 </script>
 

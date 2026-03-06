@@ -1,276 +1,229 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 
-// Mock Tauri commands (use function for factory to avoid hoisting issues)
+// Mock Tauri commands — no longer called directly from ImageDropZone
 vi.mock('$lib/bindings', () => ({
   commands: {
     uploadModelImageBytes: vi.fn()
   }
 }));
 
+// Mock ImageCropDialog to prevent rendering the actual dialog
+vi.mock('../ImageCropDialog.svelte', () => ({
+  default: vi.fn()
+}));
+
+// Mock toaster
+vi.mock('$lib/toaster', () => ({
+  toaster: {
+    error: vi.fn(),
+    success: vi.fn()
+  }
+}));
+
 // Mock paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
   drag_and_drop_hint: () => 'Drag and drop your image here',
-  drop_image_here: () => 'Drop image here',
-  uploading: () => 'Uploading...',
-  upload_success: () => 'Image uploaded successfully',
-  upload_error_model_not_found: () => 'Model not found',
-  upload_error_unknown: () => 'An unknown error occurred',
+  drop_here_to_update_photo: () => 'Drop here to update photo',
   upload_error_multiple_files: () => 'Only one image at a time'
 }));
 
 import ImageDropZone from '../ImageDropZone.svelte';
 import { commands } from '$lib/bindings';
+import { toaster } from '$lib/toaster';
 
-describe('ImageDropZone - T092: Multiple file drop rejection', () => {
-  const mockModelId = 'trn:railway-model:maer:37858';
+const mockModelId = 'trn:railway-model:maer:37858';
 
+describe('ImageDropZone - Valid file drop opens crop dialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  // T092: Test multiple file drop rejection
-  it('should reject multiple files and show error message', async () => {
+  it('valid single JPEG drop does NOT call uploadModelImageBytes directly', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-    expect(dropZone).toBeTruthy();
-
-    // Create DataTransfer with multiple files
-    const file1 = new File(['image1'], 'test1.jpg', { type: 'image/jpeg' });
-    const file2 = new File(['image2'], 'test2.jpg', { type: 'image/jpeg' });
-
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file1);
-    dataTransfer.items.add(file2);
-
-    // Trigger drop event
-    await fireEvent.drop(dropZone, { dataTransfer });
-
-    // Should NOT call upload command
-    expect(commands.uploadModelImageBytes).not.toHaveBeenCalled();
-
-    // Should show error message
-    expect(container.textContent).toContain('Only one image at a time');
-  });
-
-  it('should accept single file and proceed with upload', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
-
-    const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
-    });
-
-    const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
-    // Create DataTransfer with single file
     const file = new File(['image'], 'test.jpg', { type: 'image/jpeg' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
-    // Trigger drop event
     await fireEvent.drop(dropZone, { dataTransfer });
 
-    // Should call upload command
-    expect(commands.uploadModelImageBytes).toHaveBeenCalledWith({
-      modelId: mockModelId,
-      fileName: 'test.jpg',
-      fileData: expect.any(Array)
-    });
+    // Drop zone no longer calls upload directly — it sets pendingFile for crop dialog
+    expect(commands.uploadModelImageBytes).not.toHaveBeenCalled();
   });
 });
 
-describe('ImageDropZone - T097: MIME type hint check', () => {
-  const mockModelId = 'trn:railway-model:maer:37858';
-
+describe('ImageDropZone - Multiple file drop rejection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should reject TIFF files based on MIME type', async () => {
+  it('should reject multiple files with a toast and not open crop dialog', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
-    // Create TIFF file with MIME type
-    const file = new File(['tiff-data'], 'image.tiff', { type: 'image/tiff' });
+    const file1 = new File(['image1'], 'test1.jpg', { type: 'image/jpeg' });
+    const file2 = new File(['image2'], 'test2.jpg', { type: 'image/jpeg' });
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add(file1);
+    dataTransfer.items.add(file2);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
-    // Should NOT call upload command
+    expect(toaster.error).toHaveBeenCalledWith('Only one image at a time');
     expect(commands.uploadModelImageBytes).not.toHaveBeenCalled();
+  });
+});
 
-    // Should show unsupported format error
-    expect(container.textContent).toContain('Unsupported format: image/tiff');
+describe('ImageDropZone - MIME type rejection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should reject PDF files based on MIME type', async () => {
+  it('.pdf drop shows rejection toast and does NOT open crop dialog', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
     const file = new File(['pdf-data'], 'document.pdf', { type: 'application/pdf' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
+    expect(toaster.error).toHaveBeenCalled();
     expect(commands.uploadModelImageBytes).not.toHaveBeenCalled();
-    expect(container.textContent).toContain('Unsupported format: application/pdf');
   });
 
-  it('should reject BMP files based on MIME type', async () => {
+  it('.tiff drop shows rejection toast', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
-    const file = new File(['bmp-data'], 'image.bmp', { type: 'image/bmp' });
+    const file = new File(['tiff-data'], 'image.tiff', { type: 'image/tiff' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
+    expect(toaster.error).toHaveBeenCalled();
     expect(commands.uploadModelImageBytes).not.toHaveBeenCalled();
-    expect(container.textContent).toContain('Unsupported format: image/bmp');
   });
 
-  it('should accept JPEG files', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
-
+  it('multi-file drop shows rejection toast', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
+    const file1 = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+    const file2 = new File(['b'], 'b.png', { type: 'image/png' });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file1);
+    dataTransfer.items.add(file2);
 
+    await fireEvent.drop(dropZone, { dataTransfer });
+
+    expect(toaster.error).toHaveBeenCalled();
+    expect(commands.uploadModelImageBytes).not.toHaveBeenCalled();
+  });
+
+  it('should accept JPEG files without showing a toast', async () => {
+    const { container } = render(ImageDropZone, {
+      props: { modelId: mockModelId }
+    });
+
+    const dropZone = container.querySelector('[role="button"]') as HTMLElement;
     const file = new File(['jpeg-data'], 'photo.jpg', { type: 'image/jpeg' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
-    expect(commands.uploadModelImageBytes).toHaveBeenCalled();
+    expect(toaster.error).not.toHaveBeenCalled();
   });
 
-  it('should accept PNG files', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
-
+  it('should accept PNG files without showing a toast', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
     const file = new File(['png-data'], 'photo.png', { type: 'image/png' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
-    expect(commands.uploadModelImageBytes).toHaveBeenCalled();
+    expect(toaster.error).not.toHaveBeenCalled();
   });
 
-  it('should accept WebP files', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
-
+  it('should accept WebP files without showing a toast', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
     const file = new File(['webp-data'], 'photo.webp', { type: 'image/webp' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
-    expect(commands.uploadModelImageBytes).toHaveBeenCalled();
+    expect(toaster.error).not.toHaveBeenCalled();
   });
 
   it('should proceed when MIME type is empty (backend will validate)', async () => {
-    vi.mocked(commands.uploadModelImageBytes).mockResolvedValue({ status: 'ok', data: null });
-
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
-
-    // File with no MIME type (e.g., from some file systems)
     const file = new File(['unknown-data'], 'photo.jpg', { type: '' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
 
     await fireEvent.drop(dropZone, { dataTransfer });
 
-    // Should proceed to backend validation
-    expect(commands.uploadModelImageBytes).toHaveBeenCalled();
+    // Empty MIME type passes through — no toast error
+    expect(toaster.error).not.toHaveBeenCalled();
   });
 });
 
 describe('ImageDropZone - Drag & Drop States', () => {
-  const mockModelId = 'trn:railway-model:maer:37858';
-
-  it('should show drag state when dragging over', async () => {
+  it('should show drag state when dragging over (using dragenter)', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
 
-    await fireEvent.dragOver(dropZone);
+    await fireEvent.dragEnter(dropZone);
 
-    // Should show "Drop image here" message
-    expect(container.textContent).toContain('Drop image here');
+    // Should show "Drop here to update photo" message
+    expect(container.textContent).toContain('Drop here to update photo');
   });
 
-  it('should reset state when drag leaves', async () => {
+  it('should reset to idle state when drag leaves after entering', async () => {
     const { container } = render(ImageDropZone, {
-      props: {
-        modelId: mockModelId
-      }
+      props: { modelId: mockModelId }
     });
 
     const dropZone = container.querySelector('[role="button"]') as HTMLElement;
 
-    await fireEvent.dragOver(dropZone);
-    expect(container.textContent).toContain('Drop image here');
+    await fireEvent.dragEnter(dropZone);
+    expect(container.textContent).toContain('Drop here to update photo');
 
-    // Simulate leaving the drop zone
-    await fireEvent.dragLeave(dropZone, { relatedTarget: null });
+    await fireEvent.dragLeave(dropZone);
 
-    // Should return to default state
+    // Counter back to 0 → idle state
     expect(container.textContent).toContain('Drag and drop your image here');
   });
 });

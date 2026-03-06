@@ -18,7 +18,7 @@
     CollectionItemView
   } from '$lib/bindings';
 
-  const itemId = $page.params.itemId as string;
+  const itemId = `trn:collection-item:${$page.params.itemId}`;
 
   let collectionItem = $state<CollectionItemView | null>(null);
   let model = $state<RailwayModelView | null>(null);

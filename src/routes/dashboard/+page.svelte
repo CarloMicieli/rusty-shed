@@ -108,7 +108,7 @@
   }
 
   const handleModelClick = (collectionItemId: string) =>
-    goto(resolve(`/collection/${collectionItemId}`));
+    goto(resolve(`/collection/${collectionItemId.split(':').pop()}`));
 </script>
 
 <svelte:head>

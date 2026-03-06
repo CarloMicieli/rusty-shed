@@ -24,7 +24,7 @@
 
   function navigate(result: GlobalSearchResultView) {
     if (result.source === 'collection') {
-      goto(`/collection/${result.itemId}`);
+      goto(`/collection/${result.itemId.split(':').pop()}`);
     } else {
       const wishlistId = result.parentId ?? '';
       goto(`/wishlists/${wishlistId}`);

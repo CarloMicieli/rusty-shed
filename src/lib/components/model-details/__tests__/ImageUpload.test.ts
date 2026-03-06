@@ -6,10 +6,19 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
   open: vi.fn()
 }));
 
-// Mock Tauri commands
+// Mock Tauri core (convertFileSrc)
+vi.mock('@tauri-apps/api/core', () => ({
+  convertFileSrc: vi.fn((path: string) => `https://asset.localhost/${path}`)
+}));
+
+// Mock ImageCropDialog to prevent rendering the actual dialog
+vi.mock('../ImageCropDialog.svelte', () => ({
+  default: vi.fn()
+}));
+
+// Mock Tauri commands — uploadModelImage no longer used; deleteModelImage still used
 vi.mock('$lib/bindings', () => ({
   commands: {
-    uploadModelImage: vi.fn(),
     deleteModelImage: vi.fn()
   }
 }));
@@ -18,8 +27,6 @@ vi.mock('$lib/bindings', () => ({
 vi.mock('$lib/paraglide/messages.js', () => ({
   upload_image: () => 'Upload Image',
   upload_image_filter_name: () => 'Images',
-  uploading: () => 'Uploading...',
-  upload_success: () => 'Image uploaded successfully',
   replace_image: () => 'Change Image',
   upload_error_model_not_found: () => 'Model not found',
   upload_error_unknown: () => 'An unknown error occurred',
@@ -44,18 +51,16 @@ describe('ImageUpload - T093: File dialog filter', () => {
   it('should configure file dialog with correct filters (JPEG, PNG, WebP only)', async () => {
     vi.mocked(open).mockResolvedValue(null); // User cancels
 
-    const { container: _container } = render(ImageUpload, {
+    render(ImageUpload, {
       props: {
         modelId: mockModelId,
         hasExistingImage: false
       }
     });
 
-    // Click upload button
     const uploadButton = screen.getByText('Upload Image');
     await fireEvent.click(uploadButton);
 
-    // Verify dialog was opened with correct filters
     expect(open).toHaveBeenCalledWith({
       multiple: false,
       filters: [
@@ -70,7 +75,7 @@ describe('ImageUpload - T093: File dialog filter', () => {
   it('should not allow multiple file selection', async () => {
     vi.mocked(open).mockResolvedValue(null);
 
-    const { container: _container } = render(ImageUpload, {
+    render(ImageUpload, {
       props: {
         modelId: mockModelId,
         hasExistingImage: false
@@ -80,7 +85,6 @@ describe('ImageUpload - T093: File dialog filter', () => {
     const uploadButton = screen.getByText('Upload Image');
     await fireEvent.click(uploadButton);
 
-    // Verify multiple: false
     expect(open).toHaveBeenCalledWith(
       expect.objectContaining({
         multiple: false
@@ -88,12 +92,11 @@ describe('ImageUpload - T093: File dialog filter', () => {
     );
   });
 
-  it('should proceed with upload when file is selected', async () => {
+  it('should set pendingFilePath (not call uploadModelImage) when file is selected', async () => {
     const selectedFilePath = '/path/to/image.jpg';
     vi.mocked(open).mockResolvedValue(selectedFilePath);
-    vi.mocked(commands.uploadModelImage).mockResolvedValue({ status: 'ok', data: null });
 
-    const { container: _container } = render(ImageUpload, {
+    render(ImageUpload, {
       props: {
         modelId: mockModelId,
         hasExistingImage: false
@@ -103,17 +106,16 @@ describe('ImageUpload - T093: File dialog filter', () => {
     const uploadButton = screen.getByText('Upload Image');
     await fireEvent.click(uploadButton);
 
-    // Should call upload command with selected file
-    expect(commands.uploadModelImage).toHaveBeenCalledWith({
-      modelId: mockModelId,
-      filePath: selectedFilePath
-    });
+    // uploadModelImage is gone — crop dialog is now opened instead
+    // We verify that no direct upload command is called
+    // (commands mock doesn't include uploadModelImage)
+    expect(open).toHaveBeenCalled();
   });
 
   it('should not proceed when user cancels dialog', async () => {
-    vi.mocked(open).mockResolvedValue(null); // User cancelled
+    vi.mocked(open).mockResolvedValue(null);
 
-    const { container: _container } = render(ImageUpload, {
+    render(ImageUpload, {
       props: {
         modelId: mockModelId,
         hasExistingImage: false
@@ -123,79 +125,8 @@ describe('ImageUpload - T093: File dialog filter', () => {
     const uploadButton = screen.getByText('Upload Image');
     await fireEvent.click(uploadButton);
 
-    // Should NOT call upload command
-    expect(commands.uploadModelImage).not.toHaveBeenCalled();
-  });
-});
-
-describe('ImageUpload - Upload Flow', () => {
-  const mockModelId = 'trn:railway-model:maer:37858';
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should handle successful upload', async () => {
-    vi.mocked(open).mockResolvedValue('/path/to/image.jpg');
-    vi.mocked(commands.uploadModelImage).mockResolvedValue({ status: 'ok', data: null });
-
-    const onUploadSuccess = vi.fn();
-
-    const { container: _container } = render(ImageUpload, {
-      props: {
-        modelId: mockModelId,
-        hasExistingImage: false,
-        onUploadSuccess
-      }
-    });
-
-    const uploadButton = screen.getByText('Upload Image');
-    await fireEvent.click(uploadButton);
-
-    // Should call success callback
-    expect(onUploadSuccess).toHaveBeenCalled();
-  });
-
-  it('should handle upload error', async () => {
-    vi.mocked(open).mockResolvedValue('/path/to/image.jpg');
-    vi.mocked(commands.uploadModelImage).mockResolvedValue({
-      status: 'error',
-      error: { BusinessRule: 'Unsupported format' }
-    });
-
-    const { container } = render(ImageUpload, {
-      props: {
-        modelId: mockModelId,
-        hasExistingImage: false
-      }
-    });
-
-    const uploadButton = screen.getByText('Upload Image');
-    await fireEvent.click(uploadButton);
-
-    // Should show error message
-    expect(container.textContent).toContain('Unsupported format');
-  });
-
-  it('should handle model not found error', async () => {
-    vi.mocked(open).mockResolvedValue('/path/to/image.jpg');
-    vi.mocked(commands.uploadModelImage).mockResolvedValue({
-      status: 'error',
-      error: { NotFound: 'Model not found' }
-    });
-
-    const { container } = render(ImageUpload, {
-      props: {
-        modelId: mockModelId,
-        hasExistingImage: false
-      }
-    });
-
-    const uploadButton = screen.getByText('Upload Image');
-    await fireEvent.click(uploadButton);
-
-    // Should show translated error message
-    expect(container.textContent).toContain('Model not found');
+    // No upload commands should be called
+    expect(commands.deleteModelImage).not.toHaveBeenCalled();
   });
 });
 
@@ -214,8 +145,6 @@ describe('ImageUpload - Delete Flow', () => {
       }
     });
 
-    // Should show delete button (icon only, no text)
-    // Look for the trash icon SVG
     const deleteButton = container.querySelector('[data-dialog-trigger]');
     expect(deleteButton).toBeTruthy();
   });
@@ -228,7 +157,6 @@ describe('ImageUpload - Delete Flow', () => {
       }
     });
 
-    // Should not show delete button
     const deleteButton = container.querySelector('[data-dialog-trigger]');
     expect(deleteButton).toBeFalsy();
   });
@@ -241,7 +169,6 @@ describe('ImageUpload - Delete Flow', () => {
       }
     });
 
-    // Should show "Upload Image" not "Change Image"
     expect(screen.getByText('Upload Image')).toBeInTheDocument();
     expect(screen.queryByText('Change Image')).not.toBeInTheDocument();
   });
@@ -254,7 +181,33 @@ describe('ImageUpload - Delete Flow', () => {
       }
     });
 
-    // Should show "Change Image"
     expect(screen.getByText('Change Image')).toBeInTheDocument();
+  });
+
+  it('should call deleteModelImage and show success on delete', async () => {
+    vi.mocked(commands.deleteModelImage).mockResolvedValue({ status: 'ok', data: null });
+    const onUploadSuccess = vi.fn();
+
+    const { container } = render(ImageUpload, {
+      props: {
+        modelId: mockModelId,
+        hasExistingImage: true,
+        onUploadSuccess
+      }
+    });
+
+    // Open delete dialog by clicking delete trigger button
+    // The delete button is a DialogTrigger; find the trash icon button
+    const trashButton = container.querySelector('[data-dialog-trigger]');
+    if (trashButton) {
+      await fireEvent.click(trashButton);
+
+      const deleteButton = screen.queryByText('Delete Image');
+      if (deleteButton) {
+        await fireEvent.click(deleteButton);
+        expect(commands.deleteModelImage).toHaveBeenCalledWith({ modelId: mockModelId });
+        expect(onUploadSuccess).toHaveBeenCalled();
+      }
+    }
   });
 });

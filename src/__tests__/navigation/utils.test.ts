@@ -30,7 +30,7 @@ describe('isActive()', () => {
         href: '/collection',
         additionalPrefixes: ['/collection']
       });
-      expect(isActive(item, '/collection/trn:collection-item:abc-123')).toBe(true);
+      expect(isActive(item, '/collection/abc-123')).toBe(true);
     });
 
     it('returns false for unrelated path even with additionalPrefixes', () => {
