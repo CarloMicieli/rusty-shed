@@ -52,7 +52,6 @@ use std::fs;
 use std::path::{Component, Path};
 use tauri::Manager;
 use tauri::path::BaseDirectory;
-use tauri_plugin_log::{Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 
 #[tauri::command]
@@ -261,11 +260,6 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .targets([Target::new(TargetKind::Webview)])
-                .build(),
-        )
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
             logging::init_logger(app)?;
