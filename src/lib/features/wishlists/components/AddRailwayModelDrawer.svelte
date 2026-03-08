@@ -369,7 +369,6 @@
           powerMethodOptions={POWER_METHODS}
           {form}
           onAddRollingStock={addRollingStock}
-          onRemoveRollingStock={removeRollingStock}
           getCategoryLabelKey={getCategoryLabelKey}
           getPowerMethodLabelKey={getPowerMethodLabelKey}
         >

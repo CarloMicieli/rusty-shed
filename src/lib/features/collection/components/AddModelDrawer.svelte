@@ -370,7 +370,6 @@
             {form}
             validationErrors={validationErrors as Record<string, string | undefined>}
             onAddRollingStock={handleAddRollingStock}
-            onRemoveRollingStock={(id) => handleRemoveRollingStock(id as string)}
           >
             {#each form.rollingStocks as entry, index (entry.uid)}
               <RollingStockEntry

@@ -9,8 +9,9 @@
   import { formLabels } from './constants';
   import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
   import FormField from '$lib/shared/ui/FormField.svelte';
-  import { Button, Input, Badge } from '$lib/components';
+  import { Input, Badge } from '$lib/components';
   import TranslationsSection from './components/TranslationsSection.svelte';
+  import CatalogueFormSidebar from './components/CatalogueFormSidebar.svelte';
   import manufacturersData from '$lib/data/manufacturers.json';
   import railwayCompaniesData from '$lib/data/railway-companies.json';
   import availabilityStatusesData from '$lib/data/constants/availabilityStatuses.json';
@@ -369,85 +370,15 @@
     </form>
 
     <!-- Command Center Sidebar -->
-    <aside class="sticky top-8 w-60 shrink-0">
-      <div class="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-        <!-- Header -->
-        <div class="mb-4 flex items-center gap-2">
-          <div class="h-px flex-1 bg-zinc-800"></div>
-          <span class="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase"
-            >Command Center</span
-          >
-          <div class="h-px flex-1 bg-zinc-800"></div>
-        </div>
-
-        <!-- Model summary -->
-        <div class="mb-4 space-y-3">
-          {#if $form.product_code}
-            <div>
-              <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">
-                {resolveLabel(formLabels.productCode)}
-              </div>
-              <div class="font-mono text-sm tracking-wider text-amber-400">
-                {$form.product_code}
-              </div>
-            </div>
-          {/if}
-          {#if $form.scale}
-            {@const scaleDisplay =
-              scalesData.find((s) => s.id === $form.scale)?.display ?? $form.scale}
-            <div>
-              <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">{resolveLabel(formLabels.scale)}</div>
-              <div class="font-mono text-sm text-zinc-200">{scaleDisplay}</div>
-            </div>
-          {/if}
-          <div>
-            <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">{resolveLabel(formLabels.powerMethod)}</div>
-            <span
-              class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-400"
-              >{$form.power_method}</span
-            >
-          </div>
-        </div>
-
-        <div class="mb-4 h-px bg-zinc-800"></div>
-
-        <!-- Rolling stock -->
-        <div class="mb-4 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] tracking-wider text-zinc-500 uppercase">{resolveLabel(formLabels.rollingStock)}</span>
-            <span class="rounded-full bg-zinc-700 px-2 py-0.5 text-xs font-semibold text-zinc-200"
-              >{$form.rolling_stocks.length}</span
-            >
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            class="w-full border-zinc-700 text-xs hover:border-amber-500/50 hover:text-amber-400"
-            onclick={addRollingStock}
-          >
-            + {resolveLabel(formLabels.addRollingStock)}
-          </Button>
-        </div>
-
-        <div class="mb-4 h-px bg-zinc-800"></div>
-
-        <!-- Actions -->
-        <div class="space-y-2">
-          <Button type="submit" form="railway-model-form" class="w-full" disabled={$submitting}>
-            {$submitting
-              ? `${resolveLabel(formLabels.create)}...`
-              : resolveLabel(formLabels.create)}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            class="w-full text-zinc-400 hover:text-zinc-200"
-            onclick={() => navigate('/')}
-          >
-            {resolveLabel(formLabels.cancel)}
-          </Button>
-        </div>
-      </div>
-    </aside>
+    <CatalogueFormSidebar
+      productCode={$form.product_code}
+      scale={$form.scale}
+      powerMethod={$form.power_method}
+      rollingStockCount={$form.rolling_stocks.length}
+      isSubmitting={$submitting}
+      onAddRollingStock={addRollingStock}
+      onSubmit={() => (document.getElementById('railway-model-form') as HTMLFormElement)?.requestSubmit()}
+      onCancel={() => navigate('/')}
+    />
   </div>
 </div>

@@ -32,7 +32,6 @@
 
     /** Callbacks for rolling stock operations */
     onAddRollingStock: () => void;
-    onRemoveRollingStock: (id: string | number) => void;
 
     /** Helpers for label rendering */
     getCategoryLabelKey?: (category: string) => string;
@@ -50,7 +49,6 @@
     form,
     validationErrors = {},
     onAddRollingStock,
-    onRemoveRollingStock,
     getCategoryLabelKey = (cat: string) => cat,
     getPowerMethodLabelKey = (method: string) => method,
     children

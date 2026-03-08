@@ -42,19 +42,13 @@
   // Tab state
   let activeTab = $state<'details' | 'rolling-stock'>('details');
 
-  // Details tab state
-  let localDetails = $state(model.details ?? '');
+  // Details tab state (derived from model)
+  let localDetails = $derived.by(() => model.details ?? '');
 
   // Rolling stock state
   let rollingStockFormState = $state<Map<string, RsFormState>>(new Map());
   let rollingStockSpecLoaded = $state<Set<string>>(new Set());
   let createDrawerOpen = $state(false);
-
-  $effect(() => {
-    if (model.details !== undefined && model.details !== null) {
-      localDetails = model.details;
-    }
-  });
 
   $effect(() => {
     if (editable && model.rolling_stock) {
