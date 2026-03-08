@@ -946,5 +946,16 @@
   "module_label_finance_ledger": "Finance Ledger",
   "module_label_global_search": "Global Search",
   "module_label_settings": "Settings",
-  "module_label_signal_box": "Signal Box"
+  "module_label_signal_box": "Signal Box",
+
+  "maintenance_no_events": "No events logged yet.",
+  "track_purchase_qty": "Qty",
+  "track_purchase_total": "Total",
+  "depot_units": "UNITS",
+  "track_inventories_not_found": "Inventory not found",
+  "upload_formats_hint": "JPEG, PNG, or WebP (max 50MB)",
+  "toolbar_bold": "Bold",
+  "toolbar_italic": "Italic",
+  "toolbar_bullet_list": "Bullet list",
+  "toolbar_ordered_list": "Ordered list"
 }

@@ -13,12 +13,12 @@ describe('ImportDropZone.svelte', () => {
 
   it('renders the drop zone heading', () => {
     render(ImportDropZone, { props: {} });
-    expect(screen.getByText('Drop your import package here')).toBeInTheDocument();
+    expect(screen.getByText('Drop your import file here')).toBeInTheDocument();
   });
 
   it('renders the instructional text', () => {
     render(ImportDropZone, { props: {} });
-    expect(screen.getByText('Or click to select a .zip or .tar.gz file')).toBeInTheDocument();
+    expect(screen.getByText('Supported formats: .zip, .tar.gz')).toBeInTheDocument();
   });
 
   it('renders "Select File" button', () => {

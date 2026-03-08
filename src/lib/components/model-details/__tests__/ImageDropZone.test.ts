@@ -35,7 +35,8 @@ vi.mock('$lib/toaster', () => ({
 vi.mock('$lib/paraglide/messages.js', () => ({
   drag_and_drop_hint: () => 'Drag and drop your image here',
   drop_here_to_update_photo: () => 'Drop here to update photo',
-  upload_error_multiple_files: () => 'Only one image at a time'
+  upload_error_multiple_files: () => 'Only one image at a time',
+  upload_formats_hint: () => 'JPEG, PNG, or WebP (max 50MB)'
 }));
 
 import ImageDropZone from '../ImageDropZone.svelte';

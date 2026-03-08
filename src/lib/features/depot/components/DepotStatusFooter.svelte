@@ -3,6 +3,10 @@
 
   // Example "Memory" calculation (can be hardcoded or dynamic)
   const memoryUsage = 45;
+
+  // NOTE: Terminal-style labels (Depot_Memory, Total_Units, Active_DCC, System_Online)
+  // are intentional design choices styled as a retro depot monitoring dashboard.
+  // These should NOT be localized as they are part of the visual/UX design.
 </script>
 
 <footer class="mt-12 flex items-center justify-between border-t border-white/10 pt-6">

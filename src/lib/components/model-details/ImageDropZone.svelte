@@ -6,7 +6,8 @@
   import {
     drag_and_drop_hint,
     drop_here_to_update_photo,
-    upload_error_multiple_files
+    upload_error_multiple_files,
+    upload_formats_hint
   } from '$lib/paraglide/messages.js';
   import { toaster } from '$lib/toaster';
   import type { RailwayModelId } from '$lib/bindings';
@@ -132,7 +133,7 @@
     {:else}
       <Upload class="mb-4 h-12 w-12 text-muted-foreground" />
       <p class="mb-2 text-sm font-semibold">{drag_and_drop_hint()}</p>
-      <p class="text-xs text-muted-foreground">JPEG, PNG, or WebP (max 50MB)</p>
+      <p class="text-xs text-muted-foreground">{upload_formats_hint()}</p>
     {/if}
   </div>
 

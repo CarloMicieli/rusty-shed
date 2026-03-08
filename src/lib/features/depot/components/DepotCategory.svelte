@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import * as Accordion from '$lib/components/ui/accordion';
   import { Badge } from '$lib/components';
   import DepotTable from './DepotTable.svelte';
@@ -46,7 +47,7 @@
             variant="outline"
             class="border-[#f59e0b]/30 bg-[#f59e0b]/10 px-3 py-1 font-mono text-[#f59e0b]"
           >
-            {items.length} UNITS
+            {items.length} {m.depot_units()}
           </Badge>
         </div>
       </div>

@@ -24,7 +24,8 @@
     deleting,
     confirm_delete_image_title,
     confirm_delete_image_description,
-    image_deleted
+    image_deleted,
+    common_cancel
   } from '$lib/paraglide/messages.js';
   import type { RailwayModelId } from '$lib/bindings';
   import ImageCropDialog from './ImageCropDialog.svelte';
@@ -168,7 +169,7 @@
                 isDeleteDialogOpen = false;
               }}
             >
-              Cancel
+              {common_cancel()}
             </Button>
             <Button variant="destructive" onclick={handleDelete} disabled={isDeleting}>
               {#if isDeleting}

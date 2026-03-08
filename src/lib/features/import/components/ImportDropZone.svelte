@@ -1,4 +1,6 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
+
   let draggingOver = $state(false);
 
   interface Props {
@@ -90,10 +92,10 @@
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
-    <h3>Drop your import package here</h3>
-    <p>Or click to select a .zip or .tar.gz file</p>
+    <h3>{m["import.dropzone.title"]()}</h3>
+    <p>{m["import.dropzone.subtitle"]()}</p>
     <button class="file-action" onclick={handleClick} type="button" {disabled}>
-      Select File
+      {m["import.dropzone.select"]()}
     </button>
   </div>
 </div>

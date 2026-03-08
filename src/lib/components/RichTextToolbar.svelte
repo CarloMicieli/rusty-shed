@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { Editor } from '@tiptap/core';
   import { Bold, Italic, List, ListOrdered } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
@@ -17,7 +18,7 @@
     size="icon"
     class="h-7 w-7"
     onclick={() => editor?.chain().focus().toggleBold().run()}
-    aria-label="Bold"
+    aria-label={m.toolbar_bold()}
   >
     <Bold class="h-4 w-4" />
   </Button>
@@ -27,7 +28,7 @@
     size="icon"
     class="h-7 w-7"
     onclick={() => editor?.chain().focus().toggleItalic().run()}
-    aria-label="Italic"
+    aria-label={m.toolbar_italic()}
   >
     <Italic class="h-4 w-4" />
   </Button>
@@ -39,7 +40,7 @@
     size="icon"
     class="h-7 w-7"
     onclick={() => editor?.chain().focus().toggleBulletList().run()}
-    aria-label="Bullet list"
+    aria-label={m.toolbar_bullet_list()}
   >
     <List class="h-4 w-4" />
   </Button>
@@ -49,7 +50,7 @@
     size="icon"
     class="h-7 w-7"
     onclick={() => editor?.chain().focus().toggleOrderedList().run()}
-    aria-label="Ordered list"
+    aria-label={m.toolbar_ordered_list()}
   >
     <ListOrdered class="h-4 w-4" />
   </Button>

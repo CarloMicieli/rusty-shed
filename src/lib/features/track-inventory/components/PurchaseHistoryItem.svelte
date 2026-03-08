@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { TrackPurchaseView } from '$lib/features/track-inventory';
   import { Store, ArrowRight } from 'lucide-svelte';
 
@@ -55,7 +56,7 @@
     <!-- Quantity -->
     <div class="flex flex-col items-end">
       <span class="mb-1 text-[9px] leading-none font-bold tracking-widest text-zinc-600 uppercase"
-        >Qty</span
+        >{m.track_purchase_qty()}</span
       >
       <span class="font-mono text-base font-bold text-zinc-400">
         {purchase.quantity.toString().padStart(2, '0')}
@@ -65,7 +66,7 @@
     <!-- Price -->
     <div class="flex min-w-[80px] flex-col items-end">
       <span class="mb-1 text-[9px] leading-none font-bold tracking-widest text-zinc-600 uppercase"
-        >Total</span
+        >{m.track_purchase_total()}</span
       >
       <span class="font-mono text-base font-bold tracking-tighter text-amber-500/80">
         {formattedPrice}

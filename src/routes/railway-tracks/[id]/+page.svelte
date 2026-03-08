@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
@@ -71,7 +72,7 @@
     />
   {:else}
     <div class="rounded-xl border border-dashed border-border p-8 text-center">
-      <p class="text-muted-foreground">Inventory not found</p>
+      <p class="text-muted-foreground">{m.track_inventories_not_found()}</p>
     </div>
   {/if}
 </div>

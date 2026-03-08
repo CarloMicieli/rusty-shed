@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import { Wrench } from 'lucide-svelte';
   import type { MaintenanceCardEventView } from '$lib/bindings';
 
@@ -15,7 +16,7 @@
 {#if events.length === 0}
   <div class="flex flex-col items-center justify-center gap-4 py-16 text-zinc-600">
     <Wrench size={48} strokeWidth={1} />
-    <p class="text-sm font-medium">No events logged yet.</p>
+    <p class="text-sm font-medium">{m.maintenance_no_events()}</p>
   </div>
 {:else}
   <div class="space-y-3">
