@@ -1,11 +1,12 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { X, Loader2, ShoppingCart } from 'lucide-svelte';
   import type { TrackProductView, SellerView, Currency, Manufacturer } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import CreateProductDialog from './CreateProductDialog.svelte';
   import PurchaseFormFields from './PurchaseFormFields.svelte';
-  import { Button } from '$lib/components';
+  import PurchaseDialogHeader from './PurchaseDialogHeader.svelte';
+  import PurchaseLoadingState from './PurchaseLoadingState.svelte';
+  import PurchaseActionFooter from './PurchaseActionFooter.svelte';
 
   interface Props {
     open?: boolean;
@@ -158,37 +159,11 @@
     <div
       class="flex flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-[#0c0c0c] shadow-2xl"
     >
-      <div class="flex items-center justify-between border-b border-white/5 p-6">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500"
-          >
-            <ShoppingCart size={20} />
-          </div>
-          <h2
-            id="add-purchase-title"
-            class="text-xl font-bold tracking-tight text-zinc-100 uppercase"
-          >
-            {m.track_purchase_dialog_title()}
-          </h2>
-        </div>
-        <button
-          onclick={handleClose}
-          class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
-          disabled={submitting}
-        >
-          <X size={20} />
-        </button>
-      </div>
+      <PurchaseDialogHeader onClose={handleClose} disabled={submitting} />
 
       <div class="p-6">
         {#if loadingData}
-          <div class="flex flex-col items-center justify-center gap-4 py-20">
-            <Loader2 size={32} class="animate-spin text-amber-500" />
-            <p class="text-sm font-bold tracking-widest text-zinc-500 uppercase">
-              Indexing Ledger...
-            </p>
-          </div>
+          <PurchaseLoadingState />
         {:else}
           <form onsubmit={handleSubmit} class="space-y-6">
             <PurchaseFormFields
@@ -205,30 +180,7 @@
               onCreateProduct={() => (showCreateProduct = true)}
             />
 
-            <div class="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                onclick={handleClose}
-                class="px-6 text-zinc-500 hover:bg-transparent hover:text-white"
-                disabled={submitting}
-              >
-                {m.track_purchase_cancel()}
-              </Button>
-              <Button
-                type="submit"
-                variant="rusty"
-                class="h-12 min-w-[160px] px-8"
-                disabled={submitting}
-              >
-                {#if submitting}
-                  <Loader2 size={18} class="mr-2 animate-spin" />
-                  <span>Recording...</span>
-                {:else}
-                  {m.track_purchase_submit()}
-                {/if}
-              </Button>
-            </div>
+            <PurchaseActionFooter onCancel={handleClose} onSubmit={handleSubmit} {submitting} />
           </form>
         {/if}
       </div>

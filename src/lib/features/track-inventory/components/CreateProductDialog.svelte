@@ -1,10 +1,9 @@
 <script lang="ts">
-  import * as m from '$lib/paraglide/messages';
-  import { X, Loader2, Settings2 } from 'lucide-svelte';
   import type { ManufacturerId, TrackType, TrackCode } from '$lib/bindings';
   import { getTrackInventoryContext } from '../services/TrackInventoryService.svelte';
   import ProductFormFields from './ProductFormFields.svelte';
-  import { Button } from '$lib/components';
+  import ProductDialogHeader from './ProductDialogHeader.svelte';
+  import ProductActionFooter from './ProductActionFooter.svelte';
 
   interface Props {
     open?: boolean;
@@ -125,28 +124,7 @@
     <div
       class="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c0c] shadow-2xl"
     >
-      <div class="flex items-center justify-between border-b border-white/5 bg-zinc-950/30 p-6">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900 text-zinc-400"
-          >
-            <Settings2 size={20} />
-          </div>
-          <h2
-            id="create-product-title"
-            class="text-xl font-bold tracking-tight text-zinc-100 uppercase"
-          >
-            {m.track_product_dialog_title()}
-          </h2>
-        </div>
-        <button
-          onclick={handleClose}
-          class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
-          disabled={submitting}
-        >
-          <X size={20} />
-        </button>
-      </div>
+      <ProductDialogHeader onClose={handleClose} disabled={submitting} />
 
       <div class="p-8">
         <form onsubmit={handleSubmit} class="space-y-8">
@@ -164,30 +142,7 @@
             {manufacturers}
           />
 
-          <div class="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              onclick={handleClose}
-              class="px-8 text-zinc-500 hover:bg-transparent hover:text-white"
-              variant="ghost"
-              disabled={submitting}
-            >
-              {m.track_product_cancel()}
-            </Button>
-            <Button
-              type="submit"
-              variant="rusty"
-              class="h-12 min-w-[180px] px-8"
-              disabled={submitting}
-            >
-              {#if submitting}
-                <Loader2 size={18} class="mr-2 animate-spin" />
-                <span>Publishing...</span>
-              {:else}
-                {m.track_product_submit()}
-              {/if}
-            </Button>
-          </div>
+          <ProductActionFooter onCancel={handleClose} onSubmit={handleSubmit} {submitting} />
         </form>
       </div>
     </div>
