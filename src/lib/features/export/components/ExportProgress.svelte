@@ -4,10 +4,19 @@
    * Displays progress bar and status during export
    */
 
-  export let progress = 0;
-  export let phase: 'collecting' | 'compressing' | 'finalizing' | null = null;
-  export let currentItem: string | null = null;
-  export let estimatedSecondsRemaining = 0;
+  interface Props {
+    progress?: number;
+    phase?: 'collecting' | 'compressing' | 'finalizing' | null;
+    currentItem?: string | null;
+    estimatedSecondsRemaining?: number;
+  }
+
+  const {
+    progress = 0,
+    phase = null,
+    currentItem = null,
+    estimatedSecondsRemaining = 0
+  }: Props = $props();
 </script>
 
 <div class="export-progress">

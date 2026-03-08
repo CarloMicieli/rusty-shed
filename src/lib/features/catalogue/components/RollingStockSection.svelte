@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as Accordion from '$lib/components/ui/accordion';
 
-  import FormField from '$lib/components/ui/FormField.svelte';
+  import FormField from '$lib/shared/ui/FormField.svelte';
   import { Button, Input } from '$lib/components';
   import * as Select from '$lib/components/ui/select';
   import type { ConstantItem } from '../constants';

@@ -7,7 +7,7 @@
   import type { CreateRailwayModelInput } from '$lib/schemas/railway-model';
   import { formLabels } from './constants';
   import { createDefaultRollingStock, normalizeRollingStock, type RollingStockForm } from './utils';
-  import FormField from '$lib/components/ui/FormField.svelte';
+  import FormField from '$lib/shared/ui/FormField.svelte';
   import { Button, Input, Badge } from '$lib/components';
   import TranslationsSection from './components/TranslationsSection.svelte';
   import manufacturersData from '$lib/data/manufacturers.json';

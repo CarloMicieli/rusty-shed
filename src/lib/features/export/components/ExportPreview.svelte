@@ -3,16 +3,21 @@
    * ExportPreview component
    * Displays a summary of what will be exported
    */
+  import * as m from '$lib/paraglide/messages.js';
   import type { ExportPreview } from '../types';
 
-  export let preview: ExportPreview | null = null;
-  export let isLoading = false;
+  interface Props {
+    preview?: ExportPreview | null;
+    isLoading?: boolean;
+  }
+
+  const { preview = null, isLoading = false }: Props = $props();
 </script>
 
 <div class="export-preview">
   {#if preview}
     <div class="preview-content">
-      <h3>Export Preview</h3>
+      <h3>{m.export_preview_title()}</h3>
       <div class="preview-items">
         <div class="item">
           <span>Railway Models</span>
@@ -36,6 +41,6 @@
       {/if}
     </div>
   {:else if !isLoading}
-    <p>Loading preview...</p>
+    <p>{m.app_loading()}</p>
   {/if}
 </div>

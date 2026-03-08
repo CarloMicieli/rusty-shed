@@ -3,15 +3,20 @@
    * ExportReport component
    * Displays export completion report with summary and warnings
    */
+  import * as m from '$lib/paraglide/messages.js';
   import type { ExportResult } from '../types';
 
-  export let result: ExportResult | null = null;
+  interface Props {
+    result?: ExportResult | null;
+  }
+
+  const { result = null }: Props = $props();
 </script>
 
 <div class="export-report">
   {#if result}
     <div class="report-content">
-      <h3>Export Completed</h3>
+      <h3>{m.export_success_notification()}</h3>
       <div class="report-summary">
         <p>Archive: {result.archive_path}</p>
         <p>Size: {(result.file_size_bytes / 1024 / 1024).toFixed(2)} MB</p>

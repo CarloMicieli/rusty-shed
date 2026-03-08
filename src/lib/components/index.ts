@@ -22,7 +22,7 @@ export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 export { Alert, AlertTitle, AlertDescription } from './ui/alert';
 
 // UI components (for form fields)
-export { default as FormField } from './ui/FormField.svelte';
+export { default as FormField } from '$lib/shared/ui/FormField.svelte';
 
 // Application-specific components
 export { default as BottomNavigation } from './BottomNavigation.svelte';

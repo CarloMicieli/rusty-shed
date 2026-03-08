@@ -21,6 +21,12 @@
   const hasShortage = $derived(
     Number(item.required) > 0 && Number(item.quantity) < Number(item.required)
   );
+
+  const rowClass = $derived(
+    hasShortage
+      ? 'bg-red-950/10 border-red-500/20'
+      : 'bg-zinc-900 border-white/5'
+  );
   const shortageCount = $derived(Number(item.required) - Number(item.quantity));
 
   async function saveRequired() {
@@ -66,14 +72,7 @@
 </script>
 
 <div
-  class="group relative flex flex-col gap-4 overflow-hidden rounded-xl border p-5 transition-all duration-300"
-  class:bg-zinc-900={!hasShortage}
-  class:border-white={!hasShortage}
-  class:border-opacity-5={!hasShortage}
-  class:bg-red-950={hasShortage}
-  class:bg-opacity-10={hasShortage}
-  class:border-red-500={hasShortage}
-  class:border-opacity-20={hasShortage}
+  class="group relative flex flex-col gap-4 overflow-hidden rounded-xl border p-5 transition-all duration-300 {rowClass}"
 >
   <div class="flex items-start justify-between">
     <div class="flex flex-col gap-1">
