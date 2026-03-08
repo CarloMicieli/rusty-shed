@@ -121,7 +121,6 @@
           {maintenanceType}
           {notes}
           {error}
-          {isFormValid}
           {maintenanceTypes}
           onCardChange={(cardId) => (selectedCardId = cardId)}
           onDateChange={(date) => (datePerformed = date)}
