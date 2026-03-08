@@ -207,12 +207,11 @@
             <div class="space-y-2">
               <h2 class="text-3xl font-bold tracking-tight text-white">Rusty Shed Wishlists</h2>
               <p class="mx-auto max-w-xs text-zinc-500">
-                Select a wishlist from the left or create a new one to start building your dream
-                collection.
+                {m.wishlists_empty_state()}
               </p>
             </div>
             <Button variant="outline" class="border-zinc-800 text-zinc-400" onclick={handleCreate}>
-              Create your first list
+              {m.wishlists_create_button()}
             </Button>
           </div>
         {/if}

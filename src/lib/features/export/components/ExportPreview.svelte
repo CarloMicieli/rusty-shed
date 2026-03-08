@@ -20,7 +20,7 @@
       <h3>{m.export_preview_title()}</h3>
       <div class="preview-items">
         <div class="item">
-          <span>Railway Models</span>
+          <span>{m.export_record_count()}</span>
           <span>{preview.railway_model_count}</span>
         </div>
         <div class="item">
@@ -28,7 +28,7 @@
           <span>{preview.collection_item_count}</span>
         </div>
         <div class="item">
-          <span>Images</span>
+          <span>{m.export_image_count()}</span>
           <span>{preview.image_count}</span>
         </div>
       </div>

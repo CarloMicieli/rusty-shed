@@ -3,12 +3,7 @@
   import { Upload } from 'lucide-svelte';
   import { listen } from '@tauri-apps/api/event';
   import { readFile } from '@tauri-apps/plugin-fs';
-  import {
-    drag_and_drop_hint,
-    drop_here_to_update_photo,
-    upload_error_multiple_files,
-    upload_formats_hint
-  } from '$lib/paraglide/messages.js';
+  import * as m from '$lib/paraglide/messages.js';
   import { toaster } from '$lib/toaster';
   import type { RailwayModelId } from '$lib/bindings';
   import ImageCropDialog from './ImageCropDialog.svelte';
@@ -45,7 +40,7 @@
 
       if (paths.length === 0) return;
       if (paths.length > 1) {
-        toaster.error(upload_error_multiple_files());
+        toaster.error(m.upload_error_multiple_files());
         return;
       }
 
@@ -54,7 +49,7 @@
       const mime = extMimeMap[ext];
 
       if (!mime || !validMimeTypes.includes(mime)) {
-        toaster.error(`Unsupported format: .${ext}. Supported formats: JPEG, PNG, WebP`);
+        toaster.error(m.upload_error_unsupported_format({ format: ext }));
         return;
       }
 
@@ -95,14 +90,14 @@
     }
 
     if (files.length > 1) {
-      toaster.error(upload_error_multiple_files());
+      toaster.error(m.upload_error_multiple_files());
       return;
     }
 
     const file = files[0];
 
     if (file.type && !validMimeTypes.includes(file.type)) {
-      toaster.error(`Unsupported format: ${file.type}. Supported formats: JPEG, PNG, WebP`);
+      toaster.error(m.upload_error_unsupported_format({ format: file.type }));
       return;
     }
 
@@ -129,11 +124,11 @@
   >
     {#if isDragging}
       <Upload class="mb-4 h-12 w-12 text-primary" />
-      <p class="text-lg font-semibold text-primary">{drop_here_to_update_photo()}</p>
+      <p class="text-lg font-semibold text-primary">Drop here to update photo</p>
     {:else}
       <Upload class="mb-4 h-12 w-12 text-muted-foreground" />
-      <p class="mb-2 text-sm font-semibold">{drag_and_drop_hint()}</p>
-      <p class="text-xs text-muted-foreground">{upload_formats_hint()}</p>
+      <p class="mb-2 text-sm font-semibold">{m.drag_and_drop_hint()}</p>
+      <p class="text-xs text-muted-foreground">{m.upload_formats_hint()}</p>
     {/if}
   </div>
 

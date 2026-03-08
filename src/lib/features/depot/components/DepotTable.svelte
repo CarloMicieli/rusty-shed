@@ -80,10 +80,10 @@
   const headers = [
     { label: 'STATUS', key: 'status', class: 'w-16' },
     { label: 'VISUAL', key: 'imagePath', class: 'w-24' },
-    { label: 'ROAD NUMBER / MOD. INFO', key: 'roadNumber', class: 'min-w-[200px]' },
-    { label: 'DCC ADDR', key: 'dccAddress', class: 'w-32' },
-    { label: 'SYSTEM', key: 'control', class: 'w-32 hidden md:table-cell' },
-    { label: 'RAILWAY', key: 'railway', class: 'w-40 hidden lg:table-cell' },
+    { label: m.depot_road_number(), key: 'roadNumber', class: 'min-w-[200px]' },
+    { label: m.depot_dcc_address(), key: 'dccAddress', class: 'w-32' },
+    { label: m.depot_type(), key: 'control', class: 'w-32 hidden md:table-cell' },
+    { label: m.depot_company(), key: 'railway', class: 'w-40 hidden lg:table-cell' },
     { label: 'ACTIONS', key: null, class: 'w-32 text-right' }
   ];
 </script>

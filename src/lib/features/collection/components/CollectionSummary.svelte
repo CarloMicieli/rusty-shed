@@ -1,13 +1,16 @@
 <script lang="ts">
   import { Box, Bus, Package, TrainFront, Zap } from 'lucide-svelte';
+  import * as m from '$lib/paraglide/messages.js';
   import type { CollectionSummary } from '$lib/bindings';
 
   type IconComponent = typeof TrainFront;
 
-  const { summary, totalValue } = $props<{
+  interface Props {
     summary: CollectionSummary;
     totalValue: string;
-  }>();
+  }
+
+  const { summary, totalValue }: Props = $props();
 
   const totalUnits = $derived(
     summary.locomotivesCount +
@@ -40,7 +43,7 @@
   >
     <div class="space-y-1">
       <p class="text-surface-400 text-xs font-semibold tracking-[0.18em] uppercase">
-        Collection value
+        {m.stats_total_collection_value()}
       </p>
       <p class="h3 text-primary-100 font-bold">{totalValue}</p>
     </div>
@@ -60,11 +63,41 @@
   </div>
 
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-    {@render StatCard('Locomotives', summary.locomotivesCount, TrainFront, 'border-primary-500')}
-    {@render StatCard('Passenger cars', summary.passengerCarsCount, TrainFront, 'border-info-500')}
-    {@render StatCard('Freight cars', summary.freightCarsCount, Box, 'border-warning-500')}
-    {@render StatCard('Train sets', summary.trainSetsCount, Package, 'border-secondary-500')}
-    {@render StatCard('Railcars', summary.railcarsCount, Bus, 'border-success-500')}
-    {@render StatCard('EMU', summary.electricMultipleUnitsCount, Zap, 'border-accent-500')}
+    {@render StatCard(
+      m.constants_categories_locomotives(),
+      summary.locomotivesCount,
+      TrainFront,
+      'border-primary-500'
+    )}
+    {@render StatCard(
+      m.constants_categories_passenger_cars(),
+      summary.passengerCarsCount,
+      TrainFront,
+      'border-info-500'
+    )}
+    {@render StatCard(
+      m.constants_categories_freight_cars(),
+      summary.freightCarsCount,
+      Box,
+      'border-warning-500'
+    )}
+    {@render StatCard(
+      m.constants_categories_train_sets(),
+      summary.trainSetsCount,
+      Package,
+      'border-secondary-500'
+    )}
+    {@render StatCard(
+      m.constants_categories_railcars(),
+      summary.railcarsCount,
+      Bus,
+      'border-success-500'
+    )}
+    {@render StatCard(
+      m.constants_categories_electric_multiple_units(),
+      summary.electricMultipleUnitsCount,
+      Zap,
+      'border-accent-500'
+    )}
   </div>
 </section>
