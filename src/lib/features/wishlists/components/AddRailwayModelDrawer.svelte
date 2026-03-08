@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X, Plus } from 'lucide-svelte';
+  import { X } from 'lucide-svelte';
   import { Textarea, Button } from '$lib/components';
   import { getWishlistContext } from '../WishlistState.svelte';
   import type { AddRailwayModelFormState, RollingStockFormEntry } from '../types';
@@ -12,8 +12,8 @@
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import RollingStockEntry from './RollingStockEntry.svelte';
+  import RailwayModelBaseForm from '$lib/shared/components/RailwayModelBaseForm.svelte';
   import { CATEGORIES, SCALES, POWER_METHODS, PRIORITIES } from '../constants';
-  import epochs from '$lib/data/constants/epochs.json';
 
   interface Props {
     /** Controls drawer visibility */
@@ -198,7 +198,7 @@
     form.rollingStocks = [...form.rollingStocks, newEntry];
   }
 
-  function removeRollingStock(id: string) {
+  function removeRollingStock(id: string | number) {
     form.rollingStocks = form.rollingStocks.filter((rs) => rs.id !== id);
   }
 
@@ -361,183 +361,31 @@
           </select>
         </div>
 
-        <!-- Railway Model Section -->
-        <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">
-          <h3 class="text-lg font-semibold text-foreground">Railway Model Details</h3>
-
-          <!-- Manufacturer -->
-          <div>
-            <label for="manufacturer" class="block space-y-1">
-              <span class="text-sm font-medium text-muted-foreground">
-                {m.wishlist_field_manufacturer()}
-                <span class="text-error-500">*</span>
-              </span>
-            </label>
-            <select
-              id="manufacturer"
-              bind:value={form.manufacturerId}
-              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              required
-            >
-              <option value="">-- {m.wishlist_field_manufacturer()} --</option>
-              {#each manufacturers as mfr (mfr.id)}
-                <option value={mfr.id}>{mfr.name}</option>
-              {/each}
-            </select>
-          </div>
-
-          <!-- Product Code -->
-          <div>
-            <label for="product-code" class="block space-y-1">
-              <span class="text-sm font-medium text-muted-foreground">
-                {m.wishlist_field_product_code()}
-                <span class="text-error-500">*</span>
-              </span>
-            </label>
-            <input
-              id="product-code"
-              type="text"
-              bind:value={form.productCode}
-              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="e.g., 37171"
-              required
-            />
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label for="description" class="block space-y-1">
-              <span class="text-sm font-medium text-muted-foreground">
-                {m.wishlist_field_description()}
-                <span class="text-error-500">*</span>
-              </span>
-            </label>
-            <input
-              id="description"
-              type="text"
-              bind:value={form.description}
-              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="e.g., DB BR 218 diesel locomotive"
-              required
-            />
-          </div>
-
-          <!-- Category & Scale -->
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label for="category" class="block space-y-1">
-                <span class="text-sm font-medium text-muted-foreground">
-                  {m.wishlist_field_category()}
-                  <span class="text-error-500">*</span>
-                </span>
-              </label>
-              <select
-                id="category"
-                bind:value={form.category}
-                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                required
-              >
-                <option value="">-- {m.wishlist_field_category()} --</option>
-                {#each CATEGORIES as cat (cat)}
-                  <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-                  <option value={cat}>{(m as any)[getCategoryLabelKey(cat)]()}</option>
-                {/each}
-              </select>
-            </div>
-
-            <div>
-              <label for="scale" class="block space-y-1">
-                <span class="text-sm font-medium text-muted-foreground">
-                  {m.wishlist_field_scale()}
-                  <span class="text-error-500">*</span>
-                </span>
-              </label>
-              <select
-                id="scale"
-                bind:value={form.scale}
-                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                required
-              >
-                <option value="">-- {m.wishlist_field_scale()} --</option>
-                {#each SCALES as scale (scale)}
-                  <option value={scale}>{scale}</option>
-                {/each}
-              </select>
-            </div>
-          </div>
-
-          <!-- Power Method & Epoch -->
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label for="power-method" class="block space-y-1">
-                <span class="text-sm font-medium text-muted-foreground">
-                  {m.wishlist_field_power_method()}
-                  <span class="text-error-500">*</span>
-                </span>
-              </label>
-              <select
-                id="power-method"
-                bind:value={form.powerMethod}
-                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                required
-              >
-                <option value="">-- {m.wishlist_field_power_method()} --</option>
-                {#each POWER_METHODS as method (method)}
-                  <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-                  <option value={method}>{(m as any)[getPowerMethodLabelKey(method)]()}</option>
-                {/each}
-              </select>
-            </div>
-
-            <div>
-              <label for="epoch" class="block space-y-1">
-                <span class="text-sm font-medium text-muted-foreground">
-                  {m.wishlist_field_epoch()}
-                  <span class="text-error-500">*</span>
-                </span>
-              </label>
-              <select
-                id="epoch"
-                bind:value={form.epoch}
-                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                required
-              >
-                <option value={null}>-- {m.wishlist_field_epoch()} --</option>
-                {#each epochs as epoch (epoch.id)}
-                  <option value={epoch.id}>{epoch.display}</option>
-                {/each}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Rolling Stocks Section -->
-        <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-foreground">
-              {m.wishlist_rolling_stocks_title()}
-            </h3>
-            <Button type="button" variant="secondary" size="sm" onclick={addRollingStock}>
-              <Plus size={16} />
-              <span>{m.wishlist_rolling_stock_add()}</span>
-            </Button>
-          </div>
-
+        <!-- Base Railway Model Form (shared component) -->
+        <RailwayModelBaseForm
+          {manufacturers}
+          categoryOptions={CATEGORIES}
+          scaleOptions={SCALES}
+          powerMethodOptions={POWER_METHODS}
+          {form}
+          onAddRollingStock={addRollingStock}
+          onRemoveRollingStock={removeRollingStock}
+          getCategoryLabelKey={getCategoryLabelKey}
+          getPowerMethodLabelKey={getPowerMethodLabelKey}
+        >
           {#if form.rollingStocks.length === 0}
             <p class="text-sm text-muted-foreground">No rolling stocks added yet.</p>
           {:else}
-            <div class="space-y-4">
-              {#each form.rollingStocks as entry, i (entry.id)}
-                <RollingStockEntry
-                  bind:entry={form.rollingStocks[i]}
-                  {railwayCompanies}
-                  canRemove={form.rollingStocks.length > 0}
-                  onRemove={() => removeRollingStock(entry.id)}
-                />
-              {/each}
-            </div>
+            {#each form.rollingStocks as entry, i (entry.id)}
+              <RollingStockEntry
+                bind:entry={form.rollingStocks[i]}
+                {railwayCompanies}
+                canRemove={form.rollingStocks.length > 0}
+                onRemove={() => removeRollingStock(entry.id)}
+              />
+            {/each}
           {/if}
-        </div>
+        </RailwayModelBaseForm>
 
         <!-- Wishlist Item Details -->
         <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">

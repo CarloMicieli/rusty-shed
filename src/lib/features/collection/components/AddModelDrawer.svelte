@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X, Plus } from 'lucide-svelte';
-  import { Input, Button } from '$lib/components';
+  import { X } from 'lucide-svelte';
+  import { Button } from '$lib/components';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -17,8 +17,8 @@
   import { commands } from '$lib/bindings';
   import RollingStockEntry from './RollingStockEntry.svelte';
   import PurchaseSection from './PurchaseSection.svelte';
+  import RailwayModelBaseForm from '$lib/shared/components/RailwayModelBaseForm.svelte';
   import scales from '$lib/data/constants/scales.json';
-  import epochs from '$lib/data/constants/epochs.json';
   import categories from '$lib/data/constants/categories.json';
   import powerMethods from '$lib/data/constants/powerMethods.json';
 
@@ -361,215 +361,27 @@
         </div>
       {:else}
         <form id="add-model-form" class="space-y-6">
-          <!-- Railway Model Section -->
-          <section>
-            <h3 class="mb-4 text-lg font-semibold text-foreground">
-              {m.add_model_section_model()}
-            </h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <!-- Manufacturer -->
-                <div>
-                  <label for="manufacturer" class="block space-y-1">
-                    <span class="text-sm text-muted-foreground">{m.add_model_manufacturer()}</span>
-                  </label>
-                  <select
-                    id="manufacturer"
-                    bind:value={form.manufacturerId}
-                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    class:input-error={validationErrors.manufacturerId}
-                    aria-describedby={validationErrors.manufacturerId
-                      ? 'manufacturer-error'
-                      : undefined}
-                  >
-                    <option value={null}>-- {m.add_model_manufacturer()} --</option>
-                    {#each manufacturers as manufacturer (manufacturer.id)}
-                      <option value={manufacturer.id}>{manufacturer.name}</option>
-                    {/each}
-                  </select>
-                  {#if validationErrors.manufacturerId}
-                    <p id="manufacturer-error" class="text-error-500 mt-1 text-sm">
-                      {validationErrors.manufacturerId}
-                    </p>
-                  {/if}
-                </div>
-
-                <!-- Product Code -->
-                <div>
-                  <label for="product-code" class="block space-y-1">
-                    <span class="text-sm text-muted-foreground">{m.add_model_product_code()}</span>
-                  </label>
-                  <Input
-                    id="product-code"
-                    type="text"
-                    bind:value={form.productCode}
-                    placeholder="e.g., 37858"
-                    class="w-full font-mono"
-                    aria-describedby={validationErrors.productCode
-                      ? 'product-code-error'
-                      : undefined}
-                  />
-                  {#if validationErrors.productCode}
-                    <p id="product-code-error" class="text-error-500 mt-1 text-sm">
-                      {validationErrors.productCode}
-                    </p>
-                  {/if}
-                </div>
-              </div>
-
-              <!-- Description -->
-              <div>
-                <label for="description" class="block space-y-1">
-                  <span class="text-sm text-muted-foreground">{m.add_model_description()}</span>
-                </label>
-                <Input
-                  id="description"
-                  type="text"
-                  bind:value={form.description}
-                  placeholder="e.g., Class 218 Diesel Locomotive"
-                  class="w-full"
-                  aria-describedby={validationErrors.description ? 'description-error' : undefined}
-                />
-                {#if validationErrors.description}
-                  <p id="description-error" class="text-error-500 mt-1 text-sm">
-                    {validationErrors.description}
-                  </p>
-                {/if}
-              </div>
-
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <!-- Category -->
-                <div>
-                  <label for="category" class="block space-y-1">
-                    <span class="text-sm text-muted-foreground">{m.add_model_category()}</span>
-                  </label>
-                  <select
-                    id="category"
-                    bind:value={form.category}
-                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    class:input-error={validationErrors.category}
-                    aria-describedby={validationErrors.category ? 'category-error' : undefined}
-                  >
-                    <option value={null}>-- {m.add_model_category()} --</option>
-                    {#each categories as cat (cat.id)}
-                      <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-                      <option value={cat.id}>{(m as any)[cat.labelKey]()}</option>
-                    {/each}
-                  </select>
-                  {#if validationErrors.category}
-                    <p id="category-error" class="text-error-500 mt-1 text-sm">
-                      {validationErrors.category}
-                    </p>
-                  {/if}
-                </div>
-
-                <!-- Scale -->
-                <div>
-                  <label for="scale" class="block space-y-1">
-                    <span class="text-sm text-muted-foreground">{m.add_model_scale()}</span>
-                  </label>
-                  <select
-                    id="scale"
-                    bind:value={form.scale}
-                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    class:input-error={validationErrors.scale}
-                    aria-describedby={validationErrors.scale ? 'scale-error' : undefined}
-                  >
-                    <option value={null}>-- {m.add_model_scale()} --</option>
-                    {#each scales as scale (scale.id)}
-                      <option value={scale.id}>{scale.display}</option>
-                    {/each}
-                  </select>
-                  {#if validationErrors.scale}
-                    <p id="scale-error" class="text-error-500 mt-1 text-sm">
-                      {validationErrors.scale}
-                    </p>
-                  {/if}
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <!-- Power Method -->
-                <div>
-                  <label for="power-method" class="block space-y-1">
-                    <span class="text-sm text-muted-foreground">{m.add_model_power_method()}</span>
-                  </label>
-                  <select
-                    id="power-method"
-                    bind:value={form.powerMethod}
-                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    class:input-error={validationErrors.powerMethod}
-                    aria-describedby={validationErrors.powerMethod
-                      ? 'power-method-error'
-                      : undefined}
-                  >
-                    <option value={null}>-- {m.add_model_power_method()} --</option>
-                    {#each powerMethods as method (method.id)}
-                      <option value={method.id}>{method.display}</option>
-                    {/each}
-                  </select>
-                  {#if validationErrors.powerMethod}
-                    <p id="power-method-error" class="text-error-500 mt-1 text-sm">
-                      {validationErrors.powerMethod}
-                    </p>
-                  {/if}
-                </div>
-
-                <!-- Epoch -->
-                <div>
-                  <label for="epoch" class="block space-y-1">
-                    <span class="text-sm text-muted-foreground">{m.add_model_epoch()}</span>
-                  </label>
-                  <select
-                    id="epoch"
-                    bind:value={form.epoch}
-                    class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    class:input-error={validationErrors.epoch}
-                    aria-describedby={validationErrors.epoch ? 'epoch-error' : undefined}
-                  >
-                    <option value={null}>-- {m.add_model_epoch()} --</option>
-                    {#each epochs as epoch (epoch.id)}
-                      <option value={epoch.id}>{epoch.display}</option>
-                    {/each}
-                  </select>
-                  {#if validationErrors.epoch}
-                    <p id="epoch-error" class="text-error-500 mt-1 text-sm">
-                      {validationErrors.epoch}
-                    </p>
-                  {/if}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Rolling Stocks Section -->
-          <section>
-            <div class="mb-4 flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-foreground">
-                {m.add_model_section_rolling_stock()}
-              </h3>
-              <Button type="button" variant="default" size="sm" onclick={handleAddRollingStock}>
-                <Plus size={16} />
-                <span>{m.add_model_add_rolling_stock()}</span>
-              </Button>
-            </div>
-
-            {#if validationErrors.rollingStocks}
-              <p class="text-error-500 mb-3 text-sm">{validationErrors.rollingStocks}</p>
-            {/if}
-
-            <div class="space-y-4">
-              {#each form.rollingStocks as entry, index (entry.uid)}
-                <RollingStockEntry
-                  bind:entry={form.rollingStocks[index]}
-                  {railwayCompanies}
-                  canRemove={form.rollingStocks.length > 1}
-                  onRemove={() => handleRemoveRollingStock(entry.uid)}
-                  errors={validationErrors.rollingStockErrors?.[index]}
-                />
-              {/each}
-            </div>
-          </section>
+          <!-- Base Railway Model Form (shared component) -->
+          <RailwayModelBaseForm
+            {manufacturers}
+            categoryOptions={categories}
+            scaleOptions={scales}
+            powerMethodOptions={powerMethods}
+            {form}
+            validationErrors={validationErrors as Record<string, string | undefined>}
+            onAddRollingStock={handleAddRollingStock}
+            onRemoveRollingStock={(id) => handleRemoveRollingStock(id as string)}
+          >
+            {#each form.rollingStocks as entry, index (entry.uid)}
+              <RollingStockEntry
+                bind:entry={form.rollingStocks[index]}
+                {railwayCompanies}
+                canRemove={form.rollingStocks.length > 1}
+                onRemove={() => handleRemoveRollingStock(entry.uid)}
+                errors={validationErrors.rollingStockErrors?.[index]}
+              />
+            {/each}
+          </RailwayModelBaseForm>
 
           <!-- Purchase Section -->
           <PurchaseSection
@@ -619,9 +431,3 @@
     </div>
   </div>
 {/if}
-
-<style>
-  .input-error {
-    border-color: rgb(var(--color-error-500));
-  }
-</style>
