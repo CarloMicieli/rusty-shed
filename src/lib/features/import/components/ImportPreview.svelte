@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { ImportPreviewResponse, RecordCounts } from '$lib/bindings';
   import { Button } from '$lib/components';
 
@@ -87,7 +88,7 @@
         onclick={() => (duplicatesExpanded = !duplicatesExpanded)}
       >
         <span class="toggle-icon">{duplicatesExpanded ? '▼' : '▶'}</span>
-        View Duplicate Records
+        View Duplicates
       </button>
 
       {#if duplicatesExpanded}
@@ -144,7 +145,7 @@
   {#if hasErrors}
     <div class="preview-errors">
       <h3 class="error-title">❌ Validation Errors</h3>
-      <p class="error-subtitle">Import cannot proceed until these issues are fixed:</p>
+      <p class="error-subtitle">Import cannot proceed until these issues are fixed</p>
       <ul class="error-list">
         {#each preview.errors as error (error.code + error.message + error.path)}
           <li class="error-item">
@@ -177,9 +178,9 @@
 
   <!-- Actions -->
   <div class="preview-actions">
-    <Button variant="outline" onclick={onCancel} disabled={loading} type="button">Cancel</Button>
+    <Button variant="outline" onclick={onCancel} disabled={loading} type="button">{m.common_cancel()}</Button>
     <Button onclick={onConfirm} disabled={!preview.canImport || loading} type="button">
-      {loading ? 'Importing...' : 'Confirm Import'}
+      {loading ? m.app_loading() : 'Confirm Import'}
     </Button>
   </div>
 </div>

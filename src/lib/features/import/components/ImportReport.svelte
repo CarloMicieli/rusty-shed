@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { ImportResultResponse, RecordCounts } from '$lib/bindings';
   import { Button } from '$lib/components';
 
@@ -81,7 +82,7 @@
 
     <div class="summary-card info">
       <div class="card-header">
-        <h3>Images Imported</h3>
+        <h3>Images</h3>
       </div>
       <div class="card-body">
         <div class="count-large">{result.imagesImported}</div>
@@ -121,7 +122,7 @@
 
   <!-- Actions -->
   <div class="report-actions">
-    <Button onclick={onClose} type="button">Close</Button>
+    <Button onclick={onClose} type="button">{m.common_cancel()}</Button>
   </div>
 </div>
 
