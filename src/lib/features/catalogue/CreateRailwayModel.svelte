@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import { untrack } from 'svelte';
   import * as Accordion from '$lib/components/ui/accordion';
   import { superForm } from 'sveltekit-superforms';
@@ -71,7 +72,7 @@
         }
 
         if (form.data.rolling_stocks.length === 0) {
-          generalError = 'At least one rolling stock is required';
+          generalError = m.add_model_validation_rs_required();
           return;
         }
 
@@ -384,7 +385,7 @@
           {#if $form.product_code}
             <div>
               <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">
-                Product Code
+                {resolveLabel(formLabels.productCode)}
               </div>
               <div class="font-mono text-sm tracking-wider text-amber-400">
                 {$form.product_code}
@@ -395,12 +396,12 @@
             {@const scaleDisplay =
               scalesData.find((s) => s.id === $form.scale)?.display ?? $form.scale}
             <div>
-              <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">Scale</div>
+              <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">{resolveLabel(formLabels.scale)}</div>
               <div class="font-mono text-sm text-zinc-200">{scaleDisplay}</div>
             </div>
           {/if}
           <div>
-            <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">Power</div>
+            <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">{resolveLabel(formLabels.powerMethod)}</div>
             <span
               class="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-400"
               >{$form.power_method}</span
@@ -413,7 +414,7 @@
         <!-- Rolling stock -->
         <div class="mb-4 space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] tracking-wider text-zinc-500 uppercase">Rolling Stock</span>
+            <span class="text-[10px] tracking-wider text-zinc-500 uppercase">{resolveLabel(formLabels.rollingStock)}</span>
             <span class="rounded-full bg-zinc-700 px-2 py-0.5 text-xs font-semibold text-zinc-200"
               >{$form.rolling_stocks.length}</span
             >
