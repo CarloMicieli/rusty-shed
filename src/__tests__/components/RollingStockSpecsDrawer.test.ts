@@ -239,7 +239,8 @@ describe('RollingStockSpecsDrawer', () => {
 
       // Modify a field to make the form dirty
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
-      await fireEvent.input(seriesInput, { target: { value: 'E.646' } });
+      seriesInput.value = 'E.646';
+      await fireEvent.input(seriesInput);
 
       // Click the close (X) button
       const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
@@ -273,7 +274,8 @@ describe('RollingStockSpecsDrawer', () => {
 
       // Make the form dirty
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
-      await fireEvent.input(seriesInput, { target: { value: 'E.646' } });
+      seriesInput.value = 'E.646';
+      await fireEvent.input(seriesInput);
 
       // Click close to trigger dirty-check
       const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
@@ -309,7 +311,8 @@ describe('RollingStockSpecsDrawer', () => {
 
       // Make dirty and trigger dirty-check dialog
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
-      await fireEvent.input(seriesInput, { target: { value: 'E.646' } });
+      seriesInput.value = 'E.646';
+      await fireEvent.input(seriesInput);
 
       const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
       await fireEvent.click(closeBtn);

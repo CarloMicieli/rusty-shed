@@ -7,7 +7,11 @@ import { tick } from 'svelte';
 vi.mock('$lib/paraglide/messages', () => ({
   details_placeholder: () => 'Add maintenance notes, DCC addresses, or other details...',
   details_save_failed: () => 'Failed to save details. Please try again.',
-  edit_field_placeholder_empty: () => 'Click to add...'
+  edit_field_placeholder_empty: () => 'Click to add...',
+  toolbar_bold: () => 'Bold',
+  toolbar_italic: () => 'Italic',
+  toolbar_bullet_list: () => 'Bullet List',
+  toolbar_ordered_list: () => 'Ordered List'
 }));
 
 vi.mock('marked', () => ({

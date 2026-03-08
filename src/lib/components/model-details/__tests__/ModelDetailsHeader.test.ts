@@ -29,6 +29,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   replace_image: () => 'Change Image',
   drag_and_drop_hint: () => 'Drag and drop an image here',
   drop_image_here: () => 'Drop image here',
+  upload_formats_hint: () => 'Supported formats: JPG, PNG, GIF',
   uploading: () => 'Uploading...',
   upload_success: () => 'Image uploaded successfully',
   upload_error_model_not_found: () => 'Model not found',

@@ -346,10 +346,10 @@
 
         <div class="space-y-6">
           <RollingStockBasicFields
-            seriesCode={form.seriesCode}
-            roadNumber={form.roadNumber}
-            livery={form.livery}
-            depot={form.depot}
+            bind:seriesCode={form.seriesCode}
+            bind:roadNumber={form.roadNumber}
+            bind:livery={form.livery}
+            bind:depot={form.depot}
           />
 
           <RollingStockTechnicalFields
