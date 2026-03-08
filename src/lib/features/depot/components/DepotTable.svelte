@@ -8,6 +8,7 @@
     Info,
     TrainFront
   } from 'lucide-svelte';
+  import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { Sheet } from '$lib/components/ui/sheet';
@@ -226,10 +227,10 @@
               <div class="p-6 text-white">
                 <div class="mb-6">
                   <h3 class="font-mono text-sm tracking-widest text-[#f59e0b] uppercase">
-                    System_Operations
+                    System Operations
                   </h3>
                   <p class="text-xs text-zinc-500">
-                    Managing {props.roadNumber} ({props.manufacturer}
+                    {props.roadNumber} ({props.manufacturer}
                     {props.productCode})
                   </p>
                 </div>
@@ -240,9 +241,9 @@
                     </h4>
                     <div class="flex items-center justify-between">
                       <div class="flex flex-col gap-1">
-                        <span class="text-xs text-zinc-400">Current Address</span>
+                        <span class="text-xs text-zinc-400">{m.model_rolling_stock_digital_address()}</span>
                         <span class="font-mono text-2xl font-bold text-[#f59e0b]"
-                          >{props.dccAddress ?? 'NONE'}</span
+                          >{props.dccAddress ?? '—'}</span
                         >
                       </div>
                       <Button class="bg-[#f59e0b] text-black">Update ADDR</Button>
@@ -271,7 +272,7 @@
                   </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3 border-t border-white/5 pt-8">
-                  <Button variant="ghost" onclick={() => (selectedItemId = null)}>Close</Button>
+                  <Button variant="ghost" onclick={() => (selectedItemId = null)}>{m.common_cancel()}</Button>
                 </div>
               </div>
             </Sheet>
@@ -284,7 +285,7 @@
   {#if hasOverflow}
     <div class="mt-8 flex items-center justify-between border-t border-white/5 py-4">
       <p class="font-mono text-[10px] tracking-widest text-zinc-500 uppercase">
-        Displaying_Limit_Reached [{visibleItems.length}/{items.length}]
+        {m.depot_overflow_note({ showing: visibleItems.length, total: items.length })}
       </p>
       <Button
         variant="ghost"
@@ -292,7 +293,7 @@
         onclick={() => (viewAll = true)}
         class="text-[#f59e0b] hover:bg-[#f59e0b]/5"
       >
-        Load Complete Buffer
+        {m.depot_view_all()}
       </Button>
     </div>
   {/if}
