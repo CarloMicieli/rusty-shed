@@ -4,6 +4,7 @@
   import { commands } from '$lib/bindings';
   import type { SellerView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
+  import PurchasePaymentFields from './PurchasePaymentFields.svelte';
 
   interface Props {
     open: boolean;
@@ -31,14 +32,6 @@
 
   // ── Computed today's date for max date validation ────────────────────────────
   const today = new Date().toISOString().split('T')[0];
-
-  const CONDITION_OPTIONS = [
-    { value: 'New', label: m.purchase_dialog_condition_new() },
-    { value: 'PreOwnedLikeNew', label: m.purchase_dialog_condition_pre_owned_like_new() },
-    { value: 'PreOwnedVeryGood', label: m.purchase_dialog_condition_pre_owned_very_good() },
-    { value: 'PreOwnedGood', label: m.purchase_dialog_condition_pre_owned_good() },
-    { value: 'PreOwnedAcceptable', label: m.purchase_dialog_condition_pre_owned_acceptable() }
-  ];
 
   // ── Load initial data ─────────────────────────────────────────────────────────
   onMount(async () => {
@@ -177,99 +170,16 @@
           </div>
         {:else}
           <form onsubmit={handleSubmit} class="space-y-5">
-            <!-- Price -->
-            <div class="space-y-2">
-              <label
-                for="purchase-price"
-                class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-              >
-                {m.purchase_dialog_price_label()}
-              </label>
-              <div class="flex gap-2">
-                <input
-                  id="purchase-price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder={m.purchase_dialog_price_placeholder()}
-                  bind:value={priceAmount}
-                  disabled={isSubmitting}
-                  required
-                  class="h-12 flex-1 appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 placeholder-zinc-600 focus:border-white/20 focus:outline-none"
-                />
-                <select
-                  bind:value={priceCurrency}
-                  disabled={isSubmitting}
-                  class="h-12 appearance-none rounded-xl border border-white/10 bg-zinc-950 px-3 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-                >
-                  <option value="EUR">EUR</option>
-                  <option value="USD">USD</option>
-                  <option value="GBP">GBP</option>
-                  <option value="JPY">JPY</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Purchase Date -->
-            <div class="space-y-2">
-              <label
-                for="purchase-date"
-                class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-              >
-                {m.purchase_dialog_date_label()}
-              </label>
-              <input
-                id="purchase-date"
-                type="date"
-                max={today}
-                bind:value={purchaseDate}
-                disabled={isSubmitting}
-                required
-                class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-              />
-            </div>
-
-            <!-- Seller (optional) -->
-            <div class="space-y-2">
-              <label
-                for="purchase-seller"
-                class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-              >
-                {m.purchase_dialog_seller_label()}
-              </label>
-              <select
-                id="purchase-seller"
-                bind:value={selectedSellerId}
-                disabled={isSubmitting}
-                class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-              >
-                <option value="">{m.purchase_dialog_seller_placeholder()}</option>
-                {#each sellers as seller (seller.id)}
-                  <option value={seller.id}>{seller.name}</option>
-                {/each}
-              </select>
-            </div>
-
-            <!-- Condition (optional) -->
-            <div class="space-y-2">
-              <label
-                for="purchase-condition"
-                class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-              >
-                {m.purchase_dialog_condition_label()}
-              </label>
-              <select
-                id="purchase-condition"
-                bind:value={selectedCondition}
-                disabled={isSubmitting}
-                class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-              >
-                <option value="">{m.purchase_dialog_condition_placeholder()}</option>
-                {#each CONDITION_OPTIONS as opt (opt.value)}
-                  <option value={opt.value}>{opt.label}</option>
-                {/each}
-              </select>
-            </div>
+            <PurchasePaymentFields
+              bind:priceAmount
+              bind:priceCurrency
+              bind:purchaseDate
+              bind:selectedSellerId
+              bind:selectedCondition
+              {sellers}
+              {isSubmitting}
+              {today}
+            />
 
             <!-- Error message -->
             {#if error}

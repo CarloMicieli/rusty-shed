@@ -8,7 +8,7 @@
     depot: string;
   }
 
-  let { seriesCode, roadNumber, livery, depot }: Props = $props();
+  let { seriesCode = $bindable(), roadNumber = $bindable(), livery = $bindable(), depot = $bindable() }: Props = $props();
 </script>
 
 <section>

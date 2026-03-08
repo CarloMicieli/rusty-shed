@@ -3,9 +3,12 @@
   import { Button } from '$lib/components/ui/button';
   import * as m from '$lib/paraglide/messages';
   import { toaster } from '$lib/toaster';
-  import BadgePicker from '$lib/components/BadgePicker.svelte';
   import { commands, type RailwayModelId, type RollingStockId } from '$lib/bindings';
   import { onMount } from 'svelte';
+  import RollingStockCategoryFields from './RollingStockCategoryFields.svelte';
+  import RollingStockBasicFields from './RollingStockBasicFields.svelte';
+  import RollingStockControlField from './RollingStockControlField.svelte';
+  import DrawerActionFooter from './DrawerActionFooter.svelte';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -192,130 +195,36 @@
         </div>
       {/if}
 
-      <div class="space-y-4">
-        <!-- Railway Company -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-company">
-            {m.model_rolling_stock_field_company()} <span class="text-red-400">*</span>
-          </label>
-          {#if companyOptions.length > 0}
-            <BadgePicker
-              value={form.railwayCompanyName || '—'}
-              options={companyOptions}
-              onSelect={async (id) => {
-                form.railwayCompanyId = id;
-                form.railwayCompanyName = companyOptions.find((c) => c.id === id)?.label ?? id;
-              }}
-            />
-          {:else}
-            <p class="text-xs text-zinc-500">Loading…</p>
-          {/if}
-        </div>
+      <div class="space-y-6">
+        <RollingStockCategoryFields
+          bind:railwayCompanyId={form.railwayCompanyId}
+          bind:railwayCompanyName={form.railwayCompanyName}
+          bind:category={form.category}
+          {companyOptions}
+          {categoryOptions}
+        />
 
-        <!-- Category -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-category">
-            {m.rolling_stock_field_category()} <span class="text-red-400">*</span>
-          </label>
-          <select
-            id="create-category"
-            bind:value={form.category}
-            class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-          >
-            {#each categoryOptions as opt (opt.value)}
-              <option value={opt.value}>{opt.label}</option>
-            {/each}
-          </select>
-        </div>
+        <RollingStockBasicFields
+          bind:seriesCode={form.seriesCode}
+          bind:roadNumber={form.roadNumber}
+          bind:livery={form.livery}
+          bind:depot={form.depot}
+        />
 
-        <!-- Series Code -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-series-code">
-            {m.rolling_stock_field_series_code()} <span class="text-red-400">*</span>
-          </label>
-          <input
-            id="create-series-code"
-            type="text"
-            bind:value={form.seriesCode}
-            class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-          />
-        </div>
-
-        <!-- Road Number -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-road-number">
-            {m.rolling_stock_field_road_number()}
-          </label>
-          <input
-            id="create-road-number"
-            type="text"
-            bind:value={form.roadNumber}
-            class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-          />
-        </div>
-
-        <!-- Livery -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-livery">
-            {m.rolling_stock_field_livery()}
-          </label>
-          <input
-            id="create-livery"
-            type="text"
-            bind:value={form.livery}
-            class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-          />
-        </div>
-
-        <!-- Depot -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-depot">
-            {m.rolling_stock_field_depot()}
-          </label>
-          <input
-            id="create-depot"
-            type="text"
-            bind:value={form.depot}
-            class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-          />
-        </div>
-
-        <!-- Control Type -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-control">
-            {m.model_rolling_stock_field_control()}
-          </label>
-          <select
-            id="create-control"
-            bind:value={form.control}
-            class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-          >
-            {#each controlOptions as opt (opt.value)}
-              <option value={opt.value}>{opt.label}</option>
-            {/each}
-          </select>
-        </div>
+        <RollingStockControlField
+          bind:control={form.control}
+          {controlOptions}
+        />
       </div>
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-zinc-800 px-6 py-4">
-      <Button variant="ghost" onclick={requestClose} disabled={isSaving}>
-        {m.specs_drawer_cancel()}
-      </Button>
-      <Button
-        onclick={handleSave}
-        disabled={isSaving || !isValid}
-        class="bg-[#E2994F] text-black hover:bg-[#E2994F]/90"
-      >
-        {#if isSaving}
-          <span
-            class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent"
-          ></span>
-        {/if}
-        {m.specs_drawer_save()}
-      </Button>
-    </div>
+    <DrawerActionFooter
+      {isSaving}
+      disabled={!isValid}
+      onSave={handleSave}
+      onCancel={requestClose}
+    />
   </div>
 
   <!-- Discard confirmation dialog -->
