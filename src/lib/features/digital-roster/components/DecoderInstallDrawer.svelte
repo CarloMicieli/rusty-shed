@@ -12,6 +12,8 @@
   import { Button, Input } from '$lib/components';
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderDiscardDialog from './DecoderDiscardDialog.svelte';
+  import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
+  import DecoderPicker from './DecoderPicker.svelte';
 
   interface Props {
     /** Controls drawer visibility */
@@ -273,22 +275,6 @@
     showDiscardDialog = false;
   }
 
-  function getManufacturerName(manufacturerId: string): string {
-    return manufacturers.find((m) => m.id === manufacturerId)?.name ?? manufacturerId;
-  }
-
-  function formatRollingStockLabel(rs: InstallableRollingStockView): string {
-    const parts = [];
-    if (rs.series_code) parts.push(rs.series_code);
-    if (rs.road_number) parts.push(rs.road_number);
-    if (rs.railway_company_name) parts.push(`(${rs.railway_company_name})`);
-    return parts.join(' ') || rs.owned_rolling_stock_id;
-  }
-
-  function formatDecoderLabel(decoder: Decoder): string {
-    const manufacturer = getManufacturerName(decoder.manufacturerId);
-    return `${manufacturer} ${decoder.productCode} (${decoder.decoderType})`;
-  }
 </script>
 
 <!-- Drawer Overlay -->
@@ -341,55 +327,23 @@
       {:else}
         <form id="install-decoder-form" class="space-y-6" onsubmit={(e) => e.preventDefault()}>
           <!-- Rolling Stock Selection -->
-          <div>
-            <label for="rolling-stock" class="block space-y-1">
-              <span class="text-sm text-muted-foreground"
-                >{m.digital_roster_rolling_stock_label()}</span
-              >
-            </label>
-            <select
-              id="rolling-stock"
-              bind:value={selectedRollingStockId}
-              class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-              class:input-error={touched && validationErrors.rollingStock}
-            >
-              <option value={null}>{m.form_new_model_select_placeholder()}</option>
-              {#each installableRollingStocks as rs (rs.owned_rolling_stock_id)}
-                <option value={rs.owned_rolling_stock_id}>
-                  {formatRollingStockLabel(rs)}
-                  {#if rs.has_decoder}
-                    ({m.digital_roster_has_decoder()})
-                  {/if}
-                </option>
-              {/each}
-            </select>
-            {#if touched && validationErrors.rollingStock}
-              <p class="text-error-500 mt-1 text-xs">{validationErrors.rollingStock}</p>
-            {/if}
-          </div>
+          <DecoderRollingStockPicker
+            rollingStocks={installableRollingStocks}
+            selectedId={selectedRollingStockId}
+            error={validationErrors.rollingStock}
+            touched={touched}
+            onChange={(id) => (selectedRollingStockId = id)}
+          />
 
           <!-- Decoder Selection -->
-          <div>
-            <label for="decoder" class="block space-y-1">
-              <span class="text-sm text-muted-foreground">{m.digital_roster_decoder_label()}</span>
-            </label>
-            <select
-              id="decoder"
-              bind:value={selectedDecoderId}
-              class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-              class:input-error={touched && validationErrors.decoder}
-            >
-              <option value={null}>{m.form_new_model_select_placeholder()}</option>
-              {#each decoders as decoder (decoder.id)}
-                <option value={decoder.id}>
-                  {formatDecoderLabel(decoder)}
-                </option>
-              {/each}
-            </select>
-            {#if touched && validationErrors.decoder}
-              <p class="text-error-500 mt-1 text-xs">{validationErrors.decoder}</p>
-            {/if}
-          </div>
+          <DecoderPicker
+            decoders={decoders}
+            manufacturers={manufacturers}
+            selectedId={selectedDecoderId}
+            error={validationErrors.decoder}
+            touched={touched}
+            onChange={(id) => (selectedDecoderId = id)}
+          />
 
           <!-- DCC Address -->
           <div>
