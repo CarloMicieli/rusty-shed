@@ -8,6 +8,8 @@
    * - Red (<25% remaining)
    */
 
+  import * as m from '$lib/paraglide/messages.js';
+
   interface Props {
     remainingAmount: number;
     totalAvailable: number;
@@ -78,16 +80,16 @@
       <div class="text-4xl font-bold {getColorClass(remainingPercentage)}">
         {remainingPercentage.toFixed(1)}%
       </div>
-      <div class="text-surface-600 mt-1 text-sm">Remaining</div>
+      <div class="text-surface-600 mt-1 text-sm capitalize">{m.budget_dashboard_donut_remaining()}</div>
     </div>
   </div>
   <div class="w-full space-y-2">
     <div class="flex items-center justify-between text-sm">
-      <span class="text-surface-600">Available:</span>
+      <span class="text-surface-600">{m.budget_table_available_header()}:</span>
       <span class="text-surface-900 font-semibold">{formatAmount(totalAvailable, currency)}</span>
     </div>
     <div class="flex items-center justify-between text-sm">
-      <span class="text-surface-600">Remaining:</span>
+      <span class="text-surface-600">{m.budget_table_remaining_header()}:</span>
       <span class="text-surface-900 font-semibold {getColorClass(remainingPercentage)}">
         {formatAmount(remainingAmount, currency)}
       </span>

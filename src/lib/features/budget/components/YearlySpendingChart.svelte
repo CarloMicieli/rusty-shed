@@ -6,6 +6,8 @@
    * Shows 12 bars (one per month) with the current month highlighted.
    */
 
+  import * as m from '$lib/paraglide/messages.js';
+  import { getLocale } from '$lib/paraglide/runtime';
   import type { MonthlySpendingPoint } from '../services/BudgetService.svelte';
 
   interface Props {
@@ -16,20 +18,12 @@
 
   let { monthlySpending, monthlyGoal, currency }: Props = $props();
 
-  const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec'
-  ];
+  const monthNames = $derived.by(() => {
+    const locale = getLocale();
+    return Array.from({ length: 12 }, (_, i) =>
+      new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2000, i, 1))
+    );
+  });
   const currentMonth = new Date().getMonth() + 1;
 
   // Calculate max value for scaling
@@ -58,7 +52,7 @@
 </script>
 
 <div class="rounded-lg bg-card p-6">
-  <h3 class="text-surface-900 mb-4 text-lg font-semibold">Monthly Spending</h3>
+  <h3 class="text-surface-900 mb-4 text-lg font-semibold">{m.budget_dashboard_bar_title()}</h3>
   <div class="relative h-64">
     <!-- Goal line -->
     <div
