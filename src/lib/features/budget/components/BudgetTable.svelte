@@ -7,6 +7,8 @@
    */
 
   import { Plus } from 'lucide-svelte';
+  import * as m from '$lib/paraglide/messages.js';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import type { BudgetState } from '../BudgetState.svelte';
   import type { MonthlyBudgetRecordDto } from '../services/BudgetService.svelte';
   import {
@@ -34,21 +36,13 @@
     onAddExtra
   }: Props = $props();
 
-  // Month names for display
-  const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December'
-  ];
+  // Get localized month names using Intl.DateTimeFormat
+  const monthNames = $derived.by(() => {
+    const locale = getLocale();
+    return Array.from({ length: 12 }, (_, i) =>
+      new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2000, i, 1))
+    );
+  });
 
   function formatAmount(minorUnits: number, currencyCode: string): string {
     const major = minorUnits / 100;
@@ -76,11 +70,11 @@
   function getStatusLabel(status: string): string {
     switch (status) {
       case 'COMPLETED':
-        return 'Completed';
+        return m.budget_status_completed();
       case 'IN_PROGRESS':
-        return 'In Progress';
+        return m.budget_status_in_progress();
       case 'PROJECTED':
-        return 'Projected';
+        return m.budget_status_projected();
       default:
         return status;
     }
