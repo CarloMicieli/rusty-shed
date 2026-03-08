@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import { Dialog as DialogPrimitive } from 'bits-ui';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Button } from '$lib/components/ui/button';
@@ -59,8 +60,8 @@
       </Dialog.Description>
 
       <Dialog.Footer class="mt-2 flex justify-end gap-3">
-        <Button variant="ghost" onclick={handleClose}>Cancel</Button>
-        <Button variant="destructive" onclick={handleConfirm}>Confirm</Button>
+        <Button variant="ghost" onclick={handleClose}>{m.common_cancel()}</Button>
+        <Button variant="destructive" onclick={handleConfirm}>{m.common_delete()}</Button>
       </Dialog.Footer>
     </DialogPrimitive.Content>
   </Dialog.Portal>
