@@ -9,15 +9,14 @@
     TechnicalSpecifications
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
-  import { ChevronDown, ChevronUp, Settings } from 'lucide-svelte';
+  import { Settings } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
-  import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
-  import InPlaceBooleanEdit from '$lib/components/InPlaceBooleanEdit.svelte';
-  import BadgePicker from '$lib/components/BadgePicker.svelte';
-  import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
+  import RollingStockCardHeader from './components/RollingStockCardHeader.svelte';
+  import RollingStockIdentificationFields from './components/RollingStockIdentificationFields.svelte';
+  import RollingStockTechnicalSpecs from './components/RollingStockTechnicalSpecs.svelte';
+  import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
 
   interface Props {
     rollingStock: OwnedRollingStockView;
@@ -79,53 +78,6 @@
     localLengthMm = extractMm(rollingStock.lengthOverBuffers);
     localLengthInches = extractInches(rollingStock.lengthOverBuffers);
   });
-
-  // ── Option constants ──────────────────────────────────────────────────────────
-  const CONTROL_OPTIONS: { id: string; label: string }[] = [
-    { id: '', label: '—' },
-    { id: 'DCC_READY', label: 'DCC Ready' },
-    { id: 'DCC_FITTED', label: 'DCC Fitted' },
-    { id: 'DCC_SOUND', label: 'DCC Sound' },
-    { id: 'NO_DCC', label: 'Analogue (No DCC)' }
-  ];
-
-  const DCC_INTERFACE_OPTIONS: { id: string; label: string }[] = [
-    { id: '', label: '—' },
-    { id: 'NEM_651', label: 'NEM 651' },
-    { id: 'NEM_652', label: 'NEM 652' },
-    { id: 'NEM_654', label: 'NEM 654' },
-    { id: 'PLUX_8', label: 'PluX 8' },
-    { id: 'PLUX_12', label: 'PluX 12' },
-    { id: 'PLUX_16', label: 'PluX 16' },
-    { id: 'PLUX_22', label: 'PluX 22' },
-    { id: 'NEXT_18', label: 'Next18' },
-    { id: 'NEXT_18_S', label: 'Next18-S' },
-    { id: 'MTC_21', label: 'MTC 21' }
-  ];
-
-  const BODY_SHELL_OPTIONS = [
-    { value: '', label: '—' },
-    { value: 'PLASTIC', label: 'Plastic' },
-    { value: 'METAL_DIE_CAST', label: 'Metal Die-Cast' }
-  ] as const;
-
-  const CHASSIS_OPTIONS = [
-    { value: '', label: '—' },
-    { value: 'PLASTIC', label: 'Plastic' },
-    { value: 'METAL_DIE_CAST', label: 'Metal Die-Cast' }
-  ] as const;
-
-  const COUPLING_SOCKET_OPTIONS = [
-    { value: '', label: '—' },
-    { value: 'NONE', label: 'None' },
-    { value: 'NEM_355', label: 'NEM 355' },
-    { value: 'NEM_356', label: 'NEM 356' },
-    { value: 'NEM_357', label: 'NEM 357' },
-    { value: 'NEM_359', label: 'NEM 359' },
-    { value: 'NEM_360', label: 'NEM 360' },
-    { value: 'NEM_362', label: 'NEM 362' },
-    { value: 'NEM_365', label: 'NEM 365' }
-  ] as const;
 
   // ── Specs drawer ──────────────────────────────────────────────────────────────
   let specsDrawerOpen = $state(false);
@@ -316,32 +268,105 @@
     });
     if (result.status === 'error') throw new Error('Failed to save specifications');
   }
+
+  // ── Tech spec save wrappers ────────────────────────────────────────────────────
+  async function onSaveFlywheelFitted(v: 'YES' | 'NO' | null) {
+    const prev = localFlywheelFitted;
+    localFlywheelFitted = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localFlywheelFitted = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveBodyShell(v: string | null) {
+    const prev = localBodyShell;
+    localBodyShell = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localBodyShell = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveChassis(v: string | null) {
+    const prev = localChassis;
+    localChassis = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localChassis = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveInteriorLights(v: 'YES' | 'NO' | null) {
+    const prev = localInteriorLights;
+    localInteriorLights = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localInteriorLights = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveLights(v: 'YES' | 'NO' | null) {
+    const prev = localLights;
+    localLights = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localLights = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveCouplingSocket(v: string | null) {
+    const prev = localCouplingSocket;
+    localCouplingSocket = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localCouplingSocket = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveCloseCouplers(v: 'YES' | 'NO' | null) {
+    const prev = localCloseCouplers;
+    localCloseCouplers = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localCloseCouplers = prev;
+      throw e;
+    }
+  }
+
+  async function onSaveDigitalShunting(v: 'YES' | 'NO' | null) {
+    const prev = localDigitalShunting;
+    localDigitalShunting = v;
+    try {
+      await saveAllSpecs();
+    } catch (e) {
+      localDigitalShunting = prev;
+      throw e;
+    }
+  }
 </script>
 
 <div class="rounded-lg border border-border transition-shadow hover:shadow-md">
   <!-- Card Header (Always Visible) -->
-  <button
-    type="button"
-    class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-muted/50"
-    onclick={toggleExpand}
-    aria-expanded={isExpanded}
-  >
-    <h3 class="text-lg font-semibold">
-      {formatSeriesRoadNumber()}
-    </h3>
-    <div class="ml-4 flex flex-shrink-0 items-center gap-2">
-      {#if localRailwayCompanyName}
-        <span class="rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300"
-          >{localRailwayCompanyName}</span
-        >
-      {/if}
-      {#if isExpanded}
-        <ChevronUp class="h-5 w-5 text-muted-foreground" />
-      {:else}
-        <ChevronDown class="h-5 w-5 text-muted-foreground" />
-      {/if}
-    </div>
-  </button>
+  <RollingStockCardHeader
+    seriesRoadNumber={formatSeriesRoadNumber()}
+    railwayCompanyName={localRailwayCompanyName}
+    isExpanded={isExpanded}
+    onToggle={toggleExpand}
+  />
 
   <!-- Card Body (Expandable) -->
   {#if isExpanded}
@@ -365,412 +390,48 @@
         </div>
       {/if}
 
-      <!-- 5×3 Information Grid -->
-      <div class="grid grid-cols-3 gap-x-4 gap-y-3">
-        <!-- ── Row 1: Series · Depot · Livery ─────────────────────────────── -->
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_series()}
-          </p>
-          {#if canEdit}
-            <InPlaceEdit
-              value={localSeries}
-              placeholder={m.rolling_stock_field_series_code()}
-              onSave={(v) => saveIdentificationField('series', v)}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span class="text-sm {localSeries ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
-              {localSeries || '—'}
-            </span>
-          {/if}
-        </div>
+      <!-- Identification Fields (Rows 1-2) -->
+      <RollingStockIdentificationFields
+        canEdit={canEdit}
+        localSeries={localSeries}
+        localDepot={localDepot}
+        localLivery={localLivery}
+        localControl={localControl}
+        localDccInterface={localDccInterface}
+        displayLength={displayLength()}
+        onSaveIdentification={saveIdentificationField}
+        onSaveControl={saveControl}
+        onSaveDccInterface={saveDccInterface}
+        onSaveLength={saveLength}
+        onFieldActivate={onFieldActivate}
+        onFieldDeactivate={onFieldDeactivate}
+      />
 
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_depot()}
-          </p>
-          {#if canEdit}
-            <InPlaceEdit
-              value={localDepot}
-              placeholder={m.rolling_stock_field_depot()}
-              onSave={(v) => saveIdentificationField('depot', v)}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span class="text-sm {localDepot ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
-              {localDepot || '—'}
-            </span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_livery()}
-          </p>
-          {#if canEdit}
-            <InPlaceEdit
-              value={localLivery}
-              placeholder={m.rolling_stock_field_livery()}
-              onSave={(v) => saveIdentificationField('livery', v)}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span class="text-sm {localLivery ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
-              {localLivery || '—'}
-            </span>
-          {/if}
-        </div>
-
-        <!-- ── Row 2: Control Type · DCC Interface · Length ───────────────── -->
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_control_type()}
-          </p>
-          {#if canEdit}
-            <BadgePicker
-              value={localControl ?? ''}
-              options={CONTROL_OPTIONS}
-              onSelect={saveControl}
-            />
-          {:else}
-            <span class="text-sm text-[#E0E0E0]">
-              {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
-            </span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_dcc_interface()}
-          </p>
-          {#if canEdit}
-            <BadgePicker
-              value={localDccInterface ?? ''}
-              options={DCC_INTERFACE_OPTIONS}
-              onSelect={saveDccInterface}
-            />
-          {:else}
-            <span class="text-sm text-[#E0E0E0]">
-              {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
-            </span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_length()}
-            {settingsState.settings.measureUnit === 'Metric' ? '(mm)' : '(")'}
-          </p>
-          {#if canEdit}
-            <InPlaceEdit
-              value={displayLength()}
-              placeholder="—"
-              onSave={saveLength}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span class="text-sm {displayLength() ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
-              {displayLength() || '—'}
-            </span>
-          {/if}
-        </div>
-
-        <!-- ── Row 3: Flywheel Fitted · Body Shell · Chassis ──────────────── -->
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.specs_drawer_field_flywheel()}
-          </p>
-          {#if canEdit}
-            <InPlaceBooleanEdit
-              value={localFlywheelFitted}
-              onSave={async (v) => {
-                const prev = localFlywheelFitted;
-                localFlywheelFitted = v;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localFlywheelFitted = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else if localFlywheelFitted === 'YES'}
-            <span
-              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-              >✓ Yes</span
-            >
-          {:else if localFlywheelFitted === 'NO'}
-            <span
-              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-              >No</span
-            >
-          {:else}
-            <span class="text-sm text-[#808080] italic">—</span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.specs_drawer_field_body_material()}
-          </p>
-          {#if canEdit}
-            <InPlaceSelectEdit
-              value={localBodyShell ?? ''}
-              displayLabel={BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? ''}
-              options={[...BODY_SHELL_OPTIONS]}
-              placeholder={m.specs_drawer_field_body_material()}
-              onSave={async (v) => {
-                const prev = localBodyShell;
-                localBodyShell = v || null;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localBodyShell = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span class="text-sm {localBodyShell ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
-              {BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? '—'}
-            </span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.specs_drawer_field_chassis_material()}
-          </p>
-          {#if canEdit}
-            <InPlaceSelectEdit
-              value={localChassis ?? ''}
-              displayLabel={CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? ''}
-              options={[...CHASSIS_OPTIONS]}
-              placeholder={m.specs_drawer_field_chassis_material()}
-              onSave={async (v) => {
-                const prev = localChassis;
-                localChassis = v || null;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localChassis = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span class="text-sm {localChassis ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
-              {CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? '—'}
-            </span>
-          {/if}
-        </div>
-
-        <!-- ── Row 4: Interior Lights · Lights · (spacer) ─────────────────── -->
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_interior_lights()}
-          </p>
-          {#if canEdit}
-            <InPlaceBooleanEdit
-              value={localInteriorLights}
-              onSave={async (v) => {
-                const prev = localInteriorLights;
-                localInteriorLights = v;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localInteriorLights = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else if localInteriorLights === 'YES'}
-            <span
-              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-              >✓ Yes</span
-            >
-          {:else if localInteriorLights === 'NO'}
-            <span
-              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-              >No</span
-            >
-          {:else}
-            <span class="text-sm text-[#808080] italic">—</span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.rolling_stock_field_lights()}
-          </p>
-          {#if canEdit}
-            <InPlaceBooleanEdit
-              value={localLights}
-              onSave={async (v) => {
-                const prev = localLights;
-                localLights = v;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localLights = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else if localLights === 'YES'}
-            <span
-              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-              >✓ Yes</span
-            >
-          {:else if localLights === 'NO'}
-            <span
-              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-              >No</span
-            >
-          {:else}
-            <span class="text-sm text-[#808080] italic">—</span>
-          {/if}
-        </div>
-
-        <!-- Spacer: Row 4, Col 3 -->
-        <div></div>
-
-        <!-- ── Row 5: Coupling Socket · Close Couplers · Digital Shunting ─── -->
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.specs_drawer_field_coupling_socket()}
-          </p>
-          {#if canEdit}
-            <InPlaceSelectEdit
-              value={localCouplingSocket ?? ''}
-              displayLabel={COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)
-                ?.label ?? ''}
-              options={[...COUPLING_SOCKET_OPTIONS]}
-              placeholder={m.specs_drawer_field_coupling_socket()}
-              onSave={async (v) => {
-                const prev = localCouplingSocket;
-                localCouplingSocket = v || null;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localCouplingSocket = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else}
-            <span
-              class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}"
-            >
-              {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
-            </span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.specs_drawer_field_close_coupling()}
-          </p>
-          {#if canEdit}
-            <InPlaceBooleanEdit
-              value={localCloseCouplers}
-              onSave={async (v) => {
-                const prev = localCloseCouplers;
-                localCloseCouplers = v;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localCloseCouplers = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else if localCloseCouplers === 'YES'}
-            <span
-              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-              >✓ Yes</span
-            >
-          {:else if localCloseCouplers === 'NO'}
-            <span
-              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-              >No</span
-            >
-          {:else}
-            <span class="text-sm text-[#808080] italic">—</span>
-          {/if}
-        </div>
-
-        <div>
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.specs_drawer_field_digital_shunting()}
-          </p>
-          {#if canEdit}
-            <InPlaceBooleanEdit
-              value={localDigitalShunting}
-              onSave={async (v) => {
-                const prev = localDigitalShunting;
-                localDigitalShunting = v;
-                try {
-                  await saveAllSpecs();
-                } catch (e) {
-                  localDigitalShunting = prev;
-                  throw e;
-                }
-              }}
-              onActivate={onFieldActivate}
-              onDeactivate={onFieldDeactivate}
-            />
-          {:else if localDigitalShunting === 'YES'}
-            <span
-              class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-              >✓ Yes</span
-            >
-          {:else if localDigitalShunting === 'NO'}
-            <span
-              class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-              >No</span
-            >
-          {:else}
-            <span class="text-sm text-[#808080] italic">—</span>
-          {/if}
-        </div>
+      <!-- Technical Specs (Rows 3-5) -->
+      <div class="mt-4">
+        <RollingStockTechnicalSpecs
+          canEdit={canEdit}
+          rollingStock={rollingStock}
+          localFlywheelFitted={localFlywheelFitted}
+          localBodyShell={localBodyShell}
+          localChassis={localChassis}
+          localInteriorLights={localInteriorLights}
+          localLights={localLights}
+          localCouplingSocket={localCouplingSocket}
+          localCloseCouplers={localCloseCouplers}
+          localDigitalShunting={localDigitalShunting}
+          onSaveFlywheelFitted={onSaveFlywheelFitted}
+          onSaveBodyShell={onSaveBodyShell}
+          onSaveChassis={onSaveChassis}
+          onSaveInteriorLights={onSaveInteriorLights}
+          onSaveLights={onSaveLights}
+          onSaveCouplingSocket={onSaveCouplingSocket}
+          onSaveCloseCouplers={onSaveCloseCouplers}
+          onSaveDigitalShunting={onSaveDigitalShunting}
+          onFieldActivate={onFieldActivate}
+          onFieldDeactivate={onFieldDeactivate}
+        />
       </div>
-
-      <!-- Digital Setup (when decoder is installed) -->
-      {#if rollingStock.digital}
-        <div class="mt-4 border-t border-border pt-3">
-          <p class="mb-1 text-xs font-medium text-muted-foreground">
-            {m.model_rolling_stock_field_digital_setup()}
-          </p>
-          <p class="text-sm text-[#E0E0E0]">
-            {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
-            | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
-            {#if rollingStock.digital.installed_decoder_id}
-              | {m.model_rolling_stock_digital_decoder_id()}: {rollingStock.digital
-                .installed_decoder_id}
-            {/if}
-          </p>
-        </div>
-      {/if}
     </div>
   {/if}
 </div>
