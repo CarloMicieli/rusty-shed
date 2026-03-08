@@ -19,11 +19,10 @@
 <Sheet {open} {onOpenChange} class="border-white/10 bg-[#0c0c0c]/90 backdrop-blur-xl">
   <div class="p-6 text-white">
     <div class="mb-6">
-      <h3 class="font-mono text-sm tracking-widest text-[#f59e0b] uppercase">
-        System Operations
-      </h3>
+      <h3 class="font-mono text-sm tracking-widest text-[#f59e0b] uppercase">System Operations</h3>
       <p class="text-xs text-zinc-500">
-        {roadNumber} ({manufacturer} {productCode})
+        {roadNumber} ({manufacturer}
+        {productCode})
       </p>
     </div>
     <div class="space-y-8 py-10">
@@ -52,10 +51,7 @@
       </div>
 
       <div class="pt-10">
-        <Button
-          variant="outline"
-          class="w-full border-red-500/20 text-red-500 hover:bg-red-500/10"
-        >
+        <Button variant="outline" class="w-full border-red-500/20 text-red-500 hover:bg-red-500/10">
           <Trash2 size={14} class="mr-2" />
           Decommission from Depot
         </Button>

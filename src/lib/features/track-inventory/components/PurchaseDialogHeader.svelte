@@ -17,17 +17,14 @@
     >
       <ShoppingCart size={20} />
     </div>
-    <h2
-      id="add-purchase-title"
-      class="text-xl font-bold tracking-tight text-zinc-100 uppercase"
-    >
+    <h2 id="add-purchase-title" class="text-xl font-bold tracking-tight text-zinc-100 uppercase">
       {m.track_purchase_dialog_title()}
     </h2>
   </div>
   <button
     onclick={onClose}
     class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
-    disabled={disabled}
+    {disabled}
   >
     <X size={20} />
   </button>

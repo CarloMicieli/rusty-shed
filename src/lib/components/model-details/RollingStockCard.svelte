@@ -364,7 +364,7 @@
   <RollingStockCardHeader
     seriesRoadNumber={formatSeriesRoadNumber()}
     railwayCompanyName={localRailwayCompanyName}
-    isExpanded={isExpanded}
+    {isExpanded}
     onToggle={toggleExpand}
   />
 
@@ -392,44 +392,44 @@
 
       <!-- Identification Fields (Rows 1-2) -->
       <RollingStockIdentificationFields
-        canEdit={canEdit}
-        localSeries={localSeries}
-        localDepot={localDepot}
-        localLivery={localLivery}
-        localControl={localControl}
-        localDccInterface={localDccInterface}
+        {canEdit}
+        {localSeries}
+        {localDepot}
+        {localLivery}
+        {localControl}
+        {localDccInterface}
         displayLength={displayLength()}
         onSaveIdentification={saveIdentificationField}
         onSaveControl={saveControl}
         onSaveDccInterface={saveDccInterface}
         onSaveLength={saveLength}
-        onFieldActivate={onFieldActivate}
-        onFieldDeactivate={onFieldDeactivate}
+        {onFieldActivate}
+        {onFieldDeactivate}
       />
 
       <!-- Technical Specs (Rows 3-5) -->
       <div class="mt-4">
         <RollingStockTechnicalSpecs
-          canEdit={canEdit}
-          rollingStock={rollingStock}
-          localFlywheelFitted={localFlywheelFitted}
-          localBodyShell={localBodyShell}
-          localChassis={localChassis}
-          localInteriorLights={localInteriorLights}
-          localLights={localLights}
-          localCouplingSocket={localCouplingSocket}
-          localCloseCouplers={localCloseCouplers}
-          localDigitalShunting={localDigitalShunting}
-          onSaveFlywheelFitted={onSaveFlywheelFitted}
-          onSaveBodyShell={onSaveBodyShell}
-          onSaveChassis={onSaveChassis}
-          onSaveInteriorLights={onSaveInteriorLights}
-          onSaveLights={onSaveLights}
-          onSaveCouplingSocket={onSaveCouplingSocket}
-          onSaveCloseCouplers={onSaveCloseCouplers}
-          onSaveDigitalShunting={onSaveDigitalShunting}
-          onFieldActivate={onFieldActivate}
-          onFieldDeactivate={onFieldDeactivate}
+          {canEdit}
+          {rollingStock}
+          {localFlywheelFitted}
+          {localBodyShell}
+          {localChassis}
+          {localInteriorLights}
+          {localLights}
+          {localCouplingSocket}
+          {localCloseCouplers}
+          {localDigitalShunting}
+          {onSaveFlywheelFitted}
+          {onSaveBodyShell}
+          {onSaveChassis}
+          {onSaveInteriorLights}
+          {onSaveLights}
+          {onSaveCouplingSocket}
+          {onSaveCloseCouplers}
+          {onSaveDigitalShunting}
+          {onFieldActivate}
+          {onFieldDeactivate}
         />
       </div>
     </div>

@@ -13,7 +13,7 @@ import type {
 // Mock @tauri-apps/api/core
 vi.mock('@tauri-apps/api/core', () => {
   return {
-    invoke: vi.fn()
+    invoke: vi.fn() as any
   };
 });
 
@@ -22,8 +22,8 @@ vi.mock('svelte', async () => {
   const actual = await vi.importActual('svelte');
   return {
     ...actual,
-    getContext: vi.fn(),
-    setContext: vi.fn()
+    getContext: vi.fn() as any,
+    setContext: vi.fn() as any
   };
 });
 
@@ -49,7 +49,7 @@ describe('TrackInventoryService', () => {
           track_count: 5,
           purchase_count: 3,
           total_value: { amount: 15000n, currency: 'EUR' as Currency }
-        },
+        } as any,
         {
           id: 'inv-2',
           name: 'Storage',
@@ -57,10 +57,10 @@ describe('TrackInventoryService', () => {
           track_count: 8,
           purchase_count: 0,
           total_value: { amount: 0n, currency: 'EUR' as Currency }
-        }
+        } as any
       ];
 
-      mockInvoke.mockResolvedValue(mockInventories);
+      (mockInvoke as any).mockResolvedValue(mockInventories);
 
       const result = await service.fetchInventories();
 
@@ -69,7 +69,7 @@ describe('TrackInventoryService', () => {
     });
 
     it('should handle empty inventory list', async () => {
-      mockInvoke.mockResolvedValue([]);
+      (mockInvoke as any).mockResolvedValue([]);
 
       const result = await service.fetchInventories();
 
@@ -79,7 +79,7 @@ describe('TrackInventoryService', () => {
 
     it('should throw error when fetch fails', async () => {
       const error = new Error('Database connection failed');
-      mockInvoke.mockRejectedValue(error);
+      (mockInvoke as any).mockRejectedValue(error);
 
       await expect(service.fetchInventories()).rejects.toThrow('Database connection failed');
     });
@@ -95,9 +95,9 @@ describe('TrackInventoryService', () => {
         purchase_count: 3,
         total_value: { amount: 15000n, currency: 'EUR' as Currency },
         items: []
-      };
+      } as any;
 
-      mockInvoke.mockResolvedValue(mockInventory);
+      (mockInvoke as any).mockResolvedValue(mockInventory);
 
       const result = await service.fetchInventory('inv-1');
 
@@ -107,7 +107,7 @@ describe('TrackInventoryService', () => {
 
     it('should throw error when inventory not found', async () => {
       const error = new Error('Inventory not found');
-      mockInvoke.mockRejectedValue(error);
+      (mockInvoke as any).mockRejectedValue(error);
 
       await expect(service.fetchInventory('invalid-id')).rejects.toThrow('Inventory not found');
     });
@@ -127,10 +127,10 @@ describe('TrackInventoryService', () => {
           total_length_mm: 1000,
           purchase_count: 5,
           total_value: { amount: 2500n, currency: 'EUR' as Currency }
-        }
+        } as any
       ];
 
-      mockInvoke.mockResolvedValue(mockProducts);
+      (mockInvoke as any).mockResolvedValue(mockProducts);
 
       const result = await service.fetchProducts();
 
@@ -139,7 +139,7 @@ describe('TrackInventoryService', () => {
     });
 
     it('should handle empty product list', async () => {
-      mockInvoke.mockResolvedValue([]);
+      (mockInvoke as any).mockResolvedValue([]);
 
       const result = await service.fetchProducts();
 
@@ -147,7 +147,7 @@ describe('TrackInventoryService', () => {
     });
 
     it('should throw error on fetch failure', async () => {
-      mockInvoke.mockRejectedValue(new Error('API error'));
+      (mockInvoke as any).mockRejectedValue(new Error('API error'));
 
       await expect(service.fetchProducts()).rejects.toThrow('API error');
     });
@@ -160,7 +160,7 @@ describe('TrackInventoryService', () => {
         description: 'Test layout'
       };
 
-      mockInvoke.mockResolvedValue('inv-new-123');
+      (mockInvoke as any).mockResolvedValue('inv-new-123');
 
       const result = await service.createInventory(input);
 
@@ -174,7 +174,7 @@ describe('TrackInventoryService', () => {
         description: null
       };
 
-      mockInvoke.mockResolvedValue('inv-simple-456');
+      (mockInvoke as any).mockResolvedValue('inv-simple-456');
 
       const result = await service.createInventory(input);
 
@@ -187,7 +187,7 @@ describe('TrackInventoryService', () => {
         description: null
       };
 
-      mockInvoke.mockRejectedValue(new Error('Name already exists'));
+      (mockInvoke as any).mockRejectedValue(new Error('Name already exists'));
 
       await expect(service.createInventory(input)).rejects.toThrow('Name already exists');
     });
@@ -198,9 +198,9 @@ describe('TrackInventoryService', () => {
       const input: RenameTrackInventoryArgs = {
         id: 'inv-1',
         name: 'Updated Name'
-      };
+      } as any;
 
-      mockInvoke.mockResolvedValue(undefined);
+      (mockInvoke as any).mockResolvedValue(undefined);
 
       await service.renameInventory(input);
 
@@ -211,9 +211,9 @@ describe('TrackInventoryService', () => {
       const input: RenameTrackInventoryArgs = {
         id: 'invalid-id',
         name: 'New Name'
-      };
+      } as any;
 
-      mockInvoke.mockRejectedValue(new Error('Inventory not found'));
+      (mockInvoke as any).mockRejectedValue(new Error('Inventory not found'));
 
       await expect(service.renameInventory(input)).rejects.toThrow('Inventory not found');
     });
@@ -222,9 +222,9 @@ describe('TrackInventoryService', () => {
       const input: RenameTrackInventoryArgs = {
         id: 'inv-1',
         name: 'Existing Name'
-      };
+      } as any;
 
-      mockInvoke.mockRejectedValue(new Error('Name already exists'));
+      (mockInvoke as any).mockRejectedValue(new Error('Name already exists'));
 
       await expect(service.renameInventory(input)).rejects.toThrow('Name already exists');
     });
@@ -232,7 +232,7 @@ describe('TrackInventoryService', () => {
 
   describe('deleteInventory', () => {
     it('should delete an inventory', async () => {
-      mockInvoke.mockResolvedValue(undefined);
+      (mockInvoke as any).mockResolvedValue(undefined);
 
       await service.deleteInventory('inv-1');
 
@@ -240,13 +240,13 @@ describe('TrackInventoryService', () => {
     });
 
     it('should throw error when deletion fails', async () => {
-      mockInvoke.mockRejectedValue(new Error('Inventory not found'));
+      (mockInvoke as any).mockRejectedValue(new Error('Inventory not found'));
 
       await expect(service.deleteInventory('invalid-id')).rejects.toThrow('Inventory not found');
     });
 
     it('should throw error on constraint violation', async () => {
-      mockInvoke.mockRejectedValue(new Error('Cannot delete: inventory has items'));
+      (mockInvoke as any).mockRejectedValue(new Error('Cannot delete: inventory has items'));
 
       await expect(service.deleteInventory('inv-with-items')).rejects.toThrow(
         'Cannot delete: inventory has items'
@@ -260,12 +260,12 @@ describe('TrackInventoryService', () => {
         inventory_id: 'inv-1',
         track_id: 'track-1',
         quantity: 5,
-        price: { amount: 500n, currency: 'EUR' as Currency },
+        price: { amount: BigInt(500), currency: 'EUR' as Currency },
         seller_id: 'seller-1',
         purchase_date: '2025-03-08'
-      };
+      } as any;
 
-      mockInvoke.mockResolvedValue(undefined);
+      (mockInvoke as any).mockResolvedValue(undefined);
 
       await service.addPurchase(input);
 
@@ -277,12 +277,12 @@ describe('TrackInventoryService', () => {
         inventory_id: 'inv-1',
         track_id: 'track-1',
         quantity: 3,
-        price: { amount: 300n, currency: 'USD' as Currency },
+        price: { amount: BigInt(300), currency: 'USD' as Currency },
         seller_id: null,
         purchase_date: '2025-03-08'
-      };
+      } as any;
 
-      mockInvoke.mockResolvedValue(undefined);
+      (mockInvoke as any).mockResolvedValue(undefined);
 
       await service.addPurchase(input);
 
@@ -294,12 +294,12 @@ describe('TrackInventoryService', () => {
         inventory_id: 'invalid',
         track_id: 'track-1',
         quantity: 1,
-        price: { amount: 100n, currency: 'EUR' as Currency },
+        price: { amount: BigInt(100), currency: 'EUR' as Currency },
         seller_id: null,
         purchase_date: '2025-03-08'
-      };
+      } as any;
 
-      mockInvoke.mockRejectedValue(new Error('Inventory not found'));
+      (mockInvoke as any).mockRejectedValue(new Error('Inventory not found'));
 
       await expect(service.addPurchase(input)).rejects.toThrow('Inventory not found');
     });
@@ -308,16 +308,15 @@ describe('TrackInventoryService', () => {
   describe('createProduct', () => {
     it('should create a new track product and return ID', async () => {
       const input: CreateTrackProductArgs = {
-        manufacturer_id: 'mfg-1',
-        product_code: 'T-100',
+        manufacturerId: 'mfg-1',
+        productCode: 'T-100',
         description: 'New Track',
-        scale: 'H0',
         power_method: 'AC',
         track_type: 'STRAIGHT',
         total_length_mm: 1000
-      };
+      } as any;
 
-      mockInvoke.mockResolvedValue('track-new-789');
+      (mockInvoke as any).mockResolvedValue('track-new-789');
 
       const result = await service.createProduct(input);
 
@@ -327,16 +326,15 @@ describe('TrackInventoryService', () => {
 
     it('should throw error on product creation failure', async () => {
       const input: CreateTrackProductArgs = {
-        manufacturer_id: 'mfg-1',
-        product_code: 'DUPLICATE',
+        manufacturerId: 'mfg-1',
+        productCode: 'DUPLICATE',
         description: 'Track',
-        scale: 'H0',
         power_method: 'DC',
         track_type: 'CURVED',
         total_length_mm: 500
-      };
+      } as any;
 
-      mockInvoke.mockRejectedValue(new Error('Product code already exists'));
+      (mockInvoke as any).mockRejectedValue(new Error('Product code already exists'));
 
       await expect(service.createProduct(input)).rejects.toThrow('Product code already exists');
     });
@@ -344,7 +342,7 @@ describe('TrackInventoryService', () => {
 
   describe('setItemRequired', () => {
     it('should set required quantity for a track item', async () => {
-      mockInvoke.mockResolvedValue(undefined);
+      (mockInvoke as any).mockResolvedValue(undefined);
 
       await service.setItemRequired('inv-1', 'track-1', 10);
 
@@ -358,7 +356,7 @@ describe('TrackInventoryService', () => {
     });
 
     it('should handle zero required quantity', async () => {
-      mockInvoke.mockResolvedValue(undefined);
+      (mockInvoke as any).mockResolvedValue(undefined);
 
       await service.setItemRequired('inv-1', 'track-2', 0);
 
@@ -372,7 +370,7 @@ describe('TrackInventoryService', () => {
     });
 
     it('should throw error when setting required fails', async () => {
-      mockInvoke.mockRejectedValue(new Error('Item not found in inventory'));
+      (mockInvoke as any).mockRejectedValue(new Error('Item not found in inventory'));
 
       await expect(service.setItemRequired('inv-1', 'invalid-track', 5)).rejects.toThrow(
         'Item not found in inventory'
@@ -380,7 +378,7 @@ describe('TrackInventoryService', () => {
     });
 
     it('should throw error on invalid inventory', async () => {
-      mockInvoke.mockRejectedValue(new Error('Inventory not found'));
+      (mockInvoke as any).mockRejectedValue(new Error('Inventory not found'));
 
       await expect(service.setItemRequired('invalid-inv', 'track-1', 3)).rejects.toThrow(
         'Inventory not found'
@@ -390,7 +388,7 @@ describe('TrackInventoryService', () => {
 
   describe('Tauri invoke calls', () => {
     it('should invoke correct command names', async () => {
-      mockInvoke.mockResolvedValue(null);
+      (mockInvoke as any).mockResolvedValue(null);
 
       await service.fetchInventories();
       expect(mockInvoke).toHaveBeenCalledWith('get_track_inventories');
@@ -413,13 +411,13 @@ describe('TrackInventoryService', () => {
         message: 'Invalid argument'
       };
 
-      mockInvoke.mockRejectedValue(new Error(JSON.stringify(tauriError)));
+      (mockInvoke as any).mockRejectedValue(new Error(JSON.stringify(tauriError)));
 
       await expect(service.fetchInventories()).rejects.toThrow();
     });
 
     it('should handle timeout errors', async () => {
-      mockInvoke.mockRejectedValue(new Error('Timeout: operation took too long'));
+      (mockInvoke as any).mockRejectedValue(new Error('Timeout: operation took too long'));
 
       await expect(service.fetchInventories()).rejects.toThrow('Timeout');
     });

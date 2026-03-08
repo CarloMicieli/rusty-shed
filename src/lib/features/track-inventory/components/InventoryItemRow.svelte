@@ -23,9 +23,7 @@
   );
 
   const rowClass = $derived(
-    hasShortage
-      ? 'bg-red-950/10 border-red-500/20'
-      : 'bg-zinc-900 border-white/5'
+    hasShortage ? 'bg-red-950/10 border-red-500/20' : 'bg-zinc-900 border-white/5'
   );
   const shortageCount = $derived(Number(item.required) - Number(item.quantity));
 

@@ -201,7 +201,7 @@
       {editable}
       onBrowseImage={editable ? handleBrowseImage : undefined}
       onImageDropped={editable ? handleImageDropped : undefined}
-      onError={onError}
+      {onError}
     />
   </div>
 
@@ -244,7 +244,7 @@
 
   <!-- ═══ Tabs ══════════════════════════════════════════════════════════════ -->
   <div data-testid="tabs-box" class="mx-4 mt-3 mb-4">
-    <RailwayModelTabsContainer {model} {editable} onModelUpdated={onModelUpdated} onError={onError} />
+    <RailwayModelTabsContainer {model} {editable} {onModelUpdated} {onError} />
   </div>
 
   <!-- ═══ Crop dialogs ════════════════════════════════════════════════════ -->

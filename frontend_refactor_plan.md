@@ -17,10 +17,12 @@ enforce i18n, improve maintainability through component splitting, and raise tes
 **The Problem:** Two byte-for-byte identical files use `export let` and `<slot />` (Svelte 4).
 
 **Location:**
+
 - `src/lib/shared/ui/FormField.svelte` — `export let` ×4, `<slot />`
 - `src/lib/components/ui/FormField.svelte` — exact duplicate of above
 
 **Refactor Action:**
+
 1. Delete `src/lib/components/ui/FormField.svelte` (the legacy path).
 2. Rewrite `src/lib/shared/ui/FormField.svelte` using Svelte 5 Runes:
 
@@ -38,7 +40,9 @@ enforce i18n, improve maintainability through component splitting, and raise tes
 </script>
 
 <div class="field">
-  <label for={fieldId}>{label}{#if required}<span>*</span>{/if}</label>
+  <label for={fieldId}
+    >{label}{#if required}<span>*</span>{/if}</label
+  >
   {@render children()}
   {#if error}<p class="error">{error}</p>{/if}
 </div>
@@ -55,6 +59,7 @@ components use `export let`. `ExportDialog` additionally uses `on:click`. All UI
 (resolved together with Task B-4).
 
 **Location:**
+
 - `src/lib/features/export/components/ExportDialog.svelte` — `export let` ×3, `on:click` ×2
 - `src/lib/features/export/components/ExportProgress.svelte` — `export let` ×4
 - `src/lib/features/export/components/ExportPreview.svelte` — `export let` ×2
@@ -105,6 +110,7 @@ detail sheet panel content are entirely hardcoded in English. All matching `depo
 **Location:** `src/lib/features/depot/components/DepotTable.svelte`
 
 **Refactor Action:** Add `import * as m from '$lib/paraglide/messages.js'` and replace:
+
 - `headers` array (`STATUS`, `VISUAL`, `ROAD NUMBER`, etc.) → `depot_*` keys
 - `'On Track'` / `'In Storage'` → `m.depot_status_in_service()` and equivalent key
 - Action buttons (`Update ADDR`, `Close`, `Decommission`) → `depot_*` keys
@@ -120,6 +126,7 @@ coverage already existing in the messages file.
 **Location:** `src/lib/features/budget/components/BudgetTable.svelte`
 
 **Refactor Action:**
+
 - Add import and map every column header to its `budget_table_*` key.
 - Replace static month name array with locale-aware formatting:
   ```ts
@@ -137,6 +144,7 @@ coverage already existing in the messages file.
 `import_*` keys exist; a few new ones need to be added.
 
 **Location:**
+
 - `src/lib/features/import/components/ImportPreview.svelte`
 - `src/lib/features/import/components/ImportReport.svelte`
 
@@ -164,10 +172,12 @@ No new keys needed.
 **The Problem:** No Paraglide import. Stat card labels and confirmation button text are hardcoded.
 
 **Location:**
+
 - `src/lib/features/collection/components/CollectionSummary.svelte`
 - `src/lib/features/collection/components/DeleteModal.svelte`
 
 **Refactor Action:** Add import. Replace:
+
 - Stat labels (`Collection value`, `Total units`, `Locomotives`, …) → `stats_total_collection_value`,
   `constants_categories_*` keys
 - `Cancel` / `Confirm` buttons → `common_cancel` / `common_delete` (both already exist)
@@ -180,6 +190,7 @@ No new keys needed.
 are hardcoded.
 
 **Location:**
+
 - `src/lib/features/budget/components/BudgetDonutChart.svelte`
 - `src/lib/features/budget/components/YearlySpendingChart.svelte`
 - `src/lib/features/budget/components/BudgetMonthRow.svelte`
@@ -196,6 +207,7 @@ Add one new key `budget_month_active` for the `[Active]` badge.
 `Move`, `Purchase`, `High Priority`) are hardcoded.
 
 **Location:**
+
 - `src/lib/features/digital-roster/components/DigitalSummary.svelte`
 - `src/lib/features/wishlists/components/WishlistItemCard.svelte`
 
@@ -215,6 +227,7 @@ hardcoded English strings.
 **Refactor Action:** Add `import * as m from '$lib/paraglide/messages.js'`. Map sidebar labels
 (`Product Code`, `Scale`, `Power`, `Rolling Stock`) to existing `form_new_model_*` keys. Add new
 keys for validation error messages:
+
 - `form_error_required_fields` — "Please fill in all required fields (including English description)"
 - `form_error_no_rolling_stock` — "At least one rolling stock is required"
 - `form_error_unexpected` — "An unexpected error occurred"
@@ -227,18 +240,18 @@ keys for validation error messages:
 
 **Locations and fixes:**
 
-| File | Hardcoded Strings | Action |
-|---|---|---|
-| `src/lib/features/import/components/ImportDropZone.svelte` | 3 | Use existing `import_dropzone_*` keys |
-| `src/lib/features/maintenance/components/MaintenanceEventTimeline.svelte` | 1 | Add `maintenance_no_events` key |
-| `src/lib/features/track-inventory/components/PurchaseHistoryItem.svelte` | 2 (`Qty`, `Total`) | Add `track_purchase_qty`, `track_purchase_total` keys |
-| `src/lib/features/depot/components/DepotCategory.svelte` | 1 (`UNITS` badge) | Use `depot_*` key |
-| `src/routes/railway-tracks/[id]/+page.svelte` | 2 (error / not found) | Add `track_inventories_not_found` key |
-| `src/lib/components/model-details/ImageDropZone.svelte` | 3 (format error messages) | Use `upload_error_unsupported_format` with format param |
-| `src/lib/components/model-details/ImageUpload.svelte` | 1 (`Cancel` in delete dialog) | Use existing `common_cancel` |
-| `src/lib/components/RichTextToolbar.svelte` | 4 (`aria-label` attributes) | Add `toolbar_bold`, `toolbar_italic`, `toolbar_bullet_list`, `toolbar_ordered_list` keys |
-| `src/routes/+error.svelte` | 1 (`<title>`) | Use `m.app_name()` |
-| `src/lib/features/depot/components/DepotStatusFooter.svelte` | 5 (terminal-style labels) | Evaluate if intentional design; document as exception if so |
+| File                                                                      | Hardcoded Strings             | Action                                                                                   |
+| ------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `src/lib/features/import/components/ImportDropZone.svelte`                | 3                             | Use existing `import_dropzone_*` keys                                                    |
+| `src/lib/features/maintenance/components/MaintenanceEventTimeline.svelte` | 1                             | Add `maintenance_no_events` key                                                          |
+| `src/lib/features/track-inventory/components/PurchaseHistoryItem.svelte`  | 2 (`Qty`, `Total`)            | Add `track_purchase_qty`, `track_purchase_total` keys                                    |
+| `src/lib/features/depot/components/DepotCategory.svelte`                  | 1 (`UNITS` badge)             | Use `depot_*` key                                                                        |
+| `src/routes/railway-tracks/[id]/+page.svelte`                             | 2 (error / not found)         | Add `track_inventories_not_found` key                                                    |
+| `src/lib/components/model-details/ImageDropZone.svelte`                   | 3 (format error messages)     | Use `upload_error_unsupported_format` with format param                                  |
+| `src/lib/components/model-details/ImageUpload.svelte`                     | 1 (`Cancel` in delete dialog) | Use existing `common_cancel`                                                             |
+| `src/lib/components/RichTextToolbar.svelte`                               | 4 (`aria-label` attributes)   | Add `toolbar_bold`, `toolbar_italic`, `toolbar_bullet_list`, `toolbar_ordered_list` keys |
+| `src/routes/+error.svelte`                                                | 1 (`<title>`)                 | Use `m.app_name()`                                                                       |
+| `src/lib/features/depot/components/DepotStatusFooter.svelte`              | 5 (terminal-style labels)     | Evaluate if intentional design; document as exception if so                              |
 
 ---
 
@@ -255,6 +268,7 @@ editing, scale/era inline editing, tab navigation, and rolling stock unit manage
 **Location:** `src/lib/components/RailwayModelCard.svelte`
 
 **Refactor Action:** Extract into `src/lib/components/model-details/`:
+
 - `RailwayModelCardHeader.svelte` — manufacturer, product code, scale, era, power metadata display
 - `RailwayModelImagePanel.svelte` — drag-and-drop area, upload button, `ImageCropDialog` trigger
 - `RailwayModelDescriptionEditor.svelte` — inline description field with save/cancel
@@ -272,6 +286,7 @@ are all in one file.
 **Location:** `src/lib/components/model-details/RollingStockCard.svelte`
 
 **Refactor Action:** Extract into `src/lib/components/model-details/components/`:
+
 - `RollingStockCardHeader.svelte` — collapsed row (series, road number, livery, expand toggle)
 - `RollingStockIdentificationFields.svelte` — inline-editable identification fields group
 - `RollingStockTechnicalSpecs.svelte` — flywheel, body shell, chassis, lighting (expanded section)
@@ -285,6 +300,7 @@ are all in one file.
 **Location:** `src/lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte`
 
 **Refactor Action:** Extract into `src/lib/features/rolling-stock-edit/components/`:
+
 - `RollingStockBasicFields.svelte` — series code, road number, livery, depot
 - `RollingStockTechnicalFields.svelte` — flywheel, body shell, chassis, lights, DCC interface, control, coupling
 - `DrawerActionFooter.svelte` — Save/Cancel/Discard buttons (reusable across all drawers)
@@ -297,12 +313,14 @@ are all in one file.
 627-line copies.
 
 **Location:**
+
 - `src/lib/features/wishlists/components/AddRailwayModelDrawer.svelte`
 - `src/lib/features/collection/components/AddModelDrawer.svelte`
 
 **Refactor Action:** Extract a shared `RailwayModelBaseForm.svelte` into `src/lib/shared/components/`
 containing manufacturer, product code, description, category, scale, power method, and epoch fields.
 Each drawer composes this base form and adds its own context-specific section:
+
 - Collection drawer → purchase info fields
 - Wishlists drawer → priority and price target fields
 
@@ -316,6 +334,7 @@ dialogs live in a single component.
 **Location:** `src/lib/features/digital-roster/components/DecoderInstallDrawer.svelte`
 
 **Refactor Action:** Extract into `src/lib/features/digital-roster/components/`:
+
 - `DecoderRollingStockPicker.svelte` — searchable list of installable rolling stocks
 - `DecoderPicker.svelte` — decoder search (manufacturer filter + decoder list)
 - `DecoderInstallConfirmDialog.svelte` — "are you sure" confirmation overlay
@@ -329,10 +348,12 @@ rolling stock accordion section is itself a mega-component with 14+ conditional 
 fields.
 
 **Location:**
+
 - `src/lib/features/catalogue/CreateRailwayModel.svelte`
 - `src/lib/features/catalogue/components/RollingStockSection.svelte`
 
 **Refactor Action:**
+
 - From `CreateRailwayModel`: extract `CatalogueFormSidebar.svelte` into
   `src/lib/features/catalogue/components/`
 - From `RollingStockSection`: extract `RollingStockCategoryFields.svelte` (category-specific
@@ -346,17 +367,17 @@ fields.
 
 **Locations (in priority order):**
 
-| File | Lines | Suggested Extraction |
-|---|---|---|
-| `src/lib/features/collection/components/CollectionItemSidebar.svelte` | 413 | `CollectionItemDetails.svelte`, `CollectionPurchaseInfo.svelte` |
-| `src/lib/features/track-inventory/components/AddPurchaseDialog.svelte` | 393 | `PurchaseFormFields.svelte` |
-| `src/lib/features/track-inventory/components/CreateProductDialog.svelte` | 358 | `ProductFormFields.svelte` |
-| `src/lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte` | 348 | Reuse `RollingStockBasicFields` from C-3 |
-| `src/lib/features/wishlists/components/PurchaseDialog.svelte` | 309 | `PurchasePaymentFields.svelte` |
-| `src/lib/features/depot/components/DepotTable.svelte` | 307 | `DepotDetailSheet.svelte` (detail action sheet) |
-| `src/lib/components/SettingsForm.svelte` | 295 | Relocate imports to canonical `src/lib/features/settings/components/SettingsForm.svelte` (146 lines) and delete the `src/lib/components/` copy |
-| `src/routes/dashboard/+page.svelte` | 240 | `DashboardCharts.svelte` |
-| `src/lib/features/wishlists/WishlistsDashboard.svelte` | 242 | `WishlistFilterBar.svelte` |
+| File                                                                             | Lines | Suggested Extraction                                                                                                                           |
+| -------------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/features/collection/components/CollectionItemSidebar.svelte`            | 413   | `CollectionItemDetails.svelte`, `CollectionPurchaseInfo.svelte`                                                                                |
+| `src/lib/features/track-inventory/components/AddPurchaseDialog.svelte`           | 393   | `PurchaseFormFields.svelte`                                                                                                                    |
+| `src/lib/features/track-inventory/components/CreateProductDialog.svelte`         | 358   | `ProductFormFields.svelte`                                                                                                                     |
+| `src/lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte` | 348   | Reuse `RollingStockBasicFields` from C-3                                                                                                       |
+| `src/lib/features/wishlists/components/PurchaseDialog.svelte`                    | 309   | `PurchasePaymentFields.svelte`                                                                                                                 |
+| `src/lib/features/depot/components/DepotTable.svelte`                            | 307   | `DepotDetailSheet.svelte` (detail action sheet)                                                                                                |
+| `src/lib/components/SettingsForm.svelte`                                         | 295   | Relocate imports to canonical `src/lib/features/settings/components/SettingsForm.svelte` (146 lines) and delete the `src/lib/components/` copy |
+| `src/routes/dashboard/+page.svelte`                                              | 240   | `DashboardCharts.svelte`                                                                                                                       |
+| `src/lib/features/wishlists/WishlistsDashboard.svelte`                           | 242   | `WishlistFilterBar.svelte`                                                                                                                     |
 
 ---
 
@@ -444,10 +465,12 @@ validation, optional fields defaulting correctly.
 **The Problem:** Data transformation utilities and export orchestration logic are untested.
 
 **Location:**
+
 - `src/lib/features/catalogue/utils.ts` (145 lines)
 - `src/lib/features/export/export.controller.svelte.ts` (60 lines)
 
 **Refactor Action:**
+
 - Create `src/__tests__/lib/features/catalogue/utils.test.ts` — cover `resolveLabel`, category
   mapping, and data-shaping functions.
 - Create `src/__tests__/lib/features/export/export.controller.test.ts` — cover state transitions
@@ -457,14 +480,14 @@ validation, optional fields defaulting correctly.
 
 ## Execution Order
 
-| Phase | Tasks | Rationale |
-|---|---|---|
-| 1 — Blockers | A-1, A-2, D-1 | Syntax violations and deprecated classes — small and surgical |
-| 2 — i18n Critical | B-1, B-2, B-3, B-4 | Files with the most violations; existing keys cover most |
-| 3 — i18n Remaining | B-5 through B-9 | Remaining localisation, some new keys needed |
-| 4 — Decomposition | C-1 through C-6 | Largest components first |
-| 5 — Decomposition | C-7 | Medium-sized components |
-| 6 — Tests | E-1 through E-5 | Coverage added after structure is stable |
+| Phase              | Tasks              | Rationale                                                     |
+| ------------------ | ------------------ | ------------------------------------------------------------- |
+| 1 — Blockers       | A-1, A-2, D-1      | Syntax violations and deprecated classes — small and surgical |
+| 2 — i18n Critical  | B-1, B-2, B-3, B-4 | Files with the most violations; existing keys cover most      |
+| 3 — i18n Remaining | B-5 through B-9    | Remaining localisation, some new keys needed                  |
+| 4 — Decomposition  | C-1 through C-6    | Largest components first                                      |
+| 5 — Decomposition  | C-7                | Medium-sized components                                       |
+| 6 — Tests          | E-1 through E-5    | Coverage added after structure is stable                      |
 
 ---
 

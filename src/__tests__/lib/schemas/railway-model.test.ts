@@ -138,9 +138,7 @@ describe('railway-model schemas', () => {
     it('rejects missing required nested fields', () => {
       const invalid = {
         ...validInput,
-        rolling_stocks: [
-          { ...validInput.rolling_stocks[0], friendly_name: '' }
-        ]
+        rolling_stocks: [{ ...validInput.rolling_stocks[0], friendly_name: '' }]
       };
       expect(() => createRailwayModelSchema.parse(invalid)).toThrow();
     });

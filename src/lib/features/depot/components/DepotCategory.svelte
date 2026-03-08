@@ -47,7 +47,8 @@
             variant="outline"
             class="border-[#f59e0b]/30 bg-[#f59e0b]/10 px-3 py-1 font-mono text-[#f59e0b]"
           >
-            {items.length} {m.depot_units()}
+            {items.length}
+            {m.depot_units()}
           </Badge>
         </div>
       </div>

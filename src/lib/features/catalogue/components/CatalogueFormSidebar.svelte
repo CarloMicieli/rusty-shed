@@ -51,8 +51,7 @@
         </div>
       {/if}
       {#if scale}
-        {@const scaleDisplay =
-          scalesData.find((s) => s.id === scale)?.display ?? scale}
+        {@const scaleDisplay = scalesData.find((s) => s.id === scale)?.display ?? scale}
         <div>
           <div class="mb-0.5 text-[10px] tracking-wider text-zinc-500 uppercase">
             {resolveLabel(formLabels.scale)}
@@ -97,15 +96,8 @@
 
     <!-- Actions -->
     <div class="space-y-2">
-      <Button
-        type="submit"
-        class="w-full"
-        disabled={isSubmitting}
-        onclick={onSubmit}
-      >
-        {isSubmitting
-          ? `${resolveLabel(formLabels.create)}...`
-          : resolveLabel(formLabels.create)}
+      <Button type="submit" class="w-full" disabled={isSubmitting} onclick={onSubmit}>
+        {isSubmitting ? `${resolveLabel(formLabels.create)}...` : resolveLabel(formLabels.create)}
       </Button>
       <Button
         type="button"

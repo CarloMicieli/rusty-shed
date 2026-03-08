@@ -120,10 +120,7 @@
             required
             placeholder="0.00"
           />
-          <ShoppingCart
-            size={16}
-            class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-600"
-          />
+          <ShoppingCart size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-600" />
         </div>
         <select
           class="h-12 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs font-bold text-zinc-400 focus:outline-none"

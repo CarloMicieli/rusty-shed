@@ -211,10 +211,7 @@
           bind:depot={form.depot}
         />
 
-        <RollingStockControlField
-          bind:control={form.control}
-          {controlOptions}
-        />
+        <RollingStockControlField bind:control={form.control} {controlOptions} />
       </div>
     </div>
 

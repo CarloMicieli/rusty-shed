@@ -377,7 +377,8 @@
       rollingStockCount={$form.rolling_stocks.length}
       isSubmitting={$submitting}
       onAddRollingStock={addRollingStock}
-      onSubmit={() => (document.getElementById('railway-model-form') as HTMLFormElement)?.requestSubmit()}
+      onSubmit={() =>
+        (document.getElementById('railway-model-form') as HTMLFormElement)?.requestSubmit()}
       onCancel={() => navigate('/')}
     />
   </div>

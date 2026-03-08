@@ -213,8 +213,8 @@
     {#if canEdit}
       <InPlaceSelectEdit
         value={localCouplingSocket ?? ''}
-        displayLabel={COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)
-          ?.label ?? ''}
+        displayLabel={COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ??
+          ''}
         options={[...COUPLING_SOCKET_OPTIONS]}
         placeholder={m.specs_drawer_field_coupling_socket()}
         onSave={async (v) => {
@@ -224,9 +224,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span
-        class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}"
-      >
+      <span class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
         {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
       </span>
     {/if}
@@ -295,8 +293,7 @@
       {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
       | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
       {#if rollingStock.digital.installed_decoder_id}
-        | {m.model_rolling_stock_digital_decoder_id()}: {rollingStock.digital
-          .installed_decoder_id}
+        | {m.model_rolling_stock_digital_decoder_id()}: {rollingStock.digital.installed_decoder_id}
       {/if}
     </p>
   </div>

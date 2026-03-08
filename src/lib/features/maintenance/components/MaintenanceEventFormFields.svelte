@@ -115,10 +115,7 @@
 
 <!-- Notes -->
 <div class="space-y-2">
-  <label
-    for="event-notes"
-    class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-  >
+  <label for="event-notes" class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
     {m.maintenance_add_event_notes_label()}
   </label>
   <textarea

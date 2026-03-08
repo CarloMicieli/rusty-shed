@@ -23,12 +23,7 @@
         <Button type="button" variant="ghost" onclick={onCancel} disabled={isSubmitting}>
           {m.add_model_cancel()}
         </Button>
-        <Button
-          type="button"
-          variant="default"
-          onclick={onConfirm}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="default" onclick={onConfirm} disabled={isSubmitting}>
           {m.digital_roster_replace()}
         </Button>
       </div>

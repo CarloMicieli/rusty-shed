@@ -10,8 +10,7 @@
     disabled?: boolean;
   }
 
-  let { onSave, onCancel, isSaving = false, isLoading = false, disabled = false }: Props =
-    $props();
+  let { onSave, onCancel, isSaving = false, isLoading = false, disabled = false }: Props = $props();
 </script>
 
 <div class="flex items-center justify-end gap-3 border-t border-zinc-800 px-6 py-4">

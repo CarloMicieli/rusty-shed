@@ -5,11 +5,7 @@
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import type {
-    CollectionItemView,
-    CollectionItemUpdateArgs,
-    SellerView
-  } from '$lib/bindings';
+  import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
 
   interface Props {
     item: CollectionItemView;

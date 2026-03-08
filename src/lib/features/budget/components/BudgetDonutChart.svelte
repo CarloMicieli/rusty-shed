@@ -80,7 +80,9 @@
       <div class="text-4xl font-bold {getColorClass(remainingPercentage)}">
         {remainingPercentage.toFixed(1)}%
       </div>
-      <div class="text-surface-600 mt-1 text-sm capitalize">{m.budget_dashboard_donut_remaining()}</div>
+      <div class="text-surface-600 mt-1 text-sm capitalize">
+        {m.budget_dashboard_donut_remaining()}
+      </div>
     </div>
   </div>
   <div class="w-full space-y-2">

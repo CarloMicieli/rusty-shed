@@ -274,7 +274,6 @@
   function handleDiscardCancel() {
     showDiscardDialog = false;
   }
-
 </script>
 
 <!-- Drawer Overlay -->
@@ -331,17 +330,17 @@
             rollingStocks={installableRollingStocks}
             selectedId={selectedRollingStockId}
             error={validationErrors.rollingStock}
-            touched={touched}
+            {touched}
             onChange={(id) => (selectedRollingStockId = id)}
           />
 
           <!-- Decoder Selection -->
           <DecoderPicker
-            decoders={decoders}
-            manufacturers={manufacturers}
+            {decoders}
+            {manufacturers}
             selectedId={selectedDecoderId}
             error={validationErrors.decoder}
-            touched={touched}
+            {touched}
             onChange={(id) => (selectedDecoderId = id)}
           />
 
@@ -408,7 +407,7 @@
 
 <DecoderInstallConfirmDialog
   open={showConfirmDialog}
-  isSubmitting={isSubmitting}
+  {isSubmitting}
   onConfirm={handleConfirmReplace}
   onCancel={handleCancelReplace}
 />

@@ -11,16 +11,10 @@
   const { added, skipped, imagesImported, imagesFailed }: Props = $props();
 
   const totalAdded = $derived(
-    added.manufacturers +
-      added.railwayModels +
-      added.collectionItems +
-      added.sellers
+    added.manufacturers + added.railwayModels + added.collectionItems + added.sellers
   );
   const totalSkipped = $derived(
-    skipped.manufacturers +
-      skipped.railwayModels +
-      skipped.collectionItems +
-      skipped.sellers
+    skipped.manufacturers + skipped.railwayModels + skipped.collectionItems + skipped.sellers
   );
   const hasImageFailures = $derived(imagesFailed.length > 0);
 

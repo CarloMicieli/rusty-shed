@@ -8,12 +8,22 @@ import type {
 } from '$lib/bindings';
 import { ImportController } from '$lib/features/import/import.controller.svelte';
 
+// Mock svelte context functions
+vi.mock('svelte', async () => {
+  const actual = await vi.importActual('svelte');
+  return {
+    ...actual,
+    getContext: vi.fn() as any,
+    setContext: vi.fn() as any
+  };
+});
+
 // Mock $lib/bindings
 const mockCommands = {
-  analyzeImportPackage: vi.fn(),
-  getImportPreview: vi.fn(),
-  executeImport: vi.fn(),
-  cancelImportSession: vi.fn()
+  analyzeImportPackage: vi.fn() as any,
+  getImportPreview: vi.fn() as any,
+  executeImport: vi.fn() as any,
+  cancelImportSession: vi.fn() as any
 };
 
 vi.mock('$lib/bindings', () => ({
@@ -39,9 +49,9 @@ describe('ImportController', () => {
         railway_models: 10,
         rolling_stocks: 25,
         sellers: 3
-      };
+      } as any;
 
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: {
           sessionId: 'session-123',
@@ -76,7 +86,7 @@ describe('ImportController', () => {
     });
 
     it('should set canImport to false when validation status is not valid', async () => {
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: {
           sessionId: 'session-123',
@@ -96,7 +106,7 @@ describe('ImportController', () => {
     });
 
     it('should handle analysis errors gracefully', async () => {
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'error',
         error: 'Invalid archive format'
       });
@@ -163,7 +173,7 @@ describe('ImportController', () => {
   describe('getPreview', () => {
     it('should fetch and set preview data when session ID exists', async () => {
       // First set a session ID
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: {
           sessionId: 'session-456',
@@ -175,10 +185,10 @@ describe('ImportController', () => {
       await controller.analyzePackage('/path/to/file.zip');
 
       const mockErrors: ImportValidationError[] = [
-        { recordId: 'rec-1', message: 'Invalid data', severity: 'error' }
+        { recordId: 'rec-1', message: 'Invalid data', severity: 'error' } as any
       ];
       const mockWarnings: ImportWarning[] = [
-        { recordId: 'rec-2', message: 'Potential duplicate', severity: 'warning' }
+        { recordId: 'rec-2', message: 'Potential duplicate', severity: 'warning' } as any
       ];
 
       const mockPreview: ImportPreviewResponse = {
@@ -192,9 +202,9 @@ describe('ImportController', () => {
           invalidRecords: 1,
           duplicateWarnings: 1
         }
-      };
+      } as any;
 
-      mockCommands.getImportPreview.mockResolvedValue({
+      (mockCommands.getImportPreview as any).mockResolvedValue({
         status: 'ok',
         data: mockPreview
       });
@@ -236,17 +246,21 @@ describe('ImportController', () => {
 
     it('should handle preview fetch errors', async () => {
       // Set session ID first
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
-        data: { sessionId: 'session-789', recordCounts: {}, validationStatus: 'valid' }
+        data: { sessionId: 'session-789', recordCounts: {} as any, validationStatus: 'valid' }
       });
       await controller.analyzePackage('/path/to/file.zip');
 
-      mockCommands.getImportPreview.mockRejectedValue(new Error('Preview failed'));
+      (mockCommands.getImportPreview as any).mockRejectedValue(new Error('Preview failed'));
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      let previewValue: ImportPreviewResponse | null = { sessionId: '', errors: [], warnings: [] };
+      let previewValue: ImportPreviewResponse | null = {
+        sessionId: '',
+        errors: [],
+        warnings: []
+      } as any;
       controller.preview$.subscribe((preview) => {
         previewValue = preview;
       });
@@ -261,7 +275,7 @@ describe('ImportController', () => {
   describe('executeImport', () => {
     it('should execute import and set result when session ID exists', async () => {
       // Set session ID first
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: { sessionId: 'session-111', recordCounts: {}, validationStatus: 'valid' }
       });
@@ -270,13 +284,13 @@ describe('ImportController', () => {
       const mockWarnings: ImportWarning[] = [];
       const mockResult: ImportResultResponse = {
         sessionId: 'session-111',
-        status: 'completed',
-        recordsImported: { manufacturers: 5, railway_models: 10 },
+        status: 'completed' as any,
+        recordsImported: { manufacturers: 5, railway_models: 10 } as any,
         warnings: mockWarnings,
         importedAt: new Date().toISOString()
-      };
+      } as any;
 
-      mockCommands.executeImport.mockResolvedValue({
+      (mockCommands.executeImport as any).mockResolvedValue({
         status: 'ok',
         data: mockResult
       });
@@ -306,13 +320,13 @@ describe('ImportController', () => {
 
     it('should handle import execution errors', async () => {
       // Set session ID first
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: { sessionId: 'session-222', recordCounts: {}, validationStatus: 'valid' }
       });
       await controller.analyzePackage('/path/to/file.zip');
 
-      mockCommands.executeImport.mockRejectedValue(new Error('Import failed'));
+      (mockCommands.executeImport as any).mockRejectedValue(new Error('Import failed'));
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -331,20 +345,24 @@ describe('ImportController', () => {
   describe('cancelSession', () => {
     it('should cancel session and reset state when session ID exists', async () => {
       // Set session ID first
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
-        data: { sessionId: 'session-333', recordCounts: { manufacturers: 5 }, validationStatus: 'valid' }
+        data: {
+          sessionId: 'session-333',
+          recordCounts: { manufacturers: 5 } as any,
+          validationStatus: 'valid'
+        }
       });
       await controller.analyzePackage('/path/to/file.zip');
 
-      mockCommands.cancelImportSession.mockResolvedValue(undefined);
+      (mockCommands.cancelImportSession as any).mockResolvedValue(undefined);
 
       let sessionIdValue: string | null = 'session-333';
       controller.sessionId$.subscribe((id) => {
         sessionIdValue = id;
       });
 
-      let recordCountsValue: RecordCounts | null = { manufacturers: 5 };
+      let recordCountsValue: RecordCounts | null = { manufacturers: 5 } as any;
       controller.recordCounts$.subscribe((counts) => {
         recordCountsValue = counts;
       });
@@ -364,13 +382,13 @@ describe('ImportController', () => {
 
     it('should reset state even if cancellation fails', async () => {
       // Set session ID first
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: { sessionId: 'session-444', recordCounts: {}, validationStatus: 'valid' }
       });
       await controller.analyzePackage('/path/to/file.zip');
 
-      mockCommands.cancelImportSession.mockRejectedValue(new Error('Cancel failed'));
+      (mockCommands.cancelImportSession as any).mockRejectedValue(new Error('Cancel failed'));
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -389,11 +407,11 @@ describe('ImportController', () => {
   describe('reset', () => {
     it('should clear all state when reset is called', async () => {
       // Set some state first
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: {
           sessionId: 'session-555',
-          recordCounts: { manufacturers: 5, railway_models: 10 },
+          recordCounts: { manufacturers: 5, railway_models: 10 } as any,
           validationStatus: 'valid'
         }
       });
@@ -401,11 +419,11 @@ describe('ImportController', () => {
       await controller.analyzePackage('/path/to/file.zip');
 
       let sessionIdValue: string | null = 'session-555';
-      let recordCountsValue: RecordCounts | null = { manufacturers: 5 };
+      let recordCountsValue: RecordCounts | null = { manufacturers: 5 } as any;
       let canImportValue = true;
       let isLoadingValue = true;
       let errorsValue: ImportValidationError[] = [
-        { recordId: 'rec-1', message: 'Error', severity: 'error' }
+        { recordId: 'rec-1', message: 'Error', severity: 'error' } as any
       ];
 
       controller.sessionId$.subscribe((id) => {
@@ -438,10 +456,10 @@ describe('ImportController', () => {
       const mockPreview: ImportPreviewResponse = {
         sessionId: 'session-666',
         errors: [],
-        warnings: [{ recordId: 'rec-1', message: 'Warning', severity: 'warning' }],
+        warnings: [{ recordId: 'rec-1', message: 'Warning', severity: 'warning' } as any],
         canImport: true,
         summary: { totalRecords: 10, validRecords: 10, invalidRecords: 0 }
-      };
+      } as any;
 
       let previewValue: ImportPreviewResponse | null = mockPreview;
       let warningsValue: ImportWarning[] = mockPreview.warnings;
@@ -480,7 +498,7 @@ describe('ImportController', () => {
       controller.sessionId$.subscribe((id) => values1.push(id));
       controller.sessionId$.subscribe((id) => values2.push(id));
 
-      mockCommands.analyzeImportPackage.mockResolvedValue({
+      (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: { sessionId: 'session-777', recordCounts: {}, validationStatus: 'valid' }
       });

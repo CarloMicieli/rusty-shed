@@ -346,8 +346,7 @@
                   <InPlaceEdit
                     value={unit.road_number ?? ''}
                     placeholder={m.road_number()}
-                    onSave={(v) =>
-                      saveRollingStockIdentification(unit.id, 'roadNumber', v, unit)}
+                    onSave={(v) => saveRollingStockIdentification(unit.id, 'roadNumber', v, unit)}
                   />
                 </div>
               {:else}
@@ -422,9 +421,7 @@
               <dd class="text-xs text-zinc-200">
                 {#if editable && rollingStockSpecLoaded.has(unit.id)}
                   <BadgePicker
-                    value={rollingStockFormState.get(unit.id)?.control ??
-                      unit.control_type ??
-                      '—'}
+                    value={rollingStockFormState.get(unit.id)?.control ?? unit.control_type ?? '—'}
                     options={controlOptions}
                     onSelect={(id) => saveRollingStockSpec(unit.id, 'control', id)}
                   />
@@ -456,9 +453,7 @@
               </dd>
             </div>
             <div class="flex flex-col gap-0.5">
-              <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
-                Length
-              </dt>
+              <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Length</dt>
               <dd class="font-mono text-xs text-zinc-200">
                 {unit.length_mm != null ? `${unit.length_mm} mm` : '—'}
               </dd>
@@ -499,8 +494,7 @@
                       <InPlaceEdit
                         value={unit.series_code}
                         placeholder={m.rolling_stock_field_series_code()}
-                        onSave={(v) =>
-                          saveRollingStockIdentification(unit.id, 'series', v, unit)}
+                        onSave={(v) => saveRollingStockIdentification(unit.id, 'series', v, unit)}
                       />
                     </div>
                     <div class="shrink-0 font-mono text-sm font-semibold text-zinc-100">
@@ -539,8 +533,7 @@
                       <InPlaceEdit
                         value={unit.depot ?? ''}
                         placeholder={m.depot()}
-                        onSave={(v) =>
-                          saveRollingStockIdentification(unit.id, 'depot', v, unit)}
+                        onSave={(v) => saveRollingStockIdentification(unit.id, 'depot', v, unit)}
                       />
                     {:else}
                       {unit.depot ?? '—'}
@@ -556,8 +549,7 @@
                       <InPlaceEdit
                         value={unit.livery ?? ''}
                         placeholder={m.livery()}
-                        onSave={(v) =>
-                          saveRollingStockIdentification(unit.id, 'livery', v, unit)}
+                        onSave={(v) => saveRollingStockIdentification(unit.id, 'livery', v, unit)}
                       />
                     {:else}
                       {unit.livery ?? '—'}

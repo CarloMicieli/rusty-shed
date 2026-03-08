@@ -115,10 +115,7 @@
       </select>
     </div>
     <div>
-      <label
-        class="mb-1 block text-xs font-medium text-zinc-400"
-        for="drawer-interior-lights"
-      >
+      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-interior-lights">
         {m.specs_drawer_field_lighting()} (interior)
       </label>
       <select
@@ -169,10 +166,7 @@
       </select>
     </div>
     <div>
-      <label
-        class="mb-1 block text-xs font-medium text-zinc-400"
-        for="drawer-dcc-interface"
-      >
+      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-dcc-interface">
         {m.specs_drawer_field_dcc_interface()}
       </label>
       <select
@@ -195,10 +189,7 @@
   </h3>
   <div class="grid grid-cols-2 gap-3">
     <div>
-      <label
-        class="mb-1 block text-xs font-medium text-zinc-400"
-        for="drawer-coupling-socket"
-      >
+      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-coupling-socket">
         {m.specs_drawer_field_coupling_socket()}
       </label>
       <select
@@ -212,10 +203,7 @@
       </select>
     </div>
     <div>
-      <label
-        class="mb-1 block text-xs font-medium text-zinc-400"
-        for="drawer-close-couplers"
-      >
+      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-close-couplers">
         {m.specs_drawer_field_close_coupling()}
       </label>
       <select
@@ -233,10 +221,7 @@
       </select>
     </div>
     <div>
-      <label
-        class="mb-1 block text-xs font-medium text-zinc-400"
-        for="drawer-digital-shunting"
-      >
+      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-digital-shunting">
         {m.specs_drawer_field_digital_shunting()}
       </label>
       <select

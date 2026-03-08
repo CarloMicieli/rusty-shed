@@ -86,9 +86,9 @@ describe('Catalogue Utils', () => {
       expect(normalized.depot).toBe('Depot A');
       expect(normalized.livery).toBe('Original');
       expect((normalized as any).locomotive_type).toBe('STEAM_LOCOMOTIVE');
-      expect(normalized.is_dummy).toBe(false);
-      expect(normalized.control).toBe('DCC_FITTED');
-      expect(normalized.dcc_interface).toBe('NEM_651');
+      expect((normalized as any).is_dummy).toBe(false);
+      expect((normalized as any).control).toBe('DCC_FITTED');
+      expect((normalized as any).dcc_interface).toBe('NEM_651');
     });
 
     it('should normalize a PassengerCar rolling stock', () => {
@@ -98,7 +98,7 @@ describe('Catalogue Utils', () => {
         railway_company_id: 'company-2',
         friendly_name: 'Passenger Car',
         series_code: 'PC-100',
-        road_number: null,
+        road_number: undefined as any,
         passenger_car_type: 'COMPARTMENT_COACH',
         service_level: 'FIRST_SECOND'
       };
@@ -134,7 +134,7 @@ describe('Catalogue Utils', () => {
         railway_company_id: 'company-4',
         friendly_name: 'Railcar',
         series_code: 'RC-50',
-        road_number: null,
+        road_number: undefined as any,
         control: 'NO_DCC',
         dcc_interface: null
       };
@@ -142,8 +142,8 @@ describe('Catalogue Utils', () => {
       const normalized = normalizeRollingStock(form);
 
       expect(normalized.category).toBe('Railcar');
-      expect(normalized.control).toBe('NO_DCC');
-      expect(normalized.dcc_interface).toBeNull();
+      expect((normalized as any).control).toBe('NO_DCC');
+      expect((normalized as any).dcc_interface).toBeNull();
     });
 
     it('should normalize an ElectricMultipleUnit rolling stock', () => {
@@ -164,9 +164,9 @@ describe('Catalogue Utils', () => {
 
       expect(normalized.category).toBe('ElectricMultipleUnit');
       expect((normalized as any).electric_multiple_unit_type).toBe('MOTOR_CAR');
-      expect(normalized.is_dummy).toBe(true);
-      expect(normalized.control).toBe('DCC_SOUND');
-      expect(normalized.dcc_interface).toBe('PLUX_22');
+      expect((normalized as any).is_dummy).toBe(true);
+      expect((normalized as any).control).toBe('DCC_SOUND');
+      expect((normalized as any).dcc_interface).toBe('PLUX_22');
     });
 
     it('should throw error for invalid category', () => {
@@ -191,8 +191,8 @@ describe('Catalogue Utils', () => {
       const normalized = normalizeRollingStock(form);
 
       expect((normalized as any).locomotive_type).toBe('');
-      expect(normalized.control).toBeNull();
-      expect(normalized.dcc_interface).toBeNull();
+      expect((normalized as any).control).toBeNull();
+      expect((normalized as any).dcc_interface).toBeNull();
     });
 
     it('should preserve livery when provided', () => {
@@ -241,13 +241,9 @@ describe('Catalogue Utils', () => {
     });
 
     it('should handle all RollingStock categories', () => {
-      const categories: Array<'Locomotive' | 'PassengerCar' | 'FreightCar' | 'Railcar' | 'ElectricMultipleUnit'> = [
-        'Locomotive',
-        'PassengerCar',
-        'FreightCar',
-        'Railcar',
-        'ElectricMultipleUnit'
-      ];
+      const categories: Array<
+        'Locomotive' | 'PassengerCar' | 'FreightCar' | 'Railcar' | 'ElectricMultipleUnit'
+      > = ['Locomotive', 'PassengerCar', 'FreightCar', 'Railcar', 'ElectricMultipleUnit'];
 
       for (const category of categories) {
         const form: RollingStockForm = {

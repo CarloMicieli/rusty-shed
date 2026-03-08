@@ -369,8 +369,8 @@
           powerMethodOptions={POWER_METHODS}
           {form}
           onAddRollingStock={addRollingStock}
-          getCategoryLabelKey={getCategoryLabelKey}
-          getPowerMethodLabelKey={getPowerMethodLabelKey}
+          {getCategoryLabelKey}
+          {getPowerMethodLabelKey}
         >
           {#if form.rollingStocks.length === 0}
             <p class="text-sm text-muted-foreground">No rolling stocks added yet.</p>

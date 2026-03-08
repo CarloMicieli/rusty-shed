@@ -128,11 +128,7 @@
       {m.rolling_stock_field_control_type()}
     </p>
     {#if canEdit}
-      <BadgePicker
-        value={localControl ?? ''}
-        options={CONTROL_OPTIONS}
-        onSelect={onSaveControl}
-      />
+      <BadgePicker value={localControl ?? ''} options={CONTROL_OPTIONS} onSelect={onSaveControl} />
     {:else}
       <span class="text-sm text-[#E0E0E0]">
         {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}

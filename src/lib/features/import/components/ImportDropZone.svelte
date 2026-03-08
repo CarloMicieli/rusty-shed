@@ -92,10 +92,10 @@
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
-    <h3>{m["import.dropzone.title"]()}</h3>
-    <p>{m["import.dropzone.subtitle"]()}</p>
+    <h3>{m['import.dropzone.title']()}</h3>
+    <p>{m['import.dropzone.subtitle']()}</p>
     <button class="file-action" onclick={handleClick} type="button" {disabled}>
-      {m["import.dropzone.select"]()}
+      {m['import.dropzone.select']()}
     </button>
   </div>
 </div>

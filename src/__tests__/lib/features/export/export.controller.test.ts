@@ -7,13 +7,16 @@ vi.mock('svelte', async () => {
   const actual = await vi.importActual('svelte');
   return {
     ...actual,
-    getContext: vi.fn(),
-    setContext: vi.fn()
+    getContext: vi.fn() as any,
+    setContext: vi.fn() as any
   };
 });
 
 // Import after mocks are set up
-import { ExportController, createExportController } from '$lib/features/export/export.controller.svelte';
+import {
+  ExportController,
+  createExportController
+} from '$lib/features/export/export.controller.svelte';
 
 describe('ExportController', () => {
   let controller: ExportController;
@@ -92,7 +95,7 @@ describe('ExportController', () => {
           maintenance_logs: 5,
           dcc_roster_entries: 0
         }
-      };
+      } as any;
       controller.openDialog();
 
       expect(controller.preview).toBeNull();
@@ -110,7 +113,7 @@ describe('ExportController', () => {
         filename: 'export.zip',
         size_bytes: 5000000,
         exported_at: '2025-03-08T12:00:00Z'
-      };
+      } as any;
       controller.openDialog();
 
       expect(controller.result).toBeNull();
@@ -311,7 +314,9 @@ describe('ExportController', () => {
       expect(controller.entitySelection.include_railway_models).toBe(false);
       expect(controller.entitySelection.include_collection_items).toBe(false);
       expect(controller.entitySelection.include_sellers).toBe(false);
-      expect(controller.entitySelection.include_maintenance_logs).toBe(original.include_maintenance_logs);
+      expect(controller.entitySelection.include_maintenance_logs).toBe(
+        original.include_maintenance_logs
+      );
     });
 
     it('should start with orphaned images disabled', () => {
@@ -336,7 +341,7 @@ describe('ExportController', () => {
           maintenance_logs: 1000,
           dcc_roster_entries: 50
         }
-      };
+      } as any;
 
       controller.preview = mockPreview;
 
@@ -354,7 +359,7 @@ describe('ExportController', () => {
         filename: 'export_2025-03-08.zip',
         size_bytes: 25000000,
         exported_at: '2025-03-08T14:30:00Z'
-      };
+      } as any;
 
       controller.result = mockResult;
 
@@ -400,7 +405,7 @@ describe('ExportController', () => {
           maintenance_logs: 5,
           dcc_roster_entries: 0
         }
-      };
+      } as any;
 
       // Update entity selection
       controller.entitySelection.include_orphaned_images = true;
@@ -426,7 +431,7 @@ describe('ExportController', () => {
         filename: 'export.zip',
         size_bytes: 5000000,
         exported_at: '2025-03-08T12:00:00Z'
-      };
+      } as any;
 
       expect(controller.isLoading).toBe(false);
       expect(controller.result).not.toBeNull();
