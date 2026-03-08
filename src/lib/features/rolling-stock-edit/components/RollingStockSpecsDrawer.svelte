@@ -1,6 +1,5 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
-  import { Button } from '$lib/components/ui/button';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { toaster } from '$lib/toaster';
@@ -10,6 +9,10 @@
     type RollingStockId,
     type RollingStockView
   } from '$lib/bindings';
+  import RollingStockBasicFields from './RollingStockBasicFields.svelte';
+  import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
+  import DrawerActionFooter from './DrawerActionFooter.svelte';
+  import { Button } from '$lib/components/ui/button';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -342,280 +345,55 @@
         {/if}
 
         <div class="space-y-6">
-          <!-- ── Identification section ──────────────────────────────────── -->
-          <section>
-            <h3 class="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
-              {m.specs_drawer_section_identification()}
-            </h3>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="col-span-2">
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-series-code"
-                >
-                  {m.rolling_stock_field_series_code()} <span class="text-red-400">*</span>
-                </label>
-                <input
-                  id="drawer-series-code"
-                  type="text"
-                  bind:value={form.seriesCode}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                />
-              </div>
-              <div>
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-road-number"
-                >
-                  {m.rolling_stock_field_road_number()}
-                </label>
-                <input
-                  id="drawer-road-number"
-                  type="text"
-                  bind:value={form.roadNumber}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                />
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-livery">
-                  {m.rolling_stock_field_livery()}
-                </label>
-                <input
-                  id="drawer-livery"
-                  type="text"
-                  bind:value={form.livery}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                />
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-depot">
-                  {m.rolling_stock_field_depot()}
-                </label>
-                <input
-                  id="drawer-depot"
-                  type="text"
-                  bind:value={form.depot}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                />
-              </div>
-            </div>
-          </section>
+          <RollingStockBasicFields
+            seriesCode={form.seriesCode}
+            roadNumber={form.roadNumber}
+            livery={form.livery}
+            depot={form.depot}
+          />
 
-          <!-- ── Technical section ───────────────────────────────────────── -->
-          <section>
-            <h3 class="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
-              {m.specs_drawer_section_technical()}
-            </h3>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-flywheel">
-                  {m.specs_drawer_field_flywheel()}
-                </label>
-                <select
-                  id="drawer-flywheel"
-                  value={boolValue(form.flywheelFitted)}
-                  onchange={(e) => {
-                    form.flywheelFitted = parseBool((e.target as HTMLSelectElement).value);
-                  }}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  <option value="">—</option>
-                  {#each boolOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-body-shell">
-                  {m.specs_drawer_field_body_material()}
-                </label>
-                <select
-                  id="drawer-body-shell"
-                  bind:value={form.bodyShell}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each bodyShellOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-chassis">
-                  {m.specs_drawer_field_chassis_material()}
-                </label>
-                <select
-                  id="drawer-chassis"
-                  bind:value={form.chassis}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each chassisOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-interior-lights"
-                >
-                  {m.specs_drawer_field_lighting()} (interior)
-                </label>
-                <select
-                  id="drawer-interior-lights"
-                  bind:value={form.interiorLights}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each featureFlagOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-lights">
-                  {m.specs_drawer_field_lighting()} (headlights)
-                </label>
-                <select
-                  id="drawer-lights"
-                  bind:value={form.lights}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each featureFlagOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <!-- ── Control section ────────────────────────────────────────── -->
-          <section>
-            <h3 class="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
-              {m.specs_drawer_section_control()}
-            </h3>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-control">
-                  {m.specs_drawer_field_control_type()}
-                </label>
-                <select
-                  id="drawer-control"
-                  bind:value={form.control}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each controlOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-dcc-interface"
-                >
-                  {m.specs_drawer_field_dcc_interface()}
-                </label>
-                <select
-                  id="drawer-dcc-interface"
-                  bind:value={form.dccInterface}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each dccInterfaceOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <!-- ── Coupling section ───────────────────────────────────────── -->
-          <section>
-            <h3 class="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
-              {m.specs_drawer_section_coupling()}
-            </h3>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-coupling-socket"
-                >
-                  {m.specs_drawer_field_coupling_socket()}
-                </label>
-                <select
-                  id="drawer-coupling-socket"
-                  bind:value={form.couplingSocket}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  {#each couplingSockeOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-close-couplers"
-                >
-                  {m.specs_drawer_field_close_coupling()}
-                </label>
-                <select
-                  id="drawer-close-couplers"
-                  value={boolValue(form.closeCouplers)}
-                  onchange={(e) => {
-                    form.closeCouplers = parseBool((e.target as HTMLSelectElement).value);
-                  }}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  <option value="">—</option>
-                  {#each boolOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div>
-                <label
-                  class="mb-1 block text-xs font-medium text-zinc-400"
-                  for="drawer-digital-shunting"
-                >
-                  {m.specs_drawer_field_digital_shunting()}
-                </label>
-                <select
-                  id="drawer-digital-shunting"
-                  value={boolValue(form.digitalShunting)}
-                  onchange={(e) => {
-                    form.digitalShunting = parseBool((e.target as HTMLSelectElement).value);
-                  }}
-                  class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-                >
-                  <option value="">—</option>
-                  {#each boolOptions as opt (opt.value)}
-                    <option value={opt.value}>{opt.label}</option>
-                  {/each}
-                </select>
-              </div>
-            </div>
-          </section>
+          <RollingStockTechnicalFields
+            flywheelFitted={form.flywheelFitted}
+            bodyShell={form.bodyShell}
+            chassis={form.chassis}
+            interiorLights={form.interiorLights}
+            lights={form.lights}
+            dccInterface={form.dccInterface}
+            control={form.control}
+            couplingSocket={form.couplingSocket}
+            closeCouplers={form.closeCouplers}
+            digitalShunting={form.digitalShunting}
+            {boolOptions}
+            {bodyShellOptions}
+            {chassisOptions}
+            {featureFlagOptions}
+            {controlOptions}
+            {dccInterfaceOptions}
+            {couplingSockeOptions}
+            onFlywheelChange={(val) => {
+              form.flywheelFitted = val;
+            }}
+            onCloseCouplersChange={(val) => {
+              form.closeCouplers = val;
+            }}
+            onDigitalShuntingChange={(val) => {
+              form.digitalShunting = val;
+            }}
+            {boolValue}
+            {parseBool}
+          />
         </div>
       {/if}
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-zinc-800 px-6 py-4">
-      <Button variant="ghost" onclick={requestClose} disabled={isSaving}>
-        {m.specs_drawer_cancel()}
-      </Button>
-      <Button
-        onclick={handleSave}
-        disabled={isSaving || isLoading || !form.seriesCode.trim()}
-        class="bg-[#E2994F] text-black hover:bg-[#E2994F]/90"
-      >
-        {#if isSaving}
-          <span
-            class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent"
-          ></span>
-        {/if}
-        {m.specs_drawer_save()}
-      </Button>
-    </div>
+    <DrawerActionFooter
+      onSave={handleSave}
+      onCancel={requestClose}
+      {isSaving}
+      {isLoading}
+      disabled={!form.seriesCode.trim()}
+    />
   </div>
 
   <!-- Discard confirmation dialog -->
