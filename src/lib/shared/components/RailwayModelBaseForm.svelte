@@ -190,10 +190,14 @@
           {#each powerMethodOptions as method (typeof method === 'string' ? method : method.id)}
             {#if typeof method === 'string'}
               <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-              <option value={method}>{(m as any)[getPowerMethodLabelKey(method)]()}</option>
+              <option value={method}
+                >{(m as any)[getPowerMethodLabelKey(method)]?.() ?? method}</option
+              >
             {:else}
               <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-              <option value={method.id}>{(m as any)[getPowerMethodLabelKey(method.id)]()}</option>
+              <option value={method.id}
+                >{(m as any)[getPowerMethodLabelKey(method.id)]?.() ?? method.display}</option
+              >
             {/if}
           {/each}
         </select>
