@@ -175,6 +175,10 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             wishlist.add_item(item);
         }
 
+        // Hydration via add_item generates ItemAdded events; discard them so
+        // that save_wishlist only processes real domain events emitted after load.
+        wishlist.drain_events();
+
         Ok(Some(wishlist))
     }
 

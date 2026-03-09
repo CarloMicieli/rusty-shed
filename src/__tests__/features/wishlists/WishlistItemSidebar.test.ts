@@ -254,7 +254,7 @@ describe('WishlistItemSidebar — US3 Desired Price inline edit', () => {
         expect.objectContaining({
           wishlistId: TEST_WISHLIST_ID,
           itemId: TEST_ITEM_ID,
-          desiredPriceAmount: BigInt(4999),
+          desiredPriceAmount: 4999,
           desiredPriceCurrency: 'EUR'
         })
       );

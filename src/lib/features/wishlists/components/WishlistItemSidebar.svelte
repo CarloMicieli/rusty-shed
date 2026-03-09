@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
+  import { Select as SelectPrimitive } from 'bits-ui';
   import * as Popover from '$lib/components/ui/popover';
   import { Calendar } from '$lib/components/ui/calendar';
   import { commands } from '$lib/bindings';
@@ -28,7 +29,7 @@
   // ── Active inline-edit field ─────────────────────────────────────────────
   // Used only for desiredPrice and addedDate (text input / calendar).
   // Priority and Status use Select.Root with their own open state.
-  type EditableField = 'desiredPrice' | 'addedDate';
+  type EditableField = 'desiredPrice';
   let activeField = $state<EditableField | null>(null);
 
   // ── Select open states ───────────────────────────────────────────────────
@@ -90,11 +91,6 @@
     activeField = 'desiredPrice';
     priceError = null;
     priceInputValue = item.desiredPrice ? String(Number(item.desiredPrice.amount) / 100) : '';
-  }
-
-  function activateAddedDate() {
-    activeField = 'addedDate';
-    datePopoverOpen = true;
   }
 
   function cancelField() {
@@ -198,14 +194,16 @@
       return;
     }
 
-    const amountCents = BigInt(Math.round(parsed * 100));
+    // Use plain number for IPC (BigInt cannot be JSON-serialized by Tauri's invoke).
+    // BigInt is only needed for the local WishlistItem state type.
+    const amountCents = Math.round(parsed * 100);
     const currency = item.desiredPrice?.currency ?? defaultCurrency;
     const prev = item.desiredPrice;
 
     void saveField(
-      { desiredPriceAmount: amountCents, desiredPriceCurrency: currency },
+      { desiredPriceAmount: amountCents as unknown as bigint, desiredPriceCurrency: currency },
       () => {
-        item = { ...item, desiredPrice: { amount: amountCents, currency } };
+        item = { ...item, desiredPrice: { amount: BigInt(amountCents), currency } };
       },
       () => {
         item = { ...item, desiredPrice: prev };
@@ -280,13 +278,13 @@
             bind:open={prioritySelectOpen}
             onValueChange={handlePriorityChange}
           >
-            <Select.Trigger
-              class="group flex h-6 cursor-pointer items-center gap-1 rounded-full border-none bg-muted px-2 py-0.5 text-xs font-medium shadow-none hover:bg-muted/70"
+            <SelectPrimitive.Trigger
+              class="group flex cursor-pointer items-center gap-1 text-sm font-medium outline-none hover:opacity-70"
               aria-label={m.wishlist_item_edit_field_label({ field: m.wishlist_field_priority() })}
             >
               {priorityLabel(item.priority)}
               <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-            </Select.Trigger>
+            </SelectPrimitive.Trigger>
             <Select.Content>
               <Select.Item value="LOW" label={m.wishlist_priority_low()} />
               <Select.Item value="NORMAL" label={m.wishlist_priority_normal()} />
@@ -306,13 +304,13 @@
             bind:open={statusSelectOpen}
             onValueChange={handleStatusChange}
           >
-            <Select.Trigger
-              class="group flex h-6 cursor-pointer items-center gap-1 rounded-full border-none bg-muted px-2 py-0.5 text-xs font-medium shadow-none hover:bg-muted/70"
+            <SelectPrimitive.Trigger
+              class="group flex cursor-pointer items-center gap-1 text-sm font-medium outline-none hover:opacity-70"
               aria-label={m.wishlist_item_edit_field_label({ field: m.wishlist_item_status() })}
             >
               {statusLabel(item.status)}
               <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-            </Select.Trigger>
+            </SelectPrimitive.Trigger>
             <Select.Content>
               <Select.Item value="WANTED" label={m.wishlist_item_status_wanted()} />
               <Select.Item value="ON_ORDER" label={m.wishlist_item_status_on_order()} />
@@ -398,17 +396,14 @@
               if (!open) cancelField();
             }}
           >
-            <Popover.Trigger>
-              <button
-                class="group flex cursor-pointer items-center gap-1 font-medium hover:opacity-70"
-                onclick={activateAddedDate}
-                aria-label={m.wishlist_item_edit_field_label({
-                  field: m.wishlist_item_added_date()
-                })}
-              >
-                {formatDate(item.addedDate)}
-                <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-              </button>
+            <Popover.Trigger
+              class="group flex cursor-pointer items-center gap-1 font-medium hover:opacity-70"
+              aria-label={m.wishlist_item_edit_field_label({
+                field: m.wishlist_item_added_date()
+              })}
+            >
+              {formatDate(item.addedDate)}
+              <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
             </Popover.Trigger>
             <Popover.Content class="w-auto p-0" align="end">
               <Calendar
