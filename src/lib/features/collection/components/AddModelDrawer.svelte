@@ -15,6 +15,7 @@
     AddRailwayModelToCollectionArgs
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
+  import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import ModelSearchSection from './ModelSearchSection.svelte';
   import ModelSelectionCard from './ModelSelectionCard.svelte';
 
@@ -147,8 +148,8 @@
   function createDefaultPurchaseState(): PurchaseFormState {
     return {
       sellerId: null,
-      priceAmount: '',
-      priceCurrency: 'EUR',
+      priceAmount: null,
+      priceCurrency: settingsState.settings.currency,
       purchaseCondition: null,
       modelCondition: null,
       boxCondition: null,
@@ -192,11 +193,8 @@
   function toAddRailwayModelArgs(formState: AddModelFormState): AddRailwayModelToCollectionArgs {
     const today = new Date().toISOString().split('T')[0];
 
-    // Parse price amount from decimal to cents
-    // Use number type for JSON serialization (safe for typical price values)
-    const priceInCents = formState.purchase.priceAmount
-      ? Math.round(parseFloat(formState.purchase.priceAmount) * 100)
-      : 0;
+    // priceAmount is now stored as integer cents in the form state
+    const priceInCents = formState.purchase.priceAmount ?? 0;
 
     return {
       railwayModel: {

@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// - `PreOrdered`: the item is pre-ordered from a seller; the collector may
 ///   have paid a deposit and the full total price is known as well.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "kind", content = "data", rename_all = "camelCase")]
 #[specta(tag = "kind", content = "data")]
 pub enum PurchaseInfo {
     /// A standard purchase record.

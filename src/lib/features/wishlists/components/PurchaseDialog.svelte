@@ -18,7 +18,7 @@
   let { open, wishlistId, wishlistItemId, itemName, onClose, onSuccess }: Props = $props();
 
   // ── Form state ───────────────────────────────────────────────────────────────
-  let priceAmount = $state('');
+  let priceAmount = $state<number | null>(null);
   let priceCurrency = $state('EUR');
   let purchaseDate = $state(new Date().toISOString().split('T')[0]);
   let selectedSellerId = $state('');
@@ -52,7 +52,7 @@
 
   // ── Reset form on close ───────────────────────────────────────────────────────
   function resetForm() {
-    priceAmount = '';
+    priceAmount = null;
     purchaseDate = new Date().toISOString().split('T')[0];
     selectedSellerId = '';
     selectedCondition = '';
@@ -77,11 +77,12 @@
     e.preventDefault();
     error = null;
 
-    const amountCents = Math.round(parseFloat(priceAmount) * 100);
-    if (!priceAmount || isNaN(amountCents) || amountCents < 0) {
+    if (priceAmount === null || priceAmount < 0) {
       error = m.purchase_dialog_error_price_required();
       return;
     }
+
+    const amountCents = priceAmount;
 
     if (purchaseDate > today) {
       error = m.purchase_dialog_error_future_date_forbidden();
@@ -93,7 +94,7 @@
       const result = await commands.purchaseWishlistItem({
         wishlistId,
         wishlistItemId,
-        priceAmount: BigInt(amountCents),
+        priceAmount: amountCents as unknown as bigint,
         priceCurrency,
         purchaseDate,
         sellerId: selectedSellerId || null,

@@ -153,10 +153,11 @@ describe('PurchaseDialog.svelte', () => {
 
     await waitFor(() => expect(screen.getByLabelText('Price Paid')).toBeInTheDocument());
 
-    // Set the price input value via native DOM + input event (updates Svelte bind:value)
+    // Set the price input value via native DOM + input event + blur (triggers value binding in CurrencyInput)
     const priceInput = screen.getByLabelText('Price Paid') as HTMLInputElement;
     priceInput.value = '49.99';
     await fireEvent.input(priceInput);
+    await fireEvent.blur(priceInput);
 
     const form = document.querySelector('form') as HTMLFormElement;
     await fireEvent.submit(form);
@@ -175,6 +176,7 @@ describe('PurchaseDialog.svelte', () => {
     const priceInput = screen.getByLabelText('Price Paid') as HTMLInputElement;
     priceInput.value = '49.99';
     await fireEvent.input(priceInput);
+    await fireEvent.blur(priceInput);
 
     const form = document.querySelector('form') as HTMLFormElement;
     await fireEvent.submit(form);

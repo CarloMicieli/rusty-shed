@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { ChevronDown, ChevronRight } from 'lucide-svelte';
-  import { Input, Textarea } from '$lib/components';
+  import { Input, Textarea, CurrencyInput } from '$lib/components';
+  import { getCurrencySymbol } from '$lib/utils/currency';
   import type { SellerView } from '$lib/bindings';
   import type { PurchaseFormState } from '$lib/features/collection/types/AddModelFormTypes';
 
@@ -94,40 +95,21 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4">
         <!-- Price Amount -->
-        <div class="md:col-span-2">
+        <div>
           <label for="price-amount" class="mb-1 block">
             <span class="text-sm text-muted-foreground">{m.add_model_price()}</span>
             <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
           </label>
-          <Input
+          <CurrencyInput
             id="price-amount"
-            type="number"
-            step="0.01"
-            min="0"
             bind:value={purchase.priceAmount}
+            symbol={getCurrencySymbol(purchase.priceCurrency)}
             placeholder="0.00"
-            class="w-full font-mono"
+            class="w-full"
+            label={m.add_model_price()}
           />
-        </div>
-
-        <!-- Currency -->
-        <div>
-          <label for="currency" class="mb-1 block">
-            <span class="text-sm text-muted-foreground">{m.add_model_currency()}</span>
-            <span class="invisible ml-1 text-xs text-muted-foreground/60">.</span>
-          </label>
-          <select
-            id="currency"
-            bind:value={purchase.priceCurrency}
-            class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="EUR">EUR (€)</option>
-            <option value="USD">USD ($)</option>
-            <option value="GBP">GBP (£)</option>
-            <option value="CHF">CHF</option>
-          </select>
         </div>
       </div>
 

@@ -5,6 +5,8 @@
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import { CurrencyInput } from '$lib/components';
+  import { getCurrencySymbol } from '$lib/utils/currency';
   import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
 
   interface Props {
@@ -24,7 +26,7 @@
   let isPriceEditing = $state(false);
   let isSavingPrice = $state(false);
   let priceError = $state<string | null>(null);
-  let priceDraft = $state('');
+  let priceDraftCents = $state<number | null>(null);
   let priceCurrencyDraft = $state('EUR');
 
   let sellers = $state<SellerView[]>([]);
@@ -44,9 +46,8 @@
     item.purchaseInfo?.kind === 'purchased' ? item.purchaseInfo.data : null
   );
 
-  const currencyOptions = ['EUR', 'USD', 'GBP', 'JPY'];
-
   onMount(async () => {
+    console.log('[CollectionItemDetails] Mounted with item:', JSON.parse(JSON.stringify(item)));
     const result = await commands.getSellers();
     if (result.status === 'ok') {
       sellers = result.data;
@@ -59,14 +60,28 @@
   }
 
   async function saveUpdate(update: CollectionItemUpdateArgs): Promise<void> {
-    const result = await commands.updateCollectionItem({
-      collectionItemId: item.id,
-      update
-    });
-    if (result.status === 'error') {
-      throw new Error('update_failed');
+    console.log(
+      `[CollectionItemDetails] Saving update for item ${item.id}:`,
+      JSON.parse(JSON.stringify(update))
+    );
+    try {
+      const result = await commands.updateCollectionItem({
+        collectionItemId: item.id,
+        update
+      });
+      if (result.status === 'error') {
+        console.error('[CollectionItemDetails] Update failed with error:', result.error);
+        throw new Error('update_failed');
+      }
+      console.log('[CollectionItemDetails] Update reported success from backend');
+      if (onItemUpdated) {
+        console.log('[CollectionItemDetails] Triggering onItemUpdated callback...');
+        await onItemUpdated();
+      }
+    } catch (e) {
+      console.error('[CollectionItemDetails] Exception during saveUpdate:', e);
+      throw e;
     }
-    await onItemUpdated?.();
   }
 
   async function saveNotes(value: string): Promise<void> {
@@ -81,34 +96,55 @@
     if (isSavingPrice) return;
     priceError = null;
     const currentPrice = purchasedInfo?.price;
-    priceDraft = currentPrice ? (Number(currentPrice.amount) / 100).toFixed(2) : '';
+    priceDraftCents = currentPrice ? Number(currentPrice.amount) : null;
     priceCurrencyDraft = currentPrice?.currency ?? 'EUR';
     isPriceEditing = true;
   }
 
+  async function handlePriceKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      void savePrice();
+    } else if (e.key === 'Escape') {
+      isPriceEditing = false;
+      priceError = null;
+    }
+  }
+
   async function savePrice(): Promise<void> {
-    if (isSavingPrice) return;
+    if (isSavingPrice || !isPriceEditing) return;
+
+    // We use a local capture to avoid race conditions during async calls
+    const amountToSave = priceDraftCents;
+    const currencyToSave = priceCurrencyDraft;
+
+    console.log(
+      `[CollectionItemDetails] savePrice called. Amount: ${amountToSave}, Currency: ${currencyToSave}`
+    );
+
     isSavingPrice = true;
     priceError = null;
 
     try {
-      const normalized = priceDraft.trim();
-      if (!normalized) {
+      if (amountToSave === null) {
+        console.log('[CollectionItemDetails] Amount is null, clearing price');
         await saveUpdate({ kind: 'price', data: { amount: null, currency: null } });
-        isPriceEditing = false;
-        return;
+      } else {
+        if (amountToSave < 0) {
+          priceError = m.collection_item_error();
+          isSavingPrice = false;
+          return;
+        }
+
+        const amount = amountToSave as unknown as bigint;
+        console.log(`[CollectionItemDetails] Sending amount: ${amount} (as cents)`);
+        await saveUpdate({ kind: 'price', data: { amount, currency: currencyToSave } });
       }
 
-      const parsed = Number(normalized);
-      if (Number.isNaN(parsed) || parsed < 0) {
-        priceError = m.collection_item_error();
-        return;
-      }
-
-      const amount = BigInt(Math.round(parsed * 100));
-      await saveUpdate({ kind: 'price', data: { amount, currency: priceCurrencyDraft } });
+      console.log('[CollectionItemDetails] Save sequence completed successfully');
       isPriceEditing = false;
-    } catch {
+      priceDraftCents = null;
+    } catch (e) {
+      console.error('[CollectionItemDetails] Error in savePrice:', e);
       priceError = m.collection_item_error();
     } finally {
       isSavingPrice = false;
@@ -164,47 +200,20 @@
           {m.collection_item_price()}
         </span>
         {#if isPriceEditing}
-          <div
-            class="col-span-3 mt-1 flex flex-col gap-2"
-            onfocusout={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                void savePrice();
-              }
-            }}
-          >
-            <div class="grid grid-cols-[1fr,auto] gap-1">
-              <input
-                bind:value={priceDraft}
-                type="number"
-                min="0"
-                step="0.01"
-                disabled={isSavingPrice}
-                onkeydown={(e) => {
-                  if (e.key === 'Escape') {
-                    isPriceEditing = false;
-                    priceError = null;
-                  }
-                }}
-                class="rounded border border-[#D48A42] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
-              />
-              <select
-                bind:value={priceCurrencyDraft}
-                disabled={isSavingPrice}
-                onkeydown={(e) => {
-                  if (e.key === 'Escape') {
-                    isPriceEditing = false;
-                    priceError = null;
-                  }
-                }}
-                class="rounded border border-[#D48A42] bg-[#0F0F0F] px-1 py-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
-              >
-                {#each currencyOptions as currencyCode (currencyCode)}
-                  <option value={currencyCode}>{currencyCode}</option>
-                {/each}
-              </select>
-            </div>
+          <div class="col-span-3 mt-1">
+            <CurrencyInput
+              bind:value={priceDraftCents}
+              symbol={getCurrencySymbol(priceCurrencyDraft)}
+              disabled={isSavingPrice}
+              onblur={savePrice}
+              onkeydown={handlePriceKeydown}
+              class="w-full"
+              inputClass="border-[#D48A42] ring-[#D48A42]/30"
+              label={m.collection_item_price()}
+              autofocus
+            />
             {#if priceError}
-              <p class="text-xs text-red-400" role="alert">{priceError}</p>
+              <p class="mt-1 text-xs text-red-400" role="alert">{priceError}</p>
             {/if}
           </div>
         {:else}

@@ -45,7 +45,7 @@ function createDefaultRollingStock(): RollingStockFormEntry {
 function createDefaultPurchaseState(): PurchaseFormState {
   return {
     sellerId: null,
-    priceAmount: '',
+    priceAmount: null,
     priceCurrency: 'EUR',
     purchaseCondition: null,
     modelCondition: null,
@@ -112,10 +112,8 @@ function validateForm(form: AddModelFormState): ValidationErrors {
 function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollectionArgs {
   const today = new Date().toISOString().split('T')[0];
 
-  // Parse price amount from decimal to cents
-  const priceInCents = form.purchase.priceAmount
-    ? BigInt(Math.round(parseFloat(form.purchase.priceAmount) * 100))
-    : BigInt(0);
+  // priceAmount is now stored as integer cents
+  const priceInCents = form.purchase.priceAmount ?? 0;
 
   return {
     railwayModel: {
@@ -134,7 +132,7 @@ function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollec
         category: rs.category!
       }))
     },
-    priceAmount: priceInCents,
+    priceAmount: priceInCents as unknown as bigint,
     priceCurrency: form.purchase.priceCurrency,
     sellerId: form.purchase.sellerId,
     addedDate: today,
@@ -169,7 +167,7 @@ describe('AddModelForm - Form State Initialization', () => {
     const purchase = createDefaultPurchaseState();
 
     expect(purchase.sellerId).toBeNull();
-    expect(purchase.priceAmount).toBe('');
+    expect(purchase.priceAmount).toBeNull();
     expect(purchase.priceCurrency).toBe('EUR');
     expect(purchase.purchaseCondition).toBeNull();
     expect(purchase.modelCondition).toBeNull();
@@ -275,7 +273,7 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     form.rollingStocks[0].seriesCode = '218';
     form.rollingStocks[0].roadNumber = '218 101-3';
     form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
-    form.purchase.priceAmount = '249.99';
+    form.purchase.priceAmount = 24999;
     form.purchase.sellerId = 'trn:seller:modellbahnshop';
 
     const args = toAddRailwayModelArgs(form);
@@ -292,7 +290,7 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     expect(args.railwayModel.rollingStocks[0].seriesCode).toBe('218');
     expect(args.railwayModel.rollingStocks[0].roadNumber).toBe('218 101-3');
     expect(args.railwayModel.rollingStocks[0].category).toBe('DIESEL_LOCOMOTIVE');
-    expect(args.priceAmount).toBe(BigInt(24999)); // 249.99 * 100
+    expect(args.priceAmount).toBe(24999 as unknown as bigint); // 249.99 * 100
     expect(args.sellerId).toBe('trn:seller:modellbahnshop');
   });
 
@@ -311,17 +309,17 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     form.rollingStocks[0].category = 'DIESEL_LOCOMOTIVE';
 
     // Test various price formats
-    form.purchase.priceAmount = '99.99';
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(BigInt(9999));
+    form.purchase.priceAmount = 9999;
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(9999 as unknown as bigint);
 
-    form.purchase.priceAmount = '100';
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(BigInt(10000));
+    form.purchase.priceAmount = 10000;
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(10000 as unknown as bigint);
 
-    form.purchase.priceAmount = '0.50';
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(BigInt(50));
+    form.purchase.priceAmount = 50;
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(50 as unknown as bigint);
 
-    form.purchase.priceAmount = '';
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(BigInt(0));
+    form.purchase.priceAmount = null;
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(0 as unknown as bigint);
   });
 
   it('should handle multiple rolling stocks', () => {

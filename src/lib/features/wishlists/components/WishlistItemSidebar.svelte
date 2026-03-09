@@ -9,6 +9,8 @@
   import { toaster } from '$lib/toaster';
   import { CalendarDate } from '@internationalized/date';
   import { Pencil } from 'lucide-svelte';
+  import { CurrencyInput } from '$lib/components';
+  import { getCurrencySymbol } from '$lib/utils/currency';
 
   interface Props {
     item: WishlistItem;
@@ -37,8 +39,10 @@
   let statusSelectOpen = $state(false);
 
   // ── Price edit state ─────────────────────────────────────────────────────
-  let priceInputValue = $state('');
+  let priceInputCents = $state<number | null>(null);
   let priceError = $state<string | null>(null);
+  let priceDisplayValue = $state<string>('');
+  let priceHasInvalidInput = $state<boolean>(false);
 
   // ── Date popover state ───────────────────────────────────────────────────
   let datePopoverOpen = $state(false);
@@ -90,7 +94,7 @@
   function activateDesiredPrice() {
     activeField = 'desiredPrice';
     priceError = null;
-    priceInputValue = item.desiredPrice ? String(Number(item.desiredPrice.amount) / 100) : '';
+    priceInputCents = item.desiredPrice ? Number(item.desiredPrice.amount) : null;
   }
 
   function cancelField() {
@@ -167,10 +171,17 @@
   // ── Price save ───────────────────────────────────────────────────────────
   function commitPrice() {
     priceError = null;
-    const raw = priceInputValue.trim();
 
-    if (raw === '') {
-      // Clear desired price
+    const trimmedDisplay = priceDisplayValue.trim();
+
+    // Check if invalid characters were filtered out
+    if (priceHasInvalidInput) {
+      priceError = m.wishlist_item_price_invalid_format();
+      return;
+    }
+
+    // If empty, clear the price
+    if (trimmedDisplay === '') {
       const prev = item.desiredPrice;
       void saveField(
         { desiredPriceAmount: null, desiredPriceCurrency: null },
@@ -184,26 +195,35 @@
       return;
     }
 
-    const parsed = parseFloat(raw);
-    if (isNaN(parsed)) {
-      priceError = m.wishlist_item_price_invalid_format();
-      return;
-    }
-    if (parsed < 0) {
+    // If parsed value is negative, show error
+    if (priceInputCents !== null && priceInputCents < 0) {
       priceError = m.wishlist_item_price_negative();
       return;
     }
 
-    // Use plain number for IPC (BigInt cannot be JSON-serialized by Tauri's invoke).
-    // BigInt is only needed for the local WishlistItem state type.
-    const amountCents = Math.round(parsed * 100);
+    // If value is null but we have content, it's an edge case - treat as clearing
+    if (priceInputCents === null) {
+      const prev = item.desiredPrice;
+      void saveField(
+        { desiredPriceAmount: null, desiredPriceCurrency: null },
+        () => {
+          item = { ...item, desiredPrice: null };
+        },
+        () => {
+          item = { ...item, desiredPrice: prev };
+        }
+      );
+      return;
+    }
+
+    const amountCents = priceInputCents;
     const currency = item.desiredPrice?.currency ?? defaultCurrency;
     const prev = item.desiredPrice;
 
     void saveField(
       { desiredPriceAmount: amountCents as unknown as bigint, desiredPriceCurrency: currency },
       () => {
-        item = { ...item, desiredPrice: { amount: BigInt(amountCents), currency } };
+        item = { ...item, desiredPrice: { amount: amountCents as unknown as bigint, currency } };
       },
       () => {
         item = { ...item, desiredPrice: prev };
@@ -327,23 +347,18 @@
         <dd class="text-right">
           {#if activeField === 'desiredPrice'}
             <div class="flex flex-col items-end gap-1">
-              <div class="flex items-center gap-1">
-                <input
-                  type="text"
-                  inputmode="decimal"
-                  class="w-24 rounded border border-border bg-background px-2 py-0.5 text-right text-xs font-medium focus:ring-1 focus:ring-primary focus:outline-none"
-                  bind:value={priceInputValue}
-                  onkeydown={handlePriceKeydown}
-                  onblur={commitPrice}
-                  placeholder="0.00"
-                  aria-label={m.wishlist_item_edit_field_label({
-                    field: m.wishlist_field_desired_price()
-                  })}
-                />
-                <span class="text-xs text-muted-foreground">
-                  {item.desiredPrice?.currency ?? defaultCurrency}
-                </span>
-              </div>
+              <CurrencyInput
+                bind:value={priceInputCents}
+                bind:displayValue={priceDisplayValue}
+                bind:hasInvalidInput={priceHasInvalidInput}
+                symbol={getCurrencySymbol(item.desiredPrice?.currency ?? defaultCurrency)}
+                onblur={commitPrice}
+                onkeydown={handlePriceKeydown}
+                placeholder="0.00"
+                class="w-32"
+                label={m.wishlist_field_desired_price()}
+                autofocus
+              />
               {#if priceError}
                 <p class="text-xs text-destructive">{priceError}</p>
               {/if}

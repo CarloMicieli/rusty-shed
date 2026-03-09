@@ -1,9 +1,11 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { CurrencyInput } from '$lib/components';
+  import { getCurrencySymbol } from '$lib/utils/currency';
   import type { SellerView } from '$lib/bindings';
 
   interface Props {
-    priceAmount: string;
+    priceAmount: number | null;
     priceCurrency: string;
     purchaseDate: string;
     selectedSellerId: string;
@@ -42,27 +44,16 @@
     {m.purchase_dialog_price_label()}
   </label>
   <div class="flex gap-2">
-    <input
+    <CurrencyInput
       id="purchase-price"
-      type="number"
-      min="0"
-      step="0.01"
-      placeholder={m.purchase_dialog_price_placeholder()}
       bind:value={priceAmount}
+      symbol={getCurrencySymbol(priceCurrency)}
+      placeholder={m.purchase_dialog_price_placeholder()}
       disabled={isSubmitting}
       required
-      class="h-12 flex-1 appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 placeholder-zinc-600 focus:border-white/20 focus:outline-none"
+      class="flex-1"
+      label={m.purchase_dialog_price_label()}
     />
-    <select
-      bind:value={priceCurrency}
-      disabled={isSubmitting}
-      class="h-12 appearance-none rounded-xl border border-white/10 bg-zinc-950 px-3 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-    >
-      <option value="EUR">EUR</option>
-      <option value="USD">USD</option>
-      <option value="GBP">GBP</option>
-      <option value="JPY">JPY</option>
-    </select>
   </div>
 </div>
 

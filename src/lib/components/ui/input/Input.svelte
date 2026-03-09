@@ -29,6 +29,7 @@
     id?: string;
     name?: string;
     autocomplete?: AutoFill;
+    inputmode?: 'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url';
     min?: string | number;
     max?: string | number;
     step?: string | number;
@@ -36,6 +37,7 @@
     autoFocus?: boolean; // Alias for React-style compatibility
     'aria-describedby'?: string;
     'aria-invalid'?: boolean | 'true' | 'false';
+    'aria-label'?: string;
     onkeydown?: (e: KeyboardEvent & { currentTarget: HTMLInputElement }) => void;
     oninput?: (e: Event & { currentTarget: HTMLInputElement }) => void;
     onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
@@ -56,6 +58,7 @@
     id,
     name,
     autocomplete,
+    inputmode,
     min,
     max,
     step,
@@ -63,6 +66,7 @@
     autoFocus,
     'aria-describedby': ariaDescribedby,
     'aria-invalid': ariaInvalid,
+    'aria-label': ariaLabel,
     onkeydown,
     oninput,
     onchange,
@@ -108,6 +112,8 @@
   autofocus={shouldAutofocus}
   aria-describedby={ariaDescribedby}
   aria-invalid={ariaInvalid}
+  aria-label={ariaLabel}
+  {inputmode}
   class={inputClass}
   {onkeydown}
   {onblur}

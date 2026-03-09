@@ -34,6 +34,7 @@ export { default as StatusBadge } from './StatusBadge.svelte';
 export { default as RecentItemCard } from './RecentItemCard.svelte';
 export { default as QuickActionButtons } from './QuickActionButtons.svelte';
 export { default as SmartImage } from './SmartImage.svelte';
+export { default as CurrencyInput } from './CurrencyInput.svelte';
 
 // Feature-specific components
 export { default as AddWishlistItemModal } from './AddWishlistItemModal.svelte';

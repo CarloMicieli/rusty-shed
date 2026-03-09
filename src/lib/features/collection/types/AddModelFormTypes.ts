@@ -60,8 +60,8 @@ export interface PurchaseFormState {
   /** Seller from whom the model was purchased */
   sellerId: string | null;
 
-  /** Purchase price amount (user input as decimal string) */
-  priceAmount: string;
+  /** Purchase price amount (integer cents) */
+  priceAmount: number | null;
 
   /** Currency code (default: user preference or "EUR") */
   priceCurrency: string;
