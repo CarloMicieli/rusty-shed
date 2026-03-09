@@ -41,6 +41,8 @@
     onActivate?: () => void;
     /** Called when the user exits edit mode (for cross-card coordination). */
     onDeactivate?: () => void;
+    /** Accessible label for the trigger element in view mode. */
+    ariaLabel?: string;
   }
 
   let {
@@ -51,7 +53,8 @@
     onSave,
     class: extraClass = '',
     onActivate,
-    onDeactivate
+    onDeactivate,
+    ariaLabel
   }: InPlaceSelectEditProps = $props();
 
   let isEditing = $state(false);
@@ -132,6 +135,9 @@
     }}
     role="button"
     tabindex="0"
+    aria-label={ariaLabel}
+    aria-haspopup="listbox"
+    aria-expanded="false"
   >
     {#if value}
       <span class="text-sm text-[#E0E0E0]">{displayLabel}</span>

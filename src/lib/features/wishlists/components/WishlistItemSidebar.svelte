@@ -1,16 +1,14 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import * as Select from '$lib/components/ui/select';
-  import { Select as SelectPrimitive } from 'bits-ui';
   import * as Popover from '$lib/components/ui/popover';
   import { Calendar } from '$lib/components/ui/calendar';
   import { commands } from '$lib/bindings';
   import type { Currency, WishlistItem, WishlistPriority, WishlistStatus } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { CalendarDate } from '@internationalized/date';
-  import { Pencil } from 'lucide-svelte';
   import { CurrencyInput } from '$lib/components';
   import { getCurrencySymbol } from '$lib/utils/currency';
+  import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
 
   interface Props {
     item: WishlistItem;
@@ -33,10 +31,6 @@
   // Priority and Status use Select.Root with their own open state.
   type EditableField = 'desiredPrice';
   let activeField = $state<EditableField | null>(null);
-
-  // ── Select open states ───────────────────────────────────────────────────
-  let prioritySelectOpen = $state(false);
-  let statusSelectOpen = $state(false);
 
   // ── Price edit state ─────────────────────────────────────────────────────
   let priceInputCents = $state<number | null>(null);
@@ -265,88 +259,40 @@
   });
 
   // ── Keyboard: Escape closes active field ─────────────────────────────────
-  function handleGlobalKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && activeField) {
-      cancelField();
-    }
-  }
+  // Note: Calendar and Popover handle their own escape; this is for Price input.
+  // Using CurrencyInput's onkeydown already handles Enter/Escape in some contexts,
+  // but we can keep logic here if needed. Actually, simple cancelField is good.
 </script>
 
-<svelte:document onkeydown={handleGlobalKeydown} />
-
 <aside class="w-full shrink-0 space-y-4 lg:w-80">
-  <!-- ── Wish List Details Section ─────────────────────────────────────────── -->
-  <section class="rounded-lg border border-white/10 bg-black/20 p-4">
-    <h2 class="mb-3 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-      {m.wishlist_item_section_details()}
-    </h2>
+  <!-- ── Details Section ─────────────────────────────────────────────────── -->
+  <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
+    <div class="border-b border-[#1F1F1F] px-4 py-3">
+      <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+        {m.wishlist_item_section_details()}
+      </h3>
+    </div>
 
-    <dl class="space-y-2 text-sm">
-      <!-- List name (read-only — no hover affordance, no edit handler) -->
-      <div class="flex justify-between gap-2">
-        <dt class="shrink-0 text-muted-foreground">{m.wishlist_item_wishlist_name()}</dt>
-        <dd class="text-right font-medium">{wishlistName}</dd>
+    <div class="space-y-3 p-4">
+      <!-- List name -->
+      <div class="space-y-1">
+        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          {m.wishlist_item_wishlist_name()}
+        </span>
+        <div class="text-xs font-semibold text-[#E0E0E0]">
+          {wishlistName}
+        </div>
       </div>
 
-      <!-- Priority (inline select — badge IS the trigger) -->
-      <div class="flex items-center justify-between gap-2">
-        <dt class="shrink-0 text-muted-foreground">{m.wishlist_field_priority()}</dt>
-        <dd>
-          <Select.Root
-            type="single"
-            value={item.priority}
-            bind:open={prioritySelectOpen}
-            onValueChange={handlePriorityChange}
-          >
-            <SelectPrimitive.Trigger
-              class="group flex cursor-pointer items-center gap-1 text-sm font-medium outline-none hover:opacity-70"
-              aria-label={m.wishlist_item_edit_field_label({ field: m.wishlist_field_priority() })}
-            >
-              {priorityLabel(item.priority)}
-              <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-            </SelectPrimitive.Trigger>
-            <Select.Content>
-              <Select.Item value="LOW" label={m.wishlist_priority_low()} />
-              <Select.Item value="NORMAL" label={m.wishlist_priority_normal()} />
-              <Select.Item value="HIGH" label={m.wishlist_priority_high()} />
-            </Select.Content>
-          </Select.Root>
-        </dd>
-      </div>
-
-      <!-- Status (inline select — badge IS the trigger) -->
-      <div class="flex items-center justify-between gap-2">
-        <dt class="shrink-0 text-muted-foreground">{m.wishlist_item_status()}</dt>
-        <dd>
-          <Select.Root
-            type="single"
-            value={item.status}
-            bind:open={statusSelectOpen}
-            onValueChange={handleStatusChange}
-          >
-            <SelectPrimitive.Trigger
-              class="group flex cursor-pointer items-center gap-1 text-sm font-medium outline-none hover:opacity-70"
-              aria-label={m.wishlist_item_edit_field_label({ field: m.wishlist_item_status() })}
-            >
-              {statusLabel(item.status)}
-              <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-            </SelectPrimitive.Trigger>
-            <Select.Content>
-              <Select.Item value="WANTED" label={m.wishlist_item_status_wanted()} />
-              <Select.Item value="ON_ORDER" label={m.wishlist_item_status_on_order()} />
-              <Select.Item value="PURCHASED" label={m.wishlist_item_status_purchased()} />
-              <Select.Item value="IGNORED" label={m.wishlist_item_status_ignored()} />
-            </Select.Content>
-          </Select.Root>
-        </dd>
-      </div>
-
-      <!-- Desired Price (inline input) -->
-      <div class="flex items-start justify-between gap-2">
-        <dt class="shrink-0 text-muted-foreground">{m.wishlist_field_desired_price()}</dt>
-        <dd class="text-right">
+      <!-- Price & Added Row -->
+      <div class="grid grid-cols-3 gap-x-3 border-t border-[#1F1F1F] pt-3">
+        <!-- Desired Price -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.wishlist_field_desired_price()}
+          </span>
           {#if activeField === 'desiredPrice'}
-            <div class="flex flex-col items-end gap-1">
+            <div class="mt-1">
               <CurrencyInput
                 bind:value={priceInputCents}
                 bind:displayValue={priceDisplayValue}
@@ -355,56 +301,47 @@
                 onblur={commitPrice}
                 onkeydown={handlePriceKeydown}
                 placeholder="0.00"
-                class="w-32"
+                class="w-full"
+                inputClass="border-[#D48A42] ring-[#D48A42]/30"
                 label={m.wishlist_field_desired_price()}
                 autofocus
               />
               {#if priceError}
-                <p class="text-xs text-destructive">{priceError}</p>
+                <p class="mt-1 text-[10px] text-red-400" role="alert">{priceError}</p>
               {/if}
             </div>
           {:else}
-            <button
-              class="group flex cursor-pointer items-center gap-1 font-medium hover:opacity-70"
+            <div
+              class="-mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
               onclick={activateDesiredPrice}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') activateDesiredPrice();
+              }}
+              role="button"
+              tabindex="0"
               aria-label={m.wishlist_item_edit_field_label({
                 field: m.wishlist_field_desired_price()
               })}
             >
               {#if item.desiredPrice}
-                {formatPrice(item.desiredPrice.amount, item.desiredPrice.currency)}
+                <span class="text-xs font-semibold text-[#E0E0E0]">
+                  {formatPrice(item.desiredPrice.amount, item.desiredPrice.currency)}
+                </span>
               {:else}
-                <span class="text-muted-foreground italic">{m.wishlist_item_price_not_set()}</span>
+                <span class="text-xs text-[#808080] italic">{m.wishlist_item_price_not_set()}</span>
               {/if}
-              <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-            </button>
+            </div>
           {/if}
-        </dd>
-      </div>
-
-      <!-- Purchased Price (read-only, only shown when non-null) -->
-      {#if item.purchasedPrice}
-        <div class="flex justify-between gap-2">
-          <dt class="shrink-0 text-muted-foreground">{m.wishlist_item_purchased_price()}</dt>
-          <dd class="text-right font-medium">
-            {formatPrice(item.purchasedPrice.amount, item.purchasedPrice.currency)}
-          </dd>
         </div>
-      {/if}
-    </dl>
-  </section>
 
-  <!-- ── Personal Context Section ──────────────────────────────────────────── -->
-  <section class="rounded-lg border border-white/10 bg-black/20 p-4">
-    <h2 class="mb-3 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-      {m.wishlist_item_section_personal_context()}
-    </h2>
+        <!-- Empty slot to match Purchase Date position in collection items -->
+        <div></div>
 
-    <dl class="space-y-2 text-sm">
-      <!-- Added date (inline calendar popover) -->
-      <div class="flex items-center justify-between gap-2">
-        <dt class="shrink-0 text-muted-foreground">{m.wishlist_item_added_date()}</dt>
-        <dd>
+        <!-- Added Date -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.wishlist_item_added_date()}
+          </span>
           <Popover.Root
             bind:open={datePopoverOpen}
             onOpenChange={(open) => {
@@ -412,15 +349,16 @@
             }}
           >
             <Popover.Trigger
-              class="group flex cursor-pointer items-center gap-1 font-medium hover:opacity-70"
+              class="group -mx-1 flex cursor-pointer items-center justify-start rounded p-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
               aria-label={m.wishlist_item_edit_field_label({
                 field: m.wishlist_item_added_date()
               })}
             >
-              {formatDate(item.addedDate)}
-              <Pencil class="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
+              <span class="text-xs font-medium text-[#E0E0E0]">
+                {formatDate(item.addedDate)}
+              </span>
             </Popover.Trigger>
-            <Popover.Content class="w-auto p-0" align="end">
+            <Popover.Content class="w-auto border-[#1F1F1F] bg-[#0F0F0F] p-0" align="end">
               <Calendar
                 type="single"
                 value={calendarValue}
@@ -429,18 +367,83 @@
               />
             </Popover.Content>
           </Popover.Root>
-        </dd>
+        </div>
       </div>
 
-      <!-- Notes (read-only if present) -->
-      {#if item.notes}
-        <div class="mt-2">
-          <dt class="mb-1 text-muted-foreground">{m.wishlist_item_notes()}</dt>
-          <dd>
-            <p class="line-clamp-3 text-sm leading-relaxed">{item.notes}</p>
-          </dd>
+      <!-- Purchased Price (read-only, only shown when non-null) -->
+      {#if item.purchasedPrice}
+        <div class="flex flex-col gap-0.5 border-t border-[#1F1F1F] pt-3">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.wishlist_item_purchased_price()}
+          </span>
+          <span class="text-xs font-semibold text-[#E0E0E0]">
+            {formatPrice(item.purchasedPrice.amount, item.purchasedPrice.currency)}
+          </span>
         </div>
       {/if}
-    </dl>
-  </section>
+    </div>
+  </div>
+
+  <!-- ── Priority Section (formerly Personal Context) ────────────────────── -->
+  <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
+    <div class="border-b border-[#1F1F1F] px-4 py-3">
+      <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+        {m.wishlist_item_section_personal_context()}
+      </h3>
+    </div>
+
+    <div class="space-y-3 p-4">
+      <!-- Priority & Status Row -->
+      <div class="grid grid-cols-3 gap-x-3">
+        <!-- Priority -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.wishlist_field_priority()}
+          </span>
+          <InPlaceSelectEdit
+            value={item.priority}
+            displayLabel={priorityLabel(item.priority)}
+            ariaLabel={m.wishlist_item_edit_field_label({ field: m.wishlist_field_priority() })}
+            options={[
+              { value: 'LOW', label: m.wishlist_priority_low() },
+              { value: 'NORMAL', label: m.wishlist_priority_normal() },
+              { value: 'HIGH', label: m.wishlist_priority_high() }
+            ]}
+            onSave={async (v: string) => handlePriorityChange(v)}
+          />
+        </div>
+
+        <!-- Status -->
+        <div class="flex flex-col gap-0.5">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.wishlist_item_status()}
+          </span>
+          <InPlaceSelectEdit
+            value={item.status}
+            displayLabel={statusLabel(item.status)}
+            ariaLabel={m.wishlist_item_edit_field_label({ field: m.wishlist_item_status() })}
+            options={[
+              { value: 'WANTED', label: m.wishlist_item_status_wanted() },
+              { value: 'ON_ORDER', label: m.wishlist_item_status_on_order() },
+              { value: 'PURCHASED', label: m.wishlist_item_status_purchased() },
+              { value: 'IGNORED', label: m.wishlist_item_status_ignored() }
+            ]}
+            onSave={async (v: string) => handleStatusChange(v)}
+          />
+        </div>
+      </div>
+
+      <!-- Notes -->
+      {#if item.notes}
+        <div class="space-y-1 border-t border-[#1F1F1F] pt-3">
+          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+            {m.wishlist_item_notes()}
+          </span>
+          <p class="line-clamp-6 text-xs leading-relaxed text-[#E0E0E0]">
+            {item.notes}
+          </p>
+        </div>
+      {/if}
+    </div>
+  </div>
 </aside>

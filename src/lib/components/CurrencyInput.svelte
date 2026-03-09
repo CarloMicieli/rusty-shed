@@ -132,16 +132,16 @@
   function handleInput(e: Event & { currentTarget: HTMLInputElement }) {
     const raw = e.currentTarget.value;
     // Allow digits, dot, comma, and leading minus sign
-    let filtered = raw.replace(/[^\d.,\-]/g, '');
+    let filtered = raw.replace(/[^\d.,-]/g, '');
 
     // Track if any characters were filtered out (indicating invalid input)
     bindableHasInvalidInput = raw.length > 0 && filtered.length < raw.length;
 
     // Ensure minus sign only appears at the start
-    const minusCount = (filtered.match(/\-/g) || []).length;
+    const minusCount = (filtered.match(/-/g) || []).length;
     if (minusCount > 1) {
       // Remove all minus signs and add back one at the start if original had any
-      filtered = filtered.replace(/\-/g, '');
+      filtered = filtered.replace(/-/g, '');
       if (raw.startsWith('-')) {
         filtered = '-' + filtered;
       }
