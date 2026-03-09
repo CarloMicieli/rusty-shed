@@ -769,6 +769,27 @@ export const commands = {
     }
   },
   /**
+   * Tauri command to update one or more editable fields on a wishlist item.
+   *
+   * # Arguments
+   * * `state`: Tauri-managed application state which provides a database pool.
+   * * `args`: Transport DTO carrying the patch fields (all optional except wishlist/item IDs).
+   *
+   * # Returns
+   * - `Ok(WishlistItem)` — the full updated item — on success.
+   * - `Err(CommandError)` when validation, domain, or database errors occur.
+   */
+  async updateWishlistItem(
+    args: UpdateWishlistItemArgs
+  ): Promise<Result<WishlistItem, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('update_wishlist_item', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Command handler to retrieve maintenance cards that are due or overdue.
    *
    * # Arguments
@@ -6223,6 +6244,42 @@ export type UpdateSettingsInput = {
   favouriteScale: string | null;
   powerSystem: PowerSystem | null;
   theme: AppTheme | null;
+};
+/**
+ * Arguments for updating editable fields on a specific wishlist item.
+ *
+ * Only provided (non-`null`) fields are changed; omitted fields are left untouched.
+ * For `desired_price_amount`: absent = unchanged, `null` = clear, number = set.
+ */
+export type UpdateWishlistItemArgs = {
+  /**
+   * UUID of the parent wishlist.
+   */
+  wishlistId: string;
+  /**
+   * UUID of the wishlist item to update.
+   */
+  itemId: string;
+  /**
+   * New priority; omit or `null` to leave unchanged.
+   */
+  priority: WishlistPriority | null;
+  /**
+   * New status; omit or `null` to leave unchanged.
+   */
+  status: WishlistStatus | null;
+  /**
+   * `null` clears the price; a number sets it (in smallest unit); absent = unchanged.
+   */
+  desiredPriceAmount?: bigint | null;
+  /**
+   * ISO 4217 currency code; required when `desired_price_amount` is a number.
+   */
+  desiredPriceCurrency: string | null;
+  /**
+   * New added date (ISO 8601 YYYY-MM-DD); must be ≤ today. Omit to leave unchanged.
+   */
+  addedDate: string | null;
 };
 /**
  * Arguments for uploading a model image from file path

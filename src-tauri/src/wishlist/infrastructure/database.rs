@@ -239,6 +239,58 @@ pub async fn mark_item_purchased(
     Ok(res.rows_affected())
 }
 
+/// Update editable fields on a wishlist item using a targeted SQL UPDATE.
+///
+/// Only the fields for which non-`None` values are provided will change;
+/// Encodes the desired-price update intent for [`update_wishlist_item_fields`].
+///
+/// - `mode = 0` — leave columns unchanged
+/// - `mode = 1` — clear both to `NULL`
+/// - `mode = 2` — set to `amount` / `currency`
+pub struct PriceUpdate {
+    pub mode: i64,
+    pub amount: Option<i64>,
+    pub currency: Option<String>,
+}
+
+/// other columns are left intact via `CASE WHEN … ELSE col END` guards.
+pub async fn update_wishlist_item_fields(
+    executor: &mut sqlx::SqliteConnection,
+    item_id: &WishlistItemId,
+    priority: Option<String>,
+    status: Option<String>,
+    price: PriceUpdate,
+    added_date: Option<chrono::NaiveDate>,
+) -> Result<u64, sqlx::Error> {
+    let sql = r#"
+        UPDATE wishlist_items
+        SET
+            priority             = CASE WHEN ? IS NOT NULL THEN ? ELSE priority END,
+            status               = CASE WHEN ? IS NOT NULL THEN ? ELSE status END,
+            desired_price_amount = CASE ? WHEN 0 THEN desired_price_amount WHEN 1 THEN NULL ELSE ? END,
+            desired_price_currency = CASE ? WHEN 0 THEN desired_price_currency WHEN 1 THEN NULL ELSE ? END,
+            added_date           = CASE WHEN ? IS NOT NULL THEN ? ELSE added_date END
+        WHERE id = ?
+    "#;
+
+    let res = sqlx::query(sql)
+        .bind(priority.clone())
+        .bind(priority)
+        .bind(status.clone())
+        .bind(status)
+        .bind(price.mode)
+        .bind(price.amount)
+        .bind(price.mode)
+        .bind(price.currency)
+        .bind(added_date)
+        .bind(added_date)
+        .bind(item_id.to_string())
+        .execute(executor)
+        .await?;
+
+    Ok(res.rows_affected())
+}
+
 pub async fn move_wishlist_item(
     executor: &mut sqlx::SqliteConnection,
     id: &WishlistItemId,

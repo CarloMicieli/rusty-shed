@@ -6,6 +6,8 @@
   import { ArrowLeft, ShoppingCart } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import { settingsState } from '$lib/features/settings/SettingsState.svelte';
+  import type { Currency } from '$lib/bindings';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
@@ -161,7 +163,13 @@
 
       <!-- Right panel: Sidebar -->
       <div class="flex w-full shrink-0 flex-col gap-4 lg:w-80">
-        <WishlistItemSidebar item={wishlistItem} {wishlistName} />
+        <WishlistItemSidebar
+          item={wishlistItem}
+          {wishlistId}
+          {wishlistName}
+          defaultCurrency={settingsState.settings.currency as Currency}
+          onUpdate={reloadItem}
+        />
         {#if wishlistItem.status === 'WANTED' || wishlistItem.status === 'ON_ORDER'}
           <Button variant="default" class="w-full" onclick={() => (purchaseDialogOpen = true)}>
             <ShoppingCart class="h-4 w-4" />

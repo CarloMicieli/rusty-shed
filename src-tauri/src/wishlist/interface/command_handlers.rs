@@ -11,9 +11,10 @@ use crate::wishlist::application::MoveWishlistItemUseCase;
 use crate::wishlist::application::RemoveWishlistItemUseCase;
 use crate::wishlist::application::RenameWishlistUseCase;
 use crate::wishlist::application::SetDefaultWishlistUseCase;
+use crate::wishlist::application::UpdateWishlistItemUseCase;
 use crate::wishlist::application::inputs::{
     AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
-    RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput,
+    RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput, UpdateWishlistItemInput,
 };
 use crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCommand;
 use crate::wishlist::application::queries::WishlistView;
@@ -22,10 +23,13 @@ use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::interface::PurchaseWishlistArgs;
-use crate::wishlist::interface::command_args::AddRailwayModelToWishListArgs;
+use crate::wishlist::interface::command_args::{
+    AddRailwayModelToWishListArgs, UpdateWishlistItemArgs,
+};
 use crate::wishlist::interface::{
     AddToWishlistArgs, CreateWishlistArgs, MoveWishlistItemArgs, RenameWishlistArgs,
 };
+use garde::Validate;
 use log::info;
 // SimplifiedRailwayModelArgs is referenced via the command args; no direct import needed here.
 use crate::core::domain::{Currency, MonetaryAmount};
@@ -407,4 +411,35 @@ pub async fn add_railway_model_to_wish_list(
     unit_of_work.commit().await?;
 
     Ok(())
+}
+
+/// Tauri command to update one or more editable fields on a wishlist item.
+///
+/// # Arguments
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `args`: Transport DTO carrying the patch fields (all optional except wishlist/item IDs).
+///
+/// # Returns
+/// - `Ok(WishlistItem)` — the full updated item — on success.
+/// - `Err(CommandError)` when validation, domain, or database errors occur.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_wishlist_item(
+    state: tauri::State<'_, AppState>,
+    args: UpdateWishlistItemArgs,
+) -> Result<WishlistItem, CommandError> {
+    info!("Updating wishlist item: {:?}", args);
+
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid update args: {e}")))?;
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let input = UpdateWishlistItemInput::try_from(args).map_err(CommandError::from)?;
+
+    let item = UpdateWishlistItemUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(item)
 }

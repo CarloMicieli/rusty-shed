@@ -15,8 +15,8 @@
 
 **Purpose**: Add missing UI components required by the date-picker field before any other work begins.
 
-- [ ] T001 Add shadcn-svelte calendar component via `pnpm dlx shadcn-svelte@latest add calendar` — creates `src/lib/components/ui/calendar/`
-- [ ] T002 [P] Add shadcn-svelte popover component via `pnpm dlx shadcn-svelte@latest add popover` — creates `src/lib/components/ui/popover/`
+- [x] T001 Add shadcn-svelte calendar component via `pnpm dlx shadcn-svelte@latest add calendar` — creates `src/lib/components/ui/calendar/`
+- [x] T002 [P] Add shadcn-svelte popover component via `pnpm dlx shadcn-svelte@latest add popover` — creates `src/lib/components/ui/popover/`
 
 **Checkpoint**: `src/lib/components/ui/calendar/` and `src/lib/components/ui/popover/` exist.
 
@@ -28,18 +28,18 @@
 
 **⚠️ CRITICAL**: No user story implementation can start until T011 (bindings sync) is confirmed.
 
-- [ ] T003 Add `WishlistEvent::ItemUpdated` variant (with `item_id`, `priority`, `status`, `desired_price`, `added_date` fields) to `src-tauri/src/wishlist/domain/wishlist_event.rs`
-- [ ] T004 Add `Wishlist::update_item()` aggregate method and corresponding `apply_event` arm to `src-tauri/src/wishlist/domain/wishlist.rs`
-- [ ] T005 [P] Add `UpdateWishlistItemInput` struct to `src-tauri/src/wishlist/application/inputs.rs`
-- [ ] T006 [P] Add `UpdateWishlistItemArgs` struct (deriving `specta::Type`, `Validate`, `Deserialize`) to `src-tauri/src/wishlist/interface/command_args.rs` — implement a `deserialize_double_option` serde helper so that an absent JSON key on `desiredPriceAmount` maps to `None` (unchanged) and an explicit `null` maps to `Some(None)` (clear price); add unit tests confirming both cases (see data-model.md §Serde Implementation Note)
-- [ ] T007 Create `src-tauri/src/wishlist/application/update_wishlist_item.rs` use case (loads wishlist, calls `update_item`, saves, returns updated `WishlistItem`)
-- [ ] T008 [P] Handle `WishlistEvent::ItemUpdated` in `src-tauri/src/wishlist/infrastructure/repository.rs` with a targeted `UPDATE wishlist_items SET ... WHERE id = ?`
-- [ ] T009 Add `update_wishlist_item` Tauri command handler to `src-tauri/src/wishlist/interface/command_handlers.rs` — call `args.validate()?` at the handler entry point before mapping to `UpdateWishlistItemInput` (ADR 8 transport-boundary validation rule)
-- [ ] T010 Register `update_wishlist_item` in `collect_commands!` macro and specta export in `src-tauri/src/lib.rs`
-- [ ] T011 Sync TypeScript bindings: run `pnpm tauri dev`, confirm `updateWishlistItem` and `UpdateWishlistItemArgs` appear in `src/lib/bindings.ts`
-- [ ] T012 [P] Add Rust unit tests for `Wishlist::update_item()` (valid update, all-null input error, future date rejection) in `src-tauri/src/wishlist/domain/wishlist.rs` test module
-- [ ] T013 [P] Add Rust integration test for `ItemUpdated` repository event processing (persists changed columns, leaves unchanged columns intact) in `src-tauri/src/wishlist/`
-- [ ] T014 Add `activeField` rune, `defaultCurrency` prop, `onUpdate` callback prop, and `saveField()` optimistic-update helper (with rollback on error + `toaster.error`) to `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T003 Add `WishlistEvent::ItemUpdated` variant (with `item_id`, `priority`, `status`, `desired_price`, `added_date` fields) to `src-tauri/src/wishlist/domain/wishlist_event.rs`
+- [x] T004 Add `Wishlist::update_item()` aggregate method and corresponding `apply_event` arm to `src-tauri/src/wishlist/domain/wishlist.rs`
+- [x] T005 [P] Add `UpdateWishlistItemInput` struct to `src-tauri/src/wishlist/application/inputs.rs`
+- [x] T006 [P] Add `UpdateWishlistItemArgs` struct (deriving `specta::Type`, `Validate`, `Deserialize`) to `src-tauri/src/wishlist/interface/command_args.rs` — implement a `deserialize_double_option` serde helper so that an absent JSON key on `desiredPriceAmount` maps to `None` (unchanged) and an explicit `null` maps to `Some(None)` (clear price); add unit tests confirming both cases (see data-model.md §Serde Implementation Note)
+- [x] T007 Create `src-tauri/src/wishlist/application/update_wishlist_item.rs` use case (loads wishlist, calls `update_item`, saves, returns updated `WishlistItem`)
+- [x] T008 [P] Handle `WishlistEvent::ItemUpdated` in `src-tauri/src/wishlist/infrastructure/repository.rs` with a targeted `UPDATE wishlist_items SET ... WHERE id = ?`
+- [x] T009 Add `update_wishlist_item` Tauri command handler to `src-tauri/src/wishlist/interface/command_handlers.rs` — call `args.validate()?` at the handler entry point before mapping to `UpdateWishlistItemInput` (ADR 8 transport-boundary validation rule)
+- [x] T010 Register `update_wishlist_item` in `collect_commands!` macro and specta export in `src-tauri/src/lib.rs`
+- [x] T011 Sync TypeScript bindings: run `pnpm tauri dev`, confirm `updateWishlistItem` and `UpdateWishlistItemArgs` appear in `src/lib/bindings.ts`
+- [x] T012 [P] Add Rust unit tests for `Wishlist::update_item()` (valid update, all-null input error, future date rejection) in `src-tauri/src/wishlist/domain/wishlist.rs` test module
+- [x] T013 [P] Add Rust integration test for `ItemUpdated` repository event processing (persists changed columns, leaves unchanged columns intact) in `src-tauri/src/wishlist/`
+- [x] T014 Add `activeField` rune, `defaultCurrency` prop, `onUpdate` callback prop, and `saveField()` optimistic-update helper (with rollback on error + `toaster.error`) to `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
 
 **Checkpoint**: `pnpm run rust:test` passes; `src/lib/bindings.ts` exports `updateWishlistItem`; sidebar component compiles with new props.
 
@@ -51,8 +51,8 @@
 
 **Independent Test**: Hover Priority → click → dropdown visible with LOW/NORMAL/HIGH → select → badge updates; Escape → no change.
 
-- [ ] T015 [US1] Implement hover affordance (translucent highlight + `Pencil` icon) and Priority inline `Select` (click-to-activate, auto-focus, current value pre-selected, `onChange` triggers `saveField`, Escape cancels) in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
-- [ ] T016 [US1] Add Vitest tests for Priority inline edit in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
+- [x] T015 [US1] Implement hover affordance (translucent highlight + `Pencil` icon) and Priority inline `Select` (click-to-activate, auto-focus, current value pre-selected, `onChange` triggers `saveField`, Escape cancels) in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T016 [US1] Add Vitest tests for Priority inline edit in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
   - activation on click; all three options (LOW/NORMAL/HIGH) present; selection calls `updateWishlistItem` and badge updates; Escape cancels without calling the command
   - **cross-field / FR-018**: while Priority is active, click the Status field → Priority closes without saving, Status activates; verify `activeField` transitions correctly (SC-006)
   - **failure path / FR-019**: mock `invoke` to reject → Priority value reverts to previous and `toaster.error` is called (SC-007)
@@ -67,8 +67,8 @@
 
 **Independent Test**: Click Status → dropdown shows all four values → select → badge updates; Escape → no change.
 
-- [ ] T017 [US2] Implement hover affordance and Status inline `Select` (same pattern as Priority: click-activate, auto-focus, pre-select, `onChange` saves, Escape cancels) in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
-- [ ] T018 [P] [US2] Add Vitest tests for Status inline edit in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
+- [x] T017 [US2] Implement hover affordance and Status inline `Select` (same pattern as Priority: click-activate, auto-focus, pre-select, `onChange` saves, Escape cancels) in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T018 [P] [US2] Add Vitest tests for Status inline edit in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
   - activation; all four options (WANTED/ON_ORDER/PURCHASED/IGNORED) present; selection saves; Escape cancels
   - **failure path / FR-019**: mock `invoke` to reject → Status value reverts and `toaster.error` is called
 
@@ -82,9 +82,9 @@
 
 **Independent Test**: Click "Not set" → numeric input appears with currency label (from settings) → enter valid amount → confirm → formatted price shown; enter non-numeric → inline error; clear → confirm → "Not set"; Escape → no change.
 
-- [ ] T019 [US3] Implement hover affordance and numeric `Input` component with settings-currency adornment for the Desired Price row (click-activate, existing amount pre-selected, auto-focus) in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
-- [ ] T020 [US3] Add price validation logic: reject non-numeric and negative values with inline error message; allow clear (empty string = remove price); on Enter/blur trigger `saveField` converting to cents; on Escape cancel in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
-- [ ] T021 [P] [US3] Add Vitest tests for Desired Price inline edit in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
+- [x] T019 [US3] Implement hover affordance and numeric `Input` component with settings-currency adornment for the Desired Price row (click-activate, existing amount pre-selected, auto-focus) in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T020 [US3] Add price validation logic: reject non-numeric and negative values with inline error message; allow clear (empty string = remove price); on Enter/blur trigger `saveField` converting to cents; on Escape cancel in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T021 [P] [US3] Add Vitest tests for Desired Price inline edit in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
   - valid entry saves; non-numeric input rejected inline; negative value rejected inline; clearing input confirms as null ("Not set"); Escape cancels
   - **failure path / FR-019**: mock `invoke` to reject → price field reverts to previous value and `toaster.error` is called
 
@@ -98,8 +98,8 @@
 
 **Independent Test**: Click date → popover calendar opens with current date highlighted → future dates disabled → select past date → field updates → Escape → no change.
 
-- [ ] T022 [US4] Implement hover affordance and `Popover` + `Calendar` date-picker for the Added date row with `maxDate = today` constraint, pre-selecting the stored date, auto-closing on selection and triggering `saveField`, Escape closes popover without saving in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
-- [ ] T023 [P] [US4] Add Vitest tests for Added Date calendar in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
+- [x] T022 [US4] Implement hover affordance and `Popover` + `Calendar` date-picker for the Added date row with `maxDate = today` constraint, pre-selecting the stored date, auto-closing on selection and triggering `saveField`, Escape closes popover without saving in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T023 [P] [US4] Add Vitest tests for Added Date calendar in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`:
   - popover opens on click; future dates disabled; past date selection saves; Escape cancels
   - **failure path / FR-019**: mock `invoke` to reject → date field reverts to previous value and `toaster.error` is called
 
@@ -113,8 +113,8 @@
 
 **Independent Test**: Hover List field → no highlight, no pencil icon; click → `activeField` remains `null`.
 
-- [ ] T024 [P] [US5] Confirm List field `<dd>` has no group-hover, no cursor-pointer, no `onclick`, and no `activeField` mutation in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
-- [ ] T025 [P] [US5] Add Vitest assertions: hovering/clicking the List field does not set `activeField`, does not render any input, in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`
+- [x] T024 [P] [US5] Confirm List field `<dd>` has no group-hover, no cursor-pointer, no `onclick`, and no `activeField` mutation in `src/lib/features/wishlists/components/WishlistItemSidebar.svelte`
+- [x] T025 [P] [US5] Add Vitest assertions: hovering/clicking the List field does not set `activeField`, does not render any input, in `src/__tests__/features/wishlists/WishlistItemSidebar.test.ts`
 
 **Checkpoint**: List field has zero editable behaviour confirmed by tests.
 
@@ -124,15 +124,15 @@
 
 **Purpose**: i18n, parent prop wiring, and full verification pass.
 
-- [ ] T026 [P] Add inline-edit i18n message keys to `messages/en.json` and `messages/it.json`; run `pnpm prepare` to regenerate `src/lib/paraglide/`
+- [x] T026 [P] Add inline-edit i18n message keys to `messages/en.json` and `messages/it.json`; run `pnpm prepare` to regenerate `src/lib/paraglide/`
   - Required keys (follow existing `snake_case` convention in `messages/en.json`):
     - `wishlist_item_price_invalid_format` — `"Price must be a number"` (inline error for non-numeric input)
     - `wishlist_item_price_negative` — `"Price must be zero or greater"` (inline error for negative input)
     - `wishlist_item_price_not_set` — `"Not set"` (placeholder when desired price is null)
     - `wishlist_item_edit_field_label` — `"Edit {field}"` (parameterised `aria-label` for each edit trigger; `field: string`)
     - `wishlist_item_edit_cancel_label` — `"Cancel editing"` (a11y label for Escape/close affordance)
-- [ ] T027 [P] Thread `defaultCurrency` prop from `SettingsState.settings.currency` down to `WishlistItemSidebar` in `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte`
-- [ ] T028 Run full verification sequence: `pnpm format && pnpm lint && pnpm check && pnpm test && pnpm run rust:clippy && pnpm run rust:test` — resolve every error and warning to zero before committing
+- [x] T027 [P] Thread `defaultCurrency` prop from `SettingsState.settings.currency` down to `WishlistItemSidebar` in `src/routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte`
+- [x] T028 Run full verification sequence: `pnpm format && pnpm lint && pnpm check && pnpm test && pnpm run rust:clippy && pnpm run rust:test` — resolve every error and warning to zero before committing
 
 ---
 

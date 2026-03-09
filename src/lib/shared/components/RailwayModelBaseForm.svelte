@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
+
+  const messages = m as unknown as Record<string, (() => string) | undefined>;
   import { Plus } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import type { Manufacturer } from '$lib/bindings';
@@ -189,14 +191,12 @@
           <option value={null}>-- {m.add_model_power_method()} --</option>
           {#each powerMethodOptions as method (typeof method === 'string' ? method : method.id)}
             {#if typeof method === 'string'}
-              <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
               <option value={method}
-                >{(m as any)[getPowerMethodLabelKey(method)]?.() ?? method}</option
+                >{messages[getPowerMethodLabelKey(method)]?.() ?? method}</option
               >
             {:else}
-              <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
               <option value={method.id}
-                >{(m as any)[getPowerMethodLabelKey(method.id)]?.() ?? method.display}</option
+                >{messages[getPowerMethodLabelKey(method.id)]?.() ?? method.display}</option
               >
             {/if}
           {/each}

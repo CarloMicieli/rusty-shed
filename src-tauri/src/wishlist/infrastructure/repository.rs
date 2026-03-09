@@ -81,6 +81,71 @@ impl<'conn> SqliteWishlistRepository<'conn> {
                 }
                 Ok(())
             }
+            WishlistEvent::ItemUpdated {
+                item_id,
+                priority,
+                status,
+                desired_price,
+                added_date,
+            } => {
+                let priority_str = match priority {
+                    Some(p) => Some(
+                        serde_json::to_string(p)
+                            .map_err(|e| DomainError::Validation(e.to_string()))?
+                            .trim_matches('"')
+                            .to_string(),
+                    ),
+                    None => None,
+                };
+                let status_str = match status {
+                    Some(s) => Some(
+                        serde_json::to_string(s)
+                            .map_err(|e| DomainError::Validation(e.to_string()))?
+                            .trim_matches('"')
+                            .to_string(),
+                    ),
+                    None => None,
+                };
+
+                // Encode desired_price as (mode, amount, currency):
+                // 0 = unchanged, 1 = clear, 2 = set
+                let price = match desired_price {
+                    None => database::PriceUpdate {
+                        mode: 0,
+                        amount: None,
+                        currency: None,
+                    },
+                    Some(None) => database::PriceUpdate {
+                        mode: 1,
+                        amount: None,
+                        currency: None,
+                    },
+                    Some(Some(ma)) => database::PriceUpdate {
+                        mode: 2,
+                        amount: Some(ma.amount),
+                        currency: Some(ma.currency.to_code().to_string()),
+                    },
+                };
+
+                let affected = database::update_wishlist_item_fields(
+                    &mut *self.executor,
+                    item_id,
+                    priority_str,
+                    status_str,
+                    price,
+                    *added_date,
+                )
+                .await
+                .with_domain_context("Error updating wishlist item fields")?;
+
+                if affected == 0 {
+                    return Err(DomainError::NotFound {
+                        resource: "WishlistItem".to_string(),
+                        identifier: item_id.to_string(),
+                    });
+                }
+                Ok(())
+            }
         }
     }
 }
@@ -473,6 +538,120 @@ mod tests {
             second_wishlist.total_value.get(&Currency::USD),
             Some(&17500)
         );
+
+        Ok(())
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_wishlist.sql")
+    )]
+    async fn item_updated_event_persists_changed_columns(conn: SqlitePool) -> Result<()> {
+        use crate::wishlist::domain::wishlist_event::WishlistEvent;
+
+        let wishlist_id =
+            WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
+        let item_id =
+            WishlistItemId::try_from("trn:wishlist-item:2af7578c-8857-4894-8c93-0be4b579ff25")?;
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let mut repo = unit_of_work.wishlist_repository();
+
+        // Load the wishlist; drain the ItemAdded events generated during load so
+        // that save_wishlist only processes our ItemUpdated event.
+        let mut wishlist = repo
+            .find_by_id(&wishlist_id)
+            .await?
+            .expect("wishlist exists");
+        let _ = wishlist.drain_events(); // clear load-time ItemAdded events
+
+        let event = WishlistEvent::ItemUpdated {
+            item_id: item_id.clone(),
+            priority: Some(WishlistPriority::High),
+            status: None,              // unchanged
+            desired_price: Some(None), // clear
+            added_date: Some(chrono::NaiveDate::from_ymd_opt(2024, 6, 1).unwrap()),
+        };
+        wishlist.pending_events.push(event);
+
+        repo.save_wishlist(&wishlist).await?;
+
+        // Re-read and verify changed columns
+        let updated = repo
+            .find_by_id(&wishlist_id)
+            .await?
+            .expect("wishlist still exists");
+        let item = updated
+            .items
+            .iter()
+            .find(|i| i.id == item_id)
+            .expect("item still exists");
+
+        assert_eq!(item.priority, WishlistPriority::High); // changed
+        assert_eq!(item.status, WishlistStatus::Wanted); // unchanged
+        assert!(item.desired_price.is_none()); // cleared
+        assert_eq!(
+            item.added_date,
+            chrono::NaiveDate::from_ymd_opt(2024, 6, 1).unwrap()
+        ); // changed
+
+        Ok(())
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_wishlist.sql")
+    )]
+    async fn item_updated_event_leaves_unchanged_columns_intact(conn: SqlitePool) -> Result<()> {
+        use crate::wishlist::domain::wishlist_event::WishlistEvent;
+
+        let wishlist_id =
+            WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
+        let item_id =
+            WishlistItemId::try_from("trn:wishlist-item:2af7578c-8857-4894-8c93-0be4b579ff25")?;
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let mut repo = unit_of_work.wishlist_repository();
+
+        // Load and drain load-time events
+        let mut wishlist = repo
+            .find_by_id(&wishlist_id)
+            .await?
+            .expect("wishlist exists");
+        let _ = wishlist.drain_events();
+
+        // Only update status; all other fields should remain intact
+        let event = WishlistEvent::ItemUpdated {
+            item_id: item_id.clone(),
+            priority: None,
+            status: Some(WishlistStatus::OnOrder),
+            desired_price: None, // unchanged — price stays 12345 EUR
+            added_date: None,
+        };
+        wishlist.pending_events.push(event);
+
+        repo.save_wishlist(&wishlist).await?;
+
+        let updated = repo
+            .find_by_id(&wishlist_id)
+            .await?
+            .expect("wishlist still exists");
+        let item = updated
+            .items
+            .iter()
+            .find(|i| i.id == item_id)
+            .expect("item still exists");
+
+        assert_eq!(item.priority, WishlistPriority::Normal); // unchanged
+        assert_eq!(item.status, WishlistStatus::OnOrder); // changed
+        assert_eq!(
+            item.desired_price.as_ref().map(|p| p.amount),
+            Some(12345i64)
+        ); // unchanged
+        assert_eq!(
+            item.desired_price.as_ref().map(|p| p.currency),
+            Some(Currency::EUR)
+        ); // unchanged
 
         Ok(())
     }

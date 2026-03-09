@@ -76,3 +76,23 @@ pub struct MoveWishlistItemInput {
     /// The unique identifier of the source wishlist.
     pub wishlist_id: WishlistId,
 }
+
+/// Input structure for updating editable fields on a wishlist item.
+///
+/// Only fields wrapped in `Some` are changed; `None` means "leave unchanged".
+/// For `desired_price`: `None` = unchanged, `Some(None)` = clear, `Some(Some(v))` = set.
+#[derive(Debug, Clone)]
+pub struct UpdateWishlistItemInput {
+    /// The unique identifier of the parent wishlist.
+    pub wishlist_id: WishlistId,
+    /// The unique identifier of the wishlist item to update.
+    pub item_id: WishlistItemId,
+    /// New priority, or `None` to leave unchanged.
+    pub priority: Option<WishlistPriority>,
+    /// New status, or `None` to leave unchanged.
+    pub status: Option<WishlistStatus>,
+    /// Double-option desired price: `None` = unchanged, `Some(None)` = clear, `Some(Some(v))` = set.
+    pub desired_price: Option<Option<MonetaryAmount>>,
+    /// New added date, or `None` to leave unchanged.
+    pub added_date: Option<NaiveDate>,
+}

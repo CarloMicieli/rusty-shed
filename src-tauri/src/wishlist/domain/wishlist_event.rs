@@ -2,6 +2,9 @@ use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
+use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+use crate::wishlist::domain::wishlist_status::WishlistStatus;
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 /// Domain events emitted by `Wishlist` aggregate.
@@ -38,5 +41,16 @@ pub enum WishlistEvent {
     ItemPurchased {
         item_id: WishlistItemId,
         purchased_price: MonetaryAmount,
+    },
+    /// Emitted when one or more editable fields on a wishlist item are updated.
+    ///
+    /// Only the fields wrapped in `Some` are changed; `None` means "leave unchanged".
+    /// For `desired_price`: `None` = unchanged, `Some(None)` = clear, `Some(Some(v))` = set.
+    ItemUpdated {
+        item_id: WishlistItemId,
+        priority: Option<WishlistPriority>,
+        status: Option<WishlistStatus>,
+        desired_price: Option<Option<MonetaryAmount>>,
+        added_date: Option<NaiveDate>,
     },
 }

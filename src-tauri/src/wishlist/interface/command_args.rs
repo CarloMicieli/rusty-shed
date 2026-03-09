@@ -4,7 +4,7 @@ use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::wishlist::application::inputs::{
     AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
-    RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput,
+    RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput, UpdateWishlistItemInput,
 };
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
@@ -289,6 +289,85 @@ pub struct AddRailwayModelToWishListArgs {
     pub notes: Option<String>,
     /// The date the item was added to the wishlist (optional).
     pub added_date: Option<NaiveDate>,
+}
+
+/// Serde helper: distinguishes an **absent** JSON key (`None` = "do not touch")
+/// from an **explicit `null`** (`Some(None)` = "clear the value").
+///
+/// Used for `desired_price_amount` in `UpdateWishlistItemArgs`.
+fn deserialize_double_option<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: serde::Deserialize<'de>,
+    D: serde::Deserializer<'de>,
+{
+    Ok(Some(Option::deserialize(deserializer)?))
+}
+
+/// Arguments for updating editable fields on a specific wishlist item.
+///
+/// Only provided (non-`null`) fields are changed; omitted fields are left untouched.
+/// For `desired_price_amount`: absent = unchanged, `null` = clear, number = set.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateWishlistItemArgs {
+    /// UUID of the parent wishlist.
+    pub wishlist_id: String,
+    /// UUID of the wishlist item to update.
+    pub item_id: String,
+    /// New priority; omit or `null` to leave unchanged.
+    pub priority: Option<WishlistPriority>,
+    /// New status; omit or `null` to leave unchanged.
+    pub status: Option<WishlistStatus>,
+    /// `null` clears the price; a number sets it (in smallest unit); absent = unchanged.
+    #[serde(default, deserialize_with = "deserialize_double_option")]
+    pub desired_price_amount: Option<Option<i64>>,
+    /// ISO 4217 currency code; required when `desired_price_amount` is a number.
+    pub desired_price_currency: Option<String>,
+    /// New added date (ISO 8601 YYYY-MM-DD); must be ≤ today. Omit to leave unchanged.
+    pub added_date: Option<NaiveDate>,
+}
+
+impl TryFrom<UpdateWishlistItemArgs> for UpdateWishlistItemInput {
+    type Error = DomainError;
+
+    fn try_from(input: UpdateWishlistItemArgs) -> Result<Self, Self::Error> {
+        let wishlist_id = WishlistId::try_from(input.wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        let item_id = WishlistItemId::try_from(input.item_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        // Map double-option price amount + currency into a double-option MonetaryAmount.
+        let desired_price: Option<Option<MonetaryAmount>> = match input.desired_price_amount {
+            None => None,                  // absent — do not touch
+            Some(None) => Some(None),       // explicit null — clear the price
+            Some(Some(amount)) => {
+                if amount < 0 {
+                    return Err(DomainError::Validation(
+                        "desired_price_amount must be >= 0".to_string(),
+                    ));
+                }
+                let code = input.desired_price_currency.as_deref().ok_or_else(|| {
+                    DomainError::Validation(
+                        "desired_price_currency is required when desired_price_amount is set"
+                            .to_string(),
+                    )
+                })?;
+                let currency = Currency::from_code(code)
+                    .map_err(|e| DomainError::Validation(e.to_string()))?;
+                Some(Some(MonetaryAmount::new(amount, currency)))
+            }
+        };
+
+        Ok(UpdateWishlistItemInput {
+            wishlist_id,
+            item_id,
+            priority: input.priority,
+            status: input.status,
+            desired_price,
+            added_date: input.added_date,
+        })
+    }
 }
 
 #[cfg(test)]
