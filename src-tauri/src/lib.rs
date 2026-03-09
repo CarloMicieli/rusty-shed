@@ -32,7 +32,6 @@ use crate::commands::cloud_backup as cloud_backup_command_handlers;
 use crate::commands::database_backup as database_backup_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::logging;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::dcc_inventory::interface::command_handlers as dcc_inventory_command_handlers;
@@ -52,6 +51,7 @@ use std::fs;
 use std::path::{Component, Path};
 use tauri::Manager;
 use tauri::path::BaseDirectory;
+use tauri_plugin_log::{Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 
 #[tauri::command]
@@ -254,6 +254,15 @@ pub fn run() {
         .expect("Failed to export typescript bindings");
 
     let mut builder = tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::LogDir { file_name: None }),
+                    Target::new(TargetKind::Webview), // Required for attachConsole() to work
+                ])
+                .build(),
+        )
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_os::init())
@@ -263,8 +272,6 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
-            logging::init_logger(app)?;
-
             let version = env!("CARGO_PKG_VERSION");
 
             log::info!("{}", LOGO);
