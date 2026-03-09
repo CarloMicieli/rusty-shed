@@ -124,7 +124,7 @@
   >
     {#if isDragging}
       <Upload class="mb-4 h-12 w-12 text-primary" />
-      <p class="text-lg font-semibold text-primary">Drop here to update photo</p>
+      <p class="text-lg font-semibold text-primary">{m.image_drop_zone_drag_message()}</p>
     {:else}
       <Upload class="mb-4 h-12 w-12 text-muted-foreground" />
       <p class="mb-2 text-sm font-semibold">{m.drag_and_drop_hint()}</p>

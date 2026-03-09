@@ -51,7 +51,7 @@
           disabled={submitting}
           required
         >
-          <option value="" disabled selected>Select a track component...</option>
+          <option value="" disabled selected>{m.track_purchase_field_product_placeholder()}</option>
           {#each products as product (product.track_id)}
             <option value={product.track_id}>
               {product.manufacturer_name} • {product.description || product.product_code}
@@ -104,7 +104,7 @@
         for="purchase-price"
         class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
       >
-        Market Price (Total)
+        {m.track_purchase_field_market_price()}
       </label>
       <div class="flex gap-2">
         <div class="relative flex-1">
@@ -118,7 +118,7 @@
             class="h-12 rounded-xl border-white/10 bg-zinc-950 pl-10 text-zinc-100 focus:border-white/20 focus:ring-0"
             disabled={submitting}
             required
-            placeholder="0.00"
+            placeholder={m.track_purchase_field_price_placeholder()}
           />
           <ShoppingCart size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-600" />
         </div>
@@ -151,7 +151,7 @@
           onchange={(e) => (selectedSellerId = e.currentTarget.value)}
           disabled={submitting}
         >
-          <option value="">No vendor specified</option>
+          <option value="">{m.track_purchase_field_no_seller()}</option>
           {#each sellers as seller (seller.id)}
             <option value={seller.id}>{seller.name}</option>
           {/each}
@@ -166,7 +166,7 @@
         for="purchase-date"
         class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
       >
-        Transaction Date
+        {m.track_purchase_field_transaction_date()}
       </label>
       <div class="relative">
         <Input
@@ -187,7 +187,7 @@
     <div
       class="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-xs font-bold tracking-wider text-red-500 uppercase"
     >
-      System Error: {error}
+      {m.track_purchase_field_system_error()}: {error}
     </div>
   {/if}
 </div>

@@ -91,7 +91,7 @@
           type="button"
           class="text-zinc-500 transition-colors hover:text-white"
           onclick={handleClose}
-          aria-label="Close"
+          aria-label={m.dialog_close_button()}
         >
           <X size={20} />
         </button>

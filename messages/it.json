@@ -390,6 +390,7 @@
   "wishlist_field_desired_price": "Prezzo Desiderato",
   "wishlist_field_priority": "Priorità",
   "wishlist_field_notes": "Note",
+  "wishlist_details_section_title": "Dettagli Lista Desideri",
   "wishlist_rolling_stocks_title": "Rotabili",
   "wishlist_rolling_stock_add": "Aggiungi rotabile",
   "wishlist_rolling_stock_remove": "Rimuovi",
@@ -842,5 +843,46 @@
   "module_label_finance_ledger": "Registro Finanziario",
   "module_label_global_search": "Ricerca Globale",
   "module_label_settings": "Impostazioni",
-  "module_label_signal_box": "Quadro dei Segnali"
+  "module_label_signal_box": "Quadro dei Segnali",
+
+  "track_purchase_field_market_price": "Prezzo di Mercato (Totale)",
+  "track_purchase_field_transaction_date": "Data Transazione",
+  "track_purchase_field_price_placeholder": "0.00",
+  "track_purchase_field_product_placeholder": "Seleziona un componente...",
+  "track_purchase_field_no_seller": "Nessun venditore specificato",
+  "track_purchase_field_system_error": "Errore di sistema",
+
+  "wishlists_sidebar_title": "Le Mie Liste",
+  "wishlists_sidebar_default_badge": "Predefinita",
+  "wishlists_delete_list_title": "Elimina Lista",
+
+  "wishlists_move_to_list_title": "Sposta in Lista",
+  "wishlists_move_select_destination": "Seleziona una lista di destinazione.",
+  "wishlists_move_items_count": "{count} elementi",
+  "wishlists_move_cancel": "Annulla",
+
+  "dialog_close_button": "Chiudi",
+
+  "filter_panel_close_title": "Chiudi filtri",
+  "collection_filter_all": "Tutti",
+
+  "railway_model_image_alt": "Immagine modello ferroviario",
+  "railway_model_no_image": "Nessuna immagine disponibile",
+
+  "image_drop_zone_drag_message": "Rilascia qui per aggiornare la foto",
+
+  "create_inventory_name_placeholder": "es. Binario Principale, Staging",
+  "create_inventory_desc_placeholder": "Descrivi i binari in questo inventario...",
+  "create_inventory_saving": "Salvataggio...",
+
+  "track_inventory_back_label": "Torna agli inventari",
+  "track_inventory_section_label": "Inventario Binari",
+
+  "collection_toggle_filters_title": "Attiva/disattiva filtri",
+
+  "railway_model_digital_features_label": "Funzionalità digitali",
+  "railway_model_sound_equipped_title": "Dotato di suono",
+  "railway_model_dcc_equipped_title": "Dotato di DCC",
+
+  "railway_model_fallback_en_title": "Contenuto visualizzato in inglese (fallback)"
 }

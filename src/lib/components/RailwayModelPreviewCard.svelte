@@ -79,13 +79,12 @@
 
   import { Card, CardHeader, CardContent } from '$lib/components/ui/card';
   import { Badge } from '$lib/components/ui/badge';
-  import { Button } from '$lib/components/ui/button';
   import { Separator } from '$lib/components/ui/separator';
-  import * as AlertDialog from '$lib/components/ui/alert-dialog';
-  import { Volume2, Zap, Trash2, TrainFront, Box, Users, Layers } from 'lucide-svelte';
+  import { Volume2, Zap, TrainFront, Box, Users, Layers } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { commands } from '$lib/bindings';
+  import PreviewCardActions from '$lib/components/model-details/components/PreviewCardActions.svelte';
 
   const displayManufacturer = $derived(model.manufacturer ?? m.components_unknownManufacturer());
 
@@ -138,7 +137,6 @@
     }
   });
 
-  let showDeleteDialog = $state(false);
   let resolvedPhotoUrl = $state<string | null>(null);
 
   $effect(() => {
@@ -167,11 +165,6 @@
       resolvedPhotoUrl = null;
     }
   }
-
-  function handleDeleteConfirm() {
-    onDelete?.(model.id);
-    showDeleteDialog = false;
-  }
 </script>
 
 <!--
@@ -199,17 +192,9 @@
         </h3>
       </div>
 
-      <!-- Delete button: hidden by default, revealed on card hover -->
+      <!-- Delete button + confirmation dialog: hidden by default, revealed on card hover -->
       {#if onDelete}
-        <Button
-          variant="ghost"
-          size="icon"
-          class="-mt-1 -mr-1 h-7 w-7 shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-          aria-label={m.components_deleteButton()}
-          onclick={() => (showDeleteDialog = true)}
-        >
-          <Trash2 class="h-3.5 w-3.5 text-zinc-500 hover:text-red-400" />
-        </Button>
+        <PreviewCardActions modelId={model.id} modelSeries={model.series} {onDelete} />
       {/if}
     </div>
   </CardHeader>
@@ -240,14 +225,23 @@
 
       <!-- Digital features overlay (top-left) -->
       {#if model.digitalFeatures.length > 0}
-        <div class="absolute top-2 left-2 z-10 flex gap-1" aria-label="Digital features">
+        <div
+          class="absolute top-2 left-2 z-10 flex gap-1"
+          aria-label={m.railway_model_digital_features_label()}
+        >
           {#each model.digitalFeatures as feature (feature)}
             {#if feature === 'Sound'}
-              <div class="rounded-full bg-black/70 p-1" title="Sound equipped">
+              <div
+                class="rounded-full bg-black/70 p-1"
+                title={m.railway_model_sound_equipped_title()}
+              >
                 <Volume2 class="h-3.5 w-3.5 text-zinc-300" aria-hidden="true" />
               </div>
             {:else if feature === 'DCC'}
-              <div class="rounded-full bg-black/70 p-1" title="DCC equipped">
+              <div
+                class="rounded-full bg-black/70 p-1"
+                title={m.railway_model_dcc_equipped_title()}
+              >
                 <Zap class="h-3.5 w-3.5 text-zinc-300" aria-hidden="true" />
               </div>
             {/if}
@@ -309,23 +303,3 @@
     {/if}
   </CardContent>
 </Card>
-
-<!-- Delete confirmation dialog -->
-{#if onDelete}
-  <AlertDialog.Root bind:open={showDeleteDialog}>
-    <AlertDialog.Content>
-      <AlertDialog.Header>
-        <AlertDialog.Title>{m.components_deleteConfirmTitle()}</AlertDialog.Title>
-        <AlertDialog.Description>
-          {m.components_deleteConfirmMessage({ model: model.series ?? 'this model' })}
-        </AlertDialog.Description>
-      </AlertDialog.Header>
-      <AlertDialog.Footer>
-        <AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-        <AlertDialog.Action onclick={handleDeleteConfirm}>
-          {m.common_delete()}
-        </AlertDialog.Action>
-      </AlertDialog.Footer>
-    </AlertDialog.Content>
-  </AlertDialog.Root>
-{/if}

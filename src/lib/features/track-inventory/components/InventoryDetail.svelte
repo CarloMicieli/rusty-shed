@@ -64,14 +64,14 @@
       <a
         href={resolve('/railway-tracks')}
         class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-        aria-label="Back to inventories"
+        aria-label={m.track_inventory_back_label()}
       >
         <ChevronLeft size={22} />
       </a>
       <div>
         <div class="flex items-center gap-3">
           <p class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">
-            Track Inventory
+            {m.track_inventory_section_label()}
           </p>
           <div class="h-px w-8 bg-zinc-800"></div>
         </div>

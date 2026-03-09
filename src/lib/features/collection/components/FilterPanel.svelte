@@ -63,7 +63,7 @@
       <button
         class="text-surface-400 hover:text-surface-300 p-1 transition-colors"
         onclick={onToggleSidebar}
-        title="Close filters"
+        title={m.filter_panel_close_title()}
       >
         <X size={18} />
       </button>
@@ -107,7 +107,7 @@
             onclick={() => handleScaleChange(null)}
             class="hover:bg-primary-600 cursor-pointer transition-colors"
           >
-            All
+            {m.collection_filter_all()}
           </Badge>
           {#each availableScales as scaleOpt (scaleOpt.id)}
             <Badge

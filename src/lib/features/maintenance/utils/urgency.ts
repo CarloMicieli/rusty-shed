@@ -18,8 +18,9 @@ export function getUrgencyLevel(dueDate: string | null): UrgencyLevel {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Reset time for accurate date comparison
 
-  const due = new Date(dueDate);
-  due.setHours(0, 0, 0, 0);
+  // Parse as local date to avoid UTC-offset shifting (YYYY-MM-DD → local midnight)
+  const [year, month, day] = dueDate.split('-').map(Number);
+  const due = new Date(year, month - 1, day);
 
   const diffTime = due.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

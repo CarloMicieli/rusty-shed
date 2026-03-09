@@ -180,7 +180,12 @@
           <Plus size={18} />
           {m.collection_add_model()}
         </Button>
-        <Button onclick={ui.toggleFilterSidebar} variant="outline" size="sm" title="Toggle filters">
+        <Button
+          onclick={ui.toggleFilterSidebar}
+          variant="outline"
+          size="sm"
+          title={m.collection_toggle_filters_title()}
+        >
           <Filter size={18} />
         </Button>
       {/snippet}

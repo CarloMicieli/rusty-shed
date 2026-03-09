@@ -398,6 +398,7 @@
   "wishlist_field_desired_price": "Desired Price",
   "wishlist_field_priority": "Priority",
   "wishlist_field_notes": "Notes",
+  "wishlist_details_section_title": "Wishlist Details",
   "wishlist_rolling_stocks_title": "Rolling Stocks",
   "wishlist_rolling_stock_add": "Add rolling stock",
   "wishlist_rolling_stock_remove": "Remove",
@@ -957,5 +958,46 @@
   "toolbar_bold": "Bold",
   "toolbar_italic": "Italic",
   "toolbar_bullet_list": "Bullet list",
-  "toolbar_ordered_list": "Ordered list"
+  "toolbar_ordered_list": "Ordered list",
+
+  "track_purchase_field_market_price": "Market Price (Total)",
+  "track_purchase_field_transaction_date": "Transaction Date",
+  "track_purchase_field_price_placeholder": "0.00",
+  "track_purchase_field_product_placeholder": "Select a track component...",
+  "track_purchase_field_no_seller": "No vendor specified",
+  "track_purchase_field_system_error": "System Error",
+
+  "wishlists_sidebar_title": "My Lists",
+  "wishlists_sidebar_default_badge": "Default",
+  "wishlists_delete_list_title": "Delete List",
+
+  "wishlists_move_to_list_title": "Move to List",
+  "wishlists_move_select_destination": "Select a destination wishlist.",
+  "wishlists_move_items_count": "{count} items",
+  "wishlists_move_cancel": "Cancel",
+
+  "dialog_close_button": "Close",
+
+  "filter_panel_close_title": "Close filters",
+  "collection_filter_all": "All",
+
+  "railway_model_image_alt": "Railway model image",
+  "railway_model_no_image": "No image available",
+
+  "image_drop_zone_drag_message": "Drop here to update photo",
+
+  "create_inventory_name_placeholder": "e.g. Mainline Layout, Workshop Staging",
+  "create_inventory_desc_placeholder": "Describe the tracks in this inventory...",
+  "create_inventory_saving": "Saving...",
+
+  "track_inventory_back_label": "Back to inventories",
+  "track_inventory_section_label": "Track Inventory",
+
+  "collection_toggle_filters_title": "Toggle filters",
+
+  "railway_model_digital_features_label": "Digital features",
+  "railway_model_sound_equipped_title": "Sound equipped",
+  "railway_model_dcc_equipped_title": "DCC equipped",
+
+  "railway_model_fallback_en_title": "Content displayed in English (fallback)"
 }

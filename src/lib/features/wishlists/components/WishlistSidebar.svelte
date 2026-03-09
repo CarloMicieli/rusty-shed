@@ -15,7 +15,9 @@
 
 <aside class="space-y-4">
   <div class="flex items-center justify-between px-2">
-    <h2 class="text-xs font-bold tracking-[0.2em] text-zinc-500 uppercase">My Lists</h2>
+    <h2 class="text-xs font-bold tracking-[0.2em] text-zinc-500 uppercase">
+      {m.wishlists_sidebar_title()}
+    </h2>
   </div>
 
   <div class="space-y-1">
@@ -59,14 +61,14 @@
               <Badge
                 class="border-amber-500/20 bg-amber-500/10 text-[9px] font-bold text-amber-500 uppercase ring-1 ring-amber-500/20"
               >
-                Default
+                {m.wishlists_sidebar_default_badge()}
               </Badge>
             {/if}
 
             <button
               class="rounded p-1 text-zinc-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-zinc-800 hover:text-red-400"
               type="button"
-              title="Delete List"
+              title={m.wishlists_delete_list_title()}
               onclick={(event) => {
                 event.stopPropagation();
                 onDelete?.(wl.id);

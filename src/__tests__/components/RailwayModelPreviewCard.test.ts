@@ -14,7 +14,11 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   components_purchaseDate: () => 'PURCHASED',
   components_deleteButton: () => 'Delete model',
   common_delete: () => 'Delete',
-  common_cancel: () => 'Cancel'
+  common_cancel: () => 'Cancel',
+  railway_model_digital_features_label: () => 'Digital features',
+  railway_model_sound_equipped_title: () => 'Sound equipped',
+  railway_model_dcc_equipped_title: () => 'DCC equipped',
+  railway_model_fallback_en_title: () => 'Content displayed in English (fallback)'
 }));
 
 vi.mock('$lib/bindings', () => ({

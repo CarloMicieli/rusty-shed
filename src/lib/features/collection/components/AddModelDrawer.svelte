@@ -15,12 +15,8 @@
     AddRailwayModelToCollectionArgs
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
-  import RollingStockEntry from './RollingStockEntry.svelte';
-  import PurchaseSection from './PurchaseSection.svelte';
-  import RailwayModelBaseForm from '$lib/shared/components/RailwayModelBaseForm.svelte';
-  import scales from '$lib/data/constants/scales.json';
-  import categories from '$lib/data/constants/categories.json';
-  import powerMethods from '$lib/data/constants/powerMethods.json';
+  import ModelSearchSection from './ModelSearchSection.svelte';
+  import ModelSelectionCard from './ModelSelectionCard.svelte';
 
   interface Props {
     /** Controls drawer visibility */
@@ -361,33 +357,16 @@
         </div>
       {:else}
         <form id="add-model-form" class="space-y-6">
-          <!-- Base Railway Model Form (shared component) -->
-          <RailwayModelBaseForm
+          <ModelSearchSection
+            bind:form
             {manufacturers}
-            categoryOptions={categories}
-            scaleOptions={scales}
-            powerMethodOptions={powerMethods}
-            {form}
-            validationErrors={validationErrors as Record<string, string | undefined>}
-            onAddRollingStock={handleAddRollingStock}
-          >
-            {#each form.rollingStocks as entry, index (entry.uid)}
-              <RollingStockEntry
-                bind:entry={form.rollingStocks[index]}
-                {railwayCompanies}
-                canRemove={form.rollingStocks.length > 1}
-                onRemove={() => handleRemoveRollingStock(entry.uid)}
-                errors={validationErrors.rollingStockErrors?.[index]}
-              />
-            {/each}
-          </RailwayModelBaseForm>
-
-          <!-- Purchase Section -->
-          <PurchaseSection
-            bind:purchase={form.purchase}
+            {railwayCompanies}
             {sellers}
-            bind:expanded={showPurchaseSection}
-            onToggle={() => (showPurchaseSection = !showPurchaseSection)}
+            bind:showPurchaseSection
+            {validationErrors}
+            onAddRollingStock={handleAddRollingStock}
+            onRemoveRollingStock={handleRemoveRollingStock}
+            onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
           />
         </form>
       {/if}
@@ -413,20 +392,5 @@
 
 <!-- Discard Changes Dialog -->
 {#if showDiscardDialog}
-  <div
-    class="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-  >
-    <div class="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-xl">
-      <h3 class="mb-2 text-lg font-bold text-foreground">{m.add_model_discard_title()}</h3>
-      <p class="mb-4 text-muted-foreground">{m.add_model_discard_message()}</p>
-      <div class="flex justify-end gap-3">
-        <Button type="button" variant="ghost" onclick={handleDiscardCancel}>
-          {m.add_model_discard_cancel()}
-        </Button>
-        <Button type="button" variant="destructive" onclick={handleDiscardConfirm}>
-          {m.add_model_discard_confirm()}
-        </Button>
-      </div>
-    </div>
-  </div>
+  <ModelSelectionCard onConfirm={handleDiscardConfirm} onCancel={handleDiscardCancel} />
 {/if}

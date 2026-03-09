@@ -1,11 +1,11 @@
 <script lang="ts">
   import * as Accordion from '$lib/components/ui/accordion';
   import FormField from '$lib/shared/ui/FormField.svelte';
-  import { Input } from '$lib/components';
   import * as Select from '$lib/components/ui/select';
   import type { ConstantItem } from '../constants';
   import type { RollingStockForm } from '../utils';
   import { resolveLabel } from '../../../../utils/resolveLabel';
+  import RollingStockScaleFields from './RollingStockScaleFields.svelte';
 
   type Option = ConstantItem | { id: string; name: string };
 
@@ -83,12 +83,7 @@
 {/snippet}
 
 {#snippet passengerFields()}
-  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
-    <Input type="text" bind:value={rs.friendly_name} />
-  </FormField>
-  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
-    <Input type="text" bind:value={rs.series_code} />
-  </FormField>
+  <RollingStockScaleFields {rs} {errorsFn} {formLabels} />
 
   {@render selectField(
     formLabels.passengerCarType,
@@ -96,33 +91,6 @@
     true,
     passengerCarTypesData
   )}
-
-  <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
-    <Input
-      class="border-input bg-background"
-      type="text"
-      value={rs.road_number || ''}
-      oninput={(e) => (rs.road_number = e.currentTarget.value)}
-    />
-  </FormField>
-
-  <FormField label={formLabels.series} error={fieldError('series')}>
-    <Input
-      class="border-input bg-background"
-      type="text"
-      value={rs.series || ''}
-      oninput={(e) => (rs.series = e.currentTarget.value)}
-    />
-  </FormField>
-
-  <FormField label={formLabels.depot} error={fieldError('depot')}>
-    <Input
-      class="border-input bg-background"
-      type="text"
-      value={rs.depot || ''}
-      oninput={(e) => (rs.depot = e.currentTarget.value)}
-    />
-  </FormField>
 
   <div class="lg:col-span-2">
     <Accordion.Root type="single">
@@ -146,49 +114,13 @@
 {/snippet}
 
 {#snippet freightFields()}
-  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
-    <Input type="text" bind:value={rs.friendly_name} />
-  </FormField>
-
-  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
-    <Input type="text" bind:value={rs.series_code} />
-  </FormField>
+  <RollingStockScaleFields {rs} {errorsFn} {formLabels} />
 
   {@render selectField(formLabels.freightCarType, 'freight_car_type', false, freightCarTypesData)}
-
-  <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
-    <Input type="text" bind:value={rs.road_number} />
-  </FormField>
-
-  <FormField label={formLabels.series} error={fieldError('series')}>
-    <Input type="text" bind:value={rs.series} />
-  </FormField>
-
-  <FormField label={formLabels.depot} error={fieldError('depot')}>
-    <Input type="text" bind:value={rs.depot} />
-  </FormField>
 {/snippet}
 
 {#snippet railcarFields()}
-  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
-    <Input type="text" bind:value={rs.friendly_name} />
-  </FormField>
-
-  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
-    <Input type="text" bind:value={rs.series_code} />
-  </FormField>
-
-  <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
-    <Input type="text" bind:value={rs.road_number} />
-  </FormField>
-
-  <FormField label={formLabels.series} error={fieldError('series')}>
-    <Input type="text" bind:value={rs.series} />
-  </FormField>
-
-  <FormField label={formLabels.depot} error={fieldError('depot')}>
-    <Input type="text" bind:value={rs.depot} />
-  </FormField>
+  <RollingStockScaleFields {rs} {errorsFn} {formLabels} />
 
   <div class="lg:col-span-2">
     <Accordion.Root type="single">
@@ -213,25 +145,7 @@
 {/snippet}
 
 {#snippet emuFields()}
-  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
-    <Input type="text" bind:value={rs.friendly_name} />
-  </FormField>
-
-  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
-    <Input type="text" bind:value={rs.series_code} />
-  </FormField>
-
-  <FormField label={formLabels.roadNumber} error={fieldError('road_number')}>
-    <Input type="text" bind:value={rs.road_number} />
-  </FormField>
-
-  <FormField label={formLabels.series} error={fieldError('series')}>
-    <Input type="text" bind:value={rs.series} />
-  </FormField>
-
-  <FormField label={formLabels.depot} error={fieldError('depot')}>
-    <Input type="text" bind:value={rs.depot} />
-  </FormField>
+  <RollingStockScaleFields {rs} {errorsFn} {formLabels} />
 
   <label class="label flex items-center gap-2">
     <input class="checkbox" type="checkbox" bind:checked={rs.is_dummy} />
@@ -263,25 +177,7 @@
 {/snippet}
 
 {#snippet locomotiveFields()}
-  <FormField label={formLabels.friendlyName} error={fieldError('friendly_name')} required>
-    <Input type="text" bind:value={rs.friendly_name} />
-  </FormField>
-
-  <FormField label={formLabels.seriesCode} error={fieldError('series_code')} required>
-    <Input type="text" bind:value={rs.series_code} />
-  </FormField>
-
-  <FormField label={formLabels.roadNumber} error={fieldError('road_number')} required>
-    <Input type="text" bind:value={rs.road_number} />
-  </FormField>
-
-  <FormField label={formLabels.series} error={fieldError('series')}>
-    <Input type="text" bind:value={rs.series} />
-  </FormField>
-
-  <FormField label={formLabels.depot} error={fieldError('depot')}>
-    <Input type="text" bind:value={rs.depot} />
-  </FormField>
+  <RollingStockScaleFields {rs} {errorsFn} {formLabels} roadNumberRequired />
 
   {@render selectField(formLabels.type, 'locomotive_type', true, locomotiveTypesData)}
 

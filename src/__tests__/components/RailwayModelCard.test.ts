@@ -88,7 +88,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   crop_dialog_title: () => 'Crop Image',
   crop_cancel: () => 'Cancel',
   crop_confirm: () => 'Confirm',
-  uploading: () => 'Uploading...'
+  uploading: () => 'Uploading...',
+  railway_model_image_alt: () => 'Railway model image',
+  railway_model_no_image: () => 'No image available'
 }));
 
 describe('RailwayModelCard', () => {

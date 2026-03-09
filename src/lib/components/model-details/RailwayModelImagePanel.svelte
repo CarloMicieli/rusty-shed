@@ -56,7 +56,7 @@
     : ''}"
   style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
   role="img"
-  aria-label="Railway model image"
+  aria-label={m.railway_model_image_alt()}
   ondragover={editable ? handleDragOver : undefined}
   ondragleave={editable ? handleDragLeave : undefined}
   ondrop={editable ? handleDrop : undefined}
@@ -86,7 +86,7 @@
         <div class="flex flex-col items-center gap-3 text-zinc-600">
           <Box class="size-12" />
           <p class="text-xs text-zinc-500">
-            {dragState ? m.drag_drop_image_here() : 'No image available'}
+            {dragState ? m.drag_drop_image_here() : m.railway_model_no_image()}
           </p>
           <Button variant="secondary" size="sm" onclick={onBrowseImage}>
             <Upload class="mr-2 h-4 w-4" />
@@ -96,7 +96,7 @@
       {:else}
         <div class="flex flex-col items-center gap-2 text-zinc-600/70">
           <Box class="size-12" />
-          <p class="text-xs text-zinc-600">No image available</p>
+          <p class="text-xs text-zinc-600">{m.railway_model_no_image()}</p>
         </div>
       {/if}
     </div>

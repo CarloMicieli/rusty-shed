@@ -101,7 +101,7 @@
           onclick={handleClose}
           class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
           disabled={submitting}
-          aria-label="Close"
+          aria-label={m.dialog_close_button()}
         >
           <X size={20} />
         </button>
@@ -121,7 +121,7 @@
           <Input
             id="inventory-name"
             bind:value={name}
-            placeholder="e.g. Mainline Layout, Workshop Staging"
+            placeholder={m.create_inventory_name_placeholder()}
             class="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:border-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={submitting}
             required
@@ -140,7 +140,7 @@
           <Textarea
             id="inventory-desc"
             bind:value={description}
-            placeholder="Describe the tracks in this inventory..."
+            placeholder={m.create_inventory_desc_placeholder()}
             class="min-h-[120px] resize-none rounded-xl border-white/10 bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:border-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={submitting}
           />
@@ -174,7 +174,7 @@
           >
             {#if submitting}
               <Loader2 size={18} class="mr-2 animate-spin" />
-              <span>Saving...</span>
+              <span>{m.create_inventory_saving()}</span>
             {:else}
               {m.track_inventory_create_submit()}
             {/if}

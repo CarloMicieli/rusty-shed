@@ -38,7 +38,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   upload_error_multiple_files: () => 'Only one image at a time',
   upload_formats_hint: () => 'JPEG, PNG, or WebP (max 50MB)',
   upload_error_unsupported_format: ({ format }: { format: string }) =>
-    `Unsupported format: .${format}. Supported formats: JPEG, PNG, WebP`
+    `Unsupported format: .${format}. Supported formats: JPEG, PNG, WebP`,
+  image_drop_zone_drag_message: () => 'Drop here to update photo'
 }));
 
 import ImageDropZone from '../ImageDropZone.svelte';

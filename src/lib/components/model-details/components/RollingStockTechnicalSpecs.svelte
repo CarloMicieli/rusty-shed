@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import InPlaceBooleanEdit from '$lib/components/InPlaceBooleanEdit.svelte';
   import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
+  import SpecRow from './SpecRow.svelte';
 
   interface Props {
     canEdit: boolean;
@@ -75,38 +76,39 @@
   ] as const;
 </script>
 
+{#snippet booleanValue(
+  value: 'YES' | 'NO' | null,
+  onSave: (v: 'YES' | 'NO' | null) => Promise<void>
+)}
+  {#if canEdit}
+    <InPlaceBooleanEdit
+      {value}
+      {onSave}
+      onActivate={onFieldActivate}
+      onDeactivate={onFieldDeactivate}
+    />
+  {:else if value === 'YES'}
+    <span
+      class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
+      >✓ Yes</span
+    >
+  {:else if value === 'NO'}
+    <span
+      class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
+      >No</span
+    >
+  {:else}
+    <span class="text-sm text-[#808080] italic">—</span>
+  {/if}
+{/snippet}
+
 <div class="grid grid-cols-3 gap-x-4 gap-y-3">
   <!-- Row 3: Flywheel Fitted · Body Shell · Chassis -->
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.specs_drawer_field_flywheel()}
-    </p>
-    {#if canEdit}
-      <InPlaceBooleanEdit
-        value={localFlywheelFitted}
-        onSave={onSaveFlywheelFitted}
-        onActivate={onFieldActivate}
-        onDeactivate={onFieldDeactivate}
-      />
-    {:else if localFlywheelFitted === 'YES'}
-      <span
-        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-        >✓ Yes</span
-      >
-    {:else if localFlywheelFitted === 'NO'}
-      <span
-        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-        >No</span
-      >
-    {:else}
-      <span class="text-sm text-[#808080] italic">—</span>
-    {/if}
-  </div>
+  <SpecRow label={m.specs_drawer_field_flywheel()}>
+    {@render booleanValue(localFlywheelFitted, onSaveFlywheelFitted)}
+  </SpecRow>
 
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.specs_drawer_field_body_material()}
-    </p>
+  <SpecRow label={m.specs_drawer_field_body_material()}>
     {#if canEdit}
       <InPlaceSelectEdit
         value={localBodyShell ?? ''}
@@ -124,12 +126,9 @@
         {BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? '—'}
       </span>
     {/if}
-  </div>
+  </SpecRow>
 
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.specs_drawer_field_chassis_material()}
-    </p>
+  <SpecRow label={m.specs_drawer_field_chassis_material()}>
     {#if canEdit}
       <InPlaceSelectEdit
         value={localChassis ?? ''}
@@ -147,69 +146,22 @@
         {CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? '—'}
       </span>
     {/if}
-  </div>
+  </SpecRow>
 
   <!-- Row 4: Interior Lights · Lights · (spacer) -->
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.rolling_stock_field_interior_lights()}
-    </p>
-    {#if canEdit}
-      <InPlaceBooleanEdit
-        value={localInteriorLights}
-        onSave={onSaveInteriorLights}
-        onActivate={onFieldActivate}
-        onDeactivate={onFieldDeactivate}
-      />
-    {:else if localInteriorLights === 'YES'}
-      <span
-        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-        >✓ Yes</span
-      >
-    {:else if localInteriorLights === 'NO'}
-      <span
-        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-        >No</span
-      >
-    {:else}
-      <span class="text-sm text-[#808080] italic">—</span>
-    {/if}
-  </div>
+  <SpecRow label={m.rolling_stock_field_interior_lights()}>
+    {@render booleanValue(localInteriorLights, onSaveInteriorLights)}
+  </SpecRow>
 
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.rolling_stock_field_lights()}
-    </p>
-    {#if canEdit}
-      <InPlaceBooleanEdit
-        value={localLights}
-        onSave={onSaveLights}
-        onActivate={onFieldActivate}
-        onDeactivate={onFieldDeactivate}
-      />
-    {:else if localLights === 'YES'}
-      <span
-        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-        >✓ Yes</span
-      >
-    {:else if localLights === 'NO'}
-      <span
-        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-        >No</span
-      >
-    {:else}
-      <span class="text-sm text-[#808080] italic">—</span>
-    {/if}
-  </div>
+  <SpecRow label={m.rolling_stock_field_lights()}>
+    {@render booleanValue(localLights, onSaveLights)}
+  </SpecRow>
 
   <!-- Spacer: Row 4, Col 3 -->
   <div></div>
 
   <!-- Row 5: Coupling Socket · Close Couplers · Digital Shunting -->
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.specs_drawer_field_coupling_socket()}
-    </p>
+  <SpecRow label={m.specs_drawer_field_coupling_socket()}>
     {#if canEdit}
       <InPlaceSelectEdit
         value={localCouplingSocket ?? ''}
@@ -228,59 +180,15 @@
         {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
       </span>
     {/if}
-  </div>
+  </SpecRow>
 
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.specs_drawer_field_close_coupling()}
-    </p>
-    {#if canEdit}
-      <InPlaceBooleanEdit
-        value={localCloseCouplers}
-        onSave={onSaveCloseCouplers}
-        onActivate={onFieldActivate}
-        onDeactivate={onFieldDeactivate}
-      />
-    {:else if localCloseCouplers === 'YES'}
-      <span
-        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-        >✓ Yes</span
-      >
-    {:else if localCloseCouplers === 'NO'}
-      <span
-        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-        >No</span
-      >
-    {:else}
-      <span class="text-sm text-[#808080] italic">—</span>
-    {/if}
-  </div>
+  <SpecRow label={m.specs_drawer_field_close_coupling()}>
+    {@render booleanValue(localCloseCouplers, onSaveCloseCouplers)}
+  </SpecRow>
 
-  <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
-      {m.specs_drawer_field_digital_shunting()}
-    </p>
-    {#if canEdit}
-      <InPlaceBooleanEdit
-        value={localDigitalShunting}
-        onSave={onSaveDigitalShunting}
-        onActivate={onFieldActivate}
-        onDeactivate={onFieldDeactivate}
-      />
-    {:else if localDigitalShunting === 'YES'}
-      <span
-        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-        >✓ Yes</span
-      >
-    {:else if localDigitalShunting === 'NO'}
-      <span
-        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-        >No</span
-      >
-    {:else}
-      <span class="text-sm text-[#808080] italic">—</span>
-    {/if}
-  </div>
+  <SpecRow label={m.specs_drawer_field_digital_shunting()}>
+    {@render booleanValue(localDigitalShunting, onSaveDigitalShunting)}
+  </SpecRow>
 </div>
 
 <!-- Digital Setup (when decoder is installed) -->

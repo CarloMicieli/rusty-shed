@@ -10,7 +10,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   collection_search_placeholder: () => 'Search your collection...',
   collection_filter_scales: () => 'Scales',
   collection_filter_tags: () => 'Tags',
-  collection_clear_filters: () => 'Clear all filters'
+  collection_clear_filters: () => 'Clear all filters',
+  filter_panel_close_title: () => 'Close filters',
+  collection_filter_all: () => 'All'
 }));
 
 // ── Tags config ──────────────────────────────────────────────────────────────
