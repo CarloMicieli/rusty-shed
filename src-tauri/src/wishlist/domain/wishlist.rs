@@ -93,7 +93,8 @@ impl Wishlist {
         added_date: Option<NaiveDate>,
     ) -> Result<(), DomainError> {
         // At least one field must be provided.
-        if priority.is_none() && status.is_none() && desired_price.is_none() && added_date.is_none() {
+        if priority.is_none() && status.is_none() && desired_price.is_none() && added_date.is_none()
+        {
             return Err(DomainError::Validation(
                 "At least one field must be provided to update".to_string(),
             ));
@@ -219,7 +220,7 @@ mod tests {
         WishlistItem {
             id: WishlistItemId::try_from(id).unwrap(),
             railway_model_id: crate::catalog::domain::railway_model::RailwayModelId::try_from(
-                "trn:railway-model:test",
+                "trn:railway-model:acme:test",
             )
             .unwrap(),
             priority: WishlistPriority::Normal,
@@ -288,7 +289,10 @@ mod tests {
     fn update_item_clear_desired_price() {
         let item_id_str = "trn:wishlist-item:22222222-2222-2222-2222-222222222222";
         let mut item = make_item(item_id_str);
-        item.desired_price = Some(MonetaryAmount::new(1000, Currency::from_code("EUR").unwrap()));
+        item.desired_price = Some(MonetaryAmount::new(
+            1000,
+            Currency::from_code("EUR").unwrap(),
+        ));
         let item_id = item.id.clone();
         let mut wishlist = make_wishlist(item);
 

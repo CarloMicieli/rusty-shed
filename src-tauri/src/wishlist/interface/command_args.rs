@@ -339,8 +339,8 @@ impl TryFrom<UpdateWishlistItemArgs> for UpdateWishlistItemInput {
 
         // Map double-option price amount + currency into a double-option MonetaryAmount.
         let desired_price: Option<Option<MonetaryAmount>> = match input.desired_price_amount {
-            None => None,                  // absent — do not touch
-            Some(None) => Some(None),       // explicit null — clear the price
+            None => None,             // absent — do not touch
+            Some(None) => Some(None), // explicit null — clear the price
             Some(Some(amount)) => {
                 if amount < 0 {
                     return Err(DomainError::Validation(
