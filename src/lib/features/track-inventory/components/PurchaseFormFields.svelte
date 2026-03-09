@@ -1,8 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { Plus, Calendar, ShoppingCart, Tag, Store } from 'lucide-svelte';
+  import { Plus, ShoppingCart, Tag, Store } from 'lucide-svelte';
   import type { TrackProductView, SellerView, Currency } from '$lib/bindings';
-  import { Input, Button } from '$lib/components';
+  import { Input, Button, DatePickerField } from '$lib/components';
 
   interface Props {
     products?: TrackProductView[];
@@ -168,18 +168,7 @@
       >
         {m.track_purchase_field_transaction_date()}
       </label>
-      <div class="relative">
-        <Input
-          id="purchase-date"
-          type="date"
-          value={purchaseDate}
-          oninput={(e) => (purchaseDate = e.currentTarget.value)}
-          class="h-12 rounded-xl border-white/10 bg-zinc-950 pl-10 text-zinc-100 [color-scheme:dark] focus:border-white/20 focus:ring-0"
-          disabled={submitting}
-          required
-        />
-        <Calendar size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-600" />
-      </div>
+      <DatePickerField id="purchase-date" bind:value={purchaseDate} disabled={submitting} />
     </div>
   </div>
 

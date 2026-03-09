@@ -14,13 +14,15 @@
   const cards = $derived(maintenanceState.cards);
 
   let selectedCardId = $state<string | null>(null);
-  let datePerformed = $state<string>(new Date().toISOString().split('T')[0]);
+  let datePerformed = $state<string | null>(new Date().toISOString().split('T')[0]);
   let maintenanceType = $state<string | null>(null);
   let notes = $state<string>('');
   let isSubmitting = $state(false);
   let error = $state<string | null>(null);
 
-  const isFormValid = $derived(selectedCardId !== null && datePerformed !== '');
+  const isFormValid = $derived(
+    selectedCardId !== null && datePerformed !== null && datePerformed !== ''
+  );
 
   // Maintenance type options
   const maintenanceTypes: Array<{ value: MaintenanceType; label: string }> = [

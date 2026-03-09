@@ -9,7 +9,7 @@
     DigitalRollingStockView
   } from '$lib/bindings';
   import { getDigitalRosterContext } from '../DigitalRosterState.svelte';
-  import { Button, Input } from '$lib/components';
+  import { Button, Input, DatePickerField } from '$lib/components';
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderDiscardDialog from './DecoderDiscardDialog.svelte';
   import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
@@ -32,7 +32,7 @@
   let selectedRollingStockId = $state<string | null>(null);
   let selectedDecoderId = $state<string | null>(null);
   let dccAddress = $state<number | null>(null);
-  let installationDate = $state<string>(new Date().toISOString().split('T')[0]);
+  let installationDate = $state<string | null>(new Date().toISOString().split('T')[0]);
 
   // Reference data
   let installableRollingStocks = $state<InstallableRollingStockView[]>([]);
@@ -120,7 +120,8 @@
     selectedRollingStockId = null;
     selectedDecoderId = null;
     dccAddress = null;
-    installationDate = new Date().toISOString().split('T')[0];
+    const n = new Date();
+    installationDate = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
     touched = false;
     validationErrors = {};
     duplicateWarning = null;
@@ -371,12 +372,7 @@
             <label for="installation-date" class="block space-y-1">
               <span class="text-sm text-muted-foreground">{m.digital_roster_date_label()}</span>
             </label>
-            <Input
-              id="installation-date"
-              type="date"
-              value={installationDate}
-              oninput={(e) => (installationDate = e.currentTarget.value)}
-            />
+            <DatePickerField id="installation-date" bind:value={installationDate} />
           </div>
         </form>
       {/if}

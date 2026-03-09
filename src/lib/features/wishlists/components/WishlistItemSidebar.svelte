@@ -312,7 +312,7 @@
             </div>
           {:else}
             <div
-              class="-mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+              class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
               onclick={activateDesiredPrice}
               onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') activateDesiredPrice();
@@ -349,7 +349,7 @@
             }}
           >
             <Popover.Trigger
-              class="group -mx-1 flex cursor-pointer items-center justify-start rounded p-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+              class="group -mx-1 flex h-6 cursor-pointer items-center justify-start rounded px-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
               aria-label={m.wishlist_item_edit_field_label({
                 field: m.wishlist_item_added_date()
               })}

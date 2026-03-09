@@ -566,6 +566,7 @@
   "maintenance_add_event_error": "Impossibile registrare evento manutenzione",
   "maintenance_add_event_validation_card": "Seleziona una scheda manutenzione",
   "maintenance_add_event_validation_date": "Seleziona una data",
+  "maintenance_event_date_required": "Data obbligatoria",
   "maintenance_type_wheel_cleaning": "Pulizia Ruote",
   "maintenance_type_track_cleaning": "Pulizia Binari",
   "maintenance_type_contact_cleaning": "Pulizia Contatti",

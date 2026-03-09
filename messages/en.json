@@ -574,6 +574,7 @@
   "maintenance_add_event_error": "Failed to log maintenance event",
   "maintenance_add_event_validation_card": "Please select a maintenance card",
   "maintenance_add_event_validation_date": "Please select a date",
+  "maintenance_event_date_required": "Date is required",
   "maintenance_type_wheel_cleaning": "Wheel Cleaning",
   "maintenance_type_track_cleaning": "Track Cleaning",
   "maintenance_type_contact_cleaning": "Contact Cleaning",

@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { ChevronDown, ChevronRight } from 'lucide-svelte';
-  import { Input, Textarea, CurrencyInput } from '$lib/components';
+  import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import type { SellerView } from '$lib/bindings';
   import type { PurchaseFormState } from '$lib/features/collection/types/AddModelFormTypes';
@@ -91,7 +91,7 @@
             <span class="text-sm text-muted-foreground">{m.add_model_purchase_date()}</span>
             <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
           </label>
-          <Input id="purchase-date" type="date" bind:value={purchase.purchaseDate} class="w-full" />
+          <DatePickerField id="purchase-date" bind:value={purchase.purchaseDate} />
         </div>
       </div>
 

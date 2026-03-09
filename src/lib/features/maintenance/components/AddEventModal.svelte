@@ -1,7 +1,8 @@
 <script lang="ts">
   import { X, ClipboardList } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components';
+  import { Button, DatePickerField } from '$lib/components';
+  import { CalendarDate } from '@internationalized/date';
   import { getMaintenanceDetailState } from '../MaintenanceDetailState.svelte';
   import type { MaintenanceType } from '$lib/bindings';
 
@@ -13,13 +14,18 @@
 
   const maintenanceDetailState = getMaintenanceDetailState();
 
-  let datePerformed = $state<string>(new Date().toISOString().split('T')[0]);
+  let datePerformed = $state<string | null>(new Date().toISOString().split('T')[0]);
+
+  const today = $derived.by(() => {
+    const n = new Date();
+    return new CalendarDate(n.getFullYear(), n.getMonth() + 1, n.getDate());
+  });
   let maintenanceType = $state<string | null>(null);
   let notes = $state<string>('');
   let isSubmitting = $state(false);
   let error = $state<string | null>(null);
 
-  const isFormValid = $derived(datePerformed !== '');
+  const isFormValid = $derived(datePerformed !== '' && datePerformed !== null);
 
   const maintenanceTypes: Array<{ value: MaintenanceType; label: string }> = [
     { value: 'WHEEL_CLEANING', label: m.maintenance_type_wheel_cleaning() },
@@ -45,11 +51,13 @@
     isSubmitting = true;
     error = null;
 
+    const date = datePerformed;
+
     try {
       await maintenanceDetailState.addEvent({
         id: crypto.randomUUID(),
         maintenanceCardId,
-        datePerformed,
+        datePerformed: date,
         maintenanceType,
         notes: notes.trim() || null
       });
@@ -65,7 +73,8 @@
   }
 
   function resetForm() {
-    datePerformed = new Date().toISOString().split('T')[0];
+    const n = new Date();
+    datePerformed = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
     maintenanceType = null;
     notes = '';
     error = null;
@@ -124,16 +133,9 @@
           >
             {m.maintenance_add_event_date_label()}
           </label>
-          <input
-            id="add-event-date"
-            type="date"
-            bind:value={datePerformed}
-            max={new Date().toISOString().split('T')[0]}
-            required
-            class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 [color-scheme:dark] ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-          />
+          <DatePickerField id="add-event-date" bind:value={datePerformed} maxValue={today} />
           {#if !datePerformed}
-            <p class="text-xs font-medium text-red-500">Date is required.</p>
+            <p class="text-xs font-medium text-red-500">{m.maintenance_event_date_required()}</p>
           {/if}
         </div>
 

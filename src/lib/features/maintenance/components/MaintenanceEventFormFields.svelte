@@ -1,5 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import { CalendarDate } from '@internationalized/date';
+  import { DatePickerField } from '$lib/components';
   import type { MaintenanceType } from '$lib/bindings';
 
   interface Card {
@@ -11,13 +13,13 @@
   interface Props {
     cards: Card[];
     selectedCardId: string | null;
-    datePerformed: string;
+    datePerformed: string | null;
     maintenanceType: string | null;
     notes: string;
     error: string | null;
     maintenanceTypes: Array<{ value: MaintenanceType; label: string }>;
     onCardChange: (cardId: string | null) => void;
-    onDateChange: (date: string) => void;
+    onDateChange: (date: string | null) => void;
     onTypeChange: (type: string | null) => void;
     onNotesChange: (notes: string) => void;
   }
@@ -43,7 +45,10 @@
     return `${shortId}… — ${due}`;
   }
 
-  const todayDate = new Date().toISOString().split('T')[0];
+  const todayCalendar = $derived.by(() => {
+    const n = new Date();
+    return new CalendarDate(n.getFullYear(), n.getMonth() + 1, n.getDate());
+  });
 </script>
 
 <!-- Maintenance Card selector -->
@@ -82,13 +87,11 @@
   >
     {m.maintenance_add_event_date_label()}
   </label>
-  <input
+  <DatePickerField
     id="event-date-performed"
-    type="date"
     value={datePerformed}
-    onchange={(e) => onDateChange((e.target as HTMLInputElement).value)}
-    max={todayDate}
-    class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 [color-scheme:dark] ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+    onSelect={onDateChange}
+    maxValue={todayCalendar}
   />
 </div>
 

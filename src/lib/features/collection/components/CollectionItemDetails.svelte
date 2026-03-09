@@ -5,7 +5,7 @@
   import { commands } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { CurrencyInput } from '$lib/components';
+  import { CurrencyInput, DatePickerField } from '$lib/components';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
 
@@ -17,12 +17,6 @@
 
   let { item, seller, onItemUpdated }: Props = $props();
 
-  const dateFormatter = new Intl.DateTimeFormat(getLocale(), {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-
   let isPriceEditing = $state(false);
   let isSavingPrice = $state(false);
   let priceError = $state<string | null>(null);
@@ -30,10 +24,6 @@
   let priceCurrencyDraft = $state('EUR');
 
   let sellers = $state<SellerView[]>([]);
-
-  function formatDate(iso: string): string {
-    return dateFormatter.format(new Date(iso));
-  }
 
   function formatPrice(amount: bigint, currency: string): string {
     return new Intl.NumberFormat(getLocale(), {
@@ -53,11 +43,6 @@
       sellers = result.data;
     }
   });
-
-  function toDateInputValue(value: string | null | undefined): string {
-    if (!value) return '';
-    return value.slice(0, 10);
-  }
 
   async function saveUpdate(update: CollectionItemUpdateArgs): Promise<void> {
     console.log(
@@ -218,7 +203,7 @@
           </div>
         {:else}
           <div
-            class="-mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+            class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
             onclick={startEditingPrice}
             onkeydown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') startEditingPrice();
@@ -242,14 +227,12 @@
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
           {m.collection_item_purchase_date()}
         </span>
-        <InPlaceEdit
-          type="date"
-          value={toDateInputValue(purchasedInfo?.purchaseDate ?? null)}
-          displayValue={purchasedInfo?.purchaseDate
-            ? formatDate(purchasedInfo.purchaseDate)
-            : undefined}
+        <DatePickerField
+          value={purchasedInfo?.purchaseDate ?? null}
+          onSelect={(iso: string | null) =>
+            saveUpdate({ kind: 'purchaseDate', data: { purchase_date: iso } })}
           placeholder="—"
-          onSave={(v) => saveUpdate({ kind: 'purchaseDate', data: { purchase_date: v || null } })}
+          class="h-6"
         />
       </div>
 
@@ -258,12 +241,12 @@
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
           {m.collection_item_added_date()}
         </span>
-        <InPlaceEdit
-          type="date"
-          value={toDateInputValue(item.addedDate)}
-          displayValue={formatDate(item.addedDate)}
+        <DatePickerField
+          value={item.addedDate ?? null}
+          onSelect={(iso: string | null) =>
+            saveUpdate({ kind: 'addedDate', data: { added_date: iso } })}
           placeholder="—"
-          onSave={(v) => saveUpdate({ kind: 'addedDate', data: { added_date: v || null } })}
+          class="h-6"
         />
       </div>
     </div>

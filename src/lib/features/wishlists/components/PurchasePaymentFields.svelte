@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { CurrencyInput } from '$lib/components';
+  import { CurrencyInput, DatePickerField } from '$lib/components';
   import { getCurrencySymbol } from '$lib/utils/currency';
+  import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
 
   interface Props {
@@ -25,6 +26,11 @@
     isSubmitting,
     today
   }: Props = $props();
+
+  const todayCalendar = $derived.by(() => {
+    const [y, mo, d] = today.split('-').map(Number);
+    return new CalendarDate(y, mo, d);
+  });
 
   const CONDITION_OPTIONS = [
     { value: 'New', label: m.purchase_dialog_condition_new() },
@@ -65,14 +71,11 @@
   >
     {m.purchase_dialog_date_label()}
   </label>
-  <input
+  <DatePickerField
     id="purchase-date"
-    type="date"
-    max={today}
     bind:value={purchaseDate}
+    maxValue={todayCalendar}
     disabled={isSubmitting}
-    required
-    class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
   />
 </div>
 
