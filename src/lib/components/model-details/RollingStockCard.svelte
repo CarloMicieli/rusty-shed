@@ -86,13 +86,29 @@
   function extractMm(lob: LengthOverBuffers | null): string {
     if (!lob?.millimeters) return '';
     const val = lob.millimeters;
-    return 'Millimeters' in val ? String(val.Millimeters) : '';
+    // Runtime: Rust's custom serde serializes Length as a float number directly
+    if (typeof val === 'number') return String(val);
+    // Handle string representation
+    if (typeof val === 'string') return val;
+    // Fallback: handle tagged union format (for type safety)
+    if (typeof val === 'object' && val !== null && 'Millimeters' in val) {
+      return String((val as Record<string, unknown>).Millimeters);
+    }
+    return '';
   }
 
   function extractInches(lob: LengthOverBuffers | null): string {
     if (!lob?.inches) return '';
     const val = lob.inches;
-    return 'Inches' in val ? String(val.Inches) : '';
+    // Runtime: Rust's custom serde serializes Length as a float number directly
+    if (typeof val === 'number') return String(val);
+    // Handle string representation
+    if (typeof val === 'string') return val;
+    // Fallback: handle tagged union format (for type safety)
+    if (typeof val === 'object' && val !== null && 'Inches' in val) {
+      return String((val as Record<string, unknown>).Inches);
+    }
+    return '';
   }
 
   function displayLength(): string {

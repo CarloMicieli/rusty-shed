@@ -7,8 +7,12 @@ use crate::catalog::domain::railway_model::RailwayModel;
 use crate::catalog::domain::railway_model::RollingStock;
 use crate::catalog::domain::railway_model::RollingStockCategory;
 use crate::catalog::domain::railway_model::localized_field::LocalizedField;
+use crate::catalog::domain::railway_model::{
+    Coupling, CouplingSocket, FeatureFlag, LengthOverBuffers, Radius, TechnicalSpecifications,
+};
 use crate::core::domain::{Language, domain_error::DomainError, metadata::Metadata};
 use chrono::{DateTime, Utc};
+use std::str::FromStr;
 use url::Url;
 
 /// Convert a `ManufacturerRow` (database representation) into the domain
@@ -97,6 +101,9 @@ impl TryFrom<RollingStockRow> for RollingStock {
 
     fn try_from(row: RollingStockRow) -> Result<Self, Self::Error> {
         let category = row.category;
+        let length_over_buffer = reconstruct_length_over_buffers(&row);
+        let technical_specifications = reconstruct_technical_specifications(&row);
+
         match category {
             RollingStockCategory::Locomotive => Ok(RollingStock::Locomotive {
                 id: row.id,
@@ -109,8 +116,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 depot: row.depot,
                 livery: row.livery,
                 is_dummy: row.is_dummy,
-                length_over_buffer: None,
-                technical_specifications: None,
+                length_over_buffer,
+                technical_specifications,
                 dcc_interface: row.dcc_interface,
                 control: row.control,
             }),
@@ -122,8 +129,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 railway_id: row.railway_company_id,
                 freight_car_type: row.freight_car_type,
                 livery: row.livery,
-                length_over_buffer: None,
-                technical_specifications: None,
+                length_over_buffer,
+                technical_specifications,
             }),
             RollingStockCategory::PassengerCar => Ok(RollingStock::PassengerCar {
                 id: row.id,
@@ -135,8 +142,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 passenger_car_type: row.passenger_car_type,
                 service_level: row.service_level,
                 livery: row.livery,
-                length_over_buffer: None,
-                technical_specifications: None,
+                length_over_buffer,
+                technical_specifications,
             }),
             RollingStockCategory::ElectricMultipleUnit => Ok(RollingStock::ElectricMultipleUnit {
                 id: row.id,
@@ -149,8 +156,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 depot: row.depot,
                 livery: row.livery,
                 is_dummy: row.is_dummy,
-                length_over_buffer: None,
-                technical_specifications: None,
+                length_over_buffer,
+                technical_specifications,
                 dcc_interface: row.dcc_interface,
                 control: row.control,
             }),
@@ -165,8 +172,8 @@ impl TryFrom<RollingStockRow> for RollingStock {
                 depot: row.depot,
                 livery: row.livery,
                 is_dummy: row.is_dummy,
-                length_over_buffer: None,
-                technical_specifications: None,
+                length_over_buffer,
+                technical_specifications,
                 dcc_interface: row.dcc_interface,
                 control: row.control,
             }),
@@ -223,6 +230,104 @@ impl TryFrom<RailwayCompanyRow> for RailwayCompany {
             },
             period_of_activity,
         })
+    }
+}
+
+/// Helper function to reconstruct `LengthOverBuffers` from database columns.
+///
+/// Returns `None` if both `length_inches` and `length_millimeters` are `None`.
+/// If either value is present, attempts to construct a valid `LengthOverBuffers`.
+pub fn reconstruct_length_over_buffers(row: &RollingStockRow) -> Option<LengthOverBuffers> {
+    // sqlx::types::Text<T> implements Deref<Target = T>, so we can dereference and copy
+    let inches = row.length_inches.as_deref().copied();
+    let millimeters = row.length_millimeters.as_deref().copied();
+
+    match (inches, millimeters) {
+        (None, None) => None,
+        _ => LengthOverBuffers::new(inches, millimeters).ok(),
+    }
+}
+
+/// Helper function to reconstruct `TechnicalSpecifications` from database columns.
+///
+/// Returns `None` if all technical specification fields are `None`.
+pub fn reconstruct_technical_specifications(
+    row: &RollingStockRow,
+) -> Option<TechnicalSpecifications> {
+    // Parse the optional feature flag fields
+    let minimum_radius = row
+        .technical_minimum_radius_mm
+        .as_ref()
+        .and_then(|t| Radius::from_millimeters(**t).ok());
+
+    let coupling_socket = row
+        .technical_coupling_socket
+        .as_ref()
+        .and_then(|s| CouplingSocket::from_str(s).ok());
+
+    let close_couplers = row
+        .technical_coupling_close_couplers
+        .as_ref()
+        .and_then(|s| FeatureFlag::from_str(s).ok());
+
+    let digital_shunting = row
+        .technical_coupling_digital_shunting
+        .as_ref()
+        .and_then(|s| FeatureFlag::from_str(s).ok());
+
+    let coupling =
+        if coupling_socket.is_some() || close_couplers.is_some() || digital_shunting.is_some() {
+            Some(Coupling {
+                socket: coupling_socket,
+                close_couplers,
+                digital_shunting,
+            })
+        } else {
+            None
+        };
+
+    let flywheel_fitted = row
+        .technical_flywheel_fitted
+        .as_ref()
+        .and_then(|s| FeatureFlag::from_str(s).ok());
+
+    let interior_lights = row
+        .technical_interior_lights
+        .as_ref()
+        .and_then(|s| FeatureFlag::from_str(s).ok());
+
+    let lights = row
+        .technical_lights
+        .as_ref()
+        .and_then(|s| FeatureFlag::from_str(s).ok());
+
+    let sprung_buffers = row
+        .technical_sprung_buffers
+        .as_ref()
+        .and_then(|s| FeatureFlag::from_str(s).ok());
+
+    // Only return Some if at least one field is populated
+    if minimum_radius.is_some()
+        || coupling.is_some()
+        || flywheel_fitted.is_some()
+        || row.technical_body_shell.is_some()
+        || row.technical_chassis.is_some()
+        || interior_lights.is_some()
+        || lights.is_some()
+        || sprung_buffers.is_some()
+    {
+        Some(TechnicalSpecifications {
+            minimum_radius,
+            coupling,
+            flywheel_fitted,
+            body_shell: row.technical_body_shell,
+            chassis: row.technical_chassis,
+            interior_lights,
+            lights,
+            sprung_buffers,
+        })
+    } else {
+        None
     }
 }
 

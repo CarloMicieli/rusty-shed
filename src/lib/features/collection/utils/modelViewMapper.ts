@@ -147,7 +147,14 @@ function transformOwnedRollingStock(
  */
 function extractMm(len: LengthOverBuffers | null): number | null {
   const mm = len?.millimeters;
-  if (mm && 'Millimeters' in mm) return Number(mm.Millimeters);
+  if (!mm) return null;
+  // Runtime: Rust's custom serde serializes Length as a number/string directly
+  if (typeof mm === 'number') return mm;
+  if (typeof mm === 'string') return Number(mm);
+  // Fallback: handle tagged union format (for type safety)
+  if (typeof mm === 'object' && 'Millimeters' in mm) {
+    return Number((mm as Record<string, unknown>).Millimeters);
+  }
   return null;
 }
 

@@ -11,6 +11,9 @@ use crate::catalog::domain::railway_model::{
 };
 use crate::catalog::domain::scale::Scale;
 use crate::catalog::infrastructure::entities::{RailwayModelRow, RollingStockRow};
+use crate::catalog::infrastructure::mappers::{
+    reconstruct_length_over_buffers, reconstruct_technical_specifications,
+};
 use crate::core::domain::{Language, domain_error::DomainError};
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::search::infrastructure::rebuild_search_index;
@@ -228,7 +231,17 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             // DCC / length patch — control, dcc_interface, length_mm (all nullable)
             let control = map.get("dcc_control").and_then(|v| v.as_str());
             let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
-            let length_mm = map.get("dcc_length_mm").and_then(|v| v.as_f64());
+
+            // Extract length_mm: it can be a number or a string (Decimal serialization)
+            let length_mm = map.get("dcc_length_mm").and_then(|v| {
+                if let Some(num) = v.as_f64() {
+                    Some(num)
+                } else if let Some(s) = v.as_str() {
+                    s.parse::<f64>().ok()
+                } else {
+                    None
+                }
+            });
 
             sqlx::query(
                 r#"
@@ -713,13 +726,16 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     display: cr.railway_company_name.clone(),
                 };
 
+                let length_over_buffer = reconstruct_length_over_buffers(&cr);
+                let technical_specifications = reconstruct_technical_specifications(&cr);
+
                 let view = match cr.category {
                     RollingStockCategory::Locomotive => RollingStockView::Locomotive {
                         id: cr.id,
                         railway,
                         livery: cr.livery,
-                        length_over_buffer: None,
-                        technical_specifications: None,
+                        length_over_buffer,
+                        technical_specifications,
                         friendly_name: cr.friendly_name,
                         series_code: cr.series_code,
                         road_number: cr.road_number,
@@ -734,8 +750,8 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                         id: cr.id,
                         railway,
                         livery: cr.livery,
-                        length_over_buffer: None,
-                        technical_specifications: None,
+                        length_over_buffer,
+                        technical_specifications,
                         friendly_name: cr.friendly_name,
                         series_code: cr.series_code,
                         road_number: cr.road_number,
@@ -745,8 +761,8 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                         id: cr.id,
                         railway,
                         livery: cr.livery,
-                        length_over_buffer: None,
-                        technical_specifications: None,
+                        length_over_buffer,
+                        technical_specifications,
                         friendly_name: cr.friendly_name,
                         series_code: cr.series_code,
                         road_number: cr.road_number,
@@ -759,8 +775,8 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                             id: cr.id,
                             railway,
                             livery: cr.livery,
-                            length_over_buffer: None,
-                            technical_specifications: None,
+                            length_over_buffer,
+                            technical_specifications,
                             friendly_name: cr.friendly_name,
                             series_code: cr.series_code,
                             road_number: cr.road_number,
@@ -778,8 +794,8 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                         id: cr.id,
                         railway,
                         livery: cr.livery,
-                        length_over_buffer: None,
-                        technical_specifications: None,
+                        length_over_buffer,
+                        technical_specifications,
                         friendly_name: cr.friendly_name,
                         series_code: cr.series_code,
                         road_number: cr.road_number,
