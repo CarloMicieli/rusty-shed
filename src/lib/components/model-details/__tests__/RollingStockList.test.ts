@@ -252,8 +252,8 @@ describe('RollingStockList', () => {
         }
       });
 
-      // Each card should be rendered (Svelte handles keys internally)
-      const cards = container.querySelectorAll('.rounded-lg.border');
+      // Each card should be rendered
+      const cards = container.querySelectorAll('h3');
       expect(cards.length).toBe(2);
     });
   });
@@ -345,7 +345,7 @@ describe('RollingStockList', () => {
         }
       });
 
-      const cards = container.querySelectorAll('.rounded-lg.border');
+      const cards = container.querySelectorAll('h3');
       expect(cards.length).toBe(50);
     });
   });

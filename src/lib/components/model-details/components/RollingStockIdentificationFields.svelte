@@ -40,33 +40,13 @@
     onFieldDeactivate
   }: Props = $props();
 
-  const CONTROL_OPTIONS: { id: string; label: string }[] = [
-    { id: '', label: '—' },
-    { id: 'DCC_READY', label: 'DCC Ready' },
-    { id: 'DCC_FITTED', label: 'DCC Fitted' },
-    { id: 'DCC_SOUND', label: 'DCC Sound' },
-    { id: 'NO_DCC', label: 'Analogue (No DCC)' }
-  ];
-
-  const DCC_INTERFACE_OPTIONS: { id: string; label: string }[] = [
-    { id: '', label: '—' },
-    { id: 'NEM_651', label: 'NEM 651' },
-    { id: 'NEM_652', label: 'NEM 652' },
-    { id: 'NEM_654', label: 'NEM 654' },
-    { id: 'PLUX_8', label: 'PluX 8' },
-    { id: 'PLUX_12', label: 'PluX 12' },
-    { id: 'PLUX_16', label: 'PluX 16' },
-    { id: 'PLUX_22', label: 'PluX 22' },
-    { id: 'NEXT_18', label: 'Next18' },
-    { id: 'NEXT_18_S', label: 'Next18-S' },
-    { id: 'MTC_21', label: 'MTC 21' }
-  ];
+  import { CONTROL_OPTIONS, DCC_INTERFACE_OPTIONS } from './constants';
 </script>
 
 <!-- Row 1: Series · Depot · Livery -->
 <div class="grid grid-cols-3 gap-x-4 gap-y-3">
   <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.rolling_stock_field_series()}
     </p>
     {#if canEdit}
@@ -78,14 +58,14 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localSeries ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="font-mono text-sm {localSeries ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
         {localSeries || '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.rolling_stock_field_depot()}
     </p>
     {#if canEdit}
@@ -104,7 +84,7 @@
   </div>
 
   <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.rolling_stock_field_livery()}
     </p>
     {#if canEdit}
@@ -124,20 +104,20 @@
 
   <!-- Row 2: Control Type · DCC Interface · Length -->
   <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.rolling_stock_field_control_type()}
     </p>
     {#if canEdit}
       <BadgePicker value={localControl ?? ''} options={CONTROL_OPTIONS} onSelect={onSaveControl} />
     {:else}
-      <span class="text-sm text-[#E0E0E0]">
+      <span class="font-mono text-sm text-[#E0E0E0]">
         {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.rolling_stock_field_dcc_interface()}
     </p>
     {#if canEdit}
@@ -147,14 +127,14 @@
         onSelect={onSaveDccInterface}
       />
     {:else}
-      <span class="text-sm text-[#E0E0E0]">
+      <span class="font-mono text-sm text-[#E0E0E0]">
         {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.rolling_stock_field_length()}
       {settingsState.settings.measureUnit === 'Metric' ? '(mm)' : '(")'}
     </p>
@@ -167,7 +147,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {displayLength ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="font-mono text-sm {displayLength ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
         {displayLength || '—'}
       </span>
     {/if}

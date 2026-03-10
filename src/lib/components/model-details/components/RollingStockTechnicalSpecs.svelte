@@ -88,15 +88,15 @@
       onDeactivate={onFieldDeactivate}
     />
   {:else if value === 'YES'}
-    <span
-      class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-      >✓ Yes</span
-    >
+    <div class="flex items-center gap-2">
+      <div class="h-3 w-3 rounded-sm bg-[#D48A42]"></div>
+      <span class="text-xs font-medium text-[#E0E0E0]">Yes</span>
+    </div>
   {:else if value === 'NO'}
-    <span
-      class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-      >No</span
-    >
+    <div class="flex items-center gap-2">
+      <div class="h-3 w-3 rounded-sm border border-[#1F1F1F] bg-[#0F0F0F]"></div>
+      <span class="text-xs font-medium text-[#808080]">No</span>
+    </div>
   {:else}
     <span class="text-sm text-[#808080] italic">—</span>
   {/if}
@@ -193,11 +193,11 @@
 
 <!-- Digital Setup (when decoder is installed) -->
 {#if rollingStock.digital}
-  <div class="mt-4 border-t border-border pt-3">
-    <p class="mb-1 text-xs font-medium text-muted-foreground">
+  <div class="mt-4 border-t border-[#1F1F1F] pt-3">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
       {m.model_rolling_stock_field_digital_setup()}
     </p>
-    <p class="text-sm text-[#E0E0E0]">
+    <p class="font-mono text-sm text-[#E0E0E0]">
       {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
       | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
       {#if rollingStock.digital.installed_decoder_id}

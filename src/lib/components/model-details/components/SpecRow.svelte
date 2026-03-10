@@ -10,6 +10,6 @@
 </script>
 
 <div>
-  <p class="mb-1 text-xs font-medium text-muted-foreground">{label}</p>
+  <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">{label}</p>
   {@render children()}
 </div>

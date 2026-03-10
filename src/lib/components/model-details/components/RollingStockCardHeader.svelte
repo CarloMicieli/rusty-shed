@@ -13,23 +13,34 @@
 
 <button
   type="button"
-  class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-muted/50"
+  class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[#1F1F1F]/50"
   onclick={onToggle}
   aria-expanded={isExpanded}
 >
-  <h3 class="text-lg font-semibold">
-    {seriesRoadNumber}
-  </h3>
-  <div class="ml-4 flex flex-shrink-0 items-center gap-2">
+  <div class="flex flex-col gap-1">
+    <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+      Rolling Stock
+    </span>
+    <h3 class="font-mono text-lg font-semibold text-white">
+      {seriesRoadNumber}
+    </h3>
+  </div>
+  <div class="ml-4 flex flex-shrink-0 items-center gap-3">
     {#if railwayCompanyName}
-      <span class="rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300"
-        >{railwayCompanyName}</span
+      <span
+        class="rounded-full bg-[#D48A42] px-2.5 py-0.5 text-[10px] font-bold tracking-tight text-[#050505] uppercase"
       >
+        {railwayCompanyName}
+      </span>
     {/if}
-    {#if isExpanded}
-      <ChevronUp class="h-5 w-5 text-muted-foreground" />
-    {:else}
-      <ChevronDown class="h-5 w-5 text-muted-foreground" />
-    {/if}
+    <div
+      class="flex h-8 w-8 items-center justify-center rounded-full border border-[#1F1F1F] text-[#808080]"
+    >
+      {#if isExpanded}
+        <ChevronUp class="h-4 w-4" />
+      {:else}
+        <ChevronDown class="h-4 w-4" />
+      {/if}
+    </div>
   </div>
 </button>

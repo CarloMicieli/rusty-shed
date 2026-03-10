@@ -34,7 +34,7 @@
     <div class="mt-4 flex justify-start">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#E2994F]/50 hover:text-[#E2994F]"
+        class="inline-flex items-center gap-1.5 rounded-md border border-[#1F1F1F] bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-[#808080] uppercase transition-colors hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
         onclick={() => {
           createDrawerOpen = true;
         }}
@@ -47,7 +47,7 @@
   <div class="rounded-lg border border-dashed border-border p-8 text-center">
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-md border border-[#E2994F]/30 bg-[#E2994F]/10 px-4 py-2 text-sm font-medium text-[#E2994F] transition-colors hover:border-[#E2994F]/60 hover:bg-[#E2994F]/20"
+      class="inline-flex items-center gap-2 rounded-md border border-[#1F1F1F] bg-transparent px-4 py-2 text-[10px] font-bold tracking-wider text-[#808080] uppercase transition-colors hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
       onclick={() => {
         createDrawerOpen = true;
       }}

@@ -217,7 +217,7 @@ describe('RollingStockCard', () => {
       // Railway company is now a header badge, not a grid row
       expect(screen.getByText('Deutsche Bahn')).toBeInTheDocument();
       // Control value rendered via BadgePicker option label
-      expect(screen.getByText('DCC Fitted')).toBeInTheDocument();
+      expect(screen.getAllByText('DCC Fitted')[0]).toBeInTheDocument();
     });
 
     it('should render digital setup when present', async () => {
@@ -370,7 +370,7 @@ describe('RollingStockCard', () => {
       });
 
       const button = container.querySelector('button');
-      expect(button?.className).toContain('hover:bg-muted/50');
+      expect(button?.className).toContain('hover:bg-[#1F1F1F]/50');
     });
   });
 });

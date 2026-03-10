@@ -15,6 +15,7 @@
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import RollingStockCardHeader from './components/RollingStockCardHeader.svelte';
   import RollingStockIdentificationFields from './components/RollingStockIdentificationFields.svelte';
+  import { CONTROL_OPTIONS, DCC_INTERFACE_OPTIONS } from './components/constants';
   import RollingStockTechnicalSpecs from './components/RollingStockTechnicalSpecs.svelte';
   import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
 
@@ -375,7 +376,7 @@
   }
 </script>
 
-<div class="rounded-lg border border-border transition-shadow hover:shadow-md">
+<div class="rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] transition-shadow hover:shadow-md">
   <!-- Card Header (Always Visible) -->
   <RollingStockCardHeader
     seriesRoadNumber={formatSeriesRoadNumber()}
@@ -386,7 +387,7 @@
 
   <!-- Card Body (Expandable) -->
   {#if isExpanded}
-    <div class="border-t border-border p-4">
+    <div class="border-t border-[#1F1F1F] p-4">
       {#if rollingStock.notes}
         <p class="mb-4 text-muted-foreground">{rollingStock.notes}</p>
       {/if}
@@ -395,7 +396,7 @@
         <div class="mb-3 flex justify-end">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#E2994F]/50 hover:text-[#E2994F]"
+            class="inline-flex items-center gap-1.5 rounded-md border border-[#1F1F1F] bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-[#808080] uppercase transition-colors hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
             onclick={() => {
               specsDrawerOpen = true;
             }}
@@ -424,7 +425,7 @@
       />
 
       <!-- Technical Specs (Rows 3-5) -->
-      <div class="mt-4">
+      <div class="mt-4 border-t border-[#1F1F1F] pt-4">
         <RollingStockTechnicalSpecs
           {canEdit}
           {rollingStock}
@@ -447,6 +448,36 @@
           {onFieldActivate}
           {onFieldDeactivate}
         />
+      </div>
+
+      <!-- Metadata Footer (Three-Column Pattern) -->
+      <div
+        class="-mx-4 mt-6 -mb-4 grid grid-cols-3 gap-4 rounded-b-[8px] border-t border-[#1F1F1F] bg-[#050505]/50 p-4"
+      >
+        <div class="flex flex-col gap-1">
+          <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase"
+            >Control</span
+          >
+          <span class="font-mono text-xs text-[#E0E0E0]">
+            {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
+          </span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase"
+            >Interface</span
+          >
+          <span class="font-mono text-xs text-[#E0E0E0]">
+            {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
+          </span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase">Length</span
+          >
+          <span class="font-mono text-xs text-[#E0E0E0]">
+            {displayLength() || '—'}
+            {settingsState.settings.measureUnit === 'Metric' ? 'mm' : '"'}
+          </span>
+        </div>
       </div>
     </div>
   {/if}

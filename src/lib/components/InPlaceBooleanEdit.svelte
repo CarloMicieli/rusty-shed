@@ -138,17 +138,15 @@
     tabindex="0"
   >
     {#if value === 'YES'}
-      <span
-        class="inline-flex items-center gap-1 rounded bg-emerald-950/50 px-1.5 py-0.5 text-xs font-medium text-emerald-400"
-      >
-        ✓ Yes
-      </span>
+      <div class="flex items-center gap-2">
+        <div class="h-3 w-3 rounded-sm bg-[#D48A42]"></div>
+        <span class="text-xs font-medium text-[#E0E0E0]">Yes</span>
+      </div>
     {:else if value === 'NO'}
-      <span
-        class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-medium text-zinc-400"
-      >
-        No
-      </span>
+      <div class="flex items-center gap-2">
+        <div class="h-3 w-3 rounded-sm border border-[#1F1F1F] bg-[#0F0F0F]"></div>
+        <span class="text-xs font-medium text-[#808080]">No</span>
+      </div>
     {:else}
       <span class="text-sm text-[#808080] italic">{placeholder}</span>
     {/if}
