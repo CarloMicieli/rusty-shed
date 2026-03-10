@@ -155,6 +155,69 @@ export function useRollingStockEditor(
     await onModelUpdated();
   }
 
+  async function saveLength(unitId: string, rawValue: string) {
+    const model = getModel();
+    const form = formState.get(unitId);
+    const trimmed = rawValue.trim();
+    const lengthMm = trimmed ? parseFloat(trimmed) : null;
+
+    const result = await commands.updateRollingStockDcc({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      control: (form?.control || null) as Parameters<
+        typeof commands.updateRollingStockDcc
+      >[0]['control'],
+      dccInterface: (form?.dccInterface || null) as Parameters<
+        typeof commands.updateRollingStockDcc
+      >[0]['dccInterface'],
+      lengthMillimeters: Number.isFinite(lengthMm) ? lengthMm : null,
+      lengthInches: null
+    });
+
+    if (result.status === 'error') throw new Error('Failed to save length');
+
+    await onModelUpdated();
+  }
+
+  async function saveBoolSpec(
+    unitId: string,
+    field: 'closeCouplers' | 'digitalShunting',
+    value: boolean | null
+  ) {
+    const model = getModel();
+    const form = formState.get(unitId);
+    if (!form) return;
+
+    form[field] = value;
+
+    const result = await commands.updateRollingStockSpecifications({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      seriesCode: form.seriesCode,
+      roadNumber: form.roadNumber || null,
+      livery: form.livery || null,
+      depot: form.depot || null,
+      flywheelFitted: form.flywheelFitted,
+      bodyShell: form.bodyShell || null,
+      chassis: form.chassis || null,
+      interiorLights: form.interiorLights || null,
+      lights: form.lights || null,
+      dccInterface: (form.dccInterface || null) as Parameters<
+        typeof commands.updateRollingStockSpecifications
+      >[0]['dccInterface'],
+      control: (form.control || null) as Parameters<
+        typeof commands.updateRollingStockSpecifications
+      >[0]['control'],
+      couplingSocket: form.couplingSocket || null,
+      closeCouplers: form.closeCouplers,
+      digitalShunting: form.digitalShunting
+    });
+
+    if (result.status === 'error') throw new Error('Failed to save');
+
+    await onModelUpdated();
+  }
+
   async function saveSpec(unitId: string, field: string, value: string) {
     const model = getModel();
     const form = formState.get(unitId);
@@ -190,5 +253,13 @@ export function useRollingStockEditor(
     await onModelUpdated();
   }
 
-  return { formState, specLoaded, loadSpec, saveIdentification, saveSpec };
+  return {
+    formState,
+    specLoaded,
+    loadSpec,
+    saveIdentification,
+    saveSpec,
+    saveLength,
+    saveBoolSpec
+  };
 }

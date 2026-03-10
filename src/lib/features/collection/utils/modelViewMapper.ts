@@ -4,7 +4,8 @@ import type {
   RailwayModelImageResponse,
   RollingStockView,
   OwnedRollingStockView,
-  LengthOverBuffers
+  LengthOverBuffers,
+  DeliveryDate
 } from '$lib/bindings';
 
 import type { RailwayModel, RollingStock } from '$lib/types/railway-model';
@@ -44,6 +45,7 @@ export function toRailwayModel(
     era: modelView.epoch,
     power_method: modelView.powerMethod,
     category: modelView.category,
+    delivery_date: formatDeliveryDate(modelView.deliveryDate),
     description: modelView.description,
     descriptionLang: modelView.descriptionLang,
     details: modelView.details,
@@ -75,6 +77,7 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
       railway_company: common.railway_company,
       series_code: common.series_code,
       series_name: common.series ?? null,
+      rolling_stock_type: common.rolling_stock_type,
       category: extractCategory(view),
       subcategory: extractSubcategory(view),
       road_number: common.road_number,
@@ -83,7 +86,9 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
       length_mm: common.length_mm,
       control_type: common.control,
       dcc_interface: common.dcc_interface,
-      coupling_type: null // Not available from view
+      coupling_type: common.coupling_socket,
+      close_couplers: common.close_couplers,
+      digital_shunting: common.digital_shunting
     };
   });
 }
@@ -121,6 +126,7 @@ function transformOwnedRollingStock(
       railway_company: common?.railway_company ?? null,
       series_code: common?.series_code ?? '',
       series_name: common?.series ?? null,
+      rolling_stock_type: common?.rolling_stock_type ?? null,
       category: view ? extractCategory(view) : null,
       subcategory: view ? extractSubcategory(view) : null,
       road_number: owned.roadNumber,
@@ -129,7 +135,9 @@ function transformOwnedRollingStock(
       length_mm: common?.length_mm ?? null,
       control_type: owned.control,
       dcc_interface: owned.digital?.interface ?? null,
-      coupling_type: null // Not available
+      coupling_type: common?.coupling_socket ?? null,
+      close_couplers: common?.close_couplers ?? null,
+      digital_shunting: common?.digital_shunting ?? null
     };
   });
 }
@@ -144,6 +152,35 @@ function extractMm(len: LengthOverBuffers | null): number | null {
 }
 
 /**
+ * Format a DeliveryDate value to a human-readable string.
+ *
+ * At runtime, Rust serialises DeliveryDate as a plain string via Display
+ * (e.g. "2026", "2026/01", "2026/Q3"), so the fast-path handles that.
+ * The tagged-union branches are kept for type completeness.
+ */
+function formatDeliveryDate(d: DeliveryDate | null): string | null {
+  if (!d) return null;
+  // Runtime fast-path: Rust serialises DeliveryDate as a Display string.
+  if (typeof d === 'string') return d;
+  if ('Year' in d) return String(d.Year);
+  if ('YearMonth' in d) return `${d.YearMonth.year}/${String(d.YearMonth.month).padStart(2, '0')}`;
+  if ('YearQuarter' in d) return `${d.YearQuarter.year}/${d.YearQuarter.quarter}`;
+  return null;
+}
+
+/**
+ * Extract the high-level rolling stock type label from a RollingStockView.
+ */
+function extractRollingStockType(view: RollingStockView): string | null {
+  if ('locomotive' in view) return 'Locomotive';
+  if ('electricMultipleUnit' in view) return 'Electric Multiple Unit';
+  if ('freightCar' in view) return 'Freight Car';
+  if ('passengerCar' in view) return 'Passenger Car';
+  if ('railcar' in view) return 'Railcar';
+  return null;
+}
+
+/**
  * Extract common data from RollingStockView discriminated union.
  *
  * Handles all rolling stock types (locomotive, EMU, railcar, passenger car,
@@ -154,6 +191,7 @@ function extractMm(len: LengthOverBuffers | null): number | null {
  */
 function extractRollingStockData(view: RollingStockView): {
   id: string;
+  rolling_stock_type: string | null;
   railway_company: string;
   series_code: string;
   road_number: string | null;
@@ -163,10 +201,23 @@ function extractRollingStockData(view: RollingStockView): {
   control: string | null;
   dcc_interface: string | null;
   series: string | null;
+  coupling_socket: string | null;
+  close_couplers: boolean | null;
+  digital_shunting: boolean | null;
 } {
+  const rolling_stock_type = extractRollingStockType(view);
+
+  const flagToBool = (flag: string | null | undefined): boolean | null => {
+    if (flag === 'YES') return true;
+    if (flag === 'NO') return false;
+    return null;
+  };
+
   if ('locomotive' in view) {
+    const ts = view.locomotive.technical_specifications;
     return {
       id: view.locomotive.id,
+      rolling_stock_type,
       railway_company: view.locomotive.railway.display,
       series_code: view.locomotive.series_code,
       road_number: view.locomotive.road_number,
@@ -175,11 +226,16 @@ function extractRollingStockData(view: RollingStockView): {
       length_mm: extractMm(view.locomotive.length_over_buffer),
       control: view.locomotive.control,
       dcc_interface: view.locomotive.dcc_interface,
-      series: view.locomotive.series
+      series: view.locomotive.series,
+      coupling_socket: ts?.coupling?.socket ?? null,
+      close_couplers: flagToBool(ts?.coupling?.close_couplers),
+      digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
   } else if ('electricMultipleUnit' in view) {
+    const ts = view.electricMultipleUnit.technical_specifications;
     return {
       id: view.electricMultipleUnit.id,
+      rolling_stock_type,
       railway_company: view.electricMultipleUnit.railway.display,
       series_code: view.electricMultipleUnit.series_code,
       road_number: view.electricMultipleUnit.road_number,
@@ -188,11 +244,16 @@ function extractRollingStockData(view: RollingStockView): {
       length_mm: extractMm(view.electricMultipleUnit.length_over_buffer),
       control: view.electricMultipleUnit.control,
       dcc_interface: view.electricMultipleUnit.dcc_interface,
-      series: view.electricMultipleUnit.series
+      series: view.electricMultipleUnit.series,
+      coupling_socket: ts?.coupling?.socket ?? null,
+      close_couplers: flagToBool(ts?.coupling?.close_couplers),
+      digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
   } else if ('railcar' in view) {
+    const ts = view.railcar.technical_specifications;
     return {
       id: view.railcar.id,
+      rolling_stock_type,
       railway_company: view.railcar.railway.display,
       series_code: view.railcar.series_code,
       road_number: view.railcar.road_number,
@@ -201,11 +262,16 @@ function extractRollingStockData(view: RollingStockView): {
       length_mm: extractMm(view.railcar.length_over_buffer),
       control: view.railcar.control,
       dcc_interface: view.railcar.dcc_interface,
-      series: view.railcar.series
+      series: view.railcar.series,
+      coupling_socket: ts?.coupling?.socket ?? null,
+      close_couplers: flagToBool(ts?.coupling?.close_couplers),
+      digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
   } else if ('passengerCar' in view) {
+    const ts = view.passengerCar.technical_specifications;
     return {
       id: view.passengerCar.id,
+      rolling_stock_type,
       railway_company: view.passengerCar.railway.display,
       series_code: view.passengerCar.series_code,
       road_number: view.passengerCar.road_number,
@@ -214,11 +280,16 @@ function extractRollingStockData(view: RollingStockView): {
       length_mm: extractMm(view.passengerCar.length_over_buffer),
       control: null,
       dcc_interface: null,
-      series: view.passengerCar.series
+      series: view.passengerCar.series,
+      coupling_socket: ts?.coupling?.socket ?? null,
+      close_couplers: flagToBool(ts?.coupling?.close_couplers),
+      digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
   } else if ('freightCar' in view) {
+    const ts = view.freightCar.technical_specifications;
     return {
       id: view.freightCar.id,
+      rolling_stock_type,
       railway_company: view.freightCar.railway.display,
       series_code: view.freightCar.series_code,
       road_number: view.freightCar.road_number,
@@ -227,13 +298,17 @@ function extractRollingStockData(view: RollingStockView): {
       length_mm: extractMm(view.freightCar.length_over_buffer),
       control: null,
       dcc_interface: null,
-      series: null
+      series: null,
+      coupling_socket: ts?.coupling?.socket ?? null,
+      close_couplers: flagToBool(ts?.coupling?.close_couplers),
+      digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
   }
 
   // Fallback for unknown types
   return {
     id: '',
+    rolling_stock_type: null,
     railway_company: '',
     series_code: '',
     road_number: null,
@@ -242,7 +317,10 @@ function extractRollingStockData(view: RollingStockView): {
     length_mm: null,
     control: null,
     dcc_interface: null,
-    series: null
+    series: null,
+    coupling_socket: null,
+    close_couplers: null,
+    digital_shunting: null
   };
 }
 

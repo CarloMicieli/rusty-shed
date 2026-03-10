@@ -9,15 +9,16 @@ use crate::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
         RailwayModelTextField, SaveRailwayModelInput, SearchRailwayModelsInput,
         SimplifiedRollingStockInput, TechnicalSpecificationsInput,
-        UpdateRailwayModelClassificationInput, UpdateRailwayModelTextInput,
-        UpdateRollingStockDccInput, UpdateRollingStockIdentificationInput,
-        UpdateRollingStockRailwayCompanyInput, UpdateRollingStockSpecificationsInput,
-        UpsertRailwayModelTranslationInput,
+        UpdateRailwayModelClassificationInput, UpdateRailwayModelDeliveryDateInput,
+        UpdateRailwayModelTextInput, UpdateRollingStockDccInput,
+        UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
+        UpdateRollingStockSpecificationsInput, UpsertRailwayModelTranslationInput,
     },
     catalog::domain::railway_company::RailwayCompanyId,
     catalog::domain::railway_model::{
-        BodyShellType, ChassisType, Control, CouplingSocket, DccInterface, Epoch, FeatureFlag,
-        LengthOverBuffers, RailwayModelId, RollingStockId, RollingStockSpecPatch,
+        BodyShellType, Category, ChassisType, Control, CouplingSocket, DccInterface, DeliveryDate,
+        Epoch, FeatureFlag, LengthOverBuffers, RailwayModelId, RollingStockId,
+        RollingStockSpecPatch,
     },
     catalog::domain::scale::Scale,
     core::domain::length::Length,
@@ -968,8 +969,8 @@ impl From<UpdateRollingStockIdentificationArgs> for UpdateRollingStockIdentifica
 // UpdateRailwayModelClassification args
 // ---------------------------------------------------------------------------
 
-/// Arguments for updating the constrained classification fields (scale and/or epoch) of a
-/// railway model via a badge picker.
+/// Arguments for updating the constrained classification fields (scale, epoch, and/or category)
+/// of a railway model via a badge picker.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
@@ -980,6 +981,8 @@ pub struct UpdateRailwayModelClassificationArgs {
     pub scale: Option<Scale>,
     /// New epoch value, if being updated.
     pub epoch: Option<Epoch>,
+    /// New category value, if being updated.
+    pub category: Option<Category>,
 }
 
 impl From<UpdateRailwayModelClassificationArgs> for UpdateRailwayModelClassificationInput {
@@ -988,7 +991,45 @@ impl From<UpdateRailwayModelClassificationArgs> for UpdateRailwayModelClassifica
             railway_model_id: args.railway_model_id,
             scale: args.scale,
             epoch: args.epoch,
+            category: args.category,
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRailwayModelDeliveryDate args
+// ---------------------------------------------------------------------------
+
+/// Arguments for updating the delivery date of a railway model.
+///
+/// Pass `delivery_date` as `None` or an empty string to clear the value;
+/// otherwise the string is parsed via [`DeliveryDate::parse`].
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRailwayModelDeliveryDateArgs {
+    /// The railway model to update.
+    pub railway_model_id: RailwayModelId,
+    /// New delivery date string, or `None` / empty string to clear.
+    pub delivery_date: Option<String>,
+}
+
+impl TryFrom<UpdateRailwayModelDeliveryDateArgs> for UpdateRailwayModelDeliveryDateInput {
+    type Error = DomainError;
+
+    fn try_from(args: UpdateRailwayModelDeliveryDateArgs) -> Result<Self, Self::Error> {
+        let delivery_date =
+            match args.delivery_date.as_deref() {
+                None | Some("") => None,
+                Some(s) => Some(DeliveryDate::parse(s).map_err(|e| {
+                    DomainError::Validation(format!("invalid delivery_date: {}", e))
+                })?),
+            };
+
+        Ok(Self {
+            railway_model_id: args.railway_model_id,
+            delivery_date,
+        })
     }
 }
 

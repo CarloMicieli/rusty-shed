@@ -46,7 +46,9 @@ vi.mock('@tauri-apps/api/core', () => ({
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayCompanies: vi.fn(() => Promise.resolve({ status: 'ok', data: [] })),
-    uploadModelImageBytes: vi.fn(() => Promise.resolve({ status: 'ok', data: null }))
+    uploadModelImageBytes: vi.fn(() => Promise.resolve({ status: 'ok', data: null })),
+    updateRailwayModelClassification: vi.fn(() => Promise.resolve({ status: 'ok', data: null })),
+    updateRailwayModelDeliveryDate: vi.fn(() => Promise.resolve({ status: 'ok', data: null }))
   }
 }));
 
@@ -68,7 +70,14 @@ vi.mock('$lib/paraglide/messages', () => ({
   railway_model_field_description: () => 'Description',
   railway_model_field_scale: () => 'Scale',
   railway_model_field_era: () => 'Era',
+  railway_model_field_category: () => 'Category',
+  railway_model_field_delivery_date: () => 'Delivery Date',
+  railway_model_field_status: () => 'Status',
   railway_model_field_details: () => 'Details',
+  rolling_stock_field_length: () => 'Length',
+  rolling_stock_field_close_couplers: () => 'Close Couplers',
+  rolling_stock_field_digital_shunting: () => 'Digital Shunting',
+  rolling_stock_field_series_code: () => 'Series Code',
   details_placeholder: () => 'Add maintenance notes, DCC addresses, or other details...',
   upload_error_unknown: () => 'Unknown upload error',
   error_invalid_image_format: () =>
@@ -110,6 +119,7 @@ describe('RailwayModelCard', () => {
       era: 'IIIb',
       power_method: 'DC',
       category: 'Locomotive',
+      delivery_date: null,
       description: 'Electric locomotive E.656 in original green livery',
       descriptionLang: 'en',
       details: null,
@@ -123,6 +133,7 @@ describe('RailwayModelCard', () => {
           railway_company: 'FS',
           series_code: 'E.656',
           series_name: 'I Serie',
+          rolling_stock_type: 'Locomotive',
           category: 'Electric Locomotive',
           subcategory: 'Bo-Bo-Bo',
           road_number: '656 001',
@@ -131,7 +142,9 @@ describe('RailwayModelCard', () => {
           length_mm: 185,
           control_type: 'Digital',
           dcc_interface: '21-pin MTC',
-          coupling_type: 'NEM 362'
+          coupling_type: 'NEM 362',
+          close_couplers: null,
+          digital_shunting: null
         }
       ]
     };
@@ -145,6 +158,7 @@ describe('RailwayModelCard', () => {
       era: 'IV',
       power_method: null,
       category: 'Passenger Set',
+      delivery_date: null,
       description: 'ÖBB Railjet 3-car set',
       descriptionLang: 'en',
       details: null,
@@ -158,6 +172,7 @@ describe('RailwayModelCard', () => {
           railway_company: 'ÖBB',
           series_code: 'Railjet',
           series_name: 'Control Car',
+          rolling_stock_type: 'Passenger Car',
           category: 'Passenger Car',
           subcategory: 'Control Car',
           road_number: '80 90 73 90 004-2',
@@ -166,7 +181,9 @@ describe('RailwayModelCard', () => {
           length_mm: null,
           control_type: null,
           dcc_interface: null,
-          coupling_type: 'NEM 362'
+          coupling_type: 'NEM 362',
+          close_couplers: null,
+          digital_shunting: null
         },
         {
           id: 'trn:rolling-stock:roco:72198:2',
@@ -174,6 +191,7 @@ describe('RailwayModelCard', () => {
           railway_company: 'ÖBB',
           series_code: 'Railjet',
           series_name: 'Bistro Car',
+          rolling_stock_type: 'Passenger Car',
           category: 'Passenger Car',
           subcategory: 'Restaurant Car',
           road_number: '61 80 88-90 101-3',
@@ -182,7 +200,9 @@ describe('RailwayModelCard', () => {
           length_mm: null,
           control_type: null,
           dcc_interface: null,
-          coupling_type: 'NEM 362'
+          coupling_type: 'NEM 362',
+          close_couplers: null,
+          digital_shunting: null
         },
         {
           id: 'trn:rolling-stock:roco:72198:3',
@@ -190,6 +210,7 @@ describe('RailwayModelCard', () => {
           railway_company: 'ÖBB',
           series_code: 'Railjet',
           series_name: 'Standard Car',
+          rolling_stock_type: 'Passenger Car',
           category: 'Passenger Car',
           subcategory: '2nd Class',
           road_number: '61 80 21-90 012-7',
@@ -198,7 +219,9 @@ describe('RailwayModelCard', () => {
           length_mm: null,
           control_type: null,
           dcc_interface: null,
-          coupling_type: 'NEM 362'
+          coupling_type: 'NEM 362',
+          close_couplers: null,
+          digital_shunting: null
         }
       ]
     };

@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { RailwayModel } from '$lib/types/railway-model';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
+  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { commands, type Scale } from '$lib/bindings';
+  import { commands, type Scale, type Category } from '$lib/bindings';
   import ImageCropDialog from '$lib/components/model-details/ImageCropDialog.svelte';
   import RailwayModelCardHeader from '$lib/components/model-details/RailwayModelCardHeader.svelte';
   import RailwayModelImagePanel from '$lib/components/model-details/RailwayModelImagePanel.svelte';
@@ -54,10 +55,14 @@
   // Local copies for editable fields
   let localScale = $state('');
   let localEra = $state('');
+  let localCategory = $state('');
+  let localDeliveryDate = $state('');
 
   $effect(() => {
     localScale = model.scale ?? '';
     localEra = model.era ?? '';
+    localCategory = model.category ?? '';
+    localDeliveryDate = model.delivery_date ?? '';
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -75,6 +80,17 @@
     };
     return labels[model.power_method.toLowerCase()] ?? model.power_method.toUpperCase();
   });
+
+  // Category options
+  const categoryOptions: { id: string; label: string }[] = [
+    { id: 'LOCOMOTIVES', label: 'Locomotives' },
+    { id: 'TRAIN_SETS', label: 'Train Sets' },
+    { id: 'STARTER_SETS', label: 'Starter Sets' },
+    { id: 'FREIGHT_CARS', label: 'Freight Cars' },
+    { id: 'PASSENGER_CARS', label: 'Passenger Cars' },
+    { id: 'ELECTRIC_MULTIPLE_UNITS', label: 'Electric Multiple Units' },
+    { id: 'RAILCARS', label: 'Railcars' }
+  ];
 
   // Scale options
   const scaleOptions = [
@@ -142,7 +158,8 @@
     const result = await commands.updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: id as Scale,
-      epoch: null
+      epoch: null,
+      category: null
     });
     if (result.status === 'error') {
       throw new Error('Failed to save scale');
@@ -155,12 +172,39 @@
     const result = await commands.updateRailwayModelClassification({
       railwayModelId: model.id,
       scale: null,
-      epoch: id
+      epoch: id,
+      category: null
     });
     if (result.status === 'error') {
       throw new Error('Failed to save era');
     }
     localEra = id;
+    await onModelUpdated?.();
+  }
+
+  async function saveCategory(id: string) {
+    const result = await commands.updateRailwayModelClassification({
+      railwayModelId: model.id,
+      scale: null,
+      epoch: null,
+      category: id as Category
+    });
+    if (result.status === 'error') {
+      throw new Error('Failed to save category');
+    }
+    localCategory = id;
+    await onModelUpdated?.();
+  }
+
+  async function saveDeliveryDate(value: string) {
+    const result = await commands.updateRailwayModelDeliveryDate({
+      railwayModelId: model.id,
+      deliveryDate: value || null
+    });
+    if (result.status === 'error') {
+      throw new Error('Failed to save delivery date');
+    }
+    localDeliveryDate = value;
     await onModelUpdated?.();
   }
 
@@ -208,37 +252,79 @@
   <!-- ═══ Specs bar ════════════════════════════════════════════════════════ -->
   <div
     data-testid="specs"
-    class="mx-4 mt-3 grid grid-cols-4 divide-x divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/40 py-2"
+    class="mx-4 mt-3 grid grid-cols-5 divide-x divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/40 py-2"
   >
-    <div class="flex flex-col items-center gap-0.5 px-2">
-      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Category</span>
-      <span class="text-xs text-zinc-200">{model.category ?? '—'}</span>
-    </div>
-    <div class="flex flex-col items-center gap-0.5 px-2">
-      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase"
-        >{m.railway_model_field_scale()}</span
+    <div class="flex flex-col items-center gap-1 px-2">
+      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_category() || ' '}</span
       >
-      {#if editable}
-        <BadgePicker value={localScale || '—'} options={scaleOptions} onSelect={saveScale} />
-      {:else}
-        <span class="font-mono text-xs text-zinc-200">{model.scale ?? '—'}</span>
-      {/if}
+      <div class="flex h-4 items-center justify-center">
+        {#if editable}
+          <BadgePicker
+            value={localCategory || '—'}
+            options={categoryOptions}
+            onSelect={saveCategory}
+          />
+        {:else}
+          <span class="text-xs leading-none text-zinc-200">{model.category ?? '—'}</span>
+        {/if}
+      </div>
     </div>
-    <div class="flex flex-col items-center gap-0.5 px-2">
-      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase"
-        >{m.railway_model_field_era()}</span
+
+    <div class="flex flex-col items-center gap-1 px-2">
+      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_scale() || ' '}</span
       >
-      {#if editable}
-        <BadgePicker value={localEra || '—'} options={eraOptions} onSelect={saveEra} />
-      {:else}
-        <span class="font-mono text-xs text-zinc-200">{model.era ?? '—'}</span>
-      {/if}
+      <div class="flex h-4 items-center justify-center">
+        {#if editable}
+          <BadgePicker value={localScale || '—'} options={scaleOptions} onSelect={saveScale} />
+        {:else}
+          <span class="font-mono text-xs leading-none text-zinc-200">{model.scale ?? '—'}</span>
+        {/if}
+      </div>
     </div>
-    <div class="flex flex-col items-center gap-0.5 px-2">
-      <span class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Status</span>
-      <span class="text-xs text-zinc-200"
-        >{model.status === 'InCollection' ? 'In Collection' : model.status}</span
+
+    <div class="flex flex-col items-center gap-1 px-2">
+      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_era() || ' '}</span
       >
+      <div class="flex h-4 items-center justify-center">
+        {#if editable}
+          <BadgePicker value={localEra || '—'} options={eraOptions} onSelect={saveEra} />
+        {:else}
+          <span class="font-mono text-xs leading-none text-zinc-200">{model.era ?? '—'}</span>
+        {/if}
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center gap-1 px-2">
+      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_delivery_date() || ' '}</span
+      >
+      <div class="flex h-4 items-center justify-center">
+        {#if editable}
+          <InPlaceEdit
+            value={localDeliveryDate}
+            placeholder="YYYY or YYYY/MM"
+            onSave={saveDeliveryDate}
+          />
+        {:else}
+          <span class="font-mono text-xs leading-none text-zinc-200"
+            >{model.delivery_date ?? '—'}</span
+          >
+        {/if}
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center gap-1 px-2">
+      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+        >{m.railway_model_field_status() || ' '}</span
+      >
+      <div class="flex h-4 items-center justify-center">
+        <span class="text-xs leading-none text-zinc-200"
+          >{model.status === 'InCollection' ? 'In Collection' : model.status}</span
+        >
+      </div>
     </div>
   </div>
 

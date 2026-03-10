@@ -147,6 +147,8 @@
           onSaveIdentification={(field, value) =>
             rs.saveIdentification(unit.id, field, value, unit)}
           onSaveSpec={(field, value) => rs.saveSpec(unit.id, field, value)}
+          onSaveBoolSpec={(field, value) => rs.saveBoolSpec(unit.id, field, value)}
+          onSaveLength={(value) => rs.saveLength(unit.id, value)}
         />
       {:else}
         <RollingStockMultiUnit
@@ -162,6 +164,8 @@
             return rs.saveIdentification(unitId, field, value, unit);
           }}
           onSaveSpec={(unitId, field, value) => rs.saveSpec(unitId, field, value)}
+          onSaveBoolSpec={(unitId, field, value) => rs.saveBoolSpec(unitId, field, value)}
+          onSaveLength={(unitId, value) => rs.saveLength(unitId, value)}
         />
       {/if}
 

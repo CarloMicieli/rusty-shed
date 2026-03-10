@@ -260,6 +260,32 @@ export const commands = {
     }
   },
   /**
+   * Update the delivery date of a railway model.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model and the new delivery date string (or `None`/`""` to clear).
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model does not exist.
+   * - `Err(CommandError::ValidationError)` when the delivery date string cannot be parsed.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRailwayModelDeliveryDate(
+    args: UpdateRailwayModelDeliveryDateArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_railway_model_delivery_date', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Update the railway company of a single rolling stock unit.
    *
    * # Arguments
@@ -6069,8 +6095,8 @@ export type UpdateCollectionItemArgs = {
   update: CollectionItemUpdateArgs;
 };
 /**
- * Arguments for updating the constrained classification fields (scale and/or epoch) of a
- * railway model via a badge picker.
+ * Arguments for updating the constrained classification fields (scale, epoch, and/or category)
+ * of a railway model via a badge picker.
  */
 export type UpdateRailwayModelClassificationArgs = {
   /**
@@ -6085,6 +6111,26 @@ export type UpdateRailwayModelClassificationArgs = {
    * New epoch value, if being updated.
    */
   epoch: Epoch | null;
+  /**
+   * New category value, if being updated.
+   */
+  category: Category | null;
+};
+/**
+ * Arguments for updating the delivery date of a railway model.
+ *
+ * Pass `delivery_date` as `None` or an empty string to clear the value;
+ * otherwise the string is parsed via [`DeliveryDate::parse`].
+ */
+export type UpdateRailwayModelDeliveryDateArgs = {
+  /**
+   * The railway model to update.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * New delivery date string, or `None` / empty string to clear.
+   */
+  deliveryDate: string | null;
 };
 /**
  * Transport args for updating a single free-text field on a `RailwayModel`.

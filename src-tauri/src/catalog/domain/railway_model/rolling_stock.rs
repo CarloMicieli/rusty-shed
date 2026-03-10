@@ -607,10 +607,16 @@ impl RollingStock {
             }
         }
 
+        let length_mm = patch
+            .length_over_buffers
+            .as_ref()
+            .and_then(|l| l.millimeters())
+            .map(|m| m.quantity());
+
         serde_json::json!({
-            "control": patch.control.map(|c| c.to_string()),
+            "dcc_control": patch.control.map(|c| c.to_string()),
             "dcc_interface": patch.dcc_interface.map(|d| d.to_string()),
-            "length_over_buffers": patch.length_over_buffers.map(|l| format!("{l:?}")),
+            "dcc_length_mm": length_mm,
         })
     }
 

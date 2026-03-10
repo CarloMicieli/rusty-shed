@@ -9,6 +9,7 @@ mod get_railway_model_translations;
 mod save_railway_model;
 mod search_railway_models;
 mod update_railway_model_classification;
+mod update_railway_model_delivery_date;
 mod update_railway_model_text;
 mod update_rolling_stock_dcc;
 mod update_rolling_stock_identification;
@@ -39,6 +40,8 @@ pub use save_railway_model::{SaveRailwayModelInput, SimplifiedRollingStockInput}
 pub use search_railway_models::{SearchRailwayModels, SearchRailwayModelsInput};
 pub use update_railway_model_classification::UpdateRailwayModelClassification;
 pub use update_railway_model_classification::UpdateRailwayModelClassificationInput;
+pub use update_railway_model_delivery_date::UpdateRailwayModelDeliveryDate;
+pub use update_railway_model_delivery_date::UpdateRailwayModelDeliveryDateInput;
 pub use update_railway_model_text::UpdateRailwayModelText;
 pub use update_railway_model_text::{RailwayModelTextField, UpdateRailwayModelTextInput};
 pub use update_rolling_stock_dcc::UpdateRollingStockDcc;

@@ -12,6 +12,8 @@
     control: string;
     dccInterface: string;
     couplingSocket: string;
+    closeCouplers: boolean | null;
+    digitalShunting: boolean | null;
   }
 
   interface Props {
@@ -28,6 +30,12 @@
       value: string
     ) => Promise<void>;
     onSaveSpec: (unitId: string, field: string, value: string) => Promise<void>;
+    onSaveBoolSpec: (
+      unitId: string,
+      field: 'closeCouplers' | 'digitalShunting',
+      value: boolean | null
+    ) => Promise<void>;
+    onSaveLength: (unitId: string, value: string) => Promise<void>;
   }
 
   const {
@@ -39,7 +47,9 @@
     dccInterfaceOptions,
     couplingSocketOptions,
     onSaveIdentification,
-    onSaveSpec
+    onSaveSpec,
+    onSaveBoolSpec,
+    onSaveLength
   }: Props = $props();
 </script>
 
@@ -76,6 +86,11 @@
             </span>
           {/if}
         </div>
+        {#if unit.rolling_stock_type}
+          <span class="mt-0.5 text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            {unit.rolling_stock_type}
+          </span>
+        {/if}
         {#if unit.railway_company}
           <span
             class="absolute top-0 right-0 inline-flex items-center rounded-full border border-[#1F1F1F] bg-[#D48A42] px-2 py-0.5 font-mono text-[9px] font-bold tracking-wider text-[#050505] uppercase"
@@ -119,9 +134,21 @@
           </dd>
         </div>
         <div class="flex flex-col gap-0.5">
-          <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">Length</dt>
+          <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            {m.rolling_stock_field_length()}
+          </dt>
           <dd class="font-mono text-xs text-zinc-200">
-            {unit.length_mm != null ? `${unit.length_mm} mm` : '—'}
+            {#if editable && specLoaded}
+              <InPlaceEdit
+                value={unit.length_mm != null ? String(unit.length_mm) : ''}
+                placeholder="mm"
+                onSave={(v) => onSaveLength(unit.id, v)}
+              />
+            {:else if editable}
+              <span class="text-xs text-zinc-500 italic">—</span>
+            {:else}
+              {unit.length_mm != null ? `${unit.length_mm} mm` : '—'}
+            {/if}
           </dd>
         </div>
         <div class="flex flex-col gap-0.5">
@@ -175,6 +202,50 @@
               <span class="text-xs text-zinc-500 italic">—</span>
             {:else}
               {unit.coupling_type ?? '—'}
+            {/if}
+          </dd>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            {m.rolling_stock_field_close_couplers()}
+          </dt>
+          <dd class="text-xs text-zinc-200">
+            {#if editable && specLoaded}
+              <input
+                type="checkbox"
+                class="accent-[#D48A42]"
+                checked={formState?.closeCouplers ?? unit.close_couplers ?? false}
+                onchange={(e) =>
+                  onSaveBoolSpec(unit.id, 'closeCouplers', (e.target as HTMLInputElement).checked)}
+              />
+            {:else if editable}
+              <span class="text-xs text-zinc-500 italic">—</span>
+            {:else}
+              {unit.close_couplers === true ? '✓' : unit.close_couplers === false ? '✗' : '—'}
+            {/if}
+          </dd>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            {m.rolling_stock_field_digital_shunting()}
+          </dt>
+          <dd class="text-xs text-zinc-200">
+            {#if editable && specLoaded}
+              <input
+                type="checkbox"
+                class="accent-[#D48A42]"
+                checked={formState?.digitalShunting ?? unit.digital_shunting ?? false}
+                onchange={(e) =>
+                  onSaveBoolSpec(
+                    unit.id,
+                    'digitalShunting',
+                    (e.target as HTMLInputElement).checked
+                  )}
+              />
+            {:else if editable}
+              <span class="text-xs text-zinc-500 italic">—</span>
+            {:else}
+              {unit.digital_shunting === true ? '✓' : unit.digital_shunting === false ? '✗' : '—'}
             {/if}
           </dd>
         </div>

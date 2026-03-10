@@ -224,6 +224,33 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
+        } else if map.contains_key("dcc_interface") || map.contains_key("dcc_length_mm") {
+            // DCC / length patch — control, dcc_interface, length_mm (all nullable)
+            let control = map.get("dcc_control").and_then(|v| v.as_str());
+            let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
+            let length_mm = map.get("dcc_length_mm").and_then(|v| v.as_f64());
+
+            sqlx::query(
+                r#"
+                UPDATE rolling_stocks
+                SET control           = ?1,
+                    dcc_interface     = ?2,
+                    length_millimeters = ?3,
+                    length_inches     = CASE
+                        WHEN ?3 IS NOT NULL
+                        THEN ROUND(?3 / 25.4, 4)
+                        ELSE NULL
+                    END
+                WHERE id = ?4
+                "#,
+            )
+            .bind(control)
+            .bind(dcc_interface)
+            .bind(length_mm)
+            .bind(rolling_stock_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
         } else if map.contains_key("series_code") {
             // Identification patch (4 columns)
             let series_code = map
@@ -857,6 +884,34 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                             let update_cmd = r#"UPDATE railway_models SET epoch = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
                             sqlx::query(update_cmd)
                                 .bind(epoch)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+
+                        if let Some(serde_json::Value::String(category)) = map.get("category") {
+                            let update_cmd = r#"UPDATE railway_models SET category = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(category)
+                                .bind(&railway_model_id)
+                                .execute(&mut *self.executor)
+                                .await
+                                .map_err(DomainError::from)?;
+                        }
+
+                        // delivery_date can be set to NULL (cleared) so we
+                        // check for the key's presence rather than matching
+                        // only on String.
+                        if map.contains_key("delivery_date") {
+                            let date_val = map.get("delivery_date");
+                            let date_str = match date_val {
+                                Some(serde_json::Value::String(s)) => Some(s.as_str()),
+                                _ => None,
+                            };
+                            let update_cmd = r#"UPDATE railway_models SET delivery_date = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2;"#;
+                            sqlx::query(update_cmd)
+                                .bind(date_str)
                                 .bind(&railway_model_id)
                                 .execute(&mut *self.executor)
                                 .await

@@ -288,6 +288,33 @@ impl RailwayModel {
         Ok(())
     }
 
+    /// Update category and emit a RailwayModelUpdated event.
+    pub fn update_category(&mut self, category: Category) {
+        self.category = category;
+        let changed = json!({ "category": category.to_string() });
+        let ev = RailwayModelEvent::RailwayModelUpdated {
+            event_id: uuid::Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            changed,
+        };
+        self.push_event(ev);
+    }
+
+    /// Update delivery date and emit a RailwayModelUpdated event.
+    pub fn update_delivery_date(&mut self, delivery_date: Option<DeliveryDate>) {
+        self.delivery_date = delivery_date.clone();
+        let date_str = delivery_date.as_ref().map(|d| d.to_string());
+        let changed = json!({ "delivery_date": date_str });
+        let ev = RailwayModelEvent::RailwayModelUpdated {
+            event_id: uuid::Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            changed,
+        };
+        self.push_event(ev);
+    }
+
     /// Update availability status and emit a RailwayModelUpdated event.
     pub fn set_availability_status(&mut self, status: Option<AvailabilityStatus>) {
         self.availability_status = status;

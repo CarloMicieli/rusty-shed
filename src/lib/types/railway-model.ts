@@ -14,6 +14,7 @@ export interface RailwayModel {
   era: string | null;
   power_method: string | null;
   category: string | null;
+  delivery_date: string | null;
   description: string | null;
   descriptionLang: Language;
   details: string | null;
@@ -29,6 +30,7 @@ export interface RollingStock {
   railway_company: string | null;
   series_code: string;
   series_name: string | null;
+  rolling_stock_type: string | null;
   category: string | null;
   subcategory: string | null;
   road_number: string | null;
@@ -38,4 +40,6 @@ export interface RollingStock {
   control_type: string | null;
   dcc_interface: string | null;
   coupling_type: string | null;
+  close_couplers: boolean | null;
+  digital_shunting: boolean | null;
 }

@@ -1,48 +1,32 @@
-use crate::catalog::domain::railway_model::{Category, Epoch, RailwayModelId, RailwayModelUowExt};
-use crate::catalog::domain::scale::Scale;
-#[allow(unused)]
-use crate::core::domain::Language;
+use crate::catalog::domain::railway_model::{DeliveryDate, RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 
-/// Input for [`UpdateRailwayModelClassification::execute`].
-pub struct UpdateRailwayModelClassificationInput {
+/// Input for [`UpdateRailwayModelDeliveryDate::execute`].
+pub struct UpdateRailwayModelDeliveryDateInput {
     /// The railway model to update.
     pub railway_model_id: RailwayModelId,
-    /// New scale, if being updated.
-    pub scale: Option<Scale>,
-    /// New epoch, if being updated.
-    pub epoch: Option<Epoch>,
-    /// New category, if being updated.
-    pub category: Option<Category>,
+    /// New delivery date, or `None` to clear it.
+    pub delivery_date: Option<DeliveryDate>,
 }
 
-/// Use case that updates the constrained classification fields (scale and/or epoch)
-/// of a [`RailwayModel`] aggregate.
-pub struct UpdateRailwayModelClassification;
+/// Use case that updates the delivery date of a [`RailwayModel`] aggregate.
+pub struct UpdateRailwayModelDeliveryDate;
 
-impl UpdateRailwayModelClassification {
+impl UpdateRailwayModelDeliveryDate {
     /// Execute the use case.
     ///
-    /// At least one of `scale` or `epoch` must be `Some`; providing neither is a
-    /// [`DomainError::Validation`] error.
+    /// Passing `None` as `delivery_date` clears the existing value.
     ///
     /// # Errors
-    /// - [`DomainError::Validation`] when both `scale` and `epoch` are `None`.
     /// - [`DomainError::NotFound`] when no railway model with the given id exists.
     /// - [`DomainError::Infrastructure`] on database failure.
     pub async fn execute<U>(
         unit_of_work: &mut U,
-        input: UpdateRailwayModelClassificationInput,
+        input: UpdateRailwayModelDeliveryDateInput,
     ) -> Result<(), DomainError>
     where
         U: RailwayModelUowExt + Send,
     {
-        if input.scale.is_none() && input.epoch.is_none() && input.category.is_none() {
-            return Err(DomainError::Validation(
-                "at least one of scale, epoch, or category must be provided".to_string(),
-            ));
-        }
-
         let mut repo = unit_of_work.railway_model_repository();
 
         let mut model = repo
@@ -53,15 +37,7 @@ impl UpdateRailwayModelClassification {
                 identifier: input.railway_model_id.to_string(),
             })?;
 
-        if let Some(scale) = input.scale {
-            model.update_scale(scale);
-        }
-        if let Some(epoch) = input.epoch {
-            model.update_epoch(epoch);
-        }
-        if let Some(category) = input.category {
-            model.update_category(category);
-        }
+        model.update_delivery_date(input.delivery_date);
 
         repo.save(&mut model).await
     }
@@ -78,6 +54,7 @@ mod tests {
         RailwayModelId,
     };
     use crate::catalog::domain::scale::Scale;
+    use crate::core::domain::Language;
 
     fn make_model(id: RailwayModelId) -> RailwayModel {
         let manufacturer = ManufacturerId::try_from("trn:manufacturer:acme").unwrap();
@@ -103,7 +80,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn updates_scale_only() {
+    async fn sets_delivery_date() {
         let id = RailwayModelId::new(
             &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
             "P100",
@@ -119,13 +96,11 @@ mod tests {
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
 
-        UpdateRailwayModelClassification::execute(
+        UpdateRailwayModelDeliveryDate::execute(
             &mut uow,
-            UpdateRailwayModelClassificationInput {
+            UpdateRailwayModelDeliveryDateInput {
                 railway_model_id: id,
-                scale: Some(Scale::N),
-                epoch: None,
-                category: None,
+                delivery_date: Some(DeliveryDate::Year(2026)),
             },
         )
         .await
@@ -133,13 +108,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn updates_epoch_only() {
+    async fn clears_delivery_date() {
         let id = RailwayModelId::new(
             &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
             "P100",
         )
         .unwrap();
-        let model = make_model(id.clone());
+        let mut model = make_model(id.clone());
+        model.delivery_date = Some(DeliveryDate::Year(2025));
 
         let mut mock = MockRailwayModelRepository::new();
         mock.expect_find_by_id()
@@ -149,49 +125,15 @@ mod tests {
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
 
-        UpdateRailwayModelClassification::execute(
+        UpdateRailwayModelDeliveryDate::execute(
             &mut uow,
-            UpdateRailwayModelClassificationInput {
+            UpdateRailwayModelDeliveryDateInput {
                 railway_model_id: id,
-                scale: None,
-                epoch: Some("III".into()),
-                category: None,
+                delivery_date: None,
             },
         )
         .await
         .expect("should succeed");
-    }
-
-    #[tokio::test]
-    async fn both_none_returns_validation_error() {
-        let id = RailwayModelId::new(
-            &ManufacturerId::try_from("trn:manufacturer:acme").unwrap(),
-            "P100",
-        )
-        .unwrap();
-
-        let mut mock = MockRailwayModelRepository::new();
-        mock.expect_find_by_id().times(0);
-        mock.expect_save().times(0);
-
-        let mut uow = FakeUow::with_railway_models_repo(mock);
-
-        let err = UpdateRailwayModelClassification::execute(
-            &mut uow,
-            UpdateRailwayModelClassificationInput {
-                railway_model_id: id,
-                scale: None,
-                epoch: None,
-                category: None,
-            },
-        )
-        .await
-        .expect_err("should fail");
-
-        assert!(
-            matches!(err, DomainError::Validation(_)),
-            "expected Validation error, got {err:?}"
-        );
     }
 
     #[tokio::test]
@@ -208,13 +150,11 @@ mod tests {
 
         let mut uow = FakeUow::with_railway_models_repo(mock);
 
-        let err = UpdateRailwayModelClassification::execute(
+        let err = UpdateRailwayModelDeliveryDate::execute(
             &mut uow,
-            UpdateRailwayModelClassificationInput {
+            UpdateRailwayModelDeliveryDateInput {
                 railway_model_id: id,
-                scale: Some(Scale::N),
-                epoch: None,
-                category: None,
+                delivery_date: Some(DeliveryDate::Year(2026)),
             },
         )
         .await

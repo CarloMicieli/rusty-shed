@@ -1,8 +1,9 @@
 use crate::catalog::application::{
     AddRailwayModel, AddRollingStockToModel, GetRailwayModelTranslations, GetRailwayModelViewById,
-    SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelText,
-    UpdateRollingStockDcc, UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
-    UpdateRollingStockSpecifications, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
+    SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelDeliveryDate,
+    UpdateRailwayModelText, UpdateRollingStockDcc, UpdateRollingStockIdentification,
+    UpdateRollingStockRailwayCompany, UpdateRollingStockSpecifications,
+    UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
@@ -10,9 +11,10 @@ use crate::catalog::domain::railway_model::RollingStockId;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::interface::{
     AddRollingStockToModelArgs, CreateRailwayModelArgs, SearchRailwayModelsArgs,
-    UpdateRailwayModelClassificationArgs, UpdateRailwayModelTextArgs, UpdateRollingStockDccArgs,
-    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
-    UpdateRollingStockSpecificationsArgs, UpsertRailwayModelTranslationArgs,
+    UpdateRailwayModelClassificationArgs, UpdateRailwayModelDeliveryDateArgs,
+    UpdateRailwayModelTextArgs, UpdateRollingStockDccArgs, UpdateRollingStockIdentificationArgs,
+    UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockSpecificationsArgs,
+    UpsertRailwayModelTranslationArgs,
 };
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
@@ -169,6 +171,35 @@ pub async fn update_railway_model_classification(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRailwayModelClassification::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update the delivery date of a railway model.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model and the new delivery date string (or `None`/`""` to clear).
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model does not exist.
+/// - `Err(CommandError::ValidationError)` when the delivery date string cannot be parsed.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_railway_model_delivery_date(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRailwayModelDeliveryDateArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating delivery date for railway model {}",
+        args.railway_model_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRailwayModelDeliveryDate::execute(&mut unit_of_work, args.try_into()?).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())
