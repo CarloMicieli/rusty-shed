@@ -176,7 +176,12 @@
                 <QuickActionButtons {actions} class="gap-2" />
               </div>
             </div>
-            <DashboardCharts compact={true} data={budgetChartData} {currencyCode} hasBudget={dashboard.budgetData !== null} />
+            <DashboardCharts
+              compact={true}
+              data={budgetChartData}
+              {currencyCode}
+              hasBudget={dashboard.budgetData !== null}
+            />
           </div>
 
           <aside class="hidden lg:block">

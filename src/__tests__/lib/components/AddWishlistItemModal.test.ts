@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 
 // Mock @tauri-apps/api/core BEFORE importing
@@ -19,22 +19,52 @@ vi.mock('$lib/toaster', () => ({
 // Mock paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_modal_title: () => 'Add to Wishlist',
-  wishlist_modal_close: () => 'Close',
   wishlist_modal_cancel: () => 'Cancel',
   wishlist_modal_save: () => 'Save',
   wishlist_modal_saving: () => 'Saving...',
   wishlist_modal_choose_or_create: () => 'Choose or Create Wishlist',
-  wishlist_modal_select_list: () => 'Select Wishlist',
+  wishlist_modal_select_list: () => 'Select a wishlist',
   wishlist_modal_select_placeholder: () => 'Select a wishlist',
   wishlist_modal_new_list_placeholder: () => 'Or create new list',
-  wishlist_modal_item_id_label: () => 'Model ID',
-  wishlist_modal_item_id_placeholder: () => 'e.g., 79894',
   wishlist_modal_notes_label: () => 'Notes',
   wishlist_modal_notes_placeholder: () => 'Optional notes',
-  wishlist_modal_missing_model: () => 'Model ID is required',
   wishlist_modal_create_failed: () => 'Failed to create wishlist',
-  wishlist_modal_add_failed: () => 'Failed to add item',
   wishlist_modal_select_list_error: () => 'Please select a wishlist',
+  wishlist_modal_add_failed: () => 'Failed to add item',
+  wishlist_modal_model_details: () => 'Model Details',
+  wishlist_modal_manufacturer: () => 'Manufacturer',
+  wishlist_modal_manufacturer_placeholder: () => '— Select manufacturer —',
+  wishlist_modal_product_code: () => 'Product Code',
+  wishlist_modal_product_code_placeholder: () => 'e.g., 37858',
+  wishlist_modal_description: () => 'Description',
+  wishlist_modal_description_placeholder: () => 'e.g., Class 218 Diesel Locomotive',
+  wishlist_modal_category: () => 'Category',
+  wishlist_modal_scale: () => 'Scale',
+  wishlist_modal_power_method: () => 'Power Method',
+  wishlist_modal_epoch: () => 'Epoch',
+  wishlist_modal_epoch_placeholder: () => 'e.g., IV or III/IV',
+  wishlist_modal_wishlist_prefs: () => 'Wishlist Preferences',
+  wishlist_modal_priority: () => 'Priority',
+  wishlist_modal_desired_price: () => 'Desired Price',
+  wishlist_modal_price_placeholder: () => 'e.g., 89.99',
+  wishlist_modal_loading: () => 'Loading...',
+  wishlist_modal_missing_manufacturer: () => 'Please select a manufacturer',
+  wishlist_modal_missing_product_code: () => 'Please enter a product code',
+  wishlist_modal_missing_description: () => 'Please enter a description',
+  wishlist_modal_invalid_price: () => 'Price must be greater than 0',
+  wishlist_category_locomotives: () => 'Locomotives',
+  wishlist_category_train_sets: () => 'Train Sets',
+  wishlist_category_starter_sets: () => 'Starter Sets',
+  wishlist_category_freight_cars: () => 'Freight Cars',
+  wishlist_category_passenger_cars: () => 'Passenger Cars',
+  wishlist_category_electric_multiple_units: () => 'Electric Multiple Units',
+  wishlist_category_railcars: () => 'Railcars',
+  wishlist_power_ac: () => 'AC',
+  wishlist_power_dc: () => 'DC',
+  wishlist_power_trix_express: () => 'Trix Express',
+  wishlist_priority_low: () => 'Low',
+  wishlist_priority_normal: () => 'Normal',
+  wishlist_priority_high: () => 'High',
   collection_toast_loading: () => 'Loading...',
   collection_toast_success: () => 'Success',
   collection_toast_error: () => 'Error',
@@ -95,6 +125,19 @@ const wishlistFixtures: WishlistPreviewLite[] = [
     totalValue: {}
   } as unknown as WishlistPreviewLite
 ];
+
+const manufacturerFixtures = [
+  { id: 'märklin', name: 'Märklin', groupName: null },
+  { id: 'fleischmann', name: 'Fleischmann', groupName: null }
+];
+
+const wishlistViewFixture = {
+  id: 'wishlist-1',
+  name: 'My Wishlist',
+  notes: null,
+  is_default: true,
+  items: []
+};
 
 // Helper for Tauri mock
 const tauriMock = {
@@ -158,6 +201,46 @@ mockInvoke.mockImplementation(
   }
 );
 
+/**
+ * Set a native <select>'s value and fire a change event so Svelte's bind:value updates.
+ *
+ * happy-dom does not support the `:checked` CSS pseudo-class for <option> elements.
+ * Svelte 5's bind_select_value handler uses `select.querySelector(':checked')` to find
+ * the currently selected option. To work around this, we patch `querySelector` on the
+ * specific element to handle `:checked` manually.
+ */
+async function setSelectValue(select: HTMLSelectElement, value: string) {
+  // Mark the target option as selected
+  for (const opt of Array.from(select.options)) {
+    opt.selected = opt.value === value;
+  }
+  // Patch querySelector to handle :checked since happy-dom doesn't support it for options
+  const origQS = select.querySelector.bind(select);
+  select.querySelector = ((selector: string) => {
+    if (selector === ':checked' || selector === '[selected]') {
+      return Array.from(select.options).find((o) => o.selected) ?? null;
+    }
+    return origQS(selector);
+  }) as typeof select.querySelector;
+
+  await fireEvent.change(select);
+
+  // Restore original querySelector
+  select.querySelector = origQS;
+}
+
+/** Wait for manufacturer select to have options loaded, then select a value. */
+async function selectManufacturer(value: string) {
+  // Wait for select to be present and have manufacturer options loaded
+  await waitFor(() => {
+    const sel = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
+    // options.length > 1 means at least one manufacturer option beyond the placeholder
+    expect(sel.options.length).toBeGreaterThan(1);
+  });
+  const select = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
+  await setSelectValue(select, value);
+}
+
 describe('AddWishlistItemModal', () => {
   const defaultProps = {
     onClose: vi.fn(),
@@ -165,27 +248,33 @@ describe('AddWishlistItemModal', () => {
   };
 
   beforeEach(async () => {
+    cleanup();
     activeService = createWishlistState();
     vi.clearAllMocks();
     tauriMock.reset();
 
     tauriMock.mockCommand('get_wishlists', wishlistFixtures);
+    tauriMock.mockCommand('get_manufacturers', manufacturerFixtures);
+    tauriMock.mockCommand('get_wishlist_by_id', wishlistViewFixture);
     await activeService.fetchWishlists();
   });
 
-  it('should render modal with title and form fields', () => {
+  it('should render modal with title and form fields', async () => {
     render(AddWishlistItemModal, { props: defaultProps });
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
-    expect(screen.getByLabelText('Model ID')).toBeInTheDocument();
-    expect(screen.getByLabelText('Notes')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
   });
 
   it('should display available wishlists in dropdown', async () => {
     render(AddWishlistItemModal, { props: defaultProps });
 
-    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
+    const select = (await screen.findByLabelText('Select a wishlist')) as HTMLSelectElement;
 
     await waitFor(() => {
       const options = Array.from(select.options).map((opt) => opt.textContent?.trim());
@@ -194,7 +283,7 @@ describe('AddWishlistItemModal', () => {
     });
   });
 
-  it('should show validation error when model ID is missing', async () => {
+  it('should show validation error when manufacturer is missing', async () => {
     const user = userEvent.setup();
     render(AddWishlistItemModal, { props: defaultProps });
 
@@ -202,56 +291,75 @@ describe('AddWishlistItemModal', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Model ID is required')).toBeInTheDocument();
+      expect(screen.getByText('Please select a manufacturer')).toBeInTheDocument();
     });
   });
 
-  it('should add item to existing wishlist', async () => {
+  it('should show validation error when product code is missing', async () => {
+    const user = userEvent.setup();
+    render(AddWishlistItemModal, { props: defaultProps });
+
+    await selectManufacturer('märklin');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a product code')).toBeInTheDocument();
+    });
+  });
+
+  it('should show validation error when description is missing', async () => {
+    const user = userEvent.setup();
+    render(AddWishlistItemModal, { props: defaultProps });
+
+    await selectManufacturer('märklin');
+
+    await user.type(screen.getByLabelText(/product code/i), '37858');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a description')).toBeInTheDocument();
+    });
+  });
+
+  it('should add model to existing wishlist', async () => {
     const user = userEvent.setup();
 
-    const mockAddedItem = {
-      id: 'item-1',
-      railway_model_id: '79894',
-      priority: 'NORMAL',
-      status: 'WANTED',
-      added_date: '2024-01-01',
-      removed_date: null,
-      notes: null,
-      desired_price: null,
-      purchased_price: null
-    };
-
-    tauriMock.mockCommand('add_to_wishlist', mockAddedItem);
+    tauriMock.mockCommand('add_railway_model_to_wish_list', null);
 
     const onSaved = vi.fn();
     const onClose = vi.fn();
     render(AddWishlistItemModal, {
-      props: {
-        onSaved: onSaved,
-        onClose: onClose
-      }
+      props: { onSaved, onClose }
     });
 
-    // Select wishlist
-    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
-    await user.selectOptions(select, 'wishlist-1');
+    await waitFor(() => {
+      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
+    });
 
-    // Enter model ID
-    const modelIdInput = screen.getByLabelText('Model ID');
-    await user.type(modelIdInput, '79894');
+    // Fill manufacturer
+    const manufacturerSelect = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
+    await setSelectValue(manufacturerSelect, 'märklin');
+
+    // Fill product code
+    await user.type(screen.getByLabelText(/product code/i), '37858');
+
+    // Fill description
+    await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
 
     // Submit
-    const saveButton = screen.getByRole('button', { name: /save/i });
-    await user.click(saveButton);
+    await user.click(screen.getByRole('button', { name: /save/i }));
 
-    // Wait for async operations
     await waitFor(() => {
       expect(onSaved).toHaveBeenCalled();
       expect(onClose).toHaveBeenCalled();
     });
   });
 
-  it('should create new wishlist and add item', async () => {
+  it('should create new wishlist and add model', async () => {
     const user = userEvent.setup();
 
     const mockCreatedWishlist: WishlistPreviewLite = {
@@ -267,38 +375,35 @@ describe('AddWishlistItemModal', () => {
       totalValue: {}
     } as unknown as WishlistPreviewLite;
 
-    const mockAddedItem = {
-      id: 'item-1',
-      wishlist_id: 'new-wishlist',
-      railway_model_id: '79894',
-      notes: null,
-      purchase_status: 'not_purchased',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
-    };
-
     tauriMock.mockCommand('create_wishlist', mockCreatedWishlist);
-    tauriMock.mockCommand('add_to_wishlist', mockAddedItem);
+    tauriMock.mockCommand('add_railway_model_to_wish_list', null);
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    // Enter new list name
-    const newListInput = screen.getByPlaceholderText('Or create new list');
-    await user.type(newListInput, 'New List');
+    await waitFor(() => {
+      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
+    });
 
-    // Enter model ID
-    const modelIdInput = screen.getByLabelText('Model ID');
-    await user.type(modelIdInput, '79894');
+    // Enter new list name (fills wishlistId indirectly via newListName)
+    await user.type(screen.getByPlaceholderText('Or create new list'), 'New List');
+
+    // Fill required fields
+    const manufacturerSelect = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
+    await setSelectValue(manufacturerSelect, 'märklin');
+
+    await user.type(screen.getByLabelText(/product code/i), '37858');
+    await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
 
     // Submit
-    const saveButton = screen.getByRole('button', { name: /save/i });
-    await user.click(saveButton);
+    await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('create_wishlist', expect.any(Object));
       expect(mockInvoke).toHaveBeenCalledWith(
-        'add_to_wishlist',
-        expect.objectContaining({ input: expect.objectContaining({ railwayModelId: '79894' }) })
+        'add_railway_model_to_wish_list',
+        expect.objectContaining({
+          args: expect.objectContaining({ wishlistId: 'new-wishlist' })
+        })
       );
     });
   });
@@ -311,36 +416,38 @@ describe('AddWishlistItemModal', () => {
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    const newListInput = screen.getByPlaceholderText('Or create new list');
-    await user.type(newListInput, 'Duplicate Name');
+    await waitFor(() => {
+      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
+    });
 
-    const modelIdInput = screen.getByLabelText('Model ID');
-    await user.type(modelIdInput, '79894');
+    await user.type(screen.getByPlaceholderText('Or create new list'), 'Duplicate Name');
 
-    const saveButton = screen.getByRole('button', { name: /save/i });
-    await user.click(saveButton);
+    const manufacturerSelect = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
+    await setSelectValue(manufacturerSelect, 'märklin');
+
+    await user.type(screen.getByLabelText(/product code/i), '37858');
+    await user.type(screen.getByLabelText(/description/i), 'Test Model');
+
+    await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Failed to create wishlist')).toBeInTheDocument();
     });
   });
 
-  it('should show error when adding item fails', async () => {
+  it('should show error when adding model fails', async () => {
     const user = userEvent.setup();
-    const error = { NotFound: 'Railway model not found' };
 
-    tauriMock.mockCommandError('add_to_wishlist', error);
+    tauriMock.mockCommandError('add_railway_model_to_wish_list', { NotFound: 'Not found' });
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
-    await user.selectOptions(select, 'wishlist-1');
+    await selectManufacturer('märklin');
 
-    const modelIdInput = screen.getByLabelText('Model ID');
-    await user.type(modelIdInput, 'invalid-id');
+    await user.type(screen.getByLabelText(/product code/i), '37858');
+    await user.type(screen.getByLabelText(/description/i), 'Test Model');
 
-    const saveButton = screen.getByRole('button', { name: /save/i });
-    await user.click(saveButton);
+    await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Failed to add item')).toBeInTheDocument();
@@ -350,31 +457,19 @@ describe('AddWishlistItemModal', () => {
   it('should disable buttons while submitting', async () => {
     const user = userEvent.setup();
 
-    // Mock with delay to observe loading state
-    tauriMock.mockCommandWithDelay('add_to_wishlist', 100, {
-      id: 'item-1',
-      railway_model_id: '79894',
-      priority: 'NORMAL',
-      status: 'WANTED',
-      added_date: '2024-01-01',
-      removed_date: null,
-      notes: null,
-      desired_price: null,
-      purchased_price: null
-    });
+    tauriMock.mockCommandWithDelay('add_railway_model_to_wish_list', 200, null);
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    const select = (await screen.findByLabelText('Select Wishlist')) as HTMLSelectElement;
-    await user.selectOptions(select, 'wishlist-1');
+    await selectManufacturer('märklin');
 
-    const modelIdInput = screen.getByLabelText('Model ID');
-    await user.type(modelIdInput, '79894');
+    await user.type(screen.getByLabelText(/product code/i), '37858');
+    await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
 
-    // Buttons should be disabled during submission
+    // Button should be disabled during submission
     await waitFor(() => {
       expect(saveButton).toBeDisabled();
     });
@@ -384,11 +479,14 @@ describe('AddWishlistItemModal', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(AddWishlistItemModal, {
-      props: { ...defaultProps, onClose: onClose }
+      props: { ...defaultProps, onClose }
     });
 
-    const modelIdInput = screen.getByLabelText('Model ID');
-    await user.type(modelIdInput, 'test-value');
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText(/product code/i), 'test-value');
 
     const closeButton = screen.getByRole('button', { name: /close/i });
     await user.click(closeButton);
