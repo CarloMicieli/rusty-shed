@@ -1,5 +1,8 @@
 <script lang="ts">
   import { BarChart, LinearGradient, PieChart } from 'layerchart';
+  import { BarChart2, Wallet } from 'lucide-svelte';
+  import { resolve } from '$app/paths';
+  import { Button } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
 
   type MonthlySpendingPoint = { month: number; amount: number };
@@ -7,45 +10,32 @@
   interface DashboardChartsProps {
     /** ISO 4217 currency code for formatting. @default 'EUR' */
     currencyCode?: string;
-    /** Chart data overrides – falls back to mock data when omitted. */
+    /** Chart data overrides. */
     data?: {
       budget?: number;
       monthlySpending?: MonthlySpendingPoint[];
     };
     /** Enable compact mode with reduced chart heights. @default false */
     compact?: boolean;
+    /** Whether a budget has been configured. undefined = unknown/loading. false = no budget. */
+    hasBudget?: boolean;
   }
 
   let {
     currencyCode: currencyCodeProp,
     data: dataProp,
-    compact = false
+    compact = false,
+    hasBudget
   }: DashboardChartsProps = $props();
-
-  // --- Mock Data ---
-  const budgetMock = 0.75;
-  const monthlySpendingMock: MonthlySpendingPoint[] = [
-    { month: 0, amount: 1200 },
-    { month: 1, amount: 980 },
-    { month: 2, amount: 1050 },
-    { month: 3, amount: 1250 },
-    { month: 4, amount: 1325 },
-    { month: 5, amount: 1210 },
-    { month: 6, amount: 1400 },
-    { month: 7, amount: 1360 },
-    { month: 8, amount: 1280 },
-    { month: 9, amount: 1175 },
-    { month: 10, amount: 1230 },
-    { month: 11, amount: 1315 }
-  ];
 
   // --- Reactive Derived Logic ---
   const currencyCode = $derived(currencyCodeProp ?? 'EUR');
   const data = $derived(dataProp ?? {});
-  const budget = $derived<number>(data.budget ?? budgetMock);
-  const monthlySpending = $derived<MonthlySpendingPoint[]>(
-    data.monthlySpending ?? monthlySpendingMock
-  );
+  const noBudget = $derived(hasBudget === false);
+  const budget = $derived<number>(data.budget ?? 0);
+  const monthlySpending = $derived<MonthlySpendingPoint[]>(data.monthlySpending ?? []);
+  const hasSpendingData = $derived(monthlySpending.some((d) => d.amount > 0));
+  const currentYear = new Date().getFullYear();
 
   // --- Formatters ---
   const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' });
@@ -84,41 +74,55 @@
       </div>
 
       <div class="relative {chartHeight} w-full">
-        <PieChart
-          data={[{ key: 'available', value: budget }]}
-          key="key"
-          value="value"
-          maxValue={1}
-          innerRadius={0.65}
-          padAngle={0.02}
-          tooltip={false}
-          props={{
-            svg: { class: 'w-full h-full overflow-visible' },
-            arc: {
-              fill: `url(#${budgetGradientId})`,
-              track: { fill: 'rgba(63, 63, 70, 0.4)' },
-              strokeWidth: 0
-            }
-          }}
-        >
-          {#snippet belowMarks(_snippetProps)}
-            <LinearGradient
-              id={budgetGradientId}
-              stops={[
-                ['0%', '#d48a3e'],
-                ['100%', '#b87333']
-              ]}
-              vertical
-            />
-          {/snippet}
-        </PieChart>
-
-        <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-3xl font-extrabold text-white">{budgetPercent}%</span>
-          <span class="text-xs tracking-tighter uppercase opacity-60"
-            >{m.dashboard_chart_budget_remaining()}</span
+        {#if noBudget}
+          <div class="flex h-full flex-col items-center justify-center gap-3 text-center">
+            <div class="rounded-full bg-zinc-800/60 p-3">
+              <Wallet size={28} class="text-zinc-500" />
+            </div>
+            <p class="text-sm text-zinc-400">{m.dashboard_chart_budget_no_budget()}</p>
+            <Button variant="outline" size="sm" href={resolve('/finance')}>
+              {m.dashboard_chart_budget_set_cta()}
+            </Button>
+          </div>
+        {:else}
+          <PieChart
+            data={[{ key: 'available', value: budget }]}
+            key="key"
+            value="value"
+            maxValue={1}
+            innerRadius={0.65}
+            padAngle={0.02}
+            tooltip={false}
+            props={{
+              svg: { class: 'w-full h-full overflow-visible' },
+              arc: {
+                fill: `url(#${budgetGradientId})`,
+                track: { fill: 'rgba(63, 63, 70, 0.4)' },
+                strokeWidth: 0
+              }
+            }}
           >
-        </div>
+            {#snippet belowMarks(_snippetProps)}
+              <LinearGradient
+                id={budgetGradientId}
+                stops={[
+                  ['0%', '#d48a3e'],
+                  ['100%', '#b87333']
+                ]}
+                vertical
+              />
+            {/snippet}
+          </PieChart>
+
+          <div
+            class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <span class="text-3xl font-extrabold text-white">{budgetPercent}%</span>
+            <span class="text-xs tracking-tighter uppercase opacity-60"
+              >{m.dashboard_chart_budget_remaining()}</span
+            >
+          </div>
+        {/if}
       </div>
     </div>
 
@@ -132,30 +136,47 @@
       </div>
 
       <div class="relative {chartHeight} w-full">
-        <BarChart
-          data={monthlySpending}
-          x={(d) => d.month}
-          y={(d) => d.amount}
-          yDomain={[0, monthlyYMax * 1.1]}
-          padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
-          props={{
-            svg: { class: 'w-full h-full overflow-visible' },
-            bars: { fill: '#d48a3e', radius: 4, strokeWidth: 0 },
-            grid: {
-              y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 4 4;' }
-            },
-            xAxis: {
-              format: (v: unknown) => formatMonthIndex(Number(v))
-            },
-            yAxis: {
-              format: (v: unknown) => formatCurrency(Number(v))
-            },
-            tooltip: {
-              header: { format: (v: unknown) => formatMonthIndex(Number(v)) },
-              item: { format: (v: unknown) => formatCurrency(Number(v)) }
-            }
-          }}
-        />
+        {#if noBudget || !hasSpendingData}
+          <div
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-center"
+          >
+            <BarChart2 size={28} class="text-zinc-700" />
+            <p class="text-sm text-zinc-500">
+              {m.dashboard_chart_spending_no_data({ year: currentYear })}
+            </p>
+          </div>
+          <!-- Ghost bars to preserve chart shape -->
+          <div class="flex h-full w-full items-end gap-1 px-8 opacity-10">
+            {#each Array(12) as _, i (i)}
+              <div class="flex-1 rounded-t bg-zinc-700" style="height: {20 + (i % 4) * 10}%"></div>
+            {/each}
+          </div>
+        {:else}
+          <BarChart
+            data={monthlySpending}
+            x={(d) => d.month}
+            y={(d) => d.amount}
+            yDomain={[0, monthlyYMax * 1.1]}
+            padding={{ top: 10, right: 10, bottom: 30, left: 55 }}
+            props={{
+              svg: { class: 'w-full h-full overflow-visible' },
+              bars: { fill: '#d48a3e', radius: 4, strokeWidth: 0 },
+              grid: {
+                y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 4 4;' }
+              },
+              xAxis: {
+                format: (v: unknown) => formatMonthIndex(Number(v))
+              },
+              yAxis: {
+                format: (v: unknown) => formatCurrency(Number(v))
+              },
+              tooltip: {
+                header: { format: (v: unknown) => formatMonthIndex(Number(v)) },
+                item: { format: (v: unknown) => formatCurrency(Number(v)) }
+              }
+            }}
+          />
+        {/if}
       </div>
     </div>
   </div>
