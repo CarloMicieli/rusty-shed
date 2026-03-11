@@ -186,6 +186,7 @@ export class WishlistState {
       });
       if (!this.#activeWishlistId && defaultList) {
         this.#activeWishlistId = defaultList.id;
+        await this.loadWishlistItems(defaultList.id);
       }
     } finally {
       this.#isLoading = false;
