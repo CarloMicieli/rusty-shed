@@ -9,6 +9,15 @@
   src: url('/fonts/inter-v20-latin-regular.woff2') format('woff2');
 }
 
+/* Bebas Neue (600) */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/bebas-neue.woff2') format('woff2');
+}
+
 /* Courier Prime - Latin Regular (400) */
 @font-face {
   font-family: 'Courier Prime';
@@ -16,31 +25,6 @@
   font-weight: 400;
   font-display: swap;
   src: url('/fonts/courier-prime-v11-latin-regular.woff2') format('woff2');
-}
-
-/* Cinzel - Latin Regular (400) */
-@font-face {
-  font-family: 'Cinzel';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/cinzel-v26-latin-regular.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Zilla Slab Regular';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/zilla-slab-v12-latin-regular.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Zilla Slab Bold';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/zilla-slab-v12-latin-700.woff2') format('woff2');
 }
 
 /* --- 2. GLOBAL THEME STYLES --- */
@@ -69,7 +53,7 @@ body {
 [data-theme='steampunk-dark'] h1,
 [data-theme='steampunk-dark'] h2,
 [data-theme='steampunk-dark'] .heading {
-  font-family: 'Cinzel', serif;
+  font-family: 'Bebas Neue', serif;
   color: var(--brass);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
