@@ -40,6 +40,27 @@ export const POWER_METHODS: PowerMethod[] = ['AC', 'DC', 'TRIX_EXPRESS'];
 export const PRIORITIES: WishlistPriority[] = ['LOW', 'NORMAL', 'HIGH'];
 
 /**
+ * MOROP standard epoch values for railway models
+ */
+export const EPOCHS: string[] = [
+  'I',
+  'II',
+  'IIa',
+  'IIb',
+  'IIc',
+  'III',
+  'IIIa',
+  'IIIb',
+  'IV',
+  'IVa',
+  'IVb',
+  'V',
+  'Va',
+  'Vb',
+  'VI'
+];
+
+/**
  * Rolling stock categories (subset of Category enum)
  */
 export type RollingStockCategory =

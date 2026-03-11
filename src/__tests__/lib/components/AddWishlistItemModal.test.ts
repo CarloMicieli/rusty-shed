@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/svelte';
+import { render, screen, waitFor, cleanup } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 
 // Mock @tauri-apps/api/core BEFORE importing
@@ -202,43 +202,19 @@ mockInvoke.mockImplementation(
 );
 
 /**
- * Set a native <select>'s value and fire a change event so Svelte's bind:value updates.
- *
- * happy-dom does not support the `:checked` CSS pseudo-class for <option> elements.
- * Svelte 5's bind_select_value handler uses `select.querySelector(':checked')` to find
- * the currently selected option. To work around this, we patch `querySelector` on the
- * specific element to handle `:checked` manually.
+ * Wait for the manufacturer Select.Trigger to appear (loading done),
+ * click it to open the dropdown, then click the matching option.
  */
-async function setSelectValue(select: HTMLSelectElement, value: string) {
-  // Mark the target option as selected
-  for (const opt of Array.from(select.options)) {
-    opt.selected = opt.value === value;
-  }
-  // Patch querySelector to handle :checked since happy-dom doesn't support it for options
-  const origQS = select.querySelector.bind(select);
-  select.querySelector = ((selector: string) => {
-    if (selector === ':checked' || selector === '[selected]') {
-      return Array.from(select.options).find((o) => o.selected) ?? null;
-    }
-    return origQS(selector);
-  }) as typeof select.querySelector;
-
-  await fireEvent.change(select);
-
-  // Restore original querySelector
-  select.querySelector = origQS;
-}
-
-/** Wait for manufacturer select to have options loaded, then select a value. */
-async function selectManufacturer(value: string) {
-  // Wait for select to be present and have manufacturer options loaded
+async function selectManufacturer(name: string) {
+  const user = userEvent.setup();
+  // Wait for loading state to disappear
   await waitFor(() => {
-    const sel = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
-    // options.length > 1 means at least one manufacturer option beyond the placeholder
-    expect(sel.options.length).toBeGreaterThan(1);
+    expect(screen.queryByText('Loading...')).toBeNull();
   });
-  const select = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
-  await setSelectValue(select, value);
+  const trigger = screen.getByRole('button', { name: /^manufacturer/i });
+  await user.click(trigger);
+  const item = await screen.findByRole('option', { name: new RegExp(name, 'i') });
+  await user.click(item);
 }
 
 describe('AddWishlistItemModal', () => {
@@ -264,7 +240,7 @@ describe('AddWishlistItemModal', () => {
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^manufacturer/i })).toBeInTheDocument();
     });
     expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
@@ -272,14 +248,15 @@ describe('AddWishlistItemModal', () => {
   });
 
   it('should display available wishlists in dropdown', async () => {
+    const user = userEvent.setup();
     render(AddWishlistItemModal, { props: defaultProps });
 
-    const select = (await screen.findByLabelText('Select a wishlist')) as HTMLSelectElement;
+    const trigger = await screen.findByRole('button', { name: /select a wishlist/i });
+    await user.click(trigger);
 
     await waitFor(() => {
-      const options = Array.from(select.options).map((opt) => opt.textContent?.trim());
-      expect(options).toContain('My Wishlist (default)');
-      expect(options).toContain('Future Purchases');
+      expect(screen.getByRole('option', { name: /my wishlist/i })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /future purchases/i })).toBeInTheDocument();
     });
   });
 
@@ -299,7 +276,7 @@ describe('AddWishlistItemModal', () => {
     const user = userEvent.setup();
     render(AddWishlistItemModal, { props: defaultProps });
 
-    await selectManufacturer('märklin');
+    await selectManufacturer('Märklin');
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
@@ -313,7 +290,7 @@ describe('AddWishlistItemModal', () => {
     const user = userEvent.setup();
     render(AddWishlistItemModal, { props: defaultProps });
 
-    await selectManufacturer('märklin');
+    await selectManufacturer('Märklin');
 
     await user.type(screen.getByLabelText(/product code/i), '37858');
 
@@ -336,13 +313,8 @@ describe('AddWishlistItemModal', () => {
       props: { onSaved, onClose }
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
-    });
-
-    // Fill manufacturer
-    const manufacturerSelect = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
-    await setSelectValue(manufacturerSelect, 'märklin');
+    // Select manufacturer via shadcn Select
+    await selectManufacturer('Märklin');
 
     // Fill product code
     await user.type(screen.getByLabelText(/product code/i), '37858');
@@ -380,16 +352,11 @@ describe('AddWishlistItemModal', () => {
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
-    });
-
     // Enter new list name (fills wishlistId indirectly via newListName)
     await user.type(screen.getByPlaceholderText('Or create new list'), 'New List');
 
     // Fill required fields
-    const manufacturerSelect = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
-    await setSelectValue(manufacturerSelect, 'märklin');
+    await selectManufacturer('Märklin');
 
     await user.type(screen.getByLabelText(/product code/i), '37858');
     await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
@@ -416,14 +383,9 @@ describe('AddWishlistItemModal', () => {
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/manufacturer/i)).toBeInTheDocument();
-    });
-
     await user.type(screen.getByPlaceholderText('Or create new list'), 'Duplicate Name');
 
-    const manufacturerSelect = screen.getByLabelText(/manufacturer/i) as HTMLSelectElement;
-    await setSelectValue(manufacturerSelect, 'märklin');
+    await selectManufacturer('Märklin');
 
     await user.type(screen.getByLabelText(/product code/i), '37858');
     await user.type(screen.getByLabelText(/description/i), 'Test Model');
@@ -442,7 +404,7 @@ describe('AddWishlistItemModal', () => {
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    await selectManufacturer('märklin');
+    await selectManufacturer('Märklin');
 
     await user.type(screen.getByLabelText(/product code/i), '37858');
     await user.type(screen.getByLabelText(/description/i), 'Test Model');
@@ -461,7 +423,7 @@ describe('AddWishlistItemModal', () => {
 
     render(AddWishlistItemModal, { props: defaultProps });
 
-    await selectManufacturer('märklin');
+    await selectManufacturer('Märklin');
 
     await user.type(screen.getByLabelText(/product code/i), '37858');
     await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
