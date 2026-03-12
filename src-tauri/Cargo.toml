@@ -53,6 +53,7 @@ strum_macros            = "0.27.2"
 tar                     = "0.4"
 tauri                   = { version = "2.10.3", features = ["protocol-asset"] }
 tauri-plugin-deep-link  = "2"
+tauri-plugin-global-shortcut    = "2"
 tauri-plugin-dialog     = "2"
 tauri-plugin-fs         = "2.4.5"
 tauri-plugin-http       = "2.5.7"

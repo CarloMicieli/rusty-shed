@@ -1,8 +1,11 @@
 use crate::catalog::application::{SaveRailwayModel, SaveRailwayModelInput};
-use crate::catalog::domain::railway_model::Category;
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::catalog::domain::railway_model::{Category, Epoch, PowerMethod};
+use crate::catalog::domain::scale::Scale;
 use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
 use crate::collecting::application::{
-    AddCollectionItem, GetCollection, GetDepot, RemoveCollectionItem,
+    AcquisitionItemInput, AddCollectionItem, GetCollection, GetDepot, RecordAcquisition,
+    RecordAcquisitionInput, RemoveCollectionItem,
     RemoveCollectionItemInput as DomainRemoveCollectionItemInput, UpdateCollectionItem,
 };
 use crate::collecting::domain::{
@@ -10,7 +13,9 @@ use crate::collecting::domain::{
     UpdateCollectionItemInput,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
-use crate::collecting::interface::command_args::AddRailwayModelToCollectionArgs;
+use crate::collecting::interface::command_args::{
+    AddRailwayModelToCollectionArgs, RecordAcquisitionArgs,
+};
 use crate::collecting::interface::{
     AddCollectionItemArgs, CollectionItemUpdateArgs, RemoveCollectionItemArgs,
     UpdateCollectionItemArgs,
@@ -22,6 +27,7 @@ use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::state::AppState;
 use chrono::NaiveDate;
+use garde::Validate;
 use log::info;
 use std::convert::TryFrom;
 
@@ -345,4 +351,94 @@ pub async fn add_railway_model_to_collection(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())
+}
+
+/// Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
+#[tauri::command]
+#[specta::specta]
+pub async fn record_acquisition(
+    state: tauri::State<'_, AppState>,
+    args: RecordAcquisitionArgs,
+) -> Result<Vec<CollectionItemId>, CommandError> {
+    info!("Recording acquisition: {} items", args.items.len());
+
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid acquisition args: {e}")))?;
+
+    let purchase_date = NaiveDate::parse_from_str(&args.purchase_date, "%Y-%m-%d")
+        .map_err(|_| CommandError::validation_field("purchase_date", "invalid date format"))?;
+    let today = chrono::Local::now().date_naive();
+    if purchase_date > today {
+        return Err(CommandError::validation_field(
+            "purchase_date",
+            "purchase date cannot be in the future",
+        ));
+    }
+
+    let seller_id: Option<SellerId> = match args.seller_id {
+        Some(s) => Some(
+            SellerId::try_from(s.as_str())
+                .map_err(|_| CommandError::validation_field("seller_id", "invalid"))?,
+        ),
+        None => None,
+    };
+
+    let items = args
+        .items
+        .into_iter()
+        .map(|item| {
+            let manufacturer_id = ManufacturerId::try_from(item.manufacturer_id.as_str())
+                .map_err(|_| CommandError::validation_field("manufacturer_id", "invalid"))?;
+
+            let category = item
+                .category
+                .parse::<Category>()
+                .map_err(|_| CommandError::validation_field("category", "invalid"))?;
+
+            let scale = Scale::try_from(item.scale.as_str())
+                .map_err(|_| CommandError::validation_field("scale", "invalid"))?;
+
+            let power_method = item
+                .power_method
+                .parse::<PowerMethod>()
+                .map_err(|_| CommandError::validation_field("power_method", "invalid"))?;
+
+            let currency = Currency::from_code(&item.price_currency)
+                .map_err(|_| CommandError::validation_field("price_currency", "invalid"))?;
+
+            Ok(AcquisitionItemInput {
+                manufacturer_id,
+                product_code: item.product_code,
+                description: item.description,
+                category,
+                scale,
+                epoch: Epoch(item.epoch),
+                power_method,
+                price: MonetaryAmount::new(item.price_amount, currency),
+            })
+        })
+        .collect::<Result<Vec<_>, CommandError>>()?;
+
+    let input = RecordAcquisitionInput {
+        seller_id,
+        purchase_date,
+        items,
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let collection_item_id_provider = RuntimeIdProvider::new();
+    let purchase_info_id_provider = RuntimeIdProvider::new();
+
+    let ids = RecordAcquisition::execute(
+        &mut unit_of_work,
+        collection_item_id_provider,
+        purchase_info_id_provider,
+        input,
+    )
+    .await?;
+
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(ids)
 }

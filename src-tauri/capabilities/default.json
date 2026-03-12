@@ -6,6 +6,7 @@
   "permissions": [
     "core:default",
     "core:path:default",
+    "global-shortcut:allow-register",
     "core:webview:allow-internal-toggle-devtools",
     "core:webview:allow-set-webview-zoom",
     "log:default",

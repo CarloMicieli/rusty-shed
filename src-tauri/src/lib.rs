@@ -49,8 +49,8 @@ use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
 use std::path::{Component, Path};
-use tauri::Manager;
 use tauri::path::BaseDirectory;
+use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 
@@ -168,6 +168,7 @@ pub fn run() {
         catalog_command_handlers::search_railway_models,
         catalog_command_handlers::add_rolling_stock_to_model,
         collecting_command_handlers::add_railway_model_to_collection,
+        collecting_command_handlers::record_acquisition,
         collecting_command_handlers::update_collection_item,
         collecting_command_handlers::remove_collection_item,
         wishlist_command_handlers::add_railway_model_to_wish_list,
@@ -264,6 +265,7 @@ pub fn run() {
                 ])
                 .build(),
         )
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_os::init())
@@ -314,6 +316,16 @@ pub fn run() {
             {
                 log::warn!("Failed to setup viewport: {}", e);
             }
+
+            // Register Ctrl+N global shortcut to open the acquisition drawer
+            use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+            app.global_shortcut()
+                .on_shortcut("CommandOrControl+N", |app, _shortcut, event| {
+                    if event.state == ShortcutState::Pressed {
+                        app.emit("open-acquisition-drawer", ()).ok();
+                    }
+                })
+                .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;
 
             Ok(())
         });

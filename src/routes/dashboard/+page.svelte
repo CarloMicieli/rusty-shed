@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
@@ -24,6 +24,7 @@
 
   const dashboard = getDashboardContext();
   const wishlistService = getWishlistContext();
+  const openAcquisitionDrawer = getContext<() => void>('openAcquisitionDrawer');
 
   // State & Derived
   let showWishlistModal = $state(false);
@@ -48,9 +49,9 @@
   const actions = $derived<QuickAction[]>([
     {
       id: 'add-railway-model',
-      label: m.actions_add_railway_model(),
+      label: m.dashboard_action_new_acquisition(),
       icon: Plus,
-      onClick: () => goto(resolve('/catalogue/new-model'))
+      onClick: () => openAcquisitionDrawer()
     },
     {
       id: 'add-wishlist-item',

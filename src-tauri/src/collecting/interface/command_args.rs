@@ -193,3 +193,39 @@ pub struct AddRailwayModelToCollectionArgs {
 }
 
 // Reuse `SimplifiedRailwayModelArgs` from the `catalog::interface` module.
+
+/// Top-level args for the record_acquisition command.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordAcquisitionArgs {
+    /// Optional seller id (TRN string).
+    pub seller_id: Option<String>,
+    /// Purchase date as YYYY-MM-DD string.
+    pub purchase_date: String,
+    /// At least one item required.
+    #[garde(length(min = 1))]
+    pub items: Vec<AcquisitionItemArgs>,
+}
+
+/// Per-item args within a single acquisition batch.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct AcquisitionItemArgs {
+    #[garde(length(min = 1))]
+    pub manufacturer_id: String,
+    #[garde(length(min = 1))]
+    pub product_code: String,
+    pub description: String,
+    #[garde(length(min = 1))]
+    pub category: String,
+    #[garde(length(min = 1))]
+    pub scale: String,
+    pub epoch: String,
+    #[garde(length(min = 1))]
+    pub power_method: String,
+    /// Price in cents; 0 means no price recorded.
+    pub price_amount: i64,
+    pub price_currency: String,
+}

@@ -28,13 +28,21 @@
   import { TrackInventoryService, setTrackInventoryContext } from '$lib/features/track-inventory';
   import { Toaster } from '$lib/components/ui/sonner';
   import { safeInvoke } from '$lib/services';
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount, setContext } from 'svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { collectionStore } from '$lib/state/collection.svelte';
+  import { listen } from '@tauri-apps/api/event';
+  import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
+  let showAcquisitionDrawer = $state(false);
   let { children } = $props();
+
+  // Expose open function so any child route can open the acquisition drawer
+  setContext('openAcquisitionDrawer', () => {
+    showAcquisitionDrawer = true;
+  });
 
   // Create and provide contexts
   const collectionState = createCollectionState();
@@ -49,7 +57,22 @@
   setDepotContext(depotState);
   setTrackInventoryContext(trackInventoryService);
 
+  let unlistenAcquisition: (() => void) | undefined;
+
+  onDestroy(() => {
+    unlistenAcquisition?.();
+  });
+
   onMount(async () => {
+    // Listen for global shortcut event to open acquisition drawer
+    try {
+      unlistenAcquisition = await listen('open-acquisition-drawer', () => {
+        showAcquisitionDrawer = true;
+      });
+    } catch {
+      // Tauri not available (e.g. test environment) — skip listener
+    }
+
     // 0. Initialize settings on first run (detects OS language)
     try {
       await settingsState.initialize();
@@ -178,4 +201,12 @@
       <Toaster richColors position="top-right" />
     </div>
   </div>
+
+  <AcquisitionDrawer
+    open={showAcquisitionDrawer}
+    onClose={() => (showAcquisitionDrawer = false)}
+    onSuccess={() => {
+      showAcquisitionDrawer = false;
+    }}
+  />
 {/if}

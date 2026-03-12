@@ -16,8 +16,8 @@
 
 **Purpose**: Module scaffolding and i18n keys — unblocks all frontend work.
 
-- [ ] T001 Add all 28 `acquisition_*` and `dashboard_action_new_acquisition` Paraglide keys to `messages/en.json`; run `pnpm prepare` to regenerate `src/lib/paraglide/messages.js`
-- [ ] T002 Create directory skeleton `src/lib/features/acquisition/components/` with empty placeholder files: `types.ts`, `AcquisitionState.svelte.ts`, `AcquisitionDrawer.svelte`, `components/AcquisitionHeader.svelte`, `components/AcquisitionItemCard.svelte`, `components/AcquisitionFooter.svelte`
+- [x] T001 Add all 28 `acquisition_*` and `dashboard_action_new_acquisition` Paraglide keys to `messages/en.json`; run `pnpm prepare` to regenerate `src/lib/paraglide/messages.js`
+- [x] T002 Create directory skeleton `src/lib/features/acquisition/components/` with empty placeholder files: `types.ts`, `AcquisitionState.svelte.ts`, `AcquisitionDrawer.svelte`, `components/AcquisitionHeader.svelte`, `components/AcquisitionItemCard.svelte`, `components/AcquisitionFooter.svelte`
 
 ---
 
@@ -27,13 +27,13 @@
 
 **⚠️ CRITICAL**: T009 regenerates `src/lib/bindings.ts` — all frontend tasks depend on this.
 
-- [ ] T003 [P] Add `RecordAcquisitionArgs` and `AcquisitionItemArgs` structs (with `Debug, Clone, Validate, specta::Type, Deserialize` derives and `validate_not_future_date` custom validator for `purchase_date`) to `src-tauri/src/collecting/interface/command_args.rs` — see `contracts/rust-command.md`
-- [ ] T004 [P] Create `src-tauri/src/collecting/application/record_acquisition.rs` with `RecordAcquisitionInput`, `AcquisitionItemInput` structs, and the `RecordAcquisition` struct stub
-- [ ] T005 Implement `RecordAcquisition::execute` in `src-tauri/src/collecting/application/record_acquisition.rs`: for each item derive `RailwayModelId::new(mfr_id, product_code)`, probe `find_by_id`, conditionally call `catalog_repo.create()`, then `collection.add_item()`, commit once — see `contracts/rust-command.md § Use Case`
-- [ ] T006 Add `pub mod record_acquisition;` to `src-tauri/src/collecting/application/mod.rs`
-- [ ] T007 Add `record_acquisition` async command handler to `src-tauri/src/collecting/interface/command_handlers.rs`: call `args.validate()`, map each item to `AcquisitionItemInput`, invoke `RecordAcquisition::execute`, commit UoW — see `contracts/rust-command.md § Mapping to Use Case Input`
-- [ ] T008 Register `collecting::interface::command_handlers::record_acquisition` inside `collect_commands!` in `src-tauri/src/lib.rs`
-- [ ] T009 Run `cargo fmt`, `cargo clippy -- -D warnings`, `cargo test`; then run `pnpm tauri dev` (start + immediately stop) to regenerate `src/lib/bindings.ts`; confirm `commands.recordAcquisition` is present in the bindings file
+- [x] T003 [P] Add `RecordAcquisitionArgs` and `AcquisitionItemArgs` structs (with `Debug, Clone, Validate, specta::Type, Deserialize` derives and `validate_not_future_date` custom validator for `purchase_date`) to `src-tauri/src/collecting/interface/command_args.rs` — see `contracts/rust-command.md`
+- [x] T004 [P] Create `src-tauri/src/collecting/application/record_acquisition.rs` with `RecordAcquisitionInput`, `AcquisitionItemInput` structs, and the `RecordAcquisition` struct stub
+- [x] T005 Implement `RecordAcquisition::execute` in `src-tauri/src/collecting/application/record_acquisition.rs`: for each item derive `RailwayModelId::new(mfr_id, product_code)`, probe `find_by_id`, conditionally call `catalog_repo.create()`, then `collection.add_item()`, commit once — see `contracts/rust-command.md § Use Case`
+- [x] T006 Add `pub mod record_acquisition;` to `src-tauri/src/collecting/application/mod.rs`
+- [x] T007 Add `record_acquisition` async command handler to `src-tauri/src/collecting/interface/command_handlers.rs`: call `args.validate()`, map each item to `AcquisitionItemInput`, invoke `RecordAcquisition::execute`, commit UoW — see `contracts/rust-command.md § Mapping to Use Case Input`
+- [x] T008 Register `collecting::interface::command_handlers::record_acquisition` inside `collect_commands!` in `src-tauri/src/lib.rs`
+- [x] T009 Run `cargo fmt`, `cargo clippy -- -D warnings`, `cargo test`; then run `pnpm tauri dev` (start + immediately stop) to regenerate `src/lib/bindings.ts`; confirm `commands.recordAcquisition` is present in the bindings file
 
 **Checkpoint**: `recordAcquisition` is callable from TypeScript. Backend work is complete. Frontend phases can now proceed.
 
@@ -45,13 +45,13 @@
 
 **Independent Test**: Open the drawer, complete purchase metadata + one item (manufacturer, product code, category), click "Finalize Purchase" — verify one new collection entry is created and the drawer closes.
 
-- [ ] T010 [P] [US1] Define `AcquisitionFormState`, `AcquisitionItemEntry`, `BatchDefaults`, `AcquisitionItemErrors`, `AcquisitionValidationErrors` interfaces and `createDefaultFormState()` / `createDefaultItem()` factory functions in `src/lib/features/acquisition/types.ts` — see `data-model.md § New Frontend Types`
-- [ ] T011 [P] [US1] Implement `AcquisitionState.svelte.ts` in `src/lib/features/acquisition/AcquisitionState.svelte.ts`: thin Svelte 5 class wrapping `commands.recordAcquisition`, providing `setContext` / `getAcquisitionContext()` helpers; show success/error toasts
-- [ ] T012 [P] [US1] Build `AcquisitionHeader.svelte` in `src/lib/features/acquisition/components/AcquisitionHeader.svelte`: seller `<select>` (from `sellers: SellerView[]` prop), `DatePickerField` for purchase date (max = today), Scale `<select>`, Power Method `<select>`; emit change events via callback props — see `contracts/frontend-state.md § AcquisitionHeader.svelte`
-- [ ] T013 [P] [US1] Build `AcquisitionFooter.svelte` in `src/lib/features/acquisition/components/AcquisitionFooter.svelte`: "Add Another Item" (outline variant) and "Finalize Purchase" (default variant) buttons; disable Finalize when `isSubmitting || isLoadingData`; show "Saving…" text while submitting — see `contracts/frontend-state.md § AcquisitionFooter.svelte`
-- [ ] T014 [US1] Build `AcquisitionItemCard.svelte` in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`: manufacturer `<select>`, product code text input, description text input, category `<select>`, scale `<select>`, epoch `<select>`, power method `<select>`, `CurrencyInput` for price with read-only currency symbol; accept `item: AcquisitionItemEntry`, `manufacturers`, `currency`, `canRemove`, `onUpdate`, `onDuplicate`, `onRemove` props — see `contracts/frontend-state.md § AcquisitionItemCard.svelte`
-- [ ] T015 [US1] Build `AcquisitionDrawer.svelte` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`: fixed overlay + right-panel (`max-w-2xl`, `translate-x` animation), `$effect` scroll-lock on `document.body` and `main`, `handleOpen()` loading `getSellers` + `getManufacturers` in parallel, `handleFinalize()` calling `acquisitionService.recordAcquisition()`, `handleCloseRequest()` with `hasChanges` discard-confirm guard, compose `AcquisitionHeader` + scrollable item list + `AcquisitionFooter`; single item only for this story — see `contracts/frontend-state.md § AcquisitionDrawer.svelte`
-- [ ] T016 [US1] Update `src/routes/dashboard/+page.svelte`: replace "Add Railway Model" quick-action button with `showAcquisitionDrawer = true` onclick using label from `m.dashboard_action_new_acquisition()`; add `let showAcquisitionDrawer = $state(false)`; mount `<AcquisitionDrawer open={showAcquisitionDrawer} onClose={...} onSuccess={() => { showAcquisitionDrawer = false; /* reload recent acquisitions */ }}>`
+- [x] T010 [P] [US1] Define `AcquisitionFormState`, `AcquisitionItemEntry`, `BatchDefaults`, `AcquisitionItemErrors`, `AcquisitionValidationErrors` interfaces and `createDefaultFormState()` / `createDefaultItem()` factory functions in `src/lib/features/acquisition/types.ts` — see `data-model.md § New Frontend Types`
+- [x] T011 [P] [US1] Implement `AcquisitionState.svelte.ts` in `src/lib/features/acquisition/AcquisitionState.svelte.ts`: thin Svelte 5 class wrapping `commands.recordAcquisition`, providing `setContext` / `getAcquisitionContext()` helpers; show success/error toasts
+- [x] T012 [P] [US1] Build `AcquisitionHeader.svelte` in `src/lib/features/acquisition/components/AcquisitionHeader.svelte`: seller `<select>` (from `sellers: SellerView[]` prop), `DatePickerField` for purchase date (max = today), Scale `<select>`, Power Method `<select>`; emit change events via callback props — see `contracts/frontend-state.md § AcquisitionHeader.svelte`
+- [x] T013 [P] [US1] Build `AcquisitionFooter.svelte` in `src/lib/features/acquisition/components/AcquisitionFooter.svelte`: "Add Another Item" (outline variant) and "Finalize Purchase" (default variant) buttons; disable Finalize when `isSubmitting || isLoadingData`; show "Saving…" text while submitting — see `contracts/frontend-state.md § AcquisitionFooter.svelte`
+- [x] T014 [US1] Build `AcquisitionItemCard.svelte` in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`: manufacturer `<select>`, product code text input, description text input, category `<select>`, scale `<select>`, epoch `<select>`, power method `<select>`, `CurrencyInput` for price with read-only currency symbol; accept `item: AcquisitionItemEntry`, `manufacturers`, `currency`, `canRemove`, `onUpdate`, `onDuplicate`, `onRemove` props — see `contracts/frontend-state.md § AcquisitionItemCard.svelte`
+- [x] T015 [US1] Build `AcquisitionDrawer.svelte` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`: fixed overlay + right-panel (`max-w-2xl`, `translate-x` animation), `$effect` scroll-lock on `document.body` and `main`, `handleOpen()` loading `getSellers` + `getManufacturers` in parallel, `handleFinalize()` calling `acquisitionService.recordAcquisition()`, `handleCloseRequest()` with `hasChanges` discard-confirm guard, compose `AcquisitionHeader` + scrollable item list + `AcquisitionFooter`; single item only for this story — see `contracts/frontend-state.md § AcquisitionDrawer.svelte`
+- [x] T016 [US1] Update `src/routes/dashboard/+page.svelte`: replace "Add Railway Model" quick-action button with `showAcquisitionDrawer = true` onclick using label from `m.dashboard_action_new_acquisition()`; add `let showAcquisitionDrawer = $state(false)`; mount `<AcquisitionDrawer open={showAcquisitionDrawer} onClose={...} onSuccess={() => { showAcquisitionDrawer = false; /* reload recent acquisitions */ }}>`
 
 **Checkpoint**: Full single-item purchase flow is functional end-to-end. ✅ MVP deliverable.
 
@@ -63,10 +63,10 @@
 
 **Independent Test**: Click "Finalize Purchase" with Manufacturer missing → the specific card shows an error ring. Fix it → the error clears without re-submitting.
 
-- [ ] T017 [US4] Add `validateForm(form: AcquisitionFormState): AcquisitionValidationErrors` function to `src/lib/features/acquisition/types.ts`; validate: items array length ≥ 1, each item's `manufacturerId` + `productCode` + `category` non-null/non-empty; return per-card `AcquisitionItemErrors[]`
-- [ ] T018 [US4] Wire validation into `AcquisitionDrawer.svelte`: add `let touched = $state(false)` and `let validationErrors = $state<AcquisitionValidationErrors>({})`; add `$derived.by` that re-runs `validateForm` when `touched` is true and writes to `validationErrors`; set `touched = true` at start of `handleFinalize`, block submission if errors exist
-- [ ] T019 [US4] Update `AcquisitionItemCard.svelte` in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`: accept `errors: AcquisitionItemErrors` prop; add `ring-destructive` / `border-destructive` CSS on each field that has an error; show `<p class="text-destructive text-xs">` error text beneath the field
-- [ ] T020 [US4] Update `AcquisitionDrawer.svelte` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`: when `validationErrors.general` is set (empty items), show an inline warning banner above the item list; pass `errors={validationErrors.items?.[index] ?? {}}` to each `AcquisitionItemCard`
+- [x] T017 [US4] Add `validateForm(form: AcquisitionFormState): AcquisitionValidationErrors` function to `src/lib/features/acquisition/types.ts`; validate: items array length ≥ 1, each item's `manufacturerId` + `productCode` + `category` non-null/non-empty; return per-card `AcquisitionItemErrors[]`
+- [x] T018 [US4] Wire validation into `AcquisitionDrawer.svelte`: add `let touched = $state(false)` and `let validationErrors = $state<AcquisitionValidationErrors>({})`; add `$derived.by` that re-runs `validateForm` when `touched` is true and writes to `validationErrors`; set `touched = true` at start of `handleFinalize`, block submission if errors exist
+- [x] T019 [US4] Update `AcquisitionItemCard.svelte` in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`: accept `errors: AcquisitionItemErrors` prop; add `ring-destructive` / `border-destructive` CSS on each field that has an error; show `<p class="text-destructive text-xs">` error text beneath the field
+- [x] T020 [US4] Update `AcquisitionDrawer.svelte` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`: when `validationErrors.general` is set (empty items), show an inline warning banner above the item list; pass `errors={validationErrors.items?.[index] ?? {}}` to each `AcquisitionItemCard`
 
 **Checkpoint**: Validation UX is complete. Finalize is safely guarded. Errors surface and clear reactively.
 
@@ -78,12 +78,12 @@
 
 **Independent Test**: Set batch defaults, add 3 items via Clone, change scale on one card only — verify the other two retain the original batch default scale; finalize → 3 collection entries created.
 
-- [ ] T021 [US2] Add `handleBatchDefaultChange(field: 'scale' | 'powerMethod', value: string | null)` to `AcquisitionDrawer.svelte`: propagate new value to all items whose current `field` value matches the old default (opt-in propagation); update `form.batchDefaults`; wire to `onBatchDefaultChange` prop on `AcquisitionHeader` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
-- [ ] T022 [US2] Update `AcquisitionHeader.svelte` in `src/lib/features/acquisition/components/AcquisitionHeader.svelte`: accept `batchDefaults: BatchDefaults` and `onBatchDefaultChange` callback props; bind scale and power method dropdowns to the batch defaults and call `onBatchDefaultChange` on change
-- [ ] T023 [US2] Add `handleDuplicate(uid: string)` to `AcquisitionDrawer.svelte`: find source entry by uid, shallow-clone all fields, assign `uid = crypto.randomUUID()`, clear `productCode = ''`, insert clone immediately after the source in `form.items` array in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
-- [ ] T024 [US2] Add `handleRemove(uid: string)` to `AcquisitionDrawer.svelte`: filter `form.items`; no-op if `form.items.length <= 1`; pass `canRemove={form.items.length > 1}` to each `AcquisitionItemCard` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
-- [ ] T025 [US2] Update `AcquisitionItemCard.svelte` in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`: add a Copy (`Copy` lucide icon) button that calls `onDuplicate(item.uid)`; add a Trash (`Trash2` lucide icon) button that calls `onRemove(item.uid)`, hidden when `!canRemove`; position both in the top-right of the card
-- [ ] T026 [US2] Add auto-scroll-to-last-card behavior in `AcquisitionDrawer.svelte`: after `handleAddItem()` or `handleDuplicate()` pushes to `form.items`, use a `$effect` watching `form.items.length` to scroll the scrollable content div to its bottom via `scrollableEl.scrollTop = scrollableEl.scrollHeight` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [x] T021 [US2] Add `handleBatchDefaultChange(field: 'scale' | 'powerMethod', value: string | null)` to `AcquisitionDrawer.svelte`: propagate new value to all items whose current `field` value matches the old default (opt-in propagation); update `form.batchDefaults`; wire to `onBatchDefaultChange` prop on `AcquisitionHeader` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [x] T022 [US2] Update `AcquisitionHeader.svelte` in `src/lib/features/acquisition/components/AcquisitionHeader.svelte`: accept `batchDefaults: BatchDefaults` and `onBatchDefaultChange` callback props; bind scale and power method dropdowns to the batch defaults and call `onBatchDefaultChange` on change
+- [x] T023 [US2] Add `handleDuplicate(uid: string)` to `AcquisitionDrawer.svelte`: find source entry by uid, shallow-clone all fields, assign `uid = crypto.randomUUID()`, clear `productCode = ''`, insert clone immediately after the source in `form.items` array in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [x] T024 [US2] Add `handleRemove(uid: string)` to `AcquisitionDrawer.svelte`: filter `form.items`; no-op if `form.items.length <= 1`; pass `canRemove={form.items.length > 1}` to each `AcquisitionItemCard` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
+- [x] T025 [US2] Update `AcquisitionItemCard.svelte` in `src/lib/features/acquisition/components/AcquisitionItemCard.svelte`: add a Copy (`Copy` lucide icon) button that calls `onDuplicate(item.uid)`; add a Trash (`Trash2` lucide icon) button that calls `onRemove(item.uid)`, hidden when `!canRemove`; position both in the top-right of the card
+- [x] T026 [US2] Add auto-scroll-to-last-card behavior in `AcquisitionDrawer.svelte`: after `handleAddItem()` or `handleDuplicate()` pushes to `form.items`, use a `$effect` watching `form.items.length` to scroll the scrollable content div to its bottom via `scrollableEl.scrollTop = scrollableEl.scrollHeight` in `src/lib/features/acquisition/AcquisitionDrawer.svelte`
 
 **Checkpoint**: Multi-item haul with batch defaults and clone is fully functional.
 
@@ -95,10 +95,10 @@
 
 **Independent Test**: Navigate to the catalogue page; press Ctrl+N — acquisition drawer opens without navigating away.
 
-- [ ] T027 [US3] Register `tauri_plugin_global_shortcut` plugin in `src-tauri/src/lib.rs`: add `.plugin(tauri_plugin_global_shortcut::Builder::new().build())` to the Tauri builder chain
-- [ ] T028 [US3] Add `"global-shortcut:allow-register"` to `src-tauri/capabilities/default.json` permissions array
-- [ ] T029 [US3] Register `"CommandOrControl+N"` shortcut in the `setup` closure in `src-tauri/src/lib.rs`: call `app.global_shortcut().register("CommandOrControl+N", |app, _shortcut, _event| { app.emit("open-acquisition-drawer", ()).ok(); })?`
-- [ ] T030 [US3] Lift `AcquisitionDrawer` from `src/routes/dashboard/+page.svelte` to `src/routes/+layout.svelte`: manage `showAcquisitionDrawer = $state(false)` in layout, expose `openAcquisitionDrawer` via `setContext`; add `listen("open-acquisition-drawer", () => showAcquisitionDrawer = true)` in `onMount`; update dashboard page to call `getContext` for the open function instead of owning the state
+- [x] T027 [US3] Register `tauri_plugin_global_shortcut` plugin in `src-tauri/src/lib.rs`: add `.plugin(tauri_plugin_global_shortcut::Builder::new().build())` to the Tauri builder chain
+- [x] T028 [US3] Add `"global-shortcut:allow-register"` to `src-tauri/capabilities/default.json` permissions array
+- [x] T029 [US3] Register `"CommandOrControl+N"` shortcut in the `setup` closure in `src-tauri/src/lib.rs`: call `app.global_shortcut().register("CommandOrControl+N", |app, _shortcut, _event| { app.emit("open-acquisition-drawer", ()).ok(); })?`
+- [x] T030 [US3] Lift `AcquisitionDrawer` from `src/routes/dashboard/+page.svelte` to `src/routes/+layout.svelte`: manage `showAcquisitionDrawer = $state(false)` in layout, expose `openAcquisitionDrawer` via `setContext`; add `listen("open-acquisition-drawer", () => showAcquisitionDrawer = true)` in `onMount`; update dashboard page to call `getContext` for the open function instead of owning the state
 
 **Checkpoint**: Ctrl+N opens the acquisition drawer from any route.
 
@@ -108,8 +108,8 @@
 
 **Purpose**: Final verification pass and spec compliance confirmation.
 
-- [ ] T031 [P] Run `cargo fmt --manifest-path src-tauri/Cargo.toml` and `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings` and `cargo test --manifest-path src-tauri/Cargo.toml`; fix any warnings
-- [ ] T032 [P] Run `pnpm lint`, `pnpm check`, `pnpm test`; fix any errors or warnings
+- [x] T031 [P] Run `cargo fmt --manifest-path src-tauri/Cargo.toml` and `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings` and `cargo test --manifest-path src-tauri/Cargo.toml`; fix any warnings
+- [x] T032 [P] Run `pnpm lint`, `pnpm check`, `pnpm test`; fix any errors or warnings
 - [ ] T033 Smoke-test the full acquisition flow per `quickstart.md`: single item, 5-item haul with clone + batch defaults, validation errors, discard confirm, Ctrl+N from catalogue page
 
 ---

@@ -5,6 +5,9 @@ import { createRawSnippet } from 'svelte';
 // ── Mocks ────────────────────────────────────────────────────
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: vi.fn().mockResolvedValue(vi.fn())
+}));
 
 // Use the same async importOriginal pattern as other test files.
 // A plain Proxy returning a function for *every* key (including ES module
@@ -135,6 +138,9 @@ vi.mock('$lib/components/SearchBar.svelte', () => ({
 }));
 vi.mock('$lib/components/ui/sonner', () => ({
   Toaster: function ToasterStub() {}
+}));
+vi.mock('$lib/features/acquisition/AcquisitionDrawer.svelte', () => ({
+  default: function AcquisitionDrawerStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────

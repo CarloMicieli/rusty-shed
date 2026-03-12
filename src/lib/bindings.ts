@@ -444,6 +444,19 @@ export const commands = {
     }
   },
   /**
+   * Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
+   */
+  async recordAcquisition(
+    args: RecordAcquisitionArgs
+  ): Promise<Result<CollectionItemId[], CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('record_acquisition', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Tauri command to update mutable fields of an existing collection item.
    */
   async updateCollectionItem(args: UpdateCollectionItemArgs): Promise<Result<null, CommandError>> {
@@ -1849,6 +1862,23 @@ export const commands = {
 
 /** user-defined types **/
 
+/**
+ * Per-item args within a single acquisition batch.
+ */
+export type AcquisitionItemArgs = {
+  manufacturerId: string;
+  productCode: string;
+  description: string;
+  category: string;
+  scale: string;
+  epoch: string;
+  powerMethod: string;
+  /**
+   * Price in cents; 0 means no price recorded.
+   */
+  priceAmount: bigint;
+  priceCurrency: string;
+};
 /**
  * Arguments for adding an extra budget to a specific month.
  */
@@ -5019,6 +5049,23 @@ export type RailwayStatus =
    * The railway company has merged with another entity.
    */
   | 'MERGED';
+/**
+ * Top-level args for the record_acquisition command.
+ */
+export type RecordAcquisitionArgs = {
+  /**
+   * Optional seller id (TRN string).
+   */
+  sellerId: string | null;
+  /**
+   * Purchase date as YYYY-MM-DD string.
+   */
+  purchaseDate: string;
+  /**
+   * At least one item required.
+   */
+  items: AcquisitionItemArgs[];
+};
 /**
  * Counts of records by entity type.
  */
