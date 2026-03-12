@@ -1,3 +1,5 @@
+import type { RecordAcquisitionArgs } from '$lib/bindings';
+
 /** Session state for the entire acquisition drawer. */
 export interface AcquisitionFormState {
   sellerId: string | null;
@@ -78,4 +80,25 @@ export function validateForm(form: AcquisitionFormState): AcquisitionValidationE
 
 export function hasErrors(errors: AcquisitionValidationErrors): boolean {
   return !!errors.general || (errors.items?.some((e) => Object.keys(e).length > 0) ?? false);
+}
+
+export function toRecordAcquisitionArgs(
+  f: AcquisitionFormState,
+  currency: string
+): RecordAcquisitionArgs {
+  return {
+    sellerId: f.sellerId,
+    purchaseDate: f.purchaseDate,
+    items: f.items.map((item) => ({
+      manufacturerId: item.manufacturerId!,
+      productCode: item.productCode,
+      description: item.description,
+      category: item.category!,
+      scale: item.scale ?? '',
+      epoch: item.epoch ?? '',
+      powerMethod: item.powerMethod ?? '',
+      priceAmount: item.priceAmount != null ? BigInt(item.priceAmount) : BigInt(0),
+      priceCurrency: currency
+    }))
+  };
 }

@@ -2,12 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
   import { Button } from '$lib/components';
-  import {
-    commands,
-    type Manufacturer,
-    type RecordAcquisitionArgs,
-    type SellerView
-  } from '$lib/bindings';
+  import { commands, type Manufacturer, type SellerView } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import type {
@@ -15,7 +10,13 @@
     AcquisitionItemEntry,
     AcquisitionValidationErrors
   } from './types.js';
-  import { createDefaultFormState, createDefaultItem, validateForm, hasErrors } from './types.js';
+  import {
+    createDefaultFormState,
+    createDefaultItem,
+    validateForm,
+    hasErrors,
+    toRecordAcquisitionArgs
+  } from './types.js';
   import AcquisitionHeader from './components/AcquisitionHeader.svelte';
   import AcquisitionItemCard from './components/AcquisitionItemCard.svelte';
   import AcquisitionFooter from './components/AcquisitionFooter.svelte';
@@ -188,27 +189,6 @@
     } finally {
       isSubmitting = false;
     }
-  }
-
-  function toRecordAcquisitionArgs(f: AcquisitionFormState, cur: string): RecordAcquisitionArgs {
-    return {
-      sellerId: f.sellerId,
-      purchaseDate: f.purchaseDate,
-      items: f.items.map((item) => ({
-        manufacturerId: item.manufacturerId!,
-        productCode: item.productCode,
-        description: item.description,
-        category: item.category!,
-        scale: item.scale ?? '',
-        epoch: item.epoch ?? '',
-        powerMethod: item.powerMethod ?? '',
-        priceAmount:
-          item.priceAmount != null
-            ? (Math.round(item.priceAmount * 100) as unknown as bigint)
-            : BigInt(0),
-        priceCurrency: cur
-      }))
-    };
   }
 </script>
 
