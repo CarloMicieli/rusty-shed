@@ -19,4 +19,4 @@ export {
 
 // Components
 export { default as WishlistsDashboard } from './WishlistsDashboard.svelte';
-export { default as AddWishlistItemModal } from '../../components/AddWishlistItemModal.svelte';
+export { default as AddWishlistItemDrawer } from './AddWishlistItemDrawer.svelte';

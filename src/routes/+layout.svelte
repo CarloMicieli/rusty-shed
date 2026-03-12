@@ -33,15 +33,22 @@
   import { collectionStore } from '$lib/state/collection.svelte';
   import { listen } from '@tauri-apps/api/event';
   import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
+  import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
   let showAcquisitionDrawer = $state(false);
+  let showWishlistDrawer = $state(false);
   let { children } = $props();
 
   // Expose open function so any child route can open the acquisition drawer
   setContext('openAcquisitionDrawer', () => {
     showAcquisitionDrawer = true;
+  });
+
+  // Expose open function so any child route can open the wishlist item drawer
+  setContext('openWishlistDrawer', () => {
+    showWishlistDrawer = true;
   });
 
   // Create and provide contexts
@@ -210,5 +217,11 @@
       void collectionStore.refresh();
       void dashboardState.load();
     }}
+  />
+
+  <AddWishlistItemDrawer
+    open={showWishlistDrawer}
+    onClose={() => (showWishlistDrawer = false)}
+    onSaved={() => (showWishlistDrawer = false)}
   />
 {/if}

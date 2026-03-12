@@ -11,7 +11,6 @@
   import PageHeader from '$lib/components/PageHeader.svelte';
   import StatsCard from '$lib/components/StatsCard.svelte';
   import QuickActionButtons, { type QuickAction } from '$lib/components/QuickActionButtons.svelte';
-  import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
   import { DashboardCharts, PurchaseGroupCard } from '$lib/features/dashboard';
 
   // Refactored Components
@@ -25,9 +24,7 @@
   const dashboard = getDashboardContext();
   const wishlistService = getWishlistContext();
   const openAcquisitionDrawer = getContext<() => void>('openAcquisitionDrawer');
-
-  // State & Derived
-  let showWishlistModal = $state(false);
+  const openWishlistDrawer = getContext<() => void>('openWishlistDrawer');
   const totals = $derived(dashboard.data?.totals ?? null);
   const purchaseGroups = $derived(dashboard.data?.purchaseGroups ?? []);
   const currencyCode = $derived(dashboard.budgetData?.currency ?? 'EUR');
@@ -59,7 +56,7 @@
       icon: Heart,
       onClick: () => {
         if (!wishlistService.wishlists.length) void wishlistService.fetchWishlists();
-        showWishlistModal = true;
+        openWishlistDrawer();
       }
     },
     {
@@ -236,11 +233,4 @@
       </section>
     </div>
   </div>
-{/if}
-
-{#if showWishlistModal}
-  <AddWishlistItemModal
-    onClose={() => (showWishlistModal = false)}
-    onSaved={() => (showWishlistModal = false)}
-  />
 {/if}

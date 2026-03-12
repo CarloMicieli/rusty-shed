@@ -38,7 +38,6 @@ export { default as CurrencyInput } from './CurrencyInput.svelte';
 export { default as DatePickerField } from './DatePickerField.svelte';
 
 // Feature-specific components
-export { default as AddWishlistItemModal } from './AddWishlistItemModal.svelte';
 export { default as SellerForm } from './SellerForm.svelte';
 export { default as SettingsForm } from './SettingsForm.svelte';
 

@@ -52,6 +52,11 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_modal_missing_product_code: () => 'Please enter a product code',
   wishlist_modal_missing_description: () => 'Please enter a description',
   wishlist_modal_invalid_price: () => 'Price must be greater than 0',
+  wishlist_add_item_drawer_subtitle: () => 'Add to your collection wish list',
+  wishlist_add_item_drawer_discard_title: () => 'Discard wishlist item?',
+  wishlist_add_item_drawer_discard_description: () => 'You have unsaved changes. Discard them?',
+  wishlist_add_item_drawer_discard_confirm: () => 'Discard',
+  wishlist_add_item_drawer_discard_cancel: () => 'Keep editing',
   wishlist_category_locomotives: () => 'Locomotives',
   wishlist_category_train_sets: () => 'Train Sets',
   wishlist_category_starter_sets: () => 'Starter Sets',
@@ -85,7 +90,7 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', async (importOriginal) =
 });
 
 // Now import after mocks
-import AddWishlistItemModal from '$lib/components/AddWishlistItemModal.svelte';
+import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
 import {
   createWishlistState,
   type WishlistPreviewLite
@@ -217,8 +222,9 @@ async function selectManufacturer(name: string) {
   await user.click(item);
 }
 
-describe('AddWishlistItemModal', () => {
+describe('AddWishlistItemDrawer', () => {
   const defaultProps = {
+    open: true,
     onClose: vi.fn(),
     onSaved: vi.fn()
   };
@@ -236,7 +242,7 @@ describe('AddWishlistItemModal', () => {
   });
 
   it('should render modal with title and form fields', async () => {
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
     await waitFor(() => {
@@ -249,7 +255,7 @@ describe('AddWishlistItemModal', () => {
 
   it('should display available wishlists in dropdown', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     const trigger = await screen.findByRole('button', { name: /select a wishlist/i });
     await user.click(trigger);
@@ -262,7 +268,7 @@ describe('AddWishlistItemModal', () => {
 
   it('should show validation error when manufacturer is missing', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
@@ -274,7 +280,7 @@ describe('AddWishlistItemModal', () => {
 
   it('should show validation error when product code is missing', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     await selectManufacturer('Märklin');
 
@@ -288,7 +294,7 @@ describe('AddWishlistItemModal', () => {
 
   it('should show validation error when description is missing', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     await selectManufacturer('Märklin');
 
@@ -309,8 +315,8 @@ describe('AddWishlistItemModal', () => {
 
     const onSaved = vi.fn();
     const onClose = vi.fn();
-    render(AddWishlistItemModal, {
-      props: { onSaved, onClose }
+    render(AddWishlistItemDrawer, {
+      props: { open: true, onSaved, onClose }
     });
 
     // Select manufacturer via shadcn Select
@@ -350,7 +356,7 @@ describe('AddWishlistItemModal', () => {
     tauriMock.mockCommand('create_wishlist', mockCreatedWishlist);
     tauriMock.mockCommand('add_railway_model_to_wish_list', null);
 
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     // Enter new list name (fills wishlistId indirectly via newListName)
     await user.type(screen.getByPlaceholderText('Or create new list'), 'New List');
@@ -381,7 +387,7 @@ describe('AddWishlistItemModal', () => {
 
     tauriMock.mockCommandError('create_wishlist', error);
 
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     await user.type(screen.getByPlaceholderText('Or create new list'), 'Duplicate Name');
 
@@ -402,7 +408,7 @@ describe('AddWishlistItemModal', () => {
 
     tauriMock.mockCommandError('add_railway_model_to_wish_list', { NotFound: 'Not found' });
 
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     await selectManufacturer('Märklin');
 
@@ -421,7 +427,7 @@ describe('AddWishlistItemModal', () => {
 
     tauriMock.mockCommandWithDelay('add_railway_model_to_wish_list', 200, null);
 
-    render(AddWishlistItemModal, { props: defaultProps });
+    render(AddWishlistItemDrawer, { props: defaultProps });
 
     await selectManufacturer('Märklin');
 
@@ -437,10 +443,28 @@ describe('AddWishlistItemModal', () => {
     });
   });
 
-  it('should close modal and reset form on close button click', async () => {
+  it('should close drawer directly when no changes have been made', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(AddWishlistItemModal, {
+    render(AddWishlistItemDrawer, {
+      props: { ...defaultProps, onClose }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
+    });
+
+    // No changes made — close button should call onClose directly
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    await user.click(closeButton);
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('should show discard dialog when closing with unsaved changes', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(AddWishlistItemDrawer, {
       props: { ...defaultProps, onClose }
     });
 
@@ -453,6 +477,14 @@ describe('AddWishlistItemModal', () => {
     const closeButton = screen.getByRole('button', { name: /close/i });
     await user.click(closeButton);
 
+    // Discard dialog should appear, not close immediately
+    await waitFor(() => {
+      expect(screen.getByText('Discard wishlist item?')).toBeInTheDocument();
+    });
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Confirm discard
+    await user.click(screen.getByRole('button', { name: /discard/i }));
     expect(onClose).toHaveBeenCalled();
   });
 });
