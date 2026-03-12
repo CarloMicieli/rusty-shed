@@ -207,6 +207,8 @@
     onClose={() => (showAcquisitionDrawer = false)}
     onSuccess={() => {
       showAcquisitionDrawer = false;
+      void collectionStore.refresh();
+      void dashboardState.load();
     }}
   />
 {/if}

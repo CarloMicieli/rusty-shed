@@ -5,6 +5,7 @@
   import { Copy, Trash2 } from 'lucide-svelte';
   import type { Manufacturer } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
+  import { EPOCHS } from '$lib/features/wishlists/constants.js';
 
   const SCALE_OPTIONS = ['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', '0', 'G', 'S', 'II'] as const;
   const POWER_METHOD_OPTIONS = ['AC', 'DC', 'TRIX_EXPRESS'] as const;
@@ -17,6 +18,19 @@
     'TRAIN_SETS',
     'STARTER_SETS'
   ] as const;
+
+  function getCategoryLabelKey(category: string): string {
+    const map: Record<string, string> = {
+      LOCOMOTIVES: 'wishlist_category_locomotives',
+      FREIGHT_CARS: 'wishlist_category_freight_cars',
+      PASSENGER_CARS: 'wishlist_category_passenger_cars',
+      ELECTRIC_MULTIPLE_UNITS: 'wishlist_category_electric_multiple_units',
+      RAILCARS: 'wishlist_category_railcars',
+      TRAIN_SETS: 'wishlist_category_train_sets',
+      STARTER_SETS: 'wishlist_category_starter_sets'
+    };
+    return map[category] ?? category;
+  }
 
   interface Props {
     item: AcquisitionItemEntry;
@@ -164,7 +178,8 @@
       >
         <option value="">—</option>
         {#each CATEGORY_OPTIONS as cat (cat)}
-          <option value={cat}>{cat}</option>
+          <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
+          <option value={cat}>{(m as any)[getCategoryLabelKey(cat)]()}</option>
         {/each}
       </select>
       {#if errors.category}
@@ -198,14 +213,18 @@
       <label for="item-{item.uid}-epoch" class={LABEL_CLASS}>
         {m.acquisition_item_epoch_label()}
       </label>
-      <input
+      <select
         id="item-{item.uid}-epoch"
-        type="text"
         value={item.epoch ?? ''}
-        oninput={(e) =>
-          onUpdate(item.uid, { epoch: (e.currentTarget as HTMLInputElement).value || null })}
-        class={INPUT_CLASS}
-      />
+        onchange={(e) =>
+          onUpdate(item.uid, { epoch: (e.currentTarget as HTMLSelectElement).value || null })}
+        class={SELECT_CLASS}
+      >
+        <option value="">—</option>
+        {#each EPOCHS as epoch (epoch)}
+          <option value={epoch}>{epoch}</option>
+        {/each}
+      </select>
     </div>
 
     <!-- Power Method -->
