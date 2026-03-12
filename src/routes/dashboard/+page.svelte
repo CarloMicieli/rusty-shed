@@ -4,7 +4,6 @@
   import { resolve } from '$app/paths';
   import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { toaster } from '$lib/toaster';
   import { Button, Card, CardContent, Skeleton } from '$lib/components';
 
   // Components
@@ -25,6 +24,7 @@
   const wishlistService = getWishlistContext();
   const openAcquisitionDrawer = getContext<() => void>('openAcquisitionDrawer');
   const openWishlistDrawer = getContext<() => void>('openWishlistDrawer');
+  const openLogMaintenanceDrawer = getContext<() => void>('openLogMaintenanceDrawer');
   const totals = $derived(dashboard.data?.totals ?? null);
   const purchaseGroups = $derived(dashboard.data?.purchaseGroups ?? []);
   const currencyCode = $derived(dashboard.budgetData?.currency ?? 'EUR');
@@ -63,9 +63,7 @@
       id: 'log-maintenance',
       label: m.actions_log_maintenance(),
       icon: Wrench,
-      onClick: () => {
-        toaster.info({ title: m.actions_maintenance_coming_soon(), duration: 3000 });
-      }
+      onClick: () => openLogMaintenanceDrawer()
     }
   ]);
 

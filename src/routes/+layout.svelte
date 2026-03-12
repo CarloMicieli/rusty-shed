@@ -34,11 +34,13 @@
   import { listen } from '@tauri-apps/api/event';
   import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
   import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
+  import LogMaintenanceDrawer from '$lib/features/maintenance/components/LogMaintenanceDrawer.svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
   let showAcquisitionDrawer = $state(false);
   let showWishlistDrawer = $state(false);
+  let showLogMaintenanceDrawer = $state(false);
   let { children } = $props();
 
   // Expose open function so any child route can open the acquisition drawer
@@ -49,6 +51,11 @@
   // Expose open function so any child route can open the wishlist item drawer
   setContext('openWishlistDrawer', () => {
     showWishlistDrawer = true;
+  });
+
+  // Expose open function so any child route can open the log maintenance drawer
+  setContext('openLogMaintenanceDrawer', () => {
+    showLogMaintenanceDrawer = true;
   });
 
   // Create and provide contexts
@@ -223,5 +230,10 @@
     open={showWishlistDrawer}
     onClose={() => (showWishlistDrawer = false)}
     onSaved={() => (showWishlistDrawer = false)}
+  />
+
+  <LogMaintenanceDrawer
+    open={showLogMaintenanceDrawer}
+    onClose={() => (showLogMaintenanceDrawer = false)}
   />
 {/if}

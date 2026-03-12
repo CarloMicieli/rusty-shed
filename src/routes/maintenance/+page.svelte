@@ -9,6 +9,7 @@
   import MaintenanceCardList from '$lib/features/maintenance/components/MaintenanceCardList.svelte';
   import EmptyMaintenanceState from '$lib/features/maintenance/components/EmptyMaintenanceState.svelte';
   import AddMaintenanceCardModal from '$lib/features/maintenance/components/AddMaintenanceCardModal.svelte';
+  import LogMaintenanceDrawer from '$lib/features/maintenance/components/LogMaintenanceDrawer.svelte';
 
   // Initialize state
   const maintenanceState = new MaintenanceState();
@@ -20,8 +21,9 @@
   const error = $derived(maintenanceState.error);
   const hasCards = $derived(maintenanceState.hasCards);
 
-  // Modal states
+  // Modal/drawer states
   let showAddCardModal = $state(false);
+  let showLogDrawer = $state(false);
 
   // Stats calculation
   const stats = $derived.by(() => {
@@ -79,6 +81,10 @@
         <Button variant="default" size="sm" onclick={handleAddCard}>
           <Plus class="mr-2 h-4 w-4" />
           {m.maintenance_add_card_button()}
+        </Button>
+        <Button variant="default" size="sm" onclick={() => (showLogDrawer = true)}>
+          <Plus class="mr-2 h-4 w-4" />
+          {m.maintenance_add_event_button()}
         </Button>
       {/snippet}
     </PageHeader>
@@ -161,3 +167,10 @@
 {#if showAddCardModal}
   <AddMaintenanceCardModal open={showAddCardModal} onClose={() => (showAddCardModal = false)} />
 {/if}
+
+<!-- Log Maintenance Event Drawer -->
+<LogMaintenanceDrawer
+  open={showLogDrawer}
+  onClose={() => (showLogDrawer = false)}
+  onSuccess={() => void maintenanceState.loadDashboard()}
+/>
