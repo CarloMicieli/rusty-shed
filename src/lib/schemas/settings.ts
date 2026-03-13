@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { powerMethodSchema } from './railway-model';
 
 /**
  * Settings Form Schema
@@ -9,7 +10,7 @@ export const settingsSchema = z.object({
   measureUnit: z.enum(['Metric', 'Imperial']),
   theme: z.enum(['steampunk-light', 'steampunk-dark', 'system']),
   favouriteScale: z.enum(['H0', 'N', 'TT', 'Z', 'G', '0', '00', '1', 'H0m', 'H0e']),
-  powerSystem: z.enum(['AC', 'DC', 'TRIX_EXPRESS']),
+  powerMethod: powerMethodSchema,
   language: z.enum(['en', 'it'])
 });
 

@@ -15,7 +15,7 @@ export interface SettingsDto {
   theme: ThemeValue;
   measureUnit: MeasureUnit;
   favouriteScale: Scale;
-  powerSystem: PowerMethod;
+  powerMethod: PowerMethod;
 }
 
 export type UpdateSettingsPayload = Partial<SettingsDto>;

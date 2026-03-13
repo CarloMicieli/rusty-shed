@@ -98,7 +98,7 @@ const MOCK_SETTINGS = {
   theme: 'steampunk-dark',
   measureUnit: 'Metric',
   favouriteScale: 'HO',
-  powerSystem: 'DC'
+  powerMethod: 'DC'
 };
 
 describe('routes/settings/+page.svelte', () => {

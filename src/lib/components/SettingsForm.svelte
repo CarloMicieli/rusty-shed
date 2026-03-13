@@ -36,7 +36,7 @@
       currency: settingsSnapshot.currency,
       measureUnit: settingsSnapshot.measureUnit,
       favouriteScale: settingsSnapshot.favouriteScale,
-      powerSystem: settingsSnapshot.powerSystem,
+      powerMethod: settingsSnapshot.powerMethod,
       language: settingsSnapshot.language,
       theme: settingsSnapshot.theme
     },
@@ -262,8 +262,8 @@
       <p class="text-surface-200 text-sm font-semibold tracking-wide">
         {m.settings_power_label()}
       </p>
-      {#if $errors.powerSystem}
-        <p class="text-error-500 text-xs">{$errors.powerSystem}</p>
+      {#if $errors.powerMethod}
+        <p class="text-error-500 text-xs">{$errors.powerMethod}</p>
       {/if}
       <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
         {#each powerMethodOptions as option (option.value)}
@@ -271,10 +271,10 @@
             class={[
               'group relative flex gap-3 rounded-lg border p-4 transition',
               'hover:border-primary-400/70 bg-muted/60 hover:bg-muted/90',
-              $form.powerSystem === option.value
+              $form.powerMethod === option.value
                 ? 'border-primary-400/90 ring-primary-500/30 ring-1'
                 : 'border-border/60',
-              $errors.powerSystem ? 'border-error-500' : ''
+              $errors.powerMethod ? 'border-error-500' : ''
             ]}
           >
             <input
@@ -282,14 +282,14 @@
               type="radio"
               name="power-method"
               value={option.value}
-              bind:group={$form.powerSystem}
+              bind:group={$form.powerMethod}
             />
 
             <span
               aria-hidden="true"
               class={[
                 'mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border transition',
-                $form.powerSystem === option.value
+                $form.powerMethod === option.value
                   ? 'border-primary-300 bg-primary-500/30'
                   : 'border-border bg-card'
               ]}
@@ -297,7 +297,7 @@
               <span
                 class={[
                   'bg-primary-400 h-2 w-2 rounded-full transition',
-                  $form.powerSystem === option.value ? 'opacity-100' : 'opacity-0'
+                  $form.powerMethod === option.value ? 'opacity-100' : 'opacity-0'
                 ]}
               ></span>
             </span>

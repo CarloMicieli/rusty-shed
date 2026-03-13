@@ -148,7 +148,7 @@
       </div>
     {:else if settings}
       <div class="space-y-6">
-        {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerSystem}`}
+        {#key `${settings.language}-${settings.currency}-${settings.measureUnit}-${settings.favouriteScale}-${settings.powerMethod}`}
           <SettingsForm {settings} {saving} onsubmit={handleSubmit} />
         {/key}
 

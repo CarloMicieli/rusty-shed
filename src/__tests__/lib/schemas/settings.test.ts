@@ -8,7 +8,7 @@ describe('settingsSchema', () => {
     measureUnit: 'Metric',
     theme: 'steampunk-dark',
     favouriteScale: 'H0',
-    powerSystem: 'DC',
+    powerMethod: 'DC',
     language: 'en'
   };
 
@@ -19,7 +19,7 @@ describe('settingsSchema', () => {
       expect(result.measureUnit).toBe('Metric');
       expect(result.theme).toBe('steampunk-dark');
       expect(result.favouriteScale).toBe('H0');
-      expect(result.powerSystem).toBe('DC');
+      expect(result.powerMethod).toBe('DC');
       expect(result.language).toBe('en');
     });
   });
@@ -169,24 +169,24 @@ describe('settingsSchema', () => {
     });
   });
 
-  describe('powerSystem field', () => {
+  describe('powerMethod field', () => {
     it('accepts AC', () => {
-      expect(settingsSchema.parse({ ...validSettings, powerSystem: 'AC' }).powerSystem).toBe('AC');
+      expect(settingsSchema.parse({ ...validSettings, powerMethod: 'AC' }).powerMethod).toBe('AC');
     });
 
     it('accepts DC', () => {
-      expect(settingsSchema.parse({ ...validSettings, powerSystem: 'DC' }).powerSystem).toBe('DC');
+      expect(settingsSchema.parse({ ...validSettings, powerMethod: 'DC' }).powerMethod).toBe('DC');
     });
 
-    it('accepts DCC', () => {
-      expect(settingsSchema.parse({ ...validSettings, powerSystem: 'DCC' }).powerSystem).toBe(
-        'DCC'
-      );
+    it('accepts TRIX_EXPRESS', () => {
+      expect(
+        settingsSchema.parse({ ...validSettings, powerMethod: 'TRIX_EXPRESS' }).powerMethod
+      ).toBe('TRIX_EXPRESS');
     });
 
-    it('rejects an invalid powerSystem', () => {
+    it('rejects an invalid powerMethod', () => {
       expect(() =>
-        settingsSchema.parse({ ...validSettings, powerSystem: 'TRIX' as unknown })
+        settingsSchema.parse({ ...validSettings, powerMethod: 'DCC' as unknown })
       ).toThrow();
     });
   });
