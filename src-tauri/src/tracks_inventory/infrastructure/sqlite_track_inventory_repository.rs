@@ -219,7 +219,7 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
                     } => {
                         let insert_purchase = r#"
                             INSERT OR REPLACE INTO track_purchases (
-                                id, inventory_id, track_id, quantity, price_amount, 
+                                id, inventory_id, track_id, quantity, price_amount,
                                 price_currency, seller_id, purchase_date, created_at)
                             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP)
                         "#;
@@ -233,6 +233,23 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
                             .bind(purchase.price.currency.to_code())
                             .bind(purchase.seller_id.as_ref().map(|s| s.to_string()))
                             .bind(purchase.purchase_date.to_string())
+                            .execute(&mut *self.executor)
+                            .await
+                            .map_err(DomainError::from)?;
+
+                        // Increment the item quantity in the inventory without
+                        // clobbering the `required` field set by the user.
+                        let upsert_item = r#"
+                            INSERT INTO track_inventory_items (inventory_id, track_id, quantity)
+                            VALUES (?1, ?2, ?3)
+                            ON CONFLICT (inventory_id, track_id)
+                            DO UPDATE SET quantity = quantity + excluded.quantity
+                        "#;
+
+                        sqlx::query(upsert_item)
+                            .bind(inventory.id.to_string())
+                            .bind(purchase.track_id.to_string())
+                            .bind(purchase.quantity)
                             .execute(&mut *self.executor)
                             .await
                             .map_err(DomainError::from)?;
