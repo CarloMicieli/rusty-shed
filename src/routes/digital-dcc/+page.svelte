@@ -89,13 +89,11 @@
           <span>{m.digital_roster_install_decoder()}</span>
         </Button>
       {/snippet}
+      <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />
     </PageHeader>
   </div>
 
   <div class="space-y-6">
-    <!-- Summary Section -->
-    <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />
-
     <!-- Roster Table -->
     <DigitalRosterTable
       rollingStocks={rosterState.filteredRollingStocks}
@@ -103,6 +101,7 @@
       loading={rosterState.isLoading}
       onFilterChange={handleFilterChange}
       onEdit={handleEdit}
+      onInstallDecoder={openInstallDrawer}
     />
   </div>
 </div>

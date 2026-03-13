@@ -2,7 +2,7 @@
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
   import { Search, X, Filter, Microchip } from 'lucide-svelte';
-  import { Badge, Button, Card, CardContent } from '$lib/components';
+  import { Badge, Button } from '$lib/components';
 
   interface Props {
     rollingStocks: DigitalRollingStockView[];
@@ -10,6 +10,7 @@
     loading?: boolean;
     onFilterChange?: (text: string) => void;
     onEdit?: (stock: DigitalRollingStockView) => void;
+    onInstallDecoder?: () => void;
   }
 
   let {
@@ -17,7 +18,8 @@
     filterText = $bindable(''),
     loading = false,
     onFilterChange,
-    onEdit
+    onEdit,
+    onInstallDecoder
   }: Props = $props();
 
   function handleFilterInput(event: Event) {
@@ -75,16 +77,32 @@
         <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
       </div>
     {:else if rollingStocks.length === 0}
-      <!-- Enhanced Empty State -->
-      <Card class="border-2 border-dashed border-white/20 bg-transparent">
-        <CardContent class="flex flex-col items-center justify-center py-16">
-          <div class="mb-4 rounded-full bg-zinc-900/50 p-6">
-            <Microchip class="h-16 w-16 text-muted-foreground" />
+      <!-- Empty State -->
+      <div
+        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 py-24"
+      >
+        <div class="relative">
+          <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
+          <div
+            class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
+          >
+            <Microchip size={56} class="text-zinc-600 opacity-50" />
           </div>
-          <p class="text-xl font-semibold opacity-75">{m.digital_roster_empty()}</p>
-          <p class="mt-2 text-sm opacity-60">{m.digital_roster_empty_message()}</p>
-        </CardContent>
-      </Card>
+        </div>
+        <div class="flex max-w-sm flex-col items-center gap-3 text-center">
+          <h3 class="text-2xl font-bold text-zinc-200">{m.digital_roster_empty()}</h3>
+          <p class="text-sm leading-relaxed text-zinc-500">{m.digital_roster_empty_message()}</p>
+        </div>
+        {#if onInstallDecoder}
+          <Button
+            variant="secondary"
+            onclick={onInstallDecoder}
+            class="mt-2 rounded-xl border border-white/10 px-8 py-6 font-bold transition-all hover:bg-zinc-800"
+          >
+            {m.digital_roster_install_decoder()}
+          </Button>
+        {/if}
+      </div>
     {:else}
       <div class="table-container">
         <table class="table-hover table">

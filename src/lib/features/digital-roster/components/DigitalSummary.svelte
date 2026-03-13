@@ -11,46 +11,42 @@
   const formattedPercentage = $derived(summary ? summary.percentage.toFixed(1) : '0.0');
 </script>
 
-{#if loading}
-  <div class="flex items-center justify-center py-8">
-    <div class="border-primary-500 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+<div
+  class="grid grid-cols-1 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3"
+>
+  <!-- Digitalization Rate -->
+  <div
+    class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/40"
+  >
+    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+      Digitalization Rate
+    </p>
+    <p class="mt-1 text-lg font-bold text-orange-500">
+      {#if loading}&mdash;{:else}{formattedPercentage}%{/if}
+    </p>
   </div>
-{:else if summary}
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-    <!-- Digitalization Rate Card -->
-    <div
-      class="card gauge-frame space-y-3 p-5 text-foreground ring-1 ring-border/40 transition-all duration-200"
-    >
-      <div class="text-surface-400 flex items-center justify-between">
-        <span class="text-xs font-bold tracking-[0.2em] uppercase">Digitalization Rate</span>
-      </div>
-      <div class="flex items-end gap-2">
-        <h3 class="h2 font-bold text-orange-500">{formattedPercentage}%</h3>
-      </div>
-    </div>
 
-    <!-- Total Fleet Card -->
-    <div
-      class="card gauge-frame space-y-3 p-5 text-foreground ring-1 ring-border/40 transition-all duration-200"
-    >
-      <div class="text-surface-400 flex items-center justify-between">
-        <span class="text-xs font-bold tracking-[0.2em] uppercase">Total Fleet</span>
-      </div>
-      <div class="flex items-end gap-2">
-        <h3 class="h2 font-bold text-primary">{summary.total_non_dummy}</h3>
-      </div>
-    </div>
-
-    <!-- Active Decoders Card -->
-    <div
-      class="card gauge-frame space-y-3 p-5 text-foreground ring-1 ring-border/40 transition-all duration-200"
-    >
-      <div class="text-surface-400 flex items-center justify-between">
-        <span class="text-xs font-bold tracking-[0.2em] uppercase">Active Decoders</span>
-      </div>
-      <div class="flex items-end gap-2">
-        <h3 class="h2 font-bold text-green-500">{summary.digital_count}</h3>
-      </div>
-    </div>
+  <!-- Total Fleet -->
+  <div
+    class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/40"
+  >
+    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+      Total Fleet
+    </p>
+    <p class="mt-1 text-lg font-bold text-primary">
+      {#if loading}&mdash;{:else}{summary?.total_non_dummy ?? 0}{/if}
+    </p>
   </div>
-{/if}
+
+  <!-- Active Decoders -->
+  <div
+    class="flex flex-col justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/40"
+  >
+    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+      Active Decoders
+    </p>
+    <p class="mt-1 text-lg font-bold text-green-500">
+      {#if loading}&mdash;{:else}{summary?.digital_count ?? 0}{/if}
+    </p>
+  </div>
+</div>
