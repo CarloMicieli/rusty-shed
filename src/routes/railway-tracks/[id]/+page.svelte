@@ -6,7 +6,7 @@
   import InventoryDetail from '$lib/features/track-inventory/components/InventoryDetail.svelte';
   import RenameInventoryDialog from '$lib/features/track-inventory/components/RenameInventoryDialog.svelte';
   import DeleteInventoryDialog from '$lib/features/track-inventory/components/DeleteInventoryDialog.svelte';
-  import AddPurchaseDialog from '$lib/features/track-inventory/components/AddPurchaseDialog.svelte';
+  import AddPurchaseDrawer from '$lib/features/track-inventory/components/AddPurchaseDrawer.svelte';
   import { onMount } from 'svelte';
 
   const service = getTrackInventoryContext();
@@ -18,7 +18,7 @@
   let error = $state<string | null>(null);
   let renameDialogOpen = $state(false);
   let deleteDialogOpen = $state(false);
-  let addPurchaseDialogOpen = $state(false);
+  let addPurchaseDrawerOpen = $state(false);
 
   async function loadInventory() {
     if (!inventoryId) return;
@@ -68,7 +68,7 @@
       {inventory}
       onRename={() => (renameDialogOpen = true)}
       onDelete={() => (deleteDialogOpen = true)}
-      onAddPurchase={() => (addPurchaseDialogOpen = true)}
+      onAddPurchase={() => (addPurchaseDrawerOpen = true)}
     />
   {:else}
     <div class="rounded-xl border border-dashed border-border p-8 text-center">
@@ -87,8 +87,8 @@
   inventoryName={inventory?.name}
   onConfirm={handleDelete}
 />
-<AddPurchaseDialog
-  bind:open={addPurchaseDialogOpen}
+<AddPurchaseDrawer
+  bind:open={addPurchaseDrawerOpen}
   inventoryId={inventoryId || ''}
   onPurchaseAdded={loadInventory}
 />

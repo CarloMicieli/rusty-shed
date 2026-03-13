@@ -12,7 +12,7 @@
   let { onCancel, onSubmit, submitting = false }: Props = $props();
 </script>
 
-<div class="flex justify-end gap-3 pt-4">
+<div class="flex items-center justify-between border-t border-white/5 bg-[#0c0c0c] px-6 py-4">
   <Button
     type="button"
     variant="ghost"
@@ -24,6 +24,7 @@
   </Button>
   <Button
     type="submit"
+    form="add-purchase-form"
     variant="rusty"
     class="h-12 min-w-[160px] px-8"
     disabled={submitting}
@@ -31,7 +32,7 @@
   >
     {#if submitting}
       <Loader2 size={18} class="mr-2 animate-spin" />
-      <span>Recording...</span>
+      <span>Recording…</span>
     {:else}
       {m.track_purchase_submit()}
     {/if}
