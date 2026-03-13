@@ -1,15 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { TrainFront, TramFront, Users, Box as BoxIcon, Funnel, Plus } from 'lucide-svelte';
+  import { TrainFront, TramFront, Users, Box as BoxIcon } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Accordion from '$lib/components/ui/accordion';
-  import { Button, PageHeader } from '$lib/components';
+  import { PageHeader } from '$lib/components';
   import { getDepotContext } from '$lib/features/depot/DepotState.svelte';
 
   // Custom Components
   import DepotControls from '$lib/features/depot/components/DepotControls.svelte';
   import DepotCategory from '$lib/features/depot/components/DepotCategory.svelte';
-  import DepotStatusFooter from '$lib/features/depot/components/DepotStatusFooter.svelte';
 
   const depot = getDepotContext();
   let searchInput = $state('');
@@ -61,24 +60,11 @@
   <div
     class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
   >
-    <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()}>
-      {#snippet actions()}
-        <Button variant="outline" size="sm"
-          ><Funnel size={16} class="mr-2" /> {m.depot_filter_button()}</Button
-        >
-        <Button variant="default" size="sm"
-          ><Plus size={18} class="mr-2" /> {m.actions_add_railway_model()}</Button
-        >
-      {/snippet}
-    </PageHeader>
+    <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()} />
   </div>
 
   <div class="space-y-8">
-    <DepotControls
-      bind:searchInput
-      bind:viewMode={depot.viewMode}
-      onClear={() => (searchInput = '')}
-    />
+    <DepotControls bind:searchInput onClear={() => (searchInput = '')} />
 
     {#if depot.isLoading}{:else if depot.error}{:else}
       <Accordion.Root
@@ -96,8 +82,6 @@
           />
         {/each}
       </Accordion.Root>
-
-      <DepotStatusFooter total={depot.totalFiltered} />
     {/if}
   </div>
 </div>

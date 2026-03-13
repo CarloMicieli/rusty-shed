@@ -112,6 +112,7 @@
   "depot_filter_button": "Filtra",
   "depot_subtitle": "Sfoglia tutte le locomotive, elettrotreni e carrozze del deposito.",
   "depot_search_placeholder": "Cerca per numero di servizio o indirizzo DCC...",
+  "depot_search_label": "Cerca",
   "depot_clear_search": "Pulisci ricerca",
   "depot_no_results": "Nessun risultato trovato.",
   "depot_locomotives_title": "Locomotive",

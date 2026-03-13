@@ -61,22 +61,21 @@
   </div>
 
   <div class="space-y-6">
-
-  {#if loading}
-    <div class="flex items-center justify-center py-16">
-      <div
-        class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
-      ></div>
-    </div>
-  {:else if error}
-    <div class="rounded-2xl border border-border bg-destructive/10 p-4">
-      <p class="font-medium">{error}</p>
-    </div>
-  {:else if inventories.length === 0}
-    <EmptyState onCreateClick={() => (createDialogOpen = true)} />
-  {:else}
-    <InventoryList {inventories} />
-  {/if}
+    {#if loading}
+      <div class="flex items-center justify-center py-16">
+        <div
+          class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
+        ></div>
+      </div>
+    {:else if error}
+      <div class="rounded-2xl border border-border bg-destructive/10 p-4">
+        <p class="font-medium">{error}</p>
+      </div>
+    {:else if inventories.length === 0}
+      <EmptyState onCreateClick={() => (createDialogOpen = true)} />
+    {:else}
+      <InventoryList {inventories} />
+    {/if}
   </div>
 </div>
 

@@ -114,6 +114,7 @@
   "depot_filter_button": "Filter",
   "depot_subtitle": "Browse every locomotive, EMU, and car in your depot.",
   "depot_search_placeholder": "Search by road number or DCC address...",
+  "depot_search_label": "Search",
   "depot_clear_search": "Clear search",
   "depot_no_results": "No results found.",
   "depot_locomotives_title": "Locomotives",

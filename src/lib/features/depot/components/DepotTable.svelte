@@ -1,9 +1,8 @@
 <script lang="ts" generics="T extends { id: string }">
-  import { ArrowUpNarrowWide, ArrowDownWideNarrow, Settings2, TrainFront } from 'lucide-svelte';
+  import { ArrowUpNarrowWide, ArrowDownWideNarrow, TrainFront } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import { convertFileSrc } from '@tauri-apps/api/core';
-  import DepotDetailSheet from './DepotDetailSheet.svelte';
 
   let {
     items
@@ -13,8 +12,6 @@
 
   let viewAll = $state(false);
   const hasOverflow = $derived(!viewAll && items.length > 50);
-
-  let selectedItemId = $state<string | null>(null);
 
   // Sorting state
   let sortField = $state<string | null>(null);
@@ -83,8 +80,7 @@
     { label: m.depot_road_number(), key: 'roadNumber', class: 'min-w-[200px]' },
     { label: m.depot_dcc_address(), key: 'dccAddress', class: 'w-32' },
     { label: m.depot_type(), key: 'control', class: 'w-32 hidden md:table-cell' },
-    { label: m.depot_company(), key: 'railway', class: 'w-40 hidden lg:table-cell' },
-    { label: 'ACTIONS', key: null, class: 'w-32 text-right' }
+    { label: m.depot_company(), key: 'railway', class: 'w-40 hidden lg:table-cell' }
   ];
 </script>
 
@@ -193,32 +189,9 @@
 
           <!-- Railway -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 lg:table-cell"
+            class="hidden rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 lg:table-cell"
           >
             <span class="text-xs font-semibold text-zinc-400">{props.railway}</span>
-          </td>
-
-          <!-- Actions -->
-          <td
-            class="rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 text-right group-hover:border-[#f59e0b]/30"
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              class="h-8 w-8 text-zinc-500 hover:bg-[#f59e0b]/10 hover:text-[#f59e0b]"
-              onclick={() => (selectedItemId = props.id)}
-            >
-              <Settings2 size={16} />
-            </Button>
-
-            <DepotDetailSheet
-              open={selectedItemId === props.id}
-              onOpenChange={(open) => !open && (selectedItemId = null)}
-              roadNumber={props.roadNumber}
-              manufacturer={props.manufacturer}
-              productCode={props.productCode}
-              dccAddress={props.dccAddress}
-            />
           </td>
         </tr>
       {/each}
