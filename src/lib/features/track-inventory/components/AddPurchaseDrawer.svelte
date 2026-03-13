@@ -118,7 +118,12 @@
         purchaseDate
       });
 
-      await onPurchaseAdded?.();
+      try {
+        await onPurchaseAdded?.();
+      } catch {
+        // callback errors must not block the drawer from closing
+      }
+
       submitting = false;
       handleClose();
     } catch (err) {
@@ -148,11 +153,11 @@
 >
   <PurchaseDrawerHeader onClose={handleClose} disabled={submitting} />
 
-  <div class="flex-1 overflow-y-auto p-6">
-    {#if loadingData}
-      <PurchaseLoadingState />
-    {:else}
-      <form id="add-purchase-form" onsubmit={handleSubmit}>
+  <form onsubmit={handleSubmit} class="flex min-h-0 flex-1 flex-col">
+    <div class="flex-1 overflow-y-auto p-6">
+      {#if loadingData}
+        <PurchaseLoadingState />
+      {:else}
         <PurchaseFormFields
           {products}
           {sellers}
@@ -166,11 +171,11 @@
           {error}
           onCreateProduct={() => (showCreateProduct = true)}
         />
-      </form>
-    {/if}
-  </div>
+      {/if}
+    </div>
 
-  <PurchaseActionFooter onCancel={handleClose} onSubmit={handleSubmit} {submitting} />
+    <PurchaseActionFooter onCancel={handleClose} {submitting} />
+  </form>
 </Sheet>
 
 <CreateProductDialog

@@ -5,11 +5,10 @@
 
   interface Props {
     onCancel: () => void;
-    onSubmit: (e: Event) => void;
     submitting?: boolean;
   }
 
-  let { onCancel, onSubmit, submitting = false }: Props = $props();
+  let { onCancel, submitting = false }: Props = $props();
 </script>
 
 <div class="flex items-center justify-between border-t border-white/5 bg-[#0c0c0c] px-6 py-4">
@@ -24,11 +23,9 @@
   </Button>
   <Button
     type="submit"
-    form="add-purchase-form"
     variant="rusty"
     class="h-12 min-w-[160px] px-8"
     disabled={submitting}
-    onclick={onSubmit}
   >
     {#if submitting}
       <Loader2 size={18} class="mr-2 animate-spin" />

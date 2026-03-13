@@ -155,7 +155,10 @@
       options={sellerOptions}
       bind:value={selectedSellerId}
       emptyOption={{ value: '', label: m.track_purchase_field_no_seller() }}
-      icon={Store as unknown as Component<{ size?: number | undefined; class?: string | undefined }>}
+      icon={Store as unknown as Component<{
+        size?: number | undefined;
+        class?: string | undefined;
+      }>}
       disabled={submitting}
     />
   </div>

@@ -179,7 +179,7 @@
               onCreateProduct={() => (showCreateProduct = true)}
             />
 
-            <PurchaseActionFooter onCancel={handleClose} onSubmit={handleSubmit} {submitting} />
+            <PurchaseActionFooter onCancel={handleClose} {submitting} />
           </form>
         {/if}
       </div>
