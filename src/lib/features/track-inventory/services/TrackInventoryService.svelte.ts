@@ -2,11 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 import type {
   NewTrackInventoryArgs,
   RenameTrackInventoryArgs,
-  AddTrackPurchaseArgs,
   CreateTrackProductArgs,
   TrackInventoryListItem,
   TrackInventoryView,
-  TrackProductView
+  TrackProductView,
+  Currency
 } from '$lib/bindings';
 import { getContext, setContext } from 'svelte';
 
@@ -59,9 +59,17 @@ export class TrackInventoryService {
   }
 
   /**
-   * Add a purchase to a track inventory
+   * Add a purchase to a track inventory.
+   * Uses plain numbers instead of bigint to avoid JSON.stringify serialization issues.
    */
-  async addPurchase(input: AddTrackPurchaseArgs): Promise<void> {
+  async addPurchase(input: {
+    id: string;
+    trackId: string;
+    quantity: number;
+    price: { amount: number; currency: Currency };
+    sellerId: string | null;
+    purchaseDate: string;
+  }): Promise<void> {
     await invoke('add_track_purchase', { input });
   }
 

@@ -5,7 +5,6 @@ import type {
   TrackProductView,
   NewTrackInventoryArgs,
   RenameTrackInventoryArgs,
-  AddTrackPurchaseArgs,
   CreateTrackProductArgs,
   Currency
 } from '$lib/bindings';
@@ -256,14 +255,14 @@ describe('TrackInventoryService', () => {
 
   describe('addPurchase', () => {
     it('should add a purchase to an inventory', async () => {
-      const input: AddTrackPurchaseArgs = {
-        inventory_id: 'inv-1',
-        track_id: 'track-1',
+      const input = {
+        id: 'inv-1',
+        trackId: 'track-1',
         quantity: 5,
-        price: { amount: BigInt(500), currency: 'EUR' as Currency },
-        seller_id: 'seller-1',
-        purchase_date: '2025-03-08'
-      } as any;
+        price: { amount: 500, currency: 'EUR' as Currency },
+        sellerId: 'seller-1',
+        purchaseDate: '2025-03-08'
+      };
 
       (mockInvoke as any).mockResolvedValue(undefined);
 
@@ -272,15 +271,15 @@ describe('TrackInventoryService', () => {
       expect(mockInvoke).toHaveBeenCalledWith('add_track_purchase', { input });
     });
 
-    it('should handle null seller_id', async () => {
-      const input: AddTrackPurchaseArgs = {
-        inventory_id: 'inv-1',
-        track_id: 'track-1',
+    it('should handle null sellerId', async () => {
+      const input = {
+        id: 'inv-1',
+        trackId: 'track-1',
         quantity: 3,
-        price: { amount: BigInt(300), currency: 'USD' as Currency },
-        seller_id: null,
-        purchase_date: '2025-03-08'
-      } as any;
+        price: { amount: 300, currency: 'USD' as Currency },
+        sellerId: null,
+        purchaseDate: '2025-03-08'
+      };
 
       (mockInvoke as any).mockResolvedValue(undefined);
 
@@ -290,14 +289,14 @@ describe('TrackInventoryService', () => {
     });
 
     it('should throw error when adding purchase fails', async () => {
-      const input: AddTrackPurchaseArgs = {
-        inventory_id: 'invalid',
-        track_id: 'track-1',
+      const input = {
+        id: 'invalid',
+        trackId: 'track-1',
         quantity: 1,
-        price: { amount: BigInt(100), currency: 'EUR' as Currency },
-        seller_id: null,
-        purchase_date: '2025-03-08'
-      } as any;
+        price: { amount: 100, currency: 'EUR' as Currency },
+        sellerId: null,
+        purchaseDate: '2025-03-08'
+      };
 
       (mockInvoke as any).mockRejectedValue(new Error('Inventory not found'));
 

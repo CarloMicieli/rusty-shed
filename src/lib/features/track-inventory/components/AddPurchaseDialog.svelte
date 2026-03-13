@@ -2,6 +2,7 @@
   import * as m from '$lib/paraglide/messages';
   import type { TrackProductView, SellerView, Currency, Manufacturer } from '$lib/bindings';
   import { commands } from '$lib/bindings';
+  import { getTrackInventoryContext } from '$lib/features/track-inventory';
   import CreateProductDialog from './CreateProductDialog.svelte';
   import PurchaseFormFields from './PurchaseFormFields.svelte';
   import PurchaseDialogHeader from './PurchaseDialogHeader.svelte';
@@ -16,6 +17,8 @@
   }
 
   let { open = $bindable(false), inventoryId, onClose, onPurchaseAdded }: Props = $props();
+
+  const service = getTrackInventoryContext();
 
   let products = $state<TrackProductView[]>([]);
   let sellers = $state<SellerView[]>([]);
@@ -98,21 +101,17 @@
       submitting = true;
       error = null;
 
-      const result = await commands.addTrackPurchase({
+      await service.addPurchase({
         id: inventoryId,
         trackId: selectedProductId,
-        quantity: BigInt(quantity),
+        quantity,
         price: {
-          amount: BigInt(Math.round(parseFloat(priceAmount) * 100)),
+          amount: Math.round(parseFloat(priceAmount) * 100),
           currency: priceCurrency
         },
         sellerId: selectedSellerId || null,
-        purchaseDate: purchaseDate
+        purchaseDate
       });
-
-      if (result.status === 'error') {
-        throw new Error(JSON.stringify(result.error));
-      }
 
       await onPurchaseAdded?.();
       handleClose();
