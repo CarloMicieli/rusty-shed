@@ -10,13 +10,17 @@
   let isDisabled = $derived(controller.isOperationInProgress);
 </script>
 
-<div class="card border border-border/40 p-6 shadow-xl">
-  <div class="space-y-4">
+<div class="card border border-border/60 bg-card/50 shadow-xl">
+  <header class="flex items-center justify-between gap-4 border-b border-border/60 p-6">
     <div>
-      <h2 class="text-xl font-bold">{m.data_management_title()}</h2>
-      <p class="text-surface-400 mt-1 text-sm">{m.data_management_subtitle()}</p>
+      <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
+        {m.data_management_title()}
+      </p>
+      <p class="mt-1 text-sm text-muted-foreground">{m.data_management_subtitle()}</p>
     </div>
+  </header>
 
+  <div class="space-y-4 p-6">
     <div class="flex flex-wrap gap-4">
       <Button variant="default" disabled={isDisabled} onclick={() => controller.handleExport()}>
         {isExporting ? m.data_management_exporting() : m.data_management_export_button()}

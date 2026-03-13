@@ -7,6 +7,7 @@
   import { settingsSchema } from '$lib/schemas/settings';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
+  import * as Select from '$lib/components/ui/select';
   import type {
     SettingsDto,
     UpdateSettingsPayload,
@@ -81,9 +82,9 @@
     { label: m.settings_power_ac(), value: 'AC', helper: m.settings_power_ac_helper() },
     { label: m.settings_power_dc(), value: 'DC', helper: m.settings_power_dc_helper() },
     {
-      label: m.settings_power_dcc(),
-      value: 'DCC',
-      helper: m.settings_power_dcc_helper()
+      label: m.settings_power_trix(),
+      value: 'TRIX_EXPRESS',
+      helper: m.settings_power_trix_helper()
     }
   ];
 
@@ -117,7 +118,7 @@
       <p class="text-surface-400 text-sm font-semibold tracking-widest uppercase">
         {m.settings_title()}
       </p>
-      <h2 class="h3 text-surface-50 font-bold">{m.settings_subtitle()}</h2>
+      <p class="mt-1 text-sm text-muted-foreground">{m.settings_subtitle()}</p>
     </div>
     <Badge variant="secondary" class="font-semibold tracking-wide uppercase">
       <Check class="mr-2 h-4 w-4" />
@@ -131,16 +132,22 @@
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="currency">
           {m.currency_label()}
         </label>
-        <select
-          id="currency"
-          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          bind:value={$form.currency}
-          class:input-error={$errors.currency}
+        <Select.Root
+          type="single"
+          value={$form.currency}
+          onValueChange={(v) => {
+            $form.currency = v as Currency;
+          }}
         >
-          {#each currencyOptions as option (option.value)}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
+          <Select.Trigger class="w-full" aria-invalid={!!$errors.currency}>
+            {currencyOptions.find((o) => o.value === $form.currency)?.label ?? ''}
+          </Select.Trigger>
+          <Select.Content>
+            {#each currencyOptions as option (option.value)}
+              <Select.Item value={option.value} label={option.label} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
         {#if $errors.currency}
           <p class="text-error-500 text-xs">{$errors.currency}</p>
         {/if}
@@ -150,16 +157,22 @@
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="language">
           {m.settings_language_label()}
         </label>
-        <select
-          id="language"
-          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          bind:value={$form.language}
-          class:input-error={$errors.language}
+        <Select.Root
+          type="single"
+          value={$form.language}
+          onValueChange={(v) => {
+            $form.language = v as 'en' | 'it';
+          }}
         >
-          {#each languageOptions as option (option.value)}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
+          <Select.Trigger class="w-full" aria-invalid={!!$errors.language}>
+            {languageOptions.find((o) => o.value === $form.language)?.label ?? ''}
+          </Select.Trigger>
+          <Select.Content>
+            {#each languageOptions as option (option.value)}
+              <Select.Item value={option.value} label={option.label} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
         {#if $errors.language}
           <p class="text-error-500 text-xs">{$errors.language}</p>
         {/if}
@@ -171,16 +184,22 @@
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="length-unit">
           {m.settings_unit_label()}
         </label>
-        <select
-          id="length-unit"
-          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          bind:value={$form.measureUnit}
-          class:input-error={$errors.measureUnit}
+        <Select.Root
+          type="single"
+          value={$form.measureUnit}
+          onValueChange={(v) => {
+            $form.measureUnit = v as MeasureUnit;
+          }}
         >
-          {#each lengthUnitOptions as option (option.value)}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
+          <Select.Trigger class="w-full" aria-invalid={!!$errors.measureUnit}>
+            {lengthUnitOptions.find((o) => o.value === $form.measureUnit)?.label ?? ''}
+          </Select.Trigger>
+          <Select.Content>
+            {#each lengthUnitOptions as option (option.value)}
+              <Select.Item value={option.value} label={option.label} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
         {#if $errors.measureUnit}
           <p class="text-error-500 text-xs">{$errors.measureUnit}</p>
         {/if}
@@ -190,16 +209,22 @@
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="theme">
           {m.settings_theme_label()}
         </label>
-        <select
-          id="theme"
-          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          bind:value={$form.theme}
-          class:input-error={$errors.theme}
+        <Select.Root
+          type="single"
+          value={$form.theme}
+          onValueChange={(v) => {
+            $form.theme = v as ThemeValue;
+          }}
         >
-          {#each themeOptions as option (option.value)}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
+          <Select.Trigger class="w-full" aria-invalid={!!$errors.theme}>
+            {themeOptions.find((o) => o.value === $form.theme)?.label ?? ''}
+          </Select.Trigger>
+          <Select.Content>
+            {#each themeOptions as option (option.value)}
+              <Select.Item value={option.value} label={option.label} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
         {#if $errors.theme}
           <p class="text-error-500 text-xs">{$errors.theme}</p>
         {/if}
@@ -211,16 +236,22 @@
         <label class="text-surface-200 text-sm font-semibold tracking-wide" for="scale">
           {m.settings_scale_label()}
         </label>
-        <select
-          id="scale"
-          class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-          bind:value={$form.favouriteScale}
-          class:input-error={$errors.favouriteScale}
+        <Select.Root
+          type="single"
+          value={$form.favouriteScale}
+          onValueChange={(v) => {
+            $form.favouriteScale = v as Scale;
+          }}
         >
-          {#each scaleOptions as option (option.value)}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
+          <Select.Trigger class="w-full" aria-invalid={!!$errors.favouriteScale}>
+            {scaleOptions.find((o) => o.value === $form.favouriteScale)?.label ?? ''}
+          </Select.Trigger>
+          <Select.Content>
+            {#each scaleOptions as option (option.value)}
+              <Select.Item value={option.value} label={option.label} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
         {#if $errors.favouriteScale}
           <p class="text-error-500 text-xs">{$errors.favouriteScale}</p>
         {/if}

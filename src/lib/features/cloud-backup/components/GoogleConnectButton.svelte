@@ -67,7 +67,7 @@
         <span>{m.cloud_backup_connected_as({ email: userEmail })}</span>
       </div>
 
-      <Button variant="outline" onclick={handleDisconnect} disabled={isLoading} class="w-full">
+      <Button variant="outline" onclick={handleDisconnect} disabled={isLoading} class="w-1/4">
         {#if isLoading}
           <Loader2 class="mr-2 h-4 w-4 animate-spin" />
         {/if}
@@ -75,7 +75,7 @@
       </Button>
     </div>
   {:else}
-    <Button onclick={handleConnect} disabled={isLoading} class="w-full">
+    <Button onclick={handleConnect} disabled={isLoading} class="w-1/4">
       {#if isLoading}
         <Loader2 class="mr-2 h-4 w-4 animate-spin" />
       {/if}

@@ -9,7 +9,7 @@ export const settingsSchema = z.object({
   measureUnit: z.enum(['Metric', 'Imperial']),
   theme: z.enum(['steampunk-light', 'steampunk-dark', 'system']),
   favouriteScale: z.enum(['H0', 'N', 'TT', 'Z', 'G', '0', '00', '1', 'H0m', 'H0e']),
-  powerSystem: z.enum(['AC', 'DC', 'DCC']),
+  powerSystem: z.enum(['AC', 'DC', 'TRIX_EXPRESS']),
   language: z.enum(['en', 'it'])
 });
 
