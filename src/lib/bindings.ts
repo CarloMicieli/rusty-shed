@@ -1472,9 +1472,10 @@ export const commands = {
    * Tauri command to get budget dashboard summary.
    *
    * Returns dashboard data for widgets (donut, bar chart, heatmap).
-   * Returns `None` if budget is not configured.
+   * Budget-specific fields will be None if budget is not configured, but spending data
+   * will still be populated using the user's preferred currency from settings.
    */
-  async getBudgetDashboard(): Promise<Result<BudgetDashboardSummary | null, CommandError>> {
+  async getBudgetDashboard(): Promise<Result<BudgetDashboardSummary, CommandError>> {
     try {
       return { status: 'ok', data: await TAURI_INVOKE('get_budget_dashboard') };
     } catch (e) {
@@ -2296,20 +2297,24 @@ export type BudgetConfigDto = {
 };
 /**
  * Budget dashboard summary - aggregates all dashboard widgets data.
+ *
+ * When no budget is configured, only spending data (monthly_spending and quarterly_activity)
+ * will be populated. Budget-specific fields (remaining_amount, remaining_percentage,
+ * total_available, monthly_goal) will be None.
  */
 export type BudgetDashboardSummary = {
   /**
-   * Current month's remaining budget amount
+   * Current month's remaining budget amount (None if no budget configured)
    */
-  remainingAmount: bigint;
+  remainingAmount: bigint | null;
   /**
-   * Remaining as percentage (0.0 to 100.0+)
+   * Remaining as percentage (0.0 to 100.0+) (None if no budget configured)
    */
-  remainingPercentage: number;
+  remainingPercentage: number | null;
   /**
-   * Total available this month (base + extra + rollover)
+   * Total available this month (base + extra + rollover) (None if no budget configured)
    */
-  totalAvailable: bigint;
+  totalAvailable: bigint | null;
   /**
    * Currency for all amounts
    */
@@ -2319,9 +2324,9 @@ export type BudgetDashboardSummary = {
    */
   monthlySpending: MonthlySpendingPoint[];
   /**
-   * Monthly budget goal line amount
+   * Monthly budget goal line amount (None if no budget configured)
    */
-  monthlyGoal: bigint;
+  monthlyGoal: bigint | null;
   /**
    * Quarterly activity for heatmap (up to 20 data points: 5 years × 4 quarters)
    */

@@ -78,21 +78,25 @@ pub struct QuarterlyActivityPoint {
 }
 
 /// Budget dashboard summary - aggregates all dashboard widgets data.
+///
+/// When no budget is configured, only spending data (monthly_spending and quarterly_activity)
+/// will be populated. Budget-specific fields (remaining_amount, remaining_percentage,
+/// total_available, monthly_goal) will be None.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct BudgetDashboardSummary {
-    /// Current month's remaining budget amount
-    pub remaining_amount: i64,
-    /// Remaining as percentage (0.0 to 100.0+)
-    pub remaining_percentage: f64,
-    /// Total available this month (base + extra + rollover)
-    pub total_available: i64,
+    /// Current month's remaining budget amount (None if no budget configured)
+    pub remaining_amount: Option<i64>,
+    /// Remaining as percentage (0.0 to 100.0+) (None if no budget configured)
+    pub remaining_percentage: Option<f64>,
+    /// Total available this month (base + extra + rollover) (None if no budget configured)
+    pub total_available: Option<i64>,
     /// Currency for all amounts
     pub currency: Currency,
     /// Monthly spending for bar chart (12 data points)
     pub monthly_spending: Vec<MonthlySpendingPoint>,
-    /// Monthly budget goal line amount
-    pub monthly_goal: i64,
+    /// Monthly budget goal line amount (None if no budget configured)
+    pub monthly_goal: Option<i64>,
     /// Quarterly activity for heatmap (up to 20 data points: 5 years × 4 quarters)
     pub quarterly_activity: Vec<QuarterlyActivityPoint>,
 }

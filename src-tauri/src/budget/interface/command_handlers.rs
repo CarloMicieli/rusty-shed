@@ -164,16 +164,23 @@ pub async fn get_monthly_budget_records(
 /// Tauri command to get budget dashboard summary.
 ///
 /// Returns dashboard data for widgets (donut, bar chart, heatmap).
-/// Returns `None` if budget is not configured.
+/// Budget-specific fields will be None if budget is not configured, but spending data
+/// will still be populated using the user's preferred currency from settings.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_budget_dashboard(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
-) -> Result<Option<BudgetDashboardSummary>, CommandError> {
+) -> Result<BudgetDashboardSummary, CommandError> {
     info!("Fetching budget dashboard summary");
 
+    // Get user's preferred currency from settings
+    let settings = crate::settings::get_settings(app)
+        .await
+        .map_err(|e| CommandError::validation_field("settings", e))?;
+
     let mut unit_of_work = state.unit_of_work().await?;
-    let summary = budget_query::get_budget_dashboard(&mut unit_of_work).await?;
+    let summary = budget_query::get_budget_dashboard(&mut unit_of_work, &settings.currency).await?;
 
     unit_of_work.commit().await.map_err(CommandError::from)?;
 

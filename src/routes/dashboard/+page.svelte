@@ -31,11 +31,20 @@
 
   const stats = $derived(byStats(totals));
 
+  // Check if budget is configured by checking if remainingPercentage is not null
+  const hasBudget = $derived(
+    dashboard.budgetData?.remainingPercentage !== null &&
+      dashboard.budgetData?.remainingPercentage !== undefined
+  );
+
   const budgetChartData = $derived.by(() => {
     const budgetData = dashboard.budgetData;
     if (!budgetData) return undefined;
+
+    // Always include monthly spending data, but only include budget percentage if configured
     return {
-      budget: budgetData.remainingPercentage / 100,
+      budget:
+        budgetData.remainingPercentage !== null ? budgetData.remainingPercentage / 100 : undefined,
       monthlySpending: budgetData.monthlySpending.map((p) => ({
         month: p.month - 1,
         amount: Number(p.amount) / 100
@@ -172,12 +181,7 @@
                 <QuickActionButtons {actions} class="gap-2" />
               </div>
             </div>
-            <DashboardCharts
-              compact={true}
-              data={budgetChartData}
-              {currencyCode}
-              hasBudget={dashboard.budgetData !== null}
-            />
+            <DashboardCharts compact={true} data={budgetChartData} {currencyCode} {hasBudget} />
           </div>
 
           <aside class="hidden lg:block">

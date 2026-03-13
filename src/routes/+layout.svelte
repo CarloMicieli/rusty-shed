@@ -223,6 +223,7 @@
       showAcquisitionDrawer = false;
       void collectionStore.refresh();
       void dashboardState.load();
+      void dashboardState.loadBudget();
     }}
   />
 

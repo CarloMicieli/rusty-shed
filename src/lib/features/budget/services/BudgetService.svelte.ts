@@ -252,7 +252,7 @@ export class BudgetService {
 
     this.#isLoading = true;
     try {
-      const result = await safeInvoke<BudgetDashboardSummary | null>('get_budget_dashboard');
+      const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
 
       if (!result.ok) {
         throw new Error(getErrorMessage(result.error));

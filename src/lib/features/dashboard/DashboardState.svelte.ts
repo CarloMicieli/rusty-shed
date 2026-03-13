@@ -74,7 +74,7 @@ export class DashboardState {
    */
   async loadBudget() {
     console.debug('Invoking get_budget_dashboard');
-    const result = await safeInvoke<BudgetDashboardSummary | null>('get_budget_dashboard');
+    const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
 
     if (result.ok) {
       this.#budgetData = result.data;

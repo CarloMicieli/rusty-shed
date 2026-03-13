@@ -120,13 +120,17 @@ pub async fn get_monthly_budget_records(
 ///
 /// # Arguments
 /// * `uow` - Unit of work for database access
+/// * `user_currency` - User's preferred currency code from settings (used when no budget configured)
 ///
 /// # Returns
-/// A `BudgetDashboardSummary` with all dashboard widget data, or None if budget not configured.
+/// A `BudgetDashboardSummary` with spending data always populated. Budget-specific fields
+/// (remaining_amount, remaining_percentage, total_available, monthly_goal) are Some() if
+/// budget is configured, None otherwise.
 pub async fn get_budget_dashboard(
     uow: &mut SqliteUnitOfWork<'_>,
-) -> Result<Option<BudgetDashboardSummary>, DomainError> {
-    // Get budget configuration
+    user_currency: &str,
+) -> Result<BudgetDashboardSummary, DomainError> {
+    // Get budget configuration (optional)
     let config_option = {
         let mut repo = uow.budget_repo();
         repo.get_config()
@@ -134,31 +138,67 @@ pub async fn get_budget_dashboard(
             .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?
     };
 
-    let config = match config_option {
-        Some(c) => c,
-        None => return Ok(None), // Budget not configured
-    };
-
     let now = chrono::Utc::now();
     let current_year = now.year();
     let current_month = now.month() as u8;
 
-    // Get monthly records for the current year
-    let monthly_records = get_monthly_budget_records(uow, current_year).await?;
+    // Determine currency to use
+    let currency_code = config_option
+        .as_ref()
+        .map(|c| c.base_amount.currency.to_code())
+        .unwrap_or(user_currency);
 
-    // Find current month's record
-    let current_record = monthly_records
-        .iter()
-        .find(|r| r.month == current_month)
-        .ok_or_else(|| DomainError::BusinessRule("Current month record not found".to_string()))?;
+    // Parse currency for the response
+    let currency = config_option
+        .as_ref()
+        .map(|c| c.base_amount.currency)
+        .unwrap_or_else(|| {
+            // Try to parse user currency, fallback to EUR if invalid
+            use crate::core::domain::currency::Currency;
+            Currency::from_code(user_currency).unwrap_or(Currency::EUR)
+        });
+
+    // Get budget-specific data if budget is configured
+    let (remaining_amount, remaining_percentage, total_available, monthly_goal) =
+        if let Some(ref config) = config_option {
+            // Get monthly records for the current year
+            let monthly_records = get_monthly_budget_records(uow, current_year).await?;
+
+            // Find current month's record
+            let current_record = monthly_records
+                .iter()
+                .find(|r| r.month == current_month)
+                .ok_or_else(|| {
+                    DomainError::BusinessRule("Current month record not found".to_string())
+                })?;
+
+            (
+                Some(current_record.remaining()),
+                Some(current_record.remaining_percentage()),
+                Some(current_record.available()),
+                Some(config.monthly_amount()),
+            )
+        } else {
+            (None, None, None, None)
+        };
 
     // Build monthly spending points for bar chart (current year)
-    let monthly_spending: Vec<MonthlySpendingPoint> = monthly_records
-        .iter()
-        .map(|r| MonthlySpendingPoint {
-            month: r.month,
-            amount: r.actual_spend,
-            currency: r.currency,
+    let year_spending =
+        database::get_monthly_spending(&mut uow.tx, current_year, currency_code).await?;
+
+    let monthly_spending: Vec<MonthlySpendingPoint> = (1..=12)
+        .map(|month| {
+            let amount = year_spending
+                .iter()
+                .find(|(m, _)| *m == month)
+                .map(|(_, amt)| *amt)
+                .unwrap_or(0);
+
+            MonthlySpendingPoint {
+                month: month as u8,
+                amount,
+                currency,
+            }
         })
         .collect();
 
@@ -168,12 +208,8 @@ pub async fn get_budget_dashboard(
 
     for year in start_year..=current_year {
         // Get spending for this year
-        let year_spending = database::get_monthly_spending(
-            &mut uow.tx,
-            year,
-            config.base_amount.currency.to_code(),
-        )
-        .await?;
+        let year_spending =
+            database::get_monthly_spending(&mut uow.tx, year, currency_code).await?;
 
         // Group by quarter
         let mut q1_total = 0i64;
@@ -219,13 +255,13 @@ pub async fn get_budget_dashboard(
         }
     }
 
-    Ok(Some(BudgetDashboardSummary {
-        remaining_amount: current_record.remaining(),
-        remaining_percentage: current_record.remaining_percentage(),
-        total_available: current_record.available(),
-        currency: config.base_amount.currency,
+    Ok(BudgetDashboardSummary {
+        remaining_amount,
+        remaining_percentage,
+        total_available,
+        currency,
         monthly_spending,
-        monthly_goal: config.monthly_amount(),
+        monthly_goal,
         quarterly_activity,
-    }))
+    })
 }

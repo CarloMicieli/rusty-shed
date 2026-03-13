@@ -136,7 +136,7 @@
       </div>
 
       <div class="relative {chartHeight} w-full">
-        {#if noBudget || !hasSpendingData}
+        {#if !hasSpendingData}
           <div
             class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-center"
           >
