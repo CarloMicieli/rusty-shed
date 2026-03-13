@@ -150,7 +150,7 @@
 
   <!-- Dialog -->
   <div
-    class="fixed top-1/2 left-1/2 z-[101] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 p-4"
+    class="fixed top-1/2 left-1/2 z-[101] w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 px-2 py-4"
     role="dialog"
     aria-modal="true"
     aria-labelledby="add-purchase-title"

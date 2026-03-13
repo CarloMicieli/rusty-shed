@@ -149,7 +149,7 @@
   {open}
   side="right"
   onOpenChange={handleOpenChange}
-  class="flex w-full flex-col border-zinc-800 bg-[#0c0c0c] sm:max-w-[788px]"
+  class="flex w-full flex-col border-zinc-800 bg-[#0c0c0c] sm:w-full sm:max-w-3xl"
 >
   <PurchaseDrawerHeader onClose={handleClose} disabled={submitting} />
 

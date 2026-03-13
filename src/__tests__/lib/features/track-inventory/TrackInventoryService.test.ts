@@ -347,8 +347,8 @@ describe('TrackInventoryService', () => {
 
       expect(mockInvoke).toHaveBeenCalledWith('set_item_required', {
         input: {
-          inventory_id: 'inv-1',
-          track_id: 'track-1',
+          inventoryId: 'inv-1',
+          trackId: 'track-1',
           required: 10
         }
       });
@@ -361,8 +361,8 @@ describe('TrackInventoryService', () => {
 
       expect(mockInvoke).toHaveBeenCalledWith('set_item_required', {
         input: {
-          inventory_id: 'inv-1',
-          track_id: 'track-2',
+          inventoryId: 'inv-1',
+          trackId: 'track-2',
           required: 0
         }
       });

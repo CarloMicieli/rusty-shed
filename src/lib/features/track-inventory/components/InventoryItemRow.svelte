@@ -84,7 +84,7 @@
           >
             <AlertTriangle size={12} />
             <span class="text-[10px] font-bold tracking-wider uppercase">
-              {m.track_inventory_item_shortage({ count: shortageCount })} SHORT
+              {m.track_inventory_item_shortage({ count: shortageCount })}
             </span>
           </div>
         {/if}

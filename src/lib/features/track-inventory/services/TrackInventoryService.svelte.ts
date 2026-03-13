@@ -86,8 +86,8 @@ export class TrackInventoryService {
   async setItemRequired(inventoryId: string, trackId: string, required: number): Promise<void> {
     await invoke('set_item_required', {
       input: {
-        inventory_id: inventoryId,
-        track_id: trackId,
+        inventoryId,
+        trackId,
         required
       }
     });

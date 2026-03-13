@@ -163,7 +163,7 @@
     />
   </div>
 
-  <!-- ── Row 3: Transaction Date (full width) ─────────────────────── -->
+  <!-- ── Row 3: Purchase Date (full width) ─────────────────────── -->
   <div class="space-y-2">
     <label
       for="purchase-date"

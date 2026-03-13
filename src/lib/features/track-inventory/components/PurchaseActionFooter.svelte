@@ -21,12 +21,7 @@
   >
     {m.track_purchase_cancel()}
   </Button>
-  <Button
-    type="submit"
-    variant="rusty"
-    class="h-12 min-w-[160px] px-8"
-    disabled={submitting}
-  >
+  <Button type="submit" variant="rusty" class="h-12 min-w-[160px] px-8" disabled={submitting}>
     {#if submitting}
       <Loader2 size={18} class="mr-2 animate-spin" />
       <span>Recording…</span>
