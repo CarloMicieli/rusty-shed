@@ -42,19 +42,25 @@
   <title>{m.track_inventories_title()}</title>
 </svelte:head>
 
-<div class="space-y-6">
-  <PageHeader
-    title={m.track_inventories_title()}
-    subtitle={m.app_tracks()}
-    description={m.track_inventories_subtitle()}
+<div class="flex flex-col">
+  <div
+    class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
   >
-    {#snippet actions()}
-      <Button variant="default" onclick={() => (createDialogOpen = true)} disabled={loading}>
-        <Plus size={18} />
-        <span>{m.track_inventories_create_button()}</span>
-      </Button>
-    {/snippet}
-  </PageHeader>
+    <PageHeader
+      title={m.track_inventories_title()}
+      subtitle={m.app_tracks()}
+      description={m.track_inventories_subtitle()}
+    >
+      {#snippet actions()}
+        <Button variant="default" onclick={() => (createDialogOpen = true)} disabled={loading}>
+          <Plus size={18} />
+          <span>{m.track_inventories_create_button()}</span>
+        </Button>
+      {/snippet}
+    </PageHeader>
+  </div>
+
+  <div class="space-y-6">
 
   {#if loading}
     <div class="flex items-center justify-center py-16">
@@ -71,6 +77,7 @@
   {:else}
     <InventoryList {inventories} />
   {/if}
+  </div>
 </div>
 
 <CreateInventoryDialog bind:open={createDialogOpen} onCreate={handleCreate} />
