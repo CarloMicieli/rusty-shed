@@ -1008,7 +1008,7 @@
   "toolbar_bullet_list": "Bullet list",
   "toolbar_ordered_list": "Ordered list",
 
-  "track_purchase_field_market_price": "Market Price (Total)",
+  "track_purchase_field_market_price": "Unit Price",
   "track_purchase_field_transaction_date": "Transaction Date",
   "track_purchase_field_price_placeholder": "0.00",
   "track_purchase_field_product_placeholder": "Select a track component...",

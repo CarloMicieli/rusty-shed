@@ -905,7 +905,7 @@
   "module_label_settings": "Impostazioni",
   "module_label_signal_box": "Quadro dei Segnali",
 
-  "track_purchase_field_market_price": "Prezzo di Mercato (Totale)",
+  "track_purchase_field_market_price": "Prezzo Unitario",
   "track_purchase_field_transaction_date": "Data Transazione",
   "track_purchase_field_price_placeholder": "0.00",
   "track_purchase_field_product_placeholder": "Seleziona un componente...",

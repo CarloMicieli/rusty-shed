@@ -1,15 +1,16 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { Plus, ShoppingCart, Tag, Store } from 'lucide-svelte';
+  import { Plus, Tag, Store } from 'lucide-svelte';
   import type { TrackProductView, SellerView, Currency } from '$lib/bindings';
-  import { Input, Button, DatePickerField } from '$lib/components';
+  import { Input, Button, DatePickerField, CurrencyInput } from '$lib/components';
+  import { getCurrencySymbol } from '$lib/utils/currency';
 
   interface Props {
     products?: TrackProductView[];
     sellers?: SellerView[];
     selectedProductId?: string;
     quantity?: number;
-    priceAmount?: string;
+    priceAmount?: number | null;
     priceCurrency?: Currency;
     selectedSellerId?: string;
     purchaseDate?: string;
@@ -23,7 +24,7 @@
     sellers = [],
     selectedProductId = $bindable(''),
     quantity = $bindable(1),
-    priceAmount = $bindable(''),
+    priceAmount = $bindable(null),
     priceCurrency = $bindable('EUR' as Currency),
     selectedSellerId = $bindable(''),
     purchaseDate = $bindable(new Date().toISOString().split('T')[0]),
@@ -31,6 +32,10 @@
     error = null,
     onCreateProduct
   }: Props = $props();
+
+  const totalCents = $derived((priceAmount ?? 0) * quantity);
+  const totalDisplay = $derived((totalCents / 100).toFixed(2));
+  const currencySymbol = $derived(getCurrencySymbol(priceCurrency));
 </script>
 
 <div class="space-y-6">
@@ -98,7 +103,7 @@
       </div>
     </div>
 
-    <!-- Price -->
+    <!-- Unit price -->
     <div class="space-y-2">
       <label
         for="purchase-price"
@@ -106,33 +111,20 @@
       >
         {m.track_purchase_field_market_price()}
       </label>
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Input
-            id="purchase-price"
-            type="number"
-            value={priceAmount}
-            oninput={(e) => (priceAmount = e.currentTarget.value)}
-            min="0"
-            step="0.01"
-            class="h-12 rounded-xl border-white/10 bg-zinc-950 pl-10 text-zinc-100 focus:border-white/20 focus:ring-0"
-            disabled={submitting}
-            required
-            placeholder={m.track_purchase_field_price_placeholder()}
-          />
-          <ShoppingCart size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-600" />
-        </div>
-        <select
-          class="h-12 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs font-bold text-zinc-400 focus:outline-none"
-          value={priceCurrency}
-          onchange={(e) => (priceCurrency = e.currentTarget.value as Currency)}
-          disabled={submitting}
-        >
-          <option value="EUR">EUR</option>
-          <option value="USD">USD</option>
-          <option value="GBP">GBP</option>
-        </select>
-      </div>
+      <CurrencyInput
+        id="purchase-price"
+        bind:value={priceAmount}
+        symbol={currencySymbol}
+        placeholder="0.00"
+        disabled={submitting}
+        required
+        inputClass="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-100 focus:border-white/20 focus:ring-0"
+      />
+      {#if quantity > 1 && priceAmount !== null}
+        <p class="ml-1 text-xs text-zinc-500">
+          Total: <span class="font-mono text-zinc-300">{totalDisplay} {priceCurrency}</span>
+        </p>
+      {/if}
     </div>
 
     <!-- Seller -->

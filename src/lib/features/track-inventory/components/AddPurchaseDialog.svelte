@@ -29,7 +29,7 @@
 
   let selectedProductId = $state('');
   let quantity = $state(1);
-  let priceAmount = $state('');
+  let priceAmount = $state<number | null>(null);
   let priceCurrency = $state<Currency>('EUR');
   let selectedSellerId = $state('');
   let purchaseDate = $state(new Date().toISOString().split('T')[0]);
@@ -67,7 +67,7 @@
   function resetForm() {
     selectedProductId = '';
     quantity = 1;
-    priceAmount = '';
+    priceAmount = null;
     priceCurrency = 'EUR';
     selectedSellerId = '';
     purchaseDate = new Date().toISOString().split('T')[0];
@@ -92,7 +92,7 @@
       error = m.track_purchase_validation_quantity();
       return;
     }
-    if (!priceAmount || parseFloat(priceAmount) < 0) {
+    if (priceAmount === null || priceAmount < 0) {
       error = m.track_purchase_validation_price();
       return;
     }
@@ -106,7 +106,7 @@
         trackId: selectedProductId,
         quantity,
         price: {
-          amount: Math.round(parseFloat(priceAmount) * 100),
+          amount: priceAmount * quantity,
           currency: priceCurrency
         },
         sellerId: selectedSellerId || null,
