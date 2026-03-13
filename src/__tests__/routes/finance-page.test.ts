@@ -89,10 +89,11 @@ describe('routes/finance/+page.svelte', () => {
     expect(screen.getByText('budget_loading')).toBeInTheDocument();
   });
 
-  it('shows "budget_empty_state_message" when hasConfig is false', () => {
+  it('shows "budget_empty_state_title" and message when hasConfig is false', () => {
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = false;
     render(FinancePage);
+    expect(screen.getByText('budget_empty_state_title')).toBeInTheDocument();
     expect(screen.getByText('budget_empty_state_message')).toBeInTheDocument();
   });
 

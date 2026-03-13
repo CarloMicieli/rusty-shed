@@ -183,13 +183,27 @@
       </Card>
     {:else}
       <div
-        class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-32 text-center"
+        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 py-24"
       >
-        <div class="rounded-full bg-zinc-800/60 p-3">
-          <Wallet size={28} class="text-zinc-500" />
+        <div class="relative">
+          <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
+          <div
+            class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
+          >
+            <Wallet size={56} class="text-zinc-600 opacity-50" />
+          </div>
         </div>
-        <p class="text-sm text-zinc-400">{m.budget_empty_state_message()}</p>
-        <Button variant="outline" size="sm" onclick={() => (configSheetOpen = true)}>
+
+        <div class="flex max-w-sm flex-col items-center gap-3 text-center">
+          <h3 class="text-2xl font-bold text-zinc-200">{m.budget_empty_state_title()}</h3>
+          <p class="text-sm leading-relaxed text-zinc-500">{m.budget_empty_state_message()}</p>
+        </div>
+
+        <Button
+          variant="secondary"
+          onclick={() => (configSheetOpen = true)}
+          class="mt-2 rounded-xl border border-white/10 px-8 py-6 font-bold transition-all hover:bg-zinc-800"
+        >
           {m.dashboard_chart_budget_set_cta()}
         </Button>
       </div>
