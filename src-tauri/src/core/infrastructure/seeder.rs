@@ -16,6 +16,10 @@ static RAILWAY_COMPANIES: &str = include_str!(concat!(
 ));
 static DECODERS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/decoders.csv"));
 static SELLERS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/sellers.csv"));
+static TRACK_PRODUCTS: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/seed/track_products.csv"
+));
 
 const CHUNK_SIZE: usize = 50;
 
@@ -392,6 +396,110 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
     Ok(())
 }
 
+pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
+    use crate::tracks_inventory::domain::TrackId;
+
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .flexible(true)
+        .from_reader(TRACK_PRODUCTS.as_bytes());
+
+    let records: Vec<_> = rdr
+        .records()
+        .collect::<Result<Vec<_>, _>>()
+        .context("Failed to parse track_products CSV")?;
+
+    let now = Utc::now().to_rfc3339();
+    let mut tx = pool.begin().await.context("Failed to start transaction")?;
+
+    let insert_cmd = r#"
+        INSERT INTO track_products (
+            id, track_id, manufacturer_id, product_code, with_roadbed,
+            length_mm, radius_mm, track_code, track_type, description,
+            created_at, updated_at, version
+        )
+    "#;
+
+    for chunk in records.chunks(CHUNK_SIZE) {
+        let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
+
+        qb.push_values(chunk, |mut b, record| {
+            let manufacturer = record.get(2).unwrap_or_default(); // col: manufacturer_id
+            let product_code = record.get(3).unwrap_or_default();
+
+            let track_id = TrackId::new_from_parts(&[manufacturer, product_code]).to_string();
+            let manufacturer_id = format!("trn:manufacturer:{}", slugify(manufacturer));
+
+            let with_roadbed: i32 = record.get(4).unwrap_or("0").parse().unwrap_or(0);
+
+            let length_mm: Option<i32> = record
+                .get(5)
+                .filter(|s| !s.is_empty())
+                .and_then(|s| s.parse().ok());
+
+            let radius_mm: Option<i32> = record
+                .get(6)
+                .filter(|s| !s.is_empty())
+                .and_then(|s| s.parse().ok());
+
+            let track_code: Option<String> = match record.get(7).unwrap_or_default() {
+                "70" => Some("CODE_70".to_string()),
+                "75" => Some("CODE_75".to_string()),
+                "83" => Some("CODE_83".to_string()),
+                "100" => Some("CODE_100".to_string()),
+                _ => None,
+            };
+
+            let track_type: Option<String> =
+                match record.get(8).unwrap_or_default().to_lowercase().as_str() {
+                    "straight" => Some("STRAIGHT".to_string()),
+                    "curved" => Some("CURVE".to_string()),
+                    "turnout" => Some("TURNOUT".to_string()),
+                    "flex" => Some("FLEX_TRACK".to_string()),
+                    _ => None,
+                };
+
+            let description: Option<String> = record
+                .get(9)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            b.push_bind(track_id.clone())
+                .push_bind(track_id)
+                .push_bind(manufacturer_id)
+                .push_bind(product_code.to_string())
+                .push_bind(with_roadbed)
+                .push_bind(length_mm)
+                .push_bind(radius_mm)
+                .push_bind(track_code)
+                .push_bind(track_type)
+                .push_bind(description)
+                .push_bind(&now)
+                .push_bind(&now)
+                .push_bind(0i32);
+        });
+
+        qb.push(" ON CONFLICT(track_id) DO UPDATE SET ");
+        qb.push("manufacturer_id = EXCLUDED.manufacturer_id, ");
+        qb.push("product_code = EXCLUDED.product_code, ");
+        qb.push("with_roadbed = EXCLUDED.with_roadbed, ");
+        qb.push("length_mm = EXCLUDED.length_mm, ");
+        qb.push("radius_mm = EXCLUDED.radius_mm, ");
+        qb.push("track_code = EXCLUDED.track_code, ");
+        qb.push("track_type = EXCLUDED.track_type, ");
+        qb.push("description = EXCLUDED.description, ");
+        qb.push("updated_at = EXCLUDED.updated_at");
+
+        qb.build()
+            .execute(&mut *tx)
+            .await
+            .context("Failed to execute track_products upsert chunk")?;
+    }
+
+    tx.commit().await.context("Failed to commit transaction")?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -492,6 +600,34 @@ mod tests {
             "expected a seeded decoder for id trn:decoder:esu:58410"
         );
         assert_eq!(product_code.unwrap(), "58410");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn seeds_track_products(pool: SqlitePool) {
+        seed_manufacturers(&pool)
+            .await
+            .expect("seed manufacturers first");
+        seed_track_products(&pool)
+            .await
+            .expect("seed track_products");
+
+        let mut conn = pool.acquire().await.expect("acquire conn");
+
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM track_products")
+            .fetch_one(&mut *conn)
+            .await
+            .expect("count query");
+        assert!(count > 0, "expected seeded track products");
+
+        // Spot-check: Roco 42410 → track_id = trn:track:roco:42410
+        let product_code: Option<String> =
+            sqlx::query_scalar("SELECT product_code FROM track_products WHERE track_id = ?")
+                .bind("trn:track:roco:42410")
+                .fetch_optional(&mut *conn)
+                .await
+                .expect("select query");
+        assert!(product_code.is_some(), "expected trn:track:roco:42410");
+        assert_eq!(product_code.unwrap(), "42410");
     }
 
     #[sqlx::test(migrations = "./migrations")]

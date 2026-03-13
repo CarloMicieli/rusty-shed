@@ -1,0 +1,27 @@
+id,track_id,manufacturer_id,product_code,with_roadbed,length_mm,radius_mm,track_code,track_type,description
+trn:railway-track:roco:42410,42410,roco,42410,0,230,,83,straight,Roco Line G1 Straight Track
+trn:railway-track:roco:42411,42411,roco,42411,0,119,,83,straight,Roco Line G1/2 Straight Track
+trn:railway-track:roco:42422,42422,roco,42422,0,,358,83,curved,Roco Line R2 Curved Track 30°
+trn:railway-track:roco:42423,42423,roco,42423,0,,419,83,curved,Roco Line R3 Curved Track 30°
+trn:railway-track:roco:42440,42440,roco,42440,0,230,,83,turnout,Roco Line Left Turnout Wl15
+trn:railway-track:peco:sl-100,sl-100,peco,sl-100,0,914,,100,flex,Peco Streamline OO/HO Flex Track Wood
+trn:railway-track:peco:st-200,st-200,peco,st-200,0,168,,100,straight,Peco Setrack Standard Straight
+trn:railway-track:peco:st-225,st-225,peco,st-225,0,,438,100,curved,Peco Setrack 2nd Radius Curve
+trn:railway-track:peco:sl-e91,sl-e91,peco,sl-e91,0,185,,100,turnout,Peco Small Radius Right Hand Electrofrog
+trn:railway-track:tillig:83101,83101,tillig,83101,0,166,,83,straight,Tillig HO Elite Straight G1
+trn:railway-track:tillig:83109,83109,tillig,83109,0,,366,83,curved,Tillig HO Elite Curved R11 30°
+trn:railway-track:tillig:83321,83321,tillig,83321,0,228,,83,turnout,Tillig HO Elite Left Turnout EW1
+trn:railway-track:trix:62172,62172,trix,62172,1,171,,83,straight,Trix C Track Straight 171.7mm
+trn:railway-track:trix:62188,62188,trix,62188,1,188,,83,straight,Trix C Track Straight 188.3mm
+trn:railway-track:trix:62130,62130,trix,62130,1,,360,83,curved,Trix C Track Curved R1 30°
+trn:railway-track:trix:62230,62230,trix,62230,1,,437,83,curved,Trix C Track Curved R2 30°
+trn:railway-track:trix:62611,62611,trix,62611,1,188,,83,turnout,Trix C Track Left Turnout
+trn:railway-track:piko:55200,55200,piko,55200,0,239,,100,straight,Piko A-Gleis Straight G239
+trn:railway-track:piko:55201,55201,piko,55201,0,231,,100,straight,Piko A-Gleis Straight G231
+trn:railway-track:piko:55212,55212,piko,55212,0,,422,100,curved,Piko A-Gleis Curved R2 30°
+trn:railway-track:piko:55221,55221,piko,55221,0,239,,100,turnout,Piko A-Gleis Right Turnout WR
+trn:railway-track:marklin:24172,24172,marklin,24172,1,171,,N/A,straight,Marklin C Track Straight 171.7mm
+trn:railway-track:marklin:24188,24188,marklin,24188,1,188,,N/A,straight,Marklin C Track Straight 188.3mm
+trn:railway-track:marklin:24130,24130,marklin,24130,1,,360,N/A,curved,Marklin C Track Curved R1 30°
+trn:railway-track:marklin:24230,24230,marklin,24230,1,,437,N/A,curved,Marklin C Track Curved R2 30°
+trn:railway-track:marklin:24611,24611,marklin,24611,1,188,,N/A,turnout,Marklin C Track Left Turnout
