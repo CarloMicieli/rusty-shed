@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Settings2, CalendarDays, TrendingUp } from 'lucide-svelte';
+  import { Settings2, CalendarDays, TrendingUp, Wallet } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Dialog from '$lib/components/ui/dialog';
 
@@ -183,10 +183,15 @@
       </Card>
     {:else}
       <div
-        class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-32"
+        class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-32 text-center"
       >
-        <p class="mb-6 font-mono text-sm text-muted-foreground">NO_BUDGET_CONFIG_FOUND</p>
-        <Button onclick={() => (configSheetOpen = true)}>Initialize System Budget</Button>
+        <div class="rounded-full bg-zinc-800/60 p-3">
+          <Wallet size={28} class="text-zinc-500" />
+        </div>
+        <p class="text-sm text-zinc-400">{m.budget_empty_state_message()}</p>
+        <Button variant="outline" size="sm" onclick={() => (configSheetOpen = true)}>
+          {m.dashboard_chart_budget_set_cta()}
+        </Button>
       </div>
     {/if}
   </div>

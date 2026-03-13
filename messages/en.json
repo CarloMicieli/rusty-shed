@@ -666,6 +666,8 @@
   "budget_loading": "Loading budget data...",
   "budget_error_load": "Failed to load budget data",
   "budget_error_retry": "Retry",
+  "budget_empty_state_message": "No budget configured",
+  "budget_initialize_cta": "Initialize System Budget",
   "import.title": "Import Data",
   "import.dropzone.label": "Drop import file here or click to browse",
   "import.dropzone.formats": "Supported formats: .zip, .tar.gz",

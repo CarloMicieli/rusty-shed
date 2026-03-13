@@ -653,6 +653,8 @@
   "budget_loading": "Caricamento dati budget...",
   "budget_error_load": "Impossibile caricare i dati budget",
   "budget_error_retry": "Riprova",
+  "budget_empty_state_message": "Nessun budget configurato",
+  "budget_initialize_cta": "Inizializza Budget di Sistema",
   "import.title": "Importa Dati",
   "import.dropzone.label": "Rilascia il file di importazione qui o fai clic per sfogliare",
   "import.dropzone.formats": "Formati supportati: .zip, .tar.gz",

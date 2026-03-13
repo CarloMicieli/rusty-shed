@@ -89,18 +89,18 @@ describe('routes/finance/+page.svelte', () => {
     expect(screen.getByText('budget_loading')).toBeInTheDocument();
   });
 
-  it('shows "NO_BUDGET_CONFIG_FOUND" when hasConfig is false', () => {
+  it('shows "budget_empty_state_message" when hasConfig is false', () => {
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = false;
     render(FinancePage);
-    expect(screen.getByText('NO_BUDGET_CONFIG_FOUND')).toBeInTheDocument();
+    expect(screen.getByText('budget_empty_state_message')).toBeInTheDocument();
   });
 
-  it('shows the "Initialize System Budget" button when no config exists', () => {
+  it('shows the "dashboard_chart_budget_set_cta" button when no config exists', () => {
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = false;
     render(FinancePage);
-    expect(screen.getByText('Initialize System Budget')).toBeInTheDocument();
+    expect(screen.getByText('dashboard_chart_budget_set_cta')).toBeInTheDocument();
   });
 
   it('shows monthly allocation card when hasConfig is true', () => {
