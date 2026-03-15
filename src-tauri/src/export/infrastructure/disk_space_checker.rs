@@ -3,26 +3,68 @@ use std::path::Path;
 
 use crate::export::domain::error::ExportError;
 
-/// Check available disk space at a given path
+/// Check available disk space at a given path.
+///
+/// Uses `statvfs(2)` on Unix/Android and `GetDiskFreeSpaceExW` via the Windows
+/// API on Windows to return the number of bytes available to an unprivileged
+/// process on the filesystem that contains `path`.
 ///
 /// # Arguments
-/// * `path` - The path to check available space for
+/// * `path` - The path whose filesystem should be queried
 ///
 /// # Returns
-/// The available space in bytes
+/// Available bytes for the calling process, or an [`ExportError`] on failure.
 pub fn check_available_space(path: &Path) -> Result<u64, ExportError> {
     #[cfg(target_os = "windows")]
     {
-        use std::os::windows::fs::MetadataExt;
-        let metadata = std::fs::metadata(path).map_err(|e| ExportError::IoError(e))?;
-        Ok(metadata.file_size())
+        use std::os::windows::ffi::OsStrExt;
+
+        // Raw FFI — avoids a direct `windows-sys` dependency.
+        extern "system" {
+            fn GetDiskFreeSpaceExW(
+                lpDirectoryName: *const u16,
+                lpFreeBytesAvailableToCaller: *mut u64,
+                lpTotalNumberOfBytes: *mut u64,
+                lpTotalNumberOfFreeBytes: *mut u64,
+            ) -> i32;
+        }
+
+        let wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+        let mut free_bytes: u64 = 0;
+        // SAFETY: `wide` is a valid null-terminated UTF-16 path; `free_bytes` is
+        // a valid out-pointer. The other two out-pointers are optional and may be null.
+        let ok = unsafe {
+            GetDiskFreeSpaceExW(
+                wide.as_ptr(),
+                &mut free_bytes,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+            )
+        };
+        if ok == 0 {
+            return Err(ExportError::IoError(std::io::Error::last_os_error()));
+        }
+        Ok(free_bytes)
     }
 
     #[cfg(not(target_os = "windows"))]
     {
-        use std::os::unix::fs::MetadataExt;
-        let metadata = std::fs::metadata(path).map_err(ExportError::IoError)?;
-        Ok(metadata.blocks() * 512)
+        use std::ffi::CString;
+        use std::os::unix::ffi::OsStrExt;
+
+        let path_cstr = CString::new(path.as_os_str().as_bytes())
+            .map_err(|_| ExportError::InvalidPath(path.display().to_string()))?;
+
+        // SAFETY: `stat` is fully initialised by `statvfs` before it is read.
+        let mut stat: libc::statvfs = unsafe { std::mem::zeroed() };
+        let ret = unsafe { libc::statvfs(path_cstr.as_ptr(), &mut stat) };
+        if ret != 0 {
+            return Err(ExportError::IoError(std::io::Error::last_os_error()));
+        }
+
+        // f_bavail: blocks available to unprivileged processes
+        // f_frsize: fundamental filesystem block size in bytes
+        Ok(stat.f_bavail as u64 * stat.f_frsize as u64)
     }
 }
 

@@ -1,60 +1,65 @@
 // Export feature controller
-// Manages the frontend state for the export workflow
+// Manages the frontend state for the archive export workflow
 
-import type { ExportPreview, ExportEntitySelection, ExportResult } from './types';
+import { safeInvoke } from '$lib/services';
+import { toaster } from '$lib/toaster';
+import * as m from '$lib/paraglide/messages.js';
+import type { ExportResult } from '$lib/bindings';
 
 export class ExportController {
-  // UI state
-  isOpen: boolean = $state(false);
-  isLoading: boolean = $state(false);
+  isExporting: boolean = $state(false);
   error: string | null = $state(null);
-  progress: number = $state(0);
-  currentPhase: 'collecting' | 'compressing' | 'finalizing' | null = $state(null);
 
-  // Export data
-  entitySelection: ExportEntitySelection = $state({
-    include_railway_models: true,
-    include_collection_items: true,
-    include_sellers: true,
-    include_maintenance_logs: true,
-    include_dcc_roster: true,
-    include_orphaned_images: false
-  });
+  async handleExport(): Promise<void> {
+    if (this.isExporting) return;
 
-  preview: ExportPreview | null = $state(null);
-  selectedPath: string | null = $state(null);
-  result: ExportResult | null = $state(null);
+    // Open the native file save dialog
+    const pathResult = await safeInvoke<string | null>('open_export_file_dialog');
+    if (!pathResult.ok) {
+      this.error = pathResult.error.message;
+      toaster.error({ title: m.export_archive_error({ error: pathResult.error.message }) });
+      return;
+    }
 
-  // Methods
-  openDialog() {
-    this.isOpen = true;
+    const destinationPath = pathResult.data;
+    if (!destinationPath) {
+      // User cancelled the dialog
+      return;
+    }
+
+    this.isExporting = true;
     this.error = null;
-    this.preview = null;
-    this.selectedPath = null;
-    this.result = null;
-  }
 
-  closeDialog() {
-    this.isOpen = false;
-  }
+    try {
+      const exportResult = await safeInvoke<ExportResult>('execute_export', {
+        destinationPath
+      });
 
-  resetState() {
-    this.isLoading = false;
-    this.error = null;
-    this.progress = 0;
-    this.currentPhase = null;
-  }
-
-  setError(message: string) {
-    this.error = message;
-  }
-
-  updateProgress(percentage: number, phase: 'collecting' | 'compressing' | 'finalizing') {
-    this.progress = percentage;
-    this.currentPhase = phase;
+      if (exportResult.ok) {
+        toaster.success({
+          title: m.export_archive_success({ path: exportResult.data.archive_path })
+        });
+      } else {
+        this.error = exportResult.error.message;
+        toaster.error({
+          title: m.export_archive_error({ error: exportResult.error.message })
+        });
+      }
+    } finally {
+      this.isExporting = false;
+    }
   }
 }
 
-export function createExportController() {
+let controllerInstance: ExportController | null = null;
+
+export function createExportController(): ExportController {
   return new ExportController();
+}
+
+export function getExportController(): ExportController {
+  if (!controllerInstance) {
+    controllerInstance = new ExportController();
+  }
+  return controllerInstance;
 }

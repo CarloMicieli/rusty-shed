@@ -20,14 +20,13 @@ use crate::export::domain::error::ExportError;
 pub async fn create_archive(
     destination_path: &Path,
     manifest: &Value,
-    _media_files: Vec<PathBuf>,
+    media_files: Vec<PathBuf>,
     filename: &str,
 ) -> Result<PathBuf, ExportError> {
     let archive_path = destination_path.join(filename);
 
     // Create ZIP file
     let file = File::create(&archive_path)?;
-
     let mut zip = ZipWriter::new(file);
 
     // Add manifest.json
@@ -39,11 +38,19 @@ pub async fn create_archive(
     zip.write_all(manifest_json.as_bytes())?;
 
     // Add media files to /images/ folder in archive
-    // Note: In full implementation, iterate through media_files and add each with progress tracking
-    // For now, we create the /images/ folder placeholder
-    let options = zip::write::FileOptions::default();
-    zip.start_file("images/.gitkeep", options)?;
-    zip.write_all(b"")?;
+    for source_path in &media_files {
+        let file_name = source_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .ok_or_else(|| ExportError::ArchiveError("Invalid media filename".to_string()))?;
+
+        let archive_entry = format!("images/{}", file_name);
+        let options = zip::write::FileOptions::default();
+        zip.start_file(&archive_entry, options)?;
+
+        let data = std::fs::read(source_path)?;
+        zip.write_all(&data)?;
+    }
 
     // Finish writing
     zip.finish()?;

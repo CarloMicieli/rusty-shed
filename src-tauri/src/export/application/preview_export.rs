@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 
 /// Export preview information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct ExportPreview {
     pub railway_model_count: u32,
     pub collection_item_count: u32,
@@ -77,20 +77,19 @@ pub async fn get_export_preview(
 
     // Count maintenance logs if selected
     if selection.include_maintenance_logs {
-        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM maintenance_cards")
+        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM maintenance_events")
             .fetch_one(pool)
             .await
             .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
         preview.maintenance_log_count = count.0 as u32;
     }
 
-    // Count DCC roster if selected
+    // Count DCC roster entries if selected
     if selection.include_dcc_roster {
-        let count: (i64,) =
-            sqlx::query_as("SELECT COUNT(*) FROM rolling_stocks WHERE digital_setup IS NOT NULL")
-                .fetch_one(pool)
-                .await
-                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM digital_rolling_stocks")
+            .fetch_one(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
         preview.dcc_roster_count = count.0 as u32;
     }
 
@@ -102,7 +101,7 @@ pub async fn get_export_preview(
         + preview.dcc_roster_count;
 
     preview.estimated_size_bytes =
-        (total_records as u64 * 1024) + (preview.image_count as u64 * 500 * 1024); // Assume 500KB per image
+        (total_records as u64 * 1024) + (preview.image_count as u64 * 500 * 1024);
 
     // Check if there's data to export
     if total_records == 0 {

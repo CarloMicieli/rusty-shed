@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents the result of an export operation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct ExportResult {
     /// Path to the created archive
     pub archive_path: String,

@@ -1355,6 +1355,48 @@ export const commands = {
     }
   },
   /**
+   * Get a preview of what will be included in the export.
+   *
+   * Returns counts for each entity type and estimated archive size.
+   */
+  async getExportPreview(): Promise<Result<ExportPreview, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('get_export_preview') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Open the native file save dialog to select where to save the export.
+   *
+   * Returns the selected path as a string, or null if the user cancelled.
+   */
+  async openExportFileDialog(): Promise<Result<string | null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('open_export_file_dialog') };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Execute the export operation.
+   *
+   * Exports all collection data to a ZIP archive at the specified path.
+   *
+   * # Arguments
+   * * `destination_path` - Full path for the output archive (e.g. `/home/user/backup.zip`)
+   */
+  async executeExport(destinationPath: string): Promise<Result<ExportResult, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('execute_export', { destinationPath }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Analyze an import package archive.
    *
    * This command:
@@ -3570,6 +3612,41 @@ export type ExportDatabaseResponse = {
   file_size_bytes: bigint;
   duration_ms: bigint;
   message: string;
+};
+/**
+ * Export preview information
+ */
+export type ExportPreview = {
+  railway_model_count: number;
+  collection_item_count: number;
+  seller_count: number;
+  maintenance_log_count: number;
+  dcc_roster_count: number;
+  image_count: number;
+  orphaned_image_count: number;
+  estimated_size_bytes: bigint;
+  warnings: string[];
+};
+/**
+ * Represents the result of an export operation
+ */
+export type ExportResult = {
+  /**
+   * Path to the created archive
+   */
+  archive_path: string;
+  /**
+   * File size in bytes
+   */
+  file_size_bytes: bigint;
+  /**
+   * Number of records exported
+   */
+  records_exported: number;
+  /**
+   * Any warnings during export
+   */
+  warnings: string[];
 };
 /**
  * Extra budget entry DTO.

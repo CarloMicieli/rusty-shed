@@ -4,53 +4,62 @@ use std::path::{Path, PathBuf};
 
 use crate::export::domain::entity_selection::ExportEntitySelection;
 use crate::export::domain::error::ExportError;
-use crate::export::domain::export_config::ExportConfig;
 use crate::export::domain::export_result::ExportResult;
 use crate::export::infrastructure::{
     archive_writer, disk_space_checker, manifest_builder, media_collector,
 };
 
-/// Execute the export operation
+/// Execute the export operation.
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `archive_path` - Full path of the output ZIP file (e.g. `/home/user/Desktop/rusty-shed-export-2026-03-15.zip`)
+/// * `media_dir` - App media/models directory where images are stored
+/// * `selection` - Entity types to include in the export
 pub async fn export_to_archive(
     pool: &SqlitePool,
-    config: &ExportConfig,
+    archive_path: &Path,
+    media_dir: &Path,
     selection: &ExportEntitySelection,
 ) -> Result<ExportResult, ExportError> {
-    // Step 1: Validate destination path exists
-    let dest_path = Path::new(&config.destination_path);
-    if !dest_path.exists() {
-        return Err(ExportError::InvalidPath(dest_path.display().to_string()));
-    }
-
-    // Step 2: Validate entity selection
+    // Validate entity selection
     if !selection.is_valid() {
         return Err(ExportError::NoDataToExport);
     }
 
-    // Step 3: Check available disk space (100 MB estimated for now)
-    const ESTIMATED_SIZE: u64 = 100 * 1024 * 1024; // 100 MB
-    disk_space_checker::validate_disk_space(dest_path, ESTIMATED_SIZE)?;
+    // Validate destination directory exists
+    let dest_dir = archive_path
+        .parent()
+        .ok_or_else(|| ExportError::InvalidPath(archive_path.display().to_string()))?;
 
-    // Step 4: Build manifest from database
+    if !dest_dir.exists() {
+        return Err(ExportError::InvalidPath(dest_dir.display().to_string()));
+    }
+
+    // Check available disk space (100 MB estimated)
+    const ESTIMATED_SIZE: u64 = 100 * 1024 * 1024;
+    disk_space_checker::validate_disk_space(dest_dir, ESTIMATED_SIZE)?;
+
+    // Build manifest from database
     let manifest = manifest_builder::build_manifest(pool, selection).await?;
 
-    // Step 5: Collect media files
-    let media_files =
-        media_collector::collect_media_files(pool, selection, &PathBuf::from("/tmp")).await?;
+    // Collect media files
+    let media_files = media_collector::collect_media_files(pool, selection, media_dir).await?;
 
-    // Step 6: Create archive
-    let filename = format!(
-        "rusty-shed-export-{}.zip",
-        chrono::Local::now().format("%Y%m%d-%H%M%S")
-    );
+    // Extract directory and filename from archive_path
+    let filename = archive_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("rusty-shed-export.zip");
 
-    let archive_path =
-        archive_writer::create_archive(dest_path, &manifest, media_files, &filename).await?;
+    // Create archive
+    let created_path =
+        archive_writer::create_archive(dest_dir, &manifest, media_files, filename).await?;
 
-    let file_size = std::fs::metadata(&archive_path)?.len();
+    let file_size = std::fs::metadata(&created_path)?.len();
 
     Ok(ExportResult::new(
-        archive_path.display().to_string(),
+        created_path.display().to_string(),
         file_size,
         selection.get_entity_count(),
     ))

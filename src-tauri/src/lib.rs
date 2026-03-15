@@ -35,6 +35,7 @@ use crate::core::infrastructure::error::CommandError;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::dcc_inventory::interface::command_handlers as dcc_inventory_command_handlers;
+use crate::export::interface::command_handlers as export_command_handlers;
 use crate::import::interface::command_handlers as import_command_handlers;
 use crate::maintenance::interface::command_handlers as maintenance_command_handlers;
 use crate::media::interface::command_handlers as media_command_handlers;
@@ -213,6 +214,9 @@ pub fn run() {
         dcc_inventory_command_handlers::get_decoders,
         dcc_inventory_command_handlers::check_dcc_address_duplicate,
         dcc_inventory_command_handlers::get_installable_rolling_stocks,
+        export_command_handlers::get_export_preview,
+        export_command_handlers::open_export_file_dialog,
+        export_command_handlers::execute_export,
         import_command_handlers::analyze_import_package,
         import_command_handlers::get_import_preview,
         import_command_handlers::execute_import,
