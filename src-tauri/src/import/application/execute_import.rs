@@ -1,7 +1,10 @@
+use crate::import::domain::ImageFailure;
 use crate::import::domain::{ImportResult, ImportSession, ManifestDto, RecordCounts};
-use crate::import::infrastructure::DuplicateChecker;
+use crate::import::infrastructure::{ArchiveExtractor, DuplicateChecker};
+use log::warn;
 use sqlx::SqlitePool;
 use std::collections::HashSet;
+use std::path::Path;
 use uuid::Uuid;
 
 /// Executes the import of validated package data into the database.
@@ -36,6 +39,8 @@ impl ExecuteImportUseCase {
         &self,
         _session: &ImportSession,
         manifest: &ManifestDto,
+        archive_path: &Path,
+        media_dir: &Path,
     ) -> Result<ImportResult, String> {
         let start = std::time::Instant::now();
 
@@ -110,6 +115,8 @@ impl ExecuteImportUseCase {
 
         let mut added = RecordCounts::default();
         let mut skipped = RecordCounts::default();
+        let mut images_imported: u32 = 0;
+        let mut images_failed: Vec<ImageFailure> = vec![];
 
         // Ensure the default collection exists
         sqlx::query("INSERT OR IGNORE INTO collections (id, name) VALUES (?, ?)")
@@ -248,7 +255,7 @@ impl ExecuteImportUseCase {
             )
             .bind(&seller.id)
             .bind(&seller.name)
-            .bind(&seller.seller_type)
+            .bind(schema_seller_type_to_db(&seller.seller_type))
             .bind(&seller.email)
             .bind(&seller.phone)
             .bind(&seller.website_url)
@@ -284,6 +291,28 @@ impl ExecuteImportUseCase {
             .execute(&mut *tx)
             .await
             .map_err(|e| format!("Failed to insert collection item '{}': {}", item.id, e))?;
+
+            // Copy image from archive if present
+            if let Some(ref image_filename) = item.image {
+                let entry_path = format!("images/{}", image_filename);
+                match ArchiveExtractor::extract_file(archive_path, &entry_path) {
+                    Ok(bytes) => {
+                        let dest = media_dir.join(image_filename);
+                        if let Err(e) = std::fs::write(&dest, &bytes) {
+                            warn!("Failed to write image '{}': {}", image_filename, e);
+                            images_failed
+                                .push(ImageFailure::new(image_filename.clone(), e.to_string()));
+                        } else {
+                            images_imported += 1;
+                        }
+                    }
+                    Err(e) => {
+                        warn!("Image '{}' not found in archive: {}", image_filename, e);
+                        images_failed
+                            .push(ImageFailure::new(image_filename.clone(), e.to_string()));
+                    }
+                }
+            }
 
             // Insert purchase info if present
             if let Some(ref purchase) = item.purchase {
@@ -431,7 +460,89 @@ impl ExecuteImportUseCase {
         skipped.track_inventories = track_inventory_dupes.duplicate_count() as u32;
 
         // Maintenance cards require the owned_rolling_stocks FK chain — skipped in MVP
-        added.maintenance_cards = 0;
+        // 8. Import maintenance cards via owned_rolling_stocks bridge
+        for card in &manifest.data.maintenance_cards {
+            let card_exists: bool =
+                sqlx::query_scalar("SELECT COUNT(1) FROM maintenance_cards WHERE id = ?")
+                    .bind(&card.id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map(|count: i64| count > 0)
+                    .map_err(|e| {
+                        format!("Failed to check maintenance card '{}': {}", card.id, e)
+                    })?;
+
+            if card_exists {
+                skipped.maintenance_cards += 1;
+                continue;
+            }
+
+            let item_exists: bool =
+                sqlx::query_scalar("SELECT COUNT(1) FROM collection_items WHERE id = ?")
+                    .bind(&card.collection_item_id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map(|count: i64| count > 0)
+                    .map_err(|e| {
+                        format!(
+                            "Failed to check collection item for card '{}': {}",
+                            card.id, e
+                        )
+                    })?;
+
+            if !item_exists {
+                warn!(
+                    "Skipping maintenance card '{}': collection item '{}' not found",
+                    card.id, card.collection_item_id
+                );
+                skipped.maintenance_cards += 1;
+                continue;
+            }
+
+            let ors_id = Uuid::new_v4().to_string();
+            sqlx::query("INSERT INTO owned_rolling_stocks (id, collection_item_id) VALUES (?, ?)")
+                .bind(&ors_id)
+                .bind(&card.collection_item_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to insert owned_rolling_stock for card '{}': {}",
+                        card.id, e
+                    )
+                })?;
+
+            sqlx::query(
+                "INSERT INTO maintenance_cards \
+                 (id, owned_rolling_stock_id, last_maintenance_date, next_maintenance_date) \
+                 VALUES (?, ?, ?, ?)",
+            )
+            .bind(&card.id)
+            .bind(&ors_id)
+            .bind(&card.last_maintenance_date)
+            .bind(&card.next_maintenance_date)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| format!("Failed to insert maintenance card '{}': {}", card.id, e))?;
+
+            for event in &card.events {
+                sqlx::query(
+                    "INSERT OR IGNORE INTO maintenance_events \
+                     (id, maintenance_card_id, date_performed, maintenance_type, notes) \
+                     VALUES (?, ?, ?, ?, ?)",
+                )
+                .bind(&event.id)
+                .bind(&card.id)
+                .bind(&event.date)
+                .bind(schema_maintenance_type_to_db(&event.r#type))
+                .bind(&event.description)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| format!("Failed to insert maintenance event '{}': {}", event.id, e))?;
+            }
+
+            added.maintenance_cards += 1;
+        }
 
         // Commit the transaction
         tx.commit()
@@ -442,8 +553,8 @@ impl ExecuteImportUseCase {
             session_id: _session.id.clone(),
             added,
             skipped,
-            images_imported: 0,
-            images_failed: vec![],
+            images_imported,
+            images_failed,
             duration_ms: start.elapsed().as_millis() as u64,
             warnings: vec![],
         };
@@ -470,9 +581,31 @@ fn schema_power_method_to_db(schema_value: &str) -> &'static str {
     match schema_value {
         "ac" => "AC",
         "dc" => "DC",
-        "dcc" => "DCC",
-        "none" => "NONE",
+        "trixExpress" => "TRIX_EXPRESS",
         _ => "DC",
+    }
+}
+
+/// Convert schema seller type (camelCase/lowercase) to DB value (SCREAMING_SNAKE_CASE).
+fn schema_seller_type_to_db(schema_value: &str) -> &'static str {
+    match schema_value {
+        "shop" => "SHOP",
+        "private" => "PRIVATE",
+        "marketplace" => "MARKETPLACE",
+        "distributor" => "DISTRIBUTOR",
+        _ => "SHOP",
+    }
+}
+
+/// Convert schema maintenance type to DB value (SCREAMING_SNAKE_CASE).
+fn schema_maintenance_type_to_db(schema_value: &str) -> &'static str {
+    match schema_value {
+        "cleaning" => "WHEEL_CLEANING",
+        "lubrication" => "LUBRICATION",
+        "repair" => "OTHER",
+        "modification" => "WEATHERING",
+        "inspection" => "GENERAL_INSPECTION",
+        _ => "OTHER",
     }
 }
 
@@ -644,7 +777,14 @@ mod tests {
         };
 
         let use_case = ExecuteImportUseCase::new(pool);
-        let result = use_case.execute(&session, &manifest).await;
+        let result = use_case
+            .execute(
+                &session,
+                &manifest,
+                std::path::Path::new("/tmp/test.zip"),
+                std::path::Path::new("/tmp"),
+            )
+            .await;
 
         assert!(result.is_ok());
         let import_result = result.unwrap();
@@ -670,9 +810,17 @@ mod tests {
     fn test_schema_power_method_to_db() {
         assert_eq!(schema_power_method_to_db("ac"), "AC");
         assert_eq!(schema_power_method_to_db("dc"), "DC");
-        assert_eq!(schema_power_method_to_db("dcc"), "DCC");
-        assert_eq!(schema_power_method_to_db("none"), "NONE");
+        assert_eq!(schema_power_method_to_db("trixExpress"), "TRIX_EXPRESS");
         assert_eq!(schema_power_method_to_db("unknown"), "DC");
+    }
+
+    #[test]
+    fn test_schema_seller_type_to_db() {
+        assert_eq!(schema_seller_type_to_db("shop"), "SHOP");
+        assert_eq!(schema_seller_type_to_db("private"), "PRIVATE");
+        assert_eq!(schema_seller_type_to_db("marketplace"), "MARKETPLACE");
+        assert_eq!(schema_seller_type_to_db("distributor"), "DISTRIBUTOR");
+        assert_eq!(schema_seller_type_to_db("unknown"), "SHOP");
     }
 
     #[test]

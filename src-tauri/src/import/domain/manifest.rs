@@ -6,7 +6,7 @@ use specta::Type;
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestDto {
-    #[serde(default)]
+    #[serde(rename = "$schema", default)]
     pub schema: Option<String>,
     pub version: String,
     #[serde(default)]
@@ -57,8 +57,6 @@ pub struct ManufacturerRecord {
 pub struct RailwayCompanyRecord {
     pub id: String,
     pub name: String,
-    #[serde(default)]
-    pub abbreviation: Option<String>,
     #[serde(default)]
     pub country_code: Option<String>,
     #[serde(default)]

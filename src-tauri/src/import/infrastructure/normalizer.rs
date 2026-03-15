@@ -37,6 +37,12 @@ impl Normalizer {
             }
         }
 
+        if let Some(sellers) = data.get_mut("sellers").and_then(|v| v.as_array_mut()) {
+            for item in sellers.iter_mut() {
+                normalize_field(item, "sellerType", normalize_seller_type);
+            }
+        }
+
         if let Some(models) = data.get_mut("railwayModels").and_then(|v| v.as_array_mut()) {
             for item in models.iter_mut() {
                 normalize_field(item, "availabilityStatus", normalize_availability_status);
@@ -99,6 +105,7 @@ where
 fn normalize_manufacturer_status(s: &str) -> Option<&'static str> {
     match s {
         "ACTIVE" => Some("active"),
+        "MERGED" => Some("merged"),
         "OUT_OF_BUSINESS" => Some("outOfBusiness"),
         _ => None,
     }
@@ -116,6 +123,7 @@ fn normalize_availability_status(s: &str) -> Option<&'static str> {
     match s {
         "AVAILABLE" => Some("available"),
         "ANNOUNCED" => Some("announced"),
+        "CANCELLED" => Some("cancelled"),
         "DISCONTINUED" => Some("discontinued"),
         _ => None,
     }
@@ -125,8 +133,17 @@ fn normalize_power_method(s: &str) -> Option<&'static str> {
     match s {
         "AC" => Some("ac"),
         "DC" => Some("dc"),
-        "DCC" => Some("dcc"),
-        "TRIX_EXPRESS" | "NONE" => Some("none"),
+        "TRIX_EXPRESS" => Some("trixExpress"),
+        _ => None,
+    }
+}
+
+fn normalize_seller_type(s: &str) -> Option<&'static str> {
+    match s {
+        "SHOP" => Some("shop"),
+        "PRIVATE" => Some("private"),
+        "MARKETPLACE" => Some("marketplace"),
+        "DISTRIBUTOR" => Some("distributor"),
         _ => None,
     }
 }

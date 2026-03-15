@@ -205,8 +205,9 @@ pub async fn execute_import(
 
     // Execute import
     let use_case = ExecuteImportUseCase::new(state.db_pool());
+    let media_dir = state.models_dir();
     let result = use_case
-        .execute(&session, &manifest)
+        .execute(&session, &manifest, &session.source_path, &media_dir)
         .await
         .map_err(|e| CommandError::unknown(e.to_string()))?;
 

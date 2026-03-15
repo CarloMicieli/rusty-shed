@@ -100,7 +100,7 @@
         },
         "status": {
           "type": "string",
-          "enum": ["active", "outOfBusiness"],
+          "enum": ["active", "merged", "outOfBusiness"],
           "default": "active"
         },
         "websiteUrl": {
@@ -122,10 +122,6 @@
           "type": "string",
           "minLength": 1,
           "description": "Railway company name, e.g., 'Deutsche Bahn'"
-        },
-        "abbreviation": {
-          "type": "string",
-          "description": "Short code, e.g., 'DB'"
         },
         "countryCode": {
           "type": "string",
@@ -187,7 +183,7 @@
         },
         "powerMethod": {
           "type": "string",
-          "enum": ["dc", "ac", "dcc", "none"]
+          "enum": ["dc", "ac", "trixExpress"]
         },
         "deliveryDate": {
           "type": "string",
@@ -195,7 +191,7 @@
         },
         "availabilityStatus": {
           "type": "string",
-          "enum": ["available", "announced", "discontinued"]
+          "enum": ["available", "announced", "cancelled", "discontinued"]
         },
         "image": {
           "type": "string",
@@ -407,7 +403,7 @@
         },
         "sellerType": {
           "type": "string",
-          "enum": ["shop", "private", "marketplace", "auction"]
+          "enum": ["shop", "private", "marketplace", "distributor"]
         },
         "email": {
           "type": "string",

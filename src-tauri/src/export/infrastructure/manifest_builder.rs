@@ -1,6 +1,7 @@
-/// Archive manifest builder
 use serde_json::{Map, Value, json};
 use sqlx::{Row, SqlitePool};
+/// Archive manifest builder
+use std::path::Path;
 
 use crate::export::domain::entity_selection::ExportEntitySelection;
 use crate::export::domain::error::ExportError;
@@ -22,9 +23,7 @@ fn db_category_to_schema(db_value: &str) -> &'static str {
 fn db_power_method_to_schema(db_value: &str) -> &'static str {
     match db_value {
         "AC" => "ac",
-        "DC" => "dc",
-        "DCC" => "dcc",
-        "TRIX_EXPRESS" => "ac",
+        "TRIX_EXPRESS" => "trixExpress",
         _ => "dc",
     }
 }
@@ -32,6 +31,7 @@ fn db_power_method_to_schema(db_value: &str) -> &'static str {
 fn db_manufacturer_status_to_schema(s: &str) -> Option<&'static str> {
     match s {
         "ACTIVE" => Some("active"),
+        "MERGED" => Some("merged"),
         "OUT_OF_BUSINESS" => Some("outOfBusiness"),
         _ => None,
     }
@@ -49,7 +49,18 @@ fn db_availability_status_to_schema(s: &str) -> Option<&'static str> {
     match s {
         "AVAILABLE" => Some("available"),
         "ANNOUNCED" => Some("announced"),
+        "CANCELLED" => Some("cancelled"),
         "DISCONTINUED" => Some("discontinued"),
+        _ => None,
+    }
+}
+
+fn db_seller_type_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "SHOP" => Some("shop"),
+        "PRIVATE" => Some("private"),
+        "MARKETPLACE" => Some("marketplace"),
+        "DISTRIBUTOR" => Some("distributor"),
         _ => None,
     }
 }
@@ -146,6 +157,17 @@ where
         .unwrap_or(Value::Null)
 }
 
+fn probe_model_image(media_dir: &Path, model_id: &str) -> Option<String> {
+    let base = model_id.replace(':', "_");
+    for ext in &["png", "jpg", "jpeg"] {
+        let filename = format!("{}.{}", base, ext);
+        if media_dir.join(&filename).exists() {
+            return Some(filename);
+        }
+    }
+    None
+}
+
 // ─── Main builder ────────────────────────────────────────────────────────────
 
 /// Build export manifest from selected entities.
@@ -162,6 +184,7 @@ where
 pub async fn build_manifest(
     pool: &SqlitePool,
     selection: &ExportEntitySelection,
+    media_dir: &Path,
 ) -> Result<Value, ExportError> {
     let mut data = json!({});
 
@@ -347,11 +370,43 @@ pub async fn build_manifest(
                         _ => Value::Null,
                     };
 
+                    let sale_price_amount: Option<i64> = row
+                        .try_get::<Option<i64>, _>("sale_price_amount")
+                        .ok()
+                        .flatten();
+                    let sale_price_currency: Option<String> = row
+                        .try_get::<Option<String>, _>("sale_price_currency")
+                        .ok()
+                        .flatten();
+                    let sale_price = match (sale_price_amount, sale_price_currency) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+
+                    let deposit_amount_val: Option<i64> = row
+                        .try_get::<Option<i64>, _>("deposit_amount")
+                        .ok()
+                        .flatten();
+                    let deposit_currency: Option<String> = row
+                        .try_get::<Option<String>, _>("deposit_currency")
+                        .ok()
+                        .flatten();
+                    let deposit = match (deposit_amount_val, deposit_currency) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+
                     strip_null_fields(json!({
                         "type": pt,
                         "purchaseDate": purchase_date,
                         "sellerId": row.try_get::<Option<String>, _>("seller_id").ok().flatten(),
                         "price": price,
+                        "salePrice": sale_price,
+                        "depositAmount": deposit,
                         "saleDate": row.try_get::<Option<String>, _>("sale_date").ok().flatten(),
                         "expectedDelivery": row.try_get::<Option<String>, _>("expected_date").ok().flatten(),
                     }))
@@ -359,6 +414,11 @@ pub async fn build_manifest(
                     Value::Null
                 };
 
+                let model_id_for_image: Option<String> =
+                    row.try_get::<String, _>("railway_model_id").ok();
+                let image = model_id_for_image
+                    .as_deref()
+                    .and_then(|id| probe_model_image(media_dir, id));
                 strip_null_fields(json!({
                     "id": row.try_get::<String, _>("id").ok(),
                     "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
@@ -377,6 +437,7 @@ pub async fn build_manifest(
                         db_box_condition_to_schema,
                     ),
                     "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                    "image": image,
                     "purchase": purchase,
                 }))
             })
@@ -398,7 +459,7 @@ pub async fn build_manifest(
                 strip_null_fields(json!({
                     "id": row.try_get::<String, _>("id").ok(),
                     "name": row.try_get::<String, _>("name").ok(),
-                    "sellerType": row.try_get::<String, _>("type").ok(),
+                    "sellerType": enum_value(row.try_get::<String, _>("type").ok(), db_seller_type_to_schema),
                     "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
                     "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
                     "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
@@ -619,7 +680,7 @@ pub async fn build_manifest(
                     all_sellers.push(strip_null_fields(json!({
                         "id": row.try_get::<String, _>("id").ok(),
                         "name": row.try_get::<String, _>("name").ok(),
-                        "sellerType": row.try_get::<String, _>("type").ok(),
+                        "sellerType": enum_value(row.try_get::<String, _>("type").ok(), db_seller_type_to_schema),
                         "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
                         "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
                         "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
@@ -632,6 +693,7 @@ pub async fn build_manifest(
 
     // Build final manifest — "data" key matches ManifestDto.data in the import feature
     let manifest = json!({
+        "$schema": "https://rusty-shed.app/schemas/manifest/v1.json",
         "version": "1.0",
         "exportedAt": chrono::Utc::now().to_rfc3339(),
         "source": "rusty-shed",

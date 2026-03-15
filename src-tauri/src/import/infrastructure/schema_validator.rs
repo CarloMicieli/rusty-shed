@@ -311,7 +311,6 @@ mod tests {
                     {
                         "id": "rc1",
                         "name": "Deutsche Bahn",
-                        "abbreviation": "DB",
                         "countryCode": "DE"
                     }
                 ]
@@ -338,7 +337,6 @@ mod tests {
                     {
                         "id": "rc1",
                         "name": "Deutsche Bahn",
-                        "abbreviation": "DB",
                         "countryCode": "DE"
                     }
                 ],

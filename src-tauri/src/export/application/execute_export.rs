@@ -41,7 +41,7 @@ pub async fn export_to_archive(
     disk_space_checker::validate_disk_space(dest_dir, ESTIMATED_SIZE)?;
 
     // Build manifest from database
-    let manifest = manifest_builder::build_manifest(pool, selection).await?;
+    let manifest = manifest_builder::build_manifest(pool, selection, media_dir).await?;
 
     // Collect media files
     let media_files = media_collector::collect_media_files(pool, selection, media_dir).await?;
