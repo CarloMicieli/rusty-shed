@@ -69,7 +69,7 @@ describe('ExportController', () => {
         .mockResolvedValueOnce({
           ok: true,
           data: {
-            archive_path: '/home/user/export.zip',
+            archivePath: '/home/user/export.zip',
             file_size_bytes: BigInt(1024),
             records_exported: 42,
             warnings: []
@@ -92,7 +92,7 @@ describe('ExportController', () => {
         .mockResolvedValueOnce({
           ok: true,
           data: {
-            archive_path: destinationPath,
+            archivePath: destinationPath,
             file_size_bytes: BigInt(512),
             records_exported: 10,
             warnings: []
@@ -142,7 +142,7 @@ describe('ExportController', () => {
         .mockResolvedValueOnce({
           ok: true,
           data: {
-            archive_path: '/path/out.zip',
+            archivePath: '/path/out.zip',
             file_size_bytes: BigInt(100),
             records_exported: 1,
             warnings: []

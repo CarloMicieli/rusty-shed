@@ -37,7 +37,7 @@ export class ExportController {
 
       if (exportResult.ok) {
         toaster.success({
-          title: m.export_archive_success({ path: exportResult.data.archive_path })
+          title: m.export_archive_success({ path: exportResult.data.archivePath })
         });
       } else {
         this.error = exportResult.error.message;
