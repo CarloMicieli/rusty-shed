@@ -4,7 +4,7 @@ use crate::cloud_backup::domain::{
     BackupLabel, BackupListItem, BackupMetadata, CloudBackupError, Result,
 };
 use crate::cloud_backup::infrastructure::{GoogleDriveClient, is_online};
-use crate::import::is_import_in_progress;
+use crate::data_management::interface::is_import_in_progress;
 use chrono::Utc;
 use flate2::Compression;
 use serde_json::json;
