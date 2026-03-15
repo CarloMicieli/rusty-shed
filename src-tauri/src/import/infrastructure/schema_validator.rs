@@ -41,15 +41,18 @@ impl SchemaValidator {
     /// Validate a manifest document against the schema.
     ///
     /// # Errors
-    /// Returns `SchemaValidationError::Invalid` if the document does not conform to the schema.
+    /// Returns `SchemaValidationError::Invalid` with the first failing constraint's path and
+    /// kind, so callers can log actionable diagnostic information.
     pub fn validate(&self, manifest: &Value) -> Result<(), SchemaValidationError> {
-        // Use is_valid for simple true/false validation
-        if jsonschema::is_valid(&self.schema, manifest) {
-            Ok(())
-        } else {
-            Err(SchemaValidationError::Invalid(
-                "Manifest does not conform to schema".to_string(),
-            ))
+        match jsonschema::validate(&self.schema, manifest) {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                let msg = format!(
+                    "at '{}' (schema: '{}'): {:?}",
+                    error.instance_path, error.schema_path, error.kind
+                );
+                Err(SchemaValidationError::Invalid(msg))
+            }
         }
     }
 

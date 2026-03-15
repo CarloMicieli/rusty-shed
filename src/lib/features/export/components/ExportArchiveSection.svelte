@@ -1,11 +1,13 @@
 <script lang="ts">
   import { Button } from '$lib/components';
   import { getExportController } from '../export.controller.svelte';
+  import ImportDrawer from '$lib/features/import/components/ImportDrawer.svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   const controller = getExportController();
 
   let isExporting = $derived(controller.isExporting);
+  let importDrawerOpen = $state(false);
 </script>
 
 <div class="card border border-border/60 bg-card/50 shadow-xl">
@@ -24,9 +26,11 @@
         {isExporting ? m.export_archive_exporting() : m.export_archive_button()}
       </Button>
 
-      <Button variant="outline" href="/settings/import">
+      <Button variant="outline" onclick={() => (importDrawerOpen = true)}>
         {m.export_archive_import_button()}
       </Button>
     </div>
   </div>
 </div>
+
+<ImportDrawer bind:open={importDrawerOpen} />

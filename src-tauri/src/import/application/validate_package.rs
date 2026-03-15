@@ -1,5 +1,5 @@
 use crate::import::domain::{ArchiveFormat, ManifestDto, RecordCounts, ValidationError};
-use crate::import::infrastructure::{ArchiveExtractor, SchemaValidator};
+use crate::import::infrastructure::{ArchiveExtractor, Normalizer, SchemaValidator};
 use serde_json::Value;
 use std::path::Path;
 
@@ -44,13 +44,17 @@ impl ValidatePackageUseCase {
             )
         })?;
 
-        let manifest_value: Value = serde_json::from_str(&manifest_str).map_err(|e| {
+        let mut manifest_value: Value = serde_json::from_str(&manifest_str).map_err(|e| {
             ValidationError::new(
                 "manifest",
                 "invalid_json",
                 format!("Manifest is not valid JSON: {}", e),
             )
         })?;
+
+        // Normalize old-format enum values (SCREAMING_SNAKE_CASE → schema canonical)
+        // so archives exported before the normalization fix can still be imported.
+        Normalizer::normalize_manifest(&mut manifest_value);
 
         // Validate against schema
         let validator = SchemaValidator::new().map_err(|e| {

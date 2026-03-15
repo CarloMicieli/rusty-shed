@@ -1,6 +1,7 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog';
   import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+  import { Button } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
 
   let draggingOver = $state(false);
@@ -98,9 +99,9 @@
     </svg>
     <h3>{m['import.dropzone.title']()}</h3>
     <p>{m['import.dropzone.subtitle']()}</p>
-    <button class="file-action" onclick={handleClick} type="button" {disabled}>
+    <Button onclick={handleClick} type="button" {disabled} class="pointer-events-auto">
       {m['import.dropzone.select']()}
-    </button>
+    </Button>
   </div>
 </div>
 
@@ -161,26 +162,5 @@
     font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
     max-width: 300px;
-  }
-
-  .file-action {
-    padding: 0.5rem 1.5rem;
-    border-radius: var(--radius-md);
-    background-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 200ms ease-in-out;
-    pointer-events: auto;
-  }
-
-  .file-action:hover:not(:disabled) {
-    background-color: hsl(var(--primary) / 0.9);
-  }
-
-  .file-action:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
   }
 </style>

@@ -46,9 +46,10 @@ pub async fn analyze_import_package(
     };
 
     // Validate package using application layer
-    let (_detected_format, _manifest, record_counts) = ValidatePackageUseCase::execute(&path)
-        .await
-        .map_err(|e| CommandError::unknown(format!("Validation failed: {}", e.code)))?;
+    let (_detected_format, _manifest, record_counts) =
+        ValidatePackageUseCase::execute(&path).await.map_err(|e| {
+            CommandError::unknown(format!("Validation failed [{}]: {}", e.code, e.message))
+        })?;
 
     // Create session
     let session = ImportSession::new(path, format);

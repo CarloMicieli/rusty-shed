@@ -1,6 +1,11 @@
 /// Archive manifest builder
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 use sqlx::{Row, SqlitePool};
+
+use crate::export::domain::entity_selection::ExportEntitySelection;
+use crate::export::domain::error::ExportError;
+
+// ─── DB-to-schema value converters ──────────────────────────────────────────
 
 fn db_category_to_schema(db_value: &str) -> &'static str {
     match db_value {
@@ -24,8 +29,124 @@ fn db_power_method_to_schema(db_value: &str) -> &'static str {
     }
 }
 
-use crate::export::domain::entity_selection::ExportEntitySelection;
-use crate::export::domain::error::ExportError;
+fn db_manufacturer_status_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "ACTIVE" => Some("active"),
+        "OUT_OF_BUSINESS" => Some("outOfBusiness"),
+        _ => None,
+    }
+}
+
+fn db_railway_company_status_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "ACTIVE" => Some("active"),
+        "INACTIVE" => Some("inactive"),
+        _ => None,
+    }
+}
+
+fn db_availability_status_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "AVAILABLE" => Some("available"),
+        "ANNOUNCED" => Some("announced"),
+        "DISCONTINUED" => Some("discontinued"),
+        _ => None,
+    }
+}
+
+fn db_purchase_type_to_schema(s: &str) -> Option<&'static str> {
+    match s.to_ascii_uppercase().as_str() {
+        "PURCHASED" => Some("purchased"),
+        "SOLD" => Some("sold"),
+        "PREORDERED" => Some("preordered"),
+        _ => None,
+    }
+}
+
+fn db_purchase_condition_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "NEW" => Some("new"),
+        "PRE_OWNED" => Some("preowned"),
+        "USED" => Some("used"),
+        _ => None,
+    }
+}
+
+fn db_model_condition_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "MINT" | "NEAR_MINT" => Some("mint"),
+        "EXCELLENT" | "VERY_GOOD" => Some("excellent"),
+        "GOOD" => Some("good"),
+        "FAIR" => Some("fair"),
+        "POOR" | "FOR_PARTS" => Some("poor"),
+        _ => None,
+    }
+}
+
+fn db_box_condition_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "ORIGINAL_MINT" => Some("mint"),
+        "ORIGINAL_GOOD" | "REPLACEMENT_BOX" => Some("good"),
+        "ORIGINAL_WORN" => Some("damaged"),
+        "NO_BOX" => Some("missing"),
+        _ => None,
+    }
+}
+
+fn db_maintenance_type_to_schema(s: &str) -> Option<&'static str> {
+    match s {
+        "WHEEL_CLEANING" | "TRACK_CLEANING" | "CONTACT_CLEANING" => Some("cleaning"),
+        "LUBRICATION" | "GEAR_GREASE" => Some("lubrication"),
+        "MOTOR_BRUSH_REPLACEMENT"
+        | "TRACTION_TIRE_REPLACEMENT"
+        | "SPEAKER_REPAIR"
+        | "COUPLER_ADJUSTMENT"
+        | "DETAIL_REPAIR"
+        | "DECODER_INSTALL"
+        | "FIRMWARE_UPDATE"
+        | "STAY_ALIVE_INSTALL"
+        | "OTHER" => Some("repair"),
+        "WEATHERING" => Some("modification"),
+        "GENERAL_INSPECTION" => Some("inspection"),
+        _ => None,
+    }
+}
+
+// ─── JSON helpers ────────────────────────────────────────────────────────────
+
+/// Remove null-valued fields from JSON objects (recursive).
+///
+/// The import JSON schema uses `additionalProperties: false` and typed fields
+/// without nullable support. When a DB column is NULL, `serde_json::json!`
+/// produces `"field": null`, which fails schema validation. Stripping null
+/// fields before writing the manifest ensures only present values are included.
+fn strip_null_fields(value: Value) -> Value {
+    match value {
+        Value::Object(map) => {
+            let filtered: Map<String, Value> = map
+                .into_iter()
+                .filter(|(_, v)| !v.is_null())
+                .map(|(k, v)| (k, strip_null_fields(v)))
+                .collect();
+            Value::Object(filtered)
+        }
+        Value::Array(arr) => Value::Array(arr.into_iter().map(strip_null_fields).collect()),
+        other => other,
+    }
+}
+
+/// Convert an optional DB enum string to its schema representation.
+fn enum_value<F>(raw: Option<String>, converter: F) -> Value
+where
+    F: Fn(&str) -> Option<&'static str>,
+{
+    raw.as_deref()
+        .and_then(converter)
+        .map(|s| Value::String(s.to_string()))
+        .unwrap_or(Value::Null)
+}
+
+// ─── Main builder ────────────────────────────────────────────────────────────
 
 /// Build export manifest from selected entities.
 ///
@@ -57,14 +178,14 @@ pub async fn build_manifest(
         let manufacturers: Vec<Value> = rows
             .iter()
             .map(|row| {
-                json!({
+                strip_null_fields(json!({
                     "id": row.try_get::<String, _>("id").ok(),
                     "name": row.try_get::<String, _>("name").ok(),
                     "registeredCompanyName": row.try_get::<Option<String>, _>("registered_company_name").ok().flatten(),
                     "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
-                    "status": row.try_get::<String, _>("status").ok(),
+                    "status": enum_value(row.try_get::<String, _>("status").ok(), db_manufacturer_status_to_schema),
                     "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
-                })
+                }))
             })
             .collect();
         data["manufacturers"] = json!(manufacturers);
@@ -82,12 +203,12 @@ pub async fn build_manifest(
         let railway_companies: Vec<Value> = rc_rows
             .iter()
             .map(|row| {
-                json!({
+                strip_null_fields(json!({
                     "id": row.try_get::<String, _>("id").ok(),
                     "name": row.try_get::<String, _>("name").ok(),
                     "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
-                    "status": row.try_get::<Option<String>, _>("status").ok().flatten(),
-                })
+                    "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
+                }))
             })
             .collect();
         data["railwayCompanies"] = json!(railway_companies);
@@ -126,14 +247,14 @@ pub async fn build_manifest(
             let rolling_stocks: Vec<Value> = rs_rows
                 .iter()
                 .map(|rs| {
-                    json!({
+                    strip_null_fields(json!({
                         "railwayCompanyId": rs.try_get::<String, _>("railway_company_id").ok(),
                         "seriesCode": rs.try_get::<String, _>("series_code").ok(),
                         "roadNumber": rs.try_get::<Option<String>, _>("road_number").ok().flatten(),
                         "livery": rs.try_get::<Option<String>, _>("livery").ok().flatten(),
                         "friendlyName": rs.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
                         "isDummy": rs.try_get::<i64, _>("is_dummy").ok().map(|v| v != 0),
-                    })
+                    }))
                 })
                 .collect();
 
@@ -150,7 +271,14 @@ pub async fn build_manifest(
                 .flatten()
                 .unwrap_or_else(|| product_code.clone());
 
-            models.push(json!({
+            let availability_status = enum_value(
+                row.try_get::<Option<String>, _>("availability_status")
+                    .ok()
+                    .flatten(),
+                db_availability_status_to_schema,
+            );
+
+            models.push(strip_null_fields(json!({
                 "id": model_id,
                 "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
                 "productCode": product_code,
@@ -163,9 +291,9 @@ pub async fn build_manifest(
                 },
                 "powerMethod": db_power_method_to_schema(&power_method_db),
                 "deliveryDate": row.try_get::<Option<String>, _>("delivery_date").ok().flatten(),
-                "availabilityStatus": row.try_get::<Option<String>, _>("availability_status").ok().flatten(),
+                "availabilityStatus": availability_status,
                 "rollingStocks": rolling_stocks,
-            }));
+            })));
         }
         data["railwayModels"] = json!(models);
     }
@@ -189,17 +317,21 @@ pub async fn build_manifest(
         let items: Vec<Value> = item_rows
             .iter()
             .map(|row| {
-                let purchase_date: Option<String> = row
-                    .try_get::<Option<String>, _>("purchase_date")
-                    .ok()
-                    .flatten();
-                let purchase_type: Option<String> = row
+                let purchase_type_raw: Option<String> = row
                     .try_get::<Option<String>, _>("purchase_type")
                     .ok()
                     .flatten();
-                let has_purchase = purchase_date.is_some() || purchase_type.is_some();
 
-                let purchase = if has_purchase {
+                // Only build a purchase object when type maps to a known schema value.
+                // Purchase.type is required by the schema, so without it we omit the object.
+                let schema_purchase_type =
+                    purchase_type_raw.as_deref().and_then(db_purchase_type_to_schema);
+
+                let purchase = if let Some(pt) = schema_purchase_type {
+                    let purchase_date: Option<String> = row
+                        .try_get::<Option<String>, _>("purchase_date")
+                        .ok()
+                        .flatten();
                     let price_amount: Option<i64> = row
                         .try_get::<Option<i64>, _>("purchased_price_amount")
                         .ok()
@@ -215,29 +347,38 @@ pub async fn build_manifest(
                         _ => Value::Null,
                     };
 
-                    json!({
-                        "type": purchase_type,
+                    strip_null_fields(json!({
+                        "type": pt,
                         "purchaseDate": purchase_date,
                         "sellerId": row.try_get::<Option<String>, _>("seller_id").ok().flatten(),
                         "price": price,
                         "saleDate": row.try_get::<Option<String>, _>("sale_date").ok().flatten(),
                         "expectedDelivery": row.try_get::<Option<String>, _>("expected_date").ok().flatten(),
-                    })
+                    }))
                 } else {
                     Value::Null
                 };
 
-                json!({
+                strip_null_fields(json!({
                     "id": row.try_get::<String, _>("id").ok(),
                     "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
                     "addedDate": row.try_get::<String, _>("added_date").ok(),
                     "removedDate": row.try_get::<Option<String>, _>("removed_date").ok().flatten(),
-                    "purchaseCondition": row.try_get::<Option<String>, _>("purchase_condition").ok().flatten(),
-                    "modelCondition": row.try_get::<Option<String>, _>("model_condition").ok().flatten(),
-                    "boxCondition": row.try_get::<Option<String>, _>("box_condition").ok().flatten(),
+                    "purchaseCondition": enum_value(
+                        row.try_get::<Option<String>, _>("purchase_condition").ok().flatten(),
+                        db_purchase_condition_to_schema,
+                    ),
+                    "modelCondition": enum_value(
+                        row.try_get::<Option<String>, _>("model_condition").ok().flatten(),
+                        db_model_condition_to_schema,
+                    ),
+                    "boxCondition": enum_value(
+                        row.try_get::<Option<String>, _>("box_condition").ok().flatten(),
+                        db_box_condition_to_schema,
+                    ),
                     "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
                     "purchase": purchase,
-                })
+                }))
             })
             .collect();
         data["collectionItems"] = json!(items);
@@ -254,41 +395,78 @@ pub async fn build_manifest(
         let sellers: Vec<Value> = rows
             .iter()
             .map(|row| {
-                json!({
+                strip_null_fields(json!({
                     "id": row.try_get::<String, _>("id").ok(),
                     "name": row.try_get::<String, _>("name").ok(),
                     "sellerType": row.try_get::<String, _>("type").ok(),
                     "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
                     "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
                     "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
-                })
+                }))
             })
             .collect();
         data["sellers"] = json!(sellers);
     }
 
     if selection.include_maintenance_logs {
-        let rows = sqlx::query(
-            "SELECT id, maintenance_card_id, date_performed, maintenance_type, notes \
-             FROM maintenance_events ORDER BY id",
+        // Query maintenance cards joined to owned_rolling_stocks to get collection_item_id.
+        // The schema requires MaintenanceCard.collectionItemId; the DB stores
+        // maintenance_cards.owned_rolling_stock_id → owned_rolling_stocks.collection_item_id.
+        let card_rows = sqlx::query(
+            "SELECT mc.id, ors.collection_item_id, \
+                    mc.last_maintenance_date, mc.next_maintenance_date \
+             FROM maintenance_cards mc \
+             JOIN owned_rolling_stocks ors ON ors.id = mc.owned_rolling_stock_id \
+             ORDER BY mc.id",
         )
         .fetch_all(pool)
         .await
         .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
 
-        let logs: Vec<Value> = rows
-            .iter()
-            .map(|row| {
-                json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "maintenanceCardId": row.try_get::<String, _>("maintenance_card_id").ok(),
-                    "date": row.try_get::<String, _>("date_performed").ok(),
-                    "type": row.try_get::<Option<String>, _>("maintenance_type").ok().flatten(),
-                    "description": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+        let mut maintenance_cards: Vec<Value> = Vec::new();
+        for card_row in &card_rows {
+            let card_id: String = card_row
+                .try_get("id")
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let event_rows = sqlx::query(
+                "SELECT id, date_performed, maintenance_type, notes \
+                 FROM maintenance_events \
+                 WHERE maintenance_card_id = ? \
+                 ORDER BY date_performed",
+            )
+            .bind(&card_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let events: Vec<Value> = event_rows
+                .iter()
+                .map(|ev| {
+                    let maintenance_type = enum_value(
+                        ev.try_get::<Option<String>, _>("maintenance_type")
+                            .ok()
+                            .flatten(),
+                        db_maintenance_type_to_schema,
+                    );
+                    strip_null_fields(json!({
+                        "id": ev.try_get::<String, _>("id").ok(),
+                        "date": ev.try_get::<String, _>("date_performed").ok(),
+                        "type": maintenance_type,
+                        "description": ev.try_get::<Option<String>, _>("notes").ok().flatten(),
+                    }))
                 })
-            })
-            .collect();
-        data["maintenanceCards"] = json!(logs);
+                .collect();
+
+            maintenance_cards.push(strip_null_fields(json!({
+                "id": card_id,
+                "collectionItemId": card_row.try_get::<String, _>("collection_item_id").ok(),
+                "lastMaintenanceDate": card_row.try_get::<Option<String>, _>("last_maintenance_date").ok().flatten(),
+                "nextMaintenanceDate": card_row.try_get::<Option<String>, _>("next_maintenance_date").ok().flatten(),
+                "events": events,
+            })));
+        }
+        data["maintenanceCards"] = json!(maintenance_cards);
     }
 
     if selection.include_track_inventory {
@@ -305,7 +483,7 @@ pub async fn build_manifest(
         let track_products: Vec<Value> = tp_rows
             .iter()
             .map(|row| {
-                json!({
+                strip_null_fields(json!({
                     "trackId": row.try_get::<String, _>("track_id").ok(),
                     "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
                     "productCode": row.try_get::<String, _>("product_code").ok(),
@@ -315,7 +493,7 @@ pub async fn build_manifest(
                     "withRoadbed": row.try_get::<i64, _>("with_roadbed").ok().map(|v| v != 0),
                     "length": row.try_get::<Option<i64>, _>("length_mm").ok().flatten(),
                     "radius": row.try_get::<Option<i64>, _>("radius_mm").ok().flatten(),
-                })
+                }))
             })
             .collect();
         data["trackProducts"] = json!(track_products);
@@ -350,11 +528,11 @@ pub async fn build_manifest(
             let items: Vec<Value> = item_rows
                 .iter()
                 .map(|row| {
-                    json!({
+                    strip_null_fields(json!({
                         "trackId": row.try_get::<String, _>("track_id").ok(),
                         "quantity": row.try_get::<i64, _>("quantity").ok(),
                         "required": row.try_get::<i64, _>("required").ok(),
-                    })
+                    }))
                 })
                 .collect();
 
@@ -381,24 +559,24 @@ pub async fn build_manifest(
                     let price_currency: String = row
                         .try_get::<String, _>("price_currency")
                         .unwrap_or_else(|_| "EUR".to_string());
-                    json!({
+                    strip_null_fields(json!({
                         "id": row.try_get::<String, _>("id").ok(),
                         "trackId": row.try_get::<String, _>("track_id").ok(),
                         "quantity": row.try_get::<i64, _>("quantity").ok(),
                         "price": { "amount": price_amount, "currency": price_currency },
                         "sellerId": seller_id,
                         "purchaseDate": row.try_get::<String, _>("purchase_date").ok(),
-                    })
+                    }))
                 })
                 .collect();
 
-            track_inventories.push(json!({
+            track_inventories.push(strip_null_fields(json!({
                 "id": inv_id,
                 "name": inv_row.try_get::<String, _>("name").ok(),
                 "description": inv_row.try_get::<Option<String>, _>("description").ok().flatten(),
                 "items": items,
                 "purchases": purchases,
-            }));
+            })));
         }
         data["trackInventories"] = json!(track_inventories);
 
@@ -438,14 +616,14 @@ pub async fn build_manifest(
 
                 let mut all_sellers = existing_sellers;
                 for row in &seller_rows {
-                    all_sellers.push(json!({
+                    all_sellers.push(strip_null_fields(json!({
                         "id": row.try_get::<String, _>("id").ok(),
                         "name": row.try_get::<String, _>("name").ok(),
                         "sellerType": row.try_get::<String, _>("type").ok(),
                         "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
                         "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
                         "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
-                    }));
+                    })));
                 }
                 data["sellers"] = json!(all_sellers);
             }
