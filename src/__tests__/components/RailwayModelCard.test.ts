@@ -41,6 +41,12 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
   convertFileSrc: vi.fn((p: string) => p)
 }));
+vi.mock('@tauri-apps/api/event', () => ({
+  listen: vi.fn(() => Promise.resolve(() => {}))
+}));
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  readFile: vi.fn(() => Promise.resolve(new Uint8Array()))
+}));
 
 // Mock bindings/commands
 vi.mock('$lib/bindings', () => ({
@@ -80,6 +86,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_field_series_code: () => 'Series Code',
   details_placeholder: () => 'Add maintenance notes, DCC addresses, or other details...',
   upload_error_unknown: () => 'Unknown upload error',
+  upload_error_unsupported_format: () => 'Unsupported image format',
   error_invalid_image_format: () =>
     'Invalid image format. Please upload a JPEG, PNG, WebP, or GIF file.',
   error_image_too_large: () => 'Image file is too large. Maximum size is {maxSize} MB.',

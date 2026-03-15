@@ -3636,21 +3636,21 @@ export type ExportPreview = {
   warnings: string[];
 };
 /**
- * Represents the result of an export operation
+ * Result of a completed export operation.
  */
 export type ExportResult = {
   /**
    * Path to the created archive
    */
-  archive_path: string;
+  archivePath: string;
   /**
    * File size in bytes
    */
-  file_size_bytes: bigint;
+  fileSizeBytes: bigint;
   /**
    * Number of records exported
    */
-  records_exported: number;
+  recordsExported: number;
   /**
    * Any warnings during export
    */

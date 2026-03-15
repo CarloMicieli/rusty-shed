@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { RailwayModel } from '$lib/types/railway-model';
   import { Button } from '$lib/components/ui/button';
   import { Upload, Box } from 'lucide-svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
+  import { listen } from '@tauri-apps/api/event';
+  import { readFile } from '@tauri-apps/plugin-fs';
   import * as m from '$lib/paraglide/messages';
+  import { toaster } from '$lib/toaster';
 
   interface _Props {
     model: RailwayModel;
@@ -16,6 +20,67 @@
   const { model, editable = false, onBrowseImage, onImageDropped, onError }: _Props = $props();
 
   let dragState = $state(false);
+
+  const extMimeMap: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp'
+  };
+  const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  onMount(() => {
+    let unlistenEnter: (() => void) | undefined;
+    let unlistenLeave: (() => void) | undefined;
+    let unlistenDrop: (() => void) | undefined;
+
+    listen<{ paths: string[]; position: unknown }>('tauri://drag-enter', () => {
+      if (!editable) return;
+      dragState = true;
+    }).then((fn) => {
+      unlistenEnter = fn;
+    });
+
+    listen<{ paths: string[]; position: unknown }>('tauri://drag-leave', () => {
+      dragState = false;
+    }).then((fn) => {
+      unlistenLeave = fn;
+    });
+
+    listen<{ paths: string[]; position: unknown }>('tauri://drag-drop', async (event) => {
+      dragState = false;
+      if (!editable) return;
+
+      const paths = event.payload.paths;
+      if (paths.length === 0) return;
+
+      const filePath = paths[0];
+      const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+      const mime = extMimeMap[ext];
+
+      if (!mime || !validMimeTypes.includes(mime)) {
+        toaster.error(m.upload_error_unsupported_format());
+        return;
+      }
+
+      try {
+        const bytes = await readFile(filePath);
+        const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+        const file = new File([bytes], filePath.split('/').pop() ?? 'image', { type: mime });
+        onImageDropped?.(file, blobUrl);
+      } catch {
+        toaster.error(m.upload_error_unknown());
+      }
+    }).then((fn) => {
+      unlistenDrop = fn;
+    });
+
+    return () => {
+      unlistenEnter?.();
+      unlistenLeave?.();
+      unlistenDrop?.();
+    };
+  });
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
