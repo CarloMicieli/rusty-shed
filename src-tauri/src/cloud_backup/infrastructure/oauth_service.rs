@@ -1,13 +1,14 @@
 /// OAuth 2.0 service with PKCE flow for Google Drive
 use crate::cloud_backup::domain::{CloudBackupError, GoogleConnection, Result};
 use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage};
-use oauth2::{AuthUrl, CsrfToken, PkceCodeChallenge, PkceCodeVerifier, RedirectUrl};
+use oauth2::{AuthUrl, CsrfToken, PkceCodeChallenge, PkceCodeVerifier};
 use std::sync::Arc;
 
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL: &str = "https://www.googleapis.com/oauth2/v2/userinfo";
-const REDIRECT_URI: &str = "http://127.0.0.1:0"; // Port assigned dynamically
+#[cfg(test)]
+const REDIRECT_URI: &str = "http://127.0.0.1:0"; // Port assigned dynamically — used in tests
 const DRIVE_APPDATA_SCOPE: &str = "https://www.googleapis.com/auth/drive.appdata";
 
 #[allow(dead_code)] // Reserved for future timeout implementation
@@ -26,7 +27,13 @@ impl OAuthService {
     }
 
     /// Start OAuth flow and return authorization URL
-    pub fn start_oauth_flow(&self) -> Result<(String, PkceCodeVerifier, CsrfToken)> {
+    ///
+    /// # Arguments
+    /// * `redirect_uri` - The redirect URI where Google will send the auth code (must match registered URI)
+    pub fn start_oauth_flow(
+        &self,
+        redirect_uri: &str,
+    ) -> Result<(String, PkceCodeVerifier, CsrfToken)> {
         // Generate PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
@@ -37,15 +44,12 @@ impl OAuthService {
         let auth_url = AuthUrl::new(GOOGLE_AUTH_URL.to_string())
             .map_err(|e| CloudBackupError::OAuthFailed(format!("Invalid auth URL: {}", e)))?;
 
-        let redirect_url = RedirectUrl::new(REDIRECT_URI.to_string())
-            .map_err(|e| CloudBackupError::OAuthFailed(format!("Invalid redirect URL: {}", e)))?;
-
         // Manually construct authorization URL
         let auth_url_string = format!(
             "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&state={}&code_challenge={}&code_challenge_method=S256",
             auth_url.as_str(),
             urlencoding::encode(&self.client_id),
-            urlencoding::encode(redirect_url.as_str()),
+            urlencoding::encode(redirect_uri),
             urlencoding::encode(&format!("{} email", DRIVE_APPDATA_SCOPE)),
             csrf_token.secret(),
             pkce_challenge.as_str()
@@ -59,6 +63,7 @@ impl OAuthService {
         &self,
         auth_code: String,
         pkce_verifier: PkceCodeVerifier,
+        redirect_uri: &str,
     ) -> Result<GoogleConnection> {
         // Exchange authorization code for access token using manual HTTP request
         // oauth2 v5 has breaking API changes, so we'll implement token exchange manually
@@ -70,7 +75,7 @@ impl OAuthService {
             ("client_id", self.client_id.as_str()),
             ("code_verifier", pkce_verifier.secret()),
             ("grant_type", "authorization_code"),
-            ("redirect_uri", REDIRECT_URI),
+            ("redirect_uri", redirect_uri),
         ];
 
         let response = http_client
@@ -234,7 +239,7 @@ impl OAuthService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use oauth2::TokenUrl;
+    use oauth2::{RedirectUrl, TokenUrl};
 
     #[test]
     fn test_oauth_urls() {

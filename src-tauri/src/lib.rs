@@ -276,6 +276,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_oauth::init())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
             let version = env!("CARGO_PKG_VERSION");
@@ -308,8 +309,14 @@ pub fn run() {
 
             log::info!("Models directory: {}", models_dir.display());
 
+            let db_path = app
+                .handle()
+                .path()
+                .resolve("database.sqlite", BaseDirectory::AppData)
+                .map_err(|e| anyhow::anyhow!("Failed to resolve db path: {e}"))?;
+
             // Initial management of state
-            app.manage(AppState::new(pool.clone(), models_dir));
+            app.manage(AppState::new(pool.clone(), models_dir, db_path));
 
             start_connectivity_monitor(app.handle().clone());
 

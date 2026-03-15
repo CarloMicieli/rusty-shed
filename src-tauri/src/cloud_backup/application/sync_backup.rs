@@ -1,15 +1,19 @@
 use crate::cloud_backup::application::operation_lock::{OperationType, try_acquire_lock};
 /// Sync (backup) use case for uploading database to Google Drive
 use crate::cloud_backup::domain::{
-    BackupLabel, BackupListItem, BackupMetadata, CloudBackupError, Result,
+    BackupLabel, BackupListItem, BackupMetadata, CloudBackupError, Result, SyncProgressEvent,
+    SyncStage as DomainSyncStage,
 };
 use crate::cloud_backup::infrastructure::{GoogleDriveClient, is_online};
 use crate::data_management::interface::is_import_in_progress;
 use chrono::Utc;
 use flate2::Compression;
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use sqlx::SqlitePool;
 use std::io::Write;
+use std::path::Path;
+use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 
 const MAX_BACKUPS: usize = 5;
@@ -54,6 +58,16 @@ impl std::fmt::Display for SyncStage {
     }
 }
 
+impl From<&SyncStage> for DomainSyncStage {
+    fn from(stage: &SyncStage) -> Self {
+        match stage {
+            SyncStage::Compressing => DomainSyncStage::Compressing,
+            SyncStage::Uploading => DomainSyncStage::Uploading,
+            SyncStage::Finalizing => DomainSyncStage::Finalizing,
+        }
+    }
+}
+
 /// Get app version (should be read from config)
 fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
@@ -74,14 +88,23 @@ fn get_platform() -> String {
     }
 }
 
-/// Calculate SHA256 checksum of data
+/// Calculate SHA-256 checksum of data, returning a lowercase hex string.
 fn calculate_checksum(data: &[u8]) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    format!("{:x}", hasher.finalize())
+}
 
-    let mut hasher = DefaultHasher::new();
-    data.hash(&mut hasher);
-    format!("{:x}", hasher.finish())
+/// Emit a progress event to the frontend.
+fn emit_progress(app: &AppHandle, operation_id: &str, percent: f32, stage: &SyncStage) {
+    let event = SyncProgressEvent {
+        operation_id: operation_id.to_string(),
+        progress_percent: percent,
+        stage: DomainSyncStage::from(stage),
+    };
+    if let Err(e) = app.emit("cloud-backup://sync-progress", event) {
+        log::warn!("Failed to emit sync progress event: {e}");
+    }
 }
 
 /// Sync (backup) database to Google Drive
@@ -99,24 +122,19 @@ fn calculate_checksum(data: &[u8]) -> String {
 /// 7. Returns backup metadata
 ///
 /// # Arguments
-/// * `db_pool` - Database connection pool
+/// * `app` - Tauri app handle for emitting progress events
+/// * `db_pool` - Database connection pool (for metadata queries)
+/// * `db_path` - Filesystem path to the SQLite database file
 /// * `google_drive_client` - Configured Google Drive API client
-/// * `_progress_callback` - Callback for progress updates (not yet implemented)
 ///
 /// # Returns
 /// * `Ok(BackupListItem)` - Details of the created backup
 /// * `Err(CloudBackupError)` - Specific error with user-friendly message
-///
-/// # Errors
-/// * `ImportInProgress` - If data import is running
-/// * `OfflineError` - If device is offline
-/// * `DriveError` - If Google Drive API call fails
-/// * `CompressionError` - If database compression fails
-/// * `UnexpectedError` - If operation lock cannot be acquired
 pub async fn sync_backup(
+    app: &AppHandle,
     db_pool: &SqlitePool,
+    db_path: &Path,
     google_drive_client: &GoogleDriveClient,
-    _progress_callback: impl Fn(SyncProgress) + Send + Sync,
 ) -> Result<BackupListItem> {
     // T078: Acquire operation lock to prevent concurrent syncs
     let _lock = try_acquire_lock(OperationType::Backup)?;
@@ -133,37 +151,24 @@ pub async fn sync_backup(
     let operation_id = Uuid::new_v4().to_string();
 
     // Stage 1: Compress database
-    let _progress = SyncProgress {
-        operation_id: operation_id.clone(),
-        progress_percent: 0.0,
-        stage: SyncStage::Compressing,
-    };
-    // TODO: Emit progress callback
-
-    // Get database file path from pool
-    let _db_file_path = get_database_path()?;
+    emit_progress(app, &operation_id, 0.0, &SyncStage::Compressing);
 
     // Read database file
-    let db_data = tokio::fs::read(&_db_file_path).await.map_err(|e| {
+    let db_data = tokio::fs::read(db_path).await.map_err(|e| {
         CloudBackupError::CompressionError(format!("Failed to read database: {}", e))
     })?;
 
-    // Calculate checksum of uncompressed database
+    // Calculate SHA-256 checksum of uncompressed database
     let checksum = calculate_checksum(&db_data);
 
-    // Count records (simplified - in real code, query the database)
+    // Count records and get schema version
     let record_count = count_records(db_pool).await.unwrap_or(0);
 
     // Compress database
     let compressed_data = compress_database(&db_data)?;
 
     // Stage 2: Upload file
-    let _progress = SyncProgress {
-        operation_id: operation_id.clone(),
-        progress_percent: 50.0,
-        stage: SyncStage::Uploading,
-    };
-    // TODO: Emit progress callback
+    emit_progress(app, &operation_id, 50.0, &SyncStage::Uploading);
 
     // Get or create backup folder
     let folder_id = google_drive_client.get_or_create_backup_folder().await?;
@@ -221,23 +226,13 @@ pub async fn sync_backup(
         .await?;
 
     // Stage 3: Finalize (enforce version limit)
-    let _progress = SyncProgress {
-        operation_id: operation_id.clone(),
-        progress_percent: 75.0,
-        stage: SyncStage::Finalizing,
-    };
-    // TODO: Emit progress callback
+    emit_progress(app, &operation_id, 75.0, &SyncStage::Finalizing);
 
     // Enforce version limit
     enforce_version_limit(google_drive_client, &folder_id, MAX_BACKUPS).await?;
 
     // Final progress
-    let _progress = SyncProgress {
-        operation_id: operation_id.clone(),
-        progress_percent: 100.0,
-        stage: SyncStage::Finalizing,
-    };
-    // TODO: Emit progress callback
+    emit_progress(app, &operation_id, 100.0, &SyncStage::Finalizing);
 
     Ok(BackupListItem {
         id: uploaded.id,
@@ -251,13 +246,6 @@ pub async fn sync_backup(
 }
 
 /// Compress database file using gzip
-///
-/// # Arguments
-/// * `data` - Raw database file contents
-///
-/// # Returns
-/// * `Ok(Vec<u8>)` - Compressed data
-/// * `Err(CloudBackupError)` - If compression fails
 fn compress_database(data: &[u8]) -> Result<Vec<u8>> {
     let mut encoder = flate2::write::GzEncoder::new(Vec::new(), Compression::default());
     encoder
@@ -268,58 +256,37 @@ fn compress_database(data: &[u8]) -> Result<Vec<u8>> {
     })
 }
 
-/// Get database file path from pool
-///
-/// Note: For now, we'll use a placeholder. In a real implementation,
-/// we'd need to pass the database path through AppState or query the database
-/// for all table data to create the backup.
-///
-/// # Returns
-/// * `Ok(String)` - Path to database file
-/// * `Err(CloudBackupError)` - If path cannot be determined
-fn get_database_path() -> Result<String> {
-    // TODO: Get path from AppState or environment
-    // For now, return a placeholder that will be implemented
-    // when we have proper database integration
-    Ok(String::from(":memory:"))
-}
-
 /// Count total records in collection database
-///
-/// # Arguments
-/// * `_db_pool` - Database connection pool
-///
-/// # Returns
-/// * `Ok(u64)` - Total number of records in collection tables
-/// * `Err(CloudBackupError)` - If query fails
-async fn count_records(_db_pool: &SqlitePool) -> Result<u64> {
-    // TODO: Query appropriate tables to count total records
-    // For now, return 0
-    Ok(0)
+async fn count_records(db_pool: &SqlitePool) -> Result<u64> {
+    let row: (i64,) = sqlx::query_as(
+        r#"
+        SELECT SUM(cnt) FROM (
+            SELECT COUNT(*) AS cnt FROM railway_models
+            UNION ALL
+            SELECT COUNT(*) AS cnt FROM rolling_stocks
+        )
+        "#,
+    )
+    .fetch_one(db_pool)
+    .await
+    .map_err(|e| CloudBackupError::UnexpectedError(format!("Failed to count records: {e}")))?;
+
+    Ok(row.0.max(0) as u64)
 }
 
-/// Get database schema version
-///
-/// # Arguments
-/// * `_db_pool` - Database connection pool
-///
-/// # Returns
-/// * `Ok(i32)` - Schema version number
-/// * `Err(CloudBackupError)` - If schema version cannot be determined
-async fn get_schema_version(_db_pool: &SqlitePool) -> Result<i32> {
-    // TODO: Query PRAGMA user_version or migrations table
-    Ok(1)
+/// Get database schema version from PRAGMA user_version
+async fn get_schema_version(db_pool: &SqlitePool) -> Result<i32> {
+    let row: (i32,) = sqlx::query_as("PRAGMA user_version")
+        .fetch_one(db_pool)
+        .await
+        .map_err(|e| {
+            CloudBackupError::UnexpectedError(format!("Failed to get schema version: {e}"))
+        })?;
+
+    Ok(row.0)
 }
 
 /// Format bytes as human-readable string
-///
-/// Converts byte sizes to appropriate units (B, KB, MB, GB).
-///
-/// # Arguments
-/// * `bytes` - Number of bytes
-///
-/// # Returns
-/// Formatted string like "1.5 MB"
 fn format_bytes(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
     let mut size = bytes as f64;
@@ -334,18 +301,6 @@ fn format_bytes(bytes: u64) -> String {
 }
 
 /// Enforce version limit by deleting oldest backups
-///
-/// Maintains a maximum of `max_backups` backup files in Google Drive.
-/// Deletes oldest files first when limit is exceeded.
-///
-/// # Arguments
-/// * `client` - Google Drive API client
-/// * `folder_id` - ID of backup folder
-/// * `max_backups` - Maximum number of backups to keep (default 5)
-///
-/// # Returns
-/// * `Ok(())` - If version limit enforced successfully
-/// * `Err(CloudBackupError)` - If deletion fails
 async fn enforce_version_limit(
     client: &GoogleDriveClient,
     folder_id: &str,
@@ -386,5 +341,17 @@ mod tests {
         let data = b"test data for compression";
         let compressed = compress_database(data).unwrap();
         assert!(!compressed.is_empty());
+    }
+
+    #[test]
+    fn test_calculate_checksum_sha256() {
+        let data = b"hello world";
+        let checksum = calculate_checksum(data);
+        assert_eq!(
+            checksum.len(),
+            64,
+            "SHA-256 hex output must be 64 characters"
+        );
+        assert!(checksum.chars().all(|c| c.is_ascii_hexdigit()));
     }
 }

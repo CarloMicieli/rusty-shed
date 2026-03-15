@@ -1,75 +1,92 @@
 /// Connect Google account use case
 use crate::cloud_backup::domain::{CloudBackupError, ConnectionStatusResponse};
 use crate::cloud_backup::infrastructure::OAuthService;
-use oauth2::{CsrfToken, PkceCodeVerifier};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::AppHandle;
 use tokio::sync::oneshot;
 
 type Result<T> = std::result::Result<T, CloudBackupError>;
 
-/// State for OAuth callback
-pub struct OAuthState {
-    pub verifier: PkceCodeVerifier,
-    pub csrf_token: CsrfToken,
-    pub tx: oneshot::Sender<Result<String>>,
+/// Extract the `code` query parameter from an OAuth callback URL.
+fn extract_auth_code(url: &str) -> Option<String> {
+    url::Url::parse(url).ok().and_then(|parsed| {
+        parsed
+            .query_pairs()
+            .find(|(k, _)| k == "code")
+            .map(|(_, v)| v.to_string())
+    })
 }
 
-/// Connect Google account via OAuth PKCE flow
+/// Connect Google account via OAuth PKCE flow.
+///
+/// On desktop this starts a localhost callback server via `tauri-plugin-oauth`
+/// to receive the authorization code after the user grants consent in the browser.
 pub async fn connect_google(
-    _app: AppHandle,
+    app: AppHandle,
     oauth_service: Arc<OAuthService>,
 ) -> Result<ConnectionStatusResponse> {
-    // Start OAuth flow
-    let (auth_url, pkce_verifier, _csrf_token) = oauth_service.start_oauth_flow()?;
+    // Create oneshot channel — the OAuth callback will send the auth code here.
+    let (tx, rx) = oneshot::channel::<Result<String>>();
+    let tx_cell = Arc::new(Mutex::new(Some(tx)));
 
-    // Create channel for OAuth callback
-    let (_tx, rx) = oneshot::channel();
-
-    // Store OAuth state in app state (for callback handler)
-    // TODO: Store pkce_verifier and csrf_token for callback verification
-
-    // Open browser with authorization URL
-    let _ = tauri_plugin_opener::open_url(&auth_url, None::<&str>);
-
-    // Start local server to receive OAuth callback
     #[cfg(not(target_os = "android"))]
-    let auth_code_result = {
-        // Use tauri-plugin-oauth to start callback server
-        // For now, wait for callback with timeout
-        tokio::select! {
-            result = rx => {
-                result.map_err(|_| crate::cloud_backup::domain::CloudBackupError::OAuthCancelled)?
+    let redirect_uri = {
+        let tx_for_closure = tx_cell.clone();
+
+        let port = tauri_plugin_oauth::start(move |url| {
+            if let Some(tx) = tx_for_closure
+                .lock()
+                .expect("oauth tx lock poisoned")
+                .take()
+            {
+                let send_result = match extract_auth_code(&url) {
+                    Some(code) => tx.send(Ok(code)),
+                    None => tx.send(Err(CloudBackupError::OAuthFailed(
+                        "No authorization code in callback URL".to_string(),
+                    ))),
+                };
+                if send_result.is_err() {
+                    log::warn!("OAuth callback: receiver already dropped");
+                }
             }
-            _ = tokio::time::sleep(Duration::from_secs(300)) => {
-                Err(crate::cloud_backup::domain::CloudBackupError::OAuthTimeout)
-            }
-        }
+        })
+        .map_err(|e| CloudBackupError::OAuthFailed(format!("Failed to start OAuth server: {e}")))?;
+
+        format!("http://127.0.0.1:{port}")
     };
 
     #[cfg(target_os = "android")]
-    let auth_code_result = {
-        // Use deep-link plugin for Android
-        // Wait for callback via custom URI scheme
-        tokio::select! {
-            result = rx => {
-                result.map_err(|_| crate::cloud_backup::domain::CloudBackupError::OAuthCancelled)?
-            }
-            _ = tokio::time::sleep(Duration::from_secs(300)) => {
-                Err(crate::cloud_backup::domain::CloudBackupError::OAuthTimeout)
-            }
+    let redirect_uri = {
+        // Android uses a deep-link custom URI scheme. The deep-link plugin must
+        // register a handler that sends the URL into `tx_cell`. This is a
+        // placeholder — full Android support requires wiring the deep-link event.
+        let _ = tx_cell; // suppress unused warning
+        "com.rusty-shed://oauth".to_string()
+    };
+
+    // Build the authorization URL with the dynamic redirect URI.
+    let (auth_url, pkce_verifier, _csrf_token) = oauth_service.start_oauth_flow(&redirect_uri)?;
+
+    // Open the user's browser.
+    let _ = tauri_plugin_opener::open_url(&auth_url, None::<&str>);
+    let _ = &app; // ensure app is used (needed for Android path)
+
+    // Wait for the callback with a 5-minute timeout.
+    let auth_code = tokio::select! {
+        result = rx => {
+            result.map_err(|_| CloudBackupError::OAuthCancelled)??
+        }
+        _ = tokio::time::sleep(Duration::from_secs(300)) => {
+            return Err(CloudBackupError::OAuthTimeout);
         }
     };
 
-    let auth_code = auth_code_result?;
-
-    // Complete OAuth flow
+    // Exchange the authorization code for tokens and fetch the user email.
     let connection = oauth_service
-        .complete_oauth_flow(auth_code, pkce_verifier)
+        .complete_oauth_flow(auth_code, pkce_verifier, &redirect_uri)
         .await?;
 
-    // Return connection status
     Ok(ConnectionStatusResponse {
         is_connected: true,
         email: Some(connection.email.clone()),
@@ -83,15 +100,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_oauth_state_creation() {
-        let (tx, _rx) = oneshot::channel();
-        let (_, verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
-        let csrf = CsrfToken::new_random();
+    fn test_extract_auth_code_present() {
+        let url = "http://127.0.0.1:12345/?code=abc123&state=xyz";
+        assert_eq!(extract_auth_code(url), Some("abc123".to_string()));
+    }
 
-        let _state = OAuthState {
-            verifier,
-            csrf_token: csrf,
-            tx,
-        };
+    #[test]
+    fn test_extract_auth_code_missing() {
+        let url = "http://127.0.0.1:12345/?error=access_denied";
+        assert_eq!(extract_auth_code(url), None);
     }
 }

@@ -45,6 +45,8 @@ export class CloudBackupController {
     this.#refreshConnectionStatus();
     this.#checkConnectivity();
     this.#listenToConnectivityChanges();
+    this.#listenToSyncProgress();
+    this.#listenToRestoreComplete();
   }
 
   // ============================================================
@@ -141,7 +143,7 @@ export class CloudBackupController {
     this.#state.error = null;
 
     try {
-      const result = await commands.cloudBackupDisconnectGoogle(this.userEmail);
+      const result = await commands.cloudBackupDisconnectGoogle();
       if (result.status === 'ok') {
         this.#state.connectionStatus = {
           isConnected: false,
@@ -334,6 +336,34 @@ export class CloudBackupController {
       );
     } catch (err) {
       console.error('Failed to listen for connectivity events:', err);
+    }
+  }
+
+  async #listenToSyncProgress(): Promise<void> {
+    try {
+      await listen<{ operationId: string; progressPercent: number; stage: string }>(
+        'cloud-backup://sync-progress',
+        (event) => {
+          this.#state.syncProgress = event.payload.progressPercent;
+          this.#state.syncStatusMessage = event.payload.stage;
+        }
+      );
+    } catch (err) {
+      console.error('Failed to listen for sync progress events:', err);
+    }
+  }
+
+  async #listenToRestoreComplete(): Promise<void> {
+    try {
+      await listen<{ backupId: string; restoredAt: string }>(
+        'cloud-backup://restore-complete',
+        () => {
+          // Reload the app to pick up the restored database
+          window.location.reload();
+        }
+      );
+    } catch (err) {
+      console.error('Failed to listen for restore-complete events:', err);
     }
   }
 }

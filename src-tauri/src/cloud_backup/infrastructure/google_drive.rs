@@ -119,7 +119,7 @@ impl GoogleDriveClient {
     /// * `Ok(String)` - ID of the backup folder
     /// * `Err(CloudBackupError)` - If folder cannot be found/created
     pub async fn get_or_create_backup_folder(&self) -> Result<String> {
-        let folder_name = "RustyShed Backups";
+        let folder_name = "RustyShedBackups";
 
         // Query for existing folder
         let query = format!(

@@ -1623,11 +1623,11 @@ export const commands = {
   /**
    * Disconnect Google account
    */
-  async cloudBackupDisconnectGoogle(userEmail: string): Promise<Result<null, CommandError>> {
+  async cloudBackupDisconnectGoogle(): Promise<Result<null, CommandError>> {
     try {
       return {
         status: 'ok',
-        data: await TAURI_INVOKE('cloud_backup_disconnect_google', { userEmail })
+        data: await TAURI_INVOKE('cloud_backup_disconnect_google')
       };
     } catch (e) {
       if (e instanceof Error) throw e;
