@@ -22,8 +22,8 @@ pub async fn build_manifest(
 ) -> Result<Value, ExportError> {
     let mut data = json!({});
 
-    // Always export manufacturers when railway models are selected (FK dependency)
-    if selection.include_railway_models {
+    // Export manufacturers when railway models or track inventory are selected (FK dependency)
+    if selection.include_railway_models || selection.include_track_inventory {
         let rows = sqlx::query(
             "SELECT id, name, registered_company_name, country_code, status, website_url \
              FROM manufacturers ORDER BY name",
@@ -46,7 +46,9 @@ pub async fn build_manifest(
             })
             .collect();
         data["manufacturers"] = json!(manufacturers);
+    }
 
+    if selection.include_railway_models {
         // Railway companies (referenced by rolling stocks)
         let rc_rows = sqlx::query(
             "SELECT id, name, country_code, status FROM railway_companies ORDER BY name",
@@ -256,6 +258,167 @@ pub async fn build_manifest(
             })
             .collect();
         data["maintenanceCards"] = json!(logs);
+    }
+
+    if selection.include_track_inventory {
+        // Track products
+        let tp_rows = sqlx::query(
+            "SELECT track_id, manufacturer_id, product_code, description, \
+                    track_type, track_code, with_roadbed, length_mm, radius_mm \
+             FROM track_products ORDER BY track_id",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let track_products: Vec<Value> = tp_rows
+            .iter()
+            .map(|row| {
+                json!({
+                    "trackId": row.try_get::<String, _>("track_id").ok(),
+                    "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
+                    "productCode": row.try_get::<String, _>("product_code").ok(),
+                    "description": row.try_get::<String, _>("description").ok(),
+                    "trackType": row.try_get::<String, _>("track_type").ok(),
+                    "trackCode": row.try_get::<String, _>("track_code").ok(),
+                    "withRoadbed": row.try_get::<i64, _>("with_roadbed").ok().map(|v| v != 0),
+                    "length": row.try_get::<Option<i64>, _>("length_mm").ok().flatten(),
+                    "radius": row.try_get::<Option<i64>, _>("radius_mm").ok().flatten(),
+                })
+            })
+            .collect();
+        data["trackProducts"] = json!(track_products);
+
+        // Track inventories with nested items and purchases
+        let inv_rows =
+            sqlx::query("SELECT id, name, description FROM track_inventories ORDER BY id")
+                .fetch_all(pool)
+                .await
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        // Collect seller_ids referenced by track purchases to auto-include those sellers
+        let mut referenced_seller_ids: std::collections::HashSet<String> =
+            std::collections::HashSet::new();
+
+        let mut track_inventories: Vec<Value> = Vec::new();
+        for inv_row in &inv_rows {
+            let inv_id: String = inv_row
+                .try_get("id")
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            // Nested items
+            let item_rows = sqlx::query(
+                "SELECT track_id, quantity, required \
+                 FROM track_inventory_items WHERE inventory_id = ? ORDER BY track_id",
+            )
+            .bind(&inv_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let items: Vec<Value> = item_rows
+                .iter()
+                .map(|row| {
+                    json!({
+                        "trackId": row.try_get::<String, _>("track_id").ok(),
+                        "quantity": row.try_get::<i64, _>("quantity").ok(),
+                        "required": row.try_get::<i64, _>("required").ok(),
+                    })
+                })
+                .collect();
+
+            // Nested purchases
+            let purchase_rows = sqlx::query(
+                "SELECT id, track_id, quantity, price_amount, price_currency, \
+                        seller_id, purchase_date \
+                 FROM track_purchases WHERE inventory_id = ? ORDER BY purchase_date",
+            )
+            .bind(&inv_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let purchases: Vec<Value> = purchase_rows
+                .iter()
+                .map(|row| {
+                    let seller_id: Option<String> =
+                        row.try_get::<Option<String>, _>("seller_id").ok().flatten();
+                    if let Some(ref sid) = seller_id {
+                        referenced_seller_ids.insert(sid.clone());
+                    }
+                    let price_amount: i64 = row.try_get::<i64, _>("price_amount").unwrap_or(0);
+                    let price_currency: String = row
+                        .try_get::<String, _>("price_currency")
+                        .unwrap_or_else(|_| "EUR".to_string());
+                    json!({
+                        "id": row.try_get::<String, _>("id").ok(),
+                        "trackId": row.try_get::<String, _>("track_id").ok(),
+                        "quantity": row.try_get::<i64, _>("quantity").ok(),
+                        "price": { "amount": price_amount, "currency": price_currency },
+                        "sellerId": seller_id,
+                        "purchaseDate": row.try_get::<String, _>("purchase_date").ok(),
+                    })
+                })
+                .collect();
+
+            track_inventories.push(json!({
+                "id": inv_id,
+                "name": inv_row.try_get::<String, _>("name").ok(),
+                "description": inv_row.try_get::<Option<String>, _>("description").ok().flatten(),
+                "items": items,
+                "purchases": purchases,
+            }));
+        }
+        data["trackInventories"] = json!(track_inventories);
+
+        // Auto-include sellers referenced by track purchases (merge with any already exported)
+        if !referenced_seller_ids.is_empty() {
+            let existing_sellers: Vec<Value> =
+                data["sellers"].as_array().cloned().unwrap_or_default();
+            let existing_ids: std::collections::HashSet<String> = existing_sellers
+                .iter()
+                .filter_map(|s| s["id"].as_str().map(|id| id.to_string()))
+                .collect();
+
+            let missing_ids: Vec<&String> = referenced_seller_ids
+                .iter()
+                .filter(|id| !existing_ids.contains(*id))
+                .collect();
+
+            if !missing_ids.is_empty() {
+                let placeholders = missing_ids
+                    .iter()
+                    .map(|_| "?")
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let query = format!(
+                    "SELECT id, name, type, email, phone, website_url \
+                     FROM sellers WHERE id IN ({}) ORDER BY name",
+                    placeholders
+                );
+                let mut q = sqlx::query(&query);
+                for id in &missing_ids {
+                    q = q.bind(id.as_str());
+                }
+                let seller_rows = q
+                    .fetch_all(pool)
+                    .await
+                    .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+                let mut all_sellers = existing_sellers;
+                for row in &seller_rows {
+                    all_sellers.push(json!({
+                        "id": row.try_get::<String, _>("id").ok(),
+                        "name": row.try_get::<String, _>("name").ok(),
+                        "sellerType": row.try_get::<String, _>("type").ok(),
+                        "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
+                        "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
+                        "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
+                    }));
+                }
+                data["sellers"] = json!(all_sellers);
+            }
+        }
     }
 
     // Build final manifest — "data" key matches ManifestDto.data in the import feature

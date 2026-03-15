@@ -144,6 +144,14 @@ pub async fn get_import_preview(
             .total_records
             .maintenance_cards
             .saturating_sub(preview.duplicate_records.maintenance_cards),
+        track_products: preview
+            .total_records
+            .track_products
+            .saturating_sub(preview.duplicate_records.track_products),
+        track_inventories: preview
+            .total_records
+            .track_inventories
+            .saturating_sub(preview.duplicate_records.track_inventories),
     };
 
     let can_import = preview.can_import();

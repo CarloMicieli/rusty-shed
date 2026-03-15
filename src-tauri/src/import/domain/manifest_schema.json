@@ -61,6 +61,16 @@
           "type": "array",
           "items": { "$ref": "#/$defs/MaintenanceCard" },
           "default": []
+        },
+        "trackProducts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrackProduct" },
+          "default": []
+        },
+        "trackInventories": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrackInventory" },
+          "default": []
         }
       },
       "additionalProperties": false
@@ -480,6 +490,140 @@
         },
         "cost": {
           "$ref": "#/$defs/Money"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TrackProduct": {
+      "type": "object",
+      "required": [
+        "trackId",
+        "manufacturerId",
+        "productCode",
+        "description",
+        "trackType",
+        "trackCode",
+        "withRoadbed"
+      ],
+      "properties": {
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical TRN identifier, e.g. 'trn:track:marklin:24188'"
+        },
+        "manufacturerId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References manufacturers[].id"
+        },
+        "productCode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trackType": {
+          "type": "string",
+          "enum": ["STRAIGHT", "CURVE", "TURNOUT", "FLEX_TRACK"]
+        },
+        "trackCode": {
+          "type": "string",
+          "enum": ["CODE_70", "CODE_75", "CODE_83", "CODE_100"]
+        },
+        "withRoadbed": {
+          "type": "boolean"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Length in mm (for straight track)"
+        },
+        "radius": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Radius in mm (for curved track)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TrackInventory": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrackInventoryItem" },
+          "default": []
+        },
+        "purchases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrackPurchase" },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "TrackInventoryItem": {
+      "type": "object",
+      "required": ["trackId", "quantity"],
+      "properties": {
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References trackProducts[].trackId"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Planned/required quantity"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TrackPurchase": {
+      "type": "object",
+      "required": ["id", "trackId", "quantity", "price", "purchaseDate"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References trackProducts[].trackId"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "price": {
+          "$ref": "#/$defs/Money"
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "References sellers[].id"
+        },
+        "purchaseDate": {
+          "type": "string",
+          "format": "date"
         }
       },
       "additionalProperties": false

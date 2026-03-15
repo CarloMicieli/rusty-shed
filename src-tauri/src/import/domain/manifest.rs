@@ -31,6 +31,10 @@ pub struct DataContainerDto {
     pub sellers: Vec<SellerRecord>,
     #[serde(rename = "maintenanceCards", default)]
     pub maintenance_cards: Vec<MaintenanceCardRecord>,
+    #[serde(rename = "trackProducts", default)]
+    pub track_products: Vec<TrackProductRecord>,
+    #[serde(rename = "trackInventories", default)]
+    pub track_inventories: Vec<TrackInventoryRecord>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
@@ -212,4 +216,54 @@ pub struct MaintenanceEventRecord {
     pub description: Option<String>,
     #[serde(default)]
     pub cost: Option<MoneyRecord>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TrackProductRecord {
+    pub track_id: String,
+    pub manufacturer_id: String,
+    pub product_code: String,
+    pub description: String,
+    pub track_type: String,
+    pub track_code: String,
+    pub with_roadbed: bool,
+    #[serde(default)]
+    pub length: Option<i64>,
+    #[serde(default)]
+    pub radius: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TrackInventoryRecord {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub items: Vec<TrackInventoryItemRecord>,
+    #[serde(default)]
+    pub purchases: Vec<TrackPurchaseRecord>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TrackInventoryItemRecord {
+    pub track_id: String,
+    pub quantity: i64,
+    #[serde(default)]
+    pub required: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TrackPurchaseRecord {
+    pub id: String,
+    pub track_id: String,
+    pub quantity: i64,
+    pub price: MoneyRecord,
+    #[serde(default)]
+    pub seller_id: Option<String>,
+    pub purchase_date: String,
 }

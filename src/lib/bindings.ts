@@ -3551,6 +3551,14 @@ export type DuplicateDetails = {
    * Duplicate seller names
    */
   sellers: string[];
+  /**
+   * Duplicate track product TRN identifiers
+   */
+  trackProducts: string[];
+  /**
+   * Duplicate track inventory IDs
+   */
+  trackInventories: string[];
 };
 /**
  * The cars that form a complete EMU set can usually be separated by function into four types:
@@ -5158,6 +5166,8 @@ export type RecordCounts = {
   collectionItems: number;
   sellers: number;
   maintenanceCards: number;
+  trackProducts: number;
+  trackInventories: number;
 };
 /**
  * Arguments structure for removing an item from the collection.

@@ -1,5 +1,6 @@
 use crate::import::domain::{
     CollectionItemRecord, ManufacturerRecord, RailwayModelRecord, SellerRecord,
+    TrackInventoryRecord, TrackProductRecord,
 };
 use sqlx::SqlitePool;
 use std::collections::{HashMap, HashSet};
@@ -259,6 +260,94 @@ impl DuplicateChecker {
                 duplicate_ids.push(seller.id.clone());
             } else {
                 new_ids.push(seller.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
+
+    /// Check for duplicate track products by track_id (canonical TRN identifier).
+    pub async fn check_track_products(
+        &self,
+        products: &[TrackProductRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if products.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let track_ids: Vec<String> = products.iter().map(|p| p.track_id.clone()).collect();
+
+        let query = format!(
+            "SELECT track_id FROM track_products WHERE track_id IN ({})",
+            track_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for id in &track_ids {
+            query_builder = query_builder.bind(id);
+        }
+
+        let existing_ids: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for product in products {
+            if existing_ids.contains(&product.track_id) {
+                duplicate_ids.push(product.track_id.clone());
+            } else {
+                new_ids.push(product.track_id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
+
+    /// Check for duplicate track inventories by id.
+    pub async fn check_track_inventories(
+        &self,
+        inventories: &[TrackInventoryRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if inventories.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let ids: Vec<String> = inventories.iter().map(|inv| inv.id.clone()).collect();
+
+        let query = format!(
+            "SELECT id FROM track_inventories WHERE id IN ({})",
+            ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for id in &ids {
+            query_builder = query_builder.bind(id);
+        }
+
+        let existing_ids: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for inv in inventories {
+            if existing_ids.contains(&inv.id) {
+                duplicate_ids.push(inv.id.clone());
+            } else {
+                new_ids.push(inv.id.clone());
             }
         }
 

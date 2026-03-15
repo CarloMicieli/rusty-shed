@@ -11,6 +11,8 @@ pub struct RecordCounts {
     pub collection_items: u32,
     pub sellers: u32,
     pub maintenance_cards: u32,
+    pub track_products: u32,
+    pub track_inventories: u32,
 }
 
 impl RecordCounts {
@@ -27,6 +29,8 @@ impl RecordCounts {
             + self.collection_items
             + self.sellers
             + self.maintenance_cards
+            + self.track_products
+            + self.track_inventories
     }
 
     /// Add counts from another `RecordCounts` instance.
@@ -37,6 +41,8 @@ impl RecordCounts {
         self.collection_items += other.collection_items;
         self.sellers += other.sellers;
         self.maintenance_cards += other.maintenance_cards;
+        self.track_products += other.track_products;
+        self.track_inventories += other.track_inventories;
     }
 }
 
@@ -53,8 +59,10 @@ mod tests {
             collection_items: 4,
             sellers: 5,
             maintenance_cards: 6,
+            track_products: 7,
+            track_inventories: 8,
         };
-        assert_eq!(counts.total(), 21);
+        assert_eq!(counts.total(), 36);
     }
 
     #[test]

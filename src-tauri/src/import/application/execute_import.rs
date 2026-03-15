@@ -69,6 +69,16 @@ impl ExecuteImportUseCase {
             .await
             .map_err(|e| format!("Failed to check seller duplicates: {}", e))?;
 
+        let track_product_dupes = duplicate_checker
+            .check_track_products(&manifest.data.track_products)
+            .await
+            .map_err(|e| format!("Failed to check track product duplicates: {}", e))?;
+
+        let track_inventory_dupes = duplicate_checker
+            .check_track_inventories(&manifest.data.track_inventories)
+            .await
+            .map_err(|e| format!("Failed to check track inventory duplicates: {}", e))?;
+
         // Build HashSets for fast lookups
         let new_manufacturer_ids: HashSet<&str> = manufacturer_dupes
             .new_ids
@@ -87,6 +97,16 @@ impl ExecuteImportUseCase {
             .collect();
         let new_seller_ids: HashSet<&str> =
             seller_dupes.new_ids.iter().map(|s| s.as_str()).collect();
+        let new_track_product_ids: HashSet<&str> = track_product_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        let new_track_inventory_ids: HashSet<&str> = track_inventory_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
 
         let mut added = RecordCounts::default();
         let mut skipped = RecordCounts::default();
@@ -305,6 +325,109 @@ impl ExecuteImportUseCase {
 
         added.collection_items = collection_item_dupes.new_count() as u32;
         skipped.collection_items = collection_item_dupes.duplicate_count() as u32;
+
+        // 6. Insert new track products
+        for product in manifest
+            .data
+            .track_products
+            .iter()
+            .filter(|p| new_track_product_ids.contains(p.track_id.as_str()))
+        {
+            let product_db_id = Uuid::new_v4().to_string();
+            sqlx::query(
+                "INSERT OR IGNORE INTO track_products \
+                 (id, track_id, manufacturer_id, product_code, description, \
+                  track_type, track_code, with_roadbed, length_mm, radius_mm, \
+                  created_at, updated_at, version) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
+            )
+            .bind(&product_db_id)
+            .bind(&product.track_id)
+            .bind(&product.manufacturer_id)
+            .bind(&product.product_code)
+            .bind(&product.description)
+            .bind(&product.track_type)
+            .bind(&product.track_code)
+            .bind(product.with_roadbed as i64)
+            .bind(product.length)
+            .bind(product.radius)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                format!(
+                    "Failed to insert track product '{}': {}",
+                    product.track_id, e
+                )
+            })?;
+        }
+
+        added.track_products = track_product_dupes.new_count() as u32;
+        skipped.track_products = track_product_dupes.duplicate_count() as u32;
+
+        // 7. Insert new track inventories with items and purchases
+        for inventory in manifest
+            .data
+            .track_inventories
+            .iter()
+            .filter(|inv| new_track_inventory_ids.contains(inv.id.as_str()))
+        {
+            sqlx::query(
+                "INSERT OR IGNORE INTO track_inventories \
+                 (id, name, description, created_at, updated_at, version) \
+                 VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)",
+            )
+            .bind(&inventory.id)
+            .bind(&inventory.name)
+            .bind(&inventory.description)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| format!("Failed to insert track inventory '{}': {}", inventory.id, e))?;
+
+            // Insert inventory items
+            for item in &inventory.items {
+                sqlx::query(
+                    "INSERT OR IGNORE INTO track_inventory_items \
+                     (inventory_id, track_id, quantity, required) \
+                     VALUES (?, ?, ?, ?)",
+                )
+                .bind(&inventory.id)
+                .bind(&item.track_id)
+                .bind(item.quantity)
+                .bind(item.required)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to insert track item '{}' in inventory '{}': {}",
+                        item.track_id, inventory.id, e
+                    )
+                })?;
+            }
+
+            // Insert purchase history
+            for purchase in &inventory.purchases {
+                sqlx::query(
+                    "INSERT OR IGNORE INTO track_purchases \
+                     (id, inventory_id, track_id, quantity, \
+                      price_amount, price_currency, seller_id, purchase_date, created_at) \
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+                )
+                .bind(&purchase.id)
+                .bind(&inventory.id)
+                .bind(&purchase.track_id)
+                .bind(purchase.quantity)
+                .bind(purchase.price.amount as i64)
+                .bind(&purchase.price.currency)
+                .bind(&purchase.seller_id)
+                .bind(&purchase.purchase_date)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| format!("Failed to insert track purchase '{}': {}", purchase.id, e))?;
+            }
+        }
+
+        added.track_inventories = track_inventory_dupes.new_count() as u32;
+        skipped.track_inventories = track_inventory_dupes.duplicate_count() as u32;
 
         // Maintenance cards require the owned_rolling_stocks FK chain — skipped in MVP
         added.maintenance_cards = 0;

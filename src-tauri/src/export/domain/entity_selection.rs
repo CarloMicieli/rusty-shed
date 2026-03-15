@@ -15,6 +15,8 @@ pub struct ExportEntitySelection {
     pub include_dcc_roster: bool,
     /// Include orphaned images
     pub include_orphaned_images: bool,
+    /// Include track inventory (products, inventories, purchases)
+    pub include_track_inventory: bool,
 }
 
 impl ExportEntitySelection {
@@ -25,6 +27,7 @@ impl ExportEntitySelection {
             || self.include_sellers
             || self.include_maintenance_logs
             || self.include_dcc_roster
+            || self.include_track_inventory
     }
 
     /// Get count of entity types selected
@@ -45,6 +48,9 @@ impl ExportEntitySelection {
         if self.include_dcc_roster {
             count += 1;
         }
+        if self.include_track_inventory {
+            count += 1;
+        }
         count
     }
 }
@@ -62,6 +68,7 @@ mod tests {
             include_maintenance_logs: false,
             include_dcc_roster: false,
             include_orphaned_images: false,
+            include_track_inventory: false,
         };
         assert!(!selection.is_valid());
     }
@@ -75,6 +82,7 @@ mod tests {
             include_maintenance_logs: false,
             include_dcc_roster: false,
             include_orphaned_images: false,
+            include_track_inventory: false,
         };
         assert!(selection.is_valid());
     }

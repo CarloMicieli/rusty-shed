@@ -119,6 +119,8 @@ impl ValidatePackageUseCase {
             collection_items: manifest.data.collection_items.len() as u32,
             sellers: manifest.data.sellers.len() as u32,
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
+            track_products: manifest.data.track_products.len() as u32,
+            track_inventories: manifest.data.track_inventories.len() as u32,
         }
     }
 }
@@ -141,6 +143,8 @@ mod tests {
                 collection_items: vec![],
                 sellers: vec![],
                 maintenance_cards: vec![],
+                track_products: vec![],
+                track_inventories: vec![],
             },
         };
 

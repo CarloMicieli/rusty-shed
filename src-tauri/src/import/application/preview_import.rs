@@ -58,6 +58,8 @@ impl PreviewImportUseCase {
             collection_items: manifest.data.collection_items.len() as u32,
             sellers: manifest.data.sellers.len() as u32,
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
+            track_products: manifest.data.track_products.len() as u32,
+            track_inventories: manifest.data.track_inventories.len() as u32,
         };
 
         // Check for duplicates
@@ -83,6 +85,16 @@ impl PreviewImportUseCase {
             .await
             .map_err(|e| PreviewImportError::DatabaseError(e.to_string()))?;
 
+        let track_product_dupes = duplicate_checker
+            .check_track_products(&manifest.data.track_products)
+            .await
+            .map_err(|e| PreviewImportError::DatabaseError(e.to_string()))?;
+
+        let track_inventory_dupes = duplicate_checker
+            .check_track_inventories(&manifest.data.track_inventories)
+            .await
+            .map_err(|e| PreviewImportError::DatabaseError(e.to_string()))?;
+
         // Calculate duplicate counts
         let duplicate_counts = RecordCounts {
             manufacturers: manufacturer_dupes.duplicate_count() as u32,
@@ -91,6 +103,8 @@ impl PreviewImportUseCase {
             collection_items: collection_item_dupes.duplicate_count() as u32,
             sellers: seller_dupes.duplicate_count() as u32,
             maintenance_cards: 0, // Maintenance cards are linked to collection items
+            track_products: track_product_dupes.duplicate_count() as u32,
+            track_inventories: track_inventory_dupes.duplicate_count() as u32,
         };
 
         // Calculate new records
@@ -101,6 +115,8 @@ impl PreviewImportUseCase {
             collection_items: collection_item_dupes.new_count() as u32,
             sellers: seller_dupes.new_count() as u32,
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
+            track_products: track_product_dupes.new_count() as u32,
+            track_inventories: track_inventory_dupes.new_count() as u32,
         };
 
         // Create preview
@@ -112,6 +128,8 @@ impl PreviewImportUseCase {
         preview.duplicate_details.railway_models = railway_model_dupes.duplicate_ids;
         preview.duplicate_details.collection_items = collection_item_dupes.duplicate_ids;
         preview.duplicate_details.sellers = seller_dupes.duplicate_ids;
+        preview.duplicate_details.track_products = track_product_dupes.duplicate_ids;
+        preview.duplicate_details.track_inventories = track_inventory_dupes.duplicate_ids;
 
         // Check for missing images if archive path is provided
         if let Some(path) = archive_path {

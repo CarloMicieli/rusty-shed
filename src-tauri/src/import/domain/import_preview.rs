@@ -10,10 +10,14 @@ pub struct DuplicateDetails {
     pub manufacturers: Vec<String>,
     /// Duplicate railway model IDs
     pub railway_models: Vec<String>,
-    /// Duplicate collection item IDs  
+    /// Duplicate collection item IDs
     pub collection_items: Vec<String>,
     /// Duplicate seller names
     pub sellers: Vec<String>,
+    /// Duplicate track product TRN identifiers
+    pub track_products: Vec<String>,
+    /// Duplicate track inventory IDs
+    pub track_inventories: Vec<String>,
 }
 
 /// Preview of import before confirmation.
