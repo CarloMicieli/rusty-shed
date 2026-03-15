@@ -111,3 +111,168 @@ pub async fn get_export_preview(
 
     Ok(preview)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    fn all_selection() -> ExportEntitySelection {
+        ExportEntitySelection {
+            include_railway_models: true,
+            include_collection_items: true,
+            include_sellers: true,
+            include_maintenance_logs: true,
+            include_dcc_roster: true,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+        }
+    }
+
+    async fn setup_db() -> SqlitePool {
+        let pool = SqlitePool::connect(":memory:")
+            .await
+            .expect("in-memory pool");
+
+        sqlx::query(
+            "CREATE TABLE railway_models (
+                id TEXT PRIMARY KEY,
+                manufacturer_id TEXT NOT NULL,
+                product_code TEXT NOT NULL,
+                power_method TEXT NOT NULL,
+                scale TEXT NOT NULL,
+                epoch TEXT NOT NULL,
+                category TEXT NOT NULL
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("create railway_models");
+
+        sqlx::query(
+            "CREATE TABLE collection_items (
+                id TEXT PRIMARY KEY,
+                railway_model_id TEXT NOT NULL,
+                added_date TEXT NOT NULL
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("create collection_items");
+
+        sqlx::query(
+            "CREATE TABLE sellers (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                type TEXT NOT NULL
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("create sellers");
+
+        sqlx::query(
+            "CREATE TABLE maintenance_events (
+                id TEXT PRIMARY KEY,
+                maintenance_card_id TEXT NOT NULL,
+                date_performed TEXT NOT NULL,
+                maintenance_type TEXT
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("create maintenance_events");
+
+        sqlx::query(
+            "CREATE TABLE digital_rolling_stocks (
+                id TEXT PRIMARY KEY
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("create digital_rolling_stocks");
+
+        pool
+    }
+
+    #[tokio::test]
+    async fn test_empty_db_all_counts_zero_with_warning() {
+        let pool = setup_db().await;
+        let selection = all_selection();
+
+        let preview = get_export_preview(&pool, &selection)
+            .await
+            .expect("preview");
+
+        assert_eq!(preview.railway_model_count, 0);
+        assert_eq!(preview.collection_item_count, 0);
+        assert_eq!(preview.seller_count, 0);
+        assert_eq!(preview.maintenance_log_count, 0);
+        assert_eq!(preview.dcc_roster_count, 0);
+        assert!(
+            !preview.warnings.is_empty(),
+            "should warn when no data selected"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_counts_railway_models_correctly() {
+        let pool = setup_db().await;
+
+        sqlx::query(
+            "INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category) \
+             VALUES ('rm-1', 'mfr-1', 'CODE-1', 'DC', 'H0', 'IV', 'LOCOMOTIVES')",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let selection = ExportEntitySelection {
+            include_railway_models: true,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: false,
+            include_dcc_roster: false,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+        };
+
+        let preview = get_export_preview(&pool, &selection)
+            .await
+            .expect("preview");
+
+        assert_eq!(preview.railway_model_count, 1);
+    }
+
+    #[tokio::test]
+    async fn test_estimated_size_nonzero_when_records_exist() {
+        let pool = setup_db().await;
+
+        sqlx::query(
+            "INSERT INTO railway_models (id, manufacturer_id, product_code, power_method, scale, epoch, category) \
+             VALUES ('rm-1', 'mfr-1', 'P1', 'DC', 'H0', 'IV', 'LOCOMOTIVES')",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let selection = ExportEntitySelection {
+            include_railway_models: true,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: false,
+            include_dcc_roster: false,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+        };
+
+        let preview = get_export_preview(&pool, &selection)
+            .await
+            .expect("preview");
+
+        assert!(
+            preview.estimated_size_bytes > 0,
+            "estimated size must be positive when records exist"
+        );
+    }
+}

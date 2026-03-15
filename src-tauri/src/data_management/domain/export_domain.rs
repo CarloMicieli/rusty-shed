@@ -248,4 +248,129 @@ mod tests {
         };
         assert!(selection.is_valid());
     }
+
+    fn empty_selection() -> ExportEntitySelection {
+        ExportEntitySelection {
+            include_railway_models: false,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: false,
+            include_dcc_roster: false,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+        }
+    }
+
+    // ─── ExportSession state transitions ──────────────────────────────────────
+
+    #[test]
+    fn test_export_session_new_starts_in_selecting_state() {
+        let session = ExportSession::new();
+        assert_eq!(session.state, ExportSessionState::Selecting);
+        assert!(session.entity_selection.is_none());
+        assert!(session.destination_path.is_none());
+    }
+
+    #[test]
+    fn test_export_session_to_previewing() {
+        let mut session = ExportSession::new();
+        let selection = ExportEntitySelection {
+            include_railway_models: true,
+            ..empty_selection()
+        };
+        session.to_previewing(selection);
+        assert_eq!(session.state, ExportSessionState::Previewing);
+        assert!(session.entity_selection.is_some());
+        assert!(
+            session
+                .entity_selection
+                .as_ref()
+                .unwrap()
+                .include_railway_models
+        );
+    }
+
+    #[test]
+    fn test_export_session_to_exporting() {
+        let mut session = ExportSession::new();
+        session.to_exporting("/tmp/export.zip".to_string(), 1024);
+        assert_eq!(session.state, ExportSessionState::Exporting);
+        assert_eq!(session.destination_path.as_deref(), Some("/tmp/export.zip"));
+        assert_eq!(session.estimated_size, Some(1024));
+    }
+
+    #[test]
+    fn test_export_session_to_completed() {
+        let mut session = ExportSession::new();
+        session.to_completed();
+        assert_eq!(session.state, ExportSessionState::Completed);
+    }
+
+    // ─── ExportConfig builder ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_export_config_with_filename() {
+        let config =
+            ExportConfig::new("/tmp".to_string()).with_filename("my-export.zip".to_string());
+        assert_eq!(config.custom_filename.as_deref(), Some("my-export.zip"));
+        assert_eq!(config.destination_path, "/tmp");
+    }
+
+    #[test]
+    fn test_export_config_with_orphaned_images() {
+        let config = ExportConfig::new("/tmp".to_string()).with_orphaned_images(true);
+        assert!(config.include_orphaned_images);
+
+        let config2 = ExportConfig::new("/tmp".to_string()).with_orphaned_images(false);
+        assert!(!config2.include_orphaned_images);
+    }
+
+    #[test]
+    fn test_export_config_defaults() {
+        let config = ExportConfig::new("/some/path".to_string());
+        assert!(config.custom_filename.is_none());
+        assert!(!config.include_orphaned_images);
+    }
+
+    // ─── ExportProgress ───────────────────────────────────────────────────────
+
+    #[test]
+    fn test_export_progress_update() {
+        let mut progress = ExportProgress::new(ExportPhase::Collecting);
+        assert_eq!(progress.percentage, 0);
+        assert!(progress.current_item.is_none());
+
+        progress.update(50, Some("model.png".to_string()), 10);
+        assert_eq!(progress.percentage, 50);
+        assert_eq!(progress.current_item.as_deref(), Some("model.png"));
+        assert_eq!(progress.estimated_seconds_remaining, 10);
+    }
+
+    #[test]
+    fn test_export_progress_clamps_percentage_at_100() {
+        let mut progress = ExportProgress::new(ExportPhase::Compressing);
+        progress.update(150, None, 0);
+        assert_eq!(progress.percentage, 100, "percentage must not exceed 100");
+    }
+
+    // ─── ExportEntitySelection::get_entity_count ──────────────────────────────
+
+    #[test]
+    fn test_get_entity_count_all_selected() {
+        let selection = ExportEntitySelection {
+            include_railway_models: true,
+            include_collection_items: true,
+            include_sellers: true,
+            include_maintenance_logs: true,
+            include_dcc_roster: true,
+            include_orphaned_images: false,
+            include_track_inventory: true,
+        };
+        assert_eq!(selection.get_entity_count(), 6);
+    }
+
+    #[test]
+    fn test_get_entity_count_none_selected() {
+        assert_eq!(empty_selection().get_entity_count(), 0);
+    }
 }

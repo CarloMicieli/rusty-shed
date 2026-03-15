@@ -701,3 +701,132 @@ pub async fn build_manifest(
 
     Ok(manifest)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // ─── strip_null_fields ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_strip_null_fields_removes_null_values() {
+        let input = json!({ "a": "hello", "b": null, "c": 42 });
+        let result = strip_null_fields(input);
+        assert_eq!(result, json!({ "a": "hello", "c": 42 }));
+    }
+
+    #[test]
+    fn test_strip_null_fields_nested_object() {
+        let input = json!({ "outer": { "keep": "yes", "drop": null } });
+        let result = strip_null_fields(input);
+        assert_eq!(result, json!({ "outer": { "keep": "yes" } }));
+    }
+
+    #[test]
+    fn test_strip_null_fields_array_items_processed() {
+        let input = json!([{ "x": 1, "y": null }, { "x": 2, "y": null }]);
+        let result = strip_null_fields(input);
+        assert_eq!(result, json!([{ "x": 1 }, { "x": 2 }]));
+    }
+
+    #[test]
+    fn test_strip_null_fields_preserves_non_object_scalars() {
+        let input = json!("hello");
+        let result = strip_null_fields(input);
+        assert_eq!(result, json!("hello"));
+
+        let input2 = json!(123);
+        let result2 = strip_null_fields(input2);
+        assert_eq!(result2, json!(123));
+    }
+
+    // ─── enum_value ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_enum_value_known_input() {
+        let result = enum_value(Some("ACTIVE".to_string()), db_manufacturer_status_to_schema);
+        assert_eq!(result, Value::String("active".to_string()));
+    }
+
+    #[test]
+    fn test_enum_value_unknown_input_returns_null() {
+        let result = enum_value(
+            Some("UNKNOWN".to_string()),
+            db_manufacturer_status_to_schema,
+        );
+        assert_eq!(result, Value::Null);
+    }
+
+    #[test]
+    fn test_enum_value_none_returns_null() {
+        let result = enum_value(None, db_manufacturer_status_to_schema);
+        assert_eq!(result, Value::Null);
+    }
+
+    // ─── db_category_to_schema ────────────────────────────────────────────────
+
+    #[test]
+    fn test_db_category_to_schema_all_variants() {
+        assert_eq!(db_category_to_schema("LOCOMOTIVES"), "locomotive");
+        assert_eq!(db_category_to_schema("PASSENGER_CARS"), "passengerCar");
+        assert_eq!(db_category_to_schema("FREIGHT_CARS"), "freightCar");
+        assert_eq!(
+            db_category_to_schema("ELECTRIC_MULTIPLE_UNITS"),
+            "electricMultipleUnit"
+        );
+        assert_eq!(db_category_to_schema("RAILCARS"), "railcar");
+        assert_eq!(db_category_to_schema("TRAIN_SETS"), "trainSet");
+        assert_eq!(db_category_to_schema("STARTER_SETS"), "trainSet");
+        assert_eq!(db_category_to_schema("UNKNOWN"), "locomotive");
+    }
+
+    // ─── db_power_method_to_schema ────────────────────────────────────────────
+
+    #[test]
+    fn test_db_power_method_to_schema_all_variants() {
+        assert_eq!(db_power_method_to_schema("AC"), "ac");
+        assert_eq!(db_power_method_to_schema("TRIX_EXPRESS"), "trixExpress");
+        assert_eq!(db_power_method_to_schema("DC"), "dc");
+        assert_eq!(db_power_method_to_schema("UNKNOWN"), "dc");
+    }
+
+    // ─── db_seller_type_to_schema ─────────────────────────────────────────────
+
+    #[test]
+    fn test_db_seller_type_to_schema_all_variants() {
+        assert_eq!(db_seller_type_to_schema("SHOP"), Some("shop"));
+        assert_eq!(db_seller_type_to_schema("PRIVATE"), Some("private"));
+        assert_eq!(db_seller_type_to_schema("MARKETPLACE"), Some("marketplace"));
+        assert_eq!(db_seller_type_to_schema("DISTRIBUTOR"), Some("distributor"));
+        assert_eq!(db_seller_type_to_schema("UNKNOWN"), None);
+    }
+
+    // ─── db_model_condition_to_schema ─────────────────────────────────────────
+
+    #[test]
+    fn test_db_model_condition_to_schema_all_variants() {
+        assert_eq!(db_model_condition_to_schema("MINT"), Some("mint"));
+        assert_eq!(db_model_condition_to_schema("NEAR_MINT"), Some("mint"));
+        assert_eq!(db_model_condition_to_schema("EXCELLENT"), Some("excellent"));
+        assert_eq!(db_model_condition_to_schema("VERY_GOOD"), Some("excellent"));
+        assert_eq!(db_model_condition_to_schema("GOOD"), Some("good"));
+        assert_eq!(db_model_condition_to_schema("FAIR"), Some("fair"));
+        assert_eq!(db_model_condition_to_schema("POOR"), Some("poor"));
+        assert_eq!(db_model_condition_to_schema("FOR_PARTS"), Some("poor"));
+        assert_eq!(db_model_condition_to_schema("UNKNOWN"), None);
+    }
+
+    // ─── db_purchase_condition_to_schema ──────────────────────────────────────
+
+    #[test]
+    fn test_db_purchase_condition_to_schema_all_variants() {
+        assert_eq!(db_purchase_condition_to_schema("NEW"), Some("new"));
+        assert_eq!(
+            db_purchase_condition_to_schema("PRE_OWNED"),
+            Some("preowned")
+        );
+        assert_eq!(db_purchase_condition_to_schema("USED"), Some("used"));
+        assert_eq!(db_purchase_condition_to_schema("UNKNOWN"), None);
+    }
+}

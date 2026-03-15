@@ -57,3 +57,98 @@ pub async fn create_archive(
 
     Ok(archive_path)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use std::io::Read;
+    use zip::ZipArchive;
+
+    fn make_selection() -> serde_json::Value {
+        json!({ "data": {} })
+    }
+
+    #[tokio::test]
+    async fn test_create_archive_manifest_only() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let manifest = make_selection();
+
+        let path = create_archive(dir.path(), &manifest, vec![], "test.zip")
+            .await
+            .expect("create_archive");
+
+        assert!(path.exists());
+        assert_eq!(path.file_name().and_then(|n| n.to_str()), Some("test.zip"));
+    }
+
+    #[tokio::test]
+    async fn test_created_zip_contains_manifest_json() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let manifest = json!({ "version": "1.0" });
+
+        let path = create_archive(dir.path(), &manifest, vec![], "out.zip")
+            .await
+            .expect("create_archive");
+
+        let file = std::fs::File::open(&path).expect("open zip");
+        let mut archive = ZipArchive::new(file).expect("ZipArchive");
+        let entry = archive.by_name("manifest.json");
+        assert!(entry.is_ok(), "manifest.json must be present in ZIP");
+    }
+
+    #[tokio::test]
+    async fn test_manifest_json_content_is_correct() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let manifest = json!({ "version": "1.0", "source": "rusty-shed" });
+
+        let path = create_archive(dir.path(), &manifest, vec![], "out.zip")
+            .await
+            .expect("create_archive");
+
+        let file = std::fs::File::open(&path).expect("open zip");
+        let mut archive = ZipArchive::new(file).expect("ZipArchive");
+        let mut entry = archive.by_name("manifest.json").expect("manifest.json");
+        let mut content = String::new();
+        entry.read_to_string(&mut content).expect("read");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&content).expect("valid JSON in manifest.json");
+        assert_eq!(parsed["version"], json!("1.0"));
+    }
+
+    #[tokio::test]
+    async fn test_create_archive_with_media_file() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let manifest = json!({ "data": {} });
+
+        // Create a fake image file
+        let img_path = dir.path().join("model.png");
+        std::fs::write(&img_path, b"PNG_DATA").expect("write image");
+
+        let path = create_archive(dir.path(), &manifest, vec![img_path], "export.zip")
+            .await
+            .expect("create_archive");
+
+        let file = std::fs::File::open(&path).expect("open zip");
+        let mut archive = ZipArchive::new(file).expect("ZipArchive");
+        let entry = archive.by_name("images/model.png");
+        assert!(entry.is_ok(), "images/model.png must be present in ZIP");
+    }
+
+    #[tokio::test]
+    async fn test_created_archive_path_matches_requested_filename() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let manifest = json!({});
+        let filename = "rusty-shed-2026-03-15.zip";
+
+        let path = create_archive(dir.path(), &manifest, vec![], filename)
+            .await
+            .expect("create_archive");
+
+        assert_eq!(
+            path,
+            dir.path().join(filename),
+            "returned path must match destination_path + filename"
+        );
+    }
+}

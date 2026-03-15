@@ -64,3 +64,101 @@ pub async fn collect_media_files(
 pub async fn detect_orphaned_images() -> Result<Vec<MediaFile>, ExportError> {
     Ok(Vec::new())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_management::domain::ExportEntitySelection;
+    use sqlx::SqlitePool;
+
+    fn all_selection() -> ExportEntitySelection {
+        ExportEntitySelection {
+            include_railway_models: true,
+            include_collection_items: true,
+            include_sellers: true,
+            include_maintenance_logs: true,
+            include_dcc_roster: true,
+            include_orphaned_images: false,
+            include_track_inventory: true,
+        }
+    }
+
+    async fn make_pool() -> SqlitePool {
+        SqlitePool::connect(":memory:")
+            .await
+            .expect("in-memory pool")
+    }
+
+    #[tokio::test]
+    async fn test_empty_media_dir_returns_empty_vec() {
+        let pool = make_pool().await;
+        let dir = tempfile::tempdir().expect("tempdir");
+        let selection = all_selection();
+
+        let files = collect_media_files(&pool, &selection, dir.path())
+            .await
+            .expect("collect");
+
+        assert!(files.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_collects_png_jpg_jpeg_files() {
+        let pool = make_pool().await;
+        let dir = tempfile::tempdir().expect("tempdir");
+        let selection = all_selection();
+
+        std::fs::write(dir.path().join("a.png"), b"PNG").expect("write");
+        std::fs::write(dir.path().join("b.jpg"), b"JPG").expect("write");
+        std::fs::write(dir.path().join("c.jpeg"), b"JPEG").expect("write");
+
+        let mut files = collect_media_files(&pool, &selection, dir.path())
+            .await
+            .expect("collect");
+        files.sort();
+
+        let names: Vec<&str> = files
+            .iter()
+            .filter_map(|p| p.file_name()?.to_str())
+            .collect();
+        assert!(names.contains(&"a.png"));
+        assert!(names.contains(&"b.jpg"));
+        assert!(names.contains(&"c.jpeg"));
+        assert_eq!(files.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_ignores_non_image_files() {
+        let pool = make_pool().await;
+        let dir = tempfile::tempdir().expect("tempdir");
+        let selection = all_selection();
+
+        std::fs::write(dir.path().join("readme.txt"), b"text").expect("write");
+        std::fs::write(dir.path().join("data.json"), b"{}").expect("write");
+        std::fs::write(dir.path().join("image.png"), b"PNG").expect("write");
+
+        let files = collect_media_files(&pool, &selection, dir.path())
+            .await
+            .expect("collect");
+
+        assert_eq!(files.len(), 1);
+        assert_eq!(
+            files[0].file_name().and_then(|n| n.to_str()),
+            Some("image.png")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_nonexistent_media_dir_returns_empty() {
+        let pool = make_pool().await;
+        let dir = tempfile::tempdir().expect("tempdir");
+        let selection = all_selection();
+        let nonexistent = dir.path().join("does_not_exist");
+
+        let files = collect_media_files(&pool, &selection, &nonexistent)
+            .await
+            .expect("collect");
+
+        assert!(files.is_empty());
+    }
+}

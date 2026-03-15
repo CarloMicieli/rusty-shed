@@ -74,3 +74,77 @@ impl Default for IdMapperService {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_is_empty() {
+        let mapper = IdMapperService::new();
+        assert!(mapper.resolve_manufacturer("any").is_none());
+        assert!(mapper.resolve_railway_company("any").is_none());
+        assert!(mapper.resolve_railway_model("any").is_none());
+        assert!(mapper.resolve_seller("any").is_none());
+    }
+
+    #[test]
+    fn test_map_and_resolve_manufacturer() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_manufacturer("ext-1".to_string(), "int-abc".to_string());
+        assert_eq!(mapper.resolve_manufacturer("ext-1"), Some("int-abc"));
+    }
+
+    #[test]
+    fn test_map_and_resolve_railway_company() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_railway_company("rc-ext".to_string(), "rc-int".to_string());
+        assert_eq!(mapper.resolve_railway_company("rc-ext"), Some("rc-int"));
+    }
+
+    #[test]
+    fn test_map_and_resolve_railway_model() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_railway_model("rm-ext".to_string(), "rm-int".to_string());
+        assert_eq!(mapper.resolve_railway_model("rm-ext"), Some("rm-int"));
+    }
+
+    #[test]
+    fn test_map_and_resolve_seller() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_seller("s-ext".to_string(), "s-int".to_string());
+        assert_eq!(mapper.resolve_seller("s-ext"), Some("s-int"));
+    }
+
+    #[test]
+    fn test_resolve_returns_none_for_unmapped() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_manufacturer("ext-1".to_string(), "int-1".to_string());
+        assert!(mapper.resolve_manufacturer("ext-999").is_none());
+    }
+
+    #[test]
+    fn test_remapping_overwrites_prior_value() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_manufacturer("ext-1".to_string(), "int-first".to_string());
+        mapper.map_manufacturer("ext-1".to_string(), "int-second".to_string());
+        assert_eq!(mapper.resolve_manufacturer("ext-1"), Some("int-second"));
+    }
+
+    #[test]
+    fn test_default_equals_new() {
+        let mapper = IdMapperService::default();
+        assert!(mapper.resolve_manufacturer("any").is_none());
+    }
+
+    #[test]
+    fn test_multiple_entities_independent() {
+        let mut mapper = IdMapperService::new();
+        mapper.map_manufacturer("id-1".to_string(), "mfr-int".to_string());
+        mapper.map_seller("id-1".to_string(), "sel-int".to_string());
+        // Same external ID maps to different internals per entity type
+        assert_eq!(mapper.resolve_manufacturer("id-1"), Some("mfr-int"));
+        assert_eq!(mapper.resolve_seller("id-1"), Some("sel-int"));
+        assert!(mapper.resolve_railway_company("id-1").is_none());
+    }
+}

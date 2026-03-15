@@ -69,3 +69,31 @@ pub fn get_temp_export_path() -> Result<PathBuf, ExportError> {
     let filename = format!("rusty-shed-export-{}.zip", uuid::Uuid::new_v4());
     Ok(temp_dir.join(filename))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_temp_export_path_ends_with_zip() {
+        let path = get_temp_export_path().expect("should succeed");
+        assert_eq!(path.extension().and_then(|e| e.to_str()), Some("zip"));
+    }
+
+    #[test]
+    fn test_get_temp_export_path_unique_per_call() {
+        let path1 = get_temp_export_path().expect("should succeed");
+        let path2 = get_temp_export_path().expect("should succeed");
+        assert_ne!(path1, path2, "each call should produce a unique path");
+    }
+
+    #[test]
+    fn test_get_temp_export_path_in_temp_dir() {
+        let path = get_temp_export_path().expect("should succeed");
+        let temp_dir = std::env::temp_dir();
+        assert!(
+            path.starts_with(&temp_dir),
+            "path should be inside temp directory"
+        );
+    }
+}
