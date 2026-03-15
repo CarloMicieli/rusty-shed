@@ -64,7 +64,7 @@ pub fn check_available_space(path: &Path) -> Result<u64, ExportError> {
 
         // f_bavail: blocks available to unprivileged processes
         // f_frsize: fundamental filesystem block size in bytes
-        Ok(stat.f_bavail as u64 * stat.f_frsize as u64)
+        Ok(stat.f_bavail * stat.f_frsize)
     }
 }
 
