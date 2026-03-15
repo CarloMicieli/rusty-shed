@@ -1,14 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { flushSync } from 'svelte';
+
+// Mock Tauri dialog — open() returns an absolute path string or null
+vi.mock('@tauri-apps/plugin-dialog', () => ({
+  open: vi.fn()
+}));
+
+// Mock Tauri webviewWindow — onDragDropEvent returns a no-op unlisten promise
+vi.mock('@tauri-apps/api/webviewWindow', () => ({
+  getCurrentWebviewWindow: vi.fn(() => ({
+    onDragDropEvent: vi.fn(() => Promise.resolve(() => {}))
+  }))
+}));
+
 import ImportDropZone from '$lib/features/import/components/ImportDropZone.svelte';
+import { open } from '@tauri-apps/plugin-dialog';
 
 describe('ImportDropZone.svelte', () => {
-  const onFilesSelected = vi.fn();
+  const onFileSelected = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    onFilesSelected.mockResolvedValue(undefined);
+    onFileSelected.mockResolvedValue(undefined);
   });
 
   it('renders the drop zone heading', () => {
@@ -33,7 +47,7 @@ describe('ImportDropZone.svelte', () => {
   });
 
   it('adds "dragging" class on dragover event', async () => {
-    render(ImportDropZone, { props: { onFilesSelected } });
+    render(ImportDropZone, { props: { onFileSelected } });
     const dropZone = document.querySelector('.import-drop-zone') as HTMLElement;
     expect(dropZone).not.toBeNull();
 
@@ -44,7 +58,7 @@ describe('ImportDropZone.svelte', () => {
   });
 
   it('removes "dragging" class on dragleave event', async () => {
-    render(ImportDropZone, { props: { onFilesSelected } });
+    render(ImportDropZone, { props: { onFileSelected } });
     const dropZone = document.querySelector('.import-drop-zone') as HTMLElement;
 
     await fireEvent.dragOver(dropZone);
@@ -57,37 +71,44 @@ describe('ImportDropZone.svelte', () => {
   });
 
   it('removes "dragging" class after file drop', async () => {
-    render(ImportDropZone, { props: { onFilesSelected } });
+    render(ImportDropZone, { props: { onFileSelected } });
     const dropZone = document.querySelector('.import-drop-zone') as HTMLElement;
 
     await fireEvent.dragOver(dropZone);
     flushSync();
 
-    // Create a mock DataTransfer
-    const file = new File(['content'], 'backup.zip', { type: 'application/zip' });
-    const dataTransfer = { files: [file] };
-    await fireEvent.drop(dropZone, { dataTransfer });
+    await fireEvent.drop(dropZone);
     flushSync();
 
     expect(dropZone.classList.contains('dragging')).toBe(false);
   });
 
-  it('calls onFilesSelected when file is dropped', async () => {
-    render(ImportDropZone, { props: { onFilesSelected } });
-    const dropZone = document.querySelector('.import-drop-zone') as HTMLElement;
+  it('calls open() dialog when clicked', async () => {
+    vi.mocked(open).mockResolvedValue('/home/user/backup.zip');
+    render(ImportDropZone, { props: { onFileSelected } });
+    const btn = screen.getByRole('button', { name: 'Select File' });
 
-    const file = new File(['content'], 'backup.zip', { type: 'application/zip' });
-    const dataTransfer = {
-      files: Object.assign([file], {
-        item: (i: number) => [file][i],
-        length: 1
-      })
-    };
-
-    await fireEvent.drop(dropZone, { dataTransfer });
+    await fireEvent.click(btn);
 
     await waitFor(() => {
-      expect(onFilesSelected).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledWith({
+        multiple: false,
+        filters: [{ name: 'Archive', extensions: ['zip', 'tar.gz', 'tgz'] }]
+      });
+      expect(onFileSelected).toHaveBeenCalledWith('/home/user/backup.zip');
+    });
+  });
+
+  it('does not call onFileSelected when dialog is cancelled', async () => {
+    vi.mocked(open).mockResolvedValue(null);
+    render(ImportDropZone, { props: { onFileSelected } });
+    const btn = screen.getByRole('button', { name: 'Select File' });
+
+    await fireEvent.click(btn);
+
+    await waitFor(() => {
+      expect(open).toHaveBeenCalled();
+      expect(onFileSelected).not.toHaveBeenCalled();
     });
   });
 
@@ -98,7 +119,7 @@ describe('ImportDropZone.svelte', () => {
   });
 
   it('does not add "dragging" class when disabled prop is true', async () => {
-    render(ImportDropZone, { props: { disabled: true, onFilesSelected } });
+    render(ImportDropZone, { props: { disabled: true, onFileSelected } });
     const dropZone = document.querySelector('.import-drop-zone') as HTMLElement;
 
     await fireEvent.dragOver(dropZone);
@@ -107,15 +128,13 @@ describe('ImportDropZone.svelte', () => {
     expect(dropZone.classList.contains('dragging')).toBe(false);
   });
 
-  it('does not call onFilesSelected when disabled and file dropped', async () => {
-    render(ImportDropZone, { props: { disabled: true, onFilesSelected } });
+  it('does not call open() when disabled and clicked', async () => {
+    render(ImportDropZone, { props: { disabled: true, onFileSelected } });
     const dropZone = document.querySelector('.import-drop-zone') as HTMLElement;
 
-    const file = new File(['content'], 'backup.zip', { type: 'application/zip' });
-    const dataTransfer = { files: [file] };
-    await fireEvent.drop(dropZone, { dataTransfer });
+    await fireEvent.click(dropZone);
 
-    expect(onFilesSelected).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
   });
 
   it('is keyboard accessible with tabindex=0 when not disabled', () => {
@@ -128,11 +147,5 @@ describe('ImportDropZone.svelte', () => {
     render(ImportDropZone, { props: { disabled: true } });
     const dropZone = document.querySelector('[role="button"]') as HTMLElement;
     expect(dropZone?.getAttribute('tabindex')).toBe('-1');
-  });
-
-  it('renders file input with correct accept attribute', () => {
-    render(ImportDropZone, { props: { accept: '.zip,.tar.gz' } });
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    expect(input?.getAttribute('accept')).toBe('.zip,.tar.gz');
   });
 });

@@ -1,21 +1,41 @@
 <script lang="ts">
+  import { open } from '@tauri-apps/plugin-dialog';
+  import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
   import * as m from '$lib/paraglide/messages.js';
 
   let draggingOver = $state(false);
 
   interface Props {
-    onFilesSelected?: (files: FileList) => Promise<void>;
-    accept?: string;
+    onFileSelected?: (path: string) => Promise<void>;
     disabled?: boolean;
   }
 
-  const {
-    onFilesSelected = async () => {},
-    accept = '.zip,.tar.gz,.tgz',
-    disabled = false
-  }: Props = $props();
+  const { onFileSelected = async () => {}, disabled = false }: Props = $props();
 
-  let fileInput: HTMLInputElement | undefined = $state();
+  // Use Tauri's native drag-drop event to get absolute file paths.
+  // DOM DataTransfer File objects do not have reliable .path properties.
+  $effect(() => {
+    let cleanup = () => {};
+    let active = true;
+
+    getCurrentWebviewWindow()
+      .onDragDropEvent((event) => {
+        if (!active || disabled || event.payload.type !== 'drop') return;
+        const paths = (event.payload as { type: 'drop'; paths: string[] }).paths;
+        if (paths.length > 0) {
+          onFileSelected(paths[0]);
+        }
+      })
+      .then((unlisten) => {
+        if (active) cleanup = unlisten;
+        else unlisten();
+      });
+
+    return () => {
+      active = false;
+      cleanup();
+    };
+  });
 
   const handleDragOver = (e: DragEvent) => {
     if (disabled) return;
@@ -30,28 +50,21 @@
     draggingOver = false;
   };
 
-  const handleDrop = async (e: DragEvent) => {
-    if (disabled) return;
+  const handleDrop = (e: DragEvent) => {
+    // Prevent browser navigation. Path extraction is handled by onDragDrop above.
     e.preventDefault();
     e.stopPropagation();
     draggingOver = false;
-
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      await onFilesSelected(files);
-    }
   };
 
-  const handleFileSelect = async (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      await onFilesSelected(input.files);
-    }
-  };
-
-  const handleClick = () => {
-    if (!disabled && fileInput) {
-      fileInput.click();
+  const handleClick = async () => {
+    if (disabled) return;
+    const path = await open({
+      multiple: false,
+      filters: [{ name: 'Archive', extensions: ['zip', 'tar.gz', 'tgz'] }]
+    });
+    if (path) {
+      await onFileSelected(path as string);
     }
   };
 
@@ -77,15 +90,6 @@
   role="button"
   tabindex={disabled ? -1 : 0}
 >
-  <input
-    bind:this={fileInput}
-    type="file"
-    {accept}
-    style="display: none"
-    onchange={handleFileSelect}
-    {disabled}
-  />
-
   <div class="content">
     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

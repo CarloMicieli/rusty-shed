@@ -2,6 +2,28 @@
 use serde_json::{Value, json};
 use sqlx::{Row, SqlitePool};
 
+fn db_category_to_schema(db_value: &str) -> &'static str {
+    match db_value {
+        "LOCOMOTIVES" => "locomotive",
+        "PASSENGER_CARS" => "passengerCar",
+        "FREIGHT_CARS" => "freightCar",
+        "ELECTRIC_MULTIPLE_UNITS" => "electricMultipleUnit",
+        "RAILCARS" => "railcar",
+        "TRAIN_SETS" | "STARTER_SETS" => "trainSet",
+        _ => "locomotive",
+    }
+}
+
+fn db_power_method_to_schema(db_value: &str) -> &'static str {
+    match db_value {
+        "AC" => "ac",
+        "DC" => "dc",
+        "DCC" => "dcc",
+        "TRIX_EXPRESS" => "ac",
+        _ => "dc",
+    }
+}
+
 use crate::export::domain::entity_selection::ExportEntitySelection;
 use crate::export::domain::error::ExportError;
 
@@ -115,22 +137,31 @@ pub async fn build_manifest(
                 })
                 .collect();
 
-            let category_type: String = row
+            let category_db: String = row
                 .try_get("category")
                 .unwrap_or_else(|_| "LOCOMOTIVES".to_string());
+            let power_method_db: String = row
+                .try_get("power_method")
+                .unwrap_or_else(|_| "DC".to_string());
+            let product_code: String = row.try_get("product_code").unwrap_or_default();
+            let description: String = row
+                .try_get::<Option<String>, _>("description")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| product_code.clone());
 
             models.push(json!({
                 "id": model_id,
                 "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
-                "productCode": row.try_get::<String, _>("product_code").ok(),
-                "description": row.try_get::<Option<String>, _>("description").ok().flatten(),
+                "productCode": product_code,
+                "description": description,
                 "details": row.try_get::<Option<String>, _>("details").ok().flatten(),
                 "scale": row.try_get::<String, _>("scale").ok(),
                 "epoch": row.try_get::<String, _>("epoch").ok(),
                 "category": {
-                    "type": category_type,
+                    "type": db_category_to_schema(&category_db),
                 },
-                "powerMethod": row.try_get::<String, _>("power_method").ok(),
+                "powerMethod": db_power_method_to_schema(&power_method_db),
                 "deliveryDate": row.try_get::<Option<String>, _>("delivery_date").ok().flatten(),
                 "availabilityStatus": row.try_get::<Option<String>, _>("availability_status").ok().flatten(),
                 "rollingStocks": rolling_stocks,

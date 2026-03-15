@@ -179,10 +179,10 @@ impl ExecuteImportUseCase {
             .bind(&model.id)
             .bind(&model.manufacturer_id)
             .bind(&model.product_code)
-            .bind(&model.power_method)
+            .bind(schema_power_method_to_db(&model.power_method))
             .bind(&model.scale)
             .bind(&model.epoch)
-            .bind(&model.category.r#type)
+            .bind(schema_category_to_db(&model.category.r#type))
             .bind(&model.delivery_date)
             .bind(&model.availability_status)
             .execute(&mut *tx)
@@ -205,8 +205,9 @@ impl ExecuteImportUseCase {
             }
 
             // Insert rolling stocks (generate new UUIDs — no ID in manifest)
-            let rolling_stock_category =
-                model_category_to_rolling_stock_category(&model.category.r#type);
+            let rolling_stock_category = model_category_to_rolling_stock_category(
+                schema_category_to_db(&model.category.r#type),
+            );
             for rs in &model.rolling_stocks {
                 let rs_id = Uuid::new_v4().to_string();
                 sqlx::query(
@@ -451,9 +452,33 @@ impl ExecuteImportUseCase {
     }
 }
 
-/// Map railway model category (plural) to rolling stock category (singular).
-fn model_category_to_rolling_stock_category(category_type: &str) -> &str {
-    match category_type.to_uppercase().as_str() {
+/// Convert schema category value (camelCase) to DB value (SCREAMING_SNAKE_CASE).
+fn schema_category_to_db(schema_value: &str) -> &'static str {
+    match schema_value {
+        "locomotive" => "LOCOMOTIVES",
+        "trainSet" => "TRAIN_SETS",
+        "freightCar" => "FREIGHT_CARS",
+        "passengerCar" => "PASSENGER_CARS",
+        "electricMultipleUnit" => "ELECTRIC_MULTIPLE_UNITS",
+        "railcar" => "RAILCARS",
+        _ => "LOCOMOTIVES",
+    }
+}
+
+/// Convert schema power method value (lowercase) to DB value (SCREAMING_SNAKE_CASE).
+fn schema_power_method_to_db(schema_value: &str) -> &'static str {
+    match schema_value {
+        "ac" => "AC",
+        "dc" => "DC",
+        "dcc" => "DCC",
+        "none" => "NONE",
+        _ => "DC",
+    }
+}
+
+/// Map railway model DB category (plural) to rolling stock DB category (singular).
+fn model_category_to_rolling_stock_category(db_category: &str) -> &'static str {
+    match db_category {
         "FREIGHT_CARS" => "FREIGHT_CAR",
         "PASSENGER_CARS" => "PASSENGER_CAR",
         "ELECTRIC_MULTIPLE_UNITS" => "ELECTRIC_MULTIPLE_UNIT",
@@ -625,6 +650,29 @@ mod tests {
         let import_result = result.unwrap();
         assert_eq!(import_result.added.total(), 0);
         assert_eq!(import_result.skipped.total(), 0);
+    }
+
+    #[test]
+    fn test_schema_category_to_db() {
+        assert_eq!(schema_category_to_db("locomotive"), "LOCOMOTIVES");
+        assert_eq!(schema_category_to_db("freightCar"), "FREIGHT_CARS");
+        assert_eq!(schema_category_to_db("passengerCar"), "PASSENGER_CARS");
+        assert_eq!(
+            schema_category_to_db("electricMultipleUnit"),
+            "ELECTRIC_MULTIPLE_UNITS"
+        );
+        assert_eq!(schema_category_to_db("railcar"), "RAILCARS");
+        assert_eq!(schema_category_to_db("trainSet"), "TRAIN_SETS");
+        assert_eq!(schema_category_to_db("unknown"), "LOCOMOTIVES");
+    }
+
+    #[test]
+    fn test_schema_power_method_to_db() {
+        assert_eq!(schema_power_method_to_db("ac"), "AC");
+        assert_eq!(schema_power_method_to_db("dc"), "DC");
+        assert_eq!(schema_power_method_to_db("dcc"), "DCC");
+        assert_eq!(schema_power_method_to_db("none"), "NONE");
+        assert_eq!(schema_power_method_to_db("unknown"), "DC");
     }
 
     #[test]

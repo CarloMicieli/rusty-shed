@@ -11,20 +11,13 @@
   const preview = controller.preview$;
   const result = controller.result$;
 
-  let selectedFile: File | null = $state(null);
   let isProcessing = $state(false);
 
-  async function handleFilesSelected(files: FileList) {
-    if (files.length === 0) return;
-
-    selectedFile = files[0];
+  async function handleFileSelected(filePath: string) {
     isProcessing = true;
 
     try {
-      // In Tauri, we can access the file path from the File object
-      const filePath = (selectedFile as { path?: string }).path || selectedFile.name;
       await controller.analyzePackage(filePath);
-      // After analysis, fetch the preview
       await controller.getPreview();
     } catch (error) {
       console.error('Error analyzing package:', error);
@@ -46,12 +39,10 @@
 
   async function handleCancelImport() {
     await controller.cancelSession();
-    selectedFile = null;
   }
 
   function handleCloseReport() {
     controller.reset();
-    selectedFile = null;
   }
 </script>
 
@@ -65,7 +56,7 @@
   {#if $result}
     <ImportReport result={$result} onClose={handleCloseReport} />
   {:else if !$sessionId}
-    <ImportDropZone onFilesSelected={handleFilesSelected} disabled={isProcessing} />
+    <ImportDropZone onFileSelected={handleFileSelected} disabled={isProcessing} />
   {:else if $preview}
     <ImportPreview
       preview={$preview}
