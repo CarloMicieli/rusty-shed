@@ -108,7 +108,9 @@ impl MaintenanceCard {
             id,
             maintenance_card_id: {
                 let s = self.id.to_string();
-                let uuid_str = s.trim_start_matches(MaintenanceCardId::PREFIX);
+                let uuid_str = s
+                    .trim_start_matches(MaintenanceCardId::PREFIX)
+                    .trim_start_matches(':');
                 Uuid::parse_str(uuid_str).expect("invalid maintenance card id trn")
             },
             date_performed,
