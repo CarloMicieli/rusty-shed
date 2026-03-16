@@ -2,7 +2,7 @@
   import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Heart, Plus, RefreshCw, House, Wrench } from 'lucide-svelte';
+  import { Heart, Plus, ShoppingBag, RefreshCw, House, Wrench } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Card, CardContent, Skeleton } from '$lib/components';
 
@@ -56,7 +56,7 @@
     {
       id: 'add-railway-model',
       label: m.dashboard_action_new_acquisition(),
-      icon: Plus,
+      icon: ShoppingBag,
       onClick: () => openAcquisitionDrawer()
     },
     {

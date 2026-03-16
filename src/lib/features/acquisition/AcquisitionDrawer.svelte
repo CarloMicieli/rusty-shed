@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X } from 'lucide-svelte';
+  import { X, ShoppingBag } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import { commands, type Manufacturer, type SellerView } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
@@ -209,11 +209,16 @@
   >
     <!-- Sticky header -->
     <div class="flex items-center justify-between border-b border-white/10 p-4">
-      <div>
-        <h2 id="acquisition-drawer-title" class="text-lg font-semibold text-zinc-100">
-          {m.acquisition_drawer_title()}
-        </h2>
-        <p class="text-sm text-zinc-500">{m.acquisition_drawer_subtitle()}</p>
+      <div class="flex items-center gap-3">
+        <div class="rounded-lg bg-emerald-500/10 p-2">
+          <ShoppingBag class="h-5 w-5 text-emerald-500" />
+        </div>
+        <div>
+          <h2 id="acquisition-drawer-title" class="text-lg font-semibold text-zinc-100">
+            {m.acquisition_drawer_title()}
+          </h2>
+          <p class="text-sm text-zinc-500">{m.acquisition_drawer_subtitle()}</p>
+        </div>
       </div>
       <Button
         type="button"

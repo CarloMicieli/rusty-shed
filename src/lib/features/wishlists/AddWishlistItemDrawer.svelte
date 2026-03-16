@@ -3,7 +3,10 @@
   import * as Select from '$lib/components/ui/select';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
+  import { CurrencyInput } from '$lib/components';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
+  import { settingsState } from '$lib/features/settings/SettingsState.svelte';
+  import { getCurrencySymbol } from '$lib/utils/currency';
   import { commands } from '$lib/bindings';
   import type { Manufacturer, WishlistPriority } from '$lib/bindings';
   import {
@@ -13,7 +16,7 @@
     PRIORITIES,
     EPOCHS
   } from '$lib/features/wishlists/constants';
-  import { X } from 'lucide-svelte';
+  import { X, Heart } from 'lucide-svelte';
   import { onMount } from 'svelte';
 
   const wishlistService = getWishlistContext();
@@ -35,8 +38,7 @@
     powerMethod: string;
     epoch: string;
     priority: WishlistPriority;
-    desiredPrice: string;
-    desiredPriceCurrency: string;
+    desiredPrice: number | null;
   }
 
   let { open, onClose, onSaved }: Props = $props();
@@ -56,8 +58,7 @@
       powerMethod: POWER_METHODS[0],
       epoch: '',
       priority: 'NORMAL',
-      desiredPrice: '',
-      desiredPriceCurrency: 'EUR'
+      desiredPrice: null
     };
   }
 
@@ -69,7 +70,9 @@
   let formError = $state<string | null>(null);
   let showDiscardDialog = $state(false);
 
-  const isDropdownDisabled = $derived(form.newListName.trim() !== '');
+  const isDropdownDisabled = $derived(form.newListName.trim() !== '' || wishlists.length === 0);
+  const currency = $derived(settingsState.settings.currency ?? 'EUR');
+  const currencySymbol = $derived(getCurrencySymbol(currency));
   const selectedWishlist = $derived(wishlists.find((l) => l.id === form.wishlistId));
   const selectedManufacturer = $derived(
     manufacturers.find((mfr) => mfr.id === form.manufacturerId)
@@ -130,7 +133,7 @@
       formError = m.wishlist_modal_missing_description();
       return;
     }
-    if (form.desiredPrice !== '' && parseFloat(form.desiredPrice) <= 0) {
+    if (form.desiredPrice !== null && form.desiredPrice <= 0) {
       formError = m.wishlist_modal_invalid_price();
       return;
     }
@@ -154,9 +157,7 @@
       }
 
       const priceAmount =
-        form.desiredPrice !== ''
-          ? (Math.round(parseFloat(form.desiredPrice) * 100) as unknown as bigint)
-          : null;
+        form.desiredPrice !== null ? (form.desiredPrice as unknown as bigint) : null;
 
       const success = await wishlistService.addRailwayModelToWishlist({
         railwayModel: {
@@ -173,7 +174,7 @@
         priority: form.priority,
         status: null,
         desiredPriceAmount: priceAmount,
-        desiredPriceCurrency: priceAmount !== null ? form.desiredPriceCurrency : null,
+        desiredPriceCurrency: priceAmount !== null ? currency : null,
         notes: null,
         addedDate: null
       });
@@ -269,11 +270,16 @@
   >
     <!-- Sticky header -->
     <div class="flex items-center justify-between border-b border-white/10 p-4">
-      <div>
-        <h2 id="wishlist-item-drawer-title" class="text-lg font-semibold text-zinc-100">
-          {m.wishlist_modal_title()}
-        </h2>
-        <p class="text-sm text-zinc-500">{m.wishlist_add_item_drawer_subtitle()}</p>
+      <div class="flex items-center gap-3">
+        <div class="rounded-lg bg-rose-500/10 p-2">
+          <Heart class="h-5 w-5 text-rose-500" />
+        </div>
+        <div>
+          <h2 id="wishlist-item-drawer-title" class="text-lg font-semibold text-zinc-100">
+            {m.wishlist_modal_title()}
+          </h2>
+          <p class="text-sm text-zinc-500">{m.wishlist_add_item_drawer_subtitle()}</p>
+        </div>
       </div>
       <Button
         type="button"
@@ -536,30 +542,17 @@
           </div>
         </div>
 
-        <!-- Desired Price + Currency -->
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1">
-            <label for="wishlist-drawer-desired-price" class="text-xs text-zinc-400">
-              {m.wishlist_modal_desired_price()}
-            </label>
-            <Input
-              id="wishlist-drawer-desired-price"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder={m.wishlist_modal_price_placeholder()}
-              bind:value={form.desiredPrice}
-            />
-          </div>
-          <div class="space-y-1">
-            <label for="wishlist-drawer-currency" class="text-xs text-zinc-400"> Currency </label>
-            <Input
-              id="wishlist-drawer-currency"
-              type="text"
-              placeholder="EUR"
-              bind:value={form.desiredPriceCurrency}
-            />
-          </div>
+        <!-- Desired Price -->
+        <div class="space-y-1">
+          <label for="wishlist-drawer-desired-price" class="text-xs text-zinc-400">
+            {m.wishlist_modal_desired_price()}
+          </label>
+          <CurrencyInput
+            id="wishlist-drawer-desired-price"
+            bind:value={form.desiredPrice}
+            symbol={currencySymbol}
+            label={m.wishlist_modal_desired_price()}
+          />
         </div>
       </div>
 
