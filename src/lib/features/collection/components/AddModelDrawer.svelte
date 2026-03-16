@@ -312,7 +312,7 @@
 <!-- Drawer Overlay -->
 {#if open}
   <div
-    class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
     onclick={handleCloseRequest}
     role="presentation"
   ></div>
@@ -327,19 +327,24 @@
   aria-modal="true"
   aria-labelledby="drawer-title"
 >
-  <div class="flex h-full flex-col overflow-y-auto border-l border-border bg-background shadow-2xl">
+  <div
+    class="flex h-full flex-col overflow-y-auto border-l border-[#1F1F1F] bg-[#0F0F0F] shadow-2xl"
+  >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-border p-6">
+    <div class="flex items-center justify-between border-b border-[#1F1F1F] p-6">
       <div>
-        <p class="using-track text-xs text-muted-foreground uppercase">
+        <p class="text-[10px] tracking-[0.2em] text-[#808080] uppercase">
           {m.add_model_subtitle()}
         </p>
-        <h2 id="drawer-title" class="text-xl font-semibold">{m.add_model_title()}</h2>
+        <h2 id="drawer-title" class="text-xl font-semibold text-[#E0E0E0]">
+          {m.add_model_title()}
+        </h2>
       </div>
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
+        class="text-[#808080] hover:text-[#E0E0E0]"
         onclick={handleCloseRequest}
         aria-label={m.add_model_cancel()}
       >
@@ -351,7 +356,7 @@
     <div class="flex-1 overflow-y-auto p-6">
       {#if isLoadingData}
         <div class="flex items-center justify-center py-8">
-          <p class="text-muted-foreground">Loading...</p>
+          <p class="text-[#808080]">Loading...</p>
         </div>
       {:else}
         <form id="add-model-form" class="space-y-6">
@@ -371,14 +376,21 @@
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-border p-6">
-      <Button type="button" variant="ghost" onclick={handleCloseRequest} disabled={isSubmitting}>
+    <div class="flex items-center justify-end gap-3 border-t border-[#1F1F1F] p-6">
+      <Button
+        type="button"
+        variant="ghost"
+        class="text-[#E0E0E0]"
+        onclick={handleCloseRequest}
+        disabled={isSubmitting}
+      >
         {m.add_model_cancel()}
       </Button>
       <Button
         type="submit"
         form="add-model-form"
-        variant="default"
+        variant="ghost"
+        class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
         onclick={handleSubmit}
         disabled={isSubmitting || isLoadingData}
       >

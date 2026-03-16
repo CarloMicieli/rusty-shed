@@ -22,9 +22,23 @@
       seriesCode?: string;
       category?: string;
     };
+    /** Enable mechanical dark mode styling */
+    dark?: boolean;
   }
 
-  let { entry = $bindable(), railwayCompanies, canRemove, onRemove, errors }: Props = $props();
+  let {
+    entry = $bindable(),
+    railwayCompanies,
+    canRemove,
+    onRemove,
+    errors,
+    dark = false
+  }: Props = $props();
+
+  const darkInput =
+    'flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
+  const lightSelect =
+    'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
   // Show locomotive type field only if category is LOCOMOTIVE
   let showLocomotiveType = $derived(entry.category === 'LOCOMOTIVE');
@@ -38,18 +52,27 @@
 </script>
 
 <div
-  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 text-card-foreground"
+  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border p-4"
+  class:border-[#1F1F1F]={dark}
+  class:bg-[#0F0F0F]={dark}
+  class:border-border={!dark}
+  class:bg-card={!dark}
+  class:text-card-foreground={!dark}
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
     <div>
       <label for="railway-company-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.add_model_railway_company()}</span>
+        {#if dark}
+          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_railway_company()}</span>
+        {:else}
+          <span class="text-sm text-muted-foreground">{m.add_model_railway_company()}</span>
+        {/if}
       </label>
       <select
         id="railway-company-{entry.uid}"
         bind:value={entry.railwayCompanyId}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class={dark ? darkInput : lightSelect}
         class:input-error={errors?.railwayCompanyId}
         aria-describedby={errors?.railwayCompanyId
           ? `railway-company-error-{entry.uid}`
@@ -70,14 +93,18 @@
     <!-- Series Code -->
     <div>
       <label for="series-code-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.add_model_series_code()}</span>
+        {#if dark}
+          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_series_code()}</span>
+        {:else}
+          <span class="text-sm text-muted-foreground">{m.add_model_series_code()}</span>
+        {/if}
       </label>
       <Input
         id="series-code-{entry.uid}"
         type="text"
         bind:value={entry.seriesCode}
         placeholder="e.g., 218, Re 4/4"
-        class="w-full font-mono"
+        class={dark ? `${darkInput} font-mono` : 'w-full font-mono'}
         aria-describedby={errors?.seriesCode ? `series-code-error-{entry.uid}` : undefined}
       />
       {#if errors?.seriesCode}
@@ -92,12 +119,16 @@
     <!-- Category -->
     <div>
       <label for="category-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.add_model_rs_category()}</span>
+        {#if dark}
+          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_rs_category()}</span>
+        {:else}
+          <span class="text-sm text-muted-foreground">{m.add_model_rs_category()}</span>
+        {/if}
       </label>
       <select
         id="category-{entry.uid}"
         bind:value={entry.category}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class={dark ? darkInput : lightSelect}
         class:input-error={errors?.category}
         aria-describedby={errors?.category ? `category-error-{entry.uid}` : undefined}
       >
@@ -117,15 +148,20 @@
     <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.add_model_road_number()}</span>
-        <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
+        {#if dark}
+          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_road_number()}</span>
+          <span class="ml-1 text-[#808080]/50">(optional)</span>
+        {:else}
+          <span class="text-sm text-muted-foreground">{m.add_model_road_number()}</span>
+          <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
+        {/if}
       </label>
       <Input
         id="road-number-{entry.uid}"
         type="text"
         bind:value={entry.roadNumber}
         placeholder="e.g., 218 101-3"
-        class="w-full font-mono"
+        class={dark ? `${darkInput} font-mono` : 'w-full font-mono'}
       />
     </div>
   </div>
@@ -134,12 +170,16 @@
   {#if showLocomotiveType}
     <div>
       <label for="locomotive-type-{entry.uid}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.add_model_locomotive_type()}</span>
+        {#if dark}
+          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_locomotive_type()}</span>
+        {:else}
+          <span class="text-sm text-muted-foreground">{m.add_model_locomotive_type()}</span>
+        {/if}
       </label>
       <select
         id="locomotive-type-{entry.uid}"
         bind:value={entry.locomotiveType}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class={dark ? darkInput : lightSelect}
       >
         <option value={null}>-- {m.add_model_locomotive_type()} --</option>
         {#each locomotiveTypes as type (type.id)}
@@ -152,18 +192,30 @@
 
   <!-- Remove Button -->
   <div class="flex justify-end">
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      class="text-destructive hover:bg-destructive/10"
-      disabled={!canRemove}
-      onclick={onRemove}
-      aria-label={m.add_model_remove_rolling_stock()}
-    >
-      <X size={16} />
-      <span>{m.add_model_remove_rolling_stock()}</span>
-    </Button>
+    {#if dark}
+      <button
+        type="button"
+        class="text-[10px] tracking-widest text-[#808080]/60 uppercase hover:text-red-400 disabled:pointer-events-none disabled:opacity-30"
+        disabled={!canRemove}
+        onclick={onRemove}
+        aria-label={m.add_model_remove_rolling_stock()}
+      >
+        {m.add_model_remove_rolling_stock()}
+      </button>
+    {:else}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        class="text-destructive hover:bg-destructive/10"
+        disabled={!canRemove}
+        onclick={onRemove}
+        aria-label={m.add_model_remove_rolling_stock()}
+      >
+        <X size={16} />
+        <span>{m.add_model_remove_rolling_stock()}</span>
+      </Button>
+    {/if}
   </div>
 </div>
 

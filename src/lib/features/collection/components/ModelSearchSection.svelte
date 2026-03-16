@@ -56,6 +56,7 @@
 
 <!-- Base Railway Model Form (shared component) -->
 <RailwayModelBaseForm
+  dark={true}
   {manufacturers}
   categoryOptions={categories}
   scaleOptions={scales}
@@ -66,6 +67,7 @@
 >
   {#each form.rollingStocks as entry, index (entry.uid)}
     <RollingStockEntry
+      dark={true}
       bind:entry={form.rollingStocks[index]}
       {railwayCompanies}
       canRemove={form.rollingStocks.length > 1}
@@ -77,6 +79,7 @@
 
 <!-- Purchase Section -->
 <PurchaseSection
+  dark={true}
   bind:purchase={form.purchase}
   {sellers}
   bind:expanded={showPurchaseSection}
