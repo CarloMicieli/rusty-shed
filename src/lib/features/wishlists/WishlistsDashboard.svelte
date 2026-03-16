@@ -8,6 +8,7 @@
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
+  import WishlistValueBar from './components/WishlistValueBar.svelte';
   import AddRailwayModelDrawer from './components/AddRailwayModelDrawer.svelte';
   import PurchaseDialog from './components/PurchaseDialog.svelte';
   import type { WishlistItem } from '$lib/bindings';
@@ -184,6 +185,8 @@
               onAddModel={openAddModelDrawer}
               onDelete={_handleDelete}
             />
+
+            <WishlistValueBar items={wishlistItems} />
 
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <WishlistItems

@@ -436,6 +436,8 @@
   "wishlist_priority_low": "Low",
   "wishlist_priority_normal": "Normal",
   "wishlist_priority_high": "High",
+  "wishlist_value_bar_total_label": "TOTAL WISHLIST VALUE",
+  "wishlist_value_bar_no_price_data": "No price data available",
   "wishlist_category_locomotives": "Locomotives",
   "wishlist_category_train_sets": "Train Sets",
   "wishlist_category_starter_sets": "Starter Sets",

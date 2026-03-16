@@ -423,6 +423,8 @@
   "wishlist_priority_low": "Bassa",
   "wishlist_priority_normal": "Normale",
   "wishlist_priority_high": "Alta",
+  "wishlist_value_bar_total_label": "VALORE TOTALE LISTA DESIDERI",
+  "wishlist_value_bar_no_price_data": "Nessun dato di prezzo disponibile",
   "wishlist_category_locomotives": "Locomotive",
   "wishlist_category_train_sets": "Treni Completi",
   "wishlist_category_starter_sets": "Set Iniziali",
