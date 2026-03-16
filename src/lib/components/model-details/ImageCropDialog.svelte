@@ -3,7 +3,7 @@
   // NO CSS import — v2 uses Shadow DOM styles built-in
   import { commands } from '$lib/bindings';
   import { Button } from '$lib/components/ui/button';
-  import { Loader2 } from 'lucide-svelte';
+  import { Loader2, RotateCcw, RotateCw } from 'lucide-svelte';
   import {
     Dialog,
     DialogContent,
@@ -15,6 +15,11 @@
     crop_dialog_title,
     crop_confirm,
     crop_cancel,
+    crop_aspect_free,
+    crop_aspect_wide,
+    crop_rotate_left,
+    crop_rotate_right,
+    crop_reset,
     uploading
   } from '$lib/paraglide/messages.js';
   import type { RailwayModelId } from '$lib/bindings';
@@ -42,15 +47,19 @@
   let isReady = $state(false);
   let isSaving = $state(false);
   let saveError = $state<string | null>(null);
+  let activeRatio = $state<'free' | '16:9' | '21:9'>('free');
+  let resetKey = $state(0);
 
   // Use $effect instead of onMount: bits-ui Dialog renders content lazily,
   // so imageEl is null until the dialog actually opens and the <img> is mounted.
-  // $effect re-runs whenever imageEl changes from null → HTMLImageElement.
+  // $effect re-runs whenever imageEl or resetKey changes.
   $effect(() => {
+    void resetKey; // read to register dependency — incrementing triggers re-init
     if (!imageEl) return;
 
     isReady = false;
     saveError = null;
+    activeRatio = 'free';
 
     const instance = new Cropper(imageEl);
     cropperInstance = instance;
@@ -79,6 +88,19 @@
     };
   });
 
+  // Sync aspect ratio to cropper whenever activeRatio changes
+  $effect(() => {
+    if (!cropperInstance || !isReady) return;
+    const sel = cropperInstance.getCropperSelection()!;
+    if (activeRatio === 'free') sel.aspectRatio = NaN;
+    else if (activeRatio === '16:9') sel.aspectRatio = 16 / 9;
+    else if (activeRatio === '21:9') sel.aspectRatio = 21 / 9;
+  });
+
+  function handleRotate(degrees: number) {
+    cropperInstance?.getCropperImage()?.$rotate(degrees);
+  }
+
   function handleClose() {
     if (imageSrc.startsWith('blob:')) {
       URL.revokeObjectURL(imageSrc);
@@ -99,7 +121,7 @@
 
     try {
       const sel = cropperInstance.getCropperSelection()!;
-      const canvas = await sel.$toCanvas({ width: 2048, height: 2048 });
+      const canvas = await sel.$toCanvas({ width: 2560 });
 
       const fileData = await new Promise<number[]>((resolve, reject) => {
         canvas.toBlob(
@@ -151,14 +173,59 @@
     if (!o) handleCancel();
   }}
 >
-  <DialogContent class="max-w-2xl">
+  <DialogContent class="max-w-5xl gap-3">
     <DialogHeader>
       <DialogTitle>{crop_dialog_title()}</DialogTitle>
     </DialogHeader>
 
-    <div class="relative w-full overflow-hidden rounded-md bg-black" style="height: 400px;">
+    <div
+      class="relative w-full overflow-hidden rounded-md border border-white/10 bg-zinc-950"
+      style="height: 480px;"
+    >
       <!-- svelte-ignore a11y_missing_attribute -->
       <img bind:this={imageEl} src={imageSrc} class="max-h-full max-w-full" />
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Aspect ratio group -->
+      <div class="flex items-center gap-1 rounded-md border border-white/10 p-1">
+        {#each [['free', 'free'] as const, ['16:9', '16:9'] as const, ['21:9', '21:9'] as const] as [ratio] (ratio)}
+          <Button
+            size="sm"
+            variant={activeRatio === ratio ? 'secondary' : 'ghost'}
+            onclick={() => (activeRatio = ratio)}
+            disabled={!isReady}
+          >
+            {ratio === 'free' ? crop_aspect_free() : ratio === '21:9' ? crop_aspect_wide() : '16:9'}
+          </Button>
+        {/each}
+      </div>
+
+      <!-- Rotation -->
+      <Button
+        size="icon"
+        variant="ghost"
+        onclick={() => handleRotate(-90)}
+        disabled={!isReady}
+        aria-label={crop_rotate_left()}
+      >
+        <RotateCcw class="size-4" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        onclick={() => handleRotate(90)}
+        disabled={!isReady}
+        aria-label={crop_rotate_right()}
+      >
+        <RotateCw class="size-4" />
+      </Button>
+
+      <!-- Reset -->
+      <Button size="sm" variant="ghost" onclick={() => resetKey++} disabled={!isReady}>
+        {crop_reset()}
+      </Button>
     </div>
 
     {#if saveError}
