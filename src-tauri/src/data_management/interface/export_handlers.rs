@@ -6,7 +6,7 @@ use crate::data_management::domain::{ExportEntitySelection, ExportResult};
 use crate::data_management::infrastructure::file_picker;
 use crate::state::AppState;
 use log::info;
-use tauri::State;
+use tauri::{Manager, State};
 
 /// Get a preview of what will be included in the export.
 ///
@@ -47,7 +47,9 @@ pub async fn open_export_file_dialog(
         chrono::Local::now().format("%Y-%m-%d")
     );
 
-    let path = file_picker::open_save_dialog(&app, &default_filename)
+    let default_dir = app.path().home_dir().ok();
+
+    let path = file_picker::open_save_dialog(&app, &default_filename, default_dir)
         .map_err(|e| CommandError::unknown(e.to_string()))?;
 
     Ok(path.map(|p| p.display().to_string()))

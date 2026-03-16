@@ -12,7 +12,7 @@ pub mod interface;
 
 // Re-export main types and commands for convenience
 pub use crate::core::domain::Language;
-pub use domain::user_settings::{MeasureUnit, PowerSystem, UserSettings};
+pub use domain::user_settings::{MeasureUnit, UserSettings};
 pub use interface::commands::{get_settings, initialize_settings, update_settings};
 
 // Placeholder for backward compatibility (removed old ensure_default_settings)

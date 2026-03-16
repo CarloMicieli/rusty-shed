@@ -17,7 +17,7 @@
   let theme = $state(settingsState.settings.theme);
   let measureUnit = $state(settingsState.settings.measureUnit);
   let favouriteScale = $state(settingsState.settings.favouriteScale);
-  let powerSystem = $state(settingsState.settings.powerSystem);
+  let powerMethod = $state(settingsState.settings.powerMethod);
 
   let saving = $state(false);
   let saveError = $state<string | null>(null);
@@ -35,7 +35,7 @@
     theme = settingsState.settings.theme;
     measureUnit = settingsState.settings.measureUnit;
     favouriteScale = settingsState.settings.favouriteScale;
-    powerSystem = settingsState.settings.powerSystem;
+    powerMethod = settingsState.settings.powerMethod;
   });
 
   async function handleSubmit(event: Event) {
@@ -53,7 +53,7 @@
         theme,
         measureUnit,
         favouriteScale,
-        powerSystem
+        powerMethod
       };
 
       await settingsState.update(inputData);
@@ -110,8 +110,8 @@
       />
 
       <PowerSystemSelector
-        value={powerSystem}
-        onchange={(value) => (powerSystem = value)}
+        value={powerMethod}
+        onchange={(value) => (powerMethod = value)}
         disabled={saving}
       />
     </div>

@@ -13,7 +13,7 @@ vi.mock('$lib/features/settings/SettingsState.svelte', () => ({
       theme: 'steampunk-dark',
       measureUnit: 'Metric',
       favouriteScale: 'HO',
-      powerSystem: 'DC'
+      powerMethod: 'DC'
     },
     update: vi.fn().mockResolvedValue(undefined)
   }
@@ -73,7 +73,7 @@ describe('SettingsForm.svelte', () => {
       theme: 'steampunk-dark',
       measureUnit: 'Metric',
       favouriteScale: 'HO',
-      powerSystem: 'DC'
+      powerMethod: 'DC'
     });
 
     // Verify success message appears

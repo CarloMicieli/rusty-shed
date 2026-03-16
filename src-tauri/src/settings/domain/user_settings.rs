@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
+use crate::catalog::domain::railway_model::PowerMethod;
 use crate::core::domain::Language;
 
 /// Measurement system for dimensions
@@ -11,15 +12,6 @@ pub enum MeasureUnit {
     #[default]
     Metric,
     Imperial,
-}
-
-/// Electrical system for model railways
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type, Default)]
-pub enum PowerSystem {
-    #[default]
-    DC,
-    AC,
-    DCC,
 }
 
 /// Application theme preference
@@ -51,8 +43,9 @@ pub struct UserSettings {
     /// User's preferred model railway scale (e.g., "HO", "N", "OO")
     pub favourite_scale: String,
 
-    /// Preferred electrical system for model railways
-    pub power_system: PowerSystem,
+    /// Preferred power method for model railways
+    #[serde(alias = "powerSystem")]
+    pub power_method: PowerMethod,
 
     /// Flag indicating if this is the user's first app launch
     pub first_run: bool,
@@ -66,7 +59,7 @@ impl Default for UserSettings {
             theme: AppTheme::default(),
             measure_unit: MeasureUnit::Metric,
             favourite_scale: String::new(),
-            power_system: PowerSystem::DC,
+            power_method: PowerMethod::DC,
             first_run: true,
         }
     }
@@ -126,7 +119,7 @@ mod tests {
         assert_eq!(settings.theme, AppTheme::SteampunkDark);
         assert_eq!(settings.measure_unit, MeasureUnit::Metric);
         assert_eq!(settings.favourite_scale, "");
-        assert_eq!(settings.power_system, PowerSystem::DC);
+        assert_eq!(settings.power_method, PowerMethod::DC);
         assert!(settings.first_run);
     }
 

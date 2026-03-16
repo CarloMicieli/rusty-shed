@@ -15,7 +15,7 @@ export class SettingsState {
     theme: 'steampunk-dark',
     measureUnit: 'Metric',
     favouriteScale: '',
-    powerSystem: 'DC',
+    powerMethod: 'DC',
     firstRun: true
   });
 

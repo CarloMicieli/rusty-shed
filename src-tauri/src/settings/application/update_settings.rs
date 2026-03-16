@@ -1,7 +1,8 @@
 //! Update settings use case
 
+use crate::catalog::domain::railway_model::PowerMethod;
 use crate::core::domain::Language;
-use crate::settings::domain::user_settings::{AppTheme, MeasureUnit, PowerSystem, UserSettings};
+use crate::settings::domain::user_settings::{AppTheme, MeasureUnit, UserSettings};
 use crate::settings::infrastructure::{SettingsRepository, StoreSettingsRepository};
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -15,7 +16,7 @@ pub struct UpdateSettingsInput {
     pub language: Option<Language>,
     pub measure_unit: Option<MeasureUnit>,
     pub favourite_scale: Option<String>,
-    pub power_system: Option<PowerSystem>,
+    pub power_method: Option<PowerMethod>,
     pub theme: Option<AppTheme>,
 }
 
@@ -42,8 +43,8 @@ pub fn update_settings(
     if let Some(favourite_scale) = input.favourite_scale {
         current.set_favourite_scale(favourite_scale)?;
     }
-    if let Some(power_system) = input.power_system {
-        current.power_system = power_system;
+    if let Some(power_method) = input.power_method {
+        current.power_method = power_method;
     }
     if let Some(theme) = input.theme {
         current.theme = theme;

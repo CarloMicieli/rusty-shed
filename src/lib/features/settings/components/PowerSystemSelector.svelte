@@ -1,24 +1,28 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import type { PowerSystem } from '$lib/bindings';
+  import type { PowerMethod } from '$lib/bindings';
 
   interface Props {
-    value: PowerSystem;
-    onchange: (power: PowerSystem) => void;
+    value: PowerMethod;
+    onchange: (power: PowerMethod) => void;
     disabled?: boolean;
   }
 
   let { value, onchange, disabled = false }: Props = $props();
 
-  const options: { value: PowerSystem; label: string; helper: string }[] = [
+  const options: { value: PowerMethod; label: string; helper: string }[] = [
     { value: 'DC', label: m.settings_power_dc(), helper: m.settings_power_dc_helper() },
     { value: 'AC', label: m.settings_power_ac(), helper: m.settings_power_ac_helper() },
-    { value: 'DCC', label: m.settings_power_dcc(), helper: m.settings_power_dcc_helper() }
+    {
+      value: 'TRIX_EXPRESS',
+      label: m.settings_power_trix(),
+      helper: m.settings_power_trix_helper()
+    }
   ];
 
   function handleChange(event: Event) {
     const target = event.target as HTMLSelectElement;
-    onchange(target.value as PowerSystem);
+    onchange(target.value as PowerMethod);
   }
 </script>
 

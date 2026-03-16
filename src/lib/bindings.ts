@@ -4664,10 +4664,6 @@ export type PowerMethod =
    */
   | 'TRIX_EXPRESS';
 /**
- * Electrical system for model railways
- */
-export type PowerSystem = 'DC' | 'AC' | 'DCC';
-/**
  * Details for a pre-order entry.
  *
  * Preorders record at least the deposit paid and the total price expected
@@ -6424,7 +6420,7 @@ export type UpdateSettingsInput = {
   language: Language | null;
   measureUnit: MeasureUnit | null;
   favouriteScale: string | null;
-  powerSystem: PowerSystem | null;
+  powerMethod: PowerMethod | null;
   theme: AppTheme | null;
 };
 /**
@@ -6517,9 +6513,9 @@ export type UserSettings = {
    */
   favouriteScale: string;
   /**
-   * Preferred electrical system for model railways
+   * Preferred power method for model railways
    */
-  powerSystem: PowerSystem;
+  powerMethod: PowerMethod;
   /**
    * Flag indicating if this is the user's first app launch
    */
