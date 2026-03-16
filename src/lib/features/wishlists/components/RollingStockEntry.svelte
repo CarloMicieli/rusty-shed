@@ -33,18 +33,20 @@
 </script>
 
 <div
-  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 text-card-foreground"
+  class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4 text-card-foreground"
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
     <div>
       <label for="railway-company-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.wishlist_field_railway_company()}</span>
+        <span class="text-[10px] text-[#808080] uppercase"
+          >{m.wishlist_field_railway_company()}</span
+        >
       </label>
       <select
         id="railway-company-{entry.id}"
         bind:value={entry.railwayCompanyId}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         required
       >
         <option value="">-- {m.wishlist_field_railway_company()} --</option>
@@ -57,14 +59,14 @@
     <!-- Series Code -->
     <div>
       <label for="series-code-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.wishlist_field_series_code()}</span>
+        <span class="text-[10px] text-[#808080] uppercase">{m.wishlist_field_series_code()}</span>
       </label>
       <Input
         id="series-code-{entry.id}"
         type="text"
         bind:value={entry.seriesCode}
         placeholder="e.g., 218, Re 4/4"
-        class="w-full font-mono"
+        class="w-full border-[#1F1F1F] bg-transparent font-mono text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42]"
         required
       />
     </div>
@@ -74,12 +76,12 @@
     <!-- Category -->
     <div>
       <label for="category-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.wishlist_field_category()}</span>
+        <span class="text-[10px] text-[#808080] uppercase">{m.wishlist_field_category()}</span>
       </label>
       <select
         id="category-{entry.id}"
         bind:value={entry.category}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         required
       >
         <option value="">-- {m.wishlist_field_category()} --</option>
@@ -93,14 +95,14 @@
     <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.id}" class="block space-y-1">
-        <span class="text-sm text-muted-foreground">{m.wishlist_field_road_number()}</span>
+        <span class="text-[10px] text-[#808080] uppercase">{m.wishlist_field_road_number()}</span>
       </label>
       <Input
         id="road-number-{entry.id}"
         type="text"
         bind:value={entry.roadNumber}
         placeholder="e.g., 218 101-3"
-        class="w-full font-mono"
+        class="w-full border-[#1F1F1F] bg-transparent font-mono text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42]"
       />
     </div>
   </div>

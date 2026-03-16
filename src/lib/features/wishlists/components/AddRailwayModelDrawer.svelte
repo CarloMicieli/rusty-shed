@@ -3,12 +3,15 @@
   import { X } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import { getWishlistContext } from '../WishlistState.svelte';
+  import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import type { AddRailwayModelFormState, RollingStockFormEntry } from '../types';
   import type {
     Manufacturer,
     RailwayCompany,
     WishlistPreview,
-    AddRailwayModelToWishListArgs
+    AddRailwayModelToWishListArgs,
+    Scale,
+    PowerMethod
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import AddRailwayModelForm from './AddRailwayModelForm.svelte';
@@ -118,8 +121,8 @@
       productCode: '',
       description: '',
       category: '',
-      scale: '',
-      powerMethod: '',
+      scale: (settingsState.settings?.favouriteScale as Scale) || '',
+      powerMethod: (settingsState.settings?.powerMethod as PowerMethod) || '',
       epoch: null,
       desiredPriceAmount: '',
       desiredPriceCurrency: 'EUR',
@@ -276,7 +279,7 @@
 <!-- Drawer Overlay -->
 {#if open}
   <div
-    class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
     onclick={handleCloseRequest}
     role="presentation"
   ></div>
@@ -284,7 +287,7 @@
 
 <!-- Drawer -->
 <div
-  class="drawer fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl transform flex-col border-l border-border bg-background shadow-xl transition-transform duration-300 {open
+  class="drawer fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl transform flex-col border-l border-[#1F1F1F] bg-[#0F0F0F] shadow-2xl transition-transform duration-300 {open
     ? 'translate-x-0'
     : 'translate-x-full'}"
   role="dialog"
@@ -292,17 +295,18 @@
   aria-labelledby="drawer-title"
 >
   <!-- Header -->
-  <div class="flex items-center justify-between border-b border-border p-4">
+  <div class="flex items-center justify-between border-b border-[#1F1F1F] p-4">
     <div>
-      <h2 id="drawer-title" class="text-xl font-bold text-foreground">
+      <h2 id="drawer-title" class="text-xl font-bold text-[#E0E0E0]">
         {m.wishlist_drawer_title()}
       </h2>
-      <p class="mt-1 text-sm text-muted-foreground">{m.wishlist_drawer_subtitle()}</p>
+      <p class="mt-1 text-sm text-[#808080]">{m.wishlist_drawer_subtitle()}</p>
     </div>
     <Button
       type="button"
       variant="ghost"
       size="icon-sm"
+      class="text-[#808080] hover:text-[#E0E0E0]"
       onclick={handleCloseRequest}
       aria-label={m.wishlist_drawer_cancel()}
     >
@@ -329,13 +333,14 @@
   </div>
 
   <!-- Footer -->
-  <div class="flex items-center justify-end gap-2 border-t border-border p-4">
-    <Button type="button" variant="ghost" onclick={handleCloseRequest}>
+  <div class="flex items-center justify-end gap-2 border-t border-[#1F1F1F] p-4">
+    <Button type="button" variant="ghost" class="text-[#808080]" onclick={handleCloseRequest}>
       {m.wishlist_drawer_cancel()}
     </Button>
     <Button
       type="button"
       variant="default"
+      class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
       disabled={!isFormValid || isSubmitting}
       onclick={handleSubmit}
     >

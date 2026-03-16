@@ -6,6 +6,7 @@
   import RollingStockEntry from './RollingStockEntry.svelte';
   import RailwayModelBaseForm from '$lib/shared/components/RailwayModelBaseForm.svelte';
   import { CATEGORIES, SCALES, POWER_METHODS, PRIORITIES } from '../constants';
+  import { getCurrencySymbol } from '$lib/utils/currency';
 
   interface Props {
     /** Form state, bound two-way by parent */
@@ -35,6 +36,8 @@
     getPowerMethodLabelKey
   }: Props = $props();
 
+  const currencySymbol = $derived(getCurrencySymbol(form.desiredPriceCurrency));
+
   // Helper to get priority label — kept local since it is only used here
   function getPriorityLabelKey(priority: string): string {
     const labelMap: Record<string, string> = {
@@ -50,7 +53,7 @@
   <!-- Wishlist Selection -->
   <div>
     <label for="wishlist" class="block space-y-1">
-      <span class="text-sm font-medium text-muted-foreground">
+      <span class="text-[10px] text-[#808080] uppercase">
         {m.wishlist_field_wishlist()}
         <span class="text-error-500">*</span>
       </span>
@@ -58,7 +61,7 @@
     <select
       id="wishlist"
       bind:value={form.wishlistId}
-      class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+      class="flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       required
     >
       <option value="">-- {m.wishlist_field_wishlist()} --</option>
@@ -78,9 +81,12 @@
     {onAddRollingStock}
     {getCategoryLabelKey}
     {getPowerMethodLabelKey}
+    dark={true}
   >
     {#if form.rollingStocks.length === 0}
-      <p class="text-sm text-muted-foreground">No rolling stocks added yet.</p>
+      <div class="rounded-lg border border-dashed border-[#1F1F1F] p-4">
+        <p class="text-sm text-[#808080]">No rolling stocks added yet.</p>
+      </div>
     {:else}
       {#each form.rollingStocks as entry, i (entry.id)}
         <RollingStockEntry
@@ -94,53 +100,63 @@
   </RailwayModelBaseForm>
 
   <!-- Wishlist Item Details -->
-  <div class="space-y-4 rounded-lg border border-border bg-card p-4 text-card-foreground">
-    <h3 class="text-lg font-semibold text-foreground">{m.wishlist_details_section_title()}</h3>
+  <div class="space-y-4 rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+    <p class="text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+      {m.wishlist_modal_wishlist_prefs()}
+    </p>
 
     <!-- Priority -->
-    <div>
-      <label for="priority" class="block space-y-1">
-        <span class="text-sm font-medium text-muted-foreground">{m.wishlist_field_priority()}</span>
-      </label>
-      <select
-        id="priority"
-        bind:value={form.priority}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {#each PRIORITIES as priority (priority)}
-          <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-          <option value={priority}>{(m as any)[getPriorityLabelKey(priority)]()}</option>
+    <div class="space-y-1">
+      <span class="text-[10px] text-[#808080] uppercase">{m.wishlist_field_priority()}</span>
+      <div class="flex gap-1">
+        {#each PRIORITIES as p (p)}
+          <button
+            type="button"
+            class={[
+              'flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+              form.priority === p
+                ? 'bg-[#D48A42] font-bold text-black'
+                : 'border border-[#1F1F1F] bg-transparent text-[#808080] hover:bg-[rgba(212,138,66,0.15)]'
+            ].join(' ')}
+            onclick={() => (form.priority = p)}
+          >
+            <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
+            {(m as any)[getPriorityLabelKey(p)]()}
+          </button>
         {/each}
-      </select>
+      </div>
     </div>
 
     <!-- Desired Price -->
     <div>
       <label for="desired-price" class="block space-y-1">
-        <span class="text-sm font-medium text-muted-foreground"
-          >{m.wishlist_field_desired_price()}</span
-        >
+        <span class="text-[10px] text-[#808080] uppercase">{m.wishlist_field_desired_price()}</span>
       </label>
-      <input
-        id="desired-price"
-        type="number"
-        step="0.01"
-        min="0"
-        bind:value={form.desiredPriceAmount}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        placeholder="0.00"
-      />
+      <div class="relative flex items-center">
+        <input
+          id="desired-price"
+          type="number"
+          step="0.01"
+          min="0"
+          bind:value={form.desiredPriceAmount}
+          class="flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent pr-10 text-right font-mono text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none"
+          placeholder="0.00"
+        />
+        <span class="pointer-events-none absolute right-3 text-sm text-[#808080]">
+          {currencySymbol}
+        </span>
+      </div>
     </div>
 
     <!-- Notes -->
     <div>
       <label for="notes" class="block space-y-1">
-        <span class="text-sm font-medium text-muted-foreground">{m.wishlist_field_notes()}</span>
+        <span class="text-[10px] text-[#808080] uppercase">{m.wishlist_field_notes()}</span>
       </label>
       <Textarea
         id="notes"
         bind:value={form.notes}
-        class="w-full"
+        class="w-full border-[#1F1F1F] bg-transparent text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-[#D48A42]/30"
         rows={3}
         placeholder="Additional notes..."
       />
