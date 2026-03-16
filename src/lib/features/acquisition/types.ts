@@ -50,12 +50,18 @@ export function createDefaultItem(defaults: BatchDefaults): AcquisitionItemEntry
   };
 }
 
-export function createDefaultFormState(): AcquisitionFormState {
+export function createDefaultFormState(
+  defaults: Partial<BatchDefaults> = {}
+): AcquisitionFormState {
+  const batchDefaults: BatchDefaults = {
+    scale: defaults.scale ?? null,
+    powerMethod: defaults.powerMethod ?? null
+  };
   return {
     sellerId: null,
     purchaseDate: new Date().toISOString().split('T')[0],
-    batchDefaults: { scale: null, powerMethod: null },
-    items: [createDefaultItem({ scale: null, powerMethod: null })]
+    batchDefaults,
+    items: [createDefaultItem(batchDefaults)]
   };
 }
 

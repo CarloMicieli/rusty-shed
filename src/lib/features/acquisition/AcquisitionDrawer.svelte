@@ -42,7 +42,12 @@
   let scrollableEl = $state<HTMLDivElement | null>(null);
 
   // Form state
-  let form = $state<AcquisitionFormState>(createDefaultFormState());
+  let form = $state<AcquisitionFormState>(
+    createDefaultFormState({
+      scale: settingsState.settings?.favouriteScale || null,
+      powerMethod: settingsState.settings?.powerMethod || null
+    })
+  );
 
   // Derived values
   let hasChanges = $derived(
@@ -93,7 +98,10 @@
   });
 
   async function handleOpen() {
-    form = createDefaultFormState();
+    form = createDefaultFormState({
+      scale: settingsState.settings?.favouriteScale || null,
+      powerMethod: settingsState.settings?.powerMethod || null
+    });
     touched = false;
     validationErrors = {};
     showDiscardDialog = false;

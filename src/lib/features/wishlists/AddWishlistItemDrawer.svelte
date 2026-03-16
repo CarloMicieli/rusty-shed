@@ -54,8 +54,8 @@
       productCode: '',
       description: '',
       category: CATEGORIES[0],
-      scale: SCALES[0],
-      powerMethod: POWER_METHODS[0],
+      scale: settingsState.settings?.favouriteScale || SCALES[0],
+      powerMethod: settingsState.settings?.powerMethod || POWER_METHODS[0],
       epoch: '',
       priority: 'NORMAL',
       desiredPrice: null
