@@ -4,6 +4,7 @@
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
+  import { homeDir } from '@tauri-apps/api/path';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { commands, type Scale, type Category } from '$lib/bindings';
@@ -51,6 +52,9 @@
 
   // Crop dialog state — browse path
   let pendingBrowsePath = $state<string | null>(null);
+
+  // Incremented after each successful upload to bust the browser image cache
+  let imageVersion = $state(0);
 
   // Local copies for editable fields
   let localScale = $state('');
@@ -134,6 +138,7 @@
     try {
       const selected = await open({
         multiple: false,
+        defaultPath: await homeDir().catch(() => undefined),
         filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp'] }]
       });
       if (selected && typeof selected === 'string') {
@@ -243,6 +248,7 @@
     <RailwayModelImagePanel
       {model}
       {editable}
+      {imageVersion}
       onBrowseImage={editable ? handleBrowseImage : undefined}
       onImageDropped={editable ? handleImageDropped : undefined}
       {onError}
@@ -343,6 +349,7 @@
     onSaveSuccess={() => {
       pendingDropFile = null;
       dropBlobUrl = null;
+      imageVersion++;
       onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
       void onModelUpdated?.();
     }}
@@ -360,6 +367,7 @@
     modelId={model.id}
     onSaveSuccess={() => {
       pendingBrowsePath = null;
+      imageVersion++;
       onImageUploaded?.(`models/${model.manufacturer}_${model.product_code}`);
       void onModelUpdated?.();
     }}

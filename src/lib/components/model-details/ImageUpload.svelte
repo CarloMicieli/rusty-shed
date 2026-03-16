@@ -1,5 +1,6 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog';
+  import { homeDir } from '@tauri-apps/api/path';
   import { readFile } from '@tauri-apps/plugin-fs';
   import { commands } from '$lib/bindings';
   import { Button } from '$lib/components/ui/button';
@@ -51,8 +52,11 @@
 
     console.log('[ImageUpload] Starting upload for model:', modelId);
 
+    const startDir = await homeDir().catch(() => undefined);
+
     const file = await open({
       multiple: false,
+      defaultPath: startDir,
       filters: [
         {
           name: upload_image_filter_name(),

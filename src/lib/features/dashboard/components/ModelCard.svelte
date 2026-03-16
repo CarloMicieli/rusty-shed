@@ -1,13 +1,45 @@
 <script lang="ts">
   import { TrainFront } from 'lucide-svelte';
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { readFile } from '@tauri-apps/plugin-fs';
   import type { ModelCard as ModelCardType } from '$lib/bindings';
   import { Badge } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
 
   let { card, onclick }: { card: ModelCardType; onclick?: () => void } = $props();
 
-  const thumbnailSrc = $derived(card.thumbnailPath ? convertFileSrc(card.thumbnailPath) : null);
+  let thumbnailSrc = $state<string | null>(null);
+
+  $effect(() => {
+    const path = card.thumbnailPath;
+    if (!path) {
+      thumbnailSrc = null;
+      return;
+    }
+
+    let stale = false;
+    const ext = path.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mimes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp'
+    };
+
+    void readFile(path)
+      .then((bytes) => {
+        if (stale) return;
+        const prev = thumbnailSrc;
+        thumbnailSrc = URL.createObjectURL(new Blob([bytes], { type: mimes[ext] ?? 'image/jpeg' }));
+        if (prev) URL.revokeObjectURL(prev);
+      })
+      .catch(() => {
+        if (!stale) thumbnailSrc = null;
+      });
+
+    return () => {
+      stale = true;
+    };
+  });
 
   function formatCondition(condition: string): string {
     switch (condition) {

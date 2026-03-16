@@ -183,7 +183,12 @@
       style="height: 480px;"
     >
       <!-- svelte-ignore a11y_missing_attribute -->
-      <img bind:this={imageEl} src={imageSrc} class="max-h-full max-w-full" />
+      <img
+        bind:this={imageEl}
+        src={imageSrc}
+        crossorigin="anonymous"
+        class="max-h-full max-w-full"
+      />
     </div>
 
     <!-- Toolbar -->

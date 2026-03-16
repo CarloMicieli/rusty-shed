@@ -267,14 +267,21 @@ describe('RailwayModelCard', () => {
       expect(card?.classList.contains('ring-border/40')).toBe(false);
     });
 
-    it('shows "Change Image" when an image exists and editable=true', () => {
+    it('shows "Change Image" when an image exists and editable=true', async () => {
       const { container } = render(RailwayModelCard, {
         props: { model: _mockModelMultiUnit, editable: true }
       });
 
-      const heroBtn = container.querySelector('.hero-section button');
+      // blobUrl is set asynchronously after readFile resolves; wait for the
+      // replace button that only appears once the image blob is loaded
+      const heroBtn = await waitFor(() => {
+        const btn = Array.from(container.querySelectorAll('.hero-section button')).find((b) =>
+          b.textContent?.includes('Change Image')
+        );
+        if (!btn) throw new Error('Change Image button not found');
+        return btn;
+      });
       expect(heroBtn).toBeTruthy();
-      expect((heroBtn as HTMLElement).textContent).toContain('Change Image');
     });
   });
 
@@ -303,19 +310,25 @@ describe('RailwayModelCard', () => {
       expect(img).toBeFalsy();
     });
 
-    it('renders the hero image when image_path is present', () => {
+    it('renders the hero image when image_path is present', async () => {
       const { container } = render(RailwayModelCard, { props: { model: _mockModelMultiUnit } });
       const hero = container.querySelector('.hero-section');
-      const img = container.querySelector('.hero-section img');
       expect(hero).toBeTruthy();
+
+      // blobUrl is set asynchronously after readFile resolves
+      const img = await waitFor(() => {
+        const el = container.querySelector('.hero-section img');
+        if (!el) throw new Error('img not found');
+        return el;
+      });
       expect(img).toBeTruthy();
 
       // verify the image uses centering sizing utilities and fills the hero area
-      expect(img?.classList.contains('object-center')).toBe(true);
-      expect(img?.classList.contains('object-cover')).toBe(true);
-      expect(img?.classList.contains('w-full')).toBe(true);
-      expect(img?.classList.contains('h-full')).toBe(true);
-      expect(img?.classList.contains('block')).toBe(true);
+      expect(img.classList.contains('object-center')).toBe(true);
+      expect(img.classList.contains('object-cover')).toBe(true);
+      expect(img.classList.contains('w-full')).toBe(true);
+      expect(img.classList.contains('h-full')).toBe(true);
+      expect(img.classList.contains('block')).toBe(true);
     });
 
     it('renders global specs section with era, power_method, category, description', () => {

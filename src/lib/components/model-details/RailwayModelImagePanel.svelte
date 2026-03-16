@@ -3,7 +3,6 @@
   import type { RailwayModel } from '$lib/types/railway-model';
   import { Button } from '$lib/components/ui/button';
   import { Upload, Box } from 'lucide-svelte';
-  import { convertFileSrc } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
   import { readFile } from '@tauri-apps/plugin-fs';
   import * as m from '$lib/paraglide/messages';
@@ -12,14 +11,56 @@
   interface _Props {
     model: RailwayModel;
     editable?: boolean;
+    imageVersion?: number;
     onBrowseImage?: () => void;
     onImageDropped?: (file: File, blobUrl: string) => void;
     onError?: (error: string) => void;
   }
 
-  const { model, editable = false, onBrowseImage, onImageDropped, onError }: _Props = $props();
+  const {
+    model,
+    editable = false,
+    imageVersion = 0,
+    onBrowseImage,
+    onImageDropped,
+    onError
+  }: _Props = $props();
 
   let dragState = $state(false);
+  let blobUrl = $state<string | null>(null);
+
+  // Read the image directly from disk into a blob URL so the WebView asset
+  // cache (which ignores query parameters) is bypassed completely.
+  // Re-runs whenever image_path or imageVersion changes (upload trigger).
+  $effect(() => {
+    const path = model.image_path;
+    void imageVersion; // register as dependency so upload bumps re-read
+
+    if (!path) {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      blobUrl = null;
+      return;
+    }
+
+    let stale = false;
+    const ext = path.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mime = extMimeMap[ext] ?? 'image/jpeg';
+
+    void readFile(path)
+      .then((bytes) => {
+        if (stale) return;
+        const prev = blobUrl;
+        blobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+        if (prev) URL.revokeObjectURL(prev);
+      })
+      .catch((err: unknown) => {
+        if (!stale) console.error('[RailwayModelImagePanel] readFile failed:', err);
+      });
+
+    return () => {
+      stale = true;
+    };
+  });
 
   const extMimeMap: Record<string, string> = {
     jpg: 'image/jpeg',
@@ -110,8 +151,8 @@
       return;
     }
 
-    const blobUrl = URL.createObjectURL(file);
-    onImageDropped?.(file, blobUrl);
+    const dropBlobUrl = URL.createObjectURL(file);
+    onImageDropped?.(file, dropBlobUrl);
   }
 </script>
 
@@ -126,9 +167,9 @@
   ondragleave={editable ? handleDragLeave : undefined}
   ondrop={editable ? handleDrop : undefined}
 >
-  {#if model.image_path}
+  {#if model.image_path && blobUrl}
     <img
-      src={convertFileSrc(model.image_path)}
+      src={blobUrl}
       alt="{model.manufacturer} {model.product_code}"
       class="block h-full w-full object-cover object-center"
     />

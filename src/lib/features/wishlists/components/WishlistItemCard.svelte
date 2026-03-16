@@ -5,7 +5,7 @@
   import { Badge, Button, Card, CardContent, CardHeader } from '$lib/components';
   import { onMount } from 'svelte';
   import { commands } from '$lib/bindings';
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { readFile } from '@tauri-apps/plugin-fs';
   import { goto } from '$app/navigation';
   import { getLocale } from '$lib/paraglide/runtime.js';
 
@@ -34,7 +34,16 @@
       }
 
       if (imageResult.status === 'ok' && imageResult.data.hasImage && imageResult.data.imagePath) {
-        photoUrl = convertFileSrc(imageResult.data.imagePath);
+        const filePath = imageResult.data.imagePath;
+        const ext = filePath.split('.').pop()?.toLowerCase() ?? 'jpg';
+        const mimes: Record<string, string> = {
+          jpg: 'image/jpeg',
+          jpeg: 'image/jpeg',
+          png: 'image/png',
+          webp: 'image/webp'
+        };
+        const bytes = await readFile(filePath);
+        photoUrl = URL.createObjectURL(new Blob([bytes], { type: mimes[ext] ?? 'image/jpeg' }));
       }
     } catch (e) {
       console.warn('Failed to load model details for wishlist item', e);

@@ -1625,10 +1625,7 @@ export const commands = {
    */
   async cloudBackupDisconnectGoogle(): Promise<Result<null, CommandError>> {
     try {
-      return {
-        status: 'ok',
-        data: await TAURI_INVOKE('cloud_backup_disconnect_google')
-      };
+      return { status: 'ok', data: await TAURI_INVOKE('cloud_backup_disconnect_google') };
     } catch (e) {
       if (e instanceof Error) throw e;
       else return { status: 'error', error: e as any };

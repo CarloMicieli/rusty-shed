@@ -82,7 +82,7 @@
   import { Separator } from '$lib/components/ui/separator';
   import { Volume2, Zap, TrainFront, Box, Users, Layers } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { readFile } from '@tauri-apps/plugin-fs';
   import { commands } from '$lib/bindings';
   import PreviewCardActions from '$lib/components/model-details/components/PreviewCardActions.svelte';
 
@@ -139,32 +139,59 @@
 
   let resolvedPhotoUrl = $state<string | null>(null);
 
-  $effect(() => {
-    if (model.photoUrl) {
-      resolvedPhotoUrl =
-        model.photoUrl.startsWith('/') || model.photoUrl.includes('\\')
-          ? convertFileSrc(model.photoUrl)
-          : model.photoUrl;
-    } else {
-      void fetchImage(model.id);
-    }
-  });
-
-  async function fetchImage(id: string) {
-    try {
-      const result = await commands.getRailwayModelImage(id);
-      const imageData = result.status === 'ok' ? result.data : null;
-
-      if (imageData?.hasImage && imageData.imagePath) {
-        resolvedPhotoUrl = convertFileSrc(imageData.imagePath);
-      } else {
-        resolvedPhotoUrl = null;
-      }
-    } catch (e) {
-      console.warn(`Failed to fetch image for model ${id}:`, e);
-      resolvedPhotoUrl = null;
-    }
+  function mimeFromPath(path: string): string {
+    const ext = path.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mimes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp'
+    };
+    return mimes[ext] ?? 'image/jpeg';
   }
+
+  async function pathToBlobUrl(filePath: string): Promise<string> {
+    const bytes = await readFile(filePath);
+    return URL.createObjectURL(new Blob([bytes], { type: mimeFromPath(filePath) }));
+  }
+
+  $effect(() => {
+    const photoUrl = model.photoUrl;
+    const modelId = model.id;
+    let stale = false;
+
+    async function load() {
+      let newUrl: string | null = null;
+      try {
+        if (photoUrl) {
+          newUrl =
+            photoUrl.startsWith('/') || photoUrl.includes('\\')
+              ? await pathToBlobUrl(photoUrl)
+              : photoUrl;
+        } else {
+          const result = await commands.getRailwayModelImage(modelId);
+          const imageData = result.status === 'ok' ? result.data : null;
+          if (imageData?.hasImage && imageData.imagePath) {
+            newUrl = await pathToBlobUrl(imageData.imagePath);
+          }
+        }
+      } catch (e) {
+        console.warn(`Failed to load image for model ${modelId}:`, e);
+      }
+      if (stale) {
+        if (newUrl?.startsWith('blob:')) URL.revokeObjectURL(newUrl);
+        return;
+      }
+      const prev = resolvedPhotoUrl;
+      resolvedPhotoUrl = newUrl;
+      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev);
+    }
+
+    void load();
+    return () => {
+      stale = true;
+    };
+  });
 </script>
 
 <!--

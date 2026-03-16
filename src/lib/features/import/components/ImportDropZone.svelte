@@ -1,5 +1,6 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog';
+  import { homeDir } from '@tauri-apps/api/path';
   import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
   import { Button } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
@@ -62,6 +63,7 @@
     if (disabled) return;
     const path = await open({
       multiple: false,
+      defaultPath: await homeDir(),
       filters: [{ name: 'Archive', extensions: ['zip', 'tar.gz', 'tgz'] }]
     });
     if (path) {
