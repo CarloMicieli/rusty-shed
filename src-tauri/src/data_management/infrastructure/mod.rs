@@ -7,7 +7,9 @@ pub mod manifest_builder;
 pub mod media_collector;
 pub mod media_storage;
 pub mod normalizer;
+pub mod schema_mapper;
 pub mod schema_validator;
+pub mod sqlite_import_repository;
 
 pub use archive_extractor::*;
 pub use archive_writer::*;
@@ -19,3 +21,4 @@ pub use media_collector::*;
 pub use media_storage::*;
 pub use normalizer::*;
 pub use schema_validator::*;
+pub use sqlite_import_repository::SqliteImportRepository;

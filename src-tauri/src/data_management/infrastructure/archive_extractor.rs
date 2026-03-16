@@ -1,32 +1,23 @@
 use crate::data_management::domain::ArchiveFormat;
 use flate2::read::GzDecoder;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tar::Archive;
 use zip::ZipArchive;
 
 /// Error type for archive extraction operations.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum ArchiveError {
     /// Error extracting or opening archive
+    #[error("Archive extraction error: {0}")]
     ExtractError(String),
     /// File not found in archive
+    #[error("Not found in archive: {0}")]
     NotFound(String),
     /// Invalid archive format
+    #[error("Invalid archive format: {0}")]
     InvalidFormat(String),
 }
-
-impl std::fmt::Display for ArchiveError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ExtractError(msg) => write!(f, "Archive extraction error: {}", msg),
-            Self::NotFound(msg) => write!(f, "Not found in archive: {}", msg),
-            Self::InvalidFormat(msg) => write!(f, "Invalid archive format: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for ArchiveError {}
 
 /// Extracts and lists contents of .zip and .tar.gz archives.
 #[derive(Debug)]
@@ -90,6 +81,40 @@ impl ArchiveExtractor {
             ArchiveFormat::Zip => Self::extract_file_from_zip(archive_path, file_path),
             ArchiveFormat::TarGz => Self::extract_file_from_targz(archive_path, file_path),
         }
+    }
+
+    /// Extract manifest.json from an archive — async wrapper using `spawn_blocking`.
+    pub async fn extract_manifest_async(archive_path: PathBuf) -> Result<Vec<u8>, ArchiveError> {
+        tokio::task::spawn_blocking(move || Self::extract_manifest(&archive_path))
+            .await
+            .map_err(|e| ArchiveError::ExtractError(format!("spawn_blocking error: {}", e)))?
+    }
+
+    /// List all files in an archive — async wrapper using `spawn_blocking`.
+    pub async fn list_files_async(archive_path: PathBuf) -> Result<Vec<String>, ArchiveError> {
+        tokio::task::spawn_blocking(move || Self::list_files(&archive_path))
+            .await
+            .map_err(|e| ArchiveError::ExtractError(format!("spawn_blocking error: {}", e)))?
+    }
+
+    /// Extract all named files from an archive in a single blocking task.
+    ///
+    /// Returns a `Vec` of `(filename, Result<bytes>)` pairs preserving input order.
+    pub async fn extract_files_batch_async(
+        archive_path: PathBuf,
+        file_paths: Vec<String>,
+    ) -> Result<Vec<(String, Result<Vec<u8>, ArchiveError>)>, ArchiveError> {
+        tokio::task::spawn_blocking(move || {
+            file_paths
+                .into_iter()
+                .map(|fp| {
+                    let result = Self::extract_file(&archive_path, &fp);
+                    (fp, result)
+                })
+                .collect()
+        })
+        .await
+        .map_err(|e| ArchiveError::ExtractError(format!("spawn_blocking error: {}", e)))
     }
 
     /// Detect archive format from file extension.

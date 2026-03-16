@@ -25,35 +25,41 @@ pub async fn create_archive(
 ) -> Result<PathBuf, ExportError> {
     let archive_path = destination_path.join(filename);
 
-    // Create ZIP file
-    let file = File::create(&archive_path)?;
-    let mut zip = ZipWriter::new(file);
-
-    // Add manifest.json
-    let options = zip::write::FileOptions::default();
-    zip.start_file("manifest.json", options)?;
-
+    // Serialize the manifest once before entering spawn_blocking
     let manifest_json = serde_json::to_string_pretty(manifest)
         .map_err(|e| ExportError::ArchiveError(e.to_string()))?;
-    zip.write_all(manifest_json.as_bytes())?;
 
-    // Add media files to /images/ folder in archive
-    for source_path in &media_files {
-        let file_name = source_path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .ok_or_else(|| ExportError::ArchiveError("Invalid media filename".to_string()))?;
+    // Wrap all synchronous ZIP/file I/O in spawn_blocking to avoid blocking the async runtime.
+    let archive_path_clone = archive_path.clone();
+    tokio::task::spawn_blocking(move || -> Result<(), ExportError> {
+        let file = File::create(&archive_path_clone)?;
+        let mut zip = ZipWriter::new(file);
 
-        let archive_entry = format!("images/{}", file_name);
+        // Add manifest.json
         let options = zip::write::FileOptions::default();
-        zip.start_file(&archive_entry, options)?;
+        zip.start_file("manifest.json", options)?;
+        zip.write_all(manifest_json.as_bytes())?;
 
-        let data = std::fs::read(source_path)?;
-        zip.write_all(&data)?;
-    }
+        // Add media files to /images/ folder in archive
+        for source_path in &media_files {
+            let file_name = source_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or_else(|| ExportError::ArchiveError("Invalid media filename".to_string()))?;
 
-    // Finish writing
-    zip.finish()?;
+            let archive_entry = format!("images/{}", file_name);
+            let options = zip::write::FileOptions::default();
+            zip.start_file(&archive_entry, options)?;
+
+            let data = std::fs::read(source_path)?;
+            zip.write_all(&data)?;
+        }
+
+        zip.finish()?;
+        Ok(())
+    })
+    .await
+    .map_err(|e| ExportError::ArchiveError(format!("spawn_blocking error: {}", e)))??;
 
     Ok(archive_path)
 }

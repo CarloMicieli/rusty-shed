@@ -4,6 +4,7 @@ use crate::data_management::application::{
 };
 use crate::data_management::domain::{ArchiveFormat, ImportSession, ImportState, ManifestDto};
 use crate::data_management::infrastructure::ArchiveExtractor;
+use crate::data_management::infrastructure::SqliteImportRepository;
 use crate::data_management::interface::types::{
     AnalyzeImportPackageArgs, AnalyzeImportPackageResponse, CancelImportSessionArgs,
     CancelImportSessionResponse, ExecuteImportArgs, GetImportPreviewArgs, ImageFailureDto,
@@ -11,14 +12,9 @@ use crate::data_management::interface::types::{
 };
 use crate::state::AppState;
 use log::info;
-use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::Arc;
 use tauri::State;
-
-/// In-memory session storage (MVP - replace with DB in production)
-static IMPORT_SESSIONS: once_cell::sync::Lazy<Mutex<HashMap<String, ImportSession>>> =
-    once_cell::sync::Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Analyze an import package archive.
 ///
@@ -31,6 +27,7 @@ static IMPORT_SESSIONS: once_cell::sync::Lazy<Mutex<HashMap<String, ImportSessio
 #[specta::specta]
 pub async fn analyze_import_package(
     args: AnalyzeImportPackageArgs,
+    state: State<'_, AppState>,
 ) -> Result<AnalyzeImportPackageResponse, CommandError> {
     info!("analyze_import_package: {}", args.file_path);
 
@@ -46,20 +43,16 @@ pub async fn analyze_import_package(
     };
 
     // Validate package using application layer
-    let (_detected_format, _manifest, record_counts) =
+    let (_detected_format, manifest, record_counts) =
         ValidatePackageUseCase::execute(&path).await.map_err(|e| {
             CommandError::unknown(format!("Validation failed [{}]: {}", e.code, e.message))
         })?;
 
-    // Create session
-    let session = ImportSession::new(path, format);
+    // Create and store session — cache the parsed manifest to avoid re-extracting later
+    let mut session = ImportSession::new(path, format);
+    session.validated_manifest = Some(manifest);
     let session_id = session.id.clone();
-
-    // Store session
-    {
-        let mut sessions = IMPORT_SESSIONS.lock().unwrap();
-        sessions.insert(session_id.clone(), session);
-    }
+    state.import_session_store.insert(session).await;
 
     // Extract image filenames from archive
     let images_found = vec![]; // TODO: Extract from archive
@@ -89,35 +82,39 @@ pub async fn get_import_preview(
     info!("get_import_preview: session_id={}", args.session_id);
 
     // Get session
-    let session = {
-        let sessions = IMPORT_SESSIONS.lock().unwrap();
-        sessions
-            .get(&args.session_id)
-            .cloned()
-            .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?
+    let session = state
+        .import_session_store
+        .get(&args.session_id)
+        .await
+        .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?;
+
+    // Use cached manifest if available, otherwise fall back to archive extraction
+    let manifest_json: serde_json::Value = if let Some(ref manifest) = session.validated_manifest {
+        serde_json::to_value(manifest).map_err(|e| {
+            CommandError::unknown(format!("Failed to serialize cached manifest: {}", e))
+        })?
+    } else {
+        let manifest_bytes = ArchiveExtractor::extract_manifest_async(session.source_path.clone())
+            .await
+            .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
+        serde_json::from_slice(&manifest_bytes)
+            .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?
     };
 
-    // Extract manifest from archive
-    let manifest_bytes = ArchiveExtractor::extract_manifest(&session.source_path)
-        .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
-
-    let manifest_json: serde_json::Value = serde_json::from_slice(&manifest_bytes)
-        .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?;
-
     // Generate preview using application layer
-    let preview_use_case = PreviewImportUseCase::new(state.db_pool());
+    let repo = Arc::new(SqliteImportRepository::new(state.db_pool()));
+    let preview_use_case = PreviewImportUseCase::new(repo)
+        .map_err(|e| CommandError::unknown(format!("Failed to initialize preview: {}", e)))?;
     let preview = preview_use_case
         .execute(manifest_json, Some(&session.source_path))
         .await
         .map_err(|e| CommandError::unknown(format!("Preview generation failed: {}", e)))?;
 
     // Update session state
-    {
-        let mut sessions = IMPORT_SESSIONS.lock().unwrap();
-        if let Some(session) = sessions.get_mut(&args.session_id) {
-            session.transition(ImportState::Previewed);
-        }
-    }
+    state
+        .import_session_store
+        .update(&args.session_id, |s| s.transition(ImportState::Previewed))
+        .await;
 
     // Calculate new records (total - duplicates)
     let new_records = crate::data_management::domain::RecordCounts {
@@ -184,40 +181,47 @@ pub async fn execute_import(
 ) -> Result<ImportResultResponse, CommandError> {
     info!("execute_import: session_id={}", args.session_id);
 
+    // Guard against concurrent imports
+    if is_import_in_progress(&state.import_session_store).await {
+        return Err(CommandError::unknown(
+            "Another import is already in progress".to_string(),
+        ));
+    }
+
     // Get session
-    let session = {
-        let sessions = IMPORT_SESSIONS.lock().unwrap();
-        sessions
-            .get(&args.session_id)
-            .cloned()
-            .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?
+    let session = state
+        .import_session_store
+        .get(&args.session_id)
+        .await
+        .ok_or_else(|| CommandError::unknown("Session not found".to_string()))?;
+
+    // Use cached manifest if available, otherwise fall back to archive extraction
+    let manifest: ManifestDto = if let Some(manifest) = session.validated_manifest.clone() {
+        manifest
+    } else {
+        let manifest_bytes = ArchiveExtractor::extract_manifest_async(session.source_path.clone())
+            .await
+            .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
+        let manifest_content = String::from_utf8(manifest_bytes)
+            .map_err(|e| CommandError::unknown(format!("Invalid UTF-8 in manifest: {}", e)))?;
+        serde_json::from_str(&manifest_content)
+            .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?
     };
 
-    // Extract and parse manifest from archive
-    let manifest_bytes = ArchiveExtractor::extract_manifest(&session.source_path)
-        .map_err(|e| CommandError::unknown(format!("Failed to extract manifest: {}", e)))?;
-
-    let manifest_content = String::from_utf8(manifest_bytes)
-        .map_err(|e| CommandError::unknown(format!("Invalid UTF-8 in manifest: {}", e)))?;
-
-    let manifest: ManifestDto = serde_json::from_str(&manifest_content)
-        .map_err(|e| CommandError::unknown(format!("Failed to parse manifest: {}", e)))?;
-
     // Execute import
-    let use_case = ExecuteImportUseCase::new(state.db_pool());
+    let repo = Arc::new(SqliteImportRepository::new(state.db_pool()));
+    let use_case = ExecuteImportUseCase::new(repo);
     let media_dir = state.models_dir();
     let result = use_case
         .execute(&session, &manifest, &session.source_path, &media_dir)
         .await
-        .map_err(|e| CommandError::unknown(e.to_string()))?;
+        .map_err(CommandError::from)?;
 
     // Update session state
-    {
-        let mut sessions = IMPORT_SESSIONS.lock().unwrap();
-        if let Some(session) = sessions.get_mut(&args.session_id) {
-            session.transition(ImportState::Completed);
-        }
-    }
+    state
+        .import_session_store
+        .update(&args.session_id, |s| s.transition(ImportState::Completed))
+        .await;
 
     Ok(ImportResultResponse {
         session_id: result.session_id,
@@ -248,14 +252,16 @@ pub async fn execute_import(
 #[specta::specta]
 pub async fn cancel_import_session(
     args: CancelImportSessionArgs,
+    state: State<'_, AppState>,
 ) -> Result<CancelImportSessionResponse, CommandError> {
     info!("cancel_import_session: session_id={}", args.session_id);
 
-    let mut sessions = IMPORT_SESSIONS.lock().unwrap();
-    if let Some(mut session) = sessions.remove(&args.session_id) {
-        session.transition(ImportState::Failed {
-            reason: "Cancelled by user".to_string(),
-        });
+    if state
+        .import_session_store
+        .remove(&args.session_id)
+        .await
+        .is_some()
+    {
         Ok(CancelImportSessionResponse {
             session_id: args.session_id,
             cancelled: true,
@@ -269,9 +275,10 @@ pub async fn cancel_import_session(
 ///
 /// Returns `true` if any session is in the `Importing` state,
 /// `false` otherwise.
-pub fn is_import_in_progress() -> bool {
-    let sessions = IMPORT_SESSIONS.lock().unwrap();
-    sessions
-        .values()
+pub async fn is_import_in_progress(
+    store: &crate::data_management::application::ImportSessionStore,
+) -> bool {
+    store
         .any(|session| session.state == ImportState::Importing)
+        .await
 }

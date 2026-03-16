@@ -3,7 +3,7 @@ use crate::data_management::domain::{
     TrackInventoryRecord, TrackProductRecord,
 };
 use sqlx::SqlitePool;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 /// Service for detecting duplicate records in the database before import.
 ///
@@ -96,7 +96,8 @@ impl DuplicateChecker {
 
     /// Check for duplicate railway models by manufacturer_id + product_code.
     ///
-    /// Returns which railway models already exist in the database.
+    /// Uses a single batch query with composite key concatenation to avoid
+    /// the N+1 query problem.
     pub async fn check_railway_models(
         &self,
         models: &[RailwayModelRecord],
@@ -105,39 +106,40 @@ impl DuplicateChecker {
             return Ok(DuplicateCheckResult::default());
         }
 
-        // Build a map of (manufacturer_id, product_code) -> manifest_id
-        let mut lookup_map: HashMap<(String, String), String> = HashMap::new();
-        for model in models {
-            lookup_map.insert(
-                (model.manufacturer_id.clone(), model.product_code.clone()),
-                model.id.clone(),
-            );
+        // Build composite keys: "manufacturer_id|product_code"
+        // The separator '|' must not appear in valid manufacturer IDs or product codes.
+        let composite_keys: Vec<String> = models
+            .iter()
+            .map(|m| format!("{}|{}", m.manufacturer_id, m.product_code))
+            .collect();
+
+        let query = format!(
+            "SELECT (manufacturer_id || '|' || product_code) \
+             FROM railway_models \
+             WHERE (manufacturer_id || '|' || product_code) IN ({})",
+            composite_keys
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for key in &composite_keys {
+            query_builder = query_builder.bind(key);
         }
 
-        // Query for existing railway models
-        // We need to check each (manufacturer_id, product_code) pair
-        let mut existing_keys = HashSet::new();
+        let existing_keys: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
 
-        for (manufacturer_id, product_code) in lookup_map.keys() {
-            let exists: bool = sqlx::query_scalar(
-                "SELECT EXISTS(SELECT 1 FROM railway_models WHERE manufacturer_id = ? AND product_code = ?)"
-            )
-            .bind(manufacturer_id)
-            .bind(product_code)
-            .fetch_one(&self.pool)
-            .await?;
-
-            if exists {
-                existing_keys.insert((manufacturer_id.clone(), product_code.clone()));
-            }
-        }
-
-        // Partition into duplicates and new records
         let mut duplicate_ids = Vec::new();
         let mut new_ids = Vec::new();
 
         for model in models {
-            let key = (model.manufacturer_id.clone(), model.product_code.clone());
+            let key = format!("{}|{}", model.manufacturer_id, model.product_code);
             if existing_keys.contains(&key) {
                 duplicate_ids.push(model.id.clone());
             } else {
@@ -155,6 +157,9 @@ impl DuplicateChecker {
     ///
     /// Note: This uses added_date (the date item was added to collection) as the uniqueness
     /// criterion since the manifest uses this field analogous to purchase_date.
+    ///
+    /// Uses a single batch query with composite key concatenation to avoid
+    /// the N+1 query problem.
     pub async fn check_collection_items(
         &self,
         items: &[CollectionItemRecord],
@@ -163,38 +168,44 @@ impl DuplicateChecker {
             return Ok(DuplicateCheckResult::default());
         }
 
-        // Build a map of (railway_model_id, added_date) -> manifest_id
-        let mut lookup_map: HashMap<(String, String), String> = HashMap::new();
-        for item in items {
-            // Use purchase_date from manifest's purchase record as added_date in database
-            if let Some(ref purchase) = item.purchase
-                && let Some(ref purchase_date) = purchase.purchase_date
-            {
-                lookup_map.insert(
-                    (item.railway_model_id.clone(), purchase_date.clone()),
-                    item.id.clone(),
-                );
+        // Build composite keys for items that have a purchase_date.
+        // Separator '|' must not appear in valid railway_model_id or date values.
+        let composite_keys: Vec<String> = items
+            .iter()
+            .filter_map(|item| {
+                item.purchase
+                    .as_ref()
+                    .and_then(|p| p.purchase_date.as_ref())
+                    .map(|date| format!("{}|{}", item.railway_model_id, date))
+            })
+            .collect();
+
+        let existing_keys: HashSet<String> = if composite_keys.is_empty() {
+            HashSet::new()
+        } else {
+            let query = format!(
+                "SELECT (railway_model_id || '|' || added_date) \
+                 FROM collection_items \
+                 WHERE (railway_model_id || '|' || added_date) IN ({})",
+                composite_keys
+                    .iter()
+                    .map(|_| "?")
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+
+            let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+            for key in &composite_keys {
+                query_builder = query_builder.bind(key);
             }
-        }
 
-        // Query for existing collection items
-        let mut existing_keys = HashSet::new();
+            query_builder
+                .fetch_all(&self.pool)
+                .await?
+                .into_iter()
+                .collect()
+        };
 
-        for (railway_model_id, added_date) in lookup_map.keys() {
-            let exists: bool = sqlx::query_scalar(
-                "SELECT EXISTS(SELECT 1 FROM collection_items WHERE railway_model_id = ? AND added_date = ?)"
-            )
-            .bind(railway_model_id)
-            .bind(added_date)
-            .fetch_one(&self.pool)
-            .await?;
-
-            if exists {
-                existing_keys.insert((railway_model_id.clone(), added_date.clone()));
-            }
-        }
-
-        // Partition into duplicates and new records
         let mut duplicate_ids = Vec::new();
         let mut new_ids = Vec::new();
 
@@ -202,7 +213,7 @@ impl DuplicateChecker {
             if let Some(ref purchase) = item.purchase
                 && let Some(ref purchase_date) = purchase.purchase_date
             {
-                let key = (item.railway_model_id.clone(), purchase_date.clone());
+                let key = format!("{}|{}", item.railway_model_id, purchase_date);
                 if existing_keys.contains(&key) {
                     duplicate_ids.push(item.id.clone());
                 } else {

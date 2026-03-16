@@ -54,7 +54,7 @@ pub async fn export_to_archive(
     let created_path =
         archive_writer::create_archive(dest_dir, &manifest, media_files, filename).await?;
 
-    let file_size = std::fs::metadata(&created_path)?.len();
+    let file_size = tokio::fs::metadata(&created_path).await?.len();
 
     Ok(ExportResult::new(
         created_path.display().to_string(),

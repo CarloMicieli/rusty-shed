@@ -11,6 +11,7 @@ use std::time::SystemTime;
 use super::db::SqliteDbError;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationError;
+use crate::data_management::domain::DataManagementError;
 use serde::Serialize;
 
 /// A session-scoped unique identifier for errors.
@@ -150,6 +151,21 @@ impl From<sqlx::Error> for CommandError {
 impl From<anyhow::Error> for CommandError {
     fn from(err: anyhow::Error) -> Self {
         CommandError::unknown(err.to_string())
+    }
+}
+
+/// Automatic conversion from data management domain errors.
+impl From<DataManagementError> for CommandError {
+    fn from(err: DataManagementError) -> Self {
+        match err {
+            DataManagementError::DatabaseError(msg) => CommandError::DatabaseError(msg),
+            DataManagementError::NotFound(msg) => CommandError::NotFound(msg),
+            DataManagementError::SchemaViolation(msg) => CommandError::BusinessRule(msg),
+            DataManagementError::InvalidInput(msg) => CommandError::BusinessRule(msg),
+            DataManagementError::ArchiveError(msg)
+            | DataManagementError::IoError(msg)
+            | DataManagementError::Unknown(msg) => CommandError::unknown(msg),
+        }
     }
 }
 

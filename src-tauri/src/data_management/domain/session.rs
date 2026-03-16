@@ -1,3 +1,4 @@
+use crate::data_management::domain::ManifestDto;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -46,6 +47,9 @@ pub struct ImportSession {
     /// Session timestamps
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+    /// Validated and parsed manifest — cached after `analyze_import_package` to avoid
+    /// re-extracting and re-parsing the archive on every subsequent pipeline phase.
+    pub validated_manifest: Option<ManifestDto>,
 }
 
 impl ImportSession {
@@ -58,6 +62,7 @@ impl ImportSession {
             state: ImportState::Pending,
             created_at: Utc::now(),
             completed_at: None,
+            validated_manifest: None,
         }
     }
 

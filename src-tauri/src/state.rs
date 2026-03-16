@@ -1,5 +1,6 @@
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::data_management::application::ImportSessionStore;
 use sqlx::sqlite::SqlitePool;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -41,6 +42,8 @@ pub struct AppState {
     sync_state: Mutex<SyncState>,
     /// ISO 8601 timestamp of the last successful cloud backup sync.
     last_sync_at: Mutex<Option<String>>,
+    /// Active import sessions.
+    pub import_session_store: ImportSessionStore,
 }
 
 impl AppState {
@@ -59,6 +62,7 @@ impl AppState {
                 status_message: String::new(),
             }),
             last_sync_at: Mutex::new(None),
+            import_session_store: ImportSessionStore::new(),
         }
     }
 

@@ -5,6 +5,7 @@ use crate::cloud_backup::domain::{
     SyncStage as DomainSyncStage,
 };
 use crate::cloud_backup::infrastructure::{GoogleDriveClient, is_online};
+use crate::data_management::application::ImportSessionStore;
 use crate::data_management::interface::is_import_in_progress;
 use chrono::Utc;
 use flate2::Compression;
@@ -135,12 +136,13 @@ pub async fn sync_backup(
     db_pool: &SqlitePool,
     db_path: &Path,
     google_drive_client: &GoogleDriveClient,
+    import_session_store: &ImportSessionStore,
 ) -> Result<BackupListItem> {
     // T078: Acquire operation lock to prevent concurrent syncs
     let _lock = try_acquire_lock(OperationType::Backup)?;
 
     // BR-03: Prevent backup during data import
-    if is_import_in_progress() {
+    if is_import_in_progress(import_session_store).await {
         return Err(CloudBackupError::ImportInProgress);
     }
 
