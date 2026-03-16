@@ -15,9 +15,6 @@
   let { open = $bindable(false), onClose }: Props = $props();
 
   const controller = createImportController();
-  const sessionId = controller.sessionId$;
-  const preview = controller.preview$;
-  const result = controller.result$;
 
   let isProcessing = $state(false);
 
@@ -55,7 +52,7 @@
   }
 
   function close() {
-    if ($sessionId) {
+    if (controller.sessionId) {
       controller.cancelSession();
     }
     controller.reset();
@@ -106,13 +103,13 @@
 
   <!-- Content -->
   <div class="flex-1 overflow-y-auto p-6">
-    {#if $result}
-      <ImportReport result={$result} onClose={handleCloseReport} />
-    {:else if !$sessionId}
+    {#if controller.result}
+      <ImportReport result={controller.result} onClose={handleCloseReport} />
+    {:else if !controller.sessionId}
       <ImportDropZone onFileSelected={handleFileSelected} disabled={isProcessing} />
-    {:else if $preview}
+    {:else if controller.preview}
       <ImportPreview
-        preview={$preview}
+        preview={controller.preview}
         onConfirm={handleConfirmImport}
         onCancel={handleCancelImport}
         loading={isProcessing}

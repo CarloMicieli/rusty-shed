@@ -24,8 +24,7 @@ vi.mock('$lib/services', () => ({
 // Import after mocks are set up
 import {
   ExportController,
-  createExportController,
-  getExportController
+  createExportController
 } from '$lib/features/export/export.controller.svelte';
 
 describe('ExportController', () => {
@@ -181,14 +180,6 @@ describe('ExportController', () => {
       const c2 = createExportController();
       c1.error = 'Some error';
       expect(c2.error).toBeNull();
-    });
-  });
-
-  describe('getExportController singleton', () => {
-    it('should return same instance on multiple calls', () => {
-      const c1 = getExportController();
-      const c2 = getExportController();
-      expect(c1).toBe(c2);
     });
   });
 });

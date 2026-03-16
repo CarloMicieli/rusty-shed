@@ -26,6 +26,10 @@
   } from '$lib/features/dashboard/DashboardState.svelte';
   import { createDepotState, setDepotContext } from '$lib/features/depot/DepotState.svelte';
   import { TrackInventoryService, setTrackInventoryContext } from '$lib/features/track-inventory';
+  import {
+    createExportController,
+    setExportContext
+  } from '$lib/features/export/export.controller.svelte';
   import { Toaster } from '$lib/components/ui/sonner';
   import { safeInvoke } from '$lib/services';
   import { onDestroy, onMount, setContext } from 'svelte';
@@ -64,12 +68,14 @@
   const dashboardState = createDashboardState();
   const depotState = createDepotState();
   const trackInventoryService = new TrackInventoryService();
+  const exportController = createExportController();
 
   setCollectionContext(collectionState);
   setWishlistContext(wishlistState);
   setDashboardContext(dashboardState);
   setDepotContext(depotState);
   setTrackInventoryContext(trackInventoryService);
+  setExportContext(exportController);
 
   let unlistenAcquisition: (() => void) | undefined;
 

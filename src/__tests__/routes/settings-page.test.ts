@@ -84,6 +84,9 @@ vi.mock('$lib/features/cloud-backup/components/RestoreConfirmModal.svelte', () =
 vi.mock('$lib/features/database-backup/components/DataManagementSection.svelte', () => ({
   default: function DataManagementSectionStub() {}
 }));
+vi.mock('$lib/features/export/components/ExportArchiveSection.svelte', () => ({
+  default: function ExportArchiveSectionStub() {}
+}));
 vi.mock('$lib/components/PageHeader.svelte', () => ({
   default: function PageHeaderStub() {}
 }));

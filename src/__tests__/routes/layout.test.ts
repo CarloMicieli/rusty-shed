@@ -122,6 +122,12 @@ vi.mock('$lib/features/track-inventory', () => ({
   getTrackInventoryContext: vi.fn(() => ({}))
 }));
 
+vi.mock('$lib/features/export/export.controller.svelte', () => ({
+  createExportController: vi.fn(() => ({})),
+  setExportContext: vi.fn(),
+  getExportContext: vi.fn(() => ({}))
+}));
+
 // ── Heavy UI children ──
 
 vi.mock('$lib/services/error-id', () => ({

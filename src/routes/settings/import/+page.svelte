@@ -7,9 +7,6 @@
   import * as m from '$lib/paraglide/messages.js';
 
   const controller = createImportController();
-  const sessionId = controller.sessionId$;
-  const preview = controller.preview$;
-  const result = controller.result$;
 
   let isProcessing = $state(false);
 
@@ -53,13 +50,13 @@
 />
 
 <div class="mt-8 space-y-6">
-  {#if $result}
-    <ImportReport result={$result} onClose={handleCloseReport} />
-  {:else if !$sessionId}
+  {#if controller.result}
+    <ImportReport result={controller.result} onClose={handleCloseReport} />
+  {:else if !controller.sessionId}
     <ImportDropZone onFileSelected={handleFileSelected} disabled={isProcessing} />
-  {:else if $preview}
+  {:else if controller.preview}
     <ImportPreview
-      preview={$preview}
+      preview={controller.preview}
       onConfirm={handleConfirmImport}
       onCancel={handleCancelImport}
       loading={isProcessing}

@@ -4,7 +4,7 @@
  * Provides reactive settings state and methods to load/update settings.
  */
 
-import { invoke } from '@tauri-apps/api/core';
+import { safeInvoke } from '$lib/services';
 import type { UserSettings, UpdateSettingsInput } from '$lib/bindings';
 import { log } from '$lib/tauri-logger';
 
@@ -32,13 +32,15 @@ export class SettingsState {
 
     try {
       log.debug('SettingsState: Calling get_settings command...');
-      const settings = await invoke<UserSettings>('get_settings');
-      log.debug('SettingsState: Settings received');
-      this.settings = settings;
-    } catch (err) {
-      this.error = String(err);
-      log.error(`SettingsState: Failed to load settings: ${String(err)}`);
-      throw err;
+      const result = await safeInvoke<UserSettings>('get_settings');
+      if (result.ok) {
+        log.debug('SettingsState: Settings received');
+        this.settings = result.data;
+      } else {
+        this.error = result.error.message;
+        log.error(`SettingsState: Failed to load settings: ${result.error.message}`);
+        throw new Error(result.error.message);
+      }
     } finally {
       this.loading = false;
     }
@@ -54,13 +56,17 @@ export class SettingsState {
 
     try {
       log.debug('SettingsState: Calling update_settings command...');
-      const updated = await invoke<UserSettings>('update_settings', { input });
-      log.debug('SettingsState: Update successful');
-      this.settings = updated;
-    } catch (err) {
-      this.error = String(err);
-      log.error(`SettingsState: Failed to update settings: ${String(err)}`);
-      throw err;
+      const result = await safeInvoke<UserSettings>('update_settings', {
+        input
+      } as Record<string, unknown>);
+      if (result.ok) {
+        log.debug('SettingsState: Update successful');
+        this.settings = result.data;
+      } else {
+        this.error = result.error.message;
+        log.error(`SettingsState: Failed to update settings: ${result.error.message}`);
+        throw new Error(result.error.message);
+      }
     } finally {
       this.loading = false;
     }
@@ -70,12 +76,12 @@ export class SettingsState {
    * Initialize settings on first run
    */
   async initialize(): Promise<void> {
-    try {
-      const settings = await invoke<UserSettings>('initialize_settings');
-      this.settings = settings;
-    } catch (err) {
-      log.error(`Failed to initialize settings: ${String(err)}`);
-      throw err;
+    const result = await safeInvoke<UserSettings>('initialize_settings');
+    if (result.ok) {
+      this.settings = result.data;
+    } else {
+      log.error(`Failed to initialize settings: ${result.error.message}`);
+      throw new Error(result.error.message);
     }
   }
 }

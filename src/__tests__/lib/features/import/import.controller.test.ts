@@ -60,26 +60,11 @@ describe('ImportController', () => {
         }
       });
 
-      let sessionIdValue: string | null = null;
-      controller.sessionId$.subscribe((id) => {
-        sessionIdValue = id;
-      });
-
-      let recordCountsValue: RecordCounts | null = null;
-      controller.recordCounts$.subscribe((counts) => {
-        recordCountsValue = counts;
-      });
-
-      let canImportValue = false;
-      controller.canImport$.subscribe((value) => {
-        canImportValue = value;
-      });
-
       await controller.analyzePackage('/path/to/file.zip');
 
-      expect(sessionIdValue).toBe('session-123');
-      expect(recordCountsValue).toEqual(mockRecordCounts);
-      expect(canImportValue).toBe(true);
+      expect(controller.sessionId).toBe('session-123');
+      expect(controller.recordCounts).toEqual(mockRecordCounts);
+      expect(controller.canImport).toBe(true);
       expect(mockCommands.analyzeImportPackage).toHaveBeenCalledWith({
         filePath: '/path/to/file.zip'
       });
@@ -95,14 +80,9 @@ describe('ImportController', () => {
         }
       });
 
-      let canImportValue = true;
-      controller.canImport$.subscribe((value) => {
-        canImportValue = value;
-      });
-
       await controller.analyzePackage('/path/to/file.zip');
 
-      expect(canImportValue).toBe(false);
+      expect(controller.canImport).toBe(false);
     });
 
     it('should handle analysis errors gracefully', async () => {
@@ -111,17 +91,11 @@ describe('ImportController', () => {
         error: 'Invalid archive format'
       });
 
-      let isLoadingValue = true;
-      controller.isLoading$.subscribe((value) => {
-        isLoadingValue = value;
-      });
-
-      // Mock console.error to prevent test output pollution
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       await controller.analyzePackage('/path/to/file.zip');
 
-      expect(isLoadingValue).toBe(false);
+      expect(controller.isLoading).toBe(false);
       consoleErrorSpy.mockRestore();
     });
 
@@ -130,18 +104,15 @@ describe('ImportController', () => {
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      let isLoadingValue = true;
-      controller.isLoading$.subscribe((value) => {
-        isLoadingValue = value;
-      });
-
       await controller.analyzePackage('/path/to/file.zip');
 
-      expect(isLoadingValue).toBe(false);
+      expect(controller.isLoading).toBe(false);
       consoleErrorSpy.mockRestore();
     });
 
     it('should set isLoading to true during analysis', async () => {
+      let wasLoadingDuringOp = false;
+
       mockCommands.analyzeImportPackage.mockImplementation(
         () =>
           new Promise((resolve) => {
@@ -152,21 +123,16 @@ describe('ImportController', () => {
           })
       );
 
-      const loadingValues: boolean[] = [];
-      controller.isLoading$.subscribe((value) => {
-        loadingValues.push(value);
-      });
-
-      // Force initial subscription
       const analysisPromise = controller.analyzePackage('/path/to/file.zip');
 
       // Give time for loading state to be set
       await new Promise((r) => setTimeout(r, 5));
+      wasLoadingDuringOp = controller.isLoading;
 
       await analysisPromise;
 
-      // Should have started with false (initial), then true during operation
-      expect(loadingValues.includes(true)).toBe(true);
+      expect(wasLoadingDuringOp).toBe(true);
+      expect(controller.isLoading).toBe(false);
     });
   });
 
@@ -209,32 +175,12 @@ describe('ImportController', () => {
         data: mockPreview
       });
 
-      let previewValue: ImportPreviewResponse | null = null;
-      controller.preview$.subscribe((preview) => {
-        previewValue = preview;
-      });
-
-      let errorsValue: ImportValidationError[] = [];
-      controller.errors$.subscribe((errors) => {
-        errorsValue = errors;
-      });
-
-      let warningsValue: ImportWarning[] = [];
-      controller.warnings$.subscribe((warnings) => {
-        warningsValue = warnings;
-      });
-
-      let canImportValue = false;
-      controller.canImport$.subscribe((value) => {
-        canImportValue = value;
-      });
-
       await controller.getPreview();
 
-      expect(previewValue).toEqual(mockPreview);
-      expect(errorsValue).toEqual(mockErrors);
-      expect(warningsValue).toEqual(mockWarnings);
-      expect(canImportValue).toBe(true);
+      expect(controller.preview).toEqual(mockPreview);
+      expect(controller.errors).toEqual(mockErrors);
+      expect(controller.warnings).toEqual(mockWarnings);
+      expect(controller.canImport).toBe(true);
       expect(mockCommands.getImportPreview).toHaveBeenCalledWith({ sessionId: 'session-456' });
     });
 
@@ -256,18 +202,9 @@ describe('ImportController', () => {
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      let previewValue: ImportPreviewResponse | null = {
-        sessionId: '',
-        errors: [],
-        warnings: []
-      } as any;
-      controller.preview$.subscribe((preview) => {
-        previewValue = preview;
-      });
-
       await controller.getPreview();
 
-      expect(previewValue).toBeNull();
+      expect(controller.preview).toBeNull();
       consoleErrorSpy.mockRestore();
     });
   });
@@ -295,20 +232,10 @@ describe('ImportController', () => {
         data: mockResult
       });
 
-      let resultValue: ImportResultResponse | null = null;
-      controller.result$.subscribe((result) => {
-        resultValue = result;
-      });
-
-      let canImportValue = true;
-      controller.canImport$.subscribe((value) => {
-        canImportValue = value;
-      });
-
       await controller.executeImport();
 
-      expect(resultValue).toEqual(mockResult);
-      expect(canImportValue).toBe(false);
+      expect(controller.result).toEqual(mockResult);
+      expect(controller.canImport).toBe(false);
       expect(mockCommands.executeImport).toHaveBeenCalledWith({ sessionId: 'session-111' });
     });
 
@@ -330,14 +257,9 @@ describe('ImportController', () => {
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      let isLoadingValue = true;
-      controller.isLoading$.subscribe((value) => {
-        isLoadingValue = value;
-      });
-
       await controller.executeImport();
 
-      expect(isLoadingValue).toBe(false);
+      expect(controller.isLoading).toBe(false);
       consoleErrorSpy.mockRestore();
     });
   });
@@ -357,21 +279,11 @@ describe('ImportController', () => {
 
       (mockCommands.cancelImportSession as any).mockResolvedValue(undefined);
 
-      let sessionIdValue: string | null = 'session-333';
-      controller.sessionId$.subscribe((id) => {
-        sessionIdValue = id;
-      });
-
-      let recordCountsValue: RecordCounts | null = { manufacturers: 5 } as any;
-      controller.recordCounts$.subscribe((counts) => {
-        recordCountsValue = counts;
-      });
-
       await controller.cancelSession();
 
       expect(mockCommands.cancelImportSession).toHaveBeenCalledWith({ sessionId: 'session-333' });
-      expect(sessionIdValue).toBeNull();
-      expect(recordCountsValue).toBeNull();
+      expect(controller.sessionId).toBeNull();
+      expect(controller.recordCounts).toBeNull();
     });
 
     it('should not cancel when no session ID exists', async () => {
@@ -392,14 +304,9 @@ describe('ImportController', () => {
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      let sessionIdValue: string | null = 'session-444';
-      controller.sessionId$.subscribe((id) => {
-        sessionIdValue = id;
-      });
-
       await controller.cancelSession();
 
-      expect(sessionIdValue).toBeNull();
+      expect(controller.sessionId).toBeNull();
       consoleErrorSpy.mockRestore();
     });
   });
@@ -418,95 +325,46 @@ describe('ImportController', () => {
 
       await controller.analyzePackage('/path/to/file.zip');
 
-      let sessionIdValue: string | null = 'session-555';
-      let recordCountsValue: RecordCounts | null = { manufacturers: 5 } as any;
-      let canImportValue = true;
-      let isLoadingValue = true;
-      let errorsValue: ImportValidationError[] = [
-        { recordId: 'rec-1', message: 'Error', severity: 'error' } as any
-      ];
-
-      controller.sessionId$.subscribe((id) => {
-        sessionIdValue = id;
-      });
-      controller.recordCounts$.subscribe((counts) => {
-        recordCountsValue = counts;
-      });
-      controller.canImport$.subscribe((value) => {
-        canImportValue = value;
-      });
-      controller.isLoading$.subscribe((value) => {
-        isLoadingValue = value;
-      });
-      controller.errors$.subscribe((errors) => {
-        errorsValue = errors;
-      });
-
-      // Reset all state
       controller.reset();
 
-      expect(sessionIdValue).toBeNull();
-      expect(recordCountsValue).toBeNull();
-      expect(canImportValue).toBe(false);
-      expect(isLoadingValue).toBe(false);
-      expect(errorsValue).toEqual([]);
+      expect(controller.sessionId).toBeNull();
+      expect(controller.recordCounts).toBeNull();
+      expect(controller.canImport).toBe(false);
+      expect(controller.isLoading).toBe(false);
+      expect(controller.errors).toEqual([]);
     });
 
-    it('should reset warnings and preview', async () => {
-      const mockPreview: ImportPreviewResponse = {
-        sessionId: 'session-666',
-        errors: [],
-        warnings: [{ recordId: 'rec-1', message: 'Warning', severity: 'warning' } as any],
-        canImport: true,
-        summary: { totalRecords: 10, validRecords: 10, invalidRecords: 0 }
-      } as any;
-
-      let previewValue: ImportPreviewResponse | null = mockPreview;
-      let warningsValue: ImportWarning[] = mockPreview.warnings;
-
-      controller.preview$.subscribe((preview) => {
-        previewValue = preview;
-      });
-      controller.warnings$.subscribe((warnings) => {
-        warningsValue = warnings;
-      });
-
+    it('should reset warnings and preview', () => {
       controller.reset();
 
-      expect(previewValue).toBeNull();
-      expect(warningsValue).toEqual([]);
+      expect(controller.preview).toBeNull();
+      expect(controller.warnings).toEqual([]);
     });
   });
 
-  describe('store subscriptions', () => {
-    it('should provide readonly store interfaces', () => {
-      expect(controller.sessionId$).toHaveProperty('subscribe');
-      expect(controller.recordCounts$).toHaveProperty('subscribe');
-      expect(controller.errors$).toHaveProperty('subscribe');
-      expect(controller.warnings$).toHaveProperty('subscribe');
-      expect(controller.progress$).toHaveProperty('subscribe');
-      expect(controller.preview$).toHaveProperty('subscribe');
-      expect(controller.result$).toHaveProperty('subscribe');
-      expect(controller.canImport$).toHaveProperty('subscribe');
-      expect(controller.isLoading$).toHaveProperty('subscribe');
+  describe('state properties', () => {
+    it('should expose all state fields as direct properties', () => {
+      expect(controller.sessionId).toBeNull();
+      expect(controller.recordCounts).toBeNull();
+      expect(controller.errors).toEqual([]);
+      expect(controller.warnings).toEqual([]);
+      expect(controller.progress).toBeNull();
+      expect(controller.preview).toBeNull();
+      expect(controller.result).toBeNull();
+      expect(controller.canImport).toBe(false);
+      expect(controller.isLoading).toBe(false);
     });
 
-    it('should allow multiple subscriptions to same store', () => {
-      const values1: (string | null)[] = [];
-      const values2: (string | null)[] = [];
-
-      controller.sessionId$.subscribe((id) => values1.push(id));
-      controller.sessionId$.subscribe((id) => values2.push(id));
-
+    it('should reflect state changes after operations', async () => {
       (mockCommands.analyzeImportPackage as any).mockResolvedValue({
         status: 'ok',
         data: { sessionId: 'session-777', recordCounts: {}, validationStatus: 'valid' }
       });
 
-      controller.analyzePackage('/path/to/file.zip').then(() => {
-        expect(values1).toContain('session-777');
-        expect(values2).toContain('session-777');
-      });
+      await controller.analyzePackage('/path/to/file.zip');
+
+      expect(controller.sessionId).toBe('session-777');
+      expect(controller.canImport).toBe(true);
     });
   });
 });
