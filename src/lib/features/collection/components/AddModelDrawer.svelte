@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X } from 'lucide-svelte';
+  import { TrainFront } from 'lucide-svelte';
   import { Button } from '$lib/components';
+  import { DrawerHeader } from '$lib/components/drawer';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -331,25 +332,14 @@
     class="flex h-full flex-col overflow-y-auto border-l border-[#1F1F1F] bg-[#0F0F0F] shadow-2xl"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-[#1F1F1F] p-6">
-      <div>
-        <p class="text-[10px] tracking-[0.2em] text-[#808080] uppercase">
-          {m.add_model_subtitle()}
-        </p>
-        <h2 id="drawer-title" class="text-xl font-semibold text-[#E0E0E0]">
-          {m.add_model_title()}
-        </h2>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        class="text-[#808080] hover:text-[#E0E0E0]"
-        onclick={handleCloseRequest}
-        aria-label={m.add_model_cancel()}
-      >
-        <X size={16} />
-      </Button>
+    <div class="border-b border-[#1F1F1F]">
+      <DrawerHeader
+        id="drawer-title"
+        title={m.add_model_title()}
+        subtitle={m.add_model_subtitle()}
+        icon={TrainFront}
+        onClose={handleCloseRequest}
+      />
     </div>
 
     <!-- Content (scrollable) -->

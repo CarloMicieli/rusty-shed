@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import * as Select from '$lib/components/ui/select';
   import { DatePickerField } from '$lib/components';
+  import SearchableSelect from '$lib/components/SearchableSelect.svelte';
   import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
   import type { BatchDefaults } from '../types.js';
@@ -17,6 +19,18 @@
 
   const SCALE_OPTIONS = ['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', '0', 'G', 'S', 'II'] as const;
   const POWER_METHOD_OPTIONS = ['AC', 'DC', 'TRIX_EXPRESS'] as const;
+  const SCALE_DISPLAY_MAP: Record<string, string> = {
+    H0: 'H0 (1:87)',
+    H0m: 'H0m (1:87)',
+    H0e: 'H0e (1:87)',
+    N: 'N (1:160)',
+    TT: 'TT (1:120)',
+    Z: 'Z (1:220)',
+    '0': '0 (1:43)',
+    G: 'G (1:22.5)',
+    S: 'S (1:64)',
+    II: 'II (1:22.5)'
+  };
 
   let {
     sellerId,
@@ -43,17 +57,13 @@
     >
       {m.acquisition_seller_label()}
     </label>
-    <select
+    <SearchableSelect
       id="acq-seller"
+      options={sellers.map((s) => ({ value: s.id, label: s.name }))}
       value={sellerId ?? ''}
-      onchange={(e) => onSellerChange((e.currentTarget as HTMLSelectElement).value || null)}
-      class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-    >
-      <option value="">—</option>
-      {#each sellers as seller (seller.id)}
-        <option value={seller.id}>{seller.name}</option>
-      {/each}
-    </select>
+      placeholder="—"
+      onSelect={(v: string) => onSellerChange(v || null)}
+    />
   </div>
 
   <!-- Purchase Date -->
@@ -80,18 +90,25 @@
     >
       {m.acquisition_batch_scale_label()}
     </label>
-    <select
-      id="acq-batch-scale"
-      value={batchDefaults.scale ?? ''}
-      onchange={(e) =>
-        onBatchDefaultChange('scale', (e.currentTarget as HTMLSelectElement).value || null)}
-      class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
+    <Select.Root
+      type="single"
+      value={batchDefaults.scale ?? undefined}
+      onValueChange={(v) => onBatchDefaultChange('scale', v || null)}
     >
-      <option value="">—</option>
-      {#each SCALE_OPTIONS as scale (scale)}
-        <option value={scale}>{scale}</option>
-      {/each}
-    </select>
+      <Select.Trigger
+        id="acq-batch-scale"
+        class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+      >
+        {batchDefaults.scale
+          ? (SCALE_DISPLAY_MAP[batchDefaults.scale] ?? batchDefaults.scale)
+          : '—'}
+      </Select.Trigger>
+      <Select.Content>
+        {#each SCALE_OPTIONS as scale (scale)}
+          <Select.Item value={scale} label={SCALE_DISPLAY_MAP[scale] ?? scale} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
   </div>
 
   <!-- Default Power Method -->
@@ -102,17 +119,22 @@
     >
       {m.acquisition_batch_power_label()}
     </label>
-    <select
-      id="acq-batch-power"
-      value={batchDefaults.powerMethod ?? ''}
-      onchange={(e) =>
-        onBatchDefaultChange('powerMethod', (e.currentTarget as HTMLSelectElement).value || null)}
-      class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
+    <Select.Root
+      type="single"
+      value={batchDefaults.powerMethod ?? undefined}
+      onValueChange={(v) => onBatchDefaultChange('powerMethod', v || null)}
     >
-      <option value="">—</option>
-      {#each POWER_METHOD_OPTIONS as pm (pm)}
-        <option value={pm}>{pm}</option>
-      {/each}
-    </select>
+      <Select.Trigger
+        id="acq-batch-power"
+        class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+      >
+        {batchDefaults.powerMethod ?? '—'}
+      </Select.Trigger>
+      <Select.Content>
+        {#each POWER_METHOD_OPTIONS as pm (pm)}
+          <Select.Item value={pm} label={pm} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
   </div>
 </div>

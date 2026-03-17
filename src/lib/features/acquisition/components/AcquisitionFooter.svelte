@@ -25,6 +25,7 @@
   <Button
     type="button"
     variant="default"
+    class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
     onclick={onFinalize}
     disabled={isSubmitting || isLoadingData}
   >

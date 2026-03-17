@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X } from 'lucide-svelte';
+  import { Cpu } from 'lucide-svelte';
   import { commands } from '$lib/bindings';
   import type {
     Decoder,
@@ -13,7 +13,7 @@
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
   import DecoderPicker from './DecoderPicker.svelte';
-  import { DrawerShell, DigitalSection } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DigitalSection } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -204,26 +204,13 @@
 
 <DrawerShell {open} {onClose} size="lg" {hasChanges} labelledby="decoder-install-drawer-title">
   {#snippet header({ requestClose })}
-    <div class="flex items-center justify-between p-6">
-      <div>
-        <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
-          {m.app_digital_roster()}
-        </p>
-        <h2 id="decoder-install-drawer-title" class="text-xl font-semibold">
-          {m.digital_roster_install_decoder()}
-        </h2>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        class="h-8 w-8"
-        onclick={requestClose}
-        aria-label={m.add_model_cancel()}
-      >
-        <X size={16} />
-      </Button>
-    </div>
+    <DrawerHeader
+      id="decoder-install-drawer-title"
+      title={m.digital_roster_install_decoder()}
+      subtitle={m.app_digital_roster()}
+      icon={Cpu}
+      onClose={requestClose}
+    />
   {/snippet}
 
   {#if isLoadingData}
@@ -262,13 +249,14 @@
   {/if}
 
   {#snippet footer({ requestClose })}
-    <div class="flex justify-end gap-3 p-6">
+    <div class="flex justify-end gap-3 p-4">
       <Button type="button" variant="ghost" onclick={requestClose} disabled={isSubmitting}>
         {m.add_model_cancel()}
       </Button>
       <Button
         type="submit"
         variant="default"
+        class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
         onclick={handleSubmit}
         disabled={isSubmitting || isLoadingData || (!touched && !isFormValid)}
       >

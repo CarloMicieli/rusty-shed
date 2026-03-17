@@ -5,7 +5,7 @@
   import type { Component } from 'svelte';
   import { Input, Button, DatePickerField, CurrencyInput } from '$lib/components';
   import { getCurrencySymbol } from '$lib/utils/currency';
-  import SearchableSelect from './SearchableSelect.svelte';
+  import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 
   interface Props {
     products?: TrackProductView[];

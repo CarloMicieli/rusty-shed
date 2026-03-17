@@ -1,7 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { ShoppingBag, X } from 'lucide-svelte';
-  import { Button } from '$lib/components';
+  import { ShoppingBag } from 'lucide-svelte';
   import { commands, type Manufacturer, type SellerView } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
@@ -20,7 +19,7 @@
   import AcquisitionHeader from './components/AcquisitionHeader.svelte';
   import AcquisitionItemCard from './components/AcquisitionItemCard.svelte';
   import AcquisitionFooter from './components/AcquisitionFooter.svelte';
-  import { DrawerShell } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -168,28 +167,13 @@
   discardCancel={m.acquisition_discard_cancel()}
 >
   {#snippet header({ requestClose })}
-    <div class="flex items-center justify-between p-4">
-      <div class="flex items-center gap-3">
-        <div class="rounded-lg bg-emerald-500/10 p-2">
-          <ShoppingBag class="h-5 w-5 text-emerald-500" />
-        </div>
-        <div>
-          <h2 id="acquisition-drawer-title" class="text-lg font-semibold text-zinc-100">
-            {m.acquisition_drawer_title()}
-          </h2>
-          <p class="text-sm text-zinc-500">{m.acquisition_drawer_subtitle()}</p>
-        </div>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        onclick={requestClose}
-        aria-label={m.acquisition_cancel_button()}
-      >
-        <X size={16} />
-      </Button>
-    </div>
+    <DrawerHeader
+      id="acquisition-drawer-title"
+      title={m.acquisition_drawer_title()}
+      subtitle={m.acquisition_drawer_subtitle()}
+      icon={ShoppingBag}
+      onClose={requestClose}
+    />
   {/snippet}
 
   {#snippet stickyBand()}

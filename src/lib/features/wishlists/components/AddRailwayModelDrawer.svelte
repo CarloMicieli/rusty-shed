@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X } from 'lucide-svelte';
+  import { Train } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import { getWishlistContext } from '../WishlistState.svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
@@ -16,6 +16,7 @@
   import { commands } from '$lib/bindings';
   import {
     DrawerShell,
+    DrawerHeader,
     ModelInfoSection,
     WishlistSection,
     RollingStockSection
@@ -181,24 +182,13 @@
 
 <DrawerShell {open} {onClose} size="lg" labelledby="add-railway-model-drawer-title">
   {#snippet header({ requestClose })}
-    <div class="flex items-center justify-between p-4">
-      <div>
-        <h2 id="add-railway-model-drawer-title" class="text-xl font-bold text-zinc-100">
-          {m.wishlist_drawer_title()}
-        </h2>
-        <p class="mt-1 text-sm text-zinc-500">{m.wishlist_drawer_subtitle()}</p>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        class="text-zinc-500 hover:text-zinc-100"
-        onclick={requestClose}
-        aria-label={m.wishlist_drawer_cancel()}
-      >
-        <X size={20} />
-      </Button>
-    </div>
+    <DrawerHeader
+      id="add-railway-model-drawer-title"
+      title={m.wishlist_drawer_title()}
+      subtitle={m.wishlist_drawer_subtitle()}
+      icon={Train}
+      onClose={requestClose}
+    />
   {/snippet}
 
   {#if isLoadingData}

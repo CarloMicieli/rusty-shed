@@ -2,13 +2,17 @@
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components/ui/button';
   import { Heart } from 'lucide-svelte';
-  import { X } from 'lucide-svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { commands } from '$lib/bindings';
   import type { Manufacturer, WishlistPriority } from '$lib/bindings';
   import { CATEGORIES, SCALES, POWER_METHODS } from '$lib/features/wishlists/constants';
-  import { DrawerShell, ModelInfoSection, WishlistSection } from '$lib/components/drawer';
+  import {
+    DrawerShell,
+    DrawerHeader,
+    ModelInfoSection,
+    WishlistSection
+  } from '$lib/components/drawer';
   import { onMount } from 'svelte';
 
   const wishlistService = getWishlistContext();
@@ -177,28 +181,13 @@
   discardCancel={m.wishlist_add_item_drawer_discard_cancel()}
 >
   {#snippet header({ requestClose })}
-    <div class="flex items-center justify-between p-4">
-      <div class="flex items-center gap-3">
-        <div class="rounded-lg bg-rose-500/10 p-2">
-          <Heart class="h-5 w-5 text-rose-500" />
-        </div>
-        <div>
-          <h2 id="wishlist-item-drawer-title" class="text-lg font-semibold text-zinc-100">
-            {m.wishlist_modal_title()}
-          </h2>
-          <p class="text-sm text-zinc-500">{m.wishlist_add_item_drawer_subtitle()}</p>
-        </div>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        onclick={requestClose}
-        aria-label="close"
-      >
-        <X size={16} />
-      </Button>
-    </div>
+    <DrawerHeader
+      id="wishlist-item-drawer-title"
+      title={m.wishlist_modal_title()}
+      subtitle={m.wishlist_add_item_drawer_subtitle()}
+      icon={Heart}
+      onClose={requestClose}
+    />
   {/snippet}
 
   <div class="space-y-5">
@@ -243,6 +232,7 @@
         type="button"
         variant="default"
         size="sm"
+        class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
         onclick={handleSubmit}
         disabled={isSubmitting}
       >

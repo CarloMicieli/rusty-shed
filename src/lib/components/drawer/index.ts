@@ -1,4 +1,7 @@
 export { default as DrawerShell } from './DrawerShell.svelte';
+export { default as DrawerHeader } from './DrawerHeader.svelte';
+export { default as DrawerInput } from './DrawerInput.svelte';
+export { default as DrawerSectionBar } from './DrawerSectionBar.svelte';
 export { default as ModelInfoSection } from './ModelInfoSection.svelte';
 export { default as WishlistSection } from './WishlistSection.svelte';
 export { default as RollingStockSection } from './RollingStockSection.svelte';

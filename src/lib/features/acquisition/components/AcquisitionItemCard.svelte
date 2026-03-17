@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import * as Select from '$lib/components/ui/select';
   import { CurrencyInput } from '$lib/components';
+  import { DrawerInput } from '$lib/components/drawer';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import { Copy, Trash2 } from 'lucide-svelte';
   import type { Manufacturer } from '$lib/bindings';
@@ -19,17 +21,31 @@
     'STARTER_SETS'
   ] as const;
 
-  function getCategoryLabelKey(category: string): string {
-    const map: Record<string, string> = {
-      LOCOMOTIVES: 'wishlist_category_locomotives',
-      FREIGHT_CARS: 'wishlist_category_freight_cars',
-      PASSENGER_CARS: 'wishlist_category_passenger_cars',
-      ELECTRIC_MULTIPLE_UNITS: 'wishlist_category_electric_multiple_units',
-      RAILCARS: 'wishlist_category_railcars',
-      TRAIN_SETS: 'wishlist_category_train_sets',
-      STARTER_SETS: 'wishlist_category_starter_sets'
-    };
-    return map[category] ?? category;
+  const SCALE_DISPLAY_MAP: Record<string, string> = {
+    H0: 'H0 (1:87)',
+    H0m: 'H0m (1:87)',
+    H0e: 'H0e (1:87)',
+    N: 'N (1:160)',
+    TT: 'TT (1:120)',
+    Z: 'Z (1:220)',
+    '0': '0 (1:43)',
+    G: 'G (1:22.5)',
+    S: 'S (1:64)',
+    II: 'II (1:22.5)'
+  };
+
+  const CATEGORY_LABELS: Record<string, () => string> = {
+    LOCOMOTIVES: m.wishlist_category_locomotives,
+    FREIGHT_CARS: m.wishlist_category_freight_cars,
+    PASSENGER_CARS: m.wishlist_category_passenger_cars,
+    ELECTRIC_MULTIPLE_UNITS: m.wishlist_category_electric_multiple_units,
+    RAILCARS: m.wishlist_category_railcars,
+    TRAIN_SETS: m.wishlist_category_train_sets,
+    STARTER_SETS: m.wishlist_category_starter_sets
+  };
+
+  function getCategoryLabel(category: string): string {
+    return CATEGORY_LABELS[category]?.() ?? category;
   }
 
   interface Props {
@@ -56,15 +72,14 @@
     onRemove
   }: Props = $props();
 
-  const SELECT_CLASS =
-    'h-10 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none';
-  const SELECT_ERROR_CLASS =
-    'h-10 w-full appearance-none rounded-xl border border-destructive bg-zinc-950 px-4 text-sm text-zinc-100 ring-1 ring-destructive focus:outline-none';
-  const INPUT_CLASS =
-    'h-10 w-full rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-white/20 focus:outline-none';
-  const INPUT_ERROR_CLASS =
-    'h-10 w-full rounded-xl border border-destructive bg-zinc-950 px-4 text-sm text-zinc-100 placeholder:text-zinc-600 ring-1 ring-destructive focus:outline-none';
   const LABEL_CLASS = 'ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase';
+  const TRIGGER_CLASS = 'w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]';
+  const TRIGGER_ERROR_CLASS =
+    'w-full border-destructive bg-[#0F0F0F] text-[#E0E0E0] ring-1 ring-destructive';
+
+  const selectedManufacturer = $derived(
+    manufacturers.find((mfg) => mfg.id === item.manufacturerId)
+  );
 </script>
 
 <div class="space-y-3 rounded-xl border border-white/10 bg-zinc-900/50 p-4">
@@ -102,22 +117,31 @@
       <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
         {m.acquisition_item_manufacturer_label()}
       </label>
-      <select
-        id="item-{item.uid}-manufacturer"
-        value={item.manufacturerId ?? ''}
-        onchange={(e) =>
-          onUpdate(item.uid, {
-            manufacturerId: (e.currentTarget as HTMLSelectElement).value || null
-          })}
-        class={errors.manufacturerId ? SELECT_ERROR_CLASS : SELECT_CLASS}
-        aria-invalid={!!errors.manufacturerId}
-        aria-describedby={errors.manufacturerId ? `item-${item.uid}-manufacturer-error` : undefined}
+      <Select.Root
+        type="single"
+        value={item.manufacturerId ?? undefined}
+        onValueChange={(v) => onUpdate(item.uid, { manufacturerId: v || null })}
       >
-        <option value="">—</option>
-        {#each manufacturers as mfg (mfg.id)}
-          <option value={mfg.id}>{mfg.name}</option>
-        {/each}
-      </select>
+        <Select.Trigger
+          id="item-{item.uid}-manufacturer"
+          class={errors.manufacturerId ? TRIGGER_ERROR_CLASS : TRIGGER_CLASS}
+          aria-invalid={!!errors.manufacturerId}
+          aria-describedby={errors.manufacturerId
+            ? `item-${item.uid}-manufacturer-error`
+            : undefined}
+        >
+          {#if selectedManufacturer}
+            {selectedManufacturer.name}
+          {:else}
+            <span class="text-zinc-500">—</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each manufacturers as mfg (mfg.id)}
+            <Select.Item value={mfg.id} label={mfg.name} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
       {#if errors.manufacturerId}
         <p id="item-{item.uid}-manufacturer-error" class="mt-1 text-xs text-destructive">
           {errors.manufacturerId}
@@ -130,13 +154,12 @@
       <label for="item-{item.uid}-product-code" class={LABEL_CLASS}>
         {m.acquisition_item_product_code_label()}
       </label>
-      <input
+      <DrawerInput
         id="item-{item.uid}-product-code"
         type="text"
         value={item.productCode}
         oninput={(e) =>
           onUpdate(item.uid, { productCode: (e.currentTarget as HTMLInputElement).value })}
-        class={errors.productCode ? INPUT_ERROR_CLASS : INPUT_CLASS}
         aria-invalid={!!errors.productCode}
         aria-describedby={errors.productCode ? `item-${item.uid}-product-code-error` : undefined}
       />
@@ -152,13 +175,12 @@
       <label for="item-{item.uid}-description" class={LABEL_CLASS}>
         {m.acquisition_item_description_label()}
       </label>
-      <input
+      <DrawerInput
         id="item-{item.uid}-description"
         type="text"
         value={item.description}
         oninput={(e) =>
           onUpdate(item.uid, { description: (e.currentTarget as HTMLInputElement).value })}
-        class={INPUT_CLASS}
       />
     </div>
 
@@ -167,21 +189,29 @@
       <label for="item-{item.uid}-category" class={LABEL_CLASS}>
         {m.acquisition_item_category_label()}
       </label>
-      <select
-        id="item-{item.uid}-category"
-        value={item.category ?? ''}
-        onchange={(e) =>
-          onUpdate(item.uid, { category: (e.currentTarget as HTMLSelectElement).value || null })}
-        class={errors.category ? SELECT_ERROR_CLASS : SELECT_CLASS}
-        aria-invalid={!!errors.category}
-        aria-describedby={errors.category ? `item-${item.uid}-category-error` : undefined}
+      <Select.Root
+        type="single"
+        value={item.category ?? undefined}
+        onValueChange={(v) => onUpdate(item.uid, { category: v || null })}
       >
-        <option value="">—</option>
-        {#each CATEGORY_OPTIONS as cat (cat)}
-          <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-          <option value={cat}>{(m as any)[getCategoryLabelKey(cat)]()}</option>
-        {/each}
-      </select>
+        <Select.Trigger
+          id="item-{item.uid}-category"
+          class={errors.category ? TRIGGER_ERROR_CLASS : TRIGGER_CLASS}
+          aria-invalid={!!errors.category}
+          aria-describedby={errors.category ? `item-${item.uid}-category-error` : undefined}
+        >
+          {#if item.category}
+            {getCategoryLabel(item.category)}
+          {:else}
+            <span class="text-zinc-500">—</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each CATEGORY_OPTIONS as cat (cat)}
+            <Select.Item value={cat} label={getCategoryLabel(cat)} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
       {#if errors.category}
         <p id="item-{item.uid}-category-error" class="mt-1 text-xs text-destructive">
           {errors.category}
@@ -194,18 +224,24 @@
       <label for="item-{item.uid}-scale" class={LABEL_CLASS}>
         {m.acquisition_item_scale_label()}
       </label>
-      <select
-        id="item-{item.uid}-scale"
-        value={item.scale ?? ''}
-        onchange={(e) =>
-          onUpdate(item.uid, { scale: (e.currentTarget as HTMLSelectElement).value || null })}
-        class={SELECT_CLASS}
+      <Select.Root
+        type="single"
+        value={item.scale ?? undefined}
+        onValueChange={(v) => onUpdate(item.uid, { scale: v || null })}
       >
-        <option value="">—</option>
-        {#each SCALE_OPTIONS as scale (scale)}
-          <option value={scale}>{scale}</option>
-        {/each}
-      </select>
+        <Select.Trigger id="item-{item.uid}-scale" class={TRIGGER_CLASS}>
+          {#if item.scale}
+            {SCALE_DISPLAY_MAP[item.scale] ?? item.scale}
+          {:else}
+            <span class="text-zinc-500">—</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each SCALE_OPTIONS as scale (scale)}
+            <Select.Item value={scale} label={SCALE_DISPLAY_MAP[scale] ?? scale} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
     </div>
 
     <!-- Epoch -->
@@ -213,18 +249,24 @@
       <label for="item-{item.uid}-epoch" class={LABEL_CLASS}>
         {m.acquisition_item_epoch_label()}
       </label>
-      <select
-        id="item-{item.uid}-epoch"
-        value={item.epoch ?? ''}
-        onchange={(e) =>
-          onUpdate(item.uid, { epoch: (e.currentTarget as HTMLSelectElement).value || null })}
-        class={SELECT_CLASS}
+      <Select.Root
+        type="single"
+        value={item.epoch ?? undefined}
+        onValueChange={(v) => onUpdate(item.uid, { epoch: v || null })}
       >
-        <option value="">—</option>
-        {#each EPOCHS as epoch (epoch)}
-          <option value={epoch}>{epoch}</option>
-        {/each}
-      </select>
+        <Select.Trigger id="item-{item.uid}-epoch" class={TRIGGER_CLASS}>
+          {#if item.epoch}
+            {item.epoch}
+          {:else}
+            <span class="text-zinc-500">—</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each EPOCHS as epoch (epoch)}
+            <Select.Item value={epoch} label={epoch} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
     </div>
 
     <!-- Power Method -->
@@ -232,18 +274,24 @@
       <label for="item-{item.uid}-power" class={LABEL_CLASS}>
         {m.acquisition_item_power_label()}
       </label>
-      <select
-        id="item-{item.uid}-power"
-        value={item.powerMethod ?? ''}
-        onchange={(e) =>
-          onUpdate(item.uid, { powerMethod: (e.currentTarget as HTMLSelectElement).value || null })}
-        class={SELECT_CLASS}
+      <Select.Root
+        type="single"
+        value={item.powerMethod ?? undefined}
+        onValueChange={(v) => onUpdate(item.uid, { powerMethod: v || null })}
       >
-        <option value="">—</option>
-        {#each POWER_METHOD_OPTIONS as pm (pm)}
-          <option value={pm}>{pm}</option>
-        {/each}
-      </select>
+        <Select.Trigger id="item-{item.uid}-power" class={TRIGGER_CLASS}>
+          {#if item.powerMethod}
+            {item.powerMethod}
+          {:else}
+            <span class="text-zinc-500">—</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each POWER_METHOD_OPTIONS as pm (pm)}
+            <Select.Item value={pm} label={pm} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
     </div>
 
     <!-- Price (full width) -->
@@ -256,6 +304,7 @@
         value={item.priceAmount}
         symbol={getCurrencySymbol(currency)}
         label={m.acquisition_item_price_label()}
+        inputClass="bg-[#0F0F0F] border-[#1F1F1F] rounded-[8px] text-[#E0E0E0] placeholder:text-[#808080]"
         onchange={(val) => onUpdate(item.uid, { priceAmount: val })}
       />
     </div>

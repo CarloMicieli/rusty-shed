@@ -23,6 +23,8 @@
     id?: string;
     /** Optional lucide-svelte icon rendered left of the selected label */
     icon?: Component<{ size?: number | undefined; class?: string | undefined }>;
+    /** Optional callback fired when a selection is made */
+    onSelect?: (value: string) => void;
   }
 
   let {
@@ -32,7 +34,8 @@
     emptyOption,
     disabled = false,
     id,
-    icon: LeadingIcon
+    icon: LeadingIcon,
+    onSelect
   }: Props = $props();
 
   let open = $state(false);
@@ -70,6 +73,7 @@
 
   function select(opt: SelectOption) {
     value = opt.value;
+    onSelect?.(opt.value);
     open = false;
   }
 </script>
