@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { X, ShoppingBag } from 'lucide-svelte';
+  import { ShoppingBag, X } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import { commands, type Manufacturer, type SellerView } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
@@ -20,6 +20,7 @@
   import AcquisitionHeader from './components/AcquisitionHeader.svelte';
   import AcquisitionItemCard from './components/AcquisitionItemCard.svelte';
   import AcquisitionFooter from './components/AcquisitionFooter.svelte';
+  import { DrawerShell } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -37,10 +38,7 @@
   let isSubmitting = $state(false);
   let isLoadingData = $state(false);
   let touched = $state(false);
-  let showDiscardDialog = $state(false);
   let validationErrors = $state<AcquisitionValidationErrors>({});
-  let scrollableEl = $state<HTMLDivElement | null>(null);
-
   // Form state
   let form = $state<AcquisitionFormState>(
     createDefaultFormState({
@@ -61,39 +59,16 @@
 
   let currency = $derived(settingsState.settings.currency ?? 'EUR');
 
-  // Reactive validation: re-run whenever form changes, but only after first submit attempt
+  // Reactive validation
   let _validationReactive = $derived.by(() => {
     if (!touched) return;
     validationErrors = validateForm(form);
   });
 
-  // Watch for drawer open/close — lock scroll and load data
+  // Watch for drawer open — load data
   $effect(() => {
     if (open) {
       handleOpen();
-
-      const mainElement = document.querySelector('main');
-      document.body.style.overflow = 'hidden';
-      if (mainElement) mainElement.style.overflow = 'hidden';
-    } else {
-      const mainElement = document.querySelector('main');
-      document.body.style.overflow = '';
-      if (mainElement) mainElement.style.overflow = '';
-    }
-
-    return () => {
-      const mainElement = document.querySelector('main');
-      document.body.style.overflow = '';
-      if (mainElement) mainElement.style.overflow = '';
-    };
-  });
-
-  // Auto-scroll to bottom when items are added
-  $effect(() => {
-    // Track items.length to trigger this effect
-    const _len = form.items.length;
-    if (scrollableEl && _len > 1) {
-      scrollableEl.scrollTop = scrollableEl.scrollHeight;
     }
   });
 
@@ -104,7 +79,6 @@
     });
     touched = false;
     validationErrors = {};
-    showDiscardDialog = false;
 
     isLoadingData = true;
     try {
@@ -151,27 +125,9 @@
   function handleBatchDefaultChange(field: 'scale' | 'powerMethod', value: string | null) {
     const oldValue = form.batchDefaults[field];
     form.batchDefaults = { ...form.batchDefaults, [field]: value };
-    // Propagate to items that still have the old default value
     form.items = form.items.map((item) =>
       item[field] === oldValue ? { ...item, [field]: value } : item
     );
-  }
-
-  function handleCloseRequest() {
-    if (hasChanges) {
-      showDiscardDialog = true;
-    } else {
-      onClose();
-    }
-  }
-
-  function handleDiscardConfirm() {
-    showDiscardDialog = false;
-    onClose();
-  }
-
-  function handleDiscardCancel() {
-    showDiscardDialog = false;
   }
 
   async function handleFinalize() {
@@ -200,23 +156,19 @@
   }
 </script>
 
-{#if open}
-  <!-- Overlay -->
-  <div
-    class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-    onclick={handleCloseRequest}
-    role="presentation"
-  ></div>
-
-  <!-- Drawer panel -->
-  <div
-    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl translate-x-0 flex-col bg-zinc-950 shadow-2xl transition-transform duration-300"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="acquisition-drawer-title"
-  >
-    <!-- Sticky header -->
-    <div class="flex items-center justify-between border-b border-white/10 p-4">
+<DrawerShell
+  {open}
+  {onClose}
+  size="lg"
+  {hasChanges}
+  labelledby="acquisition-drawer-title"
+  discardTitle={m.acquisition_discard_title()}
+  discardDescription={m.acquisition_discard_description()}
+  discardConfirm={m.acquisition_discard_confirm()}
+  discardCancel={m.acquisition_discard_cancel()}
+>
+  {#snippet header({ requestClose })}
+    <div class="flex items-center justify-between p-4">
       <div class="flex items-center gap-3">
         <div class="rounded-lg bg-emerald-500/10 p-2">
           <ShoppingBag class="h-5 w-5 text-emerald-500" />
@@ -232,15 +184,16 @@
         type="button"
         variant="ghost"
         size="icon-sm"
-        onclick={handleCloseRequest}
+        onclick={requestClose}
         aria-label={m.acquisition_cancel_button()}
       >
         <X size={16} />
       </Button>
     </div>
+  {/snippet}
 
-    <!-- Sticky session fields -->
-    <div class="border-b border-white/10 px-4 py-3">
+  {#snippet stickyBand()}
+    <div class="px-4 py-3">
       <AcquisitionHeader
         sellerId={form.sellerId}
         onSellerChange={(id) => (form.sellerId = id)}
@@ -251,64 +204,44 @@
         {sellers}
       />
     </div>
+  {/snippet}
 
-    <!-- Scrollable items area -->
-    <div class="flex-1 space-y-3 overflow-y-auto p-4" bind:this={scrollableEl}>
-      {#if validationErrors.general}
-        <div
-          class="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          {validationErrors.general}
-        </div>
-      {/if}
+  <div class="space-y-3">
+    {#if validationErrors.general}
+      <div
+        class="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+      >
+        {validationErrors.general}
+      </div>
+    {/if}
 
-      {#if isLoadingData}
-        <div class="flex items-center justify-center py-12">
-          <p class="text-sm text-zinc-500">Loading…</p>
-        </div>
-      {:else}
-        {#each form.items as item (item.uid)}
-          <AcquisitionItemCard
-            {item}
-            index={form.items.indexOf(item)}
-            {manufacturers}
-            {currency}
-            errors={validationErrors.items?.[form.items.indexOf(item)] ?? {}}
-            canRemove={form.items.length > 1}
-            onUpdate={handleUpdateItem}
-            onDuplicate={handleDuplicate}
-            onRemove={handleRemove}
-          />
-        {/each}
-      {/if}
-    </div>
+    {#if isLoadingData}
+      <div class="flex items-center justify-center py-12">
+        <p class="text-sm text-zinc-500">Loading…</p>
+      </div>
+    {:else}
+      {#each form.items as item (item.uid)}
+        <AcquisitionItemCard
+          {item}
+          index={form.items.indexOf(item)}
+          {manufacturers}
+          {currency}
+          errors={validationErrors.items?.[form.items.indexOf(item)] ?? {}}
+          canRemove={form.items.length > 1}
+          onUpdate={handleUpdateItem}
+          onDuplicate={handleDuplicate}
+          onRemove={handleRemove}
+        />
+      {/each}
+    {/if}
+  </div>
 
-    <!-- Sticky footer -->
+  {#snippet footer({ requestClose: _requestClose })}
     <AcquisitionFooter
       {isSubmitting}
       {isLoadingData}
       onAddItem={handleAddItem}
       onFinalize={handleFinalize}
     />
-  </div>
-
-  <!-- Discard changes confirmation dialog -->
-  {#if showDiscardDialog}
-    <div
-      class="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-    >
-      <div class="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-xl">
-        <h3 class="mb-2 text-lg font-bold text-foreground">{m.acquisition_discard_title()}</h3>
-        <p class="mb-4 text-muted-foreground">{m.acquisition_discard_description()}</p>
-        <div class="flex justify-end gap-3">
-          <Button type="button" variant="ghost" onclick={handleDiscardCancel}>
-            {m.acquisition_discard_cancel()}
-          </Button>
-          <Button type="button" variant="destructive" onclick={handleDiscardConfirm}>
-            {m.acquisition_discard_confirm()}
-          </Button>
-        </div>
-      </div>
-    </div>
-  {/if}
-{/if}
+  {/snippet}
+</DrawerShell>

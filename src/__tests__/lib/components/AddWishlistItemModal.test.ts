@@ -73,7 +73,16 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   collection_toast_loading: () => 'Loading...',
   collection_toast_success: () => 'Success',
   collection_toast_error: () => 'Error',
-  collection_toast_retry: () => 'Retry'
+  collection_toast_retry: () => 'Retry',
+  drawer_discard_title: () => 'Discard changes?',
+  drawer_discard_description: () => 'You have unsaved changes. Discard them?',
+  drawer_discard_confirm: () => 'Discard',
+  drawer_discard_cancel: () => 'Keep editing',
+  drawer_section_model_info: () => 'Model Details',
+  drawer_section_wishlist: () => 'Wishlist Preferences',
+  drawer_section_rolling_stocks: () => 'Rolling Stocks',
+  drawer_section_purchase: () => 'Purchase Details',
+  drawer_section_digital: () => 'Digital Settings'
 }));
 
 let activeService: ReturnType<

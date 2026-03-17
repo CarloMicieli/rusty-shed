@@ -3,7 +3,7 @@
   import type { TrackProductView, SellerView, Currency, Manufacturer } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
-  import { Sheet } from '$lib/components/ui/sheet';
+  import { DrawerShell } from '$lib/components/drawer';
   import CreateProductDialog from './CreateProductDialog.svelte';
   import PurchaseFormFields from './PurchaseFormFields.svelte';
   import PurchaseDrawerHeader from './PurchaseDrawerHeader.svelte';
@@ -65,10 +65,6 @@
     onClose?.();
   }
 
-  function handleOpenChange(newOpen: boolean) {
-    if (!newOpen && !showCreateProduct) handleClose();
-  }
-
   function resetForm() {
     selectedProductId = '';
     quantity = 1;
@@ -86,8 +82,8 @@
     selectedProductId = productId;
   }
 
-  async function handleSubmit(e: Event) {
-    e.preventDefault();
+  async function handleSubmit(e?: Event) {
+    e?.preventDefault();
 
     if (!selectedProductId) {
       error = m.track_purchase_validation_product();
@@ -137,46 +133,37 @@
   $effect(() => {
     if (open) {
       loadData();
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
     }
   });
 </script>
 
-<Sheet
-  {open}
-  side="right"
-  onOpenChange={handleOpenChange}
-  class="flex w-full flex-col border-zinc-800 bg-[#0c0c0c] sm:w-full sm:max-w-3xl"
->
-  <PurchaseDrawerHeader onClose={handleClose} disabled={submitting} />
+<DrawerShell {open} onClose={handleClose} size="xl" labelledby="add-purchase-title">
+  {#snippet header({ requestClose })}
+    <PurchaseDrawerHeader onClose={requestClose} disabled={submitting} />
+  {/snippet}
 
-  <form onsubmit={handleSubmit} class="flex min-h-0 flex-1 flex-col">
-    <div class="flex-1 overflow-y-auto p-6">
-      {#if loadingData}
-        <PurchaseLoadingState />
-      {:else}
-        <PurchaseFormFields
-          {products}
-          {sellers}
-          bind:selectedProductId
-          bind:quantity
-          bind:priceAmount
-          bind:priceCurrency
-          bind:selectedSellerId
-          bind:purchaseDate
-          {submitting}
-          {error}
-          onCreateProduct={() => (showCreateProduct = true)}
-        />
-      {/if}
-    </div>
+  {#if loadingData}
+    <PurchaseLoadingState />
+  {:else}
+    <PurchaseFormFields
+      {products}
+      {sellers}
+      bind:selectedProductId
+      bind:quantity
+      bind:priceAmount
+      bind:priceCurrency
+      bind:selectedSellerId
+      bind:purchaseDate
+      {submitting}
+      {error}
+      onCreateProduct={() => (showCreateProduct = true)}
+    />
+  {/if}
 
-    <PurchaseActionFooter onCancel={handleClose} {submitting} />
-  </form>
-</Sheet>
+  {#snippet footer({ requestClose: _requestClose })}
+    <PurchaseActionFooter onCancel={handleClose} {submitting} onSubmit={handleSubmit} />
+  {/snippet}
+</DrawerShell>
 
 <CreateProductDialog
   bind:open={showCreateProduct}

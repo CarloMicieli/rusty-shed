@@ -897,7 +897,6 @@
   "rolling_stock_field_control_type": "Tipo di Controllo",
   "rolling_stock_field_interior_lights": "Luci Interne",
   "rolling_stock_field_lights": "Luci",
-
   "signal_failure_headline": "Guasto al Segnale",
   "signal_failure_subtext": "Si è verificato un errore imprevisto. Utilizza il codice errore qui sotto per segnalarlo al supporto.",
   "signal_failure_action_reset": "Reimposta Segnale",
@@ -909,7 +908,6 @@
   "signal_failure_report_copied": "Codice errore copiato negli appunti",
   "signal_failure_report_copy_failed": "Impossibile copiare il codice errore",
   "signal_toast_title": "Guasto al Segnale",
-
   "module_label_yard_overview": "Panoramica Deposito",
   "module_label_collection_depot": "Deposito Collezione",
   "module_label_wishlist": "Lista dei Desideri",
@@ -918,48 +916,35 @@
   "module_label_global_search": "Ricerca Globale",
   "module_label_settings": "Impostazioni",
   "module_label_signal_box": "Quadro dei Segnali",
-
   "track_purchase_field_market_price": "Prezzo Unitario",
   "track_purchase_field_transaction_date": "Data Acquisto",
   "track_purchase_field_price_placeholder": "0.00",
   "track_purchase_field_product_placeholder": "Seleziona un componente...",
   "track_purchase_field_no_seller": "Nessun venditore specificato",
   "track_purchase_field_system_error": "Errore di sistema",
-
   "wishlists_sidebar_title": "Le Mie Liste",
   "wishlists_sidebar_default_badge": "Predefinita",
   "wishlists_delete_list_title": "Elimina Lista",
-
   "wishlists_move_to_list_title": "Sposta in Lista",
   "wishlists_move_select_destination": "Seleziona una lista di destinazione.",
   "wishlists_move_items_count": "{count} elementi",
   "wishlists_move_cancel": "Annulla",
-
   "dialog_close_button": "Chiudi",
-
   "filter_panel_close_title": "Chiudi filtri",
   "collection_filter_all": "Tutti",
-
   "railway_model_image_alt": "Immagine modello ferroviario",
   "railway_model_no_image": "Nessuna immagine disponibile",
-
   "image_drop_zone_drag_message": "Rilascia qui per aggiornare la foto",
-
   "create_inventory_name_placeholder": "es. Binario Principale, Staging",
   "create_inventory_desc_placeholder": "Descrivi i binari in questo inventario...",
   "create_inventory_saving": "Salvataggio...",
-
   "track_inventory_back_label": "Torna agli inventari",
   "track_inventory_section_label": "Inventario Binari",
-
   "collection_toggle_filters_title": "Attiva/disattiva filtri",
-
   "railway_model_digital_features_label": "Funzionalità digitali",
   "railway_model_sound_equipped_title": "Dotato di suono",
   "railway_model_dcc_equipped_title": "Dotato di DCC",
-
   "railway_model_fallback_en_title": "Contenuto visualizzato in inglese (fallback)",
-
   "acquisition_drawer_title": "Nuovo Acquisto",
   "acquisition_drawer_subtitle": "Registra un acquisto",
   "acquisition_seller_label": "Venditore",
@@ -988,5 +973,14 @@
   "acquisition_validation_product_code": "Il codice prodotto è obbligatorio",
   "acquisition_validation_category": "La categoria è obbligatoria",
   "acquisition_toast_success": "Acquisto salvato con successo",
-  "dashboard_action_new_acquisition": "Nuovo Acquisto"
+  "dashboard_action_new_acquisition": "Nuovo Acquisto",
+  "drawer_discard_title": "Scartare le modifiche?",
+  "drawer_discard_description": "Hai modifiche non salvate. Scartarle?",
+  "drawer_discard_confirm": "Scarta",
+  "drawer_discard_cancel": "Continua a modificare",
+  "drawer_section_model_info": "Dettagli Modello",
+  "drawer_section_rolling_stocks": "Materiale Rotabile",
+  "drawer_section_purchase": "Dettagli Acquisto",
+  "drawer_section_wishlist": "Preferenze Lista Desideri",
+  "drawer_section_digital": "Impostazioni Digitale"
 }

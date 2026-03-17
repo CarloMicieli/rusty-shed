@@ -989,7 +989,6 @@
   "rolling_stock_add_cta": "Add Rolling Stock",
   "rolling_stock_add_more": "+ Add Rolling Stock",
   "rolling_stock_field_category": "Category",
-
   "signal_failure_headline": "Signal Failure",
   "signal_failure_subtext": "An unexpected fault has occurred. Use the error code below to report it to support.",
   "signal_failure_action_reset": "Reset Signal",
@@ -1001,7 +1000,6 @@
   "signal_failure_report_copied": "Error code copied to clipboard",
   "signal_failure_report_copy_failed": "Failed to copy error code",
   "signal_toast_title": "Signal Fault",
-
   "module_label_yard_overview": "Yard Overview",
   "module_label_collection_depot": "Collection Depot",
   "module_label_wishlist": "Wishlist",
@@ -1010,7 +1008,6 @@
   "module_label_global_search": "Global Search",
   "module_label_settings": "Settings",
   "module_label_signal_box": "Signal Box",
-
   "maintenance_no_events": "No events logged yet.",
   "track_purchase_qty": "Qty",
   "track_purchase_total": "Total",
@@ -1021,48 +1018,35 @@
   "toolbar_italic": "Italic",
   "toolbar_bullet_list": "Bullet list",
   "toolbar_ordered_list": "Ordered list",
-
   "track_purchase_field_market_price": "Unit Price",
   "track_purchase_field_transaction_date": "Purchase Date",
   "track_purchase_field_price_placeholder": "0.00",
   "track_purchase_field_product_placeholder": "Select a track component...",
   "track_purchase_field_no_seller": "No vendor specified",
   "track_purchase_field_system_error": "System Error",
-
   "wishlists_sidebar_title": "My Lists",
   "wishlists_sidebar_default_badge": "Default",
   "wishlists_delete_list_title": "Delete List",
-
   "wishlists_move_to_list_title": "Move to List",
   "wishlists_move_select_destination": "Select a destination wishlist.",
   "wishlists_move_items_count": "{count} items",
   "wishlists_move_cancel": "Cancel",
-
   "dialog_close_button": "Close",
-
   "filter_panel_close_title": "Close filters",
   "collection_filter_all": "All",
-
   "railway_model_image_alt": "Railway model image",
   "railway_model_no_image": "No image available",
-
   "image_drop_zone_drag_message": "Drop here to update photo",
-
   "create_inventory_name_placeholder": "e.g. Mainline Layout, Workshop Staging",
   "create_inventory_desc_placeholder": "Describe the tracks in this inventory...",
   "create_inventory_saving": "Saving...",
-
   "track_inventory_back_label": "Back to inventories",
   "track_inventory_section_label": "Track Inventory",
-
   "collection_toggle_filters_title": "Toggle filters",
-
   "railway_model_digital_features_label": "Digital features",
   "railway_model_sound_equipped_title": "Sound equipped",
   "railway_model_dcc_equipped_title": "DCC equipped",
-
   "railway_model_fallback_en_title": "Content displayed in English (fallback)",
-
   "acquisition_drawer_title": "New Acquisition",
   "acquisition_drawer_subtitle": "Record a purchase",
   "acquisition_seller_label": "Seller",
@@ -1091,5 +1075,14 @@
   "acquisition_validation_product_code": "Product code is required",
   "acquisition_validation_category": "Category is required",
   "acquisition_toast_success": "Acquisition saved successfully",
-  "dashboard_action_new_acquisition": "New Acquisition"
+  "dashboard_action_new_acquisition": "New Acquisition",
+  "drawer_discard_title": "Discard changes?",
+  "drawer_discard_description": "You have unsaved changes. Discard them?",
+  "drawer_discard_confirm": "Discard",
+  "drawer_discard_cancel": "Keep editing",
+  "drawer_section_model_info": "Model Details",
+  "drawer_section_rolling_stocks": "Rolling Stocks",
+  "drawer_section_purchase": "Purchase Details",
+  "drawer_section_wishlist": "Wishlist Preferences",
+  "drawer_section_digital": "Digital Settings"
 }

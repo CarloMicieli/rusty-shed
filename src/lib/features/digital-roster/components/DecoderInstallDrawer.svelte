@@ -9,19 +9,15 @@
     DigitalRollingStockView
   } from '$lib/bindings';
   import { getDigitalRosterContext } from '../DigitalRosterState.svelte';
-  import { today, getLocalTimeZone } from '@internationalized/date';
-  import { Button, Input, DatePickerField } from '$lib/components';
+  import { Button } from '$lib/components';
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
-  import DecoderDiscardDialog from './DecoderDiscardDialog.svelte';
   import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
   import DecoderPicker from './DecoderPicker.svelte';
+  import { DrawerShell, DigitalSection } from '$lib/components/drawer';
 
   interface Props {
-    /** Controls drawer visibility */
     open: boolean;
-    /** Callback when drawer requests close */
     onClose: () => void;
-    /** Callback when decoder is successfully installed */
     onSuccess: () => void;
   }
 
@@ -44,7 +40,6 @@
   let isLoadingData = $state(false);
   let isSubmitting = $state(false);
   let showConfirmDialog = $state(false);
-  let showDiscardDialog = $state(false);
   let duplicateWarning = $state<string | null>(null);
 
   // Validation
@@ -70,17 +65,13 @@
 
   let isFormValid = $derived.by(() => {
     if (!touched) return false;
-
     const errors = validateForm();
     validationErrors = errors;
     return Object.keys(errors).length === 0 && !duplicateWarning;
   });
 
   let existingDigitalRollingStock = $derived.by((): DigitalRollingStockView | null => {
-    if (!selectedRollingStock || !controller.state.rollingStocks) {
-      return null;
-    }
-
+    if (!selectedRollingStock || !controller.state.rollingStocks) return null;
     return (
       controller.state.rollingStocks.find(
         (drs) => drs.owned_rolling_stock_id === selectedRollingStockId
@@ -88,27 +79,13 @@
     );
   });
 
-  // Watch for drawer open
   $effect(() => {
-    if (open) {
-      handleOpen();
-    }
+    if (open) handleOpen();
   });
 
-  // Watch for rolling stock changes to check for existing decoder
   $effect(() => {
     if (selectedRollingStock?.has_decoder && existingDigitalRollingStock) {
-      // Pre-fill the address from existing decoder
       dccAddress = existingDigitalRollingStock.dcc_address;
-    }
-  });
-
-  // Watch for address changes to check for duplicates
-  $effect(() => {
-    if (dccAddress !== null && dccAddress >= 1 && dccAddress <= 9999) {
-      checkDuplicateAddress();
-    } else {
-      duplicateWarning = null;
     }
   });
 
@@ -127,31 +104,22 @@
     validationErrors = {};
     duplicateWarning = null;
     showConfirmDialog = false;
-    showDiscardDialog = false;
   }
 
   async function loadReferenceData() {
     try {
       isLoadingData = true;
-
       const [installableResult, decodersResult, manufacturersResult] = await Promise.all([
         commands.getInstallableRollingStocks(),
         commands.getDecoders(),
         commands.getManufacturers()
       ]);
 
-      if (installableResult.status === 'ok') {
-        installableRollingStocks = installableResult.data;
-      }
-
+      if (installableResult.status === 'ok') installableRollingStocks = installableResult.data;
       if (decodersResult.status === 'ok') {
-        // Filter out Function decoders
         decoders = decodersResult.data.filter((d) => d.decoderType !== 'FUNCTION');
       }
-
-      if (manufacturersResult.status === 'ok') {
-        manufacturers = manufacturersResult.data;
-      }
+      if (manufacturersResult.status === 'ok') manufacturers = manufacturersResult.data;
     } catch (error) {
       console.error('Error loading reference data:', error);
     } finally {
@@ -161,54 +129,30 @@
 
   function validateForm() {
     const errors: typeof validationErrors = {};
-
-    if (!selectedRollingStockId) {
-      errors.rollingStock = m.digital_roster_validation_rolling_stock();
-    }
-
-    if (!selectedDecoderId) {
-      errors.decoder = m.digital_roster_validation_decoder();
-    }
-
+    if (!selectedRollingStockId) errors.rollingStock = m.digital_roster_validation_rolling_stock();
+    if (!selectedDecoderId) errors.decoder = m.digital_roster_validation_decoder();
     if (dccAddress === null || dccAddress < 1 || dccAddress > 9999) {
       errors.address = m.digital_roster_address_range();
     }
-
     return errors;
   }
 
-  async function checkDuplicateAddress() {
-    if (!dccAddress) {
-      duplicateWarning = null;
-      return;
-    }
-
-    const excludeId = existingDigitalRollingStock?.id ?? null;
-    const result = await controller.checkDuplicateAddress(dccAddress, excludeId);
-
-    if (result.isDuplicate) {
-      duplicateWarning = m.digital_roster_duplicate_warning({ address: dccAddress.toString() });
+  async function handleAddressChange(addr: number | null) {
+    if (addr !== null && addr >= 1 && addr <= 9999) {
+      const excludeId = existingDigitalRollingStock?.id ?? null;
+      const result = await controller.checkDuplicateAddress(addr, excludeId);
+      duplicateWarning = result.isDuplicate
+        ? m.digital_roster_duplicate_warning({ address: addr.toString() })
+        : null;
     } else {
       duplicateWarning = null;
-    }
-  }
-
-  function handleCloseRequest() {
-    if (hasChanges) {
-      showDiscardDialog = true;
-    } else {
-      onClose();
     }
   }
 
   async function handleSubmit() {
     touched = true;
+    if (!isFormValid) return;
 
-    if (!isFormValid) {
-      return;
-    }
-
-    // Check if we need to show replacement confirmation
     if (selectedRollingStock?.has_decoder && !showConfirmDialog) {
       showConfirmDialog = true;
       return;
@@ -218,28 +162,21 @@
   }
 
   async function performInstallation() {
-    if (!selectedRollingStockId || !selectedDecoderId || dccAddress === null) {
-      return;
-    }
+    if (!selectedRollingStockId || !selectedDecoderId || dccAddress === null) return;
 
     try {
       isSubmitting = true;
-
       let success: boolean;
 
       if (existingDigitalRollingStock) {
-        // Replace existing decoder
         success = await controller.replaceDecoder(
           existingDigitalRollingStock.id,
           selectedDecoderId
         );
-
-        // Also update address if it changed
         if (success && dccAddress !== existingDigitalRollingStock.dcc_address) {
           success = await controller.changeDccAddress(existingDigitalRollingStock.id, dccAddress);
         }
       } else {
-        // Install new decoder
         success = await controller.installDecoder(
           selectedRollingStockId,
           selectedDecoderId,
@@ -263,47 +200,16 @@
     showConfirmDialog = false;
     performInstallation();
   }
-
-  function handleCancelReplace() {
-    showConfirmDialog = false;
-  }
-
-  function handleDiscardConfirm() {
-    showDiscardDialog = false;
-    onClose();
-  }
-
-  function handleDiscardCancel() {
-    showDiscardDialog = false;
-  }
 </script>
 
-<!-- Drawer Overlay -->
-{#if open}
-  <div
-    class="fixed inset-0 z-50 bg-black/50"
-    onclick={handleCloseRequest}
-    role="presentation"
-  ></div>
-{/if}
-
-<!-- Drawer Container -->
-<div
-  class="fixed top-0 right-0 z-50 h-full w-full max-w-2xl transform transition-transform duration-300 ease-in-out"
-  class:translate-x-0={open}
-  class:translate-x-full={!open}
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="drawer-title"
->
-  <div class="flex h-full flex-col overflow-y-auto border-l border-border/60 bg-card shadow-2xl">
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-border/60 p-6">
+<DrawerShell {open} {onClose} size="lg" {hasChanges} labelledby="decoder-install-drawer-title">
+  {#snippet header({ requestClose })}
+    <div class="flex items-center justify-between p-6">
       <div>
         <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
           {m.app_digital_roster()}
         </p>
-        <h2 id="drawer-title" class="text-xl font-semibold">
+        <h2 id="decoder-install-drawer-title" class="text-xl font-semibold">
           {m.digital_roster_install_decoder()}
         </h2>
       </div>
@@ -312,109 +218,73 @@
         variant="ghost"
         size="icon"
         class="h-8 w-8"
-        onclick={handleCloseRequest}
+        onclick={requestClose}
         aria-label={m.add_model_cancel()}
       >
         <X size={16} />
       </Button>
     </div>
+  {/snippet}
 
-    <!-- Content (scrollable) -->
-    <div class="flex-1 overflow-y-auto p-6">
-      {#if isLoadingData}
-        <div class="flex items-center justify-center py-8">
-          <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
-        </div>
-      {:else}
-        <form id="install-decoder-form" class="space-y-6" onsubmit={(e) => e.preventDefault()}>
-          <!-- Rolling Stock Selection -->
-          <DecoderRollingStockPicker
-            rollingStocks={installableRollingStocks}
-            selectedId={selectedRollingStockId}
-            error={validationErrors.rollingStock}
-            {touched}
-            onChange={(id) => (selectedRollingStockId = id)}
-          />
-
-          <!-- Decoder Selection -->
-          <DecoderPicker
-            {decoders}
-            {manufacturers}
-            selectedId={selectedDecoderId}
-            error={validationErrors.decoder}
-            {touched}
-            onChange={(id) => (selectedDecoderId = id)}
-          />
-
-          <!-- DCC Address -->
-          <div>
-            <label for="dcc-address" class="block space-y-1">
-              <span class="text-sm text-muted-foreground">{m.digital_roster_address_label()}</span>
-            </label>
-            <Input
-              id="dcc-address"
-              type="number"
-              min="1"
-              max="9999"
-              value={dccAddress ? String(dccAddress) : ''}
-              oninput={(e) => (dccAddress = parseInt(e.currentTarget.value) || null)}
-              placeholder="1-9999"
-            />
-            {#if touched && validationErrors.address}
-              <p class="text-error-500 mt-1 text-xs">{validationErrors.address}</p>
-            {/if}
-            {#if duplicateWarning}
-              <p class="text-warning-500 mt-1 text-xs">{duplicateWarning}</p>
-            {/if}
-          </div>
-
-          <!-- Installation Date (for future use, not currently stored) -->
-          <div>
-            <label for="installation-date" class="block space-y-1">
-              <span class="text-sm text-muted-foreground">{m.digital_roster_date_label()}</span>
-            </label>
-            <DatePickerField
-              id="installation-date"
-              bind:value={installationDate}
-              maxValue={today(getLocalTimeZone())}
-            />
-          </div>
-        </form>
-      {/if}
+  {#if isLoadingData}
+    <div class="flex items-center justify-center py-8">
+      <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
     </div>
+  {:else}
+    <form id="install-decoder-form" class="space-y-6" onsubmit={(e) => e.preventDefault()}>
+      <DecoderRollingStockPicker
+        rollingStocks={installableRollingStocks}
+        selectedId={selectedRollingStockId}
+        error={validationErrors.rollingStock}
+        {touched}
+        onChange={(id) => (selectedRollingStockId = id)}
+      />
 
-    <!-- Footer -->
-    <div class="border-t border-border/60 p-6">
-      <div class="flex justify-end gap-3">
-        <Button type="button" variant="ghost" onclick={handleCloseRequest} disabled={isSubmitting}>
-          {m.add_model_cancel()}
-        </Button>
-        <Button
-          type="submit"
-          variant="default"
-          onclick={handleSubmit}
-          disabled={isSubmitting || isLoadingData || (!touched && !isFormValid)}
-        >
-          {#if isSubmitting}
-            {m.app_loading()}
-          {:else}
-            {m.digital_roster_save()}
-          {/if}
-        </Button>
-      </div>
+      <DecoderPicker
+        {decoders}
+        {manufacturers}
+        selectedId={selectedDecoderId}
+        error={validationErrors.decoder}
+        {touched}
+        onChange={(id) => (selectedDecoderId = id)}
+      />
+
+      <DigitalSection
+        bind:dccAddress
+        bind:installationDate
+        onAddressChange={handleAddressChange}
+        {duplicateWarning}
+        errors={validationErrors}
+        {touched}
+        disabled={isSubmitting}
+      />
+    </form>
+  {/if}
+
+  {#snippet footer({ requestClose })}
+    <div class="flex justify-end gap-3 p-6">
+      <Button type="button" variant="ghost" onclick={requestClose} disabled={isSubmitting}>
+        {m.add_model_cancel()}
+      </Button>
+      <Button
+        type="submit"
+        variant="default"
+        onclick={handleSubmit}
+        disabled={isSubmitting || isLoadingData || (!touched && !isFormValid)}
+      >
+        {#if isSubmitting}
+          {m.app_loading()}
+        {:else}
+          {m.digital_roster_save()}
+        {/if}
+      </Button>
     </div>
-  </div>
-</div>
+  {/snippet}
+</DrawerShell>
 
 <DecoderInstallConfirmDialog
   open={showConfirmDialog}
   {isSubmitting}
   onConfirm={handleConfirmReplace}
-  onCancel={handleCancelReplace}
-/>
-
-<DecoderDiscardDialog
-  open={showDiscardDialog}
-  onConfirm={handleDiscardConfirm}
-  onCancel={handleDiscardCancel}
+  onCancel={() => (showConfirmDialog = false)}
 />
