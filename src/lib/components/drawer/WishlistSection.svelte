@@ -1,8 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { DrawerSectionBar, DrawerInput } from '$lib/components/drawer';
-  import { CurrencyInput } from '$lib/components';
+  import { DrawerSectionBar, DrawerInput, FormPrice } from '$lib/components/drawer';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import type { WishlistPreview, WishlistPriority } from '$lib/bindings';
   import { PRIORITIES } from '$lib/features/wishlists/constants';
@@ -135,22 +134,15 @@
     </div>
 
     <!-- Desired price -->
-    <div class="space-y-1">
-      <label for="wishlist-section-desired-price" class="text-xs text-zinc-400">
-        {m.wishlist_modal_desired_price()}
-      </label>
-      <CurrencyInput
-        id="wishlist-section-desired-price"
-        bind:value={desiredPrice}
-        symbol={currencySymbol}
-        label={m.wishlist_modal_desired_price()}
-        inputClass="bg-[#0F0F0F] border-[#1F1F1F] rounded-[8px] text-[#E0E0E0] placeholder:text-[#808080]"
-        {disabled}
-      />
-      {#if errors.desiredPrice}
-        <p class="text-xs text-destructive">{errors.desiredPrice}</p>
-      {/if}
-    </div>
+    <FormPrice
+      label={m.wishlist_modal_desired_price()}
+      id="wishlist-section-desired-price"
+      bind:value={desiredPrice}
+      symbol={currencySymbol}
+      inputClass="bg-[#0F0F0F] border-[#1F1F1F] rounded-[8px] text-[#E0E0E0] placeholder:text-[#808080]"
+      {disabled}
+      error={errors.desiredPrice}
+    />
 
     <!-- Notes (optional) -->
     {#if notes !== undefined}

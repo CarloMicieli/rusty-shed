@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { DrawerSectionBar, DrawerInput } from '$lib/components/drawer';
+  import { DrawerSectionBar, FormInput, FormSelect } from '$lib/components/drawer';
   import type { Manufacturer } from '$lib/bindings';
   import { CATEGORIES, SCALES, POWER_METHODS, EPOCHS } from '$lib/features/wishlists/constants';
 
@@ -89,10 +89,9 @@
   {#if expanded}
     <!-- Manufacturer + Product Code -->
     <div class="grid grid-cols-[2fr_1fr] gap-3">
+      <!-- Manufacturer: kept inline due to loading state -->
       <div class="space-y-1">
-        <span class="text-xs text-zinc-400">
-          {m.wishlist_modal_manufacturer()} *
-        </span>
+        <span class="text-xs text-zinc-400">{m.wishlist_modal_manufacturer()} *</span>
         {#if isLoading}
           <p class="text-sm text-zinc-500">{m.wishlist_modal_loading()}</p>
         {:else}
@@ -126,151 +125,64 @@
         {/if}
       </div>
 
-      <div class="space-y-1">
-        <label for="model-info-product-code" class="text-xs text-zinc-400">
-          {m.wishlist_modal_product_code()} *
-        </label>
-        <DrawerInput
-          id="model-info-product-code"
-          type="text"
-          placeholder={m.wishlist_modal_product_code_placeholder()}
-          bind:value={productCode}
-          {disabled}
-        />
-        {#if errors.productCode}
-          <p class="text-xs text-destructive">{errors.productCode}</p>
-        {/if}
-      </div>
+      <FormInput
+        label={m.wishlist_modal_product_code()}
+        id="model-info-product-code"
+        type="text"
+        placeholder={m.wishlist_modal_product_code_placeholder()}
+        bind:value={productCode}
+        {disabled}
+        required
+        error={errors.productCode}
+      />
     </div>
 
     <!-- Description -->
-    <div class="space-y-1">
-      <label for="model-info-description" class="text-xs text-zinc-400">
-        {m.wishlist_modal_description()} *
-      </label>
-      <DrawerInput
-        id="model-info-description"
-        type="text"
-        placeholder={m.wishlist_modal_description_placeholder()}
-        bind:value={description}
-        {disabled}
-      />
-      {#if errors.description}
-        <p class="text-xs text-destructive">{errors.description}</p>
-      {/if}
-    </div>
+    <FormInput
+      label={m.wishlist_modal_description()}
+      id="model-info-description"
+      type="text"
+      placeholder={m.wishlist_modal_description_placeholder()}
+      bind:value={description}
+      {disabled}
+      required
+      error={errors.description}
+    />
 
     <!-- Category -->
-    <div class="space-y-1">
-      <span class="text-xs text-zinc-400">
-        {m.wishlist_modal_category()}
-      </span>
-      <Select.Root
-        type="single"
-        value={category || undefined}
-        {disabled}
-        onValueChange={(v) => {
-          category = v;
-        }}
-      >
-        <Select.Trigger class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]">
-          {#if category}
-            {getCategoryLabel(category)}
-          {:else}
-            <span class="text-zinc-500">—</span>
-          {/if}
-        </Select.Trigger>
-        <Select.Content>
-          {#each CATEGORIES as cat (cat)}
-            <Select.Item value={cat} label={getCategoryLabel(cat)} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
+    <FormSelect
+      label={m.wishlist_modal_category()}
+      options={CATEGORIES.map((cat) => ({ value: cat, label: getCategoryLabel(cat) }))}
+      bind:value={category}
+      {disabled}
+    />
 
     <!-- Scale + Power Method -->
     <div class="grid grid-cols-2 gap-3">
-      <div class="space-y-1">
-        <span class="text-xs text-zinc-400">
-          {m.wishlist_modal_scale()}
-        </span>
-        <Select.Root
-          type="single"
-          value={scale || undefined}
-          {disabled}
-          onValueChange={(v) => {
-            scale = v;
-          }}
-        >
-          <Select.Trigger class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]">
-            {#if scale}
-              {SCALE_DISPLAY_MAP[scale] ?? scale}
-            {:else}
-              <span class="text-zinc-500">—</span>
-            {/if}
-          </Select.Trigger>
-          <Select.Content>
-            {#each SCALES as s (s)}
-              <Select.Item value={s} label={SCALE_DISPLAY_MAP[s] ?? s} />
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
-
-      <div class="space-y-1">
-        <span class="text-xs text-zinc-400">
-          {m.wishlist_modal_power_method()}
-        </span>
-        <Select.Root
-          type="single"
-          value={powerMethod || undefined}
-          {disabled}
-          onValueChange={(v) => {
-            powerMethod = v;
-          }}
-        >
-          <Select.Trigger class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]">
-            {#if powerMethod}
-              {getPowerMethodLabel(powerMethod)}
-            {:else}
-              <span class="text-zinc-500">—</span>
-            {/if}
-          </Select.Trigger>
-          <Select.Content>
-            {#each POWER_METHODS as method (method)}
-              <Select.Item value={method} label={getPowerMethodLabel(method)} />
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
+      <FormSelect
+        label={m.wishlist_modal_scale()}
+        options={SCALES.map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] ?? s }))}
+        bind:value={scale}
+        {disabled}
+      />
+      <FormSelect
+        label={m.wishlist_modal_power_method()}
+        options={POWER_METHODS.map((method) => ({
+          value: method,
+          label: getPowerMethodLabel(method)
+        }))}
+        bind:value={powerMethod}
+        {disabled}
+      />
     </div>
 
     <!-- Epoch -->
-    <div class="space-y-1">
-      <span class="text-xs text-zinc-400">
-        {m.wishlist_modal_epoch()}
-      </span>
-      <Select.Root
-        type="single"
-        value={epoch ?? undefined}
-        {disabled}
-        onValueChange={(v) => {
-          epoch = v;
-        }}
-      >
-        <Select.Trigger class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]">
-          {#if epoch}
-            {epoch}
-          {:else}
-            <span class="text-zinc-500">{m.wishlist_modal_epoch_placeholder()}</span>
-          {/if}
-        </Select.Trigger>
-        <Select.Content>
-          {#each EPOCHS as ep (ep)}
-            <Select.Item value={ep} label={ep} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
+    <FormSelect
+      label={m.wishlist_modal_epoch()}
+      options={EPOCHS.map((ep) => ({ value: ep, label: ep }))}
+      bind:value={epoch}
+      placeholder={m.wishlist_modal_epoch_placeholder()}
+      {disabled}
+    />
   {/if}
 </div>

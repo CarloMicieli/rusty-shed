@@ -3,7 +3,8 @@
   import { Plus, Tag, Store } from 'lucide-svelte';
   import type { TrackProductView, SellerView, Currency } from '$lib/bindings';
   import type { Component } from 'svelte';
-  import { Input, Button, DatePickerField, CurrencyInput } from '$lib/components';
+  import { Input, Button, DatePickerField } from '$lib/components';
+  import { FormPrice } from '$lib/components/drawer';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 
@@ -118,13 +119,8 @@
 
     <!-- Unit Price -->
     <div class="space-y-2">
-      <label
-        for="purchase-price"
-        class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-      >
-        {m.track_purchase_field_market_price()}
-      </label>
-      <CurrencyInput
+      <FormPrice
+        label={m.track_purchase_field_market_price()}
         id="purchase-price"
         bind:value={priceAmount}
         symbol={currencySymbol}
