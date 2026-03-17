@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
+  import { FormSelect } from '$lib/components/drawer';
 
   interface BoolOption {
     value: string;
@@ -38,13 +39,13 @@
 
   let {
     flywheelFitted,
-    bodyShell,
-    chassis,
-    interiorLights,
-    lights,
-    dccInterface,
-    control,
-    couplingSocket,
+    bodyShell = $bindable(),
+    chassis = $bindable(),
+    interiorLights = $bindable(),
+    lights = $bindable(),
+    dccInterface = $bindable(),
+    control = $bindable(),
+    couplingSocket = $bindable(),
     closeCouplers,
     digitalShunting,
     boolOptions,
@@ -60,6 +61,40 @@
     boolValue,
     parseBool
   }: Props = $props();
+
+  // Local string mirrors for boolean props (bridge between string-based FormSelect and bool props).
+  // These must stay writable ($state) so FormSelect can bind:value back to them.
+  // The $effect sync below is intentional — $derived cannot be used on writable locals.
+  /* eslint-disable svelte/prefer-writable-derived */
+  let flywheelStr = $state('');
+  let closeCouplersStr = $state('');
+  let digitalShuntingStr = $state('');
+
+  // Sync prop → local when the parent updates the bool props externally (also runs on mount)
+  $effect(() => {
+    flywheelStr = boolValue(flywheelFitted);
+  });
+  $effect(() => {
+    closeCouplersStr = boolValue(closeCouplers);
+  });
+  $effect(() => {
+    digitalShuntingStr = boolValue(digitalShunting);
+  });
+  /* eslint-enable svelte/prefer-writable-derived */
+
+  // Propagate local string changes back to parent via callbacks
+  $effect(() => {
+    onFlywheelChange(parseBool(flywheelStr));
+  });
+  $effect(() => {
+    onCloseCouplersChange(parseBool(closeCouplersStr));
+  });
+  $effect(() => {
+    onDigitalShuntingChange(parseBool(digitalShuntingStr));
+  });
+
+  // Prepend the empty option for bool fields so FormSelect can show "—" for null
+  const boolSelectOptions = $derived([{ value: '', label: '—' }, ...boolOptions]);
 </script>
 
 <!-- ── Technical section ───────────────────────────────────────── -->
@@ -68,80 +103,36 @@
     {m.specs_drawer_section_technical()}
   </h3>
   <div class="grid grid-cols-2 gap-3">
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-flywheel">
-        {m.specs_drawer_field_flywheel()}
-      </label>
-      <select
-        id="drawer-flywheel"
-        value={boolValue(flywheelFitted)}
-        onchange={(e) => {
-          onFlywheelChange(parseBool((e.target as HTMLSelectElement).value));
-        }}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        <option value="">—</option>
-        {#each boolOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-body-shell">
-        {m.specs_drawer_field_body_material()}
-      </label>
-      <select
-        id="drawer-body-shell"
-        bind:value={bodyShell}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each bodyShellOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-chassis">
-        {m.specs_drawer_field_chassis_material()}
-      </label>
-      <select
-        id="drawer-chassis"
-        bind:value={chassis}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each chassisOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-interior-lights">
-        {m.specs_drawer_field_lighting()} (interior)
-      </label>
-      <select
-        id="drawer-interior-lights"
-        bind:value={interiorLights}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each featureFlagOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-lights">
-        {m.specs_drawer_field_lighting()} (headlights)
-      </label>
-      <select
-        id="drawer-lights"
-        bind:value={lights}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each featureFlagOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="drawer-flywheel"
+      label={m.specs_drawer_field_flywheel()}
+      options={boolSelectOptions}
+      bind:value={flywheelStr}
+    />
+    <FormSelect
+      id="drawer-body-shell"
+      label={m.specs_drawer_field_body_material()}
+      options={bodyShellOptions}
+      bind:value={bodyShell}
+    />
+    <FormSelect
+      id="drawer-chassis"
+      label={m.specs_drawer_field_chassis_material()}
+      options={chassisOptions}
+      bind:value={chassis}
+    />
+    <FormSelect
+      id="drawer-interior-lights"
+      label="{m.specs_drawer_field_lighting()} (interior)"
+      options={featureFlagOptions}
+      bind:value={interiorLights}
+    />
+    <FormSelect
+      id="drawer-lights"
+      label="{m.specs_drawer_field_lighting()} (headlights)"
+      options={featureFlagOptions}
+      bind:value={lights}
+    />
   </div>
 </section>
 
@@ -151,34 +142,18 @@
     {m.specs_drawer_section_control()}
   </h3>
   <div class="grid grid-cols-2 gap-3">
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-control">
-        {m.specs_drawer_field_control_type()}
-      </label>
-      <select
-        id="drawer-control"
-        bind:value={control}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each controlOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-dcc-interface">
-        {m.specs_drawer_field_dcc_interface()}
-      </label>
-      <select
-        id="drawer-dcc-interface"
-        bind:value={dccInterface}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each dccInterfaceOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="drawer-control"
+      label={m.specs_drawer_field_control_type()}
+      options={controlOptions}
+      bind:value={control}
+    />
+    <FormSelect
+      id="drawer-dcc-interface"
+      label={m.specs_drawer_field_dcc_interface()}
+      options={dccInterfaceOptions}
+      bind:value={dccInterface}
+    />
   </div>
 </section>
 
@@ -188,55 +163,23 @@
     {m.specs_drawer_section_coupling()}
   </h3>
   <div class="grid grid-cols-2 gap-3">
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-coupling-socket">
-        {m.specs_drawer_field_coupling_socket()}
-      </label>
-      <select
-        id="drawer-coupling-socket"
-        bind:value={couplingSocket}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        {#each couplingSockeOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-close-couplers">
-        {m.specs_drawer_field_close_coupling()}
-      </label>
-      <select
-        id="drawer-close-couplers"
-        value={boolValue(closeCouplers)}
-        onchange={(e) => {
-          onCloseCouplersChange(parseBool((e.target as HTMLSelectElement).value));
-        }}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        <option value="">—</option>
-        {#each boolOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-digital-shunting">
-        {m.specs_drawer_field_digital_shunting()}
-      </label>
-      <select
-        id="drawer-digital-shunting"
-        value={boolValue(digitalShunting)}
-        onchange={(e) => {
-          onDigitalShuntingChange(parseBool((e.target as HTMLSelectElement).value));
-        }}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
-      >
-        <option value="">—</option>
-        {#each boolOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="drawer-coupling-socket"
+      label={m.specs_drawer_field_coupling_socket()}
+      options={couplingSockeOptions}
+      bind:value={couplingSocket}
+    />
+    <FormSelect
+      id="drawer-close-couplers"
+      label={m.specs_drawer_field_close_coupling()}
+      options={boolSelectOptions}
+      bind:value={closeCouplersStr}
+    />
+    <FormSelect
+      id="drawer-digital-shunting"
+      label={m.specs_drawer_field_digital_shunting()}
+      options={boolSelectOptions}
+      bind:value={digitalShuntingStr}
+    />
   </div>
 </section>

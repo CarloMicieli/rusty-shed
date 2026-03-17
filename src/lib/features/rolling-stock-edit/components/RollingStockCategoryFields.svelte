@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
+  import { FormSelect } from '$lib/components/drawer';
 
   interface Props {
     railwayCompanyId: string;
@@ -18,6 +19,22 @@
     categoryOptions,
     onCompanySelect
   }: Props = $props();
+
+  // Map company options to the { value, label } shape FormSelect expects
+  const mappedCompanyOptions = $derived(
+    companyOptions.map((c) => ({ value: c.id, label: c.label }))
+  );
+
+  // Sync railwayCompanyName and fire callback whenever the selected company changes
+  $effect(() => {
+    if (!railwayCompanyId) return;
+    railwayCompanyName =
+      companyOptions.find((c) => c.id === railwayCompanyId)?.label ?? railwayCompanyId;
+    onCompanySelect?.(railwayCompanyId, railwayCompanyName);
+  });
+
+  // Filter out the blank sentinel option from categoryOptions — FormSelect uses its placeholder instead
+  const filteredCategoryOptions = $derived(categoryOptions.filter((o) => o.value !== ''));
 </script>
 
 <section>
@@ -26,48 +43,25 @@
   </h3>
   <div class="space-y-4">
     <!-- Railway Company -->
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-company">
-        {m.model_rolling_stock_field_company()} <span class="text-red-400">*</span>
-      </label>
-      {#if companyOptions.length > 0}
-        <select
-          id="create-company"
-          value={railwayCompanyId}
-          onchange={(e) => {
-            const id = (e.target as HTMLSelectElement).value;
-            const name = companyOptions.find((c) => c.id === id)?.label ?? id;
-            railwayCompanyId = id;
-            railwayCompanyName = name;
-            onCompanySelect?.(id, name);
-          }}
-          class="flex h-10 w-full rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] px-3 py-2 text-sm text-[#E0E0E0] focus:border-[#D48A42]/60 focus:ring-2 focus:ring-[#D48A42]/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <option value="" disabled>{m.rolling_stock_select_company()}</option>
-          {#each companyOptions as opt (opt.id)}
-            <option value={opt.id}>{opt.label}</option>
-          {/each}
-        </select>
-      {:else}
-        <p class="text-xs text-zinc-500">Loading…</p>
-      {/if}
-    </div>
+    <FormSelect
+      id="create-company"
+      label={m.model_rolling_stock_field_company()}
+      options={mappedCompanyOptions}
+      bind:value={railwayCompanyId}
+      isSearchable={true}
+      placeholder={m.rolling_stock_select_company()}
+      disabled={companyOptions.length === 0}
+      required
+    />
 
     <!-- Category -->
-    <div>
-      <label class="mb-1 block text-xs font-medium text-zinc-400" for="create-category">
-        {m.rolling_stock_field_category()} <span class="text-red-400">*</span>
-      </label>
-      <select
-        id="create-category"
-        bind:value={category}
-        class="flex h-10 w-full rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] px-3 py-2 text-sm text-[#E0E0E0] focus:border-[#D48A42]/60 focus:ring-2 focus:ring-[#D48A42]/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <option value="" disabled>{m.rolling_stock_select_category()}</option>
-        {#each categoryOptions as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="create-category"
+      label={m.rolling_stock_field_category()}
+      options={filteredCategoryOptions}
+      bind:value={category}
+      placeholder={m.rolling_stock_select_category()}
+      required
+    />
   </div>
 </section>

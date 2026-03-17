@@ -2,6 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { ChevronDown, ChevronRight } from 'lucide-svelte';
   import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
+  import { FormSelect } from '$lib/components/drawer';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import type { SellerView } from '$lib/bindings';
   import type { PurchaseFormState } from '$lib/features/collection/types/AddModelFormTypes';
@@ -27,38 +28,37 @@
     dark = false
   }: Props = $props();
 
-  const darkInput =
-    'flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
-  const lightSelect =
-    'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
   const darkTextarea =
     'w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none resize-none';
 
-  // Purchase conditions (from bindings)
-  const purchaseConditions = [
-    { id: 'NEW', label: 'New' },
-    { id: 'PRE_OWNED', label: 'Pre-owned' }
+  // Map sellers to FormSelect option shape
+  const sellerOptions = $derived(sellers.map((s) => ({ value: s.id, label: s.name })));
+
+  // Purchase conditions
+  const purchaseConditionOptions = [
+    { value: 'NEW', label: 'New' },
+    { value: 'PRE_OWNED', label: 'Pre-owned' }
   ];
 
   // Model conditions
-  const modelConditions = [
-    { id: 'MINT', label: 'Mint' },
-    { id: 'NEAR_MINT', label: 'Near Mint' },
-    { id: 'EXCELLENT', label: 'Excellent' },
-    { id: 'VERY_GOOD', label: 'Very Good' },
-    { id: 'GOOD', label: 'Good' },
-    { id: 'FAIR', label: 'Fair' },
-    { id: 'POOR', label: 'Poor' },
-    { id: 'FOR_PARTS', label: 'For Parts' }
+  const modelConditionOptions = [
+    { value: 'MINT', label: 'Mint' },
+    { value: 'NEAR_MINT', label: 'Near Mint' },
+    { value: 'EXCELLENT', label: 'Excellent' },
+    { value: 'VERY_GOOD', label: 'Very Good' },
+    { value: 'GOOD', label: 'Good' },
+    { value: 'FAIR', label: 'Fair' },
+    { value: 'POOR', label: 'Poor' },
+    { value: 'FOR_PARTS', label: 'For Parts' }
   ];
 
   // Box conditions
-  const boxConditions = [
-    { id: 'ORIGINAL_MINT', label: 'Original - Mint' },
-    { id: 'ORIGINAL_GOOD', label: 'Original - Good' },
-    { id: 'ORIGINAL_WORN', label: 'Original - Worn' },
-    { id: 'REPLACEMENT_BOX', label: 'Replacement Box' },
-    { id: 'NO_BOX', label: 'No Box' }
+  const boxConditionOptions = [
+    { value: 'ORIGINAL_MINT', label: 'Original - Mint' },
+    { value: 'ORIGINAL_GOOD', label: 'Original - Good' },
+    { value: 'ORIGINAL_WORN', label: 'Original - Worn' },
+    { value: 'REPLACEMENT_BOX', label: 'Replacement Box' },
+    { value: 'NO_BOX', label: 'No Box' }
   ];
 </script>
 
@@ -100,23 +100,13 @@
     <div class="space-y-4 border-t p-4" class:border-[#1F1F1F]={dark} class:border-border={!dark}>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <!-- Seller -->
-        <div>
-          <label for="seller" class="mb-1 block">
-            {#if dark}
-              <span class="text-[10px] text-[#808080] uppercase">{m.add_model_seller()}</span>
-              <span class="ml-1 text-[#808080]/50">(optional)</span>
-            {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_seller()}</span>
-              <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
-            {/if}
-          </label>
-          <select id="seller" bind:value={purchase.sellerId} class={dark ? darkInput : lightSelect}>
-            <option value={null}>-- {m.add_model_seller()} --</option>
-            {#each sellers as seller (seller.id)}
-              <option value={seller.id}>{seller.name}</option>
-            {/each}
-          </select>
-        </div>
+        <FormSelect
+          id="seller"
+          label="{m.add_model_seller()} (optional)"
+          options={sellerOptions}
+          bind:value={purchase.sellerId}
+          placeholder="-- {m.add_model_seller()} --"
+        />
 
         <!-- Purchase Date -->
         <div>
@@ -162,81 +152,31 @@
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <!-- Purchase Condition -->
-        <div>
-          <label for="purchase-condition" class="mb-1 flex items-baseline">
-            {#if dark}
-              <span class="text-[10px] text-[#808080] uppercase"
-                >{m.add_model_purchase_condition()}</span
-              >
-              <span class="ml-1 whitespace-nowrap text-[#808080]/50">(optional)</span>
-            {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_purchase_condition()}</span>
-              <span class="ml-1 text-xs whitespace-nowrap text-muted-foreground/60">(optional)</span
-              >
-            {/if}
-          </label>
-          <select
-            id="purchase-condition"
-            bind:value={purchase.purchaseCondition}
-            class={dark ? darkInput : lightSelect}
-          >
-            <option value={null}>-- Select --</option>
-            {#each purchaseConditions as condition (condition.id)}
-              <option value={condition.id}>{condition.label}</option>
-            {/each}
-          </select>
-        </div>
+        <FormSelect
+          id="purchase-condition"
+          label="{m.add_model_purchase_condition()} (optional)"
+          options={purchaseConditionOptions}
+          bind:value={purchase.purchaseCondition}
+          placeholder="-- Select --"
+        />
 
         <!-- Model Condition -->
-        <div>
-          <label for="model-condition" class="mb-1 flex items-baseline">
-            {#if dark}
-              <span class="text-[10px] text-[#808080] uppercase"
-                >{m.add_model_model_condition()}</span
-              >
-              <span class="ml-1 whitespace-nowrap text-[#808080]/50">(optional)</span>
-            {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_model_condition()}</span>
-              <span class="ml-1 text-xs whitespace-nowrap text-muted-foreground/60">(optional)</span
-              >
-            {/if}
-          </label>
-          <select
-            id="model-condition"
-            bind:value={purchase.modelCondition}
-            class={dark ? darkInput : lightSelect}
-          >
-            <option value={null}>-- Select --</option>
-            {#each modelConditions as condition (condition.id)}
-              <option value={condition.id}>{condition.label}</option>
-            {/each}
-          </select>
-        </div>
+        <FormSelect
+          id="model-condition"
+          label="{m.add_model_model_condition()} (optional)"
+          options={modelConditionOptions}
+          bind:value={purchase.modelCondition}
+          placeholder="-- Select --"
+        />
 
         <!-- Box Condition -->
-        <div>
-          <label for="box-condition" class="mb-1 flex items-baseline">
-            {#if dark}
-              <span class="text-[10px] text-[#808080] uppercase">{m.add_model_box_condition()}</span
-              >
-              <span class="ml-1 whitespace-nowrap text-[#808080]/50">(optional)</span>
-            {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_box_condition()}</span>
-              <span class="ml-1 text-xs whitespace-nowrap text-muted-foreground/60">(optional)</span
-              >
-            {/if}
-          </label>
-          <select
-            id="box-condition"
-            bind:value={purchase.boxCondition}
-            class={dark ? darkInput : lightSelect}
-          >
-            <option value={null}>-- Select --</option>
-            {#each boxConditions as condition (condition.id)}
-              <option value={condition.id}>{condition.label}</option>
-            {/each}
-          </select>
-        </div>
+        <FormSelect
+          id="box-condition"
+          label="{m.add_model_box_condition()} (optional)"
+          options={boxConditionOptions}
+          bind:value={purchase.boxCondition}
+          placeholder="-- Select --"
+        />
       </div>
 
       <!-- Notes -->

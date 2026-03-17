@@ -22,6 +22,10 @@ vi.mock('$lib/paraglide/messages', () => ({
   specs_drawer_unsaved_title: () => 'Unsaved Changes',
   specs_drawer_unsaved_message: () => 'You have unsaved changes. Discard them?',
   specs_drawer_unsaved_confirm: () => 'Discard',
+  drawer_discard_title: () => 'Unsaved Changes',
+  drawer_discard_description: () => 'You have unsaved changes. Discard them?',
+  drawer_discard_confirm: () => 'Discard',
+  drawer_discard_cancel: () => 'Cancel',
   specs_drawer_section_identification: () => 'Identification',
   specs_drawer_section_technical: () => 'Technical',
   specs_drawer_section_control: () => 'Control',
@@ -53,6 +57,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_unsaved_title: () => 'Unsaved Changes',
   specs_drawer_unsaved_message: () => 'You have unsaved changes. Discard them?',
   specs_drawer_unsaved_confirm: () => 'Discard',
+  drawer_discard_title: () => 'Unsaved Changes',
+  drawer_discard_description: () => 'You have unsaved changes. Discard them?',
+  drawer_discard_confirm: () => 'Discard',
+  drawer_discard_cancel: () => 'Cancel',
   specs_drawer_section_identification: () => 'Identification',
   specs_drawer_section_technical: () => 'Technical',
   specs_drawer_section_control: () => 'Control',
@@ -196,15 +204,17 @@ describe('RollingStockSpecsDrawer', () => {
         }
       });
 
+      // FormSelect renders as bits-ui Select.Trigger (button), not a native <select>.
+      // Verify the trigger shows the correct label text for each populated field.
       await waitFor(() => {
-        const flywheel = container.querySelector('#drawer-flywheel') as HTMLSelectElement;
-        const bodyShell = container.querySelector('#drawer-body-shell') as HTMLSelectElement;
+        const flywheel = container.querySelector('#drawer-flywheel') as HTMLButtonElement;
+        const bodyShell = container.querySelector('#drawer-body-shell') as HTMLButtonElement;
         const couplingSocket = container.querySelector(
           '#drawer-coupling-socket'
-        ) as HTMLSelectElement;
-        expect(flywheel?.value).toBe('true'); // 'YES' → true → 'true'
-        expect(bodyShell?.value).toBe('METAL_DIE_CAST');
-        expect(couplingSocket?.value).toBe('NEM_362');
+        ) as HTMLButtonElement;
+        expect(flywheel?.textContent?.trim()).toBe('Yes'); // 'YES' → true → label 'Yes'
+        expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast'); // 'METAL_DIE_CAST' → label
+        expect(couplingSocket?.textContent?.trim()).toBe('NEM 362'); // 'NEM_362' → label
       });
     });
 
@@ -251,7 +261,7 @@ describe('RollingStockSpecsDrawer', () => {
       await fireEvent.input(seriesInput);
 
       // Click the close (X) button
-      const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
+      const closeBtn = container.querySelector('[aria-label="close"]') as HTMLElement;
       await fireEvent.click(closeBtn);
 
       // Confirmation dialog should appear
@@ -286,7 +296,7 @@ describe('RollingStockSpecsDrawer', () => {
       await fireEvent.input(seriesInput);
 
       // Click close to trigger dirty-check
-      const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
+      const closeBtn = container.querySelector('[aria-label="close"]') as HTMLElement;
       await fireEvent.click(closeBtn);
 
       // Wait for dialog to appear and click "Discard"
@@ -322,7 +332,7 @@ describe('RollingStockSpecsDrawer', () => {
       seriesInput.value = 'E.646';
       await fireEvent.input(seriesInput);
 
-      const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
+      const closeBtn = container.querySelector('[aria-label="close"]') as HTMLElement;
       await fireEvent.click(closeBtn);
 
       await waitFor(() => {
@@ -447,7 +457,7 @@ describe('RollingStockSpecsDrawer', () => {
       });
 
       // Click the close button without making any changes
-      const closeBtn = container.querySelector('[aria-label="Cancel"]') as HTMLElement;
+      const closeBtn = container.querySelector('[aria-label="close"]') as HTMLElement;
       await fireEvent.click(closeBtn);
 
       // onClose should be called immediately (no dirty-check dialog)

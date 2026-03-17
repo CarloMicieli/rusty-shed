@@ -1,8 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { TrainFront } from 'lucide-svelte';
-  import { Button } from '$lib/components';
-  import { DrawerHeader } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -18,7 +17,6 @@
   import { commands } from '$lib/bindings';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import ModelSearchSection from './ModelSearchSection.svelte';
-  import ModelSelectionCard from './ModelSelectionCard.svelte';
 
   interface Props {
     /** Controls drawer visibility */
@@ -42,7 +40,6 @@
   let isSubmitting = $state(false);
   let isLoadingData = $state(false);
   let showPurchaseSection = $state(false);
-  let showDiscardDialog = $state(false);
 
   // Form state
   let form = $state<AddModelFormState>(createDefaultFormState());
@@ -93,32 +90,7 @@
   $effect(() => {
     if (open) {
       handleOpen();
-
-      // Lock scroll on both body and main content area
-      const mainElement = document.querySelector('main');
-
-      document.body.style.overflow = 'hidden';
-      if (mainElement) {
-        mainElement.style.overflow = 'hidden';
-      }
-    } else {
-      // Restore scroll when drawer closes
-      const mainElement = document.querySelector('main');
-
-      document.body.style.overflow = '';
-      if (mainElement) {
-        mainElement.style.overflow = '';
-      }
     }
-
-    // Cleanup on unmount
-    return () => {
-      const mainElement = document.querySelector('main');
-      document.body.style.overflow = '';
-      if (mainElement) {
-        mainElement.style.overflow = '';
-      }
-    };
   });
 
   function createDefaultFormState(): AddModelFormState {
@@ -232,7 +204,6 @@
     touched = false;
     validationErrors = {};
     showPurchaseSection = false;
-    showDiscardDialog = false;
 
     // Load all reference data from backend to ensure IDs match database
     isLoadingData = true;
@@ -291,106 +262,47 @@
       isSubmitting = false;
     }
   }
-
-  function handleCloseRequest() {
-    if (hasChanges) {
-      showDiscardDialog = true;
-    } else {
-      onClose();
-    }
-  }
-
-  function handleDiscardConfirm() {
-    showDiscardDialog = false;
-    onClose();
-  }
-
-  function handleDiscardCancel() {
-    showDiscardDialog = false;
-  }
 </script>
 
-<!-- Drawer Overlay -->
-{#if open}
-  <div
-    class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
-    onclick={handleCloseRequest}
-    role="presentation"
-  ></div>
-{/if}
+<DrawerShell {open} {onClose} size="xl" {hasChanges} labelledby="drawer-title">
+  {#snippet header({ requestClose })}
+    <DrawerHeader
+      id="drawer-title"
+      title={m.add_model_title()}
+      subtitle={m.add_model_subtitle()}
+      icon={TrainFront}
+      onClose={requestClose}
+    />
+  {/snippet}
 
-<!-- Drawer Container -->
-<div
-  class="fixed top-0 right-0 z-50 h-full w-full max-w-3xl transform transition-transform duration-300 ease-in-out"
-  class:translate-x-0={open}
-  class:translate-x-full={!open}
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="drawer-title"
->
-  <div
-    class="flex h-full flex-col overflow-y-auto border-l border-[#1F1F1F] bg-[#0F0F0F] shadow-2xl"
-  >
-    <!-- Header -->
-    <div class="border-b border-[#1F1F1F]">
-      <DrawerHeader
-        id="drawer-title"
-        title={m.add_model_title()}
-        subtitle={m.add_model_subtitle()}
-        icon={TrainFront}
-        onClose={handleCloseRequest}
+  {#if isLoadingData}
+    <div class="flex items-center justify-center py-8">
+      <p class="text-[#808080]">Loading...</p>
+    </div>
+  {:else}
+    <form id="add-model-form" class="space-y-6">
+      <ModelSearchSection
+        bind:form
+        {manufacturers}
+        {railwayCompanies}
+        {sellers}
+        bind:showPurchaseSection
+        {validationErrors}
+        onAddRollingStock={handleAddRollingStock}
+        onRemoveRollingStock={handleRemoveRollingStock}
+        onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
       />
-    </div>
+    </form>
+  {/if}
 
-    <!-- Content (scrollable) -->
-    <div class="flex-1 overflow-y-auto p-6">
-      {#if isLoadingData}
-        <div class="flex items-center justify-center py-8">
-          <p class="text-[#808080]">Loading...</p>
-        </div>
-      {:else}
-        <form id="add-model-form" class="space-y-6">
-          <ModelSearchSection
-            bind:form
-            {manufacturers}
-            {railwayCompanies}
-            {sellers}
-            bind:showPurchaseSection
-            {validationErrors}
-            onAddRollingStock={handleAddRollingStock}
-            onRemoveRollingStock={handleRemoveRollingStock}
-            onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
-          />
-        </form>
-      {/if}
-    </div>
-
-    <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-[#1F1F1F] p-6">
-      <Button
-        type="button"
-        variant="ghost"
-        class="text-[#E0E0E0]"
-        onclick={handleCloseRequest}
-        disabled={isSubmitting}
-      >
-        {m.add_model_cancel()}
-      </Button>
-      <Button
-        type="submit"
-        form="add-model-form"
-        variant="ghost"
-        class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
-        onclick={handleSubmit}
-        disabled={isSubmitting || isLoadingData}
-      >
-        {isSubmitting ? m.add_model_submitting() : m.add_model_submit()}
-      </Button>
-    </div>
-  </div>
-</div>
-
-<!-- Discard Changes Dialog -->
-{#if showDiscardDialog}
-  <ModelSelectionCard onConfirm={handleDiscardConfirm} onCancel={handleDiscardCancel} />
-{/if}
+  {#snippet footer({ requestClose })}
+    <DrawerFooter
+      cancelLabel={m.add_model_cancel()}
+      submitLabel={isSubmitting ? m.add_model_submitting() : m.add_model_submit()}
+      onCancel={requestClose}
+      onSubmit={handleSubmit}
+      submitting={isSubmitting}
+      isLoading={isLoadingData}
+    />
+  {/snippet}
+</DrawerShell>

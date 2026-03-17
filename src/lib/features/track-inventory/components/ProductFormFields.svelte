@@ -3,6 +3,7 @@
   import { Ruler, Compass, X } from 'lucide-svelte';
   import type { ManufacturerId, TrackType, TrackCode } from '$lib/bindings';
   import { Input } from '$lib/components';
+  import { FormSelect } from '$lib/components/drawer';
 
   interface Props {
     manufacturerId?: string;
@@ -34,28 +35,57 @@
     error = null,
     manufacturers = []
   }: Props = $props();
+
+  // Map manufacturers to { value, label }[] for FormSelect
+  const manufacturerOptions = $derived(
+    manufacturers.map((mfr) => ({ value: mfr.id, label: mfr.name }))
+  );
+
+  const trackTypeOptions = $derived(
+    trackTypes.map((type) => ({ value: type, label: type.replace('_', ' ') }))
+  );
+
+  const trackCodeOptions = $derived(
+    trackCodes.map((code) => ({ value: code, label: code.replace('CODE_', 'Code ') }))
+  );
+
+  // Local string mirrors for the typed union props (FormSelect operates on string | null).
+  // These must stay writable ($state) so FormSelect can bind:value back to them.
+  // The $effect sync below is intentional — $derived cannot be used on writable locals.
+  /* eslint-disable svelte/prefer-writable-derived */
+  let trackTypeStr = $state('');
+  let trackCodeStr = $state('');
+
+  // Sync prop → local when parent updates externally (also runs on mount)
+  $effect(() => {
+    trackTypeStr = trackType;
+  });
+  $effect(() => {
+    trackCodeStr = trackCode;
+  });
+  /* eslint-enable svelte/prefer-writable-derived */
+
+  // Propagate local string back to typed prop
+  $effect(() => {
+    if (trackTypeStr) trackType = trackTypeStr as TrackType;
+  });
+  $effect(() => {
+    if (trackCodeStr) trackCode = trackCodeStr as TrackCode;
+  });
 </script>
 
 <div class="space-y-8">
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
     <!-- Manufacturer -->
-    <div class="space-y-2">
-      <label for="manufacturer-select" class="text-xs text-zinc-400">
-        {m.track_product_field_manufacturer()} *
-      </label>
-      <select
-        id="manufacturer-select"
-        bind:value={manufacturerId}
-        disabled={submitting}
-        required
-        class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-      >
-        <option value="" disabled>{m.wishlist_modal_manufacturer_placeholder()}</option>
-        {#each manufacturers as manufacturer (manufacturer.id)}
-          <option value={manufacturer.id}>{manufacturer.name}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="manufacturer-select"
+      label="{m.track_product_field_manufacturer()} *"
+      options={manufacturerOptions}
+      bind:value={manufacturerId}
+      placeholder={m.wishlist_modal_manufacturer_placeholder()}
+      disabled={submitting}
+      required
+    />
 
     <!-- Product Code -->
     <div class="space-y-2">
@@ -93,46 +123,24 @@
 
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
     <!-- Track Type -->
-    <div class="space-y-2">
-      <label
-        for="track-type-select"
-        class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-      >
-        {m.track_product_field_track_type()}
-      </label>
-      <select
-        id="track-type-select"
-        bind:value={trackType}
-        disabled={submitting}
-        required
-        class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-      >
-        {#each trackTypes as type (type)}
-          <option value={type}>{type.replace('_', ' ')}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="track-type-select"
+      label={m.track_product_field_track_type()}
+      options={trackTypeOptions}
+      bind:value={trackTypeStr}
+      disabled={submitting}
+      required
+    />
 
     <!-- Track Code -->
-    <div class="space-y-2">
-      <label
-        for="track-code-select"
-        class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-      >
-        {m.track_product_field_track_code()}
-      </label>
-      <select
-        id="track-code-select"
-        bind:value={trackCode}
-        disabled={submitting}
-        required
-        class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-      >
-        {#each trackCodes as code (code)}
-          <option value={code}>{code.replace('CODE_', 'Code ')}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="track-code-select"
+      label={m.track_product_field_track_code()}
+      options={trackCodeOptions}
+      bind:value={trackCodeStr}
+      disabled={submitting}
+      required
+    />
   </div>
 
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">

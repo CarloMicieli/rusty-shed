@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X } from 'lucide-svelte';
+  import { Settings } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { toaster } from '$lib/toaster';
@@ -11,8 +11,7 @@
   } from '$lib/bindings';
   import RollingStockBasicFields from './RollingStockBasicFields.svelte';
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
-  import DrawerActionFooter from './DrawerActionFooter.svelte';
-  import { Button } from '$lib/components/ui/button';
+  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -69,7 +68,6 @@
   let isLoading = $state(false);
   let isSaving = $state(false);
   let inlineError = $state<string | null>(null);
-  let showDiscardDialog = $state(false);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
@@ -254,25 +252,6 @@
     }
   }
 
-  // ── Close handling ──────────────────────────────────────────────────────────
-  function requestClose() {
-    if (isDirty) {
-      showDiscardDialog = true;
-    } else {
-      onClose();
-    }
-  }
-
-  function confirmDiscard() {
-    showDiscardDialog = false;
-    form = { ...originalForm };
-    onClose();
-  }
-
-  function cancelDiscard() {
-    showDiscardDialog = false;
-  }
-
   // ── Helpers ─────────────────────────────────────────────────────────────────
   function boolValue(val: boolean | null): string {
     if (val === true) return 'true';
@@ -287,139 +266,80 @@
   }
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && !showDiscardDialog && requestClose()} />
+<DrawerShell
+  {open}
+  {onClose}
+  size="lg"
+  hasChanges={isDirty}
+  labelledby="rs-specs-title"
+  error={inlineError}
+>
+  {#snippet header({ requestClose })}
+    <DrawerHeader
+      id="rs-specs-title"
+      title={m.specs_drawer_title()}
+      icon={Settings}
+      onClose={requestClose}
+    />
+  {/snippet}
 
-{#if open}
-  <!-- Backdrop -->
-  <div
-    class="fixed inset-0 z-40 bg-black/40"
-    role="presentation"
-    tabindex="-1"
-    onclick={requestClose}
-    onkeydown={(e) => e.key === 'Escape' && requestClose()}
-  ></div>
-
-  <!-- Drawer panel -->
-  <div
-    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col overflow-hidden border-l border-zinc-800 bg-[#0C0C0C] shadow-2xl"
-    role="dialog"
-    tabindex="-1"
-    aria-modal="true"
-    aria-label={m.specs_drawer_title()}
-    onclick={(e) => e.stopPropagation()}
-    onkeydown={(e) => e.key !== 'Escape' && e.stopPropagation()}
-  >
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
-      <div>
-        <p class="text-[10px] font-medium tracking-widest text-zinc-500 uppercase">
-          {m.specs_drawer_title()}
-        </p>
-      </div>
-      <button
-        type="button"
-        class="rounded p-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
-        onclick={requestClose}
-        aria-label={m.specs_drawer_cancel()}
-      >
-        <X size={16} />
-      </button>
+  {#if isLoading}
+    <div class="flex h-32 items-center justify-center">
+      <div
+        class="h-6 w-6 animate-spin rounded-full border-2 border-[#E2994F] border-t-transparent"
+      ></div>
     </div>
+  {:else}
+    <div class="space-y-6">
+      <RollingStockBasicFields
+        bind:seriesCode={form.seriesCode}
+        bind:roadNumber={form.roadNumber}
+        bind:livery={form.livery}
+        bind:depot={form.depot}
+      />
 
-    <!-- Content -->
-    <div class="flex-1 overflow-y-auto px-6 py-4">
-      {#if isLoading}
-        <div class="flex h-32 items-center justify-center">
-          <div
-            class="h-6 w-6 animate-spin rounded-full border-2 border-[#E2994F] border-t-transparent"
-          ></div>
-        </div>
-      {:else}
-        {#if inlineError}
-          <div
-            class="mb-4 rounded-lg border border-red-800/50 bg-red-950/40 px-4 py-3 text-sm text-red-400"
-          >
-            {inlineError}
-          </div>
-        {/if}
-
-        <div class="space-y-6">
-          <RollingStockBasicFields
-            bind:seriesCode={form.seriesCode}
-            bind:roadNumber={form.roadNumber}
-            bind:livery={form.livery}
-            bind:depot={form.depot}
-          />
-
-          <RollingStockTechnicalFields
-            flywheelFitted={form.flywheelFitted}
-            bodyShell={form.bodyShell}
-            chassis={form.chassis}
-            interiorLights={form.interiorLights}
-            lights={form.lights}
-            dccInterface={form.dccInterface}
-            control={form.control}
-            couplingSocket={form.couplingSocket}
-            closeCouplers={form.closeCouplers}
-            digitalShunting={form.digitalShunting}
-            {boolOptions}
-            {bodyShellOptions}
-            {chassisOptions}
-            {featureFlagOptions}
-            {controlOptions}
-            {dccInterfaceOptions}
-            {couplingSockeOptions}
-            onFlywheelChange={(val) => {
-              form.flywheelFitted = val;
-            }}
-            onCloseCouplersChange={(val) => {
-              form.closeCouplers = val;
-            }}
-            onDigitalShuntingChange={(val) => {
-              form.digitalShunting = val;
-            }}
-            {boolValue}
-            {parseBool}
-          />
-        </div>
-      {/if}
+      <RollingStockTechnicalFields
+        flywheelFitted={form.flywheelFitted}
+        bind:bodyShell={form.bodyShell}
+        bind:chassis={form.chassis}
+        bind:interiorLights={form.interiorLights}
+        bind:lights={form.lights}
+        bind:dccInterface={form.dccInterface}
+        bind:control={form.control}
+        bind:couplingSocket={form.couplingSocket}
+        closeCouplers={form.closeCouplers}
+        digitalShunting={form.digitalShunting}
+        {boolOptions}
+        {bodyShellOptions}
+        {chassisOptions}
+        {featureFlagOptions}
+        {controlOptions}
+        {dccInterfaceOptions}
+        {couplingSockeOptions}
+        onFlywheelChange={(val) => {
+          form.flywheelFitted = val;
+        }}
+        onCloseCouplersChange={(val) => {
+          form.closeCouplers = val;
+        }}
+        onDigitalShuntingChange={(val) => {
+          form.digitalShunting = val;
+        }}
+        {boolValue}
+        {parseBool}
+      />
     </div>
+  {/if}
 
-    <!-- Footer -->
-    <DrawerActionFooter
-      onSave={handleSave}
+  {#snippet footer({ requestClose })}
+    <DrawerFooter
+      cancelLabel={m.specs_drawer_cancel()}
+      submitLabel={m.specs_drawer_save()}
       onCancel={requestClose}
-      {isSaving}
+      onSubmit={handleSave}
+      submitting={isSaving}
       {isLoading}
       disabled={!form.seriesCode.trim()}
     />
-  </div>
-
-  <!-- Discard confirmation dialog -->
-  {#if showDiscardDialog}
-    <div
-      class="fixed inset-0 z-60 flex items-center justify-center bg-black/60"
-      role="presentation"
-      tabindex="-1"
-    >
-      <div
-        class="mx-4 w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-      >
-        <h2 class="mb-2 text-base font-semibold text-zinc-100">
-          {m.specs_drawer_unsaved_title()}
-        </h2>
-        <p class="mb-6 text-sm text-zinc-400">{m.specs_drawer_unsaved_message()}</p>
-        <div class="flex justify-end gap-3">
-          <Button variant="ghost" onclick={cancelDiscard}>
-            {m.specs_drawer_cancel()}
-          </Button>
-          <Button variant="destructive" onclick={confirmDiscard}>
-            {m.specs_drawer_unsaved_confirm()}
-          </Button>
-        </div>
-      </div>
-    </div>
-  {/if}
-{/if}
+  {/snippet}
+</DrawerShell>

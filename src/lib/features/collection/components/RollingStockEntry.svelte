@@ -2,6 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
   import { Input, Button } from '$lib/components';
+  import { FormSelect } from '$lib/components/drawer';
   import type { RailwayCompany } from '$lib/bindings';
   import type { RollingStockFormEntry } from '$lib/features/collection/types/AddModelFormTypes';
   import rollingStockCategories from '$lib/data/constants/rollingStockCategories.json';
@@ -37,8 +38,6 @@
 
   const darkInput =
     'flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
-  const lightSelect =
-    'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
   // Show locomotive type field only if category is LOCOMOTIVE
   let showLocomotiveType = $derived(entry.category === 'LOCOMOTIVE');
@@ -49,6 +48,19 @@
       entry.locomotiveType = null;
     }
   });
+
+  // Map options to { value, label }[] for FormSelect
+  const companyOptions = $derived(railwayCompanies.map((c) => ({ value: c.id, label: c.name })));
+
+  const categoryOptions = $derived(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rollingStockCategories.map((cat) => ({ value: cat.id, label: (m as any)[cat.labelKey]() }))
+  );
+
+  const locomotiveTypeOptions = $derived(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    locomotiveTypes.map((t) => ({ value: t.id, label: (m as any)[t.labelKey]() }))
+  );
 </script>
 
 <div
@@ -61,34 +73,15 @@
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
-    <div>
-      <label for="railway-company-{entry.uid}" class="block space-y-1">
-        {#if dark}
-          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_railway_company()}</span>
-        {:else}
-          <span class="text-sm text-muted-foreground">{m.add_model_railway_company()}</span>
-        {/if}
-      </label>
-      <select
-        id="railway-company-{entry.uid}"
-        bind:value={entry.railwayCompanyId}
-        class={dark ? darkInput : lightSelect}
-        class:input-error={errors?.railwayCompanyId}
-        aria-describedby={errors?.railwayCompanyId
-          ? `railway-company-error-{entry.uid}`
-          : undefined}
-      >
-        <option value={null}>-- {m.add_model_railway_company()} --</option>
-        {#each railwayCompanies as company (company.id)}
-          <option value={company.id}>{company.name}</option>
-        {/each}
-      </select>
-      {#if errors?.railwayCompanyId}
-        <p id="railway-company-error-{entry.uid}" class="text-error-500 mt-1 text-sm">
-          {errors.railwayCompanyId}
-        </p>
-      {/if}
-    </div>
+    <FormSelect
+      id="railway-company-{entry.uid}"
+      label={m.add_model_railway_company()}
+      options={companyOptions}
+      bind:value={entry.railwayCompanyId}
+      placeholder="-- {m.add_model_railway_company()} --"
+      error={errors?.railwayCompanyId}
+      required
+    />
 
     <!-- Series Code -->
     <div>
@@ -117,33 +110,15 @@
 
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Category -->
-    <div>
-      <label for="category-{entry.uid}" class="block space-y-1">
-        {#if dark}
-          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_rs_category()}</span>
-        {:else}
-          <span class="text-sm text-muted-foreground">{m.add_model_rs_category()}</span>
-        {/if}
-      </label>
-      <select
-        id="category-{entry.uid}"
-        bind:value={entry.category}
-        class={dark ? darkInput : lightSelect}
-        class:input-error={errors?.category}
-        aria-describedby={errors?.category ? `category-error-{entry.uid}` : undefined}
-      >
-        <option value={null}>-- {m.add_model_rs_category()} --</option>
-        {#each rollingStockCategories as cat (cat.id)}
-          <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-          <option value={cat.id}>{(m as any)[cat.labelKey]()}</option>
-        {/each}
-      </select>
-      {#if errors?.category}
-        <p id="category-error-{entry.uid}" class="text-error-500 mt-1 text-sm">
-          {errors.category}
-        </p>
-      {/if}
-    </div>
+    <FormSelect
+      id="category-{entry.uid}"
+      label={m.add_model_rs_category()}
+      options={categoryOptions}
+      bind:value={entry.category}
+      placeholder="-- {m.add_model_rs_category()} --"
+      error={errors?.category}
+      required
+    />
 
     <!-- Road Number (optional) -->
     <div>
@@ -168,26 +143,13 @@
 
   <!-- Locomotive Type (conditional) -->
   {#if showLocomotiveType}
-    <div>
-      <label for="locomotive-type-{entry.uid}" class="block space-y-1">
-        {#if dark}
-          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_locomotive_type()}</span>
-        {:else}
-          <span class="text-sm text-muted-foreground">{m.add_model_locomotive_type()}</span>
-        {/if}
-      </label>
-      <select
-        id="locomotive-type-{entry.uid}"
-        bind:value={entry.locomotiveType}
-        class={dark ? darkInput : lightSelect}
-      >
-        <option value={null}>-- {m.add_model_locomotive_type()} --</option>
-        {#each locomotiveTypes as type (type.id)}
-          <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-          <option value={type.id}>{(m as any)[type.labelKey]()}</option>
-        {/each}
-      </select>
-    </div>
+    <FormSelect
+      id="locomotive-type-{entry.uid}"
+      label={m.add_model_locomotive_type()}
+      options={locomotiveTypeOptions}
+      bind:value={entry.locomotiveType}
+      placeholder="-- {m.add_model_locomotive_type()} --"
+    />
   {/if}
 
   <!-- Remove Button -->
@@ -218,9 +180,3 @@
     {/if}
   </div>
 </div>
-
-<style>
-  .input-error {
-    border-color: rgb(var(--color-error-500));
-  }
-</style>

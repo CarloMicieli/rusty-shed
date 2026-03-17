@@ -200,6 +200,19 @@
   {/snippet}
 
   <div class="space-y-5">
+    <WishlistSection
+      bind:wishlistId={form.wishlistId}
+      bind:newListName={form.newListName}
+      {wishlists}
+      bind:priority={form.priority}
+      bind:desiredPrice={form.desiredPrice}
+      {currency}
+      disabled={isSubmitting}
+      disableWishlistSelection={lockWishlist}
+    />
+
+    <div class="border-t border-white/10 pt-2"></div>
+
     <ModelInfoSection
       bind:manufacturerId={form.manufacturerId}
       bind:productCode={form.productCode}
@@ -211,19 +224,6 @@
       {manufacturers}
       isLoading={isLoadingData}
       disabled={isSubmitting}
-    />
-
-    <div class="border-t border-white/10 pt-2"></div>
-
-    <WishlistSection
-      bind:wishlistId={form.wishlistId}
-      bind:newListName={form.newListName}
-      {wishlists}
-      bind:priority={form.priority}
-      bind:desiredPrice={form.desiredPrice}
-      {currency}
-      disabled={isSubmitting}
-      disableWishlistSelection={lockWishlist}
     />
   </div>
 

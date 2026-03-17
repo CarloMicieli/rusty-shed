@@ -1,5 +1,6 @@
 export { default as DrawerShell } from './DrawerShell.svelte';
 export { default as DrawerHeader } from './DrawerHeader.svelte';
+export { default as DrawerFooter } from './DrawerFooter.svelte';
 export { default as DrawerInput } from './DrawerInput.svelte';
 export { default as DrawerSectionBar } from './DrawerSectionBar.svelte';
 export { default as FormInput } from './FormInput.svelte';
@@ -7,5 +8,7 @@ export { default as FormSelect } from './FormSelect.svelte';
 export { default as FormPrice } from './FormPrice.svelte';
 export { default as ModelInfoSection } from './ModelInfoSection.svelte';
 export { default as WishlistSection } from './WishlistSection.svelte';
+export { default as WishlistPickerSection } from './WishlistPickerSection.svelte';
+export { default as WishlistPreferencesSection } from './WishlistPreferencesSection.svelte';
 export { default as RollingStockSection } from './RollingStockSection.svelte';
 export { default as DigitalSection } from './DigitalSection.svelte';

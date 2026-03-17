@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { X, ArchiveRestore } from 'lucide-svelte';
-  import { Sheet } from '$lib/components/ui/sheet';
+  import { ArchiveRestore } from 'lucide-svelte';
+  import { DrawerShell, DrawerHeader } from '$lib/components/drawer';
   import { createImportController } from '$lib/features/import/import.controller.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import ImportDropZone from './ImportDropZone.svelte';
@@ -59,61 +59,32 @@
     open = false;
     onClose?.();
   }
-
-  function handleOpenChange(newOpen: boolean) {
-    if (!newOpen) close();
-  }
-
-  $effect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
-    }
-  });
 </script>
 
-<Sheet
-  {open}
-  side="right"
-  onOpenChange={handleOpenChange}
-  class="flex w-full flex-col border-zinc-800 bg-[#0c0c0c] sm:w-full sm:max-w-2xl"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between border-b border-white/5 p-6">
-    <div class="flex items-center gap-3">
-      <div
-        class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500"
-      >
-        <ArchiveRestore size={20} />
-      </div>
-      <h2 class="text-xl font-bold tracking-tight text-zinc-100 uppercase">
-        {m['import.title']()}
-      </h2>
-    </div>
-    <button
-      onclick={close}
-      class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
-      disabled={isProcessing}
-    >
-      <X size={20} />
-    </button>
-  </div>
+<DrawerShell {open} onClose={close} size="lg" labelledby="import-drawer-title">
+  {#snippet header({ requestClose })}
+    <DrawerHeader
+      id="import-drawer-title"
+      title={m['import.title']()}
+      icon={ArchiveRestore}
+      onClose={requestClose}
+    />
+  {/snippet}
 
-  <!-- Content -->
-  <div class="flex-1 overflow-y-auto p-6">
-    {#if controller.result}
-      <ImportReport result={controller.result} onClose={handleCloseReport} />
-    {:else if !controller.sessionId}
-      <ImportDropZone onFileSelected={handleFileSelected} disabled={isProcessing} />
-    {:else if controller.preview}
-      <ImportPreview
-        preview={controller.preview}
-        onConfirm={handleConfirmImport}
-        onCancel={handleCancelImport}
-        loading={isProcessing}
-      />
-    {/if}
-  </div>
-</Sheet>
+  {#if controller.result}
+    <ImportReport result={controller.result} onClose={handleCloseReport} />
+  {:else if !controller.sessionId}
+    <ImportDropZone onFileSelected={handleFileSelected} disabled={isProcessing} />
+  {:else if controller.preview}
+    <ImportPreview
+      preview={controller.preview}
+      onConfirm={handleConfirmImport}
+      onCancel={handleCancelImport}
+      loading={isProcessing}
+    />
+  {/if}
+
+  {#snippet footer({ requestClose: _ })}
+    <!-- no drawer-level footer actions; sub-components own their actions -->
+  {/snippet}
+</DrawerShell>
