@@ -13,7 +13,7 @@
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
   import DecoderPicker from './DecoderPicker.svelte';
-  import { DrawerShell, DrawerHeader, DigitalSection } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DigitalSection, createDrawerForm } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -25,11 +25,29 @@
 
   const controller = getDigitalRosterContext();
 
-  // Form state
-  let selectedRollingStockId = $state<string | null>(null);
-  let selectedDecoderId = $state<string | null>(null);
-  let dccAddress = $state<number | null>(null);
-  let installationDate = $state<string | null>(new Date().toISOString().split('T')[0]);
+  function getTodayStr() {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+  }
+
+  const f = createDrawerForm({
+    initial: () => ({
+      selectedRollingStockId: null as string | null,
+      selectedDecoderId: null as string | null,
+      dccAddress: null as number | null,
+      installationDate: getTodayStr()
+    }),
+    validate: (v) => ({
+      rollingStock: !v.selectedRollingStockId
+        ? m.digital_roster_validation_rolling_stock()
+        : undefined,
+      decoder: !v.selectedDecoderId ? m.digital_roster_validation_decoder() : undefined,
+      address:
+        v.dccAddress === null || v.dccAddress < 1 || v.dccAddress > 9999
+          ? m.digital_roster_address_range()
+          : undefined
+    })
+  });
 
   // Reference data
   let installableRollingStocks = $state<InstallableRollingStockView[]>([]);
@@ -42,39 +60,18 @@
   let showConfirmDialog = $state(false);
   let duplicateWarning = $state<string | null>(null);
 
-  // Validation
-  let validationErrors = $state<{
-    rollingStock?: string;
-    decoder?: string;
-    address?: string;
-  }>({});
-  let touched = $state(false);
-
   // Derived state
   let selectedRollingStock = $derived(
-    installableRollingStocks.find((rs) => rs.owned_rolling_stock_id === selectedRollingStockId) ??
-      null
+    installableRollingStocks.find(
+      (rs) => rs.owned_rolling_stock_id === f.values.selectedRollingStockId
+    ) ?? null
   );
-
-  let hasChanges = $derived(
-    selectedRollingStockId !== null ||
-      selectedDecoderId !== null ||
-      dccAddress !== null ||
-      installationDate !== new Date().toISOString().split('T')[0]
-  );
-
-  let isFormValid = $derived.by(() => {
-    if (!touched) return false;
-    const errors = validateForm();
-    validationErrors = errors;
-    return Object.keys(errors).length === 0 && !duplicateWarning;
-  });
 
   let existingDigitalRollingStock = $derived.by((): DigitalRollingStockView | null => {
     if (!selectedRollingStock || !controller.state.rollingStocks) return null;
     return (
       controller.state.rollingStocks.find(
-        (drs) => drs.owned_rolling_stock_id === selectedRollingStockId
+        (drs) => drs.owned_rolling_stock_id === f.values.selectedRollingStockId
       ) ?? null
     );
   });
@@ -85,25 +82,15 @@
 
   $effect(() => {
     if (selectedRollingStock?.has_decoder && existingDigitalRollingStock) {
-      dccAddress = existingDigitalRollingStock.dcc_address;
+      f.values.dccAddress = existingDigitalRollingStock.dcc_address;
     }
   });
 
   async function handleOpen() {
-    resetForm();
-    await loadReferenceData();
-  }
-
-  function resetForm() {
-    selectedRollingStockId = null;
-    selectedDecoderId = null;
-    dccAddress = null;
-    const n = new Date();
-    installationDate = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
-    touched = false;
-    validationErrors = {};
+    f.reset();
     duplicateWarning = null;
     showConfirmDialog = false;
+    await loadReferenceData();
   }
 
   async function loadReferenceData() {
@@ -127,15 +114,8 @@
     }
   }
 
-  function validateForm() {
-    const errors: typeof validationErrors = {};
-    if (!selectedRollingStockId) errors.rollingStock = m.digital_roster_validation_rolling_stock();
-    if (!selectedDecoderId) errors.decoder = m.digital_roster_validation_decoder();
-    if (dccAddress === null || dccAddress < 1 || dccAddress > 9999) {
-      errors.address = m.digital_roster_address_range();
-    }
-    return errors;
-  }
+  // Expose current validation errors (touched-gated) for child components
+  const validationErrors = $derived(f.errors);
 
   async function handleAddressChange(addr: number | null) {
     if (addr !== null && addr >= 1 && addr <= 9999) {
@@ -150,8 +130,8 @@
   }
 
   async function handleSubmit() {
-    touched = true;
-    if (!isFormValid) return;
+    f.touch();
+    if (!f.isValid || duplicateWarning) return;
 
     if (selectedRollingStock?.has_decoder && !showConfirmDialog) {
       showConfirmDialog = true;
@@ -162,7 +142,8 @@
   }
 
   async function performInstallation() {
-    if (!selectedRollingStockId || !selectedDecoderId || dccAddress === null) return;
+    if (!f.values.selectedRollingStockId || !f.values.selectedDecoderId || f.values.dccAddress === null)
+      return;
 
     try {
       isSubmitting = true;
@@ -171,16 +152,19 @@
       if (existingDigitalRollingStock) {
         success = await controller.replaceDecoder(
           existingDigitalRollingStock.id,
-          selectedDecoderId
+          f.values.selectedDecoderId
         );
-        if (success && dccAddress !== existingDigitalRollingStock.dcc_address) {
-          success = await controller.changeDccAddress(existingDigitalRollingStock.id, dccAddress);
+        if (success && f.values.dccAddress !== existingDigitalRollingStock.dcc_address) {
+          success = await controller.changeDccAddress(
+            existingDigitalRollingStock.id,
+            f.values.dccAddress
+          );
         }
       } else {
         success = await controller.installDecoder(
-          selectedRollingStockId,
-          selectedDecoderId,
-          dccAddress
+          f.values.selectedRollingStockId,
+          f.values.selectedDecoderId,
+          f.values.dccAddress
         );
       }
 
@@ -202,7 +186,7 @@
   }
 </script>
 
-<DrawerShell {open} {onClose} size="lg" {hasChanges} labelledby="decoder-install-drawer-title">
+<DrawerShell {open} {onClose} size="lg" hasChanges={f.isDirty} labelledby="decoder-install-drawer-title">
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="decoder-install-drawer-title"
@@ -221,28 +205,28 @@
     <form id="install-decoder-form" class="space-y-6" onsubmit={(e) => e.preventDefault()}>
       <DecoderRollingStockPicker
         rollingStocks={installableRollingStocks}
-        selectedId={selectedRollingStockId}
+        selectedId={f.values.selectedRollingStockId}
         error={validationErrors.rollingStock}
-        {touched}
-        onChange={(id) => (selectedRollingStockId = id)}
+        touched={f.touched}
+        onChange={(id) => (f.values.selectedRollingStockId = id)}
       />
 
       <DecoderPicker
         {decoders}
         {manufacturers}
-        selectedId={selectedDecoderId}
+        selectedId={f.values.selectedDecoderId}
         error={validationErrors.decoder}
-        {touched}
-        onChange={(id) => (selectedDecoderId = id)}
+        touched={f.touched}
+        onChange={(id) => (f.values.selectedDecoderId = id)}
       />
 
       <DigitalSection
-        bind:dccAddress
-        bind:installationDate
+        bind:dccAddress={f.values.dccAddress}
+        bind:installationDate={f.values.installationDate}
         onAddressChange={handleAddressChange}
         {duplicateWarning}
         errors={validationErrors}
-        {touched}
+        touched={f.touched}
         disabled={isSubmitting}
       />
     </form>
@@ -258,7 +242,7 @@
         variant="default"
         class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
         onclick={handleSubmit}
-        disabled={isSubmitting || isLoadingData || (!touched && !isFormValid)}
+        disabled={isSubmitting || isLoadingData || (!f.touched && !f.isValid)}
       >
         {#if isSubmitting}
           {m.app_loading()}

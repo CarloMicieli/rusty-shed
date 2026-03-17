@@ -24,7 +24,7 @@ vi.mock('$lib/components', async (importOriginal) => {
   };
 });
 
-import DigitalSection from '$lib/components/drawer/DigitalSection.svelte';
+import DigitalSection from '$lib/components/drawer/sections/DigitalSection.svelte';
 
 describe('DigitalSection', () => {
   beforeEach(() => {

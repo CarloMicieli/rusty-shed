@@ -990,5 +990,8 @@
   "rolling_stock_select_company": "— Seleziona impresa —",
   "rolling_stock_select_category": "— Seleziona categoria —",
   "rolling_stock_select_control": "— Seleziona controllo —",
-  "track_product_select_manufacturer": "— Seleziona marca —"
+  "track_product_select_manufacturer": "— Seleziona marca —",
+  "boolean_yes": "Sì",
+  "boolean_no": "No",
+  "error_required": "Obbligatorio"
 }

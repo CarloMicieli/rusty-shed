@@ -1092,5 +1092,8 @@
   "rolling_stock_select_company": "— Select company —",
   "rolling_stock_select_category": "— Select category —",
   "rolling_stock_select_control": "— Select control —",
-  "track_product_select_manufacturer": "— Select brand —"
+  "track_product_select_manufacturer": "— Select brand —",
+  "boolean_yes": "Yes",
+  "boolean_no": "No",
+  "error_required": "Required"
 }

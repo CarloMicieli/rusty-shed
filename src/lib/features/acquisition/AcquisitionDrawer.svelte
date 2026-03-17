@@ -4,6 +4,7 @@
   import { commands, type Manufacturer, type SellerView } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
+  import { Button } from '$lib/components';
   import type {
     AcquisitionFormState,
     AcquisitionItemEntry,
@@ -16,10 +17,9 @@
     hasErrors,
     toRecordAcquisitionArgs
   } from './types.js';
-  import AcquisitionHeader from './components/AcquisitionHeader.svelte';
+  import AcquisitionBatchFields from './components/AcquisitionBatchFields.svelte';
   import AcquisitionItemCard from './components/AcquisitionItemCard.svelte';
-  import AcquisitionFooter from './components/AcquisitionFooter.svelte';
-  import { DrawerShell, DrawerHeader } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -178,7 +178,7 @@
 
   {#snippet stickyBand()}
     <div class="px-4 py-3">
-      <AcquisitionHeader
+      <AcquisitionBatchFields
         sellerId={form.sellerId}
         onSellerChange={(id) => (form.sellerId = id)}
         purchaseDate={form.purchaseDate}
@@ -220,12 +220,27 @@
     {/if}
   </div>
 
-  {#snippet footer({ requestClose: _requestClose })}
-    <AcquisitionFooter
-      {isSubmitting}
-      {isLoadingData}
-      onAddItem={handleAddItem}
-      onFinalize={handleFinalize}
-    />
+  {#snippet footer({ requestClose })}
+    <DrawerFooter
+      cancelLabel={m.acquisition_cancel_button()}
+      submitLabel={isSubmitting
+        ? m.acquisition_finalizing_button()
+        : m.acquisition_finalize_button()}
+      onCancel={requestClose}
+      onSubmit={handleFinalize}
+      submitting={isSubmitting}
+      isLoading={isLoadingData}
+    >
+      {#snippet leading()}
+        <Button
+          type="button"
+          variant="outline"
+          onclick={handleAddItem}
+          disabled={isSubmitting || isLoadingData}
+        >
+          {m.acquisition_add_item_button()}
+        </Button>
+      {/snippet}
+    </DrawerFooter>
   {/snippet}
 </DrawerShell>

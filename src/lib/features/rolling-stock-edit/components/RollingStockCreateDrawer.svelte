@@ -7,7 +7,7 @@
   import RollingStockCategoryFields from './RollingStockCategoryFields.svelte';
   import RollingStockBasicFields from './RollingStockBasicFields.svelte';
   import RollingStockControlField from './RollingStockControlField.svelte';
-  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -22,41 +22,26 @@
 
   let { open, railwayModelId, onCreated, onClose }: Props = $props();
 
-  // ── Form state ──────────────────────────────────────────────────────────────
-  interface FormState {
-    railwayCompanyId: string;
-    railwayCompanyName: string;
-    category: string;
-    seriesCode: string;
-    roadNumber: string;
-    livery: string;
-    depot: string;
-    control: string;
-  }
+  const f = createDrawerForm({
+    initial: () => ({
+      railwayCompanyId: '',
+      railwayCompanyName: '',
+      category: '',
+      seriesCode: '',
+      roadNumber: '',
+      livery: '',
+      depot: '',
+      control: ''
+    }),
+    validate: (v) => ({
+      seriesCode: !v.seriesCode.trim() ? m.error_required() : undefined,
+      railwayCompanyId: !v.railwayCompanyId ? m.error_required() : undefined,
+      category: !v.category ? m.error_required() : undefined
+    })
+  });
 
-  const emptyForm: FormState = {
-    railwayCompanyId: '',
-    railwayCompanyName: '',
-    category: '',
-    seriesCode: '',
-    roadNumber: '',
-    livery: '',
-    depot: '',
-    control: ''
-  };
-
-  let form = $state<FormState>({ ...emptyForm });
-  let originalForm = $state<FormState>({ ...emptyForm });
   let isSaving = $state(false);
   let inlineError = $state<string | null>(null);
-
-  // ── Derived ─────────────────────────────────────────────────────────────────
-  const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
-  const isValid = $derived(
-    form.seriesCode.trim().length > 0 &&
-      form.railwayCompanyId.length > 0 &&
-      form.category.length > 0
-  );
 
   // ── Company options ──────────────────────────────────────────────────────────
   let companyOptions = $state<{ id: string; label: string }[]>([]);
@@ -71,8 +56,7 @@
   // ── Reset form when drawer opens ────────────────────────────────────────────
   $effect(() => {
     if (open) {
-      form = { ...emptyForm };
-      originalForm = { ...emptyForm };
+      f.reset();
       inlineError = null;
     }
   });
@@ -97,19 +81,19 @@
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   async function handleSave() {
-    if (!isValid) return;
+    if (!f.isValid) return;
     isSaving = true;
     inlineError = null;
     try {
       const result = await commands.addRollingStockToModel({
         railwayModelId,
-        railwayCompanyId: form.railwayCompanyId,
-        category: form.category,
-        seriesCode: form.seriesCode.trim(),
-        roadNumber: form.roadNumber || null,
-        livery: form.livery || null,
-        depot: form.depot || null,
-        control: form.control || null
+        railwayCompanyId: f.values.railwayCompanyId,
+        category: f.values.category,
+        seriesCode: f.values.seriesCode.trim(),
+        roadNumber: f.values.roadNumber || null,
+        livery: f.values.livery || null,
+        depot: f.values.depot || null,
+        control: f.values.control || null
       });
 
       if (result.status === 'error') {
@@ -130,7 +114,7 @@
   {open}
   {onClose}
   size="lg"
-  hasChanges={isDirty}
+  hasChanges={f.isDirty}
   labelledby="rs-create-title"
   error={inlineError}
 >
@@ -145,21 +129,21 @@
 
   <div class="space-y-6">
     <RollingStockCategoryFields
-      bind:railwayCompanyId={form.railwayCompanyId}
-      bind:railwayCompanyName={form.railwayCompanyName}
-      bind:category={form.category}
+      bind:railwayCompanyId={f.values.railwayCompanyId}
+      bind:railwayCompanyName={f.values.railwayCompanyName}
+      bind:category={f.values.category}
       {companyOptions}
       {categoryOptions}
     />
 
     <RollingStockBasicFields
-      bind:seriesCode={form.seriesCode}
-      bind:roadNumber={form.roadNumber}
-      bind:livery={form.livery}
-      bind:depot={form.depot}
+      bind:seriesCode={f.values.seriesCode}
+      bind:roadNumber={f.values.roadNumber}
+      bind:livery={f.values.livery}
+      bind:depot={f.values.depot}
     />
 
-    <RollingStockControlField bind:control={form.control} {controlOptions} />
+    <RollingStockControlField bind:control={f.values.control} {controlOptions} />
   </div>
 
   {#snippet footer({ requestClose })}
@@ -169,7 +153,7 @@
       onCancel={requestClose}
       onSubmit={handleSave}
       submitting={isSaving}
-      disabled={!isValid}
+      disabled={!f.isValid}
     />
   {/snippet}
 </DrawerShell>

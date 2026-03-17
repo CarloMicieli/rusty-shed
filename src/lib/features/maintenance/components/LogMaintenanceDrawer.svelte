@@ -10,7 +10,7 @@
   import { safeInvoke } from '$lib/shared/services/TauriAdapter';
   import { toaster } from '$lib/toaster';
   import * as m from '$lib/paraglide/messages.js';
-  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -20,13 +20,31 @@
 
   let { open, onClose, onSuccess }: Props = $props();
 
-  // Form state
-  let mode = $state<'rolling-stock' | 'card'>('rolling-stock');
-  let selectedRsId = $state<string | null>(null);
-  let selectedCardId = $state<string | null>(null);
-  let datePerformed = $state<string>(getTodayLocal());
-  let maintenanceType = $state<string | null>(null);
-  let notes = $state('');
+  function getTodayLocal(): string {
+    const now = new Date();
+    const y = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  }
+
+  const f = createDrawerForm({
+    initial: () => ({
+      mode: 'rolling-stock' as 'rolling-stock' | 'card',
+      selectedRsId: null as string | null,
+      selectedCardId: null as string | null,
+      datePerformed: getTodayLocal(),
+      maintenanceType: null as string | null,
+      notes: ''
+    }),
+    validate: (v) => ({
+      selectedRsId:
+        v.mode === 'rolling-stock' && !v.selectedRsId ? m.error_required() : undefined,
+      selectedCardId: v.mode === 'card' && !v.selectedCardId ? m.error_required() : undefined,
+      datePerformed: !v.datePerformed ? m.error_required() : undefined
+    })
+  });
+
   let isSubmitting = $state(false);
   let isLoadingRs = $state(false);
   let error = $state<string | null>(null);
@@ -45,24 +63,26 @@
 
   // Derived: cross-reference selected RS against loaded cards
   const existingCardForRs = $derived(
-    maintenanceCards.find((c) => c.ownedRollingStockId === selectedRsId) ?? null
+    maintenanceCards.find((c) => c.ownedRollingStockId === f.values.selectedRsId) ?? null
   );
 
   // Derived: selected card's display info for road number pill
-  const selectedCard = $derived(maintenanceCards.find((c) => c.id === selectedCardId) ?? null);
-
-  const hasSelection = $derived(
-    (mode === 'rolling-stock' && selectedRsId !== null) ||
-      (mode === 'card' && selectedCardId !== null)
+  const selectedCard = $derived(
+    maintenanceCards.find((c) => c.id === f.values.selectedCardId) ?? null
   );
 
-  const isFormValid = $derived(hasSelection && datePerformed !== '');
-  const hasChanges = $derived(hasSelection || notes.trim() !== '');
+  const hasSelection = $derived(
+    (f.values.mode === 'rolling-stock' && f.values.selectedRsId !== null) ||
+      (f.values.mode === 'card' && f.values.selectedCardId !== null)
+  );
+
+  const isFormValid = $derived(hasSelection && f.values.datePerformed !== '');
 
   // Watch for open/close — load data
   $effect(() => {
     if (open) {
-      resetForm();
+      f.reset();
+      error = null;
       void loadRollingStocks();
       void loadMaintenanceCards();
     }
@@ -70,16 +90,8 @@
 
   // Clear error when RS selection changes
   $effect(() => {
-    if (selectedRsId) error = null;
+    if (f.values.selectedRsId) error = null;
   });
-
-  function getTodayLocal(): string {
-    const now = new Date();
-    const y = now.getFullYear();
-    const mo = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}-${mo}-${d}`;
-  }
 
   async function loadRollingStocks() {
     isLoadingRs = true;
@@ -115,26 +127,15 @@
     return parts.join(' ') || card.id;
   }
 
-  function resetForm() {
-    mode = 'rolling-stock';
-    selectedRsId = null;
-    selectedCardId = null;
-    datePerformed = getTodayLocal();
-    maintenanceType = null;
-    notes = '';
-    isSubmitting = false;
-    error = null;
-  }
-
   function handleModeChange(newMode: 'rolling-stock' | 'card') {
-    mode = newMode;
-    selectedRsId = null;
-    selectedCardId = null;
+    f.values.mode = newMode;
+    f.values.selectedRsId = null;
+    f.values.selectedCardId = null;
     error = null;
   }
 
   async function handleSubmit() {
-    if (!isFormValid || !datePerformed) return;
+    if (!isFormValid || !f.values.datePerformed) return;
 
     isSubmitting = true;
     error = null;
@@ -142,26 +143,26 @@
     try {
       let cardId: string;
 
-      if (mode === 'rolling-stock') {
-        if (!selectedRsId) return;
+      if (f.values.mode === 'rolling-stock') {
+        if (!f.values.selectedRsId) return;
         // Step 1: create (or get existing) maintenance card
-        const cardResult = await commands.addMaintenanceCard(selectedRsId);
+        const cardResult = await commands.addMaintenanceCard(f.values.selectedRsId);
         if (cardResult.status !== 'ok') {
           throw new Error(JSON.stringify(cardResult.error));
         }
         cardId = cardResult.data;
       } else {
-        if (!selectedCardId) return;
-        cardId = selectedCardId;
+        if (!f.values.selectedCardId) return;
+        cardId = f.values.selectedCardId;
       }
 
       // Step 2: log the event
       const eventResult = await commands.addMaintenanceEvent({
         id: crypto.randomUUID(),
         maintenanceCardId: cardId,
-        datePerformed,
-        maintenanceType,
-        notes: notes.trim() || null
+        datePerformed: f.values.datePerformed,
+        maintenanceType: f.values.maintenanceType,
+        notes: f.values.notes.trim() || null
       });
       if (eventResult.status !== 'ok') {
         throw new Error(JSON.stringify(eventResult.error));
@@ -188,7 +189,7 @@
   {open}
   {onClose}
   size="md"
-  {hasChanges}
+  hasChanges={f.isDirty}
   labelledby="log-maintenance-drawer-title"
   {error}
 >
@@ -207,8 +208,8 @@
     <div class="flex rounded-lg border border-white/10 bg-zinc-900 p-1">
       <button
         type="button"
-        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {mode ===
-        'rolling-stock'
+        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values
+          .mode === 'rolling-stock'
           ? 'bg-amber-500/20 text-amber-400'
           : 'text-zinc-400 hover:text-zinc-200'}"
         onclick={() => handleModeChange('rolling-stock')}
@@ -217,7 +218,8 @@
       </button>
       <button
         type="button"
-        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {mode === 'card'
+        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values
+          .mode === 'card'
           ? 'bg-amber-500/20 text-amber-400'
           : 'text-zinc-400 hover:text-zinc-200'}"
         onclick={() => handleModeChange('card')}
@@ -227,7 +229,7 @@
     </div>
 
     <!-- Mode A: Rolling stock selector -->
-    {#if mode === 'rolling-stock'}
+    {#if f.values.mode === 'rolling-stock'}
       <div class="space-y-2">
         <label
           for="rs-select"
@@ -246,9 +248,9 @@
           <select
             id="rs-select"
             class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            value={selectedRsId ?? ''}
+            value={f.values.selectedRsId ?? ''}
             onchange={(e) => {
-              selectedRsId = (e.target as HTMLSelectElement).value || null;
+              f.values.selectedRsId = (e.target as HTMLSelectElement).value || null;
             }}
           >
             <option value="" disabled>{m.maintenance_create_card_placeholder()}</option>
@@ -261,7 +263,7 @@
         {/if}
 
         <!-- Contextual pill after RS selection -->
-        {#if selectedRsId !== null}
+        {#if f.values.selectedRsId !== null}
           {#if existingCardForRs !== null}
             <div
               class="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400"
@@ -282,7 +284,7 @@
     {/if}
 
     <!-- Mode B: Maintenance card selector -->
-    {#if mode === 'card'}
+    {#if f.values.mode === 'card'}
       <div class="space-y-2">
         <label
           for="card-select"
@@ -293,9 +295,9 @@
         <select
           id="card-select"
           class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          value={selectedCardId ?? ''}
+          value={f.values.selectedCardId ?? ''}
           onchange={(e) => {
-            selectedCardId = (e.target as HTMLSelectElement).value || null;
+            f.values.selectedCardId = (e.target as HTMLSelectElement).value || null;
             error = null;
           }}
         >
@@ -338,8 +340,8 @@
           id="date-performed"
           type="date"
           class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-          value={datePerformed}
-          oninput={(e) => (datePerformed = (e.target as HTMLInputElement).value)}
+          value={f.values.datePerformed}
+          oninput={(e) => (f.values.datePerformed = (e.target as HTMLInputElement).value)}
           required
         />
       </div>
@@ -355,10 +357,10 @@
         <select
           id="maintenance-type"
           class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          value={maintenanceType ?? ''}
+          value={f.values.maintenanceType ?? ''}
           onchange={(e) => {
             const v = (e.target as HTMLSelectElement).value;
-            maintenanceType = v || null;
+            f.values.maintenanceType = v || null;
           }}
         >
           <option value="">{m.maintenance_add_event_type_placeholder()}</option>
@@ -380,8 +382,8 @@
           id="event-notes"
           class="flex min-h-[80px] w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
           placeholder={m.maintenance_add_event_notes_placeholder()}
-          value={notes}
-          oninput={(e) => (notes = (e.target as HTMLTextAreaElement).value)}
+          value={f.values.notes}
+          oninput={(e) => (f.values.notes = (e.target as HTMLTextAreaElement).value)}
         ></textarea>
       </div>
     {/if}

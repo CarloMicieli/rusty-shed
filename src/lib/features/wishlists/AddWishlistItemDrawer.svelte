@@ -11,7 +11,8 @@
     DrawerShell,
     DrawerHeader,
     ModelInfoSection,
-    WishlistSection
+    WishlistSection,
+    createDrawerForm
   } from '$lib/components/drawer';
   import { onMount } from 'svelte';
 
@@ -24,26 +25,12 @@
     onSaved: () => void;
   }
 
-  interface WishlistItemFormState {
-    wishlistId: string;
-    newListName: string;
-    manufacturerId: string;
-    productCode: string;
-    description: string;
-    category: string;
-    scale: string;
-    powerMethod: string;
-    epoch: string;
-    priority: WishlistPriority;
-    desiredPrice: number | null;
-  }
-
   let { open, preselectedWishlistId = null, onClose, onSaved }: Props = $props();
 
   const wishlists = $derived(wishlistService.wishlists);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
 
-  function makeDefaultForm(): WishlistItemFormState {
+  function makeInitial() {
     return {
       wishlistId: defaultWishlist?.id ?? '',
       newListName: '',
@@ -54,37 +41,46 @@
       scale: settingsState.settings?.favouriteScale || SCALES[0],
       powerMethod: settingsState.settings?.powerMethod || POWER_METHODS[0],
       epoch: '',
-      priority: 'NORMAL',
-      desiredPrice: null
+      priority: 'NORMAL' as WishlistPriority,
+      desiredPrice: null as number | null
     };
   }
 
-  let form = $state<WishlistItemFormState>(makeDefaultForm());
+  const f = createDrawerForm({
+    initial: makeInitial,
+    validate: (v) => ({
+      manufacturerId: !v.manufacturerId ? m.wishlist_modal_missing_manufacturer() : undefined,
+      productCode: !v.productCode.trim() ? m.wishlist_modal_missing_product_code() : undefined,
+      description: !v.description.trim() ? m.wishlist_modal_missing_description() : undefined,
+      desiredPrice:
+        v.desiredPrice !== null && v.desiredPrice <= 0
+          ? m.wishlist_modal_invalid_price()
+          : undefined
+    })
+  });
+
   let manufacturers = $state<Manufacturer[]>([]);
   let isLoadingData = $state(false);
   let isSubmitting = $state(false);
-  let formError = $state<string | null>(null);
+  let asyncError = $state<string | null>(null);
 
   const currency = $derived(settingsState.settings.currency ?? 'EUR');
+  const lockWishlist = $derived(!!preselectedWishlistId);
 
-  let hasChanges = $derived(
-    form.manufacturerId !== '' ||
-      form.productCode.trim() !== '' ||
-      form.description.trim() !== '' ||
-      form.newListName.trim() !== ''
+  // Show first validation error or async error in banner
+  const formError = $derived(
+    asyncError ?? (Object.values(f.errors).find((e) => !!e) as string | undefined) ?? null
   );
 
   $effect(() => {
-    if (defaultWishlist && form.wishlistId === '') {
-      form.wishlistId = defaultWishlist.id;
+    if (defaultWishlist && f.values.wishlistId === '') {
+      f.values.wishlistId = defaultWishlist.id;
     }
   });
 
-  const lockWishlist = $derived(!!preselectedWishlistId);
-
   $effect(() => {
     if (open && preselectedWishlistId) {
-      form.wishlistId = preselectedWishlistId;
+      f.values.wishlistId = preselectedWishlistId;
     }
   });
 
@@ -98,59 +94,45 @@
   });
 
   async function handleSubmit() {
-    formError = null;
+    asyncError = null;
+    f.touch();
 
-    if (!form.manufacturerId) {
-      formError = m.wishlist_modal_missing_manufacturer();
-      return;
-    }
-    if (!form.productCode.trim()) {
-      formError = m.wishlist_modal_missing_product_code();
-      return;
-    }
-    if (!form.description.trim()) {
-      formError = m.wishlist_modal_missing_description();
-      return;
-    }
-    if (form.desiredPrice !== null && form.desiredPrice <= 0) {
-      formError = m.wishlist_modal_invalid_price();
-      return;
-    }
+    if (!f.isValid) return;
 
     isSubmitting = true;
     try {
-      let targetId = form.wishlistId;
+      let targetId = f.values.wishlistId;
 
-      if (form.newListName.trim()) {
-        const created = await wishlistService.createWishlist(form.newListName.trim(), false);
+      if (f.values.newListName.trim()) {
+        const created = await wishlistService.createWishlist(f.values.newListName.trim(), false);
         if (!created) {
-          formError = m.wishlist_modal_create_failed();
+          asyncError = m.wishlist_modal_create_failed();
           return;
         }
         targetId = created.id;
       }
 
       if (!targetId) {
-        formError = m.wishlist_modal_select_list_error();
+        asyncError = m.wishlist_modal_select_list_error();
         return;
       }
 
       const priceAmount =
-        form.desiredPrice !== null ? (form.desiredPrice as unknown as bigint) : null;
+        f.values.desiredPrice !== null ? (f.values.desiredPrice as unknown as bigint) : null;
 
       const success = await wishlistService.addRailwayModelToWishlist({
         railwayModel: {
-          manufacturerId: form.manufacturerId,
-          productCode: form.productCode.trim(),
-          description: form.description.trim(),
-          category: form.category,
-          scale: form.scale,
-          epoch: form.epoch,
-          powerMethod: form.powerMethod,
+          manufacturerId: f.values.manufacturerId,
+          productCode: f.values.productCode.trim(),
+          description: f.values.description.trim(),
+          category: f.values.category,
+          scale: f.values.scale,
+          epoch: f.values.epoch,
+          powerMethod: f.values.powerMethod,
           rollingStocks: []
         },
         wishlistId: targetId,
-        priority: form.priority,
+        priority: f.values.priority,
         status: null,
         desiredPriceAmount: priceAmount,
         desiredPriceCurrency: priceAmount !== null ? currency : null,
@@ -159,7 +141,7 @@
       });
 
       if (!success) {
-        formError = m.wishlist_modal_add_failed();
+        asyncError = m.wishlist_modal_add_failed();
         return;
       }
 
@@ -172,8 +154,8 @@
 
   function resetAndClose() {
     onClose();
-    form = makeDefaultForm();
-    formError = null;
+    f.reset(makeInitial());
+    asyncError = null;
   }
 </script>
 
@@ -181,7 +163,7 @@
   {open}
   onClose={resetAndClose}
   size="md"
-  {hasChanges}
+  hasChanges={f.isDirty}
   labelledby="wishlist-item-drawer-title"
   error={formError}
   discardTitle={m.wishlist_add_item_drawer_discard_title()}
@@ -201,11 +183,11 @@
 
   <div class="space-y-5">
     <WishlistSection
-      bind:wishlistId={form.wishlistId}
-      bind:newListName={form.newListName}
+      bind:wishlistId={f.values.wishlistId}
+      bind:newListName={f.values.newListName}
       {wishlists}
-      bind:priority={form.priority}
-      bind:desiredPrice={form.desiredPrice}
+      bind:priority={f.values.priority}
+      bind:desiredPrice={f.values.desiredPrice}
       {currency}
       disabled={isSubmitting}
       disableWishlistSelection={lockWishlist}
@@ -214,13 +196,13 @@
     <div class="border-t border-white/10 pt-2"></div>
 
     <ModelInfoSection
-      bind:manufacturerId={form.manufacturerId}
-      bind:productCode={form.productCode}
-      bind:description={form.description}
-      bind:category={form.category}
-      bind:scale={form.scale}
-      bind:powerMethod={form.powerMethod}
-      bind:epoch={form.epoch}
+      bind:manufacturerId={f.values.manufacturerId}
+      bind:productCode={f.values.productCode}
+      bind:description={f.values.description}
+      bind:category={f.values.category}
+      bind:scale={f.values.scale}
+      bind:powerMethod={f.values.powerMethod}
+      bind:epoch={f.values.epoch}
       {manufacturers}
       isLoading={isLoadingData}
       disabled={isSubmitting}

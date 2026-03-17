@@ -73,11 +73,6 @@
   const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
 
   // ── Option lists ────────────────────────────────────────────────────────────
-  const boolOptions = [
-    { value: 'true', label: 'Yes' },
-    { value: 'false', label: 'No' }
-  ];
-
   const bodyShellOptions = [
     { value: '', label: '—' },
     { value: 'PLASTIC', label: 'Plastic' },
@@ -252,18 +247,7 @@
     }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-  function boolValue(val: boolean | null): string {
-    if (val === true) return 'true';
-    if (val === false) return 'false';
-    return '';
-  }
 
-  function parseBool(s: string): boolean | null {
-    if (s === 'true') return true;
-    if (s === 'false') return false;
-    return null;
-  }
 </script>
 
 <DrawerShell
@@ -299,7 +283,7 @@
       />
 
       <RollingStockTechnicalFields
-        flywheelFitted={form.flywheelFitted}
+        bind:flywheelFitted={form.flywheelFitted}
         bind:bodyShell={form.bodyShell}
         bind:chassis={form.chassis}
         bind:interiorLights={form.interiorLights}
@@ -307,26 +291,14 @@
         bind:dccInterface={form.dccInterface}
         bind:control={form.control}
         bind:couplingSocket={form.couplingSocket}
-        closeCouplers={form.closeCouplers}
-        digitalShunting={form.digitalShunting}
-        {boolOptions}
+        bind:closeCouplers={form.closeCouplers}
+        bind:digitalShunting={form.digitalShunting}
         {bodyShellOptions}
         {chassisOptions}
         {featureFlagOptions}
         {controlOptions}
         {dccInterfaceOptions}
         {couplingSockeOptions}
-        onFlywheelChange={(val) => {
-          form.flywheelFitted = val;
-        }}
-        onCloseCouplersChange={(val) => {
-          form.closeCouplers = val;
-        }}
-        onDigitalShuntingChange={(val) => {
-          form.digitalShunting = val;
-        }}
-        {boolValue}
-        {parseBool}
       />
     </div>
   {/if}

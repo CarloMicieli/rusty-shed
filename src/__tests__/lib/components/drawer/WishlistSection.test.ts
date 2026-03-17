@@ -20,7 +20,7 @@ vi.mock('$lib/utils/currency', () => ({
   getCurrencySymbol: (currency: string) => (currency === 'EUR' ? '€' : '$')
 }));
 
-import WishlistSection from '$lib/components/drawer/WishlistSection.svelte';
+import WishlistSection from '$lib/components/drawer/sections/WishlistSection.svelte';
 import type { WishlistPreview } from '$lib/bindings';
 
 const wishlists: WishlistPreview[] = [

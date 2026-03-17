@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { TrainFront } from 'lucide-svelte';
-  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -41,9 +41,6 @@
   let isLoadingData = $state(false);
   let showPurchaseSection = $state(false);
 
-  // Form state
-  let form = $state<AddModelFormState>(createDefaultFormState());
-
   // Validation
   interface ValidationErrors {
     manufacturerId?: string;
@@ -62,50 +59,6 @@
   }
 
   let validationErrors = $state<ValidationErrors>({});
-  let touched = $state(false);
-
-  // Check if form has unsaved changes
-  let hasChanges = $derived(
-    form.productCode.trim() !== '' ||
-      form.description.trim() !== '' ||
-      form.manufacturerId !== null ||
-      form.category !== null ||
-      form.scale !== null ||
-      form.powerMethod !== null ||
-      form.epoch !== null ||
-      form.rollingStocks.length > 1 ||
-      form.rollingStocks[0].seriesCode.trim() !== ''
-  );
-
-  // Validate form
-  let _isFormValid = $derived.by(() => {
-    if (!touched) return true;
-
-    const errors = validateForm(form);
-    validationErrors = errors;
-    return Object.keys(errors).length === 0;
-  });
-
-  // Watch for drawer open/close
-  $effect(() => {
-    if (open) {
-      handleOpen();
-    }
-  });
-
-  function createDefaultFormState(): AddModelFormState {
-    return {
-      manufacturerId: null,
-      productCode: '',
-      description: '',
-      category: null,
-      scale: null,
-      powerMethod: null,
-      epoch: null,
-      rollingStocks: [createDefaultRollingStock()],
-      purchase: createDefaultPurchaseState()
-    };
-  }
 
   function createDefaultRollingStock(): RollingStockFormEntry {
     return {
@@ -128,6 +81,20 @@
       boxCondition: null,
       notes: '',
       purchaseDate: new Date().toISOString().split('T')[0]
+    };
+  }
+
+  function createDefaultFormState(): AddModelFormState {
+    return {
+      manufacturerId: null,
+      productCode: '',
+      description: '',
+      category: null,
+      scale: null,
+      powerMethod: null,
+      epoch: null,
+      rollingStocks: [createDefaultRollingStock()],
+      purchase: createDefaultPurchaseState()
     };
   }
 
@@ -161,6 +128,54 @@
     }
 
     return errors;
+  }
+
+  const f = createDrawerForm({
+    initial: createDefaultFormState
+  });
+
+  // Watch for drawer open/close
+  $effect(() => {
+    if (open) {
+      handleOpen();
+    }
+  });
+
+  async function handleOpen() {
+    f.reset(createDefaultFormState());
+    validationErrors = {};
+    showPurchaseSection = false;
+
+    // Load all reference data from backend to ensure IDs match database
+    isLoadingData = true;
+    try {
+      const [mfgResult, rcResult, sellerResult] = await Promise.all([
+        commands.getManufacturers(),
+        commands.getRailwayCompanies(),
+        commands.getSellers()
+      ]);
+
+      console.debug('getManufacturers result:', mfgResult);
+      console.debug('getRailwayCompanies result:', rcResult);
+      console.debug('getSellers result:', sellerResult);
+
+      manufacturers = mfgResult.status === 'ok' ? mfgResult.data : [];
+      railwayCompanies = rcResult.status === 'ok' ? rcResult.data : [];
+      sellers = sellerResult.status === 'ok' ? sellerResult.data : [];
+    } catch (e) {
+      console.error('Error loading reference data:', e);
+    } finally {
+      isLoadingData = false;
+    }
+  }
+
+  function handleAddRollingStock() {
+    f.values.rollingStocks = [...f.values.rollingStocks, createDefaultRollingStock()];
+  }
+
+  function handleRemoveRollingStock(uid: string) {
+    if (f.values.rollingStocks.length <= 1) return;
+    f.values.rollingStocks = f.values.rollingStocks.filter((rs) => rs.uid !== uid);
   }
 
   function toAddRailwayModelArgs(formState: AddModelFormState): AddRailwayModelToCollectionArgs {
@@ -198,49 +213,10 @@
     };
   }
 
-  async function handleOpen() {
-    // Reset form
-    form = createDefaultFormState();
-    touched = false;
-    validationErrors = {};
-    showPurchaseSection = false;
-
-    // Load all reference data from backend to ensure IDs match database
-    isLoadingData = true;
-    try {
-      const [mfgResult, rcResult, sellerResult] = await Promise.all([
-        commands.getManufacturers(),
-        commands.getRailwayCompanies(),
-        commands.getSellers()
-      ]);
-
-      console.debug('getManufacturers result:', mfgResult);
-      console.debug('getRailwayCompanies result:', rcResult);
-      console.debug('getSellers result:', sellerResult);
-
-      manufacturers = mfgResult.status === 'ok' ? mfgResult.data : [];
-      railwayCompanies = rcResult.status === 'ok' ? rcResult.data : [];
-      sellers = sellerResult.status === 'ok' ? sellerResult.data : [];
-    } catch (e) {
-      console.error('Error loading reference data:', e);
-    } finally {
-      isLoadingData = false;
-    }
-  }
-
-  function handleAddRollingStock() {
-    form.rollingStocks = [...form.rollingStocks, createDefaultRollingStock()];
-  }
-
-  function handleRemoveRollingStock(uid: string) {
-    if (form.rollingStocks.length <= 1) return;
-    form.rollingStocks = form.rollingStocks.filter((rs) => rs.uid !== uid);
-  }
-
   async function handleSubmit() {
-    touched = true;
+    f.touch();
 
-    const errors = validateForm(form);
+    const errors = validateForm(f.values);
     validationErrors = errors;
 
     if (Object.keys(errors).length > 0) {
@@ -250,7 +226,7 @@
 
     isSubmitting = true;
     try {
-      const args = toAddRailwayModelArgs(form);
+      const args = toAddRailwayModelArgs(f.values);
       console.log('Submitting railway model to collection:', args);
       const success = await collectionService.addRailwayModel(args);
       if (success) {
@@ -264,7 +240,7 @@
   }
 </script>
 
-<DrawerShell {open} {onClose} size="xl" {hasChanges} labelledby="drawer-title">
+<DrawerShell {open} {onClose} size="xl" hasChanges={f.isDirty} labelledby="drawer-title">
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="drawer-title"
@@ -282,7 +258,7 @@
   {:else}
     <form id="add-model-form" class="space-y-6">
       <ModelSearchSection
-        bind:form
+        bind:form={f.values}
         {manufacturers}
         {railwayCompanies}
         {sellers}

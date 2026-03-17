@@ -28,7 +28,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_power_trix_express: () => 'Trix Express'
 }));
 
-import ModelInfoSection from '$lib/components/drawer/ModelInfoSection.svelte';
+import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';
 import type { Manufacturer } from '$lib/bindings';
 
 const manufacturers: Manufacturer[] = [
