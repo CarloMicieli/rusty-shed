@@ -260,9 +260,9 @@ pub async fn seed_decoders(pool: &SqlitePool) -> anyhow::Result<()> {
             b.push_bind(id)
                 .push_bind(manufacturer_id)
                 .push_bind(product_code.to_string())
-                .push_bind(decoder_type.to_string())
-                .push_bind(protocol.to_string())
-                .push_bind(decoder_interface.to_string());
+                .push_bind(decoder_type.to_uppercase())
+                .push_bind(protocol.to_uppercase())
+                .push_bind(decoder_interface.to_uppercase());
         });
 
         // Upsert logic: update fields when id already present

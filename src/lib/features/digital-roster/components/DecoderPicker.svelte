@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import * as Select from '$lib/components/ui/select';
   import type { Decoder, Manufacturer } from '$lib/bindings';
 
   interface Props {
@@ -27,27 +28,25 @@
   <label for="decoder" class="block space-y-1">
     <span class="text-sm text-muted-foreground">{m.digital_roster_decoder_label()}</span>
   </label>
-  <select
-    id="decoder"
-    value={selectedId ?? ''}
-    onchange={(e) => onChange(e.currentTarget.value || null)}
-    class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
-    class:input-error={touched && error}
+  <Select.Root
+    type="single"
+    value={selectedId ?? undefined}
+    onValueChange={(v) => onChange(v || null)}
   >
-    <option value="">{m.form_new_model_select_placeholder()}</option>
-    {#each decoders as decoder (decoder.id)}
-      <option value={decoder.id}>
-        {formatLabel(decoder)}
-      </option>
-    {/each}
-  </select>
+    <Select.Trigger id="decoder" class="w-full" data-error={touched && !!error}>
+      {#if selectedId}
+        {formatLabel(decoders.find((d) => d.id === selectedId)!)}
+      {:else}
+        <span class="text-muted-foreground">{m.form_new_model_select_placeholder()}</span>
+      {/if}
+    </Select.Trigger>
+    <Select.Content>
+      {#each decoders as decoder (decoder.id)}
+        <Select.Item value={decoder.id} label={formatLabel(decoder)} />
+      {/each}
+    </Select.Content>
+  </Select.Root>
   {#if touched && error}
     <p class="text-error-500 mt-1 text-xs">{error}</p>
   {/if}
 </div>
-
-<style>
-  .input-error {
-    border-color: rgb(var(--color-error-500));
-  }
-</style>

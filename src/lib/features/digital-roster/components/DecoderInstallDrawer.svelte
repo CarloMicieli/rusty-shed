@@ -9,6 +9,7 @@
     DigitalRollingStockView
   } from '$lib/bindings';
   import { getDigitalRosterContext } from '../DigitalRosterState.svelte';
+  import { today, getLocalTimeZone } from '@internationalized/date';
   import { Button, Input, DatePickerField } from '$lib/components';
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderDiscardDialog from './DecoderDiscardDialog.svelte';
@@ -372,7 +373,11 @@
             <label for="installation-date" class="block space-y-1">
               <span class="text-sm text-muted-foreground">{m.digital_roster_date_label()}</span>
             </label>
-            <DatePickerField id="installation-date" bind:value={installationDate} />
+            <DatePickerField
+              id="installation-date"
+              bind:value={installationDate}
+              maxValue={today(getLocalTimeZone())}
+            />
           </div>
         </form>
       {/if}

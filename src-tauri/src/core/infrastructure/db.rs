@@ -76,6 +76,7 @@ impl Database {
     pub async fn run_initial_seed(pool: &SqlitePool) -> Result<(), anyhow::Error> {
         seeder::seed_railway_companies(pool).await?;
         seeder::seed_manufacturers(pool).await?;
+        seeder::seed_decoders(pool).await?;
         seeder::seed_track_products(pool).await?;
         seeder::seed_sellers(pool).await?;
         Ok(())
