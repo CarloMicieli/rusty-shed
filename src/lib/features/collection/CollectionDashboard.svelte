@@ -17,7 +17,7 @@
   import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
   import { collectionItemToCardData } from './utils/cardDataMapper';
   import FilterPanel from './components/FilterPanel.svelte';
-  import AddModelDrawer from './components/AddModelDrawer.svelte';
+  import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
   import DeleteModal from './components/DeleteModal.svelte';
 
   function useCollectionUI() {
@@ -261,7 +261,7 @@
   </div>
 </div>
 
-<AddModelDrawer
+<AddCollectionItemDrawer
   open={ui.showDrawer}
   onClose={ui.closeDrawer}
   onSuccess={() => {

@@ -19,6 +19,7 @@
 
   interface Props {
     open: boolean;
+    preselectedWishlistId?: string | null;
     onClose: () => void;
     onSaved: () => void;
   }
@@ -37,7 +38,7 @@
     desiredPrice: number | null;
   }
 
-  let { open, onClose, onSaved }: Props = $props();
+  let { open, preselectedWishlistId = null, onClose, onSaved }: Props = $props();
 
   const wishlists = $derived(wishlistService.wishlists);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
@@ -76,6 +77,14 @@
   $effect(() => {
     if (defaultWishlist && form.wishlistId === '') {
       form.wishlistId = defaultWishlist.id;
+    }
+  });
+
+  const lockWishlist = $derived(!!preselectedWishlistId);
+
+  $effect(() => {
+    if (open && preselectedWishlistId) {
+      form.wishlistId = preselectedWishlistId;
     }
   });
 
@@ -214,6 +223,7 @@
       bind:desiredPrice={form.desiredPrice}
       {currency}
       disabled={isSubmitting}
+      disableWishlistSelection={lockWishlist}
     />
   </div>
 

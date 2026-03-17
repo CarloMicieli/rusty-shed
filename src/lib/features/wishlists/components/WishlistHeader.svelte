@@ -82,7 +82,7 @@
       <div class="flex items-center gap-3">
         <Button onclick={onAddModel} variant="rusty">
           <Plus size={18} class="mr-2" />
-          Add Model
+          Add railway model
         </Button>
 
         <div class="relative">

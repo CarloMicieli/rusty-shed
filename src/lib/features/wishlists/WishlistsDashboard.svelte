@@ -9,7 +9,7 @@
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
   import WishlistValueBar from './components/WishlistValueBar.svelte';
-  import AddRailwayModelDrawer from './components/AddRailwayModelDrawer.svelte';
+  import AddWishlistItemDrawer from './AddWishlistItemDrawer.svelte';
   import PurchaseDialog from './components/PurchaseDialog.svelte';
   import type { WishlistItem } from '$lib/bindings';
 
@@ -224,12 +224,11 @@
 </div>
 
 <!-- Add Railway Model Drawer -->
-<AddRailwayModelDrawer
+<AddWishlistItemDrawer
   open={showAddModelDrawer}
   preselectedWishlistId={activeWishlistId}
-  {wishlists}
   onClose={closeAddModelDrawer}
-  onSuccess={handleAddModelSuccess}
+  onSaved={handleAddModelSuccess}
 />
 
 {#if purchaseDialogOpen && purchaseDialogItem && activeWishlistId}

@@ -19,6 +19,7 @@
       desiredPrice?: string;
     };
     disabled?: boolean;
+    disableWishlistSelection?: boolean;
     expanded?: boolean;
   }
 
@@ -32,6 +33,7 @@
     notes = $bindable(undefined),
     errors = {},
     disabled = false,
+    disableWishlistSelection = false,
     expanded = $bindable(true)
   }: Props = $props();
 
@@ -46,7 +48,7 @@
   }
 
   const isDropdownDisabled = $derived(
-    disabled || newListName.trim() !== '' || wishlists.length === 0
+    disabled || disableWishlistSelection || newListName.trim() !== '' || wishlists.length === 0
   );
   const selectedWishlist = $derived(wishlists.find((l) => l.id === wishlistId));
   const currencySymbol = $derived(getCurrencySymbol(currency));
@@ -95,12 +97,14 @@
           </Select.Content>
         </Select.Root>
 
-        <DrawerInput
-          type="text"
-          placeholder={m.wishlist_modal_new_list_placeholder()}
-          bind:value={newListName}
-          {disabled}
-        />
+        {#if !disableWishlistSelection}
+          <DrawerInput
+            type="text"
+            placeholder={m.wishlist_modal_new_list_placeholder()}
+            bind:value={newListName}
+            {disabled}
+          />
+        {/if}
       </div>
       {#if errors.wishlistId}
         <p class="text-xs text-destructive">{errors.wishlistId}</p>

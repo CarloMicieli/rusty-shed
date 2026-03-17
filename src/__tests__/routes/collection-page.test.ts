@@ -45,8 +45,8 @@ vi.mock('$lib/features/collection/CollectionState.svelte', () => ({
   availableScales: []
 }));
 
-vi.mock('$lib/features/collection/components/AddModelDrawer.svelte', () => ({
-  default: function AddModelDrawerStub() {}
+vi.mock('$lib/features/collection/components/AddCollectionItemDrawer.svelte', () => ({
+  default: function AddCollectionItemDrawerStub() {}
 }));
 
 vi.mock('$lib/features/collection/components/DeleteModal.svelte', () => ({

@@ -5,13 +5,13 @@ import type {
 } from '$lib/features/wishlists/types';
 
 /**
- * Unit tests for AddRailwayModelDrawer component logic
+ * Unit tests for wishlist form logic (types and data transformation)
  *
- * Note: These tests verify form validation logic and data transformation.
- * Full component tests with rendering would require additional setup with Svelte Testing Library.
+ * Note: These tests verify form validation logic and data transformation
+ * using the AddRailwayModelFormState type from the wishlists feature.
  */
 
-describe('AddRailwayModelDrawer - Form Logic', () => {
+describe('Wishlist - Form Logic', () => {
   describe('Form State Initialization', () => {
     it('should create default form state with empty values', () => {
       const defaultState: AddRailwayModelFormState = {

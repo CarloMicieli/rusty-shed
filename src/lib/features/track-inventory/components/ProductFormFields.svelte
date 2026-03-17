@@ -40,11 +40,8 @@
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
     <!-- Manufacturer -->
     <div class="space-y-2">
-      <label
-        for="manufacturer-select"
-        class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-      >
-        {m.track_product_field_manufacturer()}
+      <label for="manufacturer-select" class="text-xs text-zinc-400">
+        {m.track_product_field_manufacturer()} *
       </label>
       <select
         id="manufacturer-select"
@@ -53,7 +50,7 @@
         required
         class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
       >
-        <option value="" disabled>{m.track_product_select_manufacturer()}</option>
+        <option value="" disabled>{m.wishlist_modal_manufacturer_placeholder()}</option>
         {#each manufacturers as manufacturer (manufacturer.id)}
           <option value={manufacturer.id}>{manufacturer.name}</option>
         {/each}
@@ -62,18 +59,15 @@
 
     <!-- Product Code -->
     <div class="space-y-2">
-      <label
-        for="product-code-input"
-        class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-      >
-        {m.track_product_field_product_code()}
+      <label for="product-code-input" class="text-xs text-zinc-400">
+        {m.track_product_field_product_code()} *
       </label>
       <Input
         id="product-code-input"
         bind:value={productCode}
         disabled={submitting}
         required
-        placeholder="e.g. 6210"
+        placeholder={m.wishlist_modal_product_code_placeholder()}
         class="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-100 focus:border-white/20 focus:ring-0"
       />
     </div>

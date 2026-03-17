@@ -6,7 +6,7 @@
   import InventoryDetail from '$lib/features/track-inventory/components/InventoryDetail.svelte';
   import RenameInventoryDialog from '$lib/features/track-inventory/components/RenameInventoryDialog.svelte';
   import DeleteInventoryDialog from '$lib/features/track-inventory/components/DeleteInventoryDialog.svelte';
-  import AddPurchaseDrawer from '$lib/features/track-inventory/components/AddPurchaseDrawer.svelte';
+  import AddTracksPurchaseDrawer from '$lib/features/track-inventory/components/AddTracksPurchaseDrawer.svelte';
   import { onMount } from 'svelte';
 
   const service = getTrackInventoryContext();
@@ -87,7 +87,7 @@
   inventoryName={inventory?.name}
   onConfirm={handleDelete}
 />
-<AddPurchaseDrawer
+<AddTracksPurchaseDrawer
   bind:open={addPurchaseDrawerOpen}
   inventoryId={inventoryId || ''}
   onPurchaseAdded={loadInventory}
