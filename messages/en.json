@@ -1084,5 +1084,13 @@
   "drawer_section_rolling_stocks": "Rolling Stocks",
   "drawer_section_purchase": "Purchase Details",
   "drawer_section_wishlist": "Wishlist Preferences",
-  "drawer_section_digital": "Digital Settings"
+  "drawer_section_digital": "Digital Settings",
+  "rolling_stock_placeholder_series_code": "e.g. Re 4/4, BR 218",
+  "rolling_stock_placeholder_road_number": "e.g. 218 101-3",
+  "rolling_stock_placeholder_livery": "e.g. Swiss Federal",
+  "rolling_stock_placeholder_depot": "e.g. Basel",
+  "rolling_stock_select_company": "— Select company —",
+  "rolling_stock_select_category": "— Select category —",
+  "rolling_stock_select_control": "— Select control —",
+  "track_product_select_manufacturer": "— Select brand —"
 }

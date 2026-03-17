@@ -20,8 +20,9 @@
     <select
       id="create-control"
       bind:value={control}
-      class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
+      class="flex h-10 w-full rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] px-3 py-2 text-sm text-[#E0E0E0] focus:border-[#D48A42]/60 focus:ring-2 focus:ring-[#D48A42]/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
     >
+      <option value="" disabled>{m.rolling_stock_select_control()}</option>
       {#each controlOptions as opt (opt.value)}
         <option value={opt.value}>{opt.label}</option>
       {/each}

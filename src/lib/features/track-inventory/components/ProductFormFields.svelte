@@ -53,7 +53,7 @@
         required
         class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
       >
-        <option value="" disabled>Select brand...</option>
+        <option value="" disabled>{m.track_product_select_manufacturer()}</option>
         {#each manufacturers as manufacturer (manufacturer.id)}
           <option value={manufacturer.id}>{manufacturer.name}</option>
         {/each}

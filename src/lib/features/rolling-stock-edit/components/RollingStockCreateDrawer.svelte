@@ -91,7 +91,6 @@
 
   // ── Control options ──────────────────────────────────────────────────────────
   const controlOptions = [
-    { value: '', label: '—' },
     { value: 'DCC_READY', label: 'DCC Ready' },
     { value: 'DCC_FITTED', label: 'DCC Fitted' },
     { value: 'DCC_SOUND', label: 'DCC Sound' },

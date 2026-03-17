@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
+  import DrawerInput from '$lib/components/drawer/DrawerInput.svelte';
 
   interface Props {
     seriesCode: string;
@@ -25,44 +26,40 @@
       <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-series-code">
         {m.rolling_stock_field_series_code()} <span class="text-red-400">*</span>
       </label>
-      <input
+      <DrawerInput
         id="drawer-series-code"
-        type="text"
         bind:value={seriesCode}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
+        placeholder={m.rolling_stock_placeholder_series_code()}
       />
     </div>
     <div>
       <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-road-number">
         {m.rolling_stock_field_road_number()}
       </label>
-      <input
+      <DrawerInput
         id="drawer-road-number"
-        type="text"
         bind:value={roadNumber}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
+        placeholder={m.rolling_stock_placeholder_road_number()}
       />
     </div>
     <div>
       <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-livery">
         {m.rolling_stock_field_livery()}
       </label>
-      <input
+      <DrawerInput
         id="drawer-livery"
-        type="text"
         bind:value={livery}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
+        placeholder={m.rolling_stock_placeholder_livery()}
       />
     </div>
     <div>
       <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-depot">
         {m.rolling_stock_field_depot()}
       </label>
-      <input
+      <DrawerInput
         id="drawer-depot"
-        type="text"
         bind:value={depot}
-        class="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-[#E2994F] focus:ring-1 focus:ring-[#E2994F]/30"
+        placeholder={m.rolling_stock_placeholder_depot()}
       />
     </div>
   </div>
