@@ -38,6 +38,7 @@
       value: boolean | null
     ) => Promise<void>;
     onSaveLength: (value: string) => Promise<void>;
+    onSpecsSaved?: () => Promise<void> | void;
   }
 
   const {
@@ -52,7 +53,8 @@
     onSaveIdentification,
     onSaveSpec,
     onSaveBoolSpec,
-    onSaveLength
+    onSaveLength,
+    onSpecsSaved
   }: Props = $props();
 
   let specsDrawerOpen = $state(false);
@@ -221,10 +223,10 @@
     </div>
     <div></div>
 
-    <!-- Row 3: Coupling Type | Close Couplers | Digital Shunting | (spacer) -->
+    <!-- Row 3: Coupling Socket | Close Couplers | Digital Shunting | (spacer) -->
     <div class="flex flex-col gap-0.5">
       <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
-        {m.coupling_type()}
+        {m.specs_drawer_field_coupling_socket()}
       </dt>
       <dd class="text-xs text-zinc-200">
         {#if editable && specLoaded}
@@ -292,5 +294,6 @@
     onClose={() => {
       specsDrawerOpen = false;
     }}
+    onSaved={() => onSpecsSaved?.()}
   />
 {/if}

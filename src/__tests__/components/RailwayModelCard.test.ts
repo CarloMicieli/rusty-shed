@@ -73,6 +73,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   control_type: () => 'Control Type',
   dcc_interface: () => 'DCC Interface',
   coupling_type: () => 'Coupling Type',
+  specs_drawer_field_coupling_socket: () => 'Coupling Socket',
   railway_model_field_description: () => 'Description',
   railway_model_field_scale: () => 'Scale',
   railway_model_field_era: () => 'Era',
@@ -111,7 +112,8 @@ vi.mock('$lib/paraglide/messages', () => ({
   crop_reset: () => 'Reset',
   uploading: () => 'Uploading...',
   railway_model_image_alt: () => 'Railway model image',
-  railway_model_no_image: () => 'No image available'
+  railway_model_no_image: () => 'No image available',
+  rolling_stock_edit_specs_button: () => 'Edit Specs'
 }));
 
 describe('RailwayModelCard', () => {
@@ -464,11 +466,11 @@ describe('RailwayModelCard', () => {
     });
 
     it('rolling stock row shows series code and series name together', () => {
-      const { container } = render(RailwayModelCard, { props: { model: _mockModelMultiUnit } });
+      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
 
-      // Verify series code and name appear together for first unit
-      expect(container.textContent).toContain('Railjet');
-      expect(container.textContent).toContain('Control Car');
+      // Verify series code and name appear together (rendered as "E.656 — I Serie" by RollingStockSingleUnit)
+      expect(container.textContent).toContain('E.656');
+      expect(container.textContent).toContain('I Serie');
     });
 
     it('expanded row displays all specifications (category, subcategory, road_number, depot, livery, control_type, dcc_interface, coupling_type)', () => {
@@ -479,7 +481,7 @@ describe('RailwayModelCard', () => {
       expect(container.textContent).toContain('Livery');
       expect(container.textContent).toContain('Control Type');
       expect(container.textContent).toContain('DCC Interface');
-      expect(container.textContent).toContain('Coupling Type');
+      expect(container.textContent).toContain('Coupling Socket');
     });
 
     it('missing optional rolling stock fields are hidden (no empty placeholders)', () => {

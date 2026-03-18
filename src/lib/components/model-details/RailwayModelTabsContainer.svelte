@@ -150,6 +150,10 @@
           onSaveSpec={(field, value) => rs.saveSpec(unit.id, field, value)}
           onSaveBoolSpec={(field, value) => rs.saveBoolSpec(unit.id, field, value)}
           onSaveLength={(value) => rs.saveLength(unit.id, value)}
+          onSpecsSaved={async () => {
+            await rs.reloadSpec(unit.id);
+            await onModelUpdated?.();
+          }}
         />
       {:else}
         <RollingStockMultiUnit

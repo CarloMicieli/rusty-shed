@@ -185,7 +185,7 @@
         </div>
         <div class="flex flex-col gap-0.5">
           <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
-            {m.coupling_type()}
+            {m.specs_drawer_field_coupling_socket()}
           </dt>
           <dd class="text-xs text-zinc-200">
             {#if editable && specLoaded}

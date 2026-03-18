@@ -91,6 +91,12 @@ export function useRollingStockEditor(
   const formState = new SvelteMap<string, RsFormState>();
   const specLoaded = new SvelteSet<string>();
 
+  async function reloadSpec(unitId: string) {
+    specLoaded.delete(unitId);
+    formState.delete(unitId);
+    await loadSpec(unitId);
+  }
+
   async function loadSpec(unitId: string) {
     if (specLoaded.has(unitId)) return;
 
@@ -257,6 +263,7 @@ export function useRollingStockEditor(
     formState,
     specLoaded,
     loadSpec,
+    reloadSpec,
     saveIdentification,
     saveSpec,
     saveLength,
