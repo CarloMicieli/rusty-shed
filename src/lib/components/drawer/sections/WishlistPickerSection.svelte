@@ -30,10 +30,10 @@
   const selectedWishlist = $derived(wishlists.find((l) => l.id === wishlistId));
 </script>
 
-<div class="space-y-1">
-  <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
+<div class="space-y-3">
+  <h3 class="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
     {m.wishlist_modal_choose_or_create()}
-  </span>
+  </h3>
   <div class="grid grid-cols-2 gap-3">
     <Select.Root
       type="single"

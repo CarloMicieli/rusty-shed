@@ -7,7 +7,12 @@
   import RollingStockCategoryFields from './RollingStockCategoryFields.svelte';
   import RollingStockBasicFields from './RollingStockBasicFields.svelte';
   import RollingStockControlField from './RollingStockControlField.svelte';
-  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
+  import {
+    DrawerShell,
+    DrawerHeader,
+    DrawerFooter,
+    createDrawerForm
+  } from '$lib/components/drawer';
 
   interface Props {
     /** Controls drawer visibility. */

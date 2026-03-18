@@ -180,7 +180,9 @@
               onCreateProduct={() => (showCreateProduct = true)}
             />
 
-            <div class="flex items-center justify-between border-t border-white/5 bg-[#0c0c0c] px-6 py-4">
+            <div
+              class="flex items-center justify-between border-t border-white/5 bg-[#0c0c0c] px-6 py-4"
+            >
               <Button
                 type="button"
                 variant="ghost"

@@ -13,18 +13,13 @@
 export function createDrawerForm<
   T extends object,
   E extends Record<string, unknown> = Record<string, string>
->(opts: {
-  initial: () => T;
-  validate?: (values: T) => E;
-}) {
+>(opts: { initial: () => T; validate?: (values: T) => E }) {
   let values = $state<T>(opts.initial());
   let touched = $state(false);
   let _initial = $state<T>(opts.initial());
 
   const errors = $derived(opts.validate ? opts.validate(values) : ({} as E));
-  const isValid = $derived(
-    Object.values(errors as Record<string, unknown>).every((e) => !e)
-  );
+  const isValid = $derived(Object.values(errors as Record<string, unknown>).every((e) => !e));
   const isDirty = $derived(JSON.stringify(values) !== JSON.stringify(_initial));
 
   return {

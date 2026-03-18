@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
-  import { DrawerSectionBar, FormInput, FormSelect } from '$lib/components/drawer';
+  import { FormInput, FormSelect } from '$lib/components/drawer';
   import type { Manufacturer } from '$lib/bindings';
   import { CATEGORIES, SCALES, POWER_METHODS, EPOCHS } from '$lib/features/wishlists/constants';
 
@@ -21,7 +21,6 @@
     };
     isLoading?: boolean;
     disabled?: boolean;
-    expanded?: boolean;
   }
 
   let {
@@ -35,8 +34,7 @@
     manufacturers,
     errors = {},
     isLoading = false,
-    disabled = false,
-    expanded = $bindable(true)
+    disabled = false
   }: Props = $props();
 
   const SCALE_DISPLAY_MAP: Record<string, string> = {
@@ -79,14 +77,12 @@
   const selectedManufacturer = $derived(manufacturers.find((mfr) => mfr.id === manufacturerId));
 </script>
 
-<div class="space-y-3">
-  <DrawerSectionBar
-    label={m.drawer_section_model_info()}
-    {expanded}
-    onToggle={() => (expanded = !expanded)}
-  />
-
-  {#if expanded}
+<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+  <section>
+  <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+    {m.drawer_section_model_info()}
+  </p>
+  <div class="space-y-4">
     <!-- Manufacturer + Product Code -->
     <div class="grid grid-cols-[2fr_1fr] gap-3">
       <!-- Manufacturer: kept inline due to loading state -->
@@ -154,6 +150,7 @@
       label={m.wishlist_modal_category()}
       options={CATEGORIES.map((cat) => ({ value: cat, label: getCategoryLabel(cat) }))}
       bind:value={category}
+      placeholder={m.rolling_stock_select_category()}
       {disabled}
     />
 
@@ -184,5 +181,6 @@
       placeholder={m.wishlist_modal_epoch_placeholder()}
       {disabled}
     />
-  {/if}
+  </div>
+  </section>
 </div>

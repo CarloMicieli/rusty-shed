@@ -3,7 +3,12 @@
   import type { TrackProductView, SellerView, Currency, Manufacturer } from '$lib/bindings';
   import { commands } from '$lib/bindings';
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
-  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
+  import {
+    DrawerShell,
+    DrawerHeader,
+    DrawerFooter,
+    createDrawerForm
+  } from '$lib/components/drawer';
   import { ShoppingCart } from 'lucide-svelte';
   import CreateProductDialog from './CreateProductDialog.svelte';
   import PurchaseFormFields from './PurchaseFormFields.svelte';
@@ -39,9 +44,7 @@
       purchaseDate: new Date().toISOString().split('T')[0]
     }),
     validate: (v) => ({
-      selectedProductId: !v.selectedProductId
-        ? m.track_purchase_validation_product()
-        : undefined,
+      selectedProductId: !v.selectedProductId ? m.track_purchase_validation_product() : undefined,
       quantity: v.quantity <= 0 ? m.track_purchase_validation_quantity() : undefined,
       priceAmount:
         v.priceAmount === null || v.priceAmount < 0

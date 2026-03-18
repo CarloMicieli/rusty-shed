@@ -1,7 +1,12 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { TrainFront } from 'lucide-svelte';
-  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
+  import {
+    DrawerShell,
+    DrawerHeader,
+    DrawerFooter,
+    createDrawerForm
+  } from '$lib/components/drawer';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,

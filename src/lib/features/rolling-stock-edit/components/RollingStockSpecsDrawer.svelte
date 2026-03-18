@@ -246,8 +246,6 @@
       isSaving = false;
     }
   }
-
-
 </script>
 
 <DrawerShell

@@ -25,7 +25,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_category_railcars: () => 'Railcars',
   wishlist_power_ac: () => 'AC',
   wishlist_power_dc: () => 'DC',
-  wishlist_power_trix_express: () => 'Trix Express'
+  wishlist_power_trix_express: () => 'Trix Express',
+  rolling_stock_select_category: () => '— Select category —'
 }));
 
 import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';

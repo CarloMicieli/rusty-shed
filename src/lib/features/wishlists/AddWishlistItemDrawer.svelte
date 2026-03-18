@@ -6,12 +6,13 @@
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { commands } from '$lib/bindings';
   import type { Manufacturer, WishlistPriority } from '$lib/bindings';
-  import { CATEGORIES, SCALES, POWER_METHODS } from '$lib/features/wishlists/constants';
+  import { SCALES, POWER_METHODS } from '$lib/features/wishlists/constants';
   import {
     DrawerShell,
     DrawerHeader,
     ModelInfoSection,
-    WishlistSection,
+    WishlistPickerSection,
+    WishlistPreferencesSection,
     createDrawerForm
   } from '$lib/components/drawer';
   import { onMount } from 'svelte';
@@ -37,7 +38,7 @@
       manufacturerId: '',
       productCode: '',
       description: '',
-      category: CATEGORIES[0],
+      category: '',
       scale: settingsState.settings?.favouriteScale || SCALES[0],
       powerMethod: settingsState.settings?.powerMethod || POWER_METHODS[0],
       epoch: '',
@@ -181,20 +182,17 @@
     />
   {/snippet}
 
-  <div class="space-y-5">
-    <WishlistSection
+  <div class="space-y-6">
+    <!-- Section 1: Choose or Create Wishlist -->
+    <WishlistPickerSection
       bind:wishlistId={f.values.wishlistId}
       bind:newListName={f.values.newListName}
       {wishlists}
-      bind:priority={f.values.priority}
-      bind:desiredPrice={f.values.desiredPrice}
-      {currency}
       disabled={isSubmitting}
       disableWishlistSelection={lockWishlist}
     />
 
-    <div class="border-t border-white/10 pt-2"></div>
-
+    <!-- Section 2: Model Details -->
     <ModelInfoSection
       bind:manufacturerId={f.values.manufacturerId}
       bind:productCode={f.values.productCode}
@@ -207,6 +205,22 @@
       isLoading={isLoadingData}
       disabled={isSubmitting}
     />
+
+    <!-- Section 3: Wishlist Preferences -->
+    <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+      <section>
+        <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+          {m.drawer_section_wishlist()}
+        </p>
+        <WishlistPreferencesSection
+          bind:priority={f.values.priority}
+          bind:desiredPrice={f.values.desiredPrice}
+          {currency}
+          errors={f.errors}
+          disabled={isSubmitting}
+        />
+      </section>
+    </div>
   </div>
 
   {#snippet footer({ requestClose })}

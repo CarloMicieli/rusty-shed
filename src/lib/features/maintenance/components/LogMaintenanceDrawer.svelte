@@ -10,7 +10,12 @@
   import { safeInvoke } from '$lib/shared/services/TauriAdapter';
   import { toaster } from '$lib/toaster';
   import * as m from '$lib/paraglide/messages.js';
-  import { DrawerShell, DrawerHeader, DrawerFooter, createDrawerForm } from '$lib/components/drawer';
+  import {
+    DrawerShell,
+    DrawerHeader,
+    DrawerFooter,
+    createDrawerForm
+  } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -38,8 +43,7 @@
       notes: ''
     }),
     validate: (v) => ({
-      selectedRsId:
-        v.mode === 'rolling-stock' && !v.selectedRsId ? m.error_required() : undefined,
+      selectedRsId: v.mode === 'rolling-stock' && !v.selectedRsId ? m.error_required() : undefined,
       selectedCardId: v.mode === 'card' && !v.selectedCardId ? m.error_required() : undefined,
       datePerformed: !v.datePerformed ? m.error_required() : undefined
     })
@@ -208,8 +212,8 @@
     <div class="flex rounded-lg border border-white/10 bg-zinc-900 p-1">
       <button
         type="button"
-        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values
-          .mode === 'rolling-stock'
+        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values.mode ===
+        'rolling-stock'
           ? 'bg-amber-500/20 text-amber-400'
           : 'text-zinc-400 hover:text-zinc-200'}"
         onclick={() => handleModeChange('rolling-stock')}
@@ -218,8 +222,8 @@
       </button>
       <button
         type="button"
-        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values
-          .mode === 'card'
+        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values.mode ===
+        'card'
           ? 'bg-amber-500/20 text-amber-400'
           : 'text-zinc-400 hover:text-zinc-200'}"
         onclick={() => handleModeChange('card')}

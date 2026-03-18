@@ -13,7 +13,12 @@
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
   import DecoderPicker from './DecoderPicker.svelte';
-  import { DrawerShell, DrawerHeader, DigitalSection, createDrawerForm } from '$lib/components/drawer';
+  import {
+    DrawerShell,
+    DrawerHeader,
+    DigitalSection,
+    createDrawerForm
+  } from '$lib/components/drawer';
 
   interface Props {
     open: boolean;
@@ -142,7 +147,11 @@
   }
 
   async function performInstallation() {
-    if (!f.values.selectedRollingStockId || !f.values.selectedDecoderId || f.values.dccAddress === null)
+    if (
+      !f.values.selectedRollingStockId ||
+      !f.values.selectedDecoderId ||
+      f.values.dccAddress === null
+    )
       return;
 
     try {
@@ -186,7 +195,13 @@
   }
 </script>
 
-<DrawerShell {open} {onClose} size="lg" hasChanges={f.isDirty} labelledby="decoder-install-drawer-title">
+<DrawerShell
+  {open}
+  {onClose}
+  size="lg"
+  hasChanges={f.isDirty}
+  labelledby="decoder-install-drawer-title"
+>
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="decoder-install-drawer-title"
