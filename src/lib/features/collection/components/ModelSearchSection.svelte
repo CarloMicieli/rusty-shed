@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { Manufacturer, RailwayCompany, SellerView } from '$lib/bindings';
   import type { AddModelFormState } from '$lib/features/collection/types/AddModelFormTypes';
+  import * as m from '$lib/paraglide/messages.js';
+  import { Plus } from 'lucide-svelte';
+  import { Button } from '$lib/components';
+  import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';
   import RollingStockEntry from './RollingStockEntry.svelte';
   import PurchaseSection from './PurchaseSection.svelte';
-  import RailwayModelBaseForm from '$lib/shared/components/RailwayModelBaseForm.svelte';
-  import scales from '$lib/data/constants/scales.json';
-  import categories from '$lib/data/constants/categories.json';
-  import powerMethods from '$lib/data/constants/powerMethods.json';
 
   interface ValidationErrors {
     manufacturerId?: string;
@@ -35,6 +35,8 @@
     showPurchaseSection: boolean;
     /** Validation errors to display */
     validationErrors: ValidationErrors;
+    /** Whether reference data is still loading */
+    isLoading?: boolean;
     /** Callbacks */
     onAddRollingStock: () => void;
     onRemoveRollingStock: (uid: string) => void;
@@ -48,34 +50,64 @@
     sellers,
     showPurchaseSection = $bindable(),
     validationErrors,
+    isLoading = false,
     onAddRollingStock,
     onRemoveRollingStock,
     onTogglePurchaseSection
   }: Props = $props();
 </script>
 
-<!-- Base Railway Model Form (shared component) -->
-<RailwayModelBaseForm
-  dark={true}
+<!-- Model Info Section (shared drawer component) -->
+<ModelInfoSection
+  bind:manufacturerId={form.manufacturerId}
+  bind:productCode={form.productCode}
+  bind:description={form.description}
+  bind:category={form.category}
+  bind:scale={form.scale}
+  bind:powerMethod={form.powerMethod}
+  bind:epoch={form.epoch}
   {manufacturers}
-  categoryOptions={categories}
-  scaleOptions={scales}
-  powerMethodOptions={powerMethods}
-  {form}
-  validationErrors={validationErrors as Record<string, string | undefined>}
-  {onAddRollingStock}
->
-  {#each form.rollingStocks as entry, index (entry.uid)}
-    <RollingStockEntry
-      dark={true}
-      bind:entry={form.rollingStocks[index]}
-      {railwayCompanies}
-      canRemove={form.rollingStocks.length > 1}
-      onRemove={() => onRemoveRollingStock(entry.uid)}
-      errors={validationErrors.rollingStockErrors?.[index]}
-    />
-  {/each}
-</RailwayModelBaseForm>
+  {isLoading}
+  errors={validationErrors}
+/>
+
+<!-- Rolling Stocks Section -->
+<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+  <section>
+    <div class="mb-4 flex items-center justify-between">
+      <p class="text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+        {m.add_model_section_rolling_stock()}
+      </p>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        class="border border-[#1F1F1F] bg-transparent text-[#E0E0E0] hover:bg-[rgba(212,138,66,0.15)]"
+        onclick={onAddRollingStock}
+      >
+        <Plus size={16} />
+        <span>{m.add_model_add_rolling_stock()}</span>
+      </Button>
+    </div>
+
+    {#if validationErrors.rollingStocks}
+      <p class="mb-3 text-sm text-destructive">{validationErrors.rollingStocks}</p>
+    {/if}
+
+    <div class="space-y-4">
+      {#each form.rollingStocks as entry, index (entry.uid)}
+        <RollingStockEntry
+          dark={true}
+          bind:entry={form.rollingStocks[index]}
+          {railwayCompanies}
+          canRemove={form.rollingStocks.length > 1}
+          onRemove={() => onRemoveRollingStock(entry.uid)}
+          errors={validationErrors.rollingStockErrors?.[index]}
+        />
+      {/each}
+    </div>
+  </section>
+</div>
 
 <!-- Purchase Section -->
 <PurchaseSection

@@ -155,6 +155,34 @@ describe('ModelInfoSection', () => {
     expect(screen.getByText('Please select a manufacturer')).toBeInTheDocument();
   });
 
+  it('displays category error when provided', () => {
+    render(ModelInfoSection, {
+      props: { ...defaultProps, errors: { category: 'Category is required' } }
+    });
+    expect(screen.getByText('Category is required')).toBeInTheDocument();
+  });
+
+  it('displays scale error when provided', () => {
+    render(ModelInfoSection, {
+      props: { ...defaultProps, errors: { scale: 'Scale is required' } }
+    });
+    expect(screen.getByText('Scale is required')).toBeInTheDocument();
+  });
+
+  it('displays powerMethod error when provided', () => {
+    render(ModelInfoSection, {
+      props: { ...defaultProps, errors: { powerMethod: 'Power method is required' } }
+    });
+    expect(screen.getByText('Power method is required')).toBeInTheDocument();
+  });
+
+  it('displays epoch error when provided', () => {
+    render(ModelInfoSection, {
+      props: { ...defaultProps, errors: { epoch: 'Epoch is required' } }
+    });
+    expect(screen.getByText('Epoch is required')).toBeInTheDocument();
+  });
+
   // ── Manufacturer select dropdown ────────────────────────────────────────────
 
   it('shows all manufacturers in dropdown when opened', async () => {

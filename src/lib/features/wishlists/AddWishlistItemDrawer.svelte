@@ -163,7 +163,7 @@
 <DrawerShell
   {open}
   onClose={resetAndClose}
-  size="md"
+  size="xl"
   hasChanges={f.isDirty}
   labelledby="wishlist-item-drawer-title"
   error={formError}

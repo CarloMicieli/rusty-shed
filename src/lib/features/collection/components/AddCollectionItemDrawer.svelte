@@ -256,25 +256,20 @@
     />
   {/snippet}
 
-  {#if isLoadingData}
-    <div class="flex items-center justify-center py-8">
-      <p class="text-[#808080]">Loading...</p>
-    </div>
-  {:else}
-    <form id="add-model-form" class="space-y-6">
-      <ModelSearchSection
-        bind:form={f.values}
-        {manufacturers}
-        {railwayCompanies}
-        {sellers}
-        bind:showPurchaseSection
-        {validationErrors}
-        onAddRollingStock={handleAddRollingStock}
-        onRemoveRollingStock={handleRemoveRollingStock}
-        onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
-      />
-    </form>
-  {/if}
+  <form id="add-model-form" class="space-y-6">
+    <ModelSearchSection
+      bind:form={f.values}
+      {manufacturers}
+      {railwayCompanies}
+      {sellers}
+      bind:showPurchaseSection
+      {validationErrors}
+      isLoading={isLoadingData}
+      onAddRollingStock={handleAddRollingStock}
+      onRemoveRollingStock={handleRemoveRollingStock}
+      onTogglePurchaseSection={() => (showPurchaseSection = !showPurchaseSection)}
+    />
+  </form>
 
   {#snippet footer({ requestClose })}
     <DrawerFooter

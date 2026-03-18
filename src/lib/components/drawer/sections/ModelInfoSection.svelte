@@ -6,30 +6,34 @@
   import { CATEGORIES, SCALES, POWER_METHODS, EPOCHS } from '$lib/features/wishlists/constants';
 
   interface Props {
-    manufacturerId: string;
+    manufacturerId: string | null;
     productCode: string;
     description: string;
-    category: string;
-    scale: string;
-    powerMethod: string;
+    category: string | null;
+    scale: string | null;
+    powerMethod: string | null;
     epoch: string | null;
     manufacturers: Manufacturer[];
     errors?: {
       manufacturerId?: string;
       productCode?: string;
       description?: string;
+      category?: string;
+      scale?: string;
+      powerMethod?: string;
+      epoch?: string;
     };
     isLoading?: boolean;
     disabled?: boolean;
   }
 
   let {
-    manufacturerId = $bindable(),
+    manufacturerId = $bindable<string | null>(),
     productCode = $bindable(),
     description = $bindable(),
-    category = $bindable(),
-    scale = $bindable(),
-    powerMethod = $bindable(),
+    category = $bindable<string | null>(),
+    scale = $bindable<string | null>(),
+    powerMethod = $bindable<string | null>(),
     epoch = $bindable<string | null>(),
     manufacturers,
     errors = {},
@@ -152,6 +156,7 @@
         bind:value={category}
         placeholder={m.rolling_stock_select_category()}
         {disabled}
+        error={errors.category}
       />
 
       <!-- Scale + Power Method -->
@@ -161,6 +166,7 @@
           options={SCALES.map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] ?? s }))}
           bind:value={scale}
           {disabled}
+          error={errors.scale}
         />
         <FormSelect
           label={m.wishlist_modal_power_method()}
@@ -170,6 +176,7 @@
           }))}
           bind:value={powerMethod}
           {disabled}
+          error={errors.powerMethod}
         />
       </div>
 
@@ -180,6 +187,7 @@
         bind:value={epoch}
         placeholder={m.wishlist_modal_epoch_placeholder()}
         {disabled}
+        error={errors.epoch}
       />
     </div>
   </section>

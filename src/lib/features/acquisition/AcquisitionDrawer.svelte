@@ -158,7 +158,7 @@
 <DrawerShell
   {open}
   {onClose}
-  size="lg"
+  size="xl"
   {hasChanges}
   labelledby="acquisition-drawer-title"
   discardTitle={m.acquisition_discard_title()}
