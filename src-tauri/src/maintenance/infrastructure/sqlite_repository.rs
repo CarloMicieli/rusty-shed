@@ -18,6 +18,35 @@ use crate::maintenance::infrastructure::entities::{
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
+/// Loads all persisted `MaintenanceEvent` records for a given card TRN.
+///
+/// Extracted to eliminate the identical query-and-map block duplicated across
+/// `find_by_rolling_stock_id` and `find_by_id`.
+async fn load_events_for_card(
+    executor: &mut SqliteConnection,
+    card_trn: &str,
+) -> Result<Vec<MaintenanceEvent>, DomainError> {
+    let events_q = r#"SELECT
+        id,
+        maintenance_card_id,
+        date_performed,
+        notes,
+        maintenance_type
+    FROM maintenance_events
+    WHERE maintenance_card_id = ?
+    ORDER BY date_performed DESC"#;
+
+    let rows = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
+        .bind(card_trn)
+        .fetch_all(executor)
+        .await
+        .with_domain_context("Error listing maintenance events for card")?;
+
+    rows.into_iter()
+        .map(|er| MaintenanceEvent::try_from(er).map_err(DomainError::Validation))
+        .collect()
+}
+
 /// SQLite implementation of the MaintenanceRepository.
 pub struct SqliteMaintenanceRepository<'conn> {
     executor: &'conn mut SqliteConnection,
@@ -58,34 +87,9 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         // Map infra row into domain model when present and load persisted events.
         let maybe_card = match row {
             Some(r) => {
-                let card_trn = r.id.clone(); // Clone the TRN for later use
+                let card_trn = r.id.clone();
                 let mut card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
-
-                // Query persisted events for this card id (TRN)
-                let events_q = r#"SELECT
-                    id,
-                    maintenance_card_id,
-                    date_performed,
-                    notes,
-                    maintenance_type
-                FROM maintenance_events
-                WHERE maintenance_card_id = ?
-                ORDER BY date_performed DESC"#;
-
-                let rows = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
-                    .bind(card_trn)
-                    .fetch_all(&mut *self.executor)
-                    .await
-                    .with_domain_context("Error listing maintenance events for card")?;
-
-                // Map infra event rows into domain events
-                let mut domain_events = Vec::with_capacity(rows.len());
-                for er in rows.into_iter() {
-                    domain_events
-                        .push(MaintenanceEvent::try_from(er).map_err(DomainError::Validation)?);
-                }
-
-                card.events = domain_events;
+                card.events = load_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
                 Some(card)
             }
             None => None,
@@ -120,33 +124,9 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
         let maybe_card = match row {
             Some(r) => {
-                let card_trn = r.id.clone(); // Clone the TRN for later use
+                let card_trn = r.id.clone();
                 let mut card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
-
-                // Load persisted events for this card.
-                let events_q = r#"SELECT
-                    id,
-                    maintenance_card_id,
-                    date_performed,
-                    notes,
-                    maintenance_type
-                FROM maintenance_events
-                WHERE maintenance_card_id = ?
-                ORDER BY date_performed DESC"#;
-
-                let rows = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
-                    .bind(card_trn)
-                    .fetch_all(&mut *self.executor)
-                    .await
-                    .with_domain_context("Error listing maintenance events for card")?;
-
-                let mut domain_events = Vec::with_capacity(rows.len());
-                for er in rows.into_iter() {
-                    domain_events
-                        .push(MaintenanceEvent::try_from(er).map_err(DomainError::Validation)?);
-                }
-
-                card.events = domain_events;
+                card.events = load_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
                 Some(card)
             }
             None => None,
@@ -206,12 +186,11 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
                 let mut events = Vec::with_capacity(rows.len());
                 for er in rows.into_iter() {
-                    // parse event id uuid from TRN
-                    let id_trn = er.id.to_string();
-                    let uuid_str = id_trn.trim_start_matches(MaintenanceEventId::PREFIX);
-                    let uuid_str = uuid_str.trim_start_matches(':');
-                    let evt_uuid = uuid::Uuid::parse_str(uuid_str)
-                        .map_err(|_| DomainError::Validation("invalid event id".to_string()))?;
+                    let event_id = MaintenanceEventId::try_from(er.id.as_ref())?;
+                    let uuid_str = &event_id.as_ref()[MaintenanceEventId::PREFIX.len() + 1..];
+                    let evt_uuid = uuid::Uuid::parse_str(uuid_str).map_err(|_| {
+                        DomainError::Infrastructure("invalid event id uuid".to_string())
+                    })?;
 
                     let maintenance_type = er
                         .maintenance_type
@@ -450,12 +429,11 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
             let mut events = Vec::with_capacity(rows_ev.len());
             for er in rows_ev.into_iter() {
-                let id_trn = er.id.to_string();
-                let uuid_str = id_trn
-                    .trim_start_matches(crate::maintenance::domain::MaintenanceEventId::PREFIX);
-                let uuid_str = uuid_str.trim_start_matches(':');
-                let evt_uuid = uuid::Uuid::parse_str(uuid_str)
-                    .map_err(|_| DomainError::Validation("invalid event id".to_string()))?;
+                let event_id = MaintenanceEventId::try_from(er.id.as_ref())?;
+                let uuid_str = &event_id.as_ref()[MaintenanceEventId::PREFIX.len() + 1..];
+                let evt_uuid = uuid::Uuid::parse_str(uuid_str).map_err(|_| {
+                    DomainError::Infrastructure("invalid event id uuid".to_string())
+                })?;
 
                 let maintenance_type = er
                     .maintenance_type

@@ -191,9 +191,9 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         let mut map: HashMap<String, WishlistPreview> = HashMap::with_capacity(rows.len());
 
         for row in rows.into_iter() {
-            let wishlist_id = WishlistId::try_from(row.wishlist_id.clone().as_str())
+            let wishlist_id = WishlistId::try_from(row.wishlist_id.as_str())
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
-            let entry = map.entry(row.wishlist_id.clone()).or_insert_with(|| {
+            let entry = map.entry(row.wishlist_id).or_insert_with(|| {
                 WishlistPreview {
                     id: wishlist_id,
                     name: row.name,

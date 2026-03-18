@@ -1,5 +1,6 @@
 use crate::core::domain::identifiers::IdParseError;
 use crate::core::domain::validation::ValidationError;
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 /// This enum categorizes errors to help the Interface layer decide
@@ -10,6 +11,10 @@ pub enum DomainError {
     ///
     /// **Source:** Usually triggered during the mapping from a Command DTO
     /// to a Domain Params struct (e.g., an invalid email format or empty item list).
+    ///
+    /// Prefer [`DomainError::validation_general`] for new code, which stores the
+    /// message in the structured `ValidationError` map under `_general` and is
+    /// consistent with the field-level `ValidationError` shape the frontend expects.
     #[error("Validation failed: {0}")]
     Validation(String),
 
@@ -62,4 +67,25 @@ pub enum DomainError {
     /// **Source:** Triggered when an operation would produce a duplicate entry.
     #[error("Conflict: {0}")]
     Conflict(String),
+}
+
+impl DomainError {
+    /// Creates a structured validation error with a single general message stored
+    /// under the `_general` sentinel key.
+    ///
+    /// Prefer this over `DomainError::Validation(msg)` for new code: it produces
+    /// a `ValidationError` map that the frontend can display consistently alongside
+    /// field-specific validation errors.
+    pub fn validation_general(msg: impl Into<String>) -> Self {
+        let mut map = HashMap::new();
+        map.insert(
+            "_general".to_string(),
+            vec![ValidationError {
+                code: Cow::Borrowed("invalid"),
+                message: Some(Cow::Owned(msg.into())),
+                params: HashMap::new(),
+            }],
+        );
+        DomainError::ValidationError(map)
+    }
 }

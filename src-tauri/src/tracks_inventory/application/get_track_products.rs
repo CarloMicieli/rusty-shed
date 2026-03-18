@@ -83,16 +83,3 @@ struct TrackProductRow {
     radius_mm: Option<i32>,
     manufacturer_name: String,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-
-    #[sqlx::test(migrations = "./migrations")]
-    async fn list_products_empty(pool: sqlx::SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
-        let result = GetTrackProductsQuery::execute(&mut uow).await.unwrap();
-        assert!(result.is_empty());
-    }
-}

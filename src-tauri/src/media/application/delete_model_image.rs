@@ -3,8 +3,6 @@
 //! Orchestrates the deletion of model images.
 
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
-#[allow(unused)]
-use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::media::domain::image_validation::{ImageFormat, ModelImagePath, StorageError};
 use crate::media::infrastructure::FileStorage;
@@ -141,6 +139,7 @@ mod tests {
         RailwayModelRepository,
     };
     use crate::catalog::domain::scale::Scale;
+    use crate::core::domain::Language;
     use crate::core::domain::identifiers::Identifier;
     use mockall::predicate::*;
     use tempfile::TempDir;

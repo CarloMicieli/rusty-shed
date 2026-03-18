@@ -37,7 +37,36 @@ impl<T> WithDomainContext<T> for Result<T, sqlx::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            // Perform the logging side effect before moving the error
+            log::error!("{}: {:?}", msg, err);
+            DomainError::Infrastructure(err.to_string())
+        })
+    }
+}
+
+impl<T> WithDomainContext<T> for Result<T, std::io::Error> {
+    fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
+        self.map_err(|err| {
+            let msg = context.into();
+            log::error!("{}: {:?}", msg, err);
+            DomainError::Infrastructure(err.to_string())
+        })
+    }
+}
+
+impl<T> WithDomainContext<T> for Result<T, serde_json::Error> {
+    fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
+        self.map_err(|err| {
+            let msg = context.into();
+            log::error!("{}: {:?}", msg, err);
+            DomainError::Infrastructure(err.to_string())
+        })
+    }
+}
+
+impl<T> WithDomainContext<T> for Result<T, anyhow::Error> {
+    fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
+        self.map_err(|err| {
+            let msg = context.into();
             log::error!("{}: {:?}", msg, err);
             DomainError::Infrastructure(err.to_string())
         })

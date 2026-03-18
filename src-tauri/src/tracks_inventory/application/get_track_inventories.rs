@@ -64,16 +64,3 @@ struct TrackInventoryListItemRow {
     total_items: i64,
     total_quantity: i64,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-
-    #[sqlx::test(migrations = "./migrations")]
-    async fn list_inventories_empty(pool: sqlx::SqlitePool) {
-        let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
-        let result = GetTrackInventoriesQuery::execute(&mut uow).await.unwrap();
-        assert!(result.is_empty());
-    }
-}

@@ -3,8 +3,6 @@ use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::collecting::domain::{CollectionId, NewCollectionItem};
 use crate::collecting::domain::{CollectionItemId, CollectionUowExt, PurchaseInfoId};
-#[allow(unused)]
-use crate::core::domain::Language;
 use crate::core::domain::{IdProvider, MonetaryAmount, domain_error::DomainError};
 use crate::sellers::domain::seller_id::SellerId;
 
@@ -141,7 +139,7 @@ mod tests {
     };
     use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::test_utils::DefaultMockIdProvider;
-    use crate::core::domain::{Currency, MonetaryAmount};
+    use crate::core::domain::{Currency, Language, MonetaryAmount};
 
     #[tokio::test]
     async fn it_should_add_collection_items() {

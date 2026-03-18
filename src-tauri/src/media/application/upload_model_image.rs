@@ -3,8 +3,6 @@
 //! Orchestrates the upload of model images from user-selected files.
 
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
-#[allow(unused)]
-use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::media::domain::image_validation::{
     ImageFormat, ImageValidator, ModelImagePath, StorageError, ValidationError,
@@ -304,6 +302,7 @@ mod tests {
         RailwayModelRepository,
     };
     use crate::catalog::domain::scale::Scale;
+    use crate::core::domain::Language;
     use crate::core::domain::identifiers::Identifier;
     use crate::media::domain::image_validation::ImageFormat;
     use mockall::predicate::*;

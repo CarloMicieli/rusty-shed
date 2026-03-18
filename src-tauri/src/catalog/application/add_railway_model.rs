@@ -86,43 +86,53 @@ impl AddRailwayModel {
             rolling_stocks,
         };
 
-        // Aggregate-first approach: construct the RailwayModel aggregate,
-        // emit a Created event (carrying the params), then persist via save().
+        // Build the event first (moving railway_model_params, no full-struct clone),
+        // then borrow from the event to construct the aggregate.
         let product_code_string = railway_model_params.product_code.to_string();
         let railway_model_id =
             RailwayModelId::new(&railway_model_params.manufacturer_id, &product_code_string)
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-        let mut aggregate = RailwayModel {
-            id: railway_model_id.clone(),
-            manufacturer_id: railway_model_params.manufacturer_id.clone(),
-            product_code: railway_model_params.product_code.clone(),
-            description: LocalizedField {
-                lang: Language::English,
-                value: railway_model_params.description.clone(),
-            },
-            details: railway_model_params
-                .details
-                .clone()
-                .map(|v| LocalizedField {
-                    lang: Language::English,
-                    value: v,
-                }),
-            power_method: railway_model_params.power_method,
-            scale: railway_model_params.scale.clone(),
-            epoch: railway_model_params.epoch.clone(),
-            category: railway_model_params.category,
-            delivery_date: railway_model_params.delivery_date.clone(),
-            availability_status: railway_model_params.availability_status,
-            rolling_stocks: Vec::new(),
-            pending_events: Vec::new(),
-        };
+        // Extract Copy fields before the move.
+        let power_method = railway_model_params.power_method;
+        let category = railway_model_params.category;
+        let availability_status = railway_model_params.availability_status;
 
         let created_event = RailwayModelEvent::RailwayModelCreated {
             event_id: Uuid::new_v4(),
             railway_model_id: railway_model_id.clone(),
             timestamp: Utc::now().naive_utc(),
-            params: railway_model_params.clone(),
+            params: railway_model_params, // moved — eliminates the whole-struct clone
+        };
+
+        // Borrow params from the event to build the aggregate.
+        let params =
+            if let RailwayModelEvent::RailwayModelCreated { ref params, .. } = created_event {
+                params
+            } else {
+                unreachable!()
+            };
+
+        let mut aggregate = RailwayModel {
+            id: railway_model_id.clone(),
+            manufacturer_id: params.manufacturer_id.clone(),
+            product_code: params.product_code.clone(),
+            description: LocalizedField {
+                lang: Language::English,
+                value: params.description.clone(),
+            },
+            details: params.details.clone().map(|v| LocalizedField {
+                lang: Language::English,
+                value: v,
+            }),
+            power_method,
+            scale: params.scale.clone(),
+            epoch: params.epoch.clone(),
+            category,
+            delivery_date: params.delivery_date.clone(),
+            availability_status,
+            rolling_stocks: Vec::new(),
+            pending_events: Vec::new(),
         };
 
         aggregate.push_event(created_event);

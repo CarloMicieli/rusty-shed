@@ -128,7 +128,9 @@ impl CollectionMapper {
                         // Basic fields
                         let mut ors = OwnedRollingStockView {
                             id: rs_row.id.clone(),
-                            rolling_stock_id: rs_row.rolling_stock_id.clone().unwrap(),
+                            rolling_stock_id: rs_row.rolling_stock_id.clone().ok_or_else(|| {
+                                DomainError::Validation("missing rolling_stock_id".to_string())
+                            })?,
                             notes: rs_row.notes.clone(),
                             series: rs_row.series.clone(),
                             road_number: rs_row.road_number.clone(),
@@ -167,10 +169,11 @@ impl CollectionMapper {
                             }
                         }
 
-                        ors
+                        Ok(ors)
                     })
-                    .collect()
+                    .collect::<Result<Vec<_>, DomainError>>()
             })
+            .transpose()?
             .unwrap_or_default();
 
         let purchase_info = purchase_info_map
