@@ -79,108 +79,108 @@
 
 <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
   <section>
-  <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
-    {m.drawer_section_model_info()}
-  </p>
-  <div class="space-y-4">
-    <!-- Manufacturer + Product Code -->
-    <div class="grid grid-cols-[2fr_1fr] gap-3">
-      <!-- Manufacturer: kept inline due to loading state -->
-      <div class="space-y-1">
-        <span class="text-xs text-zinc-400">{m.wishlist_modal_manufacturer()} *</span>
-        {#if isLoading}
-          <p class="text-sm text-zinc-500">{m.wishlist_modal_loading()}</p>
-        {:else}
-          <Select.Root
-            type="single"
-            value={manufacturerId || undefined}
-            {disabled}
-            onValueChange={(v) => {
-              manufacturerId = v;
-            }}
-          >
-            <Select.Trigger
-              class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
-              aria-label={m.wishlist_modal_manufacturer()}
+    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+      {m.drawer_section_model_info()}
+    </p>
+    <div class="space-y-4">
+      <!-- Manufacturer + Product Code -->
+      <div class="grid grid-cols-[2fr_1fr] gap-3">
+        <!-- Manufacturer: kept inline due to loading state -->
+        <div class="space-y-1">
+          <span class="text-xs text-zinc-400">{m.wishlist_modal_manufacturer()} *</span>
+          {#if isLoading}
+            <p class="text-sm text-zinc-500">{m.wishlist_modal_loading()}</p>
+          {:else}
+            <Select.Root
+              type="single"
+              value={manufacturerId || undefined}
+              {disabled}
+              onValueChange={(v) => {
+                manufacturerId = v;
+              }}
             >
-              {#if selectedManufacturer}
-                {selectedManufacturer.name}
-              {:else}
-                <span class="text-zinc-500">{m.wishlist_modal_manufacturer_placeholder()}</span>
-              {/if}
-            </Select.Trigger>
-            <Select.Content>
-              {#each manufacturers as mfr (mfr.id)}
-                <Select.Item value={mfr.id} label={mfr.name} />
-              {/each}
-            </Select.Content>
-          </Select.Root>
-        {/if}
-        {#if errors.manufacturerId}
-          <p class="text-xs text-destructive">{errors.manufacturerId}</p>
-        {/if}
+              <Select.Trigger
+                class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+                aria-label={m.wishlist_modal_manufacturer()}
+              >
+                {#if selectedManufacturer}
+                  {selectedManufacturer.name}
+                {:else}
+                  <span class="text-zinc-500">{m.wishlist_modal_manufacturer_placeholder()}</span>
+                {/if}
+              </Select.Trigger>
+              <Select.Content>
+                {#each manufacturers as mfr (mfr.id)}
+                  <Select.Item value={mfr.id} label={mfr.name} />
+                {/each}
+              </Select.Content>
+            </Select.Root>
+          {/if}
+          {#if errors.manufacturerId}
+            <p class="text-xs text-destructive">{errors.manufacturerId}</p>
+          {/if}
+        </div>
+
+        <FormInput
+          label={m.wishlist_modal_product_code()}
+          id="model-info-product-code"
+          type="text"
+          placeholder={m.wishlist_modal_product_code_placeholder()}
+          bind:value={productCode}
+          {disabled}
+          required
+          error={errors.productCode}
+        />
       </div>
 
+      <!-- Description -->
       <FormInput
-        label={m.wishlist_modal_product_code()}
-        id="model-info-product-code"
+        label={m.wishlist_modal_description()}
+        id="model-info-description"
         type="text"
-        placeholder={m.wishlist_modal_product_code_placeholder()}
-        bind:value={productCode}
+        placeholder={m.wishlist_modal_description_placeholder()}
+        bind:value={description}
         {disabled}
         required
-        error={errors.productCode}
+        error={errors.description}
       />
-    </div>
 
-    <!-- Description -->
-    <FormInput
-      label={m.wishlist_modal_description()}
-      id="model-info-description"
-      type="text"
-      placeholder={m.wishlist_modal_description_placeholder()}
-      bind:value={description}
-      {disabled}
-      required
-      error={errors.description}
-    />
-
-    <!-- Category -->
-    <FormSelect
-      label={m.wishlist_modal_category()}
-      options={CATEGORIES.map((cat) => ({ value: cat, label: getCategoryLabel(cat) }))}
-      bind:value={category}
-      placeholder={m.rolling_stock_select_category()}
-      {disabled}
-    />
-
-    <!-- Scale + Power Method -->
-    <div class="grid grid-cols-2 gap-3">
+      <!-- Category -->
       <FormSelect
-        label={m.wishlist_modal_scale()}
-        options={SCALES.map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] ?? s }))}
-        bind:value={scale}
+        label={m.wishlist_modal_category()}
+        options={CATEGORIES.map((cat) => ({ value: cat, label: getCategoryLabel(cat) }))}
+        bind:value={category}
+        placeholder={m.rolling_stock_select_category()}
         {disabled}
       />
+
+      <!-- Scale + Power Method -->
+      <div class="grid grid-cols-2 gap-3">
+        <FormSelect
+          label={m.wishlist_modal_scale()}
+          options={SCALES.map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] ?? s }))}
+          bind:value={scale}
+          {disabled}
+        />
+        <FormSelect
+          label={m.wishlist_modal_power_method()}
+          options={POWER_METHODS.map((method) => ({
+            value: method,
+            label: getPowerMethodLabel(method)
+          }))}
+          bind:value={powerMethod}
+          {disabled}
+        />
+      </div>
+
+      <!-- Epoch -->
       <FormSelect
-        label={m.wishlist_modal_power_method()}
-        options={POWER_METHODS.map((method) => ({
-          value: method,
-          label: getPowerMethodLabel(method)
-        }))}
-        bind:value={powerMethod}
+        label={m.wishlist_modal_epoch()}
+        options={EPOCHS.map((ep) => ({ value: ep, label: ep }))}
+        bind:value={epoch}
+        placeholder={m.wishlist_modal_epoch_placeholder()}
         {disabled}
       />
     </div>
-
-    <!-- Epoch -->
-    <FormSelect
-      label={m.wishlist_modal_epoch()}
-      options={EPOCHS.map((ep) => ({ value: ep, label: ep }))}
-      bind:value={epoch}
-      placeholder={m.wishlist_modal_epoch_placeholder()}
-      {disabled}
-    />
-  </div>
   </section>
 </div>

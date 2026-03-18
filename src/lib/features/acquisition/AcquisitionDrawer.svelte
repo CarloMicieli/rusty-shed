@@ -234,9 +234,10 @@
       {#snippet leading()}
         <Button
           type="button"
-          variant="outline"
+          variant="rusty"
           onclick={handleAddItem}
           disabled={isSubmitting || isLoadingData}
+          class="shadow-lg shadow-amber-500/10"
         >
           {m.acquisition_add_item_button()}
         </Button>

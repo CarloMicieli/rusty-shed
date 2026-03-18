@@ -135,7 +135,7 @@
           onclick={onAddPurchase}
         >
           <Plus size={18} />
-          <span>Add Track Purchase</span>
+          <span>{m.track_inventory_detail_add_purchase()}</span>
         </Button>
       {/if}
     </div>
@@ -211,11 +211,11 @@
             {m.track_inventory_detail_empty_items()}
           </p>
           <Button
-            variant="outline"
-            class="mt-6 border-white/5 bg-zinc-900/50"
+            variant="rusty"
+            class="mt-6 shadow-lg shadow-amber-500/10"
             onclick={onAddPurchase}
           >
-            Add First Piece
+            {m.track_inventory_detail_add_first_piece()}
           </Button>
         </div>
       {:else}

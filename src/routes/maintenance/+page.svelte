@@ -78,11 +78,21 @@
       description={m.maintenance_subtitle()}
     >
       {#snippet actions()}
-        <Button variant="default" size="sm" onclick={handleAddCard}>
+        <Button
+          variant="rusty"
+          size="sm"
+          onclick={handleAddCard}
+          class="shadow-lg shadow-amber-500/10"
+        >
           <Plus class="mr-2 h-4 w-4" />
           {m.maintenance_add_card_button()}
         </Button>
-        <Button variant="default" size="sm" onclick={() => (showLogDrawer = true)}>
+        <Button
+          variant="rusty"
+          size="sm"
+          onclick={() => (showLogDrawer = true)}
+          class="shadow-lg shadow-amber-500/10"
+        >
           <Plus class="mr-2 h-4 w-4" />
           {m.maintenance_add_event_button()}
         </Button>

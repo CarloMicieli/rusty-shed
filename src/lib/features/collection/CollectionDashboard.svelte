@@ -145,7 +145,7 @@
     <Tag class="text-muted-foreground" size={32} />
     <h3 class="text-lg font-semibold">{m.collection_add_first()}</h3>
     <p class="text-sm text-muted-foreground">{m.collection_empty_caption()}</p>
-    <Button onclick={ui.startCreate}>
+    <Button variant="rusty" onclick={ui.startCreate} class="shadow-lg shadow-amber-500/10">
       {m.collection_add_item()}
     </Button>
   </div>
@@ -176,7 +176,12 @@
       description={m.collection_description()}
     >
       {#snippet actions()}
-        <Button onclick={ui.startCreate} size="sm">
+        <Button
+          variant="rusty"
+          onclick={ui.startCreate}
+          size="sm"
+          class="shadow-lg shadow-amber-500/10"
+        >
           <Plus size={18} />
           {m.collection_add_model()}
         </Button>

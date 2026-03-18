@@ -80,9 +80,9 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <Button onclick={onAddModel} variant="rusty">
+        <Button onclick={onAddModel} variant="rusty" class="shadow-lg shadow-amber-500/10">
           <Plus size={18} class="mr-2" />
-          Add railway model
+          {m.wishlist_add_model_button()}
         </Button>
 
         <div class="relative">
