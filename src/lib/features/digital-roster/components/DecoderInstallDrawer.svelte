@@ -198,7 +198,7 @@
 <DrawerShell
   {open}
   {onClose}
-  size="lg"
+  size="xl"
   hasChanges={f.isDirty}
   labelledby="decoder-install-drawer-title"
 >

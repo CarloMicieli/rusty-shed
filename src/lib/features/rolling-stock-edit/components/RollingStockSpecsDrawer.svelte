@@ -251,7 +251,7 @@
 <DrawerShell
   {open}
   {onClose}
-  size="lg"
+  size="xl"
   hasChanges={isDirty}
   labelledby="rs-specs-title"
   error={inlineError}

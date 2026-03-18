@@ -192,7 +192,7 @@
 <DrawerShell
   {open}
   {onClose}
-  size="md"
+  size="xl"
   hasChanges={f.isDirty}
   labelledby="log-maintenance-drawer-title"
   {error}

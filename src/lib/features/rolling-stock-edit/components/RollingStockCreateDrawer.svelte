@@ -118,7 +118,7 @@
 <DrawerShell
   {open}
   {onClose}
-  size="lg"
+  size="xl"
   hasChanges={f.isDirty}
   labelledby="rs-create-title"
   error={inlineError}

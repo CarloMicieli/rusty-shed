@@ -61,7 +61,7 @@
   }
 </script>
 
-<DrawerShell {open} onClose={close} size="lg" labelledby="import-drawer-title">
+<DrawerShell {open} onClose={close} size="xl" labelledby="import-drawer-title">
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="import-drawer-title"
