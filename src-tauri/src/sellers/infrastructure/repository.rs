@@ -42,7 +42,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
         let rows = sqlx::query_as::<_, SellerRow>(sql)
             .fetch_all(&mut *self.executor)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(rows.into_iter().map(Into::into).collect())
     }
 
@@ -70,7 +70,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             .bind(&id.0)
             .fetch_optional(&mut *self.executor)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(row.map(Into::into))
     }
 
@@ -101,7 +101,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             .bind(&id.0)
             .fetch_optional(&mut *self.executor)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(row.map(|r| {
             let s: Seller = r.into();
             crate::sellers::application::seller_view::SellerView::from(s)
@@ -115,7 +115,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                 .bind(&seller.id.0)
                 .fetch_optional(&mut *self.executor)
                 .await
-                .map_err(DomainError::Infrastructure)?;
+                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
         let created_at_to_use =
             existing_created_at.unwrap_or_else(|| seller.created_at.to_rfc3339());
@@ -172,7 +172,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             .bind(&updated_at)
             .execute(&mut *self.executor)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(())
     }
 
@@ -182,7 +182,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             .bind(&id.0)
             .execute(&mut *self.executor)
             .await
-            .map_err(DomainError::Infrastructure)?;
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(res.rows_affected())
     }
 
@@ -217,7 +217,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                             .bind(&aggregate_id.0)
                             .fetch_optional(&mut *self.executor)
                             .await
-                            .map_err(DomainError::Infrastructure)?;
+                            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
                     let created_at_to_use =
                         existing_created_at.unwrap_or_else(|| created_at.to_rfc3339());
@@ -279,7 +279,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                         .bind(&updated_at_to_use)
                         .execute(&mut *self.executor)
                         .await
-                        .map_err(DomainError::Infrastructure)?;
+                        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
                 }
                 SellerEvent::Deleted { aggregate_id } => {
                     let sql = "DELETE FROM sellers WHERE id = ?";
@@ -287,7 +287,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                         .bind(&aggregate_id.0)
                         .execute(&mut *self.executor)
                         .await
-                        .map_err(DomainError::Infrastructure)?;
+                        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
                 }
             }
         }

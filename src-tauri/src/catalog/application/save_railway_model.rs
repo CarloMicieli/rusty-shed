@@ -37,6 +37,101 @@ pub struct SimplifiedRollingStockInput {
     pub category: String,
 }
 
+/// Maps a `SimplifiedRollingStockInput` and its resolved `RailwayCompanyId` into
+/// the appropriate `RollingStockParams` variant, returning a `DomainError` for
+/// any invalid field values.
+fn map_simple_rolling_stock(
+    rs: SimplifiedRollingStockInput,
+    company_id: RailwayCompanyId,
+) -> Result<RollingStockParams, DomainError> {
+    match rs.category.parse::<RollingStockCategory>() {
+        Ok(RollingStockCategory::Locomotive) => {
+            let loco_type = rs.locomotive_type.ok_or_else(|| {
+                DomainError::Validation("locomotive_type required for locomotive".to_string())
+            })?;
+            let loco_type = loco_type
+                .parse::<LocomotiveType>()
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+            Ok(RollingStockParams::LocomotiveParams {
+                railway_company_id: company_id,
+                livery: None,
+                length_over_buffers: None,
+                technical_specifications: None,
+                friendly_name: "".to_string(),
+                series_code: Some(rs.series_code),
+                road_number: rs.road_number.unwrap_or_default(),
+                series: None,
+                depot: None,
+                locomotive_type: loco_type,
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            })
+        }
+        Ok(RollingStockCategory::PassengerCar) => Ok(RollingStockParams::PassengerCarParams {
+            railway_company_id: company_id,
+            livery: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+            friendly_name: "".to_string(),
+            series_code: Some(rs.series_code),
+            road_number: rs.road_number,
+            series: None,
+            passenger_car_type: Some("UNKNOWN".parse().unwrap_or(PassengerCarType::BaggageCar)),
+            service_level: None,
+        }),
+        Ok(RollingStockCategory::FreightCar) => Ok(RollingStockParams::FreightCarParams {
+            railway_company_id: company_id,
+            livery: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+            friendly_name: "".to_string(),
+            series_code: Some(rs.series_code),
+            road_number: rs.road_number,
+            series: None,
+            freight_car_type: None,
+        }),
+        Ok(RollingStockCategory::ElectricMultipleUnit) => {
+            Ok(RollingStockParams::ElectricMultipleUnitParams {
+                railway_company_id: company_id,
+                livery: None,
+                length_over_buffers: None,
+                technical_specifications: None,
+                friendly_name: "".to_string(),
+                series_code: Some(rs.series_code),
+                road_number: rs.road_number,
+                series: None,
+                depot: None,
+                electric_multiple_unit_type: ""
+                    .parse()
+                    .unwrap_or(ElectricMultipleUnitType::default()),
+                dcc_interface: None,
+                control: None,
+                is_dummy: false,
+            })
+        }
+        Ok(RollingStockCategory::Railcar) => Ok(RollingStockParams::RailcarParams {
+            railway_company_id: company_id,
+            livery: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+            friendly_name: "".to_string(),
+            series_code: Some(rs.series_code),
+            road_number: rs.road_number,
+            series: None,
+            depot: None,
+            railcar_type: "".parse().unwrap_or(RailcarType::default()),
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        }),
+        Err(_) => Err(DomainError::Validation(
+            "invalid rolling stock category".to_string(),
+        )),
+    }
+}
+
 /// Use case that saves or merges a simplified railway model into the catalog.
 pub struct SaveRailwayModel;
 
@@ -150,102 +245,7 @@ impl SaveRailwayModel {
                     continue;
                 }
 
-                // minimal mapping: treat category to select variant
-                let params = match rs.category.parse::<RollingStockCategory>() {
-                    Ok(RollingStockCategory::Locomotive) => {
-                        let loco_type = rs.locomotive_type.ok_or_else(|| {
-                            DomainError::Validation(
-                                "locomotive_type required for locomotive".to_string(),
-                            )
-                        })?;
-                        let loco_type = loco_type
-                            .parse::<LocomotiveType>()
-                            .map_err(|e| DomainError::Validation(e.to_string()))?;
-
-                        RollingStockParams::LocomotiveParams {
-                            railway_company_id: company_id,
-                            livery: None,
-                            length_over_buffers: None,
-                            technical_specifications: None,
-                            friendly_name: "".to_string(),
-                            series_code: Some(rs.series_code),
-                            road_number: rs.road_number.unwrap_or_default(),
-                            series: None,
-                            depot: None,
-                            locomotive_type: loco_type,
-                            dcc_interface: None,
-                            control: None,
-                            is_dummy: false,
-                        }
-                    }
-                    Ok(RollingStockCategory::PassengerCar) => {
-                        RollingStockParams::PassengerCarParams {
-                            railway_company_id: company_id,
-                            livery: None,
-                            length_over_buffers: None,
-                            technical_specifications: None,
-                            friendly_name: "".to_string(),
-                            series_code: Some(rs.series_code),
-                            road_number: rs.road_number,
-                            series: None,
-                            passenger_car_type: Some("UNKNOWN".parse().unwrap_or(
-                                crate::catalog::domain::railway_model::PassengerCarType::BaggageCar,
-                            )),
-                            service_level: None,
-                        }
-                    }
-                    Ok(RollingStockCategory::FreightCar) => RollingStockParams::FreightCarParams {
-                        railway_company_id: company_id,
-                        livery: None,
-                        length_over_buffers: None,
-                        technical_specifications: None,
-                        friendly_name: "".to_string(),
-                        series_code: Some(rs.series_code),
-                        road_number: rs.road_number,
-                        series: None,
-                        freight_car_type: None,
-                    },
-                    Ok(RollingStockCategory::ElectricMultipleUnit) => {
-                        RollingStockParams::ElectricMultipleUnitParams {
-                            railway_company_id: company_id,
-                            livery: None,
-                            length_over_buffers: None,
-                            technical_specifications: None,
-                            friendly_name: "".to_string(),
-                            series_code: Some(rs.series_code),
-                            road_number: rs.road_number,
-                            series: None,
-                            depot: None,
-                            electric_multiple_unit_type: ""
-                                .parse()
-                                .unwrap_or(ElectricMultipleUnitType::default()),
-                            dcc_interface: None,
-                            control: None,
-                            is_dummy: false,
-                        }
-                    }
-                    Ok(RollingStockCategory::Railcar) => RollingStockParams::RailcarParams {
-                        railway_company_id: company_id,
-                        livery: None,
-                        length_over_buffers: None,
-                        technical_specifications: None,
-                        friendly_name: "".to_string(),
-                        series_code: Some(rs.series_code),
-                        road_number: rs.road_number,
-                        series: None,
-                        depot: None,
-                        railcar_type: "".parse().unwrap_or(RailcarType::default()),
-                        dcc_interface: None,
-                        control: None,
-                        is_dummy: false,
-                    },
-                    Err(_) => {
-                        return Err(DomainError::Validation(
-                            "invalid rolling stock category".to_string(),
-                        ));
-                    }
-                };
-
+                let params = map_simple_rolling_stock(rs, company_id)?;
                 aggregate.add_rolling_stock(params);
             }
 
@@ -261,103 +261,7 @@ impl SaveRailwayModel {
                 .map(|rs| {
                     let company_id = RailwayCompanyId::try_from(&rs.railway_company_id)
                         .map_err(|e| DomainError::Validation(e.to_string()))?;
-
-                    match rs.category.parse::<RollingStockCategory>() {
-                        Ok(RollingStockCategory::Locomotive) => {
-                            let loco_type = rs.locomotive_type.ok_or_else(|| {
-                                DomainError::Validation(
-                                    "locomotive_type required for locomotive".to_string(),
-                                )
-                            })?;
-                            let loco_type = loco_type
-                                .parse::<LocomotiveType>()
-                                .map_err(|e| DomainError::Validation(e.to_string()))?;
-
-                            Ok(RollingStockParams::LocomotiveParams {
-                                railway_company_id: company_id,
-                                livery: None,
-                                length_over_buffers: None,
-                                technical_specifications: None,
-                                friendly_name: "".to_string(),
-                                series_code: Some(rs.series_code),
-                                road_number: rs.road_number.unwrap_or_default(),
-                                series: None,
-                                depot: None,
-                                locomotive_type: loco_type,
-                                dcc_interface: None,
-                                control: None,
-                                is_dummy: false,
-                            })
-                        }
-                        Ok(RollingStockCategory::PassengerCar) => {
-                            Ok(RollingStockParams::PassengerCarParams {
-                                railway_company_id: company_id,
-                                livery: None,
-                                length_over_buffers: None,
-                                technical_specifications: None,
-                                friendly_name: "".to_string(),
-                                series_code: Some(rs.series_code),
-                                road_number: rs.road_number,
-                                series: None,
-                                passenger_car_type: Some(
-                                    "UNKNOWN".parse().unwrap_or(PassengerCarType::BaggageCar),
-                                ),
-                                service_level: None,
-                            })
-                        }
-                        Ok(RollingStockCategory::FreightCar) => {
-                            Ok(RollingStockParams::FreightCarParams {
-                                railway_company_id: company_id,
-                                livery: None,
-                                length_over_buffers: None,
-                                technical_specifications: None,
-                                friendly_name: "".to_string(),
-                                series_code: Some(rs.series_code),
-                                road_number: rs.road_number,
-                                series: None,
-                                freight_car_type: None,
-                            })
-                        }
-                        Ok(RollingStockCategory::ElectricMultipleUnit) => {
-                            Ok(RollingStockParams::ElectricMultipleUnitParams {
-                                railway_company_id: company_id,
-                                livery: None,
-                                length_over_buffers: None,
-                                technical_specifications: None,
-                                friendly_name: "".to_string(),
-                                series_code: Some(rs.series_code),
-                                road_number: rs.road_number,
-                                series: None,
-                                depot: None,
-                                electric_multiple_unit_type: ""
-                                    .parse()
-                                    .unwrap_or(ElectricMultipleUnitType::default()),
-                                dcc_interface: None,
-                                control: None,
-                                is_dummy: false,
-                            })
-                        }
-                        Ok(RollingStockCategory::Railcar) => {
-                            Ok(RollingStockParams::RailcarParams {
-                                railway_company_id: company_id,
-                                livery: None,
-                                length_over_buffers: None,
-                                technical_specifications: None,
-                                friendly_name: "".to_string(),
-                                series_code: Some(rs.series_code),
-                                road_number: rs.road_number,
-                                series: None,
-                                depot: None,
-                                railcar_type: "".parse().unwrap_or(RailcarType::default()),
-                                dcc_interface: None,
-                                control: None,
-                                is_dummy: false,
-                            })
-                        }
-                        Err(_) => Err(DomainError::Validation(
-                            "invalid rolling stock category".to_string(),
-                        )),
-                    }
+                    map_simple_rolling_stock(rs, company_id)
                 })
                 .collect::<Result<Vec<RollingStockParams>, DomainError>>()?;
 

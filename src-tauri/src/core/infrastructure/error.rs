@@ -4,6 +4,7 @@
 //! command handlers and infrastructure components to represent database and
 //! other execution errors in a serializable, human-friendly way.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
@@ -109,14 +110,19 @@ impl From<DomainError> for CommandError {
                 "{} with identifier '{}' not found",
                 resource, identifier
             )),
-            DomainError::Validation(_msg) => {
-                // DomainError::Validation represents a general validation failure
-                // without field-specific messages. Map remains empty so callers
-                // can distinguish between general validation and field errors.
-                let map: HashMap<String, Vec<ValidationError>> = HashMap::new();
+            DomainError::Validation(msg) => {
+                let mut map = HashMap::new();
+                map.insert(
+                    "_general".to_string(),
+                    vec![ValidationError {
+                        code: Cow::Borrowed("invalid"),
+                        message: Some(Cow::Owned(msg)),
+                        params: HashMap::new(),
+                    }],
+                );
                 CommandError::ValidationError(map)
             }
-            DomainError::Infrastructure(inner) => CommandError::DatabaseError(inner.to_string()),
+            DomainError::Infrastructure(inner) => CommandError::DatabaseError(inner),
             DomainError::BusinessRule(msg) => CommandError::BusinessRule(msg),
             DomainError::ValidationError(errors) => CommandError::ValidationError(errors),
             DomainError::InvalidIdentifier(e) => {
@@ -186,9 +192,16 @@ impl CommandError {
     }
 
     /// Helper to create a validation error for a single field.
-    pub fn validation_field(field: impl Into<String>, _error: impl Into<String>) -> Self {
+    pub fn validation_field(field: impl Into<String>, error: impl Into<String>) -> Self {
         let mut fields = HashMap::new();
-        fields.insert(field.into(), Vec::new());
+        fields.insert(
+            field.into(),
+            vec![ValidationError {
+                code: Cow::Borrowed("invalid"),
+                message: Some(Cow::Owned(error.into())),
+                params: HashMap::new(),
+            }],
+        );
         CommandError::ValidationError(fields)
     }
 
@@ -201,7 +214,16 @@ impl CommandError {
     {
         let map = fields
             .into_iter()
-            .map(|(k, _v)| (k.into(), Vec::new()))
+            .map(|(k, v)| {
+                (
+                    k.into(),
+                    vec![ValidationError {
+                        code: Cow::Borrowed("invalid"),
+                        message: Some(Cow::Owned(v.into())),
+                        params: HashMap::new(),
+                    }],
+                )
+            })
             .collect();
         CommandError::ValidationError(map)
     }
@@ -288,6 +310,9 @@ mod tests {
         match command_error {
             CommandError::ValidationError(map) => {
                 assert!(map.contains_key("email"));
+                let errs = &map["email"];
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].message.as_deref(), Some("Invalid format"));
             }
             _ => panic!("Expected ValidationError variant"),
         }
@@ -301,6 +326,26 @@ mod tests {
             CommandError::ValidationError(map) => {
                 assert!(map.contains_key("email"));
                 assert!(map.contains_key("age"));
+                assert_eq!(map["email"][0].message.as_deref(), Some("Invalid format"));
+                assert_eq!(
+                    map["age"][0].message.as_deref(),
+                    Some("Must be at least 18")
+                );
+            }
+            _ => panic!("Expected ValidationError variant"),
+        }
+    }
+
+    #[test]
+    fn domain_validation_error_maps_to_general_key() {
+        let domain_error = DomainError::Validation("some validation message".to_string());
+        let cmd: CommandError = domain_error.into();
+        match cmd {
+            CommandError::ValidationError(map) => {
+                assert!(map.contains_key("_general"), "_general key must be present");
+                let errs = &map["_general"];
+                assert_eq!(errs.len(), 1);
+                assert_eq!(errs[0].message.as_deref(), Some("some validation message"));
             }
             _ => panic!("Expected ValidationError variant"),
         }
@@ -331,7 +376,7 @@ mod tests {
                 identifier: "id-42".to_string(),
             },
             "validation" => DomainError::Validation("bad input".to_string()),
-            "infrastructure" => DomainError::Infrastructure(sqlx::Error::RowNotFound),
+            "infrastructure" => DomainError::Infrastructure("row not found".to_string()),
             "business_rule" => DomainError::BusinessRule("some rule".to_string()),
             "validation_error" => {
                 let mut map: StdHashMap<String, Vec<ValidationError>> = StdHashMap::new();
@@ -358,7 +403,10 @@ mod tests {
                 _ => panic!("expected NotFound"),
             },
             "validation" => match cmd {
-                CommandError::ValidationError(map) => assert!(map.is_empty()),
+                CommandError::ValidationError(map) => {
+                    assert!(map.contains_key("_general"), "_general key must be present");
+                    assert!(!map["_general"].is_empty());
+                }
                 _ => panic!("expected ValidationError"),
             },
             "infrastructure" => match cmd {

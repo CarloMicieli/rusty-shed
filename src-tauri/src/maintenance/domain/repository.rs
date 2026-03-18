@@ -1,6 +1,7 @@
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
 use crate::maintenance::domain::MaintenanceCard;
+use crate::maintenance::domain::read_models::MaintenanceCardView;
 use async_trait::async_trait;
 
 /// Repository abstraction for maintenance operations.
@@ -63,7 +64,7 @@ pub trait MaintenanceRepository {
     async fn find_view_by_id(
         &mut self,
         id: &crate::maintenance::domain::MaintenanceCardId,
-    ) -> Result<Option<crate::maintenance::interface::MaintenanceCardView>, DomainError>;
+    ) -> Result<Option<MaintenanceCardView>, DomainError>;
 
     /// Persist changes for a maintenance card.
     ///
@@ -91,9 +92,7 @@ pub trait MaintenanceRepository {
     async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCard>, DomainError>;
 
     /// List lightweight view representations for maintenance cards that are due or overdue.
-    async fn list_due_card_views(
-        &mut self,
-    ) -> Result<Vec<crate::maintenance::interface::MaintenanceCardView>, DomainError>;
+    async fn list_due_card_views(&mut self) -> Result<Vec<MaintenanceCardView>, DomainError>;
 }
 
 /// Extension trait to attach the maintenance repository to the Unit of Work.

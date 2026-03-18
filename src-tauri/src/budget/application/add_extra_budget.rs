@@ -80,7 +80,7 @@ impl AddExtraBudgetUseCase {
             let mut repo = uow.budget_repo();
             repo.add_extra_budget(&entry)
                 .await
-                .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?;
+                .map_err(DomainError::Infrastructure)?;
         }
 
         Ok(entry)

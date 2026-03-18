@@ -21,7 +21,7 @@ pub enum DomainError {
     /// *Note:* In production, the raw error should be logged, but a generic
     /// message may be shown to the user for security.
     #[error("Internal persistence error: {0}")]
-    Infrastructure(#[from] sqlx::Error),
+    Infrastructure(String),
 
     /// Indicates that a requested resource was not found.
     ///

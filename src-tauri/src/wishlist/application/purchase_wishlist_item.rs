@@ -477,7 +477,7 @@ mod tests {
         collection_mock
             .expect_save()
             .times(1)
-            .returning(move |_c| Err(DomainError::Infrastructure(sqlx::Error::RowNotFound)));
+            .returning(move |_c| Err(DomainError::Infrastructure("row not found".to_string())));
 
         let mut railway_mock = MockRailwayModelRepository::new();
         let rm_id = RailwayModelId::try_from("trn:railway-model:rm:test").unwrap();

@@ -28,7 +28,7 @@ impl RemoveExtraBudgetUseCase {
         let entry = repo
             .get_extra_budget_by_id(&id)
             .await
-            .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?;
+            .map_err(DomainError::Infrastructure)?;
 
         if entry.is_none() {
             return Err(DomainError::NotFound {
@@ -40,7 +40,7 @@ impl RemoveExtraBudgetUseCase {
         // Remove entry
         repo.remove_extra_budget(&id)
             .await
-            .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?;
+            .map_err(DomainError::Infrastructure)?;
 
         Ok(())
     }

@@ -7,13 +7,13 @@ use crate::maintenance::domain::MaintenanceCardId;
 use crate::maintenance::domain::MaintenanceEvent;
 use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent;
+use crate::maintenance::domain::read_models::{
+    MaintenanceCardEventView, MaintenanceCardView, RollingStockDisplayInfo,
+};
 use crate::maintenance::domain::{MaintenanceCard, MaintenanceEventId};
 use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
 use crate::maintenance::infrastructure::entities::{
     MaintenanceCardRow, MaintenanceCardWithDisplayInfoRow, MaintenanceEventRow,
-};
-use crate::maintenance::interface::{
-    MaintenanceCardEventView, MaintenanceCardView, RollingStockDisplayInfo,
 };
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
@@ -343,7 +343,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                                     .to_string(),
                             ));
                         }
-                        return Err(DomainError::Infrastructure(e));
+                        return Err(DomainError::Infrastructure(e.to_string()));
                     }
 
                     sqlx::query(insert_sql)
@@ -398,9 +398,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(cards)
     }
 
-    async fn list_due_card_views(
-        &mut self,
-    ) -> Result<Vec<crate::maintenance::interface::MaintenanceCardView>, DomainError> {
+    async fn list_due_card_views(&mut self) -> Result<Vec<MaintenanceCardView>, DomainError> {
         let q = r#"SELECT
             mc.id,
             mc.owned_rolling_stock_id,

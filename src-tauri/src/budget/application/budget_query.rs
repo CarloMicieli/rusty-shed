@@ -33,7 +33,7 @@ pub async fn get_monthly_budget_records(
         let mut repo = uow.budget_repo();
         repo.get_config()
             .await
-            .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?
+            .map_err(DomainError::Infrastructure)?
     };
 
     let config = config_option
@@ -135,7 +135,7 @@ pub async fn get_budget_dashboard(
         let mut repo = uow.budget_repo();
         repo.get_config()
             .await
-            .map_err(|e| DomainError::Infrastructure(sqlx::Error::Protocol(e)))?
+            .map_err(DomainError::Infrastructure)?
     };
 
     let now = chrono::Utc::now();

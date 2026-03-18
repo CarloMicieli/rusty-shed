@@ -40,7 +40,7 @@ pub async fn get_collection(
         .bind(collection_id.to_string())
         .fetch_optional(executor)
         .await
-        .map_err(DomainError::Infrastructure)?;
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
     Ok(row)
 }
@@ -81,7 +81,7 @@ pub async fn get_collection_items(
         .bind(collection_id.to_string())
         .fetch_all(executor)
         .await
-        .map_err(DomainError::Infrastructure)?;
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
     Ok(rows)
 }
@@ -128,7 +128,7 @@ pub async fn get_owned_rolling_stock(
         .bind(owned_rolling_stock_id)
         .fetch_optional(executor)
         .await
-        .map_err(DomainError::Infrastructure)?;
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
     Ok(row)
 }
@@ -176,7 +176,7 @@ pub async fn get_owned_rolling_stocks(
         .bind(collection_id.to_string())
         .fetch_all(executor)
         .await
-        .map_err(DomainError::Infrastructure)?;
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
     Ok(rows)
 }
@@ -215,7 +215,7 @@ pub async fn get_purchase_infos(
         .bind(collection_id.to_string())
         .fetch_all(executor)
         .await
-        .map_err(DomainError::Infrastructure)?;
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
     Ok(rows)
 }
