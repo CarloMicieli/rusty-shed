@@ -139,6 +139,7 @@
         <RollingStockSingleUnit
           {unit}
           {editable}
+          railwayModelId={model.id}
           formState={rs.formState.get(unit.id)}
           specLoaded={rs.specLoaded.has(unit.id)}
           {controlOptions}

@@ -59,18 +59,21 @@
     {@const formState = rollingStockFormState.get(unit.id)}
     {@const specLoaded = rollingStockSpecLoaded.has(unit.id)}
     <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-      <!-- Mini-card header: series name + railway company -->
-      <div class="relative mb-2.5 border-b border-zinc-800/60 pb-2">
-        <div class="flex min-w-0 items-baseline gap-2 pr-16">
+      <!-- Header row: ID cluster (left) + category (right) -->
+      <div
+        class="-mx-3 -mt-3 mb-2.5 flex items-center gap-2 rounded-t-lg border-b border-white/10 bg-white/[0.03] px-3 py-2"
+      >
+        <!-- ID cluster: company badge + road number -->
+        <div class="flex items-center gap-2">
+          {#if unit.railway_company}
+            <span
+              class="rounded bg-[#f0a34b] px-1.5 py-0.5 font-mono text-[10px] font-black tracking-wider text-black uppercase"
+            >
+              {unit.railway_company}
+            </span>
+          {/if}
           {#if editable}
-            <div class="truncate text-xs font-medium text-zinc-200">
-              <InPlaceEdit
-                value={unit.series_code}
-                placeholder={m.rolling_stock_field_series_code()}
-                onSave={(v) => onSaveIdentification(unit.id, 'series', v)}
-              />
-            </div>
-            <div class="shrink-0 font-mono text-sm font-semibold text-zinc-100">
+            <div class="shrink-0 font-mono text-sm font-bold text-zinc-100">
               <InPlaceEdit
                 value={unit.road_number ?? ''}
                 placeholder={m.road_number()}
@@ -78,24 +81,17 @@
               />
             </div>
           {:else}
-            <span class="truncate text-xs font-medium text-zinc-200">
-              {unit.series_code}{unit.series_name ? ` — ${unit.series_name}` : ''}
-            </span>
-            <span class="shrink-0 font-mono text-sm font-semibold text-zinc-100">
+            <span class="shrink-0 font-mono text-sm font-bold text-zinc-100 normal-case">
               {unit.road_number ?? '—'}
             </span>
           {/if}
         </div>
+        <!-- Category ghost pill (right-aligned) -->
         {#if unit.rolling_stock_type}
-          <span class="mt-0.5 text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
-            {unit.rolling_stock_type}
-          </span>
-        {/if}
-        {#if unit.railway_company}
           <span
-            class="absolute top-0 right-0 inline-flex items-center rounded-full border border-[#1F1F1F] bg-[#D48A42] px-2 py-0.5 font-mono text-[9px] font-bold tracking-wider text-[#050505] uppercase"
+            class="ml-auto rounded border border-white/10 px-2 py-0.5 text-[9px] font-medium tracking-widest text-zinc-500 uppercase"
           >
-            {unit.railway_company}
+            {unit.rolling_stock_type}
           </span>
         {/if}
       </div>
