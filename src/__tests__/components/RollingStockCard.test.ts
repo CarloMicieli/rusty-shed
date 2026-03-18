@@ -10,6 +10,7 @@ vi.mock('$lib/bindings', () => ({
     updateRollingStockIdentification: vi.fn(),
     updateRollingStockRailwayCompany: vi.fn(),
     updateRollingStockDcc: vi.fn(),
+    updateRollingStockCategory: vi.fn(),
     getRailwayModelById: vi.fn(),
     updateRollingStockSpecifications: vi.fn()
   }
@@ -81,7 +82,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   specs_drawer_field_dcc_interface: () => 'DCC Interface',
   specs_drawer_field_coupling_socket: () => 'Coupling Socket',
   specs_drawer_field_close_coupling: () => 'Close Couplers',
-  specs_drawer_field_digital_shunting: () => 'Digital Shunting'
+  specs_drawer_field_digital_shunting: () => 'Digital Shunting',
+  rolling_stock_field_category: () => 'Category',
+  rolling_stock_select_company: () => '— Select company —'
 }));
 vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_unknown_series: () => 'Unknown',
@@ -136,7 +139,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_field_dcc_interface: () => 'DCC Interface',
   specs_drawer_field_coupling_socket: () => 'Coupling Socket',
   specs_drawer_field_close_coupling: () => 'Close Couplers',
-  specs_drawer_field_digital_shunting: () => 'Digital Shunting'
+  specs_drawer_field_digital_shunting: () => 'Digital Shunting',
+  rolling_stock_field_category: () => 'Category',
+  rolling_stock_select_company: () => '— Select company —'
 }));
 
 vi.mock('$lib/toaster', () => ({
@@ -183,7 +188,7 @@ const mockRailwayModelView = {
     {
       locomotive: {
         id: ROLLING_STOCK_ID,
-        railway: { id: 'fs', display: 'FS' },
+        railway: { railwayCompanyId: 'trn:railway-company:fs', display: 'FS' },
         livery: 'Verde FS',
         length_over_buffer: null,
         technical_specifications: null,
@@ -309,10 +314,13 @@ describe('RollingStockCard', () => {
     it('InPlaceEdit on series code field triggers save callback with correct args', async () => {
       const { container } = await renderExpandedCard();
 
-      // Find and click the series code InPlaceEdit display area
-      const inPlaceEdits = container.querySelectorAll('[role="button"]');
-      // Series code is the first InPlaceEdit in the card body
-      const seriesEdit = inPlaceEdits[0] as HTMLElement;
+      // Find and click the series code InPlaceEdit display area.
+      // Note: the Category InPlaceSelectEdit also has role="button" and appears first,
+      // so we locate the Series edit by its text content ('E.656').
+      const inPlaceEdits = Array.from(container.querySelectorAll('[role="button"]'));
+      const seriesEdit = inPlaceEdits.find(
+        (el) => el.textContent?.trim() === 'E.656'
+      ) as HTMLElement;
       await fireEvent.click(seriesEdit);
 
       // Type a new value in the input
@@ -344,8 +352,10 @@ describe('RollingStockCard', () => {
 
       const { container } = await renderExpandedCard();
 
-      const inPlaceEdits = container.querySelectorAll('[role="button"]');
-      const seriesEdit = inPlaceEdits[0] as HTMLElement;
+      const inPlaceEdits = Array.from(container.querySelectorAll('[role="button"]'));
+      const seriesEdit = inPlaceEdits.find(
+        (el) => el.textContent?.trim() === 'E.656'
+      ) as HTMLElement;
       await fireEvent.click(seriesEdit);
 
       const input = container.querySelector('input') as HTMLInputElement;
@@ -382,9 +392,12 @@ describe('RollingStockCard', () => {
 
       const { container } = await renderExpandedCard();
 
-      // Save a new series code in-place
-      const inPlaceEdits = container.querySelectorAll('[role="button"]');
-      const seriesEdit = inPlaceEdits[0] as HTMLElement;
+      // Save a new series code in-place.
+      // Category InPlaceSelectEdit also uses role="button", so locate Series by text.
+      const inPlaceEdits = Array.from(container.querySelectorAll('[role="button"]'));
+      const seriesEdit = inPlaceEdits.find(
+        (el) => el.textContent?.trim() === 'E.656'
+      ) as HTMLElement;
       await fireEvent.click(seriesEdit);
 
       const input = container.querySelector('input') as HTMLInputElement;

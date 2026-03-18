@@ -1,6 +1,7 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::catalog::domain::railway_company::RailwayCompanyId;
 use crate::catalog::domain::railway_model::RailwayModelEvent;
+use crate::catalog::domain::railway_model::RollingStockCategory;
 use crate::catalog::domain::railway_model::localized_field::LocalizedField;
 use crate::catalog::domain::railway_model::rolling_stock::{
     RollingStockDccPatch, RollingStockSpecPatch,
@@ -164,6 +165,36 @@ impl RailwayModel {
             })?;
 
         let changed = rs.apply_railway_company(company_id);
+
+        let ev = RailwayModelEvent::RollingStockUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            rolling_stock_id: rolling_stock_id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            changed,
+        };
+        self.push_event(ev);
+        Ok(())
+    }
+
+    /// Change the category (variant) of a rolling stock and emit a RollingStockUpdated event.
+    ///
+    /// Returns `Err(DomainError::NotFound)` when no rolling stock with `rolling_stock_id` exists.
+    pub fn update_rolling_stock_category(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        new_category: RollingStockCategory,
+    ) -> Result<(), DomainError> {
+        let rs = self
+            .rolling_stocks
+            .iter_mut()
+            .find(|rs| rs.id_as_ref() == rolling_stock_id)
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "RollingStock".to_string(),
+                identifier: rolling_stock_id.to_string(),
+            })?;
+
+        let changed = rs.apply_category(new_category);
 
         let ev = RailwayModelEvent::RollingStockUpdated {
             event_id: Uuid::new_v4(),

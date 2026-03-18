@@ -1,8 +1,9 @@
 <script lang="ts">
-  import type { Control, DccInterface } from '$lib/bindings';
+  import type { Control, DccInterface, RollingStockCategory } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
 
   interface Props {
@@ -12,6 +13,7 @@
     localLivery: string;
     localControl: Control | null;
     localDccInterface: DccInterface | null;
+    localCategory: RollingStockCategory | null;
     displayLength: string;
     onSaveIdentification: (
       field: 'series' | 'roadNumber' | 'livery' | 'depot',
@@ -20,6 +22,7 @@
     onSaveControl: (id: string) => Promise<void>;
     onSaveDccInterface: (id: string) => Promise<void>;
     onSaveLength: (v: string) => Promise<void>;
+    onSaveCategory: (v: RollingStockCategory) => Promise<void>;
     onFieldActivate: () => void;
     onFieldDeactivate: () => void;
   }
@@ -31,17 +34,53 @@
     localLivery,
     localControl,
     localDccInterface,
+    localCategory,
     displayLength,
     onSaveIdentification,
     onSaveControl,
     onSaveDccInterface,
     onSaveLength,
+    onSaveCategory,
     onFieldActivate,
     onFieldDeactivate
   }: Props = $props();
 
   import { CONTROL_OPTIONS, DCC_INTERFACE_OPTIONS } from './constants';
+
+  const CATEGORY_OPTIONS = [
+    { value: 'LOCOMOTIVE', label: 'Locomotive' },
+    { value: 'ELECTRIC_MULTIPLE_UNIT', label: 'Electric Multiple Unit' },
+    { value: 'FREIGHT_CAR', label: 'Freight Car' },
+    { value: 'PASSENGER_CAR', label: 'Passenger Car' },
+    { value: 'RAILCAR', label: 'Railcar' }
+  ] as const;
 </script>
+
+<!-- Row 0: Category -->
+<div class="mb-3 grid grid-cols-3 gap-x-4">
+  <div>
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+      {m.rolling_stock_field_category()}
+    </p>
+    {#if canEdit && localCategory !== null}
+      <InPlaceSelectEdit
+        value={localCategory}
+        displayLabel={CATEGORY_OPTIONS.find((o) => o.value === localCategory)?.label ??
+          localCategory}
+        options={[...CATEGORY_OPTIONS]}
+        onSave={async (v) => {
+          await onSaveCategory(v as RollingStockCategory);
+        }}
+        onActivate={onFieldActivate}
+        onDeactivate={onFieldDeactivate}
+      />
+    {:else}
+      <span class="text-sm {localCategory ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+        {CATEGORY_OPTIONS.find((o) => o.value === localCategory)?.label ?? localCategory ?? '—'}
+      </span>
+    {/if}
+  </div>
+</div>
 
 <!-- Row 1: Series · Depot · Livery -->
 <div class="grid grid-cols-3 gap-x-4 gap-y-3">

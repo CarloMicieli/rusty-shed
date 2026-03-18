@@ -5,6 +5,7 @@
   import { toaster } from '$lib/toaster';
   import {
     commands,
+    type RailwayCompanyId,
     type RailwayModelId,
     type RollingStockId,
     type RollingStockView
@@ -30,6 +31,7 @@
 
   // ── Form state ──────────────────────────────────────────────────────────────
   interface FormState {
+    railwayCompanyId: string;
     seriesCode: string;
     roadNumber: string;
     livery: string;
@@ -47,6 +49,7 @@
   }
 
   const emptyForm: FormState = {
+    railwayCompanyId: '',
     seriesCode: '',
     roadNumber: '',
     livery: '',
@@ -68,6 +71,7 @@
   let isLoading = $state(false);
   let isSaving = $state(false);
   let inlineError = $state<string | null>(null);
+  let companyOptions = $state<{ value: string; label: string }[]>([]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
@@ -125,7 +129,7 @@
   ];
 
   // ── Data loading ─────────────────────────────────────────────────────────────
-  function extractRsData(view: RollingStockView): Omit<FormState, never> {
+  function extractRsData(view: RollingStockView): FormState {
     let rs;
     if ('locomotive' in view) rs = view.locomotive;
     else if ('electricMultipleUnit' in view) rs = view.electricMultipleUnit;
@@ -136,6 +140,7 @@
 
     const ts = rs.technical_specifications;
     return {
+      railwayCompanyId: rs.railway.railwayCompanyId ?? '',
       seriesCode: rs.series_code,
       roadNumber: rs.road_number ?? '',
       livery: rs.livery ?? '',
@@ -173,18 +178,22 @@
     isLoading = true;
     inlineError = null;
     try {
-      const result = await commands.getRailwayModelById(railwayModelId, getLocale());
-      if (result.status === 'error') {
+      const [modelResult, companiesResult] = await Promise.all([
+        commands.getRailwayModelById(railwayModelId, getLocale()),
+        commands.getRailwayCompanies()
+      ]);
+
+      if (modelResult.status === 'error' || !modelResult.data) {
         toaster.error(m.specs_drawer_save_error());
         onClose();
         return;
       }
-      if (!result.data) {
-        toaster.error(m.specs_drawer_save_error());
-        onClose();
-        return;
+
+      if (companiesResult.status === 'ok' && companiesResult.data) {
+        companyOptions = companiesResult.data.map((c) => ({ value: c.id, label: c.name }));
       }
-      const rs = result.data.rollingStock.find((r) => {
+
+      const rs = modelResult.data.rollingStock.find((r) => {
         if ('locomotive' in r) return r.locomotive.id === rollingStockId;
         if ('electricMultipleUnit' in r) return r.electricMultipleUnit.id === rollingStockId;
         if ('freightCar' in r) return r.freightCar.id === rollingStockId;
@@ -238,6 +247,19 @@
         return;
       }
 
+      // Save railway company separately if it changed.
+      if (form.railwayCompanyId && form.railwayCompanyId !== originalForm.railwayCompanyId) {
+        const companyResult = await commands.updateRollingStockRailwayCompany({
+          railwayModelId,
+          rollingStockId,
+          railwayCompanyId: form.railwayCompanyId as RailwayCompanyId
+        });
+        if (companyResult.status === 'error') {
+          inlineError = m.specs_drawer_save_error();
+          return;
+        }
+      }
+
       toaster.success(m.specs_drawer_save_success());
       originalForm = { ...form };
       onSaved?.();
@@ -278,6 +300,8 @@
         bind:roadNumber={form.roadNumber}
         bind:livery={form.livery}
         bind:depot={form.depot}
+        bind:railwayCompanyId={form.railwayCompanyId}
+        {companyOptions}
       />
 
       <RollingStockTechnicalFields

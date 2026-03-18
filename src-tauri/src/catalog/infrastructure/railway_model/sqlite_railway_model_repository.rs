@@ -264,6 +264,18 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
+        } else if map.contains_key("rolling_stock_category") {
+            // Category patch — change the `category` column only.
+            let category = map
+                .get("rolling_stock_category")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            sqlx::query("UPDATE rolling_stocks SET category = ?1 WHERE id = ?2")
+                .bind(category)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
         } else if map.contains_key("series_code") {
             // Identification patch (4 columns)
             let series_code = map

@@ -8,6 +8,7 @@ vi.mock('$lib/bindings', () => ({
     updateRollingStockIdentification: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
     updateRollingStockRailwayCompany: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
     updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    updateRollingStockCategory: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
     getRailwayModelById: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
     updateRollingStockSpecifications: vi.fn().mockResolvedValue({ status: 'ok', data: null })
   }
@@ -36,6 +37,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_digital_interface: () => 'Interface',
   model_rolling_stock_digital_address: () => 'Address',
   model_rolling_stock_digital_decoder_id: () => 'Decoder ID',
+  rolling_stock_field_category: () => 'Category',
   rolling_stock_field_series: () => 'Series',
   rolling_stock_field_series_code: () => 'Series Code',
   rolling_stock_field_depot: () => 'Depot',
@@ -45,6 +47,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_field_control_type: () => 'Control Type',
   rolling_stock_field_interior_lights: () => 'Interior Lights',
   rolling_stock_field_lights: () => 'Lights',
+  rolling_stock_select_company: () => '— Select company —',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_placeholder_empty: () => 'Click to add...',
   edit_save_error: () => 'Failed to save.',

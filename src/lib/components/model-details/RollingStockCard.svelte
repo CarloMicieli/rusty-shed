@@ -5,6 +5,7 @@
     LengthOverBuffers,
     OwnedRollingStockView,
     RailwayModelId,
+    RollingStockCategory,
     RollingStockView,
     TechnicalSpecifications
   } from '$lib/bindings';
@@ -50,6 +51,7 @@
   let localDepot = $state('');
   let localControl = $state<Control | null>(null);
   let localDccInterface = $state<DccInterface | null>(null);
+  let localCategory = $state<RollingStockCategory | null>(null);
   let localLengthMm = $state('');
   let localLengthInches = $state('');
 
@@ -145,6 +147,13 @@
     });
     if (!rsView) return;
 
+    // Extract category from the variant key
+    if ('locomotive' in rsView) localCategory = 'LOCOMOTIVE';
+    else if ('electricMultipleUnit' in rsView) localCategory = 'ELECTRIC_MULTIPLE_UNIT';
+    else if ('freightCar' in rsView) localCategory = 'FREIGHT_CAR';
+    else if ('passengerCar' in rsView) localCategory = 'PASSENGER_CAR';
+    else if ('railcar' in rsView) localCategory = 'RAILCAR';
+
     let ts: TechnicalSpecifications | null = null;
     if ('locomotive' in rsView) ts = rsView.locomotive.technical_specifications;
     else if ('electricMultipleUnit' in rsView)
@@ -214,6 +223,21 @@
     else if (field === 'roadNumber') localRoadNumber = value;
     else if (field === 'livery') localLivery = value;
     else if (field === 'depot') localDepot = value;
+  }
+
+  // ── Save: category ────────────────────────────────────────────────────────────
+  async function saveCategory(newCategory: RollingStockCategory) {
+    const prev = localCategory;
+    localCategory = newCategory;
+    const result = await commands.updateRollingStockCategory({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      category: newCategory
+    });
+    if (result.status === 'error') {
+      localCategory = prev;
+      throw new Error('Failed to save category');
+    }
   }
 
   // ── Save: DCC / control fields ────────────────────────────────────────────────
@@ -415,11 +439,13 @@
         {localLivery}
         {localControl}
         {localDccInterface}
+        {localCategory}
         displayLength={displayLength()}
         onSaveIdentification={saveIdentificationField}
         onSaveControl={saveControl}
         onSaveDccInterface={saveDccInterface}
         onSaveLength={saveLength}
+        onSaveCategory={saveCategory}
         {onFieldActivate}
         {onFieldDeactivate}
       />

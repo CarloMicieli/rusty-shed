@@ -7,7 +7,9 @@ import type { RailwayModelId, RollingStockId } from '$lib/bindings';
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayModelById: vi.fn(),
-    updateRollingStockSpecifications: vi.fn()
+    getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    updateRollingStockSpecifications: vi.fn(),
+    updateRollingStockRailwayCompany: vi.fn()
   }
 }));
 
@@ -38,6 +40,8 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_placeholder_road_number: () => 'e.g. 218 101-3',
   rolling_stock_placeholder_livery: () => 'e.g. Swiss Federal',
   rolling_stock_placeholder_depot: () => 'e.g. Basel',
+  model_rolling_stock_field_company: () => 'Company',
+  rolling_stock_select_company: () => '— Select company —',
   specs_drawer_field_flywheel: () => 'Flywheel Fitted',
   specs_drawer_field_body_material: () => 'Body Material',
   specs_drawer_field_chassis_material: () => 'Chassis Material',
@@ -75,6 +79,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_placeholder_road_number: () => 'e.g. 218 101-3',
   rolling_stock_placeholder_livery: () => 'e.g. Swiss Federal',
   rolling_stock_placeholder_depot: () => 'e.g. Basel',
+  model_rolling_stock_field_company: () => 'Company',
+  rolling_stock_select_company: () => '— Select company —',
   specs_drawer_field_flywheel: () => 'Flywheel Fitted',
   specs_drawer_field_body_material: () => 'Body Material',
   specs_drawer_field_chassis_material: () => 'Chassis Material',
@@ -102,7 +108,7 @@ const ROLLING_STOCK_ID = 'trn:rolling-stock:rs-001' as RollingStockId;
 /** A fully-populated locomotive fixture for the drawer */
 const mockLocomotive = {
   id: ROLLING_STOCK_ID,
-  railway: { id: 'fs', display: 'FS' },
+  railway: { railwayCompanyId: 'trn:railway-company:fs', display: 'FS' },
   livery: 'Verde FS',
   length_over_buffer: null,
   technical_specifications: {

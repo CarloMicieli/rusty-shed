@@ -311,6 +311,28 @@ export const commands = {
     }
   },
   /**
+   * Change the category (variant) of a single rolling stock unit.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, rolling stock, and new category.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRollingStockCategory(
+    args: UpdateRollingStockCategoryArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('update_rolling_stock_category', { args }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Update only the control type, DCC interface, and length of a single rolling stock unit.
    *
    * Unlike `update_rolling_stock_specifications`, this command only touches these three fields
@@ -6285,6 +6307,23 @@ export type UpdateRailwayModelTextArgs = {
    * Language code for the translation to update.
    */
   lang: Language;
+};
+/**
+ * Arguments for changing the category (variant) of a rolling stock unit.
+ */
+export type UpdateRollingStockCategoryArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * The new rolling stock category.
+   */
+  category: RollingStockCategory;
 };
 /**
  * Arguments for updating the control type, DCC interface, and length of a single rolling stock

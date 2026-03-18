@@ -1,9 +1,9 @@
 use crate::catalog::application::{
     AddRailwayModel, AddRollingStockToModel, GetRailwayModelTranslations, GetRailwayModelViewById,
     SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelDeliveryDate,
-    UpdateRailwayModelText, UpdateRollingStockDcc, UpdateRollingStockIdentification,
-    UpdateRollingStockRailwayCompany, UpdateRollingStockSpecifications,
-    UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
+    UpdateRailwayModelText, UpdateRollingStockCategory, UpdateRollingStockDcc,
+    UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
+    UpdateRollingStockSpecifications, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
@@ -12,9 +12,9 @@ use crate::catalog::domain::railway_model::railway_model_translation::RailwayMod
 use crate::catalog::interface::{
     AddRollingStockToModelArgs, CreateRailwayModelArgs, SearchRailwayModelsArgs,
     UpdateRailwayModelClassificationArgs, UpdateRailwayModelDeliveryDateArgs,
-    UpdateRailwayModelTextArgs, UpdateRollingStockDccArgs, UpdateRollingStockIdentificationArgs,
-    UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockSpecificationsArgs,
-    UpsertRailwayModelTranslationArgs,
+    UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs, UpdateRollingStockDccArgs,
+    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
+    UpdateRollingStockSpecificationsArgs, UpsertRailwayModelTranslationArgs,
 };
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
@@ -228,6 +228,34 @@ pub async fn update_rolling_stock_railway_company(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRollingStockRailwayCompany::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Change the category (variant) of a single rolling stock unit.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, rolling stock, and new category.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_category(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockCategoryArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating category for rolling stock {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockCategory::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())

@@ -10,11 +10,12 @@ use crate::{
         RailwayModelTextField, SaveRailwayModelInput, SearchRailwayModelsInput,
         SimplifiedRollingStockInput, TechnicalSpecificationsInput,
         UpdateRailwayModelClassificationInput, UpdateRailwayModelDeliveryDateInput,
-        UpdateRailwayModelTextInput, UpdateRollingStockDccInput,
+        UpdateRailwayModelTextInput, UpdateRollingStockCategoryInput, UpdateRollingStockDccInput,
         UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
         UpdateRollingStockSpecificationsInput, UpsertRailwayModelTranslationInput,
     },
     catalog::domain::railway_company::RailwayCompanyId,
+    catalog::domain::railway_model::RollingStockCategory,
     catalog::domain::railway_model::{
         BodyShellType, Category, ChassisType, Control, CouplingSocket, DccInterface, DeliveryDate,
         Epoch, FeatureFlag, LengthOverBuffers, RailwayModelId, RollingStockId,
@@ -1056,6 +1057,33 @@ impl From<UpdateRollingStockRailwayCompanyArgs> for UpdateRollingStockRailwayCom
             railway_model_id: args.railway_model_id,
             rolling_stock_id: args.rolling_stock_id,
             railway_company_id: args.railway_company_id,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRollingStockCategory args
+// ---------------------------------------------------------------------------
+
+/// Arguments for changing the category (variant) of a rolling stock unit.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockCategoryArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+    /// The new rolling stock category.
+    pub category: RollingStockCategory,
+}
+
+impl From<UpdateRollingStockCategoryArgs> for UpdateRollingStockCategoryInput {
+    fn from(args: UpdateRollingStockCategoryArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            category: args.category,
         }
     }
 }

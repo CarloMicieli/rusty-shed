@@ -620,6 +620,196 @@ impl RollingStock {
         })
     }
 
+    /// Change the rolling stock variant to match `new_category`, preserving all shared fields
+    /// and applying sensible defaults for type-specific fields.  Returns a JSON patch suitable
+    /// for the repository's `update_rolling_stock_from_patch`.
+    pub fn apply_category(&mut self, new_category: RollingStockCategory) -> serde_json::Value {
+        // Extract shared fields from the current variant.
+        let (
+            id,
+            railway_id,
+            livery,
+            length_over_buffer,
+            technical_specifications,
+            friendly_name,
+            series_code,
+            road_number,
+        ) = match self.clone() {
+            RollingStock::Locomotive {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::ElectricMultipleUnit {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::FreightCar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::PassengerCar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            }
+            | RollingStock::Railcar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                ..
+            } => (
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+            ),
+        };
+
+        // Extract powered-variant-only fields (None when coming from FreightCar/PassengerCar).
+        let (series, depot, dcc_interface, control, is_dummy) = match self.clone() {
+            RollingStock::Locomotive {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+                ..
+            }
+            | RollingStock::ElectricMultipleUnit {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+                ..
+            }
+            | RollingStock::Railcar {
+                series,
+                depot,
+                dcc_interface,
+                control,
+                is_dummy,
+                ..
+            } => (series, depot, dcc_interface, control, is_dummy),
+            _ => (None, None, None, None, false),
+        };
+
+        let category_str = new_category.to_string();
+
+        *self = match new_category {
+            RollingStockCategory::Locomotive => RollingStock::Locomotive {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                series,
+                depot,
+                locomotive_type: LocomotiveType::ElectricLocomotive,
+                dcc_interface,
+                control,
+                is_dummy,
+            },
+            RollingStockCategory::ElectricMultipleUnit => RollingStock::ElectricMultipleUnit {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                series,
+                depot,
+                electric_multiple_unit_type: ElectricMultipleUnitType::MotorCar,
+                dcc_interface,
+                control,
+                is_dummy,
+            },
+            RollingStockCategory::FreightCar => RollingStock::FreightCar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                freight_car_type: None,
+            },
+            RollingStockCategory::PassengerCar => RollingStock::PassengerCar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                series,
+                passenger_car_type: None,
+                service_level: None,
+            },
+            RollingStockCategory::Railcar => RollingStock::Railcar {
+                id,
+                railway_id,
+                livery,
+                length_over_buffer,
+                technical_specifications,
+                friendly_name,
+                series_code,
+                road_number,
+                series,
+                depot,
+                railcar_type: RailcarType::PowerCar,
+                dcc_interface,
+                control,
+                is_dummy,
+            },
+        };
+
+        serde_json::json!({ "rolling_stock_category": category_str })
+    }
+
     /// Return true if the rolling stock has a decoder, false otherwise
     pub fn with_decoder(&self) -> bool {
         match self {
