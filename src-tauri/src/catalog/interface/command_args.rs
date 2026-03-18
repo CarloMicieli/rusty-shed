@@ -12,14 +12,15 @@ use crate::{
         UpdateRailwayModelClassificationInput, UpdateRailwayModelDeliveryDateInput,
         UpdateRailwayModelTextInput, UpdateRollingStockCategoryInput, UpdateRollingStockDccInput,
         UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
-        UpdateRollingStockSpecificationsInput, UpsertRailwayModelTranslationInput,
+        UpdateRollingStockServiceLevelInput, UpdateRollingStockSpecificationsInput,
+        UpdateRollingStockSubcategoryInput, UpsertRailwayModelTranslationInput,
     },
     catalog::domain::railway_company::RailwayCompanyId,
     catalog::domain::railway_model::RollingStockCategory,
     catalog::domain::railway_model::{
         BodyShellType, Category, ChassisType, Control, CouplingSocket, DccInterface, DeliveryDate,
         Epoch, FeatureFlag, LengthOverBuffers, RailwayModelId, RollingStockId,
-        RollingStockSpecPatch,
+        RollingStockSpecPatch, ServiceLevel,
     },
     catalog::domain::scale::Scale,
     core::domain::length::Length,
@@ -1305,6 +1306,60 @@ impl From<UpdateRollingStockDccArgs> for UpdateRollingStockDccInput {
             control: args.control,
             dcc_interface: args.dcc_interface,
             length_over_buffers,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRollingStockSubcategory args
+// ---------------------------------------------------------------------------
+
+/// Arguments for changing the subcategory (type field) of a rolling stock unit.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockSubcategoryArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+    /// The new subcategory string (e.g. "ELECTRIC_LOCOMOTIVE", "GONDOLA").
+    pub subcategory: String,
+}
+
+impl From<UpdateRollingStockSubcategoryArgs> for UpdateRollingStockSubcategoryInput {
+    fn from(args: UpdateRollingStockSubcategoryArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            subcategory: args.subcategory,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdateRollingStockServiceLevel args
+// ---------------------------------------------------------------------------
+
+/// Arguments for changing the service level of a rolling stock unit.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateRollingStockServiceLevelArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to update.
+    pub rolling_stock_id: RollingStockId,
+    /// The new service level; `None` clears the field.
+    pub service_level: Option<ServiceLevel>,
+}
+
+impl From<UpdateRollingStockServiceLevelArgs> for UpdateRollingStockServiceLevelInput {
+    fn from(args: UpdateRollingStockServiceLevelArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
+            service_level: args.service_level,
         }
     }
 }

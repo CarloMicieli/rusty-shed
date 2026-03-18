@@ -333,6 +333,57 @@ export const commands = {
     }
   },
   /**
+   * Update the subcategory (type field) of a single rolling stock unit.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, rolling stock, and new subcategory string.
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+   * - `Err(CommandError::ValidationError)` when the subcategory is invalid for the current category.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRollingStockSubcategory(
+    args: UpdateRollingStockSubcategoryArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_rolling_stock_subcategory', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
+   * Update the service level of a single rolling stock unit.
+   *
+   * # Arguments
+   * * `state` - Tauri-managed application `AppState` providing the database pool.
+   * * `args` - The target model, rolling stock, and new service level (or None to clear).
+   *
+   * # Returns
+   * - `Ok(())` on success.
+   * - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+   * - `Err(CommandError::DatabaseError)` on persistence failure.
+   */
+  async updateRollingStockServiceLevel(
+    args: UpdateRollingStockServiceLevelArgs
+  ): Promise<Result<null, CommandError>> {
+    try {
+      return {
+        status: 'ok',
+        data: await TAURI_INVOKE('update_rolling_stock_service_level', { args })
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Update only the control type, DCC interface, and length of a single rolling stock unit.
    *
    * Unlike `update_rolling_stock_specifications`, this command only touches these three fields
@@ -6403,6 +6454,23 @@ export type UpdateRollingStockRailwayCompanyArgs = {
   railwayCompanyId: RailwayCompanyId;
 };
 /**
+ * Arguments for changing the service level of a rolling stock unit.
+ */
+export type UpdateRollingStockServiceLevelArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * The new service level; `None` clears the field.
+   */
+  serviceLevel: ServiceLevel | null;
+};
+/**
  * Full technical specification payload for a RollingStock unit.
  * Saves all four drawer sections (Identification, Technical, Control, Coupling) atomically.
  */
@@ -6435,6 +6503,23 @@ export type UpdateRollingStockSpecificationsArgs = {
   couplingSocket: string | null;
   closeCouplers: boolean | null;
   digitalShunting: boolean | null;
+};
+/**
+ * Arguments for changing the subcategory (type field) of a rolling stock unit.
+ */
+export type UpdateRollingStockSubcategoryArgs = {
+  /**
+   * The parent railway model.
+   */
+  railwayModelId: RailwayModelId;
+  /**
+   * The rolling stock unit to update.
+   */
+  rollingStockId: RollingStockId;
+  /**
+   * The new subcategory string (e.g. "ELECTRIC_LOCOMOTIVE", "GONDOLA").
+   */
+  subcategory: string;
 };
 export type UpdateSellerPayload = {
   id: string;

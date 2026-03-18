@@ -264,6 +264,56 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .execute(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
+        } else if map.contains_key("locomotive_type") {
+            let value = map.get("locomotive_type").and_then(|v| v.as_str());
+            sqlx::query("UPDATE rolling_stocks SET locomotive_type = ?1 WHERE id = ?2")
+                .bind(value)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        } else if map.contains_key("freight_car_type") {
+            let value = map.get("freight_car_type").and_then(|v| v.as_str());
+            sqlx::query("UPDATE rolling_stocks SET freight_car_type = ?1 WHERE id = ?2")
+                .bind(value)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        } else if map.contains_key("passenger_car_type") {
+            let value = map.get("passenger_car_type").and_then(|v| v.as_str());
+            sqlx::query("UPDATE rolling_stocks SET passenger_car_type = ?1 WHERE id = ?2")
+                .bind(value)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        } else if map.contains_key("electric_multiple_unit_type") {
+            let value = map
+                .get("electric_multiple_unit_type")
+                .and_then(|v| v.as_str());
+            sqlx::query("UPDATE rolling_stocks SET electric_multiple_unit_type = ?1 WHERE id = ?2")
+                .bind(value)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        } else if map.contains_key("railcar_type") {
+            let value = map.get("railcar_type").and_then(|v| v.as_str());
+            sqlx::query("UPDATE rolling_stocks SET railcar_type = ?1 WHERE id = ?2")
+                .bind(value)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
+        } else if map.contains_key("service_level") {
+            let value = map.get("service_level").and_then(|v| v.as_str());
+            sqlx::query("UPDATE rolling_stocks SET service_level = ?1 WHERE id = ?2")
+                .bind(value)
+                .bind(rolling_stock_id)
+                .execute(&mut *self.executor)
+                .await
+                .map_err(DomainError::from)?;
         } else if map.contains_key("rolling_stock_category") {
             // Category patch — change the `category` column only.
             let category = map

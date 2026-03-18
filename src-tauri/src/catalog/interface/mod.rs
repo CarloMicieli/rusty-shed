@@ -19,5 +19,7 @@ pub use command_args::UpdateRollingStockCategoryArgs;
 pub use command_args::UpdateRollingStockDccArgs;
 pub use command_args::UpdateRollingStockIdentificationArgs;
 pub use command_args::UpdateRollingStockRailwayCompanyArgs;
+pub use command_args::UpdateRollingStockServiceLevelArgs;
 pub use command_args::UpdateRollingStockSpecificationsArgs;
+pub use command_args::UpdateRollingStockSubcategoryArgs;
 pub use command_args::UpsertRailwayModelTranslationArgs;

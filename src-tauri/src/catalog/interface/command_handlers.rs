@@ -3,7 +3,8 @@ use crate::catalog::application::{
     SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelDeliveryDate,
     UpdateRailwayModelText, UpdateRollingStockCategory, UpdateRollingStockDcc,
     UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
-    UpdateRollingStockSpecifications, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
+    UpdateRollingStockServiceLevel, UpdateRollingStockSpecifications,
+    UpdateRollingStockSubcategory, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
 };
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
@@ -14,7 +15,8 @@ use crate::catalog::interface::{
     UpdateRailwayModelClassificationArgs, UpdateRailwayModelDeliveryDateArgs,
     UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs, UpdateRollingStockDccArgs,
     UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
-    UpdateRollingStockSpecificationsArgs, UpsertRailwayModelTranslationArgs,
+    UpdateRollingStockServiceLevelArgs, UpdateRollingStockSpecificationsArgs,
+    UpdateRollingStockSubcategoryArgs, UpsertRailwayModelTranslationArgs,
 };
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
@@ -420,4 +422,61 @@ pub async fn add_rolling_stock_to_model(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(rs_id)
+}
+
+/// Update the subcategory (type field) of a single rolling stock unit.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, rolling stock, and new subcategory string.
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+/// - `Err(CommandError::ValidationError)` when the subcategory is invalid for the current category.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_subcategory(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockSubcategoryArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating subcategory for rolling stock {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockSubcategory::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Update the service level of a single rolling stock unit.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The target model, rolling stock, and new service level (or None to clear).
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_service_level(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockServiceLevelArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating service level for rolling stock {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    UpdateRollingStockServiceLevel::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
 }

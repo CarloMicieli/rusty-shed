@@ -990,6 +990,8 @@
   "rolling_stock_add_cta": "Add Rolling Stock",
   "rolling_stock_add_more": "+ Add Rolling Stock",
   "rolling_stock_field_category": "Category",
+  "rolling_stock_field_subcategory": "Type",
+  "rolling_stock_field_service_level": "Service Level",
   "signal_failure_headline": "Signal Failure",
   "signal_failure_subtext": "An unexpected fault has occurred. Use the error code below to report it to support.",
   "signal_failure_action_reset": "Reset Signal",

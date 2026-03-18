@@ -894,6 +894,8 @@
   "rolling_stock_add_cta": "Aggiungi Materiale Rotabile",
   "rolling_stock_add_more": "+ Aggiungi Materiale Rotabile",
   "rolling_stock_field_category": "Categoria",
+  "rolling_stock_field_subcategory": "Tipo",
+  "rolling_stock_field_service_level": "Classe di Servizio",
   "rolling_stock_field_series": "Serie",
   "rolling_stock_field_control_type": "Tipo di Controllo",
   "rolling_stock_field_interior_lights": "Luci Interne",

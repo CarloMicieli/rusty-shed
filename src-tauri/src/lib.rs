@@ -162,6 +162,8 @@ pub fn run() {
         catalog_command_handlers::update_railway_model_delivery_date,
         catalog_command_handlers::update_rolling_stock_railway_company,
         catalog_command_handlers::update_rolling_stock_category,
+        catalog_command_handlers::update_rolling_stock_subcategory,
+        catalog_command_handlers::update_rolling_stock_service_level,
         catalog_command_handlers::update_rolling_stock_dcc,
         catalog_command_handlers::update_rolling_stock_specifications,
         catalog_command_handlers::get_railway_model_translations,

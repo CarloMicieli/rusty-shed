@@ -207,6 +207,67 @@ impl RailwayModel {
         Ok(())
     }
 
+    /// Change the subcategory (type field) of a rolling stock and emit a RollingStockUpdated event.
+    ///
+    /// Returns `Err(DomainError::NotFound)` when no rolling stock with `rolling_stock_id` exists.
+    /// Returns `Err(DomainError::Validation)` when `subcategory` is invalid for the current category.
+    pub fn update_rolling_stock_subcategory(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        subcategory: String,
+    ) -> Result<(), DomainError> {
+        let rs = self
+            .rolling_stocks
+            .iter_mut()
+            .find(|rs| rs.id_as_ref() == rolling_stock_id)
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "RollingStock".to_string(),
+                identifier: rolling_stock_id.to_string(),
+            })?;
+
+        let changed = rs.apply_subcategory(subcategory)?;
+
+        let ev = RailwayModelEvent::RollingStockUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            rolling_stock_id: rolling_stock_id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            changed,
+        };
+        self.push_event(ev);
+        Ok(())
+    }
+
+    /// Change the service level of a rolling stock and emit a RollingStockUpdated event.
+    ///
+    /// Returns `Err(DomainError::NotFound)` when no rolling stock with `rolling_stock_id` exists.
+    pub fn update_rolling_stock_service_level(
+        &mut self,
+        rolling_stock_id: &RollingStockId,
+        service_level: Option<crate::catalog::domain::railway_model::ServiceLevel>,
+    ) -> Result<(), DomainError> {
+        let rs = self
+            .rolling_stocks
+            .iter_mut()
+            .find(|rs| rs.id_as_ref() == rolling_stock_id)
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "RollingStock".to_string(),
+                identifier: rolling_stock_id.to_string(),
+            })?;
+
+        let changed = rs.apply_service_level(service_level);
+
+        let ev = RailwayModelEvent::RollingStockUpdated {
+            event_id: Uuid::new_v4(),
+            railway_model_id: self.id.clone(),
+            rolling_stock_id: rolling_stock_id.clone(),
+            timestamp: chrono::Utc::now().naive_utc(),
+            changed,
+        };
+        self.push_event(ev);
+        Ok(())
+    }
+
     /// Update the identification fields (series_code, road_number, livery, depot) of a rolling
     /// stock and emit a RollingStockUpdated event.
     ///

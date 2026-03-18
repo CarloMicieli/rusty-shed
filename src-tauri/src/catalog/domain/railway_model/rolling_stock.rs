@@ -14,6 +14,7 @@ use crate::catalog::domain::railway_model::feature_flag::FeatureFlag;
 use crate::catalog::domain::railway_model::length_over_buffers::LengthOverBuffers;
 use crate::catalog::domain::railway_model::rolling_stock_id::RollingStockId;
 use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecifications;
+use crate::core::domain::domain_error::DomainError;
 
 /// A patch containing all fields that can be updated in the technical specification drawer.
 #[derive(Debug, Clone)]
@@ -808,6 +809,83 @@ impl RollingStock {
         };
 
         serde_json::json!({ "rolling_stock_category": category_str })
+    }
+
+    /// Change the subcategory (type field) of this rolling stock and return a JSON patch.
+    ///
+    /// Returns `Err(DomainError::Validation)` when `subcategory` is not a valid variant
+    /// for the current category.
+    pub fn apply_subcategory(
+        &mut self,
+        subcategory: String,
+    ) -> Result<serde_json::Value, DomainError> {
+        match self {
+            RollingStock::Locomotive {
+                locomotive_type, ..
+            } => {
+                let t = subcategory.parse::<LocomotiveType>().map_err(|_| {
+                    DomainError::Validation(format!("invalid locomotive type: {subcategory}"))
+                })?;
+                *locomotive_type = t;
+                Ok(serde_json::json!({ "locomotive_type": subcategory }))
+            }
+            RollingStock::FreightCar {
+                freight_car_type, ..
+            } => {
+                let t = subcategory.parse::<FreightCarType>().map_err(|_| {
+                    DomainError::Validation(format!("invalid freight car type: {subcategory}"))
+                })?;
+                *freight_car_type = Some(t);
+                Ok(serde_json::json!({ "freight_car_type": subcategory }))
+            }
+            RollingStock::PassengerCar {
+                passenger_car_type, ..
+            } => {
+                let t = subcategory.parse::<PassengerCarType>().map_err(|_| {
+                    DomainError::Validation(format!("invalid passenger car type: {subcategory}"))
+                })?;
+                *passenger_car_type = Some(t);
+                Ok(serde_json::json!({ "passenger_car_type": subcategory }))
+            }
+            RollingStock::ElectricMultipleUnit {
+                electric_multiple_unit_type,
+                ..
+            } => {
+                let t = subcategory
+                    .parse::<ElectricMultipleUnitType>()
+                    .map_err(|_| {
+                        DomainError::Validation(format!(
+                            "invalid electric multiple unit type: {subcategory}"
+                        ))
+                    })?;
+                *electric_multiple_unit_type = t;
+                Ok(serde_json::json!({ "electric_multiple_unit_type": subcategory }))
+            }
+            RollingStock::Railcar { railcar_type, .. } => {
+                let t = subcategory.parse::<RailcarType>().map_err(|_| {
+                    DomainError::Validation(format!("invalid railcar type: {subcategory}"))
+                })?;
+                *railcar_type = t;
+                Ok(serde_json::json!({ "railcar_type": subcategory }))
+            }
+        }
+    }
+
+    /// Change the service level of this rolling stock and return a JSON patch.
+    ///
+    /// Only `PassengerCar` actually stores a service level; for all other variants
+    /// this is a no-op but still returns a valid patch so the call is safe.
+    pub fn apply_service_level(
+        &mut self,
+        service_level: Option<ServiceLevel>,
+    ) -> serde_json::Value {
+        if let RollingStock::PassengerCar {
+            service_level: sl, ..
+        } = self
+        {
+            *sl = service_level;
+        }
+        serde_json::json!({ "service_level": service_level })
     }
 
     /// Return true if the rolling stock has a decoder, false otherwise

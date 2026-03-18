@@ -15,7 +15,9 @@ mod update_rolling_stock_category;
 mod update_rolling_stock_dcc;
 mod update_rolling_stock_identification;
 mod update_rolling_stock_railway_company;
+mod update_rolling_stock_service_level;
 mod update_rolling_stock_specifications;
+mod update_rolling_stock_subcategory;
 mod upsert_railway_model_translation;
 
 #[cfg(test)]
@@ -53,8 +55,12 @@ pub use update_rolling_stock_identification::UpdateRollingStockIdentification;
 pub use update_rolling_stock_identification::UpdateRollingStockIdentificationInput;
 pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompany;
 pub use update_rolling_stock_railway_company::UpdateRollingStockRailwayCompanyInput;
+pub use update_rolling_stock_service_level::UpdateRollingStockServiceLevel;
+pub use update_rolling_stock_service_level::UpdateRollingStockServiceLevelInput;
 pub use update_rolling_stock_specifications::UpdateRollingStockSpecifications;
 pub use update_rolling_stock_specifications::UpdateRollingStockSpecificationsInput;
+pub use update_rolling_stock_subcategory::UpdateRollingStockSubcategory;
+pub use update_rolling_stock_subcategory::UpdateRollingStockSubcategoryInput;
 pub use upsert_railway_model_translation::{
     UpsertRailwayModelTranslation, UpsertRailwayModelTranslationInput,
 };

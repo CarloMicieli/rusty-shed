@@ -150,6 +150,9 @@
           onSaveSpec={(field, value) => rs.saveSpec(unit.id, field, value)}
           onSaveBoolSpec={(field, value) => rs.saveBoolSpec(unit.id, field, value)}
           onSaveLength={(value) => rs.saveLength(unit.id, value)}
+          onSaveCategory={(category) => rs.saveCategory(unit.id, category)}
+          onSaveSubcategory={(subcategory) => rs.saveSubcategory(unit.id, subcategory)}
+          onSaveServiceLevel={(sl) => rs.saveServiceLevel(unit.id, sl)}
           onSpecsSaved={async () => {
             await rs.reloadSpec(unit.id);
             await onModelUpdated?.();
@@ -171,6 +174,9 @@
           onSaveSpec={(unitId, field, value) => rs.saveSpec(unitId, field, value)}
           onSaveBoolSpec={(unitId, field, value) => rs.saveBoolSpec(unitId, field, value)}
           onSaveLength={(unitId, value) => rs.saveLength(unitId, value)}
+          onSaveCategory={(unitId, category) => rs.saveCategory(unitId, category)}
+          onSaveSubcategory={(unitId, subcategory) => rs.saveSubcategory(unitId, subcategory)}
+          onSaveServiceLevel={(unitId, sl) => rs.saveServiceLevel(unitId, sl)}
         />
       {/if}
 

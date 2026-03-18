@@ -19,6 +19,10 @@ export interface RsFormState {
   couplingSocket: string;
   closeCouplers: boolean | null;
   digitalShunting: boolean | null;
+  category: string | null;
+  subcategory: string | null;
+  serviceLevel: string | null;
+  subcategoryFlashed: boolean;
 }
 
 function getEmptyRsForm(): RsFormState {
@@ -36,7 +40,11 @@ function getEmptyRsForm(): RsFormState {
     control: '',
     couplingSocket: '',
     closeCouplers: null,
-    digitalShunting: null
+    digitalShunting: null,
+    category: null,
+    subcategory: null,
+    serviceLevel: null,
+    subcategoryFlashed: false
   };
 }
 
@@ -50,6 +58,29 @@ function extractRsDataFromView(view: RollingStockView): RsFormState {
   else return getEmptyRsForm();
 
   const ts = rs.technical_specifications;
+
+  let category: string | null = null;
+  let subcategory: string | null = null;
+  let serviceLevel: string | null = null;
+
+  if ('locomotive' in view) {
+    category = 'LOCOMOTIVE';
+    subcategory = view.locomotive.locomotive_type ?? null;
+  } else if ('electricMultipleUnit' in view) {
+    category = 'ELECTRIC_MULTIPLE_UNIT';
+    subcategory = view.electricMultipleUnit.electric_multiple_unit_type ?? null;
+  } else if ('freightCar' in view) {
+    category = 'FREIGHT_CAR';
+    subcategory = view.freightCar.freight_car_type ?? null;
+  } else if ('passengerCar' in view) {
+    category = 'PASSENGER_CAR';
+    subcategory = view.passengerCar.passenger_car_type ?? null;
+    serviceLevel = view.passengerCar.service_level ?? null;
+  } else if ('railcar' in view) {
+    category = 'RAILCAR';
+    subcategory = view.railcar.railcar_type ?? null;
+  }
+
   return {
     seriesCode: rs.series_code,
     roadNumber: rs.road_number ?? '',
@@ -75,7 +106,11 @@ function extractRsDataFromView(view: RollingStockView): RsFormState {
         ? true
         : ts?.coupling?.digital_shunting === 'NO'
           ? false
-          : null
+          : null,
+    category,
+    subcategory,
+    serviceLevel,
+    subcategoryFlashed: false
   };
 }
 
@@ -259,6 +294,61 @@ export function useRollingStockEditor(
     await onModelUpdated();
   }
 
+  async function saveCategory(unitId: string, newCategory: string) {
+    const model = getModel();
+    const result = await commands.updateRollingStockCategory({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      category: newCategory as Parameters<typeof commands.updateRollingStockCategory>[0]['category']
+    });
+    if (result.status === 'error') throw new Error('Failed to save category');
+
+    const form = formState.get(unitId) ?? getEmptyRsForm();
+    if (!formState.has(unitId)) formState.set(unitId, form);
+    form.category = newCategory;
+    form.subcategory = null;
+    form.serviceLevel = null;
+    form.subcategoryFlashed = true;
+    setTimeout(() => {
+      const f = formState.get(unitId);
+      if (f) f.subcategoryFlashed = false;
+    }, 800);
+
+    await onModelUpdated();
+  }
+
+  async function saveSubcategory(unitId: string, subcategory: string) {
+    const model = getModel();
+    const result = await commands.updateRollingStockSubcategory({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      subcategory
+    });
+    if (result.status === 'error') throw new Error('Failed to save subcategory');
+
+    const form = formState.get(unitId);
+    if (form) form.subcategory = subcategory;
+
+    await onModelUpdated();
+  }
+
+  async function saveServiceLevel(unitId: string, serviceLevel: string | null) {
+    const model = getModel();
+    const result = await commands.updateRollingStockServiceLevel({
+      railwayModelId: model.id,
+      rollingStockId: unitId,
+      serviceLevel: (serviceLevel || null) as Parameters<
+        typeof commands.updateRollingStockServiceLevel
+      >[0]['serviceLevel']
+    });
+    if (result.status === 'error') throw new Error('Failed to save service level');
+
+    const form = formState.get(unitId);
+    if (form) form.serviceLevel = serviceLevel || null;
+
+    await onModelUpdated();
+  }
+
   return {
     formState,
     specLoaded,
@@ -267,6 +357,9 @@ export function useRollingStockEditor(
     saveIdentification,
     saveSpec,
     saveLength,
-    saveBoolSpec
+    saveBoolSpec,
+    saveCategory,
+    saveSubcategory,
+    saveServiceLevel
   };
 }
