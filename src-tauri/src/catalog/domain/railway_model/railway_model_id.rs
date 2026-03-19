@@ -43,13 +43,12 @@ impl RailwayModelId {
         let manufacturer_trn = Trn::from_str(manufacturer_id.as_ref())
             .map_err(|_| RailwayModelIdError::InvalidManufacturerId)?;
 
-        // Build the ID manually without slugifying the product code
-        let id = format!(
-            "{}:{}:{}",
-            Self::PREFIX,
-            manufacturer_trn.nss(),
-            product_code.to_lowercase()
-        );
+        // Trim and replace whitespace with hyphens before lowercasing
+        let sanitized = product_code
+            .trim()
+            .replace(char::is_whitespace, "-")
+            .to_lowercase();
+        let id = format!("{}:{}:{}", Self::PREFIX, manufacturer_trn.nss(), sanitized);
         Ok(RailwayModelId::from_string_unchecked(id))
     }
 }
@@ -105,6 +104,9 @@ impl TryFrom<&str> for RailwayModelId {
         if product_code.is_empty() {
             return Err(RailwayModelIdError::InvalidProductCode);
         }
+        if product_code.contains(char::is_whitespace) {
+            return Err(RailwayModelIdError::InvalidProductCode);
+        }
 
         // Validate manufacturer_nss is a valid slug (lowercase alphanumeric + hyphens, no spaces)
         if manufacturer_nss.contains(char::is_whitespace) {
@@ -156,6 +158,10 @@ mod tests {
         "trn:railway-model:unknown manufacturer:123456",
         RailwayModelIdError::InvalidManufacturerNamespace
     )]
+    #[case(
+        "trn:railway-model:acme:1252 116",
+        RailwayModelIdError::InvalidProductCode
+    )]
     fn try_from_str_empty_fails(#[case] input: &str, #[case] expected_error: RailwayModelIdError) {
         let err = RailwayModelId::try_from(input).expect_err("empty id should fail");
         assert_eq!(err, expected_error);
@@ -185,6 +191,30 @@ mod tests {
             RailwayModelId::new(&manufacturer_id, "P123").expect("valid Railway model ID");
 
         assert_eq!(railway_model_id.to_string(), "trn:railway-model:acme:p123");
+    }
+
+    #[test]
+    fn it_should_new_replace_spaces_with_hyphens() {
+        let manufacturer_id =
+            ManufacturerId::try_from(MANUFACTURER_ID_TRN).expect("valid manufacturer trn");
+        let id = RailwayModelId::new(&manufacturer_id, "1252 116").expect("valid id");
+        assert_eq!(id.to_string(), "trn:railway-model:acme:1252-116");
+    }
+
+    #[test]
+    fn it_should_new_trim_leading_trailing_spaces() {
+        let manufacturer_id =
+            ManufacturerId::try_from(MANUFACTURER_ID_TRN).expect("valid manufacturer trn");
+        let id = RailwayModelId::new(&manufacturer_id, " P100 ").expect("valid id");
+        assert_eq!(id.to_string(), "trn:railway-model:acme:p100");
+    }
+
+    #[test]
+    fn it_should_new_replace_multiple_spaces_with_hyphens() {
+        let manufacturer_id =
+            ManufacturerId::try_from(MANUFACTURER_ID_TRN).expect("valid manufacturer trn");
+        let id = RailwayModelId::new(&manufacturer_id, "1252  116").expect("valid id");
+        assert_eq!(id.to_string(), "trn:railway-model:acme:1252--116");
     }
 
     #[test]
