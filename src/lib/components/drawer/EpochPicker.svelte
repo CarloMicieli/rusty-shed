@@ -1,5 +1,5 @@
 <script lang="ts">
-  const BASE_EPOCHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'Vm'] as const;
+  const BASE_EPOCHS = ['I', 'II', 'III', 'IV', 'V', 'Vm', 'VI'] as const;
 
   interface Props {
     label: string;
