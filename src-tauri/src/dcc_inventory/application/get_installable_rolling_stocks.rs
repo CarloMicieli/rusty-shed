@@ -49,6 +49,7 @@ mod tests {
             road_number: Some("1001".to_string()),
             series_code: Some("E.656".to_string()),
             has_decoder: false,
+            dcc_interface: None,
         };
 
         mock.expect_find_installable_rolling_stocks()

@@ -4121,6 +4121,10 @@ export type InstallableRollingStockView = {
    * True if this rolling stock already has a decoder installed
    */
   has_decoder: boolean;
+  /**
+   * The DCC interface of the rolling stock, if available (e.g. NEM_652)
+   */
+  dcc_interface: DccInterface | null;
 };
 /**
  * Application display language

@@ -22,6 +22,7 @@
 
   // Drawer state
   let installDrawerOpen = $state(false);
+  let preselectedStockId = $state<string | null>(null);
 
   onMount(async () => {
     await controller.loadAll();
@@ -37,7 +38,8 @@
     return success;
   }
 
-  function handleChangeDecoder(_stock: DigitalRollingStockView) {
+  function handleChangeDecoder(stock: DigitalRollingStockView) {
+    preselectedStockId = stock.owned_rolling_stock_id;
     installDrawerOpen = true;
   }
 
@@ -47,6 +49,7 @@
   }
 
   function openInstallDrawer() {
+    preselectedStockId = null;
     installDrawerOpen = true;
   }
 
@@ -111,4 +114,5 @@
   open={installDrawerOpen}
   onClose={closeInstallDrawer}
   onSuccess={handleInstallSuccess}
+  {preselectedStockId}
 />

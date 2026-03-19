@@ -24,9 +24,10 @@
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    preselectedStockId?: string | null;
   }
 
-  let { open, onClose, onSuccess }: Props = $props();
+  let { open, onClose, onSuccess, preselectedStockId = null }: Props = $props();
 
   const controller = getDigitalRosterContext();
 
@@ -81,6 +82,12 @@
     );
   });
 
+  let compatibleDecoders = $derived.by(() => {
+    const iface = selectedRollingStock?.dcc_interface ?? null;
+    if (!iface) return decoders;
+    return decoders.filter((d) => d.decoderInterface === iface);
+  });
+
   $effect(() => {
     if (open) handleOpen();
   });
@@ -88,6 +95,16 @@
   $effect(() => {
     if (selectedRollingStock?.has_decoder && existingDigitalRollingStock) {
       f.values.dccAddress = existingDigitalRollingStock.dcc_address;
+      f.values.selectedDecoderId = existingDigitalRollingStock.decoder.id;
+    }
+  });
+
+  $effect(() => {
+    if (
+      f.values.selectedDecoderId &&
+      !compatibleDecoders.some((d) => d.id === f.values.selectedDecoderId)
+    ) {
+      f.values.selectedDecoderId = null;
     }
   });
 
@@ -96,6 +113,9 @@
     duplicateWarning = null;
     showConfirmDialog = false;
     await loadReferenceData();
+    if (preselectedStockId) {
+      f.values.selectedRollingStockId = preselectedStockId;
+    }
   }
 
   async function loadReferenceData() {
@@ -227,7 +247,7 @@
       />
 
       <DecoderPicker
-        {decoders}
+        decoders={compatibleDecoders}
         {manufacturers}
         selectedId={f.values.selectedDecoderId}
         error={validationErrors.decoder}

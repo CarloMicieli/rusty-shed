@@ -26,6 +26,16 @@ impl ChangeDccAddressUseCase {
     {
         let mut repo = unit_of_work.digital_rolling_stocks_repository();
 
+        let dup = repo
+            .check_address_exists(input.new_dcc_address, Some(input.id.clone()))
+            .await?;
+        if dup.is_duplicate {
+            return Err(DomainError::Conflict(format!(
+                "DCC address {} is already in use",
+                *input.new_dcc_address
+            )));
+        }
+
         let maybe = repo.find_by_id(&input.id).await?;
         let mut drs = maybe.ok_or_else(|| DomainError::NotFound {
             resource: "DigitalRollingStock".to_string(),
@@ -51,6 +61,7 @@ pub struct ChangeDccAddressInput {
 mod tests {
     use super::*;
     use crate::collecting::domain::OwnedRollingStockId;
+    use crate::dcc_inventory::application::CheckDuplicateAddressResult;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
     use crate::dcc_inventory::domain::{DccAddress, DecoderId};
     use crate::dcc_inventory::domain::{DigitalRollingStock, DigitalRollingStockId};
@@ -72,6 +83,15 @@ mod tests {
 
         let new_addr = DccAddress::new(500).unwrap();
         let expected_addr = new_addr;
+
+        mock.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: false,
+                    existing_rolling_stock_id: None,
+                })
+            });
 
         mock.expect_find_by_id()
             .times(1)
@@ -100,6 +120,15 @@ mod tests {
     async fn it_should_return_not_found_when_target_missing() {
         let mut mock = MockDigitalRollingStockRepository::new();
 
+        mock.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: false,
+                    existing_rolling_stock_id: None,
+                })
+            });
+
         mock.expect_find_by_id().times(1).returning(|_| Ok(None));
 
         let mut uow = FakeUow::new(mock);
@@ -111,5 +140,29 @@ mod tests {
 
         let res = ChangeDccAddressUseCase::execute(&mut uow, input).await;
         assert!(matches!(res, Err(DomainError::NotFound { .. })));
+    }
+
+    #[tokio::test]
+    async fn it_should_reject_duplicate_dcc_address() {
+        let mut mock = MockDigitalRollingStockRepository::new();
+
+        mock.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: true,
+                    existing_rolling_stock_id: None,
+                })
+            });
+
+        let mut uow = FakeUow::new(mock);
+
+        let input = ChangeDccAddressInput {
+            id: DigitalRollingStockId::from_uuid(Uuid::new_v4()),
+            new_dcc_address: DccAddress::new(1).unwrap(),
+        };
+
+        let res = ChangeDccAddressUseCase::execute(&mut uow, input).await;
+        assert!(matches!(res, Err(DomainError::Conflict(_))));
     }
 }

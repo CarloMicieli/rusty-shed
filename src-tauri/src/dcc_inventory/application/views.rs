@@ -85,4 +85,6 @@ pub struct InstallableRollingStockView {
     pub series_code: Option<String>,
     /// True if this rolling stock already has a decoder installed
     pub has_decoder: bool,
+    /// The DCC interface of the rolling stock, if available (e.g. NEM_652)
+    pub dcc_interface: Option<DccInterface>,
 }

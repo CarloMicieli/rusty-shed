@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::catalog::domain::railway_model::{PowerMethod, RollingStockCategory};
+use crate::catalog::domain::railway_model::{DccInterface, PowerMethod, RollingStockCategory};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
@@ -338,13 +338,14 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
         &mut self,
     ) -> Result<Vec<InstallableRollingStockView>, DomainError> {
         let sql = r#"
-            SELECT 
+            SELECT
                 ors.id AS owned_rolling_stock_id,
                 rs.category,
                 rs.road_number,
                 rs.series_code,
                 rc.name AS railway_company_name,
-                CASE WHEN drs.id IS NOT NULL THEN 1 ELSE 0 END AS has_decoder
+                CASE WHEN drs.id IS NOT NULL THEN 1 ELSE 0 END AS has_decoder,
+                rs.dcc_interface
             FROM owned_rolling_stocks ors
             LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
             LEFT JOIN railway_companies rc ON rs.railway_company_id = rc.id
@@ -363,6 +364,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             series_code: Option<String>,
             railway_company_name: Option<String>,
             has_decoder: i32,
+            dcc_interface: Option<DccInterface>,
         }
 
         let rows = sqlx::query_as::<_, InstallableRow>(sql)
@@ -385,6 +387,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
                 road_number: row.road_number,
                 series_code: row.series_code,
                 has_decoder: row.has_decoder != 0,
+                dcc_interface: row.dcc_interface,
             });
         }
 

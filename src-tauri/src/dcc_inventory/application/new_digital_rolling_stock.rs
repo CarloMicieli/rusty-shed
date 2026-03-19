@@ -34,6 +34,14 @@ impl NewDigitalRollingStockUseCase {
     {
         let mut repo = unit_of_work.digital_rolling_stocks_repository();
 
+        let dup = repo.check_address_exists(input.dcc_address, None).await?;
+        if dup.is_duplicate {
+            return Err(DomainError::Conflict(format!(
+                "DCC address {} is already in use",
+                *input.dcc_address
+            )));
+        }
+
         let id = id_provider.next_id();
 
         let drs = DigitalRollingStock::new(
@@ -63,6 +71,7 @@ mod tests {
     use super::*;
     use crate::collecting::domain::OwnedRollingStockId;
     use crate::core::domain::test_utils::MockIdProvider;
+    use crate::dcc_inventory::application::CheckDuplicateAddressResult;
     use crate::dcc_inventory::domain::DigitalRollingStockId;
     use crate::dcc_inventory::domain::MockDigitalRollingStockRepository;
     use crate::dcc_inventory::domain::{DccAddress, DecoderId};
@@ -73,6 +82,15 @@ mod tests {
     #[tokio::test]
     async fn it_should_create_new_digital_rolling_stock() {
         let mut mock = MockDigitalRollingStockRepository::new();
+
+        mock.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: false,
+                    existing_rolling_stock_id: None,
+                })
+            });
 
         mock.expect_save()
             .times(1)
@@ -95,5 +113,33 @@ mod tests {
             .expect("execute should succeed");
 
         assert_eq!(returned, fixed_id);
+    }
+
+    #[tokio::test]
+    async fn it_should_reject_duplicate_dcc_address() {
+        let mut mock = MockDigitalRollingStockRepository::new();
+
+        mock.expect_check_address_exists()
+            .times(1)
+            .returning(|_, _| {
+                Ok(CheckDuplicateAddressResult {
+                    is_duplicate: true,
+                    existing_rolling_stock_id: None,
+                })
+            });
+
+        let mut uow = FakeUow::new(mock);
+
+        let fixed_id = DigitalRollingStockId::from_uuid(Uuid::new_v4());
+        let id_provider = MockIdProvider::new(fixed_id.clone());
+
+        let input = NewDigitalRollingStockInput {
+            owned_rolling_stock_id: OwnedRollingStockId::from(Uuid::new_v4()),
+            dcc_address: DccAddress::new(123).unwrap(),
+            decoder_id: DecoderId::try_from("trn:decoder:acme:d-100").unwrap(),
+        };
+
+        let res = NewDigitalRollingStockUseCase::execute(&mut uow, id_provider, input).await;
+        assert!(matches!(res, Err(DomainError::Conflict(_))));
     }
 }
