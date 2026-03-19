@@ -40,6 +40,11 @@
   function toggleSettings() {
     showSettings = !showSettings;
   }
+
+  function formatDate(value: string): string {
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+  }
 </script>
 
 {#if wishlist}
@@ -62,7 +67,7 @@
             </div>
           {:else}
             <h2 class="text-3xl font-bold tracking-tight text-white">{wishlist.name}</h2>
-            {#if wishlist.is_default}
+            {#if wishlist.isDefault}
               <Badge
                 class="border-amber-500/20 bg-amber-500/10 text-[10px] font-bold text-amber-500 ring-1 ring-amber-500/20"
               >
@@ -73,9 +78,7 @@
         </div>
         <p class="font-mono text-xs tracking-wider text-zinc-500 uppercase">
           {wishlist.count}
-          {m.stats_rolling_stocks()} · Last updated {new Date(
-            wishlist.updated_at
-          ).toLocaleDateString()}
+          {m.stats_rolling_stocks()} · Last updated {formatDate(wishlist.updatedAt)}
         </p>
       </div>
 

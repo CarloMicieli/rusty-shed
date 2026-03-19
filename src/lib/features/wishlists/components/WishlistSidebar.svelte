@@ -57,7 +57,7 @@
           </div>
 
           <div class="flex items-center gap-2">
-            {#if wl.is_default}
+            {#if wl.isDefault}
               <Badge
                 class="border-amber-500/20 bg-amber-500/10 text-[9px] font-bold text-amber-500 uppercase ring-1 ring-amber-500/20"
               >
