@@ -143,11 +143,25 @@
 
       if (result.status === 'error') {
         const err = result.error;
+        console.error('[ImageCropDialog] upload error:', err);
         if (typeof err === 'object') {
           if ('BusinessRule' in err) {
-            saveError = err.BusinessRule;
+            saveError = err.BusinessRule as string;
+          } else if ('NotFound' in err) {
+            saveError = err.NotFound as string;
           } else if ('Unknown' in err) {
             saveError = (err.Unknown as { message: string }).message;
+          } else if ('DatabaseError' in err) {
+            saveError = err.DatabaseError as string;
+          } else if ('ValidationError' in err) {
+            const allErrors = Object.values(
+              err.ValidationError as Record<string, Array<{ message?: string }>>
+            ).flat();
+            saveError = allErrors[0]?.message ?? 'Validation error';
+          } else if ('Conflict' in err) {
+            saveError = err.Conflict as string;
+          } else if ('PermissionDenied' in err) {
+            saveError = err.PermissionDenied as string;
           } else {
             saveError = 'Upload failed';
           }

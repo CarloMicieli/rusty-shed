@@ -84,15 +84,14 @@ impl UploadModelImage {
                 existing_format,
             );
 
-            if existing_path.exists() {
-                log::debug!(
-                    "Deleting existing image: {}",
-                    existing_path.full_path().display()
-                );
-                self.storage
-                    .delete_image(&existing_path)
-                    .await
-                    .map_err(UploadError::Storage)?;
+            log::debug!(
+                "Deleting existing image: {}",
+                existing_path.full_path().display()
+            );
+            match self.storage.delete_image(&existing_path).await {
+                Ok(()) => {}
+                Err(StorageError::FileNotFound(_)) => {} // already gone, fine
+                Err(e) => return Err(UploadError::Storage(e)),
             }
         }
 
@@ -210,15 +209,14 @@ impl UploadModelImageBytes {
                     existing_format,
                 );
 
-                if existing_path.exists() {
-                    log::debug!(
-                        "Deleting existing image: {}",
-                        existing_path.full_path().display()
-                    );
-                    self.storage
-                        .delete_image(&existing_path)
-                        .await
-                        .map_err(UploadError::Storage)?;
+                log::debug!(
+                    "Deleting existing image: {}",
+                    existing_path.full_path().display()
+                );
+                match self.storage.delete_image(&existing_path).await {
+                    Ok(()) => {}
+                    Err(StorageError::FileNotFound(_)) => {} // already gone, fine
+                    Err(e) => return Err(UploadError::Storage(e)),
                 }
             }
 
