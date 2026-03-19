@@ -139,7 +139,7 @@
 {:else}
   <div class="flex flex-col">
     <div
-      class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
+      class="-mx-4 -mt-4 mb-6 rounded-tl-[24px] border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
     >
       <PageHeader
         title={m.dashboard_title()}

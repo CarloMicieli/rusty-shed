@@ -189,6 +189,9 @@
 
     <!-- Main Content Wrapper -->
     <div class="relative flex h-full min-w-0 flex-1 flex-col bg-[#0D0D0D]">
+      <!-- Amber tint overlay to match sidebar/header in the exposed corner -->
+      <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
+
       <!-- Header -->
       <header
         class="relative sticky top-0 z-50 border-b border-[#1F1F1F] bg-[#0D0D0D]"
