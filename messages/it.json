@@ -133,6 +133,7 @@
   "depot_manufacturer": "Produttore",
   "depot_product_code": "Codice Prodotto",
   "depot_category": "Categoria",
+  "depot_era": "Epoca",
   "depot_scale": "Scala",
   "depot_description": "Descrizione",
   "depot_status_in_service": "In Servizio",

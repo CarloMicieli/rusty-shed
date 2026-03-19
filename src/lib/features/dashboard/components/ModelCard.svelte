@@ -107,5 +107,16 @@
         {formatDescription(card.description)}
       </p>
     {/if}
+
+    {#if card.scale || card.era || card.roadNumber}
+      <div class="mt-2 grid grid-cols-3 gap-1 border-t border-white/5 pt-2">
+        {#each [{ label: m.depot_road_number(), val: card.roadNumber }, { label: m.depot_scale(), val: card.scale }, { label: m.depot_era(), val: card.era }] as col (col.label)}
+          <div class="flex flex-col items-center gap-0.5">
+            <span class="text-[9px] tracking-wider text-[#808080] uppercase">{col.label}</span>
+            <span class="font-mono text-[11px] text-[#E0E0E0]">{col.val ?? '—'}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
   </div>
 </button>

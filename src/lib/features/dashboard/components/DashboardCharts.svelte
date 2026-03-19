@@ -1,8 +1,6 @@
 <script lang="ts">
   import { BarChart, LinearGradient, PieChart } from 'layerchart';
   import { BarChart2, Wallet } from 'lucide-svelte';
-  import { resolve } from '$app/paths';
-  import { Button } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
 
   type MonthlySpendingPoint = { month: number; amount: number };
@@ -80,9 +78,6 @@
               <Wallet size={28} class="text-zinc-500" />
             </div>
             <p class="text-sm text-zinc-400">{m.dashboard_chart_budget_no_budget()}</p>
-            <Button variant="outline" size="sm" href={resolve('/finance')}>
-              {m.dashboard_chart_budget_set_cta()}
-            </Button>
           </div>
         {:else}
           <PieChart
@@ -162,7 +157,7 @@
               svg: { class: 'w-full h-full overflow-visible' },
               bars: { fill: '#d48a3e', radius: 4, strokeWidth: 0 },
               grid: {
-                y: { style: 'stroke: rgba(82, 82, 91, 0.3); stroke-dasharray: 4 4;' }
+                y: { style: 'stroke: rgba(31, 31, 31, 0.9); stroke-dasharray: 4 4;' }
               },
               xAxis: {
                 format: (v: unknown) => formatMonthIndex(Number(v))

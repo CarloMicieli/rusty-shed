@@ -12,7 +12,7 @@
 <button
   type="button"
   onclick={() => action.onClick()}
-  class="group hover:border-accent-500/50 relative flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-border/60 bg-card/50 p-4 text-center transition-all hover:bg-muted/70 {isPrimary
+  class="group relative flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-[#1F1F1F] bg-card/50 p-3 text-center transition-all hover:border-[#D48A42]/50 hover:bg-[rgba(212,138,66,0.15)] {isPrimary
     ? 'border-accent-500/40 bg-accent-950/30'
     : ''}"
 >

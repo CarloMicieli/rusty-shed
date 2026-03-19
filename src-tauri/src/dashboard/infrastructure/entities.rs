@@ -75,6 +75,9 @@ pub struct ModelCardRow {
     pub description: String,
     pub image_path: Option<String>,
     pub purchase_condition: Option<String>,
+    pub scale: Option<String>,
+    pub era: Option<String>,
+    pub road_number: Option<String>,
 }
 
 impl From<ModelCardRow> for ModelCard {
@@ -92,6 +95,9 @@ impl From<ModelCardRow> for ModelCard {
             product_code: row.product_code,
             condition,
             description: row.description,
+            scale: row.scale,
+            era: row.era,
+            road_number: row.road_number,
         }
     }
 }

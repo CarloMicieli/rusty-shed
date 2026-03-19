@@ -4423,6 +4423,18 @@ export type ModelCard = {
    * Frontend will truncate to ~100 characters
    */
   description: string;
+  /**
+   * Scale (e.g., "H0", "N") — from railway_models.scale
+   */
+  scale: string | null;
+  /**
+   * Era/epoch (e.g., "V", "IV") — from railway_models.epoch
+   */
+  era: string | null;
+  /**
+   * Road number — from rolling_stocks.road_number (first match)
+   */
+  roadNumber: string | null;
 };
 /**
  * This represents the physical and mechanical state of the locomotive or rolling stock.

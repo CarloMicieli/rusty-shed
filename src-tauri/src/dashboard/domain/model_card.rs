@@ -24,4 +24,13 @@ pub struct ModelCard {
     /// Model description or auto-generated title
     /// Frontend will truncate to ~100 characters
     pub description: String,
+
+    /// Scale (e.g., "H0", "N") — from railway_models.scale
+    pub scale: Option<String>,
+
+    /// Era/epoch (e.g., "V", "IV") — from railway_models.epoch
+    pub era: Option<String>,
+
+    /// Road number — from rolling_stocks.road_number (first match)
+    pub road_number: Option<String>,
 }
