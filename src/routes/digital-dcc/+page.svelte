@@ -68,6 +68,8 @@
   function handleInstallSuccess() {
     closeInstallDrawer();
   }
+
+  const isRosterEmpty = $derived(rosterState.rollingStocks.length === 0);
 </script>
 
 <svelte:head>
@@ -84,14 +86,21 @@
       description={m.depot_subtitle()}
     >
       {#snippet actions()}
-        <Button size="sm" type="button" onclick={openInstallDrawer}>
-          <Plus size={18} class="mr-2" />
-          <span>{m.digital_roster_install_decoder()}</span>
-        </Button>
+        {#if !isRosterEmpty}
+          <Button size="sm" type="button" onclick={openInstallDrawer}>
+            <Plus size={18} class="mr-2" />
+            <span>{m.digital_roster_install_decoder()}</span>
+          </Button>
+        {/if}
       {/snippet}
-      <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />
     </PageHeader>
   </div>
+
+  {#if !isRosterEmpty && !rosterState.isLoading}
+    <div class="mb-6 px-4 lg:px-8">
+      <DigitalSummary summary={rosterState.summary} loading={rosterState.isLoading} />
+    </div>
+  {/if}
 
   <div class="space-y-6">
     <!-- Roster Table -->

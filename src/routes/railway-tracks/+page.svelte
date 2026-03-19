@@ -52,10 +52,12 @@
       description={m.track_inventories_subtitle()}
     >
       {#snippet actions()}
-        <Button variant="default" onclick={() => (createDialogOpen = true)} disabled={loading}>
-          <Plus size={18} />
-          <span>{m.track_inventories_create_button()}</span>
-        </Button>
+        {#if !loading && inventories.length > 0}
+          <Button variant="default" onclick={() => (createDialogOpen = true)}>
+            <Plus size={18} />
+            <span>{m.track_inventories_create_button()}</span>
+          </Button>
+        {/if}
       {/snippet}
     </PageHeader>
   </div>

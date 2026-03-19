@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plus, TrainFront, X, Filter } from 'lucide-svelte';
+  import { TrainFront, X, Filter } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -96,6 +96,7 @@
   const filters = $derived(collectionService.filters);
   const availableTags = $derived(collectionService.availableTags);
   const isLoading = $derived(collectionService.isLoading);
+  const isCollectionEmpty = $derived(rawItems.length === 0);
 
   onMount(() => {
     void collectionService.fetchCollection();
@@ -206,34 +207,26 @@
       description={m.collection_description()}
     >
       {#snippet actions()}
-        <Button
-          variant="rusty"
-          onclick={ui.startCreate}
-          size="sm"
-          class="shadow-lg shadow-amber-500/10"
-        >
-          <Plus size={18} />
-          {m.collection_add_model()}
-        </Button>
-        <Button
-          onclick={ui.toggleFilterSidebar}
-          variant="outline"
-          size="sm"
-          title={m.collection_toggle_filters_title()}
-        >
-          <Filter size={18} />
-        </Button>
+        {#if !isCollectionEmpty}
+          <Button
+            variant="rusty"
+            onclick={ui.startCreate}
+            size="sm"
+            class="shadow-lg shadow-amber-500/10"
+          >
+            <TrainFront size={18} />
+            {m.collection_add_model()}
+          </Button>
+          <Button
+            onclick={ui.toggleFilterSidebar}
+            variant="outline"
+            size="sm"
+            title={m.collection_toggle_filters_title()}
+          >
+            <Filter size={18} />
+          </Button>
+        {/if}
       {/snippet}
-      <div
-        class="grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
-      >
-        {@render StatChip('Locomotives', summaryData.locomotivesCount)}
-        {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
-        {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
-        {@render StatChip('Train Sets', summaryData.trainSetsCount)}
-        {@render StatChip('Railcars', summaryData.railcarsCount)}
-        {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
-      </div>
     </PageHeader>
   </div>
 
@@ -242,6 +235,18 @@
     <!-- Main Content -->
     <div class="flex-1">
       <div class="px-4 py-6 sm:px-6">
+        {#if !isCollectionEmpty && !isLoading}
+          <div
+            class="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
+          >
+            {@render StatChip('Locomotives', summaryData.locomotivesCount)}
+            {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
+            {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
+            {@render StatChip('Train Sets', summaryData.trainSetsCount)}
+            {@render StatChip('Railcars', summaryData.railcarsCount)}
+            {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
+          </div>
+        {/if}
         {#if isLoading && rawItems.length === 0}
           {@render LoadingSkeleton()}
         {:else if !isLoading && rawItems.length === 0}
