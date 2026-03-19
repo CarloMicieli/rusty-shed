@@ -72,7 +72,7 @@
       seriesCode: '',
       category: null,
       roadNumber: '',
-      locomotiveType: null
+      subcategory: null
     };
   }
 
@@ -202,7 +202,7 @@
           railwayCompanyId: rs.railwayCompanyId!,
           seriesCode: rs.seriesCode,
           roadNumber: rs.roadNumber || null,
-          locomotiveType: rs.locomotiveType || null,
+          subcategory: rs.subcategory || null,
           category: rs.category!
         }))
       },

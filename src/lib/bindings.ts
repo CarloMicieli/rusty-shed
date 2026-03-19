@@ -5954,7 +5954,7 @@ export type SimplifiedRollingStockArgs = {
   railwayCompanyId: string;
   seriesCode: string;
   roadNumber: string | null;
-  locomotiveType: string | null;
+  subcategory: string | null;
   category: string;
 };
 /**

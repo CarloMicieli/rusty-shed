@@ -3,10 +3,10 @@
   import { X } from 'lucide-svelte';
   import { Input, Button } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
-  import type { RailwayCompany } from '$lib/bindings';
+  import type { RailwayCompany, RollingStockCategory } from '$lib/bindings';
   import type { RollingStockFormEntry } from '$lib/features/collection/types/AddModelFormTypes';
   import rollingStockCategories from '$lib/data/constants/rollingStockCategories.json';
-  import locomotiveTypes from '$lib/data/constants/locomotiveTypes.json';
+  import { getSubcategoryOptions } from '$lib/components/model-details/components/constants';
 
   interface Props {
     /** Entry data bound two-way */
@@ -39,13 +39,18 @@
   const darkInput =
     'flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
-  // Show locomotive type field only if category is LOCOMOTIVE
-  let showLocomotiveType = $derived(entry.category === 'LOCOMOTIVE');
+  // Subcategory options depend on selected category
+  const subcategoryOptions = $derived(
+    getSubcategoryOptions(entry.category as RollingStockCategory | null).map((o) => ({
+      value: o.id,
+      label: o.label
+    }))
+  );
 
-  // When category changes, reset locomotive type if not a locomotive
+  // When category changes, reset subcategory
   $effect(() => {
-    if (!showLocomotiveType && entry.locomotiveType) {
-      entry.locomotiveType = null;
+    if (subcategoryOptions.length === 0 && entry.subcategory) {
+      entry.subcategory = null;
     }
   });
 
@@ -55,11 +60,6 @@
   const categoryOptions = $derived(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rollingStockCategories.map((cat) => ({ value: cat.id, label: (m as any)[cat.labelKey]() }))
-  );
-
-  const locomotiveTypeOptions = $derived(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    locomotiveTypes.map((t) => ({ value: t.id, label: (m as any)[t.labelKey]() }))
   );
 </script>
 
@@ -71,8 +71,8 @@
   class:bg-card={!dark}
   class:text-card-foreground={!dark}
 >
+  <!-- Row 1: Railway Company | (empty) -->
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <!-- Railway Company -->
     <FormSelect
       id="railway-company-{entry.uid}"
       label={m.add_model_railway_company()}
@@ -82,8 +82,11 @@
       error={errors?.railwayCompanyId}
       required
     />
+    <div></div>
+  </div>
 
-    <!-- Series Code -->
+  <!-- Row 2: Series Code | Road Number -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <div>
       <label for="series-code-{entry.uid}" class="block space-y-1">
         {#if dark}
@@ -106,21 +109,7 @@
         </p>
       {/if}
     </div>
-  </div>
 
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <!-- Category -->
-    <FormSelect
-      id="category-{entry.uid}"
-      label={m.add_model_rs_category()}
-      options={categoryOptions}
-      bind:value={entry.category}
-      placeholder="-- {m.add_model_rs_category()} --"
-      error={errors?.category}
-      required
-    />
-
-    <!-- Road Number (optional) -->
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
         {#if dark}
@@ -141,16 +130,30 @@
     </div>
   </div>
 
-  <!-- Locomotive Type (conditional) -->
-  {#if showLocomotiveType}
+  <!-- Row 3: Category | Subcategory (shown only when options exist) -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <FormSelect
-      id="locomotive-type-{entry.uid}"
-      label={m.add_model_locomotive_type()}
-      options={locomotiveTypeOptions}
-      bind:value={entry.locomotiveType}
-      placeholder="-- {m.add_model_locomotive_type()} --"
+      id="category-{entry.uid}"
+      label={m.add_model_rs_category()}
+      options={categoryOptions}
+      bind:value={entry.category}
+      placeholder="-- {m.add_model_rs_category()} --"
+      error={errors?.category}
+      required
     />
-  {/if}
+
+    {#if subcategoryOptions.length > 0}
+      <FormSelect
+        id="subcategory-{entry.uid}"
+        label={m.add_model_rs_subcategory()}
+        options={subcategoryOptions}
+        bind:value={entry.subcategory}
+        placeholder="-- {m.add_model_rs_subcategory()} --"
+      />
+    {:else}
+      <div></div>
+    {/if}
+  </div>
 
   <!-- Remove Button -->
   <div class="flex justify-end">

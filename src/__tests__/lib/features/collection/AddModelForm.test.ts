@@ -35,7 +35,7 @@ function createDefaultRollingStock(): RollingStockFormEntry {
     seriesCode: '',
     category: null,
     roadNumber: '',
-    locomotiveType: null
+    subcategory: null
   };
 }
 
@@ -128,7 +128,7 @@ function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollec
         railwayCompanyId: rs.railwayCompanyId!,
         seriesCode: rs.seriesCode,
         roadNumber: rs.roadNumber || null,
-        locomotiveType: rs.locomotiveType || null,
+        subcategory: rs.subcategory || null,
         category: rs.category!
       }))
     },
@@ -339,7 +339,7 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
         seriesCode: 'TEE',
         category: 'POWER_CAR',
         roadNumber: 'VT 11.5 001',
-        locomotiveType: null
+        subcategory: null
       },
       {
         uid: crypto.randomUUID(),
@@ -347,7 +347,7 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
         seriesCode: 'TEE',
         category: 'TRAILER_CAR',
         roadNumber: 'VT 11.5 002',
-        locomotiveType: null
+        subcategory: null
       },
       {
         uid: crypto.randomUUID(),
@@ -355,7 +355,7 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
         seriesCode: 'TEE',
         category: 'TRAILER_CAR',
         roadNumber: 'VT 11.5 003',
-        locomotiveType: null
+        subcategory: null
       }
     ];
 

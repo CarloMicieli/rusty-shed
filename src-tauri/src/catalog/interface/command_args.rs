@@ -225,7 +225,7 @@ pub struct SimplifiedRollingStockArgs {
     pub railway_company_id: String,
     pub series_code: String,
     pub road_number: Option<String>,
-    pub locomotive_type: Option<String>,
+    pub subcategory: Option<String>,
     pub category: String,
 }
 
@@ -240,7 +240,7 @@ impl TryFrom<SimplifiedRailwayModelArgs> for SaveRailwayModelInput {
                 railway_company_id: rs.railway_company_id,
                 series_code: rs.series_code,
                 road_number: rs.road_number,
-                locomotive_type: rs.locomotive_type,
+                subcategory: rs.subcategory,
                 category: rs.category,
             })
             .collect();

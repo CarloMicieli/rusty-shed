@@ -45,11 +45,11 @@ export interface RollingStockFormEntry {
   roadNumber: string;
 
   /**
-   * Locomotive type if category is 'locomotive' (e.g., STEAM, DIESEL, ELECTRIC).
-   * Required when category is locomotive; auto-hidden for other categories.
-   * Maps to SimplifiedRollingStockArgs.locomotiveType in backend.
+   * Subcategory for the rolling stock (e.g., STEAM_LOCOMOTIVE, BAGGAGE_CAR, TANK_CARS).
+   * Available options depend on the selected category.
+   * Maps to SimplifiedRollingStockArgs.subcategory in backend.
    */
-  locomotiveType: string | null;
+  subcategory: string | null;
 }
 
 /**
