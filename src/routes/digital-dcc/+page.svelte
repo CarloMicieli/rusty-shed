@@ -7,7 +7,6 @@
   } from '$lib/features/digital-roster';
   import DigitalSummary from '$lib/features/digital-roster/components/DigitalSummary.svelte';
   import DigitalRosterTable from '$lib/features/digital-roster/components/DigitalRosterTable.svelte';
-  import DccAddressEditor from '$lib/features/digital-roster/components/DccAddressEditor.svelte';
   import DecoderInstallDrawer from '$lib/features/digital-roster/components/DecoderInstallDrawer.svelte';
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
@@ -21,10 +20,8 @@
   // Set context for child components
   setDigitalRosterContext(controller);
 
-  // Modal state
-  let editModalOpen = $state(false);
+  // Drawer state
   let installDrawerOpen = $state(false);
-  let selectedStock: DigitalRollingStockView | null = $state(null);
 
   onMount(async () => {
     await controller.loadAll();
@@ -34,27 +31,19 @@
     rosterState.setFilterText(text);
   }
 
-  async function handleSaveAddress(newAddress: number): Promise<boolean> {
-    if (!selectedStock) return false;
-    const success = await controller.changeDccAddress(selectedStock.id, newAddress);
-    if (success) {
-      await controller.loadRollingStocks();
-    }
+  async function handleSaveAddress(id: string, newAddress: number): Promise<boolean> {
+    const success = await controller.changeDccAddress(id, newAddress);
+    if (success) await controller.loadRollingStocks();
     return success;
   }
 
-  async function handleCheckDuplicate(address: number, excludeId: string) {
-    return await controller.checkDuplicateAddress(address, excludeId);
+  function handleChangeDecoder(_stock: DigitalRollingStockView) {
+    installDrawerOpen = true;
   }
 
-  function handleEdit(stock: DigitalRollingStockView) {
-    selectedStock = stock;
-    editModalOpen = true;
-  }
-
-  function handleCloseModal() {
-    editModalOpen = false;
-    selectedStock = null;
+  function handleDelete(stock: DigitalRollingStockView) {
+    // TODO: implement delete command
+    console.warn('Delete not yet implemented for', stock.id);
   }
 
   function openInstallDrawer() {
@@ -109,22 +98,13 @@
       filterText={rosterState.filterText}
       loading={rosterState.isLoading}
       onFilterChange={handleFilterChange}
-      onEdit={handleEdit}
       onInstallDecoder={openInstallDrawer}
+      onSaveAddress={handleSaveAddress}
+      onChangeDecoder={handleChangeDecoder}
+      onDelete={handleDelete}
     />
   </div>
 </div>
-
-<!-- DCC Address Editor Modal -->
-{#if selectedStock}
-  <DccAddressEditor
-    open={editModalOpen}
-    stock={selectedStock}
-    onSave={handleSaveAddress}
-    onCheckDuplicate={handleCheckDuplicate}
-    onClose={handleCloseModal}
-  />
-{/if}
 
 <!-- Decoder Install Drawer -->
 <DecoderInstallDrawer
