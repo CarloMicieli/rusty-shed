@@ -39,36 +39,38 @@
 </script>
 
 <div class="space-y-4">
-  <!-- Integrated Search Toolbar -->
-  <div class="rounded-lg bg-zinc-900/50 p-3">
-    <div class="flex items-center gap-2">
-      <div
-        class="flex flex-1 items-center gap-2 rounded-md border border-border bg-background px-3"
-      >
-        <Search class="h-5 w-5 text-muted-foreground" />
-        <input
-          type="text"
-          class="flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
-          placeholder={m.digital_roster_filter_placeholder()}
-          value={filterText}
-          oninput={handleFilterInput}
-        />
-        {#if filterText}
-          <button
-            type="button"
-            class="rounded-sm p-1 transition-colors hover:bg-zinc-800"
-            onclick={clearFilter}
-          >
-            <X class="h-4 w-4 text-muted-foreground" />
-          </button>
-        {/if}
+  {#if rollingStocks.length > 0 || filterText || loading}
+    <!-- Integrated Search Toolbar -->
+    <div class="rounded-lg bg-zinc-900/50 p-3">
+      <div class="flex items-center gap-2">
+        <div
+          class="flex flex-1 items-center gap-2 rounded-md border border-border bg-background px-3"
+        >
+          <Search class="h-5 w-5 text-muted-foreground" />
+          <input
+            type="text"
+            class="flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+            placeholder={m.digital_roster_filter_placeholder()}
+            value={filterText}
+            oninput={handleFilterInput}
+          />
+          {#if filterText}
+            <button
+              type="button"
+              class="rounded-sm p-1 transition-colors hover:bg-zinc-800"
+              onclick={clearFilter}
+            >
+              <X class="h-4 w-4 text-muted-foreground" />
+            </button>
+          {/if}
+        </div>
+        <Button variant="outline" size="sm">
+          <Filter class="h-4 w-4" />
+          <span>Filter</span>
+        </Button>
       </div>
-      <Button variant="outline" size="sm">
-        <Filter class="h-4 w-4" />
-        <span>Filter</span>
-      </Button>
     </div>
-  </div>
+  {/if}
 
   <!-- Content Area -->
   <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
@@ -79,7 +81,7 @@
     {:else if rollingStocks.length === 0}
       <!-- Empty State -->
       <div
-        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 py-24"
+        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
       >
         <div class="relative">
           <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
@@ -94,13 +96,17 @@
           <p class="text-sm leading-relaxed text-zinc-500">{m.digital_roster_empty_message()}</p>
         </div>
         {#if onInstallDecoder}
-          <Button
-            variant="secondary"
+          <button
+            type="button"
+            class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
             onclick={onInstallDecoder}
-            class="mt-2 rounded-xl border border-white/10 px-8 py-6 font-bold transition-all hover:bg-zinc-800"
           >
-            {m.digital_roster_install_decoder()}
-          </Button>
+            <div
+              class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
+            ></div>
+            <Microchip class="h-5 w-5" />
+            <span>{m.digital_roster_install_decoder()}</span>
+          </button>
         {/if}
       </div>
     {:else}

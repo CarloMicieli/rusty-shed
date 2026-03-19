@@ -148,16 +148,18 @@
 
   <div class="-mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
     <!-- List Navigator (Left Column) -->
-    <aside class="flex-shrink-0 border-r border-border bg-card md:w-80">
-      <div class="sticky top-4 p-4">
-        <WishlistSidebar
-          {wishlists}
-          activeId={activeWishlistId}
-          onSelect={handleSelect}
-          onDelete={_handleDelete}
-        />
-      </div>
-    </aside>
+    {#if wishlists.length > 0 || wishlistService.isLoading}
+      <aside class="flex-shrink-0 border-r border-border bg-card md:w-80">
+        <div class="sticky top-4 p-4">
+          <WishlistSidebar
+            {wishlists}
+            activeId={activeWishlistId}
+            onSelect={handleSelect}
+            onDelete={_handleDelete}
+          />
+        </div>
+      </aside>
+    {/if}
 
     <!-- Wishlist Content Area (Right Column) -->
     <div class="flex-1 bg-background">
@@ -202,22 +204,40 @@
             </div>
           </div>
         {:else}
-          <div class="flex h-[60vh] flex-col items-center justify-center space-y-6 text-center">
-            <div class="relative">
-              <div
-                class="absolute inset-0 -m-4 animate-pulse rounded-full bg-amber-500/10 blur-2xl"
-              ></div>
-              <Heart size={64} class="relative text-zinc-800" />
+          <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
+            <div
+              class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
+            >
+              <div class="relative">
+                <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
+                <div
+                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
+                >
+                  <Heart size={56} class="text-zinc-600 opacity-50" />
+                </div>
+              </div>
+
+              <div class="flex max-w-sm flex-col items-center gap-3 text-center">
+                <h3 class="text-2xl font-bold text-zinc-200">
+                  {m.app_wishlists()}
+                </h3>
+                <p class="text-sm leading-relaxed text-zinc-500">
+                  {m.wishlists_empty_state()}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
+                onclick={handleCreate}
+              >
+                <div
+                  class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
+                ></div>
+                <Heart class="h-5 w-5" />
+                <span>{m.wishlists_create_button()}</span>
+              </button>
             </div>
-            <div class="space-y-2">
-              <h2 class="text-3xl font-bold tracking-tight text-white">Rusty Shed Wishlists</h2>
-              <p class="mx-auto max-w-xs text-zinc-500">
-                {m.wishlists_empty_state()}
-              </p>
-            </div>
-            <Button variant="outline" class="border-zinc-800 text-zinc-400" onclick={handleCreate}>
-              {m.wishlists_create_button()}
-            </Button>
           </div>
         {/if}
       </div>
