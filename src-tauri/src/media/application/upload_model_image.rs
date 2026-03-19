@@ -123,14 +123,15 @@ impl UploadModelImage {
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        let model = repository
-            .find_by_id(model_id, "en")
+        let exists = repository
+            .exists_by_id(model_id)
             .await
             .map_err(UploadError::Domain)?;
 
-        match model {
-            Some(_) => Ok(()),
-            None => Err(UploadError::ModelNotFound(model_id.as_ref().to_string())),
+        if exists {
+            Ok(())
+        } else {
+            Err(UploadError::ModelNotFound(model_id.as_ref().to_string()))
         }
     }
 }
@@ -254,14 +255,15 @@ impl UploadModelImageBytes {
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        let model = repository
-            .find_by_id(model_id, "en")
+        let exists = repository
+            .exists_by_id(model_id)
             .await
             .map_err(UploadError::Domain)?;
 
-        match model {
-            Some(_) => Ok(()),
-            None => Err(UploadError::ModelNotFound(model_id.as_ref().to_string())),
+        if exists {
+            Ok(())
+        } else {
+            Err(UploadError::ModelNotFound(model_id.as_ref().to_string()))
         }
     }
 }
@@ -293,15 +295,9 @@ pub enum UploadError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::domain::manufacturer::ManufacturerId;
-    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
-        Category, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
-        RailwayModelRepository,
+        MockRailwayModelRepository, RailwayModelRepository,
     };
-    use crate::catalog::domain::scale::Scale;
-    use crate::core::domain::Language;
-    use crate::core::domain::identifiers::Identifier;
     use crate::media::domain::image_validation::ImageFormat;
     use mockall::predicate::*;
     use std::io::Write;
@@ -328,30 +324,6 @@ mod tests {
                     .take()
                     .expect("railway model repository already taken"),
             )
-        }
-    }
-
-    fn create_test_railway_model(model_id_str: &str) -> RailwayModel {
-        let railway_model_id = RailwayModelId::try_from(model_id_str).unwrap();
-        RailwayModel {
-            id: railway_model_id.clone(),
-            manufacturer_id: ManufacturerId::from_string_unchecked(
-                "trn:manufacturer:marklin".to_string(),
-            ),
-            product_code: ProductCode::try_from("39216").unwrap(),
-            description: LocalizedField {
-                lang: Language::English,
-                value: "Test model".to_string(),
-            },
-            details: None,
-            power_method: PowerMethod::DC,
-            scale: Scale::H0,
-            epoch: "IV".into(),
-            category: Category::Locomotives,
-            delivery_date: None,
-            availability_status: None,
-            rolling_stocks: vec![],
-            pending_events: Vec::new(),
         }
     }
 
@@ -417,14 +389,13 @@ mod tests {
         let model_id_str = "trn:railway-model:marklin:39216";
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
-        // Setup mock repository to return a model
+        // Setup mock repository to confirm model exists
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -454,13 +425,13 @@ mod tests {
         let model_id_str = "trn:railway-model:nonexistent:999";
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
-        // Setup mock repository to return None (model not found)
+        // Setup mock repository to report model not found
         let mut mock_repo = MockRailwayModelRepository::new();
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(|_, _| Ok(None));
+            .returning(|_| Ok(false));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -487,12 +458,11 @@ mod tests {
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -526,12 +496,11 @@ mod tests {
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -562,12 +531,11 @@ mod tests {
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -602,12 +570,11 @@ mod tests {
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -638,12 +605,11 @@ mod tests {
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -675,10 +641,10 @@ mod tests {
 
         let mut mock_repo = MockRailwayModelRepository::new();
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(|_, _| Ok(None));
+            .returning(|_| Ok(false));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -716,12 +682,11 @@ mod tests {
         let model_id = RailwayModelId::try_from(model_id_str).unwrap();
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
         mock_repo
-            .expect_find_by_id()
-            .withf(move |id, _lang| id.as_ref() == model_id_str)
+            .expect_exists_by_id()
+            .withf(move |id| id.as_ref() == model_id_str)
             .times(1)
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+            .returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -759,10 +724,7 @@ mod tests {
             create_valid_jpeg_with_content(temp_dir.path(), "first.jpg", b"FIRST_IMAGE_DATA");
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
-        mock_repo
-            .expect_find_by_id()
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+        mock_repo.expect_exists_by_id().returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -786,10 +748,7 @@ mod tests {
         );
 
         let mut mock_repo2 = MockRailwayModelRepository::new();
-        let test_model2 = create_test_railway_model(model_id_str);
-        mock_repo2
-            .expect_find_by_id()
-            .returning(move |_, _| Ok(Some(test_model2.clone())));
+        mock_repo2.expect_exists_by_id().returning(|_| Ok(true));
 
         let mut uow2 = FakeUow::with_railway_models_repo(mock_repo2);
 
@@ -835,10 +794,7 @@ mod tests {
             let use_case = UploadModelImage::new(storage_inst);
 
             let mut mock_repo = MockRailwayModelRepository::new();
-            let test_model = create_test_railway_model(model_id_str);
-            mock_repo
-                .expect_find_by_id()
-                .returning(move |_, _| Ok(Some(test_model.clone())));
+            mock_repo.expect_exists_by_id().returning(|_| Ok(true));
 
             let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -886,10 +842,7 @@ mod tests {
         let jpeg_image = create_valid_jpeg(temp_dir.path(), "photo.jpg");
 
         let mut mock_repo = MockRailwayModelRepository::new();
-        let test_model = create_test_railway_model(model_id_str);
-        mock_repo
-            .expect_find_by_id()
-            .returning(move |_, _| Ok(Some(test_model.clone())));
+        mock_repo.expect_exists_by_id().returning(|_| Ok(true));
 
         let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 
@@ -908,10 +861,7 @@ mod tests {
         let png_image = create_valid_png(temp_dir.path(), "photo.png");
 
         let mut mock_repo2 = MockRailwayModelRepository::new();
-        let test_model2 = create_test_railway_model(model_id_str);
-        mock_repo2
-            .expect_find_by_id()
-            .returning(move |_, _| Ok(Some(test_model2.clone())));
+        mock_repo2.expect_exists_by_id().returning(|_| Ok(true));
 
         let mut uow2 = FakeUow::with_railway_models_repo(mock_repo2);
 
@@ -985,10 +935,7 @@ mod tests {
             let use_case = UploadModelImage::new(storage_inst);
 
             let mut mock_repo = MockRailwayModelRepository::new();
-            let test_model = create_test_railway_model(model_id_str);
-            mock_repo
-                .expect_find_by_id()
-                .returning(move |_, _| Ok(Some(test_model.clone())));
+            mock_repo.expect_exists_by_id().returning(|_| Ok(true));
 
             let mut uow = FakeUow::with_railway_models_repo(mock_repo);
 

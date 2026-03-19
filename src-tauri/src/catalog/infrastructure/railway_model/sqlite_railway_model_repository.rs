@@ -770,6 +770,16 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         }
     }
 
+    async fn exists_by_id(&mut self, id: &RailwayModelId) -> Result<bool, DomainError> {
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM railway_models WHERE id = ?1 LIMIT 1")
+                .bind(id.as_ref())
+                .fetch_one(&mut *self.executor)
+                .await
+                .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+        Ok(count > 0)
+    }
+
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,

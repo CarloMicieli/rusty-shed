@@ -191,6 +191,10 @@ impl<'a> RailwayModelRepository for RailwayRepoRef<'a> {
         self.inner.save(aggregate).await
     }
 
+    async fn exists_by_id(&mut self, id: &RailwayModelId) -> Result<bool, DomainError> {
+        self.inner.exists_by_id(id).await
+    }
+
     async fn search(&mut self, query: &str) -> Result<Vec<RailwayModelId>, DomainError> {
         self.inner.search(query).await
     }

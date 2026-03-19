@@ -125,7 +125,7 @@ impl ModelImagePath {
 ///
 /// Replaces colons with underscores for filesystem compatibility
 fn sanitize_filename(model_id: &str, format: ImageFormat) -> String {
-    let sanitized_id = model_id.replace(':', "_");
+    let sanitized_id = model_id.replace([':', ' '], "_");
     format!("{}.{}", sanitized_id, format.extension())
 }
 
@@ -602,7 +602,7 @@ mod tests {
     fn test_sanitize_filename_with_spaces() {
         assert_eq!(
             sanitize_filename("brand name:model 123", ImageFormat::Jpeg),
-            "brand name_model 123.jpg"
+            "brand_name_model_123.jpg"
         );
     }
 

@@ -76,6 +76,11 @@ pub trait RailwayModelRepository: Send + Sync {
     /// from the aggregate and map them to appropriate SQL statements.
     async fn save(&mut self, aggregate: &mut RailwayModel) -> Result<(), DomainError>;
 
+    /// Check whether a railway model with the given ID exists in the database.
+    ///
+    /// Cheaper than `find_by_id` — uses a single-table query with no JOINs.
+    async fn exists_by_id(&mut self, id: &RailwayModelId) -> Result<bool, DomainError>;
+
     /// Search for railway models using FTS5 full-text search across all languages.
     ///
     /// # Arguments
