@@ -45,6 +45,7 @@
   let showAcquisitionDrawer = $state(false);
   let showWishlistDrawer = $state(false);
   let showLogMaintenanceDrawer = $state(false);
+  let sidebarCollapsed = $state(false);
   let { children } = $props();
 
   // Expose open function so any child route can open the acquisition drawer
@@ -175,18 +176,28 @@
     in:fade
   >
     <!-- Sidebar Left (Desktop) -->
-    <div class="hidden h-full w-0 shrink-0 transition-all duration-300 lg:block lg:w-64">
-      <SidebarNavigation />
+    <div
+      class="relative z-50 hidden h-full shrink-0 overflow-hidden lg:block"
+      style:width={sidebarCollapsed ? '64px' : '256px'}
+      style="transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);"
+    >
+      <SidebarNavigation
+        collapsed={sidebarCollapsed}
+        onToggle={() => (sidebarCollapsed = !sidebarCollapsed)}
+      />
     </div>
 
     <!-- Main Content Wrapper -->
     <div class="relative flex h-full min-w-0 flex-1 flex-col">
       <!-- Header -->
       <header
-        class="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md"
+        class="relative sticky top-0 z-50 border-b border-[#1F1F1F] bg-[#121212]"
+        style="box-shadow: inset 0 1px 0 rgba(212, 138, 66, 0.1);"
         data-tauri-drag-region
       >
-        <div class="flex items-center justify-between p-4">
+        <!-- Amber tint overlay -->
+        <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
+        <div class="relative z-10 flex items-center justify-between p-4">
           <!-- Mobile: Logo / Brand (Visible only when sidebar is hidden) -->
           <div class="flex items-center gap-2 lg:hidden">
             <TrainFront class="text-primary" size={24} />

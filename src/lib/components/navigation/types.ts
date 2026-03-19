@@ -82,6 +82,16 @@ export interface SidebarNavigationProps {
    * Optional CSS class to apply to the sidebar root
    */
   class?: string;
+
+  /**
+   * Whether the sidebar is in collapsed (icon-only) mode
+   */
+  collapsed?: boolean;
+
+  /**
+   * Callback to toggle collapsed state
+   */
+  onToggle?: () => void;
 }
 
 /**
