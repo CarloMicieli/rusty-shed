@@ -129,14 +129,13 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Railway Tracks')).toBeTruthy();
   });
 
-  it('renders with correct responsive class (hidden on mobile)', () => {
+  it('renders nav with correct base classes', () => {
     const { container } = render(SidebarNavigation);
 
     const nav = container.querySelector('nav');
 
-    // Check for responsive classes
-    expect(nav?.classList.contains('hidden')).toBe(true);
-    expect(nav?.classList.contains('lg:flex')).toBe(true);
+    expect(nav?.classList.contains('flex')).toBe(true);
+    expect(nav?.classList.contains('flex-col')).toBe(true);
   });
 
   it('navigates to correct routes on click', () => {

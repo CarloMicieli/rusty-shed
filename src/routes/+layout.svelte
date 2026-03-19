@@ -172,7 +172,7 @@
   </div>
 {:else}
   <div
-    class="flex h-screen w-full flex-col overflow-hidden bg-background font-sans text-foreground lg:flex-row"
+    class="flex h-screen w-full flex-col overflow-hidden bg-[#0D0D0D] font-sans text-foreground lg:flex-row"
     in:fade
   >
     <!-- Sidebar Left (Desktop) -->
@@ -188,10 +188,10 @@
     </div>
 
     <!-- Main Content Wrapper -->
-    <div class="relative flex h-full min-w-0 flex-1 flex-col">
+    <div class="relative flex h-full min-w-0 flex-1 flex-col bg-[#0D0D0D]">
       <!-- Header -->
       <header
-        class="relative sticky top-0 z-50 border-b border-[#1F1F1F] bg-[#121212]"
+        class="relative sticky top-0 z-50 border-b border-[#1F1F1F] bg-[#0D0D0D]"
         style="box-shadow: inset 0 1px 0 rgba(212, 138, 66, 0.1);"
         data-tauri-drag-region
       >
@@ -222,9 +222,13 @@
 
       <!-- Page Content -->
       <main
-        class="mx-auto w-full max-w-[1600px] flex-1 space-y-8 overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8"
+        class="relative flex-1 overflow-hidden rounded-tl-[24px] border-t border-l border-[#1F1F1F] bg-[#050505]"
       >
-        {@render children()}
+        <div class="mx-auto h-full w-full max-w-[1600px] overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
+          <div class="space-y-8">
+            {@render children()}
+          </div>
+        </div>
       </main>
 
       <!-- Footer / Bottom Nav -->

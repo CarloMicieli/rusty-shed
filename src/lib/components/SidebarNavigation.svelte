@@ -28,7 +28,7 @@
 </script>
 
 {#key locale}
-  <nav class="relative flex h-full w-full flex-col overflow-hidden bg-[#121212]">
+  <nav class="relative flex h-full w-full flex-col overflow-hidden bg-[#0D0D0D]">
     <!-- Amber tint overlay -->
     <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
 
@@ -50,9 +50,11 @@
           <path d="M6 9v12m6-12v12m6-12v12M3 9h18" />
         </svg>
         {#if !collapsed}
-          <h2 class="h3 font-bold tracking-tight text-sidebar-foreground uppercase">
+          <h1
+            class="text-xl font-bold tracking-tight text-[#D48A42] uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+          >
             {m.app_name()}
-          </h2>
+          </h1>
         {/if}
       </div>
 

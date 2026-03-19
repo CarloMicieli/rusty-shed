@@ -43,7 +43,7 @@
   <nav class="hidden h-full w-64 flex-col border-r border-border/50 bg-card p-4 lg:flex">
     <div class="mb-8 flex items-center gap-3 px-4">
       <TrainFront class="text-accent-500" size={32} />
-      <h2 class="h3 font-bold tracking-tight uppercase">{m.app_name()}</h2>
+      <h2 class="text-[40px] font-bold tracking-tight uppercase">{m.app_name()}</h2>
     </div>
 
     <ul class="space-y-2">
