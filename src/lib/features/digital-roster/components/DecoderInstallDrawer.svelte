@@ -115,6 +115,15 @@
     await loadReferenceData();
     if (preselectedStockId) {
       f.values.selectedRollingStockId = preselectedStockId;
+      const existing =
+        controller.state.rollingStocks?.find(
+          (drs) => drs.owned_rolling_stock_id === preselectedStockId
+        ) ?? null;
+      if (existing) {
+        f.values.dccAddress = existing.dcc_address;
+        f.values.selectedDecoderId = existing.decoder.id;
+      }
+      f.syncInitial();
     }
   }
 

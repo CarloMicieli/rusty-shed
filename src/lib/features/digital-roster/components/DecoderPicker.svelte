@@ -14,6 +14,8 @@
 
   const { decoders, manufacturers, selectedId, error, touched = false, onChange }: Props = $props();
 
+  const selectedDecoder = $derived(decoders.find((d) => d.id === selectedId) ?? null);
+
   function getManufacturerName(manufacturerId: string): string {
     return manufacturers.find((m) => m.id === manufacturerId)?.name ?? manufacturerId;
   }
@@ -34,8 +36,8 @@
     onValueChange={(v) => onChange(v || null)}
   >
     <Select.Trigger id="decoder" class="w-full" data-error={touched && !!error}>
-      {#if selectedId}
-        {formatLabel(decoders.find((d) => d.id === selectedId)!)}
+      {#if selectedDecoder}
+        {formatLabel(selectedDecoder)}
       {:else}
         <span class="text-muted-foreground">{m.form_new_model_select_placeholder()}</span>
       {/if}
