@@ -18,7 +18,8 @@ vi.mock('cropperjs', () => {
 
   const mockImage = {
     $ready: vi.fn().mockResolvedValue(undefined),
-    $rotate: vi.fn()
+    $rotate: vi.fn(),
+    $scale: vi.fn()
   };
 
   const MockCropper = vi.fn().mockImplementation(() => ({
@@ -47,7 +48,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   crop_aspect_wide: () => 'Train/Wide',
   crop_rotate_left: () => 'Rotate Left',
   crop_rotate_right: () => 'Rotate Right',
-  crop_reset: () => 'Reset'
+  crop_reset: () => 'Reset',
+  crop_flip_horizontal: () => 'Flip'
 }));
 
 // Mock shadcn Dialog to render children directly

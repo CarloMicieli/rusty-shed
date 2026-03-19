@@ -110,6 +110,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   crop_rotate_left: () => 'Rotate Left',
   crop_rotate_right: () => 'Rotate Right',
   crop_reset: () => 'Reset',
+  crop_flip_horizontal: () => 'Flip',
   uploading: () => 'Uploading...',
   railway_model_image_alt: () => 'Railway model image',
   railway_model_no_image: () => 'No image available',

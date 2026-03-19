@@ -3,7 +3,7 @@
   // NO CSS import — v2 uses Shadow DOM styles built-in
   import { commands } from '$lib/bindings';
   import { Button } from '$lib/components/ui/button';
-  import { Loader2, RotateCcw, RotateCw } from 'lucide-svelte';
+  import { FlipHorizontal2, Loader2, RotateCcw, RotateCw } from 'lucide-svelte';
   import {
     Dialog,
     DialogContent,
@@ -17,6 +17,7 @@
     crop_cancel,
     crop_aspect_free,
     crop_aspect_wide,
+    crop_flip_horizontal,
     crop_rotate_left,
     crop_rotate_right,
     crop_reset,
@@ -47,7 +48,7 @@
   let isReady = $state(false);
   let isSaving = $state(false);
   let saveError = $state<string | null>(null);
-  let activeRatio = $state<'free' | '16:9' | '21:9'>('free');
+  let activeRatio = $state<'free' | '16:9' | '3:1'>('free');
   let resetKey = $state(0);
 
   // Use $effect instead of onMount: bits-ui Dialog renders content lazily,
@@ -94,11 +95,15 @@
     const sel = cropperInstance.getCropperSelection()!;
     if (activeRatio === 'free') sel.aspectRatio = NaN;
     else if (activeRatio === '16:9') sel.aspectRatio = 16 / 9;
-    else if (activeRatio === '21:9') sel.aspectRatio = 21 / 9;
+    else if (activeRatio === '3:1') sel.aspectRatio = 3 / 1;
   });
 
   function handleRotate(degrees: number) {
     cropperInstance?.getCropperImage()?.$rotate(degrees);
+  }
+
+  function handleFlip() {
+    cropperInstance?.getCropperImage()?.$scale(-1, 1);
   }
 
   function handleClose() {
@@ -192,9 +197,10 @@
       <DialogTitle>{crop_dialog_title()}</DialogTitle>
     </DialogHeader>
 
+    <!-- Cropper canvas — aspect-[16/7] fills the panoramic shape of a locomotive -->
     <div
-      class="relative w-full overflow-hidden rounded-md border border-white/10 bg-zinc-950"
-      style="height: 480px;"
+      class="relative aspect-[16/7] w-full overflow-hidden rounded-md border border-white/10"
+      style="background-color: #27272a; background-image: linear-gradient(45deg, #3f3f46 25%, transparent 25%), linear-gradient(-45deg, #3f3f46 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3f3f46 75%), linear-gradient(-45deg, transparent 75%, #3f3f46 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"
     >
       <!-- svelte-ignore a11y_missing_attribute -->
       <img
@@ -207,45 +213,67 @@
 
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-2">
-      <!-- Aspect ratio group -->
-      <div class="flex items-center gap-1 rounded-md border border-white/10 p-1">
-        {#each [['free', 'free'] as const, ['16:9', '16:9'] as const, ['21:9', '21:9'] as const] as [ratio] (ratio)}
+      <!-- Aspect ratio segmented control -->
+      <div class="flex items-center gap-0.5 rounded-lg bg-zinc-800/60 p-0.5 ring-1 ring-white/10">
+        {#each [['free', 'free'] as const, ['16:9', '16:9'] as const, ['3:1', '3:1'] as const] as [ratio] (ratio)}
           <Button
             size="sm"
-            variant={activeRatio === ratio ? 'secondary' : 'ghost'}
+            class={activeRatio === ratio
+              ? 'bg-zinc-700 text-white hover:bg-zinc-600'
+              : 'bg-transparent text-zinc-400 shadow-none hover:bg-transparent hover:text-zinc-200'}
             onclick={() => (activeRatio = ratio)}
             disabled={!isReady}
           >
-            {ratio === 'free' ? crop_aspect_free() : ratio === '21:9' ? crop_aspect_wide() : '16:9'}
+            {ratio === 'free' ? crop_aspect_free() : ratio === '3:1' ? crop_aspect_wide() : '16:9'}
           </Button>
         {/each}
       </div>
 
-      <!-- Rotation -->
-      <Button
-        size="icon"
-        variant="ghost"
-        onclick={() => handleRotate(-90)}
-        disabled={!isReady}
-        aria-label={crop_rotate_left()}
-      >
-        <RotateCcw class="size-4" />
-      </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        onclick={() => handleRotate(90)}
-        disabled={!isReady}
-        aria-label={crop_rotate_right()}
-      >
-        <RotateCw class="size-4" />
-      </Button>
+      <!-- Utility icon group: rotate + flip -->
+      <div class="flex items-center gap-1 rounded-md border border-white/10 p-1">
+        <Button
+          size="icon"
+          variant="ghost"
+          onclick={() => handleRotate(-90)}
+          disabled={!isReady}
+          aria-label={crop_rotate_left()}
+        >
+          <RotateCcw class="size-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onclick={() => handleRotate(90)}
+          disabled={!isReady}
+          aria-label={crop_rotate_right()}
+        >
+          <RotateCw class="size-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onclick={handleFlip}
+          disabled={!isReady}
+          aria-label={crop_flip_horizontal()}
+        >
+          <FlipHorizontal2 class="size-4" />
+        </Button>
+      </div>
 
-      <!-- Reset -->
-      <Button size="sm" variant="ghost" onclick={() => resetKey++} disabled={!isReady}>
+      <!-- Reset — visually separated via ml-auto -->
+      <Button
+        size="sm"
+        variant="ghost"
+        class="ml-auto"
+        onclick={() => resetKey++}
+        disabled={!isReady}
+      >
         {crop_reset()}
       </Button>
     </div>
+
+    <!-- Model ID metadata -->
+    <p class="font-mono text-xs text-zinc-600">{modelId}</p>
 
     {#if saveError}
       <p class="text-sm text-destructive">{saveError}</p>
@@ -255,7 +283,11 @@
       <Button variant="outline" onclick={handleCancel} disabled={isSaving}>
         {crop_cancel()}
       </Button>
-      <Button onclick={handleConfirm} disabled={!isReady || isSaving}>
+      <Button
+        class="bg-amber-600 text-black hover:bg-amber-500 focus-visible:ring-amber-500"
+        onclick={handleConfirm}
+        disabled={!isReady || isSaving}
+      >
         {#if isSaving}
           <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {uploading()}
