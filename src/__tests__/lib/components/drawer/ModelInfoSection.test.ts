@@ -198,15 +198,20 @@ describe('ModelInfoSection', () => {
     });
   });
 
-  // ── Epoch placeholder ────────────────────────────────────────────────────────
+  // ── Epoch picker buttons ─────────────────────────────────────────────────────
 
-  it('shows epoch placeholder when epoch is empty', () => {
+  it('renders epoch toggle buttons when epoch is empty', () => {
     render(ModelInfoSection, { props: { ...defaultProps, epoch: '' } });
-    expect(screen.getByText('e.g., IV or III/IV')).toBeInTheDocument();
+    // EpochPicker renders toggle buttons for each base epoch
+    expect(screen.getByRole('button', { name: 'IV' })).toBeInTheDocument();
+    // No display summary shown when nothing is selected
+    expect(screen.queryAllByText('IV').length).toBe(1);
   });
 
-  it('shows selected epoch value when epoch is set', () => {
+  it('shows selected epoch display value when epoch is set', () => {
     render(ModelInfoSection, { props: { ...defaultProps, epoch: 'IV' } });
-    expect(screen.getByText('IV')).toBeInTheDocument();
+    // The selected epoch appears as both an active button and a summary <p>
+    const matches = screen.getAllByText('IV');
+    expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 });

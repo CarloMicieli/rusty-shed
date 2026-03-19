@@ -41,7 +41,7 @@
       category: '',
       scale: settingsState.settings?.favouriteScale || SCALES[0],
       powerMethod: settingsState.settings?.powerMethod || POWER_METHODS[0],
-      epoch: '',
+      epoch: null as string | null,
       priority: 'NORMAL' as WishlistPriority,
       desiredPrice: null as number | null
     };
@@ -75,7 +75,7 @@
 
   $effect(() => {
     if (defaultWishlist && f.values.wishlistId === '') {
-      f.values.wishlistId = defaultWishlist.id;
+      f.reset(makeInitial());
     }
   });
 
@@ -128,7 +128,7 @@
           description: f.values.description.trim(),
           category: f.values.category,
           scale: f.values.scale,
-          epoch: f.values.epoch,
+          epoch: f.values.epoch ?? '',
           powerMethod: f.values.powerMethod,
           rollingStocks: []
         },

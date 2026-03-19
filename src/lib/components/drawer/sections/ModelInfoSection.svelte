@@ -2,8 +2,9 @@
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
   import { FormInput, FormSelect } from '$lib/components/drawer';
+  import EpochPicker from '$lib/components/drawer/EpochPicker.svelte';
   import type { Manufacturer } from '$lib/bindings';
-  import { CATEGORIES, SCALES, POWER_METHODS, EPOCHS } from '$lib/features/wishlists/constants';
+  import { CATEGORIES, SCALES, POWER_METHODS } from '$lib/features/wishlists/constants';
 
   interface Props {
     manufacturerId: string | null;
@@ -181,11 +182,9 @@
       </div>
 
       <!-- Epoch -->
-      <FormSelect
+      <EpochPicker
         label={m.wishlist_modal_epoch()}
-        options={EPOCHS.map((ep) => ({ value: ep, label: ep }))}
         bind:value={epoch}
-        placeholder={m.wishlist_modal_epoch_placeholder()}
         {disabled}
         error={errors.epoch}
       />

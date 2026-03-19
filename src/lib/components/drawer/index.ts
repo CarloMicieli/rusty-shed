@@ -7,6 +7,7 @@ export { default as FormInput } from './FormInput.svelte';
 export { default as FormSelect } from './FormSelect.svelte';
 export { default as FormPrice } from './FormPrice.svelte';
 export { default as FormBooleanSelect } from './FormBooleanSelect.svelte';
+export { default as EpochPicker } from './EpochPicker.svelte';
 export { createDrawerForm } from './createDrawerForm.svelte.js';
 export { default as ModelInfoSection } from './sections/ModelInfoSection.svelte';
 export { default as WishlistSection } from './sections/WishlistSection.svelte';

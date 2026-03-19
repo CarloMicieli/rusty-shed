@@ -46,6 +46,9 @@ export function createDrawerForm<
       values = v;
       _initial = structuredClone(v) as T;
       touched = false;
+    },
+    syncInitial() {
+      _initial = JSON.parse(JSON.stringify(values)) as T;
     }
   };
 }

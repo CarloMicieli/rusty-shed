@@ -19,7 +19,6 @@
   import controlsData from '$lib/data/constants/controls.json';
   import dccInterfacesData from '$lib/data/constants/dccInterfaces.json';
   import electricMultipleUnitTypesData from '$lib/data/constants/electricMultipleUnitTypes.json';
-  import epochsData from '$lib/data/constants/epochs.json';
   import freightCarTypesData from '$lib/data/constants/freightCarTypes.json';
   import locomotiveTypesData from '$lib/data/constants/locomotiveTypes.json';
   import passengerCarTypesData from '$lib/data/constants/passengerCarTypes.json';
@@ -31,6 +30,7 @@
   import type { ConstantItem } from './constants';
   import RollingStockSection from './components/RollingStockSection.svelte';
   import * as Select from '$lib/components/ui/select';
+  import EpochPicker from '$lib/components/drawer/EpochPicker.svelte';
 
   // Custom form type that uses RollingStockForm for UI state
   type CreateRailwayModelFormInput = Omit<CreateRailwayModelInput, 'rolling_stocks'> & {
@@ -271,14 +271,13 @@
 
               {@render powerMethodPills()}
 
-              {@render selectField(
-                formLabels.epoch,
-                fieldError('epoch'),
-                true,
-                $form.epoch,
-                epochsData,
-                (next) => ($form.epoch = next)
-              )}
+              <EpochPicker
+                label={resolveLabel(formLabels.epoch)}
+                value={$form.epoch || null}
+                onchange={(v) => ($form.epoch = v ?? '')}
+                error={fieldError('epoch')}
+                required
+              />
             </div>
           </Accordion.Content>
         </Accordion.Item>
