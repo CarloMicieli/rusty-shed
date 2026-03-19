@@ -21,7 +21,7 @@
     <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
       Digitalization Rate
     </p>
-    <p class="mt-1 text-lg font-bold text-orange-500">
+    <p class="mt-1 text-lg font-bold text-primary">
       {#if loading}&mdash;{:else}{formattedPercentage}%{/if}
     </p>
   </div>
@@ -45,7 +45,7 @@
     <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
       Active Decoders
     </p>
-    <p class="mt-1 text-lg font-bold text-green-500">
+    <p class="mt-1 text-lg font-bold text-primary">
       {#if loading}&mdash;{:else}{summary?.digital_count ?? 0}{/if}
     </p>
   </div>

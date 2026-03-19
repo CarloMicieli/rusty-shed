@@ -130,6 +130,7 @@ describe('routes/maintenance/+page.svelte', () => {
   });
 
   it('shows action buttons in the header', () => {
+    mockStateInstance.hasCards = true;
     render(MaintenancePage);
     expect(screen.getByText('maintenance_add_card_button')).toBeInTheDocument();
   });
