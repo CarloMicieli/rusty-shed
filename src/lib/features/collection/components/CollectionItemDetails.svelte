@@ -177,8 +177,8 @@
       />
     </div>
 
-    <!-- Three-column footer: Price | Purchase Date | Added Date -->
-    <div class="grid grid-cols-3 gap-x-3 border-t border-[#1F1F1F] pt-3">
+    <!-- Two-column footer: Price | Purchase Date -->
+    <div class="grid grid-cols-2 gap-x-3 border-t border-[#1F1F1F] pt-3">
       <!-- Price -->
       <div class="flex flex-col gap-0.5">
         <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
@@ -236,19 +236,6 @@
         />
       </div>
 
-      <!-- Added Date -->
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
-          {m.collection_item_added_date()}
-        </span>
-        <DatePickerField
-          value={item.addedDate ?? null}
-          onSelect={(iso: string | null) =>
-            saveUpdate({ kind: 'addedDate', data: { added_date: iso } })}
-          placeholder="—"
-          class="h-6"
-        />
-      </div>
     </div>
   </div>
 </div>
