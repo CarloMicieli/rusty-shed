@@ -21,8 +21,6 @@
 
   let selected = $state<string[]>(value ? value.split('/').filter(Boolean) : []);
 
-  const display = $derived(selected.length > 0 ? selected.join('/') : null);
-
   $effect(() => {
     const next = selected.length > 0 ? selected.join('/') : null;
     value = next;

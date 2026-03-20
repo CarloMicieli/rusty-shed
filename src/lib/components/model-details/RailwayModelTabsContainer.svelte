@@ -162,6 +162,7 @@
         <RollingStockMultiUnit
           units={model.rolling_stock}
           {editable}
+          railwayModelId={model.id}
           rollingStockFormState={rs.formState}
           rollingStockSpecLoaded={rs.specLoaded}
           {controlOptions}
@@ -177,6 +178,10 @@
           onSaveCategory={(unitId, category) => rs.saveCategory(unitId, category)}
           onSaveSubcategory={(unitId, subcategory) => rs.saveSubcategory(unitId, subcategory)}
           onSaveServiceLevel={(unitId, sl) => rs.saveServiceLevel(unitId, sl)}
+          onSpecsSaved={async (unitId) => {
+            await rs.reloadSpec(unitId);
+            await onModelUpdated?.();
+          }}
         />
       {/if}
 
