@@ -5,9 +5,10 @@ import { render, fireEvent, screen } from '@testing-library/svelte';
 vi.mock('cropperjs', () => {
   const mockSelection = {
     aspectRatio: NaN,
-    initialCoverage: 0.8,
+    initialCoverage: 1,
     movable: true,
     resizable: true,
+    $center: vi.fn().mockReturnThis(),
     $toCanvas: vi.fn().mockResolvedValue({
       toBlob: (cb: (blob: Blob | null) => void) => {
         const blob = new Blob(['fake-image-bytes'], { type: 'image/jpeg' });
@@ -18,6 +19,7 @@ vi.mock('cropperjs', () => {
 
   const mockImage = {
     $ready: vi.fn().mockResolvedValue(undefined),
+    $center: vi.fn(),
     $rotate: vi.fn(),
     $scale: vi.fn()
   };

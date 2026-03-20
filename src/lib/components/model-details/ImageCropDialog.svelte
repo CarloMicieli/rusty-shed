@@ -88,12 +88,20 @@
 
         const sel = instance.getCropperSelection()!;
         sel.aspectRatio = NaN;
-        sel.initialCoverage = 0.8;
+        // initialCoverage = 1 → selection fills the full canvas, so the exported area always
+        // includes the full container. For narrow images, the sides render as white (letterboxing).
+        sel.initialCoverage = 1;
         sel.movable = true;
         sel.resizable = true;
 
         await instance.getCropperImage()!.$ready();
+
         if (!stale) {
+          // Ensure the image is centered within the canvas, then center the selection over it.
+          // $center('contain') scales the image to fit the canvas; sel.$center() re-centers the
+          // selection so any manual resize still starts from a centered position.
+          instance.getCropperImage()!.$center('contain');
+          sel.$center();
           isReady = true;
         }
       } catch (err: unknown) {
@@ -149,7 +157,13 @@
 
     try {
       const sel = cropperInstance.getCropperSelection()!;
-      const canvas = await sel.$toCanvas({ width: 2560 });
+      const canvas = await sel.$toCanvas({
+        width: 2560,
+        beforeDraw(ctx: CanvasRenderingContext2D, c: HTMLCanvasElement) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, c.width, c.height);
+        }
+      });
 
       const fileData = await new Promise<number[]>((resolve, reject) => {
         canvas.toBlob(

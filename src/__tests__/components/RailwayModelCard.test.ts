@@ -19,7 +19,8 @@ vi.mock('cropperjs', () => {
     initialCoverage: 0,
     movable: false,
     resizable: false,
-    $toCanvas: () => Promise.resolve(mockCanvas)
+    $toCanvas: () => Promise.resolve(mockCanvas),
+    $center: () => mockSelection
   };
   class MockCropper {
     getCropperCanvas() {
@@ -29,7 +30,7 @@ vi.mock('cropperjs', () => {
       return mockSelection;
     }
     getCropperImage() {
-      return { $ready: () => Promise.resolve() };
+      return { $ready: () => Promise.resolve(), $center: () => {} };
     }
     destroy() {}
   }
@@ -321,20 +322,18 @@ describe('RailwayModelCard', () => {
       const hero = container.querySelector('.hero-section');
       expect(hero).toBeTruthy();
 
-      // blobUrl is set asynchronously after readFile resolves
+      // blobUrl is set asynchronously after readFile resolves; select the primary (non-backdrop) img
       const img = await waitFor(() => {
-        const el = container.querySelector('.hero-section img');
+        const el = container.querySelector('.hero-section img.object-contain');
         if (!el) throw new Error('img not found');
         return el;
       });
       expect(img).toBeTruthy();
 
-      // verify the image uses centering sizing utilities and fills the hero area
-      expect(img.classList.contains('object-center')).toBe(true);
-      expect(img.classList.contains('object-cover')).toBe(true);
+      // primary image uses contain so the full model is always visible
+      expect(img.classList.contains('object-contain')).toBe(true);
       expect(img.classList.contains('w-full')).toBe(true);
       expect(img.classList.contains('h-full')).toBe(true);
-      expect(img.classList.contains('block')).toBe(true);
     });
 
     it('renders global specs section with era, power_method, category, description', () => {

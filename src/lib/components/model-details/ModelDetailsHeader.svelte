@@ -27,23 +27,30 @@
 
 <div class="mb-8">
   <!-- Image Container -->
-  <div class="mb-6 overflow-hidden rounded-lg">
+  <div class="relative mb-6 aspect-[3/1] overflow-hidden rounded-lg bg-zinc-900">
     {#if imageResponse?.hasImage && imageSrc}
+      <!-- Blurred backdrop: fills letterbox bars with a softened version of the image -->
+      <img
+        src={imageSrc}
+        alt=""
+        aria-hidden="true"
+        class="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+      />
+      <!-- Primary image: always fully visible, centered -->
       <img
         src={imageSrc}
         alt={model.description}
-        class="h-auto w-full object-cover"
-        style="max-height: 400px;"
+        class="absolute inset-0 z-10 h-full w-full object-contain"
       />
     {:else if imageResponse?.placeholderHtml}
-      <div class="h-64">
+      <div class="absolute inset-0">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         {@html imageResponse.placeholderHtml}
       </div>
     {:else}
       <!-- Fallback placeholder -->
       <div
-        class="flex h-64 items-center justify-center bg-muted"
+        class="absolute inset-0 flex items-center justify-center bg-muted"
         role="img"
         aria-label={m.model_image_alt_no_image()}
       >

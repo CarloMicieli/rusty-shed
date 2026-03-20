@@ -157,7 +157,7 @@
 </script>
 
 <div
-  class="hero-section relative aspect-video overflow-hidden rounded-xl bg-zinc-900 {dragState
+  class="hero-section relative aspect-[3/1] overflow-hidden rounded-xl bg-zinc-900 {dragState
     ? 'ring-2 ring-[#E2994F]'
     : ''}"
   style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
@@ -168,13 +168,21 @@
   ondrop={editable ? handleDrop : undefined}
 >
   {#if model.image_path && blobUrl}
+    <!-- Blurred backdrop: fills letterbox bars with a softened version of the image -->
+    <img
+      src={blobUrl}
+      alt=""
+      aria-hidden="true"
+      class="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+    />
+    <!-- Primary image: always fully visible, centered -->
     <img
       src={blobUrl}
       alt="{model.manufacturer} {model.product_code}"
-      class="block h-full w-full object-cover object-center"
+      class="absolute inset-0 z-10 h-full w-full object-contain"
     />
     {#if editable}
-      <div class="absolute top-2 right-2">
+      <div class="absolute top-2 right-2 z-20">
         <Button
           variant="secondary"
           size="sm"

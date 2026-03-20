@@ -64,13 +64,19 @@
   class="group flex gap-3 rounded-lg border border-white/10 bg-black/20 p-3 text-left transition-all hover:border-orange-400/50 hover:bg-black/30"
   {onclick}
 >
-  <!-- 16:9 Aspect Ratio Thumbnail -->
-  <div class="relative aspect-video w-40 flex-shrink-0 overflow-hidden rounded">
+  <!-- 3:1 Thumbnail — wide enough for locomotives, contain-fit with blurred backdrop -->
+  <div class="relative aspect-[3/1] w-48 flex-shrink-0 overflow-hidden rounded">
     {#if thumbnailSrc}
       <img
         src={thumbnailSrc}
+        alt=""
+        aria-hidden="true"
+        class="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
+      />
+      <img
+        src={thumbnailSrc}
         alt={`${card.manufacturer} ${card.productCode}`}
-        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        class="absolute inset-0 z-10 h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
       />
     {:else}
       <div
@@ -81,7 +87,7 @@
     {/if}
 
     <!-- Condition Badge (top-right corner) -->
-    <div class="absolute top-1 right-1">
+    <div class="absolute top-1 right-1 z-20">
       <Badge
         variant={card.condition === 'NEW' ? 'default' : 'secondary'}
         class="text-[0.65rem] font-semibold"
