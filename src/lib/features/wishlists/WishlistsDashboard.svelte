@@ -138,10 +138,12 @@
       description={m.wishlists_description()}
     >
       {#snippet actions()}
-        <Button onclick={handleCreate} size="sm">
-          <Sparkles size={18} />
-          {m.wishlists_create_button()}
-        </Button>
+        {#if wishlists.length > 0}
+          <Button onclick={handleCreate} size="sm">
+            <Sparkles size={18} />
+            {m.wishlists_create_button()}
+          </Button>
+        {/if}
       {/snippet}
     </PageHeader>
   </div>
