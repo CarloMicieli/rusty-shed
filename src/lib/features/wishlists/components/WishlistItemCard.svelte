@@ -122,8 +122,14 @@
         {#if photoUrl}
           <img
             src={photoUrl}
+            alt=""
+            aria-hidden="true"
+            class="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
+          />
+          <img
+            src={photoUrl}
             alt="Model"
-            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            class="absolute inset-0 z-10 h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         {:else}
           <div class="flex h-full w-full items-center justify-center opacity-20">
@@ -132,7 +138,7 @@
         {/if}
 
         <!-- Status Overlay -->
-        <div class="absolute right-2 bottom-2">
+        <div class="absolute right-2 bottom-2 z-20">
           <Badge
             variant="outline"
             class="border-white/10 bg-black/60 font-mono text-[9px] backdrop-blur-md"

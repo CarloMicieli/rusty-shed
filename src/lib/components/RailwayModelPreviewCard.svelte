@@ -238,8 +238,14 @@
       {#if resolvedPhotoUrl}
         <img
           src={resolvedPhotoUrl}
+          alt=""
+          aria-hidden="true"
+          class="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
+        />
+        <img
+          src={resolvedPhotoUrl}
           alt={model.series ?? 'Railway model'}
-          class="h-full w-full object-cover"
+          class="absolute inset-0 z-10 h-full w-full object-contain"
           loading="lazy"
           decoding="async"
         />
@@ -253,7 +259,7 @@
       <!-- Digital features overlay (top-left) -->
       {#if model.digitalFeatures.length > 0}
         <div
-          class="absolute top-2 left-2 z-10 flex gap-1"
+          class="absolute top-2 left-2 z-20 flex gap-1"
           aria-label={m.railway_model_digital_features_label()}
         >
           {#each model.digitalFeatures as feature (feature)}
@@ -278,7 +284,7 @@
 
       <!-- Power method badge (top-right): amber on black, prominent -->
       {#if model.powerMethod}
-        <div class="absolute top-2 right-2 z-10">
+        <div class="absolute top-2 right-2 z-20">
           <Badge
             class="border-transparent bg-[#E2994F] px-1.5 py-0.5 text-[10px] font-bold text-black"
           >
@@ -289,7 +295,7 @@
 
       <!-- Unit count badge (bottom-right): shown only when > 1 -->
       {#if model.unitCount && model.unitCount > 1}
-        <div class="absolute right-2 bottom-2 z-10">
+        <div class="absolute right-2 bottom-2 z-20">
           <Badge class="border-transparent bg-zinc-800/90 px-1.5 py-0.5 text-xs text-zinc-300">
             ×{model.unitCount}
           </Badge>

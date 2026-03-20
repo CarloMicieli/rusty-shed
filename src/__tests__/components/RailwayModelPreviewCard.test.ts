@@ -394,7 +394,9 @@ describe('RailwayModelPreviewCard', () => {
         props: { model: { ...mockModel, photoUrl: 'https://example.com/photo.jpg' } }
       });
 
-      const img = container.querySelector('img');
+      const imgs = container.querySelectorAll('img');
+      // Second img is the main image (first is the blurred backdrop)
+      const img = imgs[1];
       expect(img?.getAttribute('loading')).toBe('lazy');
       expect(img?.getAttribute('decoding')).toBe('async');
     });
