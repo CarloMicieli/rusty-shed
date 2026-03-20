@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Cropper from 'cropperjs';
+  import { browser } from '$app/environment';
+  import type Cropper from 'cropperjs';
   // NO CSS import — v2 uses Shadow DOM styles built-in
   import { commands } from '$lib/bindings';
   import { Button } from '$lib/components/ui/button';
@@ -44,6 +45,7 @@
   }: Props = $props();
 
   let imageEl = $state<HTMLImageElement | null>(null);
+  let CropperCtor = $state<(new (image: HTMLImageElement) => Cropper) | null>(null);
   let cropperInstance: Cropper | null = null;
   let isReady = $state(false);
   let isSaving = $state(false);
@@ -56,34 +58,49 @@
   // $effect re-runs whenever imageEl or resetKey changes.
   $effect(() => {
     void resetKey; // read to register dependency — incrementing triggers re-init
-    if (!imageEl) return;
+    if (!browser || !imageEl || !imageSrc) return;
 
     isReady = false;
     saveError = null;
     activeRatio = 'free';
 
-    const instance = new Cropper(imageEl);
-    cropperInstance = instance;
+    let stale = false;
 
-    const sel = instance.getCropperSelection()!;
-    sel.aspectRatio = NaN;
-    sel.initialCoverage = 0.8;
-    sel.movable = true;
-    sel.resizable = true;
+    void (async () => {
+      try {
+        if (!CropperCtor) {
+          const cropperModule = await import('cropperjs');
+          CropperCtor = cropperModule.default as unknown as new (
+            image: HTMLImageElement
+          ) => Cropper;
+        }
 
-    instance
-      .getCropperImage()!
-      .$ready()
-      .then(() => {
-        isReady = true;
-      })
-      .catch((err: unknown) => {
-        saveError = 'Failed to load image for cropping. Check the file format.';
-        console.error('[ImageCropDialog] CropperJS $ready() failed:', err);
-      });
+        if (stale || !CropperCtor || !imageEl) return;
+
+        const instance = new CropperCtor(imageEl);
+        cropperInstance = instance;
+
+        const sel = instance.getCropperSelection()!;
+        sel.aspectRatio = NaN;
+        sel.initialCoverage = 0.8;
+        sel.movable = true;
+        sel.resizable = true;
+
+        await instance.getCropperImage()!.$ready();
+        if (!stale) {
+          isReady = true;
+        }
+      } catch (err: unknown) {
+        if (!stale) {
+          saveError = 'Failed to load image for cropping. Check the file format.';
+          console.error('[ImageCropDialog] CropperJS $ready() failed:', err);
+        }
+      }
+    })();
 
     return () => {
-      instance.destroy();
+      stale = true;
+      cropperInstance?.destroy();
       cropperInstance = null;
       isReady = false;
     };
@@ -199,16 +216,19 @@
 
     <!-- Cropper canvas — aspect-[16/7] fills the panoramic shape of a locomotive -->
     <div
-      class="relative aspect-[16/7] w-full overflow-hidden rounded-md border border-white/10"
+      class="relative aspect-[16/7] w-full rounded-md border border-white/10"
       style="background-color: #27272a; background-image: linear-gradient(45deg, #3f3f46 25%, transparent 25%), linear-gradient(-45deg, #3f3f46 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3f3f46 75%), linear-gradient(-45deg, transparent 75%, #3f3f46 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"
     >
-      <!-- svelte-ignore a11y_missing_attribute -->
-      <img
-        bind:this={imageEl}
-        src={imageSrc}
-        crossorigin="anonymous"
-        class="max-h-full max-w-full"
-      />
+      <!-- keyed by imageSrc so a new blob URL recreates the element, giving a fresh imageEl reference -->
+      {#key imageSrc}
+        <!-- svelte-ignore a11y_missing_attribute -->
+        <img
+          bind:this={imageEl}
+          src={imageSrc}
+          crossorigin="anonymous"
+          class="block h-full w-full object-contain"
+        />
+      {/key}
     </div>
 
     <!-- Toolbar -->

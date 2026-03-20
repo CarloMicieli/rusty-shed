@@ -114,7 +114,7 @@ describe('ModelDetailsHeader', () => {
 
       const img = screen.getByAltText('Class 218 Diesel Locomotive');
       expect(img).toBeInTheDocument();
-      expect(img).toHaveAttribute('src', 'asset://localhost//path/to/image.jpg');
+      expect(img).toHaveAttribute('src', 'asset://localhost//path/to/image.jpg?v=0');
     });
 
     it('should render HTML placeholder when no image', () => {

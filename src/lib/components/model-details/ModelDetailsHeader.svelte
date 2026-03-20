@@ -15,9 +15,13 @@
 
   let { model, imageResponse, onImageChange }: Props = $props();
 
-  // Convert filesystem path to Tauri asset protocol
+  let uploadVersion = $state(0);
+
+  // Convert filesystem path to Tauri asset protocol; append version to bust WebView cache after uploads
   const imageSrc = $derived(
-    imageResponse?.imagePath ? convertFileSrc(imageResponse.imagePath) : null
+    imageResponse?.imagePath
+      ? `${convertFileSrc(imageResponse.imagePath)}?v=${uploadVersion}`
+      : null
   );
 </script>
 
@@ -55,13 +59,22 @@
       <ImageUpload
         modelId={model.id}
         hasExistingImage={imageResponse?.hasImage ?? false}
-        onUploadSuccess={onImageChange}
+        onUploadSuccess={() => {
+          uploadVersion++;
+          onImageChange?.();
+        }}
       />
     </div>
 
     <!-- Drag & Drop Upload -->
     <div>
-      <ImageDropZone modelId={model.id} onUploadSuccess={onImageChange} />
+      <ImageDropZone
+        modelId={model.id}
+        onUploadSuccess={() => {
+          uploadVersion++;
+          onImageChange?.();
+        }}
+      />
     </div>
   </div>
 

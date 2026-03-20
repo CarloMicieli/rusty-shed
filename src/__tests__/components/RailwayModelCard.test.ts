@@ -421,8 +421,9 @@ describe('RailwayModelCard', () => {
       const confirmButton = await waitFor(() => {
         const btn = Array.from(document.querySelectorAll('button')).find((b) =>
           b.textContent?.includes('Confirm')
-        );
+        ) as HTMLButtonElement | undefined;
         expect(btn).toBeTruthy();
+        expect(btn?.disabled).toBe(false);
         return btn!;
       });
       await fireEvent.click(confirmButton);
