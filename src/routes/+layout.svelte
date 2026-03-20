@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/stores';
   import '../app.css';
   import './layout.css';
   import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
@@ -154,7 +155,7 @@
 {:else if loading}
   <div
     class="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-background font-sans text-foreground"
-    in:fade
+    in:fade={{ delay: 1 }}
     out:fade
   >
     <div class="flex flex-col items-center gap-4">
@@ -173,7 +174,7 @@
 {:else}
   <div
     class="flex h-screen w-full flex-col overflow-hidden bg-[#0D0D0D] font-sans text-foreground lg:flex-row"
-    in:fade
+    in:fade={{ delay: 1 }}
   >
     <!-- Sidebar Left (Desktop) -->
     <div
@@ -228,9 +229,11 @@
         class="relative flex-1 overflow-hidden rounded-tl-[24px] border-t border-l border-[#1F1F1F] bg-[#050505]"
       >
         <div class="mx-auto h-full w-full max-w-[1600px] overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
-          <div class="space-y-8">
-            {@render children()}
-          </div>
+          {#key $page.url.pathname}
+            <div in:fade={{ duration: 150, delay: 1 }} class="space-y-8">
+              {@render children()}
+            </div>
+          {/key}
         </div>
       </main>
 
