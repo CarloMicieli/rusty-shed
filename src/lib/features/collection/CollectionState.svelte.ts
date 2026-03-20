@@ -6,6 +6,7 @@ import { FIXED_TAG_META, sortAvailableTags, tagIcon } from '$lib/config/tags';
 import { SvelteSet } from 'svelte/reactivity';
 import type { CollectionView, AddRailwayModelToCollectionArgs } from '$lib/bindings';
 import { safeInvoke, getErrorMessage } from '$lib/services';
+import { collectionStore } from '$lib/state/collection.svelte';
 
 export type FilterState = {
   query: string;
@@ -136,6 +137,7 @@ export class CollectionState {
     if (result.ok) {
       toaster.success(m.add_model_success(), { duration: 3000 });
       await this.fetchCollection();
+      void collectionStore.refresh();
       return true;
     }
 
@@ -197,6 +199,7 @@ export class CollectionState {
 
       // Refresh collection after successful deletion
       await this.fetchCollection();
+      void collectionStore.refresh();
       toaster.success('Item removed from collection');
       return result.data;
     } catch (error) {

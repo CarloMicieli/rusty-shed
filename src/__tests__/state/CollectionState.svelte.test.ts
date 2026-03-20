@@ -14,6 +14,17 @@ vi.mock('$lib/toaster', () => ({
   }
 }));
 
+vi.mock('$lib/state/collection.svelte', () => ({
+  collectionStore: {
+    refresh: vi.fn().mockResolvedValue(undefined),
+    fetch: vi.fn().mockResolvedValue(undefined),
+    items: [],
+    collection: null,
+    loading: false,
+    getItemById: vi.fn().mockReturnValue(undefined)
+  }
+}));
+
 vi.mock('$lib/paraglide/messages.js', () => ({
   collection_toast_loading: () => 'Loading...',
   collection_toast_success: () => 'Success',
