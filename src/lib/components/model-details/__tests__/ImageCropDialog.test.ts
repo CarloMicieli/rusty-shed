@@ -23,6 +23,7 @@ vi.mock('cropperjs', () => {
   };
 
   const MockCropper = vi.fn().mockImplementation(() => ({
+    getCropperCanvas: vi.fn().mockReturnValue({ style: { cssText: '' } }),
     getCropperSelection: vi.fn().mockReturnValue(mockSelection),
     getCropperImage: vi.fn().mockReturnValue(mockImage),
     destroy: vi.fn()

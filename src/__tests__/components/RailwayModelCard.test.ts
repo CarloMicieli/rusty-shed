@@ -22,6 +22,9 @@ vi.mock('cropperjs', () => {
     $toCanvas: () => Promise.resolve(mockCanvas)
   };
   class MockCropper {
+    getCropperCanvas() {
+      return { style: { cssText: '' } };
+    }
     getCropperSelection() {
       return mockSelection;
     }

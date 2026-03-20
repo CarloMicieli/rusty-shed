@@ -26,6 +26,9 @@
   } from '$lib/paraglide/messages.js';
   import type { RailwayModelId } from '$lib/bindings';
 
+  // Module-level cache — not $state so setting it never re-triggers the $effect
+  let _cropperCtor: (new (image: HTMLImageElement) => Cropper) | null = null;
+
   interface Props {
     open: boolean;
     imageSrc: string;
@@ -45,7 +48,6 @@
   }: Props = $props();
 
   let imageEl = $state<HTMLImageElement | null>(null);
-  let CropperCtor = $state<(new (image: HTMLImageElement) => Cropper) | null>(null);
   let cropperInstance: Cropper | null = null;
   let isReady = $state(false);
   let isSaving = $state(false);
@@ -68,17 +70,21 @@
 
     void (async () => {
       try {
-        if (!CropperCtor) {
+        if (!_cropperCtor) {
           const cropperModule = await import('cropperjs');
-          CropperCtor = cropperModule.default as unknown as new (
+          _cropperCtor = cropperModule.default as unknown as new (
             image: HTMLImageElement
           ) => Cropper;
         }
 
-        if (stale || !CropperCtor || !imageEl) return;
+        if (stale || !imageEl) return;
 
-        const instance = new CropperCtor(imageEl);
+        const instance = new _cropperCtor(imageEl);
         cropperInstance = instance;
+
+        // Stretch canvas to fill the aspect-ratio container so $center('contain') measures correctly
+        const canvas = instance.getCropperCanvas();
+        if (canvas) canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
 
         const sel = instance.getCropperSelection()!;
         sel.aspectRatio = NaN;
