@@ -56,9 +56,6 @@
       </button>
     {/each}
   </div>
-  {#if display}
-    <p class="text-xs text-zinc-500">{display}</p>
-  {/if}
   {#if error}
     <p class="text-xs text-destructive">{error}</p>
   {/if}
