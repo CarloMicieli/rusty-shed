@@ -74,6 +74,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button,
+[data-slot='button'],
+[role='button'],
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+  cursor: pointer;
+}
+
 /* Steampunk Typography */
 [data-theme='steampunk-dark'] h1,
 [data-theme='steampunk-dark'] h2,

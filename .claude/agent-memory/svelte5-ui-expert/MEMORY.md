@@ -23,6 +23,7 @@
 - Stats/Summary cards: `card gauge-frame` with `ring-1 ring-border/40`
 - Content sections: `rounded-lg border border-white/10 bg-black/20 p-4`
 - Search inputs: `flex items-center` layout (Icon → Input flex-1 → Clear button)
+- Global pointer cursor for button-like controls lives in `src/app.css` (`button`, `[data-slot='button']`, `[role='button']`, and button-type inputs).
 
 ## Runes Controller Pattern (`.svelte.ts`)
 
