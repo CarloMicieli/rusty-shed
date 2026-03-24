@@ -1,6 +1,7 @@
 use crate::catalog::domain::railway_model::RailwayModelUowExt;
 use crate::collecting::application::AddCollectionItem;
 use crate::collecting::application::AddCollectionItemInput;
+use crate::collecting::domain::BoxCondition;
 use crate::collecting::domain::CollectionUowExt;
 use crate::collecting::domain::ModelCondition;
 use crate::collecting::domain::PurchaseCondition;
@@ -32,6 +33,8 @@ pub struct PurchaseWishlistItemCommand {
     pub purchase_condition: Option<PurchaseCondition>,
     /// The model condition grade (for pre-owned items).
     pub model_condition: Option<ModelCondition>,
+    /// The box/packaging condition.
+    pub box_condition: Option<BoxCondition>,
 }
 
 /// Service that orchestrates purchasing a wishlist item into the collection
@@ -93,7 +96,7 @@ impl PurchaseWishlistItemService {
             purchase_date: cmd.purchase_date,
             purchase_condition: cmd.purchase_condition,
             model_condition: cmd.model_condition,
-            box_condition: None,
+            box_condition: cmd.box_condition,
             notes: item_notes,
         };
 
@@ -249,6 +252,7 @@ mod tests {
             seller_id: None,
             purchase_condition: None,
             model_condition: None,
+            box_condition: None,
         };
 
         let res = PurchaseWishlistItemService::execute(
@@ -292,6 +296,7 @@ mod tests {
             seller_id: None,
             purchase_condition: None,
             model_condition: None,
+            box_condition: None,
         };
 
         let res = PurchaseWishlistItemService::execute(
@@ -374,6 +379,7 @@ mod tests {
             seller_id: None,
             purchase_condition: Some(PurchaseCondition::PreOwned),
             model_condition: Some(ModelCondition::NearMint),
+            box_condition: None,
         };
 
         let res = PurchaseWishlistItemService::execute(
@@ -425,6 +431,7 @@ mod tests {
             seller_id: None,
             purchase_condition: None,
             model_condition: None,
+            box_condition: None,
         };
 
         let res = PurchaseWishlistItemService::execute(
@@ -502,6 +509,7 @@ mod tests {
             seller_id: None,
             purchase_condition: None,
             model_condition: None,
+            box_condition: None,
         };
 
         let res = PurchaseWishlistItemService::execute(

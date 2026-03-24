@@ -10,13 +10,27 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   purchase_dialog_date_label: () => 'Purchase Date',
   purchase_dialog_seller_label: () => 'Seller',
   purchase_dialog_seller_placeholder: () => 'Select a seller…',
-  purchase_dialog_condition_label: () => 'Condition',
-  purchase_dialog_condition_placeholder: () => 'Select condition…',
-  purchase_dialog_condition_new: () => 'New',
-  purchase_dialog_condition_pre_owned_like_new: () => 'Pre-Owned – Like New',
-  purchase_dialog_condition_pre_owned_very_good: () => 'Pre-Owned – Very Good',
-  purchase_dialog_condition_pre_owned_good: () => 'Pre-Owned – Good',
-  purchase_dialog_condition_pre_owned_acceptable: () => 'Pre-Owned – Acceptable',
+  purchase_dialog_purchase_condition_label: () => 'Purchase Condition',
+  purchase_dialog_purchase_condition_placeholder: () => 'Select condition…',
+  purchase_dialog_purchase_condition_new: () => 'New',
+  purchase_dialog_purchase_condition_pre_owned: () => 'Pre-Owned',
+  purchase_dialog_model_condition_label: () => 'Model Condition',
+  purchase_dialog_model_condition_placeholder: () => 'Select grade…',
+  purchase_dialog_model_condition_mint: () => 'Mint',
+  purchase_dialog_model_condition_near_mint: () => 'Near Mint',
+  purchase_dialog_model_condition_excellent: () => 'Excellent',
+  purchase_dialog_model_condition_very_good: () => 'Very Good',
+  purchase_dialog_model_condition_good: () => 'Good',
+  purchase_dialog_model_condition_fair: () => 'Fair',
+  purchase_dialog_model_condition_poor: () => 'Poor',
+  purchase_dialog_model_condition_for_parts: () => 'For Parts',
+  purchase_dialog_box_condition_label: () => 'Box Condition',
+  purchase_dialog_box_condition_placeholder: () => 'Select box condition…',
+  purchase_dialog_box_condition_original_mint: () => 'Original – Mint',
+  purchase_dialog_box_condition_original_good: () => 'Original – Good',
+  purchase_dialog_box_condition_original_worn: () => 'Original – Worn',
+  purchase_dialog_box_condition_replacement_box: () => 'Replacement Box',
+  purchase_dialog_box_condition_no_box: () => 'No Box',
   purchase_dialog_submit: () => 'Record Purchase',
   purchase_dialog_cancel: () => 'Cancel',
   purchase_dialog_error_price_required: () => 'Price is required',
@@ -79,12 +93,14 @@ describe('PurchaseDialog.svelte', () => {
     });
   });
 
-  it('renders price input, date input, and condition select after loading', async () => {
+  it('renders price input, date input, and condition selects after loading', async () => {
     render(PurchaseDialog, { props: baseProps });
     await waitFor(() => {
       expect(screen.getByLabelText('Price Paid')).toBeInTheDocument();
       expect(screen.getByLabelText('Purchase Date')).toBeInTheDocument();
-      expect(screen.getByLabelText('Condition')).toBeInTheDocument();
+      expect(screen.getByLabelText('Purchase Condition')).toBeInTheDocument();
+      expect(screen.getByLabelText('Model Condition')).toBeInTheDocument();
+      expect(screen.getByLabelText('Box Condition')).toBeInTheDocument();
     });
   });
 
@@ -134,14 +150,25 @@ describe('PurchaseDialog.svelte', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('renders all condition options', async () => {
+  it('renders purchase, model, and box condition triggers', async () => {
     render(PurchaseDialog, { props: baseProps });
     await waitFor(() => {
-      expect(screen.getByText('New')).toBeInTheDocument();
-      expect(screen.getByText('Pre-Owned – Like New')).toBeInTheDocument();
-      expect(screen.getByText('Pre-Owned – Very Good')).toBeInTheDocument();
-      expect(screen.getByText('Pre-Owned – Good')).toBeInTheDocument();
-      expect(screen.getByText('Pre-Owned – Acceptable')).toBeInTheDocument();
+      // The three select triggers are identifiable by their labels
+      expect(screen.getByLabelText('Purchase Condition')).toBeInTheDocument();
+      expect(screen.getByLabelText('Model Condition')).toBeInTheDocument();
+      expect(screen.getByLabelText('Box Condition')).toBeInTheDocument();
+      // Placeholders are shown in the triggers when nothing is selected
+      expect(screen.getByText('Select condition…')).toBeInTheDocument();
+      expect(screen.getByText('Select grade…')).toBeInTheDocument();
+      expect(screen.getByText('Select box condition…')).toBeInTheDocument();
+    });
+  });
+
+  it('prefills price from initialPriceAmount prop', async () => {
+    render(PurchaseDialog, { props: { ...baseProps, initialPriceAmount: 4999 } });
+    await waitFor(() => {
+      const input = screen.getByLabelText('Price Paid') as HTMLInputElement;
+      expect(input.value).not.toBe('');
     });
   });
 

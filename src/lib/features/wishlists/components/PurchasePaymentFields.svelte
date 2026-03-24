@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
+  import * as Select from '$lib/components/ui/select';
   import { CurrencyInput, DatePickerField } from '$lib/components';
   import { getCurrencySymbol } from '$lib/utils/currency';
   import { CalendarDate } from '@internationalized/date';
@@ -10,7 +11,9 @@
     priceCurrency: string;
     purchaseDate: string;
     selectedSellerId: string;
-    selectedCondition: string;
+    selectedPurchaseCondition: string;
+    selectedModelCondition: string;
+    selectedBoxCondition: string;
     sellers: SellerView[];
     isSubmitting: boolean;
     today: string;
@@ -21,7 +24,9 @@
     priceCurrency = $bindable(),
     purchaseDate = $bindable(),
     selectedSellerId = $bindable(),
-    selectedCondition = $bindable(),
+    selectedPurchaseCondition = $bindable(),
+    selectedModelCondition = $bindable(),
+    selectedBoxCondition = $bindable(),
     sellers,
     isSubmitting,
     today
@@ -32,13 +37,44 @@
     return new CalendarDate(y, mo, d);
   });
 
-  const CONDITION_OPTIONS = [
-    { value: 'New', label: m.purchase_dialog_condition_new() },
-    { value: 'PreOwnedLikeNew', label: m.purchase_dialog_condition_pre_owned_like_new() },
-    { value: 'PreOwnedVeryGood', label: m.purchase_dialog_condition_pre_owned_very_good() },
-    { value: 'PreOwnedGood', label: m.purchase_dialog_condition_pre_owned_good() },
-    { value: 'PreOwnedAcceptable', label: m.purchase_dialog_condition_pre_owned_acceptable() }
+  const PURCHASE_CONDITION_OPTIONS = [
+    { value: 'NEW', label: m.purchase_dialog_purchase_condition_new() },
+    { value: 'PRE_OWNED', label: m.purchase_dialog_purchase_condition_pre_owned() }
   ];
+
+  const MODEL_CONDITION_OPTIONS = [
+    { value: 'MINT', label: m.purchase_dialog_model_condition_mint() },
+    { value: 'NEAR_MINT', label: m.purchase_dialog_model_condition_near_mint() },
+    { value: 'EXCELLENT', label: m.purchase_dialog_model_condition_excellent() },
+    { value: 'VERY_GOOD', label: m.purchase_dialog_model_condition_very_good() },
+    { value: 'GOOD', label: m.purchase_dialog_model_condition_good() },
+    { value: 'FAIR', label: m.purchase_dialog_model_condition_fair() },
+    { value: 'POOR', label: m.purchase_dialog_model_condition_poor() },
+    { value: 'FOR_PARTS', label: m.purchase_dialog_model_condition_for_parts() }
+  ];
+
+  const BOX_CONDITION_OPTIONS = [
+    { value: 'ORIGINAL_MINT', label: m.purchase_dialog_box_condition_original_mint() },
+    { value: 'ORIGINAL_GOOD', label: m.purchase_dialog_box_condition_original_good() },
+    { value: 'ORIGINAL_WORN', label: m.purchase_dialog_box_condition_original_worn() },
+    { value: 'REPLACEMENT_BOX', label: m.purchase_dialog_box_condition_replacement_box() },
+    { value: 'NO_BOX', label: m.purchase_dialog_box_condition_no_box() }
+  ];
+
+  const purchaseConditionLabel = $derived(
+    PURCHASE_CONDITION_OPTIONS.find((o) => o.value === selectedPurchaseCondition)?.label ??
+      m.purchase_dialog_purchase_condition_placeholder()
+  );
+
+  const modelConditionLabel = $derived(
+    MODEL_CONDITION_OPTIONS.find((o) => o.value === selectedModelCondition)?.label ??
+      m.purchase_dialog_model_condition_placeholder()
+  );
+
+  const boxConditionLabel = $derived(
+    BOX_CONDITION_OPTIONS.find((o) => o.value === selectedBoxCondition)?.label ??
+      m.purchase_dialog_box_condition_placeholder()
+  );
 </script>
 
 <!-- Price -->
@@ -100,23 +136,95 @@
   </select>
 </div>
 
-<!-- Condition (optional) -->
-<div class="space-y-2">
-  <label
-    for="purchase-condition"
-    class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-  >
-    {m.purchase_dialog_condition_label()}
-  </label>
-  <select
-    id="purchase-condition"
-    bind:value={selectedCondition}
-    disabled={isSubmitting}
-    class="h-12 w-full appearance-none rounded-xl border border-white/10 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-white/20 focus:outline-none"
-  >
-    <option value="">{m.purchase_dialog_condition_placeholder()}</option>
-    {#each CONDITION_OPTIONS as opt (opt.value)}
-      <option value={opt.value}>{opt.label}</option>
-    {/each}
-  </select>
+<!-- Condition inputs (2×2: Purchase + Model on row 1, Box spanning row 2) -->
+<div class="grid grid-cols-2 gap-4">
+  <!-- Purchase Condition -->
+  <div class="flex flex-col gap-1.5">
+    <label
+      for="purchase-condition"
+      class="text-[10px] font-bold tracking-widest text-[#808080] uppercase"
+    >
+      {m.purchase_dialog_purchase_condition_label()}
+    </label>
+    <Select.Root
+      type="single"
+      value={selectedPurchaseCondition || undefined}
+      onValueChange={(v) => (selectedPurchaseCondition = v ?? '')}
+      disabled={isSubmitting}
+    >
+      <Select.Trigger
+        id="purchase-condition"
+        class="!h-10 w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] focus-visible:border-[#D48A42] focus-visible:ring-[#D48A42]/20 data-[state=open]:border-[#D48A42]"
+      >
+        {purchaseConditionLabel}
+      </Select.Trigger>
+      <Select.Content
+        class="z-[200] border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] [&_[data-highlighted]]:bg-[#D48A42]/10 [&_[data-highlighted]]:text-[#D48A42]"
+      >
+        {#each PURCHASE_CONDITION_OPTIONS as opt (opt.value)}
+          <Select.Item value={opt.value} label={opt.label} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
+  </div>
+
+  <!-- Model Condition -->
+  <div class="flex flex-col gap-1.5">
+    <label
+      for="model-condition"
+      class="text-[10px] font-bold tracking-widest text-[#808080] uppercase"
+    >
+      {m.purchase_dialog_model_condition_label()}
+    </label>
+    <Select.Root
+      type="single"
+      value={selectedModelCondition || undefined}
+      onValueChange={(v) => (selectedModelCondition = v ?? '')}
+      disabled={isSubmitting}
+    >
+      <Select.Trigger
+        id="model-condition"
+        class="!h-10 w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] focus-visible:border-[#D48A42] focus-visible:ring-[#D48A42]/20 data-[state=open]:border-[#D48A42]"
+      >
+        {modelConditionLabel}
+      </Select.Trigger>
+      <Select.Content
+        class="z-[200] border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] [&_[data-highlighted]]:bg-[#D48A42]/10 [&_[data-highlighted]]:text-[#D48A42]"
+      >
+        {#each MODEL_CONDITION_OPTIONS as opt (opt.value)}
+          <Select.Item value={opt.value} label={opt.label} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
+  </div>
+
+  <!-- Box Condition (full-width second row) -->
+  <div class="col-span-2 flex flex-col gap-1.5">
+    <label
+      for="box-condition"
+      class="text-[10px] font-bold tracking-widest text-[#808080] uppercase"
+    >
+      {m.purchase_dialog_box_condition_label()}
+    </label>
+    <Select.Root
+      type="single"
+      value={selectedBoxCondition || undefined}
+      onValueChange={(v) => (selectedBoxCondition = v ?? '')}
+      disabled={isSubmitting}
+    >
+      <Select.Trigger
+        id="box-condition"
+        class="!h-10 w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] focus-visible:border-[#D48A42] focus-visible:ring-[#D48A42]/20 data-[state=open]:border-[#D48A42]"
+      >
+        {boxConditionLabel}
+      </Select.Trigger>
+      <Select.Content
+        class="z-[200] border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] [&_[data-highlighted]]:bg-[#D48A42]/10 [&_[data-highlighted]]:text-[#D48A42]"
+      >
+        {#each BOX_CONDITION_OPTIONS as opt (opt.value)}
+          <Select.Item value={opt.value} label={opt.label} />
+        {/each}
+      </Select.Content>
+    </Select.Root>
+  </div>
 </div>

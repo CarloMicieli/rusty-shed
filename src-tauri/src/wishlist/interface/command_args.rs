@@ -92,9 +92,12 @@ pub struct PurchaseWishlistArgs {
     pub purchase_date: NaiveDate,
     /// Optional seller id string.
     pub seller_id: Option<String>,
-    /// Combined condition selection. Valid values:
-    /// "New" | "PreOwnedLikeNew" | "PreOwnedVeryGood" | "PreOwnedGood" | "PreOwnedAcceptable"
-    pub condition: Option<String>,
+    /// Purchase condition. Valid values: "NEW" | "PRE_OWNED"
+    pub purchase_condition: Option<String>,
+    /// Model condition grade. Valid values: "MINT" | "NEAR_MINT" | "EXCELLENT" | "VERY_GOOD" | "GOOD" | "FAIR" | "POOR" | "FOR_PARTS"
+    pub model_condition: Option<String>,
+    /// Box/packaging condition. Valid values: "ORIGINAL_MINT" | "ORIGINAL_GOOD" | "ORIGINAL_WORN" | "REPLACEMENT_BOX" | "NO_BOX"
+    pub box_condition: Option<String>,
 }
 
 impl TryFrom<CreateWishlistArgs> for CreateWishlistInput {
@@ -206,6 +209,7 @@ impl TryFrom<PurchaseWishlistArgs>
     type Error = DomainError;
 
     fn try_from(input: PurchaseWishlistArgs) -> Result<Self, Self::Error> {
+        use crate::collecting::domain::BoxCondition;
         use crate::collecting::domain::ModelCondition;
         use crate::collecting::domain::PurchaseCondition;
         use crate::sellers::domain::seller_id::SellerId;
@@ -230,31 +234,33 @@ impl TryFrom<PurchaseWishlistArgs>
             None => None,
         };
 
-        let (purchase_condition, model_condition) = match input.condition.as_deref() {
-            None => (None, None),
-            Some("New") => (Some(PurchaseCondition::New), None),
-            Some("PreOwnedLikeNew") => (
-                Some(PurchaseCondition::PreOwned),
-                Some(ModelCondition::NearMint),
-            ),
-            Some("PreOwnedVeryGood") => (
-                Some(PurchaseCondition::PreOwned),
-                Some(ModelCondition::VeryGood),
-            ),
-            Some("PreOwnedGood") => (
-                Some(PurchaseCondition::PreOwned),
-                Some(ModelCondition::Good),
-            ),
-            Some("PreOwnedAcceptable") => (
-                Some(PurchaseCondition::PreOwned),
-                Some(ModelCondition::Fair),
-            ),
-            Some(other) => {
-                return Err(DomainError::Validation(format!(
-                    "Unknown condition value: {other}"
-                )));
-            }
-        };
+        let purchase_condition = input
+            .purchase_condition
+            .as_deref()
+            .map(|s| {
+                s.parse::<PurchaseCondition>().map_err(|_| {
+                    DomainError::Validation(format!("Unknown purchase_condition: {s}"))
+                })
+            })
+            .transpose()?;
+
+        let model_condition = input
+            .model_condition
+            .as_deref()
+            .map(|s| {
+                s.parse::<ModelCondition>()
+                    .map_err(|_| DomainError::Validation(format!("Unknown model_condition: {s}")))
+            })
+            .transpose()?;
+
+        let box_condition = input
+            .box_condition
+            .as_deref()
+            .map(|s| {
+                s.parse::<BoxCondition>()
+                    .map_err(|_| DomainError::Validation(format!("Unknown box_condition: {s}")))
+            })
+            .transpose()?;
 
         Ok(PurchaseWishlistItemCommand {
             wishlist_id,
@@ -264,6 +270,7 @@ impl TryFrom<PurchaseWishlistArgs>
             seller_id: seller,
             purchase_condition,
             model_condition,
+            box_condition,
         })
     }
 }

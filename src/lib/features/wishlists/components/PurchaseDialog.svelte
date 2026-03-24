@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { X, ShoppingCart, Loader2 } from 'lucide-svelte';
   import { commands } from '$lib/bindings';
   import type { SellerView } from '$lib/bindings';
@@ -11,18 +11,29 @@
     wishlistId: string;
     wishlistItemId: string;
     itemName: string;
+    initialPriceAmount?: number | null;
     onClose: () => void;
     onSuccess: () => void;
   }
 
-  let { open, wishlistId, wishlistItemId, itemName, onClose, onSuccess }: Props = $props();
+  let {
+    open,
+    wishlistId,
+    wishlistItemId,
+    itemName,
+    initialPriceAmount = null,
+    onClose,
+    onSuccess
+  }: Props = $props();
 
   // ── Form state ───────────────────────────────────────────────────────────────
-  let priceAmount = $state<number | null>(null);
+  let priceAmount = $state<number | null>(untrack(() => initialPriceAmount));
   let priceCurrency = $state('EUR');
   let purchaseDate = $state(new Date().toISOString().split('T')[0]);
   let selectedSellerId = $state('');
-  let selectedCondition = $state('');
+  let selectedPurchaseCondition = $state('');
+  let selectedModelCondition = $state('');
+  let selectedBoxCondition = $state('');
   let isSubmitting = $state(false);
   let error = $state<string | null>(null);
 
@@ -55,7 +66,9 @@
     priceAmount = null;
     purchaseDate = new Date().toISOString().split('T')[0];
     selectedSellerId = '';
-    selectedCondition = '';
+    selectedPurchaseCondition = '';
+    selectedModelCondition = '';
+    selectedBoxCondition = '';
     error = null;
     isSubmitting = false;
   }
@@ -98,7 +111,9 @@
         priceCurrency,
         purchaseDate,
         sellerId: selectedSellerId || null,
-        condition: selectedCondition || null
+        purchaseCondition: selectedPurchaseCondition || null,
+        modelCondition: selectedModelCondition || null,
+        boxCondition: selectedBoxCondition || null
       });
 
       if (result.status === 'error') {
@@ -176,7 +191,9 @@
               bind:priceCurrency
               bind:purchaseDate
               bind:selectedSellerId
-              bind:selectedCondition
+              bind:selectedPurchaseCondition
+              bind:selectedModelCondition
+              bind:selectedBoxCondition
               {sellers}
               {isSubmitting}
               {today}

@@ -261,6 +261,9 @@
     wishlistId={activeWishlistId}
     wishlistItemId={purchaseDialogItem.id}
     itemName={purchaseDialogItem.railwayModelId}
+    initialPriceAmount={purchaseDialogItem.desiredPrice
+      ? Number(purchaseDialogItem.desiredPrice.amount)
+      : null}
     onClose={handlePurchaseClose}
     onSuccess={handlePurchaseSuccess}
   />
