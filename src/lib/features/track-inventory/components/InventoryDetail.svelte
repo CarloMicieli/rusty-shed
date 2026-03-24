@@ -15,6 +15,7 @@
     Trash2,
     Edit2
   } from 'lucide-svelte';
+  import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
   import { resolve } from '$app/paths';
   import { Button } from '$lib/components';
 
@@ -146,47 +147,9 @@
 
   <!-- 2. Statistical Dashboard -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <!-- Card 1: Total Pieces -->
-    <div
-      class="flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/30 p-6 backdrop-blur-sm"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
-          Total Pieces
-        </span>
-        <Box size={16} class="text-zinc-600" />
-      </div>
-      <div class="flex items-baseline gap-2">
-        <span class="text-3xl font-bold text-zinc-100">{totalPieces}</span>
-        <span class="text-sm font-medium text-zinc-500">pcs</span>
-      </div>
-    </div>
-
-    <!-- Card 2: Total Value -->
-    <div
-      class="flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/30 p-6 backdrop-blur-sm"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
-          Inventory Value
-        </span>
-        <Euro size={16} class="text-zinc-600" />
-      </div>
-      <span class="text-3xl font-bold text-amber-500/90">{totalValue}</span>
-    </div>
-
-    <!-- Card 3: Last Purchase Date -->
-    <div
-      class="flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/30 p-6 backdrop-blur-sm"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
-          Last Purchase
-        </span>
-        <Calendar size={16} class="text-zinc-600" />
-      </div>
-      <span class="text-2xl font-bold text-zinc-300">{lastPurchaseDate}</span>
-    </div>
+    <GaugeStatCard label="Total Pieces" value={totalPieces} icon={Box} unit="pcs" />
+    <GaugeStatCard label="Inventory Value" value={totalValue} icon={Euro} />
+    <GaugeStatCard label="Last Purchase" value={lastPurchaseDate} icon={Calendar} />
   </div>
 
   <div class="space-y-12">

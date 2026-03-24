@@ -142,9 +142,10 @@ describe('routes/wishlists/[wishlistId]/items/[itemId]/+page.svelte', () => {
     mockCommands.getRailwayModelById.mockResolvedValue({ status: 'ok', data: null });
     mockCommands.getRailwayModelImage.mockResolvedValue({ status: 'ok', data: null });
     render(WishlistItemPage);
-    await waitFor(() => expect(screen.getByText('wishlist_item_back')).toBeInTheDocument(), {
-      timeout: 2000
-    });
+    await waitFor(
+      () => expect(screen.getByRole('link', { name: 'wishlist_item_back' })).toBeInTheDocument(),
+      { timeout: 2000 }
+    );
   });
 
   it('uses the wishlistId param from the $page store when loading', async () => {

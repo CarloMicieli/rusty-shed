@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Settings2, CalendarDays, TrendingUp, Wallet } from 'lucide-svelte';
+  import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import * as Dialog from '$lib/components/ui/dialog';
 
@@ -88,39 +89,17 @@
         </p>
       </div>
     {:else if budgetState.hasConfig}
-      <div class="grid gap-6 md:grid-cols-3">
-        <Card class="border-border bg-card">
-          <CardHeader class="pb-2">
-            <CardTitle
-              class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
-            >
-              <CalendarDays class="h-3 w-3 text-primary" />
-              Monthly Allocation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div class="font-mono text-2xl font-bold">
-              {budgetState.formattedMonthlyBudget}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card class="border-border bg-card">
-          <CardHeader class="pb-2">
-            <CardTitle
-              class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
-            >
-              <TrendingUp class="h-3 w-3 text-primary" />
-              Yearly Forecast
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div class="font-mono text-2xl font-bold">
-              {budgetState.formattedYearlyBudget}
-            </div>
-          </CardContent>
-        </Card>
-
+      <div class="grid gap-4 md:grid-cols-3">
+        <GaugeStatCard
+          label="Monthly Allocation"
+          value={budgetState.formattedMonthlyBudget}
+          icon={CalendarDays}
+        />
+        <GaugeStatCard
+          label="Yearly Forecast"
+          value={budgetState.formattedYearlyBudget}
+          icon={TrendingUp}
+        />
         <Card class="border-border bg-card">
           <CardContent class="pt-6">
             <Button variant="outline" class="w-full" onclick={() => (configSheetOpen = true)}>

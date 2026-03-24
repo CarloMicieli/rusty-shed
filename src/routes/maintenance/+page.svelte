@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Plus, Activity, CheckCircle2, Factory } from 'lucide-svelte';
+  import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, PageHeader } from '$lib/components';
   import MaintenanceState, {
@@ -106,44 +107,27 @@
     <!-- Workshop Progress / Stats -->
     {#if hasCards}
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <!-- Active Services -->
-        <div class="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-          <div class="rounded-lg bg-blue-500/10 p-3">
-            <Factory class="h-6 w-6 text-blue-500" />
-          </div>
-          <div>
-            <div class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-              Active Services
-            </div>
-            <div class="font-mono text-2xl font-bold">{stats.active}</div>
-          </div>
-        </div>
-
-        <!-- Upcoming Inspections -->
-        <div class="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-          <div class="rounded-lg bg-primary/10 p-3">
-            <Activity class="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <div class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-              Upcoming Inspections
-            </div>
-            <div class="font-mono text-2xl font-bold">{stats.upcoming}</div>
-          </div>
-        </div>
-
-        <!-- Completed Tasks -->
-        <div class="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-          <div class="rounded-lg bg-emerald-500/10 p-3">
-            <CheckCircle2 class="h-6 w-6 text-emerald-500" />
-          </div>
-          <div>
-            <div class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-              Completed Tasks
-            </div>
-            <div class="font-mono text-2xl font-bold">{stats.completed}</div>
-          </div>
-        </div>
+        <GaugeStatCard
+          label={m.maintenance_stats_active_services()}
+          value={stats.active}
+          icon={Factory}
+          iconBgClass="bg-blue-500/10"
+          iconColorClass="text-blue-500"
+        />
+        <GaugeStatCard
+          label={m.maintenance_stats_upcoming_inspections()}
+          value={stats.upcoming}
+          icon={Activity}
+          iconBgClass="bg-primary/10"
+          iconColorClass="text-primary"
+        />
+        <GaugeStatCard
+          label={m.maintenance_stats_completed_tasks()}
+          value={stats.completed}
+          icon={CheckCircle2}
+          iconBgClass="bg-emerald-500/10"
+          iconColorClass="text-emerald-500"
+        />
       </div>
     {/if}
 

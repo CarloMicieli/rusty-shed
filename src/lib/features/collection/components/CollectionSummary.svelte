@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Box, Bus, Package, TrainFront, Zap } from 'lucide-svelte';
+  import { Box, Bus, Package, TrainFront, Zap, Wallet } from 'lucide-svelte';
+  import type { IconComponent } from '$lib/config/icons';
   import * as m from '$lib/paraglide/messages.js';
   import type { CollectionSummary } from '$lib/bindings';
-
-  type IconComponent = typeof TrainFront;
+  import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
 
   interface Props {
     summary: CollectionSummary;
@@ -20,84 +20,48 @@
       summary.railcarsCount +
       summary.electricMultipleUnitsCount
   );
+
+  const categoryStats: { label: () => string; value: () => number; icon: IconComponent }[] = [
+    {
+      label: m.constants_categories_locomotives,
+      value: () => summary.locomotivesCount,
+      icon: TrainFront
+    },
+    {
+      label: m.constants_categories_passenger_cars,
+      value: () => summary.passengerCarsCount,
+      icon: TrainFront
+    },
+    {
+      label: m.constants_categories_freight_cars,
+      value: () => summary.freightCarsCount,
+      icon: Box
+    },
+    {
+      label: m.constants_categories_train_sets,
+      value: () => summary.trainSetsCount,
+      icon: Package
+    },
+    { label: m.constants_categories_railcars, value: () => summary.railcarsCount, icon: Bus },
+    {
+      label: m.constants_categories_electric_multiple_units,
+      value: () => summary.electricMultipleUnitsCount,
+      icon: Zap
+    }
+  ];
 </script>
 
-{#snippet StatCard(label: string, value: number | string, Icon: IconComponent, accentClass: string)}
-  {@const iconClass = accentClass.replace('border-', 'text-').replace('500', '300')}
-  <div
-    class={`card flex items-center justify-between gap-3 border-l-4 bg-muted/40 p-4 ${accentClass}`}
-  >
-    <div class={`rounded-lg bg-muted p-3 ${iconClass}`}>
-      <Icon size={20} />
-    </div>
-    <div class="text-right">
-      <p class="text-surface-400 text-xs font-semibold tracking-wide uppercase">{label}</p>
-      <p class="text-surface-100 text-xl font-bold">{value}</p>
-    </div>
-  </div>
-{/snippet}
-
 <section class="space-y-4">
-  <div
-    class="variant-glass-surface card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between"
-  >
-    <div class="space-y-1">
-      <p class="text-surface-400 text-xs font-semibold tracking-[0.18em] uppercase">
-        {m.stats_total_collection_value()}
-      </p>
-      <p class="h3 text-primary-100 font-bold">{totalValue}</p>
-    </div>
-    <div
-      class="border-primary-500/40 bg-primary-500/10 flex items-center gap-3 rounded-xl border px-4 py-3"
-    >
-      <div class="bg-primary-500/20 text-primary-200 rounded-full p-3">
-        <TrainFront size={22} />
-      </div>
-      <div>
-        <p class="text-surface-400 text-xs font-semibold tracking-[0.12em] uppercase">
-          Total units
-        </p>
-        <p class="text-surface-50 text-2xl font-bold">{totalUnits}</p>
-      </div>
-    </div>
+  <!-- Top summary row -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <GaugeStatCard label={m.stats_total_collection_value()} value={totalValue} icon={Wallet} />
+    <GaugeStatCard label={m.stats_rolling_stocks()} value={totalUnits} icon={TrainFront} />
   </div>
 
+  <!-- Category breakdown -->
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-    {@render StatCard(
-      m.constants_categories_locomotives(),
-      summary.locomotivesCount,
-      TrainFront,
-      'border-primary-500'
-    )}
-    {@render StatCard(
-      m.constants_categories_passenger_cars(),
-      summary.passengerCarsCount,
-      TrainFront,
-      'border-info-500'
-    )}
-    {@render StatCard(
-      m.constants_categories_freight_cars(),
-      summary.freightCarsCount,
-      Box,
-      'border-warning-500'
-    )}
-    {@render StatCard(
-      m.constants_categories_train_sets(),
-      summary.trainSetsCount,
-      Package,
-      'border-secondary-500'
-    )}
-    {@render StatCard(
-      m.constants_categories_railcars(),
-      summary.railcarsCount,
-      Bus,
-      'border-success-500'
-    )}
-    {@render StatCard(
-      m.constants_categories_electric_multiple_units(),
-      summary.electricMultipleUnitsCount,
-      Zap,
-      'border-accent-500'
-    )}
+    {#each categoryStats as { label, value, icon } (label())}
+      <GaugeStatCard label={label()} value={value()} {icon} />
+    {/each}
   </div>
 </section>

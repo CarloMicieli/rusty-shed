@@ -2,7 +2,7 @@
   import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Heart, Plus, ShoppingBag, RefreshCw, House, Wrench } from 'lucide-svelte';
+  import { Heart, Plus, ShoppingBag, RefreshCw, House, Wrench, Wallet, Train } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Card, CardContent, Skeleton } from '$lib/components';
 
@@ -30,6 +30,7 @@
   const currencyCode = $derived(dashboard.budgetData?.currency ?? 'EUR');
 
   const stats = $derived(byStats(totals));
+  const statIcons = [Wallet, Train, Wrench] as const;
 
   // Check if budget is configured by checking if remainingPercentage is not null
   const hasBudget = $derived(
@@ -161,8 +162,8 @@
               <Skeleton class="h-28 w-full" />
             {/each}
           {:else}
-            {#each stats as stat (stat.label)}
-              <StatsCard {stat} />
+            {#each stats as stat, i (stat.label)}
+              <StatsCard {stat} icon={statIcons[i]} />
             {/each}
           {/if}
         </div>
