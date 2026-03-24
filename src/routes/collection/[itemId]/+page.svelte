@@ -1,16 +1,15 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
   import { collectionStore } from '$lib/state/collection.svelte';
   import { commands } from '$lib/bindings';
-  import { ArrowLeft } from 'lucide-svelte';
+  import { ChevronLeft } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import CollectionItemSidebar from '$lib/features/collection/components/CollectionItemSidebar.svelte';
-  import { Button } from '$lib/components';
+  import { resolve } from '$app/paths';
   import type {
     RailwayModelView,
     RailwayModelImageResponse,
@@ -85,10 +84,6 @@
     }
   }
 
-  function goBack() {
-    goto('/collection');
-  }
-
   onMount(async () => {
     try {
       await loadData();
@@ -121,26 +116,35 @@
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{m.collection_item_not_found()}</p>
     <p class="text-sm text-muted-foreground">{m.collection_item_not_found_message()}</p>
-    <Button variant="ghost" size="sm" onclick={goBack}>
-      <ArrowLeft class="h-4 w-4" />
-      {m.collection_item_back()}
-    </Button>
+    <a
+      href={resolve('/collection')}
+      class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+      aria-label={m.collection_item_back()}
+    >
+      <ChevronLeft size={22} />
+    </a>
   </div>
 {:else if error}
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{error}</p>
-    <Button variant="ghost" size="sm" onclick={goBack}>
-      <ArrowLeft class="h-4 w-4" />
-      {m.collection_item_back()}
-    </Button>
+    <a
+      href={resolve('/collection')}
+      class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+      aria-label={m.collection_item_back()}
+    >
+      <ChevronLeft size={22} />
+    </a>
   </div>
 {:else if collectionItem}
   <div class="mx-auto max-w-7xl">
     <!-- Back button -->
-    <Button variant="ghost" size="sm" class="mb-6" onclick={goBack}>
-      <ArrowLeft class="h-4 w-4" />
-      {m.collection_item_back()}
-    </Button>
+    <a
+      href={resolve('/collection')}
+      class="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+      aria-label={m.collection_item_back()}
+    >
+      <ChevronLeft size={22} />
+    </a>
 
     <!-- Two-panel layout -->
     <div class="flex flex-col gap-6 lg:flex-row">
