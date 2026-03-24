@@ -3,8 +3,7 @@
   import type { WishlistItem, WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import WishlistItemCard from './WishlistItemCard.svelte';
-  import * as Dialog from '$lib/components/ui/dialog';
-  import { Button } from '$lib/components';
+  import MoveModelModal from './MoveModelModal.svelte';
 
   const { items, activeWishlistId, otherTargets, onRemove, onMove, onPurchase } = $props<{
     items: WishlistItem[];
@@ -26,19 +25,7 @@
   }
 
   function handleMoveTrigger(itemId: string) {
-    if (otherTargets.length === 1) {
-      // Direct move if only one target
-      onMove?.({ itemId, fromId: activeWishlistId!, toId: otherTargets[0].id });
-    } else {
-      movingItemId = itemId;
-    }
-  }
-
-  function handleMoveConfirm(targetId: string) {
-    if (movingItemId && activeWishlistId) {
-      onMove?.({ itemId: movingItemId, fromId: activeWishlistId, toId: targetId });
-      movingItemId = null;
-    }
+    movingItemId = itemId;
   }
 </script>
 
@@ -66,34 +53,14 @@
   {/each}
 {/if}
 
-<!-- Move To List Dialog -->
-{#if movingItemId}
-  <Dialog.Root open={!!movingItemId} onOpenChange={() => (movingItemId = null)}>
-    <Dialog.Content class="border-zinc-800 bg-[#0c0c0c] text-white">
-      <Dialog.Header>
-        <Dialog.Title>{m.wishlists_move_to_list_title()}</Dialog.Title>
-        <Dialog.Description class="text-zinc-500"
-          >{m.wishlists_move_select_destination()}</Dialog.Description
-        >
-      </Dialog.Header>
-      <div class="grid gap-2 py-4">
-        {#each otherTargets as target (target.id)}
-          <button
-            onclick={() => handleMoveConfirm(target.id)}
-            class="flex items-center justify-between rounded-xl border border-zinc-900 bg-zinc-900/50 px-4 py-3 text-left transition-all hover:border-amber-500/30 hover:bg-zinc-800"
-          >
-            <span class="font-bold">{target.name}</span>
-            <span class="text-xs text-zinc-500"
-              >{m.wishlists_move_items_count({ count: target.count })}</span
-            >
-          </button>
-        {/each}
-      </div>
-      <Dialog.Footer>
-        <Button variant="ghost" onclick={() => (movingItemId = null)}
-          >{m.wishlists_move_cancel()}</Button
-        >
-      </Dialog.Footer>
-    </Dialog.Content>
-  </Dialog.Root>
-{/if}
+<MoveModelModal
+  open={!!movingItemId}
+  itemId={movingItemId ?? ''}
+  fromWishlistId={activeWishlistId ?? ''}
+  {otherTargets}
+  onClose={() => (movingItemId = null)}
+  onMove={(detail) => {
+    onMove?.(detail);
+    movingItemId = null;
+  }}
+/>
