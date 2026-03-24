@@ -1,8 +1,8 @@
 <script lang="ts" generics="T extends { id: string }">
-  import { ArrowUpNarrowWide, ArrowDownWideNarrow, TrainFront } from 'lucide-svelte';
+  import { ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import DepotThumbnail from './DepotThumbnail.svelte';
 
   let {
     items
@@ -31,15 +31,15 @@
     const it = item as unknown as Record<string, unknown>;
     const str = (v: unknown) => (v === undefined || v === null ? '-' : String(v));
 
-    // Construct image path: models/Manufacturer_ProductCode.jpg
     const manufacturer = str(it.manufacturer ?? '');
     const productCode = str(it.productCode ?? '');
-    const imagePath = `models/${manufacturer}_${productCode}.jpg`;
+    const railwayModelId = str(it.railwayModelId ?? '');
 
     return {
       id: str(it.id),
       productCode,
       manufacturer,
+      railwayModelId,
       category: str(it.categoryLabel ?? '-'),
       roadNumber: str(it.roadNumber ?? '-'),
       railway: str(it.railwayCompany ?? '-'),
@@ -48,7 +48,6 @@
       control: str(it.control ?? '-'),
       dccAddress: it.dccAddress as number | null,
       serviceLevel: str(it.serviceLevel ?? '-'),
-      imagePath,
       // Status simulation (or use real data if available)
       status: it.depot ? 'On Track' : 'In Storage'
     };
@@ -76,11 +75,11 @@
   // Table headers
   const headers = [
     { label: 'STATUS', key: 'status', class: 'w-16' },
-    { label: 'VISUAL', key: 'imagePath', class: 'w-24' },
+    { label: 'VISUAL', key: '', class: 'w-24' },
+    { label: m.depot_company(), key: 'railway', class: 'w-40 hidden lg:table-cell' },
     { label: m.depot_road_number(), key: 'roadNumber', class: 'min-w-[200px]' },
     { label: m.depot_dcc_address(), key: 'dccAddress', class: 'w-32' },
-    { label: m.depot_type(), key: 'control', class: 'w-32 hidden md:table-cell' },
-    { label: m.depot_company(), key: 'railway', class: 'w-40 hidden lg:table-cell' }
+    { label: m.depot_type(), key: 'control', class: 'w-32 hidden md:table-cell' }
   ];
 </script>
 
@@ -131,17 +130,14 @@
 
           <!-- Thumbnail -->
           <td class="border-y border-white/5 bg-white/5 px-2 py-4 group-hover:border-[#f59e0b]/30">
-            <div
-              class="flex h-10 w-16 items-center justify-center overflow-hidden rounded border border-white/10 bg-black"
-            >
-              <img
-                src={convertFileSrc(props.imagePath)}
-                alt={props.productCode}
-                class="h-full w-full object-cover contrast-125 grayscale transition-all group-hover:contrast-100 group-hover:grayscale-0"
-                onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
-              />
-              <TrainFront size={16} class="text-zinc-800" />
-            </div>
+            <DepotThumbnail railwayModelId={props.railwayModelId} productCode={props.productCode} />
+          </td>
+
+          <!-- Railway -->
+          <td
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 lg:table-cell"
+          >
+            <span class="text-xs font-semibold text-zinc-400">{props.railway}</span>
           </td>
 
           <!-- Model Info -->
@@ -180,18 +176,11 @@
 
           <!-- Control System -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 md:table-cell"
+            class="hidden rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 md:table-cell"
           >
             <span class="font-mono text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
               >{props.control.replace('_', ' ')}</span
             >
-          </td>
-
-          <!-- Railway -->
-          <td
-            class="hidden rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 lg:table-cell"
-          >
-            <span class="text-xs font-semibold text-zinc-400">{props.railway}</span>
           </td>
         </tr>
       {/each}

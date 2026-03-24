@@ -1,5 +1,6 @@
 export type Locomotive = {
   id: string;
+  railwayModelId: string;
   group: string;
   manufacturer: string;
   seriesCode: string;
@@ -14,6 +15,7 @@ export type Locomotive = {
 
 export type TrainSet = {
   id: string;
+  railwayModelId: string;
   group: string;
   manufacturer: string;
   seriesCode: string;
@@ -30,6 +32,7 @@ export type CarCategory = 'passenger' | 'freight';
 
 export type Car = {
   id: string;
+  railwayModelId: string;
   type: string;
   manufacturer: string;
   seriesCode: string;

@@ -325,6 +325,7 @@ impl CollectionMapper {
 
         Ok(crate::collecting::domain::DepotRollingStockView {
             id: owned.id.clone(),
+            railway_model_id: collection_item.railway_model.railway_model_id.clone(),
             series_code: collection_item.railway_model.product_code.clone(),
             road_number: owned.road_number.clone(),
             friendly_name: None,

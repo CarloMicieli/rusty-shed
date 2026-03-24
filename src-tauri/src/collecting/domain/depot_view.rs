@@ -1,4 +1,6 @@
-use crate::catalog::domain::railway_model::{Control, Epoch, ProductCode, RollingStockCategory};
+use crate::catalog::domain::railway_model::{
+    Control, Epoch, ProductCode, RailwayModelId, RollingStockCategory,
+};
 use crate::collecting::domain::OwnedRollingStockId;
 use serde::Serialize;
 
@@ -24,6 +26,9 @@ pub struct DepotView {
 pub struct DepotRollingStockView {
     /// Unique identifier for the owned rolling stock instance.
     pub id: OwnedRollingStockId,
+
+    /// The railway model identifier, used for image lookup.
+    pub railway_model_id: RailwayModelId,
 
     /// Series or class code for the rolling stock (e.g. "Class 37").
     pub series_code: String,

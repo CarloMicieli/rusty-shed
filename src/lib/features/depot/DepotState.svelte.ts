@@ -114,6 +114,7 @@ export class DepotState {
   private mapToLocomotive(item: DepotRollingStockView): Locomotive {
     return {
       id: item.id,
+      railwayModelId: item.railwayModelId,
       group: item.friendlyName ?? item.seriesCode,
       manufacturer: item.manufacturerName,
       seriesCode: item.seriesCode,
@@ -130,6 +131,7 @@ export class DepotState {
   private mapToTrainSet(item: DepotRollingStockView): TrainSet {
     return {
       id: item.id,
+      railwayModelId: item.railwayModelId,
       group: item.friendlyName ?? item.seriesCode,
       manufacturer: item.manufacturerName,
       seriesCode: item.seriesCode,
@@ -146,6 +148,7 @@ export class DepotState {
   private mapToCar(item: DepotRollingStockView): Car {
     return {
       id: item.id,
+      railwayModelId: item.railwayModelId,
       type: item.friendlyName ?? item.seriesCode,
       manufacturer: item.manufacturerName,
       seriesCode: item.seriesCode,

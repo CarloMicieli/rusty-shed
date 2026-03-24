@@ -3,9 +3,10 @@ import { render, screen } from '@testing-library/svelte';
 import DepotCategoryWrapper from './DepotCategoryWrapper.svelte';
 import { TrainFront } from 'lucide-svelte';
 
-// ── Mock @tauri-apps/api/core ────────────────────────────────────────────────
-vi.mock('@tauri-apps/api/core', () => ({
-  convertFileSrc: vi.fn((path: string) => `asset://localhost/${path}`)
+// ── Mock @tauri-apps/plugin-fs ───────────────────────────────────────────────
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  readFile: vi.fn().mockRejectedValue(new Error('Not found')),
+  BaseDirectory: { AppLocalData: 'AppLocalData' }
 }));
 
 const defaultProps = {
