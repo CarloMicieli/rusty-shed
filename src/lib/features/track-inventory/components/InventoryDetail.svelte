@@ -20,12 +20,13 @@
 
   interface Props {
     inventory: TrackInventoryView;
+    showBackButton?: boolean;
     onRename?: () => void;
     onDelete?: () => void;
     onAddPurchase?: () => void;
   }
 
-  const { inventory, onRename, onDelete, onAddPurchase }: Props = $props();
+  const { inventory, showBackButton = false, onRename, onDelete, onAddPurchase }: Props = $props();
 
   // Derived statistics
   const totalPieces = $derived(
@@ -61,13 +62,15 @@
   <!-- 1. Header & Primary Actions -->
   <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
     <div class="flex items-start gap-4">
-      <a
-        href={resolve('/railway-tracks')}
-        class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-        aria-label={m.track_inventory_back_label()}
-      >
-        <ChevronLeft size={22} />
-      </a>
+      {#if showBackButton}
+        <a
+          href={resolve('/railway-tracks')}
+          class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          aria-label={m.track_inventory_back_label()}
+        >
+          <ChevronLeft size={22} />
+        </a>
+      {/if}
       <div>
         <div class="flex items-center gap-3">
           <p class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">
@@ -186,9 +189,9 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 gap-12 lg:grid-cols-5">
+  <div class="space-y-12">
     <!-- 3. Items List Section -->
-    <div class="space-y-6 lg:col-span-3">
+    <div class="space-y-6">
       <div class="flex items-center gap-3">
         <TrainTrack size={20} class="text-amber-500/60" />
         <h3 class="text-lg font-bold tracking-tight text-zinc-200">
@@ -228,8 +231,8 @@
     </div>
 
     <!-- 4. Purchase History Section -->
-    <div class="space-y-6 lg:col-span-2">
-      <div class="flex items-center gap-3 border-b border-white/5 pb-4 lg:border-0 lg:pb-0">
+    <div class="space-y-6">
+      <div class="flex items-center gap-3">
         <History size={20} class="text-zinc-500" />
         <h3 class="text-lg font-bold tracking-tight text-zinc-200">
           {m.track_inventory_detail_history_tab()}

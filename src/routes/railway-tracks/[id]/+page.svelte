@@ -66,6 +66,7 @@
   {:else if inventory}
     <InventoryDetail
       {inventory}
+      showBackButton={true}
       onRename={() => (renameDialogOpen = true)}
       onDelete={() => (deleteDialogOpen = true)}
       onAddPurchase={() => (addPurchaseDrawerOpen = true)}
