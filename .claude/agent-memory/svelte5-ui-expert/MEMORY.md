@@ -109,6 +109,12 @@ Key collection components:
 - `ModelSearchSection.svelte` — RailwayModelBaseForm + rolling stocks + PurchaseSection (84 lines)
 - `ModelSelectionCard.svelte` — discard-changes confirmation dialog (30 lines)
 
+## `$props()` Typing Syntax
+
+- Correct: `const { foo, bar }: Props = $props();` — annotate the destructuring, not the call.
+- Wrong: `const { foo, bar } = $props<Props>();` — this causes "Expected 0 type arguments" errors in svelte-check.
+- Implicit `any` in callbacks passed to `$derived` must also be typed explicitly when TypeScript cannot infer them.
+
 ## Bindings Type Gotchas
 
 - `Length` = `{ Millimeters: string } | { Inches: string } | ...` — string values, not numbers/BigInt
