@@ -12,9 +12,10 @@
   --radius: 0.625rem;
 
   /* Layout structure colors — theme-switchable */
-  --layout-bg: #0d0d0d;
+  --layout-bg: color-mix(in srgb, #0d0d0d, hsl(30 50% 50%) 5%);
   --layout-surface: #050505;
   --layout-border: #1f1f1f;
+  --layout-header-radius: 32px;
 
   /* Background & Surface (Zinc-based Dark) */
   --background: hsl(240 10% 3.9%); /* zinc-950 */
@@ -59,7 +60,11 @@
   --chart-5: hsl(30 35% 35%);
 
   /* Sidebar (High-Contrast Darker) */
-  --sidebar: hsl(240 10% 2%); /* Darker than background */
+  --sidebar: color-mix(
+    in srgb,
+    hsl(240 10% 2%),
+    hsl(30 50% 50%) 5%
+  ); /* Darker than background with copper tint */
   --sidebar-foreground: hsl(0 0% 90%); /* Slightly dimmed */
   --sidebar-primary: hsl(30 50% 50%); /* Copper accent */
   --sidebar-primary-foreground: hsl(240 10% 2%);
@@ -67,6 +72,7 @@
   --sidebar-accent-foreground: hsl(0 0% 98%);
   --sidebar-border: hsl(240 5.9% 15%); /* Subtle border */
   --sidebar-ring: hsl(30 50% 50%);
+  --sidebar-name-shadow: rgba(0, 0, 0, 0.8);
 }
 
 .dark {
@@ -113,7 +119,11 @@
   --chart-5: hsl(30 35% 35%);
 
   /* Sidebar (High-Contrast Darker) */
-  --sidebar: hsl(240 10% 2%); /* Darker than background */
+  --sidebar: color-mix(
+    in srgb,
+    hsl(240 10% 2%),
+    hsl(30 50% 50%) 5%
+  ); /* Darker than background with copper tint */
   --sidebar-foreground: hsl(0 0% 90%); /* Slightly dimmed */
   --sidebar-primary: hsl(30 50% 50%); /* Copper accent */
   --sidebar-primary-foreground: hsl(240 10% 2%);

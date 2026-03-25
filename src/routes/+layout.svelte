@@ -195,20 +195,18 @@
 
     <!-- Main Content Wrapper ("sheet" that sits on the sidebar shelf) -->
     <div
-      class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-tl-[32px]"
+      class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden"
+      style:border-top-left-radius="var(--layout-header-radius)"
       style:background-color="var(--background)"
     >
       <!-- Header -->
       <header
-        class="relative sticky top-0 z-50 border-b"
+        class="sticky top-0 z-50 border-b"
         style:background-color="var(--background)"
         style:border-color="var(--layout-border)"
-        style="box-shadow: inset 0 1px 0 rgba(212, 138, 66, 0.1);"
         data-tauri-drag-region
       >
-        <!-- Brass tint overlay -->
-        <div class="pointer-events-none absolute inset-0 z-0 bg-sidebar-primary/5"></div>
-        <div class="relative z-10 flex items-center justify-between p-4">
+        <div class="flex items-center justify-between p-4" style="pointer-events: auto;">
           <!-- Mobile: Logo / Brand (Visible only when sidebar is hidden) -->
           <div class="flex items-center gap-2 lg:hidden">
             <TrainFront class="text-primary" size={24} />
@@ -232,11 +230,7 @@
       </header>
 
       <!-- Page Content -->
-      <main
-        class="relative flex-1 overflow-hidden border-t"
-        style:background-color="var(--layout-surface)"
-        style:border-color="var(--layout-border)"
-      >
+      <main class="relative flex-1 overflow-hidden">
         <div class="mx-auto h-full w-full max-w-[1600px] overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
           {#key $page.url.pathname}
             <div in:fade={{ duration: 150, delay: 1 }} class="space-y-8">

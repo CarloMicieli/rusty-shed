@@ -29,9 +29,6 @@
 
 {#key locale}
   <nav class="relative flex h-full w-full flex-col overflow-hidden bg-sidebar">
-    <!-- Brass tint overlay -->
-    <div class="pointer-events-none absolute inset-0 z-0 bg-sidebar-primary/5"></div>
-
     <!-- Content -->
     <div class="relative z-10 flex h-full flex-col p-4">
       <!-- Logo -->
@@ -66,7 +63,7 @@
         </svg>
         {#if !collapsed}
           <h1
-            class="text-xl font-bold tracking-tight text-sidebar-primary uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+            class="text-xl font-bold tracking-tight text-sidebar-primary uppercase" style="filter: drop-shadow(0 1px 2px var(--sidebar-name-shadow));"
           >
             {m.app_name()}
           </h1>

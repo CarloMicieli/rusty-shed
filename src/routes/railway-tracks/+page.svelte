@@ -94,9 +94,7 @@
 
 <div class="mb-10 flex flex-col">
   <!-- Page Header -->
-  <div
-    class="-mx-4 -mt-4 rounded-tl-[24px] border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8"
-  >
+  <div class="-mx-4 -mt-4 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8">
     <PageHeader
       title={m.track_inventories_title()}
       subtitle={m.app_tracks()}

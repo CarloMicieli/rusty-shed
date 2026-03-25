@@ -208,8 +208,8 @@
   --input: hsl(32 37% 70%);
   --ring: hsl(44 88% 38%);
 
-  /* Sidebar — "Deep Parchment" */
-  --sidebar: hsl(40 40% 80%); /* Weathered paper, darker than background */
+  /* Sidebar — "Deep Parchment" with baked-in brass tint */
+  --sidebar: color-mix(in srgb, hsl(40 40% 80%), var(--color-primary-600) 5%);
   --sidebar-foreground: hsl(35 27% 13%);
   --sidebar-primary: hsl(44 88% 30%); /* Deeper brass for active text */
   --sidebar-primary-foreground: hsl(44 58% 89%);
@@ -217,12 +217,17 @@
   --sidebar-accent-foreground: hsl(35 27% 13%);
   --sidebar-border: hsl(32 37% 70%); /* Matches --border */
   --sidebar-ring: hsl(44 88% 38%);
+  --sidebar-name-shadow: rgba(255, 0, 0, 0.8);
 
   /* ========================================================================
      Layout structure color overrides
      ======================================================================== */
 
-  --layout-bg: hsl(40 43% 83%); /* Aged Paper — wrapper/header bg */
+  --layout-bg: color-mix(
+    in srgb,
+    hsl(40 43% 83%),
+    var(--color-primary-600) 5%
+  ); /* Aged Paper — wrapper/header bg */
   --layout-surface: hsl(44 58% 89%); /* Warm Parchment — main content */
   --layout-border: hsl(32 37% 70%);
 }
