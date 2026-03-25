@@ -9,6 +9,7 @@
   import type { QuarterlySummary } from '../services/BudgetService.svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     summary: QuarterlySummary;
@@ -23,13 +24,7 @@
   const closeText = m.common_close?.() || 'Close';
 
   function formatAmount(minorUnits: number, currencyCode: string): string {
-    const major = minorUnits / 100;
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currencyCode,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(major);
+    return regionalManager.formatCurrencyWith(minorUnits, currencyCode);
   }
 
   function getCategoryLabel(category: string): string {

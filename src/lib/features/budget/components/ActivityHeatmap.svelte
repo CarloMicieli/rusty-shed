@@ -9,6 +9,7 @@
   import { SvelteMap } from 'svelte/reactivity';
   import * as Dialog from '$lib/components/ui/dialog';
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { QuarterlyActivityPoint, QuarterlySummary } from '../services/BudgetService.svelte';
   import type { BudgetState } from '../BudgetState.svelte';
   import QuarterlySummaryModal from './QuarterlySummaryModal.svelte';
@@ -69,13 +70,12 @@
   }
 
   function formatAmount(minorUnits: number, currencyCode: string = currency): string {
-    const major = minorUnits / 100;
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(regionalManager.locale, {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(major);
+    }).format(minorUnits / 100);
   }
 
   async function handleCellClick(year: number, quarter: string) {

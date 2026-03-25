@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages';
   import PurchaseHistoryItem from './PurchaseHistoryItem.svelte';
   import { History } from 'lucide-svelte';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     purchases: TrackPurchaseView[];
@@ -28,7 +29,7 @@
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([key, items]) => ({
         monthKey: key,
-        displayMonth: new Date(key + '-01').toLocaleDateString(undefined, {
+        displayMonth: new Date(key + '-01').toLocaleDateString(regionalManager.locale, {
           year: 'numeric',
           month: 'long'
         }),

@@ -82,6 +82,7 @@
   import { Separator } from '$lib/components/ui/separator';
   import { Volume2, Zap, TrainFront, Box, Users, Layers } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { readFile } from '@tauri-apps/plugin-fs';
   import { commands } from '$lib/bindings';
   import PreviewCardActions from '$lib/components/model-details/components/PreviewCardActions.svelte';
@@ -102,7 +103,7 @@
     const parsedDate = new Date(model.purchaseDate);
     return Number.isNaN(parsedDate.getTime())
       ? model.purchaseDate
-      : parsedDate.toLocaleDateString();
+      : parsedDate.toLocaleDateString(regionalManager.locale);
   });
 
   // Compact display label for power method badge

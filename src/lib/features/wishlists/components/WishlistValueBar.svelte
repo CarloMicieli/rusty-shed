@@ -2,6 +2,7 @@
   import { CircleDollarSign } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import type { WishlistItem } from '$lib/bindings';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     items: WishlistItem[];
@@ -36,10 +37,7 @@
   const currency = $derived(pricedItems[0]?.desiredPrice?.currency ?? 'EUR');
 
   function formatAmount(cents: number, curr: string): string {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: curr
-    }).format(cents / 100);
+    return regionalManager.formatCurrencyWith(cents, curr);
   }
 </script>
 

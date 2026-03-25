@@ -21,6 +21,7 @@
   import { getToastMessage } from '$lib/services/errors';
   import * as m from '$lib/paraglide/messages.js';
   import { setActiveLocale } from '$lib/stores/locale';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   let settings: SettingsDto | null = $state(null);
   let loading = $state(true);
@@ -178,7 +179,7 @@
                   <div class="text-sm text-muted-foreground">
                     <p>
                       {m.cloud_backup_last_sync({
-                        timestamp: new Date(lastSyncAt).toLocaleString()
+                        timestamp: new Date(lastSyncAt).toLocaleString(regionalManager.locale)
                       })}
                     </p>
                   </div>

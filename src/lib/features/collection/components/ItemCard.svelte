@@ -5,6 +5,7 @@
   import { Badge, Button } from '$lib/components';
   import { resolveTagMeta, tagIcon } from '$lib/config/tags';
   import type { CollectionItemView } from '$lib/bindings';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   const { item, onDelete, onClick } = $props<{
     item: CollectionItemView;
@@ -68,7 +69,7 @@
 
     <div class="flex flex-wrap gap-2 text-xs text-muted-foreground">
       <Badge variant="outline">{item.railwayModel.scale}</Badge>
-      <Badge variant="outline">{new Date(item.addedDate).toLocaleDateString()}</Badge>
+      <Badge variant="outline">{regionalManager.formatDate(item.addedDate)}</Badge>
     </div>
 
     {#if item.notes}

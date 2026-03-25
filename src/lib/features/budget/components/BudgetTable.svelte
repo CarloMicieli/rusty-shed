@@ -8,7 +8,7 @@
 
   import { Plus } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import { getLocale } from '$lib/paraglide/runtime.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { BudgetState } from '../BudgetState.svelte';
   import type { MonthlyBudgetRecordDto } from '../services/BudgetService.svelte';
   import {
@@ -38,20 +38,15 @@
 
   // Get localized month names using Intl.DateTimeFormat
   const monthNames = $derived.by(() => {
-    const locale = getLocale();
     return Array.from({ length: 12 }, (_, i) =>
-      new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2000, i, 1))
+      new Intl.DateTimeFormat(regionalManager.locale, { month: 'long' }).format(
+        new Date(2000, i, 1)
+      )
     );
   });
 
   function formatAmount(minorUnits: number, currencyCode: string): string {
-    const major = minorUnits / 100;
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currencyCode,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(major);
+    return regionalManager.formatCurrencyWith(minorUnits, currencyCode);
   }
 
   function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'outline' {

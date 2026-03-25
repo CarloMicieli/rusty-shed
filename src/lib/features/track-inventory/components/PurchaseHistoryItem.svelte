@@ -2,6 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import type { TrackPurchaseView } from '$lib/features/track-inventory';
   import { Store, ArrowRight } from 'lucide-svelte';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     purchase: TrackPurchaseView;
@@ -10,10 +11,7 @@
   const { purchase }: Props = $props();
 
   const formattedPrice = $derived(
-    new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: purchase.price.currency
-    }).format(Number(purchase.price.amount) / 100)
+    regionalManager.formatCurrencyWith(purchase.price.amount, purchase.price.currency)
   );
 </script>
 
@@ -26,7 +24,9 @@
       class="flex min-w-[50px] flex-col items-center justify-center rounded-lg border border-white/5 bg-zinc-900 px-2 py-1.5"
     >
       <span class="text-[10px] font-bold tracking-tighter text-zinc-500 uppercase">
-        {new Date(purchase.purchase_date).toLocaleDateString(undefined, { month: 'short' })}
+        {new Date(purchase.purchase_date).toLocaleDateString(regionalManager.locale, {
+          month: 'short'
+        })}
       </span>
       <span class="text-sm font-bold text-zinc-100">
         {new Date(purchase.purchase_date).getDate()}

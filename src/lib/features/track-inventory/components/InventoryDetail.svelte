@@ -18,6 +18,7 @@
   import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
   import { resolve } from '$app/paths';
   import { Button } from '$lib/components';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     inventory: TrackInventoryView;
@@ -39,17 +40,17 @@
   );
 
   const totalValue = $derived(
-    new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: inventory.purchases[0]?.price.currency || 'EUR'
-    }).format(totalValueRaw / 100)
+    regionalManager.formatCurrencyWith(
+      totalValueRaw,
+      inventory.purchases[0]?.price.currency || 'EUR'
+    )
   );
 
   const lastPurchaseDate = $derived.by(() => {
     if (inventory.purchases.length === 0) return '—';
     const dates = inventory.purchases.map((p) => new Date(p.purchase_date).getTime());
     const latest = Math.max(...dates);
-    return new Date(latest).toLocaleDateString(undefined, {
+    return new Date(latest).toLocaleDateString(regionalManager.locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'

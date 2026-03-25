@@ -19,6 +19,7 @@
   // Contexts
   import { getDashboardContext } from '$lib/features/dashboard/DashboardState.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   const dashboard = getDashboardContext();
   const wishlistService = getWishlistContext();
@@ -85,8 +86,7 @@
   // Helpers
   function formatMoney(amount?: { amount: bigint; currency: string } | null) {
     if (!amount) return '—';
-    const major = Number(amount.amount) / 100;
-    return `${amount.currency} ${major.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return regionalManager.formatCurrencyWith(amount.amount, amount.currency);
   }
 
   function byStats(data: typeof totals) {

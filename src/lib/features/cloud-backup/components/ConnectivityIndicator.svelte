@@ -15,6 +15,7 @@
   import { Wifi, WifiOff } from 'lucide-svelte';
   import { connectivityStore } from '../stores/connectivity';
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   /**
    * Props for the connectivity indicator
@@ -31,7 +32,7 @@
   function formatCheckedAt(checkedAt: string): string {
     try {
       const date = new Date(checkedAt);
-      return new Intl.DateTimeFormat(undefined, {
+      return new Intl.DateTimeFormat(regionalManager.locale, {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'

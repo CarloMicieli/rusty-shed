@@ -9,6 +9,7 @@
    */
 
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     remainingAmount: number;
@@ -20,13 +21,12 @@
   let { remainingAmount, totalAvailable, remainingPercentage, currency }: Props = $props();
 
   function formatAmount(minorUnits: number, currencyCode: string): string {
-    const major = minorUnits / 100;
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(regionalManager.locale, {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(major);
+    }).format(minorUnits / 100);
   }
 
   function getColorClass(percentage: number): string {
