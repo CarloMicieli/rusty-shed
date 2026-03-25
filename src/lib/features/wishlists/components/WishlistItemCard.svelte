@@ -105,11 +105,12 @@
         </div>
 
         <button
+          type="button"
           onclick={(e) => {
             e.stopPropagation();
             onRemove?.(item.id);
           }}
-          class="text-muted-foreground transition-colors hover:text-red-400"
+          class="rounded-[8px] border border-[#1F1F1F] p-1 text-[#808080] transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
         >
           <Trash2 size={14} />
         </button>

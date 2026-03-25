@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Sparkles, Heart } from 'lucide-svelte';
+  import { Sparkles, Heart, LayoutGrid, Table } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
   import { Button } from '$lib/components';
@@ -8,6 +8,7 @@
   import WishlistSidebar from './components/WishlistSidebar.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
+  import WishlistTableView from './components/WishlistTableView.svelte';
   import WishlistValueBar from './components/WishlistValueBar.svelte';
   import AddWishlistItemDrawer from './AddWishlistItemDrawer.svelte';
   import PurchaseDialog from './components/PurchaseDialog.svelte';
@@ -23,6 +24,9 @@
 
   // Drawer state
   let showAddModelDrawer = $state(false);
+
+  // View toggle state
+  let viewMode = $state<'grid' | 'table'>('grid');
 
   // Purchase dialog state
   let purchaseDialogOpen = $state(false);
@@ -129,7 +133,7 @@
 
 <div class="mb-10 flex flex-col">
   <!-- Page Header -->
-  <div class="-mx-4 -mt-4 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8">
+  <div class="-mx-4 -mt-4 border-b border-[#1F1F1F] bg-[#0F0F0F] px-6 py-4 lg:-mx-8 lg:-mt-8">
     <PageHeader
       title={m.wishlists_title()}
       subtitle={m.wishlists_subtitle()}
@@ -146,11 +150,13 @@
     </PageHeader>
   </div>
 
-  <div class="-mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
-    <!-- List Navigator (Left Column) -->
+  <div class="-mx-4 flex min-h-screen flex-col md:flex-row lg:-mx-8">
+    <!-- List Navigator (Full-Height Left Column) -->
     {#if wishlists.length > 0 || wishlistService.isLoading}
-      <aside class="flex-shrink-0 border-r border-border bg-card md:w-80">
-        <div class="sticky top-4 p-4">
+      <aside
+        class="w-full shrink-0 border-b border-[#1F1F1F] bg-[#0F0F0F] md:w-64 md:border-r md:border-b-0"
+      >
+        <div class="sticky top-0 p-3 pt-4">
           <WishlistSidebar
             {wishlists}
             activeId={activeWishlistId}
@@ -168,20 +174,20 @@
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {#each Array.from({ length: 8 }) as _, i (i)}
               <div
-                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-2xl border-2 border-border/50 bg-card p-4"
+                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-4"
               >
-                <div class="h-2 w-1/2 rounded bg-muted"></div>
-                <div class="h-4 w-3/4 rounded bg-muted"></div>
-                <div class="aspect-[4/3] rounded-xl bg-muted"></div>
+                <div class="h-2 w-1/2 rounded bg-[#1F1F1F]"></div>
+                <div class="h-4 w-3/4 rounded bg-[#1F1F1F]"></div>
+                <div class="aspect-[4/3] rounded-[8px] bg-[#1F1F1F]"></div>
                 <div class="flex gap-2">
-                  <div class="h-8 flex-1 rounded-lg bg-muted"></div>
-                  <div class="h-8 flex-1 rounded-lg bg-muted"></div>
+                  <div class="h-8 flex-1 rounded-[8px] bg-[#1F1F1F]"></div>
+                  <div class="h-8 flex-1 rounded-[8px] bg-[#1F1F1F]"></div>
                 </div>
               </div>
             {/each}
           </div>
         {:else if activeWishlist}
-          <div class="space-y-6">
+          <div class="space-y-4">
             <WishlistHeader
               wishlist={activeWishlist}
               onRename={handleRename}
@@ -192,8 +198,50 @@
 
             <WishlistValueBar items={wishlistItems} />
 
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <WishlistItems
+            <!-- View Mode Toggle -->
+            <div class="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                title={m.wishlist_view_grid()}
+                class={[
+                  'rounded-[8px] border p-1.5 transition-colors',
+                  viewMode === 'grid'
+                    ? 'border-[#D48A42] bg-[rgba(212,138,66,0.15)] text-[#D48A42]'
+                    : 'border-[#1F1F1F] text-[#808080] hover:border-[#D48A42]/40 hover:text-[#D48A42]'
+                ].join(' ')}
+                onclick={() => (viewMode = 'grid')}
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                type="button"
+                title={m.wishlist_view_table()}
+                class={[
+                  'rounded-[8px] border p-1.5 transition-colors',
+                  viewMode === 'table'
+                    ? 'border-[#D48A42] bg-[rgba(212,138,66,0.15)] text-[#D48A42]'
+                    : 'border-[#1F1F1F] text-[#808080] hover:border-[#D48A42]/40 hover:text-[#D48A42]'
+                ].join(' ')}
+                onclick={() => (viewMode = 'table')}
+              >
+                <Table size={16} />
+              </button>
+            </div>
+
+            <!-- Items: Grid or Table -->
+            {#if viewMode === 'grid'}
+              <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <WishlistItems
+                  items={wishlistItems}
+                  {activeWishlistId}
+                  {otherTargets}
+                  onRemove={handleRemove}
+                  onMove={handleMove}
+                  onPurchase={handlePurchaseTrigger}
+                />
+              </div>
+            {:else}
+              <WishlistTableView
                 items={wishlistItems}
                 {activeWishlistId}
                 {otherTargets}
@@ -201,39 +249,36 @@
                 onMove={handleMove}
                 onPurchase={handlePurchaseTrigger}
               />
-            </div>
+            {/if}
           </div>
         {:else}
-          <div class="space-y-4 rounded-lg border border-border/20 bg-muted/20 p-4">
+          <div class="rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-4">
             <div
-              class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-border/10 bg-card/50 px-4 py-24 text-center"
+              class="flex flex-col items-center justify-center gap-8 rounded-[8px] border border-[#1F1F1F] px-4 py-24 text-center"
             >
               <div class="relative">
-                <div class="absolute inset-0 rounded-full bg-muted/10 blur-3xl"></div>
+                <div class="absolute inset-0 rounded-full bg-[#D48A42]/5 blur-3xl"></div>
                 <div
-                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-border/20 bg-muted/50"
+                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-[#1F1F1F] bg-[#0F0F0F]"
                 >
-                  <Heart size={56} class="text-muted-foreground opacity-50" />
+                  <Heart size={56} class="text-[#808080] opacity-40" />
                 </div>
               </div>
 
               <div class="flex max-w-sm flex-col items-center gap-3 text-center">
-                <h3 class="text-2xl font-bold text-foreground">
+                <h3 class="text-2xl font-bold text-[#E0E0E0]">
                   {m.app_wishlists()}
                 </h3>
-                <p class="text-sm leading-relaxed text-muted-foreground">
+                <p class="text-sm leading-relaxed text-[#808080]">
                   {m.wishlists_empty_state()}
                 </p>
               </div>
 
               <button
                 type="button"
-                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
+                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-[8px] border border-[#D48A42] bg-[#D48A42] px-8 py-3 font-bold tracking-wide text-black transition-all hover:bg-[#D48A42]/90 hover:shadow-[0_0_20px_rgba(212,138,66,0.3)] active:scale-95"
                 onclick={handleCreate}
               >
-                <div
-                  class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
-                ></div>
                 <Heart class="h-5 w-5" />
                 <span>{m.wishlists_create_button()}</span>
               </button>

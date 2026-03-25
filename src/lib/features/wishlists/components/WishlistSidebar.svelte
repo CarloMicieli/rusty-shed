@@ -13,18 +13,20 @@
   }>();
 </script>
 
-<aside class="space-y-4">
+<aside class="flex flex-col gap-4">
   <div class="flex items-center justify-between px-2">
-    <h2 class="text-xs font-bold tracking-[0.2em] text-zinc-500 uppercase">
+    <h2 class="text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
       {m.wishlists_sidebar_title()}
     </h2>
   </div>
 
-  <div class="space-y-1">
+  <div class="space-y-0.5">
     {#if wishlists.length === 0}
-      <div class="flex flex-col items-center justify-center py-8 text-center text-zinc-600">
-        <Heart size={32} class="mb-2 opacity-20" />
-        <p class="text-xs font-medium tracking-widest uppercase">{m.wishlists_items_empty()}</p>
+      <div class="flex flex-col items-center justify-center py-8 text-center">
+        <Heart size={28} class="mb-2 text-[#808080] opacity-30" />
+        <p class="text-[10px] font-medium tracking-widest text-[#808080] uppercase">
+          {m.wishlists_items_empty()}
+        </p>
       </div>
     {:else}
       {#each wishlists as wl (wl.id)}
@@ -32,41 +34,41 @@
           role="button"
           tabindex="0"
           class={cn(
-            'group relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-3 text-left transition-all duration-200',
+            'group relative flex w-full cursor-pointer items-center justify-between gap-3 py-2.5 pr-3 pl-3 text-left transition-all duration-200',
             wl.id === activeId
-              ? 'border-l-2 border-amber-500 bg-amber-500/10 text-white shadow-[0_0_15px_rgba(245,158,11,0.05)]'
-              : 'text-zinc-400 hover:bg-white/5'
+              ? 'border-l-2 border-[#D48A42] bg-[rgba(212,138,66,0.15)] text-[#E0E0E0]'
+              : 'border-l-2 border-transparent text-[#808080] hover:bg-[rgba(212,138,66,0.05)] hover:text-[#E0E0E0]'
           )}
           onclick={() => onSelect?.(wl.id)}
           onkeydown={(e) => e.key === 'Enter' && onSelect?.(wl.id)}
         >
-          <div class="flex items-center gap-3">
+          <div class="flex min-w-0 items-center gap-3">
             <Heart
-              size={18}
+              size={16}
               class={wl.id === activeId
-                ? 'text-amber-500'
-                : 'text-zinc-600 transition-colors group-hover:text-zinc-400'}
+                ? 'shrink-0 text-[#D48A42]'
+                : 'shrink-0 text-[#808080] transition-colors group-hover:text-[#D48A42]'}
             />
             <div class="flex min-w-0 flex-col">
-              <span class="truncate font-bold tracking-tight">{wl.name}</span>
-              <span class="font-mono text-[10px] tracking-wider text-zinc-500">
+              <span class="truncate text-sm font-bold tracking-tight">{wl.name}</span>
+              <span class="font-mono text-[10px] tracking-wider text-[#808080]">
                 {wl.count}
                 {m.stats_rolling_stocks()}
               </span>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex shrink-0 items-center gap-2">
             {#if wl.isDefault}
               <Badge
-                class="border-amber-500/20 bg-amber-500/10 text-[9px] font-bold text-amber-500 uppercase ring-1 ring-amber-500/20"
+                class="border border-[#D48A42]/20 bg-[rgba(212,138,66,0.1)] text-[9px] font-bold text-[#D48A42] uppercase"
               >
                 {m.wishlists_sidebar_default_badge()}
               </Badge>
             {/if}
 
             <button
-              class="rounded p-1 text-zinc-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-zinc-800 hover:text-red-400"
+              class="rounded-[8px] border border-[#1F1F1F] p-1 text-[#808080] opacity-0 transition-all group-hover:opacity-100 hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
               type="button"
               title={m.wishlists_delete_list_title()}
               onclick={(event) => {
@@ -74,7 +76,7 @@
                 onDelete?.(wl.id);
               }}
             >
-              <Trash2 size={14} />
+              <Trash2 size={13} />
             </button>
           </div>
         </div>
