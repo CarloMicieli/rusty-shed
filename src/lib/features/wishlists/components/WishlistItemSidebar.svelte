@@ -266,9 +266,9 @@
 
 <aside class="w-full shrink-0 space-y-4 lg:w-80">
   <!-- ── Details Section ─────────────────────────────────────────────────── -->
-  <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
-    <div class="border-b border-[#1F1F1F] px-4 py-3">
-      <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+  <div class="overflow-hidden rounded-lg border border-border bg-card">
+    <div class="border-b border-border px-4 py-3">
+      <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
         {m.wishlist_item_section_details()}
       </h3>
     </div>
@@ -276,19 +276,19 @@
     <div class="space-y-3 p-4">
       <!-- List name -->
       <div class="space-y-1">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
           {m.wishlist_item_wishlist_name()}
         </span>
-        <div class="text-xs font-semibold text-[#E0E0E0]">
+        <div class="text-xs font-semibold text-foreground">
           {wishlistName}
         </div>
       </div>
 
       <!-- Price & Added Row -->
-      <div class="grid grid-cols-3 gap-x-3 border-t border-[#1F1F1F] pt-3">
+      <div class="grid grid-cols-3 gap-x-3 border-t border-border pt-3">
         <!-- Desired Price -->
         <div class="flex flex-col gap-0.5">
-          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
             {m.wishlist_field_desired_price()}
           </span>
           {#if activeField === 'desiredPrice'}
@@ -304,7 +304,7 @@
                 onkeydown={handlePriceKeydown}
                 placeholder="0.00"
                 class="w-full"
-                inputClass="border-[#D48A42] ring-[#D48A42]/30"
+                inputClass="border-primary ring-primary/30"
                 label={m.wishlist_field_desired_price()}
                 autofocus
               />
@@ -314,7 +314,7 @@
             </div>
           {:else}
             <div
-              class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+              class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15"
               onclick={activateDesiredPrice}
               onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') activateDesiredPrice();
@@ -326,11 +326,13 @@
               })}
             >
               {#if item.desiredPrice}
-                <span class="text-xs font-semibold text-[#E0E0E0]">
+                <span class="text-xs font-semibold text-foreground">
                   {formatPrice(item.desiredPrice.amount, item.desiredPrice.currency)}
                 </span>
               {:else}
-                <span class="text-xs text-[#808080] italic">{m.wishlist_item_price_not_set()}</span>
+                <span class="text-xs text-muted-foreground italic"
+                  >{m.wishlist_item_price_not_set()}</span
+                >
               {/if}
             </div>
           {/if}
@@ -341,7 +343,7 @@
 
         <!-- Added Date -->
         <div class="flex flex-col gap-0.5">
-          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
             {m.wishlist_item_added_date()}
           </span>
           <Popover.Root
@@ -351,16 +353,16 @@
             }}
           >
             <Popover.Trigger
-              class="group -mx-1 flex h-6 cursor-pointer items-center justify-start rounded px-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+              class="group -mx-1 flex h-6 cursor-pointer items-center justify-start rounded px-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15"
               aria-label={m.wishlist_item_edit_field_label({
                 field: m.wishlist_item_added_date()
               })}
             >
-              <span class="text-xs font-medium text-[#E0E0E0]">
+              <span class="text-xs font-medium text-foreground">
                 {formatDate(item.addedDate)}
               </span>
             </Popover.Trigger>
-            <Popover.Content class="w-auto border-[#1F1F1F] bg-[#0F0F0F] p-0" align="end">
+            <Popover.Content class="w-auto border-border bg-card p-0" align="end">
               <Calendar
                 type="single"
                 value={calendarValue}
@@ -374,11 +376,11 @@
 
       <!-- Purchased Price (read-only, only shown when non-null) -->
       {#if item.purchasedPrice}
-        <div class="flex flex-col gap-0.5 border-t border-[#1F1F1F] pt-3">
-          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        <div class="flex flex-col gap-0.5 border-t border-border pt-3">
+          <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
             {m.wishlist_item_purchased_price()}
           </span>
-          <span class="text-xs font-semibold text-[#E0E0E0]">
+          <span class="text-xs font-semibold text-foreground">
             {formatPrice(item.purchasedPrice.amount, item.purchasedPrice.currency)}
           </span>
         </div>
@@ -387,9 +389,9 @@
   </div>
 
   <!-- ── Priority Section (formerly Personal Context) ────────────────────── -->
-  <div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
-    <div class="border-b border-[#1F1F1F] px-4 py-3">
-      <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+  <div class="overflow-hidden rounded-lg border border-border bg-card">
+    <div class="border-b border-border px-4 py-3">
+      <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
         {m.wishlist_item_section_personal_context()}
       </h3>
     </div>
@@ -399,7 +401,7 @@
       <div class="grid grid-cols-3 gap-x-3">
         <!-- Priority -->
         <div class="flex flex-col gap-0.5">
-          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
             {m.wishlist_field_priority()}
           </span>
           <InPlaceSelectEdit
@@ -417,7 +419,7 @@
 
         <!-- Status -->
         <div class="flex flex-col gap-0.5">
-          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+          <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
             {m.wishlist_item_status()}
           </span>
           <InPlaceSelectEdit
@@ -437,11 +439,11 @@
 
       <!-- Notes -->
       {#if item.notes}
-        <div class="space-y-1 border-t border-[#1F1F1F] pt-3">
-          <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        <div class="space-y-1 border-t border-border pt-3">
+          <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
             {m.wishlist_item_notes()}
           </span>
-          <p class="line-clamp-6 text-xs leading-relaxed text-[#E0E0E0]">
+          <p class="line-clamp-6 text-xs leading-relaxed text-foreground">
             {item.notes}
           </p>
         </div>

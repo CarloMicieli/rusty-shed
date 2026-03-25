@@ -111,7 +111,7 @@
     {#if multiline}
       <textarea
         bind:this={inputEl}
-        class="w-full resize-none rounded border border-[#D48A42] bg-[#0F0F0F] p-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
+        class="w-full resize-none rounded border border-primary bg-card p-1 text-sm text-foreground ring-1 ring-primary/30 outline-none"
         bind:value={editValue}
         onblur={handleBlur}
         onkeydown={handleKeydown}
@@ -122,7 +122,7 @@
       <input
         bind:this={inputEl}
         {type}
-        class="w-full rounded border border-[#D48A42] bg-[#0F0F0F] p-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
+        class="w-full rounded border border-primary bg-card p-1 text-sm text-foreground ring-1 ring-primary/30 outline-none"
         bind:value={editValue}
         onblur={handleBlur}
         onkeydown={handleKeydown}
@@ -132,7 +132,7 @@
 
     {#if isSaving}
       <span
-        class="absolute top-1/2 right-1.5 inline-block h-3 w-3 -translate-y-1/2 animate-spin rounded-full border-2 border-[#D48A42] border-t-transparent"
+        class="absolute top-1/2 right-1.5 inline-block h-3 w-3 -translate-y-1/2 animate-spin rounded-full border-2 border-primary border-t-transparent"
       ></span>
     {/if}
     {#if error}
@@ -141,7 +141,7 @@
   </div>
 {:else}
   <div
-    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)] focus-visible:outline-none"
+    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15 focus-visible:outline-none"
     onclick={startEditing}
     onkeydown={(e) => {
       if (e.key === 'Enter' || e.key === ' ') startEditing();
@@ -150,9 +150,9 @@
     tabindex="0"
   >
     {#if value}
-      <span class="text-sm text-[#E0E0E0]">{displayValue ?? value}</span>
+      <span class="text-sm text-foreground">{displayValue ?? value}</span>
     {:else}
-      <span class="text-sm text-[#808080] italic"
+      <span class="text-sm text-muted-foreground italic"
         >{placeholder ?? m.edit_field_placeholder_empty()}</span
       >
     {/if}

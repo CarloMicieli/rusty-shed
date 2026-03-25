@@ -15,7 +15,7 @@
   const { details, detailsLang, currentLocale, editable, onSave }: Props = $props();
 </script>
 
-<div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+<div class="rounded-lg border border-border bg-card/40 p-4">
   {#if detailsLang && detailsLang !== currentLocale}
     <div class="mb-2 flex items-center gap-1 text-xs text-zinc-500">
       <span>{m.railway_model_field_details()}</span>

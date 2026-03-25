@@ -48,7 +48,7 @@
 </script>
 
 {#if wishlist}
-  <div class="flex flex-col gap-6 border-b border-white/5 pb-6">
+  <div class="flex flex-col gap-6 border-b border-border/20 pb-6">
     <div class="flex items-start justify-between">
       <div class="space-y-1">
         <div class="flex items-center gap-3">
@@ -57,7 +57,7 @@
               <Input
                 bind:value={nameDraft}
                 onkeydown={handleKeydown}
-                class="h-8 min-w-[300px] bg-zinc-900 font-bold text-white shadow-inner focus:ring-amber-500/50"
+                class="h-8 min-w-[300px] bg-card font-bold text-card-foreground shadow-inner focus:ring-amber-500/50"
                 autofocus
               />
               <Button size="sm" class="h-8" onclick={handleRenameSubmit}>Save</Button>
@@ -66,7 +66,7 @@
               >
             </div>
           {:else}
-            <h2 class="text-3xl font-bold tracking-tight text-white">{wishlist.name}</h2>
+            <h2 class="text-3xl font-bold tracking-tight text-foreground">{wishlist.name}</h2>
             {#if wishlist.isDefault}
               <Badge
                 class="border-amber-500/20 bg-amber-500/10 text-[10px] font-bold text-amber-500 ring-1 ring-amber-500/20"
@@ -76,7 +76,7 @@
             {/if}
           {/if}
         </div>
-        <p class="font-mono text-xs tracking-wider text-zinc-500 uppercase">
+        <p class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
           {wishlist.count}
           {m.stats_rolling_stocks()} · Last updated {formatDate(wishlist.updatedAt)}
         </p>
@@ -93,7 +93,7 @@
             variant="outline"
             size="icon"
             onclick={toggleSettings}
-            class="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            class="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             {#if showSettings}
               <X size={18} />
@@ -104,7 +104,7 @@
 
           {#if showSettings}
             <div
-              class="absolute top-12 right-0 z-50 w-48 animate-in rounded-xl border border-zinc-800 bg-[#0c0c0c] p-1 shadow-2xl duration-200 fade-in zoom-in"
+              class="absolute top-12 right-0 z-50 w-48 animate-in rounded-xl border border-border bg-card p-1 shadow-2xl duration-200 fade-in zoom-in"
               onmouseleave={() => (showSettings = false)}
               role="menu"
               tabindex="-1"
@@ -114,7 +114,7 @@
                   isEditing = true;
                   showSettings = false;
                 }}
-                class="flex w-full items-center rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                class="flex w-full items-center rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Edit2 size={14} class="mr-2" />
                 Rename
@@ -124,12 +124,12 @@
                   onSetDefault?.();
                   showSettings = false;
                 }}
-                class="flex w-full items-center rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                class="flex w-full items-center rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Star size={14} class="mr-2" />
                 Set as Default
               </button>
-              <div class="my-1 h-px bg-zinc-800"></div>
+              <div class="my-1 h-px bg-border"></div>
               <button
                 onclick={() => {
                   onDelete?.(wishlist.id);

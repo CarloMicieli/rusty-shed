@@ -64,16 +64,16 @@
 <div class="flex items-start justify-between">
   <div class="min-w-0 flex-1">
     <div class="flex flex-wrap items-center gap-1.5">
-      <span class="text-xs font-semibold text-zinc-200">{model.manufacturer}</span>
-      <span class="text-zinc-700" aria-hidden="true">·</span>
-      <span class="font-mono text-xs text-zinc-500">{model.product_code}</span>
+      <span class="text-xs font-semibold text-foreground">{model.manufacturer}</span>
+      <span class="text-muted-foreground/40" aria-hidden="true">·</span>
+      <span class="font-mono text-xs text-muted-foreground">{model.product_code}</span>
     </div>
     <div class="mt-0.5">
       {#if editable}
         {#if isEditingDescription}
           <input
             bind:this={descriptionInput}
-            class="w-full rounded-sm border border-zinc-700 bg-zinc-900/70 px-1.5 py-0.5 text-sm text-zinc-200 outline-none focus:border-[#E2994F]"
+            class="w-full rounded-sm border border-border bg-card/70 px-1.5 py-0.5 text-sm text-foreground outline-none focus:border-primary"
             bind:value={descriptionDraft}
             onblur={saveDescription}
             onkeydown={(e) => {
@@ -91,14 +91,14 @@
         {:else}
           <button
             type="button"
-            class="line-clamp-1 cursor-text text-left text-sm text-zinc-400 transition-colors hover:text-zinc-300"
+            class="line-clamp-1 cursor-text text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
             onclick={startDescriptionEditing}
           >
             {model.description || m.details_placeholder()}
           </button>
         {/if}
       {:else if model.description}
-        <p class="line-clamp-1 text-sm text-zinc-400">{model.description}</p>
+        <p class="line-clamp-1 text-sm text-muted-foreground">{model.description}</p>
       {/if}
 
       {#if model.description && model.descriptionLang !== currentLocale}

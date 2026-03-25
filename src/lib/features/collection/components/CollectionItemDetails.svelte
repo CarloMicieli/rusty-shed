@@ -142,9 +142,9 @@
   ]);
 </script>
 
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
-  <div class="border-b border-[#1F1F1F] px-4 py-3">
-    <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+<div class="overflow-hidden rounded-lg border border-border bg-card">
+  <div class="border-b border-border px-4 py-3">
+    <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
       {m.collection_item_section_acquisition()}
     </h3>
   </div>
@@ -152,7 +152,7 @@
   <div class="space-y-3 p-4">
     <!-- Seller -->
     <div class="space-y-1">
-      <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+      <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
         {m.collection_item_seller()}
       </span>
       <InPlaceSelectEdit
@@ -166,7 +166,7 @@
 
     <!-- Notes -->
     <div class="space-y-1">
-      <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+      <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
         {m.collection_item_notes()}
       </span>
       <InPlaceEdit
@@ -178,10 +178,10 @@
     </div>
 
     <!-- Two-column footer: Price | Purchase Date -->
-    <div class="grid grid-cols-2 gap-x-3 border-t border-[#1F1F1F] pt-3">
+    <div class="grid grid-cols-2 gap-x-3 border-t border-border pt-3">
       <!-- Price -->
       <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
           {m.collection_item_price()}
         </span>
         {#if isPriceEditing}
@@ -193,7 +193,7 @@
               onblur={savePrice}
               onkeydown={handlePriceKeydown}
               class="w-full"
-              inputClass="border-[#D48A42] ring-[#D48A42]/30"
+              inputClass="border-primary ring-primary/30"
               label={m.collection_item_price()}
               autofocus
             />
@@ -203,7 +203,7 @@
           </div>
         {:else}
           <div
-            class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)]"
+            class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15"
             onclick={startEditingPrice}
             onkeydown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') startEditingPrice();
@@ -212,11 +212,11 @@
             tabindex="0"
           >
             {#if purchasedInfo?.price}
-              <span class="text-xs font-semibold text-[#E0E0E0]">
+              <span class="text-xs font-semibold text-foreground">
                 {formatPrice(purchasedInfo.price.amount, purchasedInfo.price.currency)}
               </span>
             {:else}
-              <span class="text-xs text-[#808080] italic">—</span>
+              <span class="text-xs text-muted-foreground italic">—</span>
             {/if}
           </div>
         {/if}
@@ -224,7 +224,7 @@
 
       <!-- Purchase Date -->
       <div class="flex flex-col gap-0.5">
-        <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+        <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
           {m.collection_item_purchase_date()}
         </span>
         <DatePickerField

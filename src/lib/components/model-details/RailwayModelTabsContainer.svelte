@@ -99,22 +99,18 @@
 </script>
 
 <Tabs bind:value={activeTab} class="w-full">
-  <TabsList
-    class="grid h-auto w-full grid-cols-2 rounded-lg border border-zinc-800 bg-zinc-900 p-1"
-  >
+  <TabsList class="grid h-auto w-full grid-cols-2 rounded-lg border border-border bg-card p-1">
     <TabsTrigger
       value="details"
-      class="rounded-md text-xs text-zinc-400 transition-colors
-        data-[state=active]:bg-[#E2994F]/10 data-[state=active]:text-[#E2994F] data-[state=active]:shadow-none
-        dark:text-zinc-400 dark:data-[state=active]:border-input dark:data-[state=active]:bg-[#E2994F]/10 dark:data-[state=active]:text-[#E2994F]"
+      class="rounded-md text-xs text-muted-foreground transition-colors
+        data-[state=active]:bg-[#E2994F]/10 data-[state=active]:text-[#E2994F] data-[state=active]:shadow-none"
     >
       {m.railway_model_details()}
     </TabsTrigger>
     <TabsTrigger
       value="rolling-stock"
-      class="rounded-md text-xs text-zinc-400 transition-colors
-        data-[state=active]:bg-[#E2994F]/10 data-[state=active]:text-[#E2994F] data-[state=active]:shadow-none
-        dark:text-zinc-400 dark:data-[state=active]:border-input dark:data-[state=active]:bg-[#E2994F]/10 dark:data-[state=active]:text-[#E2994F]"
+      class="rounded-md text-xs text-muted-foreground transition-colors
+        data-[state=active]:bg-[#E2994F]/10 data-[state=active]:text-[#E2994F] data-[state=active]:shadow-none"
     >
       {m.rolling_stock_list()}
     </TabsTrigger>
@@ -189,7 +185,7 @@
         <div class="mt-4 flex justify-start">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-transparent px-3 py-1.5 text-xs font-medium text-[#E0E0E0] transition-colors hover:border-[#D48A42]/50 hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/15 hover:text-primary"
             onclick={() => {
               createDrawerOpen = true;
             }}
@@ -202,7 +198,7 @@
       <div class="rounded-lg border border-dashed border-border p-8 text-center">
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-lg border border-[#1F1F1F] bg-transparent px-4 py-2 text-sm font-medium text-[#E0E0E0] transition-colors hover:border-[#D48A42]/50 hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
+          class="inline-flex items-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/15 hover:text-primary"
           onclick={() => {
             createDrawerOpen = true;
           }}
@@ -211,8 +207,8 @@
         </button>
       </div>
     {:else}
-      <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-        <p class="text-sm text-zinc-600 italic">{m.no_additional_details()}</p>
+      <div class="rounded-lg border border-border bg-card/40 p-4">
+        <p class="text-sm text-muted-foreground italic">{m.no_additional_details()}</p>
       </div>
     {/if}
   </TabsContent>

@@ -124,7 +124,7 @@
   <!-- Trigger -->
   <div
     bind:this={triggerEl}
-    class="group inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 transition-colors hover:bg-[rgba(212,138,66,0.15)]"
+    class="group inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 transition-colors hover:bg-primary/15"
     role="button"
     tabindex="0"
     aria-haspopup="listbox"
@@ -132,20 +132,20 @@
     onclick={open}
     onkeydown={handleTriggerKeydown}
   >
-    <span class="font-mono text-xs text-zinc-200">{displayValue}</span>
+    <span class="font-mono text-xs text-foreground">{displayValue}</span>
     <Pencil
       size={10}
-      class="text-zinc-600 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+      class="text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100"
     />
   </div>
 
   <!-- Picker panel -->
   {#if isOpen}
     <div
-      class="absolute top-full left-0 z-50 mt-1 min-w-[10rem] overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] shadow-xl"
+      class="absolute top-full left-0 z-50 mt-1 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-card shadow-xl"
     >
-      <div class="flex items-center justify-between border-b border-[#1F1F1F] px-2 py-1">
-        <span class="text-[10px] font-medium tracking-wider text-zinc-500 uppercase"
+      <div class="flex items-center justify-between border-b border-border px-2 py-1">
+        <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
           >{m.badge_picker_close()}</span
         >
       </div>
@@ -162,10 +162,10 @@
             aria-selected={option.id === selectedValue || option.label === selectedValue}
             class="flex cursor-pointer items-center px-3 py-1.5 text-xs transition-colors
               {option.id === selectedValue || option.label === selectedValue
-              ? 'bg-[rgba(212,138,66,0.2)] text-[#D48A42]'
-              : 'text-[#E0E0E0]'}
-              {i === focusedIndex ? 'bg-[rgba(212,138,66,0.1)]' : ''}
-              hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
+              ? 'bg-primary/20 text-primary'
+              : 'text-foreground'}
+              {i === focusedIndex ? 'bg-primary/10' : ''}
+              hover:bg-primary/15 hover:text-primary"
             onclick={() => void select(option.id)}
             onkeydown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {

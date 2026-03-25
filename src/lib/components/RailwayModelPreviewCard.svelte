@@ -232,7 +232,7 @@
       Subtle grid pattern via inline background-image; bg-zinc-900 as base.
     -->
     <div
-      class="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900"
+      class="relative aspect-video w-full overflow-hidden rounded-xl bg-card"
       style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
     >
       {#if resolvedPhotoUrl}
@@ -265,14 +265,14 @@
           {#each model.digitalFeatures as feature (feature)}
             {#if feature === 'Sound'}
               <div
-                class="rounded-full bg-black/70 p-1"
+                class="rounded-full bg-background/70 p-1"
                 title={m.railway_model_sound_equipped_title()}
               >
                 <Volume2 class="h-3.5 w-3.5 text-zinc-300" aria-hidden="true" />
               </div>
             {:else if feature === 'DCC'}
               <div
-                class="rounded-full bg-black/70 p-1"
+                class="rounded-full bg-background/70 p-1"
                 title={m.railway_model_dcc_equipped_title()}
               >
                 <Zap class="h-3.5 w-3.5 text-zinc-300" aria-hidden="true" />
@@ -304,25 +304,25 @@
     </div>
 
     <!-- Separator between image and technical specs -->
-    <Separator class="my-2.5 bg-zinc-800" />
+    <Separator class="my-2.5 bg-border" />
 
     <!-- Technical specs grid: Road Number · Scale · Era -->
-    <div class="grid grid-cols-3 divide-x divide-zinc-800">
+    <div class="grid grid-cols-3 divide-x divide-border">
       <div class="flex flex-col items-center gap-0.5 pr-2">
-        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
           {m.depot_road_number()}
         </span>
-        <span class="font-mono text-xs text-zinc-300">{model.roadNumber ?? '—'}</span>
+        <span class="font-mono text-xs text-foreground">{model.roadNumber ?? '—'}</span>
       </div>
       <div class="flex flex-col items-center gap-0.5 px-2">
-        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
           {m.depot_scale()}
         </span>
-        <span class="font-mono text-xs text-zinc-300">{model.scale ?? '—'}</span>
+        <span class="font-mono text-xs text-foreground">{model.scale ?? '—'}</span>
       </div>
       <div class="flex flex-col items-center gap-0.5 pl-2">
-        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">Era</span>
-        <span class="font-mono text-xs text-zinc-300">{model.era ?? '—'}</span>
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">Era</span>
+        <span class="font-mono text-xs text-foreground">{model.era ?? '—'}</span>
       </div>
     </div>
 

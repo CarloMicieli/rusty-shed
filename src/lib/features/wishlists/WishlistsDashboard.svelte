@@ -206,24 +206,24 @@
             </div>
           </div>
         {:else}
-          <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
+          <div class="space-y-4 rounded-lg border border-border/20 bg-muted/20 p-4">
             <div
-              class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
+              class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-border/10 bg-card/50 px-4 py-24 text-center"
             >
               <div class="relative">
-                <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
+                <div class="absolute inset-0 rounded-full bg-muted/10 blur-3xl"></div>
                 <div
-                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
+                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-border/20 bg-muted/50"
                 >
-                  <Heart size={56} class="text-zinc-600 opacity-50" />
+                  <Heart size={56} class="text-muted-foreground opacity-50" />
                 </div>
               </div>
 
               <div class="flex max-w-sm flex-col items-center gap-3 text-center">
-                <h3 class="text-2xl font-bold text-zinc-200">
+                <h3 class="text-2xl font-bold text-foreground">
                   {m.app_wishlists()}
                 </h3>
-                <p class="text-sm leading-relaxed text-zinc-500">
+                <p class="text-sm leading-relaxed text-muted-foreground">
                   {m.wishlists_empty_state()}
                 </p>
               </div>

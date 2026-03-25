@@ -110,21 +110,21 @@
   ]);
 </script>
 
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F]">
-  <div class="border-b border-[#1F1F1F] px-4 py-3">
-    <h3 class="text-xs font-semibold tracking-widest text-[#808080] uppercase">
+<div class="overflow-hidden rounded-lg border border-border bg-card">
+  <div class="border-b border-border px-4 py-3">
+    <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
       {m.collection_item_section_condition()}
     </h3>
   </div>
 
   <div class="grid grid-cols-3 grid-rows-[auto_auto] items-start gap-x-3 gap-y-0.5 p-4">
-    <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+    <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.collection_item_purchase_condition()}
     </span>
-    <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+    <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.collection_item_model_condition()}
     </span>
-    <span class="text-[9px] font-medium tracking-wider text-[#808080] uppercase">
+    <span class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.collection_item_box_condition()}
     </span>
 
@@ -136,7 +136,7 @@
       options={purchaseConditionSelectOptions}
       placeholder={m.collection_item_not_recorded()}
       class={item.purchaseCondition && isPositiveCondition(item.purchaseCondition)
-        ? 'text-[#D48A42]'
+        ? 'text-primary'
         : ''}
       onSave={(v) =>
         saveUpdate({ kind: 'purchaseCondition', data: { purchase_condition: v || null } })}
@@ -148,9 +148,7 @@
         : m.collection_item_not_recorded()}
       options={modelConditionSelectOptions}
       placeholder={m.collection_item_not_recorded()}
-      class={item.modelCondition && isPositiveCondition(item.modelCondition)
-        ? 'text-[#D48A42]'
-        : ''}
+      class={item.modelCondition && isPositiveCondition(item.modelCondition) ? 'text-primary' : ''}
       onSave={(v) => saveUpdate({ kind: 'modelCondition', data: { model_condition: v || null } })}
     />
     <InPlaceSelectEdit
@@ -160,7 +158,7 @@
         : m.collection_item_not_recorded()}
       options={boxConditionSelectOptions}
       placeholder={m.collection_item_not_recorded()}
-      class={item.boxCondition && isPositiveCondition(item.boxCondition) ? 'text-[#D48A42]' : ''}
+      class={item.boxCondition && isPositiveCondition(item.boxCondition) ? 'text-primary' : ''}
       onSave={(v) => saveUpdate({ kind: 'boxCondition', data: { box_condition: v || null } })}
     />
   </div>

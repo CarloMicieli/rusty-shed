@@ -43,27 +43,27 @@
   }
 </script>
 
-<div class="rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="rounded-[8px] border border-border bg-card p-4">
   {#if pricedItems.length === 0}
     <div class="flex items-center justify-center gap-2 py-2">
-      <CircleDollarSign class="size-8 text-zinc-700" />
-      <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+      <CircleDollarSign class="size-8 text-muted-foreground" />
+      <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
         {m.wishlist_value_bar_no_price_data()}
       </span>
     </div>
   {:else}
     <!-- Top row -->
     <div class="mb-3 flex items-center justify-between">
-      <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+      <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
         {m.wishlist_value_bar_total_label()}
       </span>
-      <span class="font-mono text-lg font-bold text-white">
+      <span class="font-mono text-lg font-bold text-foreground">
         {formatAmount(totals.total, currency)}
       </span>
     </div>
 
     <!-- Segmented bar -->
-    <div class="mb-3 flex h-3 overflow-hidden rounded-full bg-[#1A1A1A]">
+    <div class="mb-3 flex h-3 overflow-hidden rounded-full bg-muted">
       {#if percentages.high > 0}
         <div
           class="h-full bg-[#D48A42] transition-all duration-500"
@@ -87,26 +87,26 @@
     <!-- Footer labels -->
     <div class="flex justify-between gap-2">
       <div class="flex flex-col gap-0.5">
-        <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+        <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
           {m.wishlist_priority_high()}
         </span>
-        <span class="font-mono text-xs text-white/70">
+        <span class="font-mono text-xs text-foreground/70">
           {formatAmount(totals.high, currency)}
         </span>
       </div>
       <div class="flex flex-col items-center gap-0.5">
-        <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+        <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
           {m.wishlist_priority_normal()}
         </span>
-        <span class="font-mono text-xs text-white/70">
+        <span class="font-mono text-xs text-foreground/70">
           {formatAmount(totals.normal, currency)}
         </span>
       </div>
       <div class="flex flex-col items-end gap-0.5">
-        <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+        <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
           {m.wishlist_priority_low()}
         </span>
-        <span class="font-mono text-xs text-white/70">
+        <span class="font-mono text-xs text-foreground/70">
           {formatAmount(totals.low, currency)}
         </span>
       </div>

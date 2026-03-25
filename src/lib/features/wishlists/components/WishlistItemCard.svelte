@@ -75,7 +75,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="cursor-pointer" onclick={() => goto(`/wishlists/${wishlistId}/items/${item.id}`)}>
   <Card
-    class="group relative flex flex-col overflow-hidden border-2 border-white/5 bg-[#0c0c0c] transition-all duration-300 hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.07)]"
+    class="group relative flex flex-col overflow-hidden border-2 border-border/20 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.07)]"
   >
     <!-- Priority Badge overlay -->
     {#if item.priority === 'HIGH'}
@@ -92,11 +92,13 @@
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 overflow-hidden">
-            <span class="truncate text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+            <span
+              class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {modelDetails?.manufacturer.display ?? 'Searching...'}
             </span>
           </div>
-          <h3 class="truncate text-sm font-bold text-white">
+          <h3 class="truncate text-sm font-bold text-foreground">
             {modelDetails?.description ?? item.railwayModelId}
           </h3>
         </div>
@@ -106,7 +108,7 @@
             e.stopPropagation();
             onRemove?.(item.id);
           }}
-          class="text-zinc-600 transition-colors hover:text-red-400"
+          class="text-muted-foreground transition-colors hover:text-red-400"
         >
           <Trash2 size={14} />
         </button>
@@ -116,7 +118,7 @@
     <CardContent class="flex flex-1 flex-col p-4 pt-0">
       <!-- Image Area -->
       <div
-        class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-zinc-900/50"
+        class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted/50"
         style="background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 15px 15px;"
       >
         {#if photoUrl}
@@ -141,7 +143,7 @@
         <div class="absolute right-2 bottom-2 z-20">
           <Badge
             variant="outline"
-            class="border-white/10 bg-black/60 font-mono text-[9px] backdrop-blur-md"
+            class="border-border/20 bg-background/60 font-mono text-[9px] backdrop-blur-md"
           >
             {statusLabel}
           </Badge>
@@ -150,15 +152,19 @@
 
       <!-- Specs row -->
       <div class="mt-3 grid grid-cols-2 gap-2">
-        <div class="rounded-lg bg-white/5 p-2 text-center">
-          <p class="text-[8px] font-bold tracking-tighter text-zinc-600 uppercase">Price Target</p>
+        <div class="rounded-lg bg-muted/40 p-2 text-center">
+          <p class="text-[8px] font-bold tracking-tighter text-muted-foreground uppercase">
+            Price Target
+          </p>
           <p class="font-mono text-xs font-bold text-amber-500">
             {desiredPriceStr ?? '—'}
           </p>
         </div>
-        <div class="rounded-lg bg-white/5 p-2 text-center">
-          <p class="text-[8px] font-bold tracking-tighter text-zinc-600 uppercase">Product Code</p>
-          <p class="font-mono text-xs text-zinc-300">
+        <div class="rounded-lg bg-muted/40 p-2 text-center">
+          <p class="text-[8px] font-bold tracking-tighter text-muted-foreground uppercase">
+            Product Code
+          </p>
+          <p class="font-mono text-xs text-foreground">
             {modelDetails?.productCode ?? '—'}
           </p>
         </div>
@@ -169,7 +175,7 @@
         <Button
           variant="secondary"
           size="sm"
-          class="h-8 flex-1 border-zinc-700 bg-zinc-800 text-[11px] font-bold hover:bg-zinc-700"
+          class="h-8 flex-1 border-border bg-muted text-[11px] font-bold hover:bg-muted/80"
           onclick={(e: MouseEvent) => {
             e.stopPropagation();
             onMove?.(item.id);
@@ -182,7 +188,7 @@
           <Button
             variant="secondary"
             size="sm"
-            class="h-8 flex-1 border-zinc-700 bg-zinc-800 text-[11px] font-bold hover:bg-zinc-700"
+            class="h-8 flex-1 border-border bg-muted text-[11px] font-bold hover:bg-muted/80"
             onclick={(e: MouseEvent) => {
               e.stopPropagation();
               onPurchase?.(item.id);

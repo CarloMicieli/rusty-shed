@@ -60,17 +60,17 @@
   <Popover.Trigger
     {disabled}
     {id}
-    class="-mx-1 flex cursor-pointer items-center justify-start rounded p-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)] disabled:opacity-50 {className}"
+    class="-mx-1 flex cursor-pointer items-center justify-start rounded p-1 text-left transition-colors duration-150 outline-none hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15 disabled:opacity-50 {className}"
   >
     {#if value}
-      <span class="text-xs font-semibold text-[#E0E0E0]">
+      <span class="text-xs font-semibold text-foreground">
         {formatDate(value)}
       </span>
     {:else}
-      <span class="text-xs font-semibold text-[#808080] italic">{placeholder}</span>
+      <span class="text-xs font-semibold text-muted-foreground italic">{placeholder}</span>
     {/if}
   </Popover.Trigger>
-  <Popover.Content class="w-auto border-[#1F1F1F] bg-[#0F0F0F] p-0" {align}>
+  <Popover.Content class="w-auto border-border bg-card p-0" {align}>
     <Calendar
       type="single"
       value={calendarValue}

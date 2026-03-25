@@ -116,7 +116,7 @@
       onkeydown={handleKeydown}
       onblur={cancel}
       disabled={isSaving}
-      class="w-full rounded border border-[#D48A42] bg-[#0F0F0F] px-2 py-1 text-sm text-[#E0E0E0] ring-1 ring-[#D48A42]/30 outline-none"
+      class="w-full rounded border border-primary bg-card px-2 py-1 text-sm text-foreground ring-1 ring-primary/30 outline-none"
     >
       {#each options as option (option.value)}
         <option value={option.value}>{option.label}</option>
@@ -128,7 +128,7 @@
   </div>
 {:else}
   <div
-    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)] {extraClass}"
+    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15 {extraClass}"
     onclick={startEditing}
     onkeydown={(e) => {
       if (e.key === 'Enter' || e.key === ' ') startEditing();
@@ -140,9 +140,9 @@
     aria-expanded="false"
   >
     {#if value}
-      <span class="text-sm text-[#E0E0E0]">{displayLabel}</span>
+      <span class="text-sm text-foreground">{displayLabel}</span>
     {:else}
-      <span class="text-sm text-[#808080] italic"
+      <span class="text-sm text-muted-foreground italic"
         >{placeholder ?? m.edit_field_placeholder_empty()}</span
       >
     {/if}

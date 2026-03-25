@@ -83,10 +83,10 @@
   {#each units as unit (unit.id)}
     {@const formState = rollingStockFormState.get(unit.id)}
     {@const specLoaded = rollingStockSpecLoaded.has(unit.id)}
-    <Accordion.Item value={unit.id} class="rounded-lg border border-zinc-800 bg-zinc-900/40">
+    <Accordion.Item value={unit.id} class="rounded-lg border border-border bg-card/40">
       <!-- Custom header: trigger (toggle) + Edit Specs button as siblings -->
       <AccordionPrimitive.Header
-        class="flex items-center gap-2 rounded-t-lg border-b border-white/10 bg-white/[0.03] px-3 py-2
+        class="flex items-center gap-2 rounded-t-lg border-b border-border/20 bg-foreground/[0.03] px-3 py-2
                data-[state=closed]:rounded-b-lg data-[state=closed]:border-b-transparent"
       >
         <!-- Trigger spans the identity + category area + chevron -->
@@ -103,7 +103,7 @@
               </span>
             {/if}
             {#if editable}
-              <div class="shrink-0 font-mono text-sm font-bold text-zinc-100">
+              <div class="shrink-0 font-mono text-sm font-bold text-foreground">
                 <InPlaceEdit
                   value={unit.road_number ?? ''}
                   placeholder={m.road_number()}
@@ -111,7 +111,7 @@
                 />
               </div>
             {:else}
-              <span class="shrink-0 font-mono text-sm font-bold text-zinc-100 normal-case">
+              <span class="shrink-0 font-mono text-sm font-bold text-foreground normal-case">
                 {unit.road_number ?? '—'}
               </span>
             {/if}
@@ -129,7 +129,7 @@
                 onSelect={(cat) => onSaveCategory(unit.id, cat)}
               />
               {#if subcategoryOpts.length > 0}
-                <span class="text-xs text-zinc-500">•</span>
+                <span class="text-xs text-muted-foreground">•</span>
                 <div
                   class="inline-flex items-center"
                   class:animate-pulse={formState?.subcategoryFlashed}
@@ -151,7 +151,7 @@
               )}
               {@const subcatLabel =
                 subcatOpts.find((o) => o.id === unit.subcategory)?.label ?? null}
-              <span class="text-xs text-zinc-400">
+              <span class="text-xs text-muted-foreground">
                 {catLabel}{subcatLabel ? ` • ${subcatLabel}` : ''}
               </span>
             {/if}
@@ -167,7 +167,7 @@
         {#if editable}
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-md border border-[#1F1F1F] bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-[#808080] uppercase transition-colors hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
+            class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
             onclick={() => {
               specsDrawerOpenFor = unit.id;
             }}
@@ -183,10 +183,10 @@
         <dl class="grid grid-cols-4 gap-x-4 gap-y-3">
           <!-- Row 1: Series Code | Livery | Length | Service Level (PASSENGER_CAR only) -->
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.series_code()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable}
                 <InPlaceEdit
                   value={unit.series_code}
@@ -199,10 +199,10 @@
             </dd>
           </div>
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.livery()}
             </dt>
-            <dd class="truncate text-xs text-zinc-200">
+            <dd class="truncate text-xs text-foreground">
               {#if editable}
                 <InPlaceEdit
                   value={unit.livery ?? ''}
@@ -215,10 +215,10 @@
             </dd>
           </div>
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.rolling_stock_field_length()}
             </dt>
-            <dd class="font-mono text-xs text-zinc-200">
+            <dd class="font-mono text-xs text-foreground">
               {#if editable && specLoaded}
                 <InPlaceEdit
                   value={unit.length_mm != null ? String(unit.length_mm) : ''}
@@ -226,7 +226,7 @@
                   onSave={(v) => onSaveLength(unit.id, v)}
                 />
               {:else if editable}
-                <span class="text-xs text-zinc-500 italic">—</span>
+                <span class="text-xs text-muted-foreground italic">—</span>
               {:else}
                 {unit.length_mm != null ? `${unit.length_mm} mm` : '—'}
               {/if}
@@ -235,10 +235,10 @@
           <!-- Service Level: PASSENGER_CAR only, edit mode only -->
           {#if editable && specLoaded && (formState?.category ?? unit.category) === 'PASSENGER_CAR'}
             <div class="flex flex-col gap-0.5">
-              <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+              <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
                 {m.rolling_stock_field_service_level()}
               </dt>
-              <dd class="text-xs text-zinc-200">
+              <dd class="text-xs text-foreground">
                 <BadgePicker
                   value={formState?.serviceLevel ?? ''}
                   options={SERVICE_LEVEL_OPTIONS}
@@ -252,10 +252,10 @@
 
           <!-- Row 2: Depot | Control Type | DCC Interface | (empty) -->
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.depot()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable}
                 <InPlaceEdit
                   value={unit.depot ?? ''}
@@ -268,10 +268,10 @@
             </dd>
           </div>
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.control_type()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable && specLoaded && ['LOCOMOTIVE', 'ELECTRIC_MULTIPLE_UNIT', 'RAILCAR'].includes(formState?.category ?? unit.category ?? '')}
                 <BadgePicker
                   value={formState?.control ?? unit.control_type ?? ''}
@@ -279,17 +279,17 @@
                   onSelect={(id) => onSaveSpec(unit.id, 'control', id)}
                 />
               {:else if editable && !specLoaded}
-                <span class="text-xs text-zinc-500 italic">—</span>
+                <span class="text-xs text-muted-foreground italic">—</span>
               {:else}
                 {unit.control_type ?? '—'}
               {/if}
             </dd>
           </div>
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.dcc_interface()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable && specLoaded && ['LOCOMOTIVE', 'ELECTRIC_MULTIPLE_UNIT', 'RAILCAR'].includes(formState?.category ?? unit.category ?? '')}
                 <BadgePicker
                   value={formState?.dccInterface ?? unit.dcc_interface ?? ''}
@@ -297,7 +297,7 @@
                   onSelect={(id) => onSaveSpec(unit.id, 'dccInterface', id)}
                 />
               {:else if editable && !specLoaded}
-                <span class="text-xs text-zinc-500 italic">—</span>
+                <span class="text-xs text-muted-foreground italic">—</span>
               {:else}
                 {unit.dcc_interface ?? '—'}
               {/if}
@@ -307,10 +307,10 @@
 
           <!-- Row 3: Coupling Socket | Close Couplers | Digital Shunting | (empty) -->
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.specs_drawer_field_coupling_socket()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable && specLoaded}
                 <BadgePicker
                   value={formState?.couplingSocket ?? unit.coupling_type ?? '—'}
@@ -318,17 +318,17 @@
                   onSelect={(id) => onSaveSpec(unit.id, 'couplingSocket', id)}
                 />
               {:else if editable}
-                <span class="text-xs text-zinc-500 italic">—</span>
+                <span class="text-xs text-muted-foreground italic">—</span>
               {:else}
                 {unit.coupling_type ?? '—'}
               {/if}
             </dd>
           </div>
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.rolling_stock_field_close_couplers()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable && specLoaded}
                 <input
                   type="checkbox"
@@ -342,17 +342,17 @@
                     )}
                 />
               {:else if editable}
-                <span class="text-xs text-zinc-500 italic">—</span>
+                <span class="text-xs text-muted-foreground italic">—</span>
               {:else}
                 {unit.close_couplers === true ? '✓' : unit.close_couplers === false ? '✗' : '—'}
               {/if}
             </dd>
           </div>
           <div class="flex flex-col gap-0.5">
-            <dt class="text-[9px] font-medium tracking-wider text-zinc-500 uppercase">
+            <dt class="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
               {m.rolling_stock_field_digital_shunting()}
             </dt>
-            <dd class="text-xs text-zinc-200">
+            <dd class="text-xs text-foreground">
               {#if editable && specLoaded}
                 <input
                   type="checkbox"
@@ -366,7 +366,7 @@
                     )}
                 />
               {:else if editable}
-                <span class="text-xs text-zinc-500 italic">—</span>
+                <span class="text-xs text-muted-foreground italic">—</span>
               {:else}
                 {unit.digital_shunting === true ? '✓' : unit.digital_shunting === false ? '✗' : '—'}
               {/if}

@@ -232,7 +232,7 @@
   }
 </script>
 
-<div class="railway-model-card rounded-2xl border border-zinc-800 bg-[#0C0C0C] {className}">
+<div class="railway-model-card rounded-2xl border border-border bg-card {className}">
   <!-- ═══ Header ════════════════════════════════════════════════════════════ -->
   <div class="p-4 pb-3">
     <RailwayModelCardHeader
@@ -258,10 +258,11 @@
   <!-- ═══ Specs bar ════════════════════════════════════════════════════════ -->
   <div
     data-testid="specs"
-    class="mx-4 mt-3 grid grid-cols-5 divide-x divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/40 py-2"
+    class="mx-4 mt-3 grid grid-cols-5 divide-x divide-border rounded-lg border border-border bg-card/40 py-2"
   >
     <div class="flex flex-col items-center gap-1 px-2">
-      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+      <span
+        class="h-3 text-[9px] leading-none font-medium tracking-wider text-muted-foreground uppercase"
         >{m.railway_model_field_category() || ' '}</span
       >
       <div class="flex h-4 items-center justify-center">
@@ -272,39 +273,42 @@
             onSelect={saveCategory}
           />
         {:else}
-          <span class="text-xs leading-none text-zinc-200">{model.category ?? '—'}</span>
+          <span class="text-xs leading-none text-foreground">{model.category ?? '—'}</span>
         {/if}
       </div>
     </div>
 
     <div class="flex flex-col items-center gap-1 px-2">
-      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+      <span
+        class="h-3 text-[9px] leading-none font-medium tracking-wider text-muted-foreground uppercase"
         >{m.railway_model_field_scale() || ' '}</span
       >
       <div class="flex h-4 items-center justify-center">
         {#if editable}
           <BadgePicker value={localScale || '—'} options={scaleOptions} onSelect={saveScale} />
         {:else}
-          <span class="font-mono text-xs leading-none text-zinc-200">{model.scale ?? '—'}</span>
+          <span class="font-mono text-xs leading-none text-foreground">{model.scale ?? '—'}</span>
         {/if}
       </div>
     </div>
 
     <div class="flex flex-col items-center gap-1 px-2">
-      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+      <span
+        class="h-3 text-[9px] leading-none font-medium tracking-wider text-muted-foreground uppercase"
         >{m.railway_model_field_era() || ' '}</span
       >
       <div class="flex h-4 items-center justify-center">
         {#if editable}
           <BadgePicker value={localEra || '—'} options={eraOptions} onSelect={saveEra} />
         {:else}
-          <span class="font-mono text-xs leading-none text-zinc-200">{model.era ?? '—'}</span>
+          <span class="font-mono text-xs leading-none text-foreground">{model.era ?? '—'}</span>
         {/if}
       </div>
     </div>
 
     <div class="flex flex-col items-center gap-1 px-2">
-      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+      <span
+        class="h-3 text-[9px] leading-none font-medium tracking-wider text-muted-foreground uppercase"
         >{m.railway_model_field_delivery_date() || ' '}</span
       >
       <div class="flex h-4 items-center justify-center">
@@ -315,7 +319,7 @@
             onSave={saveDeliveryDate}
           />
         {:else}
-          <span class="font-mono text-xs leading-none text-zinc-200"
+          <span class="font-mono text-xs leading-none text-foreground"
             >{model.delivery_date ?? '—'}</span
           >
         {/if}
@@ -323,11 +327,12 @@
     </div>
 
     <div class="flex flex-col items-center gap-1 px-2">
-      <span class="h-3 text-[9px] leading-none font-medium tracking-wider text-zinc-500 uppercase"
+      <span
+        class="h-3 text-[9px] leading-none font-medium tracking-wider text-muted-foreground uppercase"
         >{m.railway_model_field_status() || ' '}</span
       >
       <div class="flex h-4 items-center justify-center">
-        <span class="text-xs leading-none text-zinc-200"
+        <span class="text-xs leading-none text-foreground"
           >{model.status === 'InCollection' ? 'In Collection' : model.status}</span
         >
       </div>
