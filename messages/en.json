@@ -907,6 +907,7 @@
   "specs_drawer_field_body_material": "Body Material",
   "specs_drawer_field_chassis_material": "Chassis Material",
   "specs_drawer_field_lighting": "Lighting",
+  "specs_drawer_field_sprung_buffers": "Sprung Buffers",
   "specs_drawer_field_dcc_interface": "DCC Interface",
   "specs_drawer_field_control_type": "Control Type",
   "specs_drawer_field_coupling_socket": "Coupling Socket",

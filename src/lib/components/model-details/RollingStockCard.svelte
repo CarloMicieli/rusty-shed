@@ -61,6 +61,7 @@
 
   // ── Technical spec fields (loaded via getRailwayModelById on first expand) ───
   let localFlywheelFitted = $state<'YES' | 'NO' | null>(null);
+  let localSprungBuffers = $state<'YES' | 'NO' | null>(null);
   let localBodyShell = $state<string | null>(null);
   let localChassis = $state<string | null>(null);
   let localInteriorLights = $state<'YES' | 'NO' | null>(null);
@@ -187,6 +188,8 @@
     const coupling = ts?.coupling;
     localFlywheelFitted =
       ts?.flywheel_fitted === 'YES' ? 'YES' : ts?.flywheel_fitted === 'NO' ? 'NO' : null;
+    localSprungBuffers =
+      ts?.sprung_buffers === 'YES' ? 'YES' : ts?.sprung_buffers === 'NO' ? 'NO' : null;
     localBodyShell = ts?.body_shell ?? null;
     localChassis = ts?.chassis ?? null;
     localInteriorLights =
@@ -321,6 +324,7 @@
       livery: localLivery || null,
       depot: localDepot || null,
       flywheelFitted: featureFlagToBool(localFlywheelFitted),
+      sprungBuffers: featureFlagToBool(localSprungBuffers),
       bodyShell: localBodyShell || null,
       chassis: localChassis || null,
       interiorLights: localInteriorLights,

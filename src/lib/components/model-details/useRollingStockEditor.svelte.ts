@@ -12,6 +12,7 @@ export interface RsFormState {
   livery: string;
   depot: string;
   flywheelFitted: boolean | null;
+  sprungBuffers: boolean | null;
   bodyShell: string;
   chassis: string;
   interiorLights: string;
@@ -36,6 +37,7 @@ function getEmptyRsForm(): RsFormState {
     livery: '',
     depot: '',
     flywheelFitted: null,
+    sprungBuffers: null,
     bodyShell: '',
     chassis: '',
     interiorLights: '',
@@ -94,6 +96,7 @@ function extractRsDataFromView(view: RollingStockView): RsFormState {
     depot: 'depot' in rs ? (rs.depot ?? '') : '',
     flywheelFitted:
       ts?.flywheel_fitted === 'YES' ? true : ts?.flywheel_fitted === 'NO' ? false : null,
+    sprungBuffers: ts?.sprung_buffers === 'YES' ? true : ts?.sprung_buffers === 'NO' ? false : null,
     bodyShell: ts?.body_shell ?? '',
     chassis: ts?.chassis ?? '',
     interiorLights: ts?.interior_lights ?? '',
@@ -247,6 +250,7 @@ export function useRollingStockEditor(
       livery: form.livery || null,
       depot: form.depot || null,
       flywheelFitted: form.flywheelFitted,
+      sprungBuffers: form.sprungBuffers,
       bodyShell: form.bodyShell || null,
       chassis: form.chassis || null,
       interiorLights: form.interiorLights || null,
@@ -284,6 +288,7 @@ export function useRollingStockEditor(
       livery: form.livery || null,
       depot: form.depot || null,
       flywheelFitted: form.flywheelFitted,
+      sprungBuffers: form.sprungBuffers,
       bodyShell: form.bodyShell || null,
       chassis: form.chassis || null,
       interiorLights: form.interiorLights || null,

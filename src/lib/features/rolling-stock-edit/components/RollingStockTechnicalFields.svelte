@@ -9,6 +9,7 @@
 
   interface Props {
     flywheelFitted?: boolean | null;
+    sprungBuffers?: boolean | null;
     bodyShell: string;
     chassis: string;
     interiorLights: string;
@@ -28,6 +29,7 @@
 
   let {
     flywheelFitted = $bindable<boolean | null>(null),
+    sprungBuffers = $bindable<boolean | null>(null),
     bodyShell = $bindable(),
     chassis = $bindable(),
     interiorLights = $bindable(),
@@ -81,6 +83,11 @@
         label="{m.specs_drawer_field_lighting()} (headlights)"
         options={featureFlagOptions}
         bind:value={lights}
+      />
+      <FormBooleanSelect
+        id="drawer-sprung-buffers"
+        label={m.specs_drawer_field_sprung_buffers()}
+        bind:value={sprungBuffers}
       />
     </div>
   </section>

@@ -170,7 +170,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                 .await
                 .map_err(DomainError::from)?;
         } else if map.contains_key("series_code") && map.contains_key("flywheel_fitted") {
-            // Full specifications patch (14 columns)
+            // Full specifications patch (17 columns)
             let series_code = map
                 .get("series_code")
                 .and_then(|v| v.as_str())
@@ -178,11 +178,14 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             let road_number = map.get("road_number").and_then(|v| v.as_str());
             let livery = map.get("livery").and_then(|v| v.as_str());
             let depot = map.get("depot").and_then(|v| v.as_str());
+            let series = map.get("series").and_then(|v| v.as_str());
+            let friendly_name = map.get("friendly_name").and_then(|v| v.as_str());
             let flywheel = map.get("flywheel_fitted").and_then(|v| v.as_str());
             let body_shell = map.get("body_shell").and_then(|v| v.as_str());
             let chassis = map.get("chassis").and_then(|v| v.as_str());
             let interior_lights = map.get("interior_lights").and_then(|v| v.as_str());
             let lights = map.get("lights").and_then(|v| v.as_str());
+            let sprung_buffers = map.get("sprung_buffers").and_then(|v| v.as_str());
             let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
             let control = map.get("control").and_then(|v| v.as_str());
             let coupling_socket = map.get("coupling_socket").and_then(|v| v.as_str());
@@ -196,28 +199,34 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                     road_number = ?2,
                     livery = ?3,
                     depot = ?4,
-                    technical_flywheel_fitted = ?5,
-                    technical_body_shell = ?6,
-                    technical_chassis = ?7,
-                    technical_interior_lights = ?8,
-                    technical_lights = ?9,
-                    dcc_interface = ?10,
-                    control = ?11,
-                    technical_coupling_socket = ?12,
-                    technical_coupling_close_couplers = ?13,
-                    technical_coupling_digital_shunting = ?14
-                WHERE id = ?15
+                    series = ?5,
+                    friendly_name = ?6,
+                    technical_flywheel_fitted = ?7,
+                    technical_body_shell = ?8,
+                    technical_chassis = ?9,
+                    technical_interior_lights = ?10,
+                    technical_lights = ?11,
+                    technical_sprung_buffers = ?12,
+                    dcc_interface = ?13,
+                    control = ?14,
+                    technical_coupling_socket = ?15,
+                    technical_coupling_close_couplers = ?16,
+                    technical_coupling_digital_shunting = ?17
+                WHERE id = ?18
             "#,
             )
             .bind(series_code)
             .bind(road_number)
             .bind(livery)
             .bind(depot)
+            .bind(series)
+            .bind(friendly_name)
             .bind(flywheel)
             .bind(body_shell)
             .bind(chassis)
             .bind(interior_lights)
             .bind(lights)
+            .bind(sprung_buffers)
             .bind(dcc_interface)
             .bind(control)
             .bind(coupling_socket)

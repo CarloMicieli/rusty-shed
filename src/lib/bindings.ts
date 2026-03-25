@@ -6545,6 +6545,7 @@ export type UpdateRollingStockSpecificationsArgs = {
   chassis: string | null;
   interiorLights: string | null;
   lights: string | null;
+  sprungBuffers: boolean | null;
   /**
    * Only relevant for motorised rolling stock (Locomotive, EMU, Railcar).
    */

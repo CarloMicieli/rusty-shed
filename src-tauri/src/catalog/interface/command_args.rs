@@ -1119,6 +1119,7 @@ pub struct UpdateRollingStockSpecificationsArgs {
     pub chassis: Option<String>,
     pub interior_lights: Option<String>,
     pub lights: Option<String>,
+    pub sprung_buffers: Option<bool>,
 
     // ── Control ────────────────────────────────────────────────────────────
     /// Only relevant for motorised rolling stock (Locomotive, EMU, Railcar).
@@ -1167,6 +1168,7 @@ impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecifi
                 chassis: parse_opt::<ChassisType>(args.chassis, "chassis")?,
                 interior_lights: parse_opt::<FeatureFlag>(args.interior_lights, "interior_lights")?,
                 lights: parse_opt::<FeatureFlag>(args.lights, "lights")?,
+                sprung_buffers: bool_to_flag(args.sprung_buffers),
                 dcc_interface: args.dcc_interface,
                 control: args.control,
                 coupling_socket: parse_opt::<CouplingSocket>(

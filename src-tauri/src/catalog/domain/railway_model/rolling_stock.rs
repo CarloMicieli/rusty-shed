@@ -41,6 +41,8 @@ pub struct RollingStockSpecPatch {
     pub interior_lights: Option<FeatureFlag>,
     /// Optional lights flag.
     pub lights: Option<FeatureFlag>,
+    /// Optional sprung buffers flag.
+    pub sprung_buffers: Option<FeatureFlag>,
     /// Optional DCC interface type.
     pub dcc_interface: Option<DccInterface>,
     /// Optional control type.
@@ -470,7 +472,7 @@ impl RollingStock {
             chassis: spec.chassis,
             interior_lights: spec.interior_lights,
             lights: spec.lights,
-            sprung_buffers: None,
+            sprung_buffers: spec.sprung_buffers,
         };
 
         match self {
@@ -584,6 +586,7 @@ impl RollingStock {
             "chassis": spec.chassis.map(|c| c.to_string()),
             "interior_lights": spec.interior_lights.map(|f| f.to_string()),
             "lights": spec.lights.map(|f| f.to_string()),
+            "sprung_buffers": spec.sprung_buffers.map(|f| f.to_string()),
             "dcc_interface": spec.dcc_interface.map(|d| d.to_string()),
             "control": spec.control.map(|c| c.to_string()),
             "coupling_socket": spec.coupling_socket.map(|s| s.to_string()),

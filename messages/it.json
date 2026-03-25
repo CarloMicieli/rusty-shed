@@ -869,6 +869,7 @@
   "specs_drawer_field_body_material": "Materiale Carrozzeria",
   "specs_drawer_field_chassis_material": "Materiale Telaio",
   "specs_drawer_field_lighting": "Illuminazione",
+  "specs_drawer_field_sprung_buffers": "Respingenti a Molla",
   "specs_drawer_field_dcc_interface": "Interfaccia DCC",
   "specs_drawer_field_control_type": "Tipo di Controllo",
   "specs_drawer_field_coupling_socket": "Presa Aggancio",
