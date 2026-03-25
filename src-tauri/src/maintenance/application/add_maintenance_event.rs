@@ -1,6 +1,7 @@
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::identifiers::Identifier;
+use crate::maintenance::domain::MaintenanceEventId;
 use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::MaintenanceUowExt;
 use crate::maintenance::domain::{MaintenanceCard, MaintenanceCardId};
@@ -36,7 +37,7 @@ impl AddMaintenanceEvent {
     ///
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `MaintenanceUowExt` and `Send`.
-    /// - `P`: Identifier provider type implementing `IdProvider<Uuid>`.
+    /// - `P`: Identifier provider type implementing `IdProvider<MaintenanceEventId>`.
     pub async fn execute<U, P>(
         unit_of_work: &mut U,
         id_provider: P,
@@ -44,7 +45,7 @@ impl AddMaintenanceEvent {
     ) -> Result<(), DomainError>
     where
         U: MaintenanceUowExt + Send,
-        P: IdProvider<Uuid>,
+        P: IdProvider<MaintenanceEventId>,
     {
         let mut repo = unit_of_work.maintenance_repository();
 
@@ -59,7 +60,10 @@ impl AddMaintenanceEvent {
 
         let mut card = MaintenanceCard::from_id(card_id);
 
-        let id = id_provider.next_id();
+        let event_id = id_provider.next_id();
+        let event_uuid_str = event_id.as_ref().trim_start_matches("trn:maintenance-event:");
+        let id = Uuid::parse_str(event_uuid_str)
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
 
         card.record_maintenance(
             id,

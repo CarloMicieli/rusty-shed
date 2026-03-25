@@ -51,7 +51,8 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: () => m.app_maintenance(),
     icon: Wrench,
     href: '/maintenance',
-    isPrimary: false
+    isPrimary: false,
+    usePrefixMatch: true
   },
   {
     id: 'depot',

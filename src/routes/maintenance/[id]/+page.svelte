@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { ArrowLeft, CalendarPlus, Calendar, CheckCircle2, Hash } from 'lucide-svelte';
+  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, Hash } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import MaintenanceDetailState, {
@@ -48,15 +48,13 @@
 
 <div class="flex flex-col gap-6">
   <!-- Back navigation -->
-  <div>
-    <a
-      href="/maintenance"
-      class="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-200"
-    >
-      <ArrowLeft size={16} />
-      {m.maintenance_title()}
-    </a>
-  </div>
+  <a
+    href="/maintenance"
+    class="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+    aria-label={m.maintenance_title()}
+  >
+    <ChevronLeft size={22} />
+  </a>
 
   {#if isLoading}
     <div class="flex h-64 flex-col items-center justify-center gap-4">
