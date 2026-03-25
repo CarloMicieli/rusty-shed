@@ -177,7 +177,8 @@
   </div>
 {:else}
   <div
-    class="flex h-screen w-full flex-col overflow-hidden bg-[#0D0D0D] font-sans text-foreground lg:flex-row"
+    class="flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"
+    style:background-color="var(--layout-bg)"
     in:fade={{ delay: 1 }}
   >
     <!-- Sidebar Left (Desktop) -->
@@ -193,13 +194,15 @@
     </div>
 
     <!-- Main Content Wrapper -->
-    <div class="relative flex h-full min-w-0 flex-1 flex-col bg-[#0D0D0D]">
+    <div class="relative flex h-full min-w-0 flex-1 flex-col" style:background-color="var(--layout-bg)">
       <!-- Amber tint overlay to match sidebar/header in the exposed corner -->
       <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
 
       <!-- Header -->
       <header
-        class="relative sticky top-0 z-50 border-b border-[#1F1F1F] bg-[#0D0D0D]"
+        class="relative sticky top-0 z-50 border-b"
+        style:background-color="var(--layout-bg)"
+        style:border-color="var(--layout-border)"
         style="box-shadow: inset 0 1px 0 rgba(212, 138, 66, 0.1);"
         data-tauri-drag-region
       >
@@ -230,7 +233,9 @@
 
       <!-- Page Content -->
       <main
-        class="relative flex-1 overflow-hidden rounded-tl-[24px] border-t border-l border-[#1F1F1F] bg-[#050505]"
+        class="relative flex-1 overflow-hidden rounded-tl-[24px] border-t border-l"
+        style:background-color="var(--layout-surface)"
+        style:border-color="var(--layout-border)"
       >
         <div class="mx-auto h-full w-full max-w-[1600px] overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
           {#key $page.url.pathname}

@@ -2,12 +2,20 @@
 
 @import 'tw-animate-css';
 
+@import '../lib/themes/steampunk-dark.css';
+@import '../lib/themes/steampunk-light.css';
+
 @plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --radius: 0.625rem;
+
+  /* Layout structure colors — theme-switchable */
+  --layout-bg: #0D0D0D;
+  --layout-surface: #050505;
+  --layout-border: #1F1F1F;
 
   /* Background & Surface (Zinc-based Dark) */
   --background: hsl(240 10% 3.9%); /* zinc-950 */
