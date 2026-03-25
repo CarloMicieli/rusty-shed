@@ -20,31 +20,31 @@
 </script>
 
 <div
-  class="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-white/20"
+  class="space-y-4 rounded-xl border border-border/20 bg-card/20 p-5 transition-all hover:border-border/40"
 >
   <header
-    class="flex flex-wrap items-start justify-between gap-4 border-l-2 border-[#f59e0b]/30 pl-4"
+    class="flex flex-wrap items-start justify-between gap-4 border-l-2 border-primary/30 pl-4"
   >
     <div class="space-y-1">
-      <div class="flex items-center gap-2 text-zinc-300">
-        <Calendar class="h-3.5 w-3.5 text-[#f59e0b]/70" />
+      <div class="flex items-center gap-2 text-foreground">
+        <Calendar class="h-3.5 w-3.5 text-primary/70" />
         <span class="font-mono text-xs font-bold tracking-tight">{formattedDate}</span>
       </div>
 
-      <div class="flex items-center gap-2 text-zinc-500">
+      <div class="flex items-center gap-2 text-muted-foreground">
         <Store class="h-3.5 w-3.5" />
         <span class="text-xs tracking-wider uppercase">{sellerDisplay}</span>
       </div>
 
       {#if group.notes}
-        <p class="max-w-md text-[11px] leading-relaxed text-zinc-600 italic">
+        <p class="max-w-md text-[11px] leading-relaxed text-muted-foreground italic">
           // {group.notes}
         </p>
       {/if}
     </div>
 
     <div class="hidden sm:block">
-      <span class="rounded bg-white/5 px-2 py-1 font-mono text-[9px] text-zinc-500 uppercase">
+      <span class="rounded bg-muted/20 px-2 py-1 font-mono text-[9px] text-muted-foreground uppercase">
         ID: {group.id.split('-')[0]}
       </span>
     </div>
@@ -58,11 +58,11 @@
 
   {#if additionalCount > 0}
     <div class="flex items-center gap-4 py-2">
-      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-      <p class="font-mono text-[10px] tracking-widest text-zinc-500 uppercase">
+      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-border/20 to-transparent"></div>
+      <p class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
         + {m.dashboard_more_models({ count: additionalCount })}
       </p>
-      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-border/20 to-transparent"></div>
     </div>
   {/if}
 </div>

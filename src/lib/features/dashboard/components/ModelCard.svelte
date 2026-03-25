@@ -61,7 +61,7 @@
 
 <button
   type="button"
-  class="group flex gap-3 rounded-lg border border-white/10 bg-black/20 p-3 text-left transition-all hover:border-orange-400/50 hover:bg-black/30"
+  class="group flex gap-3 rounded-lg border border-border/20 bg-card/20 p-3 text-left transition-all hover:border-primary/50 hover:bg-card/40"
   {onclick}
 >
   <!-- 3:1 Thumbnail — wide enough for locomotives, contain-fit with blurred backdrop -->
@@ -80,9 +80,9 @@
       />
     {:else}
       <div
-        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-700"
+        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/70"
       >
-        <TrainFront class="h-12 w-12 text-zinc-500" />
+        <TrainFront class="h-12 w-12 text-muted-foreground" />
       </div>
     {/if}
 
@@ -99,27 +99,27 @@
 
   <!-- Model Details -->
   <div class="flex min-w-0 flex-1 flex-col gap-1">
-    <!-- Manufacturer in orange-400 -->
-    <p class="text-xs font-bold tracking-wider text-orange-400 uppercase">
+    <!-- Manufacturer -->
+    <p class="text-xs font-bold tracking-wider text-primary uppercase">
       {card.manufacturer}
     </p>
 
     <!-- Product Code -->
-    <p class="text-sm font-semibold text-white">{card.productCode}</p>
+    <p class="text-sm font-semibold text-foreground">{card.productCode}</p>
 
     <!-- Description (truncated to 100 chars) -->
     {#if card.description}
-      <p class="text-xs text-zinc-400">
+      <p class="text-xs text-muted-foreground">
         {formatDescription(card.description)}
       </p>
     {/if}
 
     {#if card.scale || card.era || card.roadNumber}
-      <div class="mt-2 grid grid-cols-3 gap-1 border-t border-white/5 pt-2">
+      <div class="mt-2 grid grid-cols-3 gap-1 border-t border-border/10 pt-2">
         {#each [{ label: m.depot_road_number(), val: card.roadNumber }, { label: m.depot_scale(), val: card.scale }, { label: m.depot_era(), val: card.era }] as col (col.label)}
           <div class="flex flex-col items-center gap-0.5">
-            <span class="text-[9px] tracking-wider text-[#808080] uppercase">{col.label}</span>
-            <span class="font-mono text-[11px] text-[#E0E0E0]">{col.val ?? '—'}</span>
+            <span class="text-[9px] tracking-wider text-muted-foreground uppercase">{col.label}</span>
+            <span class="font-mono text-[11px] text-foreground">{col.val ?? '—'}</span>
           </div>
         {/each}
       </div>

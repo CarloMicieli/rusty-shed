@@ -57,7 +57,7 @@
   // Compact mode reduces chart height by ~30%
   const chartHeight = $derived(compact ? 'h-44' : 'h-64');
   const chartCardClass =
-    'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm bg-zinc-900/50 border border-zinc-800';
+    'card gauge-frame p-4 transition-colors duration-200 backdrop-blur-sm bg-card/80 border border-border';
 </script>
 
 <div class="gauge-frame flex h-full items-center p-4">
@@ -74,10 +74,10 @@
       <div class="relative {chartHeight} w-full">
         {#if noBudget}
           <div class="flex h-full flex-col items-center justify-center gap-3 text-center">
-            <div class="rounded-full bg-zinc-800/60 p-3">
-              <Wallet size={28} class="text-zinc-500" />
+            <div class="rounded-full bg-muted/60 p-3">
+              <Wallet size={28} class="text-muted-foreground" />
             </div>
-            <p class="text-sm text-zinc-400">{m.dashboard_chart_budget_no_budget()}</p>
+            <p class="text-sm text-muted-foreground">{m.dashboard_chart_budget_no_budget()}</p>
           </div>
         {:else}
           <PieChart
@@ -112,7 +112,7 @@
           <div
             class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
           >
-            <span class="text-3xl font-extrabold text-white">{budgetPercent}%</span>
+            <span class="text-3xl font-extrabold text-foreground">{budgetPercent}%</span>
             <span class="text-xs tracking-tighter uppercase opacity-60"
               >{m.dashboard_chart_budget_remaining()}</span
             >
@@ -135,15 +135,15 @@
           <div
             class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-center"
           >
-            <BarChart2 size={28} class="text-zinc-700" />
-            <p class="text-sm text-zinc-500">
+            <BarChart2 size={28} class="text-muted-foreground/50" />
+            <p class="text-sm text-muted-foreground">
               {m.dashboard_chart_spending_no_data({ year: currentYear })}
             </p>
           </div>
           <!-- Ghost bars to preserve chart shape -->
           <div class="flex h-full w-full items-end gap-1 px-8 opacity-10">
             {#each Array(12) as _, i (i)}
-              <div class="flex-1 rounded-t bg-zinc-700" style="height: {20 + (i % 4) * 10}%"></div>
+              <div class="flex-1 rounded-t bg-muted" style="height: {20 + (i % 4) * 10}%"></div>
             {/each}
           </div>
         {:else}

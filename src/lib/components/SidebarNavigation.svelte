@@ -22,27 +22,27 @@
 
   function navLinkClass(active: boolean): string {
     return active
-      ? 'bg-[rgba(212,138,66,0.15)] text-[#D48A42]'
-      : 'text-sidebar-foreground hover:bg-sidebar-accent';
+      ? 'bg-sidebar-primary/10 text-sidebar-primary'
+      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground';
   }
 </script>
 
 {#key locale}
-  <nav class="relative flex h-full w-full flex-col overflow-hidden bg-[#0D0D0D]">
-    <!-- Amber tint overlay -->
-    <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
+  <nav class="relative flex h-full w-full flex-col overflow-hidden bg-sidebar">
+    <!-- Brass tint overlay -->
+    <div class="pointer-events-none absolute inset-0 z-0 bg-sidebar-primary/5"></div>
 
     <!-- Content -->
     <div class="relative z-10 flex h-full flex-col p-4">
       <!-- Logo -->
       <div class="mb-8 flex items-center {collapsed ? 'justify-center px-0' : 'gap-3 px-4'}">
         <svg
-          class="shrink-0"
+          class="shrink-0 text-sidebar-primary"
           width="32"
           height="32"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#D48A42"
+          stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -66,7 +66,7 @@
         </svg>
         {#if !collapsed}
           <h1
-            class="text-xl font-bold tracking-tight text-[#D48A42] uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+            class="text-xl font-bold tracking-tight text-sidebar-primary uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
           >
             {m.app_name()}
           </h1>
@@ -78,7 +78,7 @@
         {#each NAVIGATION_ITEMS as item (item.id)}
           <li class="relative overflow-hidden">
             {#if isActive(item, pathname)}
-              <div class="absolute inset-y-0 left-0 w-[2px] bg-[#D48A42]"></div>
+              <div class="absolute inset-y-0 left-0 w-[2px] bg-sidebar-primary"></div>
             {/if}
             <a
               href={resolve(item.href as '/dashboard')}
@@ -101,7 +101,7 @@
       </ul>
 
       <!-- Footer -->
-      <div class="mt-auto space-y-2 border-t border-[#1F1F1F] pt-4">
+      <div class="mt-auto space-y-2 border-t border-sidebar-border pt-4">
         <!-- Toggle button -->
         <button
           onclick={onToggle}
@@ -120,7 +120,7 @@
         <!-- Settings link -->
         <div class="relative overflow-hidden">
           {#if pathname === '/settings'}
-            <div class="absolute inset-y-0 left-0 w-[2px] bg-[#D48A42]"></div>
+            <div class="absolute inset-y-0 left-0 w-[2px] bg-sidebar-primary"></div>
           {/if}
           <a
             href={resolve('/settings')}
