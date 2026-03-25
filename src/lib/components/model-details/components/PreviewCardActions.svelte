@@ -38,7 +38,10 @@
   size="icon"
   class="-mt-1 -mr-1 h-7 w-7 shrink-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
   aria-label={m.components_deleteButton()}
-  onclick={() => (showDeleteDialog = true)}
+  onclick={(e) => {
+    e.stopPropagation();
+    showDeleteDialog = true;
+  }}
 >
   <Trash2 class="h-3.5 w-3.5 text-zinc-500 hover:text-red-400" />
 </Button>

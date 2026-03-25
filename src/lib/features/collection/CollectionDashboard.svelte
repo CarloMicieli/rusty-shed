@@ -18,13 +18,11 @@
   import { collectionItemToCardData } from './utils/cardDataMapper';
   import FilterPanel from './components/FilterPanel.svelte';
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
-  import DeleteModal from './components/DeleteModal.svelte';
 
   function useCollectionUI() {
     let showDrawer = $state(false);
     let showFilterSidebar = $state(false);
     let editing = $state<CollectionItemView | null>(null);
-    let confirmDeleteId = $state<string | null>(null);
 
     const startCreate = () => {
       editing = null;
@@ -45,14 +43,6 @@
       showFilterSidebar = !showFilterSidebar;
     };
 
-    const requestDelete = (id: string | null) => {
-      confirmDeleteId = id;
-    };
-
-    const clearDelete = () => {
-      confirmDeleteId = null;
-    };
-
     return {
       get showDrawer() {
         return showDrawer;
@@ -66,15 +56,10 @@
       get editing() {
         return editing;
       },
-      get confirmDeleteId() {
-        return confirmDeleteId;
-      },
       startCreate,
       edit,
       closeDrawer,
-      toggleFilterSidebar,
-      requestDelete,
-      clearDelete
+      toggleFilterSidebar
     };
   }
 
@@ -118,12 +103,6 @@
   function handleClear() {
     collectionService.clearFilters();
     void collectionService.fetchCollection('');
-  }
-
-  async function handleDeleteConfirm() {
-    if (!ui.confirmDeleteId) return;
-    await collectionService.deleteItem(ui.confirmDeleteId);
-    ui.clearDelete();
   }
 
   function handleCardClick(item: CollectionItemView) {
@@ -268,7 +247,7 @@
               >
                 <RailwayModelPreviewCard
                   model={collectionItemToCardData(item)}
-                  onDelete={() => ui.requestDelete(item.id)}
+                  onDelete={() => void collectionService.deleteItem(item.id)}
                 />
               </div>
             {/each}
@@ -305,14 +284,6 @@
   onSuccess={() => {
     ui.closeDrawer();
   }}
-/>
-
-<DeleteModal
-  open={Boolean(ui.confirmDeleteId)}
-  title={m.collection_delete_item()}
-  message={m.collection_confirm_delete()}
-  onClose={ui.clearDelete}
-  onConfirm={handleDeleteConfirm}
 />
 
 {#snippet StatChip(label: string, count: number)}
