@@ -180,7 +180,7 @@
      (these are what all components and Tailwind classes like bg-background use)
      ======================================================================== */
 
-  --background: hsl(44 58% 89%); /* Warm Parchment  #f4ebd0 */
+  --background: hsl(44 60% 94%); /* Warm Parchment  #f8f2e0 */
   --foreground: hsl(35 27% 13%); /* Dark Sepia      #2a2218 */
 
   --card: hsl(42 43% 83%); /* Aged Paper      #e8dcc0 */
@@ -204,8 +204,8 @@
   --destructive: hsl(2 60% 45%); /* Terracotta */
   --destructive-foreground: hsl(44 58% 89%);
 
-  --border: hsl(32 37% 70%); /* Aged Brass      #cfb598 */
-  --input: hsl(32 37% 70%);
+  --border: hsl(32 30% 60%); /* Aged Brass      #a8906b */
+  --input: hsl(32 30% 60%);
   --ring: hsl(44 88% 38%);
 
   /* Sidebar — "Deep Parchment" with baked-in brass tint */
@@ -215,7 +215,7 @@
   --sidebar-primary-foreground: hsl(44 58% 89%);
   --sidebar-accent: hsl(44 88% 38% / 0.12); /* Subtle brass highlight for hover */
   --sidebar-accent-foreground: hsl(35 27% 13%);
-  --sidebar-border: hsl(32 37% 70%); /* Matches --border */
+  --sidebar-border: hsl(32 30% 60%); /* Matches --border */
   --sidebar-ring: hsl(44 88% 38%);
   --sidebar-name-shadow: rgba(255, 0, 0, 0.8);
 
@@ -229,5 +229,5 @@
     var(--color-primary-600) 5%
   ); /* Aged Paper — wrapper/header bg */
   --layout-surface: hsl(44 58% 89%); /* Warm Parchment — main content */
-  --layout-border: hsl(32 37% 70%);
+  --layout-border: hsl(32 30% 60%);
 }

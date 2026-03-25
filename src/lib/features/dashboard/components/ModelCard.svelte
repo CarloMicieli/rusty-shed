@@ -61,7 +61,7 @@
 
 <button
   type="button"
-  class="group flex gap-3 rounded-lg border border-border/20 bg-card/20 p-3 text-left transition-all hover:border-primary/50 hover:bg-card/40"
+  class="group flex gap-3 rounded-lg border border-border/50 bg-card/80 p-3 text-left shadow-[0_1px_4px_rgba(42,34,24,0.06)] transition-all hover:border-primary/50 hover:bg-card"
   {onclick}
 >
   <!-- 3:1 Thumbnail — wide enough for locomotives, contain-fit with blurred backdrop -->
@@ -115,7 +115,7 @@
     {/if}
 
     {#if card.scale || card.era || card.roadNumber}
-      <div class="mt-2 grid grid-cols-3 gap-1 border-t border-border/10 pt-2">
+      <div class="mt-2 grid grid-cols-3 gap-1 border-t border-border/20 pt-2">
         {#each [{ label: m.depot_road_number(), val: card.roadNumber }, { label: m.depot_scale(), val: card.scale }, { label: m.depot_era(), val: card.era }] as col (col.label)}
           <div class="flex flex-col items-center gap-0.5">
             <span class="text-[9px] tracking-wider text-muted-foreground uppercase"

@@ -63,7 +63,8 @@
         </svg>
         {#if !collapsed}
           <h1
-            class="text-xl font-bold tracking-tight text-sidebar-primary uppercase" style="filter: drop-shadow(0 1px 2px var(--sidebar-name-shadow));"
+            class="text-xl font-bold tracking-tight text-sidebar-primary uppercase"
+            style="filter: drop-shadow(0 1px 2px var(--sidebar-name-shadow));"
           >
             {m.app_name()}
           </h1>
