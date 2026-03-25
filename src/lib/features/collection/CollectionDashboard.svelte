@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { TrainFront, X, Filter } from 'lucide-svelte';
+  import { TrainFront, X, Filter, LayoutGrid, Rows3, SlidersHorizontal } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -17,11 +17,13 @@
   import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
   import { collectionItemToCardData } from './utils/cardDataMapper';
   import FilterPanel from './components/FilterPanel.svelte';
+  import CollectionTableView from './components/CollectionTableView.svelte';
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
 
   function useCollectionUI() {
     let showDrawer = $state(false);
-    let showFilterSidebar = $state(false);
+    let showFilterSidebar = $state(true);
+    let viewMode = $state<'grid' | 'table'>('grid');
     let editing = $state<CollectionItemView | null>(null);
 
     const startCreate = () => {
@@ -43,6 +45,10 @@
       showFilterSidebar = !showFilterSidebar;
     };
 
+    const setViewMode = (mode: 'grid' | 'table') => {
+      viewMode = mode;
+    };
+
     return {
       get showDrawer() {
         return showDrawer;
@@ -53,13 +59,17 @@
       get showFilterSidebar() {
         return showFilterSidebar;
       },
+      get viewMode() {
+        return viewMode;
+      },
       get editing() {
         return editing;
       },
       startCreate,
       edit,
       closeDrawer,
-      toggleFilterSidebar
+      toggleFilterSidebar,
+      setViewMode
     };
   }
 
@@ -194,10 +204,12 @@
             <TrainFront size={18} />
             {m.collection_add_model()}
           </Button>
+          <!-- Mobile-only filter toggle -->
           <Button
             onclick={ui.toggleFilterSidebar}
             variant="outline"
             size="sm"
+            class="md:hidden"
             title={m.collection_toggle_filters_title()}
           >
             <Filter size={18} />
@@ -231,50 +243,137 @@
         {:else if !isLoading && rawItems.length > 0 && filteredItems.length === 0}
           {@render NoResults()}
         {:else}
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {#each filteredItems as item (item.id)}
-              <div
-                role="button"
-                tabindex={0}
-                class="cursor-pointer"
-                onclick={() => handleCardClick(item)}
-                onkeydown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleCardClick(item);
-                  }
-                }}
+          <!-- View mode toolbar -->
+          <div class="mb-4 flex items-center justify-between">
+            <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+              {filteredItems.length} item{filteredItems.length === 1 ? '' : 's'}
+            </span>
+            <div class="flex items-center gap-1 rounded-lg border border-border/60 p-0.5">
+              <button
+                type="button"
+                class="rounded p-1.5 transition-colors {ui.viewMode === 'grid'
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'}"
+                onclick={() => ui.setViewMode('grid')}
+                title="Grid view"
+                aria-pressed={ui.viewMode === 'grid'}
               >
-                <RailwayModelPreviewCard
-                  model={collectionItemToCardData(item)}
-                  onDelete={() => void collectionService.deleteItem(item.id)}
-                />
-              </div>
-            {/each}
+                <LayoutGrid size={14} />
+              </button>
+              <button
+                type="button"
+                class="rounded p-1.5 transition-colors {ui.viewMode === 'table'
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'}"
+                onclick={() => ui.setViewMode('table')}
+                title="Table view"
+                aria-pressed={ui.viewMode === 'table'}
+              >
+                <Rows3 size={14} />
+              </button>
+            </div>
           </div>
+
+          {#if ui.viewMode === 'grid'}
+            <div
+              class="grid gap-4"
+              style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));"
+            >
+              {#each filteredItems as item (item.id)}
+                <div
+                  role="button"
+                  tabindex={0}
+                  class="cursor-pointer"
+                  onclick={() => handleCardClick(item)}
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleCardClick(item);
+                    }
+                  }}
+                >
+                  <RailwayModelPreviewCard
+                    model={collectionItemToCardData(item)}
+                    onDelete={() => void collectionService.deleteItem(item.id)}
+                  />
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <CollectionTableView items={filteredItems} onRowClick={handleCardClick} />
+          {/if}
         {/if}
       </div>
     </div>
 
-    <!-- Sidebar (Right) -->
+    <!-- Sidebar (Right) — persistent on desktop, toggled on mobile -->
     {#if ui.showFilterSidebar}
-      <aside
-        class="w-full flex-shrink-0 border-t border-border bg-card md:w-80 md:border-t-0 md:border-l"
-      >
-        <div class="sticky top-4">
-          <FilterPanel
-            {filters}
-            {availableTags}
-            {availableScales}
-            onSearch={handleSearch}
-            onSetScale={handleScale}
-            onToggleTag={handleTag}
-            onClear={handleClear}
-            onToggleSidebar={ui.toggleFilterSidebar}
-          />
-        </div>
+      <!-- Mobile: full-width panel below content -->
+      <aside class="w-full flex-shrink-0 border-t border-border bg-card md:hidden">
+        <FilterPanel
+          {filters}
+          {availableTags}
+          {availableScales}
+          onSearch={handleSearch}
+          onSetScale={handleScale}
+          onToggleTag={handleTag}
+          onClear={handleClear}
+          onToggleSidebar={ui.toggleFilterSidebar}
+        />
       </aside>
     {/if}
+
+    <!-- Desktop: always-visible command center sidebar (narrows to icon rail when collapsed) -->
+    <aside
+      class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-[#1F1F1F] bg-card md:flex"
+      style="width: {ui.showFilterSidebar
+        ? '280px'
+        : '60px'}; transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);"
+    >
+      <!-- Sidebar header — always visible -->
+      <div
+        class="flex flex-shrink-0 items-center border-b border-[#1F1F1F] px-2 py-3"
+        class:justify-between={ui.showFilterSidebar}
+        class:justify-center={!ui.showFilterSidebar}
+      >
+        <span
+          class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase transition-[opacity,width] duration-200"
+          style="opacity: {ui.showFilterSidebar ? '1' : '0'}; width: {ui.showFilterSidebar
+            ? 'auto'
+            : '0'}; overflow: hidden;"
+        >
+          Filters
+        </span>
+        <button
+          type="button"
+          class="rounded p-1 text-muted-foreground transition-colors hover:text-[#D48A42]"
+          onclick={ui.toggleFilterSidebar}
+          title={m.collection_toggle_filters_title()}
+          aria-expanded={ui.showFilterSidebar}
+        >
+          <SlidersHorizontal size={14} />
+        </button>
+      </div>
+
+      <!-- Sidebar content — fades in after sidebar expands -->
+      <div
+        class="flex-1 overflow-y-auto transition-opacity duration-200"
+        style="opacity: {ui.showFilterSidebar ? '1' : '0'}; pointer-events: {ui.showFilterSidebar
+          ? 'auto'
+          : 'none'};"
+      >
+        <FilterPanel
+          {filters}
+          {availableTags}
+          {availableScales}
+          onSearch={handleSearch}
+          onSetScale={handleScale}
+          onToggleTag={handleTag}
+          onClear={handleClear}
+          onToggleSidebar={ui.toggleFilterSidebar}
+        />
+      </div>
+    </aside>
   </div>
 </div>
 

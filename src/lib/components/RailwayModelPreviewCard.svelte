@@ -197,10 +197,10 @@
 
 <!--
   Card uses `group` so child elements can react to card-level hover via group-hover:*.
-  Amber ring glow appears on hover; delete button fades in.
+  Amber border becomes solid on hover; delete button fades in.
 -->
 <Card
-  class="group card rounded-2xl border-2 border-[rgba(212,138,62,0.35)] shadow-xl transition-all duration-200 hover:border-[rgba(226,153,79,0.65)] hover:shadow-[0_0_20px_rgba(226,153,79,0.2)] {className ??
+  class="group card relative rounded-2xl border-2 border-[rgba(212,138,62,0.35)] shadow-xl transition-all duration-200 hover:border-[#D48A42] hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {className ??
     ''}"
 >
   <CardHeader class="p-3 pb-2">
@@ -233,7 +233,7 @@
       Subtle grid pattern via inline background-image; bg-zinc-900 as base.
     -->
     <div
-      class="relative aspect-video w-full overflow-hidden rounded-xl bg-card"
+      class="relative aspect-video w-full overflow-hidden rounded-xl bg-card saturate-[0.9] transition-all duration-200 group-hover:saturate-100"
       style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
     >
       {#if resolvedPhotoUrl}
