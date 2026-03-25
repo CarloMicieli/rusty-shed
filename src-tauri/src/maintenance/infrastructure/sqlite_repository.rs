@@ -149,7 +149,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             mfr.name            AS manufacturer_name,
             rm.product_code     AS product_code,
             rs.series_code      AS series_code,
-            rs.road_number      AS road_number
+            rs.road_number      AS road_number,
+            rs.category         AS rolling_stock_category
         FROM maintenance_cards mc
         LEFT JOIN owned_rolling_stocks ors ON mc.owned_rolling_stock_id = ors.id
         LEFT JOIN rolling_stocks rs        ON ors.rolling_stock_id = rs.id
@@ -215,6 +216,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                         product_code: r.product_code,
                         series_code: r.series_code,
                         road_number: r.road_number,
+                        rolling_stock_category: r.rolling_stock_category,
                     })
                 } else {
                     None
@@ -428,7 +430,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             mfr.name            AS manufacturer_name,
             rm.product_code     AS product_code,
             rs.series_code      AS series_code,
-            rs.road_number      AS road_number
+            rs.road_number      AS road_number,
+            rs.category         AS rolling_stock_category
         FROM maintenance_cards mc
         LEFT JOIN owned_rolling_stocks ors ON mc.owned_rolling_stock_id = ors.id
         LEFT JOIN rolling_stocks rs        ON ors.rolling_stock_id = rs.id
@@ -500,6 +503,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                     product_code: r.product_code,
                     series_code: r.series_code,
                     road_number: r.road_number,
+                    rolling_stock_category: r.rolling_stock_category,
                 })
             } else {
                 None

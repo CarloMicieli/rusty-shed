@@ -575,6 +575,7 @@
   "maintenance_urgency_overdue": "Overdue",
   "maintenance_urgency_warning": "Due Soon",
   "maintenance_urgency_normal": "Scheduled",
+  "maintenance_card_title": "Maintenance Card",
   "maintenance_card_due_date": "Due",
   "maintenance_card_last_maintenance": "Last serviced",
   "maintenance_card_no_last_maintenance": "Never serviced",

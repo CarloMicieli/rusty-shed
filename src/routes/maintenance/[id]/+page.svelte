@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, Hash, History } from 'lucide-svelte';
+  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, History } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import MaintenanceDetailState, {
@@ -84,27 +84,38 @@
     <div class="rounded-xl border border-white/10 bg-[#0c0c0c] p-6">
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
-          <div class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
-            {m.app_maintenance()}
+          <!-- Tier 1: Bebas Neue amber section label -->
+          <div
+            class="text-3xl leading-none tracking-wide"
+            style="font-family: 'Bebas Neue', serif; color: #D48A42;"
+          >
+            {m.maintenance_card_title()}
           </div>
-          <h1 class="text-2xl font-bold tracking-tight text-white">
-            {card.displayInfo?.manufacturerName ?? '—'}
-            {card.displayInfo?.productCode ?? ''}
-          </h1>
-          {#if card.displayInfo?.seriesCode}
-            <div class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
-              {card.displayInfo.seriesCode}
+
+          <!-- Tier 2: Serial number row — category in white, road number in amber -->
+          {#if card.displayInfo?.rollingStockCategory || card.displayInfo?.roadNumber || card.displayInfo?.seriesCode}
+            <div class="font-mono text-[11px] font-bold tracking-wider">
+              {#if card.displayInfo?.rollingStockCategory}
+                <span class="text-white">{card.displayInfo.rollingStockCategory.toUpperCase()}</span>
+              {/if}
+              {#if card.displayInfo?.roadNumber}
+                <span class="ml-2 text-amber-400">{card.displayInfo.roadNumber}</span>
+              {:else if card.displayInfo?.seriesCode}
+                <span class="ml-2 text-amber-400">{card.displayInfo.seriesCode}</span>
+              {/if}
+            </div>
+          {/if}
+
+          <!-- Tier 3: Subdued subtitle with manufacturer · product code -->
+          {#if card.displayInfo?.manufacturerName || card.displayInfo?.productCode}
+            <div class="text-xs text-zinc-500">
+              {[card.displayInfo?.manufacturerName, card.displayInfo?.productCode]
+                .filter(Boolean)
+                .join(' · ')}
             </div>
           {/if}
         </div>
         <div class="flex items-center gap-3">
-          {#if card.displayInfo?.roadNumber}
-            <span
-              class="rounded border border-amber-500/20 bg-amber-500/10 px-3 py-1 font-mono text-sm font-bold text-amber-400"
-            >
-              <Hash size={12} class="mr-1 inline" />{card.displayInfo.roadNumber}
-            </span>
-          {/if}
           <Button variant="default" size="sm" onclick={() => (showAddEventModal = true)}>
             <CalendarPlus class="mr-2 h-4 w-4" />
             Add Event

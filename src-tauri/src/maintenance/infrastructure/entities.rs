@@ -46,6 +46,7 @@ pub struct MaintenanceCardWithDisplayInfoRow {
     pub product_code: Option<String>,
     pub series_code: Option<String>,
     pub road_number: Option<String>,
+    pub rolling_stock_category: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, FromRow)]

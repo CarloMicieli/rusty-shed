@@ -32,6 +32,8 @@ pub struct RollingStockDisplayInfo {
     pub series_code: Option<String>,
     /// Road number / running number (e.g. "66001").
     pub road_number: Option<String>,
+    /// Rolling stock category (e.g. "Locomotive", "FreightCar").
+    pub rolling_stock_category: Option<String>,
 }
 
 /// Lightweight view representation of a maintenance card intended for the frontend.
