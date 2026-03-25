@@ -180,49 +180,49 @@
      (these are what all components and Tailwind classes like bg-background use)
      ======================================================================== */
 
-  --background: hsl(44 58% 89%);        /* Warm Parchment  #f4ebd0 */
-  --foreground: hsl(35 27% 13%);        /* Dark Sepia      #2a2218 */
+  --background: hsl(44 58% 89%); /* Warm Parchment  #f4ebd0 */
+  --foreground: hsl(35 27% 13%); /* Dark Sepia      #2a2218 */
 
-  --card: hsl(40 43% 83%);              /* Aged Paper      #e8dcc0 */
+  --card: hsl(40 43% 83%); /* Aged Paper      #e8dcc0 */
   --card-foreground: hsl(35 27% 13%);
 
   --popover: hsl(40 43% 83%);
   --popover-foreground: hsl(35 27% 13%);
 
-  --primary: hsl(44 88% 38%);           /* Burnished Brass #B8860B */
+  --primary: hsl(44 88% 38%); /* Burnished Brass #B8860B */
   --primary-foreground: hsl(44 58% 89%);
 
-  --secondary: hsl(36 32% 74%);         /* Faded Linen     #dcc9ac */
+  --secondary: hsl(36 32% 74%); /* Faded Linen     #dcc9ac */
   --secondary-foreground: hsl(35 27% 13%);
 
   --muted: hsl(36 32% 74%);
-  --muted-foreground: hsl(38 22% 35%);  /* Ink             #6b5d45 */
+  --muted-foreground: hsl(38 22% 35%); /* Ink             #6b5d45 */
 
   --accent: hsl(36 32% 74%);
   --accent-foreground: hsl(35 27% 13%);
 
-  --destructive: hsl(2 60% 45%);        /* Terracotta */
+  --destructive: hsl(2 60% 45%); /* Terracotta */
   --destructive-foreground: hsl(44 58% 89%);
 
-  --border: hsl(32 37% 70%);            /* Aged Brass      #cfb598 */
+  --border: hsl(32 37% 70%); /* Aged Brass      #cfb598 */
   --input: hsl(32 37% 70%);
   --ring: hsl(44 88% 38%);
 
   /* Sidebar — "Deep Parchment" */
-  --sidebar: hsl(40 40% 80%);           /* Weathered paper, darker than background */
+  --sidebar: hsl(40 40% 80%); /* Weathered paper, darker than background */
   --sidebar-foreground: hsl(35 27% 13%);
-  --sidebar-primary: hsl(44 88% 30%);   /* Deeper brass for active text */
+  --sidebar-primary: hsl(44 88% 30%); /* Deeper brass for active text */
   --sidebar-primary-foreground: hsl(44 58% 89%);
   --sidebar-accent: hsl(44 88% 38% / 0.12); /* Subtle brass highlight for hover */
   --sidebar-accent-foreground: hsl(35 27% 13%);
-  --sidebar-border: hsl(32 37% 70%);    /* Matches --border */
+  --sidebar-border: hsl(32 37% 70%); /* Matches --border */
   --sidebar-ring: hsl(44 88% 38%);
 
   /* ========================================================================
      Layout structure color overrides
      ======================================================================== */
 
-  --layout-bg: hsl(40 43% 83%);         /* Aged Paper — wrapper/header bg */
-  --layout-surface: hsl(44 58% 89%);    /* Warm Parchment — main content */
+  --layout-bg: hsl(40 43% 83%); /* Aged Paper — wrapper/header bg */
+  --layout-surface: hsl(44 58% 89%); /* Warm Parchment — main content */
   --layout-border: hsl(32 37% 70%);
 }

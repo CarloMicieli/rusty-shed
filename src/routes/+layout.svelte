@@ -178,7 +178,7 @@
 {:else}
   <div
     class="flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"
-    style:background-color="var(--layout-bg)"
+    style:background-color="var(--sidebar)"
     in:fade={{ delay: 1 }}
   >
     <!-- Sidebar Left (Desktop) -->
@@ -193,24 +193,21 @@
       />
     </div>
 
-    <!-- Main Content Wrapper -->
+    <!-- Main Content Wrapper ("sheet" that sits on the sidebar shelf) -->
     <div
-      class="relative flex h-full min-w-0 flex-1 flex-col"
-      style:background-color="var(--layout-bg)"
+      class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-tl-[32px]"
+      style:background-color="var(--background)"
     >
-      <!-- Amber tint overlay to match sidebar/header in the exposed corner -->
-      <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
-
       <!-- Header -->
       <header
         class="relative sticky top-0 z-50 border-b"
-        style:background-color="var(--layout-bg)"
+        style:background-color="var(--background)"
         style:border-color="var(--layout-border)"
         style="box-shadow: inset 0 1px 0 rgba(212, 138, 66, 0.1);"
         data-tauri-drag-region
       >
-        <!-- Amber tint overlay -->
-        <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
+        <!-- Brass tint overlay -->
+        <div class="pointer-events-none absolute inset-0 z-0 bg-sidebar-primary/5"></div>
         <div class="relative z-10 flex items-center justify-between p-4">
           <!-- Mobile: Logo / Brand (Visible only when sidebar is hidden) -->
           <div class="flex items-center gap-2 lg:hidden">
@@ -236,7 +233,7 @@
 
       <!-- Page Content -->
       <main
-        class="relative flex-1 overflow-hidden rounded-tl-[24px] border-t border-l"
+        class="relative flex-1 overflow-hidden border-t"
         style:background-color="var(--layout-surface)"
         style:border-color="var(--layout-border)"
       >

@@ -118,7 +118,9 @@
       <div class="mt-2 grid grid-cols-3 gap-1 border-t border-border/10 pt-2">
         {#each [{ label: m.depot_road_number(), val: card.roadNumber }, { label: m.depot_scale(), val: card.scale }, { label: m.depot_era(), val: card.era }] as col (col.label)}
           <div class="flex flex-col items-center gap-0.5">
-            <span class="text-[9px] tracking-wider text-muted-foreground uppercase">{col.label}</span>
+            <span class="text-[9px] tracking-wider text-muted-foreground uppercase"
+              >{col.label}</span
+            >
             <span class="font-mono text-[11px] text-foreground">{col.val ?? '—'}</span>
           </div>
         {/each}

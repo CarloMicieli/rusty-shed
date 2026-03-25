@@ -44,7 +44,9 @@
     </div>
 
     <div class="hidden sm:block">
-      <span class="rounded bg-muted/20 px-2 py-1 font-mono text-[9px] text-muted-foreground uppercase">
+      <span
+        class="rounded bg-muted/20 px-2 py-1 font-mono text-[9px] text-muted-foreground uppercase"
+      >
         ID: {group.id.split('-')[0]}
       </span>
     </div>
