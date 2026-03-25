@@ -2,6 +2,7 @@
   import { BarChart, LinearGradient, PieChart } from 'layerchart';
   import { BarChart2, Wallet } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   type MonthlySpendingPoint = { month: number; amount: number };
 
@@ -36,17 +37,20 @@
   const currentYear = new Date().getFullYear();
 
   // --- Formatters ---
-  const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' });
+  const monthFormatter = $derived(
+    new Intl.DateTimeFormat(regionalManager.locale, { month: 'short' })
+  );
   const currencyFormatter = $derived(
-    new Intl.NumberFormat(undefined, {
+    new Intl.NumberFormat(regionalManager.locale, {
       style: 'currency',
       currency: currencyCode,
       maximumFractionDigits: 0
     })
   );
 
-  const formatMonthIndex = (monthIndex: number) =>
-    monthFormatter.format(new Date(2024, Math.max(0, Math.min(11, monthIndex)), 1));
+  const formatMonthIndex = $derived((monthIndex: number) =>
+    monthFormatter.format(new Date(2024, Math.max(0, Math.min(11, monthIndex)), 1))
+  );
 
   const formatCurrency = (value: number) => currencyFormatter.format(value ?? 0);
 

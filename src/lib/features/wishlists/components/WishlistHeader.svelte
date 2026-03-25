@@ -3,6 +3,7 @@
   import type { WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Badge, Input } from '$lib/components';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   const { wishlist, onRename, onSetDefault, onAddModel, onDelete } = $props<{
     wishlist: WishlistPreview | null;
@@ -43,7 +44,7 @@
 
   function formatDate(value: string): string {
     const d = new Date(value);
-    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+    return isNaN(d.getTime()) ? '-' : regionalManager.formatDate(value);
   }
 </script>
 

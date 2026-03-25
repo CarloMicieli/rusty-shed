@@ -62,6 +62,23 @@ class RegionalManager {
   }
 
   /**
+   * Format an amount in any explicit currency using the current locale.
+   * Use this when the price currency may differ from the user's default currency.
+   */
+  formatCurrencyWith(cents: number | bigint, currency: string): string {
+    try {
+      return new Intl.NumberFormat(this.locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(Number(cents) / 100);
+    } catch {
+      return `${currency} ${(Number(cents) / 100).toFixed(2)}`;
+    }
+  }
+
+  /**
    * Return the symbol character for any currency code using the current locale.
    * Replaces getCurrencySymbol() from $lib/utils/currency.
    */

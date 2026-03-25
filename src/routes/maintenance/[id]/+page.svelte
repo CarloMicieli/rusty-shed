@@ -10,6 +10,7 @@
   import MaintenanceEventTimeline from '$lib/features/maintenance/components/MaintenanceEventTimeline.svelte';
   import AddEventModal from '$lib/features/maintenance/components/AddEventModal.svelte';
   import { goto } from '$app/navigation';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   const maintenanceDetailState = new MaintenanceDetailState();
   setMaintenanceDetailState(maintenanceDetailState);
@@ -24,7 +25,11 @@
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date
-      .toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+      .toLocaleDateString(regionalManager.locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
       .replace(/\//g, '.');
   };
 

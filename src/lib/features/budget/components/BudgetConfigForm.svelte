@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import type { BudgetMode } from '../services/BudgetService.svelte';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   let {
     mode = $bindable('MONTHLY'),
@@ -60,7 +61,7 @@
   }
 
   function formatCurrency(value: number): string {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(regionalManager.locale, {
       style: 'currency',
       currency: currency ?? 'EUR',
       minimumFractionDigits: 2,

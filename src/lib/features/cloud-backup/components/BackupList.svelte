@@ -18,6 +18,7 @@
   import { getCloudBackupController } from '../controllers/cloudBackup.svelte';
   import type { BackupListItem } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   /**
    * Props for BackupList component
@@ -42,7 +43,7 @@
   function formatDate(isoString: string): string {
     try {
       const date = new Date(isoString);
-      return new Intl.DateTimeFormat(undefined, {
+      return new Intl.DateTimeFormat(regionalManager.locale, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

@@ -43,6 +43,7 @@ export class DatabaseBackupController {
     const destinationPath = await save({
       title: m.data_management_file_picker_export_title(),
       filters: [{ name: 'SQLite Database', extensions: ['sqlite', 'db'] }],
+      // 'en-CA' produces ISO 8601 YYYY-MM-DD for safe, sortable filenames — not for UI display.
       defaultPath: `rusty-shed-backup-${new Intl.DateTimeFormat('en-CA').format(Date.now())}.sqlite`
     });
 

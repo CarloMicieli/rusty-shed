@@ -42,21 +42,12 @@
   let datePopoverOpen = $state(false);
 
   // ── Date formatter ──────────────────────────────────────────────────────
-  const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
-
-  function formatDate(iso: string): string {
-    // Parse as local date to avoid UTC midnight offset
-    const [y, mo, d] = iso.split('-').map(Number);
-    return dateFormatter.format(new Date(y, mo - 1, d));
-  }
+  // Delegate to RegionalManager to ensure OS locale (via Tauri) is used.
+  const formatDate = (iso: string) => regionalManager.formatDate(iso);
 
   // ── Price formatter ─────────────────────────────────────────────────────
-  function formatPrice(amount: bigint, currency: string): string {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency
-    }).format(Number(amount) / 100);
-  }
+  const formatPrice = (amount: bigint, currency: string) =>
+    regionalManager.formatCurrencyWith(amount, currency);
 
   // ── Priority label ───────────────────────────────────────────────────────
   function priorityLabel(p: WishlistPriority): string {

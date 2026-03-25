@@ -2,6 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { Wrench, Trash2 } from 'lucide-svelte';
   import type { MaintenanceCardEventView } from '$lib/bindings';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   let { events, onDeleteEvent } = $props<{
     events: MaintenanceCardEventView[];
@@ -11,7 +12,11 @@
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     return date
-      .toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+      .toLocaleDateString(regionalManager.locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
       .replace(/\//g, '.');
   }
 </script>

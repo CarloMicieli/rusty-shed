@@ -8,6 +8,7 @@
   import { readFile } from '@tauri-apps/plugin-fs';
   import { goto } from '$app/navigation';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     item: WishlistItem;
@@ -55,10 +56,10 @@
   const desiredPriceStr = $derived.by(() => {
     if (!item.desiredPrice) return null;
     const price = item.desiredPrice as MonetaryAmount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: (price.currency as string) || 'EUR'
-    }).format(Number(price.amount || 0) / 100);
+    return regionalManager.formatCurrencyWith(
+      Number(price.amount || 0),
+      (price.currency as string) || 'EUR'
+    );
   });
 
   const PlaceholderIcon = $derived.by(() => {

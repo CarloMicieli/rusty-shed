@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { getUrgencyLevel } from '../utils/urgency';
   import type { MaintenanceCardView } from '$lib/bindings';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   let { card } = $props<{ card: MaintenanceCardView }>();
 
@@ -38,7 +39,11 @@
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date
-      .toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+      .toLocaleDateString(regionalManager.locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
       .replace(/\//g, '.'); // Monospaced friendly format
   };
 

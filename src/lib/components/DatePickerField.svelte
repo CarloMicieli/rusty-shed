@@ -2,6 +2,7 @@
   import * as Popover from '$lib/components/ui/popover';
   import { Calendar } from '$lib/components/ui/calendar';
   import { CalendarDate } from '@internationalized/date';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   interface Props {
     value?: string | null;
@@ -27,8 +28,6 @@
     class: className = ''
   }: Props = $props();
 
-  const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
-
   function isoToCalendarDate(iso: string): CalendarDate {
     const [y, mo, d] = iso.split('-').map(Number);
     return new CalendarDate(y, mo, d);
@@ -39,8 +38,7 @@
   }
 
   function formatDate(iso: string): string {
-    const [y, mo, d] = iso.split('-').map(Number);
-    return dateFormatter.format(new Date(y, mo - 1, d));
+    return regionalManager.formatDate(iso);
   }
 
   const calendarValue = $derived(value ? isoToCalendarDate(value) : undefined);
