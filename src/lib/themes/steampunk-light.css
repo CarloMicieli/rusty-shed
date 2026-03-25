@@ -226,13 +226,3 @@
   --layout-surface: #f4ebd0;
   --layout-border: #cfb598;
 }
-
-/* Ensure text contrast meets WCAG AA (4.5:1 for normal text) */
-[data-theme='steampunk-light'] {
-  /* Heading contrast: brass on parchment */
-  --heading-color: var(--color-primary-800);
-  --heading-weight: 700;
-
-  /* Body text contrast */
-  --body-color: var(--color-text-700);
-}

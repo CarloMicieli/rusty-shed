@@ -194,7 +194,10 @@
     </div>
 
     <!-- Main Content Wrapper -->
-    <div class="relative flex h-full min-w-0 flex-1 flex-col" style:background-color="var(--layout-bg)">
+    <div
+      class="relative flex h-full min-w-0 flex-1 flex-col"
+      style:background-color="var(--layout-bg)"
+    >
       <!-- Amber tint overlay to match sidebar/header in the exposed corner -->
       <div class="pointer-events-none absolute inset-0 z-0 bg-[#D48A42]/5"></div>
 
