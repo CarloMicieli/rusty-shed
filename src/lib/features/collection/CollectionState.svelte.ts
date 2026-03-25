@@ -10,7 +10,12 @@ import { collectionStore } from '$lib/state/collection.svelte';
 
 export type FilterState = {
   query: string;
+  /** @deprecated use `scales` multi-select instead */
   scale: string | null;
+  scales: SvelteSet<string>;
+  companies: SvelteSet<string>;
+  categories: SvelteSet<string>;
+  epochs: SvelteSet<string>;
   tags: SvelteSet<string>;
 };
 
@@ -35,7 +40,15 @@ function toastError(id: string, message?: string) {
  */
 export class CollectionState {
   #collection = $state<CollectionView | null>(null);
-  #filters = $state<FilterState>({ query: '', scale: null, tags: new SvelteSet() });
+  #filters = $state<FilterState>({
+    query: '',
+    scale: null,
+    scales: new SvelteSet(),
+    companies: new SvelteSet(),
+    categories: new SvelteSet(),
+    epochs: new SvelteSet(),
+    tags: new SvelteSet()
+  });
   #isLoading = $state(false);
 
   availableTags = $derived.by(() => {
@@ -46,14 +59,76 @@ export class CollectionState {
     return sortAvailableTags([...combined]);
   });
 
+  /** Unique Scale values present in the current collection, sorted alphabetically */
+  availableScaleIds = $derived.by((): string[] => {
+    const items = this.#collection?.items ?? [];
+    const seen = new SvelteSet<string>();
+    for (const item of items) {
+      if (item.railwayModel.scale) seen.add(item.railwayModel.scale);
+    }
+    return [...seen].sort();
+  });
+
+  /** Unique railway company names present in the current collection, sorted alphabetically */
+  availableCompanies = $derived.by((): string[] => {
+    const items = this.#collection?.items ?? [];
+    const seen = new SvelteSet<string>();
+    for (const item of items) {
+      for (const rs of item.rollingStocks) {
+        if (rs.railwayCompanyName) seen.add(rs.railwayCompanyName);
+      }
+    }
+    return [...seen].sort();
+  });
+
+  /** Unique Category values present in the current collection, sorted alphabetically */
+  availableCategories = $derived.by((): string[] => {
+    const items = this.#collection?.items ?? [];
+    const seen = new SvelteSet<string>();
+    for (const item of items) {
+      if (item.railwayModel.category) seen.add(item.railwayModel.category);
+    }
+    return [...seen].sort();
+  });
+
+  /** Unique Epoch values present in the current collection, sorted alphabetically */
+  availableEpochs = $derived.by((): string[] => {
+    const items = this.#collection?.items ?? [];
+    const seen = new SvelteSet<string>();
+    for (const item of items) {
+      if (item.railwayModel.epoch) seen.add(item.railwayModel.epoch);
+    }
+    return [...seen].sort();
+  });
+
+  /** True when at least one filter dimension is active */
+  get hasActiveFilters(): boolean {
+    const f = this.#filters;
+    return (
+      f.query !== '' ||
+      f.scales.size > 0 ||
+      f.companies.size > 0 ||
+      f.categories.size > 0 ||
+      f.epochs.size > 0 ||
+      f.tags.size > 0
+    );
+  }
+
   filteredItems = $derived.by(() => {
     const items = this.#collection?.items ?? [];
-    const { query, scale } = this.#filters;
+    const { query, scales, companies, categories, epochs } = this.#filters;
     const q = query.trim().toLowerCase();
 
     return items.filter((item) => {
-      if (scale && item.railwayModel.scale !== scale) return false;
-      // Tag filtering will be added when backend supports it
+      if (scales.size > 0 && !scales.has(item.railwayModel.scale)) return false;
+      if (categories.size > 0 && !categories.has(item.railwayModel.category)) return false;
+      if (epochs.size > 0 && !epochs.has(item.railwayModel.epoch)) return false;
+      if (companies.size > 0) {
+        const itemCompanies = item.rollingStocks
+          .map((rs) => rs.railwayCompanyName)
+          .filter((c): c is string => c !== null);
+        if (!itemCompanies.some((c) => companies.has(c))) return false;
+      }
       if (q) {
         const manufacturer =
           typeof item.railwayModel.manufacturer === 'object'
@@ -119,11 +194,55 @@ export class CollectionState {
   };
 
   setScale = (scale: string | null) => {
+    // Legacy single-select: sync to multi-select `scales` set
+    if (scale === null) {
+      this.#filters.scales = new SvelteSet();
+    } else {
+      this.#filters.scales = new SvelteSet([scale]);
+    }
     this.#filters.scale = scale;
   };
 
+  toggleScale = (scale: string) => {
+    const next = new SvelteSet(this.#filters.scales);
+    if (next.has(scale)) next.delete(scale);
+    else next.add(scale);
+    this.#filters.scales = next;
+    // Keep legacy field in sync (null = all, first value otherwise)
+    this.#filters.scale = next.size === 0 ? null : [...next][0];
+  };
+
+  toggleCompany = (company: string) => {
+    const next = new SvelteSet(this.#filters.companies);
+    if (next.has(company)) next.delete(company);
+    else next.add(company);
+    this.#filters.companies = next;
+  };
+
+  toggleCategory = (category: string) => {
+    const next = new SvelteSet(this.#filters.categories);
+    if (next.has(category)) next.delete(category);
+    else next.add(category);
+    this.#filters.categories = next;
+  };
+
+  toggleEpoch = (epoch: string) => {
+    const next = new SvelteSet(this.#filters.epochs);
+    if (next.has(epoch)) next.delete(epoch);
+    else next.add(epoch);
+    this.#filters.epochs = next;
+  };
+
   clearFilters = () => {
-    this.#filters = { query: '', scale: null, tags: new SvelteSet() };
+    this.#filters = {
+      query: '',
+      scale: null,
+      scales: new SvelteSet(),
+      companies: new SvelteSet(),
+      categories: new SvelteSet(),
+      epochs: new SvelteSet(),
+      tags: new SvelteSet()
+    };
   };
 
   /**

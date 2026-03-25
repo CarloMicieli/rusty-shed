@@ -23,18 +23,35 @@ vi.mock('$lib/features/collection/CollectionState.svelte', () => ({
     collection: null,
     isLoading: false,
     error: null,
-    filters: { query: '', scale: null, tags: new Set() },
+    filters: {
+      query: '',
+      scale: null,
+      scales: new Set(),
+      companies: new Set(),
+      categories: new Set(),
+      epochs: new Set(),
+      tags: new Set()
+    },
     filteredItems: [],
     rawItems: [],
     items: [],
     summary: null,
     availableTags: [],
+    availableScaleIds: [],
+    availableCompanies: [],
+    availableCategories: [],
+    availableEpochs: [],
+    hasActiveFilters: false,
     filterCount: 0,
     fetchCollection: vi.fn(),
     setFilter: vi.fn(),
     setQuery: vi.fn(),
     setScale: vi.fn(),
     toggleTag: vi.fn(),
+    toggleScale: vi.fn(),
+    toggleCompany: vi.fn(),
+    toggleCategory: vi.fn(),
+    toggleEpoch: vi.fn(),
     clearFilters: vi.fn(),
     deleteItem: vi.fn(),
     addItem: vi.fn(),
@@ -55,6 +72,10 @@ vi.mock('$lib/features/collection/components/DeleteModal.svelte', () => ({
 
 vi.mock('$lib/features/collection/components/FilterPanel.svelte', () => ({
   default: function FilterPanelStub() {}
+}));
+
+vi.mock('$lib/features/collection/components/ControlPanel.svelte', () => ({
+  default: function ControlPanelStub() {}
 }));
 
 vi.mock('$lib/components/RailwayModelPreviewCard.svelte', () => ({

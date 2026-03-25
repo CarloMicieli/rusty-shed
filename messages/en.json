@@ -1129,5 +1129,10 @@
   "track_product_select_manufacturer": "— Select brand —",
   "boolean_yes": "Yes",
   "boolean_no": "No",
-  "error_required": "Required"
+  "error_required": "Required",
+  "controlpanel_section_scales": "Scales",
+  "controlpanel_section_companies": "Companies",
+  "controlpanel_section_categories": "Category",
+  "controlpanel_section_epochs": "Epochs",
+  "controlpanel_clear_all": "Clear All"
 }

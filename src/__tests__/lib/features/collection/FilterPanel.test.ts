@@ -35,6 +35,10 @@ function makeFilters(overrides?: Partial<FilterState>): FilterState {
   return {
     query: '',
     scale: null,
+    scales: new SvelteSet<string>(),
+    companies: new SvelteSet<string>(),
+    categories: new SvelteSet<string>(),
+    epochs: new SvelteSet<string>(),
     tags: new SvelteSet<string>(),
     ...overrides
   };

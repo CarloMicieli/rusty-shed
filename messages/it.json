@@ -1129,5 +1129,10 @@
   "wishlist_add_item_drawer_discard_confirm": "Scarta",
   "wishlist_add_item_drawer_discard_description": "Hai modifiche non salvate. Scartarle?",
   "wishlist_add_item_drawer_discard_title": "Scartare l'elemento dalla lista dei desideri?",
-  "wishlist_add_item_drawer_subtitle": "Aggiungi alla tua lista dei desideri"
+  "wishlist_add_item_drawer_subtitle": "Aggiungi alla tua lista dei desideri",
+  "controlpanel_section_scales": "Scale",
+  "controlpanel_section_companies": "Compagnie",
+  "controlpanel_section_categories": "Categoria",
+  "controlpanel_section_epochs": "Epoche",
+  "controlpanel_clear_all": "Cancella tutto"
 }

@@ -17,6 +17,7 @@
   import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
   import { collectionItemToCardData } from './utils/cardDataMapper';
   import FilterPanel from './components/FilterPanel.svelte';
+  import ControlPanel from './components/ControlPanel.svelte';
   import CollectionTableView from './components/CollectionTableView.svelte';
   import AddCollectionItemDrawer from './components/AddCollectionItemDrawer.svelte';
 
@@ -93,6 +94,16 @@
   const isLoading = $derived(collectionService.isLoading);
   const isCollectionEmpty = $derived(rawItems.length === 0);
 
+  // Control Panel derived values — dynamic options from live collection
+  const availableScaleOptions = $derived.by(() => {
+    const ids = collectionService.availableScaleIds;
+    return availableScales.filter((s) => ids.includes(s.id));
+  });
+  const availableCompanies = $derived(collectionService.availableCompanies);
+  const availableCategories = $derived(collectionService.availableCategories);
+  const availableEpochs = $derived(collectionService.availableEpochs);
+  const hasActiveFilters = $derived(collectionService.hasActiveFilters);
+
   onMount(() => {
     void collectionService.fetchCollection();
   });
@@ -104,6 +115,22 @@
 
   function handleScale(scale: string | null) {
     collectionService.setScale(scale);
+  }
+
+  function handleToggleScale(scale: string) {
+    collectionService.toggleScale(scale);
+  }
+
+  function handleToggleCompany(company: string) {
+    collectionService.toggleCompany(company);
+  }
+
+  function handleToggleCategory(category: string) {
+    collectionService.toggleCategory(category);
+  }
+
+  function handleToggleEpoch(epoch: string) {
+    collectionService.toggleEpoch(epoch);
   }
 
   function handleTag(tag: string) {
@@ -362,13 +389,17 @@
           ? 'auto'
           : 'none'};"
       >
-        <FilterPanel
+        <ControlPanel
           {filters}
-          {availableTags}
-          {availableScales}
-          onSearch={handleSearch}
-          onSetScale={handleScale}
-          onToggleTag={handleTag}
+          availableScales={availableScaleOptions}
+          {availableCompanies}
+          {availableCategories}
+          {availableEpochs}
+          {hasActiveFilters}
+          onToggleScale={handleToggleScale}
+          onToggleCompany={handleToggleCompany}
+          onToggleCategory={handleToggleCategory}
+          onToggleEpoch={handleToggleEpoch}
           onClear={handleClear}
           onToggleSidebar={ui.toggleFilterSidebar}
         />
