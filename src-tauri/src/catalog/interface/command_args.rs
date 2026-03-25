@@ -1110,6 +1110,8 @@ pub struct UpdateRollingStockSpecificationsArgs {
     pub road_number: Option<String>,
     pub livery: Option<String>,
     pub depot: Option<String>,
+    pub series: Option<String>,
+    pub friendly_name: Option<String>,
 
     // ── Technical ──────────────────────────────────────────────────────────
     pub flywheel_fitted: Option<bool>,
@@ -1158,6 +1160,8 @@ impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecifi
                 road_number: args.road_number,
                 livery: args.livery,
                 depot: args.depot,
+                series: args.series,
+                friendly_name: args.friendly_name,
                 flywheel_fitted: bool_to_flag(args.flywheel_fitted),
                 body_shell: parse_opt::<BodyShellType>(args.body_shell, "body_shell")?,
                 chassis: parse_opt::<ChassisType>(args.chassis, "chassis")?,

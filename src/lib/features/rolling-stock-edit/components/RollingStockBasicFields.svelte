@@ -5,7 +5,9 @@
 
   interface Props {
     seriesCode: string;
+    series: string;
     roadNumber: string;
+    friendlyName: string;
     livery: string;
     depot: string;
     railwayCompanyId?: string | null;
@@ -14,7 +16,9 @@
 
   let {
     seriesCode = $bindable(),
+    series = $bindable(),
     roadNumber = $bindable(),
+    friendlyName = $bindable(),
     livery = $bindable(),
     depot = $bindable(),
     railwayCompanyId = $bindable(null),
@@ -40,7 +44,7 @@
           required
         />
       </div>
-      <div class="col-span-2">
+      <div>
         <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-series-code">
           {m.rolling_stock_field_series_code()} <span class="text-red-400">*</span>
         </label>
@@ -51,6 +55,16 @@
         />
       </div>
       <div>
+        <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-series">
+          {m.rolling_stock_field_series()}
+        </label>
+        <DrawerInput
+          id="drawer-series"
+          bind:value={series}
+          placeholder={m.rolling_stock_placeholder_series()}
+        />
+      </div>
+      <div>
         <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-road-number">
           {m.rolling_stock_field_road_number()}
         </label>
@@ -58,6 +72,16 @@
           id="drawer-road-number"
           bind:value={roadNumber}
           placeholder={m.rolling_stock_placeholder_road_number()}
+        />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-zinc-400" for="drawer-friendly-name">
+          {m.rolling_stock_field_friendly_name()}
+        </label>
+        <DrawerInput
+          id="drawer-friendly-name"
+          bind:value={friendlyName}
+          placeholder={m.rolling_stock_placeholder_friendly_name()}
         />
       </div>
       <div>

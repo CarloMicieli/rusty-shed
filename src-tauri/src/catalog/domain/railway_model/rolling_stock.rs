@@ -27,6 +27,10 @@ pub struct RollingStockSpecPatch {
     pub livery: Option<String>,
     /// Optional depot name.
     pub depot: Option<String>,
+    /// Optional prototype series name.
+    pub series: Option<String>,
+    /// Optional friendly name (nickname).
+    pub friendly_name: Option<String>,
     /// Optional flywheel flag.
     pub flywheel_fitted: Option<FeatureFlag>,
     /// Optional body shell material.
@@ -475,6 +479,8 @@ impl RollingStock {
                 road_number: rn,
                 livery: lv,
                 depot: dp,
+                series: sr,
+                friendly_name: fn_,
                 technical_specifications: ts,
                 dcc_interface: di,
                 control: ct,
@@ -484,6 +490,8 @@ impl RollingStock {
                 *rn = spec.road_number.clone();
                 *lv = spec.livery.clone();
                 *dp = spec.depot.clone();
+                *sr = spec.series.clone();
+                *fn_ = spec.friendly_name.clone();
                 *ts = Some(tech_specs);
                 *di = spec.dcc_interface;
                 *ct = spec.control;
@@ -493,6 +501,8 @@ impl RollingStock {
                 road_number: rn,
                 livery: lv,
                 depot: dp,
+                series: sr,
+                friendly_name: fn_,
                 technical_specifications: ts,
                 dcc_interface: di,
                 control: ct,
@@ -502,6 +512,8 @@ impl RollingStock {
                 *rn = spec.road_number.clone();
                 *lv = spec.livery.clone();
                 *dp = spec.depot.clone();
+                *sr = spec.series.clone();
+                *fn_ = spec.friendly_name.clone();
                 *ts = Some(tech_specs);
                 *di = spec.dcc_interface;
                 *ct = spec.control;
@@ -511,6 +523,8 @@ impl RollingStock {
                 road_number: rn,
                 livery: lv,
                 depot: dp,
+                series: sr,
+                friendly_name: fn_,
                 technical_specifications: ts,
                 dcc_interface: di,
                 control: ct,
@@ -520,6 +534,8 @@ impl RollingStock {
                 *rn = spec.road_number.clone();
                 *lv = spec.livery.clone();
                 *dp = spec.depot.clone();
+                *sr = spec.series.clone();
+                *fn_ = spec.friendly_name.clone();
                 *ts = Some(tech_specs);
                 *di = spec.dcc_interface;
                 *ct = spec.control;
@@ -528,24 +544,30 @@ impl RollingStock {
                 series_code: sc,
                 road_number: rn,
                 livery: lv,
+                friendly_name: fn_,
                 technical_specifications: ts,
                 ..
             } => {
                 *sc = spec.series_code.clone();
                 *rn = spec.road_number.clone();
                 *lv = spec.livery.clone();
+                *fn_ = spec.friendly_name.clone();
                 *ts = Some(tech_specs);
             }
             RollingStock::PassengerCar {
                 series_code: sc,
                 road_number: rn,
                 livery: lv,
+                series: sr,
+                friendly_name: fn_,
                 technical_specifications: ts,
                 ..
             } => {
                 *sc = spec.series_code.clone();
                 *rn = spec.road_number.clone();
                 *lv = spec.livery.clone();
+                *sr = spec.series.clone();
+                *fn_ = spec.friendly_name.clone();
                 *ts = Some(tech_specs);
             }
         }
@@ -555,6 +577,8 @@ impl RollingStock {
             "road_number": spec.road_number,
             "livery": spec.livery,
             "depot": spec.depot,
+            "series": spec.series,
+            "friendly_name": spec.friendly_name,
             "flywheel_fitted": spec.flywheel_fitted.map(|f| f.to_string()),
             "body_shell": spec.body_shell.map(|b| b.to_string()),
             "chassis": spec.chassis.map(|c| c.to_string()),

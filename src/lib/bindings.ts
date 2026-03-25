@@ -6538,6 +6538,8 @@ export type UpdateRollingStockSpecificationsArgs = {
   roadNumber: string | null;
   livery: string | null;
   depot: string | null;
+  series: string | null;
+  friendlyName: string | null;
   flywheelFitted: boolean | null;
   bodyShell: string | null;
   chassis: string | null;

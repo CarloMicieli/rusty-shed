@@ -33,7 +33,9 @@
   interface FormState {
     railwayCompanyId: string;
     seriesCode: string;
+    series: string;
     roadNumber: string;
+    friendlyName: string;
     livery: string;
     depot: string;
     flywheelFitted: boolean | null;
@@ -51,7 +53,9 @@
   const emptyForm: FormState = {
     railwayCompanyId: '',
     seriesCode: '',
+    series: '',
     roadNumber: '',
+    friendlyName: '',
     livery: '',
     depot: '',
     flywheelFitted: null,
@@ -142,7 +146,9 @@
     return {
       railwayCompanyId: rs.railway.railwayCompanyId ?? '',
       seriesCode: rs.series_code,
+      series: 'series' in rs ? (rs.series ?? '') : '',
       roadNumber: rs.road_number ?? '',
+      friendlyName: rs.friendly_name ?? '',
       livery: rs.livery ?? '',
       depot: 'depot' in rs ? (rs.depot ?? '') : '',
       flywheelFitted:
@@ -223,7 +229,9 @@
         railwayModelId,
         rollingStockId,
         seriesCode: form.seriesCode,
+        series: form.series || null,
         roadNumber: form.roadNumber || null,
+        friendlyName: form.friendlyName || null,
         livery: form.livery || null,
         depot: form.depot || null,
         flywheelFitted: form.flywheelFitted,
@@ -297,7 +305,9 @@
     <div class="space-y-6">
       <RollingStockBasicFields
         bind:seriesCode={form.seriesCode}
+        bind:series={form.series}
         bind:roadNumber={form.roadNumber}
+        bind:friendlyName={form.friendlyName}
         bind:livery={form.livery}
         bind:depot={form.depot}
         bind:railwayCompanyId={form.railwayCompanyId}

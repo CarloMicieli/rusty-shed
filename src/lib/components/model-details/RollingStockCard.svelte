@@ -55,6 +55,10 @@
   let localLengthMm = $state('');
   let localLengthInches = $state('');
 
+  // ── Additional identification fields (loaded via getRailwayModelById on first expand) ─
+  let localPrototypeSeries = $state<string | null>(null);
+  let localFriendlyName = $state<string | null>(null);
+
   // ── Technical spec fields (loaded via getRailwayModelById on first expand) ───
   let localFlywheelFitted = $state<'YES' | 'NO' | null>(null);
   let localBodyShell = $state<string | null>(null);
@@ -153,6 +157,24 @@
     else if ('freightCar' in rsView) localCategory = 'FREIGHT_CAR';
     else if ('passengerCar' in rsView) localCategory = 'PASSENGER_CAR';
     else if ('railcar' in rsView) localCategory = 'RAILCAR';
+
+    // Extract prototype series and friendly_name
+    if ('locomotive' in rsView) {
+      localPrototypeSeries = rsView.locomotive.series ?? null;
+      localFriendlyName = rsView.locomotive.friendly_name ?? null;
+    } else if ('electricMultipleUnit' in rsView) {
+      localPrototypeSeries = rsView.electricMultipleUnit.series ?? null;
+      localFriendlyName = rsView.electricMultipleUnit.friendly_name ?? null;
+    } else if ('freightCar' in rsView) {
+      localPrototypeSeries = null;
+      localFriendlyName = rsView.freightCar.friendly_name ?? null;
+    } else if ('passengerCar' in rsView) {
+      localPrototypeSeries = rsView.passengerCar.series ?? null;
+      localFriendlyName = rsView.passengerCar.friendly_name ?? null;
+    } else if ('railcar' in rsView) {
+      localPrototypeSeries = rsView.railcar.series ?? null;
+      localFriendlyName = rsView.railcar.friendly_name ?? null;
+    }
 
     let ts: TechnicalSpecifications | null = null;
     if ('locomotive' in rsView) ts = rsView.locomotive.technical_specifications;
@@ -293,7 +315,9 @@
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       seriesCode: localSeries || rollingStock.series || '',
+      series: localPrototypeSeries,
       roadNumber: localRoadNumber || null,
+      friendlyName: localFriendlyName,
       livery: localLivery || null,
       depot: localDepot || null,
       flywheelFitted: featureFlagToBool(localFlywheelFitted),

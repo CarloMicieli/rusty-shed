@@ -33,7 +33,9 @@
       railwayCompanyName: '',
       category: '',
       seriesCode: '',
+      series: '',
       roadNumber: '',
+      friendlyName: '',
       livery: '',
       depot: '',
       control: ''
@@ -143,7 +145,9 @@
 
     <RollingStockBasicFields
       bind:seriesCode={f.values.seriesCode}
+      bind:series={f.values.series}
       bind:roadNumber={f.values.roadNumber}
+      bind:friendlyName={f.values.friendlyName}
       bind:livery={f.values.livery}
       bind:depot={f.values.depot}
     />

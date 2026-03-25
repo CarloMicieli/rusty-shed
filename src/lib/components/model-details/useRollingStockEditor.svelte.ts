@@ -6,7 +6,9 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 export interface RsFormState {
   seriesCode: string;
+  series: string;
   roadNumber: string;
+  friendlyName: string;
   livery: string;
   depot: string;
   flywheelFitted: boolean | null;
@@ -28,7 +30,9 @@ export interface RsFormState {
 function getEmptyRsForm(): RsFormState {
   return {
     seriesCode: '',
+    series: '',
     roadNumber: '',
+    friendlyName: '',
     livery: '',
     depot: '',
     flywheelFitted: null,
@@ -83,7 +87,9 @@ function extractRsDataFromView(view: RollingStockView): RsFormState {
 
   return {
     seriesCode: rs.series_code,
+    series: 'series' in rs ? (rs.series ?? '') : '',
     roadNumber: rs.road_number ?? '',
+    friendlyName: rs.friendly_name ?? '',
     livery: rs.livery ?? '',
     depot: 'depot' in rs ? (rs.depot ?? '') : '',
     flywheelFitted:
@@ -235,7 +241,9 @@ export function useRollingStockEditor(
       railwayModelId: model.id,
       rollingStockId: unitId,
       seriesCode: form.seriesCode,
+      series: form.series || null,
       roadNumber: form.roadNumber || null,
+      friendlyName: form.friendlyName || null,
       livery: form.livery || null,
       depot: form.depot || null,
       flywheelFitted: form.flywheelFitted,
@@ -270,7 +278,9 @@ export function useRollingStockEditor(
       railwayModelId: model.id,
       rollingStockId: unitId,
       seriesCode: form.seriesCode,
+      series: form.series || null,
       roadNumber: form.roadNumber || null,
+      friendlyName: form.friendlyName || null,
       livery: form.livery || null,
       depot: form.depot || null,
       flywheelFitted: form.flywheelFitted,
