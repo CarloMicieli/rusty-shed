@@ -35,6 +35,7 @@
   import { safeInvoke } from '$lib/services';
   import { onDestroy, onMount, setContext } from 'svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { collectionStore } from '$lib/state/collection.svelte';
   import { listen } from '@tauri-apps/api/event';
   import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
@@ -101,6 +102,9 @@
     } catch (err) {
       log.warn(`Failed to initialize settings, using defaults: ${String(err)}`);
     }
+
+    // 0a. Detect OS locale for regional formatting
+    await regionalManager.init();
 
     // 1. Initialize theme from settings
     await themeStore.initializeFromSettings();

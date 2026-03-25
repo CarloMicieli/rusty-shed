@@ -16,8 +16,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_priority_high: () => 'High'
 }));
 
-vi.mock('$lib/utils/currency', () => ({
-  getCurrencySymbol: (currency: string) => (currency === 'EUR' ? '€' : '$')
+vi.mock('$lib/features/settings/RegionalManager.svelte', () => ({
+  regionalManager: { getCurrencySymbol: (currency: string) => (currency === 'EUR' ? '€' : '$') }
 }));
 
 import WishlistSection from '$lib/components/drawer/sections/WishlistSection.svelte';

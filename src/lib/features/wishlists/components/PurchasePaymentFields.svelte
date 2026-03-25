@@ -2,7 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
   import { CurrencyInput, DatePickerField } from '$lib/components';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
 
@@ -89,7 +89,7 @@
     <CurrencyInput
       id="purchase-price"
       bind:value={priceAmount}
-      symbol={getCurrencySymbol(priceCurrency)}
+      symbol={regionalManager.getCurrencySymbol(priceCurrency)}
       placeholder={m.purchase_dialog_price_placeholder()}
       disabled={isSubmitting}
       required

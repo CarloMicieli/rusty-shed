@@ -6,7 +6,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { CurrencyInput, DatePickerField } from '$lib/components';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
 
   interface Props {
@@ -188,7 +188,7 @@
           <div class="col-span-3 mt-1">
             <CurrencyInput
               bind:value={priceDraftCents}
-              symbol={getCurrencySymbol(priceCurrencyDraft)}
+              symbol={regionalManager.getCurrencySymbol(priceCurrencyDraft)}
               disabled={isSavingPrice}
               onblur={savePrice}
               onkeydown={handlePriceKeydown}

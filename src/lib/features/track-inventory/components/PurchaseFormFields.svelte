@@ -5,7 +5,7 @@
   import type { Component } from 'svelte';
   import { Input, Button, DatePickerField } from '$lib/components';
   import { FormPrice } from '$lib/components/drawer';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 
   interface Props {
@@ -38,7 +38,7 @@
 
   const totalCents = $derived((priceAmount ?? 0) * quantity);
   const totalDisplay = $derived((totalCents / 100).toFixed(2));
-  const currencySymbol = $derived(getCurrencySymbol(priceCurrency));
+  const currencySymbol = $derived(regionalManager.getCurrencySymbol(priceCurrency));
 
   const productOptions = $derived(
     products.map((p) => ({

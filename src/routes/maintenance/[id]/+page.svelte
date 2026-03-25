@@ -96,7 +96,8 @@
           {#if card.displayInfo?.rollingStockCategory || card.displayInfo?.roadNumber || card.displayInfo?.seriesCode}
             <div class="font-mono text-[11px] font-bold tracking-wider">
               {#if card.displayInfo?.rollingStockCategory}
-                <span class="text-white">{card.displayInfo.rollingStockCategory.toUpperCase()}</span>
+                <span class="text-white">{card.displayInfo.rollingStockCategory.toUpperCase()}</span
+                >
               {/if}
               {#if card.displayInfo?.roadNumber}
                 <span class="ml-2 text-amber-400">{card.displayInfo.roadNumber}</span>

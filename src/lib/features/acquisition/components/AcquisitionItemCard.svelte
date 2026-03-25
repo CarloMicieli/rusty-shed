@@ -3,7 +3,7 @@
   import * as Select from '$lib/components/ui/select';
   import { CurrencyInput } from '$lib/components';
   import { DrawerInput } from '$lib/components/drawer';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { Copy, Trash2 } from 'lucide-svelte';
   import type { Manufacturer } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
@@ -302,7 +302,7 @@
       <CurrencyInput
         id="item-{item.uid}-price"
         value={item.priceAmount}
-        symbol={getCurrencySymbol(currency)}
+        symbol={regionalManager.getCurrencySymbol(currency)}
         label={m.acquisition_item_price_label()}
         inputClass="bg-[#0F0F0F] border-[#1F1F1F] rounded-[8px] text-[#E0E0E0] placeholder:text-[#808080]"
         onchange={(val) => onUpdate(item.uid, { priceAmount: val })}

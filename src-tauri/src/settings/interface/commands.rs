@@ -28,3 +28,10 @@ pub async fn update_settings(
 pub async fn initialize_settings(app: AppHandle) -> Result<UserSettings, String> {
     application::initialize_settings::initialize_settings(&app)
 }
+
+/// Return the OS system locale as a BCP 47 tag (e.g. "en-US", "it-IT").
+#[command]
+#[specta::specta]
+pub fn get_locale() -> Option<String> {
+    tauri_plugin_os::locale()
+}

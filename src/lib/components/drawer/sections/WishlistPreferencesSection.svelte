@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { FormPrice } from '$lib/components/drawer';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { WishlistPriority } from '$lib/bindings';
   import { PRIORITIES } from '$lib/features/wishlists/constants';
 
@@ -35,7 +35,7 @@
     return PRIORITY_LABELS[p]?.() ?? p;
   }
 
-  const currencySymbol = $derived(getCurrencySymbol(currency));
+  const currencySymbol = $derived(regionalManager.getCurrencySymbol(currency));
 </script>
 
 <div class="space-y-3">

@@ -7,7 +7,7 @@
   import { toaster } from '$lib/toaster';
   import { CalendarDate } from '@internationalized/date';
   import { CurrencyInput } from '$lib/components';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
 
   interface Props {
@@ -297,7 +297,9 @@
                 bind:value={priceInputCents}
                 bind:displayValue={priceDisplayValue}
                 bind:hasInvalidInput={priceHasInvalidInput}
-                symbol={getCurrencySymbol(item.desiredPrice?.currency ?? defaultCurrency)}
+                symbol={regionalManager.getCurrencySymbol(
+                  item.desiredPrice?.currency ?? defaultCurrency
+                )}
                 onblur={commitPrice}
                 onkeydown={handlePriceKeydown}
                 placeholder="0.00"

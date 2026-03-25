@@ -3,7 +3,7 @@
   import { ChevronDown, ChevronRight } from 'lucide-svelte';
   import { Textarea, CurrencyInput, DatePickerField } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
-  import { getCurrencySymbol } from '$lib/utils/currency';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { SellerView } from '$lib/bindings';
   import type { PurchaseFormState } from '$lib/features/collection/types/AddModelFormTypes';
 
@@ -139,7 +139,7 @@
           <CurrencyInput
             id="price-amount"
             bind:value={purchase.priceAmount}
-            symbol={getCurrencySymbol(purchase.priceCurrency)}
+            symbol={regionalManager.getCurrencySymbol(purchase.priceCurrency)}
             placeholder="0.00"
             class="w-full"
             label={m.add_model_price()}

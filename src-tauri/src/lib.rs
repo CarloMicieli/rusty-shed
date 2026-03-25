@@ -41,7 +41,9 @@ use crate::media::interface::command_handlers as media_command_handlers;
 use crate::search::interface::command_handlers as search_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
 use crate::settings::ensure_default_settings;
-use crate::settings::interface::commands::{get_settings, initialize_settings, update_settings};
+use crate::settings::interface::commands::{
+    get_locale, get_settings, initialize_settings, update_settings,
+};
 use crate::state::AppState;
 use crate::tracks_inventory::interface::command_handlers as tracks_inventory_command_handlers;
 use crate::tracks_inventory::interface::query_handlers as tracks_inventory_query_handlers;
@@ -248,6 +250,7 @@ pub fn run() {
         initialize_settings,
         get_settings,
         update_settings,
+        get_locale,
         database_backup_command_handlers::export_database,
         database_backup_command_handlers::import_database,
         search_command_handlers::global_search
