@@ -377,6 +377,48 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(cards)
     }
 
+    async fn delete_event(&mut self, event_id: &MaintenanceEventId) -> Result<(), DomainError> {
+        let event_trn = event_id.to_string();
+
+        // Retrieve the owning card's TRN before deleting so we can update its projection.
+        let card_trn: Option<String> =
+            sqlx::query_scalar("SELECT maintenance_card_id FROM maintenance_events WHERE id = ?")
+                .bind(&event_trn)
+                .fetch_optional(&mut *self.executor)
+                .await
+                .with_domain_context("Error finding owning card for maintenance event")?;
+
+        let card_trn = card_trn.ok_or_else(|| DomainError::NotFound {
+            resource: "MaintenanceEvent".to_string(),
+            identifier: event_trn.clone(),
+        })?;
+
+        sqlx::query("DELETE FROM maintenance_events WHERE id = ?")
+            .bind(&event_trn)
+            .execute(&mut *self.executor)
+            .await
+            .with_domain_context("Error deleting maintenance event")?;
+
+        // Recalculate last_maintenance_date from the remaining events for this card.
+        sqlx::query(
+            r#"UPDATE maintenance_cards
+               SET last_maintenance_date = (
+                   SELECT MAX(date_performed)
+                   FROM maintenance_events
+                   WHERE maintenance_card_id = ?
+               ),
+               updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?"#,
+        )
+        .bind(&card_trn)
+        .bind(&card_trn)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error updating maintenance card after event deletion")?;
+
+        Ok(())
+    }
+
     async fn list_due_card_views(&mut self) -> Result<Vec<MaintenanceCardView>, DomainError> {
         let q = r#"SELECT
             mc.id,
@@ -757,6 +799,85 @@ mod tests {
             display_info.product_code.as_deref(),
             Some("60100"),
             "product_code should match fixture"
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
+    async fn repo_delete_event_removes_row(pool: SqlitePool) {
+        // Uses event: trn:maintenance-event:ad4f1aa7-1142-43eb-afb4-cb56871ac29d
+        let event_uuid = Uuid::parse_str("ad4f1aa7-1142-43eb-afb4-cb56871ac29d").unwrap();
+        let event_id = crate::maintenance::domain::MaintenanceEventId::from_uuid(&event_uuid);
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repository();
+        repo.delete_event(&event_id).await.expect("delete");
+
+        // Load the card and confirm event is gone
+        let card_id = MaintenanceCardId::try_from(
+            "trn:maintenance-card:3284cc76-1472-4b12-a7d4-62043416adc2",
+        )
+        .expect("parse");
+        let card = repo
+            .find_by_id(&card_id)
+            .await
+            .expect("find")
+            .expect("exists");
+        assert!(
+            !card.events.iter().any(|e| e.id == event_uuid),
+            "deleted event should not be present"
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
+    async fn repo_delete_event_updates_last_maintenance_date(pool: SqlitePool) {
+        // Delete the most recent event (2025-03-01). last_maintenance_date should fall back to 2025-01-01.
+        let event_uuid = Uuid::parse_str("ad4f1aa7-1142-43eb-afb4-cb56871ac29d").unwrap();
+        let event_id = crate::maintenance::domain::MaintenanceEventId::from_uuid(&event_uuid);
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repository();
+        repo.delete_event(&event_id).await.expect("delete");
+
+        let card_id = MaintenanceCardId::try_from(
+            "trn:maintenance-card:3284cc76-1472-4b12-a7d4-62043416adc2",
+        )
+        .expect("parse");
+        let card = repo
+            .find_by_id(&card_id)
+            .await
+            .expect("find")
+            .expect("exists");
+        assert_eq!(
+            card.last_maintenance_date,
+            NaiveDate::from_ymd_opt(2025, 1, 1),
+            "last_maintenance_date should roll back to the previous event"
+        );
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_maintenance.sql")
+    )]
+    async fn repo_delete_event_not_found_returns_error(pool: SqlitePool) {
+        let nonexistent_uuid = Uuid::parse_str("ffffffff-ffff-ffff-ffff-ffffffffffff").unwrap();
+        let event_id = crate::maintenance::domain::MaintenanceEventId::from_uuid(&nonexistent_uuid);
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool).await.expect("uow");
+        let mut repo = unit_of_work.maintenance_repository();
+        let result = repo.delete_event(&event_id).await;
+        assert!(
+            matches!(
+                result,
+                Err(crate::core::domain::domain_error::DomainError::NotFound { .. })
+            ),
+            "Expected NotFound error, got: {:?}",
+            result
         );
     }
 }

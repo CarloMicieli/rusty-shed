@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, Hash } from 'lucide-svelte';
+  import { ChevronLeft, CalendarPlus, Calendar, CheckCircle2, Hash, History } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components';
   import MaintenanceDetailState, {
@@ -154,10 +154,14 @@
 
     <!-- Event Timeline -->
     <div class="space-y-4">
-      <h2 class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
-        Maintenance History
-      </h2>
-      <MaintenanceEventTimeline events={card.events} />
+      <div class="flex items-center gap-3">
+        <History size={20} class="text-zinc-500" />
+        <h3 class="text-lg font-bold tracking-tight text-zinc-200">Maintenance History</h3>
+      </div>
+      <MaintenanceEventTimeline
+        events={card.events}
+        onDeleteEvent={(id) => void maintenanceDetailState.deleteEvent(id)}
+      />
     </div>
   {/if}
 </div>

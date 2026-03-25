@@ -980,6 +980,17 @@ export const commands = {
     }
   },
   /**
+   * Command handler to delete a single maintenance event.
+   */
+  async deleteMaintenanceEvent(eventId: string): Promise<Result<null, CommandError>> {
+    try {
+      return { status: 'ok', data: await TAURI_INVOKE('delete_maintenance_event', { eventId }) };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: 'error', error: e as any };
+    }
+  },
+  /**
    * Command handler to retrieve all sellers.
    *
    * This handler constructs the repository and query handler, executes the query

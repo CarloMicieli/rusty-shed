@@ -1,6 +1,7 @@
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
 use crate::maintenance::domain::MaintenanceCard;
+use crate::maintenance::domain::MaintenanceEventId;
 use crate::maintenance::domain::read_models::MaintenanceCardView;
 use async_trait::async_trait;
 
@@ -93,6 +94,13 @@ pub trait MaintenanceRepository {
 
     /// List lightweight view representations for maintenance cards that are due or overdue.
     async fn list_due_card_views(&mut self) -> Result<Vec<MaintenanceCardView>, DomainError>;
+
+    /// Delete a single maintenance event by its identifier.
+    ///
+    /// After removing the event row, implementations must also recalculate and
+    /// update `maintenance_cards.last_maintenance_date` for the owning card so
+    /// the projection stays consistent.
+    async fn delete_event(&mut self, event_id: &MaintenanceEventId) -> Result<(), DomainError>;
 }
 
 /// Extension trait to attach the maintenance repository to the Unit of Work.

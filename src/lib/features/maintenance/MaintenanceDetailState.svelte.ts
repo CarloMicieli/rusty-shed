@@ -51,6 +51,28 @@ export default class MaintenanceDetailState {
     }
   }
 
+  async deleteEvent(eventId: string): Promise<void> {
+    if (!this.#card) return;
+
+    // Optimistic removal
+    const previous = this.#card.events;
+    this.#card = {
+      ...this.#card,
+      events: this.#card.events.filter((e) => e.id !== eventId)
+    };
+
+    const result = await safeInvoke<null>('delete_maintenance_event', { eventId });
+    if (!result.ok) {
+      // Rollback
+      if (this.#card) {
+        this.#card = { ...this.#card, events: previous };
+      }
+      throw new Error(result.error.message);
+    }
+
+    await this.loadCard(this.#card?.id ?? '');
+  }
+
   async addEvent(args: AddMaintenanceArgs): Promise<void> {
     if (!this.#card) return;
 

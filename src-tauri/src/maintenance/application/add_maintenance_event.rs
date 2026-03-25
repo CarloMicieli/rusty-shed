@@ -61,9 +61,11 @@ impl AddMaintenanceEvent {
         let mut card = MaintenanceCard::from_id(card_id);
 
         let event_id = id_provider.next_id();
-        let event_uuid_str = event_id.as_ref().trim_start_matches("trn:maintenance-event:");
-        let id = Uuid::parse_str(event_uuid_str)
-            .map_err(|e| DomainError::Validation(e.to_string()))?;
+        let event_uuid_str = event_id
+            .as_ref()
+            .trim_start_matches("trn:maintenance-event:");
+        let id =
+            Uuid::parse_str(event_uuid_str).map_err(|e| DomainError::Validation(e.to_string()))?;
 
         card.record_maintenance(
             id,
@@ -74,5 +76,60 @@ impl AddMaintenanceEvent {
 
         repo.save(card).await?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::domain::test_utils::MockIdProvider;
+    use crate::maintenance::application::testing::FakeUow;
+    use crate::maintenance::domain::{MaintenanceCardId, MockMaintenanceRepository};
+    use chrono::NaiveDate;
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn it_saves_maintenance_recorded_event() {
+        let mut mock = MockMaintenanceRepository::new();
+        let fixed_event_uuid = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
+        let fixed_event_id = MaintenanceEventId::from_uuid(&fixed_event_uuid);
+
+        mock.expect_save()
+            .times(1)
+            .withf(move |card| {
+                matches!(
+                    card.pending_events.first(),
+                    Some(crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent::MaintenanceRecorded { id, .. })
+                    if *id == fixed_event_uuid
+                )
+            })
+            .returning(|_| Ok(()));
+
+        let mut uow = FakeUow::new(mock);
+        let card_id = MaintenanceCardId::from_uuid(
+            &Uuid::parse_str("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").unwrap(),
+        );
+        let input = AddMaintenanceEventInput {
+            maintenance_card_id: card_id,
+            date_performed: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
+            maintenance_type: None,
+            notes: None,
+        };
+        let id_provider = MockIdProvider::new(fixed_event_id);
+        AddMaintenanceEvent::execute(&mut uow, id_provider, input)
+            .await
+            .expect("execute should succeed");
+    }
+
+    #[tokio::test]
+    async fn event_id_is_not_nil() {
+        // Regression: previously IdProvider<Uuid> was used, causing Uuid::default()
+        // (nil UUID) to be inserted every time — violating the UNIQUE constraint on
+        // maintenance_events.id on the second call.
+        let fixed_uuid = Uuid::parse_str("cccccccc-cccc-cccc-cccc-cccccccccccc").unwrap();
+        let fixed_id = MaintenanceEventId::from_uuid(&fixed_uuid);
+        assert!(!fixed_uuid.is_nil(), "event UUID must not be nil");
+        // Also ensure the TRN prefix is correct
+        assert!(fixed_id.as_ref().starts_with("trn:maintenance-event:"));
     }
 }

@@ -3,9 +3,11 @@ use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::maintenance::application::AddMaintenanceCard;
 use crate::maintenance::application::AddMaintenanceEvent;
+use crate::maintenance::application::DeleteMaintenanceEvent;
 use crate::maintenance::application::add_maintenance_card::AddMaintenanceCardInput;
 use crate::maintenance::application::add_maintenance_event::AddMaintenanceEventInput;
 use crate::maintenance::domain::MaintenanceCardId;
+use crate::maintenance::domain::MaintenanceEventId;
 use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::MaintenanceUowExt;
 use crate::maintenance::interface::{
@@ -96,6 +98,25 @@ pub async fn add_maintenance_card(
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(id)
+}
+
+/// Command handler to delete a single maintenance event.
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_maintenance_event(
+    state: tauri::State<'_, AppState>,
+    event_id: uuid::Uuid,
+) -> Result<(), CommandError> {
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let id = MaintenanceEventId::from_uuid(&event_id);
+
+    DeleteMaintenanceEvent::execute(&mut unit_of_work, id)
+        .await
+        .map_err(CommandError::from)?;
+
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+    Ok(())
 }
 
 /// Command handler to add a maintenance event and update the card.

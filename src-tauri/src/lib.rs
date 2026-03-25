@@ -193,6 +193,7 @@ pub fn run() {
         maintenance_command_handlers::get_maintenance_card,
         maintenance_command_handlers::add_maintenance_event,
         maintenance_command_handlers::add_maintenance_card,
+        maintenance_command_handlers::delete_maintenance_event,
         sellers_command_handlers::get_sellers,
         sellers_command_handlers::get_seller_by_id,
         sellers_command_handlers::create_seller,
