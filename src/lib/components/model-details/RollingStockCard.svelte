@@ -19,6 +19,7 @@
   import { CONTROL_OPTIONS, DCC_INTERFACE_OPTIONS } from './components/constants';
   import RollingStockTechnicalSpecs from './components/RollingStockTechnicalSpecs.svelte';
   import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
+  import { getEditContext } from './editContext.svelte';
 
   interface Props {
     rollingStock: OwnedRollingStockView;
@@ -26,19 +27,15 @@
     railwayModelId: RailwayModelId;
     /** When true, identification fields are editable in-place. */
     editable?: boolean;
-    /** US5: ID of the card currently in edit mode (null = none active). */
-    activeEditId?: string | null;
-    /** US5: Callback to notify parent which card is actively being edited. */
-    setActiveEditId?: (id: string | null) => void;
   }
 
   let {
     rollingStock,
     railwayModelId,
-    editable = false,
-    activeEditId = null,
-    setActiveEditId
+    editable = false
   }: Props = $props();
+
+  const editCtx = getEditContext();
 
   let isExpanded = $state(false);
   let specsLoaded = $state(false);
@@ -72,7 +69,7 @@
 
   // ── US5: derived edit-permission flag ────────────────────────────────────────
   /** True when no other card is editing, or when this specific card is the active one. */
-  const canEdit = $derived(editable && (activeEditId === null || activeEditId === rollingStock.id));
+  const canEdit = $derived(editable && (editCtx.activeEditId === null || editCtx.activeEditId === rollingStock.id));
 
   // ── Prop sync ─────────────────────────────────────────────────────────────────
   $effect(() => {
@@ -216,11 +213,11 @@
 
   // ── US5: active-edit tracking ─────────────────────────────────────────────────
   function onFieldActivate() {
-    setActiveEditId?.(rollingStock.id);
+    editCtx.setActive(rollingStock.id);
   }
 
   function onFieldDeactivate() {
-    setActiveEditId?.(null);
+    editCtx.clearActive();
   }
 
   // ── Save: identification fields ───────────────────────────────────────────────

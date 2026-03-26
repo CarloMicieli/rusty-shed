@@ -3,6 +3,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import RollingStockCard from './RollingStockCard.svelte';
   import RollingStockCreateDrawer from '$lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte';
+  import { setEditContext } from './editContext.svelte';
 
   interface Props {
     rollingStocks?: OwnedRollingStockView[];
@@ -14,7 +15,7 @@
   let { rollingStocks, railwayModelId, editable = false, onRollingStockAdded }: Props = $props();
 
   let createDrawerOpen = $state(false);
-  let activeEditId = $state<string | null>(null);
+  setEditContext();
 </script>
 
 {#if rollingStocks && rollingStocks.length > 0}
@@ -24,8 +25,6 @@
         {rollingStock}
         {railwayModelId}
         {editable}
-        {activeEditId}
-        setActiveEditId={(id) => (activeEditId = id)}
       />
     {/each}
   </div>
