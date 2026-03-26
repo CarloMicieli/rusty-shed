@@ -325,7 +325,7 @@ describe('RollingStockCard', () => {
       // Find and click the series code InPlaceEdit display area.
       // Note: the Category InPlaceSelectEdit also has role="button" and appears first,
       // so we locate the Series edit by its text content ('E.656').
-      const inPlaceEdits = Array.from(container.querySelectorAll('[role="button"]'));
+      const inPlaceEdits = Array.from(container.querySelectorAll('button'));
       const seriesEdit = inPlaceEdits.find(
         (el) => el.textContent?.trim() === 'E.656'
       ) as HTMLElement;
@@ -360,7 +360,7 @@ describe('RollingStockCard', () => {
 
       const { container } = await renderExpandedCard();
 
-      const inPlaceEdits = Array.from(container.querySelectorAll('[role="button"]'));
+      const inPlaceEdits = Array.from(container.querySelectorAll('button'));
       const seriesEdit = inPlaceEdits.find(
         (el) => el.textContent?.trim() === 'E.656'
       ) as HTMLElement;
@@ -402,7 +402,7 @@ describe('RollingStockCard', () => {
 
       // Save a new series code in-place.
       // Category InPlaceSelectEdit also uses role="button", so locate Series by text.
-      const inPlaceEdits = Array.from(container.querySelectorAll('[role="button"]'));
+      const inPlaceEdits = Array.from(container.querySelectorAll('button'));
       const seriesEdit = inPlaceEdits.find(
         (el) => el.textContent?.trim() === 'E.656'
       ) as HTMLElement;

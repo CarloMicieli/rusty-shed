@@ -42,7 +42,7 @@ describe('InPlaceEdit', () => {
       const { container } = render(InPlaceEdit, {
         props: { value: 'Original', onSave: vi.fn().mockResolvedValue(undefined) }
       });
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
       expect(container.querySelector('input')).not.toBeNull();
     });
@@ -51,7 +51,7 @@ describe('InPlaceEdit', () => {
       const { container } = render(InPlaceEdit, {
         props: { value: 'Line one', multiline: true, onSave: vi.fn().mockResolvedValue(undefined) }
       });
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
       expect(container.querySelector('textarea')).not.toBeNull();
       expect(container.querySelector('input')).toBeNull();
@@ -66,7 +66,7 @@ describe('InPlaceEdit', () => {
       });
 
       // Click to enter editing mode
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
 
       // Change the value
@@ -85,7 +85,7 @@ describe('InPlaceEdit', () => {
         props: { value: 'Same', onSave }
       });
 
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
 
       const input = container.querySelector('input') as HTMLInputElement;
@@ -103,7 +103,7 @@ describe('InPlaceEdit', () => {
       });
 
       // Enter editing mode
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
 
       // Type a new value
@@ -125,7 +125,7 @@ describe('InPlaceEdit', () => {
         props: { value: 'Original', multiline: true, onSave }
       });
 
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
 
       const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
@@ -144,7 +144,7 @@ describe('InPlaceEdit', () => {
       });
 
       // Enter editing mode
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
 
       // Type a new value
@@ -172,7 +172,7 @@ describe('InPlaceEdit', () => {
         props: { value: 'Original', onSave }
       });
 
-      const display = container.querySelector('[role="button"]') as HTMLElement;
+      const display = container.querySelector('button') as HTMLElement;
       await fireEvent.click(display);
 
       const input = container.querySelector('input') as HTMLInputElement;

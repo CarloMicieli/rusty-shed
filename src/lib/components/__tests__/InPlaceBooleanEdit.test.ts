@@ -3,7 +3,9 @@ import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import InPlaceBooleanEdit from '../InPlaceBooleanEdit.svelte';
 
 vi.mock('$lib/paraglide/messages', () => ({
-  edit_save_error: () => 'Failed to save.'
+  edit_save_error: () => 'Failed to save.',
+  boolean_yes: () => 'Yes',
+  boolean_no: () => 'No'
 }));
 
 describe('InPlaceBooleanEdit', () => {
