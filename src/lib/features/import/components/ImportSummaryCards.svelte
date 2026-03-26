@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { ImportPreviewResponse, RecordCounts } from '$lib/bindings';
 
   interface Props {
@@ -29,7 +30,7 @@
 <div class="preview-summary">
   <div class="summary-card">
     <div class="card-header">
-      <h3>Total Records</h3>
+      <h3>{m.import_total_records_heading()}</h3>
     </div>
     <div class="card-body">
       <div class="count-display">{formatRecordCounts(preview.totalRecords)}</div>
@@ -38,7 +39,7 @@
 
   <div class="summary-card success">
     <div class="card-header">
-      <h3>New Records</h3>
+      <h3>{m.import_new_records_heading()}</h3>
     </div>
     <div class="card-body">
       <div class="count-display">{formatRecordCounts(preview.newRecords)}</div>

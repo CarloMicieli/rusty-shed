@@ -103,7 +103,7 @@
 
         {#if showSettings}
           <div
-            class="absolute top-full right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0c] shadow-2xl"
+            class="absolute top-full right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-white/10 bg-layout-surface shadow-2xl"
           >
             {#if onRename}
               <button
@@ -126,7 +126,7 @@
                 class="flex w-full items-center gap-3 border-t border-white/5 px-4 py-3 text-sm text-zinc-500 transition-colors hover:bg-red-950/30 hover:text-red-500"
               >
                 <Trash2 size={16} />
-                <span>Delete Inventory</span>
+                <span>{m.inventory_delete_action()}</span>
               </button>
             {/if}
           </div>
@@ -148,9 +148,9 @@
 
   <!-- 2. Statistical Dashboard -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <GaugeStatCard label="Total Pieces" value={totalPieces} icon={Box} unit="pcs" />
-    <GaugeStatCard label="Inventory Value" value={totalValue} icon={Euro} />
-    <GaugeStatCard label="Last Purchase" value={lastPurchaseDate} icon={Calendar} />
+    <GaugeStatCard label={m.track_inventories_card_total_quantity()} value={totalPieces} icon={Box} unit="pcs" />
+    <GaugeStatCard label={m.track_inventory_value_label()} value={totalValue} icon={Euro} />
+    <GaugeStatCard label={m.track_inventory_last_purchase()} value={lastPurchaseDate} icon={Calendar} />
   </div>
 
   <div class="space-y-12">

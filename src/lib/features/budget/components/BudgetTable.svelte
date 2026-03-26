@@ -91,17 +91,17 @@
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Month</TableHead>
-          <TableHead class="text-right">Base Budget</TableHead>
-          <TableHead class="text-right">Extra Budget</TableHead>
-          <TableHead class="text-right">Rollover In</TableHead>
-          <TableHead class="text-right">Available</TableHead>
-          <TableHead class="text-right">Spent</TableHead>
-          <TableHead class="text-right">Remaining</TableHead>
-          <TableHead class="text-right">Remaining %</TableHead>
-          <TableHead class="text-right">Rollover Out</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead>{m.budget_table_month_header()}</TableHead>
+          <TableHead class="text-right">{m.budget_base_budget()}</TableHead>
+          <TableHead class="text-right">{m.budget_extra_budget()}</TableHead>
+          <TableHead class="text-right">{m.budget_rollover_in()}</TableHead>
+          <TableHead class="text-right">{m.budget_table_available_header()}</TableHead>
+          <TableHead class="text-right">{m.budget_table_spent_header()}</TableHead>
+          <TableHead class="text-right">{m.budget_table_remaining_header()}</TableHead>
+          <TableHead class="text-right">{m.budget_remaining_percent()}</TableHead>
+          <TableHead class="text-right">{m.budget_rollover_out()}</TableHead>
+          <TableHead>{m.budget_table_status_header()}</TableHead>
+          <TableHead>{m.budget_table_actions_header()}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

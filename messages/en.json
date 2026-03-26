@@ -1181,5 +1181,16 @@
   "controlpanel_section_companies": "Companies",
   "controlpanel_section_categories": "Category",
   "controlpanel_section_epochs": "Epochs",
-  "controlpanel_clear_all": "Clear All"
+  "controlpanel_clear_all": "Clear All",
+  "inventory_delete_action": "Delete Inventory",
+  "track_inventory_value_label": "Inventory Value",
+  "track_inventory_last_purchase": "Last Purchase",
+  "budget_base_budget": "Base Budget",
+  "budget_extra_budget": "Extra Budget",
+  "budget_rollover_in": "Rollover In",
+  "budget_rollover_out": "Rollover Out",
+  "budget_remaining_percent": "Remaining %",
+  "budget_table_actions_header": "Actions",
+  "import_total_records_heading": "Total Records",
+  "import_new_records_heading": "New Records"
 }
