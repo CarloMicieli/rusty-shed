@@ -31,11 +31,7 @@
     </div>
 
     {#if onCreateClick}
-      <button
-        type="button"
-        class={ctaButtonClass}
-        onclick={onCreateClick}
-      >
+      <button type="button" class={ctaButtonClass} onclick={onCreateClick}>
         <div
           class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
         ></div>

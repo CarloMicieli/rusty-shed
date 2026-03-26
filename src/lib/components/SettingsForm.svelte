@@ -24,11 +24,7 @@
     onsubmit: (payload: UpdateSettingsPayload) => void;
   }
 
-  const {
-    settings: initialSettings,
-    saving = false,
-    onsubmit
-  }: Props = $props();
+  const { settings: initialSettings, saving = false, onsubmit }: Props = $props();
 
   // Capture initial values as snapshot to avoid Svelte 5 reactivity warnings
   const settingsSnapshot = untrack(() => $state.snapshot(initialSettings));

@@ -44,9 +44,7 @@
     <Dialog.Overlay class="bg-black/80 backdrop-blur-sm" />
 
     <!-- Dialog content -->
-    <DialogPrimitive.Content
-      class={dialogPanelClass}
-    >
+    <DialogPrimitive.Content class={dialogPanelClass}>
       <Dialog.Header class="gap-3">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/20">

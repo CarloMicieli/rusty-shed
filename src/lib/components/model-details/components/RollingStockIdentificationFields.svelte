@@ -97,7 +97,9 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="font-mono text-sm {localSeries ? 'text-foreground' : 'text-muted-foreground italic'}">
+      <span
+        class="font-mono text-sm {localSeries ? 'text-foreground' : 'text-muted-foreground italic'}"
+      >
         {localSeries || '—'}
       </span>
     {/if}
@@ -186,7 +188,11 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="font-mono text-sm {displayLength ? 'text-foreground' : 'text-muted-foreground italic'}">
+      <span
+        class="font-mono text-sm {displayLength
+          ? 'text-foreground'
+          : 'text-muted-foreground italic'}"
+      >
         {displayLength || '—'}
       </span>
     {/if}

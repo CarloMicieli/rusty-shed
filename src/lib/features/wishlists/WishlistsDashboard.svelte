@@ -136,7 +136,9 @@
 
 <div class="mb-10 flex flex-col">
   <!-- Page Header -->
-  <div class="-mx-4 -mt-4 border-b border-layout-border bg-layout-surface px-6 py-4 lg:-mx-8 lg:-mt-8">
+  <div
+    class="-mx-4 -mt-4 border-b border-layout-border bg-layout-surface px-6 py-4 lg:-mx-8 lg:-mt-8"
+  >
     <PageHeader
       title={m.wishlists_title()}
       subtitle={m.wishlists_subtitle()}
@@ -277,11 +279,7 @@
                 </p>
               </div>
 
-              <button
-                type="button"
-                class={ctaButtonClass}
-                onclick={handleCreate}
-              >
+              <button type="button" class={ctaButtonClass} onclick={handleCreate}>
                 <Heart class="h-5 w-5" />
                 <span>{m.wishlists_create_button()}</span>
               </button>

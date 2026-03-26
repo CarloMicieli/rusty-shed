@@ -95,7 +95,11 @@
 
   <!-- Section Content -->
   {#if expanded}
-    <div class="space-y-4 border-t p-4" class:border-layout-border={dark} class:border-border={!dark}>
+    <div
+      class="space-y-4 border-t p-4"
+      class:border-layout-border={dark}
+      class:border-border={!dark}
+    >
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <!-- Seller -->
         <FormSelect
@@ -110,7 +114,8 @@
         <div>
           <label for="purchase-date" class="mb-1 block">
             {#if dark}
-              <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_purchase_date()}</span
+              <span class="text-[10px] text-muted-foreground uppercase"
+                >{m.add_model_purchase_date()}</span
               >
               <span class="ml-1 text-muted-foreground/50">(optional)</span>
             {:else}

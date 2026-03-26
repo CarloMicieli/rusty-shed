@@ -21,11 +21,7 @@
 {#if rollingStocks && rollingStocks.length > 0}
   <div class="space-y-4">
     {#each rollingStocks as rollingStock (rollingStock.id)}
-      <RollingStockCard
-        {rollingStock}
-        {railwayModelId}
-        {editable}
-      />
+      <RollingStockCard {rollingStock} {railwayModelId} {editable} />
     {/each}
   </div>
 
@@ -46,7 +42,7 @@
   <div class="rounded-lg border border-dashed border-border p-8 text-center">
     <button
       type="button"
-        class="inline-flex items-center gap-2 rounded-md border border-layout-border bg-transparent px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
+      class="inline-flex items-center gap-2 rounded-md border border-layout-border bg-transparent px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
       onclick={() => {
         createDrawerOpen = true;
       }}

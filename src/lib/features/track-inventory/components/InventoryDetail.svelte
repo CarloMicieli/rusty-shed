@@ -148,9 +148,18 @@
 
   <!-- 2. Statistical Dashboard -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <GaugeStatCard label={m.track_inventories_card_total_quantity()} value={totalPieces} icon={Box} unit="pcs" />
+    <GaugeStatCard
+      label={m.track_inventories_card_total_quantity()}
+      value={totalPieces}
+      icon={Box}
+      unit="pcs"
+    />
     <GaugeStatCard label={m.track_inventory_value_label()} value={totalValue} icon={Euro} />
-    <GaugeStatCard label={m.track_inventory_last_purchase()} value={lastPurchaseDate} icon={Calendar} />
+    <GaugeStatCard
+      label={m.track_inventory_last_purchase()}
+      value={lastPurchaseDate}
+      icon={Calendar}
+    />
   </div>
 
   <div class="space-y-12">

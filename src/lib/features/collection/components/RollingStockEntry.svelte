@@ -90,7 +90,9 @@
     <div>
       <label for="series-code-{entry.uid}" class="block space-y-1">
         {#if dark}
-          <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_series_code()}</span>
+          <span class="text-[10px] text-muted-foreground uppercase"
+            >{m.add_model_series_code()}</span
+          >
         {:else}
           <span class="text-sm text-muted-foreground">{m.add_model_series_code()}</span>
         {/if}
@@ -113,7 +115,9 @@
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
         {#if dark}
-          <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_road_number()}</span>
+          <span class="text-[10px] text-muted-foreground uppercase"
+            >{m.add_model_road_number()}</span
+          >
           <span class="ml-1 text-muted-foreground/50">(optional)</span>
         {:else}
           <span class="text-sm text-muted-foreground">{m.add_model_road_number()}</span>

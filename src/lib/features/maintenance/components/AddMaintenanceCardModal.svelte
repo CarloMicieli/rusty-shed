@@ -61,7 +61,12 @@
   }
 </script>
 
-<Dialog.Root open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
+<Dialog.Root
+  {open}
+  onOpenChange={(o) => {
+    if (!o) handleClose();
+  }}
+>
   <Dialog.Content
     showCloseButton={false}
     class="max-w-md overflow-hidden rounded-2xl border-white/10 bg-layout-surface p-0"

@@ -97,9 +97,7 @@
       </div>
     {:else if rollingStocks.length === 0}
       <!-- Empty State -->
-      <div
-        class={emptyStateClass}
-      >
+      <div class={emptyStateClass}>
         <div class="relative">
           <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
           <div
@@ -113,11 +111,7 @@
           <p class="text-sm leading-relaxed text-zinc-500">{m.digital_roster_empty_message()}</p>
         </div>
         {#if onInstallDecoder}
-          <button
-            type="button"
-            class={ctaButtonClass}
-            onclick={onInstallDecoder}
-          >
+          <button type="button" class={ctaButtonClass} onclick={onInstallDecoder}>
             <div
               class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
             ></div>

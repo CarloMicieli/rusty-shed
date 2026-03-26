@@ -105,9 +105,7 @@
           </td>
 
           <!-- Brand & Model -->
-          <td
-            class="border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30"
-          >
+          <td class="border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30">
             <div class="flex flex-col gap-0.5">
               <span
                 class="text-xs font-semibold text-zinc-200 transition-colors group-hover:text-primary"

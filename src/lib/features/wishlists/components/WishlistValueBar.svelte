@@ -66,7 +66,9 @@
     <!-- 3-Column Stats Footer -->
     <div class="mb-4 grid grid-cols-3 gap-2">
       <div class="flex flex-col gap-1">
-        <span class="font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase">
+        <span
+          class="font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase"
+        >
           {m.wishlist_stat_total_cost()}
         </span>
         <span class="font-mono text-base leading-none font-bold text-primary">
@@ -74,7 +76,9 @@
         </span>
       </div>
       <div class="flex flex-col items-center gap-1">
-        <span class="font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase">
+        <span
+          class="font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase"
+        >
           {m.wishlist_stat_item_count()}
         </span>
         <span class="font-mono text-base leading-none font-bold text-foreground">

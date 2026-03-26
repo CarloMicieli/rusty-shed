@@ -29,11 +29,7 @@
     editable?: boolean;
   }
 
-  let {
-    rollingStock,
-    railwayModelId,
-    editable = false
-  }: Props = $props();
+  let { rollingStock, railwayModelId, editable = false }: Props = $props();
 
   const editCtx = getEditContext();
 
@@ -69,7 +65,9 @@
 
   // ── US5: derived edit-permission flag ────────────────────────────────────────
   /** True when no other card is editing, or when this specific card is the active one. */
-  const canEdit = $derived(editable && (editCtx.activeEditId === null || editCtx.activeEditId === rollingStock.id));
+  const canEdit = $derived(
+    editable && (editCtx.activeEditId === null || editCtx.activeEditId === rollingStock.id)
+  );
 
   // ── Prop sync ─────────────────────────────────────────────────────────────────
   $effect(() => {
@@ -425,7 +423,9 @@
   }
 </script>
 
-<div class="rounded-[8px] border border-layout-border bg-layout-surface transition-shadow hover:shadow-md">
+<div
+  class="rounded-[8px] border border-layout-border bg-layout-surface transition-shadow hover:shadow-md"
+>
   <!-- Card Header (Always Visible) -->
   <RollingStockCardHeader
     seriesRoadNumber={formatSeriesRoadNumber()}
@@ -522,7 +522,8 @@
           </span>
         </div>
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">Length</span
+          <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
+            >Length</span
           >
           <span class="font-mono text-xs text-foreground">
             {displayLength() || '—'}

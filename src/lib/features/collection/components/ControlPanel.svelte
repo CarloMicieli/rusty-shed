@@ -62,7 +62,9 @@
 
 <div class="flex h-full flex-col bg-layout-surface">
   <!-- Header -->
-  <div class="flex flex-shrink-0 items-center justify-between border-b border-layout-border px-4 py-3">
+  <div
+    class="flex flex-shrink-0 items-center justify-between border-b border-layout-border px-4 py-3"
+  >
     <span
       class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase"
     >

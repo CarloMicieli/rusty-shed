@@ -176,7 +176,9 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localCouplingSocket ? 'text-foreground' : 'text-muted-foreground italic'}">
+      <span
+        class="text-sm {localCouplingSocket ? 'text-foreground' : 'text-muted-foreground italic'}"
+      >
         {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
       </span>
     {/if}

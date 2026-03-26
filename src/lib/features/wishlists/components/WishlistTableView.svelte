@@ -45,37 +45,49 @@
         <tr class="border-b border-layout-border">
           <!-- Priority -->
           <th class="w-10 px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+            <span
+              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {m.wishlist_table_col_priority()}
             </span>
           </th>
           <!-- Model -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+            <span
+              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {m.wishlist_table_col_model()}
             </span>
           </th>
           <!-- Product Code -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+            <span
+              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {m.wishlist_table_col_product_code()}
             </span>
           </th>
           <!-- Price Target -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+            <span
+              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {m.wishlist_table_col_price_target()}
             </span>
           </th>
           <!-- Status -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+            <span
+              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {m.wishlist_table_col_status()}
             </span>
           </th>
           <!-- Actions -->
           <th class="px-4 py-3 text-right">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+            <span
+              class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
               {m.wishlist_table_col_actions()}
             </span>
           </th>
