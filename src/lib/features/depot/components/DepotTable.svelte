@@ -4,11 +4,11 @@
   import { Button } from '$lib/components';
   import DepotThumbnail from './DepotThumbnail.svelte';
 
-  let {
-    items
-  }: {
+  interface Props {
     items: T[];
-  } = $props();
+  }
+
+  const { items }: Props = $props();
 
   let viewAll = $state(false);
   const hasOverflow = $derived(!viewAll && items.length > 50);

@@ -6,11 +6,13 @@
   import { getMaintenanceDetailState } from '../MaintenanceDetailState.svelte';
   import type { MaintenanceType } from '$lib/bindings';
 
-  let { open, onClose, maintenanceCardId } = $props<{
+  interface Props {
     open: boolean;
     onClose: () => void;
     maintenanceCardId: string;
-  }>();
+  }
+
+  const { open, onClose, maintenanceCardId }: Props = $props();
 
   const maintenanceDetailState = getMaintenanceDetailState();
 

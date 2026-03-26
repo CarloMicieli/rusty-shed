@@ -6,7 +6,7 @@
 
   type MonthlySpendingPoint = { month: number; amount: number };
 
-  interface DashboardChartsProps {
+  interface Props {
     /** ISO 4217 currency code for formatting. @default 'EUR' */
     currencyCode?: string;
     /** Chart data overrides. */
@@ -20,12 +20,12 @@
     hasBudget?: boolean;
   }
 
-  let {
+  const {
     currencyCode: currencyCodeProp,
     data: dataProp,
     compact = false,
     hasBudget
-  }: DashboardChartsProps = $props();
+  }: Props = $props();
 
   // --- Reactive Derived Logic ---
   const currencyCode = $derived(currencyCodeProp ?? 'EUR');

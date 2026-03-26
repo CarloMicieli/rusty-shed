@@ -6,7 +6,12 @@
   import RollingStockSelector from './RollingStockSelector.svelte';
   import { toaster } from '$lib/toaster';
 
-  let { open, onClose } = $props<{ open: boolean; onClose: () => void }>();
+  interface Props {
+    open: boolean;
+    onClose: () => void;
+  }
+
+  const { open, onClose }: Props = $props();
 
   const maintenanceState = getMaintenanceState();
 

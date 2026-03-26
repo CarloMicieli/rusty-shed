@@ -24,7 +24,7 @@
     label: string;
   }
 
-  interface BadgePickerProps {
+  interface Props {
     /** Currently selected display value. */
     value: string;
     /** Available options to pick from. */
@@ -33,7 +33,7 @@
     onSelect: (id: string) => Promise<void>;
   }
 
-  let { value, options, onSelect }: BadgePickerProps = $props();
+  const { value, options, onSelect }: Props = $props();
 
   let isOpen = $state(false);
   let isSaving = $state(false);

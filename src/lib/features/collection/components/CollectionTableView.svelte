@@ -3,13 +3,12 @@
   import { Badge } from '$lib/components/ui/badge';
   import DepotThumbnail from '$lib/features/depot/components/DepotThumbnail.svelte';
 
-  let {
-    items,
-    onRowClick
-  }: {
+  interface Props {
     items: CollectionItemView[];
     onRowClick: (item: CollectionItemView) => void;
-  } = $props();
+  }
+
+  const { items, onRowClick }: Props = $props();
 
   function categoryLabel(category: Category | null): string {
     switch (category) {

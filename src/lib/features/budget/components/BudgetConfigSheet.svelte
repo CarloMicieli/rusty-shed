@@ -5,6 +5,15 @@
   import type { BudgetMode } from '../services/BudgetService.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
+  interface Props {
+    open?: boolean;
+    mode?: BudgetMode;
+    baseAmount?: number;
+    currency?: string;
+    saving?: boolean;
+    onsubmit: (mode: BudgetMode, amount: number) => void;
+  }
+
   let {
     open = $bindable(false),
     mode = $bindable('MONTHLY' as BudgetMode),
@@ -12,14 +21,7 @@
     currency,
     saving = false,
     onsubmit
-  } = $props<{
-    open?: boolean;
-    mode?: BudgetMode;
-    baseAmount?: number;
-    currency?: string;
-    saving?: boolean;
-    onsubmit: (mode: BudgetMode, amount: number) => void;
-  }>();
+  }: Props = $props();
 
   // Local form state for amount input (in major units)
   // eslint-disable-next-line svelte/prefer-writable-derived
