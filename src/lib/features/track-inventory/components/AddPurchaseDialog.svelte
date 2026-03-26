@@ -157,7 +157,7 @@
     aria-labelledby="add-purchase-title"
   >
     <div
-      class="flex flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-[#0c0c0c] shadow-2xl"
+      class="flex flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-layout-surface shadow-2xl"
     >
       <PurchaseDialogHeader onClose={handleClose} disabled={submitting} />
 
@@ -181,7 +181,7 @@
             />
 
             <div
-              class="flex items-center justify-between border-t border-white/5 bg-[#0c0c0c] px-6 py-4"
+              class="flex items-center justify-between border-t border-white/5 bg-layout-surface px-6 py-4"
             >
               <Button
                 type="button"

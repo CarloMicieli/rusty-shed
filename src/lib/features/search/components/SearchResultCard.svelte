@@ -20,7 +20,7 @@
 
 <button
   type="button"
-  class="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-zinc-800 bg-[#0F0F0F] px-4 py-3 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-900/60"
+  class="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-zinc-800 bg-layout-surface px-4 py-3 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-900/60"
   {onclick}
   aria-label="{result.displayName} — {sourceLabel}"
 >

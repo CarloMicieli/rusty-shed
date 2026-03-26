@@ -142,7 +142,7 @@
   <div class="flex flex-col gap-1.5">
     <label
       for="purchase-condition"
-      class="text-[10px] font-bold tracking-widest text-[#808080] uppercase"
+      class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
     >
       {m.purchase_dialog_purchase_condition_label()}
     </label>
@@ -154,12 +154,12 @@
     >
       <Select.Trigger
         id="purchase-condition"
-        class="!h-10 w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] focus-visible:border-[#D48A42] focus-visible:ring-[#D48A42]/20 data-[state=open]:border-[#D48A42]"
+        class="!h-10 w-full border-layout-border bg-layout-surface text-foreground focus-visible:border-primary/60 focus-visible:ring-primary/20 data-[state=open]:border-primary"
       >
         {purchaseConditionLabel}
       </Select.Trigger>
       <Select.Content
-        class="z-[200] border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] [&_[data-highlighted]]:bg-[#D48A42]/10 [&_[data-highlighted]]:text-[#D48A42]"
+        class="z-[200] border-layout-border bg-layout-surface text-foreground [&_[data-highlighted]]:bg-primary/10 [&_[data-highlighted]]:text-primary"
       >
         {#each PURCHASE_CONDITION_OPTIONS as opt (opt.value)}
           <Select.Item value={opt.value} label={opt.label} />
@@ -172,7 +172,7 @@
   <div class="flex flex-col gap-1.5">
     <label
       for="model-condition"
-      class="text-[10px] font-bold tracking-widest text-[#808080] uppercase"
+      class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
     >
       {m.purchase_dialog_model_condition_label()}
     </label>
@@ -184,12 +184,12 @@
     >
       <Select.Trigger
         id="model-condition"
-        class="!h-10 w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] focus-visible:border-[#D48A42] focus-visible:ring-[#D48A42]/20 data-[state=open]:border-[#D48A42]"
+        class="!h-10 w-full border-layout-border bg-layout-surface text-foreground focus-visible:border-primary/60 focus-visible:ring-primary/20 data-[state=open]:border-primary"
       >
         {modelConditionLabel}
       </Select.Trigger>
       <Select.Content
-        class="z-[200] border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] [&_[data-highlighted]]:bg-[#D48A42]/10 [&_[data-highlighted]]:text-[#D48A42]"
+        class="z-[200] border-layout-border bg-layout-surface text-foreground [&_[data-highlighted]]:bg-primary/10 [&_[data-highlighted]]:text-primary"
       >
         {#each MODEL_CONDITION_OPTIONS as opt (opt.value)}
           <Select.Item value={opt.value} label={opt.label} />
@@ -202,7 +202,7 @@
   <div class="col-span-2 flex flex-col gap-1.5">
     <label
       for="box-condition"
-      class="text-[10px] font-bold tracking-widest text-[#808080] uppercase"
+      class="text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
     >
       {m.purchase_dialog_box_condition_label()}
     </label>
@@ -214,12 +214,12 @@
     >
       <Select.Trigger
         id="box-condition"
-        class="!h-10 w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] focus-visible:border-[#D48A42] focus-visible:ring-[#D48A42]/20 data-[state=open]:border-[#D48A42]"
+        class="!h-10 w-full border-layout-border bg-layout-surface text-foreground focus-visible:border-primary/60 focus-visible:ring-primary/20 data-[state=open]:border-primary"
       >
         {boxConditionLabel}
       </Select.Trigger>
       <Select.Content
-        class="z-[200] border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0] [&_[data-highlighted]]:bg-[#D48A42]/10 [&_[data-highlighted]]:text-[#D48A42]"
+        class="z-[200] border-layout-border bg-layout-surface text-foreground [&_[data-highlighted]]:bg-primary/10 [&_[data-highlighted]]:text-primary"
       >
         {#each BOX_CONDITION_OPTIONS as opt (opt.value)}
           <Select.Item value={opt.value} label={opt.label} />

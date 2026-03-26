@@ -110,7 +110,7 @@
   {#if showResults && query.length >= 2}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      class="absolute top-full right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-xl border border-zinc-800 bg-[#0C0C0C] shadow-xl"
+      class="absolute top-full right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-xl border border-zinc-800 bg-layout-surface shadow-xl"
       onmousedown={(e) => e.preventDefault()}
     >
       {#if isSearching}

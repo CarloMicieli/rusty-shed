@@ -158,7 +158,7 @@
 {#snippet EmptyState()}
   <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
     <div
-      class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
+      class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center"
     >
       <!-- Thematic Iconography -->
       <div class="relative">
@@ -352,14 +352,14 @@
 
     <!-- Desktop: always-visible command center sidebar (narrows to icon rail when collapsed) -->
     <aside
-      class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-[#1F1F1F] bg-card md:flex"
+      class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-layout-border bg-card md:flex"
       style="width: {ui.showFilterSidebar
         ? '280px'
         : '60px'}; transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);"
     >
       <!-- Sidebar header — always visible -->
       <div
-        class="flex flex-shrink-0 items-center border-b border-[#1F1F1F] px-2 py-3"
+        class="flex flex-shrink-0 items-center border-b border-layout-border px-2 py-3"
         class:justify-between={ui.showFilterSidebar}
         class:justify-center={!ui.showFilterSidebar}
       >
@@ -373,7 +373,7 @@
         </span>
         <button
           type="button"
-          class="rounded p-1 text-muted-foreground transition-colors hover:text-[#D48A42]"
+          class="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
           onclick={ui.toggleFilterSidebar}
           title={m.collection_toggle_filters_title()}
           aria-expanded={ui.showFilterSidebar}

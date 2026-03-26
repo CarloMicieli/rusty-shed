@@ -45,20 +45,20 @@
   }
 </script>
 
-<div class="rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="rounded-[8px] border border-layout-border bg-layout-surface p-4">
   <!-- Card Header -->
-  <div class="mb-4 flex items-center justify-between border-b border-[#1F1F1F] pb-3">
-    <span class="font-mono text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+  <div class="mb-4 flex items-center justify-between border-b border-layout-border pb-3">
+    <span class="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.wishlist_procurement_summary()}
     </span>
-    <CircleDollarSign size={14} class="text-[#808080]" />
+    <CircleDollarSign size={14} class="text-muted-foreground" />
   </div>
 
   {#if pricedItems.length === 0}
     <!-- Empty state -->
     <div class="flex flex-col items-center justify-center gap-2 py-6">
-      <CircleDollarSign size={32} class="text-[#808080] opacity-30" />
-      <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+      <CircleDollarSign size={32} class="text-muted-foreground opacity-30" />
+      <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
         {m.wishlist_value_bar_no_price_data()}
       </span>
     </div>
@@ -66,28 +66,28 @@
     <!-- 3-Column Stats Footer -->
     <div class="mb-4 grid grid-cols-3 gap-2">
       <div class="flex flex-col gap-1">
-        <span class="font-mono text-[10px] leading-none tracking-widest text-[#808080] uppercase">
+        <span class="font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase">
           {m.wishlist_stat_total_cost()}
         </span>
-        <span class="font-mono text-base leading-none font-bold text-[#D48A42]">
+        <span class="font-mono text-base leading-none font-bold text-primary">
           {formatAmount(totals.total, currency)}
         </span>
       </div>
       <div class="flex flex-col items-center gap-1">
-        <span class="font-mono text-[10px] leading-none tracking-widest text-[#808080] uppercase">
+        <span class="font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase">
           {m.wishlist_stat_item_count()}
         </span>
-        <span class="font-mono text-base leading-none font-bold text-[#E0E0E0]">
+        <span class="font-mono text-base leading-none font-bold text-foreground">
           {items.length}
         </span>
       </div>
       <div class="flex flex-col items-end gap-1">
         <span
-          class="text-right font-mono text-[10px] leading-none tracking-widest text-[#808080] uppercase"
+          class="text-right font-mono text-[10px] leading-none tracking-widest text-muted-foreground uppercase"
         >
           {m.wishlist_stat_avg_price()}
         </span>
-        <span class="font-mono text-base leading-none font-bold text-[#D48A42]">
+        <span class="font-mono text-base leading-none font-bold text-primary">
           {formatAmount(avgPrice, currency)}
         </span>
       </div>
@@ -96,24 +96,24 @@
     <!-- Mechanical Gauge Bar -->
     <div class="mb-3">
       <!-- Track with tick marks -->
-      <div class="relative mb-1.5 h-2.5 overflow-hidden rounded-full bg-[#1F1F1F]">
+      <div class="relative mb-1.5 h-2.5 overflow-hidden rounded-full bg-layout-border">
         <!-- Filled segments -->
         <div class="absolute inset-y-0 left-0 flex h-full" style="width: 100%">
           {#if percentages.high > 0}
             <div
-              class="h-full bg-[#D48A42] transition-all duration-500"
+              class="h-full bg-primary transition-all duration-500"
               style="width: {percentages.high}%; box-shadow: 0 0 8px rgba(212,138,66,0.5), 0 0 16px rgba(212,138,66,0.2);"
             ></div>
           {/if}
           {#if percentages.normal > 0}
             <div
-              class="h-full bg-[#D48A42]/55 transition-all duration-500"
+              class="h-full bg-primary/55 transition-all duration-500"
               style="width: {percentages.normal}%"
             ></div>
           {/if}
           {#if percentages.low > 0}
             <div
-              class="h-full bg-[#D48A42]/25 transition-all duration-500"
+              class="h-full bg-primary/25 transition-all duration-500"
               style="width: {percentages.low}%"
             ></div>
           {/if}
@@ -121,7 +121,7 @@
         <!-- Tick marks overlay (4 evenly spaced) -->
         <div class="pointer-events-none absolute inset-0 flex items-stretch justify-around">
           {#each [0, 1, 2] as _ (_)}
-            <div class="h-full w-px bg-[#050505]/70"></div>
+            <div class="h-full w-px bg-layout-surface/70"></div>
           {/each}
         </div>
       </div>
@@ -131,34 +131,34 @@
     <div class="flex justify-between gap-2">
       <div class="flex flex-col gap-0.5">
         <div class="flex items-center gap-1.5">
-          <div class="h-1.5 w-1.5 rounded-full bg-[#D48A42]"></div>
-          <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+          <div class="h-1.5 w-1.5 rounded-full bg-primary"></div>
+          <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
             {m.wishlist_priority_high()}
           </span>
         </div>
-        <span class="font-mono text-xs text-[#E0E0E0]/70">
+        <span class="font-mono text-xs text-foreground/70">
           {formatAmount(totals.high, currency)}
         </span>
       </div>
       <div class="flex flex-col items-center gap-0.5">
         <div class="flex items-center gap-1.5">
-          <div class="h-1.5 w-1.5 rounded-full bg-[#D48A42]/55"></div>
-          <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+          <div class="h-1.5 w-1.5 rounded-full bg-primary/55"></div>
+          <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
             {m.wishlist_priority_normal()}
           </span>
         </div>
-        <span class="font-mono text-xs text-[#E0E0E0]/70">
+        <span class="font-mono text-xs text-foreground/70">
           {formatAmount(totals.normal, currency)}
         </span>
       </div>
       <div class="flex flex-col items-end gap-0.5">
         <div class="flex items-center gap-1.5">
-          <div class="h-1.5 w-1.5 rounded-full bg-[#D48A42]/25"></div>
-          <span class="font-mono text-[10px] tracking-widest text-[#808080] uppercase">
+          <div class="h-1.5 w-1.5 rounded-full bg-primary/25"></div>
+          <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
             {m.wishlist_priority_low()}
           </span>
         </div>
-        <span class="font-mono text-xs text-[#E0E0E0]/70">
+        <span class="font-mono text-xs text-foreground/70">
           {formatAmount(totals.low, currency)}
         </span>
       </div>

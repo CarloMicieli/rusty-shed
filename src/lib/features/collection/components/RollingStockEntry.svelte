@@ -37,7 +37,7 @@
   }: Props = $props();
 
   const darkInput =
-    'flex h-10 w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
+    'flex h-10 w-full rounded-md border border-layout-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
   // Subcategory options depend on selected category
   const subcategoryOptions = $derived(
@@ -65,8 +65,8 @@
 
 <div
   class="rolling-stock-entry grid grid-cols-1 gap-4 rounded-lg border p-4"
-  class:border-[#1F1F1F]={dark}
-  class:bg-[#0F0F0F]={dark}
+  class:border-layout-border={dark}
+  class:bg-layout-surface={dark}
   class:border-border={!dark}
   class:bg-card={!dark}
   class:text-card-foreground={!dark}
@@ -90,7 +90,7 @@
     <div>
       <label for="series-code-{entry.uid}" class="block space-y-1">
         {#if dark}
-          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_series_code()}</span>
+          <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_series_code()}</span>
         {:else}
           <span class="text-sm text-muted-foreground">{m.add_model_series_code()}</span>
         {/if}
@@ -113,8 +113,8 @@
     <div>
       <label for="road-number-{entry.uid}" class="block space-y-1">
         {#if dark}
-          <span class="text-[10px] text-[#808080] uppercase">{m.add_model_road_number()}</span>
-          <span class="ml-1 text-[#808080]/50">(optional)</span>
+          <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_road_number()}</span>
+          <span class="ml-1 text-muted-foreground/50">(optional)</span>
         {:else}
           <span class="text-sm text-muted-foreground">{m.add_model_road_number()}</span>
           <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
@@ -160,7 +160,7 @@
     {#if dark}
       <button
         type="button"
-        class="text-[10px] tracking-widest text-[#808080]/60 uppercase hover:text-red-400 disabled:pointer-events-none disabled:opacity-30"
+        class="text-[10px] tracking-widest text-muted-foreground/60 uppercase hover:text-red-400 disabled:pointer-events-none disabled:opacity-30"
         disabled={!canRemove}
         onclick={onRemove}
         aria-label={m.add_model_remove_rolling_stock()}

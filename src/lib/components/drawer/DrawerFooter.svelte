@@ -41,7 +41,7 @@
       type="button"
       onclick={onSubmit}
       disabled={submitting || isLoading || disabled}
-      class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
+      class="bg-primary font-bold text-primary-foreground hover:bg-primary/90"
     >
       {#if submitting}
         <span

@@ -200,7 +200,7 @@
   Amber border becomes solid on hover; delete button fades in.
 -->
 <Card
-  class="group card relative rounded-2xl border-2 border-[rgba(212,138,62,0.35)] shadow-xl transition-all duration-200 hover:border-[#D48A42] hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {className ??
+  class="group card relative rounded-2xl border-2 border-primary/35 shadow-xl transition-all duration-200 hover:border-primary hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {className ??
     ''}"
 >
   <CardHeader class="p-3 pb-2">
@@ -287,7 +287,7 @@
       {#if model.powerMethod}
         <div class="absolute top-2 right-2 z-20">
           <Badge
-            class="border-transparent bg-[#E2994F] px-1.5 py-0.5 text-[10px] font-bold text-black"
+            class="border-transparent bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground"
           >
             {powerMethodLabel}
           </Badge>

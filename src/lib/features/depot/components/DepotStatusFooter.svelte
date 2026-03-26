@@ -17,7 +17,7 @@
       <div class="flex items-center gap-2">
         <div class="h-1.5 w-32 overflow-hidden rounded-full border border-white/5 bg-zinc-900">
           <div
-            class="h-full bg-[#f59e0b] shadow-[0_0_8px_#f59e0b] transition-all duration-1000"
+            class="h-full bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)] transition-all duration-1000"
             style="width: {memoryUsage}%;"
           ></div>
         </div>
@@ -37,13 +37,13 @@
       <div class="flex flex-col">
         <span class="text-[9px] font-bold tracking-[0.2em] text-zinc-600 uppercase">Active_DCC</span
         >
-        <span class="font-mono text-sm font-bold text-[#f59e0b]">— READY —</span>
+        <span class="font-mono text-sm font-bold text-amber-500">— READY —</span>
       </div>
     </div>
   </div>
 
   <div class="flex items-center gap-2 text-zinc-600">
-    <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f59e0b]"></div>
+    <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500"></div>
     <span class="text-[9px] font-bold tracking-[0.2em] uppercase">System_Online</span>
   </div>
 </footer>

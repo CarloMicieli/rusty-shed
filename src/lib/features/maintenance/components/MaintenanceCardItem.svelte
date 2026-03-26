@@ -58,7 +58,7 @@
 
 <a
   href="/maintenance/{encodeURIComponent(card.id)}"
-  class="group relative block overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0c] transition-all hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
+  class="group relative block overflow-hidden rounded-xl border border-white/10 bg-layout-surface transition-all hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
 >
   <!-- Status Stripe -->
   <div

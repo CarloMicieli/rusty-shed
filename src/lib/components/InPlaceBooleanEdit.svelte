@@ -119,7 +119,7 @@
       </button>
       {#if isSaving}
         <span
-          class="ml-1 inline-block h-3 w-3 animate-spin self-center rounded-full border-2 border-[#D48A42] border-t-transparent"
+          class="ml-1 inline-block h-3 w-3 animate-spin self-center rounded-full border-2 border-primary border-t-transparent"
         ></span>
       {/if}
     </div>
@@ -129,7 +129,7 @@
   </div>
 {:else}
   <div
-    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.15)] focus-visible:outline-none"
+    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15 focus-visible:outline-none"
     onclick={startEditing}
     onkeydown={(e) => {
       if (e.key === 'Enter' || e.key === ' ') startEditing();
@@ -139,16 +139,16 @@
   >
     {#if value === 'YES'}
       <div class="flex items-center gap-2">
-        <div class="h-3 w-3 rounded-sm bg-[#D48A42]"></div>
-        <span class="text-xs font-medium text-[#E0E0E0]">Yes</span>
+        <div class="h-3 w-3 rounded-sm bg-primary"></div>
+        <span class="text-xs font-medium text-foreground">{m.boolean_yes()}</span>
       </div>
     {:else if value === 'NO'}
       <div class="flex items-center gap-2">
-        <div class="h-3 w-3 rounded-sm border border-[#1F1F1F] bg-[#0F0F0F]"></div>
-        <span class="text-xs font-medium text-[#808080]">No</span>
+        <div class="h-3 w-3 rounded-sm border border-layout-border bg-layout-surface"></div>
+        <span class="text-xs font-medium text-muted-foreground">{m.boolean_no()}</span>
       </div>
     {:else}
-      <span class="text-sm text-[#808080] italic">{placeholder}</span>
+      <span class="text-sm text-muted-foreground italic">{placeholder}</span>
     {/if}
   </div>
 {/if}

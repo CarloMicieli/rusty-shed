@@ -72,7 +72,7 @@
     role="dialog"
   >
     <div
-      class="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] shadow-2xl"
+      class="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-layout-surface shadow-2xl"
     >
       <!-- Background Context Icon -->
       <div class="pointer-events-none absolute -top-6 -right-6 text-white/5">

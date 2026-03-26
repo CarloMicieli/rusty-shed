@@ -33,7 +33,7 @@
       value = v === 'true' ? true : v === 'false' ? false : null;
     }}
   >
-    <Select.Trigger {id} class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]">
+    <Select.Trigger {id} class="w-full border-layout-border bg-layout-surface text-foreground">
       {#if value === true}
         {m.boolean_yes()}
       {:else if value === false}

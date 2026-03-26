@@ -26,9 +26,9 @@
   }: Props = $props();
 </script>
 
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="overflow-hidden rounded-lg border border-layout-border bg-layout-surface p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.specs_drawer_section_identification()}
     </p>
     <div class="grid grid-cols-2 gap-3">

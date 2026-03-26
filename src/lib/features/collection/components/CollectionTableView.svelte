@@ -96,22 +96,22 @@
         >
           <!-- Thumbnail -->
           <td
-            class="relative rounded-l-lg border-y border-l border-white/5 bg-white/5 px-2 py-2.5 group-hover:border-[#D48A42]/30"
+            class="relative rounded-l-lg border-y border-l border-white/5 bg-white/5 px-2 py-2.5 group-hover:border-primary/30"
           >
             <!-- Left amber indicator -->
             <div
-              class="absolute top-1/4 bottom-1/4 left-0 w-0.5 rounded-full bg-transparent transition-all duration-200 group-hover:bg-[#D48A42]"
+              class="absolute top-1/4 bottom-1/4 left-0 w-0.5 rounded-full bg-transparent transition-all duration-200 group-hover:bg-primary"
             ></div>
             <DepotThumbnail railwayModelId={rm.railwayModelId} productCode={rm.productCode} />
           </td>
 
           <!-- Brand & Model -->
           <td
-            class="border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-[#D48A42]/30"
+            class="border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30"
           >
             <div class="flex flex-col gap-0.5">
               <span
-                class="text-xs font-semibold text-zinc-200 transition-colors group-hover:text-[#D48A42]"
+                class="text-xs font-semibold text-zinc-200 transition-colors group-hover:text-primary"
                 >{rm.description}</span
               >
               <div class="flex items-center gap-1">
@@ -126,39 +126,39 @@
 
           <!-- Road Number -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-[#D48A42]/30 sm:table-cell"
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30 sm:table-cell"
           >
             <span class="font-mono text-xs text-zinc-300">{roadNumber}</span>
           </td>
 
           <!-- Scale -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-[#D48A42]/30 md:table-cell"
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30 md:table-cell"
           >
             <span class="font-mono text-xs text-zinc-400">{rm.scale ?? '—'}</span>
           </td>
 
           <!-- Era -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-[#D48A42]/30 lg:table-cell"
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30 lg:table-cell"
           >
             <span class="font-mono text-xs text-zinc-400">{rm.epoch ?? '—'}</span>
           </td>
 
           <!-- Type -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-[#D48A42]/30 lg:table-cell"
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30 lg:table-cell"
           >
             <span class="text-[10px] text-zinc-500">{categoryLabel(rm.category)}</span>
           </td>
 
           <!-- Status (Power Method) -->
           <td
-            class="rounded-r-lg border-y border-r border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-[#D48A42]/30"
+            class="rounded-r-lg border-y border-r border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30"
           >
             {#if rm.powerMethod}
               <Badge
-                class="border-transparent bg-[#E2994F] px-1.5 py-0.5 text-[10px] font-bold text-black"
+                class="border-transparent bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground"
               >
                 {powerMethodLabel(rm.powerMethod)}
               </Badge>

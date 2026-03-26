@@ -29,7 +29,7 @@
   }: Props = $props();
 
   const darkTextarea =
-    'w-full rounded-md border border-[#1F1F1F] bg-transparent px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-2 focus:ring-[#D48A42]/30 focus:outline-none resize-none';
+    'w-full rounded-md border border-layout-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 focus:outline-none resize-none';
 
   // Map sellers to FormSelect option shape
   const sellerOptions = $derived(sellers.map((s) => ({ value: s.id, label: s.name })));
@@ -64,8 +64,8 @@
 
 <div
   class="purchase-section rounded-lg border"
-  class:border-[#1F1F1F]={dark}
-  class:bg-[#0F0F0F]={dark}
+  class:border-layout-border={dark}
+  class:bg-layout-surface={dark}
   class:border-border={!dark}
   class:bg-card={!dark}
   class:text-card-foreground={!dark}
@@ -73,16 +73,14 @@
   <!-- Section Header -->
   <button
     type="button"
-    class="flex w-full items-center justify-between p-4 text-left"
-    class:text-[#E0E0E0]={dark}
+    class="flex w-full items-center justify-between p-4 text-left text-foreground"
     class:hover:bg-[rgba(255,255,255,0.03)]={dark}
-    class:text-foreground={!dark}
     class:hover:bg-muted={!dark}
     onclick={onToggle}
     aria-expanded={expanded}
   >
     {#if dark}
-      <p class="text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+      <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
         {m.add_model_section_purchase()}
       </p>
     {:else}
@@ -97,7 +95,7 @@
 
   <!-- Section Content -->
   {#if expanded}
-    <div class="space-y-4 border-t p-4" class:border-[#1F1F1F]={dark} class:border-border={!dark}>
+    <div class="space-y-4 border-t p-4" class:border-layout-border={dark} class:border-border={!dark}>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <!-- Seller -->
         <FormSelect
@@ -112,9 +110,9 @@
         <div>
           <label for="purchase-date" class="mb-1 block">
             {#if dark}
-              <span class="text-[10px] text-[#808080] uppercase">{m.add_model_purchase_date()}</span
+              <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_purchase_date()}</span
               >
-              <span class="ml-1 text-[#808080]/50">(optional)</span>
+              <span class="ml-1 text-muted-foreground/50">(optional)</span>
             {:else}
               <span class="text-sm text-muted-foreground">{m.add_model_purchase_date()}</span>
               <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
@@ -129,8 +127,8 @@
         <div>
           <label for="price-amount" class="mb-1 block">
             {#if dark}
-              <span class="text-[10px] text-[#808080] uppercase">{m.add_model_price()}</span>
-              <span class="ml-1 text-[#808080]/50">(optional)</span>
+              <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_price()}</span>
+              <span class="ml-1 text-muted-foreground/50">(optional)</span>
             {:else}
               <span class="text-sm text-muted-foreground">{m.add_model_price()}</span>
               <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
@@ -144,7 +142,7 @@
             class="w-full"
             label={m.add_model_price()}
             inputClass={dark
-              ? 'bg-transparent border-[#1F1F1F] text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42] focus:ring-[#D48A42]/30'
+              ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
               : ''}
           />
         </div>
@@ -183,8 +181,8 @@
       <div>
         <label for="notes" class="mb-1 block">
           {#if dark}
-            <span class="text-[10px] text-[#808080] uppercase">{m.add_model_notes()}</span>
-            <span class="ml-1 text-[#808080]/50">(optional)</span>
+            <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_notes()}</span>
+            <span class="ml-1 text-muted-foreground/50">(optional)</span>
           {:else}
             <span class="text-sm text-muted-foreground">{m.add_model_notes()}</span>
             <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>

@@ -59,7 +59,7 @@
 <!-- Row 0: Category -->
 <div class="mb-3 grid grid-cols-3 gap-x-4">
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_category()}
     </p>
     {#if canEdit && localCategory !== null}
@@ -75,7 +75,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localCategory ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="text-sm {localCategory ? 'text-foreground' : 'text-muted-foreground italic'}">
         {CATEGORY_OPTIONS.find((o) => o.value === localCategory)?.label ?? localCategory ?? '—'}
       </span>
     {/if}
@@ -85,7 +85,7 @@
 <!-- Row 1: Series · Depot · Livery -->
 <div class="grid grid-cols-3 gap-x-4 gap-y-3">
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_series()}
     </p>
     {#if canEdit}
@@ -97,14 +97,14 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="font-mono text-sm {localSeries ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="font-mono text-sm {localSeries ? 'text-foreground' : 'text-muted-foreground italic'}">
         {localSeries || '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_depot()}
     </p>
     {#if canEdit}
@@ -116,14 +116,14 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localDepot ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="text-sm {localDepot ? 'text-foreground' : 'text-muted-foreground italic'}">
         {localDepot || '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_livery()}
     </p>
     {#if canEdit}
@@ -135,7 +135,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localLivery ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="text-sm {localLivery ? 'text-foreground' : 'text-muted-foreground italic'}">
         {localLivery || '—'}
       </span>
     {/if}
@@ -143,20 +143,20 @@
 
   <!-- Row 2: Control Type · DCC Interface · Length -->
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_control_type()}
     </p>
     {#if canEdit}
       <BadgePicker value={localControl ?? ''} options={CONTROL_OPTIONS} onSelect={onSaveControl} />
     {:else}
-      <span class="font-mono text-sm text-[#E0E0E0]">
+      <span class="font-mono text-sm text-foreground">
         {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_dcc_interface()}
     </p>
     {#if canEdit}
@@ -166,14 +166,14 @@
         onSelect={onSaveDccInterface}
       />
     {:else}
-      <span class="font-mono text-sm text-[#E0E0E0]">
+      <span class="font-mono text-sm text-foreground">
         {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
       </span>
     {/if}
   </div>
 
   <div>
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_length()}
       {settingsState.settings.measureUnit === 'Metric' ? '(mm)' : '(")'}
     </p>
@@ -186,7 +186,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="font-mono text-sm {displayLength ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="font-mono text-sm {displayLength ? 'text-foreground' : 'text-muted-foreground italic'}">
         {displayLength || '—'}
       </span>
     {/if}

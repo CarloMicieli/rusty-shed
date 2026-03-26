@@ -72,17 +72,17 @@
 />
 
 <!-- Rolling Stocks Section -->
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="overflow-hidden rounded-lg border border-layout-border bg-layout-surface p-4">
   <section>
     <div class="mb-4 flex items-center justify-between">
-      <p class="text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+      <p class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
         {m.add_model_section_rolling_stock()}
       </p>
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        class="border border-[#1F1F1F] bg-transparent text-[#E0E0E0] hover:bg-[rgba(212,138,66,0.15)]"
+        class="border border-layout-border bg-transparent text-foreground hover:bg-primary/15"
         onclick={onAddRollingStock}
       >
         <Plus size={16} />

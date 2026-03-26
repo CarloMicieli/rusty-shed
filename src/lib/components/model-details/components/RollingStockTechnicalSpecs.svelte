@@ -89,16 +89,16 @@
     />
   {:else if value === 'YES'}
     <div class="flex items-center gap-2">
-      <div class="h-3 w-3 rounded-sm bg-[#D48A42]"></div>
-      <span class="text-xs font-medium text-[#E0E0E0]">Yes</span>
+      <div class="h-3 w-3 rounded-sm bg-primary"></div>
+      <span class="text-xs font-medium text-foreground">Yes</span>
     </div>
   {:else if value === 'NO'}
     <div class="flex items-center gap-2">
-      <div class="h-3 w-3 rounded-sm border border-[#1F1F1F] bg-[#0F0F0F]"></div>
-      <span class="text-xs font-medium text-[#808080]">No</span>
+      <div class="h-3 w-3 rounded-sm border border-layout-border bg-layout-surface"></div>
+      <span class="text-xs font-medium text-muted-foreground">No</span>
     </div>
   {:else}
-    <span class="text-sm text-[#808080] italic">—</span>
+    <span class="text-sm text-muted-foreground italic">—</span>
   {/if}
 {/snippet}
 
@@ -122,7 +122,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localBodyShell ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="text-sm {localBodyShell ? 'text-foreground' : 'text-muted-foreground italic'}">
         {BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? '—'}
       </span>
     {/if}
@@ -142,7 +142,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localChassis ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="text-sm {localChassis ? 'text-foreground' : 'text-muted-foreground italic'}">
         {CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? '—'}
       </span>
     {/if}
@@ -176,7 +176,7 @@
         onDeactivate={onFieldDeactivate}
       />
     {:else}
-      <span class="text-sm {localCouplingSocket ? 'text-[#E0E0E0]' : 'text-[#808080] italic'}">
+      <span class="text-sm {localCouplingSocket ? 'text-foreground' : 'text-muted-foreground italic'}">
         {COUPLING_SOCKET_OPTIONS.find((o) => o.value === localCouplingSocket)?.label ?? '—'}
       </span>
     {/if}
@@ -193,11 +193,11 @@
 
 <!-- Digital Setup (when decoder is installed) -->
 {#if rollingStock.digital}
-  <div class="mt-4 border-t border-[#1F1F1F] pt-3">
-    <p class="mb-1 text-[10px] font-medium tracking-wider text-[#808080] uppercase">
+  <div class="mt-4 border-t border-layout-border pt-3">
+    <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.model_rolling_stock_field_digital_setup()}
     </p>
-    <p class="font-mono text-sm text-[#E0E0E0]">
+    <p class="font-mono text-sm text-foreground">
       {m.model_rolling_stock_digital_interface()}: {rollingStock.digital.interface}
       | {m.model_rolling_stock_digital_address()}: {rollingStock.digital.dcc_address}
       {#if rollingStock.digital.installed_decoder_id}

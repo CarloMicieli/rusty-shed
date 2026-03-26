@@ -428,7 +428,7 @@
   }
 </script>
 
-<div class="rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] transition-shadow hover:shadow-md">
+<div class="rounded-[8px] border border-layout-border bg-layout-surface transition-shadow hover:shadow-md">
   <!-- Card Header (Always Visible) -->
   <RollingStockCardHeader
     seriesRoadNumber={formatSeriesRoadNumber()}
@@ -439,7 +439,7 @@
 
   <!-- Card Body (Expandable) -->
   {#if isExpanded}
-    <div class="border-t border-[#1F1F1F] p-4">
+    <div class="border-t border-layout-border p-4">
       {#if rollingStock.notes}
         <p class="mb-4 text-muted-foreground">{rollingStock.notes}</p>
       {/if}
@@ -448,7 +448,7 @@
         <div class="mb-3 flex justify-end">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-md border border-[#1F1F1F] bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-[#808080] uppercase transition-colors hover:bg-[rgba(212,138,66,0.15)] hover:text-[#D48A42]"
+            class="inline-flex items-center gap-1.5 rounded-md border border-layout-border bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
             onclick={() => {
               specsDrawerOpen = true;
             }}
@@ -479,7 +479,7 @@
       />
 
       <!-- Technical Specs (Rows 3-5) -->
-      <div class="mt-4 border-t border-[#1F1F1F] pt-4">
+      <div class="mt-4 border-t border-layout-border pt-4">
         <RollingStockTechnicalSpecs
           {canEdit}
           {rollingStock}
@@ -506,28 +506,28 @@
 
       <!-- Metadata Footer (Three-Column Pattern) -->
       <div
-        class="-mx-4 mt-6 -mb-4 grid grid-cols-3 gap-4 rounded-b-[8px] border-t border-[#1F1F1F] bg-[#050505]/50 p-4"
+        class="-mx-4 mt-6 -mb-4 grid grid-cols-3 gap-4 rounded-b-[8px] border-t border-layout-border bg-layout-surface/50 p-4"
       >
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase"
+          <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
             >Control</span
           >
-          <span class="font-mono text-xs text-[#E0E0E0]">
+          <span class="font-mono text-xs text-foreground">
             {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
           </span>
         </div>
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase"
+          <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
             >Interface</span
           >
-          <span class="font-mono text-xs text-[#E0E0E0]">
+          <span class="font-mono text-xs text-foreground">
             {DCC_INTERFACE_OPTIONS.find((o) => o.id === localDccInterface)?.label ?? '—'}
           </span>
         </div>
         <div class="flex flex-col gap-1">
-          <span class="text-[10px] font-medium tracking-wider text-[#808080] uppercase">Length</span
+          <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">Length</span
           >
-          <span class="font-mono text-xs text-[#E0E0E0]">
+          <span class="font-mono text-xs text-foreground">
             {displayLength() || '—'}
             {settingsState.settings.measureUnit === 'Metric' ? 'mm' : '"'}
           </span>

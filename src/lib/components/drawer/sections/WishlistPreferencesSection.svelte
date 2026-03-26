@@ -52,9 +52,9 @@
             'flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
             priority === p
               ? p === 'NORMAL'
-                ? 'bg-[#D48A42] text-black'
-                : 'border border-[#D48A42]/60 bg-[#D48A42]/10 text-[#D48A42]'
-              : 'border border-[#1F1F1F] text-[#808080] hover:bg-[#D48A42]/10'
+                ? 'bg-primary text-primary-foreground'
+                : 'border border-primary/60 bg-primary/10 text-primary'
+              : 'border border-layout-border text-muted-foreground hover:bg-primary/10'
           ].join(' ')}
           onclick={() => (priority = p)}
           {disabled}
@@ -71,7 +71,7 @@
     id="wishlist-section-desired-price"
     bind:value={desiredPrice}
     symbol={currencySymbol}
-    inputClass="bg-[#0F0F0F] border-[#1F1F1F] rounded-[8px] text-[#E0E0E0] placeholder:text-[#808080]"
+    inputClass="bg-layout-surface border-layout-border rounded-[8px] text-foreground placeholder:text-muted-foreground"
     {disabled}
     error={errors.desiredPrice}
   />
@@ -88,7 +88,7 @@
         {disabled}
         rows={3}
         placeholder="Additional notes..."
-        class="flex w-full rounded-md border border-[#1F1F1F] bg-[#0F0F0F] px-3 py-2 text-sm text-[#E0E0E0] placeholder:text-[#808080] focus:border-[#D48A42]/60 focus:ring-2 focus:ring-[#D48A42]/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex w-full rounded-md border border-layout-border bg-layout-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       ></textarea>
     </div>
   {/if}

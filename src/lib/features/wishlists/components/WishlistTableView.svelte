@@ -31,51 +31,51 @@
 
 {#if activeWishlistId && items.length === 0}
   <div
-    class="flex h-48 flex-col items-center justify-center gap-3 rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F]"
+    class="flex h-48 flex-col items-center justify-center gap-3 rounded-[8px] border border-layout-border bg-layout-surface"
   >
-    <Heart size={36} class="text-[#808080] opacity-20" />
-    <p class="font-mono text-[10px] font-medium tracking-widest text-[#808080] uppercase">
+    <Heart size={36} class="text-muted-foreground opacity-20" />
+    <p class="font-mono text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
       {m.wishlists_items_empty()}
     </p>
   </div>
 {:else if items.length > 0}
-  <div class="overflow-hidden rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F]">
+  <div class="overflow-hidden rounded-[8px] border border-layout-border bg-layout-surface">
     <table class="w-full">
       <thead>
-        <tr class="border-b border-[#1F1F1F]">
+        <tr class="border-b border-layout-border">
           <!-- Priority -->
           <th class="w-10 px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               {m.wishlist_table_col_priority()}
             </span>
           </th>
           <!-- Model -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               {m.wishlist_table_col_model()}
             </span>
           </th>
           <!-- Product Code -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               {m.wishlist_table_col_product_code()}
             </span>
           </th>
           <!-- Price Target -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               {m.wishlist_table_col_price_target()}
             </span>
           </th>
           <!-- Status -->
           <th class="px-4 py-3 text-left">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               {m.wishlist_table_col_status()}
             </span>
           </th>
           <!-- Actions -->
           <th class="px-4 py-3 text-right">
-            <span class="font-mono text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+            <span class="font-mono text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               {m.wishlist_table_col_actions()}
             </span>
           </th>

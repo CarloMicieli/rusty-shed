@@ -29,7 +29,7 @@
 {:else}
   <div class="space-y-3">
     {#each events as event (event.id)}
-      <div class="space-y-2 rounded-xl border border-[#1F1F1F] bg-[#0c0c0c] p-4">
+      <div class="space-y-2 rounded-xl border border-layout-border bg-layout-surface p-4">
         <div class="flex items-center justify-between">
           <span class="font-mono text-sm font-bold text-zinc-200"
             >{formatDate(event.datePerformed)}</span

@@ -111,7 +111,7 @@
 
   {#if model.power_method}
     <Badge
-      class="ml-2 shrink-0 border-transparent bg-[#E2994F] px-1.5 py-0.5 text-[10px] font-bold text-black"
+      class="ml-2 shrink-0 border-transparent bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground"
     >
       {powerMethodLabel || ''}
     </Badge>

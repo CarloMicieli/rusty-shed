@@ -158,7 +158,7 @@
 
 <div
   class="hero-section relative aspect-[3/1] overflow-hidden rounded-xl bg-zinc-900 {dragState
-    ? 'ring-2 ring-[#E2994F]'
+    ? 'ring-2 ring-primary'
     : ''}"
   style="background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;"
   role="img"

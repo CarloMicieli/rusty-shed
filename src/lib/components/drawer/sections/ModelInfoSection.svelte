@@ -82,9 +82,9 @@
   const selectedManufacturer = $derived(manufacturers.find((mfr) => mfr.id === manufacturerId));
 </script>
 
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="overflow-hidden rounded-lg border border-layout-border bg-layout-surface p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.drawer_section_model_info()}
     </p>
     <div class="space-y-4">
@@ -105,7 +105,7 @@
               }}
             >
               <Select.Trigger
-                class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+                class="w-full border-layout-border bg-layout-surface text-foreground"
                 aria-label={m.wishlist_modal_manufacturer()}
               >
                 {#if selectedManufacturer}

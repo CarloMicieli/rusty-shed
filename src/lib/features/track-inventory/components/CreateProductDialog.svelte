@@ -122,7 +122,7 @@
     aria-labelledby="create-product-title"
   >
     <div
-      class="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c0c] shadow-2xl"
+      class="flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-layout-surface shadow-2xl"
     >
       <ProductDialogHeader onClose={handleClose} disabled={submitting} />
 

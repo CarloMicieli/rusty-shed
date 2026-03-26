@@ -82,7 +82,7 @@
     <div class="flex flex-1 items-center gap-2">
       {#if unit.railway_company}
         <span
-          class="rounded bg-[#f0a34b] px-1.5 py-0.5 font-mono text-[10px] font-black tracking-wider text-black uppercase"
+          class="rounded bg-primary px-1.5 py-0.5 font-mono text-[10px] font-black tracking-wider text-primary-foreground uppercase"
         >
           {unit.railway_company}
         </span>
@@ -306,7 +306,7 @@
         {#if editable && specLoaded}
           <input
             type="checkbox"
-            class="accent-[#D48A42]"
+            class="accent-primary"
             checked={formState?.closeCouplers ?? unit.close_couplers ?? false}
             onchange={(e) =>
               onSaveBoolSpec('closeCouplers', (e.target as HTMLInputElement).checked)}
@@ -326,7 +326,7 @@
         {#if editable && specLoaded}
           <input
             type="checkbox"
-            class="accent-[#D48A42]"
+            class="accent-primary"
             checked={formState?.digitalShunting ?? unit.digital_shunting ?? false}
             onchange={(e) =>
               onSaveBoolSpec('digitalShunting', (e.target as HTMLInputElement).checked)}

@@ -150,7 +150,7 @@
     aria-labelledby="purchase-dialog-title"
   >
     <div
-      class="flex flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-[#0c0c0c] shadow-2xl"
+      class="flex flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-layout-surface shadow-2xl"
     >
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-white/5 p-6">

@@ -103,14 +103,14 @@
     <TabsTrigger
       value="details"
       class="rounded-md text-xs text-muted-foreground transition-colors
-        data-[state=active]:bg-[#E2994F]/10 data-[state=active]:text-[#E2994F] data-[state=active]:shadow-none"
+        data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
     >
       {m.railway_model_details()}
     </TabsTrigger>
     <TabsTrigger
       value="rolling-stock"
       class="rounded-md text-xs text-muted-foreground transition-colors
-        data-[state=active]:bg-[#E2994F]/10 data-[state=active]:text-[#E2994F] data-[state=active]:shadow-none"
+        data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
     >
       {m.rolling_stock_list()}
     </TabsTrigger>

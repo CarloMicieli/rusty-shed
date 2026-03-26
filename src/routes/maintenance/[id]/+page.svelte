@@ -86,13 +86,13 @@
     </div>
   {:else if card}
     <!-- Card Header -->
-    <div class="rounded-xl border border-white/10 bg-[#0c0c0c] p-6">
+    <div class="rounded-xl border border-white/10 bg-layout-surface p-6">
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
           <!-- Tier 1: Bebas Neue amber section label -->
           <div
             class="text-3xl leading-none tracking-wide"
-            style="font-family: 'Bebas Neue', serif; color: #D48A42;"
+            style="font-family: 'Bebas Neue', serif; color: var(--color-primary);"
           >
             {m.maintenance_card_title()}
           </div>

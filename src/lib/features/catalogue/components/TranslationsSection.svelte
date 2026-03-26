@@ -53,7 +53,7 @@
         singleLine={true}
       />
       <div
-        class="rounded-md border border-zinc-800 bg-[#0F0F0F] p-3 transition-colors focus-within:border-amber-500/50"
+        class="rounded-md border border-zinc-800 bg-layout-surface p-3 transition-colors focus-within:border-amber-500/50"
       >
         <LocalizedFieldInput
           lang="en"
@@ -77,7 +77,7 @@
         singleLine={true}
       />
       <div
-        class="rounded-md border border-zinc-800 bg-[#0F0F0F] p-3 transition-colors focus-within:border-amber-500/50"
+        class="rounded-md border border-zinc-800 bg-layout-surface p-3 transition-colors focus-within:border-amber-500/50"
       >
         <LocalizedFieldInput
           lang="it"

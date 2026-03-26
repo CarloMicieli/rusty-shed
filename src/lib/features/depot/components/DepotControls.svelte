@@ -9,10 +9,10 @@
 </script>
 
 <div
-  class="group relative flex items-center rounded-lg border border-white/10 bg-white/5 p-1 transition-all focus-within:border-[#f59e0b]/50 focus-within:bg-white/10"
+  class="group relative flex items-center rounded-lg border border-white/10 bg-white/5 p-1 transition-all focus-within:border-amber-500/50 focus-within:bg-white/10"
 >
   <div
-    class="flex h-10 w-10 items-center justify-center text-zinc-500 group-focus-within:text-[#f59e0b]"
+    class="flex h-10 w-10 items-center justify-center text-zinc-500 group-focus-within:text-amber-500"
   >
     <Search size={18} />
   </div>

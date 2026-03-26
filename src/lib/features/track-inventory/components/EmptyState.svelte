@@ -11,7 +11,7 @@
 
 <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
   <div
-    class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 py-24"
+    class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 py-24"
   >
     <div class="relative">
       <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>

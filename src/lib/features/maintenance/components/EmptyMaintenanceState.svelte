@@ -7,7 +7,7 @@
 
 <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
   <div
-    class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
+    class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center"
   >
     <!-- Thematic Iconography -->
     <div class="relative">

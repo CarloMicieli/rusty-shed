@@ -93,7 +93,7 @@
     role="dialog"
   >
     <div
-      class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-amber-500/20 bg-[#0c0c0c] shadow-2xl"
+      class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-amber-500/20 bg-layout-surface shadow-2xl"
     >
       <div class="pointer-events-none absolute -top-6 -right-6 text-white/5">
         <ClipboardList size={120} strokeWidth={1} />

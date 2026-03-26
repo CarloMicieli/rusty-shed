@@ -97,7 +97,7 @@
     >
       <Select.Trigger
         id="acq-batch-scale"
-        class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+        class="w-full border-layout-border bg-layout-surface text-foreground"
       >
         {batchDefaults.scale
           ? (SCALE_DISPLAY_MAP[batchDefaults.scale] ?? batchDefaults.scale)
@@ -126,7 +126,7 @@
     >
       <Select.Trigger
         id="acq-batch-power"
-        class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+        class="w-full border-layout-border bg-layout-surface text-foreground"
       >
         {batchDefaults.powerMethod ?? '—'}
       </Select.Trigger>

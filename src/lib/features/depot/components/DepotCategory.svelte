@@ -28,7 +28,7 @@
     >
       <div class="flex w-full items-center gap-4">
         <div
-          class="flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-[#f59e0b] transition-all group-hover:bg-[#f59e0b]/20 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+          class="flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-amber-500 transition-all group-hover:bg-amber-500/20 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
         >
           <Icon size={20} />
         </div>
@@ -45,7 +45,7 @@
         <div class="ml-auto">
           <Badge
             variant="outline"
-            class="border-[#f59e0b]/30 bg-[#f59e0b]/10 px-3 py-1 font-mono text-[#f59e0b]"
+            class="border-amber-500/30 bg-amber-500/10 px-3 py-1 font-mono text-amber-500"
           >
             {items.length}
             {m.depot_units()}

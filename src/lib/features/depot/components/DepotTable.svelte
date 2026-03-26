@@ -97,9 +97,9 @@
               {col.label}
               {#if sortField === col.key && col.key}
                 {#if sortDirection === 'asc'}
-                  <ArrowUpNarrowWide size={12} class="text-[#f59e0b]" />
+                  <ArrowUpNarrowWide size={12} class="text-amber-500" />
                 {:else}
-                  <ArrowDownWideNarrow size={12} class="text-[#f59e0b]" />
+                  <ArrowDownWideNarrow size={12} class="text-amber-500" />
                 {/if}
               {/if}
             </div>
@@ -113,10 +113,10 @@
         <tr class="group transition-all duration-300">
           <!-- Status LED -->
           <td
-            class="relative rounded-l-xl border-y border-l border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30"
+            class="relative rounded-l-xl border-y border-l border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30"
           >
             <div
-              class="absolute top-1/4 bottom-1/4 left-0 w-1 bg-transparent transition-all group-hover:bg-[#f59e0b]"
+              class="absolute top-1/4 bottom-1/4 left-0 w-1 bg-transparent transition-all group-hover:bg-amber-500"
             ></div>
             <div class="flex items-center justify-center">
               <div
@@ -129,22 +129,22 @@
           </td>
 
           <!-- Thumbnail -->
-          <td class="border-y border-white/5 bg-white/5 px-2 py-4 group-hover:border-[#f59e0b]/30">
+          <td class="border-y border-white/5 bg-white/5 px-2 py-4 group-hover:border-amber-500/30">
             <DepotThumbnail railwayModelId={props.railwayModelId} productCode={props.productCode} />
           </td>
 
           <!-- Railway -->
           <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 lg:table-cell"
+            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30 lg:table-cell"
           >
             <span class="text-xs font-semibold text-zinc-400">{props.railway}</span>
           </td>
 
           <!-- Model Info -->
-          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30">
+          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30">
             <div class="flex flex-col">
               <span
-                class="font-mono text-base font-bold text-white transition-colors group-hover:text-[#f59e0b]"
+                class="font-mono text-base font-bold text-white transition-colors group-hover:text-amber-500"
                 >{props.roadNumber}</span
               >
               <div class="mt-0.5 flex items-center gap-1.5">
@@ -160,13 +160,13 @@
           </td>
 
           <!-- DCC Address -->
-          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30">
+          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30">
             {#if props.dccAddress !== null}
               <div class="flex items-center gap-2">
                 <div
-                  class="flex h-7 w-12 items-center justify-center rounded border border-[#f59e0b]/30 bg-[#f59e0b]/10"
+                  class="flex h-7 w-12 items-center justify-center rounded border border-amber-500/30 bg-amber-500/10"
                 >
-                  <span class="font-mono text-sm font-bold text-[#f59e0b]">{props.dccAddress}</span>
+                  <span class="font-mono text-sm font-bold text-amber-500">{props.dccAddress}</span>
                 </div>
               </div>
             {:else}
@@ -176,7 +176,7 @@
 
           <!-- Control System -->
           <td
-            class="hidden rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 group-hover:border-[#f59e0b]/30 md:table-cell"
+            class="hidden rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30 md:table-cell"
           >
             <span class="font-mono text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
               >{props.control.replace('_', ' ')}</span
@@ -196,7 +196,7 @@
         variant="ghost"
         size="sm"
         onclick={() => (viewAll = true)}
-        class="text-[#f59e0b] hover:bg-[#f59e0b]/5"
+        class="text-amber-500 hover:bg-amber-500/5"
       >
         {m.depot_view_all()}
       </Button>

@@ -91,7 +91,7 @@
     {:else if rollingStocks.length === 0}
       <!-- Empty State -->
       <div
-        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
+        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center"
       >
         <div class="relative">
           <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>

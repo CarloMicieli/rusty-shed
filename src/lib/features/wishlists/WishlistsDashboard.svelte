@@ -133,7 +133,7 @@
 
 <div class="mb-10 flex flex-col">
   <!-- Page Header -->
-  <div class="-mx-4 -mt-4 border-b border-[#1F1F1F] bg-[#0F0F0F] px-6 py-4 lg:-mx-8 lg:-mt-8">
+  <div class="-mx-4 -mt-4 border-b border-layout-border bg-layout-surface px-6 py-4 lg:-mx-8 lg:-mt-8">
     <PageHeader
       title={m.wishlists_title()}
       subtitle={m.wishlists_subtitle()}
@@ -154,7 +154,7 @@
     <!-- List Navigator (Full-Height Left Column) -->
     {#if wishlists.length > 0 || wishlistService.isLoading}
       <aside
-        class="w-full shrink-0 border-b border-[#1F1F1F] bg-[#0F0F0F] md:w-64 md:border-r md:border-b-0"
+        class="w-full shrink-0 border-b border-layout-border bg-layout-surface md:w-64 md:border-r md:border-b-0"
       >
         <div class="sticky top-0 p-3 pt-4">
           <WishlistSidebar
@@ -174,14 +174,14 @@
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {#each Array.from({ length: 8 }) as _, i (i)}
               <div
-                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-4"
+                class="aspect-[3/4] animate-pulse space-y-4 overflow-hidden rounded-[8px] border border-layout-border bg-layout-surface p-4"
               >
-                <div class="h-2 w-1/2 rounded bg-[#1F1F1F]"></div>
-                <div class="h-4 w-3/4 rounded bg-[#1F1F1F]"></div>
-                <div class="aspect-[4/3] rounded-[8px] bg-[#1F1F1F]"></div>
+                <div class="h-2 w-1/2 rounded bg-layout-border"></div>
+                <div class="h-4 w-3/4 rounded bg-layout-border"></div>
+                <div class="aspect-[4/3] rounded-[8px] bg-layout-border"></div>
                 <div class="flex gap-2">
-                  <div class="h-8 flex-1 rounded-[8px] bg-[#1F1F1F]"></div>
-                  <div class="h-8 flex-1 rounded-[8px] bg-[#1F1F1F]"></div>
+                  <div class="h-8 flex-1 rounded-[8px] bg-layout-border"></div>
+                  <div class="h-8 flex-1 rounded-[8px] bg-layout-border"></div>
                 </div>
               </div>
             {/each}
@@ -206,8 +206,8 @@
                 class={[
                   'rounded-[8px] border p-1.5 transition-colors',
                   viewMode === 'grid'
-                    ? 'border-[#D48A42] bg-[rgba(212,138,66,0.15)] text-[#D48A42]'
-                    : 'border-[#1F1F1F] text-[#808080] hover:border-[#D48A42]/40 hover:text-[#D48A42]'
+                    ? 'border-primary bg-primary/15 text-primary'
+                    : 'border-layout-border text-muted-foreground hover:border-primary/40 hover:text-primary'
                 ].join(' ')}
                 onclick={() => (viewMode = 'grid')}
               >
@@ -219,8 +219,8 @@
                 class={[
                   'rounded-[8px] border p-1.5 transition-colors',
                   viewMode === 'table'
-                    ? 'border-[#D48A42] bg-[rgba(212,138,66,0.15)] text-[#D48A42]'
-                    : 'border-[#1F1F1F] text-[#808080] hover:border-[#D48A42]/40 hover:text-[#D48A42]'
+                    ? 'border-primary bg-primary/15 text-primary'
+                    : 'border-layout-border text-muted-foreground hover:border-primary/40 hover:text-primary'
                 ].join(' ')}
                 onclick={() => (viewMode = 'table')}
               >
@@ -252,31 +252,31 @@
             {/if}
           </div>
         {:else}
-          <div class="rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+          <div class="rounded-[8px] border border-layout-border bg-layout-surface p-4">
             <div
-              class="flex flex-col items-center justify-center gap-8 rounded-[8px] border border-[#1F1F1F] px-4 py-24 text-center"
+              class="flex flex-col items-center justify-center gap-8 rounded-[8px] border border-layout-border px-4 py-24 text-center"
             >
               <div class="relative">
-                <div class="absolute inset-0 rounded-full bg-[#D48A42]/5 blur-3xl"></div>
+                <div class="absolute inset-0 rounded-full bg-primary/5 blur-3xl"></div>
                 <div
-                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-[#1F1F1F] bg-[#0F0F0F]"
+                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-layout-border bg-layout-surface"
                 >
-                  <Heart size={56} class="text-[#808080] opacity-40" />
+                  <Heart size={56} class="text-muted-foreground opacity-40" />
                 </div>
               </div>
 
               <div class="flex max-w-sm flex-col items-center gap-3 text-center">
-                <h3 class="text-2xl font-bold text-[#E0E0E0]">
+                <h3 class="text-2xl font-bold text-foreground">
                   {m.app_wishlists()}
                 </h3>
-                <p class="text-sm leading-relaxed text-[#808080]">
+                <p class="text-sm leading-relaxed text-muted-foreground">
                   {m.wishlists_empty_state()}
                 </p>
               </div>
 
               <button
                 type="button"
-                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-[8px] border border-[#D48A42] bg-[#D48A42] px-8 py-3 font-bold tracking-wide text-black transition-all hover:bg-[#D48A42]/90 hover:shadow-[0_0_20px_rgba(212,138,66,0.3)] active:scale-95"
+                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-[8px] border border-primary bg-primary px-8 py-3 font-bold tracking-wide text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(212,138,66,0.3)] active:scale-95"
                 onclick={handleCreate}
               >
                 <Heart class="h-5 w-5" />

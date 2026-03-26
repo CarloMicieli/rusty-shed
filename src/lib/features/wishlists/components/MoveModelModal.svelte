@@ -43,7 +43,7 @@
 
 <Dialog.Root {open} onOpenChange={() => onClose()}>
   <Dialog.Content
-    class="overflow-hidden rounded-2xl border border-amber-500/20 bg-[#0c0c0c] p-0 text-white shadow-2xl"
+    class="overflow-hidden rounded-2xl border border-amber-500/20 bg-layout-surface p-0 text-white shadow-2xl"
   >
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-white/5 p-6">
@@ -69,7 +69,7 @@
 
     <!-- Body -->
     <div class="space-y-3 p-6">
-      <span class="text-[10px] font-bold tracking-[0.25em] text-[#808080] uppercase">
+      <span class="text-[10px] font-bold tracking-[0.25em] text-muted-foreground uppercase">
         {m.wishlists_move_destination_label()}
       </span>
       <Select.Root
@@ -80,7 +80,7 @@
           error = '';
         }}
       >
-        <Select.Trigger class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]">
+        <Select.Trigger class="w-full border-layout-border bg-layout-surface text-foreground">
           {#if selectedLabel}
             {selectedLabel}
           {:else}
@@ -118,7 +118,7 @@
         type="button"
         onclick={handleSubmit}
         disabled={!selectedTargetId}
-        class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90 disabled:opacity-40"
+        class="bg-primary font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
       >
         {m.wishlists_move_submit()}
       </Button>

@@ -44,7 +44,7 @@
       }}
     >
       <Select.Trigger
-        class="w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]"
+        class="w-full border-layout-border bg-layout-surface text-foreground"
         aria-label={m.wishlist_modal_select_list()}
       >
         {#if selectedWishlist}
