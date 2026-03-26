@@ -727,6 +727,8 @@
   "import.error.unsupportedFormat": "Formato file non supportato",
   "import.error.archiveCorrupted": "L'archivio è corrotto",
   "import.error.manifestMissing": "manifest.json non trovato nell'archivio",
+  "import.error.analyzeFailed": "Impossibile leggere il file di importazione. Verifica che sia un archivio valido.",
+  "import.error.importFailed": "Importazione non riuscita. Riprova.",
   "import.warning.missingImage": "Immagine non trovata: {filename}",
   "import_report_title_complete": "Importazione Completata",
   "import_report_title_failed": "Importazione Fallita",

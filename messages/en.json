@@ -741,6 +741,8 @@
   "import.error.unsupportedFormat": "Unsupported file format",
   "import.error.archiveCorrupted": "Archive is corrupted",
   "import.error.manifestMissing": "manifest.json not found in archive",
+  "import.error.analyzeFailed": "Failed to read the import file. Please check it is a valid archive.",
+  "import.error.importFailed": "Import failed. Please try again.",
   "import.warning.missingImage": "Image not found: {filename}",
   "import_report_title_complete": "Import Complete",
   "import_report_title_failed": "Import Failed",

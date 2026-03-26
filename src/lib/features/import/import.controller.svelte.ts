@@ -4,11 +4,19 @@ import type {
   ImportValidationError,
   ImportWarning,
   ImportPreviewResponse,
-  ImportResultResponse
+  ImportResultResponse,
+  CommandError
 } from '$lib/bindings';
 import type { ImportProgress } from './types';
+import * as m from '$lib/paraglide/messages.js';
 
 const IMPORT_CONTEXT_KEY = Symbol('import-controller');
+
+function extractErrorMessage(error: CommandError): string {
+  if ('NotFound' in error) return m['import.error.manifestMissing']();
+  if ('DatabaseError' in error) return m['import.error.importFailed']();
+  return m['import.error.analyzeFailed']();
+}
 
 export class ImportController {
   sessionId = $state<string | null>(null);
@@ -20,8 +28,10 @@ export class ImportController {
   result = $state<ImportResultResponse | null>(null);
   canImport = $state(false);
   isLoading = $state(false);
+  fatalError = $state<string | null>(null);
 
   async analyzePackage(filePath: string) {
+    this.fatalError = null;
     this.isLoading = true;
     try {
       const { commands } = await import('$lib/bindings');
@@ -31,17 +41,13 @@ export class ImportController {
         this.sessionId = result.data.sessionId;
         this.recordCounts = result.data.recordCounts;
         this.canImport = result.data.validationStatus === 'valid';
-
-        if (result.data.validationStatus !== 'valid') {
-          this.errors = [];
-        }
       } else {
         console.error('Failed to analyze package:', result.error);
-        this.errors = [];
+        this.fatalError = extractErrorMessage(result.error);
       }
     } catch (error) {
       console.error('Failed to analyze package:', error);
-      this.errors = [];
+      this.fatalError = m['import.error.analyzeFailed']();
     } finally {
       this.isLoading = false;
     }
@@ -62,11 +68,13 @@ export class ImportController {
         this.canImport = result.data.canImport;
       } else {
         console.error('Failed to get preview:', result.error);
-        this.preview = null;
+        this.fatalError = extractErrorMessage(result.error);
+        this.sessionId = null;
       }
     } catch (error) {
       console.error('Failed to get preview:', error);
-      this.preview = null;
+      this.fatalError = m['import.error.analyzeFailed']();
+      this.sessionId = null;
     } finally {
       this.isLoading = false;
     }
@@ -86,9 +94,15 @@ export class ImportController {
         this.canImport = false;
       } else {
         console.error('Failed to execute import:', result.error);
+        this.fatalError = extractErrorMessage(result.error);
+        this.sessionId = null;
+        this.preview = null;
       }
     } catch (error) {
       console.error('Failed to execute import:', error);
+      this.fatalError = m['import.error.importFailed']();
+      this.sessionId = null;
+      this.preview = null;
     } finally {
       this.isLoading = false;
     }
@@ -117,6 +131,7 @@ export class ImportController {
     this.result = null;
     this.canImport = false;
     this.isLoading = false;
+    this.fatalError = null;
   }
 }
 

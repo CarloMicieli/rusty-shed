@@ -10,9 +10,10 @@
   interface Props {
     onFileSelected?: (path: string) => Promise<void>;
     disabled?: boolean;
+    error?: string;
   }
 
-  const { onFileSelected = async () => {}, disabled = false }: Props = $props();
+  const { onFileSelected = async () => {}, disabled = false, error }: Props = $props();
 
   // Use Tauri's native drag-drop event to get absolute file paths.
   // DOM DataTransfer File objects do not have reliable .path properties.
@@ -104,6 +105,9 @@
     <Button onclick={handleClick} type="button" {disabled} class="pointer-events-auto">
       {m['import.dropzone.select']()}
     </Button>
+    {#if error}
+      <p class="error-message" role="alert">{error}</p>
+    {/if}
   </div>
 </div>
 
@@ -164,5 +168,12 @@
     font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
     max-width: 300px;
+  }
+
+  .error-message {
+    font-size: 0.875rem;
+    color: hsl(var(--destructive));
+    max-width: 340px;
+    text-align: center;
   }
 </style>

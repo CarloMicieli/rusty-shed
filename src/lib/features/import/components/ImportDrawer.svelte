@@ -74,7 +74,11 @@
   {#if controller.result}
     <ImportReport result={controller.result} onClose={handleCloseReport} />
   {:else if !controller.sessionId}
-    <ImportDropZone onFileSelected={handleFileSelected} disabled={isProcessing} />
+    <ImportDropZone
+      onFileSelected={handleFileSelected}
+      disabled={isProcessing}
+      error={controller.fatalError ?? undefined}
+    />
   {:else if controller.preview}
     <ImportPreview
       preview={controller.preview}

@@ -110,14 +110,15 @@ impl SchemaValidator {
         let collection_item_ids = Self::extract_ids(data, "collectionItems");
         let seller_ids = Self::extract_ids(data, "sellers");
 
-        // Validate railway models reference valid manufacturers
+        // Validate railway models reference valid manufacturers;
+        // validate nested rolling stocks reference valid railway companies.
         if let Some(models) = data.get("railwayModels").and_then(|v| v.as_array()) {
-            for (idx, model) in models.iter().enumerate() {
+            for (model_idx, model) in models.iter().enumerate() {
                 if let Some(manufacturer_id) = model.get("manufacturerId").and_then(|v| v.as_str())
                     && !manufacturer_ids.contains(manufacturer_id)
                 {
                     errors.push(ValidationError::new(
-                        format!("data.railwayModels[{}].manufacturerId", idx),
+                        format!("data.railwayModels[{}].manufacturerId", model_idx),
                         "referential_integrity",
                         format!(
                             "Manufacturer '{}' not found in manufacturers list",
@@ -126,29 +127,37 @@ impl SchemaValidator {
                     ));
                 }
 
-                if let Some(railway_id) = model.get("railwayId").and_then(|v| v.as_str())
-                    && !railway_company_ids.contains(railway_id)
+                if let Some(rolling_stocks) = model.get("rollingStocks").and_then(|v| v.as_array())
                 {
-                    errors.push(ValidationError::new(
-                        format!("data.railwayModels[{}].railwayId", idx),
-                        "referential_integrity",
-                        format!(
-                            "Railway company '{}' not found in railwayCompanies list",
-                            railway_id
-                        ),
-                    ));
+                    for (rs_idx, rs) in rolling_stocks.iter().enumerate() {
+                        if let Some(rc_id) = rs.get("railwayCompanyId").and_then(|v| v.as_str())
+                            && !railway_company_ids.contains(rc_id)
+                        {
+                            errors.push(ValidationError::new(
+                                format!(
+                                    "data.railwayModels[{}].rollingStocks[{}].railwayCompanyId",
+                                    model_idx, rs_idx
+                                ),
+                                "referential_integrity",
+                                format!(
+                                    "Railway company '{}' not found in railwayCompanies list",
+                                    rc_id
+                                ),
+                            ));
+                        }
+                    }
                 }
             }
         }
 
-        // Validate collection items reference valid models, manufacturers, and sellers
+        // Validate collection items reference valid railway models and sellers.
         if let Some(items) = data.get("collectionItems").and_then(|v| v.as_array()) {
             for (idx, item) in items.iter().enumerate() {
-                if let Some(model_id) = item.get("modelId").and_then(|v| v.as_str())
+                if let Some(model_id) = item.get("railwayModelId").and_then(|v| v.as_str())
                     && !railway_model_ids.contains(model_id)
                 {
                     errors.push(ValidationError::new(
-                        format!("data.collectionItems[{}].modelId", idx),
+                        format!("data.collectionItems[{}].railwayModelId", idx),
                         "referential_integrity",
                         format!(
                             "Railway model '{}' not found in railwayModels list",
@@ -157,24 +166,14 @@ impl SchemaValidator {
                     ));
                 }
 
-                if let Some(manufacturer_id) = item.get("manufacturerId").and_then(|v| v.as_str())
-                    && !manufacturer_ids.contains(manufacturer_id)
-                {
-                    errors.push(ValidationError::new(
-                        format!("data.collectionItems[{}].manufacturerId", idx),
-                        "referential_integrity",
-                        format!(
-                            "Manufacturer '{}' not found in manufacturers list",
-                            manufacturer_id
-                        ),
-                    ));
-                }
-
-                if let Some(seller_id) = item.get("sellerId").and_then(|v| v.as_str())
+                if let Some(seller_id) = item
+                    .get("purchase")
+                    .and_then(|p| p.get("sellerId"))
+                    .and_then(|v| v.as_str())
                     && !seller_ids.contains(seller_id)
                 {
                     errors.push(ValidationError::new(
-                        format!("data.collectionItems[{}].sellerId", idx),
+                        format!("data.collectionItems[{}].purchase.sellerId", idx),
                         "referential_integrity",
                         format!("Seller '{}' not found in sellers list", seller_id),
                     ));

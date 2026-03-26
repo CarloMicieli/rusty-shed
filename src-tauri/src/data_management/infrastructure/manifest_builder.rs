@@ -156,6 +156,40 @@ where
         .unwrap_or(Value::Null)
 }
 
+/// Build a seller JSON value from a database row.
+///
+/// Centralises the field mapping so both the explicit-sellers export and the
+/// auto-include-sellers-for-track-purchases path produce identical output.
+/// Expects the row to contain: id, name, type, email, phone, website_url,
+/// street_address, city, state_region, postal_code, country_code.
+fn build_seller_value(row: &sqlx::sqlite::SqliteRow) -> Value {
+    let address_obj = strip_null_fields(json!({
+        "street": row.try_get::<Option<String>, _>("street_address").ok().flatten(),
+        "city": row.try_get::<Option<String>, _>("city").ok().flatten(),
+        "region": row.try_get::<Option<String>, _>("state_region").ok().flatten(),
+        "postalCode": row.try_get::<Option<String>, _>("postal_code").ok().flatten(),
+        "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
+    }));
+    let address = if address_obj
+        .as_object()
+        .map(|o| !o.is_empty())
+        .unwrap_or(false)
+    {
+        address_obj
+    } else {
+        Value::Null
+    };
+    strip_null_fields(json!({
+        "id": row.try_get::<String, _>("id").ok(),
+        "name": row.try_get::<String, _>("name").ok(),
+        "sellerType": enum_value(row.try_get::<String, _>("type").ok(), db_seller_type_to_schema),
+        "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
+        "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
+        "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
+        "address": address,
+    }))
+}
+
 fn probe_model_image(media_dir: &Path, model_id: &str) -> Option<String> {
     let base = model_id.replace(':', "_");
     for ext in &["png", "jpg", "jpeg"] {
@@ -187,8 +221,16 @@ pub async fn build_manifest(
 ) -> Result<Value, ExportError> {
     let mut data = json!({});
 
+    // Resolve FK dependencies so the exported manifest is always self-consistent.
+    // Each entity must be present whenever something that references it is exported.
+    let include_maintenance_logs = selection.include_maintenance_logs;
+    let include_collection_items = selection.include_collection_items || include_maintenance_logs;
+    let include_railway_models = selection.include_railway_models || include_collection_items;
+    let include_track_inventory = selection.include_track_inventory;
+    let include_sellers = selection.include_sellers;
+
     // Export manufacturers when railway models or track inventory are selected (FK dependency)
-    if selection.include_railway_models || selection.include_track_inventory {
+    if include_railway_models || include_track_inventory {
         let rows = sqlx::query(
             "SELECT id, name, registered_company_name, country_code, status, website_url \
              FROM manufacturers ORDER BY name",
@@ -213,7 +255,7 @@ pub async fn build_manifest(
         data["manufacturers"] = json!(manufacturers);
     }
 
-    if selection.include_railway_models {
+    if include_railway_models {
         // Railway companies (referenced by rolling stocks)
         let rc_rows = sqlx::query(
             "SELECT id, name, country_code, status FROM railway_companies ORDER BY name",
@@ -258,7 +300,7 @@ pub async fn build_manifest(
             // Fetch nested rolling stocks
             let rs_rows = sqlx::query(
                 "SELECT railway_company_id, series_code, road_number, livery, \
-                        friendly_name, is_dummy \
+                        friendly_name, is_dummy, length_millimeters \
                  FROM rolling_stocks WHERE railway_model_id = ? ORDER BY series_code",
             )
             .bind(&model_id)
@@ -276,6 +318,10 @@ pub async fn build_manifest(
                         "livery": rs.try_get::<Option<String>, _>("livery").ok().flatten(),
                         "friendlyName": rs.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
                         "isDummy": rs.try_get::<i64, _>("is_dummy").ok().map(|v| v != 0),
+                        "lengthOverBuffers": rs.try_get::<Option<String>, _>("length_millimeters")
+                            .ok()
+                            .flatten()
+                            .and_then(|s| s.parse::<f64>().ok()),
                     }))
                 })
                 .collect();
@@ -320,7 +366,7 @@ pub async fn build_manifest(
         data["railwayModels"] = json!(models);
     }
 
-    if selection.include_collection_items {
+    if include_collection_items {
         let item_rows = sqlx::query(
             "SELECT ci.id, ci.railway_model_id, ci.added_date, ci.removed_date, \
                     ci.purchase_condition, ci.model_condition, ci.box_condition, ci.notes, \
@@ -354,61 +400,84 @@ pub async fn build_manifest(
                         .try_get::<Option<String>, _>("purchase_date")
                         .ok()
                         .flatten();
-                    let price_amount: Option<i64> = row
-                        .try_get::<Option<i64>, _>("purchased_price_amount")
+                    let sale_date: Option<String> = row
+                        .try_get::<Option<String>, _>("sale_date")
                         .ok()
                         .flatten();
-                    let price_currency: Option<String> = row
-                        .try_get::<Option<String>, _>("purchased_price_currency")
+                    let seller_id: Option<String> = row
+                        .try_get::<Option<String>, _>("seller_id")
                         .ok()
                         .flatten();
-                    let price = match (price_amount, price_currency) {
-                        (Some(amount), Some(currency)) => {
-                            json!({ "amount": amount, "currency": currency })
-                        }
-                        _ => Value::Null,
+
+                    // Enforce schema allOf conditional requirements before building the object.
+                    // If a required conditional field is NULL in the DB, strip_null_fields would
+                    // remove it and produce schema-invalid JSON — so we skip the whole object.
+                    let conditions_met = match pt {
+                        "purchased" => purchase_date.is_some(),
+                        "sold" => purchase_date.is_some() && sale_date.is_some(),
+                        "preordered" => seller_id.is_some(),
+                        _ => true,
                     };
 
-                    let sale_price_amount: Option<i64> = row
-                        .try_get::<Option<i64>, _>("sale_price_amount")
-                        .ok()
-                        .flatten();
-                    let sale_price_currency: Option<String> = row
-                        .try_get::<Option<String>, _>("sale_price_currency")
-                        .ok()
-                        .flatten();
-                    let sale_price = match (sale_price_amount, sale_price_currency) {
-                        (Some(amount), Some(currency)) => {
-                            json!({ "amount": amount, "currency": currency })
-                        }
-                        _ => Value::Null,
-                    };
+                    if conditions_met {
+                        let price_amount: Option<i64> = row
+                            .try_get::<Option<i64>, _>("purchased_price_amount")
+                            .ok()
+                            .flatten();
+                        let price_currency: Option<String> = row
+                            .try_get::<Option<String>, _>("purchased_price_currency")
+                            .ok()
+                            .flatten();
+                        let price = match (price_amount, price_currency) {
+                            (Some(amount), Some(currency)) => {
+                                json!({ "amount": amount, "currency": currency })
+                            }
+                            _ => Value::Null,
+                        };
 
-                    let deposit_amount_val: Option<i64> = row
-                        .try_get::<Option<i64>, _>("deposit_amount")
-                        .ok()
-                        .flatten();
-                    let deposit_currency: Option<String> = row
-                        .try_get::<Option<String>, _>("deposit_currency")
-                        .ok()
-                        .flatten();
-                    let deposit = match (deposit_amount_val, deposit_currency) {
-                        (Some(amount), Some(currency)) => {
-                            json!({ "amount": amount, "currency": currency })
-                        }
-                        _ => Value::Null,
-                    };
+                        let sale_price_amount: Option<i64> = row
+                            .try_get::<Option<i64>, _>("sale_price_amount")
+                            .ok()
+                            .flatten();
+                        let sale_price_currency: Option<String> = row
+                            .try_get::<Option<String>, _>("sale_price_currency")
+                            .ok()
+                            .flatten();
+                        let sale_price = match (sale_price_amount, sale_price_currency) {
+                            (Some(amount), Some(currency)) => {
+                                json!({ "amount": amount, "currency": currency })
+                            }
+                            _ => Value::Null,
+                        };
 
-                    strip_null_fields(json!({
-                        "type": pt,
-                        "purchaseDate": purchase_date,
-                        "sellerId": row.try_get::<Option<String>, _>("seller_id").ok().flatten(),
-                        "price": price,
-                        "salePrice": sale_price,
-                        "depositAmount": deposit,
-                        "saleDate": row.try_get::<Option<String>, _>("sale_date").ok().flatten(),
-                        "expectedDelivery": row.try_get::<Option<String>, _>("expected_date").ok().flatten(),
-                    }))
+                        let deposit_amount_val: Option<i64> = row
+                            .try_get::<Option<i64>, _>("deposit_amount")
+                            .ok()
+                            .flatten();
+                        let deposit_currency: Option<String> = row
+                            .try_get::<Option<String>, _>("deposit_currency")
+                            .ok()
+                            .flatten();
+                        let deposit = match (deposit_amount_val, deposit_currency) {
+                            (Some(amount), Some(currency)) => {
+                                json!({ "amount": amount, "currency": currency })
+                            }
+                            _ => Value::Null,
+                        };
+
+                        strip_null_fields(json!({
+                            "type": pt,
+                            "purchaseDate": purchase_date,
+                            "sellerId": seller_id,
+                            "price": price,
+                            "salePrice": sale_price,
+                            "depositAmount": deposit,
+                            "saleDate": sale_date,
+                            "expectedDelivery": row.try_get::<Option<String>, _>("expected_date").ok().flatten(),
+                        }))
+                    } else {
+                        Value::Null
+                    }
                 } else {
                     Value::Null
                 };
@@ -444,31 +513,21 @@ pub async fn build_manifest(
         data["collectionItems"] = json!(items);
     }
 
-    if selection.include_sellers {
+    if include_sellers {
         let rows = sqlx::query(
-            "SELECT id, name, type, email, phone, website_url FROM sellers ORDER BY name",
+            "SELECT id, name, type, email, phone, website_url, \
+                    street_address, city, state_region, postal_code, country_code \
+             FROM sellers ORDER BY name",
         )
         .fetch_all(pool)
         .await
         .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
 
-        let sellers: Vec<Value> = rows
-            .iter()
-            .map(|row| {
-                strip_null_fields(json!({
-                    "id": row.try_get::<String, _>("id").ok(),
-                    "name": row.try_get::<String, _>("name").ok(),
-                    "sellerType": enum_value(row.try_get::<String, _>("type").ok(), db_seller_type_to_schema),
-                    "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
-                    "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
-                    "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
-                }))
-            })
-            .collect();
+        let sellers: Vec<Value> = rows.iter().map(build_seller_value).collect();
         data["sellers"] = json!(sellers);
     }
 
-    if selection.include_maintenance_logs {
+    if include_maintenance_logs {
         // Query maintenance cards joined to owned_rolling_stocks to get collection_item_id.
         // The schema requires MaintenanceCard.collectionItemId; the DB stores
         // maintenance_cards.owned_rolling_stock_id → owned_rolling_stocks.collection_item_id.
@@ -530,7 +589,7 @@ pub async fn build_manifest(
         data["maintenanceCards"] = json!(maintenance_cards);
     }
 
-    if selection.include_track_inventory {
+    if include_track_inventory {
         // Track products
         let tp_rows = sqlx::query(
             "SELECT track_id, manufacturer_id, product_code, description, \
@@ -662,7 +721,8 @@ pub async fn build_manifest(
                     .collect::<Vec<_>>()
                     .join(", ");
                 let query = format!(
-                    "SELECT id, name, type, email, phone, website_url \
+                    "SELECT id, name, type, email, phone, website_url, \
+                            street_address, city, state_region, postal_code, country_code \
                      FROM sellers WHERE id IN ({}) ORDER BY name",
                     placeholders
                 );
@@ -677,14 +737,7 @@ pub async fn build_manifest(
 
                 let mut all_sellers = existing_sellers;
                 for row in &seller_rows {
-                    all_sellers.push(strip_null_fields(json!({
-                        "id": row.try_get::<String, _>("id").ok(),
-                        "name": row.try_get::<String, _>("name").ok(),
-                        "sellerType": enum_value(row.try_get::<String, _>("type").ok(), db_seller_type_to_schema),
-                        "email": row.try_get::<Option<String>, _>("email").ok().flatten(),
-                        "phone": row.try_get::<Option<String>, _>("phone").ok().flatten(),
-                        "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
-                    })));
+                    all_sellers.push(build_seller_value(row));
                 }
                 data["sellers"] = json!(all_sellers);
             }
