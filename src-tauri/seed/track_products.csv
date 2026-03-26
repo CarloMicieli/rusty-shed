@@ -8,11 +8,11 @@ trn:railway-track:piko:55200,55200,piko,55200,0,239,,100,straight,Piko A-Gleis S
 trn:railway-track:piko:55201,55201,piko,55201,0,231,,100,straight,Piko A-Gleis Straight G231
 trn:railway-track:piko:55212,55212,piko,55212,0,,422,100,curved,Piko A-Gleis Curved R2 30°
 trn:railway-track:piko:55221,55221,piko,55221,0,239,,100,turnout,Piko A-Gleis Right Turnout WR
-trn:railway-track:marklin:24172,24172,marklin,24172,1,171,,N/A,straight,Marklin C Track Straight 171.7mm
-trn:railway-track:marklin:24188,24188,marklin,24188,1,188,,N/A,straight,Marklin C Track Straight 188.3mm
-trn:railway-track:marklin:24130,24130,marklin,24130,1,,360,N/A,curved,Marklin C Track Curved R1 30°
-trn:railway-track:marklin:24230,24230,marklin,24230,1,,437,N/A,curved,Marklin C Track Curved R2 30°
-trn:railway-track:marklin:24611,24611,marklin,24611,1,188,,N/A,turnout,Marklin C Track Left Turnout
+trn:railway-track:marklin:24172,24172,marklin,24172,1,171,,83,straight,Marklin C Track Straight 171.7mm
+trn:railway-track:marklin:24188,24188,marklin,24188,1,188,,83,straight,Marklin C Track Straight 188.3mm
+trn:railway-track:marklin:24130,24130,marklin,24130,1,,360,83,curved,Marklin C Track Curved R1 30°
+trn:railway-track:marklin:24230,24230,marklin,24230,1,,437,83,curved,Marklin C Track Curved R2 30°
+trn:railway-track:marklin:24611,24611,marklin,24611,1,188,,83,turnout,Marklin C Track Left Turnout
 trn:railway-track:roco:42510,42510,roco,42510,1,230,,83,straight,Roco Line w/Bedding G1 Straight
 trn:railway-track:roco:42511,42511,roco,42511,1,115,,83,straight,Roco Line w/Bedding G1/2 Straight
 trn:railway-track:roco:42512,42512,roco,42512,1,58,,83,straight,Roco Line w/Bedding G1/4 Straight
