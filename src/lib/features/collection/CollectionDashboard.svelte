@@ -351,60 +351,62 @@
     {/if}
 
     <!-- Desktop: always-visible command center sidebar (narrows to icon rail when collapsed) -->
-    <aside
-      class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-layout-border bg-card md:flex"
-      style="width: {ui.showFilterSidebar
-        ? '280px'
-        : '60px'}; transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);"
-    >
-      <!-- Sidebar header — always visible -->
-      <div
-        class="flex flex-shrink-0 items-center border-b border-layout-border px-2 py-3"
-        class:justify-between={ui.showFilterSidebar}
-        class:justify-center={!ui.showFilterSidebar}
+    {#if !isCollectionEmpty}
+      <aside
+        class="sticky top-0 hidden h-dvh flex-shrink-0 flex-col overflow-hidden border-l border-layout-border bg-card md:flex"
+        style="width: {ui.showFilterSidebar
+          ? '280px'
+          : '60px'}; transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);"
       >
-        <span
-          class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase transition-[opacity,width] duration-200"
-          style="opacity: {ui.showFilterSidebar ? '1' : '0'}; width: {ui.showFilterSidebar
-            ? 'auto'
-            : '0'}; overflow: hidden;"
+        <!-- Sidebar header — always visible -->
+        <div
+          class="flex flex-shrink-0 items-center border-b border-layout-border px-2 py-3"
+          class:justify-between={ui.showFilterSidebar}
+          class:justify-center={!ui.showFilterSidebar}
         >
-          Filters
-        </span>
-        <button
-          type="button"
-          class="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
-          onclick={ui.toggleFilterSidebar}
-          title={m.collection_toggle_filters_title()}
-          aria-expanded={ui.showFilterSidebar}
-        >
-          <SlidersHorizontal size={14} />
-        </button>
-      </div>
+          <span
+            class="text-[10px] font-semibold tracking-widest whitespace-nowrap text-muted-foreground uppercase transition-[opacity,width] duration-200"
+            style="opacity: {ui.showFilterSidebar ? '1' : '0'}; width: {ui.showFilterSidebar
+              ? 'auto'
+              : '0'}; overflow: hidden;"
+          >
+            Filters
+          </span>
+          <button
+            type="button"
+            class="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
+            onclick={ui.toggleFilterSidebar}
+            title={m.collection_toggle_filters_title()}
+            aria-expanded={ui.showFilterSidebar}
+          >
+            <SlidersHorizontal size={14} />
+          </button>
+        </div>
 
-      <!-- Sidebar content — fades in after sidebar expands -->
-      <div
-        class="flex-1 overflow-y-auto transition-opacity duration-200"
-        style="opacity: {ui.showFilterSidebar ? '1' : '0'}; pointer-events: {ui.showFilterSidebar
-          ? 'auto'
-          : 'none'};"
-      >
-        <ControlPanel
-          {filters}
-          availableScales={availableScaleOptions}
-          {availableCompanies}
-          {availableCategories}
-          {availableEpochs}
-          {hasActiveFilters}
-          onToggleScale={handleToggleScale}
-          onToggleCompany={handleToggleCompany}
-          onToggleCategory={handleToggleCategory}
-          onToggleEpoch={handleToggleEpoch}
-          onClear={handleClear}
-          onToggleSidebar={ui.toggleFilterSidebar}
-        />
-      </div>
-    </aside>
+        <!-- Sidebar content — fades in after sidebar expands -->
+        <div
+          class="flex-1 overflow-y-auto transition-opacity duration-200"
+          style="opacity: {ui.showFilterSidebar ? '1' : '0'}; pointer-events: {ui.showFilterSidebar
+            ? 'auto'
+            : 'none'};"
+        >
+          <ControlPanel
+            {filters}
+            availableScales={availableScaleOptions}
+            {availableCompanies}
+            {availableCategories}
+            {availableEpochs}
+            {hasActiveFilters}
+            onToggleScale={handleToggleScale}
+            onToggleCompany={handleToggleCompany}
+            onToggleCategory={handleToggleCategory}
+            onToggleEpoch={handleToggleEpoch}
+            onClear={handleClear}
+            onToggleSidebar={ui.toggleFilterSidebar}
+          />
+        </div>
+      </aside>
+    {/if}
   </div>
 </div>
 
