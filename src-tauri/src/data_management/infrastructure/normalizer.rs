@@ -71,7 +71,7 @@ impl Normalizer {
             for card in cards.iter_mut() {
                 if let Some(events) = card.get_mut("events").and_then(|v| v.as_array_mut()) {
                     for event in events.iter_mut() {
-                        normalize_field(event, "type", normalize_maintenance_type);
+                        normalize_maintenance_event_type(event);
                     }
                 }
             }
@@ -187,6 +187,27 @@ fn normalize_box_condition(s: &str) -> Option<&'static str> {
     }
 }
 
+/// Normalize a maintenance event's `type` field.
+///
+/// Handles three cases:
+/// - DB-native SCREAMING_SNAKE_CASE string → canonical schema value
+/// - `null` or missing field → `"repair"` (same as `OTHER`; safe fallback for legacy data)
+/// - Already-canonical string → unchanged (converter returns `None`)
+fn normalize_maintenance_event_type(event: &mut Value) {
+    match event.get("type") {
+        Some(Value::String(raw)) => {
+            if let Some(canonical) = normalize_maintenance_type(raw.as_str()) {
+                event["type"] = Value::String(canonical.to_string());
+            }
+        }
+        // null value or missing field: insert default so schema validation passes
+        Some(Value::Null) | None => {
+            event["type"] = Value::String("repair".to_string());
+        }
+        _ => {}
+    }
+}
+
 fn normalize_maintenance_type(s: &str) -> Option<&'static str> {
     match s {
         "WHEEL_CLEANING" | "TRACK_CLEANING" | "CONTACT_CLEANING" => Some("cleaning"),
@@ -236,6 +257,78 @@ mod tests {
         });
         Normalizer::normalize_manifest(&mut m);
         assert_eq!(m["data"]["collectionItems"][0]["boxCondition"], "mint");
+    }
+
+    #[test]
+    fn normalizes_maintenance_event_type_null_to_repair() {
+        let mut m = json!({
+            "version": "1.0",
+            "data": {
+                "maintenanceCards": [{
+                    "id": "mc1", "collectionItemId": "ci1",
+                    "events": [{ "id": "ev1", "date": "2026-01-01", "type": null }]
+                }]
+            }
+        });
+        Normalizer::normalize_manifest(&mut m);
+        assert_eq!(
+            m["data"]["maintenanceCards"][0]["events"][0]["type"],
+            "repair"
+        );
+    }
+
+    #[test]
+    fn normalizes_maintenance_event_type_missing_to_repair() {
+        let mut m = json!({
+            "version": "1.0",
+            "data": {
+                "maintenanceCards": [{
+                    "id": "mc1", "collectionItemId": "ci1",
+                    "events": [{ "id": "ev1", "date": "2026-01-01" }]
+                }]
+            }
+        });
+        Normalizer::normalize_manifest(&mut m);
+        assert_eq!(
+            m["data"]["maintenanceCards"][0]["events"][0]["type"],
+            "repair"
+        );
+    }
+
+    #[test]
+    fn normalizes_maintenance_event_type_uppercase_to_canonical() {
+        let mut m = json!({
+            "version": "1.0",
+            "data": {
+                "maintenanceCards": [{
+                    "id": "mc1", "collectionItemId": "ci1",
+                    "events": [{ "id": "ev1", "date": "2026-01-01", "type": "WHEEL_CLEANING" }]
+                }]
+            }
+        });
+        Normalizer::normalize_manifest(&mut m);
+        assert_eq!(
+            m["data"]["maintenanceCards"][0]["events"][0]["type"],
+            "cleaning"
+        );
+    }
+
+    #[test]
+    fn leaves_canonical_maintenance_event_type_unchanged() {
+        let mut m = json!({
+            "version": "1.0",
+            "data": {
+                "maintenanceCards": [{
+                    "id": "mc1", "collectionItemId": "ci1",
+                    "events": [{ "id": "ev1", "date": "2026-01-01", "type": "cleaning" }]
+                }]
+            }
+        });
+        Normalizer::normalize_manifest(&mut m);
+        assert_eq!(
+            m["data"]["maintenanceCards"][0]["events"][0]["type"],
+            "cleaning"
+        );
     }
 
     #[test]

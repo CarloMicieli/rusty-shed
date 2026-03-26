@@ -503,16 +503,17 @@ pub async fn build_manifest(
             let events: Vec<Value> = event_rows
                 .iter()
                 .map(|ev| {
-                    let maintenance_type = enum_value(
-                        ev.try_get::<Option<String>, _>("maintenance_type")
-                            .ok()
-                            .flatten(),
-                        db_maintenance_type_to_schema,
-                    );
+                    let schema_type = ev
+                        .try_get::<Option<String>, _>("maintenance_type")
+                        .ok()
+                        .flatten()
+                        .as_deref()
+                        .and_then(db_maintenance_type_to_schema)
+                        .unwrap_or("repair"); // "OTHER" maps to "repair"; safe fallback for NULL
                     strip_null_fields(json!({
                         "id": ev.try_get::<String, _>("id").ok(),
                         "date": ev.try_get::<String, _>("date_performed").ok(),
-                        "type": maintenance_type,
+                        "type": schema_type,
                         "description": ev.try_get::<Option<String>, _>("notes").ok().flatten(),
                     }))
                 })
@@ -800,6 +801,75 @@ mod tests {
         assert_eq!(db_seller_type_to_schema("MARKETPLACE"), Some("marketplace"));
         assert_eq!(db_seller_type_to_schema("DISTRIBUTOR"), Some("distributor"));
         assert_eq!(db_seller_type_to_schema("UNKNOWN"), None);
+    }
+
+    // ─── db_maintenance_type_to_schema ───────────────────────────────────────
+
+    #[test]
+    fn test_db_maintenance_type_to_schema_all_variants() {
+        assert_eq!(
+            db_maintenance_type_to_schema("WHEEL_CLEANING"),
+            Some("cleaning")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("TRACK_CLEANING"),
+            Some("cleaning")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("CONTACT_CLEANING"),
+            Some("cleaning")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("LUBRICATION"),
+            Some("lubrication")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("GEAR_GREASE"),
+            Some("lubrication")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("MOTOR_BRUSH_REPLACEMENT"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("TRACTION_TIRE_REPLACEMENT"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("SPEAKER_REPAIR"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("COUPLER_ADJUSTMENT"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("DETAIL_REPAIR"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("DECODER_INSTALL"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("FIRMWARE_UPDATE"),
+            Some("repair")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("STAY_ALIVE_INSTALL"),
+            Some("repair")
+        );
+        assert_eq!(db_maintenance_type_to_schema("OTHER"), Some("repair"));
+        assert_eq!(
+            db_maintenance_type_to_schema("WEATHERING"),
+            Some("modification")
+        );
+        assert_eq!(
+            db_maintenance_type_to_schema("GENERAL_INSPECTION"),
+            Some("inspection")
+        );
+        // unknown / future variants return None; caller provides fallback
+        assert_eq!(db_maintenance_type_to_schema("UNKNOWN"), None);
     }
 
     // ─── db_model_condition_to_schema ─────────────────────────────────────────
