@@ -140,14 +140,10 @@
     {/if}
   </div>
 {:else}
-  <div
-    class="group relative -mx-1 cursor-pointer rounded p-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15 focus-visible:outline-none"
+  <button
+    type="button"
+    class="group relative -mx-1 w-full cursor-pointer rounded border-0 bg-transparent p-1 text-left transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15 focus-visible:outline-none"
     onclick={startEditing}
-    onkeydown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') startEditing();
-    }}
-    role="button"
-    tabindex="0"
   >
     {#if value}
       <span class="text-sm text-foreground">{displayValue ?? value}</span>
@@ -156,5 +152,5 @@
         >{placeholder ?? m.edit_field_placeholder_empty()}</span
       >
     {/if}
-  </div>
+  </button>
 {/if}
