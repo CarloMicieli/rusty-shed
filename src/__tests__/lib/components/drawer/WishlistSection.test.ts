@@ -82,31 +82,31 @@ describe('WishlistSection', () => {
   it('NORMAL active button has amber bg class', () => {
     render(WishlistSection, { props: { ...defaultProps, priority: 'NORMAL' } });
     const normalBtn = screen.getByRole('button', { name: 'Normal' });
-    expect(normalBtn.className).toContain('bg-[#D48A42]');
-    expect(normalBtn.className).toContain('text-black');
+    expect(normalBtn.className).toContain('bg-primary');
+    expect(normalBtn.className).toContain('text-primary-foreground');
   });
 
   it('LOW active button has amber border/text (not solid bg)', () => {
     render(WishlistSection, { props: { ...defaultProps, priority: 'LOW' } });
     const lowBtn = screen.getByRole('button', { name: 'Low' });
-    expect(lowBtn.className).toContain('bg-[#D48A42]/10');
-    expect(lowBtn.className).toContain('text-[#D48A42]');
+    expect(lowBtn.className).toContain('bg-primary/10');
+    expect(lowBtn.className).toContain('text-primary');
   });
 
   it('HIGH active button has amber border/text (not solid bg)', () => {
     render(WishlistSection, { props: { ...defaultProps, priority: 'HIGH' } });
     const highBtn = screen.getByRole('button', { name: 'High' });
-    expect(highBtn.className).toContain('bg-[#D48A42]/10');
-    expect(highBtn.className).toContain('text-[#D48A42]');
+    expect(highBtn.className).toContain('bg-primary/10');
+    expect(highBtn.className).toContain('text-primary');
   });
 
   it('inactive buttons have neutral text colour', () => {
     render(WishlistSection, { props: { ...defaultProps, priority: 'NORMAL' } });
     const lowBtn = screen.getByRole('button', { name: 'Low' });
     // Inactive buttons have neutral zinc text, not amber
-    expect(lowBtn.className).toContain('text-[#808080]');
-    expect(lowBtn.className).not.toContain('text-[#D48A42]');
-    expect(lowBtn.className).not.toContain('text-black');
+    expect(lowBtn.className).toContain('text-muted-foreground');
+    expect(lowBtn.className).not.toContain('text-primary');
+    expect(lowBtn.className).not.toContain('text-primary-foreground');
   });
 
   // ── Desired price ───────────────────────────────────────────────────────────
@@ -155,13 +155,13 @@ describe('WishlistSection', () => {
 
     const highBtn = screen.getByRole('button', { name: 'High' });
     // Initially HIGH is inactive — has neutral text colour
-    expect(highBtn.className).toContain('text-[#808080]');
+    expect(highBtn.className).toContain('text-muted-foreground');
 
     await user.click(highBtn);
 
     // After click, HIGH should be active — gains amber text
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'High' }).className).toContain('text-[#D48A42]');
+      expect(screen.getByRole('button', { name: 'High' }).className).toContain('text-primary');
     });
   });
 });

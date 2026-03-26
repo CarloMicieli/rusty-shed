@@ -118,7 +118,7 @@ describe('WishlistValueBar', () => {
     const { container } = render(WishlistValueBar, { props: { items } });
 
     // The gauge bar track element is present
-    const track = container.querySelector('.bg-\\[\\#1F1F1F\\]');
+    const track = container.querySelector('.bg-layout-border');
     expect(track).toBeTruthy();
   });
 });

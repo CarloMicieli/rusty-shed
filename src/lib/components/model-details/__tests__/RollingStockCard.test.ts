@@ -373,7 +373,7 @@ describe('RollingStockCard', () => {
       });
 
       const button = container.querySelector('button');
-      expect(button?.className).toContain('hover:bg-[#1F1F1F]/50');
+      expect(button?.className).toContain('hover:bg-layout-border/50');
     });
   });
 });
