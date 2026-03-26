@@ -217,6 +217,268 @@
   );
 </script>
 
+{#snippet wishlistSelectionRow()}
+  <div class="space-y-2">
+    <span class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      {m.wishlist_modal_choose_or_create()}
+    </span>
+    <div class="grid grid-cols-2 gap-3">
+      <Select.Root
+        type="single"
+        value={form.wishlistId || undefined}
+        disabled={isDropdownDisabled}
+        onValueChange={(v) => {
+          form.wishlistId = v;
+        }}
+      >
+        <Select.Trigger class="w-full" aria-label={m.wishlist_modal_select_list()}>
+          {#if selectedWishlist}
+            {selectedWishlist.name}{#if selectedWishlist.isDefault}
+              (default){/if}
+          {:else}
+            <span class="text-muted-foreground">{m.wishlist_modal_select_placeholder()}</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each wishlists as list (list.id)}
+            <Select.Item value={list.id} label={list.name}>
+              {list.name}{#if list.isDefault}
+                (default){/if}
+            </Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
+      <Input
+        type="text"
+        placeholder={m.wishlist_modal_new_list_placeholder()}
+        bind:value={form.newListName}
+      />
+    </div>
+  </div>
+{/snippet}
+
+{#snippet modelDetailsSection()}
+  <div class="space-y-3">
+    <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      {m.wishlist_modal_model_details()}
+    </p>
+
+    <!-- Manufacturer + Product Code -->
+    <div class="grid grid-cols-[2fr_1fr] gap-3">
+      <div class="space-y-1">
+        <span class="text-xs text-muted-foreground">
+          {m.wishlist_modal_manufacturer()} *
+        </span>
+        {#if isLoadingData}
+          <p class="text-sm text-muted-foreground">{m.wishlist_modal_loading()}</p>
+        {:else}
+          <Select.Root
+            type="single"
+            value={form.manufacturerId || undefined}
+            onValueChange={(v) => {
+              form.manufacturerId = v;
+            }}
+          >
+            <Select.Trigger class="w-full" aria-label={m.wishlist_modal_manufacturer()}>
+              {#if selectedManufacturer}
+                {selectedManufacturer.name}
+              {:else}
+                <span class="text-muted-foreground"
+                  >{m.wishlist_modal_manufacturer_placeholder()}</span
+                >
+              {/if}
+            </Select.Trigger>
+            <Select.Content>
+              {#each manufacturers as mfr (mfr.id)}
+                <Select.Item value={mfr.id} label={mfr.name} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        {/if}
+      </div>
+      <div class="space-y-1">
+        <label for="product-code" class="text-xs text-muted-foreground">
+          {m.wishlist_modal_product_code()} *
+        </label>
+        <Input
+          id="product-code"
+          type="text"
+          placeholder={m.wishlist_modal_product_code_placeholder()}
+          bind:value={form.productCode}
+        />
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="space-y-1">
+      <label for="description" class="text-xs text-muted-foreground">
+        {m.wishlist_modal_description()} *
+      </label>
+      <Input
+        id="description"
+        type="text"
+        placeholder={m.wishlist_modal_description_placeholder()}
+        bind:value={form.description}
+      />
+    </div>
+
+    <!-- Category -->
+    <div class="space-y-1">
+      <span class="text-xs text-muted-foreground">
+        {m.wishlist_modal_category()}
+      </span>
+      <Select.Root
+        type="single"
+        value={form.category || undefined}
+        onValueChange={(v) => {
+          form.category = v;
+        }}
+      >
+        <Select.Trigger class="w-full">
+          {#if form.category}
+            {getMessage(getCategoryLabelKey(form.category))}
+          {:else}
+            <span class="text-muted-foreground">—</span>
+          {/if}
+        </Select.Trigger>
+        <Select.Content>
+          {#each CATEGORIES as cat (cat)}
+            <Select.Item value={cat} label={getMessage(getCategoryLabelKey(cat))} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
+    </div>
+
+    <!-- Scale + Power Method + Epoch -->
+    <div class="grid grid-cols-3 gap-3">
+      <div class="space-y-1">
+        <span class="text-xs text-muted-foreground">
+          {m.wishlist_modal_scale()}
+        </span>
+        <Select.Root
+          type="single"
+          value={form.scale || undefined}
+          onValueChange={(v) => {
+            form.scale = v;
+          }}
+        >
+          <Select.Trigger class="w-full">
+            {#if form.scale}
+              {form.scale}
+            {:else}
+              <span class="text-muted-foreground">—</span>
+            {/if}
+          </Select.Trigger>
+          <Select.Content>
+            {#each SCALES as scale (scale)}
+              <Select.Item value={scale} label={scale} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
+      </div>
+      <div class="space-y-1">
+        <span class="text-xs text-muted-foreground">
+          {m.wishlist_modal_power_method()}
+        </span>
+        <Select.Root
+          type="single"
+          value={form.powerMethod || undefined}
+          onValueChange={(v) => {
+            form.powerMethod = v;
+          }}
+        >
+          <Select.Trigger class="w-full">
+            {#if form.powerMethod}
+              {getMessage(getPowerMethodLabelKey(form.powerMethod))}
+            {:else}
+              <span class="text-muted-foreground">—</span>
+            {/if}
+          </Select.Trigger>
+          <Select.Content>
+            {#each POWER_METHODS as method (method)}
+              <Select.Item value={method} label={getMessage(getPowerMethodLabelKey(method))} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
+      </div>
+      <div class="space-y-1">
+        <span class="text-xs text-muted-foreground">
+          {m.wishlist_modal_epoch()}
+        </span>
+        <Select.Root
+          type="single"
+          value={form.epoch || undefined}
+          onValueChange={(v) => {
+            form.epoch = v;
+          }}
+        >
+          <Select.Trigger class="w-full">
+            {#if form.epoch}
+              {form.epoch}
+            {:else}
+              <span class="text-muted-foreground">{m.wishlist_modal_epoch_placeholder()}</span>
+            {/if}
+          </Select.Trigger>
+          <Select.Content>
+            {#each EPOCHS as epoch (epoch)}
+              <Select.Item value={epoch} label={epoch} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
+      </div>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet wishlistPreferencesSection()}
+  <div class="space-y-3">
+    <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      {m.wishlist_modal_wishlist_prefs()}
+    </p>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-1">
+        <span class="text-xs text-muted-foreground">
+          {m.wishlist_modal_priority()}
+        </span>
+        <Select.Root
+          type="single"
+          value={form.priority || undefined}
+          onValueChange={(v) => {
+            form.priority = v as WishlistPriority;
+          }}
+        >
+          <Select.Trigger class="w-full">
+            {#if form.priority}
+              {getMessage(getPriorityLabelKey(form.priority))}
+            {:else}
+              <span class="text-muted-foreground">—</span>
+            {/if}
+          </Select.Trigger>
+          <Select.Content>
+            {#each PRIORITIES as priority (priority)}
+              <Select.Item value={priority} label={getMessage(getPriorityLabelKey(priority))} />
+            {/each}
+          </Select.Content>
+        </Select.Root>
+      </div>
+      <div class="space-y-1">
+        <label for="desired-price" class="text-xs text-muted-foreground">
+          {m.wishlist_modal_desired_price()}
+        </label>
+        <Input
+          id="desired-price"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder={m.wishlist_modal_price_placeholder()}
+          bind:value={form.desiredPrice}
+        />
+      </div>
+    </div>
+  </div>
+{/snippet}
+
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
   <div class="flex w-full max-w-2xl flex-col rounded-lg border border-border/70 bg-card shadow-xl">
     <!-- Header -->
@@ -229,264 +491,9 @@
 
     <!-- Scrollable body -->
     <div class="max-h-[80vh] space-y-5 overflow-y-auto p-4">
-      <!-- Row 1: Wishlist selection -->
-      <div class="space-y-2">
-        <span class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {m.wishlist_modal_choose_or_create()}
-        </span>
-        <div class="grid grid-cols-2 gap-3">
-          <Select.Root
-            type="single"
-            value={form.wishlistId || undefined}
-            disabled={isDropdownDisabled}
-            onValueChange={(v) => {
-              form.wishlistId = v;
-            }}
-          >
-            <Select.Trigger class="w-full" aria-label={m.wishlist_modal_select_list()}>
-              {#if selectedWishlist}
-                {selectedWishlist.name}{#if selectedWishlist.isDefault}
-                  (default){/if}
-              {:else}
-                <span class="text-muted-foreground">{m.wishlist_modal_select_placeholder()}</span>
-              {/if}
-            </Select.Trigger>
-            <Select.Content>
-              {#each wishlists as list (list.id)}
-                <Select.Item value={list.id} label={list.name}>
-                  {list.name}{#if list.isDefault}
-                    (default){/if}
-                </Select.Item>
-              {/each}
-            </Select.Content>
-          </Select.Root>
-          <Input
-            type="text"
-            placeholder={m.wishlist_modal_new_list_placeholder()}
-            bind:value={form.newListName}
-          />
-        </div>
-      </div>
-
-      <!-- Model Details section -->
-      <div class="space-y-3">
-        <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {m.wishlist_modal_model_details()}
-        </p>
-
-        <!-- Row 2: Manufacturer + Product Code -->
-        <div class="grid grid-cols-[2fr_1fr] gap-3">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">
-              {m.wishlist_modal_manufacturer()} *
-            </span>
-            {#if isLoadingData}
-              <p class="text-sm text-muted-foreground">{m.wishlist_modal_loading()}</p>
-            {:else}
-              <Select.Root
-                type="single"
-                value={form.manufacturerId || undefined}
-                onValueChange={(v) => {
-                  form.manufacturerId = v;
-                }}
-              >
-                <Select.Trigger class="w-full" aria-label={m.wishlist_modal_manufacturer()}>
-                  {#if selectedManufacturer}
-                    {selectedManufacturer.name}
-                  {:else}
-                    <span class="text-muted-foreground"
-                      >{m.wishlist_modal_manufacturer_placeholder()}</span
-                    >
-                  {/if}
-                </Select.Trigger>
-                <Select.Content>
-                  {#each manufacturers as mfr (mfr.id)}
-                    <Select.Item value={mfr.id} label={mfr.name} />
-                  {/each}
-                </Select.Content>
-              </Select.Root>
-            {/if}
-          </div>
-          <div class="space-y-1">
-            <label for="product-code" class="text-xs text-muted-foreground">
-              {m.wishlist_modal_product_code()} *
-            </label>
-            <Input
-              id="product-code"
-              type="text"
-              placeholder={m.wishlist_modal_product_code_placeholder()}
-              bind:value={form.productCode}
-            />
-          </div>
-        </div>
-
-        <!-- Row 3: Description -->
-        <div class="space-y-1">
-          <label for="description" class="text-xs text-muted-foreground">
-            {m.wishlist_modal_description()} *
-          </label>
-          <Input
-            id="description"
-            type="text"
-            placeholder={m.wishlist_modal_description_placeholder()}
-            bind:value={form.description}
-          />
-        </div>
-
-        <!-- Row 3b: Category (full width) -->
-        <div class="space-y-1">
-          <span class="text-xs text-muted-foreground">
-            {m.wishlist_modal_category()}
-          </span>
-          <Select.Root
-            type="single"
-            value={form.category || undefined}
-            onValueChange={(v) => {
-              form.category = v;
-            }}
-          >
-            <Select.Trigger class="w-full">
-              {#if form.category}
-                {getMessage(getCategoryLabelKey(form.category))}
-              {:else}
-                <span class="text-muted-foreground">—</span>
-              {/if}
-            </Select.Trigger>
-            <Select.Content>
-              {#each CATEGORIES as cat (cat)}
-                <Select.Item value={cat} label={getMessage(getCategoryLabelKey(cat))} />
-              {/each}
-            </Select.Content>
-          </Select.Root>
-        </div>
-
-        <!-- Row 4: Scale + Power Method + Epoch -->
-        <div class="grid grid-cols-3 gap-3">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">
-              {m.wishlist_modal_scale()}
-            </span>
-            <Select.Root
-              type="single"
-              value={form.scale || undefined}
-              onValueChange={(v) => {
-                form.scale = v;
-              }}
-            >
-              <Select.Trigger class="w-full">
-                {#if form.scale}
-                  {form.scale}
-                {:else}
-                  <span class="text-muted-foreground">—</span>
-                {/if}
-              </Select.Trigger>
-              <Select.Content>
-                {#each SCALES as scale (scale)}
-                  <Select.Item value={scale} label={scale} />
-                {/each}
-              </Select.Content>
-            </Select.Root>
-          </div>
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">
-              {m.wishlist_modal_power_method()}
-            </span>
-            <Select.Root
-              type="single"
-              value={form.powerMethod || undefined}
-              onValueChange={(v) => {
-                form.powerMethod = v;
-              }}
-            >
-              <Select.Trigger class="w-full">
-                {#if form.powerMethod}
-                  {getMessage(getPowerMethodLabelKey(form.powerMethod))}
-                {:else}
-                  <span class="text-muted-foreground">—</span>
-                {/if}
-              </Select.Trigger>
-              <Select.Content>
-                {#each POWER_METHODS as method (method)}
-                  <Select.Item value={method} label={getMessage(getPowerMethodLabelKey(method))} />
-                {/each}
-              </Select.Content>
-            </Select.Root>
-          </div>
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">
-              {m.wishlist_modal_epoch()}
-            </span>
-            <Select.Root
-              type="single"
-              value={form.epoch || undefined}
-              onValueChange={(v) => {
-                form.epoch = v;
-              }}
-            >
-              <Select.Trigger class="w-full">
-                {#if form.epoch}
-                  {form.epoch}
-                {:else}
-                  <span class="text-muted-foreground">{m.wishlist_modal_epoch_placeholder()}</span>
-                {/if}
-              </Select.Trigger>
-              <Select.Content>
-                {#each EPOCHS as epoch (epoch)}
-                  <Select.Item value={epoch} label={epoch} />
-                {/each}
-              </Select.Content>
-            </Select.Root>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row 5: Wishlist Preferences -->
-      <div class="space-y-3">
-        <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {m.wishlist_modal_wishlist_prefs()}
-        </p>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">
-              {m.wishlist_modal_priority()}
-            </span>
-            <Select.Root
-              type="single"
-              value={form.priority || undefined}
-              onValueChange={(v) => {
-                form.priority = v as WishlistPriority;
-              }}
-            >
-              <Select.Trigger class="w-full">
-                {#if form.priority}
-                  {getMessage(getPriorityLabelKey(form.priority))}
-                {:else}
-                  <span class="text-muted-foreground">—</span>
-                {/if}
-              </Select.Trigger>
-              <Select.Content>
-                {#each PRIORITIES as priority (priority)}
-                  <Select.Item value={priority} label={getMessage(getPriorityLabelKey(priority))} />
-                {/each}
-              </Select.Content>
-            </Select.Root>
-          </div>
-          <div class="space-y-1">
-            <label for="desired-price" class="text-xs text-muted-foreground">
-              {m.wishlist_modal_desired_price()}
-            </label>
-            <Input
-              id="desired-price"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder={m.wishlist_modal_price_placeholder()}
-              bind:value={form.desiredPrice}
-            />
-          </div>
-        </div>
-      </div>
+      {@render wishlistSelectionRow()}
+      {@render modelDetailsSection()}
+      {@render wishlistPreferencesSection()}
 
       {#if formError}
         <div
@@ -508,3 +515,4 @@
     </div>
   </div>
 </div>
+

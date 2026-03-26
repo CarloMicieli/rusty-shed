@@ -255,8 +255,7 @@
   // but we can keep logic here if needed. Actually, simple cancelField is good.
 </script>
 
-<aside class="w-full shrink-0 space-y-4 lg:w-80">
-  <!-- ── Details Section ─────────────────────────────────────────────────── -->
+{#snippet detailsSection()}
   <div class="overflow-hidden rounded-lg border border-border bg-card">
     <div class="border-b border-border px-4 py-3">
       <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
@@ -304,14 +303,10 @@
               {/if}
             </div>
           {:else}
-            <div
-              class="-mx-1 flex h-6 cursor-pointer items-center rounded px-1 transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15"
+            <button
+              type="button"
+              class="-mx-1 flex h-6 w-full cursor-pointer items-center rounded border-0 bg-transparent px-1 text-left transition-colors duration-150 hover:border hover:border-dashed hover:border-primary/40 hover:bg-primary/15"
               onclick={activateDesiredPrice}
-              onkeydown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') activateDesiredPrice();
-              }}
-              role="button"
-              tabindex="0"
               aria-label={m.wishlist_item_edit_field_label({
                 field: m.wishlist_field_desired_price()
               })}
@@ -325,11 +320,11 @@
                   >{m.wishlist_item_price_not_set()}</span
                 >
               {/if}
-            </div>
+            </button>
           {/if}
         </div>
 
-        <!-- Empty slot to match Purchase Date position in collection items -->
+        <!-- Empty slot -->
         <div></div>
 
         <!-- Added Date -->
@@ -378,8 +373,9 @@
       {/if}
     </div>
   </div>
+{/snippet}
 
-  <!-- ── Priority Section (formerly Personal Context) ────────────────────── -->
+{#snippet personalContextSection()}
   <div class="overflow-hidden rounded-lg border border-border bg-card">
     <div class="border-b border-border px-4 py-3">
       <h3 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
@@ -441,4 +437,10 @@
       {/if}
     </div>
   </div>
+{/snippet}
+
+<aside class="w-full shrink-0 space-y-4 lg:w-80">
+  {@render detailsSection()}
+  {@render personalContextSection()}
 </aside>
+
