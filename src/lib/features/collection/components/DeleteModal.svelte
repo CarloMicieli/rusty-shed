@@ -33,6 +33,9 @@
   function handleConfirm() {
     onConfirm?.();
   }
+
+  const dialogPanelClass =
+    'fixed top-[50%] left-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border border-border bg-card p-6 shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95';
 </script>
 
 <Dialog.Root {open} onOpenChange={handleOpenChange}>
@@ -42,7 +45,7 @@
 
     <!-- Dialog content -->
     <DialogPrimitive.Content
-      class="fixed top-[50%] left-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border border-border bg-card p-6 shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+      class={dialogPanelClass}
     >
       <Dialog.Header class="gap-3">
         <div class="flex items-center gap-3">

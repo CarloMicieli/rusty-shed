@@ -49,6 +49,12 @@
     const n = new Date();
     return new CalendarDate(n.getFullYear(), n.getMonth() + 1, n.getDate());
   });
+
+  const selectInputClass =
+    'flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none';
+  const selectInputClassWithDisabled = `${selectInputClass} disabled:cursor-not-allowed disabled:opacity-50`;
+  const textareaClass =
+    'scrollbar-thin scrollbar-track-zinc-900 scrollbar-thumb-zinc-700 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none';
 </script>
 
 <!-- Maintenance Card selector -->
@@ -61,7 +67,7 @@
   </label>
   <select
     id="event-card-select"
-    class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+    class={selectInputClassWithDisabled}
     value={selectedCardId ?? ''}
     onchange={(e) => onCardChange((e.target as HTMLSelectElement).value || null)}
   >
@@ -105,7 +111,7 @@
   </label>
   <select
     id="event-maintenance-type"
-    class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+    class={selectInputClass}
     value={maintenanceType ?? ''}
     onchange={(e) => onTypeChange((e.target as HTMLSelectElement).value || null)}
   >
@@ -127,7 +133,7 @@
     placeholder={m.maintenance_add_event_notes_placeholder()}
     value={notes}
     onchange={(e) => onNotesChange((e.target as HTMLTextAreaElement).value)}
-    class="scrollbar-thin scrollbar-track-zinc-900 scrollbar-thumb-zinc-700 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+    class={textareaClass}
   ></textarea>
 </div>
 

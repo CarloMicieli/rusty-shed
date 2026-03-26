@@ -46,6 +46,13 @@
     filterText = '';
     onFilterChange?.('');
   }
+
+  const emptyStateClass =
+    'flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center';
+  const ctaButtonClass =
+    'group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95';
+  const decoderBadgeClass =
+    'inline-flex items-center gap-1.5 rounded-md border border-amber-600/40 bg-amber-950/40 px-2.5 py-1 text-xs font-medium text-amber-400 transition-colors hover:border-amber-500/60 hover:bg-amber-900/50';
 </script>
 
 <div class="space-y-4">
@@ -91,7 +98,7 @@
     {:else if rollingStocks.length === 0}
       <!-- Empty State -->
       <div
-        class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center"
+        class={emptyStateClass}
       >
         <div class="relative">
           <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
@@ -108,7 +115,7 @@
         {#if onInstallDecoder}
           <button
             type="button"
-            class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
+            class={ctaButtonClass}
             onclick={onInstallDecoder}
           >
             <div
@@ -199,7 +206,7 @@
                   <!-- Change Decoder button -->
                   <button
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-md border border-amber-600/40 bg-amber-950/40 px-2.5 py-1 text-xs font-medium text-amber-400 transition-colors hover:border-amber-500/60 hover:bg-amber-900/50"
+                    class={decoderBadgeClass}
                     onclick={() => onChangeDecoder?.(stock)}
                   >
                     <Cpu class="h-3.5 w-3.5" />

@@ -125,6 +125,9 @@
     closeAddModelDrawer();
     // Refresh handled by WishlistState method
   }
+
+  const ctaButtonClass =
+    'group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-[8px] border border-primary bg-primary px-8 py-3 font-bold tracking-wide text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(212,138,66,0.3)] active:scale-95';
 </script>
 
 <svelte:head>
@@ -276,7 +279,7 @@
 
               <button
                 type="button"
-                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-[8px] border border-primary bg-primary px-8 py-3 font-bold tracking-wide text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(212,138,66,0.3)] active:scale-95"
+                class={ctaButtonClass}
                 onclick={handleCreate}
               >
                 <Heart class="h-5 w-5" />
