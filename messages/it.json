@@ -1113,6 +1113,8 @@
   "dcc_interface": "Interfaccia DCC",
   "depot": "Deposito",
   "depot_empty_freight_cars": "Nessun carro merci corrisponde a questa ricerca.",
+  "depot_empty_title": "Il deposito è ancora vuoto",
+  "depot_empty_caption": "Aggiungi un modello ferroviario alla tua collezione per iniziare",
   "depot_empty_passenger_cars": "Nessun carro passeggeri corrisponde a questa ricerca.",
   "depot_empty_railcars_and_emu": "Nessuna automotrice o unità multipla corrisponde a questa ricerca.",
   "depot_freight_cars_title": "Carri merci",

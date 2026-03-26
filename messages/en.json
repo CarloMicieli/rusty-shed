@@ -129,6 +129,8 @@
   "depot_empty_railcars_and_emu": "No railcars or multiple units match this search.",
   "depot_empty_passenger_cars": "No passenger cars match this search.",
   "depot_empty_freight_cars": "No freight cars match this search.",
+  "depot_empty_title": "Nothing in the depot yet",
+  "depot_empty_caption": "Add a railway model to your collection to get started",
   "depot_era": "Era",
   "depot_overflow_note": "Showing {showing} of {total} — refine search or view all.",
   "depot_view_all": "View All",
