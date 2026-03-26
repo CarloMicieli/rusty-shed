@@ -1,4 +1,6 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
+
   interface ImageFailure {
     filename: string;
     reason: string;
@@ -15,7 +17,7 @@
 
 {#if hasImageFailures}
   <div class="report-errors">
-    <h3 class="error-title">Image Import Failures</h3>
+    <h3 class="error-title">{m.import_report_image_failures_title()}</h3>
     <ul class="error-list">
       {#each failures as failure (failure.filename)}
         <li class="error-item">

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
+
   interface Props {
     isSuccess: boolean;
     durationMs: bigint;
@@ -12,15 +14,19 @@
     const seconds = (msNumber / 1000).toFixed(1);
     return `${seconds}s`;
   }
+
+  const title = $derived(
+    isSuccess ? m.import_report_title_complete() : m.import_report_title_failed()
+  );
 </script>
 
 <div class="report-header">
   <div class="status-icon {isSuccess ? 'success' : 'error'}">
     {isSuccess ? '✓' : '✗'}
   </div>
-  <h2>Import {isSuccess ? 'Complete' : 'Failed'}</h2>
+  <h2>{title}</h2>
   <p class="report-subtitle">
-    Completed in {formatDuration(durationMs)}
+    {m.import_report_completed_in({ duration: formatDuration(durationMs) })}
   </p>
 </div>
 

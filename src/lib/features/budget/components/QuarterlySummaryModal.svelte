@@ -18,10 +18,8 @@
 
   let { summary, onClose }: Props = $props();
 
-  // @ts-expect-error - paraglide message may not exist yet
-  const noSpendingText = m.budget_no_spending?.() || 'No spending data for this quarter';
-  // @ts-expect-error - paraglide message may not exist yet
-  const closeText = m.common_close?.() || 'Close';
+  const noSpendingText = m.budget_no_spending();
+  const closeText = m.common_close();
 
   function formatAmount(minorUnits: number, currencyCode: string): string {
     return regionalManager.formatCurrencyWith(minorUnits, currencyCode);
@@ -68,12 +66,12 @@
     <h2 class="text-2xl font-bold text-foreground">
       {summary.year} - {summary.quarter}
     </h2>
-    <p class="mt-1 text-muted-foreground">Category Spending Breakdown</p>
+    <p class="mt-1 text-muted-foreground">{m.budget_quarterly_breakdown()}</p>
   </header>
 
   <!-- Total Spending -->
   <div class="mb-6 rounded-lg border border-border bg-muted p-4">
-    <p class="text-sm text-muted-foreground">Total Spending</p>
+    <p class="text-sm text-muted-foreground">{m.budget_quarterly_total_label()}</p>
     <p class="text-primary-400 text-3xl font-bold">
       {formatAmount(summary.totalSpending.amount, summary.totalSpending.currency)}
     </p>
@@ -82,7 +80,9 @@
   <!-- Category Breakdown -->
   {#if summary.categoryBreakdown.length > 0}
     <div class="space-y-3">
-      <h3 class="mb-3 text-lg font-semibold text-foreground">By Category</h3>
+      <h3 class="mb-3 text-lg font-semibold text-foreground">
+        {m.budget_quarterly_category_label()}
+      </h3>
 
       {#each summary.categoryBreakdown as category, index (category.category)}
         <div class="category-item rounded-lg border border-border bg-muted p-3">

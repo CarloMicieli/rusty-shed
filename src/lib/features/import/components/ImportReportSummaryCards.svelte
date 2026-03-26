@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { RecordCounts } from '$lib/bindings';
 
   interface Props {
@@ -33,7 +34,7 @@
 <div class="report-summary">
   <div class="summary-card success">
     <div class="card-header">
-      <h3>Successfully Added</h3>
+      <h3>{m.import_report_added_title()}</h3>
     </div>
     <div class="card-body">
       <div class="count-large">{totalAdded}</div>
@@ -43,7 +44,7 @@
 
   <div class="summary-card neutral">
     <div class="card-header">
-      <h3>Skipped (Duplicates)</h3>
+      <h3>{m.import_report_skipped_title()}</h3>
     </div>
     <div class="card-body">
       <div class="count-large">{totalSkipped}</div>
@@ -53,12 +54,14 @@
 
   <div class="summary-card info">
     <div class="card-header">
-      <h3>Images</h3>
+      <h3>{m.import_report_images_title()}</h3>
     </div>
     <div class="card-body">
       <div class="count-large">{imagesImported}</div>
       {#if hasImageFailures}
-        <div class="count-detail warning-text">{imagesFailed.length} failed</div>
+        <div class="count-detail warning-text">
+          {m.import_report_images_failed_count({ count: imagesFailed.length })}
+        </div>
       {/if}
     </div>
   </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
   import type { ImportPreviewResponse } from '$lib/bindings';
 
   interface Props {
@@ -12,8 +13,8 @@
 
 {#if hasErrors}
   <div class="preview-errors">
-    <h3 class="error-title">❌ Validation Errors</h3>
-    <p class="error-subtitle">Import cannot proceed until these issues are fixed</p>
+    <h3 class="error-title">❌ {m.import_report_validation_errors_title()}</h3>
+    <p class="error-subtitle">{m.import_report_validation_errors_subtitle()}</p>
     <ul class="error-list">
       {#each preview.errors as error (error.code + error.message + error.path)}
         <li class="error-item">
@@ -21,7 +22,7 @@
             <strong class="error-code">{error.code}</strong>
             <span class="error-message">{error.message}</span>
             {#if error.path}
-              <span class="error-path">at {error.path}</span>
+              <span class="error-path">{m.import_report_error_at({ path: error.path })}</span>
             {/if}
           </div>
         </li>

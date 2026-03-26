@@ -1,4 +1,6 @@
 <script lang="ts">
+  import * as m from '$lib/paraglide/messages.js';
+
   interface Warning {
     message: string;
   }
@@ -14,7 +16,7 @@
 
 {#if hasWarnings}
   <div class="report-warnings">
-    <h3 class="warning-title">Warnings</h3>
+    <h3 class="warning-title">{m.import_report_warnings_title()}</h3>
     <ul class="warning-list">
       {#each warnings as warning (warning.message)}
         <li class="warning-item">{warning.message}</li>
