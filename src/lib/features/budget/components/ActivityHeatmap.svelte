@@ -165,7 +165,7 @@
 
 {#if selectedSummary}
   <Dialog.Root bind:open={dialogOpen}>
-    <Dialog.Content class="max-w-2xl">
+    <Dialog.Content class="max-h-[80vh] max-w-2xl overflow-y-auto">
       <QuarterlySummaryModal
         summary={selectedSummary}
         onClose={() => {
