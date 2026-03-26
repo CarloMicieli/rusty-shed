@@ -284,7 +284,7 @@
       <Button
         type="submit"
         variant="default"
-        class="bg-[#D48A42] font-bold text-black hover:bg-[#D48A42]/90"
+        class="bg-amber-500 font-bold text-black hover:bg-amber-500/90"
         onclick={handleSubmit}
         disabled={isSubmitting || isLoadingData || (!f.touched && !f.isValid)}
       >

@@ -73,9 +73,9 @@
   }: Props = $props();
 
   const LABEL_CLASS = 'ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase';
-  const TRIGGER_CLASS = 'w-full border-[#1F1F1F] bg-[#0F0F0F] text-[#E0E0E0]';
+  const TRIGGER_CLASS = 'w-full border-border bg-card text-foreground';
   const TRIGGER_ERROR_CLASS =
-    'w-full border-destructive bg-[#0F0F0F] text-[#E0E0E0] ring-1 ring-destructive';
+    'w-full border-destructive bg-card text-foreground ring-1 ring-destructive';
 
   const selectedManufacturer = $derived(
     manufacturers.find((mfg) => mfg.id === item.manufacturerId)
@@ -304,7 +304,7 @@
         value={item.priceAmount}
         symbol={regionalManager.getCurrencySymbol(currency)}
         label={m.acquisition_item_price_label()}
-        inputClass="bg-[#0F0F0F] border-[#1F1F1F] rounded-[8px] text-[#E0E0E0] placeholder:text-[#808080]"
+        inputClass="bg-card border-border rounded-[8px] text-foreground placeholder:text-muted-foreground"
         onchange={(val) => onUpdate(item.uid, { priceAmount: val })}
       />
     </div>

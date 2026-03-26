@@ -49,9 +49,9 @@
 </script>
 
 <!-- ── Technical section ───────────────────────────────────────── -->
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="overflow-hidden rounded-lg border border-border bg-card p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.specs_drawer_section_technical()}
     </p>
     <div class="grid grid-cols-2 gap-3">
@@ -94,9 +94,9 @@
 </div>
 
 <!-- ── Control section ────────────────────────────────────────── -->
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="overflow-hidden rounded-lg border border-border bg-card p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.specs_drawer_section_control()}
     </p>
     <div class="grid grid-cols-2 gap-3">
@@ -117,9 +117,9 @@
 </div>
 
 <!-- ── Coupling section ───────────────────────────────────────── -->
-<div class="overflow-hidden rounded-lg border border-[#1F1F1F] bg-[#0F0F0F] p-4">
+<div class="overflow-hidden rounded-lg border border-border bg-card p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#808080] uppercase">
+    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.specs_drawer_section_coupling()}
     </p>
     <div class="grid grid-cols-2 gap-3">

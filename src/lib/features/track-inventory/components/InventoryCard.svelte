@@ -13,7 +13,7 @@
 
 <a
   href={resolve(`/railway-tracks/${inventory.id}`)}
-  class="group relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)]"
+  class="group relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-white/10 bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-[0_0_30px_theme(--color-amber-500/10%)]"
 >
   <!-- Subtle gradient glow -->
   <div
