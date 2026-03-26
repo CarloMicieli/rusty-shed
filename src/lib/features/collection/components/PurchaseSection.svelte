@@ -157,7 +157,7 @@
           label="{m.add_model_purchase_condition()} (optional)"
           options={purchaseConditionOptions}
           bind:value={purchase.purchaseCondition}
-          placeholder="-- Select --"
+          placeholder={m.form_new_model_select_placeholder()}
         />
 
         <!-- Model Condition -->
@@ -166,7 +166,7 @@
           label="{m.add_model_model_condition()} (optional)"
           options={modelConditionOptions}
           bind:value={purchase.modelCondition}
-          placeholder="-- Select --"
+          placeholder={m.form_new_model_select_placeholder()}
         />
 
         <!-- Box Condition -->
@@ -175,7 +175,7 @@
           label="{m.add_model_box_condition()} (optional)"
           options={boxConditionOptions}
           bind:value={purchase.boxCondition}
-          placeholder="-- Select --"
+          placeholder={m.form_new_model_select_placeholder()}
         />
       </div>
 
@@ -195,7 +195,7 @@
             id="notes"
             bind:value={purchase.notes}
             rows={3}
-            placeholder="Additional notes about this purchase..."
+            placeholder={m.add_model_notes_placeholder()}
             class={darkTextarea}
           ></textarea>
         {:else}
@@ -203,7 +203,7 @@
             id="notes"
             bind:value={purchase.notes}
             rows={3}
-            placeholder="Additional notes about this purchase..."
+            placeholder={m.add_model_notes_placeholder()}
             class="w-full"
           />
         {/if}

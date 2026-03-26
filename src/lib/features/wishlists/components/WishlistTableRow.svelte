@@ -69,8 +69,9 @@
   });
 
   const priorityDotClass = $derived.by(() => {
-    if (item.priority === 'HIGH') return 'bg-[#D48A42] shadow-[0_0_4px_rgba(212,138,66,0.6)]';
-    if (item.priority === 'NORMAL') return 'bg-[#D48A42]/50';
+    if (item.priority === 'HIGH')
+      return 'bg-amber-500 shadow-[0_0_4px_theme(colors.amber.500/0.6)]';
+    if (item.priority === 'NORMAL') return 'bg-amber-500/50';
     return 'bg-zinc-600';
   });
 
@@ -79,7 +80,7 @@
       case 'WANTED':
         return {
           label: m.wishlist_item_status_wanted(),
-          classes: 'bg-[rgba(212,138,66,0.15)] border-[#D48A42]/30 text-[#D48A42]'
+          classes: 'bg-amber-500/15 border-amber-500/30 text-amber-500'
         };
       case 'ON_ORDER':
         return {
@@ -114,7 +115,7 @@
 </script>
 
 <tr
-  class="group cursor-pointer border-b border-[#1F1F1F] transition-colors duration-150 last:border-b-0 hover:bg-[rgba(212,138,66,0.04)]"
+  class="group cursor-pointer border-b border-border transition-colors duration-150 last:border-b-0 hover:bg-amber-500/5"
   onclick={handleRowClick}
   onkeydown={handleRowKeydown}
   tabindex="0"
@@ -136,22 +137,24 @@
     <div class="flex items-center gap-3">
       <!-- Thumbnail -->
       <div
-        class="relative h-8 w-8 shrink-0 overflow-hidden rounded-[4px] border border-[#1F1F1F] bg-[#1F1F1F]"
+        class="relative h-8 w-8 shrink-0 overflow-hidden rounded-[4px] border border-border bg-muted"
       >
         {#if photoUrl}
           <img src={photoUrl} alt="" aria-hidden="true" class="h-full w-full object-cover" />
         {:else}
           <div class="flex h-full w-full items-center justify-center opacity-30">
-            <PlaceholderIcon size={16} class="text-[#808080]" />
+            <PlaceholderIcon size={16} class="text-muted-foreground" />
           </div>
         {/if}
       </div>
       <!-- Text -->
       <div class="flex min-w-0 flex-col">
-        <span class="truncate text-[10px] font-bold tracking-widest text-[#808080] uppercase">
+        <span
+          class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
+        >
           {modelDetails?.manufacturer.display ?? '—'}
         </span>
-        <span class="truncate text-sm font-semibold text-[#E0E0E0]">
+        <span class="truncate text-sm font-semibold text-foreground">
           {modelDetails?.description ?? item.railwayModelId}
         </span>
       </div>
@@ -160,7 +163,7 @@
 
   <!-- Product Code -->
   <td class="px-4 py-3">
-    <span class="font-mono text-xs text-[#808080]">
+    <span class="font-mono text-xs text-muted-foreground">
       {modelDetails?.productCode ?? '—'}
     </span>
   </td>
@@ -168,9 +171,9 @@
   <!-- Price Target -->
   <td class="px-4 py-3">
     {#if desiredPriceStr}
-      <span class="font-mono text-sm font-bold text-[#D48A42]">{desiredPriceStr}</span>
+      <span class="font-mono text-sm font-bold text-amber-500">{desiredPriceStr}</span>
     {:else}
-      <span class="font-mono text-xs text-[#808080]">—</span>
+      <span class="font-mono text-xs text-muted-foreground">—</span>
     {/if}
   </td>
 
@@ -190,7 +193,7 @@
         <button
           type="button"
           title={m.wishlist_item_status_purchased()}
-          class="rounded-[8px] border border-[#1F1F1F] p-1.5 text-[#808080] transition-colors hover:border-emerald-700/40 hover:bg-emerald-900/20 hover:text-emerald-400"
+          class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-emerald-700/40 hover:bg-emerald-900/20 hover:text-emerald-400"
           onclick={() => onPurchase!(item.id)}
         >
           <ShoppingCart size={13} />
@@ -199,8 +202,8 @@
       {#if onMove}
         <button
           type="button"
-          title="Move to another list"
-          class="rounded-[8px] border border-[#1F1F1F] p-1.5 text-[#808080] transition-colors hover:border-[#D48A42]/40 hover:bg-[rgba(212,138,66,0.1)] hover:text-[#D48A42]"
+          title={m.wishlist_table_row_move_title()}
+          class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-500"
           onclick={() => onMove!(item.id)}
         >
           <MoveRight size={13} />
@@ -209,8 +212,8 @@
       {#if onRemove}
         <button
           type="button"
-          title="Remove from list"
-          class="rounded-[8px] border border-[#1F1F1F] p-1.5 text-[#808080] transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
+          title={m.wishlist_table_row_remove_title()}
+          class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
           onclick={() => onRemove!(item.id)}
         >
           <Trash2 size={13} />

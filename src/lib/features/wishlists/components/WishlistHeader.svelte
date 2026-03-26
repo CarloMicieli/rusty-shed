@@ -61,9 +61,11 @@
                 class="h-8 min-w-[300px] bg-card font-bold text-card-foreground shadow-inner focus:ring-amber-500/50"
                 autofocus
               />
-              <Button size="sm" class="h-8" onclick={handleRenameSubmit}>Save</Button>
+              <Button size="sm" class="h-8" onclick={handleRenameSubmit}
+                >{m.wishlist_modal_save()}</Button
+              >
               <Button size="sm" variant="ghost" class="h-8" onclick={() => (isEditing = false)}
-                >Cancel</Button
+                >{m.wishlist_modal_cancel()}</Button
               >
             </div>
           {:else}
@@ -72,14 +74,15 @@
               <Badge
                 class="border-amber-500/20 bg-amber-500/10 text-[10px] font-bold text-amber-500 ring-1 ring-amber-500/20"
               >
-                Default
+                {m.wishlist_header_default_badge()}
               </Badge>
             {/if}
           {/if}
         </div>
         <p class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
           {wishlist.count}
-          {m.stats_rolling_stocks()} · Last updated {formatDate(wishlist.updatedAt)}
+          {m.stats_rolling_stocks()} · {m.wishlist_header_last_updated()}
+          {formatDate(wishlist.updatedAt)}
         </p>
       </div>
 
@@ -105,7 +108,7 @@
 
           {#if showSettings}
             <div
-              class="absolute top-12 right-0 z-50 w-48 animate-in rounded-[8px] border border-[#1F1F1F] bg-[#0F0F0F] p-1 shadow-2xl duration-200 fade-in zoom-in"
+              class="absolute top-12 right-0 z-50 w-48 animate-in rounded-[8px] border border-border bg-card p-1 shadow-2xl duration-200 fade-in zoom-in"
               onmouseleave={() => (showSettings = false)}
               role="menu"
               tabindex="-1"
@@ -115,22 +118,22 @@
                   isEditing = true;
                   showSettings = false;
                 }}
-                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-[#E0E0E0] transition-colors hover:bg-[#1F1F1F] hover:text-[#E0E0E0]"
+                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
               >
                 <Edit2 size={14} class="mr-2" />
-                Rename
+                {m.wishlist_header_rename()}
               </button>
               <button
                 onclick={() => {
                   onSetDefault?.();
                   showSettings = false;
                 }}
-                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-[#E0E0E0] transition-colors hover:bg-[#1F1F1F] hover:text-[#E0E0E0]"
+                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
               >
                 <Star size={14} class="mr-2" />
-                Set as Default
+                {m.wishlist_header_set_default()}
               </button>
-              <div class="my-1 h-px bg-[#1F1F1F]"></div>
+              <div class="my-1 h-px bg-border"></div>
               <button
                 onclick={() => {
                   onDelete?.(wishlist.id);
@@ -139,7 +142,7 @@
                 class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-900/20"
               >
                 <Trash2 size={14} class="mr-2" />
-                Delete List
+                {m.wishlist_header_delete_list()}
               </button>
             </div>
           {/if}

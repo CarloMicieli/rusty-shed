@@ -46,7 +46,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlists_items_empty: () => 'No items yet',
   wishlist_priority_high: () => 'High',
   wishlist_priority_normal: () => 'Normal',
-  wishlist_priority_low: () => 'Low'
+  wishlist_priority_low: () => 'Low',
+  wishlist_table_row_move_title: () => 'Move to another list',
+  wishlist_table_row_remove_title: () => 'Remove from list'
 }));
 
 import WishlistTableView from '../WishlistTableView.svelte';

@@ -76,7 +76,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="cursor-pointer" onclick={() => goto(`/wishlists/${wishlistId}/items/${item.id}`)}>
   <Card
-    class="group relative flex flex-col overflow-hidden border-2 border-border/20 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.07)]"
+    class="group relative flex flex-col overflow-hidden border-2 border-border/20 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-amber-500/10"
   >
     <!-- Priority Badge overlay -->
     {#if item.priority === 'HIGH'}
@@ -84,7 +84,7 @@
         <Badge
           class="bg-amber-500 text-[9px] font-bold text-black uppercase shadow-lg shadow-amber-500/20"
         >
-          {m.wishlist_priority_high()} Priority
+          {m.wishlist_item_card_high_priority()}
         </Badge>
       </div>
     {/if}
@@ -96,7 +96,7 @@
             <span
               class="truncate text-[10px] font-bold tracking-widest text-muted-foreground uppercase"
             >
-              {modelDetails?.manufacturer.display ?? 'Searching...'}
+              {modelDetails?.manufacturer.display ?? m.wishlist_item_card_searching()}
             </span>
           </div>
           <h3 class="truncate text-sm font-bold text-foreground">
@@ -110,7 +110,7 @@
             e.stopPropagation();
             onRemove?.(item.id);
           }}
-          class="rounded-[8px] border border-[#1F1F1F] p-1 text-[#808080] transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
+          class="rounded-[8px] border border-border p-1 text-muted-foreground transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
         >
           <Trash2 size={14} />
         </button>
@@ -156,7 +156,7 @@
       <div class="mt-3 grid grid-cols-2 gap-2">
         <div class="rounded-lg bg-muted/40 p-2 text-center">
           <p class="text-[8px] font-bold tracking-tighter text-muted-foreground uppercase">
-            Price Target
+            {m.wishlist_table_col_price_target()}
           </p>
           <p class="font-mono text-xs font-bold text-amber-500">
             {desiredPriceStr ?? '—'}
@@ -164,7 +164,7 @@
         </div>
         <div class="rounded-lg bg-muted/40 p-2 text-center">
           <p class="text-[8px] font-bold tracking-tighter text-muted-foreground uppercase">
-            Product Code
+            {m.wishlist_table_col_product_code()}
           </p>
           <p class="font-mono text-xs text-foreground">
             {modelDetails?.productCode ?? '—'}
@@ -184,7 +184,7 @@
           }}
         >
           <MoveRight size={12} />
-          <span class="ml-1.5">Move</span>
+          <span class="ml-1.5">{m.wishlist_item_card_move()}</span>
         </Button>
         {#if item.status === 'WANTED' || item.status === 'ON_ORDER'}
           <Button
@@ -197,7 +197,7 @@
             }}
           >
             <ShoppingCart size={12} />
-            <span class="ml-1.5">Purchase</span>
+            <span class="ml-1.5">{m.wishlist_item_card_purchase()}</span>
           </Button>
         {/if}
       </div>

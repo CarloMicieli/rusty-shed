@@ -116,7 +116,7 @@
       bind:value={description}
       disabled={submitting}
       required
-      placeholder="e.g. Straight Track 111.06mm"
+      placeholder={m.track_product_field_description_placeholder()}
       class="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-100 focus:border-white/20 focus:ring-0"
     />
   </div>
