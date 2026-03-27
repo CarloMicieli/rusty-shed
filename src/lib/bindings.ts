@@ -6945,7 +6945,7 @@ export type WishlistView = {
   /**
    * Whether this wishlist is the default for the user.
    */
-  is_default: boolean;
+  isDefault: boolean;
   /**
    * Number of items contained in the wishlist (derived from `items` when present).
    */
@@ -6953,11 +6953,11 @@ export type WishlistView = {
   /**
    * Timestamp of the last update for the wishlist.
    */
-  updated_at: string;
+  updatedAt: string;
   /**
    * Summed monetary totals per currency for the wishlist items.
    */
-  total_value: Partial<{ [key in Currency]: bigint }>;
+  totalValue: Partial<{ [key in Currency]: bigint }>;
   /**
    * Optional detailed items for the wishlist. This is `None` for list views and
    * `Some(vec!)` for single-wishlist views returned by the `get_wishlist_by_id` query.

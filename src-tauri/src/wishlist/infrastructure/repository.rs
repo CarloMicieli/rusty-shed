@@ -357,10 +357,18 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         database::insert_wishlist_item(&mut *self.executor, row)
             .await
             .with_domain_context("Error inserting wishlist item")?;
+        database::touch_wishlist_updated_at(&mut *self.executor, wishlist_id)
+            .await
+            .with_domain_context("Error updating wishlist timestamp after item insert")?;
         Ok(())
     }
 
     async fn remove_item(&mut self, item_id: &WishlistItemId) -> Result<(), DomainError> {
+        // Touch the parent wishlist timestamp before deleting (after deletion the
+        // item row is gone and the parent id can no longer be looked up).
+        database::touch_wishlist_updated_at_for_item(&mut *self.executor, item_id)
+            .await
+            .with_domain_context("Error updating wishlist timestamp before item delete")?;
         let affected = database::delete_wishlist_item(&mut *self.executor, item_id)
             .await
             .with_domain_context("Error deleting wishlist item")?;
@@ -378,6 +386,10 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         item_id: &WishlistItemId,
         destination_wishlist: &WishlistId,
     ) -> Result<(), DomainError> {
+        // Touch the source wishlist before moving (item still belongs to it at this point).
+        database::touch_wishlist_updated_at_for_item(&mut *self.executor, item_id)
+            .await
+            .with_domain_context("Error updating source wishlist timestamp before item move")?;
         let affected =
             database::move_wishlist_item(&mut *self.executor, item_id, destination_wishlist)
                 .await
@@ -388,6 +400,10 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
                 identifier: item_id.to_string(),
             });
         }
+        // Touch the destination wishlist after the item has been reassigned.
+        database::touch_wishlist_updated_at(&mut *self.executor, destination_wishlist)
+            .await
+            .with_domain_context("Error updating destination wishlist timestamp after item move")?;
         Ok(())
     }
 }

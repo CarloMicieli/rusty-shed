@@ -5,11 +5,10 @@
   import { getWishlistContext } from './WishlistState.svelte';
   import { Button } from '$lib/components';
   import PageHeader from '$lib/components/PageHeader.svelte';
-  import WishlistSidebar from './components/WishlistSidebar.svelte';
+  import WishlistDashboardHeader from './components/WishlistDashboardHeader.svelte';
   import WishlistHeader from './components/WishlistHeader.svelte';
   import WishlistItems from './components/WishlistItems.svelte';
   import WishlistTableView from './components/WishlistTableView.svelte';
-  import WishlistValueBar from './components/WishlistValueBar.svelte';
   import AddWishlistItemDrawer from './AddWishlistItemDrawer.svelte';
   import PurchaseDialog from './components/PurchaseDialog.svelte';
   import type { WishlistItem } from '$lib/bindings';
@@ -152,24 +151,20 @@
     </PageHeader>
   </div>
 
-  <div class="-mx-4 flex min-h-screen flex-col md:flex-row lg:-mx-8">
-    <!-- List Navigator (Full-Height Left Column) -->
-    {#if wishlists.length > 0 || wishlistService.isLoading}
-      <aside
-        class="w-full shrink-0 border-b border-layout-border bg-layout-surface md:w-64 md:border-r md:border-b-0"
-      >
-        <div class="sticky top-0 p-3 pt-4">
-          <WishlistSidebar
-            {wishlists}
-            activeId={activeWishlistId}
-            onSelect={handleSelect}
-            onDelete={_handleDelete}
-          />
-        </div>
-      </aside>
+  <div class="-mx-4 flex min-h-screen flex-col lg:-mx-8">
+    <!-- Integrated Dashboard Header -->
+    {#if wishlists.length > 0}
+      <div class="border-b border-layout-border px-6 py-4">
+        <WishlistDashboardHeader
+          {wishlists}
+          {activeWishlistId}
+          items={wishlistItems}
+          onSelect={handleSelect}
+        />
+      </div>
     {/if}
 
-    <!-- Wishlist Content Area (Right Column) -->
+    <!-- Wishlist Content Area -->
     <div class="flex-1 bg-background">
       <div class="p-6">
         {#if wishlistService.isLoading}
@@ -197,8 +192,6 @@
               onAddModel={openAddModelDrawer}
               onDelete={_handleDelete}
             />
-
-            <WishlistValueBar items={wishlistItems} />
 
             <!-- View Mode Toggle -->
             <div class="flex items-center justify-end gap-1">

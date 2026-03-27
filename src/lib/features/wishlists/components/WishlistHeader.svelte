@@ -2,7 +2,7 @@
   import { Settings, Plus, Star, Trash2, Edit2, X } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button, Badge, Input } from '$lib/components';
+  import { Button, Input } from '$lib/components';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   const { wishlist, onRename, onSetDefault, onAddModel, onDelete } = $props<{
@@ -44,46 +44,35 @@
 
   function formatDate(value: string): string {
     const d = new Date(value);
-    return isNaN(d.getTime()) ? '-' : regionalManager.formatDate(value);
+    return isNaN(d.getTime()) ? '-' : regionalManager.formatDate(d);
   }
 </script>
 
 {#if wishlist}
   <div class="flex flex-col gap-6 border-b border-border/20 pb-6">
     <div class="flex items-start justify-between">
-      <div class="space-y-1">
-        <div class="flex items-center gap-3">
-          {#if isEditing}
-            <div class="flex items-center gap-2">
-              <Input
-                bind:value={nameDraft}
-                onkeydown={handleKeydown}
-                class="h-8 min-w-[300px] bg-card font-bold text-card-foreground shadow-inner focus:ring-amber-500/50"
-                autofocus
-              />
-              <Button size="sm" class="h-8" onclick={handleRenameSubmit}
-                >{m.wishlist_modal_save()}</Button
-              >
-              <Button size="sm" variant="ghost" class="h-8" onclick={() => (isEditing = false)}
-                >{m.wishlist_modal_cancel()}</Button
-              >
-            </div>
-          {:else}
-            <h2 class="text-3xl font-bold tracking-tight text-foreground">{wishlist.name}</h2>
-            {#if wishlist.isDefault}
-              <Badge
-                class="border-amber-500/20 bg-amber-500/10 text-[10px] font-bold text-amber-500 ring-1 ring-amber-500/20"
-              >
-                {m.wishlist_header_default_badge()}
-              </Badge>
-            {/if}
-          {/if}
-        </div>
-        <p class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
-          {wishlist.count}
-          {m.stats_rolling_stocks()} · {m.wishlist_header_last_updated()}
-          {formatDate(wishlist.updatedAt)}
-        </p>
+      <div class="flex items-center gap-3">
+        {#if isEditing}
+          <div class="flex items-center gap-2">
+            <Input
+              bind:value={nameDraft}
+              onkeydown={handleKeydown}
+              class="h-8 min-w-[300px] bg-card font-bold text-card-foreground shadow-inner focus:ring-amber-500/50"
+              autofocus
+            />
+            <Button size="sm" class="h-8" onclick={handleRenameSubmit}
+              >{m.wishlist_modal_save()}</Button
+            >
+            <Button size="sm" variant="ghost" class="h-8" onclick={() => (isEditing = false)}
+              >{m.wishlist_modal_cancel()}</Button
+            >
+          </div>
+        {:else}
+          <p class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+            {m.wishlist_header_last_updated()}
+            {formatDate(wishlist.updatedAt)}
+          </p>
+        {/if}
       </div>
 
       <div class="flex items-center gap-3">

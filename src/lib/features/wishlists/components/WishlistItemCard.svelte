@@ -78,17 +78,6 @@
   <Card
     class="group relative flex flex-col overflow-hidden border-2 border-border/20 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-amber-500/10"
   >
-    <!-- Priority Badge overlay -->
-    {#if item.priority === 'HIGH'}
-      <div class="absolute top-3 left-3 z-20">
-        <Badge
-          class="bg-amber-500 text-[9px] font-bold text-black uppercase shadow-lg shadow-amber-500/20"
-        >
-          {m.wishlist_item_card_high_priority()}
-        </Badge>
-      </div>
-    {/if}
-
     <CardHeader class="p-4 pb-2">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
@@ -138,6 +127,17 @@
         {:else}
           <div class="flex h-full w-full items-center justify-center opacity-20">
             <PlaceholderIcon size={40} class="text-zinc-400" />
+          </div>
+        {/if}
+
+        <!-- Priority label -->
+        {#if item.priority === 'HIGH'}
+          <div class="absolute top-2 left-2 z-20">
+            <Badge
+              class="bg-red-500 text-[9px] font-bold text-white uppercase shadow-lg shadow-red-500/30"
+            >
+              {m.wishlist_item_card_high_priority()}
+            </Badge>
           </div>
         {/if}
 

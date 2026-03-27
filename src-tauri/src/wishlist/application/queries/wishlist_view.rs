@@ -14,6 +14,7 @@ use std::collections::HashMap;
 /// list queries each view will have `items == None` to keep payloads small;
 /// for the single-wishlist query the `items` field will be `Some(vec![...])`.
 #[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct WishlistView {
     /// Unique identifier for the wishlist (TRN format).
     pub id: WishlistId,

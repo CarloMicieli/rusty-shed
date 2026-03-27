@@ -160,6 +160,36 @@ pub async fn set_default_wishlist(
     Ok(())
 }
 
+/// Touch the `updated_at` timestamp of a wishlist, recording that it was modified now.
+pub async fn touch_wishlist_updated_at(
+    executor: &mut sqlx::SqliteConnection,
+    wishlist_id: &WishlistId,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE wishlists SET updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(wishlist_id.to_string())
+        .execute(executor)
+        .await?;
+    Ok(())
+}
+
+/// Touch the `updated_at` timestamp of the wishlist that owns the given item.
+///
+/// Useful when only the item id is known (e.g. before a delete or move where
+/// the parent wishlist id is not passed in).
+pub async fn touch_wishlist_updated_at_for_item(
+    executor: &mut sqlx::SqliteConnection,
+    item_id: &WishlistItemId,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE wishlists SET updated_at = CURRENT_TIMESTAMP \
+         WHERE id = (SELECT wishlist_id FROM wishlist_items WHERE id = ?)",
+    )
+    .bind(item_id.to_string())
+    .execute(executor)
+    .await?;
+    Ok(())
+}
+
 pub async fn insert_wishlist_item(
     executor: &mut sqlx::SqliteConnection,
     row: WishlistItemRow,
