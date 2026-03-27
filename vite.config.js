@@ -17,7 +17,7 @@ export default defineConfig({
 
   // Optimize bundle size and loading
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         manualChunks: {
           // Split large icon library into separate chunk
@@ -27,6 +27,11 @@ export default defineConfig({
     },
     // Reduce chunk size warning threshold
     chunkSizeWarningLimit: 600
+  },
+
+  resolve: {
+    // Enable native TypeScript path resolution (new in Vite 8, replaces third-party tsconfigPaths plugins)
+    tsconfigPaths: true
   },
 
   // Vite options tailored for Tauri development and only applied in  or
