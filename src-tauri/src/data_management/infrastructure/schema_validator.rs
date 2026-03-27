@@ -49,7 +49,9 @@ impl SchemaValidator {
             Err(error) => {
                 let msg = format!(
                     "at '{}' (schema: '{}'): {:?}",
-                    error.instance_path, error.schema_path, error.kind
+                    error.instance_path(),
+                    error.schema_path(),
+                    error.kind()
                 );
                 Err(SchemaValidationError::Invalid(msg))
             }
@@ -66,9 +68,9 @@ impl SchemaValidator {
         if !jsonschema::is_valid(&self.schema, manifest) {
             if let Err(error) = jsonschema::validate(&self.schema, manifest) {
                 let validation_error = ValidationError::new(
-                    error.instance_path.to_string(),
+                    error.instance_path().to_string(),
                     "schema_validation",
-                    format!("{:?}", error.kind),
+                    format!("{:?}", error.kind()),
                 );
                 errors.push(validation_error);
             } else {

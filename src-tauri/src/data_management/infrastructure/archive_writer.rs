@@ -36,7 +36,7 @@ pub async fn create_archive(
         let mut zip = ZipWriter::new(file);
 
         // Add manifest.json
-        let options = zip::write::FileOptions::default();
+        let options = zip::write::FileOptions::<()>::default();
         zip.start_file("manifest.json", options)?;
         zip.write_all(manifest_json.as_bytes())?;
 
@@ -48,7 +48,7 @@ pub async fn create_archive(
                 .ok_or_else(|| ExportError::ArchiveError("Invalid media filename".to_string()))?;
 
             let archive_entry = format!("images/{}", file_name);
-            let options = zip::write::FileOptions::default();
+            let options = zip::write::FileOptions::<()>::default();
             zip.start_file(&archive_entry, options)?;
 
             let data = std::fs::read(source_path)?;
