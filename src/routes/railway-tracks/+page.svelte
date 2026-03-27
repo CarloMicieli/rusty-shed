@@ -3,7 +3,7 @@
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
   import type { TrackInventoryListItem, TrackInventoryView } from '$lib/features/track-inventory';
   import InventoryDetail from '$lib/features/track-inventory/components/InventoryDetail.svelte';
-  import InventorySidebar from '$lib/features/track-inventory/components/InventorySidebar.svelte';
+  import TrackCommandBar from '$lib/features/track-inventory/components/TrackCommandBar.svelte';
   import CreateInventoryDialog from '$lib/features/track-inventory/components/CreateInventoryDialog.svelte';
   import RenameInventoryDialog from '$lib/features/track-inventory/components/RenameInventoryDialog.svelte';
   import DeleteInventoryDialog from '$lib/features/track-inventory/components/DeleteInventoryDialog.svelte';
@@ -159,41 +159,37 @@
       </div>
     </div>
   {:else}
-    <!-- Sidebar + Content split -->
-    <div class="-mx-4 flex flex-1 flex-col md:flex-row lg:-mx-8">
-      <!-- Left Sidebar: Inventory list -->
-      <aside class="flex-shrink-0 border-r border-border bg-card md:w-80">
-        <div class="sticky top-4 p-4">
-          <InventorySidebar {inventories} activeId={activeInventoryId} onSelect={handleSelect} />
-        </div>
-      </aside>
+    <!-- Command Bar + full-width content -->
+    <div class="mt-6 space-y-6 px-4 lg:px-0">
+      <TrackCommandBar
+        {inventories}
+        {activeInventoryId}
+        {activeInventory}
+        onSelect={handleSelect}
+        onRename={() => (renameDialogOpen = true)}
+        onDelete={() => (deleteDialogOpen = true)}
+        onAddPurchase={() => (addPurchaseDrawerOpen = true)}
+      />
 
-      <!-- Main Content: Selected inventory detail -->
-      <div class="flex-1 bg-background">
-        <div class="p-6">
-          {#if detailLoading}
-            <div class="flex items-center justify-center py-16">
-              <div
-                class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
-              ></div>
-            </div>
-          {:else if activeInventory}
-            <InventoryDetail
-              inventory={activeInventory}
-              onRename={() => (renameDialogOpen = true)}
-              onDelete={() => (deleteDialogOpen = true)}
-              onAddPurchase={() => (addPurchaseDrawerOpen = true)}
-            />
-          {:else}
-            <div
-              class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/5 bg-zinc-900/10 py-20 text-center"
-            >
-              <TrainTrack size={48} class="mb-4 text-zinc-700 opacity-20" />
-              <p class="text-sm text-zinc-500">{m.track_inventories_empty_title()}</p>
-            </div>
-          {/if}
+      {#if detailLoading}
+        <div class="flex items-center justify-center py-16">
+          <div
+            class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
+          ></div>
         </div>
-      </div>
+      {:else if activeInventory}
+        <InventoryDetail
+          inventory={activeInventory}
+          onAddPurchase={() => (addPurchaseDrawerOpen = true)}
+        />
+      {:else}
+        <div
+          class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/5 bg-zinc-900/10 py-20 text-center"
+        >
+          <TrainTrack size={48} class="mb-4 text-zinc-700 opacity-20" />
+          <p class="text-sm text-zinc-500">{m.track_inventories_empty_title()}</p>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
