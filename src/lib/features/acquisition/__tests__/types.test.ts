@@ -20,7 +20,7 @@ function makeItem(overrides: Partial<AcquisitionItemEntry> = {}): AcquisitionIte
     manufacturerId: 'mfg-1',
     productCode: 'CODE-123',
     description: 'A test item',
-    category: 'Locomotive',
+    category: 'LOCOMOTIVES',
     scale: 'H0',
     epoch: 'IV',
     powerMethod: 'DC',

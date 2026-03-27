@@ -4,7 +4,7 @@
   import { FormInput, FormSelect } from '$lib/components/drawer';
   import EpochPicker from '$lib/components/drawer/EpochPicker.svelte';
   import type { Manufacturer } from '$lib/bindings';
-  import { CATEGORIES, SCALES, POWER_METHODS } from '$lib/features/wishlists/constants';
+  import { scaleOptions, categoryOptions, powerMethodOptions } from '$lib/utils/enum-options';
 
   interface Props {
     manufacturerId: string | null;
@@ -41,43 +41,6 @@
     isLoading = false,
     disabled = false
   }: Props = $props();
-
-  const SCALE_DISPLAY_MAP: Record<string, string> = {
-    H0: 'H0 (1:87)',
-    H0m: 'H0m (1:87)',
-    H0e: 'H0e (1:87)',
-    N: 'N (1:160)',
-    TT: 'TT (1:120)',
-    Z: 'Z (1:220)',
-    G: 'G (1:22.5)',
-    Scale1: 'Scale 1 (1:32)',
-    Scale0: 'Scale 0 (1:43)',
-    Scale00: 'Scale 00 (1:76)'
-  };
-
-  const CATEGORY_LABELS: Record<string, () => string> = {
-    LOCOMOTIVES: m.wishlist_category_locomotives,
-    TRAIN_SETS: m.wishlist_category_train_sets,
-    STARTER_SETS: m.wishlist_category_starter_sets,
-    FREIGHT_CARS: m.wishlist_category_freight_cars,
-    PASSENGER_CARS: m.wishlist_category_passenger_cars,
-    ELECTRIC_MULTIPLE_UNITS: m.wishlist_category_electric_multiple_units,
-    RAILCARS: m.wishlist_category_railcars
-  };
-
-  const POWER_METHOD_LABELS: Record<string, () => string> = {
-    AC: m.wishlist_power_ac,
-    DC: m.wishlist_power_dc,
-    TRIX_EXPRESS: m.wishlist_power_trix_express
-  };
-
-  function getCategoryLabel(cat: string): string {
-    return CATEGORY_LABELS[cat]?.() ?? cat;
-  }
-
-  function getPowerMethodLabel(method: string): string {
-    return POWER_METHOD_LABELS[method]?.() ?? method;
-  }
 
   const selectedManufacturer = $derived(manufacturers.find((mfr) => mfr.id === manufacturerId));
 </script>
@@ -153,7 +116,7 @@
       <!-- Category -->
       <FormSelect
         label={m.wishlist_modal_category()}
-        options={CATEGORIES.map((cat) => ({ value: cat, label: getCategoryLabel(cat) }))}
+        options={categoryOptions()}
         bind:value={category}
         placeholder={m.rolling_stock_select_category()}
         {disabled}
@@ -164,17 +127,14 @@
       <div class="grid grid-cols-2 gap-3">
         <FormSelect
           label={m.wishlist_modal_scale()}
-          options={SCALES.map((s) => ({ value: s, label: SCALE_DISPLAY_MAP[s] ?? s }))}
+          options={scaleOptions()}
           bind:value={scale}
           {disabled}
           error={errors.scale}
         />
         <FormSelect
           label={m.wishlist_modal_power_method()}
-          options={POWER_METHODS.map((method) => ({
-            value: method,
-            label: getPowerMethodLabel(method)
-          }))}
+          options={powerMethodOptions()}
           bind:value={powerMethod}
           {disabled}
           error={errors.powerMethod}

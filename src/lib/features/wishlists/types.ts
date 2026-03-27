@@ -1,5 +1,4 @@
 import type { Category, Scale, PowerMethod, WishlistPriority } from '$lib/bindings';
-import type { RollingStockCategory } from './constants';
 
 /**
  * Form state for rolling stock entry within the railway model form
@@ -12,7 +11,7 @@ export type RollingStockFormEntry = {
   /** Series code (user input) */
   seriesCode: string;
   /** Rolling stock category */
-  category: RollingStockCategory | '';
+  category: Category | '';
   /** Road number (optional) */
   roadNumber: string;
 };

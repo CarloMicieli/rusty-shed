@@ -6,6 +6,12 @@
   import { CalendarDate } from '@internationalized/date';
   import type { SellerView } from '$lib/bindings';
   import type { BatchDefaults } from '../types.js';
+  import {
+    scaleOptions,
+    powerMethodOptions,
+    powerMethodLabel,
+    SCALE_DISPLAY_MAP
+  } from '$lib/utils/enum-options';
 
   interface Props {
     sellerId: string | null;
@@ -16,21 +22,6 @@
     onBatchDefaultChange: (field: 'scale' | 'powerMethod', value: string | null) => void;
     sellers: SellerView[];
   }
-
-  const SCALE_OPTIONS = ['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', '0', 'G', 'S', 'II'] as const;
-  const POWER_METHOD_OPTIONS = ['AC', 'DC', 'TRIX_EXPRESS'] as const;
-  const SCALE_DISPLAY_MAP: Record<string, string> = {
-    H0: 'H0 (1:87)',
-    H0m: 'H0m (1:87)',
-    H0e: 'H0e (1:87)',
-    N: 'N (1:160)',
-    TT: 'TT (1:120)',
-    Z: 'Z (1:220)',
-    '0': '0 (1:43)',
-    G: 'G (1:22.5)',
-    S: 'S (1:64)',
-    II: 'II (1:22.5)'
-  };
 
   let {
     sellerId,
@@ -104,8 +95,8 @@
           : '—'}
       </Select.Trigger>
       <Select.Content>
-        {#each SCALE_OPTIONS as scale (scale)}
-          <Select.Item value={scale} label={SCALE_DISPLAY_MAP[scale] ?? scale} />
+        {#each scaleOptions() as opt (opt.value)}
+          <Select.Item value={opt.value} label={opt.label} />
         {/each}
       </Select.Content>
     </Select.Root>
@@ -128,11 +119,11 @@
         id="acq-batch-power"
         class="w-full border-layout-border bg-layout-surface text-foreground"
       >
-        {batchDefaults.powerMethod ?? '—'}
+        {batchDefaults.powerMethod ? powerMethodLabel(batchDefaults.powerMethod) : '—'}
       </Select.Trigger>
       <Select.Content>
-        {#each POWER_METHOD_OPTIONS as pm (pm)}
-          <Select.Item value={pm} label={pm} />
+        {#each powerMethodOptions() as opt (opt.value)}
+          <Select.Item value={opt.value} label={opt.label} />
         {/each}
       </Select.Content>
     </Select.Root>

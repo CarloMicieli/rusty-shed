@@ -1,38 +1,6 @@
-import type { Category, Scale, PowerMethod, WishlistPriority } from '$lib/bindings';
+import type { Category, WishlistPriority } from '$lib/bindings';
 
-/**
- * Static dropdown options for railway model categories
- */
-export const CATEGORIES: Category[] = [
-  'LOCOMOTIVES',
-  'TRAIN_SETS',
-  'STARTER_SETS',
-  'FREIGHT_CARS',
-  'PASSENGER_CARS',
-  'ELECTRIC_MULTIPLE_UNITS',
-  'RAILCARS'
-];
-
-/**
- * Static dropdown options for railway model scales
- */
-export const SCALES: Scale[] = [
-  'H0',
-  'H0m',
-  'H0e',
-  'N',
-  'TT',
-  'Z',
-  'G',
-  'Scale1',
-  'Scale0',
-  'Scale00'
-];
-
-/**
- * Static dropdown options for power methods
- */
-export const POWER_METHODS: PowerMethod[] = ['AC', 'DC', 'TRIX_EXPRESS'];
+export { CATEGORIES, SCALES, POWER_METHODS } from '$lib/utils/enum-options';
 
 /**
  * Static dropdown options for wishlist priorities
@@ -61,19 +29,9 @@ export const EPOCHS: string[] = [
 ];
 
 /**
- * Rolling stock categories (subset of Category enum)
+ * Rolling stock categories (subset of Category — excludes TRAIN_SETS, STARTER_SETS)
  */
-export type RollingStockCategory =
-  | 'LOCOMOTIVES'
-  | 'FREIGHT_CARS'
-  | 'PASSENGER_CARS'
-  | 'ELECTRIC_MULTIPLE_UNITS'
-  | 'RAILCARS';
-
-/**
- * Static dropdown options for rolling stock categories
- */
-export const ROLLING_STOCK_CATEGORIES: RollingStockCategory[] = [
+export const ROLLING_STOCK_CATEGORIES: Category[] = [
   'LOCOMOTIVES',
   'FREIGHT_CARS',
   'PASSENGER_CARS',

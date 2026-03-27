@@ -1,4 +1,4 @@
-import type { RecordAcquisitionArgs } from '$lib/bindings';
+import type { Category, PowerMethod, RecordAcquisitionArgs, Scale } from '$lib/bindings';
 
 /** Session state for the entire acquisition drawer. */
 export interface AcquisitionFormState {
@@ -9,8 +9,8 @@ export interface AcquisitionFormState {
 }
 
 export interface BatchDefaults {
-  scale: string | null;
-  powerMethod: string | null;
+  scale: Scale | null;
+  powerMethod: PowerMethod | null;
 }
 
 export interface AcquisitionItemEntry {
@@ -18,10 +18,10 @@ export interface AcquisitionItemEntry {
   manufacturerId: string | null;
   productCode: string;
   description: string;
-  category: string | null;
-  scale: string | null;
+  category: Category | null;
+  scale: Scale | null;
   epoch: string | null;
-  powerMethod: string | null;
+  powerMethod: PowerMethod | null;
   priceAmount: number | null;
 }
 

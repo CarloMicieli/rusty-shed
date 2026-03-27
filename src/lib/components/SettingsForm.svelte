@@ -8,6 +8,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';
   import * as Select from '$lib/components/ui/select';
+  import { scaleOptions as getScaleOptions } from '$lib/utils/enum-options';
   import type {
     SettingsDto,
     UpdateSettingsPayload,
@@ -86,18 +87,7 @@
     }
   ];
 
-  const scaleOptions: { label: string; value: Scale }[] = [
-    { label: 'H0', value: 'H0' },
-    { label: 'N', value: 'N' },
-    { label: 'TT', value: 'TT' },
-    { label: 'Z', value: 'Z' },
-    { label: 'G', value: 'G' },
-    { label: '0', value: '0' },
-    { label: '00', value: '00' },
-    { label: '1', value: '1' },
-    { label: 'H0m', value: 'H0m' },
-    { label: 'H0e', value: 'H0e' }
-  ];
+  const scaleOptions = getScaleOptions();
 
   const themeOptions: { label: string; value: ThemeValue }[] = [
     { label: m.settings_theme_light(), value: 'steampunk-light' },

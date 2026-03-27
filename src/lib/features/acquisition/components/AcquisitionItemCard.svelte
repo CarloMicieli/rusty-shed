@@ -5,48 +5,17 @@
   import { DrawerInput } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { Copy, Trash2 } from 'lucide-svelte';
-  import type { Manufacturer } from '$lib/bindings';
+  import type { Category, Manufacturer, PowerMethod, Scale } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
   import { EPOCHS } from '$lib/features/wishlists/constants.js';
-
-  const SCALE_OPTIONS = ['H0', 'H0m', 'H0e', 'N', 'TT', 'Z', '0', 'G', 'S', 'II'] as const;
-  const POWER_METHOD_OPTIONS = ['AC', 'DC', 'TRIX_EXPRESS'] as const;
-  const CATEGORY_OPTIONS = [
-    'LOCOMOTIVES',
-    'FREIGHT_CARS',
-    'PASSENGER_CARS',
-    'ELECTRIC_MULTIPLE_UNITS',
-    'RAILCARS',
-    'TRAIN_SETS',
-    'STARTER_SETS'
-  ] as const;
-
-  const SCALE_DISPLAY_MAP: Record<string, string> = {
-    H0: 'H0 (1:87)',
-    H0m: 'H0m (1:87)',
-    H0e: 'H0e (1:87)',
-    N: 'N (1:160)',
-    TT: 'TT (1:120)',
-    Z: 'Z (1:220)',
-    '0': '0 (1:43)',
-    G: 'G (1:22.5)',
-    S: 'S (1:64)',
-    II: 'II (1:22.5)'
-  };
-
-  const CATEGORY_LABELS: Record<string, () => string> = {
-    LOCOMOTIVES: m.wishlist_category_locomotives,
-    FREIGHT_CARS: m.wishlist_category_freight_cars,
-    PASSENGER_CARS: m.wishlist_category_passenger_cars,
-    ELECTRIC_MULTIPLE_UNITS: m.wishlist_category_electric_multiple_units,
-    RAILCARS: m.wishlist_category_railcars,
-    TRAIN_SETS: m.wishlist_category_train_sets,
-    STARTER_SETS: m.wishlist_category_starter_sets
-  };
-
-  function getCategoryLabel(category: string): string {
-    return CATEGORY_LABELS[category]?.() ?? category;
-  }
+  import {
+    scaleOptions,
+    powerMethodOptions,
+    powerMethodLabel,
+    categoryOptions,
+    SCALE_DISPLAY_MAP,
+    categoryLabel
+  } from '$lib/utils/enum-options';
 
   interface Props {
     item: AcquisitionItemEntry;
@@ -192,7 +161,7 @@
       <Select.Root
         type="single"
         value={item.category ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { category: v || null })}
+        onValueChange={(v) => onUpdate(item.uid, { category: (v as Category) || null })}
       >
         <Select.Trigger
           id="item-{item.uid}-category"
@@ -201,14 +170,14 @@
           aria-describedby={errors.category ? `item-${item.uid}-category-error` : undefined}
         >
           {#if item.category}
-            {getCategoryLabel(item.category)}
+            {categoryLabel(item.category)}
           {:else}
             <span class="text-zinc-500">—</span>
           {/if}
         </Select.Trigger>
         <Select.Content>
-          {#each CATEGORY_OPTIONS as cat (cat)}
-            <Select.Item value={cat} label={getCategoryLabel(cat)} />
+          {#each categoryOptions() as opt (opt.value)}
+            <Select.Item value={opt.value} label={opt.label} />
           {/each}
         </Select.Content>
       </Select.Root>
@@ -227,7 +196,7 @@
       <Select.Root
         type="single"
         value={item.scale ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { scale: v || null })}
+        onValueChange={(v) => onUpdate(item.uid, { scale: (v as Scale) || null })}
       >
         <Select.Trigger id="item-{item.uid}-scale" class={TRIGGER_CLASS}>
           {#if item.scale}
@@ -237,8 +206,8 @@
           {/if}
         </Select.Trigger>
         <Select.Content>
-          {#each SCALE_OPTIONS as scale (scale)}
-            <Select.Item value={scale} label={SCALE_DISPLAY_MAP[scale] ?? scale} />
+          {#each scaleOptions() as opt (opt.value)}
+            <Select.Item value={opt.value} label={opt.label} />
           {/each}
         </Select.Content>
       </Select.Root>
@@ -277,18 +246,18 @@
       <Select.Root
         type="single"
         value={item.powerMethod ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { powerMethod: v || null })}
+        onValueChange={(v) => onUpdate(item.uid, { powerMethod: (v as PowerMethod) || null })}
       >
         <Select.Trigger id="item-{item.uid}-power" class={TRIGGER_CLASS}>
           {#if item.powerMethod}
-            {item.powerMethod}
+            {powerMethodLabel(item.powerMethod)}
           {:else}
             <span class="text-zinc-500">—</span>
           {/if}
         </Select.Trigger>
         <Select.Content>
-          {#each POWER_METHOD_OPTIONS as pm (pm)}
-            <Select.Item value={pm} label={pm} />
+          {#each powerMethodOptions() as opt (opt.value)}
+            <Select.Item value={opt.value} label={opt.label} />
           {/each}
         </Select.Content>
       </Select.Root>

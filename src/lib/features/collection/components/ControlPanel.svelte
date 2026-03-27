@@ -2,6 +2,8 @@
   import { X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
+  import { categoryLabel as enumCategoryLabel } from '$lib/utils/enum-options';
+  import type { Category } from '$lib/bindings';
 
   interface ScaleOption {
     id: string;
@@ -39,24 +41,7 @@
   }: Props = $props();
 
   function categoryLabel(cat: string): string {
-    switch (cat) {
-      case 'LOCOMOTIVES':
-        return m.wishlist_category_locomotives();
-      case 'FREIGHT_CARS':
-        return m.wishlist_category_freight_cars();
-      case 'PASSENGER_CARS':
-        return m.wishlist_category_passenger_cars();
-      case 'ELECTRIC_MULTIPLE_UNITS':
-        return m.wishlist_category_electric_multiple_units();
-      case 'RAILCARS':
-        return m.wishlist_category_railcars();
-      case 'TRAIN_SETS':
-        return m.wishlist_category_train_sets();
-      case 'STARTER_SETS':
-        return m.wishlist_category_starter_sets();
-      default:
-        return cat;
-    }
+    return enumCategoryLabel(cat as Category);
   }
 </script>
 

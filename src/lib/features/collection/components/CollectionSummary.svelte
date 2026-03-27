@@ -23,28 +23,28 @@
 
   const categoryStats: { label: () => string; value: () => number; icon: IconComponent }[] = [
     {
-      label: m.constants_categories_locomotives,
+      label: m.enum_category_locomotives,
       value: () => summary.locomotivesCount,
       icon: TrainFront
     },
     {
-      label: m.constants_categories_passenger_cars,
+      label: m.enum_category_passenger_cars,
       value: () => summary.passengerCarsCount,
       icon: TrainFront
     },
     {
-      label: m.constants_categories_freight_cars,
+      label: m.enum_category_freight_cars,
       value: () => summary.freightCarsCount,
       icon: Box
     },
     {
-      label: m.constants_categories_train_sets,
+      label: m.enum_category_train_sets,
       value: () => summary.trainSetsCount,
       icon: Package
     },
-    { label: m.constants_categories_railcars, value: () => summary.railcarsCount, icon: Bus },
+    { label: m.enum_category_railcars, value: () => summary.railcarsCount, icon: Bus },
     {
-      label: m.constants_categories_electric_multiple_units,
+      label: m.enum_category_electric_multiple_units,
       value: () => summary.electricMultipleUnitsCount,
       icon: Zap
     }

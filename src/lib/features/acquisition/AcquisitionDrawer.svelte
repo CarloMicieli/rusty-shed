@@ -1,7 +1,13 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { ShoppingBag } from 'lucide-svelte';
-  import { commands, type Manufacturer, type SellerView } from '$lib/bindings';
+  import {
+    commands,
+    type Manufacturer,
+    type PowerMethod,
+    type Scale,
+    type SellerView
+  } from '$lib/bindings';
   import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { Button } from '$lib/components';
@@ -41,8 +47,8 @@
   // Form state
   let form = $state<AcquisitionFormState>(
     createDefaultFormState({
-      scale: settingsState.settings?.favouriteScale || null,
-      powerMethod: settingsState.settings?.powerMethod || null
+      scale: (settingsState.settings?.favouriteScale as Scale) || null,
+      powerMethod: (settingsState.settings?.powerMethod as PowerMethod) || null
     })
   );
 
@@ -73,8 +79,8 @@
 
   async function handleOpen() {
     form = createDefaultFormState({
-      scale: settingsState.settings?.favouriteScale || null,
-      powerMethod: settingsState.settings?.powerMethod || null
+      scale: (settingsState.settings?.favouriteScale as Scale) || null,
+      powerMethod: (settingsState.settings?.powerMethod as PowerMethod) || null
     });
     touched = false;
     validationErrors = {};

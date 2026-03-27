@@ -5,14 +5,19 @@
   import { Input } from '$lib/components/ui/input';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { commands } from '$lib/bindings';
-  import type { Manufacturer, WishlistPriority } from '$lib/bindings';
+  import type { Category, Manufacturer, PowerMethod, Scale, WishlistPriority } from '$lib/bindings';
+  import { PRIORITIES, EPOCHS } from '$lib/features/wishlists/constants';
   import {
     CATEGORIES,
     SCALES,
     POWER_METHODS,
-    PRIORITIES,
-    EPOCHS
-  } from '$lib/features/wishlists/constants';
+    categoryOptions,
+    categoryLabel,
+    scaleOptions,
+    powerMethodOptions,
+    powerMethodLabel,
+    SCALE_DISPLAY_MAP
+  } from '$lib/utils/enum-options';
   import { X } from 'lucide-svelte';
   import { onMount } from 'svelte';
 
@@ -29,9 +34,9 @@
     manufacturerId: string;
     productCode: string;
     description: string;
-    category: string;
-    scale: string;
-    powerMethod: string;
+    category: Category;
+    scale: Scale;
+    powerMethod: PowerMethod;
     epoch: string;
     priority: WishlistPriority;
     desiredPrice: string;
@@ -174,41 +179,14 @@
     formError = null;
   }
 
-  function getCategoryLabelKey(category: string): string {
-    const labelMap: Record<string, string> = {
-      LOCOMOTIVES: 'wishlist_category_locomotives',
-      TRAIN_SETS: 'wishlist_category_train_sets',
-      STARTER_SETS: 'wishlist_category_starter_sets',
-      FREIGHT_CARS: 'wishlist_category_freight_cars',
-      PASSENGER_CARS: 'wishlist_category_passenger_cars',
-      ELECTRIC_MULTIPLE_UNITS: 'wishlist_category_electric_multiple_units',
-      RAILCARS: 'wishlist_category_railcars'
-    };
-    return labelMap[category] ?? category;
-  }
+  const PRIORITY_LABEL_FN_MAP: Record<WishlistPriority, () => string> = {
+    LOW: m.wishlist_priority_low,
+    NORMAL: m.wishlist_priority_normal,
+    HIGH: m.wishlist_priority_high
+  };
 
-  function getPowerMethodLabelKey(method: string): string {
-    const labelMap: Record<string, string> = {
-      AC: 'wishlist_power_ac',
-      DC: 'wishlist_power_dc',
-      TRIX_EXPRESS: 'wishlist_power_trix_express'
-    };
-    return labelMap[method] ?? method;
-  }
-
-  function getPriorityLabelKey(priority: string): string {
-    const labelMap: Record<string, string> = {
-      LOW: 'wishlist_priority_low',
-      NORMAL: 'wishlist_priority_normal',
-      HIGH: 'wishlist_priority_high'
-    };
-    return labelMap[priority] ?? priority;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const messages = m as any as Record<string, () => string>;
-  function getMessage(key: string): string {
-    return messages[key]();
+  function priorityLabel(priority: WishlistPriority): string {
+    return PRIORITY_LABEL_FN_MAP[priority]();
   }
 
   const selectedWishlist = $derived(wishlists.find((l) => l.id === form.wishlistId));
@@ -331,19 +309,19 @@
         type="single"
         value={form.category || undefined}
         onValueChange={(v) => {
-          form.category = v;
+          form.category = v as Category;
         }}
       >
         <Select.Trigger class="w-full">
           {#if form.category}
-            {getMessage(getCategoryLabelKey(form.category))}
+            {categoryLabel(form.category)}
           {:else}
             <span class="text-muted-foreground">—</span>
           {/if}
         </Select.Trigger>
         <Select.Content>
-          {#each CATEGORIES as cat (cat)}
-            <Select.Item value={cat} label={getMessage(getCategoryLabelKey(cat))} />
+          {#each categoryOptions() as opt (opt.value)}
+            <Select.Item value={opt.value} label={opt.label} />
           {/each}
         </Select.Content>
       </Select.Root>
@@ -359,19 +337,19 @@
           type="single"
           value={form.scale || undefined}
           onValueChange={(v) => {
-            form.scale = v;
+            form.scale = v as Scale;
           }}
         >
           <Select.Trigger class="w-full">
             {#if form.scale}
-              {form.scale}
+              {SCALE_DISPLAY_MAP[form.scale] ?? form.scale}
             {:else}
               <span class="text-muted-foreground">—</span>
             {/if}
           </Select.Trigger>
           <Select.Content>
-            {#each SCALES as scale (scale)}
-              <Select.Item value={scale} label={scale} />
+            {#each scaleOptions() as opt (opt.value)}
+              <Select.Item value={opt.value} label={opt.label} />
             {/each}
           </Select.Content>
         </Select.Root>
@@ -384,19 +362,19 @@
           type="single"
           value={form.powerMethod || undefined}
           onValueChange={(v) => {
-            form.powerMethod = v;
+            form.powerMethod = v as PowerMethod;
           }}
         >
           <Select.Trigger class="w-full">
             {#if form.powerMethod}
-              {getMessage(getPowerMethodLabelKey(form.powerMethod))}
+              {powerMethodLabel(form.powerMethod)}
             {:else}
               <span class="text-muted-foreground">—</span>
             {/if}
           </Select.Trigger>
           <Select.Content>
-            {#each POWER_METHODS as method (method)}
-              <Select.Item value={method} label={getMessage(getPowerMethodLabelKey(method))} />
+            {#each powerMethodOptions() as opt (opt.value)}
+              <Select.Item value={opt.value} label={opt.label} />
             {/each}
           </Select.Content>
         </Select.Root>
@@ -450,14 +428,14 @@
         >
           <Select.Trigger class="w-full">
             {#if form.priority}
-              {getMessage(getPriorityLabelKey(form.priority))}
+              {priorityLabel(form.priority)}
             {:else}
               <span class="text-muted-foreground">—</span>
             {/if}
           </Select.Trigger>
           <Select.Content>
             {#each PRIORITIES as priority (priority)}
-              <Select.Item value={priority} label={getMessage(getPriorityLabelKey(priority))} />
+              <Select.Item value={priority} label={priorityLabel(priority)} />
             {/each}
           </Select.Content>
         </Select.Root>

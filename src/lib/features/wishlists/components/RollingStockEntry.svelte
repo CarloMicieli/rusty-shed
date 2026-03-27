@@ -2,9 +2,10 @@
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
   import { Input, Button } from '$lib/components';
-  import type { RailwayCompany } from '$lib/bindings';
+  import type { RailwayCompany, Category } from '$lib/bindings';
   import type { RollingStockFormEntry } from '../types';
   import { ROLLING_STOCK_CATEGORIES } from '../constants';
+  import { categoryLabel } from '$lib/utils/enum-options';
 
   interface Props {
     /** Entry data bound two-way */
@@ -18,18 +19,6 @@
   }
 
   let { entry = $bindable(), railwayCompanies, canRemove, onRemove }: Props = $props();
-
-  // Helper to get category label key
-  function getCategoryLabelKey(category: string): string {
-    const labelMap: Record<string, string> = {
-      LOCOMOTIVES: 'wishlist_category_locomotives',
-      FREIGHT_CARS: 'wishlist_category_freight_cars',
-      PASSENGER_CARS: 'wishlist_category_passenger_cars',
-      ELECTRIC_MULTIPLE_UNITS: 'wishlist_category_electric_multiple_units',
-      RAILCARS: 'wishlist_category_railcars'
-    };
-    return labelMap[category] || category;
-  }
 </script>
 
 <div
@@ -90,8 +79,7 @@
       >
         <option value="">-- {m.wishlist_field_category()} --</option>
         {#each ROLLING_STOCK_CATEGORIES as cat (cat)}
-          <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-          <option value={cat}>{(m as any)[getCategoryLabelKey(cat)]()}</option>
+          <option value={cat}>{categoryLabel(cat as Category)}</option>
         {/each}
       </select>
     </div>
