@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Sparkles, Heart, LayoutGrid, Table } from 'lucide-svelte';
+  import { Sparkles, Heart, LayoutGrid, Table, PackagePlus } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { getWishlistContext } from './WishlistState.svelte';
   import { Button } from '$lib/components';
@@ -253,7 +253,45 @@
               />
             {/if}
           </div>
+        {:else if wishlists.length > 0}
+          <!-- Has wishlists but none is active-selected -->
+          <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
+            <div
+              class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"
+            >
+              <div class="relative">
+                <div class="absolute inset-0 rounded-full bg-amber-500/10 blur-3xl"></div>
+                <div
+                  class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
+                >
+                  <PackagePlus size={56} class="text-amber-500/60" />
+                </div>
+              </div>
+
+              <div class="flex max-w-sm flex-col items-center gap-3 text-center">
+                <h3 class="text-2xl font-bold text-zinc-200">
+                  {m.wishlists_no_model_title()}
+                </h3>
+                <p class="text-sm leading-relaxed text-zinc-500">
+                  {m.wishlists_no_model_description()}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
+                onclick={openAddModelDrawer}
+              >
+                <div
+                  class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
+                ></div>
+                <PackagePlus class="h-5 w-5" />
+                <span>{m.wishlists_add_model_button()}</span>
+              </button>
+            </div>
+          </div>
         {:else}
+          <!-- No wishlists at all -->
           <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
             <div
               class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-[#0c0c0c]/50 px-4 py-24 text-center"

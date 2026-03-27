@@ -187,6 +187,9 @@ export class WishlistState {
       if (!this.#activeWishlistId && defaultList) {
         this.#activeWishlistId = defaultList.id;
         await this.loadWishlistItems(defaultList.id);
+      } else if (!this.#activeWishlistId && this.#wishlists.length === 1) {
+        this.#activeWishlistId = this.#wishlists[0].id;
+        await this.loadWishlistItems(this.#wishlists[0].id);
       }
     } finally {
       this.#isLoading = false;
@@ -235,7 +238,7 @@ export class WishlistState {
       ? this.#wishlists.map((w) => ({ ...w, isDefault: false }))
       : this.#wishlists;
     this.#wishlists = [...cleared, optimistic];
-    if (isDefault) this.#activeWishlistId = tempId;
+    if (isDefault || cleared.length === 0) this.#activeWishlistId = tempId;
     toastLoading(toastId);
 
     const result = await safeInvoke<WishlistPreview>('create_wishlist', {
@@ -256,7 +259,12 @@ export class WishlistState {
     }
 
     this.#wishlists = this.#wishlists.map((w) => (w.id === tempId ? result.data : w));
-    if (result.data.isDefault) this.#activeWishlistId = result.data.id;
+    if (result.data.isDefault || this.#activeWishlistId === tempId) {
+      this.#activeWishlistId = result.data.id;
+      if (!this.#itemsByWishlist[result.data.id]) {
+        await this.loadWishlistItems(result.data.id);
+      }
+    }
     toastSuccess(toastId);
     return result.data;
   }
