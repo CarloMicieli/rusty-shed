@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 pub mod archive_extractor;
 pub mod archive_writer;
 pub mod disk_space_checker;
