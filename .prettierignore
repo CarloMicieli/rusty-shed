@@ -17,6 +17,9 @@ coverage/
 # Paraglide specific
 src/lib/paraglide/**
 
+# Specta bindings
+src/lib/bindings.ts
+
 # Custom exclusions
 .claude/
 .github/
