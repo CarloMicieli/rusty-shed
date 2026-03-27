@@ -1,93 +1,79 @@
 ---
 name: designer
-description: Use this skill when building Tauri-based, Svelte 5 views, or data grids that require a high-contrast, dark-mode interface centered around a charcoal-and-amber color palette, mechanical precision.
+description: Use this skill when building Tauri 2 views or Svelte 5 components. It enforces a "Mechanical Precision" aesthetic using a dynamic Steampunk palette (Iron/Copper or Parchment/Brass) centered on high-contrast data display and industrial textures.
 ---
 
 ### 🛠️ Agent Activation Instructions
 
 Apply the [designer] skill whenever the user's request involves:
 
-* **New View Creation:** If the user asks for a new page (e.g., "Add a 'Repair History' screen" or "Build a 'Marketplace' view"), use the 3-column dashboard layout (Sidebar | Main Content | Command Center) or the Collection Grid layout.
-* **Data Visualization:** When displaying stats, costs, or inventory counts, default to **Amber-on-Charcoal** bar charts, circular progress rings, or high-contrast numeric cards.
-* **Component Styling:** If the user asks to "Style a button" or "Create a modal," use a `1px` border of `#1F1F1F`, a background of `#0F0F0F`, and `8px` rounded corners.
-* **Inventory/Technical Details:** When displaying physical specs (Scale, Era, Road Number, DCC Address), format them in the **"Three-Column Footer"** pattern seen in the Collection cards—tiny muted headers over bright, centered values.
-* **State Management UI:** For "Empty," "Loading," or "Error" states, use the centered monochromatic icon approach found in the *Digital (DCC)* and *Maintenance* screens.
+* **New View Creation:** Use a 3-column dashboard layout: `[Sidebar (Nav) | Main Content | Command Center (Quick Actions)]`. Use `bg-background` for the app base and `bg-card` for elevated panels.
+* **Data Visualization:** Default to **Primary-on-Surface** (Amber/Copper on Charcoal) using circular progress rings (`variant-steampunk-gauge`) or high-contrast numeric cards.
+* **Component Styling:** Use `border-border` (1px), `bg-card`, and `rounded-sm` (steampunk favors sharper, 2-4px corners over soft ones).
+* **Technical Metadata:** Display physical specs (Scale, Road Number, DCC Address) using the **"Three-Column Footer"** pattern—`text-muted-foreground` uppercase labels over `text-foreground` monospaced values.
+* **Svelte 5 Patterns:** Utilize `{#snippet}` for repeatable UI elements like Table Rows or Metadata Badges to ensure theme consistency.
 
 ---
 
-### 🚦 Decision Logic (The "Style Check")
+### 🚦 Decision Logic (The "Theme-Variable" Check)
 
-Add this logic to the agent's system prompt to maintain consistency:
+**CRITICAL:** Never use hex codes (e.g., #D48A42). Map all intent to Tailwind 4 theme variables:
 
-1. **Is it a Brand Element?** If yes, use **Amber (`#D48A42`)** for primary actions and **Deep Charcoal (`#0F0F0F`)** for surfaces.
-2. **Is it a Secondary Detail?** Use **Muted Gray (`#808080`)** and **Uppercase** typography for labels.
-3. **Is it an Interactive Element?** Use a **Subtle Glow or 15% Opacity Amber** background for hover/active states in the sidebar and navigation.
-4. **Is it a Model Attribute?** Always use the **Pill Badge** (Top Right) or the **Metadata Grid** (Bottom) to display it.
+1. **Is it a Brand Action?** Use `bg-primary` and `text-primary-foreground`.
+2. **Is it a Secondary Detail?** Use `text-muted-foreground` and `font-mono` (JetBrains Mono) for numbers.
+3. **Is it Interactive?** Apply `variant-steampunk-lever` for buttons to trigger the mechanical press effect.
+4. **Is it a Container?** Use `variant-steampunk-riveted` for main dashboard panels to apply corner rivets.
 
 ---
 
-### 1. The "Amber" Accent Rule
+### 1. The "Dynamic Accent" Rule
 
-The amber/copper color (`#D48A42`) is your only "action" color.
+The action color (`--primary`) adapts based on the active `data-theme`.
 
-* **Active States:** Use a low-opacity amber background for sidebar items and a vertical 2px line on the left or a full rounded background.
-* **Buttons:** Primary buttons are solid amber with black text. Secondary buttons are outlined with amber text.
-* **Progress:** Circular charts and gauges use the amber color to represent "fullness" or "remaining value."
+* **Active States:** Use `bg-primary/15` for sidebar highlights with a `2px` solid `border-primary` on the left.
+* **Buttons:** * *Primary:* `bg-primary text-primary-foreground` (Solid brass/copper).
+    * *Secondary:* `border-primary text-primary hover:bg-primary/10`.
+* **Mechanical Feel:** Use `transition-all duration-150 ease-out` to mimic physical switchgear.
 
 ### 2. Layout & Information Hierarchy
 
-* **The "Card in Card" Look:** Use cards to group logical data (e.g., "Yard Statistics"). Inside those cards, use subtle dividers or further sub-grouping with smaller, even darker containers.
-* **Technical Specs:** When displaying model data (like Scale  or Era ), use a 3-column footer layout within the card. Label titles should be tiny, uppercase, and muted, while the values are bright and prominent.
-* **Status Badges:** Use "Pill" style tags (like the **AC/DC** or **ERA** badges) in the top right of images. These should have a slight background color to pop against the imagery.
+* **The "Card in Card" Look:** Use `bg-card` for main containers. For sub-grouping (e.g., "Yard Statistics"), use an inner `div` with `bg-background/50` and a `border-border`.
+* **Technical Specs:** Labels must be `text-[10px] uppercase tracking-tighter text-muted-foreground`. Values must be `text-sm font-mono text-foreground`.
+* **Status Badges:** Use the "Pill" style snippet. Position them `absolute top-2 right-2` on images using `bg-background/80` with a `border-primary`.
 
-### 3. Empty States & Illustrations
+### 3. Empty States & Feedback
 
-* Keep empty states centered.
-* Use thin-stroke (2px) monochromatic icons in the muted text color.
-* The "Command Center" buttons on the right of the dashboard should remain consistent: a subtle dashed or solid border with a centered icon and text.
-
-### 4. Data Visualization
-
-* **Charts:** Use simple bar or line charts. Avoid gradients inside bars; keep them solid amber.
-* **Gridlines:** Keep chart gridlines extremely faint () so they don't clutter the UI.
+* **Center Aligned:** Keep empty states perfectly centered in their container.
+* **Monochromatic Icons:** Use 2px stroke icons (Lucide or similar) in `text-muted-foreground`.
+* **Toast/Signals:** Use `.toast-signal` for background errors, ensuring the `border-primary` or `border-warning` is visible.
 
 ---
 
-## 🎨 Design Tokens (Tailwind 4 / CSS)
-- **Background (Base):** `#050505` (True Dark)
-- **Surface (Cards/Modals):** `#0F0F0F` (Deep Charcoal)
-- **Border:** `#1F1F1F` (Subtle separator)
-- **Primary (Accent):** `#D48A42` (Amber/Copper)
-- **Primary-Muted:** `rgba(212, 138, 66, 0.15)` (Active states/Hover)
-- **Text-Main:** `#E0E0E0` (High readability)
-- **Text-Muted:** `#808080` (Labels/Secondary info)
-
----
-
-## 📐 Layout & Structure
-- **Sidebar:** Fixed width, integrated with background. Active items use `primary-muted` background with a left-accent border or rounded-pill highlight.
-- **Card Pattern:** All cards use `bg-[#0F0F0F]`, `border-[#1F1F1F]`, and `rounded-[8px]`. No drop shadows; use borders for depth.
-- **Grid Layouts:** Collection items should follow a responsive grid. Each card must include a header (Brand/ID) and a metadata footer.
-- **The "Command Center":** Right-hand utility column for quick actions (Add, Log, etc.) using vertical stacked buttons with distinctive icons.
+## 🎨 Design Tokens (Tailwind 4 Variable Mapping)
+- **Background:** `bg-background` (Mapped to `--background`)
+- **Surface:** `bg-card` (Mapped to `--card`)
+- **Border:** `border-border` (Mapped to `--border`)
+- **Primary:** `bg-primary` (Mapped to `--primary` — Amber/Brass)
+- **Primary-Muted:** `bg-primary/15` (For hovers and active states)
+- **Text-Main:** `text-foreground` (Mapped to `--foreground`)
+- **Text-Muted:** `text-muted-foreground` (Mapped to `--muted-foreground`)
+- **Font-Heading:** `font-bebas` (Bebas Neue)
+- **Font-Data:** `font-mono` (JetBrains Mono / Courier Prime)
 
 ---
 
 ## 🛠️ Component-Specific Instructions
 
-### 1. Model Cards (Collection View)
-- **Header:** Brand name (e.g., A.C.M.E.) in small caps/muted, Model name in bold.
-- **Badges:** Use absolute positioning in the top-right corner for "AC/DC" or "Scale" badges (Pill shape).
-- **Metadata Footer:** A 3-column flex/grid row. Labels are `text-[10px] uppercase text-[#808080]`. Values are `text-[12px] text-[#E0E0E0]`.
+### 1. Model Cards (Svelte Snippet)
+- **Header:** Brand name in `font-bebas text-muted-foreground`.
+- **Image:** Contained in a `border-b border-border` frame.
+- **Footer:** A 3-column flex/grid. Labels: `text-[10px] text-muted-foreground`. Values: `text-xs font-mono`.
 
-### 2. Data Viz (Dashboard)
-- **Progress Rings:** Use `#D48A42` for the progress stroke and `#1F1F1F` for the trail.
-- **Charts:** Bar charts use solid `#D48A42`. Grid lines must be barely visible (`#1F1F1F`).
-- **Typography:** Use monospaced fonts (e.g., JetBrains Mono) for numerical values like "Road Number" or "DCC Address" to emphasize the mechanical feel.
+### 2. Dashboard Gauges
+- **Circular Progress:** Use `stroke-primary` for the active value and `stroke-muted/20` for the background track.
+- **Typography:** Numerical values inside gauges must be `font-mono`.
 
-### 3. Interactive Elements
-- **Buttons:**
-    - *Primary:* Solid `#D48A42` background, black text.
-    - *Secondary/Ghost:* Border `#1F1F1F`, text `#E0E0E0`, hover background `primary-muted`.
-- **Inputs:** Minimalist with `border-[#1F1F1F]`. On focus, border changes to `#D48A42`.
-
----
+### 3. Interactive Inputs
+- **Fields:** Use `bg-background` with `border-border`. 
+- **Focus State:** On focus, use `ring-1 ring-primary` and `border-primary`.
+- **Toggle/Valve:** Apply the `.variant-steampunk-valve` class for checkbox/switch inputs.
