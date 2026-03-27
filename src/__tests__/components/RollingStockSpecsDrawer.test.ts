@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
 import type { RailwayModelId, RollingStockId } from '$lib/bindings';
 
@@ -178,7 +178,7 @@ beforeEach(() => {
 describe('RollingStockSpecsDrawer', () => {
   describe('Field population (FR-022–FR-026)', () => {
     it('populates the series code field from getRailwayModelById response when opened', async () => {
-      const { container } = render(RollingStockSpecsDrawer, {
+      render(RollingStockSpecsDrawer, {
         props: {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
@@ -188,10 +188,7 @@ describe('RollingStockSpecsDrawer', () => {
       });
 
       // Wait for loadData to complete
-      await waitFor(() => {
-        const input = container.querySelector('#drawer-series-code') as HTMLInputElement;
-        expect(input?.value).toBe('E.656');
-      });
+      await screen.findByDisplayValue('E.656');
     });
 
     it('populates road number, livery, and depot fields from the mocked response', async () => {
@@ -204,14 +201,13 @@ describe('RollingStockSpecsDrawer', () => {
         }
       });
 
-      await waitFor(() => {
-        const roadNumber = container.querySelector('#drawer-road-number') as HTMLInputElement;
-        const livery = container.querySelector('#drawer-livery') as HTMLInputElement;
-        const depot = container.querySelector('#drawer-depot') as HTMLInputElement;
-        expect(roadNumber?.value).toBe('656 001');
-        expect(livery?.value).toBe('Verde FS');
-        expect(depot?.value).toBe('Milano Centrale');
-      });
+      await screen.findByDisplayValue('656 001');
+      expect((container.querySelector('#drawer-livery') as HTMLInputElement).value).toBe(
+        'Verde FS'
+      );
+      expect((container.querySelector('#drawer-depot') as HTMLInputElement).value).toBe(
+        'Milano Centrale'
+      );
     });
 
     it('populates technical specification selects from the mocked response', async () => {
@@ -226,16 +222,15 @@ describe('RollingStockSpecsDrawer', () => {
 
       // FormSelect renders as bits-ui Select.Trigger (button), not a native <select>.
       // Verify the trigger shows the correct label text for each populated field.
-      await waitFor(() => {
-        const flywheel = container.querySelector('#drawer-flywheel') as HTMLButtonElement;
-        const bodyShell = container.querySelector('#drawer-body-shell') as HTMLButtonElement;
-        const couplingSocket = container.querySelector(
-          '#drawer-coupling-socket'
-        ) as HTMLButtonElement;
-        expect(flywheel?.textContent?.trim()).toBe('Yes'); // 'YES' → true → label 'Yes'
-        expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast'); // 'METAL_DIE_CAST' → label
-        expect(couplingSocket?.textContent?.trim()).toBe('NEM 362'); // 'NEM_362' → label
-      });
+      await screen.findByDisplayValue('E.656'); // ensure loadData has completed
+      const flywheel = container.querySelector('#drawer-flywheel') as HTMLButtonElement;
+      const bodyShell = container.querySelector('#drawer-body-shell') as HTMLButtonElement;
+      const couplingSocket = container.querySelector(
+        '#drawer-coupling-socket'
+      ) as HTMLButtonElement;
+      expect(flywheel?.textContent?.trim()).toBe('Yes'); // 'YES' → true → label 'Yes'
+      expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast'); // 'METAL_DIE_CAST' → label
+      expect(couplingSocket?.textContent?.trim()).toBe('NEM 362'); // 'NEM_362' → label
     });
 
     it('renders all four sections (Identification, Technical, Control, Coupling)', async () => {
@@ -248,12 +243,11 @@ describe('RollingStockSpecsDrawer', () => {
         }
       });
 
-      await waitFor(() => {
-        expect(container.textContent).toContain('Identification');
-        expect(container.textContent).toContain('Technical');
-        expect(container.textContent).toContain('Control');
-        expect(container.textContent).toContain('Coupling');
-      });
+      await screen.findByDisplayValue('E.656'); // ensure loadData has completed
+      expect(container.textContent).toContain('Identification');
+      expect(container.textContent).toContain('Technical');
+      expect(container.textContent).toContain('Control');
+      expect(container.textContent).toContain('Coupling');
     });
   });
 
@@ -270,10 +264,7 @@ describe('RollingStockSpecsDrawer', () => {
       });
 
       // Wait for drawer to load
-      await waitFor(() => {
-        const input = container.querySelector('#drawer-series-code') as HTMLInputElement;
-        expect(input).not.toBeNull();
-      });
+      await screen.findByDisplayValue('E.656');
 
       // Modify a field to make the form dirty
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
@@ -285,10 +276,7 @@ describe('RollingStockSpecsDrawer', () => {
       await fireEvent.click(closeBtn);
 
       // Confirmation dialog should appear
-      await waitFor(() => {
-        expect(container.textContent).toContain('Unsaved Changes');
-        expect(container.textContent).toContain('Discard');
-      });
+      await screen.findByText('Unsaved Changes');
 
       // onClose should NOT have been called yet
       expect(onClose).not.toHaveBeenCalled();
@@ -306,9 +294,7 @@ describe('RollingStockSpecsDrawer', () => {
       });
 
       // Wait for drawer to load
-      await waitFor(() => {
-        expect(container.querySelector('#drawer-series-code')).not.toBeNull();
-      });
+      await screen.findByDisplayValue('E.656');
 
       // Make the form dirty
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
@@ -320,9 +306,7 @@ describe('RollingStockSpecsDrawer', () => {
       await fireEvent.click(closeBtn);
 
       // Wait for dialog to appear and click "Discard"
-      await waitFor(() => {
-        expect(container.textContent).toContain('Unsaved Changes');
-      });
+      await screen.findByText('Unsaved Changes');
 
       const discardBtn = Array.from(container.querySelectorAll('button')).find(
         (b) => b.textContent?.trim() === 'Discard'
@@ -343,9 +327,7 @@ describe('RollingStockSpecsDrawer', () => {
         }
       });
 
-      await waitFor(() => {
-        expect(container.querySelector('#drawer-series-code')).not.toBeNull();
-      });
+      await screen.findByDisplayValue('E.656');
 
       // Make dirty and trigger dirty-check dialog
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
@@ -355,9 +337,7 @@ describe('RollingStockSpecsDrawer', () => {
       const closeBtn = container.querySelector('[aria-label="close"]') as HTMLElement;
       await fireEvent.click(closeBtn);
 
-      await waitFor(() => {
-        expect(container.textContent).toContain('Unsaved Changes');
-      });
+      await screen.findByText('Unsaved Changes');
 
       // Click the "Cancel" button in the dialog (not the drawer's Cancel)
       const dialogCancelBtns = Array.from(container.querySelectorAll('button')).filter(
@@ -395,9 +375,7 @@ describe('RollingStockSpecsDrawer', () => {
       });
 
       // Wait for drawer to load
-      await waitFor(() => {
-        expect(container.querySelector('#drawer-series-code')).not.toBeNull();
-      });
+      await screen.findByDisplayValue('E.656');
 
       // Change a value so we have something to save
       const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
@@ -415,9 +393,7 @@ describe('RollingStockSpecsDrawer', () => {
       });
 
       // Inline error should be shown
-      await waitFor(() => {
-        expect(container.textContent).toContain('Failed to save. Please try again.');
-      });
+      await screen.findByText('Failed to save. Please try again.');
 
       // Drawer should still be open (onClose not called)
       expect(onClose).not.toHaveBeenCalled();
@@ -443,9 +419,7 @@ describe('RollingStockSpecsDrawer', () => {
         }
       });
 
-      await waitFor(() => {
-        expect(container.querySelector('#drawer-series-code')).not.toBeNull();
-      });
+      await screen.findByDisplayValue('E.656');
 
       const saveBtn = Array.from(container.querySelectorAll('button')).find(
         (b) => b.textContent?.includes('Save') && !b.disabled
@@ -472,9 +446,7 @@ describe('RollingStockSpecsDrawer', () => {
         }
       });
 
-      await waitFor(() => {
-        expect(container.querySelector('#drawer-series-code')).not.toBeNull();
-      });
+      await screen.findByDisplayValue('E.656');
 
       // Click the close button without making any changes
       const closeBtn = container.querySelector('[aria-label="close"]') as HTMLElement;

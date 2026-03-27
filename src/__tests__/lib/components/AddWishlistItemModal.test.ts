@@ -220,13 +220,8 @@ mockInvoke.mockImplementation(
  * Wait for the manufacturer Select.Trigger to appear (loading done),
  * click it to open the dropdown, then click the matching option.
  */
-async function selectManufacturer(name: string) {
-  const user = userEvent.setup();
-  // Wait for loading state to disappear
-  await waitFor(() => {
-    expect(screen.queryByText('Loading...')).toBeNull();
-  });
-  const trigger = screen.getByRole('button', { name: /^manufacturer/i });
+async function selectManufacturerWithUser(user: ReturnType<typeof userEvent.setup>, name: string) {
+  const trigger = await screen.findByRole('button', { name: /^manufacturer/i });
   await user.click(trigger);
   const item = await screen.findByRole('option', { name: new RegExp(name, 'i') });
   await user.click(item);
@@ -255,9 +250,7 @@ describe('AddWishlistItemDrawer', () => {
     render(AddWishlistItemDrawer, { props: defaultProps });
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /^manufacturer/i })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('button', { name: /^manufacturer/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
@@ -270,10 +263,8 @@ describe('AddWishlistItemDrawer', () => {
     const trigger = await screen.findByRole('button', { name: /select a wishlist/i });
     await user.click(trigger);
 
-    await waitFor(() => {
-      expect(screen.getByRole('option', { name: /my wishlist/i })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /future purchases/i })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('option', { name: /my wishlist/i })).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: /future purchases/i })).toBeInTheDocument();
   });
 
   it('should show validation error when manufacturer is missing', async () => {
@@ -292,7 +283,7 @@ describe('AddWishlistItemDrawer', () => {
     const user = userEvent.setup();
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
@@ -306,9 +297,9 @@ describe('AddWishlistItemDrawer', () => {
     const user = userEvent.setup();
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
-    await user.type(screen.getByLabelText(/product code/i), '37858');
+    await user.type(screen.getByLabelText(/product code/i), '1');
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
@@ -330,13 +321,13 @@ describe('AddWishlistItemDrawer', () => {
     });
 
     // Select manufacturer via shadcn Select
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
     // Fill product code
-    await user.type(screen.getByLabelText(/product code/i), '37858');
+    await user.type(screen.getByLabelText(/product code/i), '1');
 
     // Fill description
-    await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
+    await user.type(screen.getByLabelText(/description/i), 'a');
 
     // Submit
     await user.click(screen.getByRole('button', { name: /save/i }));
@@ -369,13 +360,13 @@ describe('AddWishlistItemDrawer', () => {
     render(AddWishlistItemDrawer, { props: defaultProps });
 
     // Enter new list name (fills wishlistId indirectly via newListName)
-    await user.type(screen.getByPlaceholderText('Or create new list'), 'New List');
+    await user.type(screen.getByPlaceholderText('Or create new list'), 'N');
 
     // Fill required fields
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
-    await user.type(screen.getByLabelText(/product code/i), '37858');
-    await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
+    await user.type(screen.getByLabelText(/product code/i), '1');
+    await user.type(screen.getByLabelText(/description/i), 'a');
 
     // Submit
     await user.click(screen.getByRole('button', { name: /save/i }));
@@ -399,12 +390,12 @@ describe('AddWishlistItemDrawer', () => {
 
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    await user.type(screen.getByPlaceholderText('Or create new list'), 'Duplicate Name');
+    await user.type(screen.getByPlaceholderText('Or create new list'), 'D');
 
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
-    await user.type(screen.getByLabelText(/product code/i), '37858');
-    await user.type(screen.getByLabelText(/description/i), 'Test Model');
+    await user.type(screen.getByLabelText(/product code/i), '1');
+    await user.type(screen.getByLabelText(/description/i), 'a');
 
     await user.click(screen.getByRole('button', { name: /save/i }));
 
@@ -420,10 +411,10 @@ describe('AddWishlistItemDrawer', () => {
 
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
-    await user.type(screen.getByLabelText(/product code/i), '37858');
-    await user.type(screen.getByLabelText(/description/i), 'Test Model');
+    await user.type(screen.getByLabelText(/product code/i), '1');
+    await user.type(screen.getByLabelText(/description/i), 'a');
 
     await user.click(screen.getByRole('button', { name: /save/i }));
 
@@ -435,14 +426,14 @@ describe('AddWishlistItemDrawer', () => {
   it('should disable buttons while submitting', async () => {
     const user = userEvent.setup();
 
-    tauriMock.mockCommandWithDelay('add_railway_model_to_wish_list', 200, null);
+    tauriMock.mockCommandWithDelay('add_railway_model_to_wish_list', 80, null);
 
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    await selectManufacturer('Märklin');
+    await selectManufacturerWithUser(user, 'Märklin');
 
-    await user.type(screen.getByLabelText(/product code/i), '37858');
-    await user.type(screen.getByLabelText(/description/i), 'Class 218 Diesel');
+    await user.type(screen.getByLabelText(/product code/i), '1');
+    await user.type(screen.getByLabelText(/description/i), 'a');
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
@@ -460,9 +451,7 @@ describe('AddWishlistItemDrawer', () => {
       props: { ...defaultProps, onClose }
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByLabelText(/product code/i)).toBeInTheDocument();
 
     // No changes made — close button should call onClose directly
     const closeButton = screen.getByRole('button', { name: /close/i });
@@ -478,11 +467,9 @@ describe('AddWishlistItemDrawer', () => {
       props: { ...defaultProps, onClose }
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByLabelText(/product code/i)).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/product code/i), 'test-value');
+    await user.type(screen.getByLabelText(/product code/i), 't');
 
     const closeButton = screen.getByRole('button', { name: /close/i });
     await user.click(closeButton);

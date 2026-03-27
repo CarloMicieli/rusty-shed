@@ -16,8 +16,7 @@ export const deserialize = vi.fn((data: string) => {
   }
 });
 
-export const enhance = vi.fn((form: HTMLFormElement, _options?: any) => {
-  console.log(`[Mock] enhance form:`, form.id || 'unnamed');
+export const enhance = vi.fn((_form: HTMLFormElement, _options?: any) => {
   return {
     destroy: vi.fn()
   };

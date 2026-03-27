@@ -217,10 +217,20 @@ describe('WishlistTableRow', () => {
   });
 
   it('renders without crashing when model fetch fails', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     vi.mocked(commands.getRailwayModelById).mockRejectedValueOnce(new Error('Network error'));
 
     const item = makeItem();
     expect(() => render(WishlistTableRow, { props: { item, wishlistId: 'wl-1' } })).not.toThrow();
+
+    await waitFor(() => {
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Failed to load model details for wishlist table row',
+        expect.any(Error)
+      );
+    });
+
+    warnSpy.mockRestore();
   });
 
   // ── Action buttons ──────────────────────────────────────────────────────────

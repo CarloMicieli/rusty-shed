@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
 import type { RailwayModel } from '$lib/types/railway-model';
 
@@ -275,19 +275,13 @@ describe('RailwayModelCard', () => {
     });
 
     it('shows "Change Image" when an image exists and editable=true', async () => {
-      const { container } = render(RailwayModelCard, {
+      render(RailwayModelCard, {
         props: { model: _mockModelMultiUnit, editable: true }
       });
 
       // blobUrl is set asynchronously after readFile resolves; wait for the
       // replace button that only appears once the image blob is loaded
-      const heroBtn = await waitFor(() => {
-        const btn = Array.from(container.querySelectorAll('.hero-section button')).find((b) =>
-          b.textContent?.includes('Change Image')
-        );
-        if (!btn) throw new Error('Change Image button not found');
-        return btn;
-      });
+      const heroBtn = await screen.findByRole('button', { name: /change image/i });
       expect(heroBtn).toBeTruthy();
     });
   });
@@ -323,11 +317,10 @@ describe('RailwayModelCard', () => {
       expect(hero).toBeTruthy();
 
       // blobUrl is set asynchronously after readFile resolves; select the primary (non-backdrop) img
-      const img = await waitFor(() => {
-        const el = container.querySelector('.hero-section img.object-contain');
-        if (!el) throw new Error('img not found');
-        return el;
-      });
+      await waitFor(() =>
+        expect(container.querySelector('.hero-section img.object-contain')).toBeTruthy()
+      );
+      const img = container.querySelector('.hero-section img.object-contain')!;
       expect(img).toBeTruthy();
 
       // primary image uses contain so the full model is always visible
@@ -420,14 +413,8 @@ describe('RailwayModelCard', () => {
       await fireEvent.drop(heroSection!, { dataTransfer });
 
       // The drop opens the ImageCropDialog — wait for the confirm button then click it
-      const confirmButton = await waitFor(() => {
-        const btn = Array.from(document.querySelectorAll('button')).find((b) =>
-          b.textContent?.includes('Confirm')
-        ) as HTMLButtonElement | undefined;
-        expect(btn).toBeTruthy();
-        expect(btn?.disabled).toBe(false);
-        return btn!;
-      });
+      const confirmButton = await screen.findByRole('button', { name: /confirm/i });
+      await waitFor(() => expect(confirmButton).not.toBeDisabled());
       await fireEvent.click(confirmButton);
 
       await waitFor(() => {

@@ -64,10 +64,8 @@ describe('WishlistSection', () => {
 
     await user.click(screen.getByRole('button', { name: /select a wishlist/i }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('option', { name: /my wishlist/i })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /future buys/i })).toBeInTheDocument();
-    });
+    await screen.findByRole('option', { name: /my wishlist/i });
+    expect(screen.getByRole('option', { name: /future buys/i })).toBeInTheDocument();
   });
 
   // ── Priority toggle ─────────────────────────────────────────────────────────
