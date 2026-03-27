@@ -79,7 +79,7 @@ async fn get_image_path(
                 ));
             }
 
-            let mut full_path = state.models_dir();
+            let mut full_path = state.models_dir().to_path_buf();
             full_path.push(id_path);
 
             // Ensure the file exists before returning the absolute path

@@ -134,7 +134,7 @@ pub async fn upload_model_image(
     // Get storage directory
     let models_dir = state.models_dir();
     debug!("Using models directory: {:?}", models_dir);
-    let storage = FileStorage::new(models_dir.clone()).map_err(map_storage_error)?;
+    let storage = FileStorage::new(models_dir.to_path_buf()).map_err(map_storage_error)?;
 
     // Execute use case
     let use_case = UploadModelImage::new(storage);
@@ -197,7 +197,7 @@ pub async fn upload_model_image_bytes(
 
     // Get storage directory
     let models_dir = state.models_dir();
-    let storage = FileStorage::new(models_dir.clone()).map_err(map_storage_error)?;
+    let storage = FileStorage::new(models_dir.to_path_buf()).map_err(map_storage_error)?;
 
     // Execute use case
     let use_case = UploadModelImageBytes::new(storage);
@@ -253,7 +253,7 @@ pub async fn delete_model_image(
 
     // Get storage directory
     let models_dir = state.models_dir();
-    let storage = FileStorage::new(models_dir.clone()).map_err(map_storage_error)?;
+    let storage = FileStorage::new(models_dir.to_path_buf()).map_err(map_storage_error)?;
 
     // Execute use case
     let use_case = DeleteModelImage::new(storage);

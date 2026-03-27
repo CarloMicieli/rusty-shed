@@ -1,9 +1,9 @@
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::data_management::application::ImportSessionStore;
+use parking_lot::RwLock;
 use sqlx::sqlite::SqlitePool;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Lightweight sync operation state stored independent of domain types.
@@ -30,18 +30,21 @@ pub struct SyncState {
 /// - `SqlitePool` itself is a cloneable handle to an internal pool and is
 ///   designed to be shared across threads. The `db_pool()` accessor clones the
 ///   handle for the caller.
+/// - Mutable fields use `parking_lot::RwLock` to allow concurrent reads for
+///   read-heavy operations (e.g., checking sync status, getting paths).
 pub struct AppState {
     initialized: AtomicBool,
     db_pool: SqlitePool,
-    models_dir: PathBuf,
-    /// Resolved path to the SQLite database file.
-    db_path: PathBuf,
+    /// Models directory path — immutable after initialization.
+    models_dir: Box<Path>,
+    /// Resolved path to the SQLite database file — immutable after initialization.
+    db_path: Box<Path>,
     /// Email of the currently connected Google account (None if not connected).
-    connected_email: Mutex<Option<String>>,
+    connected_email: RwLock<Option<String>>,
     /// Current cloud backup sync operation state.
-    sync_state: Mutex<SyncState>,
+    sync_state: RwLock<SyncState>,
     /// ISO 8601 timestamp of the last successful cloud backup sync.
-    last_sync_at: Mutex<Option<String>>,
+    last_sync_at: RwLock<Option<String>>,
     /// Active import sessions.
     pub import_session_store: ImportSessionStore,
 }
@@ -52,16 +55,16 @@ impl AppState {
         Self {
             initialized: AtomicBool::new(false),
             db_pool,
-            models_dir,
-            db_path,
-            connected_email: Mutex::new(None),
-            sync_state: Mutex::new(SyncState {
+            models_dir: models_dir.into_boxed_path(),
+            db_path: db_path.into_boxed_path(),
+            connected_email: RwLock::new(None),
+            sync_state: RwLock::new(SyncState {
                 operation_id: None,
                 is_syncing: false,
                 progress_percent: 0.0,
                 status_message: String::new(),
             }),
-            last_sync_at: Mutex::new(None),
+            last_sync_at: RwLock::new(None),
             import_session_store: ImportSessionStore::new(),
         }
     }
@@ -81,14 +84,14 @@ impl AppState {
         self.db_pool.clone()
     }
 
-    /// Return the configured models directory path.
-    pub fn models_dir(&self) -> PathBuf {
-        self.models_dir.clone()
+    /// Return a reference to the configured models directory path.
+    pub fn models_dir(&self) -> &Path {
+        &self.models_dir
     }
 
-    /// Return the resolved database file path.
-    pub fn db_path(&self) -> PathBuf {
-        self.db_path.clone()
+    /// Return a reference to the resolved database file path.
+    pub fn db_path(&self) -> &Path {
+        &self.db_path
     }
 
     /// Create a new `SqliteUnitOfWork` using the internal database pool.
@@ -100,23 +103,17 @@ impl AppState {
 
     /// Return the email of the currently connected Google account.
     pub fn connected_email(&self) -> Option<String> {
-        self.connected_email
-            .lock()
-            .expect("connected_email lock poisoned")
-            .clone()
+        self.connected_email.read().clone()
     }
 
     /// Set (or clear) the connected Google account email.
     pub fn set_connected_email(&self, email: Option<String>) {
-        *self
-            .connected_email
-            .lock()
-            .expect("connected_email lock poisoned") = email;
+        *self.connected_email.write() = email;
     }
 
     /// Return a snapshot of the current sync operation state.
     pub fn sync_state(&self) -> (Option<String>, bool, f32, String) {
-        let s = self.sync_state.lock().expect("sync_state lock poisoned");
+        let s = self.sync_state.read();
         (
             s.operation_id.clone(),
             s.is_syncing,
@@ -133,26 +130,50 @@ impl AppState {
         progress_percent: f32,
         status_message: impl Into<String>,
     ) {
-        let mut s = self.sync_state.lock().expect("sync_state lock poisoned");
+        let mut s = self.sync_state.write();
         s.operation_id = operation_id;
         s.is_syncing = is_syncing;
         s.progress_percent = progress_percent;
         s.status_message = status_message.into();
     }
 
+    /// Atomically update multiple fields of the sync state using a closure.
+    ///
+    /// The closure receives a mutable reference to `SyncState` and can modify
+    /// any combination of its fields in a single, lock-protected operation.
+    ///
+    /// Prefer this method over multiple separate calls to [`AppState::set_sync_state`]
+    /// when you need to change several fields at once without releasing the write
+    /// lock between individual field assignments. This prevents intermediate states
+    /// from being observed by concurrent readers.
+    ///
+    /// # Thread Safety
+    ///
+    /// This method acquires a `parking_lot::RwLock` write guard for the duration
+    /// of the closure. All other readers and writers are blocked until the closure
+    /// returns and the guard is dropped.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// state.update_sync_state(|s| {
+    ///     s.is_syncing = true;
+    ///     s.progress_percent = 50.0;
+    ///     s.status_message = "Uploading…".to_string();
+    /// });
+    /// ```
+    pub fn update_sync_state<F: FnOnce(&mut SyncState)>(&self, f: F) {
+        let mut s = self.sync_state.write();
+        f(&mut s);
+    }
+
     /// Return the ISO 8601 timestamp of the last successful cloud backup.
     pub fn last_sync_at(&self) -> Option<String> {
-        self.last_sync_at
-            .lock()
-            .expect("last_sync_at lock poisoned")
-            .clone()
+        self.last_sync_at.read().clone()
     }
 
     /// Set the last successful cloud backup timestamp.
     pub fn set_last_sync_at(&self, timestamp: Option<String>) {
-        *self
-            .last_sync_at
-            .lock()
-            .expect("last_sync_at lock poisoned") = timestamp;
+        *self.last_sync_at.write() = timestamp;
     }
 }
