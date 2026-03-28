@@ -71,10 +71,10 @@ pub async fn export_database(
 
     let destination = std::path::Path::new(&args.destination_path);
 
-    let result =
-        crate::data_management::application::export_database::export_database(&state.db_pool(), destination)
-            .await
-            .map_err(CommandError::from)?;
+    use crate::data_management::application::export_database::export_database as run_export;
+    let result = run_export(&state.db_pool(), destination)
+        .await
+        .map_err(CommandError::from)?;
 
     Ok(ExportDatabaseResponse {
         file_path: result.file_path,
@@ -118,10 +118,10 @@ pub async fn import_database(
         .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
         .join("database.sqlite");
 
-    let result =
-        crate::data_management::application::import_database::import_database(source, &db_path, &args.confirmation)
-            .await
-            .map_err(CommandError::from)?;
+    use crate::data_management::application::import_database::import_database as run_import;
+    let result = run_import(source, &db_path, &args.confirmation)
+        .await
+        .map_err(CommandError::from)?;
 
     Ok(ImportDatabaseResponse {
         file_path: result.file_path,
