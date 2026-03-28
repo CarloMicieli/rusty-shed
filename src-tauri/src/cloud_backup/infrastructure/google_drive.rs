@@ -155,7 +155,10 @@ impl GoogleDriveClient {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 
@@ -191,7 +194,10 @@ impl GoogleDriveClient {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 
@@ -236,7 +242,7 @@ impl GoogleDriveClient {
         }
     }
 
-    /// Simple upload for small files
+    /// Simple multipart upload for files under 5 MB
     async fn simple_upload(
         &self,
         folder_id: &str,
@@ -254,20 +260,47 @@ impl GoogleDriveClient {
             file_metadata["appProperties"] = props.clone();
         }
 
-        let client = reqwest::Client::new();
-        let response = client
-            .post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
+        // Build a multipart/related body as required by the Drive upload API
+        let boundary_uuid = uuid::Uuid::new_v4().simple().to_string();
+        let boundary = format!("boundary-{}", boundary_uuid);
+        let metadata_json = serde_json::to_string(&file_metadata).map_err(|e| {
+            CloudBackupError::DriveError(format!("Failed to serialize file metadata: {}", e))
+        })?;
+
+        let mut body: Vec<u8> = Vec::new();
+        body.extend_from_slice(
+            format!("--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n")
+                .as_bytes(),
+        );
+        body.extend_from_slice(metadata_json.as_bytes());
+        body.extend_from_slice(b"\r\n");
+        body.extend_from_slice(
+            format!("--{boundary}\r\nContent-Type: application/octet-stream\r\n\r\n").as_bytes(),
+        );
+        body.extend_from_slice(&file_data);
+        body.extend_from_slice(b"\r\n");
+        body.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
+
+        let response = self
+            .http_client
+            .post("https://www.googleapis.com/upload/drive/v3/files")
             .bearer_auth(&self.access_token)
-            .header("Content-Type", "application/json")
-            .json(&file_metadata)
-            .body(file_data)
+            .header(
+                "Content-Type",
+                format!("multipart/related; boundary={}", boundary),
+            )
+            .query(&[("uploadType", "multipart"), ("fields", "id,name,size")])
+            .body(body)
             .send()
             .await
             .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 
@@ -275,14 +308,35 @@ impl GoogleDriveClient {
             CloudBackupError::DriveError(format!("Failed to parse response: {}", e))
         })?;
 
+        let id = data["id"]
+            .as_str()
+            .ok_or_else(|| {
+                CloudBackupError::DriveError("No file ID in upload response".to_string())
+            })?
+            .to_string();
+
+        let name = data["name"]
+            .as_str()
+            .ok_or_else(|| {
+                CloudBackupError::DriveError("No file name in upload response".to_string())
+            })?
+            .to_string();
+
         Ok(UploadedFile {
-            id: data["id"].as_str().unwrap_or("").to_string(),
-            name: data["name"].as_str().unwrap_or("").to_string(),
+            id,
+            name,
             size: data["size"].as_u64().unwrap_or(0),
         })
     }
 
-    /// Resumable upload for large files
+    /// Resumable upload for files ≥ 5 MB
+    ///
+    /// Implements the Google Drive resumable upload protocol:
+    /// 1. Initiate the upload session and obtain an upload URL.
+    /// 2. Upload the full file content to that URL in a single PUT request.
+    ///
+    /// This approach is required by the Drive API for large files and avoids
+    /// multipart size limits.
     async fn resumable_upload(
         &self,
         folder_id: &str,
@@ -290,10 +344,100 @@ impl GoogleDriveClient {
         file_data: Vec<u8>,
         metadata: serde_json::Value,
     ) -> Result<UploadedFile> {
-        // For now, use simple upload
-        // TODO: Implement proper resumable upload with progress tracking
-        self.simple_upload(folder_id, file_name, file_data, metadata)
+        let mut file_metadata = json!({
+            "name": file_name,
+            "parents": [folder_id]
+        });
+
+        if let Some(props) = metadata.get("appProperties") {
+            file_metadata["appProperties"] = props.clone();
+        }
+
+        let file_size = file_data.len();
+
+        // Step 1: Initiate the resumable upload session
+        let init_response = self
+            .http_client
+            .post("https://www.googleapis.com/upload/drive/v3/files")
+            .bearer_auth(&self.access_token)
+            .header("X-Upload-Content-Type", "application/octet-stream")
+            .header("X-Upload-Content-Length", file_size.to_string())
+            .query(&[("uploadType", "resumable"), ("fields", "id,name,size")])
+            .json(&file_metadata)
+            .send()
             .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        if !init_response.status().is_success() {
+            let status = init_response.status().as_u16();
+            let error_text = init_response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+            return Err(extract_drive_error(status, &error_text));
+        }
+
+        let upload_url = init_response
+            .headers()
+            .get("location")
+            .ok_or_else(|| {
+                CloudBackupError::DriveError(
+                    "No upload URL in resumable upload initiation response".to_string(),
+                )
+            })?
+            .to_str()
+            .map_err(|e| CloudBackupError::DriveError(format!("Invalid upload URL header: {}", e)))?
+            .to_string();
+
+        // Step 2: Upload the full file in a single PUT request
+        let upload_response = self
+            .http_client
+            .put(&upload_url)
+            .header("Content-Type", "application/octet-stream")
+            .header("Content-Length", file_size.to_string())
+            .header(
+                "Content-Range",
+                format!("bytes 0-{}/{}", file_size - 1, file_size),
+            )
+            .body(file_data)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        if !upload_response.status().is_success() {
+            let status = upload_response.status().as_u16();
+            let error_text = upload_response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+            return Err(extract_drive_error(status, &error_text));
+        }
+
+        let data: serde_json::Value = upload_response.json().await.map_err(|e| {
+            CloudBackupError::DriveError(format!("Failed to parse upload response: {}", e))
+        })?;
+
+        let id = data["id"]
+            .as_str()
+            .ok_or_else(|| {
+                CloudBackupError::DriveError("No file ID in resumable upload response".to_string())
+            })?
+            .to_string();
+
+        let name = data["name"]
+            .as_str()
+            .ok_or_else(|| {
+                CloudBackupError::DriveError(
+                    "No file name in resumable upload response".to_string(),
+                )
+            })?
+            .to_string();
+
+        Ok(UploadedFile {
+            id,
+            name,
+            size: data["size"].as_u64().unwrap_or(0),
+        })
     }
 
     /// Download a file from Google Drive
@@ -320,7 +464,10 @@ impl GoogleDriveClient {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 
@@ -365,7 +512,10 @@ impl GoogleDriveClient {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 
@@ -416,7 +566,51 @@ impl GoogleDriveClient {
 
         if !response.status().is_success() && response.status().as_u16() != 404 {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+            return Err(extract_drive_error(status, &error_text));
+        }
+
+        Ok(())
+    }
+
+    /// Rename a file in Google Drive
+    ///
+    /// Updates the display name of a file using the Drive Files.update endpoint.
+    /// Used by the stage-and-commit upload pattern to atomically promote a
+    /// temporary upload to its final name.
+    ///
+    /// # Arguments
+    /// * `file_id` - ID of file to rename
+    /// * `new_name` - New display name for the file
+    ///
+    /// # Returns
+    /// * `Ok(())` - File renamed successfully
+    /// * `Err(CloudBackupError)` - If rename fails
+    pub async fn rename_file(&self, file_id: &str, new_name: &str) -> Result<()> {
+        let body = json!({ "name": new_name });
+
+        let response = self
+            .http_client
+            .patch(format!(
+                "https://www.googleapis.com/drive/v3/files/{}",
+                file_id
+            ))
+            .bearer_auth(&self.access_token)
+            .query(&[("fields", "id,name")])
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
+
+        if !response.status().is_success() {
+            let status = response.status().as_u16();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 
@@ -457,7 +651,10 @@ impl GoogleDriveClient {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response.text().await.unwrap_or_default();
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| CloudBackupError::NetworkError(e.to_string()))?;
             return Err(extract_drive_error(status, &error_text));
         }
 

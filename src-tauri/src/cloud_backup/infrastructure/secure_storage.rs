@@ -218,11 +218,11 @@ impl SecureStorage for StrongholdStorage {
 
     async fn delete_tokens(&self, _user_id: &str) -> Result<()> {
         // TODO: Implement stronghold deletion
-        Ok(())
+        Err(CloudBackupError::NotImplemented)
     }
 
     async fn has_tokens(&self, _user_id: &str) -> Result<bool> {
-        Ok(false)
+        Err(CloudBackupError::NotImplemented)
     }
 }
 

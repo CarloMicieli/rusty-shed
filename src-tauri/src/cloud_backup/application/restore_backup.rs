@@ -3,14 +3,12 @@ use crate::cloud_backup::application::operation_lock::{OperationType, try_acquir
 use crate::cloud_backup::domain::{
     CloudBackupError, RestoreCompleteEvent, Result, dtos::RestoreBackupArgs,
 };
-use crate::cloud_backup::infrastructure::{
-    google_drive::GoogleDriveClient, is_online, oauth_service::OAuthService,
-    secure_storage::SecureStorage,
-};
+use crate::cloud_backup::infrastructure::{DriveClient, is_online};
 use chrono::Utc;
 use flate2::read::GzDecoder;
 use std::io::Read;
 use std::path::Path;
+use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 
 /// SQLite database file magic bytes (the string "SQLite format 3\000")
@@ -30,10 +28,7 @@ const SQLITE_MAGIC: &[u8] = b"SQLite format 3\x00";
 pub async fn restore_backup(
     args: RestoreBackupArgs,
     db_path: &Path,
-    client_id: &str,
-    oauth_service: &OAuthService,
-    storage: &dyn SecureStorage,
-    user_email: &str,
+    drive_client: Arc<dyn DriveClient + Send + Sync>,
     app: AppHandle,
 ) -> Result<()> {
     // T078: Acquire operation lock to prevent concurrent restores
@@ -47,24 +42,6 @@ pub async fn restore_backup(
     if !is_online().await {
         return Err(CloudBackupError::OfflineError);
     }
-
-    // Get access token
-    let tokens = storage
-        .retrieve_tokens(user_email)
-        .await?
-        .ok_or(CloudBackupError::NotConnected)?;
-
-    // Refresh if expired
-    let access_token = if tokens.is_expired() {
-        let refreshed = oauth_service.refresh_token(user_email).await?;
-        storage.store_tokens(user_email, &refreshed).await?;
-        refreshed.access_token_str().to_string()
-    } else {
-        tokens.access_token_str().to_string()
-    };
-
-    // Create Drive client
-    let drive_client = GoogleDriveClient::new(client_id.to_string(), access_token);
 
     // Download backup file
     let compressed_data = drive_client.download_file(&args.backup_id).await?;
