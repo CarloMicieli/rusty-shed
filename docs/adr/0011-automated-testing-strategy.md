@@ -1,6 +1,6 @@
 # ADR 11: Automated Testing Strategy for the Rust Backend
 
-Status: Proposed
+Status: Accepted
 
 Date: 2026-03-28
 
@@ -8,7 +8,7 @@ Deciders: Project Lead
 
 ## Context and Problem Statement
 
-The model railway collection management app is built with Tauri 2, Svelte 5 Runes, and a Rust backend following Clean Architecture (Hexagonal / Ports and Adapters). As the codebase grows, we need a clear, layered testing strategy that:
+The model railway collection management app is built with Tauri 2, Svelte 5 Runes, and a Rust backend following Clean Architecture. As the codebase grows, we need a clear, layered testing strategy that:
 
 1. Ensures high confidence in **Domain Logic** (e.g., scale conversions, inventory valuations).
 2. Verifies **Persistence** (SQLx / SQLite) without bloating test runtimes.
@@ -28,7 +28,7 @@ Without a defined strategy, test coverage will be inconsistent, slow, and tightl
 
 1. **Ad-hoc Tests Only:** Write tests wherever convenient with no layering strategy.
 2. **End-to-End Tests Only:** Use WebDriver / Playwright to exercise the full Tauri app.
-3. **Layered Testing Pyramid (Hexagonal / Clean Architecture):** Align test types with architectural layers.
+3. **Layered Testing Pyramid (Clean Architecture):** Align test types with architectural layers.
 
 ## Decision Outcome
 
@@ -39,7 +39,7 @@ Chosen option: **Option 3: Layered Testing Pyramid**, because it mirrors the Cle
 - **Good:** Fast feedback loop — 90% of tests (Domain + Application) run without a database.
 - **Good:** Database tests are isolated and do not leak state between runs (via `#[sqlx::test]`).
 - **Good:** Changing a database schema only breaks Infrastructure tests, leaving Use Case tests stable.
-- **Bad:** Requires maintaining Repository traits (Ports) for all external dependencies, which adds some boilerplate.
+- **Bad:** Requires maintaining Repository traits for all external dependencies, which adds some boilerplate.
 - **Bad:** Managing `sqlx::test` requires the `DATABASE_URL` to be available during `cargo test` (or using a temporary file).
 - **Neutral:** Testing the Interface layer can be tricky because it often requires mocking `tauri::AppHandle` if commands emit events.
 
@@ -57,7 +57,7 @@ Chosen option: **Option 3: Layered Testing Pyramid**, because it mirrors the Cle
 - **Pros:** Tests the full user journey, catching integration problems.
 - **Cons:** Very slow; tests are brittle and expensive to maintain; provides no isolation for debugging failures in business logic.
 
-### Option 3: Layered Testing Pyramid (Hexagonal / Clean Architecture)
+### Option 3: Layered Testing Pyramid (Clean Architecture)
 
 - **Pros:** Fast, focused tests for each layer; failures are easy to localise; Domain logic is fully exercised without infrastructure concerns.
 - **Cons:** More initial setup (traits, mocks, test utilities); requires discipline to keep each layer's tests within their scope.
@@ -100,11 +100,11 @@ mod tests {
 
 - **Test type:** Integration Tests (Logic).
 - **Tooling:** `mockall` for trait mocking; `#[tokio::test]` for async use cases.
-- **Strategy:** Test Use Cases in isolation by mocking the Repository traits (Ports). This allows verifying complex scenarios (e.g., "Database is down" or "Item not found") without a real database.
+- **Strategy:** Test Use Cases in isolation by mocking the Repository traits. This allows verifying complex scenarios (e.g., "Database is down" or "Item not found") without a real database.
 - **Focus:** Ensuring the orchestration flow is correct. Example: when a user adds a locomotive, the Use Case must first check whether the ID exists, then call the Repository `save` method.
 
 ```rust
-// The Port (Trait)
+// The Repository Trait
 #[mockall::automock]
 pub trait LocomotiveRepository {
     async fn save(&self, loco: Locomotive) -> Result<(), RepoError>;
