@@ -12,3 +12,4 @@
 | 0008 | Standardize Tauri Command and Use Case Data Structures        | ✅ Accepted | 2026-01-23 |
 | 0009 | Localized Data Management and Full-Text Search Strategy       | ✅ Accepted | 2026-01-24 |
 | 0010 | Enforce Strongly Typed Command Arguments                      | ✅ Accepted | 2026-03-01 |
+| 0011 | Automated Testing Strategy for the Rust Backend               | 🔵 Proposed | 2026-03-28 |
