@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
+import RailwayModelPreviewCard, {
+  type ModelCategory
+} from '$lib/components/RailwayModelPreviewCard.svelte';
 
 // Mock Paraglide messages
 vi.mock('$lib/paraglide/messages.js', () => ({
@@ -217,7 +219,12 @@ describe('RailwayModelPreviewCard', () => {
 
   describe('User Story 3: Category Placeholder Icons', () => {
     it('displays placeholder SVG icon for various categories (steam, electric, wagon, unknown)', () => {
-      for (const category of ['SteamLocomotive', 'ElectricLocomotive', 'Wagon', 'Unknown']) {
+      for (const category of [
+        'SteamLocomotive',
+        'ElectricLocomotive',
+        'Wagon',
+        'Unknown'
+      ] as ModelCategory[]) {
         const { container, unmount } = render(RailwayModelPreviewCard, {
           props: { model: { ...mockModel, category, photoUrl: null } }
         });
