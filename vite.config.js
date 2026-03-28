@@ -7,7 +7,6 @@ import { sveltekit } from '@sveltejs/kit/vite';
 const host = typeof process !== 'undefined' ? process.env?.TAURI_DEV_HOST : undefined;
 
 // https://vite.dev/config/
-/** @type {import('vite').UserConfigExport & { test?: any }} */
 export default defineConfig({
   plugins: [
     paraglideVitePlugin({ project: './project.inlang', outdir: './src/paraglide' }),
@@ -19,10 +18,8 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       output: {
-        manualChunks: {
-          // Split large icon library into separate chunk
-          lucide: ['lucide-svelte']
-        }
+        // Split large icon library into separate chunk
+        manualChunks: (id) => (id.includes('lucide-svelte') ? 'lucide' : undefined)
       }
     },
     // Reduce chunk size warning threshold
@@ -56,7 +53,6 @@ export default defineConfig({
     }
   },
 
-  // @ts-expect-error -- vitest test config (not part of Vite's strict UserConfigExport typings)
   test: {
     expect: { requireAssertions: true },
 
