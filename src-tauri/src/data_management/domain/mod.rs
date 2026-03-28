@@ -17,3 +17,7 @@ pub use result::*;
 pub use session::*;
 pub use validation_error::*;
 pub use warning::*;
+
+pub mod backup_errors;
+pub mod backup_validation;
+pub use backup_errors::DatabaseBackupError;
