@@ -213,7 +213,7 @@ pub async fn execute_import(
     let use_case = ExecuteImportUseCase::new(repo);
     let media_dir = state.models_dir();
     let result = use_case
-        .execute(&session, &manifest, &session.source_path, &media_dir)
+        .execute(&session, &manifest, &session.source_path, media_dir)
         .await
         .map_err(CommandError::from)?;
 

@@ -177,14 +177,9 @@ pub async fn cloud_backup_sync_now(
     let state_ref = state.inner();
 
     // Wire progress via app event — sync_backup emits events directly
-    let result = application::sync_backup(
-        &app,
-        &db_pool,
-        &db_path,
-        client,
-        &state.import_session_store,
-    )
-    .await;
+    let result =
+        application::sync_backup(&app, &db_pool, db_path, client, &state.import_session_store)
+            .await;
 
     match &result {
         Ok(item) => {

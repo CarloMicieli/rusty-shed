@@ -37,7 +37,7 @@ pub async fn get_dashboard_summary(
     let dashboard_summary = GetDashboardSummary::execute(
         &mut unit_of_work,
         number_of_recent_items,
-        state.models_dir(),
+        state.models_dir().to_path_buf(),
     )
     .await?;
 
