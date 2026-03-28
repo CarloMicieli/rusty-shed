@@ -10,13 +10,13 @@
 
 :root {
   /* Body/UI Font */
-  --font-family-body: 'Courier Prime', 'Courier New', monospace;
+  --font-family-body: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Heading Font */
-  --font-family-heading: 'Zilla Slab Bold', 'Georgia', serif;
+  --font-family-heading: 'Bebas Neue', sans-serif;
 
-  /* Accent/Decorative Font */
-  --font-family-accent: 'Spectral', 'Georgia', serif;
+  /* Monospace / Code Font */
+  --font-family-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   /* Parchment texture for light theme - aged paper effect */
   --texture-parchment: repeating-linear-gradient(
@@ -45,31 +45,48 @@
    Variant Component Classes - Steampunk Styling
    ============================================================================ */
 
-/* Riveted Panel - adds corner rivets for mechanical appearance */
+/* Riveted Panel - adds corner rivets for mechanical appearance using a single ::before */
 .variant-steampunk-riveted {
   position: relative;
   background-clip: padding-box;
 }
 
-.variant-steampunk-riveted::before,
-.variant-steampunk-riveted::after {
+.variant-steampunk-riveted::before {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.3));
-  border: 1px solid currentColor;
-}
-
-.variant-steampunk-riveted::before {
-  top: 8px;
-  left: 8px;
-}
-
-.variant-steampunk-riveted::after {
-  top: 8px;
-  right: 8px;
+  inset: 0;
+  pointer-events: none;
+  /* Four corner rivets: top-left, top-right, bottom-left, bottom-right */
+  background-image:
+    radial-gradient(
+      circle 5px at 13px 13px,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(0, 0, 0, 0.35) 85%,
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    radial-gradient(
+      circle 5px at calc(100% - 13px) 13px,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(0, 0, 0, 0.35) 85%,
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    radial-gradient(
+      circle 5px at 13px calc(100% - 13px),
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(0, 0, 0, 0.35) 85%,
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    radial-gradient(
+      circle 5px at calc(100% - 13px) calc(100% - 13px),
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(0, 0, 0, 0.35) 85%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+  background-repeat: no-repeat;
 }
 
 /* Brass variant - warm metallic accent styling */
@@ -81,7 +98,7 @@
 /* Copper variant - burnished copper accent styling */
 .variant-steampunk-copper {
   border-color: var(--color-copper-600, #cd7f32);
-  color: var(--color-copper-700, #b67325);
+  color: var(--color-copper-700, #a86428);
 }
 
 /* Lever button styling - mechanical press effect */
@@ -90,7 +107,7 @@
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 2px solid currentColor;
+  border: 2px solid var(--border, currentColor);
 }
 
 .variant-steampunk-lever:active {
@@ -118,12 +135,12 @@
 /* Pressure gauge styling - circular indicator */
 .variant-steampunk-gauge {
   border-radius: 50%;
-  border: 3px solid currentColor;
+  border: 3px solid var(--border, currentColor);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-family: var(--font-family-accent);
+  font-family: var(--font-family-heading);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -136,7 +153,7 @@
   background: var(--color-surface-500, #666);
   border-radius: 12px;
   cursor: pointer;
-  border: 1px solid currentColor;
+  border: 1px solid var(--border, currentColor);
   transition: background 0.3s ease;
 }
 
@@ -159,7 +176,7 @@
 
 /* Focus state for accessibility */
 .variant-steampunk-focus {
-  outline: 3px solid var(--color-primary-500);
+  outline: 3px solid var(--ring, var(--color-primary-500));
   outline-offset: 2px;
 }
 
@@ -190,8 +207,7 @@
   }
 
   /* Hide rivets on mobile for cleaner appearance */
-  .variant-steampunk-riveted::before,
-  .variant-steampunk-riveted::after {
+  .variant-steampunk-riveted::before {
     display: none;
   }
 }
@@ -215,10 +231,29 @@
 
 /* High contrast mode support */
 @media (prefers-contrast: more) {
-  .variant-steampunk-riveted::before,
-  .variant-steampunk-riveted::after {
-    background: var(--color-surface-900);
-    border: 2px solid var(--color-surface-900);
+  .variant-steampunk-riveted::before {
+    /* Solid rivet circles for high-contrast mode */
+    background-image:
+      radial-gradient(
+        circle 5px at 13px 13px,
+        var(--color-surface-900, #1a1a1b) 100%,
+        transparent 100%
+      ),
+      radial-gradient(
+        circle 5px at calc(100% - 13px) 13px,
+        var(--color-surface-900, #1a1a1b) 100%,
+        transparent 100%
+      ),
+      radial-gradient(
+        circle 5px at 13px calc(100% - 13px),
+        var(--color-surface-900, #1a1a1b) 100%,
+        transparent 100%
+      ),
+      radial-gradient(
+        circle 5px at calc(100% - 13px) calc(100% - 13px),
+        var(--color-surface-900, #1a1a1b) 100%,
+        transparent 100%
+      );
   }
 
   .variant-steampunk-lever {

@@ -189,8 +189,13 @@
   --popover: hsl(42 43% 83%);
   --popover-foreground: hsl(35 27% 13%);
 
-  --primary: hsl(44 88% 38%); /* Burnished Brass #B8860B */
+  --primary: hsl(44 88% 38%); /* Burnished Brass #B8860B — interactive elements */
   --primary-foreground: hsl(44 58% 89%);
+
+  /* --primary-text: deeper burnished brass for heading/body text on parchment.
+     Contrast ratio ≈ 5:1 vs --background (hsl 44 60% 94%) — meets WCAG AA (4.5:1).
+     Use this for color: on headings instead of --primary. */
+  --primary-text: hsl(44 92% 26%); /* ~#7F5F05 */
 
   --secondary: hsl(36 31% 77%); /* Faded Linen     #dcc9ac */
   --secondary-foreground: hsl(35 27% 13%);
