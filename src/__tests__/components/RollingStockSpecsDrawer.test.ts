@@ -177,8 +177,8 @@ beforeEach(() => {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 describe('RollingStockSpecsDrawer', () => {
   describe('Field population (FR-022–FR-026)', () => {
-    it('populates the series code field from getRailwayModelById response when opened', async () => {
-      render(RollingStockSpecsDrawer, {
+    it('populates all identification fields and all four sections from getRailwayModelById response', async () => {
+      const { container } = render(RollingStockSpecsDrawer, {
         props: {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
@@ -189,61 +189,29 @@ describe('RollingStockSpecsDrawer', () => {
 
       // Wait for loadData to complete
       await screen.findByDisplayValue('E.656');
-    });
 
-    it('populates road number, livery, and depot fields from the mocked response', async () => {
-      const { container } = render(RollingStockSpecsDrawer, {
-        props: {
-          open: true,
-          railwayModelId: RAILWAY_MODEL_ID,
-          rollingStockId: ROLLING_STOCK_ID,
-          onClose: vi.fn()
-        }
-      });
-
-      await screen.findByDisplayValue('656 001');
-      expect((container.querySelector('#drawer-livery') as HTMLInputElement).value).toBe(
+      // Road number, livery, depot
+      expect((container.querySelector('#drawer-road-number') as HTMLInputElement)?.value).toBe(
+        '656 001'
+      );
+      expect((container.querySelector('#drawer-livery') as HTMLInputElement)?.value).toBe(
         'Verde FS'
       );
-      expect((container.querySelector('#drawer-depot') as HTMLInputElement).value).toBe(
+      expect((container.querySelector('#drawer-depot') as HTMLInputElement)?.value).toBe(
         'Milano Centrale'
       );
-    });
 
-    it('populates technical specification selects from the mocked response', async () => {
-      const { container } = render(RollingStockSpecsDrawer, {
-        props: {
-          open: true,
-          railwayModelId: RAILWAY_MODEL_ID,
-          rollingStockId: ROLLING_STOCK_ID,
-          onClose: vi.fn()
-        }
-      });
-
-      // FormSelect renders as bits-ui Select.Trigger (button), not a native <select>.
-      // Verify the trigger shows the correct label text for each populated field.
-      await screen.findByDisplayValue('E.656'); // ensure loadData has completed
+      // Technical spec selects
       const flywheel = container.querySelector('#drawer-flywheel') as HTMLButtonElement;
       const bodyShell = container.querySelector('#drawer-body-shell') as HTMLButtonElement;
       const couplingSocket = container.querySelector(
         '#drawer-coupling-socket'
       ) as HTMLButtonElement;
-      expect(flywheel?.textContent?.trim()).toBe('Yes'); // 'YES' → true → label 'Yes'
-      expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast'); // 'METAL_DIE_CAST' → label
-      expect(couplingSocket?.textContent?.trim()).toBe('NEM 362'); // 'NEM_362' → label
-    });
+      expect(flywheel?.textContent?.trim()).toBe('Yes');
+      expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast');
+      expect(couplingSocket?.textContent?.trim()).toBe('NEM 362');
 
-    it('renders all four sections (Identification, Technical, Control, Coupling)', async () => {
-      const { container } = render(RollingStockSpecsDrawer, {
-        props: {
-          open: true,
-          railwayModelId: RAILWAY_MODEL_ID,
-          rollingStockId: ROLLING_STOCK_ID,
-          onClose: vi.fn()
-        }
-      });
-
-      await screen.findByDisplayValue('E.656'); // ensure loadData has completed
+      // All four sections visible
       expect(container.textContent).toContain('Identification');
       expect(container.textContent).toContain('Technical');
       expect(container.textContent).toContain('Control');
@@ -358,7 +326,7 @@ describe('RollingStockSpecsDrawer', () => {
   });
 
   describe('FR-028: Save failure keeps drawer open with values preserved', () => {
-    it('shows inline error and keeps drawer open when updateRollingStockSpecifications rejects', async () => {
+    it('shows inline error, keeps drawer open, and preserves values when updateRollingStockSpecifications rejects', async () => {
       vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue({
         status: 'error',
         error: { kind: 'validation', message: 'series_code required' }
@@ -401,36 +369,6 @@ describe('RollingStockSpecsDrawer', () => {
       // Entered values should be preserved in the form
       const stillVisible = container.querySelector('#drawer-series-code') as HTMLInputElement;
       expect(stillVisible?.value).toBe('E.646');
-    });
-
-    it('does not close the drawer when save fails — onClose is NOT called', async () => {
-      vi.mocked(commands.updateRollingStockSpecifications).mockResolvedValue({
-        status: 'error',
-        error: { kind: 'database', message: 'connection lost' }
-      } as never);
-
-      const onClose = vi.fn();
-      const { container } = render(RollingStockSpecsDrawer, {
-        props: {
-          open: true,
-          railwayModelId: RAILWAY_MODEL_ID,
-          rollingStockId: ROLLING_STOCK_ID,
-          onClose
-        }
-      });
-
-      await screen.findByDisplayValue('E.656');
-
-      const saveBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent?.includes('Save') && !b.disabled
-      ) as HTMLElement;
-      await fireEvent.click(saveBtn);
-
-      await waitFor(() => {
-        expect(commands.updateRollingStockSpecifications).toHaveBeenCalled();
-      });
-
-      expect(onClose).not.toHaveBeenCalled();
     });
   });
 

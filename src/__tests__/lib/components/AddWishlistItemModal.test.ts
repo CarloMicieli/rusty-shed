@@ -246,7 +246,8 @@ describe('AddWishlistItemDrawer', () => {
     await activeService.fetchWishlists();
   });
 
-  it('should render modal with title and form fields', async () => {
+  it('should render modal with title, form fields, and available wishlists', async () => {
+    const user = userEvent.setup();
     render(AddWishlistItemDrawer, { props: defaultProps });
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
@@ -254,56 +255,34 @@ describe('AddWishlistItemDrawer', () => {
     expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
-  });
-
-  it('should display available wishlists in dropdown', async () => {
-    const user = userEvent.setup();
-    render(AddWishlistItemDrawer, { props: defaultProps });
 
     const trigger = await screen.findByRole('button', { name: /select a wishlist/i });
     await user.click(trigger);
-
     expect(await screen.findByRole('option', { name: /my wishlist/i })).toBeInTheDocument();
-    expect(await screen.findByRole('option', { name: /future purchases/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /future purchases/i })).toBeInTheDocument();
   });
 
-  it('should show validation error when manufacturer is missing', async () => {
+  it('should show all validation errors in sequence (manufacturer → product code → description)', async () => {
     const user = userEvent.setup();
     render(AddWishlistItemDrawer, { props: defaultProps });
 
+    // 1. Missing manufacturer
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
-
     await waitFor(() => {
       expect(screen.getByText('Please select a manufacturer')).toBeInTheDocument();
     });
-  });
 
-  it('should show validation error when product code is missing', async () => {
-    const user = userEvent.setup();
-    render(AddWishlistItemDrawer, { props: defaultProps });
-
+    // 2. After selecting manufacturer, missing product code
     await selectManufacturerWithUser(user, 'Märklin');
-
-    const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
-
     await waitFor(() => {
       expect(screen.getByText('Please enter a product code')).toBeInTheDocument();
     });
-  });
 
-  it('should show validation error when description is missing', async () => {
-    const user = userEvent.setup();
-    render(AddWishlistItemDrawer, { props: defaultProps });
-
-    await selectManufacturerWithUser(user, 'Märklin');
-
+    // 3. After filling product code, missing description
     await user.type(screen.getByLabelText(/product code/i), '1');
-
-    const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
-
     await waitFor(() => {
       expect(screen.getByText('Please enter a description')).toBeInTheDocument();
     });

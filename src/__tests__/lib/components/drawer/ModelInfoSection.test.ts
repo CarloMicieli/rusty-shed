@@ -54,19 +54,12 @@ describe('ModelInfoSection', () => {
     vi.clearAllMocks();
   });
 
-  // ── Section header ──────────────────────────────────────────────────────────
+  // ── Section header & all fields render ─────────────────────────────────────
 
-  it('renders section header label', () => {
+  it('renders section header and all required field labels', () => {
     render(ModelInfoSection, { props: defaultProps });
+
     expect(screen.getByText('Model Details')).toBeInTheDocument();
-  });
-
-  // ── All fields render ───────────────────────────────────────────────────────
-
-  it('renders all required field labels', () => {
-    render(ModelInfoSection, { props: defaultProps });
-
-    // "Manufacturer" appears as both a label span and button aria-label — check ≥1 element exists
     expect(screen.getAllByText(/manufacturer/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
@@ -78,108 +71,77 @@ describe('ModelInfoSection', () => {
 
   // ── Loading state ────────────────────────────────────────────────────────────
 
-  it('shows loading text when isLoading=true', () => {
-    render(ModelInfoSection, { props: { ...defaultProps, isLoading: true } });
+  it('shows loading text when isLoading=true; shows manufacturer select when false', () => {
+    const { unmount } = render(ModelInfoSection, { props: { ...defaultProps, isLoading: true } });
     expect(screen.getByText('Loading...')).toBeInTheDocument();
-  });
+    unmount();
 
-  it('shows manufacturer select when isLoading=false', () => {
     render(ModelInfoSection, { props: { ...defaultProps, isLoading: false } });
     expect(screen.queryByText('Loading...')).toBeNull();
-    // Manufacturer trigger button should be visible
     expect(screen.getByRole('button', { name: /manufacturer/i })).toBeInTheDocument();
   });
 
   // ── Scale display with ratio ─────────────────────────────────────────────────
 
-  it('shows scale ratio annotation in trigger (H0 → H0 (1:87))', async () => {
-    render(ModelInfoSection, { props: { ...defaultProps, scale: 'H0' } });
-    // The trigger should display the scale with ratio
+  it('shows scale ratio annotation for H0, N, and Z', () => {
+    const { unmount } = render(ModelInfoSection, { props: { ...defaultProps, scale: 'H0' } });
     expect(screen.getByText('H0 (1:87)')).toBeInTheDocument();
-  });
+    unmount();
 
-  it('shows N scale ratio annotation (N → N (1:160))', async () => {
-    render(ModelInfoSection, { props: { ...defaultProps, scale: 'N' } });
+    const { unmount: u2 } = render(ModelInfoSection, { props: { ...defaultProps, scale: 'N' } });
     expect(screen.getByText('N (1:160)')).toBeInTheDocument();
-  });
+    u2();
 
-  it('shows Z scale ratio annotation (Z → Z (1:220))', async () => {
     render(ModelInfoSection, { props: { ...defaultProps, scale: 'Z' } });
     expect(screen.getByText('Z (1:220)')).toBeInTheDocument();
   });
 
-  // ── Category labels ─────────────────────────────────────────────────────────
+  // ── Category / power method labels ─────────────────────────────────────────
 
-  it('shows Paraglide category label for selected category', () => {
-    render(ModelInfoSection, { props: { ...defaultProps, category: 'LOCOMOTIVES' } });
+  it('shows Paraglide labels for category and power method', () => {
+    const { unmount } = render(ModelInfoSection, {
+      props: { ...defaultProps, category: 'LOCOMOTIVES' }
+    });
     expect(screen.getByText('Locomotives')).toBeInTheDocument();
-  });
+    unmount();
 
-  it('shows Paraglide power method label for selected method', () => {
     render(ModelInfoSection, { props: { ...defaultProps, powerMethod: 'AC' } });
     expect(screen.getByText('AC')).toBeInTheDocument();
   });
 
   // ── Text input bindings ──────────────────────────────────────────────────────
 
-  it('product code input reflects initial value', () => {
-    render(ModelInfoSection, { props: { ...defaultProps, productCode: '37858' } });
+  it('product code and description inputs reflect initial values', () => {
+    render(ModelInfoSection, {
+      props: { ...defaultProps, productCode: '37858', description: 'BR 218' }
+    });
     expect(screen.getByLabelText(/product code/i)).toHaveValue('37858');
-  });
-
-  it('description input reflects initial value', () => {
-    render(ModelInfoSection, { props: { ...defaultProps, description: 'BR 218' } });
     expect(screen.getByLabelText(/description/i)).toHaveValue('BR 218');
   });
 
-  // ── Error messages ───────────────────────────────────────────────────────────
+  // ── Error messages (all in one render) ───────────────────────────────────────
 
-  it('displays productCode error when provided', () => {
+  it('displays all field errors when provided', () => {
     render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { productCode: 'Product code is required' } }
+      props: {
+        ...defaultProps,
+        errors: {
+          productCode: 'Product code is required',
+          description: 'Description is required',
+          manufacturerId: 'Please select a manufacturer',
+          category: 'Category is required',
+          scale: 'Scale is required',
+          powerMethod: 'Power method is required',
+          epoch: 'Epoch is required'
+        }
+      }
     });
     expect(screen.getByText('Product code is required')).toBeInTheDocument();
-  });
-
-  it('displays description error when provided', () => {
-    render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { description: 'Description is required' } }
-    });
     expect(screen.getByText('Description is required')).toBeInTheDocument();
-  });
-
-  it('displays manufacturerId error when provided', () => {
-    render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { manufacturerId: 'Please select a manufacturer' } }
-    });
     expect(screen.getByText('Please select a manufacturer')).toBeInTheDocument();
-  });
-
-  it('displays category error when provided', () => {
-    render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { category: 'Category is required' } }
-    });
     expect(screen.getByText('Category is required')).toBeInTheDocument();
-  });
-
-  it('displays scale error when provided', () => {
-    render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { scale: 'Scale is required' } }
-    });
     expect(screen.getByText('Scale is required')).toBeInTheDocument();
-  });
-
-  it('displays powerMethod error when provided', () => {
-    render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { powerMethod: 'Power method is required' } }
-    });
     expect(screen.getByText('Power method is required')).toBeInTheDocument();
-  });
-
-  it('displays epoch error when provided', () => {
-    render(ModelInfoSection, {
-      props: { ...defaultProps, errors: { epoch: 'Epoch is required' } }
-    });
     expect(screen.getByText('Epoch is required')).toBeInTheDocument();
   });
 
