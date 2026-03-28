@@ -6,7 +6,7 @@ use crate::cloud_backup::application;
 use crate::cloud_backup::domain::*;
 use crate::cloud_backup::infrastructure::secure_storage::SecureStorage;
 use crate::cloud_backup::infrastructure::{
-    GoogleDriveClient, KeyringStorage, OAuthService, check_connectivity,
+    DriveClient, GoogleDriveClient, KeyringStorage, OAuthService, check_connectivity,
 };
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -54,6 +54,9 @@ impl From<CloudBackupError> for CommandError {
             CloudBackupError::IntegrityCheckFailed(msg) => {
                 CommandError::BusinessRule(format!("INTEGRITY_ERROR: {msg}"))
             }
+            CloudBackupError::NotImplemented => CommandError::BusinessRule(
+                "NOT_IMPLEMENTED: This operation is not supported on this platform".into(),
+            ),
             other => CommandError::unknown(other.to_string()),
         }
     }
@@ -158,11 +161,11 @@ pub async fn cloud_backup_sync_now(
         .map_err(CommandError::from)?
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
-    // Create Google Drive client
-    let client = GoogleDriveClient::new(
+    // Create Google Drive client wrapped in Arc<dyn DriveClient>
+    let client: Arc<dyn DriveClient + Send + Sync> = Arc::new(GoogleDriveClient::new(
         GOOGLE_CLIENT_ID.to_string(),
         tokens.access_token_str().to_string(),
-    );
+    ));
 
     let db_pool = state.db_pool();
     let db_path = state.db_path();
@@ -178,7 +181,7 @@ pub async fn cloud_backup_sync_now(
         &app,
         &db_pool,
         db_path,
-        &client,
+        client,
         &state.import_session_store,
     )
     .await;
@@ -262,9 +265,32 @@ pub async fn cloud_backup_restore(
         .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
 
     let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
-    let oauth_service = Arc::new(OAuthService::new(
+    let oauth_service = OAuthService::new(GOOGLE_CLIENT_ID.to_string(), storage.clone());
+
+    // Retrieve tokens, refreshing if expired, then build the Drive client
+    let tokens = storage
+        .retrieve_tokens(&user_email)
+        .await
+        .map_err(CommandError::from)?
+        .ok_or_else(|| CommandError::from(CloudBackupError::NotConnected))?;
+
+    let access_token = if tokens.is_expired() {
+        let refreshed = oauth_service
+            .refresh_token(&user_email)
+            .await
+            .map_err(CommandError::from)?;
+        storage
+            .store_tokens(&user_email, &refreshed)
+            .await
+            .map_err(CommandError::from)?;
+        refreshed.access_token_str().to_string()
+    } else {
+        tokens.access_token_str().to_string()
+    };
+
+    let drive_client: Arc<dyn DriveClient + Send + Sync> = Arc::new(GoogleDriveClient::new(
         GOOGLE_CLIENT_ID.to_string(),
-        storage.clone(),
+        access_token,
     ));
 
     let db_path = app
@@ -277,17 +303,9 @@ pub async fn cloud_backup_restore(
     // The frontend will reload the app via the restore-complete event.
     state.db_pool().close().await;
 
-    application::restore_backup(
-        args,
-        &db_path,
-        GOOGLE_CLIENT_ID,
-        oauth_service.as_ref(),
-        storage.as_ref(),
-        &user_email,
-        app,
-    )
-    .await
-    .map_err(CommandError::from)
+    application::restore_backup(args, &db_path, drive_client, app)
+        .await
+        .map_err(CommandError::from)
 }
 
 #[cfg(test)]

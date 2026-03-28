@@ -1,13 +1,12 @@
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 const host = typeof process !== 'undefined' ? process.env?.TAURI_DEV_HOST : undefined;
 
 // https://vite.dev/config/
-/** @type {import('vite').UserConfigExport & { test?: any }} */
 export default defineConfig({
   plugins: [
     paraglideVitePlugin({ project: './project.inlang', outdir: './src/paraglide' }),
@@ -17,16 +16,19 @@ export default defineConfig({
 
   // Optimize bundle size and loading
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          // Split large icon library into separate chunk
-          lucide: ['lucide-svelte']
-        }
+        // Split large icon library into separate chunk
+        manualChunks: (id) => (id.includes('lucide-svelte') ? 'lucide' : undefined)
       }
     },
     // Reduce chunk size warning threshold
     chunkSizeWarningLimit: 600
+  },
+
+  resolve: {
+    // Enable native TypeScript path resolution (new in Vite 8, replaces third-party tsconfigPaths plugins)
+    tsconfigPaths: true
   },
 
   // Vite options tailored for Tauri development and only applied in  or
@@ -51,7 +53,6 @@ export default defineConfig({
     }
   },
 
-  // @ts-expect-error -- vitest test config (not part of Vite's strict UserConfigExport typings)
   test: {
     expect: { requireAssertions: true },
 

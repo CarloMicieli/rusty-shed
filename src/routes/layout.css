@@ -73,6 +73,12 @@
   --sidebar-border: hsl(240 5.9% 15%); /* Subtle border */
   --sidebar-ring: hsl(30 50% 50%);
   --sidebar-name-shadow: rgba(0, 0, 0, 0.8);
+
+  /* Brass & Copper base fallbacks — overridden per theme */
+  --color-brass-600: #b8860b;
+  --color-brass-700: #8b6508;
+  --color-copper-600: #cd7f32;
+  --color-copper-700: #a86428;
 }
 
 .dark {
@@ -135,6 +141,8 @@
 
 @theme inline {
   --font-family-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-family-heading: 'Bebas Neue', sans-serif;
+  --font-family-body: 'Inter', system-ui, -apple-system, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -172,6 +180,11 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-layout-border: var(--layout-border);
   --color-layout-surface: var(--layout-surface);
+  /* Steampunk palette utilities — bg-brass-*, text-copper-*, etc. */
+  --color-brass: var(--color-brass-600);
+  --color-brass-deep: var(--color-brass-700);
+  --color-copper: var(--color-copper-600);
+  --color-copper-deep: var(--color-copper-700);
 }
 
 @layer base {

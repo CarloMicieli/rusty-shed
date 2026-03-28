@@ -90,7 +90,7 @@ input[type='reset'] {
 [data-theme='steampunk-dark'] h1,
 [data-theme='steampunk-dark'] h2,
 [data-theme='steampunk-dark'] .heading {
-  font-family: 'Bebas Neue', serif;
+  font-family: var(--font-family-heading);
   color: var(--brass);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -98,7 +98,7 @@ input[type='reset'] {
 [data-theme='steampunk-dark'] code,
 [data-theme='steampunk-dark'] pre,
 [data-theme='steampunk-dark'] .typewriter {
-  font-family: 'Courier Prime', monospace;
+  font-family: var(--font-family-mono);
   color: var(--copper);
 }
 
@@ -106,16 +106,17 @@ input[type='reset'] {
 [data-theme='steampunk-light'] h1,
 [data-theme='steampunk-light'] h2,
 [data-theme='steampunk-light'] .heading {
-  font-family: 'Bebas Neue', serif;
-  color: var(--primary); /* resolves to burnished brass from steampunk-light.css */
+  font-family: var(--font-family-heading);
+  /* Use --primary-text (hsl 44 92% 26%, ≈5:1 contrast on parchment) for WCAG AA compliance */
+  color: var(--primary-text, var(--primary));
   text-shadow: 1px 1px 2px rgba(100, 60, 0, 0.2);
 }
 
 [data-theme='steampunk-light'] code,
 [data-theme='steampunk-light'] pre,
 [data-theme='steampunk-light'] .typewriter {
-  font-family: 'Courier Prime', monospace;
-  color: #a85427; /* --color-accent-700: burnished copper on parchment */
+  font-family: var(--font-family-mono);
+  color: var(--color-copper-700, #a85427); /* --color-copper-700: burnished copper on parchment */
 }
 
 /* Signal Fault toast — Amber border for non-fatal background errors */

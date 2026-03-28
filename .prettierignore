@@ -17,6 +17,16 @@ coverage/
 # Paraglide specific
 src/lib/paraglide/**
 
+# Specta bindings
+src/lib/bindings.ts
+
+# Tauri/Rust specific
+src-tauri/target/
+src-tauri/gen/
+
+# SvelteKit specific
+.svelte-kit/
+
 # Custom exclusions
 .claude/
 .github/
