@@ -56,56 +56,27 @@ describe('RailwayModelPreviewCard', () => {
   });
 
   describe('Rendering', () => {
-    it('should render the component with card structure', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
-      // Check that card element is rendered
-      const card = container.querySelector('.card');
-      expect(card).toBeTruthy();
-    });
-
-    it('should apply custom class to card', () => {
+    it('should render with card structure, apply custom class, and display all core model info', () => {
       const { container } = render(RailwayModelPreviewCard, {
         props: { model: mockModel, class: 'custom-class' }
       });
 
       const card = container.querySelector('.card');
+      expect(card).toBeTruthy();
       expect(card?.classList.contains('custom-class')).toBe(true);
+      expect(card?.classList.contains('transition-all')).toBe(true);
+
+      expect(screen.getByText('Märklin')).toBeTruthy();
+      expect(screen.getByText(/37586/)).toBeTruthy();
+      expect(screen.getByText(/Class 66/)).toBeTruthy();
+      expect(screen.getByText(/66 001/)).toBeTruthy();
+      const roadNumberElement = screen.getByText(/66 001/).closest('span');
+      expect(roadNumberElement?.classList.contains('font-mono')).toBe(true);
     });
   });
 
   describe('User Story 1: Core Model Information Display', () => {
-    it('should display manufacturer and product code', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
-      expect(screen.getByText('Märklin')).toBeTruthy();
-      expect(screen.getByText(/37586/)).toBeTruthy();
-    });
-
-    it('should display series and category as title', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
-      expect(screen.getByText(/Class 66/)).toBeTruthy();
-    });
-
-    it('should display road number in identification plate', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
-      expect(screen.getByText(/66 001/)).toBeTruthy();
-      // Check for monospaced font
-      const roadNumberElement = screen.getByText(/66 001/).closest('span');
-      expect(roadNumberElement?.classList.contains('font-mono')).toBe(true);
-    });
-
-    it('should render thumbnail with 16:9 aspect ratio', () => {
+    it('renders thumbnail with 16:9 aspect ratio when photoUrl provided', () => {
       const { container } = render(RailwayModelPreviewCard, {
         props: { model: { ...mockModel, photoUrl: 'https://example.com/photo.jpg' } }
       });
@@ -126,131 +97,67 @@ describe('RailwayModelPreviewCard', () => {
       expect(truncated || fullText).toBeTruthy();
     });
 
-    it('should display fallback for missing road number', () => {
-      render(RailwayModelPreviewCard, {
+    it('displays fallbacks for missing road number and manufacturer', () => {
+      const { unmount } = render(RailwayModelPreviewCard, {
         props: { model: { ...mockModel, roadNumber: null } }
       });
-
       expect(screen.getByText(/—/)).toBeTruthy();
-    });
+      unmount();
 
-    it('should display fallback for missing manufacturer', () => {
       render(RailwayModelPreviewCard, {
         props: { model: { ...mockModel, manufacturer: null } }
       });
-
       expect(screen.getByText('Unknown')).toBeTruthy();
     });
   });
 
   describe('User Story 2: Metadata Badges and Status Indicators', () => {
-    it('should display scale and power method badges', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
+    it('displays scale, power method, era badges; omits them when data is missing', () => {
+      const { unmount } = render(RailwayModelPreviewCard, { props: { model: mockModel } });
       expect(screen.getByText('H0')).toBeTruthy();
       expect(screen.getByText('DCC')).toBeTruthy();
-    });
-
-    it('should display era badge', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
       expect(screen.getByText(/VI/)).toBeTruthy();
-    });
+      unmount();
 
-    it('should display purchase date badge', () => {
       render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
+        props: { model: { ...mockModel, scale: null, powerMethod: null, era: null, purchaseDate: null } }
       });
-
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-      // Ensure component renders; specific purchase badge rendering is optional
-      expect(container).toBeTruthy();
-    });
-
-    it('should display unit count badge when > 1', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, unitCount: 3 } }
-      });
-
-      expect(screen.getByText(/×3/)).toBeTruthy();
-      // Check badge is positioned absolutely in bottom-right
-      const badge = container.querySelector('.absolute.bottom-2.right-2');
-      expect(badge).toBeTruthy();
-    });
-
-    it('should not display unit count badge when unitCount is 1', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, unitCount: 1 } }
-      });
-
-      expect(screen.queryByText(/×1/)).toBeFalsy();
-    });
-
-    it('should display digital feature icons in top-left corner', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, digitalFeatures: ['Sound', 'DCC'] } }
-      });
-
-      // Check overlay is positioned in top-left
-      const overlay = container.querySelector('.absolute.top-2.left-2');
-      expect(overlay).toBeTruthy();
-    });
-
-    it('should stack multiple digital features horizontally', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, digitalFeatures: ['Sound', 'DCC', 'Light'] } }
-      });
-
-      // Check flexbox layout with gap
-      const overlay = container.querySelector('.flex.gap-1');
-      expect(overlay).toBeTruthy();
-    });
-
-    it('should omit badges when data is missing', () => {
-      render(RailwayModelPreviewCard, {
-        props: {
-          model: {
-            ...mockModel,
-            scale: null,
-            powerMethod: null,
-            era: null,
-            purchaseDate: null
-          }
-        }
-      });
-
-      // Should not display missing badges
       expect(screen.queryByText('H0')).toBeFalsy();
       expect(screen.queryByText('DCC')).toBeFalsy();
       expect(screen.queryByText(/VI/)).toBeFalsy();
       expect(screen.queryByText(/PURCHASED/)).toBeFalsy();
     });
+
+    it('displays unit count badge when > 1 and hides it when unitCount is 1', () => {
+      const { container, unmount } = render(RailwayModelPreviewCard, {
+        props: { model: { ...mockModel, unitCount: 3 } }
+      });
+      expect(screen.getByText(/×3/)).toBeTruthy();
+      expect(container.querySelector('.absolute.bottom-2.right-2')).toBeTruthy();
+      unmount();
+
+      render(RailwayModelPreviewCard, { props: { model: { ...mockModel, unitCount: 1 } } });
+      expect(screen.queryByText(/×1/)).toBeFalsy();
+    });
+
+    it('displays digital feature icons in top-left with flex layout for multiple features', () => {
+      const { container } = render(RailwayModelPreviewCard, {
+        props: { model: { ...mockModel, digitalFeatures: ['Sound', 'DCC', 'Light'] } }
+      });
+      expect(container.querySelector('.absolute.top-2.left-2')).toBeTruthy();
+      expect(container.querySelector('.flex.gap-1')).toBeTruthy();
+    });
   });
 
   describe('User Story 4: Delete Functionality', () => {
-    it('should render delete button when onDelete prop provided', () => {
+    it('renders delete button when onDelete provided, hides it when omitted', () => {
       const onDelete = vi.fn();
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel, onDelete }
-      });
+      const { unmount } = render(RailwayModelPreviewCard, { props: { model: mockModel, onDelete } });
+      expect(screen.getByLabelText(/delete/i)).toBeTruthy();
+      unmount();
 
-      const deleteButton = screen.getByLabelText(/delete/i);
-      expect(deleteButton).toBeTruthy();
-    });
-
-    it('should hide delete button when onDelete prop omitted', () => {
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
-      const deleteButton = screen.queryByLabelText(/delete/i);
-      expect(deleteButton).toBeFalsy();
+      render(RailwayModelPreviewCard, { props: { model: mockModel } });
+      expect(screen.queryByLabelText(/delete/i)).toBeFalsy();
     });
 
     it('should open confirmation dialog on delete button click', async () => {
@@ -305,52 +212,14 @@ describe('RailwayModelPreviewCard', () => {
   });
 
   describe('User Story 3: Category Placeholder Icons', () => {
-    it('should display steam locomotive placeholder icon', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: {
-          model: { ...mockModel, category: 'SteamLocomotive', photoUrl: null }
-        }
-      });
-
-      // Should display icon (SVG) for steam locomotives
-      const icon = container.querySelector('svg.lucide-icon');
-      expect(icon).toBeTruthy();
-    });
-
-    it('should display electric locomotive placeholder icon', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: {
-          model: { ...mockModel, category: 'ElectricLocomotive', photoUrl: null }
-        }
-      });
-
-      // Should display icon (SVG) for electric locomotives
-      const icon = container.querySelector('svg.lucide-icon');
-      expect(icon).toBeTruthy();
-    });
-
-    it('should display wagon/freight car placeholder icon', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: {
-          model: { ...mockModel, category: 'Wagon', photoUrl: null }
-        }
-      });
-
-      // Should display icon (SVG) for wagons
-      const icon = container.querySelector('svg.lucide-icon');
-      expect(icon).toBeTruthy();
-    });
-
-    it('should display generic train placeholder when category unknown', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: {
-          model: { ...mockModel, category: 'Unknown', photoUrl: null }
-        }
-      });
-
-      // Should display generic icon (SVG)
-      const icon = container.querySelector('svg.lucide-icon');
-      expect(icon).toBeTruthy();
+    it('displays placeholder SVG icon for various categories (steam, electric, wagon, unknown)', () => {
+      for (const category of ['SteamLocomotive', 'ElectricLocomotive', 'Wagon', 'Unknown']) {
+        const { container, unmount } = render(RailwayModelPreviewCard, {
+          props: { model: { ...mockModel, category, photoUrl: null } }
+        });
+        expect(container.querySelector('svg.lucide-icon')).toBeTruthy();
+        unmount();
+      }
     });
 
     it('should display photo when photoUrl provided', () => {
@@ -368,75 +237,36 @@ describe('RailwayModelPreviewCard', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have ARIA label on delete button', () => {
+    it('has ARIA label on delete button, semantic heading, lazy-loaded image, and overlay ARIA labels', () => {
       const onDelete = vi.fn();
-      render(RailwayModelPreviewCard, {
-        props: { model: mockModel, onDelete }
-      });
+      const { unmount } = render(RailwayModelPreviewCard, { props: { model: mockModel, onDelete } });
+      expect(screen.getByLabelText(/delete model/i)).toBeTruthy();
+      unmount();
 
-      const deleteButton = screen.getByLabelText(/delete model/i);
-      expect(deleteButton).toBeTruthy();
-    });
-
-    it('should have semantic HTML structure', () => {
       const { container } = render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
+        props: { model: { ...mockModel, photoUrl: 'https://example.com/photo.jpg', unitCount: 3, digitalFeatures: ['Sound', 'DCC'] } }
       });
-
-      // Should have proper heading
       const heading = container.querySelector('h3');
       expect(heading).toBeTruthy();
       expect(heading?.textContent).toContain('Class 66');
-    });
-
-    it('should have lazy loading on images', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, photoUrl: 'https://example.com/photo.jpg' } }
-      });
 
       const imgs = container.querySelectorAll('img');
-      // Second img is the main image (first is the blurred backdrop)
       const img = imgs[1];
       expect(img?.getAttribute('loading')).toBe('lazy');
       expect(img?.getAttribute('decoding')).toBe('async');
-    });
 
-    it('should have ARIA labels on overlays', () => {
-      render(RailwayModelPreviewCard, {
-        props: {
-          model: {
-            ...mockModel,
-            unitCount: 3,
-            digitalFeatures: ['Sound', 'DCC']
-          }
-        }
-      });
-
-      // Digital features overlay (use query to avoid throwing)
-      const digitalOverlay = screen.queryByLabelText(/digital features/i);
-      expect(digitalOverlay).toBeTruthy();
-
-      // Unit count overlay: badge shows ×3; check for text content
-      const unitBadge = screen.queryByText(/×3/);
-      expect(unitBadge).toBeTruthy();
+      expect(screen.queryByLabelText(/digital features/i)).toBeTruthy();
+      expect(screen.queryByText(/×3/)).toBeTruthy();
     });
   });
 
   describe('Responsive Design', () => {
-    it('should use responsive grid classes', () => {
+    it('should use responsive grid classes and hover transition on card', () => {
       const { container } = render(RailwayModelPreviewCard, {
         props: { model: mockModel }
       });
 
-      const grid = container.querySelector('.grid');
-      expect(grid).toBeTruthy();
-    });
-
-    it('should have hover transition classes on card', () => {
-      const { container } = render(RailwayModelPreviewCard, {
-        props: { model: mockModel }
-      });
-
+      expect(container.querySelector('.grid')).toBeTruthy();
       const card = container.querySelector('.card');
       expect(card).toBeTruthy();
       expect(card?.classList.contains('transition-all')).toBe(true);

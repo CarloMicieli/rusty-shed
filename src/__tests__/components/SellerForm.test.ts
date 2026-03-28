@@ -34,9 +34,23 @@ describe('SellerForm.svelte', () => {
     vi.clearAllMocks();
   });
 
-  it('renders "New Seller" heading when no initial value', () => {
+  it('renders "New Seller" heading with all form fields and buttons', () => {
     render(SellerForm, { props: {} });
     expect(screen.getByText('New Seller')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Seller name')).toBeInTheDocument();
+    expect(screen.getByText('Shop')).toBeInTheDocument();
+    expect(screen.getByText('Private')).toBeInTheDocument();
+    expect(screen.getByText('Manufacturer')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('email@example.com')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Phone number')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('https://example.com')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('123 Main St')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('City')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('12345')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    const submitBtn = screen.getByRole('button', { name: 'Create Railway Model' }) as HTMLButtonElement;
+    expect(submitBtn).toBeInTheDocument();
+    expect(submitBtn.disabled).toBe(false);
   });
 
   it('renders "Edit Seller" heading when initial value has an id', () => {
@@ -61,38 +75,6 @@ describe('SellerForm.svelte', () => {
     expect(screen.getByText('Edit Seller')).toBeInTheDocument();
   });
 
-  it('renders the Name field with placeholder', () => {
-    render(SellerForm, { props: {} });
-    expect(screen.getByPlaceholderText('Seller name')).toBeInTheDocument();
-  });
-
-  it('renders the Seller Type select with default "Shop" option', () => {
-    render(SellerForm, { props: {} });
-    expect(screen.getByText('Shop')).toBeInTheDocument();
-    expect(screen.getByText('Private')).toBeInTheDocument();
-    expect(screen.getByText('Manufacturer')).toBeInTheDocument();
-  });
-
-  it('renders email, phone, website fields', () => {
-    render(SellerForm, { props: {} });
-    expect(screen.getByPlaceholderText('email@example.com')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Phone number')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('https://example.com')).toBeInTheDocument();
-  });
-
-  it('renders address-related fields', () => {
-    render(SellerForm, { props: {} });
-    expect(screen.getByPlaceholderText('123 Main St')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('City')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('12345')).toBeInTheDocument();
-  });
-
-  it('renders Cancel and Submit buttons', () => {
-    render(SellerForm, { props: {} });
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create Railway Model' })).toBeInTheDocument();
-  });
-
   it('calls onClose when Cancel button is clicked', async () => {
     const onClose = vi.fn();
     render(SellerForm, { props: { onClose } });
@@ -100,7 +82,7 @@ describe('SellerForm.svelte', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('populates initial values into form fields', () => {
+  it('populates initial values into form fields and shows unsaved changes when tainted', async () => {
     render(SellerForm, {
       props: {
         initial: {
@@ -121,24 +103,10 @@ describe('SellerForm.svelte', () => {
     });
     const nameInput = screen.getByPlaceholderText('Seller name') as HTMLInputElement;
     expect(nameInput.value).toBe('Acme Models');
-  });
 
-  it('shows "unsaved changes" message when form is tainted', async () => {
-    render(SellerForm, { props: {} });
-    const nameInput = screen.getByPlaceholderText('Seller name');
     await fireEvent.input(nameInput, { target: { value: 'New Seller Name' } });
-    // The component shows "You have unsaved changes" when tainted
     await waitFor(() => {
       expect(screen.getByText('You have unsaved changes')).toBeInTheDocument();
     });
-  });
-
-  it('submit button is enabled when form has no errors initially', () => {
-    render(SellerForm, { props: {} });
-    const submitBtn = screen.getByRole('button', {
-      name: 'Create Railway Model'
-    }) as HTMLButtonElement;
-    // Button should not be disabled when not submitting
-    expect(submitBtn.disabled).toBe(false);
   });
 });

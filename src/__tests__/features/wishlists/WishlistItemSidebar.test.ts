@@ -81,38 +81,26 @@ function renderSidebar(item: WishlistItem = baseItem, overrides: object = {}) {
 // ── Base rendering tests ──────────────────────────────────────────────────────
 
 describe('WishlistItemSidebar — rendering', () => {
-  it('renders wishlist name', () => {
+  it('renders initial state: wishlist name, NORMAL priority, no price, no purchased price', () => {
     renderSidebar();
     expect(screen.getByText('My Test List')).toBeTruthy();
-  });
-
-  it('renders correct priority label for NORMAL', () => {
-    renderSidebar();
     expect(screen.getByText('Normal')).toBeTruthy();
+    expect(screen.getByText('Not set')).toBeTruthy();
+    expect(screen.queryByText('Purchased Price')).toBeNull();
   });
 
-  it('renders correct priority label for HIGH', () => {
+  it('renders HIGH priority label and hides purchased price when null', () => {
     renderSidebar({ ...baseItem, priority: 'HIGH' });
     expect(screen.getByText('High')).toBeTruthy();
   });
 
-  it('renders desired price when set', () => {
-    renderSidebar({ ...baseItem, desiredPrice: { amount: BigInt(9900), currency: 'EUR' } });
+  it('hides "Not set" when desiredPrice is set; shows purchased price row when purchasedPrice is set', () => {
+    renderSidebar({
+      ...baseItem,
+      desiredPrice: { amount: BigInt(9900), currency: 'EUR' },
+      purchasedPrice: { amount: BigInt(8500), currency: 'GBP' }
+    });
     expect(screen.queryByText('Not set')).toBeNull();
-  });
-
-  it('renders "Not set" when desired price is null', () => {
-    renderSidebar({ ...baseItem, desiredPrice: null });
-    expect(screen.getByText('Not set')).toBeTruthy();
-  });
-
-  it('hides purchased price row when purchasedPrice is null', () => {
-    renderSidebar({ ...baseItem, purchasedPrice: null });
-    expect(screen.queryByText('Purchased Price')).toBeNull();
-  });
-
-  it('shows purchased price row when purchasedPrice is set', () => {
-    renderSidebar({ ...baseItem, purchasedPrice: { amount: BigInt(8500), currency: 'GBP' } });
     expect(screen.getByText('Purchased Price')).toBeTruthy();
   });
 });
@@ -120,19 +108,13 @@ describe('WishlistItemSidebar — rendering', () => {
 // ── US5: List field is permanently read-only (T024/T025) ─────────────────────
 
 describe('WishlistItemSidebar — US5 List field read-only', () => {
-  it('List field renders as plain text (not a button)', () => {
+  it('List field renders as plain text and clicking it does not open any input', async () => {
     renderSidebar();
     const listDd = screen.getByText('My Test List');
     expect(listDd.tagName.toLowerCase()).not.toBe('button');
-    // No aria-label for Edit on the list name cell
     expect(listDd.closest('[aria-label]')).toBeNull();
-  });
 
-  it('clicking List field does not open any input or combobox', async () => {
-    renderSidebar();
-    const listCell = screen.getByText('My Test List');
-    await fireEvent.click(listCell);
-    // No text input should appear
+    await fireEvent.click(listDd);
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 });
@@ -144,37 +126,24 @@ describe('WishlistItemSidebar — US1 Priority inline edit', () => {
     mockUpdateWishlistItem.mockResolvedValue({ status: 'ok', data: baseItem });
   });
 
-  it('renders Priority as an editable trigger with aria-label', () => {
+  it('renders Priority trigger with aria-label, current value, correct ARIA attributes', () => {
     renderSidebar();
     const trigger = screen.getByLabelText(/Edit Priority/i);
     expect(trigger).toBeTruthy();
     expect(trigger.textContent).toContain('Normal');
-  });
-
-  it('Priority trigger has correct aria-label', () => {
-    renderSidebar();
-    const trigger = screen.getByLabelText(/Edit Priority/i);
     expect(trigger.getAttribute('aria-label')).toContain('Priority');
-  });
-
-  it('Priority trigger shows current value (HIGH)', () => {
-    renderSidebar({ ...baseItem, priority: 'HIGH' });
-    const trigger = screen.getByLabelText(/Edit Priority/i);
-    expect(trigger.textContent).toContain('High');
-  });
-
-  it('Priority trigger shows current value (LOW)', () => {
-    renderSidebar({ ...baseItem, priority: 'LOW' });
-    const trigger = screen.getByLabelText(/Edit Priority/i);
-    expect(trigger.textContent).toContain('Low');
-  });
-
-  it('Priority Select.Root is rendered and wired up correctly', () => {
-    renderSidebar();
-    const trigger = screen.getByLabelText(/Edit Priority/i);
-    // The trigger should have aria-haspopup indicating it controls a listbox
     expect(trigger.getAttribute('aria-haspopup')).toBe('listbox');
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('Priority trigger shows HIGH value', () => {
+    renderSidebar({ ...baseItem, priority: 'HIGH' });
+    expect(screen.getByLabelText(/Edit Priority/i).textContent).toContain('High');
+  });
+
+  it('Priority trigger shows LOW value', () => {
+    renderSidebar({ ...baseItem, priority: 'LOW' });
+    expect(screen.getByLabelText(/Edit Priority/i).textContent).toContain('Low');
   });
 });
 
@@ -185,36 +154,24 @@ describe('WishlistItemSidebar — US2 Status inline edit', () => {
     mockUpdateWishlistItem.mockResolvedValue({ status: 'ok', data: baseItem });
   });
 
-  it('renders Status as an editable trigger with aria-label', () => {
+  it('renders Status trigger with aria-label, current value, correct ARIA attributes', () => {
     renderSidebar();
     const trigger = screen.getByLabelText(/Edit Status/i);
     expect(trigger).toBeTruthy();
     expect(trigger.textContent).toContain('Wanted');
-  });
-
-  it('Status trigger has correct aria-label', () => {
-    renderSidebar();
-    const trigger = screen.getByLabelText(/Edit Status/i);
     expect(trigger.getAttribute('aria-label')).toContain('Status');
-  });
-
-  it('Status trigger shows current value (ON_ORDER)', () => {
-    renderSidebar({ ...baseItem, status: 'ON_ORDER' });
-    const trigger = screen.getByLabelText(/Edit Status/i);
-    expect(trigger.textContent).toContain('On Order');
-  });
-
-  it('Status trigger shows current value (PURCHASED)', () => {
-    renderSidebar({ ...baseItem, status: 'PURCHASED' });
-    const trigger = screen.getByLabelText(/Edit Status/i);
-    expect(trigger.textContent).toContain('Purchased');
-  });
-
-  it('Status Select.Root is rendered and wired up correctly', () => {
-    renderSidebar();
-    const trigger = screen.getByLabelText(/Edit Status/i);
     expect(trigger.getAttribute('aria-haspopup')).toBe('listbox');
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('Status trigger shows ON_ORDER value', () => {
+    renderSidebar({ ...baseItem, status: 'ON_ORDER' });
+    expect(screen.getByLabelText(/Edit Status/i).textContent).toContain('On Order');
+  });
+
+  it('Status trigger shows PURCHASED value', () => {
+    renderSidebar({ ...baseItem, status: 'PURCHASED' });
+    expect(screen.getByLabelText(/Edit Status/i).textContent).toContain('Purchased');
   });
 });
 

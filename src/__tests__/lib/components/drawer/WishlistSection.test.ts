@@ -43,19 +43,14 @@ describe('WishlistSection', () => {
     vi.clearAllMocks();
   });
 
-  // ── Section header ──────────────────────────────────────────────────────────
+  // ── Section header & initial render ────────────────────────────────────────
 
-  it('renders section header label', () => {
+  it('renders section header, wishlist selector, new list input, and desired price label', () => {
     render(WishlistSection, { props: defaultProps });
     expect(screen.getByText('Wishlist Preferences')).toBeInTheDocument();
-  });
-
-  // ── Wishlist selector ───────────────────────────────────────────────────────
-
-  it('renders wishlist selector and new list input', () => {
-    render(WishlistSection, { props: defaultProps });
     expect(screen.getByRole('button', { name: /select a wishlist/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Or create new list...')).toBeInTheDocument();
+    expect(screen.getByText('Desired Price')).toBeInTheDocument();
   });
 
   it('shows available wishlists in dropdown', async () => {
@@ -68,20 +63,26 @@ describe('WishlistSection', () => {
     expect(screen.getByRole('option', { name: /future buys/i })).toBeInTheDocument();
   });
 
-  // ── Priority toggle ─────────────────────────────────────────────────────────
+  // ── Priority toggle styling ─────────────────────────────────────────────────
 
-  it('renders all three priority buttons', () => {
-    render(WishlistSection, { props: defaultProps });
-    expect(screen.getByRole('button', { name: 'Low' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Normal' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'High' })).toBeInTheDocument();
-  });
-
-  it('NORMAL active button has amber bg class', () => {
+  it('renders all three priority buttons with correct active/inactive styling', () => {
     render(WishlistSection, { props: { ...defaultProps, priority: 'NORMAL' } });
     const normalBtn = screen.getByRole('button', { name: 'Normal' });
+    const lowBtn = screen.getByRole('button', { name: 'Low' });
+    const highBtn = screen.getByRole('button', { name: 'High' });
+
+    expect(normalBtn).toBeInTheDocument();
+    expect(lowBtn).toBeInTheDocument();
+    expect(highBtn).toBeInTheDocument();
+
+    // NORMAL is active — solid bg
     expect(normalBtn.className).toContain('bg-primary');
     expect(normalBtn.className).toContain('text-primary-foreground');
+
+    // LOW and HIGH are inactive — neutral text
+    expect(lowBtn.className).toContain('text-muted-foreground');
+    expect(lowBtn.className).not.toContain('text-primary');
+    expect(highBtn.className).toContain('text-muted-foreground');
   });
 
   it('LOW active button has amber border/text (not solid bg)', () => {
@@ -98,22 +99,6 @@ describe('WishlistSection', () => {
     expect(highBtn.className).toContain('text-primary');
   });
 
-  it('inactive buttons have neutral text colour', () => {
-    render(WishlistSection, { props: { ...defaultProps, priority: 'NORMAL' } });
-    const lowBtn = screen.getByRole('button', { name: 'Low' });
-    // Inactive buttons have neutral zinc text, not amber
-    expect(lowBtn.className).toContain('text-muted-foreground');
-    expect(lowBtn.className).not.toContain('text-primary');
-    expect(lowBtn.className).not.toContain('text-primary-foreground');
-  });
-
-  // ── Desired price ───────────────────────────────────────────────────────────
-
-  it('renders desired price label', () => {
-    render(WishlistSection, { props: defaultProps });
-    expect(screen.getByText('Desired Price')).toBeInTheDocument();
-  });
-
   // ── Notes field conditional render ──────────────────────────────────────────
 
   it('renders notes field when notes prop is an empty string', () => {
@@ -127,19 +112,19 @@ describe('WishlistSection', () => {
     expect(screen.queryByText('Notes')).toBeNull();
   });
 
-  // ── Error messages ───────────────────────────────────────────────────────────
+  // ── Error messages (all in one render) ───────────────────────────────────────
 
-  it('shows wishlistId error when provided', () => {
+  it('shows all field errors when provided', () => {
     render(WishlistSection, {
-      props: { ...defaultProps, errors: { wishlistId: 'Please select a wishlist' } }
+      props: {
+        ...defaultProps,
+        errors: {
+          wishlistId: 'Please select a wishlist',
+          desiredPrice: 'Invalid price'
+        }
+      }
     });
     expect(screen.getByText('Please select a wishlist')).toBeInTheDocument();
-  });
-
-  it('shows desiredPrice error when provided', () => {
-    render(WishlistSection, {
-      props: { ...defaultProps, errors: { desiredPrice: 'Invalid price' } }
-    });
     expect(screen.getByText('Invalid price')).toBeInTheDocument();
   });
 

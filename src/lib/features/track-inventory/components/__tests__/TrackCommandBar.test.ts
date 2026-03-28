@@ -77,8 +77,10 @@ describe('TrackCommandBar', () => {
 
   // ── Zone A: label & selector ──────────────────────────────────────────────────
 
-  it('renders "ACTIVE INVENTORY" label', () => {
-    render(TrackCommandBar, {
+  it('renders "ACTIVE INVENTORY" label, placeholder when no inventory active, and active name when selected', () => {
+    const inventories = [makeListItem('aaa', 'Main Layout'), makeListItem('bbb', 'Staging Yard')];
+
+    const { unmount } = render(TrackCommandBar, {
       props: {
         inventories: [],
         activeInventoryId: null,
@@ -87,10 +89,21 @@ describe('TrackCommandBar', () => {
       }
     });
     expect(screen.getByText('ACTIVE INVENTORY')).toBeInTheDocument();
-  });
+    unmount();
 
-  it('shows active inventory name in the selector trigger', () => {
-    const inventories = [makeListItem('aaa', 'Main Layout'), makeListItem('bbb', 'Staging Yard')];
+    // With no active selection — placeholder shown
+    const { unmount: u2 } = render(TrackCommandBar, {
+      props: {
+        inventories: [makeListItem('aaa', 'Main Layout')],
+        activeInventoryId: null,
+        activeInventory: null,
+        onSelect: vi.fn()
+      }
+    });
+    expect(screen.getByText('Select an inventory')).toBeInTheDocument();
+    u2();
+
+    // With active inventory — name shown in selector trigger
     render(TrackCommandBar, {
       props: {
         inventories,
@@ -102,37 +115,12 @@ describe('TrackCommandBar', () => {
     expect(screen.getByText('Main Layout')).toBeInTheDocument();
   });
 
-  it('shows placeholder when no inventory is active', () => {
-    render(TrackCommandBar, {
-      props: {
-        inventories: [makeListItem('aaa', 'Main Layout')],
-        activeInventoryId: null,
-        activeInventory: null,
-        onSelect: vi.fn()
-      }
-    });
-    expect(screen.getByText('Select an inventory')).toBeInTheDocument();
-  });
-
   // ── Zone B: Metrics ───────────────────────────────────────────────────────────
 
-  it('renders metric column labels', () => {
-    render(TrackCommandBar, {
-      props: {
-        inventories: [],
-        activeInventoryId: null,
-        activeInventory: null,
-        onSelect: vi.fn()
-      }
-    });
-    expect(screen.getByText('Total Pieces')).toBeInTheDocument();
-    expect(screen.getByText('Inventory Value')).toBeInTheDocument();
-    expect(screen.getByText('Last Purchase')).toBeInTheDocument();
-  });
-
-  it('shows computed stats when active inventory has data', () => {
+  it('renders metric column labels and computed stats with active inventory; shows zeros/dash without inventory', () => {
     const inventory = makeInventoryView('aaa', 'Main Layout');
-    render(TrackCommandBar, {
+
+    const { unmount } = render(TrackCommandBar, {
       props: {
         inventories: [makeListItem('aaa', 'Main Layout')],
         activeInventoryId: 'trn:track-inventory:aaa',
@@ -140,13 +128,15 @@ describe('TrackCommandBar', () => {
         onSelect: vi.fn()
       }
     });
+    expect(screen.getByText('Total Pieces')).toBeInTheDocument();
+    expect(screen.getByText('Inventory Value')).toBeInTheDocument();
+    expect(screen.getByText('Last Purchase')).toBeInTheDocument();
     // total pieces: 10 + 5 = 15
     expect(screen.getByText('15')).toBeInTheDocument();
     // formatted value from mock: EUR 19.99
     expect(screen.getByText('EUR 19.99')).toBeInTheDocument();
-  });
+    unmount();
 
-  it('shows zero formatted value and dash for last purchase when no active inventory', () => {
     render(TrackCommandBar, {
       props: {
         inventories: [],
@@ -156,9 +146,7 @@ describe('TrackCommandBar', () => {
       }
     });
     expect(screen.getByText('0')).toBeInTheDocument();
-    // Formatted zero value (uses mock: "EUR 0.00")
     expect(screen.getByText('EUR 0.00')).toBeInTheDocument();
-    // Only last purchase shows dash
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 

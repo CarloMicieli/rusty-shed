@@ -247,29 +247,14 @@ describe('RailwayModelCard', () => {
   });
 
   describe('Component Rendering', () => {
-    it('should render with minimal props', () => {
-      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-      expect(container).toBeTruthy();
-    });
-
-    it('should accept and apply custom class', () => {
+    it('should render with minimal props, apply custom class, and not use decorative classes', () => {
       const { container } = render(RailwayModelCard, {
         props: { model: mockModelSingleUnit, class: 'custom-class' }
       });
+      expect(container).toBeTruthy();
       const card = container.querySelector('.railway-model-card');
       expect(card?.classList.contains('custom-class')).toBe(true);
-    });
-
-    it('does not use the decorative gauge-frame (removes orange border)', () => {
-      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-      const card = container.querySelector('.railway-model-card');
       expect(card?.classList.contains('gauge-frame')).toBe(false);
-    });
-
-    it('removes outer ring/border classes from the card root', () => {
-      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-      const card = container.querySelector('.railway-model-card');
-      // should not have the decorative ring or ring-border utility classes
       expect(card?.classList.contains('ring-1')).toBe(false);
       expect(card?.classList.contains('ring-border/40')).toBe(false);
     });
@@ -288,27 +273,21 @@ describe('RailwayModelCard', () => {
 
   // Tests for User Story 1: View Basic Model Information
   describe('User Story 1: Basic Model Information', () => {
-    it('renders header with manufacturer and product code; scale is in specifications', () => {
+    it('renders all core info: manufacturer, product code, specs, status badge, and placeholder image', () => {
       const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
 
-      // Check for manufacturer
       expect(container.textContent).toContain('Rivarossi');
-      // Check for product code
       expect(container.textContent).toContain('HR2906');
-      // Scale should still appear in the card (now in the specs row)
       expect(container.textContent).toContain('H0');
-    });
+      expect(container.textContent).toContain('IIIb');
+      expect(container.textContent).toContain('DC');
+      expect(container.textContent).toContain('Locomotive');
+      expect(container.textContent).toContain('Electric locomotive E.656 in original green livery');
+      expect(container.textContent).toContain('In Collection');
 
-    it('displays placeholder image when image_path is null', () => {
-      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-
-      // Check that hero section exists
-      const heroSection = container.querySelector('.hero-section');
-      expect(heroSection).toBeTruthy();
-
-      // Check for placeholder (no <img> tag with actual src)
-      const img = container.querySelector('img[src*="images/"]');
-      expect(img).toBeFalsy();
+      // Hero section exists with no image src (image_path is null)
+      expect(container.querySelector('.hero-section')).toBeTruthy();
+      expect(container.querySelector('img[src*="images/"]')).toBeFalsy();
     });
 
     it('renders the hero image when image_path is present', async () => {
@@ -329,31 +308,10 @@ describe('RailwayModelCard', () => {
       expect(img.classList.contains('h-full')).toBe(true);
     });
 
-    it('renders global specs section with era, power_method, category, description', () => {
-      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-
-      // Check for era
-      expect(container.textContent).toContain('IIIb');
-      // Check for power_method
-      expect(container.textContent).toContain('DC');
-      // Check for category
-      expect(container.textContent).toContain('Locomotive');
-      // Check for description
-      expect(container.textContent).toContain('Electric locomotive E.656 in original green livery');
-    });
-
-    it('displays status badge correctly (InCollection vs Wishlist)', () => {
-      const { container } = render(RailwayModelCard, { props: { model: mockModelSingleUnit } });
-
-      // Check for InCollection status (displayed as "In Collection")
-      expect(container.textContent).toContain('In Collection');
-
-      // Test Wishlist status
+    it('displays Wishlist status badge correctly', () => {
       const wishlistModel = { ...mockModelSingleUnit, status: 'Wishlist' as const };
-      const { container: wishlistContainer } = render(RailwayModelCard, {
-        props: { model: wishlistModel }
-      });
-      expect(wishlistContainer.textContent).toContain('Wishlist');
+      const { container } = render(RailwayModelCard, { props: { model: wishlistModel } });
+      expect(container.textContent).toContain('Wishlist');
     });
   });
 

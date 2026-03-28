@@ -268,53 +268,27 @@ describe('RollingStockCard', () => {
   });
 
   describe('US1: Empty field display shows "—"', () => {
-    it('shows "—" for Livery when value is null (read-only mode)', async () => {
-      const rs = { ...mockRollingStock, livery: null };
+    it('shows "—" for null Livery, Control Type, and Depot; renders all grid labels in read-only mode', async () => {
+      const rs = { ...mockRollingStock, livery: null, control: null, depot: null, railwayCompanyName: null };
       const result = render(RollingStockCard, {
         props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
       });
       const headerBtn = result.container.querySelector('button') as HTMLElement;
       await fireEvent.click(headerBtn);
-      // Livery row must be present
+
+      // All grid field labels must be present
       expect(result.getByText('Livery')).toBeTruthy();
-      // The "—" character appears for null livery in a span
+      expect(result.getByText('Control Type')).toBeTruthy();
+      expect(result.getByText('Depot')).toBeTruthy();
+      expect(result.container.textContent).toContain('Livery');
+      expect(result.container.textContent).toContain('Control Type');
+      expect(result.container.textContent).toContain('Depot');
+
+      // The "—" character appears for null fields
       const dashes = Array.from(result.container.querySelectorAll('span')).filter(
         (el) => el.textContent?.trim() === '—'
       );
       expect(dashes.length).toBeGreaterThan(0);
-    });
-
-    it('shows "—" for Control Type when value is null (read-only mode)', async () => {
-      const rs = { ...mockRollingStock, control: null };
-      const result = render(RollingStockCard, {
-        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
-      });
-      const headerBtn = result.container.querySelector('button') as HTMLElement;
-      await fireEvent.click(headerBtn);
-      expect(result.getByText('Control Type')).toBeTruthy();
-    });
-
-    it('shows "—" for Depot when value is null (read-only mode)', async () => {
-      const rs = { ...mockRollingStock, depot: null };
-      const result = render(RollingStockCard, {
-        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
-      });
-      const headerBtn = result.container.querySelector('button') as HTMLElement;
-      await fireEvent.click(headerBtn);
-      expect(result.getByText('Depot')).toBeTruthy();
-    });
-
-    it('renders all grid field labels even in read-only mode when values are null', async () => {
-      const rs = { ...mockRollingStock, depot: null, livery: null, railwayCompanyName: null };
-      const result = render(RollingStockCard, {
-        props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
-      });
-      const headerBtn = result.container.querySelector('button') as HTMLElement;
-      await fireEvent.click(headerBtn);
-      // All grid field labels must be present
-      expect(result.container.textContent).toContain('Livery');
-      expect(result.container.textContent).toContain('Control Type');
-      expect(result.container.textContent).toContain('Depot');
     });
   });
 

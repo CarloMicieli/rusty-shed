@@ -51,6 +51,7 @@ describe('viewport', () => {
     expect(viewport!.scaleFactor).toBe(1.0);
     expect(viewport!.width).toBe(800);
     expect(viewport!.height).toBe(600);
+    expect(viewport!.isMobile).toBe(false);
   });
 
   it('should correctly compute isHighDPI based on scaleFactor', async () => {
@@ -71,11 +72,9 @@ describe('viewport', () => {
       }
     });
 
-    // Wait for initialization
     await tick();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // High DPI should be true when scale factor is 2.0
     expect(viewport!.isHighDPI).toBe(true);
   });
 
@@ -96,9 +95,8 @@ describe('viewport', () => {
       }
     });
 
-    // Wait for initialization
     await tick();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(viewport!.isMobile).toBe(true);
 
@@ -109,24 +107,6 @@ describe('viewport', () => {
     });
   });
 
-  it('should detect desktop platform correctly', async () => {
-    // Ensure desktop user agent (default in test environment)
-    let viewport: ReturnType<typeof createViewport>;
-    render(ViewportTestWrapper, {
-      props: {
-        onViewport: (v) => {
-          viewport = v;
-        }
-      }
-    });
-
-    // Wait for initialization
-    await tick();
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(viewport!.isMobile).toBe(false);
-  });
-
   it('should set up event listeners for scale-change and resize', async () => {
     const { listen } = await import('@tauri-apps/api/event');
 
@@ -134,11 +114,9 @@ describe('viewport', () => {
       props: { onViewport: () => {} }
     });
 
-    // Wait for initialization
     await tick();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // Verify that listen was called for both events
     expect(listen).toHaveBeenCalledWith('tauri://scale-change', expect.any(Function));
     expect(listen).toHaveBeenCalledWith('tauri://resize', expect.any(Function));
   });
@@ -146,7 +124,6 @@ describe('viewport', () => {
   it('should apply CSS custom properties', async () => {
     const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
 
-    // Mock specific dimensions and scale
     vi.mocked(getCurrentWebviewWindow).mockReturnValue({
       scaleFactor: vi.fn(() => Promise.resolve(1.5)),
       innerSize: vi.fn(() => Promise.resolve({ width: 1024, height: 768 }))
@@ -156,11 +133,9 @@ describe('viewport', () => {
       props: { onViewport: () => {} }
     });
 
-    // Wait for CSS application
     await tick();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // Verify CSS variables are set
     if (typeof document !== 'undefined') {
       const setPropertyMock = document.documentElement.style.setProperty as ReturnType<
         typeof vi.fn
@@ -174,7 +149,6 @@ describe('viewport', () => {
   it('should handle errors gracefully when Tauri API fails', async () => {
     const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
 
-    // Mock API failure
     vi.mocked(getCurrentWebviewWindow).mockReturnValue({
       scaleFactor: vi.fn(() => Promise.reject(new Error('API Error'))),
       innerSize: vi.fn(() => Promise.reject(new Error('API Error')))
@@ -190,11 +164,9 @@ describe('viewport', () => {
       }
     });
 
-    // Wait for initialization attempt
     await tick();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    // Should maintain default values on error
     expect(viewport!.scaleFactor).toBe(1.0);
     expect(viewport!.width).toBe(800);
     expect(viewport!.height).toBe(600);
