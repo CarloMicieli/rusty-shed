@@ -134,7 +134,6 @@ pub async fn import_database(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::data_management::domain::backup_validation::{
         validate_confirmation, validate_export_destination,
     };
