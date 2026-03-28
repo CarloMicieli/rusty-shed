@@ -177,7 +177,7 @@ pub async fn cloud_backup_sync_now(
     let result = application::sync_backup(
         &app,
         &db_pool,
-        &db_path,
+        db_path,
         &client,
         &state.import_session_store,
     )

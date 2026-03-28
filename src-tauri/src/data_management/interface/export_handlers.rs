@@ -83,7 +83,7 @@ pub async fn execute_export(
         include_track_inventory: true,
     };
 
-    execute_export::export_to_archive(&state.db_pool(), archive_path, &media_dir, &selection)
+    execute_export::export_to_archive(&state.db_pool(), archive_path, media_dir, &selection)
         .await
         .map_err(|e| CommandError::unknown(e.to_string()))
 }

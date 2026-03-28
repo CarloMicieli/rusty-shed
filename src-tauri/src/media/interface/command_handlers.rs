@@ -54,7 +54,7 @@ pub async fn get_railway_model_image(
     let models_dir = state.models_dir();
     let use_case = GetRailwayModelImage;
 
-    match use_case.execute(&railway_model_id, &models_dir).await {
+    match use_case.execute(&railway_model_id, models_dir).await {
         Ok(image) => {
             debug!(
                 "Found image for model {}: {:?}",
