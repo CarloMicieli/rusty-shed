@@ -110,6 +110,10 @@ pub enum CloudBackupError {
     /// An unexpected error occurred
     #[error("Unexpected error: {0}")]
     UnexpectedError(String),
+
+    /// The requested operation is not yet implemented on this platform
+    #[error("Operation not implemented on this platform")]
+    NotImplemented,
 }
 
 impl CloudBackupError {

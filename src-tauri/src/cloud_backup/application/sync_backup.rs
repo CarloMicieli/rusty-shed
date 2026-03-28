@@ -4,7 +4,7 @@ use crate::cloud_backup::domain::{
     BackupLabel, BackupListItem, BackupMetadata, CloudBackupError, Result, SyncProgressEvent,
     SyncStage as DomainSyncStage,
 };
-use crate::cloud_backup::infrastructure::{GoogleDriveClient, is_online};
+use crate::cloud_backup::infrastructure::{DriveClient, is_online};
 use crate::data_management::application::ImportSessionStore;
 use crate::data_management::interface::is_import_in_progress;
 use chrono::Utc;
@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
 use sqlx::SqlitePool;
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 
@@ -122,7 +123,7 @@ fn emit_progress(app: &AppHandle, operation_id: &str, percent: f32, stage: &Sync
 /// 2. Verifies internet connectivity
 /// 3. Acquires operation lock to prevent concurrent syncs
 /// 4. Compresses the database file
-/// 5. Uploads to Google Drive (creates backup folder if needed)
+/// 5. Uploads to Google Drive using stage-and-commit (temp name → rename to final)
 /// 6. Enforces version limit (max 5 backups)
 /// 7. Returns backup metadata
 ///
@@ -130,7 +131,7 @@ fn emit_progress(app: &AppHandle, operation_id: &str, percent: f32, stage: &Sync
 /// * `app` - Tauri app handle for emitting progress events
 /// * `db_pool` - Database connection pool (for metadata queries)
 /// * `db_path` - Filesystem path to the SQLite database file
-/// * `google_drive_client` - Configured Google Drive API client
+/// * `drive_client` - Drive client implementing the `DriveClient` trait
 ///
 /// # Returns
 /// * `Ok(BackupListItem)` - Details of the created backup
@@ -139,7 +140,7 @@ pub async fn sync_backup(
     app: &AppHandle,
     db_pool: &SqlitePool,
     db_path: &Path,
-    google_drive_client: &GoogleDriveClient,
+    drive_client: Arc<dyn DriveClient + Send + Sync>,
     import_session_store: &ImportSessionStore,
 ) -> Result<BackupListItem> {
     // T078: Acquire operation lock to prevent concurrent syncs
@@ -173,14 +174,14 @@ pub async fn sync_backup(
     // Compress database
     let compressed_data = compress_database(&db_data)?;
 
-    // Stage 2: Upload file
+    // Stage 2: Upload file (stage-and-commit)
     emit_progress(app, &operation_id, 50.0, &SyncStage::Uploading);
 
     // Get or create backup folder
-    let folder_id = google_drive_client.get_or_create_backup_folder().await?;
+    let folder_id = drive_client.get_or_create_backup_folder().await?;
 
     // Determine if this is the initial backup
-    let existing_files = google_drive_client.list_files(&folder_id).await?;
+    let existing_files = drive_client.list_files(&folder_id).await?;
     let is_initial = existing_files.is_empty();
 
     let timestamp = Utc::now();
@@ -190,13 +191,16 @@ pub async fn sync_backup(
         BackupLabel::manual(timestamp)
     };
 
-    // Create file name with schema version
+    // Create final file name with schema version
     let schema_version = get_schema_version(db_pool).await?;
-    let file_name = format!(
+    let final_file_name = format!(
         "rusty_shed_backup_{}_v{}.db.gz",
         timestamp.format("%Y%m%dT%H%M%SZ"),
         schema_version
     );
+
+    // Upload to a temporary name first (stage-and-commit pattern)
+    let temp_file_name = format!("{}.tmp", final_file_name);
 
     // Create metadata
     let metadata = BackupMetadata::new(
@@ -217,25 +221,37 @@ pub async fn sync_backup(
         "isInitial": is_initial.to_string(),
     });
 
-    // Upload file
     let file_metadata = json!({
         "appProperties": app_properties
     });
 
-    let uploaded = google_drive_client
+    // Upload file under temporary name
+    let uploaded = drive_client
         .upload_file(
             &folder_id,
-            &file_name,
+            &temp_file_name,
             compressed_data.clone(),
             file_metadata,
         )
+        .await?;
+
+    // Verify the upload before committing: the file ID must be non-empty.
+    if uploaded.id.is_empty() {
+        return Err(CloudBackupError::DriveError(
+            "Upload verification failed: no file ID returned by Drive".to_string(),
+        ));
+    }
+
+    // Commit: rename from temp name to the final backup name
+    drive_client
+        .rename_file(&uploaded.id, &final_file_name)
         .await?;
 
     // Stage 3: Finalize (enforce version limit)
     emit_progress(app, &operation_id, 75.0, &SyncStage::Finalizing);
 
     // Enforce version limit
-    enforce_version_limit(google_drive_client, &folder_id, MAX_BACKUPS).await?;
+    enforce_version_limit(drive_client, &folder_id, MAX_BACKUPS).await?;
 
     // Final progress
     emit_progress(app, &operation_id, 100.0, &SyncStage::Finalizing);
@@ -308,7 +324,7 @@ fn format_bytes(bytes: u64) -> String {
 
 /// Enforce version limit by deleting oldest backups
 async fn enforce_version_limit(
-    client: &GoogleDriveClient,
+    client: Arc<dyn DriveClient + Send + Sync>,
     folder_id: &str,
     max_backups: usize,
 ) -> Result<()> {
