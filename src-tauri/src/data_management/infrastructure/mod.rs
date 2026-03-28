@@ -25,3 +25,6 @@ pub use media_storage::*;
 pub use normalizer::*;
 pub use schema_validator::*;
 pub use sqlite_import_repository::SqliteImportRepository;
+
+pub mod backup_file_operations;
+pub use backup_file_operations::{copy_file, get_file_size};

@@ -1,15 +1,23 @@
-use crate::database_backup::domain::errors::DatabaseBackupError;
-use crate::database_backup::domain::validation::validate_export_destination;
+use crate::data_management::domain::backup_errors::DatabaseBackupError;
+use crate::data_management::domain::backup_validation::validate_export_destination;
 use sqlx::SqlitePool;
 use std::path::Path;
 
+/// Result returned by a successful database export operation.
 pub struct ExportResult {
+    /// Absolute path of the exported database file.
     pub file_path: String,
+    /// Size of the exported file in bytes.
     pub file_size_bytes: u64,
+    /// Time taken to complete the export in milliseconds.
     pub duration_ms: u64,
 }
 
-/// Export the database to a file using VACUUM INTO
+/// Export the database to a file using `VACUUM INTO`.
+///
+/// # Errors
+/// Returns [`DatabaseBackupError`] if the destination is invalid, the VACUUM fails,
+/// or the resulting file cannot be stat-ed.
 pub async fn export_database(
     pool: &SqlitePool,
     destination_path: &Path,

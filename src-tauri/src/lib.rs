@@ -6,7 +6,7 @@ pub mod commands;
 pub mod core;
 pub mod dashboard;
 pub mod data_management;
-pub mod database_backup;
+
 pub mod dcc_inventory;
 pub mod maintenance;
 pub mod media;
@@ -28,7 +28,7 @@ use crate::catalog::interface::railway_companies as railway_companies_command_ha
 use crate::cloud_backup::infrastructure::start_connectivity_monitor;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::commands::cloud_backup as cloud_backup_command_handlers;
-use crate::commands::database_backup as database_backup_command_handlers;
+use crate::data_management::interface::backup_handlers as database_backup_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::interface::command_handlers as core_command_handlers;
