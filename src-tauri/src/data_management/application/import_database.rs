@@ -1,5 +1,7 @@
 use crate::data_management::domain::backup_errors::DatabaseBackupError;
-use crate::data_management::domain::backup_validation::{validate_confirmation, validate_sqlite_file};
+use crate::data_management::domain::backup_validation::{
+    validate_confirmation, validate_sqlite_file,
+};
 use crate::data_management::infrastructure::backup_file_operations::{copy_file, get_file_size};
 use std::path::Path;
 
