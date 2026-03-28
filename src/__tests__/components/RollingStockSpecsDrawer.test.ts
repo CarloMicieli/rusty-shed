@@ -191,14 +191,22 @@ describe('RollingStockSpecsDrawer', () => {
       await screen.findByDisplayValue('E.656');
 
       // Road number, livery, depot
-      expect((container.querySelector('#drawer-road-number') as HTMLInputElement)?.value).toBe('656 001');
-      expect((container.querySelector('#drawer-livery') as HTMLInputElement)?.value).toBe('Verde FS');
-      expect((container.querySelector('#drawer-depot') as HTMLInputElement)?.value).toBe('Milano Centrale');
+      expect((container.querySelector('#drawer-road-number') as HTMLInputElement)?.value).toBe(
+        '656 001'
+      );
+      expect((container.querySelector('#drawer-livery') as HTMLInputElement)?.value).toBe(
+        'Verde FS'
+      );
+      expect((container.querySelector('#drawer-depot') as HTMLInputElement)?.value).toBe(
+        'Milano Centrale'
+      );
 
       // Technical spec selects
       const flywheel = container.querySelector('#drawer-flywheel') as HTMLButtonElement;
       const bodyShell = container.querySelector('#drawer-body-shell') as HTMLButtonElement;
-      const couplingSocket = container.querySelector('#drawer-coupling-socket') as HTMLButtonElement;
+      const couplingSocket = container.querySelector(
+        '#drawer-coupling-socket'
+      ) as HTMLButtonElement;
       expect(flywheel?.textContent?.trim()).toBe('Yes');
       expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast');
       expect(couplingSocket?.textContent?.trim()).toBe('NEM 362');

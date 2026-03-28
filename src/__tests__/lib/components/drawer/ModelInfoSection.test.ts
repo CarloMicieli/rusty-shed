@@ -99,7 +99,9 @@ describe('ModelInfoSection', () => {
   // ── Category / power method labels ─────────────────────────────────────────
 
   it('shows Paraglide labels for category and power method', () => {
-    const { unmount } = render(ModelInfoSection, { props: { ...defaultProps, category: 'LOCOMOTIVES' } });
+    const { unmount } = render(ModelInfoSection, {
+      props: { ...defaultProps, category: 'LOCOMOTIVES' }
+    });
     expect(screen.getByText('Locomotives')).toBeInTheDocument();
     unmount();
 

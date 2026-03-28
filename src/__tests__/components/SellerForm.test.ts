@@ -48,7 +48,9 @@ describe('SellerForm.svelte', () => {
     expect(screen.getByPlaceholderText('City')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('12345')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    const submitBtn = screen.getByRole('button', { name: 'Create Railway Model' }) as HTMLButtonElement;
+    const submitBtn = screen.getByRole('button', {
+      name: 'Create Railway Model'
+    }) as HTMLButtonElement;
     expect(submitBtn).toBeInTheDocument();
     expect(submitBtn.disabled).toBe(false);
   });

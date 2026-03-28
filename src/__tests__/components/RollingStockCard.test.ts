@@ -269,7 +269,13 @@ describe('RollingStockCard', () => {
 
   describe('US1: Empty field display shows "—"', () => {
     it('shows "—" for null Livery, Control Type, and Depot; renders all grid labels in read-only mode', async () => {
-      const rs = { ...mockRollingStock, livery: null, control: null, depot: null, railwayCompanyName: null };
+      const rs = {
+        ...mockRollingStock,
+        livery: null,
+        control: null,
+        depot: null,
+        railwayCompanyName: null
+      };
       const result = render(RollingStockCard, {
         props: { rollingStock: rs, railwayModelId: RAILWAY_MODEL_ID, editable: false }
       });

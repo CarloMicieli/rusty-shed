@@ -120,7 +120,9 @@ describe('RailwayModelPreviewCard', () => {
       unmount();
 
       render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, scale: null, powerMethod: null, era: null, purchaseDate: null } }
+        props: {
+          model: { ...mockModel, scale: null, powerMethod: null, era: null, purchaseDate: null }
+        }
       });
       expect(screen.queryByText('H0')).toBeFalsy();
       expect(screen.queryByText('DCC')).toBeFalsy();
@@ -152,7 +154,9 @@ describe('RailwayModelPreviewCard', () => {
   describe('User Story 4: Delete Functionality', () => {
     it('renders delete button when onDelete provided, hides it when omitted', () => {
       const onDelete = vi.fn();
-      const { unmount } = render(RailwayModelPreviewCard, { props: { model: mockModel, onDelete } });
+      const { unmount } = render(RailwayModelPreviewCard, {
+        props: { model: mockModel, onDelete }
+      });
       expect(screen.getByLabelText(/delete/i)).toBeTruthy();
       unmount();
 
@@ -239,12 +243,21 @@ describe('RailwayModelPreviewCard', () => {
   describe('Accessibility', () => {
     it('has ARIA label on delete button, semantic heading, lazy-loaded image, and overlay ARIA labels', () => {
       const onDelete = vi.fn();
-      const { unmount } = render(RailwayModelPreviewCard, { props: { model: mockModel, onDelete } });
+      const { unmount } = render(RailwayModelPreviewCard, {
+        props: { model: mockModel, onDelete }
+      });
       expect(screen.getByLabelText(/delete model/i)).toBeTruthy();
       unmount();
 
       const { container } = render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, photoUrl: 'https://example.com/photo.jpg', unitCount: 3, digitalFeatures: ['Sound', 'DCC'] } }
+        props: {
+          model: {
+            ...mockModel,
+            photoUrl: 'https://example.com/photo.jpg',
+            unitCount: 3,
+            digitalFeatures: ['Sound', 'DCC']
+          }
+        }
       });
       const heading = container.querySelector('h3');
       expect(heading).toBeTruthy();
