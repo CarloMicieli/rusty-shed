@@ -200,6 +200,14 @@ impl From<EpochKind> for Epoch {
     }
 }
 
+/// Garde validator for epoch strings (required). Accepts any value valid for [`EpochKind`].
+#[allow(dead_code)]
+pub fn validate_epoch(value: &str, _ctx: &()) -> garde::Result {
+    EpochKind::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_epoch"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

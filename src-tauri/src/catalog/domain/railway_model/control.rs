@@ -105,6 +105,21 @@ pub fn validate_control(value: &str, _ctx: &()) -> garde::Result {
     }
 }
 
+/// Garde validator for `Option<String>` that must parse as `Control` when present.
+#[allow(dead_code)]
+pub fn validate_opt_control(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => {
+            if s.parse::<Control>().is_ok() {
+                Ok(())
+            } else {
+                Err(garde::Error::new("error_invalid_control"))
+            }
+        }
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod validator_tests {
     use super::*;

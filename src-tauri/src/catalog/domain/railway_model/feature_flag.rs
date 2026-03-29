@@ -50,6 +50,21 @@ pub fn validate_feature_flag(value: &str, _ctx: &()) -> garde::Result {
     }
 }
 
+/// Garde validator for `Option<String>` that must parse as `FeatureFlag` when present.
+#[allow(dead_code)]
+pub fn validate_opt_feature_flag(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => {
+            if s.parse::<FeatureFlag>().is_ok() {
+                Ok(())
+            } else {
+                Err(garde::Error::new("error_invalid_feature_flag"))
+            }
+        }
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

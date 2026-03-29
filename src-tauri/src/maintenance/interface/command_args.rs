@@ -8,10 +8,12 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 
 /// Arguments for the `AddMaintenanceEvent` use-case.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddMaintenanceEventArgs {
-    /// The maintenance card this event belongs to.
+    /// The maintenance card this event belongs to (non-empty TRN string).
+    #[garde(length(min = 1))]
     pub maintenance_card_id: String,
 
     /// Date the maintenance was performed (date-only).
@@ -54,6 +56,46 @@ impl TryFrom<AddMaintenanceEventArgs> for AddMaintenanceEventInput {
             maintenance_type: value.maintenance_type,
             notes: value.notes,
         })
+    }
+}
+
+#[cfg(test)]
+mod garde_tests {
+    use super::*;
+    use crate::maintenance::domain::MaintenanceCardId;
+    use chrono::NaiveDate;
+    use garde::Validate;
+    use uuid::Uuid;
+
+    fn valid_add_event() -> AddMaintenanceEventArgs {
+        let id = Uuid::new_v4();
+        AddMaintenanceEventArgs {
+            maintenance_card_id: MaintenanceCardId::from_uuid(&id).to_string(),
+            date_performed: NaiveDate::from_ymd_opt(2025, 3, 1).unwrap(),
+            maintenance_type: None,
+            notes: None,
+        }
+    }
+
+    #[test]
+    fn add_maintenance_event_valid_passes() {
+        assert!(valid_add_event().validate().is_ok());
+    }
+
+    #[test]
+    fn add_maintenance_event_empty_card_id_fails() {
+        let args = AddMaintenanceEventArgs {
+            maintenance_card_id: String::new(),
+            ..valid_add_event()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "maintenance_card_id"),
+            "{errors:?}"
+        );
     }
 }
 

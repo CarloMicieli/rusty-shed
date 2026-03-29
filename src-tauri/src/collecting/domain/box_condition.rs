@@ -47,6 +47,21 @@ pub fn validate_box_condition(value: &str, _ctx: &()) -> garde::Result {
     }
 }
 
+/// Garde validator for `Option<String>` that must parse as `BoxCondition` when present.
+#[allow(dead_code)]
+pub fn validate_opt_box_condition(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => {
+            if s.parse::<BoxCondition>().is_ok() {
+                Ok(())
+            } else {
+                Err(garde::Error::new("error_invalid_box_condition"))
+            }
+        }
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod validator_tests {
     use super::*;

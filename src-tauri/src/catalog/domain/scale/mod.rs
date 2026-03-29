@@ -1,6 +1,6 @@
 mod ratio;
 #[allow(clippy::module_inception)]
-mod scale;
+pub(crate) mod scale;
 mod scale_gauge;
 mod track_gauge;
 

@@ -1,17 +1,17 @@
-mod availability_status;
-mod body_shell_type;
-mod category;
-mod chassis_type;
-mod control;
+pub(crate) mod availability_status;
+pub(crate) mod body_shell_type;
+pub(crate) mod category;
+pub(crate) mod chassis_type;
+pub(crate) mod control;
 mod coupling;
-mod coupling_socket;
+pub(crate) mod coupling_socket;
 mod dcc_interface;
 mod delivery_date;
-mod epoch;
-mod feature_flag;
+pub(crate) mod epoch;
+pub(crate) mod feature_flag;
 mod length_over_buffers;
 pub mod localized_field;
-mod power_method;
+pub(crate) mod power_method;
 mod product_code;
 mod radius;
 #[allow(clippy::module_inception)]
