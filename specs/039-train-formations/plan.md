@@ -13,7 +13,7 @@ Build a Train Formations module that lets users compose ordered consists from a 
 
 **Primary Dependencies**:
 
-- Backend: `sqlx` (async SQLite), `tauri-specta` (type gen), `uuid`, `validator`
+- Backend: `sqlx` (async SQLite), `tauri-specta` (type gen), `uuid`, `garde` (v0.22.1)
 - Frontend: SvelteKit, Svelte 5 Runes, Tailwind CSS v4, shadcn-svelte, `svelte-dnd-action` (drag-and-drop — **approved 2026-03-29**)
 
 **Storage**: SQLite via `sqlx` migrations. Migration file: `0009_create_train_formations_schema.sql`. Additive `ALTER TABLE` on `owned_rolling_stocks` to add `prototype_id`.
@@ -43,7 +43,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 | **Modular, Library-First**      | ✅ PASS | New `trains` domain module is self-contained under `src-tauri/src/trains/` and `src/lib/features/train-formations/`. No cross-domain coupling added.               |
 | **Deterministic Interfaces**    | ✅ PASS | All 14 IPC commands defined in `contracts/tauri-ipc.md`; typed via `tauri-specta`.                                                                                 |
 | **Test-First Emphasis**         | ✅ PASS | Rust use-case tests and Vitest component tests specified in `quickstart.md` Phase F.                                                                               |
-| **Code Quality**                | ✅ PASS | No `unwrap()`, all `Args` derive `validator::Validate`, CI gates apply.                                                                                            |
+| **Code Quality**                | ✅ PASS | No `unwrap()`, all `Args` derive `garde::Validate`, CI gates apply.                                                                                                |
 | **Testing Standards**           | ✅ PASS | Unit tests for domain logic (traction eval, reorder); integration tests via in-memory SQLite.                                                                      |
 | **User Experience Consistency** | ✅ PASS | All strings via Paraglide (EN + IT). UI follows steampunk design tokens.                                                                                           |
 | **Performance Requirements**    | ✅ PASS | SC-002/003/004 targets defined. Bulk reorder pattern avoids N+1 DB writes.                                                                                         |

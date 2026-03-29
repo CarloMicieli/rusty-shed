@@ -113,6 +113,8 @@ A single ordered slot in a formation's composition.
 | `formation_id`           | `TEXT`    | NOT NULL, FK → `train_formations(id) ON DELETE CASCADE`      |                                                                                           |
 | `prototype_id`           | `TEXT`    | NOT NULL, FK → `prototypes(id)`                              | Mandatory prototype anchor                                                                |
 | `owned_rolling_stock_id` | `TEXT`    | NULLABLE, FK → `owned_rolling_stocks(id) ON DELETE SET NULL` | Optional explicit model assignment                                                        |
+| `snapshot_series_code`   | `TEXT`    | NULLABLE                                                     | Snapshotted from `Prototype.series_code` at the moment `owned_rolling_stock_id` is assigned; **never cleared** — when `owned_rolling_stock_id` becomes NULL (model deleted), this field retains the last value and drives the "Stock not found" display (FR-020) |
+| `snapshot_company_name`  | `TEXT`    | NULLABLE                                                     | Snapshotted from `RailwayCompany.name` at assignment time; retained for tombstone display |
 | `position_order`         | `INTEGER` | NOT NULL                                                     | 0-based; unique within formation                                                          |
 | `traction_override`      | `INTEGER` | NOT NULL DEFAULT 0                                           | 1 = this slot counts for traction regardless of Prototype type (-1 = explicitly excluded) |
 | `created_at`             | `TEXT`    | NOT NULL DEFAULT CURRENT_TIMESTAMP                           |                                                                                           |
@@ -148,10 +150,11 @@ This is a non-breaking additive change — existing rows will have `NULL` (unlin
 
 ```
 [appended] ──reorder──▶ [position updated]
-   └─ ──assign model──▶ [has owned_rolling_stock_id]
-   └─ ──unassign──▶ [owned_rolling_stock_id = NULL]
+   └─ ──assign model──▶ [has owned_rolling_stock_id; snapshot_series_code + snapshot_company_name populated]
+   └─ ──unassign──▶ [owned_rolling_stock_id = NULL; snapshots cleared]
+   └─ ──model deleted──▶ [owned_rolling_stock_id = NULL via FK SET NULL; snapshots retained → "Stock not found" display (FR-020)]
    └─ ──removed──▶ [deleted; siblings shift position_order]
-   └─ ──prototype deleted──▶ [remains; prototype_id FK stays via SET NULL or restricted]
+   └─ ──prototype deleted──▶ [blocked by ON DELETE RESTRICT; use soft-delete on prototypes]
 ```
 
 **Note on prototype deletion**: When a seeded prototype is "deleted" by a user custom override, existing `FormationElement` rows that referenced it must show a "Prototype not found" visual state (FR-020 analogue). The FK is `ON DELETE RESTRICT` for prototypes to prevent accidental breaks — soft-delete pattern preferred for prototypes.
@@ -167,7 +170,7 @@ This is a non-breaking additive change — existing rows will have `NULL` (unlin
 | `prototype_id` required on FormationElement     | DB NOT NULL + Rust                                         | Mandatory prototype anchor                               |
 | Duplicate prototype slots allowed               | No uniqueness constraint on `(formation_id, prototype_id)` | FR-016                                                   |
 | Same `owned_rolling_stock_id` in multiple slots | Not blocked                                                | A model can be logically "counted" in multiple positions |
-| Prototype `car_type` in allowed enum            | Rust validation at boundary                                | Enforced via `validator` crate on `Args`                 |
+| Prototype `car_type` in allowed enum            | Rust validation at boundary                                | Enforced via `garde` crate on `Args` (`custom(validate_car_type_enum)`) |
 
 ---
 
@@ -252,6 +255,8 @@ CREATE TABLE IF NOT EXISTS formation_elements
     formation_id            TEXT NOT NULL,
     prototype_id            TEXT NOT NULL,
     owned_rolling_stock_id  TEXT,
+    snapshot_series_code    TEXT,                     -- set on assign; retained on delete (FR-020)
+    snapshot_company_name   TEXT,                     -- set on assign; retained on delete (FR-020)
     position_order          INTEGER NOT NULL,
     traction_override       INTEGER NOT NULL DEFAULT 0,
     created_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

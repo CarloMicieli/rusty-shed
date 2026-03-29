@@ -256,6 +256,19 @@ pub struct CreateFormationCategoryArgs {
 ## View Models (Specta-typed Read DTOs)
 
 ```rust
+// Post-write response for create_train_formation and update_train_formation
+pub struct TrainFormationView {
+    pub id: String,
+    pub name: String,
+    pub category: Option<FormationCategoryView>,
+    pub start_year: Option<i32>,
+    pub end_year: Option<i32>,
+    pub epoch: Option<String>,
+    pub notes: Option<String>,
+    pub element_count: i64,
+    pub has_traction: bool,
+}
+
 // Summary card for formation list
 pub struct TrainFormationSummary {
     pub id: String,
@@ -287,9 +300,12 @@ pub struct FormationElementView {
     pub position_order: i32,
     pub prototype: PrototypeView,
     pub owned_rolling_stock_id: Option<String>,
-    pub owned_count_for_prototype: i64,       // # of owned_rolling_stocks with same prototype_id
+    pub snapshot_series_code: Option<String>,    // populated on assign; retained on model delete
+    pub snapshot_company_name: Option<String>,   // populated on assign; retained on model delete
+    pub stock_not_found: bool,                   // true when snapshot_series_code is set but owned_rolling_stock_id is None
+    pub owned_count_for_prototype: i64,          // # of owned_rolling_stocks with same prototype_id
     pub traction_override: i32,
-    pub is_traction_slot: bool,               // derived from prototype + override
+    pub is_traction_slot: bool,                  // derived from prototype + override
 }
 
 // Prototype in search results
@@ -368,7 +384,28 @@ fn validate_year_range(end: &Option<i32>, args: &CreateTrainFormationArgs) -> ga
 }
 ```
 
-Apply the same pattern to `UpdateTrainFormationArgs` — the struct fields are identical so the same `validate_year_range` function can be reused.
+A garde custom validator is monomorphised to its specific struct type — the **same function cannot be shared** across two different `Args` structs. Extract the shared logic into a private helper and declare a separate function for `UpdateTrainFormationArgs`:
+
+```rust
+fn check_year_range(start: Option<i32>, end: Option<i32>) -> garde::Result {
+    if let (Some(s), Some(e)) = (start, end) {
+        if s > e {
+            return Err(garde::Error::new("start_year cannot exceed end_year"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_year_range(end: &Option<i32>, args: &CreateTrainFormationArgs) -> garde::Result {
+    check_year_range(args.start_year, *end)
+}
+
+fn validate_year_range_update(end: &Option<i32>, args: &UpdateTrainFormationArgs) -> garde::Result {
+    check_year_range(args.start_year, *end)
+}
+```
+
+Then apply `#[garde(custom(validate_year_range_update))]` on `UpdateTrainFormationArgs.end_year`.
 
 ### Step 3 — Invoke at IPC boundary
 
@@ -402,7 +439,7 @@ pub async fn create_train_formation(
 | `create_train_formation`     | `end_year`            | `custom(validate_year_range)`         |
 | `update_train_formation`     | `name`                | `length(min=1, max=100)`              |
 | `update_train_formation`     | `start_year`          | `range(min=1800, max=2100)` or `skip` |
-| `update_train_formation`     | `end_year`            | `custom(validate_year_range)`         |
+| `update_train_formation`     | `end_year`            | `custom(validate_year_range_update)`  |
 | `create_custom_prototype`    | `series_code`         | `length(min=1, max=50)`               |
 | `create_custom_prototype`    | `car_type`            | `custom(validate_car_type_enum)`      |
 | `create_formation_category`  | `name`                | `length(min=1, max=80)`               |
@@ -434,23 +471,7 @@ The string error codes used in each command section above map to these `CommandE
 
 The `From<DomainError> for CommandError` impl handles `NotFound`, `BusinessRule`, `Conflict`, and `ValidationError` variants automatically via `?`.
 
----
-
-## Domain Events
-
-```rust
-pub enum TrainFormationEvent {
-    Created { id: String, name: String },
-    Updated { id: String },
-    Deleted { id: String },
-    ElementAdded { formation_id: String, element_id: String, position: i32 },
-    ElementRemoved { formation_id: String, element_id: String },
-    ElementsReordered { formation_id: String },
-    RollingStockAssigned { element_id: String, rolling_stock_id: String },
-    RollingStockUnassigned { element_id: String },
-    TractionOverrideSet { element_id: String, override_value: i32 },
-}
-```
+> **Domain Events** are defined in `quickstart.md` Phase A2a (`TrainFormationEvent` enum, 10 variants). That file is the single authoritative reference — do not redefine events here.
 
 ---
 
