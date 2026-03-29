@@ -30,3 +30,4 @@ src-tauri/gen/
 # Custom exclusions
 .claude/
 .github/
+specs/

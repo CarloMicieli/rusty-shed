@@ -184,14 +184,14 @@ mod tests {
 
 ## Recommended Testing Tools
 
-| Tool | Purpose |
-| --- | --- |
-| `cargo test` | Standard unit and integration test runner |
-| `mockall` | The standard crate for trait mocking in Rust |
-| `sqlx::test` | Macro for isolated database integration tests with automatic migrations |
-| `tokio::test` | Async test runtime for use cases and command smoke tests |
-| `fake-rs` | Generating realistic dummy data (train names, manufacturers) |
-| `pretty_assertions` | Improved diff output for large Domain struct comparisons |
+| Tool                | Purpose                                                                 |
+| ------------------- | ----------------------------------------------------------------------- |
+| `cargo test`        | Standard unit and integration test runner                               |
+| `mockall`           | The standard crate for trait mocking in Rust                            |
+| `sqlx::test`        | Macro for isolated database integration tests with automatic migrations |
+| `tokio::test`       | Async test runtime for use cases and command smoke tests                |
+| `fake-rs`           | Generating realistic dummy data (train names, manufacturers)            |
+| `pretty_assertions` | Improved diff output for large Domain struct comparisons                |
 
 ---
 
