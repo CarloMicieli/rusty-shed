@@ -15,6 +15,7 @@ pub mod sellers;
 pub mod settings;
 pub mod state;
 pub mod tracks_inventory;
+pub mod trains;
 pub mod viewport;
 pub mod wishlist;
 
@@ -47,6 +48,7 @@ use crate::settings::interface::commands::{
 use crate::state::AppState;
 use crate::tracks_inventory::interface::command_handlers as tracks_inventory_command_handlers;
 use crate::tracks_inventory::interface::query_handlers as tracks_inventory_query_handlers;
+use crate::trains::interface::command_handlers as trains_command_handlers;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
@@ -253,7 +255,21 @@ pub fn run() {
         get_locale,
         database_backup_command_handlers::export_database,
         database_backup_command_handlers::import_database,
-        search_command_handlers::global_search
+        search_command_handlers::global_search,
+        trains_command_handlers::create_train_formation,
+        trains_command_handlers::update_train_formation,
+        trains_command_handlers::delete_train_formation,
+        trains_command_handlers::get_train_formation,
+        trains_command_handlers::get_train_formations,
+        trains_command_handlers::add_formation_element,
+        trains_command_handlers::remove_formation_element,
+        trains_command_handlers::reorder_formation_elements,
+        trains_command_handlers::assign_rolling_stock_to_element,
+        trains_command_handlers::set_traction_override,
+        trains_command_handlers::get_prototypes,
+        trains_command_handlers::create_custom_prototype,
+        trains_command_handlers::get_formation_categories,
+        trains_command_handlers::create_formation_category
     ]);
 
     #[allow(unused_variables)]

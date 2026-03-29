@@ -1861,6 +1861,160 @@ async globalSearch(args: GlobalSearchArgs) : Promise<Result<GlobalSearchResultVi
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Create a new train formation.
+ */
+async createTrainFormation(args: CreateTrainFormationArgs) : Promise<Result<TrainFormationView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_train_formation", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Update the metadata of an existing train formation.
+ */
+async updateTrainFormation(id: string, args: UpdateTrainFormationArgs) : Promise<Result<TrainFormationView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_train_formation", { id, args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Delete a train formation by ID.
+ */
+async deleteTrainFormation(id: string) : Promise<Result<null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_train_formation", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get a single train formation with full element detail.
+ */
+async getTrainFormation(id: string) : Promise<Result<TrainFormationDetail, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_train_formation", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * List all train formations as summaries.
+ */
+async getTrainFormations() : Promise<Result<TrainFormationSummary[], CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_train_formations") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Add a prototype element to a train formation.
+ */
+async addFormationElement(formationId: string, args: AddFormationElementArgs) : Promise<Result<FormationElementView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_formation_element", { formationId, args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Remove an element from a train formation.
+ */
+async removeFormationElement(elementId: string) : Promise<Result<null, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_formation_element", { elementId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Reorder the elements within a train formation.
+ */
+async reorderFormationElements(formationId: string, args: ReorderFormationElementsArgs) : Promise<Result<TrainFormationDetail, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reorder_formation_elements", { formationId, args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Assign or unassign an owned rolling stock to a formation element.
+ */
+async assignRollingStockToElement(elementId: string, args: AssignRollingStockToElementArgs) : Promise<Result<FormationElementView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("assign_rolling_stock_to_element", { elementId, args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Override the traction status of a formation element.
+ */
+async setTractionOverride(elementId: string, args: SetTractionOverrideArgs) : Promise<Result<FormationElementView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_traction_override", { elementId, args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Search prototypes grouped by railway company.
+ */
+async getPrototypes(query: string | null) : Promise<Result<PrototypeGroupView[], CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_prototypes", { query }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Create a new custom prototype.
+ */
+async createCustomPrototype(args: CreateCustomPrototypeArgs) : Promise<Result<PrototypeView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_custom_prototype", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * List all formation categories.
+ */
+async getFormationCategories() : Promise<Result<FormationCategoryView[], CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_formation_categories") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Create a new custom formation category.
+ */
+async createFormationCategory(args: CreateFormationCategoryArgs) : Promise<Result<FormationCategoryView, CommandError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_formation_category", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -1910,6 +2064,10 @@ currency: string | null;
  * Optional reason for the extra budget
  */
 reason: string | null }
+/**
+ * Arguments for `add_formation_element`.
+ */
+export type AddFormationElementArgs = { prototype_id: string; owned_rolling_stock_id: string | null }
 /**
  * Arguments for adding a maintenance record.
  */
@@ -2186,6 +2344,14 @@ export type AppTheme = "steampunk-dark" | "steampunk-light" | "system"
  * Archive format detection.
  */
 export type ArchiveFormat = "zip" | "tarGz"
+/**
+ * Arguments for `assign_rolling_stock_to_element`.
+ */
+export type AssignRollingStockToElementArgs = { 
+/**
+ * `None` = unassign.
+ */
+owned_rolling_stock_id: string | null }
 /**
  * Lifecycle availability status of a railway model.
  * 
@@ -2792,6 +2958,14 @@ export type CouplingSocket = "NONE" |
  */
 "NEM_365"
 /**
+ * Arguments for `create_custom_prototype`.
+ */
+export type CreateCustomPrototypeArgs = { railway_company_id: string; series_code: string; car_type: string; service_level: string | null; category: string; is_motorized: boolean; default_is_dummy: boolean; notes: string | null }
+/**
+ * Arguments for `create_formation_category`.
+ */
+export type CreateFormationCategoryArgs = { name: string }
+/**
  * Arguments for creating a new railway model (transport from IPC to application).
  */
 export type CreateRailwayModelArgs = { 
@@ -2900,6 +3074,14 @@ length: Length | null;
  * Radius for curved track elements, when applicable
  */
 radius: Length | null }
+/**
+ * Arguments for `create_train_formation`.
+ */
+export type CreateTrainFormationArgs = { 
+/**
+ * Formation name — required, 1–100 characters.
+ */
+name: string; category_id: string | null; start_year: number | null; end_year: number | null; epoch: string | null; notes: string | null }
 /**
  * Arguments structure for creating a new wishlist.
  */
@@ -3524,6 +3706,34 @@ export type FeatureFlag =
  * for a Steam Locomotive.
  */
 "NOT_APPLICABLE"
+/**
+ * A formation category (seeded or custom).
+ */
+export type FormationCategoryView = { id: string; name: string; is_custom: boolean }
+/**
+ * An individual element slot in a formation.
+ */
+export type FormationElementView = { id: string; position_order: number; prototype: PrototypeView; owned_rolling_stock_id: string | null; 
+/**
+ * Snapshotted series code retained even after owned model deletion.
+ */
+snapshot_series_code: string | null; 
+/**
+ * Snapshotted company name retained even after owned model deletion.
+ */
+snapshot_company_name: string | null; 
+/**
+ * `true` when `snapshot_series_code` is set but `owned_rolling_stock_id` is `None`.
+ */
+stock_not_found: boolean; 
+/**
+ * Number of `owned_rolling_stocks` rows matching the same `prototype_id`.
+ */
+owned_count_for_prototype: bigint; traction_override: number; 
+/**
+ * Derived: whether this slot counts as a traction source.
+ */
+is_traction_slot: boolean }
 /**
  * Represents the various types of freight rolling stock used in rail transport.
  * 
@@ -4553,6 +4763,14 @@ expectedDate: string | null }
  */
 export type ProductCode = string
 /**
+ * Prototypes grouped by railway company (for the search drawer).
+ */
+export type PrototypeGroupView = { railway_company_id: string; company_name: string; prototypes: PrototypeView[] }
+/**
+ * Prototype in search results.
+ */
+export type PrototypeView = { id: string; railway_company_id: string; company_name: string; series_code: string; car_type: string; service_level: string | null; category: string; is_motorized: boolean; default_is_dummy: boolean; is_custom: boolean }
+/**
  * The condition under which a collectible item was purchased.
  */
 export type PurchaseCondition = 
@@ -5026,6 +5244,14 @@ wishlistId: string;
  * The new name for the wishlist (1–200 characters).
  */
 name: string }
+/**
+ * Arguments for `reorder_formation_elements`.
+ */
+export type ReorderFormationElementsArgs = { 
+/**
+ * Complete ordered list of all element IDs.
+ */
+element_ids: string[] }
 /**
  * Response for created digital rolling stock: returns the new id.
  */
@@ -5616,6 +5842,14 @@ trackId: TrackId;
  */
 quantity: bigint }
 /**
+ * Arguments for `set_traction_override`.
+ */
+export type SetTractionOverrideArgs = { 
+/**
+ * 0 = use prototype default, 1 = force count, -1 = force exclude.
+ */
+traction_override: number }
+/**
  * Simplified arguments for creating a railway model and optionally a small set
  * of rolling stocks. This is a lighter-weight payload used by the
  * `add_railway_model_to_collection` and `add_railway_model_to_wish_list` commands.
@@ -5939,6 +6173,38 @@ seller_name: string | null;
 purchase_date: string }
 export type TrackType = "STRAIGHT" | "CURVE" | "TURNOUT" | "FLEX_TRACK"
 /**
+ * Full detail for the formation builder screen.
+ */
+export type TrainFormationDetail = { id: string; name: string; category: FormationCategoryView | null; start_year: number | null; end_year: number | null; epoch: string | null; notes: string | null; 
+/**
+ * Ordered composition slots.
+ */
+elements: FormationElementView[]; 
+/**
+ * Whether the formation has at least one effective traction slot.
+ */
+has_traction: boolean }
+/**
+ * Summary card for the formation list page.
+ */
+export type TrainFormationSummary = { id: string; name: string; category: FormationCategoryView | null; epoch: string | null; element_count: bigint; 
+/**
+ * Whether the formation has at least one effective traction slot.
+ */
+has_traction: boolean; 
+/**
+ * Elements that have an `owned_rolling_stock_id` assigned.
+ */
+owned_count: bigint; 
+/**
+ * Elements that do not have an `owned_rolling_stock_id` assigned.
+ */
+planned_count: bigint }
+/**
+ * Post-write response for `create_train_formation` and `update_train_formation`.
+ */
+export type TrainFormationView = { id: string; name: string; category: FormationCategoryView | null; start_year: number | null; end_year: number | null; epoch: string | null; notes: string | null; element_count: bigint; has_traction: boolean }
+/**
  * Arguments structure for updating a single mutable field of a collection item.
  */
 export type UpdateCollectionItemArgs = { 
@@ -6175,6 +6441,14 @@ countryCode: string | null; createdAt: string | null }
  * Input for partial settings updates
  */
 export type UpdateSettingsInput = { currency: string | null; language: Language | null; measureUnit: MeasureUnit | null; favouriteScale: string | null; powerMethod: PowerMethod | null; theme: AppTheme | null }
+/**
+ * Arguments for `update_train_formation`.
+ */
+export type UpdateTrainFormationArgs = { 
+/**
+ * New name for the formation. `None` = keep existing name.
+ */
+name: string | null; category_id: string | null; start_year: number | null; end_year: number | null; epoch: string | null; notes: string | null }
 /**
  * Arguments for updating editable fields on a specific wishlist item.
  * 

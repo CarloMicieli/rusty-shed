@@ -68,7 +68,8 @@ describe('User Story 4: Consistent Feature Identity', () => {
         maintenance: 'Maintenance',
         depot: 'Depot',
         'digital-dcc': 'Digital (DCC)',
-        'railway-tracks': 'Railway Tracks'
+        'railway-tracks': 'Railway Tracks',
+        'train-formations': 'Train Formations'
       };
 
       NAVIGATION_ITEMS.forEach((item) => {
@@ -90,7 +91,8 @@ describe('User Story 4: Consistent Feature Identity', () => {
         maintenance: 'wrench',
         depot: 'warehouse',
         'digital-dcc': 'cpu',
-        'railway-tracks': 'train_track'
+        'railway-tracks': 'train_track',
+        'train-formations': 'combine'
       };
 
       NAVIGATION_ITEMS.forEach((item) => {
@@ -106,8 +108,8 @@ describe('User Story 4: Consistent Feature Identity', () => {
 
   describe('T056: Configuration Consolidation', () => {
     it('NAVIGATION_ITEMS config uses correct icons per spec', () => {
-      // Verify config has all 8 items (4 primary + 4 secondary)
-      expect(NAVIGATION_ITEMS).toHaveLength(8);
+      // Verify config has all 9 items (4 primary + 5 secondary)
+      expect(NAVIGATION_ITEMS).toHaveLength(9);
 
       // Verify each item has required properties
       NAVIGATION_ITEMS.forEach((item) => {
@@ -124,8 +126,8 @@ describe('User Story 4: Consistent Feature Identity', () => {
     it('all components reference shared config (no hardcoded navigation data)', () => {
       // Verify PRIMARY_ITEMS is derived from NAVIGATION_ITEMS
       expect(PRIMARY_ITEMS).toHaveLength(4); // Exactly 4 primary items
-      expect(SECONDARY_ITEMS).toHaveLength(4); // Exactly 4 secondary items
-      expect(NAVIGATION_ITEMS).toHaveLength(8); // 4 + 4 (no duplicates)
+      expect(SECONDARY_ITEMS).toHaveLength(5); // Exactly 5 secondary items
+      expect(NAVIGATION_ITEMS).toHaveLength(9); // 4 + 5 (no duplicates)
 
       const totalFeatures = PRIMARY_ITEMS.length + SECONDARY_ITEMS.length;
       expect(totalFeatures).toBe(NAVIGATION_ITEMS.length);

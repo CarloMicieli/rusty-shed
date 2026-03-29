@@ -665,16 +665,17 @@ pnpm add svelte-dnd-action
 <script lang="ts">
   import { dndzone } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
+  import type { FormationElementView } from '$lib/bindings';
 
-  let items = $state([...]);
+  let items = $state<FormationElementView[]>([]);
 
   function handleConsider(e: CustomEvent) {
-    items = e.detail.items;  // local state only — no DB call
+    items = e.detail.items; // local state only — no DB call
   }
 
   async function handleFinalize(e: CustomEvent) {
     items = e.detail.items;
-    await reorderFormationElements({ formation_id, ordered_element_ids: items.map(i => i.id) });
+    await reorderFormationElements({ formation_id, ordered_element_ids: items.map((i) => i.id) });
   }
 </script>
 

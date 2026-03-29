@@ -6,7 +6,8 @@ import {
   Wrench,
   Warehouse,
   Cpu,
-  TrainTrack
+  TrainTrack,
+  Combine
 } from 'lucide-svelte';
 import * as m from '$lib/paraglide/messages.js';
 import type { NavigationItem } from './types';
@@ -73,6 +74,14 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     label: () => m.app_railway_tracks(),
     icon: TrainTrack,
     href: '/railway-tracks',
+    isPrimary: false,
+    usePrefixMatch: true
+  },
+  {
+    id: 'train-formations',
+    label: () => m.app_train_formations(),
+    icon: Combine,
+    href: '/train-formations',
     isPrimary: false,
     usePrefixMatch: true
   }

@@ -107,18 +107,18 @@ The header record for a named train set.
 
 A single ordered slot in a formation's composition.
 
-| Column                   | Type      | Constraints                                                  | Notes                                                                                     |
-| ------------------------ | --------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `id`                     | `TEXT`    | PK                                                           | Format: `trn:element:<uuid>`                                                              |
-| `formation_id`           | `TEXT`    | NOT NULL, FK → `train_formations(id) ON DELETE CASCADE`      |                                                                                           |
-| `prototype_id`           | `TEXT`    | NOT NULL, FK → `prototypes(id)`                              | Mandatory prototype anchor                                                                |
-| `owned_rolling_stock_id` | `TEXT`    | NULLABLE, FK → `owned_rolling_stocks(id) ON DELETE SET NULL` | Optional explicit model assignment                                                        |
+| Column                   | Type      | Constraints                                                  | Notes                                                                                                                                                                                                                                                            |
+| ------------------------ | --------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                     | `TEXT`    | PK                                                           | Format: `trn:element:<uuid>`                                                                                                                                                                                                                                     |
+| `formation_id`           | `TEXT`    | NOT NULL, FK → `train_formations(id) ON DELETE CASCADE`      |                                                                                                                                                                                                                                                                  |
+| `prototype_id`           | `TEXT`    | NOT NULL, FK → `prototypes(id)`                              | Mandatory prototype anchor                                                                                                                                                                                                                                       |
+| `owned_rolling_stock_id` | `TEXT`    | NULLABLE, FK → `owned_rolling_stocks(id) ON DELETE SET NULL` | Optional explicit model assignment                                                                                                                                                                                                                               |
 | `snapshot_series_code`   | `TEXT`    | NULLABLE                                                     | Snapshotted from `Prototype.series_code` at the moment `owned_rolling_stock_id` is assigned; **never cleared** — when `owned_rolling_stock_id` becomes NULL (model deleted), this field retains the last value and drives the "Stock not found" display (FR-020) |
-| `snapshot_company_name`  | `TEXT`    | NULLABLE                                                     | Snapshotted from `RailwayCompany.name` at assignment time; retained for tombstone display |
-| `position_order`         | `INTEGER` | NOT NULL                                                     | 0-based; unique within formation                                                          |
-| `traction_override`      | `INTEGER` | NOT NULL DEFAULT 0                                           | 1 = this slot counts for traction regardless of Prototype type (-1 = explicitly excluded) |
-| `created_at`             | `TEXT`    | NOT NULL DEFAULT CURRENT_TIMESTAMP                           |                                                                                           |
-| `updated_at`             | `TEXT`    | NOT NULL DEFAULT CURRENT_TIMESTAMP                           |                                                                                           |
+| `snapshot_company_name`  | `TEXT`    | NULLABLE                                                     | Snapshotted from `RailwayCompany.name` at assignment time; retained for tombstone display                                                                                                                                                                        |
+| `position_order`         | `INTEGER` | NOT NULL                                                     | 0-based; unique within formation                                                                                                                                                                                                                                 |
+| `traction_override`      | `INTEGER` | NOT NULL DEFAULT 0                                           | 1 = this slot counts for traction regardless of Prototype type (-1 = explicitly excluded)                                                                                                                                                                        |
+| `created_at`             | `TEXT`    | NOT NULL DEFAULT CURRENT_TIMESTAMP                           |                                                                                                                                                                                                                                                                  |
+| `updated_at`             | `TEXT`    | NOT NULL DEFAULT CURRENT_TIMESTAMP                           |                                                                                                                                                                                                                                                                  |
 
 **Indexes**: `(formation_id, position_order)`, `(prototype_id)`
 
@@ -163,13 +163,13 @@ This is a non-breaking additive change — existing rows will have `NULL` (unlin
 
 ## Validation Rules
 
-| Rule                                            | Layer                                                      | Notes                                                    |
-| ----------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
-| Formation name uniqueness                       | DB UNIQUE + Rust use case                                  | FR-002                                                   |
-| `start_year <= end_year`                        | DB CHECK + Rust + Frontend `$derived`                      | FR-003                                                   |
-| `prototype_id` required on FormationElement     | DB NOT NULL + Rust                                         | Mandatory prototype anchor                               |
-| Duplicate prototype slots allowed               | No uniqueness constraint on `(formation_id, prototype_id)` | FR-016                                                   |
-| Same `owned_rolling_stock_id` in multiple slots | Not blocked                                                | A model can be logically "counted" in multiple positions |
+| Rule                                            | Layer                                                      | Notes                                                                   |
+| ----------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Formation name uniqueness                       | DB UNIQUE + Rust use case                                  | FR-002                                                                  |
+| `start_year <= end_year`                        | DB CHECK + Rust + Frontend `$derived`                      | FR-003                                                                  |
+| `prototype_id` required on FormationElement     | DB NOT NULL + Rust                                         | Mandatory prototype anchor                                              |
+| Duplicate prototype slots allowed               | No uniqueness constraint on `(formation_id, prototype_id)` | FR-016                                                                  |
+| Same `owned_rolling_stock_id` in multiple slots | Not blocked                                                | A model can be logically "counted" in multiple positions                |
 | Prototype `car_type` in allowed enum            | Rust validation at boundary                                | Enforced via `garde` crate on `Args` (`custom(validate_car_type_enum)`) |
 
 ---
