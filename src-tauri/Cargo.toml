@@ -1,6 +1,6 @@
 [package]
 name = "rusty-shed"
-version = "0.1.0"
+version = "0.2.0"
 description = "The ultimate companion app for scale modelers and collectors"
 authors = ["Carlo Micieli <piovarolo@gmail.com>"]
 edition = "2024"
