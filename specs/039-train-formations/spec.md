@@ -122,14 +122,16 @@ A user wants to know immediately whether their formation has enough motorized tr
 - **FR-007**: Users MUST be able to add custom categories to the global category list; custom categories MUST persist and be available in all future category selections.
 - **FR-008**: The system MUST display a horizontal scrolling track view where each composition entry is rendered as a stock cell showing: SVG side-profile icon, railway operator badge, series code, and service level.
 - **FR-009**: The identity card (formation name, category, traction warning) MUST remain sticky/fixed while the user scrolls horizontally through the composition.
-- **FR-010**: The system MUST visually distinguish owned stock from non-owned stock within the composition grid using a color-coded indicator (background tint or border).
-- **FR-011**: The system MUST provide a side drawer panel that lets users search their rolling stock catalog and add units to the active formation composition.
+- **FR-010**: Each `FormationEntry` cell MUST automatically display an ownership badge showing how many `RollingStock` items in the user's inventory share the slot's `prototype_id` (e.g., "2 owned"). If zero matching models exist, the cell MUST display a "Planned" or unowned visual state. The user MAY open an assignment picker from the cell to explicitly select one specific `RollingStock` model for that slot; once assigned, the assigned model's details (scale, manufacturer) replace the generic badge.
+- **FR-011**: The system MUST provide a side drawer panel that lets users search the **Prototype Library** (master catalog, not just owned inventory) and add units to the active formation composition. Results MUST be grouped by railway operator. For each Prototype, the drawer MUST display: series code, car type, and service level. When a Prototype is selected, a `FormationEntry` is created with that `prototype_id` and no `rolling_stock_id` initially.
+- **FR-011a**: The app MUST ship with a seeded dataset of common `Prototype` records (following the same seed pattern as `RailwayCompany`). Users MUST be able to add custom `Prototype` records; custom entries MUST be flagged with `is_custom = true` and persist across sessions.
+- **FR-011b**: Custom `Prototype` creation MUST be available inline from the drawer search panel — either when a search returns zero results or via an explicit "+ Add Prototype" action. The user MUST be able to specify at minimum: railway company, series code, car type, and service level. No separate management screen is required.
 - **FR-012**: The drawer search MUST filter results in real time as the user types.
 - **FR-013**: Users MUST be able to reorder composition entries via drag-and-drop; the new order MUST be saved immediately.
 - **FR-014**: A drag-and-drop interaction MUST show a ghost/placeholder element indicating the drop target before the user releases.
 - **FR-015**: Users MUST be able to remove individual stock entries from the composition.
 - **FR-016**: The system MUST allow the same stock item to appear multiple times in a single composition (duplicate entries permitted).
-- **FR-017**: The system MUST evaluate traction for every composition: if no non-dummy motorized unit exists in the composition, a "No Traction" warning MUST be displayed in the identity card.
+- **FR-017**: The system MUST evaluate traction based on `Prototype.car_type`: a `FormationEntry` whose Prototype has `car_type` of `Locomotive` or `PowerCar` is considered a motorized slot. If no such slot exists in the composition, a "No Traction" warning MUST be displayed in the identity card. This evaluation applies regardless of whether a physical `RollingStock` model has been assigned to the slot.
 - **FR-018**: Users MUST be able to flag a dummy motorized unit as "counts for traction" on a per-entry basis; such entries MUST be visually distinct but suppress the no-traction warning.
 - **FR-019**: The notes field MUST support inline rich-text editing with Markdown output, rendered in-place without navigating to a separate edit screen.
 - **FR-020**: When a rolling stock item referenced in a composition is deleted from inventory, the composition entry MUST remain with a visual "stock not found" indicator rather than silently disappearing.
@@ -138,8 +140,10 @@ A user wants to know immediately whether their formation has enough motorized tr
 
 - **TrainFormation**: Represents a named train set. Key attributes: unique name, category (link to FormationCategory), service start year, service end year, railway epoch, markdown notes, ordered list of composition entries.
 - **FormationCategory**: A named classification for a formation type (e.g., EuroCity, TEE). Supports both built-in and user-created entries.
-- **FormationEntry**: Represents a single rolling stock unit's slot in a formation. Key attributes: position (order index), reference to rolling stock, dummy-counts-for-traction override flag. Belongs to one TrainFormation.
-- **RollingStock** _(existing entity)_: The locomotive or carriage being referenced. Relevant attributes: series code, service level, operator badge, is_dummy flag, ownership status.
+- **RailwayCompany**: Defines the real-world railway operator (e.g., FS, SBB, DB). Key attributes: code, name. ID pattern: `trn:railway-company:<code>`.
+- **Prototype**: Defines a real-world rolling stock series and its technical/service classification. Belongs to a `RailwayCompany`. Key attributes: series code (e.g., "UIC-Z1"), car type (e.g., Locomotive, Coach, Couchette, Dining), service level (e.g., 1st Class, 2nd Class), era/epoch, `is_custom` flag (false for seeded records, true for user-added). ID pattern: `trn:prototype:<railway>-<series-slug>`. Seeded records ship with the app (same pattern as `RailwayCompany`); users may add custom prototypes which persist alongside seeded data but are flagged distinctly.
+- **FormationEntry**: Represents a single slot in a formation's ordered consist. Key attributes: position (order index), **required** `prototype_id` (reference to a `Prototype`), **optional** `rolling_stock_id` (reference to a specific owned `RollingStock` model assigned to this slot), dummy-counts-for-traction override flag. Belongs to one `TrainFormation`. ID pattern: `trn:element:<uuid>`.
+- **RollingStock** _(existing entity)_: A physical model in the user's inventory. Must carry an optional `prototype_id` foreign key to enable ownership matching. Relevant attributes: series code, service level, operator badge, is_dummy flag, prototype_id.
 
 ## Success Criteria _(mandatory)_
 
@@ -152,3 +156,13 @@ A user wants to know immediately whether their formation has enough motorized tr
 - **SC-005**: 90% of users can successfully build and reorder a 5-unit formation on their first attempt without consulting documentation, as measured by task-completion testing.
 - **SC-006**: All formation metadata fields survive an app restart without data loss (full persistence).
 - **SC-007**: Drag-and-drop reordering is usable on touch devices (tablet) as well as mouse-driven desktop without requiring a separate interaction mode.
+
+## Clarifications
+
+### Session 2026-03-29
+
+- Q: Should `FormationEntry` reference a `Prototype` (master catalog), a `RollingStock` inventory item, or both? → A: **Both** — a `FormationEntry` requires a `Prototype` reference (mandatory) and allows an optional assignment of a specific owned `RollingStock` model to that slot.
+- Q: Where does the Prototype Library data come from? → A: **Seeded** — the app ships with a bundled dataset of common prototypes (same pattern as `RailwayCompany` seed data); users can add custom prototypes on top.
+- Q: How is ownership displayed on a `FormationEntry` slot? → A: **Auto-detect, manual assignment** — the cell automatically shows an "N owned" badge when matching `RollingStock` records exist; the user can optionally open a picker to assign a specific physical model to that slot.
+- Q: Where can custom Prototypes be created? → A: **Inline from the drawer** — when a search returns no results (or via an explicit "+ Add Prototype" action at the bottom of results), the user can create a custom Prototype without leaving the Formation builder. No separate management screen is required for this feature.
+- Q: What drives the traction evaluation for a `FormationEntry`? → A: **Prototype car type** — a slot is motorized if its `Prototype.car_type` is `Locomotive` or `PowerCar`, regardless of whether a physical `RollingStock` is assigned. The per-entry dummy override flag can still suppress or force this for edge cases.
