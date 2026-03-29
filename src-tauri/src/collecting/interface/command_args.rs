@@ -281,7 +281,8 @@ mod garde_tests {
         let report = args.validate().unwrap_err();
         let errors: Vec<_> = report.into_inner();
         assert!(
-            errors.iter().any(|(p, _)| p.to_string() == "seller_id"),
+            errors.iter().any(|(p, e)| p.to_string() == "seller_id"
+                && e.to_string().contains("error_invalid_seller_id")),
             "{errors:?}"
         );
     }
@@ -482,7 +483,7 @@ fn validate_opt_seller_trn(v: &Option<String>, _: &()) -> garde::Result {
     match v {
         Some(s) => SellerId::try_from(s.as_str())
             .map(|_| ())
-            .map_err(|e| garde::Error::new(e.to_string())),
+            .map_err(|_| garde::Error::new("error_invalid_seller_id")),
         None => Ok(()),
     }
 }

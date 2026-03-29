@@ -325,7 +325,7 @@ where
 /// Garde validator for the double-option price amount: rejects negative inner values.
 fn validate_opt_price_amount(value: &Option<Option<i64>>, _: &()) -> garde::Result {
     if matches!(value, Some(Some(n)) if *n < 0) {
-        return Err(garde::Error::new("desired_price_amount must be >= 0"));
+        return Err(garde::Error::new("error_invalid_desired_price_amount"));
     }
     Ok(())
 }
@@ -373,7 +373,7 @@ impl TryFrom<UpdateWishlistItemArgs> for UpdateWishlistItemInput {
             Some(Some(amount)) => {
                 if amount < 0 {
                     return Err(DomainError::Validation(
-                        "desired_price_amount must be >= 0".to_string(),
+                        "error_invalid_desired_price_amount".to_string(),
                     ));
                 }
                 let code = input.desired_price_currency.as_deref().ok_or_else(|| {
