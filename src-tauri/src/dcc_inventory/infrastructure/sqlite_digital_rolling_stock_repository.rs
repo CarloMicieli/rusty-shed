@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::catalog::domain::railway_model::{DccInterface, PowerMethod, RollingStockCategory};
 use crate::catalog::domain::scale::Scale;
 use crate::core::domain::domain_error::DomainError;
@@ -9,12 +7,10 @@ use crate::dcc_inventory::application::{
     InstallableRollingStockView,
 };
 use crate::dcc_inventory::domain::{
-    DccAddress, DccInventoryUowExt, Decoder, DigitalRollingStock, DigitalRollingStockId,
-    DigitalRollingStockRepository,
+    DccAddress, DccInventoryUowExt, Decoder, DecoderId, DecoderType, DigitalProtocol,
+    DigitalRollingStock, DigitalRollingStockId, DigitalRollingStockRepository,
 };
-use crate::dcc_inventory::infrastructure::entities::{
-    DecoderRow, DigitalRollingStockRow, ManufacturerNameRow,
-};
+use crate::dcc_inventory::infrastructure::entities::{DecoderRow, DigitalRollingStockRow};
 use sqlx::SqliteConnection;
 
 /// SQLite implementation of the `DigitalRollingStockRepository`.
@@ -137,31 +133,17 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
     async fn find_all_digital_rolling_stocks(
         &mut self,
     ) -> Result<Vec<DigitalRollingStockView>, DomainError> {
-        // Load all decoders and manufacturers once and build lookup maps to avoid N+1 queries.
-        let decoders = self.find_all_decoders().await?;
-        let mut decoder_map = HashMap::with_capacity(decoders.len());
-        for d in decoders {
-            decoder_map.insert(d.id.clone(), d);
-        }
-
-        let msql = r#"SELECT id, name FROM manufacturers"#;
-        let manufacturer_rows = sqlx::query_as::<_, ManufacturerNameRow>(msql)
-            .fetch_all(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
-
-        let mut manufacturer_map = HashMap::with_capacity(manufacturer_rows.len());
-        for m in manufacturer_rows {
-            manufacturer_map.insert(m.id, m.name);
-        }
-
-        // Enhanced query with catalog data JOIN and Function decoder exclusion
         let sql = r#"
-            SELECT 
+            SELECT
                 drs.id,
                 drs.owned_rolling_stock_id,
                 drs.dcc_address,
-                drs.installed_decoder_id,
+                d.id AS decoder_id,
+                d.product_code AS decoder_product_code,
+                d.decoder_type,
+                d.protocol AS decoder_protocol,
+                d.decoder_interface,
+                m.name AS manufacturer_name,
                 rs.category,
                 rs.road_number,
                 rs.series_code,
@@ -171,6 +153,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
                 rm.power_method
             FROM digital_rolling_stocks drs
             JOIN decoders d ON drs.installed_decoder_id = d.id
+            LEFT JOIN manufacturers m ON d.manufacturer_id = m.id
             JOIN owned_rolling_stocks ors ON drs.owned_rolling_stock_id = ors.id
             LEFT JOIN rolling_stocks rs ON ors.rolling_stock_id = rs.id
             LEFT JOIN railway_companies rc ON rs.railway_company_id = rc.id
@@ -183,8 +166,13 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
         struct EnrichedRow {
             id: DigitalRollingStockId,
             owned_rolling_stock_id: crate::collecting::domain::OwnedRollingStockId,
-            dcc_address: i32,
-            installed_decoder_id: Option<crate::dcc_inventory::domain::DecoderId>,
+            dcc_address: u16,
+            decoder_id: DecoderId,
+            decoder_product_code: String,
+            decoder_type: DecoderType,
+            decoder_protocol: DigitalProtocol,
+            decoder_interface: DccInterface,
+            manufacturer_name: Option<String>,
             category: Option<String>,
             road_number: Option<String>,
             series_code: Option<String>,
@@ -202,37 +190,32 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
         let mut out = Vec::with_capacity(rows.len());
 
         for row in rows {
-            let dcc = DccAddress::new(row.dcc_address.try_into().unwrap_or(1))
+            let dcc = DccAddress::new(row.dcc_address)
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-            let decoder_id = row.installed_decoder_id.ok_or_else(|| {
-                DomainError::Validation("missing decoder for digital rolling stock".to_string())
-            })?;
-
-            let decoder = decoder_map
-                .get(&decoder_id)
-                .ok_or_else(|| DomainError::NotFound {
-                    resource: "Decoder".to_string(),
-                    identifier: decoder_id.to_string(),
-                })?;
-
             let decoder_view = DecoderView {
-                id: decoder.id.clone(),
-                manufacturer: manufacturer_map
-                    .get(&decoder.manufacturer_id)
-                    .cloned()
-                    .unwrap_or_else(|| decoder.manufacturer_id.to_string()),
-                product_code: decoder.product_code.clone(),
-                decoder_type: decoder.decoder_type.clone(),
-                protocol: decoder.protocol.clone(),
-                decoder_interface: decoder.decoder_interface,
+                id: row.decoder_id,
+                manufacturer: row
+                    .manufacturer_name
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                product_code: row.decoder_product_code,
+                decoder_type: row.decoder_type,
+                protocol: row.decoder_protocol,
+                decoder_interface: row.decoder_interface,
             };
 
-            // Parse catalog enums from strings
             let category = row
                 .category
-                .and_then(|c| c.parse::<RollingStockCategory>().ok())
-                .unwrap_or(RollingStockCategory::Locomotive);
+                .ok_or_else(|| {
+                    DomainError::Validation(
+                        "missing category for digital rolling stock".to_string(),
+                    )
+                })
+                .and_then(|c| {
+                    c.parse::<RollingStockCategory>().map_err(|_| {
+                        DomainError::Validation(format!("unknown rolling stock category: {c}"))
+                    })
+                })?;
 
             let scale = row.scale.as_deref().and_then(|s| Scale::try_from(s).ok());
             let power_method = row
