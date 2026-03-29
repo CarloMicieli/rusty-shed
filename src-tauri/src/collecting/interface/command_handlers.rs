@@ -249,6 +249,9 @@ pub async fn add_collection_item(
 ) -> Result<CollectionItemId, CommandError> {
     info!("Adding collection item: {:?}", args);
 
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid collection args: {e}")))?;
+
     let domain_cmd = match DomainAddCollectionItemInput::try_from(args) {
         Ok(v) => v,
         Err(e) => return Err(CommandError::from(e)),
@@ -279,6 +282,9 @@ pub async fn add_railway_model_to_collection(
     args: AddRailwayModelToCollectionArgs,
 ) -> Result<(), CommandError> {
     info!("add_railway_model_to_collection (collecting): {:?}", args);
+
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid collection args: {e}")))?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 

@@ -266,10 +266,8 @@ mod garde_tests {
         let report = args.validate().unwrap_err();
         let errors: Vec<_> = report.into_inner();
         assert!(
-            errors
-                .iter()
-                .any(|(p, e)| p.to_string() == "purchase_date"
-                    && e.to_string().contains("YYYY-MM-DD")),
+            errors.iter().any(|(p, e)| p.to_string() == "purchase_date"
+                && e.to_string().contains("error_invalid_date_format")),
             "{errors:?}"
         );
     }
@@ -476,7 +474,7 @@ mod garde_tests {
 fn validate_iso_date(v: &str, _: &()) -> garde::Result {
     chrono::NaiveDate::parse_from_str(v, "%Y-%m-%d")
         .map(|_| ())
-        .map_err(|_| garde::Error::new("expected YYYY-MM-DD"))
+        .map_err(|_| garde::Error::new("error_invalid_date_format"))
 }
 
 /// Validates that an optional string is a valid seller TRN.
