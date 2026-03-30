@@ -6,6 +6,7 @@ export interface ExportPreview {
   seller_count: number;
   maintenance_log_count: number;
   dcc_roster_count: number;
+  train_formation_count: number;
   image_count: number;
   orphaned_image_count: number;
   estimated_size_bytes: number;
@@ -19,6 +20,7 @@ export interface ExportEntitySelection {
   include_maintenance_logs: boolean;
   include_dcc_roster: boolean;
   include_orphaned_images: boolean;
+  include_train_formations: boolean;
 }
 
 export interface ExportResult {

@@ -72,6 +72,9 @@ mod tests {
                 seller_dupes: DuplicateCheckResult::default(),
                 track_product_dupes: DuplicateCheckResult::default(),
                 track_inventory_dupes: DuplicateCheckResult::default(),
+                formation_category_dupes: DuplicateCheckResult::default(),
+                train_formation_dupes: DuplicateCheckResult::default(),
+                prototype_dupes: DuplicateCheckResult::default(),
             })
         }
 

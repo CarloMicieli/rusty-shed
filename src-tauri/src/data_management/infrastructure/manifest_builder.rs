@@ -744,6 +744,136 @@ pub async fn build_manifest(
         }
     }
 
+    if selection.include_train_formations {
+        // Formation categories
+        let cat_rows =
+            sqlx::query("SELECT id, name, is_custom FROM formation_categories ORDER BY name")
+                .fetch_all(pool)
+                .await
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let formation_categories: Vec<Value> = cat_rows
+            .iter()
+            .map(|row| {
+                json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "name": row.try_get::<String, _>("name").ok(),
+                    "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
+                })
+            })
+            .collect();
+        data["formationCategories"] = json!(formation_categories);
+
+        // Prototypes referenced by formations (and custom ones)
+        let proto_rows = sqlx::query(
+            "SELECT DISTINCT p.id, p.railway_company_id, p.series_code, p.car_type, \
+                    p.service_level, p.category, p.is_motorized, p.is_custom \
+             FROM prototypes p \
+             WHERE p.is_custom = 1 \
+                OR p.id IN ( \
+                    SELECT DISTINCT fe.prototype_id \
+                    FROM formation_elements fe \
+                    JOIN train_formations tf ON tf.id = fe.formation_id \
+                ) \
+             ORDER BY p.id",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let prototypes: Vec<Value> = proto_rows
+            .iter()
+            .map(|row| {
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "railwayCompanyId": row.try_get::<String, _>("railway_company_id").ok(),
+                    "seriesCode": row.try_get::<String, _>("series_code").ok(),
+                    "carType": row.try_get::<String, _>("car_type").ok(),
+                    "serviceLevel": row.try_get::<Option<String>, _>("service_level").ok().flatten(),
+                    "category": row.try_get::<String, _>("category").ok(),
+                    "isMotorized": row.try_get::<i64, _>("is_motorized").ok().map(|v| v != 0).unwrap_or(false),
+                    "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
+                }))
+            })
+            .collect();
+        data["prototypes"] = json!(prototypes);
+
+        // Train formations need a railway_companies entry for any prototype's railway_company_id
+        // Ensure railway_companies is exported (FK dependency)
+        if data["railwayCompanies"].is_null() || data["railwayCompanies"] == json!(null) {
+            let rc_rows = sqlx::query(
+                "SELECT id, name, country_code, status FROM railway_companies ORDER BY name",
+            )
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let railway_companies: Vec<Value> = rc_rows
+                .iter()
+                .map(|row| {
+                    strip_null_fields(json!({
+                        "id": row.try_get::<String, _>("id").ok(),
+                        "name": row.try_get::<String, _>("name").ok(),
+                        "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
+                        "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
+                    }))
+                })
+                .collect();
+            data["railwayCompanies"] = json!(railway_companies);
+        }
+
+        // Train formations with nested elements
+        let tf_rows = sqlx::query(
+            "SELECT id, name, category_id, start_year, end_year, epoch, notes \
+             FROM train_formations ORDER BY name",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let mut train_formations: Vec<Value> = Vec::new();
+        for tf_row in &tf_rows {
+            let tf_id: String = tf_row
+                .try_get("id")
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let elem_rows = sqlx::query(
+                "SELECT id, prototype_id, owned_rolling_stock_id, position_order, traction_override \
+                 FROM formation_elements \
+                 WHERE formation_id = ? ORDER BY position_order",
+            )
+            .bind(&tf_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let elements: Vec<Value> = elem_rows
+                .iter()
+                .map(|row| {
+                    strip_null_fields(json!({
+                        "id": row.try_get::<String, _>("id").ok(),
+                        "prototypeId": row.try_get::<String, _>("prototype_id").ok(),
+                        "ownedRollingStockId": row.try_get::<Option<String>, _>("owned_rolling_stock_id").ok().flatten(),
+                        "positionOrder": row.try_get::<i64, _>("position_order").ok(),
+                        "tractionOverride": row.try_get::<i64, _>("traction_override").ok().unwrap_or(0),
+                    }))
+                })
+                .collect();
+
+            train_formations.push(strip_null_fields(json!({
+                "id": tf_id,
+                "name": tf_row.try_get::<String, _>("name").ok(),
+                "categoryId": tf_row.try_get::<Option<String>, _>("category_id").ok().flatten(),
+                "startYear": tf_row.try_get::<Option<i64>, _>("start_year").ok().flatten(),
+                "endYear": tf_row.try_get::<Option<i64>, _>("end_year").ok().flatten(),
+                "epoch": tf_row.try_get::<Option<String>, _>("epoch").ok().flatten(),
+                "notes": tf_row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                "elements": elements,
+            })));
+        }
+        data["trainFormations"] = json!(train_formations);
+    }
+
     // Build final manifest — "data" key matches ManifestDto.data in the import feature
     let manifest = json!({
         "$schema": "https://rusty-shed.app/schemas/manifest/v1.json",

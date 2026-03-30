@@ -35,6 +35,12 @@ pub struct DataContainerDto {
     pub track_products: Vec<TrackProductRecord>,
     #[serde(rename = "trackInventories", default)]
     pub track_inventories: Vec<TrackInventoryRecord>,
+    #[serde(default)]
+    pub prototypes: Vec<PrototypeRecord>,
+    #[serde(rename = "formationCategories", default)]
+    pub formation_categories: Vec<FormationCategoryRecord>,
+    #[serde(rename = "trainFormations", default)]
+    pub train_formations: Vec<TrainFormationRecord>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
@@ -264,4 +270,65 @@ pub struct TrackPurchaseRecord {
     #[serde(default)]
     pub seller_id: Option<String>,
     pub purchase_date: String,
+}
+
+/// A rolling stock prototype from the train formations catalog.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct PrototypeRecord {
+    pub id: String,
+    pub railway_company_id: String,
+    pub series_code: String,
+    pub car_type: String,
+    #[serde(default)]
+    pub service_level: Option<String>,
+    pub category: String,
+    pub is_motorized: bool,
+    pub is_custom: bool,
+}
+
+/// A user-defined or built-in train formation category.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FormationCategoryRecord {
+    pub id: String,
+    pub name: String,
+    pub is_custom: bool,
+}
+
+/// A named train formation with an ordered list of elements.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TrainFormationRecord {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub category_id: Option<String>,
+    #[serde(default)]
+    pub start_year: Option<i64>,
+    #[serde(default)]
+    pub end_year: Option<i64>,
+    #[serde(default)]
+    pub epoch: Option<String>,
+    #[serde(default)]
+    pub notes: Option<String>,
+    #[serde(default)]
+    pub elements: Vec<FormationElementRecord>,
+}
+
+/// A single slot in a train formation's composition.
+///
+/// `owned_rolling_stock_id` is exported for informational purposes only;
+/// it is **not** restored on import (set to NULL) since the target database
+/// may have different collection items.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FormationElementRecord {
+    pub id: String,
+    pub prototype_id: String,
+    #[serde(default)]
+    pub owned_rolling_stock_id: Option<String>,
+    pub position_order: i64,
+    /// 1 = traction required, -1 = traction excluded, 0 = default
+    pub traction_override: i64,
 }

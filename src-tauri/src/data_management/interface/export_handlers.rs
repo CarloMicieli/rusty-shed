@@ -25,6 +25,7 @@ pub async fn get_export_preview(state: State<'_, AppState>) -> Result<ExportPrev
         include_dcc_roster: true,
         include_orphaned_images: false,
         include_track_inventory: true,
+        include_train_formations: true,
     };
 
     preview_export::get_export_preview(&state.db_pool(), &selection)
@@ -81,6 +82,7 @@ pub async fn execute_export(
         include_dcc_roster: false,
         include_orphaned_images: false,
         include_track_inventory: true,
+        include_train_formations: true,
     };
 
     execute_export::export_to_archive(&state.db_pool(), archive_path, media_dir, &selection)

@@ -29,6 +29,7 @@ mod roundtrip {
             include_dcc_roster: false,
             include_orphaned_images: false,
             include_track_inventory: false,
+            include_train_formations: true,
         }
     }
 
@@ -140,6 +141,58 @@ mod roundtrip {
             .execute(pool)
             .await
             .expect("seed seller");
+
+        sqlx::query("INSERT INTO formation_categories (id, name, is_custom) VALUES (?, ?, ?)")
+            .bind("fc-test-001")
+            .bind("Test Category")
+            .bind(1_i64)
+            .execute(pool)
+            .await
+            .expect("seed formation category");
+
+        sqlx::query(
+            "INSERT INTO prototypes \
+             (id, railway_company_id, series_code, car_type, category, is_motorized, is_custom) \
+             VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("proto-test-001")
+        .bind("rc-test-001")
+        .bind("BR 101")
+        .bind("Locomotive")
+        .bind("LOCOMOTIVES")
+        .bind(1_i64)
+        .bind(1_i64)
+        .execute(pool)
+        .await
+        .expect("seed prototype");
+
+        sqlx::query(
+            "INSERT INTO train_formations \
+             (id, name, category_id, epoch, notes) \
+             VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind("tf-test-001")
+        .bind("Test Formation")
+        .bind("fc-test-001")
+        .bind("VI")
+        .bind("Roundtrip test formation")
+        .execute(pool)
+        .await
+        .expect("seed train formation");
+
+        sqlx::query(
+            "INSERT INTO formation_elements \
+             (id, formation_id, prototype_id, position_order, traction_override) \
+             VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind("fe-test-001")
+        .bind("tf-test-001")
+        .bind("proto-test-001")
+        .bind(0_i64)
+        .bind(0_i64)
+        .execute(pool)
+        .await
+        .expect("seed formation element");
     }
 
     /// Export the seeded pool to a new archive and return the archive path.
@@ -235,6 +288,10 @@ mod roundtrip {
         );
         assert_eq!(result.added.sellers, 1, "one seller added");
         assert_eq!(
+            result.added.train_formations, 1,
+            "one train formation added"
+        );
+        assert_eq!(
             result.skipped.manufacturers, 0,
             "no duplicate manufacturers"
         );
@@ -277,6 +334,21 @@ mod roundtrip {
                 .await
                 .unwrap();
         assert_eq!(count, 1, "seller must exist in import DB");
+
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM train_formations WHERE id = 'tf-test-001'")
+                .fetch_one(&import_pool)
+                .await
+                .unwrap();
+        assert_eq!(count, 1, "train formation must exist in import DB");
+
+        let count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM formation_elements WHERE formation_id = 'tf-test-001'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(count, 1, "formation element must exist in import DB");
     }
 
     /// Importing the same archive twice must not create duplicates.
@@ -307,6 +379,7 @@ mod roundtrip {
         assert_eq!(first.added.railway_models, 1);
         assert_eq!(first.added.collection_items, 1);
         assert_eq!(first.added.sellers, 1);
+        assert_eq!(first.added.train_formations, 1);
 
         // Second import of the same archive into the same pool
         let second = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
@@ -339,6 +412,14 @@ mod roundtrip {
         assert_eq!(
             second.skipped.sellers, 1,
             "duplicate seller must be skipped"
+        );
+        assert_eq!(
+            second.added.train_formations, 0,
+            "no new train formations on re-import"
+        );
+        assert_eq!(
+            second.skipped.train_formations, 1,
+            "duplicate train formation must be skipped"
         );
 
         // Row counts must not grow

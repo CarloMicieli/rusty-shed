@@ -13,6 +13,9 @@ pub struct RecordCounts {
     pub maintenance_cards: u32,
     pub track_products: u32,
     pub track_inventories: u32,
+    pub prototypes: u32,
+    pub formation_categories: u32,
+    pub train_formations: u32,
 }
 
 impl RecordCounts {
@@ -31,6 +34,9 @@ impl RecordCounts {
             + self.maintenance_cards
             + self.track_products
             + self.track_inventories
+            + self.prototypes
+            + self.formation_categories
+            + self.train_formations
     }
 
     /// Add counts from another `RecordCounts` instance.
@@ -43,6 +49,9 @@ impl RecordCounts {
         self.maintenance_cards += other.maintenance_cards;
         self.track_products += other.track_products;
         self.track_inventories += other.track_inventories;
+        self.prototypes += other.prototypes;
+        self.formation_categories += other.formation_categories;
+        self.train_formations += other.train_formations;
     }
 }
 
@@ -61,6 +70,9 @@ mod tests {
             maintenance_cards: 6,
             track_products: 7,
             track_inventories: 8,
+            prototypes: 0,
+            formation_categories: 0,
+            train_formations: 0,
         };
         assert_eq!(counts.total(), 36);
     }

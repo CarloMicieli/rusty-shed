@@ -66,6 +66,9 @@ impl PreviewImportUseCase {
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
             track_products: manifest.data.track_products.len() as u32,
             track_inventories: manifest.data.track_inventories.len() as u32,
+            prototypes: manifest.data.prototypes.len() as u32,
+            formation_categories: manifest.data.formation_categories.len() as u32,
+            train_formations: manifest.data.train_formations.len() as u32,
         };
 
         // Check for duplicates via repository port
@@ -85,6 +88,9 @@ impl PreviewImportUseCase {
             maintenance_cards: 0, // Maintenance cards are linked to collection items
             track_products: duplicates.track_product_dupes.duplicate_count() as u32,
             track_inventories: duplicates.track_inventory_dupes.duplicate_count() as u32,
+            prototypes: duplicates.prototype_dupes.duplicate_count() as u32,
+            formation_categories: duplicates.formation_category_dupes.duplicate_count() as u32,
+            train_formations: duplicates.train_formation_dupes.duplicate_count() as u32,
         };
 
         // Calculate new records
@@ -97,6 +103,9 @@ impl PreviewImportUseCase {
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
             track_products: duplicates.track_product_dupes.new_count() as u32,
             track_inventories: duplicates.track_inventory_dupes.new_count() as u32,
+            prototypes: duplicates.prototype_dupes.new_count() as u32,
+            formation_categories: duplicates.formation_category_dupes.new_count() as u32,
+            train_formations: duplicates.train_formation_dupes.new_count() as u32,
         };
 
         // Create preview
@@ -111,6 +120,7 @@ impl PreviewImportUseCase {
         preview.duplicate_details.track_products = duplicates.track_product_dupes.duplicate_ids;
         preview.duplicate_details.track_inventories =
             duplicates.track_inventory_dupes.duplicate_ids;
+        preview.duplicate_details.train_formations = duplicates.train_formation_dupes.duplicate_ids;
 
         // Check for missing images if archive path is provided
         if let Some(path) = archive_path {

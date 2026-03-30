@@ -1,6 +1,7 @@
 use crate::data_management::domain::{
-    CollectionItemRecord, ManufacturerRecord, RailwayModelRecord, SellerRecord,
-    TrackInventoryRecord, TrackProductRecord,
+    CollectionItemRecord, FormationCategoryRecord, ManufacturerRecord, PrototypeRecord,
+    RailwayModelRecord, SellerRecord, TrackInventoryRecord, TrackProductRecord,
+    TrainFormationRecord,
 };
 use sqlx::SqlitePool;
 use std::collections::HashSet;
@@ -367,6 +368,151 @@ impl DuplicateChecker {
             new_ids,
         })
     }
+
+    /// Check for duplicate formation categories by name (case-sensitive).
+    pub async fn check_formation_categories(
+        &self,
+        categories: &[FormationCategoryRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if categories.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let names: Vec<String> = categories.iter().map(|c| c.name.clone()).collect();
+
+        let query = format!(
+            "SELECT name FROM formation_categories WHERE name IN ({})",
+            names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for name in &names {
+            query_builder = query_builder.bind(name);
+        }
+
+        let existing_names: std::collections::HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for cat in categories {
+            if existing_names.contains(&cat.name) {
+                duplicate_ids.push(cat.id.clone());
+            } else {
+                new_ids.push(cat.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
+
+    /// Check for duplicate train formations by name.
+    pub async fn check_train_formations(
+        &self,
+        formations: &[TrainFormationRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if formations.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let names: Vec<String> = formations.iter().map(|f| f.name.clone()).collect();
+
+        let query = format!(
+            "SELECT name FROM train_formations WHERE name IN ({})",
+            names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for name in &names {
+            query_builder = query_builder.bind(name);
+        }
+
+        let existing_names: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for formation in formations {
+            if existing_names.contains(&formation.name) {
+                duplicate_ids.push(formation.id.clone());
+            } else {
+                new_ids.push(formation.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
+
+    /// Check for duplicate prototypes by railway_company_id + series_code + car_type.
+    pub async fn check_prototypes(
+        &self,
+        prototypes: &[PrototypeRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if prototypes.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let composite_keys: Vec<String> = prototypes
+            .iter()
+            .map(|p| format!("{}|{}|{}", p.railway_company_id, p.series_code, p.car_type))
+            .collect();
+
+        let query = format!(
+            "SELECT (railway_company_id || '|' || series_code || '|' || car_type) \
+             FROM prototypes \
+             WHERE (railway_company_id || '|' || series_code || '|' || car_type) IN ({})",
+            composite_keys
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for key in &composite_keys {
+            query_builder = query_builder.bind(key);
+        }
+
+        let existing_keys: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for prototype in prototypes {
+            let key = format!(
+                "{}|{}|{}",
+                prototype.railway_company_id, prototype.series_code, prototype.car_type
+            );
+            if existing_keys.contains(&key) {
+                duplicate_ids.push(prototype.id.clone());
+            } else {
+                new_ids.push(prototype.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -392,5 +538,104 @@ mod tests {
         assert_eq!(result.duplicate_count(), 0);
         assert_eq!(result.new_count(), 0);
         assert_eq!(result.total_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_check_formation_categories_empty_input() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE formation_categories (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, is_custom INTEGER NOT NULL DEFAULT 0)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+
+        let checker = DuplicateChecker::new(pool);
+        let result = checker
+            .check_formation_categories(&[])
+            .await
+            .expect("check");
+        assert_eq!(result.total_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_check_train_formations_detects_duplicate_name() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE train_formations (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+        sqlx::query("INSERT INTO train_formations (id, name) VALUES ('existing-id', 'Express')")
+            .execute(&pool)
+            .await
+            .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let formations = vec![
+            TrainFormationRecord {
+                id: "existing-id".to_string(),
+                name: "Express".to_string(),
+                ..Default::default()
+            },
+            TrainFormationRecord {
+                id: "new-id".to_string(),
+                name: "Local".to_string(),
+                ..Default::default()
+            },
+        ];
+
+        let result = checker
+            .check_train_formations(&formations)
+            .await
+            .expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(result.duplicate_ids.contains(&"existing-id".to_string()));
+        assert!(result.new_ids.contains(&"new-id".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_check_prototypes_uses_composite_key() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE prototypes (id TEXT PRIMARY KEY, railway_company_id TEXT NOT NULL, series_code TEXT NOT NULL, car_type TEXT NOT NULL, is_custom INTEGER NOT NULL DEFAULT 0)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+        sqlx::query(
+            "INSERT INTO prototypes (id, railway_company_id, series_code, car_type, is_custom) VALUES ('p1', 'rc1', 'BR 01', 'Locomotive', 0)",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let prototypes = vec![
+            PrototypeRecord {
+                id: "p1".to_string(),
+                railway_company_id: "rc1".to_string(),
+                series_code: "BR 01".to_string(),
+                car_type: "Locomotive".to_string(),
+                ..Default::default()
+            },
+            PrototypeRecord {
+                id: "p2".to_string(),
+                railway_company_id: "rc1".to_string(),
+                series_code: "BR 50".to_string(),
+                car_type: "Locomotive".to_string(),
+                ..Default::default()
+            },
+        ];
+
+        let result = checker.check_prototypes(&prototypes).await.expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(result.duplicate_ids.contains(&"p1".to_string()));
+        assert!(result.new_ids.contains(&"p2".to_string()));
     }
 }

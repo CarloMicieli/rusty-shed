@@ -71,6 +71,21 @@
           "type": "array",
           "items": { "$ref": "#/$defs/TrackInventory" },
           "default": []
+        },
+        "prototypes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Prototype" },
+          "default": []
+        },
+        "formationCategories": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FormationCategory" },
+          "default": []
+        },
+        "trainFormations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrainFormation" },
+          "default": []
         }
       },
       "additionalProperties": false
@@ -621,6 +636,81 @@
           "type": "string",
           "format": "date"
         }
+      },
+      "additionalProperties": false
+    },
+    "Prototype": {
+      "type": "object",
+      "required": [
+        "id",
+        "railwayCompanyId",
+        "seriesCode",
+        "carType",
+        "category",
+        "isMotorized",
+        "isCustom"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "railwayCompanyId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References railwayCompanies[].id"
+        },
+        "seriesCode": { "type": "string", "minLength": 1 },
+        "carType": { "type": "string", "minLength": 1 },
+        "serviceLevel": { "type": "string" },
+        "category": { "type": "string", "minLength": 1 },
+        "isMotorized": { "type": "boolean" },
+        "isCustom": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "FormationCategory": {
+      "type": "object",
+      "required": ["id", "name", "isCustom"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "isCustom": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "TrainFormation": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "categoryId": { "type": "string" },
+        "startYear": { "type": "integer" },
+        "endYear": { "type": "integer" },
+        "epoch": { "type": "string" },
+        "notes": { "type": "string" },
+        "elements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FormationElement" },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "FormationElement": {
+      "type": "object",
+      "required": ["id", "prototypeId", "positionOrder", "tractionOverride"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "prototypeId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "References prototypes[].id"
+        },
+        "ownedRollingStockId": {
+          "type": "string",
+          "description": "Informational only; not restored on import"
+        },
+        "positionOrder": { "type": "integer", "minimum": 0 },
+        "tractionOverride": { "type": "integer", "enum": [-1, 0, 1] }
       },
       "additionalProperties": false
     }

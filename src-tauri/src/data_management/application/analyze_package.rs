@@ -125,6 +125,9 @@ impl ValidatePackageUseCase {
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
             track_products: manifest.data.track_products.len() as u32,
             track_inventories: manifest.data.track_inventories.len() as u32,
+            prototypes: manifest.data.prototypes.len() as u32,
+            formation_categories: manifest.data.formation_categories.len() as u32,
+            train_formations: manifest.data.train_formations.len() as u32,
         }
     }
 }
@@ -149,6 +152,9 @@ mod tests {
                 maintenance_cards: vec![],
                 track_products: vec![],
                 track_inventories: vec![],
+                prototypes: vec![],
+                formation_categories: vec![],
+                train_formations: vec![],
             },
         };
 

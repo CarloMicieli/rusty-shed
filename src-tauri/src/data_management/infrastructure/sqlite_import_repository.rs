@@ -39,7 +39,7 @@ impl ImportRepository for SqliteImportRepository {
     ) -> Result<AllDuplicates, DataManagementError> {
         let checker = DuplicateChecker::new(self.pool.clone());
 
-        // All six checks are independent reads — run them concurrently
+        // All checks are independent reads — run them concurrently
         let (
             manufacturer_dupes,
             railway_model_dupes,
@@ -47,6 +47,9 @@ impl ImportRepository for SqliteImportRepository {
             seller_dupes,
             track_product_dupes,
             track_inventory_dupes,
+            formation_category_dupes,
+            train_formation_dupes,
+            prototype_dupes,
         ) = tokio::try_join!(
             checker.check_manufacturers(&data.manufacturers),
             checker.check_railway_models(&data.railway_models),
@@ -54,6 +57,9 @@ impl ImportRepository for SqliteImportRepository {
             checker.check_sellers(&data.sellers),
             checker.check_track_products(&data.track_products),
             checker.check_track_inventories(&data.track_inventories),
+            checker.check_formation_categories(&data.formation_categories),
+            checker.check_train_formations(&data.train_formations),
+            checker.check_prototypes(&data.prototypes),
         )
         .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
@@ -64,6 +70,9 @@ impl ImportRepository for SqliteImportRepository {
             seller_dupes,
             track_product_dupes,
             track_inventory_dupes,
+            formation_category_dupes,
+            train_formation_dupes,
+            prototype_dupes,
         })
     }
 
@@ -107,6 +116,24 @@ impl ImportRepository for SqliteImportRepository {
             .collect();
         let new_track_inventory_ids: HashSet<&str> = duplicates
             .track_inventory_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        let new_formation_category_ids: HashSet<&str> = duplicates
+            .formation_category_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        let new_train_formation_ids: HashSet<&str> = duplicates
+            .train_formation_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        let new_prototype_ids: HashSet<&str> = duplicates
+            .prototype_dupes
             .new_ids
             .iter()
             .map(|s| s.as_str())
@@ -500,6 +527,102 @@ impl ImportRepository for SqliteImportRepository {
 
             added.maintenance_cards += 1;
         }
+
+        // 9. Insert new formation categories (INSERT OR IGNORE by unique name)
+        for cat in data
+            .formation_categories
+            .iter()
+            .filter(|c| new_formation_category_ids.contains(c.id.as_str()))
+        {
+            sqlx::query(
+                "INSERT OR IGNORE INTO formation_categories \
+                 (id, name, is_custom) \
+                 VALUES (?, ?, ?)",
+            )
+            .bind(&cat.id)
+            .bind(&cat.name)
+            .bind(cat.is_custom as i64)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+        }
+
+        added.formation_categories = duplicates.formation_category_dupes.new_count() as u32;
+        skipped.formation_categories = duplicates.formation_category_dupes.duplicate_count() as u32;
+
+        // 10. Insert new prototypes (INSERT OR IGNORE by PK; FK may already be satisfied)
+        // Railway companies are inserted earlier (step 2 via INSERT OR IGNORE).
+        for proto in data
+            .prototypes
+            .iter()
+            .filter(|p| new_prototype_ids.contains(p.id.as_str()))
+        {
+            sqlx::query(
+                "INSERT OR IGNORE INTO prototypes \
+                 (id, railway_company_id, series_code, car_type, service_level, \
+                  category, is_motorized, is_custom) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&proto.id)
+            .bind(&proto.railway_company_id)
+            .bind(&proto.series_code)
+            .bind(&proto.car_type)
+            .bind(&proto.service_level)
+            .bind(&proto.category)
+            .bind(proto.is_motorized as i64)
+            .bind(proto.is_custom as i64)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+        }
+
+        added.prototypes = duplicates.prototype_dupes.new_count() as u32;
+        skipped.prototypes = duplicates.prototype_dupes.duplicate_count() as u32;
+
+        // 11. Insert new train formations + elements
+        for formation in data
+            .train_formations
+            .iter()
+            .filter(|f| new_train_formation_ids.contains(f.id.as_str()))
+        {
+            sqlx::query(
+                "INSERT OR IGNORE INTO train_formations \
+                 (id, name, category_id, start_year, end_year, epoch, notes) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&formation.id)
+            .bind(&formation.name)
+            .bind(&formation.category_id)
+            .bind(formation.start_year)
+            .bind(formation.end_year)
+            .bind(&formation.epoch)
+            .bind(&formation.notes)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            for element in &formation.elements {
+                // owned_rolling_stock_id is intentionally NOT restored — it links to
+                // collection items in the source DB which may not exist here.
+                sqlx::query(
+                    "INSERT OR IGNORE INTO formation_elements \
+                     (id, formation_id, prototype_id, owned_rolling_stock_id, \
+                      position_order, traction_override) \
+                     VALUES (?, ?, ?, NULL, ?, ?)",
+                )
+                .bind(&element.id)
+                .bind(&formation.id)
+                .bind(&element.prototype_id)
+                .bind(element.position_order)
+                .bind(element.traction_override)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            }
+        }
+
+        added.train_formations = duplicates.train_formation_dupes.new_count() as u32;
+        skipped.train_formations = duplicates.train_formation_dupes.duplicate_count() as u32;
 
         // Commit the transaction — all DB work done before any file I/O
         tx.commit()

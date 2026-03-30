@@ -5,7 +5,7 @@ use crate::data_management::infrastructure::DuplicateCheckResult;
 use async_trait::async_trait;
 use std::path::Path;
 
-/// All six duplicate-check results grouped for a single import run.
+/// All duplicate-check results grouped for a single import run.
 pub struct AllDuplicates {
     pub manufacturer_dupes: DuplicateCheckResult,
     pub railway_model_dupes: DuplicateCheckResult,
@@ -13,6 +13,9 @@ pub struct AllDuplicates {
     pub seller_dupes: DuplicateCheckResult,
     pub track_product_dupes: DuplicateCheckResult,
     pub track_inventory_dupes: DuplicateCheckResult,
+    pub formation_category_dupes: DuplicateCheckResult,
+    pub train_formation_dupes: DuplicateCheckResult,
+    pub prototype_dupes: DuplicateCheckResult,
 }
 
 /// Statistics returned after all records have been persisted.

@@ -150,6 +150,18 @@ pub async fn get_import_preview(
             .total_records
             .track_inventories
             .saturating_sub(preview.duplicate_records.track_inventories),
+        prototypes: preview
+            .total_records
+            .prototypes
+            .saturating_sub(preview.duplicate_records.prototypes),
+        formation_categories: preview
+            .total_records
+            .formation_categories
+            .saturating_sub(preview.duplicate_records.formation_categories),
+        train_formations: preview
+            .total_records
+            .train_formations
+            .saturating_sub(preview.duplicate_records.train_formations),
     };
 
     let can_import = preview.can_import();

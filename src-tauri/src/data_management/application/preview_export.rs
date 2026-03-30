@@ -11,6 +11,7 @@ pub struct ExportPreview {
     pub seller_count: u32,
     pub maintenance_log_count: u32,
     pub dcc_roster_count: u32,
+    pub train_formation_count: u32,
     pub image_count: u32,
     pub orphaned_image_count: u32,
     pub estimated_size_bytes: u64,
@@ -26,6 +27,7 @@ impl ExportPreview {
             seller_count: 0,
             maintenance_log_count: 0,
             dcc_roster_count: 0,
+            train_formation_count: 0,
             image_count: 0,
             orphaned_image_count: 0,
             estimated_size_bytes: 0,
@@ -92,12 +94,22 @@ pub async fn get_export_preview(
         preview.dcc_roster_count = count.0 as u32;
     }
 
+    // Count train formations if selected
+    if selection.include_train_formations {
+        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM train_formations")
+            .fetch_one(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+        preview.train_formation_count = count.0 as u32;
+    }
+
     // Estimate total data size (rough calculation: 1KB per record + images)
     let total_records = preview.railway_model_count
         + preview.collection_item_count
         + preview.seller_count
         + preview.maintenance_log_count
-        + preview.dcc_roster_count;
+        + preview.dcc_roster_count
+        + preview.train_formation_count;
 
     preview.estimated_size_bytes =
         (total_records as u64 * 1024) + (preview.image_count as u64 * 500 * 1024);
@@ -126,6 +138,7 @@ mod tests {
             include_dcc_roster: true,
             include_orphaned_images: false,
             include_track_inventory: false,
+            include_train_formations: false,
         }
     }
 
@@ -235,6 +248,7 @@ mod tests {
             include_dcc_roster: false,
             include_orphaned_images: false,
             include_track_inventory: false,
+            include_train_formations: false,
         };
 
         let preview = get_export_preview(&pool, &selection)
@@ -264,6 +278,7 @@ mod tests {
             include_dcc_roster: false,
             include_orphaned_images: false,
             include_track_inventory: false,
+            include_train_formations: false,
         };
 
         let preview = get_export_preview(&pool, &selection)
@@ -274,5 +289,43 @@ mod tests {
             preview.estimated_size_bytes > 0,
             "estimated size must be positive when records exist"
         );
+    }
+
+    #[tokio::test]
+    async fn test_counts_train_formations_correctly() {
+        let pool = SqlitePool::connect(":memory:")
+            .await
+            .expect("in-memory pool");
+        sqlx::query(
+            "CREATE TABLE train_formations (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("create train_formations");
+
+        sqlx::query("INSERT INTO train_formations (id, name) VALUES ('tf-1', 'Test Formation')")
+            .execute(&pool)
+            .await
+            .expect("insert formation");
+
+        let selection = ExportEntitySelection {
+            include_railway_models: false,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: false,
+            include_dcc_roster: false,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+            include_train_formations: true,
+        };
+
+        let preview = get_export_preview(&pool, &selection)
+            .await
+            .expect("preview");
+
+        assert_eq!(preview.train_formation_count, 1);
     }
 }
