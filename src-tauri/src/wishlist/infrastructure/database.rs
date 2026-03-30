@@ -2,7 +2,7 @@ use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::infrastructure::entities::{
-    WishlistItemRow, WishlistPreviewProjection, WishlistRow,
+    WishlistItemRow, WishlistPreviewAggregateRow, WishlistRow,
 };
 
 pub async fn find_wishlist_by_id(
@@ -59,7 +59,7 @@ pub async fn find_wishlist_items_by_id(
 
 pub async fn find_wishlist_previews(
     executor: &mut sqlx::SqliteConnection,
-) -> Result<Vec<WishlistPreviewProjection>, sqlx::Error> {
+) -> Result<Vec<WishlistPreviewAggregateRow>, sqlx::Error> {
     let sql = r#"
         SELECT
             w.id as wishlist_id,
@@ -67,20 +67,61 @@ pub async fn find_wishlist_previews(
             w.notes,
             w.is_default,
             w.updated_at,
-            wi.desired_price_currency as currency,
-            SUM(wi.desired_price_amount) as total_amount,
-            COUNT(wi.id) as item_count
+            COALESCE(item_counts.item_count, 0) as item_count,
+            totals.totals_by_currency
         FROM wishlists w
-        LEFT JOIN wishlist_items wi ON wi.wishlist_id = w.id
-        GROUP BY w.id, wi.desired_price_currency
+        LEFT JOIN (
+            SELECT wishlist_id, COUNT(*) as item_count
+            FROM wishlist_items
+            GROUP BY wishlist_id
+        ) item_counts ON item_counts.wishlist_id = w.id
+        LEFT JOIN (
+            SELECT
+                aggregated.wishlist_id,
+                GROUP_CONCAT(
+                    aggregated.currency || ':' || aggregated.total_amount,
+                    '|'
+                ) as totals_by_currency
+            FROM (
+                SELECT
+                    wishlist_id,
+                    desired_price_currency as currency,
+                    SUM(desired_price_amount) as total_amount
+                FROM wishlist_items
+                WHERE desired_price_currency IS NOT NULL
+                  AND desired_price_amount IS NOT NULL
+                GROUP BY wishlist_id, desired_price_currency
+            ) aggregated
+            GROUP BY aggregated.wishlist_id
+        ) totals ON totals.wishlist_id = w.id
         ORDER BY w.updated_at DESC
     "#;
 
-    let rows = sqlx::query_as::<_, WishlistPreviewProjection>(sql)
+    let rows = sqlx::query_as::<_, WishlistPreviewAggregateRow>(sql)
         .fetch_all(executor)
         .await?;
 
     Ok(rows)
+}
+
+pub async fn wishlist_exists(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistId,
+) -> Result<bool, sqlx::Error> {
+    let sql = r#"
+        SELECT 1
+        FROM wishlists
+        WHERE id = ?
+        LIMIT 1
+    "#;
+
+    let exists = sqlx::query_scalar::<_, i64>(sql)
+        .bind(id.to_string())
+        .fetch_optional(executor)
+        .await?
+        .is_some();
+
+    Ok(exists)
 }
 
 pub async fn insert_wishlist(
@@ -126,6 +167,28 @@ pub async fn update_wishlist_name(
     Ok(res.rows_affected())
 }
 
+pub async fn update_wishlist_details(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistId,
+    name: &str,
+    notes: Option<&str>,
+) -> Result<u64, sqlx::Error> {
+    let sql = r#"
+        UPDATE wishlists
+        SET name = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    "#;
+
+    let res = sqlx::query(sql)
+        .bind(name)
+        .bind(notes)
+        .bind(id.to_string())
+        .execute(executor)
+        .await?;
+
+    Ok(res.rows_affected())
+}
+
 pub async fn delete_wishlist(
     executor: &mut sqlx::SqliteConnection,
     id: &WishlistId,
@@ -157,6 +220,17 @@ pub async fn set_default_wishlist(
         .execute(executor)
         .await?;
 
+    Ok(())
+}
+
+pub async fn unset_default_wishlist(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistId,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE wishlists SET is_default = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(id.to_string())
+        .execute(executor)
+        .await?;
     Ok(())
 }
 
@@ -339,6 +413,30 @@ pub async fn move_wishlist_item(
         .await?;
 
     Ok(res.rows_affected())
+}
+
+pub async fn move_wishlist_item_with_source(
+    executor: &mut sqlx::SqliteConnection,
+    id: &WishlistItemId,
+    destination: &WishlistId,
+) -> Result<Option<String>, sqlx::Error> {
+    let source_sql = "SELECT wishlist_id FROM wishlist_items WHERE id = ?";
+
+    let source = sqlx::query_scalar::<_, String>(source_sql)
+        .bind(id.to_string())
+        .fetch_optional(&mut *executor)
+        .await?;
+
+    let Some(source_wishlist_id) = source else {
+        return Ok(None);
+    };
+
+    let affected = move_wishlist_item(executor, id, destination).await?;
+    if affected == 0 {
+        return Ok(None);
+    }
+
+    Ok(Some(source_wishlist_id))
 }
 
 #[cfg(test)]

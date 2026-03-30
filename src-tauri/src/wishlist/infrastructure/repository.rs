@@ -9,9 +9,11 @@ use crate::wishlist::domain::wishlist_id::WishlistId;
 use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
+use crate::wishlist::domain::wishlist_priority::WishlistPriority;
+use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use crate::wishlist::infrastructure::database;
 use crate::wishlist::infrastructure::entities::{
-    WishlistItemRow, WishlistPreviewProjection, WishlistRow,
+    WishlistItemRow, WishlistPreviewAggregateRow, WishlistRow,
 };
 use anyhow::Error as AnyhowError;
 use std::collections::HashMap;
@@ -28,6 +30,76 @@ impl<'conn> SqliteWishlistRepository<'conn> {
         Self { executor }
     }
 
+    fn priority_to_db(priority: &WishlistPriority) -> &'static str {
+        match priority {
+            WishlistPriority::Low => "LOW",
+            WishlistPriority::Normal => "NORMAL",
+            WishlistPriority::High => "HIGH",
+        }
+    }
+
+    fn status_to_db(status: &WishlistStatus) -> &'static str {
+        match status {
+            WishlistStatus::Wanted => "WANTED",
+            WishlistStatus::OnOrder => "ON_ORDER",
+            WishlistStatus::Purchased => "PURCHASED",
+            WishlistStatus::Ignored => "IGNORED",
+        }
+    }
+
+    fn map_price_update(
+        desired_price: &Option<Option<crate::core::domain::MonetaryAmount>>,
+    ) -> database::PriceUpdate {
+        match desired_price {
+            None => database::PriceUpdate {
+                mode: 0,
+                amount: None,
+                currency: None,
+            },
+            Some(None) => database::PriceUpdate {
+                mode: 1,
+                amount: None,
+                currency: None,
+            },
+            Some(Some(ma)) => database::PriceUpdate {
+                mode: 2,
+                amount: Some(ma.amount),
+                currency: Some(ma.currency.to_code().to_string()),
+            },
+        }
+    }
+
+    fn parse_totals_by_currency(
+        totals_by_currency: Option<&str>,
+    ) -> Result<HashMap<Currency, i64>, DomainError> {
+        let mut totals = HashMap::with_capacity(2);
+
+        let Some(raw) = totals_by_currency else {
+            return Ok(totals);
+        };
+
+        for pair in raw.split('|') {
+            let mut parts = pair.splitn(2, ':');
+            let currency_code = parts.next().unwrap_or_default();
+            let amount_str = parts.next().unwrap_or_default();
+
+            if currency_code.is_empty() || amount_str.is_empty() {
+                continue;
+            }
+
+            let amount = amount_str
+                .parse::<i64>()
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+            let currency = Currency::from_code(currency_code)
+                .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+            totals.insert(currency, amount);
+        }
+
+        Ok(totals)
+    }
+
     /// Handle a single `WishlistEvent` by performing the corresponding
     /// repository/database operation. This uses an exhaustive match to
     /// guarantee every event variant is handled.
@@ -37,7 +109,43 @@ impl<'conn> SqliteWishlistRepository<'conn> {
         event: &WishlistEvent,
     ) -> Result<(), DomainError> {
         match event {
-            WishlistEvent::Created { .. } => Ok(()),
+            WishlistEvent::Created {
+                name,
+                notes,
+                is_default,
+            } => {
+                let affected = database::update_wishlist_details(
+                    &mut *self.executor,
+                    wishlist_id,
+                    name,
+                    notes.as_deref(),
+                )
+                .await
+                .with_domain_context("Error applying wishlist creation event")?;
+
+                if affected == 0 {
+                    return Err(DomainError::NotFound {
+                        resource: "Wishlist".to_string(),
+                        identifier: wishlist_id.to_string(),
+                    });
+                }
+
+                if *is_default {
+                    database::set_default_wishlist(&mut *self.executor, wishlist_id)
+                        .await
+                        .with_domain_context(
+                            "Error setting default wishlist from creation event",
+                        )?;
+                } else {
+                    database::unset_default_wishlist(&mut *self.executor, wishlist_id)
+                        .await
+                        .with_domain_context(
+                            "Error unsetting default wishlist from creation event",
+                        )?;
+                }
+
+                Ok(())
+            }
             WishlistEvent::Renamed { name } => {
                 let affected =
                     database::update_wishlist_name(&mut *self.executor, wishlist_id, name)
@@ -78,6 +186,10 @@ impl<'conn> SqliteWishlistRepository<'conn> {
                     database::set_default_wishlist(&mut *self.executor, wishlist_id)
                         .await
                         .with_domain_context("Error setting default wishlist from event")?;
+                } else {
+                    database::unset_default_wishlist(&mut *self.executor, wishlist_id)
+                        .await
+                        .with_domain_context("Error unsetting default wishlist from event")?;
                 }
                 Ok(())
             }
@@ -88,44 +200,11 @@ impl<'conn> SqliteWishlistRepository<'conn> {
                 desired_price,
                 added_date,
             } => {
-                let priority_str = match priority {
-                    Some(p) => Some(
-                        serde_json::to_string(p)
-                            .map_err(|e| DomainError::Validation(e.to_string()))?
-                            .trim_matches('"')
-                            .to_string(),
-                    ),
-                    None => None,
-                };
-                let status_str = match status {
-                    Some(s) => Some(
-                        serde_json::to_string(s)
-                            .map_err(|e| DomainError::Validation(e.to_string()))?
-                            .trim_matches('"')
-                            .to_string(),
-                    ),
-                    None => None,
-                };
-
-                // Encode desired_price as (mode, amount, currency):
-                // 0 = unchanged, 1 = clear, 2 = set
-                let price = match desired_price {
-                    None => database::PriceUpdate {
-                        mode: 0,
-                        amount: None,
-                        currency: None,
-                    },
-                    Some(None) => database::PriceUpdate {
-                        mode: 1,
-                        amount: None,
-                        currency: None,
-                    },
-                    Some(Some(ma)) => database::PriceUpdate {
-                        mode: 2,
-                        amount: Some(ma.amount),
-                        currency: Some(ma.currency.to_code().to_string()),
-                    },
-                };
+                let priority_str = priority
+                    .as_ref()
+                    .map(|p| Self::priority_to_db(p).to_string());
+                let status_str = status.as_ref().map(|s| Self::status_to_db(s).to_string());
+                let price = Self::map_price_update(desired_price);
 
                 let affected = database::update_wishlist_item_fields(
                     &mut *self.executor,
@@ -183,43 +262,29 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     }
 
     async fn find_wishlists(&mut self) -> Result<Vec<WishlistPreview>, DomainError> {
-        let rows: Vec<WishlistPreviewProjection> =
+        let rows: Vec<WishlistPreviewAggregateRow> =
             database::find_wishlist_previews(&mut *self.executor)
                 .await
                 .with_domain_context("Error fetching wishlist previews")?;
 
-        let mut map: HashMap<String, WishlistPreview> = HashMap::with_capacity(rows.len());
+        let mut previews = Vec::with_capacity(rows.len());
 
-        for row in rows.into_iter() {
+        for row in rows {
             let wishlist_id = WishlistId::try_from(row.wishlist_id.as_str())
                 .map_err(|e| DomainError::Validation(e.to_string()))?;
-            let entry = map.entry(row.wishlist_id).or_insert_with(|| {
-                WishlistPreview {
-                    id: wishlist_id,
-                    name: row.name,
-                    notes: row.notes,
-                    is_default: row.is_default != 0,
-                    count: 0,
-                    updated_at: row.updated_at,
-                    total_value: HashMap::with_capacity(2), // Most wishlists use 1-2 currencies
-                }
+
+            previews.push(WishlistPreview {
+                id: wishlist_id,
+                name: row.name,
+                notes: row.notes,
+                is_default: row.is_default != 0,
+                count: row.item_count,
+                updated_at: row.updated_at,
+                total_value: Self::parse_totals_by_currency(row.totals_by_currency.as_deref())?,
             });
-
-            entry.count += row.item_count;
-
-            if let Some(total) = row.total_amount
-                && let Some(curr_str) = row.currency.clone()
-                && let Ok(currency) = Currency::from_code(&curr_str)
-            {
-                *entry.total_value.entry(currency).or_insert(0) += total;
-            }
         }
 
-        let mut wishlist_previews: Vec<WishlistPreview> = Vec::with_capacity(map.len());
-        wishlist_previews.extend(map.into_values());
-
-        wishlist_previews.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
-        Ok(wishlist_previews)
+        Ok(previews)
     }
 
     async fn create_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError> {
@@ -237,12 +302,15 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         database::insert_wishlist(&mut *self.executor, row)
             .await
             .with_domain_context("Error inserting wishlist")?;
-        // If creating as default, ensure exclusivity after insert
+
         if wishlist.is_default {
-            database::set_default_wishlist(&mut *self.executor, &wishlist.id)
-                .await
-                .with_domain_context("Error setting default wishlist")?;
+            self.handle_event(
+                &wishlist.id,
+                &WishlistEvent::MarkedDefault { is_default: true },
+            )
+            .await?;
         }
+
         // Apply any pending domain events emitted by the aggregate.
         for ev in &wishlist.pending_events {
             self.handle_event(&wishlist.id, ev).await?;
@@ -251,24 +319,15 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
     }
 
     async fn save_wishlist(&mut self, wishlist: &Wishlist) -> Result<(), DomainError> {
-        // Persist simple wishlist fields (name + updated timestamp)
-        let affected =
-            database::update_wishlist_name(&mut *self.executor, &wishlist.id, &wishlist.name)
-                .await
-                .with_domain_context("Error updating wishlist")?;
+        let exists = database::wishlist_exists(&mut *self.executor, &wishlist.id)
+            .await
+            .with_domain_context("Error checking wishlist existence")?;
 
-        if affected == 0 {
+        if !exists {
             return Err(DomainError::NotFound {
                 resource: "Wishlist".to_string(),
                 identifier: wishlist.id.to_string(),
             });
-        }
-
-        // If aggregate indicates it should be default, ensure exclusivity
-        if wishlist.is_default {
-            database::set_default_wishlist(&mut *self.executor, &wishlist.id)
-                .await
-                .with_domain_context("Error setting default wishlist")?;
         }
 
         // Process emitted events from aggregate
@@ -329,14 +388,8 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
             .map(|p| (Some(p.amount), Some(p.currency.to_code().to_string())))
             .unwrap_or((None, None));
 
-        let priority_str = serde_json::to_string(&item.priority)
-            .map_err(|e| DomainError::Validation(e.to_string()))?
-            .trim_matches('"')
-            .to_string();
-        let status_str = serde_json::to_string(&item.status)
-            .map_err(|e| DomainError::Validation(e.to_string()))?
-            .trim_matches('"')
-            .to_string();
+        let priority_str = Self::priority_to_db(&item.priority).to_string();
+        let status_str = Self::status_to_db(&item.status).to_string();
 
         let row = WishlistItemRow {
             id: item.id.to_string(),
@@ -386,24 +439,36 @@ impl<'conn> WishlistRepository for SqliteWishlistRepository<'conn> {
         item_id: &WishlistItemId,
         destination_wishlist: &WishlistId,
     ) -> Result<(), DomainError> {
-        // Touch the source wishlist before moving (item still belongs to it at this point).
-        database::touch_wishlist_updated_at_for_item(&mut *self.executor, item_id)
-            .await
-            .with_domain_context("Error updating source wishlist timestamp before item move")?;
-        let affected =
-            database::move_wishlist_item(&mut *self.executor, item_id, destination_wishlist)
-                .await
-                .with_domain_context("Error moving wishlist item")?;
-        if affected == 0 {
+        let source_wishlist_id = database::move_wishlist_item_with_source(
+            &mut *self.executor,
+            item_id,
+            destination_wishlist,
+        )
+        .await
+        .with_domain_context("Error moving wishlist item")?;
+
+        let Some(source_wishlist_id) = source_wishlist_id else {
             return Err(DomainError::NotFound {
                 resource: "WishlistItem".to_string(),
                 identifier: item_id.to_string(),
             });
-        }
-        // Touch the destination wishlist after the item has been reassigned.
-        database::touch_wishlist_updated_at(&mut *self.executor, destination_wishlist)
+        };
+
+        let source_wishlist = WishlistId::try_from(source_wishlist_id.as_str())
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        database::touch_wishlist_updated_at(&mut *self.executor, &source_wishlist)
             .await
-            .with_domain_context("Error updating destination wishlist timestamp after item move")?;
+            .with_domain_context("Error updating source wishlist timestamp after item move")?;
+
+        if source_wishlist != *destination_wishlist {
+            database::touch_wishlist_updated_at(&mut *self.executor, destination_wishlist)
+                .await
+                .with_domain_context(
+                    "Error updating destination wishlist timestamp after item move",
+                )?;
+        }
+
         Ok(())
     }
 }
@@ -672,6 +737,91 @@ mod tests {
             item.desired_price.as_ref().map(|p| p.currency),
             Some(Currency::EUR)
         ); // unchanged
+
+        Ok(())
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_wishlists.sql")
+    )]
+    async fn save_wishlist_replays_root_events_only(conn: SqlitePool) -> Result<()> {
+        use crate::wishlist::domain::wishlist_event::WishlistEvent;
+
+        let first_id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
+        let second_id = WishlistId::try_from("trn:wishlist:c9950910-96e1-47ae-8097-cd0ebbaa83f5")?;
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let mut repo = unit_of_work.wishlist_repository();
+
+        let mut wishlist = repo.find_by_id(&first_id).await?.expect("wishlist exists");
+        let _ = wishlist.drain_events();
+
+        wishlist.pending_events.push(WishlistEvent::Renamed {
+            name: "Renamed Through Event".to_string(),
+        });
+        wishlist
+            .pending_events
+            .push(WishlistEvent::MarkedDefault { is_default: true });
+
+        repo.save_wishlist(&wishlist).await?;
+
+        let updated_first = repo
+            .find_by_id(&first_id)
+            .await?
+            .expect("first wishlist exists");
+        let updated_second = repo
+            .find_by_id(&second_id)
+            .await?
+            .expect("second wishlist exists");
+
+        assert_eq!(updated_first.name, "Renamed Through Event");
+        assert!(updated_first.is_default);
+        assert!(!updated_second.is_default);
+
+        Ok(())
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_wishlists.sql")
+    )]
+    async fn move_item_not_found_does_not_touch_wishlist_timestamps(
+        conn: SqlitePool,
+    ) -> Result<()> {
+        let destination =
+            WishlistId::try_from("trn:wishlist:c9950910-96e1-47ae-8097-cd0ebbaa83f5")?;
+        let missing_item =
+            WishlistItemId::try_from("trn:wishlist-item:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")?;
+
+        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+        let mut repo = unit_of_work.wishlist_repository();
+
+        let before = repo.find_wishlists().await?;
+        let before_by_id: std::collections::HashMap<String, chrono::NaiveDateTime> = before
+            .iter()
+            .map(|preview| (preview.id.to_string(), preview.updated_at))
+            .collect();
+
+        let err = repo
+            .move_item(&missing_item, &destination)
+            .await
+            .expect_err("missing item should fail");
+
+        match err {
+            DomainError::NotFound { resource, .. } => {
+                assert_eq!(resource, "WishlistItem");
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+
+        let after = repo.find_wishlists().await?;
+        for preview in after {
+            let before_ts = before_by_id
+                .get(&preview.id.to_string())
+                .expect("wishlist should exist before and after");
+            assert_eq!(*before_ts, preview.updated_at);
+        }
 
         Ok(())
     }
