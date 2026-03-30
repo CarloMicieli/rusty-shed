@@ -8,7 +8,8 @@ use crate::dcc_inventory::application::{
 };
 use crate::dcc_inventory::domain::{
     DccAddress, DccInventoryUowExt, Decoder, DecoderId, DecoderType, DigitalProtocol,
-    DigitalRollingStock, DigitalRollingStockId, DigitalRollingStockRepository,
+    DigitalRollingStock, DigitalRollingStockEvent, DigitalRollingStockId,
+    DigitalRollingStockRepository,
 };
 use crate::dcc_inventory::infrastructure::entities::{DecoderRow, DigitalRollingStockRow};
 use sqlx::SqliteConnection;
@@ -28,6 +29,65 @@ impl<'conn> SqliteDigitalRollingStockRepository<'conn> {
     /// - New instance of `SqliteDigitalRollingStockRepository`.
     pub fn new(executor: &'conn mut SqliteConnection) -> Self {
         Self { executor }
+    }
+
+    /// Route a single domain event to the correct SQL operation.
+    ///
+    /// The match is exhaustive: adding a new event variant forces the compiler
+    /// to require a corresponding persistence branch here.
+    async fn handle_event(
+        &mut self,
+        id: &DigitalRollingStockId,
+        event: DigitalRollingStockEvent,
+    ) -> Result<(), DomainError> {
+        match event {
+            DigitalRollingStockEvent::Created {
+                owned_rolling_stock_id,
+                dcc_address,
+                decoder_id,
+            } => {
+                let sql = r#"
+                    INSERT INTO digital_rolling_stocks
+                        (id, owned_rolling_stock_id, dcc_address, installed_decoder_id)
+                    VALUES (?1, ?2, ?3, ?4)
+                "#;
+                sqlx::query(sql)
+                    .bind(id)
+                    .bind(owned_rolling_stock_id)
+                    .bind(*dcc_address)
+                    .bind(decoder_id)
+                    .execute(&mut *self.executor)
+                    .await
+                    .map_err(DomainError::from)?;
+            }
+            DigitalRollingStockEvent::DecoderChanged { decoder_id } => {
+                let sql = r#"
+                    UPDATE digital_rolling_stocks
+                    SET installed_decoder_id = ?1
+                    WHERE id = ?2
+                "#;
+                sqlx::query(sql)
+                    .bind(decoder_id)
+                    .bind(id)
+                    .execute(&mut *self.executor)
+                    .await
+                    .map_err(DomainError::from)?;
+            }
+            DigitalRollingStockEvent::DccAddressChanged { dcc_address } => {
+                let sql = r#"
+                    UPDATE digital_rolling_stocks
+                    SET dcc_address = ?1
+                    WHERE id = ?2
+                "#;
+                sqlx::query(sql)
+                    .bind(*dcc_address)
+                    .bind(id)
+                    .execute(&mut *self.executor)
+                    .await
+                    .map_err(DomainError::from)?;
+            }
+        }
+        Ok(())
     }
 
     async fn select_by_id(
@@ -66,7 +126,8 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
                 DomainError::Validation("missing decoder for digital rolling stock".to_string())
             })?;
 
-            Ok(Some(DigitalRollingStock::new(
+            // Use reconstitute() — not new() — so no spurious Created event is emitted.
+            Ok(Some(DigitalRollingStock::reconstitute(
                 r.id,
                 r.owned_rolling_stock_id,
                 dcc_address,
@@ -79,26 +140,12 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
 
     async fn save(
         &mut self,
-        digital_rolling_stock: DigitalRollingStock,
+        mut digital_rolling_stock: DigitalRollingStock,
     ) -> Result<(), DomainError> {
-        let sql = r#"
-            INSERT INTO digital_rolling_stocks (id, owned_rolling_stock_id, dcc_address, installed_decoder_id)
-            VALUES (?1, ?2, ?3, ?4)
-            ON CONFLICT(id) DO UPDATE SET
-              owned_rolling_stock_id = excluded.owned_rolling_stock_id,
-              dcc_address = excluded.dcc_address,
-              installed_decoder_id = excluded.installed_decoder_id
-        "#;
-
-        sqlx::query(sql)
-            .bind(&digital_rolling_stock.id)
-            .bind(&digital_rolling_stock.owned_rolling_stock_id)
-            .bind(*digital_rolling_stock.dcc_address)
-            .bind(digital_rolling_stock.decoder_id)
-            .execute(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
-
+        let id = digital_rolling_stock.id.clone();
+        for ev in digital_rolling_stock.pull_events() {
+            self.handle_event(&id, ev).await?;
+        }
         Ok(())
     }
 

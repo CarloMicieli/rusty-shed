@@ -37,15 +37,14 @@ pub struct WishlistItemRow {
     pub purchased_price_currency: Option<String>,
 }
 
-/// Flat row used to build wishlist previews grouped by wishlist and currency.
+/// One row per wishlist used to build wishlist previews.
 #[derive(Debug, Clone, sqlx::FromRow)]
-pub struct WishlistPreviewProjection {
+pub struct WishlistPreviewAggregateRow {
     pub wishlist_id: String,
     pub name: String,
     pub notes: Option<String>,
     pub is_default: i64,
     pub updated_at: NaiveDateTime,
-    pub currency: Option<String>,
-    pub total_amount: Option<i64>,
+    pub totals_by_currency: Option<String>,
     pub item_count: i64,
 }

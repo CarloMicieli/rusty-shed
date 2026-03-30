@@ -1,4 +1,6 @@
-use crate::budget::domain::{BudgetConfigId, BudgetEvent, BudgetMode};
+use crate::budget::domain::{
+    BudgetConfigId, BudgetEvent, BudgetMode, ExtraBudgetEntry, ExtraBudgetId,
+};
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -39,11 +41,14 @@ impl BudgetConfiguration {
             pending_events: Vec::new(),
         };
 
-        // Record the configuration event
+        // Record the configuration event with all SQL-needed fields
         config.pending_events.push(BudgetEvent::BudgetConfigured {
             config_id: config.id,
-            mode: format!("{:?}", mode),
+            mode: Self::mode_to_db_str(mode).to_string(),
             base_amount,
+            last_reset_year: config.last_reset_year,
+            created_at: config.created_at,
+            version: config.version,
             timestamp: now,
         });
 
@@ -56,12 +61,38 @@ impl BudgetConfiguration {
         self.base_amount = base_amount.clone();
         self.updated_at = Utc::now();
 
-        // Record the update event
+        // Record the update event with all SQL-needed fields
         self.pending_events.push(BudgetEvent::BudgetConfigured {
             config_id: self.id,
-            mode: format!("{:?}", mode),
+            mode: Self::mode_to_db_str(mode).to_string(),
             base_amount,
+            last_reset_year: self.last_reset_year,
+            created_at: self.created_at,
+            version: self.version,
             timestamp: self.updated_at,
+        });
+    }
+
+    /// Emit an `ExtraBudgetAdded` event so the repository can INSERT the entry.
+    ///
+    /// The aggregate does not own extra budget entries as in-memory state;
+    /// the event payload carries all fields the SQL operation requires.
+    pub fn add_extra_budget(&mut self, entry: &ExtraBudgetEntry) {
+        self.pending_events.push(BudgetEvent::ExtraBudgetAdded {
+            extra_budget_id: entry.id.clone(),
+            year: entry.year,
+            month: entry.month,
+            amount: entry.amount.clone(),
+            reason: entry.reason.clone(),
+            timestamp: entry.created_at,
+        });
+    }
+
+    /// Emit an `ExtraBudgetRemoved` event so the repository can DELETE the entry.
+    pub fn remove_extra_budget(&mut self, id: ExtraBudgetId) {
+        self.pending_events.push(BudgetEvent::ExtraBudgetRemoved {
+            extra_budget_id: id,
+            timestamp: Utc::now(),
         });
     }
 
@@ -80,6 +111,14 @@ impl BudgetConfiguration {
         match self.mode {
             BudgetMode::Yearly => self.base_amount.amount,
             BudgetMode::Monthly => self.base_amount.amount * 12,
+        }
+    }
+
+    /// Convert a `BudgetMode` to the DB-compatible string representation.
+    fn mode_to_db_str(mode: BudgetMode) -> &'static str {
+        match mode {
+            BudgetMode::Yearly => "YEARLY",
+            BudgetMode::Monthly => "MONTHLY",
         }
     }
 
@@ -105,12 +144,15 @@ impl BudgetConfiguration {
         }
     }
 
-    /// Get and clear pending events.
+    /// Drain and return all pending domain events.
+    ///
+    /// Clears the internal buffer. Called once by the repository's `save()` to
+    /// obtain the events to persist within the current transaction.
     pub fn drain_events(&mut self) -> Vec<BudgetEvent> {
         std::mem::take(&mut self.pending_events)
     }
 
-    /// Get pending events without clearing them.
+    /// Inspect pending events without clearing them (useful in tests).
     pub fn pending_events(&self) -> &[BudgetEvent] {
         &self.pending_events
     }

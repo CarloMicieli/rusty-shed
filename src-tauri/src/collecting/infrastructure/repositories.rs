@@ -438,6 +438,8 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                 CollectionEvent::CollectionCreated { aggregate_id, .. } => {
                     self.insert_collection(aggregate_id, &collection.name)
                         .await?;
+                    // Metadata is initialised as part of this event — bump version/timestamp.
+                    self.update_collection_metadata(aggregate_id).await?;
                 }
                 CollectionEvent::RailwayModelAdded {
                     aggregate_id,
@@ -491,7 +493,9 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                         seller_id.as_ref(),
                         purchase_date,
                     )
-                    .await?
+                    .await?;
+
+                    self.update_collection_metadata(aggregate_id).await?;
                 }
                 CollectionEvent::RailwayModelRemoved {
                     aggregate_id,
@@ -510,12 +514,12 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                     // Set removed_date on the collection item row
                     self.update_collection_item_removed_date(collection_item_id, removed_date)
                         .await?;
+
+                    self.update_collection_metadata(aggregate_id).await?;
                 }
                 CollectionEvent::RailwayModelSold { .. } => {}
             }
         }
-
-        self.update_collection_metadata(&collection.id).await?;
 
         // `pull_events()` already cleared `pending_events` by taking ownership.
         Ok(())

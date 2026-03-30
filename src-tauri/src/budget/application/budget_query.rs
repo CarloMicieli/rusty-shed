@@ -31,9 +31,7 @@ pub async fn get_monthly_budget_records(
     // Get budget configuration
     let config_option = {
         let mut repo = uow.budget_repo();
-        repo.get_config()
-            .await
-            .map_err(DomainError::Infrastructure)?
+        repo.get_config().await?
     };
 
     let config = config_option
@@ -133,9 +131,7 @@ pub async fn get_budget_dashboard(
     // Get budget configuration (optional)
     let config_option = {
         let mut repo = uow.budget_repo();
-        repo.get_config()
-            .await
-            .map_err(DomainError::Infrastructure)?
+        repo.get_config().await?
     };
 
     let now = chrono::Utc::now();

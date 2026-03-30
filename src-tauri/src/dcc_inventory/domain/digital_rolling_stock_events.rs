@@ -1,13 +1,20 @@
+use crate::collecting::domain::OwnedRollingStockId;
 use crate::dcc_inventory::domain::{DccAddress, DecoderId};
 
-/// Represents a digitalized piece of railway equipment as a Domain-Driven Design (DDD)
-/// Aggregate Root.
-///
-/// A `DigitalRollingStock` is the holistic representation of a physical model (locomotive,
-/// multiple unit, or functional wagon) paired with its digital control interface (DCC Decoder).
 /// Events emitted by the `DigitalRollingStock` aggregate.
+///
+/// Each variant carries all data necessary for the corresponding SQL operation,
+/// so the repository's `handle_event` never reads fields from the aggregate directly.
 #[derive(Debug, Clone)]
 pub enum DigitalRollingStockEvent {
+    /// A new digital rolling stock record was created.
+    Created {
+        owned_rolling_stock_id: OwnedRollingStockId,
+        dcc_address: DccAddress,
+        decoder_id: DecoderId,
+    },
+    /// The installed decoder was replaced.
     DecoderChanged { decoder_id: DecoderId },
+    /// The DCC address was reassigned.
     DccAddressChanged { dcc_address: DccAddress },
 }

@@ -269,64 +269,7 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
             return Ok(());
         }
 
-        // No events emitted: fall back to snapshot-style persistence (existing behavior)
-        // Upsert inventory header
-        let sql_upsert = r#"
-            INSERT OR REPLACE INTO track_inventories (id, created_at, updated_at, version)
-            VALUES (?1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
-        "#;
-
-        sqlx::query(sql_upsert)
-            .bind(inventory.id.to_string())
-            .execute(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
-
-        // Delete existing items and re-insert
-        let sql_delete_items = r#"DELETE FROM track_inventory_items WHERE inventory_id = ?1"#;
-        sqlx::query(sql_delete_items)
-            .bind(inventory.id.to_string())
-            .execute(&mut *self.executor)
-            .await
-            .map_err(DomainError::from)?;
-
-        for (_k, tq) in inventory.inventory.iter() {
-            let insert_item = r#"
-                INSERT INTO track_inventory_items (inventory_id, track_id, quantity)
-                VALUES (?1, ?2, ?3)
-            "#;
-            sqlx::query(insert_item)
-                .bind(inventory.id.to_string())
-                .bind(tq.track_id.to_string())
-                .bind(tq.quantity)
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
-        }
-
-        // Persist purchases
-        for p in inventory.purchase_history.iter() {
-            let insert_purchase = r#"
-                INSERT OR REPLACE INTO track_purchases (
-                    id, inventory_id, track_id, quantity, price_amount, 
-                    price_currency, seller_id, purchase_date, created_at)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP)
-            "#;
-
-            sqlx::query(insert_purchase)
-                .bind(p.track_purchase_id.to_string())
-                .bind(inventory.id.to_string())
-                .bind(p.track_id.to_string())
-                .bind(p.quantity)
-                .bind(p.price.amount)
-                .bind(p.price.currency.to_code())
-                .bind(p.seller_id.as_ref().map(|s| s.to_string()))
-                .bind(p.purchase_date.to_string())
-                .execute(&mut *self.executor)
-                .await
-                .map_err(DomainError::from)?;
-        }
-
+        // No events: nothing to persist.
         Ok(())
     }
 }

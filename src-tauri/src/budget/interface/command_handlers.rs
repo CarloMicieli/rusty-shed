@@ -37,9 +37,7 @@ pub async fn get_budget_config(
     let mut unit_of_work = state.unit_of_work().await?;
     let config = {
         let mut repo = unit_of_work.budget_repo();
-        repo.get_config()
-            .await
-            .map_err(CommandError::DatabaseError)?
+        repo.get_config().await.map_err(CommandError::from)?
     };
 
     unit_of_work.commit().await.map_err(CommandError::from)?;
@@ -294,7 +292,7 @@ pub async fn get_extra_budgets(
         let mut repo = unit_of_work.budget_repo();
         repo.get_extra_budgets(args.year)
             .await
-            .map_err(CommandError::DatabaseError)?
+            .map_err(CommandError::from)?
     };
 
     unit_of_work.commit().await.map_err(CommandError::from)?;
