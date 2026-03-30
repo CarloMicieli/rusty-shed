@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn validate_accepts_valid_trn() {
         let id = MaintenanceCardId::from_uuid(&Uuid::new_v4());
-        assert!(validate_maintenance_card_id(&id.to_string(), &()).is_ok());
+        assert!(validate_maintenance_card_id(id.as_ref(), &()).is_ok());
     }
 
     #[test]
