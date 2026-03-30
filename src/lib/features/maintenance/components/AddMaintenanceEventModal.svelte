@@ -52,7 +52,6 @@
 
     try {
       await maintenanceState.addMaintenanceEvent({
-        id: crypto.randomUUID(),
         maintenanceCardId: selectedCardId,
         datePerformed,
         maintenanceType,

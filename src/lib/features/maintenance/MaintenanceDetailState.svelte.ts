@@ -77,8 +77,9 @@ export default class MaintenanceDetailState {
     if (!this.#card) return;
 
     // Optimistically prepend the new event before awaiting the backend
+    const optimisticId = crypto.randomUUID();
     const optimisticEvent: MaintenanceCardEventView = {
-      id: args.id,
+      id: optimisticId,
       datePerformed: args.datePerformed,
       maintenanceType: null,
       notes: args.notes
@@ -94,7 +95,7 @@ export default class MaintenanceDetailState {
       if (this.#card) {
         this.#card = {
           ...this.#card,
-          events: this.#card.events.filter((e) => e.id !== args.id)
+          events: this.#card.events.filter((e) => e.id !== optimisticId)
         };
       }
       throw new Error(result.error.message);

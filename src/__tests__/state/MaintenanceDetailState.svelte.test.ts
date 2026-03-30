@@ -99,7 +99,7 @@ describe('MaintenanceDetailState', () => {
 
       // Optimistic update: event should already be prepended
       expect(state.card!.events).toHaveLength(1);
-      expect(state.card!.events[0].id).toBe('new-event-id');
+      expect(state.card!.events[0].id).toBeTruthy();
 
       // Resolve the backend call to clean up
       resolveAddEvent({ ok: null, data: null });
@@ -110,7 +110,6 @@ describe('MaintenanceDetailState', () => {
       const state = new MaintenanceDetailState();
       // No card loaded — addEvent should be a no-op
       await state.addEvent({
-        id: 'ev-1',
         maintenanceCardId: 'mc-1',
         datePerformed: '2026-03-05',
         maintenanceType: null,

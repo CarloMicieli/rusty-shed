@@ -249,8 +249,7 @@ pub async fn add_collection_item(
 ) -> Result<CollectionItemId, CommandError> {
     info!("Adding collection item: {:?}", args);
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid collection args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
 
     let domain_cmd = match DomainAddCollectionItemInput::try_from(args) {
         Ok(v) => v,
@@ -283,8 +282,7 @@ pub async fn add_railway_model_to_collection(
 ) -> Result<(), CommandError> {
     info!("add_railway_model_to_collection (collecting): {:?}", args);
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid collection args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 
@@ -368,8 +366,7 @@ pub async fn record_acquisition(
 ) -> Result<Vec<CollectionItemId>, CommandError> {
     info!("Recording acquisition: {} items", args.items.len());
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid acquisition args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
 
     let purchase_date = NaiveDate::parse_from_str(&args.purchase_date, "%Y-%m-%d")
         .map_err(|_| CommandError::validation_field("purchase_date", "invalid date format"))?;

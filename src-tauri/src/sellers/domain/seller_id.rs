@@ -25,6 +25,16 @@ impl Identifier for SellerId {
     }
 }
 
+/// Garde validator: accepts `None`; rejects `Some(s)` that cannot be parsed as a `SellerId`.
+pub fn validate_opt_seller_trn(value: &Option<String>, _: &()) -> garde::Result {
+    match value {
+        Some(s) => SellerId::try_from(s.as_str())
+            .map(|_| ())
+            .map_err(|_| garde::Error::new("error_invalid_seller_id")),
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

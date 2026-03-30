@@ -4,9 +4,13 @@ use crate::collecting::application::AddCollectionItemInput;
 use crate::collecting::domain::box_condition::validate_opt_box_condition;
 use crate::collecting::domain::model_condition::validate_opt_model_condition;
 use crate::collecting::domain::purchase_condition::validate_opt_purchase_condition;
+use crate::collecting::domain::validate_collection_item_id;
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
+use crate::core::domain::currency::{validate_currency_code, validate_opt_currency_code};
 use crate::core::domain::domain_error::DomainError;
-use crate::core::domain::validation::ValidationContext;
+use crate::core::domain::validation::{
+    ValidationContext, validate_not_future_iso_date, validate_opt_not_future_date,
+};
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
@@ -15,51 +19,81 @@ use serde::Deserialize;
 
 /// Arguments structure for removing an item from the collection.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveCollectionItemArgs {
     /// The ID of the collection item to remove.
+    #[garde(length(min = 1), custom(validate_collection_item_id))]
     pub collection_item_id: String,
     /// The category of the item.
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::category::validate_category)
+    )]
     pub category: String,
     /// The date the item was removed from the collection (YYYY-MM-DD).
+    #[garde(custom(validate_iso_date), custom(validate_not_future_iso_date))]
     pub removed_date: String,
 }
 
 /// Arguments structure for updating a single mutable field of a collection item.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCollectionItemArgs {
     /// The ID of the collection item to update.
+    #[garde(length(min = 1), custom(validate_collection_item_id))]
     pub collection_item_id: String,
     /// The concrete field update payload.
+    #[garde(dive)]
     pub update: CollectionItemUpdateArgs,
 }
 
 /// Tagged payload for a collection item update operation.
-#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(tag = "kind", content = "data", rename_all = "camelCase")]
 pub enum CollectionItemUpdateArgs {
     /// Set or clear seller id in purchase info.
-    Seller { seller_id: Option<String> },
+    Seller {
+        #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
+        seller_id: Option<String>,
+    },
     /// Set or clear purchased price in minor units.
     Price {
+        #[garde(range(min = 0))]
         amount: Option<i64>,
+        #[garde(custom(validate_opt_currency_code))]
         currency: Option<String>,
     },
     /// Set or clear purchase date.
-    PurchaseDate { purchase_date: Option<NaiveDate> },
+    PurchaseDate {
+        #[garde(custom(validate_opt_not_future_date))]
+        purchase_date: Option<NaiveDate>,
+    },
     /// Set or clear added date.
-    AddedDate { added_date: Option<NaiveDate> },
+    AddedDate {
+        #[garde(custom(validate_opt_not_future_date))]
+        added_date: Option<NaiveDate>,
+    },
     /// Set or clear notes.
-    Notes { notes: Option<String> },
+    Notes {
+        #[garde(length(max = 2000))]
+        notes: Option<String>,
+    },
     /// Set or clear purchase condition.
-    PurchaseCondition { purchase_condition: Option<String> },
+    PurchaseCondition {
+        #[garde(custom(validate_opt_purchase_condition))]
+        purchase_condition: Option<String>,
+    },
     /// Set or clear model condition.
-    ModelCondition { model_condition: Option<String> },
+    ModelCondition {
+        #[garde(custom(validate_opt_model_condition))]
+        model_condition: Option<String>,
+    },
     /// Set or clear box condition.
-    BoxCondition { box_condition: Option<String> },
+    BoxCondition {
+        #[garde(custom(validate_opt_box_condition))]
+        box_condition: Option<String>,
+    },
 }
 
 /// Arguments structure for adding an item to the collection.
@@ -68,15 +102,20 @@ pub enum CollectionItemUpdateArgs {
 #[serde(rename_all = "camelCase")]
 pub struct AddCollectionItemArgs {
     /// The railway model ID of the item to add.
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::validate_railway_model_id)
+    )]
     pub railway_model_id: String,
     /// The category and rolling stock are determined from the referenced railway model.
     /// The price amount in the smallest currency unit (e.g., cents). Must be >= 0.
     #[garde(range(min = 0))]
     pub price_amount: i64,
     /// The currency code for the price (e.g., "USD"). Must be 3 characters (ISO 4217).
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
     /// The seller ID (optional).
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// The date the item was added to the collection (YYYY-MM-DD).
     pub added_date: NaiveDate,
@@ -92,6 +131,7 @@ pub struct AddCollectionItemArgs {
     #[garde(custom(validate_opt_box_condition))]
     pub box_condition: Option<String>,
     /// Additional notes about the item (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
 }
 
@@ -177,6 +217,7 @@ mod tests {
 #[serde(rename_all = "camelCase")]
 pub struct AddRailwayModelToCollectionArgs {
     /// The simplified railway model data.
+    #[garde(dive)]
     pub railway_model: SimplifiedRailwayModelArgs,
 
     /// The category and rolling stock are determined from the referenced railway model.
@@ -184,9 +225,10 @@ pub struct AddRailwayModelToCollectionArgs {
     #[garde(range(min = 0))]
     pub price_amount: i64,
     /// The currency code for the price (e.g., "USD"). Must be 3 characters (ISO 4217).
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
     /// The seller ID (optional).
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// The date the item was added to the collection (YYYY-MM-DD).
     pub added_date: NaiveDate,
@@ -202,6 +244,7 @@ pub struct AddRailwayModelToCollectionArgs {
     #[garde(custom(validate_opt_box_condition))]
     pub box_condition: Option<String>,
     /// Additional notes about the item (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
 }
 
@@ -215,7 +258,7 @@ mod garde_tests {
 
     fn valid_item() -> AcquisitionItemArgs {
         AcquisitionItemArgs {
-            manufacturer_id: "acme".to_string(),
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
             product_code: "60100".to_string(),
             description: "Steam locomotive".to_string(),
             category: "LOCOMOTIVES".to_string(),
@@ -478,29 +521,19 @@ fn validate_iso_date(v: &str, _: &()) -> garde::Result {
         .map_err(|_| garde::Error::new("error_invalid_date_format"))
 }
 
-/// Validates that an optional string is a valid seller TRN.
-fn validate_opt_seller_trn(v: &Option<String>, _: &()) -> garde::Result {
-    match v {
-        Some(s) => SellerId::try_from(s.as_str())
-            .map(|_| ())
-            .map_err(|_| garde::Error::new("error_invalid_seller_id")),
-        None => Ok(()),
-    }
-}
-
 /// Top-level args for the record_acquisition command.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordAcquisitionArgs {
     /// Optional seller id (TRN string).
-    #[garde(custom(validate_opt_seller_trn))]
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// Purchase date as YYYY-MM-DD string.
-    #[garde(custom(validate_iso_date))]
+    #[garde(custom(validate_iso_date), custom(validate_not_future_iso_date))]
     pub purchase_date: String,
     /// At least one item required.
-    #[garde(length(min = 1))]
+    #[garde(length(min = 1), dive)]
     pub items: Vec<AcquisitionItemArgs>,
 }
 
@@ -509,27 +542,39 @@ pub struct RecordAcquisitionArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AcquisitionItemArgs {
-    #[garde(length(min = 1))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::manufacturer::validate_manufacturer_id)
+    )]
     pub manufacturer_id: String,
     #[garde(length(min = 1, max = 20))]
     pub product_code: String,
     #[garde(length(min = 1, max = 500))]
     pub description: String,
-    #[garde(length(min = 1))]
-    #[garde(custom(crate::catalog::domain::railway_model::category::validate_category))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::category::validate_category)
+    )]
     pub category: String,
-    #[garde(length(min = 1))]
-    #[garde(custom(crate::catalog::domain::scale::scale::validate_scale))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::scale::scale::validate_scale)
+    )]
     pub scale: String,
-    #[garde(length(min = 1, max = 10))]
+    #[garde(
+        length(min = 1, max = 10),
+        custom(crate::catalog::domain::railway_model::epoch::validate_epoch)
+    )]
     pub epoch: String,
-    #[garde(length(min = 1))]
-    #[garde(custom(crate::catalog::domain::railway_model::power_method::validate_power_method))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::power_method::validate_power_method)
+    )]
     pub power_method: String,
     /// Price in cents; 0 means no price recorded. Must be >= 0.
     #[garde(range(min = 0))]
     pub price_amount: i64,
     /// ISO 4217 currency code (3 characters).
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
 }

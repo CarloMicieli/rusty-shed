@@ -35,6 +35,13 @@ impl Identifier for ExtraBudgetId {
     }
 }
 
+/// Garde validator: rejects a `&str` that cannot be parsed as an `ExtraBudgetId`.
+pub fn validate_extra_budget_id(value: &str, _: &()) -> garde::Result {
+    ExtraBudgetId::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_extra_budget_id"))
+}
+
 /// Generate a new `ExtraBudgetId` using a random `Uuid`.
 impl Default for ExtraBudgetId {
     fn default() -> Self {

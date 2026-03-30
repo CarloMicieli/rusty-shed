@@ -97,9 +97,7 @@ pub async fn create_seller(
 ) -> Result<Seller, CommandError> {
     info!("Creating new seller {:?}", payload);
 
-    payload
-        .validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid seller args: {e}")))?;
+    payload.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 
@@ -148,9 +146,7 @@ pub async fn update_seller(
 ) -> Result<Seller, CommandError> {
     info!("Updating seller: {:?}", payload);
 
-    payload
-        .validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid seller args: {e}")))?;
+    payload.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
     let input = UpdateSellerInput::try_from(payload)?;

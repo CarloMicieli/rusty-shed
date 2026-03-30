@@ -1,5 +1,4 @@
 use crate::collecting::domain::OwnedRollingStockId;
-use crate::core::domain::validation::ValidationError;
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::maintenance::application::AddMaintenanceCard;
@@ -15,27 +14,8 @@ use crate::maintenance::interface::{
     AddMaintenanceArgs, AddMaintenanceEventArgs, MaintenanceCardView,
 };
 use crate::state::AppState;
-use garde::{Report, Validate};
-use std::borrow::Cow;
-use std::collections::HashMap;
+use garde::Validate;
 use std::convert::TryInto;
-
-fn map_garde_report_to_command_error(report: Report) -> CommandError {
-    let mut fields: HashMap<String, Vec<ValidationError>> = HashMap::new();
-
-    for (path, error) in report.into_inner() {
-        fields
-            .entry(path.to_string())
-            .or_default()
-            .push(ValidationError {
-                code: Cow::Borrowed("invalid"),
-                message: Some(Cow::Owned(error.to_string())),
-                params: HashMap::new(),
-            });
-    }
-
-    CommandError::ValidationError(fields)
-}
 
 /// Command handler to retrieve a single maintenance card by its ID.
 ///
@@ -172,7 +152,7 @@ pub async fn add_maintenance_event(
         notes: input.notes,
     };
 
-    args.validate().map_err(map_garde_report_to_command_error)?;
+    args.validate().map_err(CommandError::from)?;
 
     let app_input: AddMaintenanceEventInput = args.try_into()?;
 

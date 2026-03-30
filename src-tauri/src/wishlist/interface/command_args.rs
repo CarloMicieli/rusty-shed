@@ -1,13 +1,15 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::interface::SimplifiedRailwayModelArgs;
+use crate::core::domain::currency::{validate_currency_code, validate_opt_currency_code};
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::validation::validate_opt_not_future_date;
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::wishlist::application::inputs::{
     AddToWishlistInput, CreateWishlistInput, DeleteWishlistInput, MoveWishlistItemInput,
     RemoveWishlistItemInput, RenameWishlistInput, SetDefaultWishlistInput, UpdateWishlistItemInput,
 };
-use crate::wishlist::domain::wishlist_id::WishlistId;
-use crate::wishlist::domain::wishlist_item_id::WishlistItemId;
+use crate::wishlist::domain::wishlist_id::{WishlistId, validate_wishlist_id};
+use crate::wishlist::domain::wishlist_item_id::{WishlistItemId, validate_wishlist_item_id};
 use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use chrono::NaiveDate;
@@ -20,8 +22,13 @@ use serde::Deserialize;
 #[serde(rename_all = "camelCase")]
 pub struct AddToWishlistArgs {
     /// The ID of the wishlist to which the item will be added.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub wishlist_id: String,
     /// The railway model ID of the item to add.
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::validate_railway_model_id)
+    )]
     pub railway_model_id: String,
     /// The priority of the wishlist item (optional).
     pub priority: Option<WishlistPriority>,
@@ -31,24 +38,28 @@ pub struct AddToWishlistArgs {
     #[garde(range(min = 0))]
     pub desired_price_amount: Option<i64>,
     /// The desired price currency code (e.g., "USD"). Must be 3 characters (ISO 4217).
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub desired_price_currency: Option<String>,
     /// Additional notes about the wishlist item (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
     /// The date the item was added to the wishlist (optional).
+    #[garde(custom(validate_opt_not_future_date))]
     pub added_date: Option<NaiveDate>,
 }
 
 /// Arguments structure for moving an item between wishlists.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct MoveWishlistItemArgs {
     /// The ID of the wishlist item to move.
+    #[garde(length(min = 1), custom(validate_wishlist_item_id))]
     pub item_id: String,
     /// The ID of the destination wishlist.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub destination_wishlist_id: String,
     /// The ID of the source wishlist the item currently belongs to.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub wishlist_id: String,
 }
 
@@ -61,6 +72,7 @@ pub struct CreateWishlistArgs {
     #[garde(length(min = 1, max = 200))]
     pub name: String,
     /// Optional notes about the new wishlist.
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
     /// Whether the new wishlist should be set as the default.
     pub is_default: Option<bool>,
@@ -72,6 +84,7 @@ pub struct CreateWishlistArgs {
 #[serde(rename_all = "camelCase")]
 pub struct RenameWishlistArgs {
     /// The ID of the wishlist to rename.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub wishlist_id: String,
     /// The new name for the wishlist (1–200 characters).
     #[garde(length(min = 1, max = 200))]
@@ -84,18 +97,21 @@ pub struct RenameWishlistArgs {
 #[serde(rename_all = "camelCase")]
 pub struct PurchaseWishlistArgs {
     /// The ID of the wishlist containing the item.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub wishlist_id: String,
     /// The ID of the wishlist item being purchased.
+    #[garde(length(min = 1), custom(validate_wishlist_item_id))]
     pub wishlist_item_id: String,
     /// Purchase price amount in the smallest currency unit (e.g., cents). Must be >= 0.
     #[garde(range(min = 0))]
     pub price_amount: i64,
     /// Purchase price currency code (e.g., "EUR", "USD", "GBP", "JPY"). Must be 3 characters.
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
     /// The date the purchase occurred (ISO 8601: YYYY-MM-DD).
     pub purchase_date: NaiveDate,
     /// Optional seller id string.
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// Purchase condition. Valid values: NEW | PRE_OWNED.
     #[garde(custom(
@@ -291,8 +307,10 @@ impl TryFrom<PurchaseWishlistArgs>
 #[serde(rename_all = "camelCase")]
 pub struct AddRailwayModelToWishListArgs {
     /// The simplified railway model data.
+    #[garde(dive)]
     pub railway_model: SimplifiedRailwayModelArgs,
     /// Target wishlist id. The item will be added to this wishlist.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub wishlist_id: String,
     /// The priority of the wishlist item (optional).
     pub priority: Option<WishlistPriority>,
@@ -302,11 +320,13 @@ pub struct AddRailwayModelToWishListArgs {
     #[garde(range(min = 0))]
     pub desired_price_amount: Option<i64>,
     /// The desired price currency code (e.g., "USD"). Must be 3 characters (ISO 4217).
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub desired_price_currency: Option<String>,
     /// Additional notes about the wishlist item (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
     /// The date the item was added to the wishlist (optional).
+    #[garde(custom(validate_opt_not_future_date))]
     pub added_date: Option<NaiveDate>,
 }
 
@@ -339,8 +359,10 @@ fn validate_opt_price_amount(value: &Option<Option<i64>>, _: &()) -> garde::Resu
 #[serde(rename_all = "camelCase")]
 pub struct UpdateWishlistItemArgs {
     /// UUID of the parent wishlist.
+    #[garde(length(min = 1), custom(validate_wishlist_id))]
     pub wishlist_id: String,
     /// UUID of the wishlist item to update.
+    #[garde(length(min = 1), custom(validate_wishlist_item_id))]
     pub item_id: String,
     /// New priority; omit or `null` to leave unchanged.
     pub priority: Option<WishlistPriority>,
@@ -351,9 +373,10 @@ pub struct UpdateWishlistItemArgs {
     #[garde(custom(validate_opt_price_amount))]
     pub desired_price_amount: Option<Option<i64>>,
     /// ISO 4217 currency code (3 characters); required when `desired_price_amount` is a number.
-    #[garde(length(min = 3, max = 3))]
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub desired_price_currency: Option<String>,
     /// New added date (ISO 8601 YYYY-MM-DD); must be ≤ today. Omit to leave unchanged.
+    #[garde(custom(validate_opt_not_future_date))]
     pub added_date: Option<NaiveDate>,
 }
 
@@ -468,7 +491,7 @@ mod garde_tests {
     #[test]
     fn add_to_wishlist_valid_passes() {
         let args = AddToWishlistArgs {
-            wishlist_id: "wl-1".to_string(),
+            wishlist_id: "trn:wishlist:550e8400-e29b-41d4-a716-446655440000".to_string(),
             railway_model_id: "trn:railway-model:acme:60100".to_string(),
             priority: None,
             status: None,
@@ -528,8 +551,8 @@ mod garde_tests {
 
     fn valid_purchase() -> PurchaseWishlistArgs {
         PurchaseWishlistArgs {
-            wishlist_id: "wl-1".to_string(),
-            wishlist_item_id: "item-1".to_string(),
+            wishlist_id: "trn:wishlist:550e8400-e29b-41d4-a716-446655440000".to_string(),
+            wishlist_item_id: "trn:wishlist-item:550e8400-e29b-41d4-a716-446655440001".to_string(),
             price_amount: 2000,
             price_currency: "EUR".to_string(),
             purchase_date: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
@@ -655,8 +678,8 @@ mod garde_tests {
     fn update_wishlist_item_null_price_passes() {
         // Some(None) means "clear the price" — should be valid
         let args = UpdateWishlistItemArgs {
-            wishlist_id: "wl-1".to_string(),
-            item_id: "item-1".to_string(),
+            wishlist_id: "trn:wishlist:550e8400-e29b-41d4-a716-446655440000".to_string(),
+            item_id: "trn:wishlist-item:550e8400-e29b-41d4-a716-446655440001".to_string(),
             priority: None,
             status: None,
             desired_price_amount: Some(None),

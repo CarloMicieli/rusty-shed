@@ -28,8 +28,7 @@ pub async fn global_search(
         args.query, args.lang
     );
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid search args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
 
     let input = GlobalSearchInput {
         query: args.query,

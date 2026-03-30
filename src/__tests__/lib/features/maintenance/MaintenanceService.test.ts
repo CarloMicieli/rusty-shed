@@ -27,7 +27,6 @@ function makeCard(id: string, overrides: Partial<MaintenanceCardView> = {}): Mai
 
 function makeEventArgs(overrides: Partial<AddMaintenanceArgs> = {}): AddMaintenanceArgs {
   return {
-    id: 'ev-1',
     maintenanceCardId: 'mc-1',
     datePerformed: '2026-03-01',
     maintenanceType: null,
@@ -146,7 +145,6 @@ describe('MaintenanceService', () => {
       mockSafeInvoke.mockResolvedValueOnce({ ok: true, data: null });
 
       const args = makeEventArgs({
-        id: 'ev-42',
         maintenanceCardId: 'mc-99',
         datePerformed: '2026-02-15',
         maintenanceType: 'CLEANING',

@@ -11,6 +11,7 @@ mod repository;
 
 pub use maintenance_card::MaintenanceCard;
 pub use maintenance_card_id::MaintenanceCardId;
+pub use maintenance_card_id::validate_maintenance_card_id;
 pub use maintenance_event::MaintenanceEvent;
 pub use maintenance_event_id::MaintenanceEventId;
 pub use maintenance_status::MaintenanceStatus;

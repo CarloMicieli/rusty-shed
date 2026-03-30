@@ -1,5 +1,7 @@
+use crate::core::domain::validation::validate_not_future_date;
 use crate::core::infrastructure::error::CommandError;
 use crate::maintenance::application::add_maintenance_event::AddMaintenanceEventInput;
+use crate::maintenance::domain::validate_maintenance_card_id;
 use crate::maintenance::domain::{MaintenanceCardId, MaintenanceType};
 use chrono::NaiveDate;
 use garde::Validate;
@@ -9,37 +11,50 @@ use std::convert::TryFrom;
 
 /// Arguments for the `AddMaintenanceEvent` use-case.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddMaintenanceEventArgs {
     /// The maintenance card this event belongs to (non-empty TRN string).
-    #[garde(length(min = 1))]
+    #[garde(length(min = 1), custom(validate_maintenance_card_id))]
     pub maintenance_card_id: String,
 
     /// Date the maintenance was performed (date-only).
+    #[garde(custom(validate_not_future_date))]
     pub date_performed: NaiveDate,
 
     /// Optional maintenance type.
+    #[garde(skip)]
     pub maintenance_type: Option<MaintenanceType>,
 
     /// Optional free-text notes.
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
+}
+
+fn validate_opt_maintenance_type_parse(value: &Option<String>, _: &()) -> garde::Result {
+    match value {
+        None => Ok(()),
+        Some(s) => s
+            .parse::<MaintenanceType>()
+            .map(|_| ())
+            .map_err(|_| garde::Error::new("error_invalid_maintenance_type")),
+    }
 }
 
 /// Arguments for adding a maintenance record.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddMaintenanceArgs {
-    /// The unique identifier for the maintenance record.
-    pub id: String,
     /// The ID of the maintenance card.
+    #[garde(length(min = 1), custom(validate_maintenance_card_id))]
     pub maintenance_card_id: String,
     /// The date the maintenance was performed (YYYY-MM-DD).
+    #[garde(custom(validate_not_future_date))]
     pub date_performed: NaiveDate,
     /// The type of maintenance performed (optional).
+    #[garde(custom(validate_opt_maintenance_type_parse))]
     pub maintenance_type: Option<String>,
     /// Additional notes about the maintenance (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
 }
 
@@ -94,6 +109,113 @@ mod garde_tests {
             errors
                 .iter()
                 .any(|(p, _)| p.to_string() == "maintenance_card_id"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_maintenance_event_invalid_card_id_format_fails() {
+        let args = AddMaintenanceEventArgs {
+            maintenance_card_id: "not-a-trn".to_string(),
+            ..valid_add_event()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "maintenance_card_id"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_maintenance_event_notes_too_long_fails() {
+        let args = AddMaintenanceEventArgs {
+            notes: Some("x".repeat(2001)),
+            ..valid_add_event()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, _)| p.to_string() == "notes"),
+            "{errors:?}"
+        );
+    }
+
+    fn valid_add_maintenance() -> AddMaintenanceArgs {
+        let id = Uuid::new_v4();
+        AddMaintenanceArgs {
+            maintenance_card_id: MaintenanceCardId::from_uuid(&id).to_string(),
+            date_performed: NaiveDate::from_ymd_opt(2025, 3, 1).unwrap(),
+            maintenance_type: None,
+            notes: None,
+        }
+    }
+
+    #[test]
+    fn add_maintenance_valid_passes() {
+        assert!(valid_add_maintenance().validate().is_ok());
+    }
+
+    #[test]
+    fn add_maintenance_empty_card_id_fails() {
+        let args = AddMaintenanceArgs {
+            maintenance_card_id: String::new(),
+            ..valid_add_maintenance()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "maintenance_card_id"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_maintenance_invalid_card_id_format_fails() {
+        let args = AddMaintenanceArgs {
+            maintenance_card_id: "not-a-trn".to_string(),
+            ..valid_add_maintenance()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "maintenance_card_id"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_maintenance_invalid_type_string_fails() {
+        let args = AddMaintenanceArgs {
+            maintenance_type: Some("unknown-type".to_string()),
+            ..valid_add_maintenance()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "maintenance_type"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_maintenance_notes_too_long_fails() {
+        let args = AddMaintenanceArgs {
+            notes: Some("y".repeat(2001)),
+            ..valid_add_maintenance()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, _)| p.to_string() == "notes"),
             "{errors:?}"
         );
     }

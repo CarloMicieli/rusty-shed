@@ -65,6 +65,23 @@ pub enum CurrencyError {
     UnsupportedCurrency(String),
 }
 
+/// Garde validator: rejects a `&str` that is not a known currency code.
+pub fn validate_currency_code(value: &str, _: &()) -> garde::Result {
+    Currency::from_code(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_currency_code"))
+}
+
+/// Garde validator: accepts `None`; rejects a `Some(s)` where `s` is not a known currency code.
+pub fn validate_opt_currency_code(value: &Option<String>, _: &()) -> garde::Result {
+    match value {
+        Some(s) => Currency::from_code(s)
+            .map(|_| ())
+            .map_err(|_| garde::Error::new("error_invalid_currency_code")),
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -80,5 +97,34 @@ mod tests {
     #[test]
     fn it_should_currency_from_code_err() {
         assert!(Currency::from_code("ABC").is_err());
+    }
+
+    #[test]
+    fn validate_currency_code_accepts_valid_codes() {
+        assert!(validate_currency_code("EUR", &()).is_ok());
+        assert!(validate_currency_code("usd", &()).is_ok());
+        assert!(validate_currency_code("JPY", &()).is_ok());
+    }
+
+    #[test]
+    fn validate_currency_code_rejects_unknown_code() {
+        let err = validate_currency_code("XYZ", &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_invalid_currency_code");
+    }
+
+    #[test]
+    fn validate_opt_currency_code_accepts_none() {
+        assert!(validate_opt_currency_code(&None, &()).is_ok());
+    }
+
+    #[test]
+    fn validate_opt_currency_code_accepts_valid_some() {
+        assert!(validate_opt_currency_code(&Some("EUR".to_string()), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_opt_currency_code_rejects_invalid_some() {
+        let err = validate_opt_currency_code(&Some("FOO".to_string()), &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_invalid_currency_code");
     }
 }

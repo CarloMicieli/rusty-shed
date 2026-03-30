@@ -46,6 +46,13 @@ impl Identifier for ManufacturerId {
     }
 }
 
+/// Garde validator: rejects a `&str` that cannot be parsed as a `ManufacturerId`.
+pub fn validate_manufacturer_id(value: &str, _: &()) -> garde::Result {
+    ManufacturerId::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_manufacturer_id"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -28,6 +28,7 @@ pub use collection_events::CollectionEvent;
 pub use collection_id::CollectionId;
 pub use collection_item::CollectionItem;
 pub use collection_item_id::CollectionItemId;
+pub use collection_item_id::validate_collection_item_id;
 pub use collection_item_update::CollectionItemUpdate;
 pub use collection_item_update::UpdateCollectionItemInput;
 pub use collection_item_view::CollectionItemView;

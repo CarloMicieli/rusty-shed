@@ -54,6 +54,7 @@ pub use radius::{Radius, RadiusError};
 pub use railway_model::RailwayModel;
 pub use railway_model_event::RailwayModelEvent;
 pub use railway_model_id::RailwayModelId;
+pub use railway_model_id::validate_railway_model_id;
 pub use railway_model_params::RailwayModelParams;
 pub use railway_model_translation::{RailwayModelTranslationEntry, RailwayModelTranslations};
 pub use railway_model_view::{

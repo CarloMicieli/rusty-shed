@@ -1,4 +1,5 @@
 use crate::core::domain::domain_error::DomainError;
+use chrono::Local;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -155,6 +156,31 @@ impl ValidationContext {
     }
 }
 
+/// Garde validator: rejects a `NaiveDate` that is strictly in the future (after today).
+pub fn validate_not_future_date(value: &chrono::NaiveDate, _: &()) -> garde::Result {
+    let today = Local::now().date_naive();
+    if *value > today {
+        Err(garde::Error::new("error_date_in_future"))
+    } else {
+        Ok(())
+    }
+}
+
+/// Garde validator: rejects an `Option<NaiveDate>` whose inner value is strictly in the future.
+pub fn validate_opt_not_future_date(value: &Option<chrono::NaiveDate>, _: &()) -> garde::Result {
+    match value {
+        Some(d) => validate_not_future_date(d, &()),
+        None => Ok(()),
+    }
+}
+
+/// Garde validator: rejects a `&str` ISO date (`YYYY-MM-DD`) that is strictly in the future.
+pub fn validate_not_future_iso_date(value: &str, _: &()) -> garde::Result {
+    let d = chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d")
+        .map_err(|_| garde::Error::new("error_invalid_date_format"))?;
+    validate_not_future_date(&d, &())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -206,5 +232,55 @@ mod tests {
         } else {
             panic!("Expected ValidationError");
         }
+    }
+
+    #[test]
+    fn validate_not_future_date_accepts_past_date() {
+        let past = chrono::NaiveDate::from_ymd_opt(2020, 1, 1).unwrap();
+        assert!(validate_not_future_date(&past, &()).is_ok());
+    }
+
+    #[test]
+    fn validate_not_future_date_rejects_future_date() {
+        let future = chrono::Local::now().naive_local().date() + chrono::Duration::days(1);
+        let err = validate_not_future_date(&future, &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_date_in_future");
+    }
+
+    #[test]
+    fn validate_opt_not_future_date_accepts_none() {
+        assert!(validate_opt_not_future_date(&None, &()).is_ok());
+    }
+
+    #[test]
+    fn validate_opt_not_future_date_accepts_past_some() {
+        let past = chrono::NaiveDate::from_ymd_opt(2020, 6, 15).unwrap();
+        assert!(validate_opt_not_future_date(&Some(past), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_opt_not_future_date_rejects_future_some() {
+        let future = chrono::Local::now().naive_local().date() + chrono::Duration::days(1);
+        let err = validate_opt_not_future_date(&Some(future), &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_date_in_future");
+    }
+
+    #[test]
+    fn validate_not_future_iso_date_accepts_valid_past_string() {
+        assert!(validate_not_future_iso_date("2020-01-01", &()).is_ok());
+    }
+
+    #[test]
+    fn validate_not_future_iso_date_rejects_invalid_format() {
+        let err = validate_not_future_iso_date("not-a-date", &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_invalid_date_format");
+    }
+
+    #[test]
+    fn validate_not_future_iso_date_rejects_future_string() {
+        let future = chrono::Local::now().naive_local().date() + chrono::Duration::days(1);
+        let future_str = future.format("%Y-%m-%d").to_string();
+        let err = validate_not_future_iso_date(&future_str, &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_date_in_future");
     }
 }

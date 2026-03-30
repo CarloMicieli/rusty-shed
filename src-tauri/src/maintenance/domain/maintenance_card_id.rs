@@ -50,8 +50,44 @@ impl From<Uuid> for MaintenanceCardId {
     }
 }
 
+/// Garde validator: rejects a `&str` that cannot be parsed as a `MaintenanceCardId`.
+pub fn validate_maintenance_card_id(value: &str, _: &()) -> garde::Result {
+    MaintenanceCardId::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_maintenance_card_id"))
+}
+
 impl Default for MaintenanceCardId {
     fn default() -> Self {
         MaintenanceCardId::from_uuid(&Uuid::new_v4())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validate_accepts_valid_trn() {
+        let id = MaintenanceCardId::from_uuid(&Uuid::new_v4());
+        assert!(validate_maintenance_card_id(&id.to_string(), &()).is_ok());
+    }
+
+    #[test]
+    fn validate_rejects_empty_string() {
+        let err = validate_maintenance_card_id("", &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_invalid_maintenance_card_id");
+    }
+
+    #[test]
+    fn validate_rejects_wrong_prefix() {
+        let err = validate_maintenance_card_id("trn:other:some-id", &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_invalid_maintenance_card_id");
+    }
+
+    #[test]
+    fn validate_rejects_plain_string() {
+        let err = validate_maintenance_card_id("not-a-trn", &()).unwrap_err();
+        assert_eq!(err.to_string(), "error_invalid_maintenance_card_id");
     }
 }
