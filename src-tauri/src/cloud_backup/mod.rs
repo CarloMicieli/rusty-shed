@@ -3,6 +3,7 @@
 /// Provides Google Drive cloud backup and restore functionality
 /// for the collection database.
 pub mod application;
+pub mod commands;
 pub mod domain;
 pub mod infrastructure;
 
