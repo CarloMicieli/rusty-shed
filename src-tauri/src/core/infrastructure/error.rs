@@ -13,6 +13,7 @@ use super::db::SqliteDbError;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationError;
 use crate::data_management::domain::DataManagementError;
+use garde::Report;
 use serde::Serialize;
 
 /// A session-scoped unique identifier for errors.
@@ -175,6 +176,49 @@ impl From<DataManagementError> for CommandError {
     }
 }
 
+impl From<Report> for CommandError {
+    fn from(report: Report) -> Self {
+        let mut fields: HashMap<String, Vec<ValidationError>> = HashMap::new();
+
+        for (path, error) in report.into_inner() {
+            let raw = error.to_string();
+            let code = extract_machine_validation_code(&raw)
+                .map(Cow::Owned)
+                .unwrap_or(Cow::Borrowed("invalid"));
+
+            let message = if code.as_ref() == raw {
+                None
+            } else {
+                Some(Cow::Owned(raw))
+            };
+
+            fields
+                .entry(path.to_string())
+                .or_default()
+                .push(ValidationError {
+                    code,
+                    message,
+                    params: HashMap::new(),
+                });
+        }
+
+        CommandError::ValidationError(fields)
+    }
+}
+
+fn extract_machine_validation_code(input: &str) -> Option<String> {
+    let candidate = input.trim();
+    if candidate.starts_with("error_")
+        && candidate
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+    {
+        Some(candidate.to_string())
+    } else {
+        None
+    }
+}
+
 impl CommandError {
     /// Create an Unknown error with a generated Error ID and structured logging.
     ///
@@ -232,10 +276,27 @@ impl CommandError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use garde::Validate;
     use pretty_assertions::assert_eq;
     use rstest::rstest;
     use std::collections::HashMap as StdHashMap;
     use std::collections::HashSet;
+
+    fn validate_coded_error(value: &str, _: &()) -> garde::Result {
+        if value == "ok" {
+            Ok(())
+        } else {
+            Err(garde::Error::new("error_invalid_magic"))
+        }
+    }
+
+    #[derive(garde::Validate)]
+    struct GardeMappingFixture {
+        #[garde(custom(validate_coded_error))]
+        coded: String,
+        #[garde(length(min = 3))]
+        generic: String,
+    }
 
     // --- ErrorId Tests ---
 
@@ -422,6 +483,30 @@ mod tests {
                 _ => panic!("expected ValidationError"),
             },
             _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn garde_report_keeps_machine_code_and_uses_invalid_fallback() {
+        let fixture = GardeMappingFixture {
+            coded: "bad".to_string(),
+            generic: "x".to_string(),
+        };
+
+        let report = fixture.validate().expect_err("fixture should be invalid");
+        let cmd = CommandError::from(report);
+
+        match cmd {
+            CommandError::ValidationError(map) => {
+                let coded = &map["coded"][0];
+                assert_eq!(coded.code, "error_invalid_magic");
+                assert_eq!(coded.message, None);
+
+                let generic = &map["generic"][0];
+                assert_eq!(generic.code, "invalid");
+                assert!(generic.message.is_some());
+            }
+            _ => panic!("Expected ValidationError variant"),
         }
     }
 }

@@ -22,16 +22,14 @@ export function getUrgencyLevel(dueDate: string | null): UrgencyLevel {
   const [year, month, day] = dueDate.split('-').map(Number);
   const due = new Date(year, month - 1, day);
 
-  const diffTime = due.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  // Overdue: due date is in the past
-  if (diffDays < 0) {
+  // Overdue: due date is strictly before today (direct comparison avoids DST rounding errors)
+  if (due < today) {
     return 'overdue';
   }
 
-  // Warning: due within 7 days
-  if (diffDays <= 7) {
+  // Warning: due within 7 days (use ms comparison; DST shifts ≤1h safely within the 7-day window)
+  const diffMs = due.getTime() - today.getTime();
+  if (diffMs <= 7 * 24 * 60 * 60 * 1000) {
     return 'warning';
   }
 

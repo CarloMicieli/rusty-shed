@@ -2,9 +2,19 @@
 // Following ADR 8: Standardize Tauri Command and Use Case Input Handling
 
 use crate::budget::domain::BudgetMode;
+use crate::budget::domain::validate_extra_budget_id;
 use crate::core::domain::Currency;
+use crate::core::domain::currency::validate_opt_currency_code;
 use garde::Validate;
 use serde::{Deserialize, Serialize};
+
+/// Garde validator for `Option<i32>` year range (2000–2100).
+fn validate_opt_year_range(value: &Option<i32>, _: &()) -> garde::Result {
+    match value {
+        Some(y) if !(2000..=2100).contains(y) => Err(garde::Error::new("error_year_out_of_range")),
+        _ => Ok(()),
+    }
+}
 
 /// Arguments for setting/updating the budget configuration.
 #[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
@@ -17,6 +27,7 @@ pub struct SetBudgetConfigArgs {
     #[garde(range(min = 0))]
     pub base_amount: i64,
     /// Optional currency code (inherits from settings if not provided)
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub currency: Option<String>,
 }
 
@@ -35,17 +46,19 @@ pub struct AddExtraBudgetArgs {
     #[garde(range(min = 1))]
     pub amount: i64,
     /// Optional currency code (inherits from settings if not provided)
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub currency: Option<String>,
     /// Optional reason for the extra budget
+    #[garde(length(max = 500))]
     pub reason: Option<String>,
 }
 
 /// Arguments for removing an extra budget entry.
 #[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveExtraBudgetArgs {
     /// ID of the extra budget entry to remove
+    #[garde(length(min = 1), custom(validate_extra_budget_id))]
     pub id: String,
 }
 
@@ -55,6 +68,7 @@ pub struct RemoveExtraBudgetArgs {
 #[serde(rename_all = "camelCase")]
 pub struct GetMonthlyBudgetRecordsArgs {
     /// Year to query (defaults to current year if not provided)
+    #[garde(custom(validate_opt_year_range))]
     pub year: Option<i32>,
 }
 
@@ -74,8 +88,10 @@ pub struct GetExtraBudgetsArgs {
 #[serde(rename_all = "camelCase")]
 pub struct GetQuarterlySummariesArgs {
     /// Year to query (defaults to current year if not provided)
+    #[garde(custom(validate_opt_year_range))]
     pub year: Option<i32>,
     /// Currency code (defaults to settings currency if not provided)
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub currency: Option<String>,
 }
 

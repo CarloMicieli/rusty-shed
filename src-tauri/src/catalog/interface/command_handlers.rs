@@ -356,8 +356,7 @@ pub async fn upsert_railway_model_translation(
         args.lang, args.railway_model_id
     );
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid translation args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
     let mut unit_of_work = state.unit_of_work().await?;
     UpsertRailwayModelTranslation::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
@@ -374,8 +373,7 @@ pub async fn search_railway_models(
 ) -> Result<Vec<RailwayModelId>, CommandError> {
     info!("Searching railway models with query: {}", args.query);
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid search args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
     let mut unit_of_work = state.unit_of_work().await?;
     let ids = SearchRailwayModels::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
@@ -403,8 +401,7 @@ pub async fn add_rolling_stock_to_model(
         args.railway_model_id, args.category
     );
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
 
     let input = parse_add_rolling_stock_args(
         args.railway_model_id,

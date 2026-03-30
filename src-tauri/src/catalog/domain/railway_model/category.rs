@@ -394,6 +394,36 @@ pub enum RailcarType {
     TrailerCar,
 }
 
+/// Garde validator for `Category` (required string).
+#[allow(dead_code)]
+pub fn validate_category(value: &str, _ctx: &()) -> garde::Result {
+    value
+        .parse::<Category>()
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_category"))
+}
+
+/// Garde validator for `Option<String>` that must parse as `Category` when present.
+#[allow(dead_code)]
+pub fn validate_opt_category(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => s
+            .parse::<Category>()
+            .map(|_| ())
+            .map_err(|_| garde::Error::new("error_invalid_category")),
+        None => Ok(()),
+    }
+}
+
+/// Garde validator for `RollingStockCategory` (required string).
+#[allow(dead_code)]
+pub fn validate_rolling_stock_category(value: &str, _ctx: &()) -> garde::Result {
+    value
+        .parse::<RollingStockCategory>()
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_rolling_stock_category"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

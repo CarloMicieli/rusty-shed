@@ -51,6 +51,21 @@ pub fn validate_availability_status(value: &str, _ctx: &()) -> garde::Result {
     }
 }
 
+/// Garde validator for `Option<String>` that must parse as `AvailabilityStatus` when present.
+#[allow(dead_code)]
+pub fn validate_opt_availability_status(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => {
+            if s.parse::<AvailabilityStatus>().is_ok() {
+                Ok(())
+            } else {
+                Err(garde::Error::new("error_invalid_availability_status"))
+            }
+        }
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

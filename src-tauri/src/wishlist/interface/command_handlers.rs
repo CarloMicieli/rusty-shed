@@ -122,6 +122,8 @@ pub async fn create_wishlist(
 ) -> Result<WishlistPreview, CommandError> {
     info!("Creating wishlist: {:?}", input);
 
+    input.validate().map_err(CommandError::from)?;
+
     let mut unit_of_work = state.unit_of_work().await?;
     let id_provider = RuntimeIdProvider::new();
 
@@ -154,6 +156,8 @@ pub async fn rename_wishlist(
     input: RenameWishlistArgs,
 ) -> Result<(), CommandError> {
     info!("Renaming wishlist: {:?}", input);
+
+    input.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 
@@ -251,6 +255,8 @@ pub async fn add_to_wishlist(
 ) -> Result<WishlistItem, CommandError> {
     info!("Adding item to wishlist: {:?}", input);
 
+    input.validate().map_err(CommandError::from)?;
+
     let mut unit_of_work = state.unit_of_work().await?;
     let id_provider = RuntimeIdProvider::new();
 
@@ -316,6 +322,8 @@ pub async fn move_item_to_list(
 ) -> Result<(), CommandError> {
     info!("Moving wishlist item: {:?}", input);
 
+    input.validate().map_err(CommandError::from)?;
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let cmd = MoveWishlistItemInput::try_from(input).map_err(CommandError::from)?;
@@ -344,6 +352,8 @@ pub async fn purchase_wishlist_item(
 ) -> Result<(), CommandError> {
     info!("Purchasing wishlist item: {:?}", input);
 
+    input.validate().map_err(CommandError::from)?;
+
     let mut unit_of_work = state.unit_of_work().await?;
     let collection_item_id_provider = RuntimeIdProvider::new();
     let purchase_info_id_provider = RuntimeIdProvider::new();
@@ -371,6 +381,8 @@ pub async fn add_railway_model_to_wish_list(
     args: AddRailwayModelToWishListArgs,
 ) -> Result<(), CommandError> {
     info!("add_railway_model_to_wish_list (wishlist): {:?}", args);
+
+    args.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 
@@ -430,8 +442,7 @@ pub async fn update_wishlist_item(
 ) -> Result<WishlistItem, CommandError> {
     info!("Updating wishlist item: {:?}", args);
 
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid update args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
 

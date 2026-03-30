@@ -14,6 +14,7 @@ use crate::maintenance::interface::{
     AddMaintenanceArgs, AddMaintenanceEventArgs, MaintenanceCardView,
 };
 use crate::state::AppState;
+use garde::Validate;
 use std::convert::TryInto;
 
 /// Command handler to retrieve a single maintenance card by its ID.
@@ -150,6 +151,8 @@ pub async fn add_maintenance_event(
         maintenance_type,
         notes: input.notes,
     };
+
+    args.validate().map_err(CommandError::from)?;
 
     let app_input: AddMaintenanceEventInput = args.try_into()?;
 

@@ -51,6 +51,13 @@ impl Default for CollectionItemId {
     }
 }
 
+/// Garde validator: rejects a `&str` that cannot be parsed as a `CollectionItemId`.
+pub fn validate_collection_item_id(value: &str, _: &()) -> garde::Result {
+    CollectionItemId::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_collection_item_id"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

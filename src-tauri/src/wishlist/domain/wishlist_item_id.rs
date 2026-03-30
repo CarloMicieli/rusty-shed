@@ -41,6 +41,13 @@ impl Identifier for WishlistItemId {
     }
 }
 
+/// Garde validator: rejects a `&str` that cannot be parsed as a `WishlistItemId`.
+pub fn validate_wishlist_item_id(value: &str, _: &()) -> garde::Result {
+    WishlistItemId::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_wishlist_item_id"))
+}
+
 /// Generate a new `WishlistItemId` using a random `Uuid`.
 ///
 /// The default value is a namespaced string of the form `trn:wishlist-item:{uuid}`.

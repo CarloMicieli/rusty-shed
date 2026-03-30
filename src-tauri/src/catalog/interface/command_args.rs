@@ -32,27 +32,36 @@ use crate::{
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateRailwayModelArgs {
-    /// ID of the manufacturer.
+    /// ID of the manufacturer (non-empty TRN string).
+    #[garde(length(min = 1))]
     pub manufacturer_id: String,
-    /// Product code of the railway model.
+    /// Product code of the railway model (1–20 characters).
+    #[garde(length(min = 1, max = 20))]
     pub product_code: String,
-    /// Description of the railway model.
+    /// Description of the railway model (1–500 characters).
+    #[garde(length(min = 1, max = 500))]
     pub description: String,
     /// Additional details about the railway model.
     pub details: Option<String>,
-    /// Power method of the railway model.
+    /// Power method of the railway model (AC / DC / TRIX_EXPRESS).
+    #[garde(custom(crate::catalog::domain::railway_model::power_method::validate_power_method))]
     pub power_method: String,
-    /// Scale of the railway model.
+    /// Scale of the railway model (H0 / N / Z / etc.).
+    #[garde(custom(crate::catalog::domain::scale::scale::validate_scale))]
     pub scale: String,
-    /// Epoch of the railway model.
+    /// Epoch of the railway model (I / II / IIa / III/IV / Vm / etc.).
+    #[garde(length(min = 1, max = 10))]
     pub epoch: String,
-    /// Category of the railway model.
+    /// Category of the railway model (LOCOMOTIVES / FREIGHT_CARS / etc.).
+    #[garde(custom(crate::catalog::domain::railway_model::category::validate_category))]
     pub category: String,
     /// Optional delivery date of the railway model.
     pub delivery_date: Option<String>,
-    /// Optional availability status of the railway model.
+    /// Optional availability status (ANNOUNCED / AVAILABLE / CANCELLED / DISCONTINUED).
+    #[garde(custom(crate::catalog::domain::railway_model::availability_status::validate_opt_availability_status))]
     pub availability_status: Option<String>,
-    /// Rolling stock items associated with the railway model.
+    /// Rolling stock items associated with the railway model (at least one required).
+    #[garde(length(min = 1))]
     pub rolling_stocks: Vec<CreateRollingStockArgs>,
 }
 
@@ -135,9 +144,11 @@ pub enum CreateRollingStockArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct LengthOverBuffersArgs {
-    /// Length in millimeters.
+    /// Length in millimeters (must be non-negative when provided).
+    #[garde(range(min = 0.0))]
     pub millimeters: Option<f64>,
-    /// Length in inches.
+    /// Length in inches (must be non-negative when provided).
+    #[garde(range(min = 0.0))]
     pub inches: Option<f64>,
 }
 
@@ -146,21 +157,40 @@ pub struct LengthOverBuffersArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct TechnicalSpecificationsArgs {
-    /// Minimum radius the rolling stock can navigate.
+    /// Minimum radius the rolling stock can navigate (must be non-negative when provided).
+    #[garde(range(min = 0.0))]
     pub minimum_radius: Option<f64>,
     /// Coupling details.
     pub coupling: Option<CouplingArgs>,
-    /// Flywheel details.
+    /// Flywheel details (YES / NO / NOT_APPLICABLE).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::feature_flag::validate_opt_feature_flag
+    ))]
     pub flywheel_fitted: Option<String>,
-    /// Body shell details.
+    /// Body shell details (PLASTIC / METAL_DIE_CAST).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::body_shell_type::validate_opt_body_shell_type
+    ))]
     pub body_shell: Option<String>,
-    /// Chassis details.
+    /// Chassis details (PLASTIC / METAL_DIE_CAST).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::chassis_type::validate_opt_chassis_type
+    ))]
     pub chassis: Option<String>,
-    /// Presence of interior lighting.
+    /// Presence of interior lighting (YES / NO / NOT_APPLICABLE).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::feature_flag::validate_opt_feature_flag
+    ))]
     pub interior_lights: Option<String>,
-    /// Presence of headlights or other lights.
+    /// Presence of headlights or other lights (YES / NO / NOT_APPLICABLE).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::feature_flag::validate_opt_feature_flag
+    ))]
     pub lights: Option<String>,
-    /// Presence of sprung buffers.
+    /// Presence of sprung buffers (YES / NO / NOT_APPLICABLE).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::feature_flag::validate_opt_feature_flag
+    ))]
     pub sprung_buffers: Option<String>,
 }
 
@@ -169,11 +199,20 @@ pub struct TechnicalSpecificationsArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct CouplingArgs {
-    /// Type of coupling used.
+    /// Type of coupling used (NONE / NEM_355 / NEM_356 / NEM_357 / NEM_359 / NEM_360 / NEM_362 / NEM_365).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::coupling_socket::validate_coupling_socket
+    ))]
     pub socket: String,
-    /// Type of coupling head used.
+    /// Type of coupling head used (YES / NO / NOT_APPLICABLE).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::feature_flag::validate_opt_feature_flag
+    ))]
     pub close_couplers: Option<String>,
-    /// Presence of digital shunting couplers.
+    /// Presence of digital shunting couplers (YES / NO / NOT_APPLICABLE).
+    #[garde(custom(
+        crate::catalog::domain::railway_model::feature_flag::validate_opt_feature_flag
+    ))]
     pub digital_shunting: Option<String>,
 }
 
@@ -206,15 +245,23 @@ impl TryFrom<CreateRailwayModelArgs> for CreateRailwayModelInput {
 /// Simplified arguments for creating a railway model and optionally a small set
 /// of rolling stocks. This is a lighter-weight payload used by the
 /// `add_railway_model_to_collection` and `add_railway_model_to_wish_list` commands.
-#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct SimplifiedRailwayModelArgs {
+    #[garde(length(min = 1))]
     pub manufacturer_id: String,
+    #[garde(length(min = 1, max = 20))]
     pub product_code: String,
+    #[garde(length(min = 1, max = 500))]
     pub description: String,
+    #[garde(custom(crate::catalog::domain::railway_model::category::validate_category))]
     pub category: String,
+    #[garde(custom(crate::catalog::domain::scale::scale::validate_scale))]
     pub scale: String,
+    #[garde(length(min = 1, max = 10))]
     pub epoch: String,
+    #[garde(custom(crate::catalog::domain::railway_model::power_method::validate_power_method))]
     pub power_method: String,
     pub rolling_stocks: Vec<SimplifiedRollingStockArgs>,
 }
@@ -1367,5 +1414,393 @@ impl From<UpdateRollingStockServiceLevelArgs> for UpdateRollingStockServiceLevel
             rolling_stock_id: args.rolling_stock_id,
             service_level: args.service_level,
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Garde validation tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod garde_tests {
+    use super::*;
+    use garde::Validate;
+
+    fn one_locomotive() -> CreateRollingStockArgs {
+        CreateRollingStockArgs::Locomotive {
+            railway_company_id: "DB".to_string(),
+            friendly_name: "BR 01".to_string(),
+            series_code: "01".to_string(),
+            road_number: "01 001".to_string(),
+            series: None,
+            depot: None,
+            livery: None,
+            locomotive_type: "STEAM_LOCOMOTIVE".to_string(),
+            is_dummy: None,
+            control: None,
+            dcc_interface: None,
+            length_over_buffers: None,
+            technical_specifications: None,
+        }
+    }
+
+    fn valid_create_railway_model() -> CreateRailwayModelArgs {
+        CreateRailwayModelArgs {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "60100".to_string(),
+            description: "Steam locomotive".to_string(),
+            details: None,
+            power_method: "DC".to_string(),
+            scale: "H0".to_string(),
+            epoch: "IV".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![one_locomotive()],
+        }
+    }
+
+    // --- CreateRailwayModelArgs ---
+
+    #[test]
+    fn create_railway_model_valid_passes() {
+        assert!(valid_create_railway_model().validate().is_ok());
+    }
+
+    #[test]
+    fn create_railway_model_empty_manufacturer_id_fails() {
+        let args = CreateRailwayModelArgs {
+            manufacturer_id: "".to_string(),
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let paths: Vec<_> = report
+            .into_inner()
+            .into_iter()
+            .map(|(p, _)| p.to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p == "manufacturer_id"), "{paths:?}");
+    }
+
+    #[test]
+    fn create_railway_model_product_code_too_long_fails() {
+        let args = CreateRailwayModelArgs {
+            product_code: "X".repeat(21),
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let paths: Vec<_> = report
+            .into_inner()
+            .into_iter()
+            .map(|(p, _)| p.to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p == "product_code"), "{paths:?}");
+    }
+
+    #[test]
+    fn create_railway_model_empty_description_fails() {
+        let args = CreateRailwayModelArgs {
+            description: "".to_string(),
+            ..valid_create_railway_model()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn create_railway_model_invalid_power_method_fails() {
+        let args = CreateRailwayModelArgs {
+            power_method: "STEAM".to_string(),
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "power_method"
+                && e.to_string().contains("error_invalid_power_method")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn create_railway_model_invalid_scale_fails() {
+        let args = CreateRailwayModelArgs {
+            scale: "HO".to_string(), // correct is "H0" (zero, not letter O)
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, e)| p.to_string() == "scale"
+                    && e.to_string().contains("error_invalid_scale")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn create_railway_model_invalid_category_fails() {
+        let args = CreateRailwayModelArgs {
+            category: "TRAINS".to_string(),
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "category"
+                && e.to_string().contains("error_invalid_category")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn create_railway_model_invalid_availability_status_fails() {
+        let args = CreateRailwayModelArgs {
+            availability_status: Some("SOLD_OUT".to_string()),
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, e)| p.to_string() == "availability_status"
+                    && e.to_string().contains("error_invalid_availability_status")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn create_railway_model_empty_rolling_stocks_fails() {
+        let args = CreateRailwayModelArgs {
+            rolling_stocks: vec![],
+            ..valid_create_railway_model()
+        };
+        let report = args.validate().unwrap_err();
+        let paths: Vec<_> = report
+            .into_inner()
+            .into_iter()
+            .map(|(p, _)| p.to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p == "rolling_stocks"), "{paths:?}");
+    }
+
+    // --- LengthOverBuffersArgs ---
+
+    #[test]
+    fn length_over_buffers_valid_passes() {
+        let args = LengthOverBuffersArgs {
+            millimeters: Some(150.0),
+            inches: Some(5.9),
+        };
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn length_over_buffers_negative_mm_fails() {
+        let args = LengthOverBuffersArgs {
+            millimeters: Some(-1.0),
+            inches: None,
+        };
+        let report = args.validate().unwrap_err();
+        let paths: Vec<_> = report
+            .into_inner()
+            .into_iter()
+            .map(|(p, _)| p.to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p == "millimeters"), "{paths:?}");
+    }
+
+    #[test]
+    fn length_over_buffers_negative_inches_fails() {
+        let args = LengthOverBuffersArgs {
+            millimeters: None,
+            inches: Some(-0.1),
+        };
+        let report = args.validate().unwrap_err();
+        let paths: Vec<_> = report
+            .into_inner()
+            .into_iter()
+            .map(|(p, _)| p.to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p == "inches"), "{paths:?}");
+    }
+
+    // --- TechnicalSpecificationsArgs ---
+
+    fn valid_tech_specs() -> TechnicalSpecificationsArgs {
+        TechnicalSpecificationsArgs {
+            minimum_radius: Some(360.0),
+            coupling: None,
+            flywheel_fitted: Some("YES".to_string()),
+            body_shell: Some("PLASTIC".to_string()),
+            chassis: Some("METAL_DIE_CAST".to_string()),
+            interior_lights: Some("NO".to_string()),
+            lights: Some("YES".to_string()),
+            sprung_buffers: Some("NOT_APPLICABLE".to_string()),
+        }
+    }
+
+    #[test]
+    fn tech_specs_valid_passes() {
+        assert!(valid_tech_specs().validate().is_ok());
+    }
+
+    #[test]
+    fn tech_specs_negative_radius_fails() {
+        let args = TechnicalSpecificationsArgs {
+            minimum_radius: Some(-10.0),
+            ..valid_tech_specs()
+        };
+        let report = args.validate().unwrap_err();
+        let paths: Vec<_> = report
+            .into_inner()
+            .into_iter()
+            .map(|(p, _)| p.to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p == "minimum_radius"), "{paths:?}");
+    }
+
+    #[test]
+    fn tech_specs_invalid_flywheel_fails() {
+        let args = TechnicalSpecificationsArgs {
+            flywheel_fitted: Some("UNKNOWN".to_string()),
+            ..valid_tech_specs()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, e)| p.to_string() == "flywheel_fitted"
+                    && e.to_string().contains("error_invalid_feature_flag")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn tech_specs_invalid_body_shell_fails() {
+        let args = TechnicalSpecificationsArgs {
+            body_shell: Some("WOOD".to_string()),
+            ..valid_tech_specs()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "body_shell"
+                && e.to_string().contains("error_invalid_body_shell_type")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn tech_specs_invalid_chassis_fails() {
+        let args = TechnicalSpecificationsArgs {
+            chassis: Some("CARBON_FIBER".to_string()),
+            ..valid_tech_specs()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "chassis"
+                && e.to_string().contains("error_invalid_chassis_type")),
+            "{errors:?}"
+        );
+    }
+
+    // --- CouplingArgs ---
+
+    #[test]
+    fn coupling_valid_passes() {
+        let args = CouplingArgs {
+            socket: "NEM_362".to_string(),
+            close_couplers: Some("YES".to_string()),
+            digital_shunting: None,
+        };
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn coupling_invalid_socket_fails() {
+        let args = CouplingArgs {
+            socket: "KADEE".to_string(),
+            close_couplers: None,
+            digital_shunting: None,
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "socket"
+                && e.to_string().contains("error_invalid_coupling_socket")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn coupling_invalid_close_couplers_fails() {
+        let args = CouplingArgs {
+            socket: "NONE".to_string(),
+            close_couplers: Some("MAYBE".to_string()),
+            digital_shunting: None,
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "close_couplers"
+                && e.to_string().contains("error_invalid_feature_flag")),
+            "{errors:?}"
+        );
+    }
+
+    // --- SimplifiedRailwayModelArgs ---
+
+    fn valid_simplified_model() -> SimplifiedRailwayModelArgs {
+        SimplifiedRailwayModelArgs {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "60100".to_string(),
+            description: "Steam locomotive".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            scale: "H0".to_string(),
+            epoch: "IV".to_string(),
+            power_method: "DC".to_string(),
+            rolling_stocks: vec![],
+        }
+    }
+
+    #[test]
+    fn simplified_model_valid_passes() {
+        assert!(valid_simplified_model().validate().is_ok());
+    }
+
+    #[test]
+    fn simplified_model_invalid_scale_fails() {
+        let args = SimplifiedRailwayModelArgs {
+            scale: "HO".to_string(),
+            ..valid_simplified_model()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, e)| p.to_string() == "scale"
+                    && e.to_string().contains("error_invalid_scale")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn simplified_model_invalid_power_method_fails() {
+        let args = SimplifiedRailwayModelArgs {
+            power_method: "DIESEL".to_string(),
+            ..valid_simplified_model()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "power_method"
+                && e.to_string().contains("error_invalid_power_method")),
+            "{errors:?}"
+        );
     }
 }

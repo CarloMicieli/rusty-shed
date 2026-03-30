@@ -9,6 +9,7 @@ use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::interface::{CreateSellerPayload, UpdateSellerPayload};
 use crate::state::AppState;
+use garde::Validate;
 use log::info;
 use std::convert::TryFrom;
 
@@ -96,6 +97,8 @@ pub async fn create_seller(
 ) -> Result<Seller, CommandError> {
     info!("Creating new seller {:?}", payload);
 
+    payload.validate().map_err(CommandError::from)?;
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let input = CreateSellerInput {
@@ -142,6 +145,8 @@ pub async fn update_seller(
     payload: UpdateSellerPayload,
 ) -> Result<Seller, CommandError> {
     info!("Updating seller: {:?}", payload);
+
+    payload.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
     let input = UpdateSellerInput::try_from(payload)?;

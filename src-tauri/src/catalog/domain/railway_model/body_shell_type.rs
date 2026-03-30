@@ -42,6 +42,21 @@ pub fn validate_body_shell_type(value: &str, _ctx: &()) -> garde::Result {
     }
 }
 
+/// Garde validator for `Option<String>` that must parse as `BodyShellType` when present.
+#[allow(dead_code)]
+pub fn validate_opt_body_shell_type(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => {
+            if s.parse::<BodyShellType>().is_ok() {
+                Ok(())
+            } else {
+                Err(garde::Error::new("error_invalid_body_shell_type"))
+            }
+        }
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

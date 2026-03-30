@@ -1,9 +1,16 @@
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::interface::SimplifiedRailwayModelArgs;
 use crate::collecting::application::AddCollectionItemInput;
+use crate::collecting::domain::box_condition::validate_opt_box_condition;
+use crate::collecting::domain::model_condition::validate_opt_model_condition;
+use crate::collecting::domain::purchase_condition::validate_opt_purchase_condition;
+use crate::collecting::domain::validate_collection_item_id;
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
+use crate::core::domain::currency::{validate_currency_code, validate_opt_currency_code};
 use crate::core::domain::domain_error::DomainError;
-use crate::core::domain::validation::ValidationContext;
+use crate::core::domain::validation::{
+    ValidationContext, validate_not_future_iso_date, validate_opt_not_future_date,
+};
 use crate::core::domain::{Currency, MonetaryAmount};
 use crate::sellers::domain::seller_id::SellerId;
 use chrono::NaiveDate;
@@ -12,51 +19,81 @@ use serde::Deserialize;
 
 /// Arguments structure for removing an item from the collection.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveCollectionItemArgs {
     /// The ID of the collection item to remove.
+    #[garde(length(min = 1), custom(validate_collection_item_id))]
     pub collection_item_id: String,
     /// The category of the item.
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::category::validate_category)
+    )]
     pub category: String,
     /// The date the item was removed from the collection (YYYY-MM-DD).
+    #[garde(custom(validate_iso_date), custom(validate_not_future_iso_date))]
     pub removed_date: String,
 }
 
 /// Arguments structure for updating a single mutable field of a collection item.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
-#[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCollectionItemArgs {
     /// The ID of the collection item to update.
+    #[garde(length(min = 1), custom(validate_collection_item_id))]
     pub collection_item_id: String,
     /// The concrete field update payload.
+    #[garde(dive)]
     pub update: CollectionItemUpdateArgs,
 }
 
 /// Tagged payload for a collection item update operation.
-#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
 #[serde(tag = "kind", content = "data", rename_all = "camelCase")]
 pub enum CollectionItemUpdateArgs {
     /// Set or clear seller id in purchase info.
-    Seller { seller_id: Option<String> },
+    Seller {
+        #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
+        seller_id: Option<String>,
+    },
     /// Set or clear purchased price in minor units.
     Price {
+        #[garde(range(min = 0))]
         amount: Option<i64>,
+        #[garde(custom(validate_opt_currency_code))]
         currency: Option<String>,
     },
     /// Set or clear purchase date.
-    PurchaseDate { purchase_date: Option<NaiveDate> },
+    PurchaseDate {
+        #[garde(custom(validate_opt_not_future_date))]
+        purchase_date: Option<NaiveDate>,
+    },
     /// Set or clear added date.
-    AddedDate { added_date: Option<NaiveDate> },
+    AddedDate {
+        #[garde(custom(validate_opt_not_future_date))]
+        added_date: Option<NaiveDate>,
+    },
     /// Set or clear notes.
-    Notes { notes: Option<String> },
+    Notes {
+        #[garde(length(max = 2000))]
+        notes: Option<String>,
+    },
     /// Set or clear purchase condition.
-    PurchaseCondition { purchase_condition: Option<String> },
+    PurchaseCondition {
+        #[garde(custom(validate_opt_purchase_condition))]
+        purchase_condition: Option<String>,
+    },
     /// Set or clear model condition.
-    ModelCondition { model_condition: Option<String> },
+    ModelCondition {
+        #[garde(custom(validate_opt_model_condition))]
+        model_condition: Option<String>,
+    },
     /// Set or clear box condition.
-    BoxCondition { box_condition: Option<String> },
+    BoxCondition {
+        #[garde(custom(validate_opt_box_condition))]
+        box_condition: Option<String>,
+    },
 }
 
 /// Arguments structure for adding an item to the collection.
@@ -65,25 +102,36 @@ pub enum CollectionItemUpdateArgs {
 #[serde(rename_all = "camelCase")]
 pub struct AddCollectionItemArgs {
     /// The railway model ID of the item to add.
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::validate_railway_model_id)
+    )]
     pub railway_model_id: String,
     /// The category and rolling stock are determined from the referenced railway model.
-    /// The price amount in the smallest currency unit (e.g., cents).
+    /// The price amount in the smallest currency unit (e.g., cents). Must be >= 0.
+    #[garde(range(min = 0))]
     pub price_amount: i64,
-    /// The currency code for the price (e.g., "USD").
+    /// The currency code for the price (e.g., "USD"). Must be 3 characters (ISO 4217).
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
     /// The seller ID (optional).
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// The date the item was added to the collection (YYYY-MM-DD).
     pub added_date: NaiveDate,
     /// The date the item was purchased (YYYY-MM-DD).
     pub purchase_date: NaiveDate,
-    /// The purchase condition (optional).
+    /// The purchase condition (optional). Valid values: NEW, PRE_OWNED.
+    #[garde(custom(validate_opt_purchase_condition))]
     pub purchase_condition: Option<String>,
-    /// The model condition (optional).
+    /// The model condition (optional). Valid values: MINT, NEAR_MINT, EXCELLENT, etc.
+    #[garde(custom(validate_opt_model_condition))]
     pub model_condition: Option<String>,
-    /// The box condition (optional).
+    /// The box condition (optional). Valid values: ORIGINAL_MINT, ORIGINAL_GOOD, etc.
+    #[garde(custom(validate_opt_box_condition))]
     pub box_condition: Option<String>,
     /// Additional notes about the item (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
 }
 
@@ -169,30 +217,309 @@ mod tests {
 #[serde(rename_all = "camelCase")]
 pub struct AddRailwayModelToCollectionArgs {
     /// The simplified railway model data.
+    #[garde(dive)]
     pub railway_model: SimplifiedRailwayModelArgs,
 
     /// The category and rolling stock are determined from the referenced railway model.
-    /// The price amount in the smallest currency unit (e.g., cents).
+    /// The price amount in the smallest currency unit (e.g., cents). Must be >= 0.
+    #[garde(range(min = 0))]
     pub price_amount: i64,
-    /// The currency code for the price (e.g., "USD").
+    /// The currency code for the price (e.g., "USD"). Must be 3 characters (ISO 4217).
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
     /// The seller ID (optional).
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// The date the item was added to the collection (YYYY-MM-DD).
     pub added_date: NaiveDate,
     /// The date the item was purchased (YYYY-MM-DD).
     pub purchase_date: NaiveDate,
-    /// The purchase condition (optional).
+    /// The purchase condition (optional). Valid values: NEW, PRE_OWNED.
+    #[garde(custom(validate_opt_purchase_condition))]
     pub purchase_condition: Option<String>,
-    /// The model condition (optional).
+    /// The model condition (optional). Valid values: MINT, NEAR_MINT, EXCELLENT, etc.
+    #[garde(custom(validate_opt_model_condition))]
     pub model_condition: Option<String>,
-    /// The box condition (optional).
+    /// The box condition (optional). Valid values: ORIGINAL_MINT, ORIGINAL_GOOD, etc.
+    #[garde(custom(validate_opt_box_condition))]
     pub box_condition: Option<String>,
     /// Additional notes about the item (optional).
+    #[garde(length(max = 2000))]
     pub notes: Option<String>,
 }
 
+#[cfg(test)]
+mod garde_tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use garde::Validate;
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    fn valid_item() -> AcquisitionItemArgs {
+        AcquisitionItemArgs {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "60100".to_string(),
+            description: "Steam locomotive".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            scale: "H0".to_string(),
+            epoch: "IV".to_string(),
+            power_method: "DC".to_string(),
+            price_amount: 5000,
+            price_currency: "EUR".to_string(),
+        }
+    }
+
+    fn valid_acquisition() -> RecordAcquisitionArgs {
+        RecordAcquisitionArgs {
+            seller_id: None,
+            purchase_date: "2025-06-01".to_string(),
+            items: vec![valid_item()],
+        }
+    }
+
+    fn valid_add_collection_item() -> AddCollectionItemArgs {
+        AddCollectionItemArgs {
+            railway_model_id: "trn:railway-model:acme:60100".to_string(),
+            price_amount: 1000,
+            price_currency: "EUR".to_string(),
+            seller_id: None,
+            added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        }
+    }
+
+    // ── RecordAcquisitionArgs ────────────────────────────────────────────────
+
+    #[test]
+    fn record_acquisition_valid_passes() {
+        assert!(valid_acquisition().validate().is_ok());
+    }
+
+    #[test]
+    fn record_acquisition_bad_date_fails() {
+        let args = RecordAcquisitionArgs {
+            purchase_date: "not-a-date".to_string(),
+            ..valid_acquisition()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "purchase_date"
+                && e.to_string().contains("error_invalid_date_format")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn record_acquisition_invalid_seller_trn_fails() {
+        let args = RecordAcquisitionArgs {
+            seller_id: Some("not-a-trn".to_string()),
+            ..valid_acquisition()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "seller_id"
+                && e.to_string().contains("error_invalid_seller_id")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn record_acquisition_empty_items_fails() {
+        let args = RecordAcquisitionArgs {
+            items: vec![],
+            ..valid_acquisition()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, _)| p.to_string() == "items"),
+            "{errors:?}"
+        );
+    }
+
+    // ── AcquisitionItemArgs ──────────────────────────────────────────────────
+
+    #[test]
+    fn acquisition_item_valid_passes() {
+        assert!(valid_item().validate().is_ok());
+    }
+
+    #[test]
+    fn acquisition_item_negative_price_fails() {
+        let item = AcquisitionItemArgs {
+            price_amount: -1,
+            ..valid_item()
+        };
+        let report = item.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, _)| p.to_string() == "price_amount"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn acquisition_item_bad_currency_length_fails() {
+        let item = AcquisitionItemArgs {
+            price_currency: "EU".to_string(),
+            ..valid_item()
+        };
+        let report = item.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "price_currency"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn acquisition_item_invalid_category_fails() {
+        let item = AcquisitionItemArgs {
+            category: "NOT_A_CATEGORY".to_string(),
+            ..valid_item()
+        };
+        let report = item.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "category"
+                && e.to_string().contains("error_invalid_category")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn acquisition_item_invalid_scale_fails() {
+        let item = AcquisitionItemArgs {
+            scale: "NOSCALE".to_string(),
+            ..valid_item()
+        };
+        let report = item.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, e)| p.to_string() == "scale"
+                    && e.to_string().contains("error_invalid_scale")),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn acquisition_item_invalid_power_method_fails() {
+        let item = AcquisitionItemArgs {
+            power_method: "STEAM".to_string(),
+            ..valid_item()
+        };
+        let report = item.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, e)| p.to_string() == "power_method"
+                && e.to_string().contains("error_invalid_power_method")),
+            "{errors:?}"
+        );
+    }
+
+    // ── AddCollectionItemArgs ────────────────────────────────────────────────
+
+    #[test]
+    fn add_collection_item_valid_passes() {
+        assert!(valid_add_collection_item().validate().is_ok());
+    }
+
+    #[test]
+    fn add_collection_item_negative_price_fails() {
+        let args = AddCollectionItemArgs {
+            price_amount: -100,
+            ..valid_add_collection_item()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, _)| p.to_string() == "price_amount"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_collection_item_bad_currency_fails() {
+        let args = AddCollectionItemArgs {
+            price_currency: "EU".to_string(),
+            ..valid_add_collection_item()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "price_currency"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_collection_item_invalid_purchase_condition_fails() {
+        let args = AddCollectionItemArgs {
+            purchase_condition: Some("BROKEN".to_string()),
+            ..valid_add_collection_item()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "purchase_condition"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_collection_item_invalid_model_condition_fails() {
+        let args = AddCollectionItemArgs {
+            model_condition: Some("PERFECT".to_string()),
+            ..valid_add_collection_item()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors
+                .iter()
+                .any(|(p, _)| p.to_string() == "model_condition"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn add_collection_item_invalid_box_condition_fails() {
+        let args = AddCollectionItemArgs {
+            box_condition: Some("SMASHED".to_string()),
+            ..valid_add_collection_item()
+        };
+        let report = args.validate().unwrap_err();
+        let errors: Vec<_> = report.into_inner();
+        assert!(
+            errors.iter().any(|(p, _)| p.to_string() == "box_condition"),
+            "{errors:?}"
+        );
+    }
+}
+
 // Reuse `SimplifiedRailwayModelArgs` from the `catalog::interface` module.
+
+/// Validates that a string represents a valid ISO 8601 date (YYYY-MM-DD).
+fn validate_iso_date(v: &str, _: &()) -> garde::Result {
+    chrono::NaiveDate::parse_from_str(v, "%Y-%m-%d")
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_date_format"))
+}
 
 /// Top-level args for the record_acquisition command.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
@@ -200,11 +527,13 @@ pub struct AddRailwayModelToCollectionArgs {
 #[serde(rename_all = "camelCase")]
 pub struct RecordAcquisitionArgs {
     /// Optional seller id (TRN string).
+    #[garde(custom(crate::sellers::domain::seller_id::validate_opt_seller_trn))]
     pub seller_id: Option<String>,
     /// Purchase date as YYYY-MM-DD string.
+    #[garde(custom(validate_iso_date), custom(validate_not_future_iso_date))]
     pub purchase_date: String,
     /// At least one item required.
-    #[garde(length(min = 1))]
+    #[garde(length(min = 1), dive)]
     pub items: Vec<AcquisitionItemArgs>,
 }
 
@@ -213,19 +542,39 @@ pub struct RecordAcquisitionArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AcquisitionItemArgs {
-    #[garde(length(min = 1))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::manufacturer::validate_manufacturer_id)
+    )]
     pub manufacturer_id: String,
-    #[garde(length(min = 1))]
+    #[garde(length(min = 1, max = 20))]
     pub product_code: String,
+    #[garde(length(min = 1, max = 500))]
     pub description: String,
-    #[garde(length(min = 1))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::category::validate_category)
+    )]
     pub category: String,
-    #[garde(length(min = 1))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::scale::scale::validate_scale)
+    )]
     pub scale: String,
+    #[garde(
+        length(min = 1, max = 10),
+        custom(crate::catalog::domain::railway_model::epoch::validate_epoch)
+    )]
     pub epoch: String,
-    #[garde(length(min = 1))]
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::railway_model::power_method::validate_power_method)
+    )]
     pub power_method: String,
-    /// Price in cents; 0 means no price recorded.
+    /// Price in cents; 0 means no price recorded. Must be >= 0.
+    #[garde(range(min = 0))]
     pub price_amount: i64,
+    /// ISO 4217 currency code (3 characters).
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
     pub price_currency: String,
 }

@@ -38,6 +38,21 @@ pub fn validate_purchase_condition(value: &str, _ctx: &()) -> garde::Result {
     }
 }
 
+/// Garde validator for `Option<String>` that must parse as `PurchaseCondition` when present.
+#[allow(dead_code)]
+pub fn validate_opt_purchase_condition(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => {
+            if s.parse::<PurchaseCondition>().is_ok() {
+                Ok(())
+            } else {
+                Err(garde::Error::new("error_invalid_purchase_condition"))
+            }
+        }
+        None => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod validator_tests {
     use super::*;

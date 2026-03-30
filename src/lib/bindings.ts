@@ -1879,9 +1879,13 @@ async globalSearch(args: GlobalSearchArgs) : Promise<Result<GlobalSearchResultVi
  */
 export type AcquisitionItemArgs = { manufacturerId: string; productCode: string; description: string; category: string; scale: string; epoch: string; powerMethod: string; 
 /**
- * Price in cents; 0 means no price recorded.
+ * Price in cents; 0 means no price recorded. Must be >= 0.
  */
-priceAmount: bigint; priceCurrency: string }
+priceAmount: bigint; 
+/**
+ * ISO 4217 currency code (3 characters).
+ */
+priceCurrency: string }
 /**
  * Arguments for adding an extra budget to a specific month.
  */
@@ -1911,10 +1915,6 @@ reason: string | null }
  */
 export type AddMaintenanceArgs = { 
 /**
- * The unique identifier for the maintenance record.
- */
-id: string; 
-/**
  * The ID of the maintenance card.
  */
 maintenanceCardId: string; 
@@ -1940,11 +1940,11 @@ export type AddRailwayModelToCollectionArgs = {
 railwayModel: SimplifiedRailwayModelArgs; 
 /**
  * The category and rolling stock are determined from the referenced railway model.
- * The price amount in the smallest currency unit (e.g., cents).
+ * The price amount in the smallest currency unit (e.g., cents). Must be >= 0.
  */
 priceAmount: bigint; 
 /**
- * The currency code for the price (e.g., "USD").
+ * The currency code for the price (e.g., "USD"). Must be 3 characters (ISO 4217).
  */
 priceCurrency: string; 
 /**
@@ -1960,15 +1960,15 @@ addedDate: string;
  */
 purchaseDate: string; 
 /**
- * The purchase condition (optional).
+ * The purchase condition (optional). Valid values: NEW, PRE_OWNED.
  */
 purchaseCondition: string | null; 
 /**
- * The model condition (optional).
+ * The model condition (optional). Valid values: MINT, NEAR_MINT, EXCELLENT, etc.
  */
 modelCondition: string | null; 
 /**
- * The box condition (optional).
+ * The box condition (optional). Valid values: ORIGINAL_MINT, ORIGINAL_GOOD, etc.
  */
 boxCondition: string | null; 
 /**
@@ -1996,11 +1996,11 @@ priority: WishlistPriority | null;
  */
 status: WishlistStatus | null; 
 /**
- * The desired price amount in the smallest currency unit (e.g., cents) (optional).
+ * The desired price amount in the smallest currency unit (e.g., cents). Must be >= 0.
  */
 desiredPriceAmount: bigint | null; 
 /**
- * The desired price currency code (e.g., "USD") (optional).
+ * The desired price currency code (e.g., "USD"). Must be 3 characters (ISO 4217).
  */
 desiredPriceCurrency: string | null; 
 /**
@@ -2071,11 +2071,11 @@ priority: WishlistPriority | null;
  */
 status: WishlistStatus | null; 
 /**
- * The desired price amount in the smallest currency unit (e.g., cents) (optional).
+ * The desired price amount in the smallest currency unit (e.g., cents). Must be >= 0.
  */
 desiredPriceAmount: bigint | null; 
 /**
- * The desired price currency code (e.g., "USD") (optional).
+ * The desired price currency code (e.g., "USD"). Must be 3 characters (ISO 4217).
  */
 desiredPriceCurrency: string | null; 
 /**
@@ -2751,15 +2751,15 @@ digital_shunting: FeatureFlag | null }
  */
 export type CouplingArgs = { 
 /**
- * Type of coupling used.
+ * Type of coupling used (NONE / NEM_355 / NEM_356 / NEM_357 / NEM_359 / NEM_360 / NEM_362 / NEM_365).
  */
 socket: string; 
 /**
- * Type of coupling head used.
+ * Type of coupling head used (YES / NO / NOT_APPLICABLE).
  */
 closeCouplers: string | null; 
 /**
- * Presence of digital shunting couplers.
+ * Presence of digital shunting couplers (YES / NO / NOT_APPLICABLE).
  */
 digitalShunting: string | null }
 export type CouplingSocket = "NONE" | 
@@ -2796,15 +2796,15 @@ export type CouplingSocket = "NONE" |
  */
 export type CreateRailwayModelArgs = { 
 /**
- * ID of the manufacturer.
+ * ID of the manufacturer (non-empty TRN string).
  */
 manufacturerId: string; 
 /**
- * Product code of the railway model.
+ * Product code of the railway model (1–20 characters).
  */
 productCode: string; 
 /**
- * Description of the railway model.
+ * Description of the railway model (1–500 characters).
  */
 description: string; 
 /**
@@ -2812,19 +2812,19 @@ description: string;
  */
 details: string | null; 
 /**
- * Power method of the railway model.
+ * Power method of the railway model (AC / DC / TRIX_EXPRESS).
  */
 powerMethod: string; 
 /**
- * Scale of the railway model.
+ * Scale of the railway model (H0 / N / Z / etc.).
  */
 scale: string; 
 /**
- * Epoch of the railway model.
+ * Epoch of the railway model (I / II / IIa / III/IV / Vm / etc.).
  */
 epoch: string; 
 /**
- * Category of the railway model.
+ * Category of the railway model (LOCOMOTIVES / FREIGHT_CARS / etc.).
  */
 category: string; 
 /**
@@ -2832,18 +2832,38 @@ category: string;
  */
 deliveryDate: string | null; 
 /**
- * Optional availability status of the railway model.
+ * Optional availability status (ANNOUNCED / AVAILABLE / CANCELLED / DISCONTINUED).
  */
 availabilityStatus: string | null; 
 /**
- * Rolling stock items associated with the railway model.
+ * Rolling stock items associated with the railway model (at least one required).
  */
 rollingStocks: CreateRollingStockArgs[] }
 /**
  * Input for creating a rolling stock (tagged union by category).
  */
 export type CreateRollingStockArgs = { category: "locomotive"; railway_company_id: string; friendly_name: string; series_code: string; road_number: string; series: string | null; depot: string | null; livery: string | null; locomotive_type: string; is_dummy: boolean | null; control: string | null; dcc_interface: string | null; length_over_buffers: LengthOverBuffersArgs | null; technical_specifications: TechnicalSpecificationsArgs | null } | { category: "passengerCar"; railway_company_id: string; friendly_name: string; series_code: string; road_number: string | null; series: string | null; livery: string | null; passenger_car_type: string; service_level: string | null; length_over_buffers: LengthOverBuffersArgs | null; technical_specifications: TechnicalSpecificationsArgs | null } | { category: "freightCar"; railway_company_id: string; friendly_name: string; series_code: string; road_number: string | null; series: string | null; livery: string | null; freight_car_type: string | null; length_over_buffers: LengthOverBuffersArgs | null; technical_specifications: TechnicalSpecificationsArgs | null } | { category: "railcar"; railway_company_id: string; friendly_name: string; series_code: string; road_number: string | null; series: string | null; depot: string | null; livery: string | null; railcar_type: string | null; is_dummy: boolean | null; control: string | null; dcc_interface: string | null; length_over_buffers: LengthOverBuffersArgs | null; technical_specifications: TechnicalSpecificationsArgs | null } | { category: "electricMultipleUnit"; railway_company_id: string; friendly_name: string; series_code: string; road_number: string | null; series: string | null; depot: string | null; livery: string | null; electric_multiple_unit_type: string; is_dummy: boolean | null; control: string | null; dcc_interface: string | null; length_over_buffers: LengthOverBuffersArgs | null; technical_specifications: TechnicalSpecificationsArgs | null }
-export type CreateSellerPayload = { name: string; sellerType: SellerType; email: string | null; phone: string | null; websiteUrl: string | null; streetAddress: string | null; extendedAddress: string | null; city: string | null; stateRegion: string | null; postalCode: string | null; countryCode: string | null }
+export type CreateSellerPayload = { 
+/**
+ * Seller name (1-200 characters).
+ */
+name: string; sellerType: SellerType; 
+/**
+ * Optional email address.
+ */
+email: string | null; 
+/**
+ * Optional phone number (max 30 characters).
+ */
+phone: string | null; 
+/**
+ * Optional website URL.
+ */
+websiteUrl: string | null; streetAddress: string | null; extendedAddress: string | null; city: string | null; stateRegion: string | null; postalCode: string | null; 
+/**
+ * ISO 3166-1 alpha-2 country code (exactly 2 characters).
+ */
+countryCode: string | null }
 /**
  * Command argument to create a new track product
  */
@@ -2885,7 +2905,7 @@ radius: Length | null }
  */
 export type CreateWishlistArgs = { 
 /**
- * The name of the new wishlist.
+ * The name of the new wishlist (1–200 characters).
  */
 name: string; 
 /**
@@ -3944,11 +3964,11 @@ millimeters: Length | null }
  */
 export type LengthOverBuffersArgs = { 
 /**
- * Length in millimeters.
+ * Length in millimeters (must be non-negative when provided).
  */
 millimeters: number | null; 
 /**
- * Length in inches.
+ * Length in inches (must be non-negative when provided).
  */
 inches: number | null }
 /**
@@ -4618,11 +4638,11 @@ wishlistId: string;
  */
 wishlistItemId: string; 
 /**
- * Purchase price amount in the smallest currency unit (e.g., cents).
+ * Purchase price amount in the smallest currency unit (e.g., cents). Must be >= 0.
  */
 priceAmount: bigint; 
 /**
- * Purchase price currency code (e.g., "EUR", "USD", "GBP", "JPY").
+ * Purchase price currency code (e.g., "EUR", "USD", "GBP", "JPY"). Must be 3 characters.
  */
 priceCurrency: string; 
 /**
@@ -4634,15 +4654,15 @@ purchaseDate: string;
  */
 sellerId: string | null; 
 /**
- * Purchase condition. Valid values: "NEW" | "PRE_OWNED"
+ * Purchase condition. Valid values: NEW | PRE_OWNED.
  */
 purchaseCondition: string | null; 
 /**
- * Model condition grade. Valid values: "MINT" | "NEAR_MINT" | "EXCELLENT" | "VERY_GOOD" | "GOOD" | "FAIR" | "POOR" | "FOR_PARTS"
+ * Model condition grade. Valid values: MINT | NEAR_MINT | EXCELLENT | VERY_GOOD | GOOD | FAIR | POOR | FOR_PARTS.
  */
 modelCondition: string | null; 
 /**
- * Box/packaging condition. Valid values: "ORIGINAL_MINT" | "ORIGINAL_GOOD" | "ORIGINAL_WORN" | "REPLACEMENT_BOX" | "NO_BOX"
+ * Box/packaging condition. Valid values: ORIGINAL_MINT | ORIGINAL_GOOD | ORIGINAL_WORN | REPLACEMENT_BOX | NO_BOX.
  */
 boxCondition: string | null }
 /**
@@ -5003,7 +5023,7 @@ export type RenameWishlistArgs = {
  */
 wishlistId: string; 
 /**
- * The new name for the wishlist.
+ * The new name for the wishlist (1–200 characters).
  */
 name: string }
 /**
@@ -5696,7 +5716,7 @@ sprung_buffers: FeatureFlag | null }
  */
 export type TechnicalSpecificationsArgs = { 
 /**
- * Minimum radius the rolling stock can navigate.
+ * Minimum radius the rolling stock can navigate (must be non-negative when provided).
  */
 minimumRadius: number | null; 
 /**
@@ -5704,27 +5724,27 @@ minimumRadius: number | null;
  */
 coupling: CouplingArgs | null; 
 /**
- * Flywheel details.
+ * Flywheel details (YES / NO / NOT_APPLICABLE).
  */
 flywheelFitted: string | null; 
 /**
- * Body shell details.
+ * Body shell details (PLASTIC / METAL_DIE_CAST).
  */
 bodyShell: string | null; 
 /**
- * Chassis details.
+ * Chassis details (PLASTIC / METAL_DIE_CAST).
  */
 chassis: string | null; 
 /**
- * Presence of interior lighting.
+ * Presence of interior lighting (YES / NO / NOT_APPLICABLE).
  */
 interiorLights: string | null; 
 /**
- * Presence of headlights or other lights.
+ * Presence of headlights or other lights (YES / NO / NOT_APPLICABLE).
  */
 lights: string | null; 
 /**
- * Presence of sprung buffers.
+ * Presence of sprung buffers (YES / NO / NOT_APPLICABLE).
  */
 sprungBuffers: string | null }
 /**
@@ -6130,7 +6150,27 @@ rollingStockId: RollingStockId;
  * The new subcategory string (e.g. "ELECTRIC_LOCOMOTIVE", "GONDOLA").
  */
 subcategory: string }
-export type UpdateSellerPayload = { id: string; name: string; sellerType: SellerType; email: string | null; phone: string | null; websiteUrl: string | null; streetAddress: string | null; extendedAddress: string | null; city: string | null; stateRegion: string | null; postalCode: string | null; countryCode: string | null; createdAt: string | null }
+export type UpdateSellerPayload = { id: string; 
+/**
+ * Seller name (1-200 characters).
+ */
+name: string; sellerType: SellerType; 
+/**
+ * Optional email address.
+ */
+email: string | null; 
+/**
+ * Optional phone number (max 30 characters).
+ */
+phone: string | null; 
+/**
+ * Optional website URL.
+ */
+websiteUrl: string | null; streetAddress: string | null; extendedAddress: string | null; city: string | null; stateRegion: string | null; postalCode: string | null; 
+/**
+ * ISO 3166-1 alpha-2 country code (exactly 2 characters).
+ */
+countryCode: string | null; createdAt: string | null }
 /**
  * Input for partial settings updates
  */
@@ -6159,11 +6199,11 @@ priority: WishlistPriority | null;
  */
 status: WishlistStatus | null; 
 /**
- * `null` clears the price; a number sets it (in smallest unit); absent = unchanged.
+ * `null` clears the price; a number sets it (in smallest unit, must be >= 0); absent = unchanged.
  */
 desiredPriceAmount?: bigint | null; 
 /**
- * ISO 4217 currency code; required when `desired_price_amount` is a number.
+ * ISO 4217 currency code (3 characters); required when `desired_price_amount` is a number.
  */
 desiredPriceCurrency: string | null; 
 /**

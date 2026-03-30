@@ -130,6 +130,13 @@ impl TryFrom<String> for RailwayModelId {
     }
 }
 
+/// Garde validator: rejects a `&str` that cannot be parsed as a `RailwayModelId`.
+pub fn validate_railway_model_id(value: &str, _: &()) -> garde::Result {
+    RailwayModelId::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_railway_model_id"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

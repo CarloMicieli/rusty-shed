@@ -159,7 +159,6 @@ describe('MaintenanceState', () => {
 
       const state = new MaintenanceState();
       await state.addMaintenanceEvent({
-        id: 'ev-1',
         maintenanceCardId: 'mc-1',
         datePerformed: '2026-01-15',
         maintenanceType: null,
@@ -178,7 +177,6 @@ describe('MaintenanceState', () => {
       const state = new MaintenanceState();
       await expect(
         state.addMaintenanceEvent({
-          id: 'ev-bad',
           maintenanceCardId: 'bad-id',
           datePerformed: '2026-01-15',
           maintenanceType: null,

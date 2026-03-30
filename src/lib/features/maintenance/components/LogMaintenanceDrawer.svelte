@@ -162,7 +162,6 @@
 
       // Step 2: log the event
       const eventResult = await commands.addMaintenanceEvent({
-        id: crypto.randomUUID(),
         maintenanceCardId: cardId,
         datePerformed: f.values.datePerformed,
         maintenanceType: f.values.maintenanceType,

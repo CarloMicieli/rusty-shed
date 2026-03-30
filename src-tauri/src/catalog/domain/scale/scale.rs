@@ -116,6 +116,25 @@ impl fmt::Display for Scale {
     }
 }
 
+/// Garde validator for `Scale` (required string).
+#[allow(dead_code)]
+pub fn validate_scale(value: &str, _ctx: &()) -> garde::Result {
+    Scale::try_from(value)
+        .map(|_| ())
+        .map_err(|_| garde::Error::new("error_invalid_scale"))
+}
+
+/// Garde validator for `Option<String>` that must parse as `Scale` when present.
+#[allow(dead_code)]
+pub fn validate_opt_scale(value: &Option<String>, _ctx: &()) -> garde::Result {
+    match value {
+        Some(s) => Scale::try_from(s.as_str())
+            .map(|_| ())
+            .map_err(|_| garde::Error::new("error_invalid_scale")),
+        None => Ok(()),
+    }
+}
+
 // Static error message used when parsing fails
 /// Error message used when parsing a string into a `Scale` fails.
 const INVALID_SCALE: &str = "invalid scale";
