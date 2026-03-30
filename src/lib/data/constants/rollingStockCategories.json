@@ -1,7 +1,7 @@
 [
-  { "id": "LOCOMOTIVE", "labelKey": "constants_categories_locomotives" },
-  { "id": "PASSENGER_CAR", "labelKey": "constants_categories_passenger_cars" },
-  { "id": "FREIGHT_CAR", "labelKey": "constants_categories_freight_cars" },
-  { "id": "RAILCAR", "labelKey": "constants_categories_railcars" },
-  { "id": "ELECTRIC_MULTIPLE_UNIT", "labelKey": "constants_categories_electric_multiple_units" }
+  { "id": "LOCOMOTIVE", "labelKey": "enum_category_locomotives" },
+  { "id": "PASSENGER_CAR", "labelKey": "enum_category_passenger_cars" },
+  { "id": "FREIGHT_CAR", "labelKey": "enum_category_freight_cars" },
+  { "id": "RAILCAR", "labelKey": "enum_category_railcars" },
+  { "id": "ELECTRIC_MULTIPLE_UNIT", "labelKey": "enum_category_electric_multiple_units" }
 ]

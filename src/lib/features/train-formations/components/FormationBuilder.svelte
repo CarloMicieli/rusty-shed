@@ -42,7 +42,7 @@
       <!-- Back button -->
       <a
         href={resolve('/train-formations')}
-        class="variant-steampunk-lever flex items-center gap-1.5 self-start rounded-sm border-2 border-copper px-2 py-1 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+        class="variant-steampunk-lever flex items-center gap-1.5 self-start rounded-sm border-2 border-copper px-2 py-1 text-[11px] tracking-wider text-muted-foreground uppercase transition-colors hover:text-foreground"
         aria-label={m.formations_back()}
       >
         <ChevronLeft class="size-3" />
@@ -58,7 +58,7 @@
     <!-- Col 2: Main Content (Formation Grid) -->
     <div class="flex min-w-0 flex-col gap-3">
       <div class="flex items-center gap-2">
-        <span class="text-[10px] uppercase tracking-tighter text-muted-foreground">
+        <span class="text-[10px] tracking-tighter text-muted-foreground uppercase">
           {m.formations_element_count({ n: Number(elementCount) })}
         </span>
       </div>
@@ -70,23 +70,23 @@
     <aside class="flex flex-col gap-4 rounded-sm border border-border bg-card p-4">
       <!-- Stats section -->
       <div class="flex flex-col gap-2">
-        <span class="text-[10px] uppercase tracking-tighter text-muted-foreground">
+        <span class="text-[10px] tracking-tighter text-muted-foreground uppercase">
           {m.formations_element_count({ n: Number(elementCount) })}
         </span>
 
         <div class="flex flex-col gap-1">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-tighter text-muted-foreground">Units</span>
+            <span class="text-[10px] tracking-tighter text-muted-foreground uppercase">Units</span>
             <span class="font-mono text-sm text-foreground">{elementCount}</span>
           </div>
 
           {#if ctx.hasTraction}
             <div class="flex items-center gap-1 text-[10px] text-primary">
               <Zap class="size-3" />
-              <span class="uppercase tracking-tighter">Traction</span>
+              <span class="tracking-tighter uppercase">Traction</span>
             </div>
           {:else if elementCount > 0}
-            <div class="text-[10px] uppercase tracking-tighter text-muted-foreground/60">
+            <div class="text-[10px] tracking-tighter text-muted-foreground/60 uppercase">
               No traction
             </div>
           {/if}
@@ -96,11 +96,7 @@
       <div class="h-px bg-border"></div>
 
       <!-- Add Stock action -->
-      <Button
-        size="sm"
-        class="variant-steampunk-lever w-full"
-        onclick={() => (drawerOpen = true)}
-      >
+      <Button size="sm" class="variant-steampunk-lever w-full" onclick={() => (drawerOpen = true)}>
         <Plus class="mr-1.5 size-3.5" />
         {m.formations_add_stock()}
       </Button>

@@ -280,7 +280,7 @@
   "form_new_model_select_placeholder": "-- Seleziona --",
   "form_new_model_delivery_availability": "Consegna e disponibilità",
   "form_new_model_delivery_date": "Data di consegna",
-  "form_new_model_delivery_date_placeholder": "2025, 2025/06 o 2025/T2",
+  "form_new_model_delivery_date_placeholder": "YYYY/QQ",
   "form_new_model_availability_status": "Stato disponibilità",
   "form_new_model_additional_details": "Dettagli aggiuntivi",
   "form_new_model_details_placeholder": "Note facoltative su questo modello...",
