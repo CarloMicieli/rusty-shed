@@ -94,7 +94,7 @@ mod tests {
 
         mock.expect_save()
             .times(1)
-            .withf(|drs: &DigitalRollingStock| drs.pending_events.is_empty())
+            .withf(|drs: &DigitalRollingStock| drs.pending_events.len() == 1)
             .returning(|_| Ok(()));
 
         let mut uow = FakeUow::new(mock);

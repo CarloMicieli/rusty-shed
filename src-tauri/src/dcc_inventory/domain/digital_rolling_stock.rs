@@ -25,8 +25,39 @@ pub struct DigitalRollingStock {
 }
 
 impl DigitalRollingStock {
-    /// Create a new `DigitalRollingStock` instance.
+    /// Create a new `DigitalRollingStock` aggregate and emit a `Created` event.
+    ///
+    /// Use this constructor when provisioning a brand-new record. The emitted
+    /// event is consumed by the repository's `save()` to perform the INSERT.
     pub fn new(
+        id: DigitalRollingStockId,
+        owned_rolling_stock_id: OwnedRollingStockId,
+        dcc_address: DccAddress,
+        decoder_id: DecoderId,
+    ) -> Self {
+        let mut aggregate = Self {
+            id,
+            owned_rolling_stock_id: owned_rolling_stock_id.clone(),
+            dcc_address,
+            decoder_id: decoder_id.clone(),
+            pending_events: Vec::new(),
+            metadata: Metadata::default(),
+        };
+        aggregate
+            .pending_events
+            .push(DigitalRollingStockEvent::Created {
+                owned_rolling_stock_id,
+                dcc_address,
+                decoder_id,
+            });
+        aggregate
+    }
+
+    /// Reconstitute a `DigitalRollingStock` from persisted data without emitting events.
+    ///
+    /// Used exclusively by the repository's `find_by_id` to hydrate the aggregate
+    /// from a database row without producing spurious `Created` events.
+    pub(crate) fn reconstitute(
         id: DigitalRollingStockId,
         owned_rolling_stock_id: OwnedRollingStockId,
         dcc_address: DccAddress,
@@ -40,6 +71,14 @@ impl DigitalRollingStock {
             pending_events: Vec::new(),
             metadata: Metadata::default(),
         }
+    }
+
+    /// Drain and return all pending domain events.
+    ///
+    /// The internal buffer is cleared after this call. The repository's `save()`
+    /// calls this once to obtain the events to persist.
+    pub fn pull_events(&mut self) -> Vec<DigitalRollingStockEvent> {
+        std::mem::take(&mut self.pending_events)
     }
 
     /// Change the decoder and emit an event.
@@ -66,7 +105,7 @@ mod tests {
     use uuid::Uuid;
 
     #[test]
-    fn digital_rolling_stock_create_struct() {
+    fn digital_rolling_stock_new_emits_created_event() {
         use crate::collecting::domain::OwnedRollingStockId;
 
         let u = Uuid::new_v4();
@@ -80,7 +119,28 @@ mod tests {
 
         assert_eq!(drs.id, id);
         assert_eq!(drs.owned_rolling_stock_id, owned);
-        assert_eq!(drs.pending_events.len(), 0);
+        // new() must emit exactly one Created event for the repository to INSERT
+        assert_eq!(drs.pending_events.len(), 1);
+        assert!(matches!(
+            drs.pending_events[0],
+            crate::dcc_inventory::domain::DigitalRollingStockEvent::Created { .. }
+        ));
         assert_eq!(drs.decoder_id, decoder);
+    }
+
+    #[test]
+    fn digital_rolling_stock_reconstitute_has_no_events() {
+        use crate::collecting::domain::OwnedRollingStockId;
+
+        let u = Uuid::new_v4();
+        let id = crate::dcc_inventory::domain::DigitalRollingStockId::from_uuid(u);
+        let owned = OwnedRollingStockId::from(Uuid::new_v4());
+        let addr = crate::dcc_inventory::domain::DccAddress::new(500).unwrap();
+        let decoder = DecoderId::try_from("trn:decoder:acme:d-100").expect("should parse");
+
+        let drs =
+            DigitalRollingStock::reconstitute(id.clone(), owned.clone(), addr, decoder.clone());
+
+        assert_eq!(drs.pending_events.len(), 0);
     }
 }

@@ -31,6 +31,7 @@ impl AddExtraBudgetUseCase {
     ///
     /// # Errors
     /// - `Validation`: If year or month is invalid, or amount is not positive
+    /// - `NotFound`: If no budget configuration exists yet
     /// - `Infrastructure`: If database operation fails
     pub async fn execute(
         uow: &mut SqliteUnitOfWork<'_>,
@@ -64,7 +65,18 @@ impl AddExtraBudgetUseCase {
             ));
         }
 
-        // Create new extra budget entry
+        // Load the budget configuration aggregate — it is the root for budget events.
+        let mut config = {
+            let mut repo = uow.budget_repo();
+            repo.get_config()
+                .await?
+                .ok_or_else(|| DomainError::NotFound {
+                    resource: "BudgetConfiguration".to_string(),
+                    identifier: "singleton".to_string(),
+                })?
+        };
+
+        // Build the entry value object
         let entry = ExtraBudgetEntry {
             id: ExtraBudgetId::default(),
             year: input.year,
@@ -75,12 +87,13 @@ impl AddExtraBudgetUseCase {
             version: 0,
         };
 
-        // Save to database
+        // Emit the ExtraBudgetAdded event on the aggregate
+        config.add_extra_budget(&entry);
+
+        // Save: the repository drains pending_events and runs handle_event for each
         {
             let mut repo = uow.budget_repo();
-            repo.add_extra_budget(&entry)
-                .await
-                .map_err(DomainError::Infrastructure)?;
+            repo.save(config).await?;
         }
 
         Ok(entry)

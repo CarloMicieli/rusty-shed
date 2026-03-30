@@ -5,15 +5,21 @@ use serde::{Deserialize, Serialize};
 
 /// Domain events for budget tracking.
 ///
-/// These events capture changes to budget configuration and extra budgets.
+/// Every variant carries all fields required for its SQL operation so that
+/// `handle_event` in the repository never reads aggregate fields directly.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum BudgetEvent {
     /// Budget configuration was created or updated.
     BudgetConfigured {
         config_id: BudgetConfigId,
+        /// DB-compatible mode string: "YEARLY" or "MONTHLY".
         mode: String,
         base_amount: MonetaryAmount,
+        last_reset_year: i32,
+        created_at: DateTime<Utc>,
+        version: u32,
+        /// Equals `updated_at` for the config row.
         timestamp: DateTime<Utc>,
     },
     /// An extra budget was added to a specific month.

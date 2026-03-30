@@ -67,7 +67,7 @@ mod tests {
             let owned = OwnedRollingStockId::from(Uuid::new_v4());
             let addr = DccAddress::new(10).unwrap();
             let decoder = DecoderId::try_from("trn:decoder:old:old").unwrap();
-            DigitalRollingStock::new(id, owned, addr, decoder)
+            DigitalRollingStock::reconstitute(id, owned, addr, decoder)
         };
 
         let new_decoder = DecoderId::try_from("trn:decoder:new:d-1").unwrap();

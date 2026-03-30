@@ -28,27 +28,25 @@ impl SetBudgetUseCase {
         // Get existing config if any
         let existing_config = {
             let mut repo = unit_of_work.budget_repo();
-            repo.get_config().await.map_err(DomainError::BusinessRule)?
+            repo.get_config().await?
         };
 
         let config = match existing_config {
             Some(mut existing) => {
-                // Update existing configuration
+                // Update existing configuration (emits BudgetConfigured event)
                 existing.update(input.mode, input.base_amount);
                 existing
             }
             None => {
-                // Create new configuration
+                // Create new configuration (emits BudgetConfigured event)
                 BudgetConfiguration::new(input.mode, input.base_amount)
             }
         };
 
-        // Save configuration
+        // Save by draining pending events through handle_event
         {
             let mut repo = unit_of_work.budget_repo();
-            repo.save_config(&config)
-                .await
-                .map_err(DomainError::BusinessRule)?;
+            repo.save(config.clone()).await?;
         }
 
         Ok(config)
