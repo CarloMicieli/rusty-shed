@@ -11,7 +11,11 @@ vi.mock('$app/navigation', () => ({ goto: mockedGoto }));
 vi.mock('$lib/paraglide/messages.js', () => ({
   formations_page_title: () => 'Train formations',
   formations_new_formation: () => 'New formation',
+  formations_description: () => 'Organize your locomotives and rolling stock into consist groups.',
   formations_empty_list: () => 'No formations yet',
+  formations_empty_heading: () => 'Create your first formation',
+  formations_empty_sub: () =>
+    'Start organizing your locomotives and rolling stock into consist groups.',
   formations_element_count: ({ n }: { n: number }) => `${n} elements`,
   formations_owned_count: ({ n }: { n: number }) => `${n} owned`
 }));
@@ -45,7 +49,7 @@ describe('FormationList.svelte', () => {
       props: { state: makeState() }
     });
 
-    expect(screen.getByText('No formations yet')).toBeInTheDocument();
+    expect(screen.getByText('Create your first formation')).toBeInTheDocument();
   });
 
   it('renders the available formation cards', () => {
