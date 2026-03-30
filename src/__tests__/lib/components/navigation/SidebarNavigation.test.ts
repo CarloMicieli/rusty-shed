@@ -32,6 +32,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   app_depot: () => 'Depot',
   app_digital_dcc: () => 'Digital (DCC)',
   app_railway_tracks: () => 'Railway Tracks',
+  app_train_formations: () => 'Train Formations',
   app_settings: () => 'Settings',
   app_version_prefix: () => 'v.'
 }));
@@ -73,10 +74,10 @@ describe('SidebarNavigation', () => {
     vi.clearAllMocks();
   });
 
-  it('renders all 9 navigation items on desktop', () => {
+  it('renders all 10 desktop navigation entries including settings', () => {
     render(SidebarNavigation);
 
-    // Check for all 9 primary navigation items
+    // Check for all navigation entries rendered in the sidebar.
     expect(screen.getByText('Home')).toBeTruthy();
     expect(screen.getByText('Collection')).toBeTruthy();
     expect(screen.getByText('Finance')).toBeTruthy();
@@ -85,6 +86,7 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Depot')).toBeTruthy();
     expect(screen.getByText('Digital (DCC)')).toBeTruthy();
     expect(screen.getByText('Railway Tracks')).toBeTruthy();
+    expect(screen.getByText('Train Formations')).toBeTruthy();
     expect(screen.getByText('Settings')).toBeTruthy();
   });
 
@@ -127,6 +129,7 @@ describe('SidebarNavigation', () => {
     expect(screen.getByText('Finance')).toBeTruthy();
     expect(screen.getByText('Digital (DCC)')).toBeTruthy();
     expect(screen.getByText('Railway Tracks')).toBeTruthy();
+    expect(screen.getByText('Train Formations')).toBeTruthy();
   });
 
   it('renders nav with correct base classes', () => {

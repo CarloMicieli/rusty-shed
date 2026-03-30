@@ -46,6 +46,7 @@
     "layerchart": "2.0.0-next.44",
     "marked": "^17.0.5",
     "shadcn-svelte": "1.1.1",
+    "svelte-dnd-action": "^0.9.69",
     "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0"
   },
@@ -106,5 +107,5 @@
       "rolldown"
     ]
   },
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }
