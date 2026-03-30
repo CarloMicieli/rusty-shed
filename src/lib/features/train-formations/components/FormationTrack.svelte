@@ -39,27 +39,30 @@
 
 {#if items.length === 0}
   <div
-    class="flex h-24 items-center justify-center rounded-lg border-2 border-dashed
-      border-muted-foreground/30 text-sm text-muted-foreground"
+    class="variant-steampunk-riveted flex h-32 items-center justify-center rounded-sm border border-border bg-card"
   >
-    {m.formations_empty_composition()}
+    <span class="font-bebas text-2xl tracking-widest text-muted-foreground">
+      {m.formations_no_units()}
+    </span>
   </div>
 {:else}
-  <div
-    class="scrollbar-thin flex gap-2 overflow-x-auto pb-2"
-    use:dndzone={{ items, flipDurationMs: 200, type: 'formation-cell' }}
-    onconsider={handleConsider}
-    onfinalize={handleFinalize}
-  >
-    {#each items as element (element.id)}
-      <div animate:flip={{ duration: 200 }} class="group shrink-0">
-        <FormationCell
-          {element}
-          onRemove={handleRemove}
-          {onOpenPicker}
-          onTractionToggle={handleTractionToggle}
-        />
-      </div>
-    {/each}
+  <div class="scrollbar-thin overflow-x-auto pb-2">
+    <div
+      class="flex gap-2 pt-3 pr-2"
+      use:dndzone={{ items, flipDurationMs: 200, type: 'formation-cell' }}
+      onconsider={handleConsider}
+      onfinalize={handleFinalize}
+    >
+      {#each items as element (element.id)}
+        <div animate:flip={{ duration: 200 }} class="group shrink-0 overflow-visible">
+          <FormationCell
+            {element}
+            onRemove={handleRemove}
+            {onOpenPicker}
+            onTractionToggle={handleTractionToggle}
+          />
+        </div>
+      {/each}
+    </div>
   </div>
 {/if}

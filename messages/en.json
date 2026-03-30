@@ -1241,5 +1241,7 @@
   "formations_category_name_label": "Category Name",
   "formations_custom_category_badge": "Custom",
   "formations_traction_override_enable": "Force traction",
-  "formations_traction_override_disable": "Exclude from traction"
+  "formations_traction_override_disable": "Exclude from traction",
+  "formations_back": "Back",
+  "formations_no_units": "NO ROLLING STOCK ASSIGNED"
 }

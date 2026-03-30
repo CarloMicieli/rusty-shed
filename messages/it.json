@@ -1241,5 +1241,7 @@
   "formations_category_name_label": "Nome categoria",
   "formations_custom_category_badge": "Personalizzata",
   "formations_traction_override_enable": "Forza trazione",
-  "formations_traction_override_disable": "Escludi dalla trazione"
+  "formations_traction_override_disable": "Escludi dalla trazione",
+  "formations_back": "Indietro",
+  "formations_no_units": "NESSUN MATERIALE ROTABILE ASSEGNATO"
 }

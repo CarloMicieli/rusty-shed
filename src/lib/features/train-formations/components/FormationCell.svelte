@@ -27,7 +27,7 @@
 </script>
 
 <div
-  class="variant-steampunk-riveted group relative flex min-w-[5.25rem] flex-col items-center gap-2 rounded-sm border p-3 shadow-sm transition-all duration-150 ease-out
+  class="variant-steampunk-riveted group relative flex min-w-[5.25rem] flex-col items-center gap-2 overflow-visible rounded-sm border p-3 shadow-sm transition-all duration-150 ease-out
     {element.owned_rolling_stock_id
     ? 'border-primary/45 bg-primary/8 text-foreground'
     : ownedCount > 0
