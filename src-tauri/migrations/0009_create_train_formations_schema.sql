@@ -1,8 +1,7 @@
--- ──────────────────────────────────────────────
--- Migration: Train Formations (Feature 039)
--- ──────────────────────────────────────────────
+-- noinspection SqlResolveForFile
+-- noinspection SqlNoDataSourceInspectionForFile
+-- noinspection SqlResolveInspectionForFile
 
--- 1. Prototype Library (master catalog)
 CREATE TABLE IF NOT EXISTS prototypes
 (
     id                  TEXT NOT NULL PRIMARY KEY,
@@ -25,7 +24,6 @@ CREATE INDEX IF NOT EXISTS idx_prototypes_company_series ON prototypes (railway_
 CREATE INDEX IF NOT EXISTS idx_prototypes_car_type ON prototypes (car_type);
 CREATE INDEX IF NOT EXISTS idx_prototypes_is_custom ON prototypes (is_custom);
 
--- 2. Formation Categories
 CREATE TABLE IF NOT EXISTS formation_categories
 (
     id          TEXT NOT NULL PRIMARY KEY,
@@ -34,7 +32,6 @@ CREATE TABLE IF NOT EXISTS formation_categories
     created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Train Formations (header)
 CREATE TABLE IF NOT EXISTS train_formations
 (
     id          TEXT NOT NULL PRIMARY KEY,
@@ -54,7 +51,6 @@ CREATE TABLE IF NOT EXISTS train_formations
 CREATE INDEX IF NOT EXISTS idx_train_formations_category_id ON train_formations (category_id);
 CREATE INDEX IF NOT EXISTS idx_train_formations_name ON train_formations (name);
 
--- 4. Formation Elements (composition slots)
 CREATE TABLE IF NOT EXISTS formation_elements
 (
     id                      TEXT NOT NULL PRIMARY KEY,
@@ -75,17 +71,5 @@ CREATE TABLE IF NOT EXISTS formation_elements
 CREATE INDEX IF NOT EXISTS idx_formation_elements_formation ON formation_elements (formation_id, position_order);
 CREATE INDEX IF NOT EXISTS idx_formation_elements_prototype ON formation_elements (prototype_id);
 
--- 5. Add prototype_id to owned_rolling_stocks (additive, non-breaking)
 ALTER TABLE owned_rolling_stocks ADD COLUMN prototype_id TEXT REFERENCES prototypes(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_owned_rolling_stocks_prototype_id ON owned_rolling_stocks (prototype_id);
-
--- 6. Seed: Formation Categories
-INSERT OR IGNORE INTO formation_categories (id, name, is_custom) VALUES
-    ('trn:formation-category:eurocity',  'EuroCity',   0),
-    ('trn:formation-category:intercity', 'Intercity',  0),
-    ('trn:formation-category:tee',       'TEE',        0),
-    ('trn:formation-category:express',   'Express',    0),
-    ('trn:formation-category:regional',  'Regional',   0),
-    ('trn:formation-category:freight',   'Freight',    0),
-    ('trn:formation-category:special',   'Special',    0),
-    ('trn:formation-category:thematic',  'Thematic',   0);

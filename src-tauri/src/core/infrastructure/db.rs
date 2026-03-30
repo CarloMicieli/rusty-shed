@@ -79,8 +79,8 @@ impl Database {
         seeder::seed_decoders(pool).await?;
         seeder::seed_track_products(pool).await?;
         seeder::seed_sellers(pool).await?;
-        crate::trains::infrastructure::seed_data::insert_default_categories(pool).await?;
-        crate::trains::infrastructure::seed_data::insert_default_prototypes(pool).await?;
+        seeder::seed_train_categories(pool).await?;
+        seeder::seed_prototypes(pool).await?;
         Ok(())
     }
 }

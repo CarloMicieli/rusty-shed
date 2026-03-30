@@ -20,6 +20,11 @@ static TRACK_PRODUCTS: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/seed/track_products.csv"
 ));
+static TRAIN_CATEGORIES: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/seed/train_categories.csv"
+));
+static PROTOTYPES: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/prototypes.csv"));
 
 const CHUNK_SIZE: usize = 50;
 
@@ -494,6 +499,120 @@ pub async fn seed_track_products(pool: &SqlitePool) -> anyhow::Result<()> {
             .execute(&mut *tx)
             .await
             .context("Failed to execute track_products upsert chunk")?;
+    }
+
+    tx.commit().await.context("Failed to commit transaction")?;
+    Ok(())
+}
+
+/// Seed the default formation categories from the embedded CSV file.
+///
+/// Uses an `ON CONFLICT(id) DO UPDATE SET` upsert so it is safe to call
+/// on every application startup. The `id` is derived as
+/// `trn:formation-category:{slugify(name)}`; `is_custom` is always `0`.
+pub async fn seed_train_categories(pool: &SqlitePool) -> anyhow::Result<()> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(TRAIN_CATEGORIES.as_bytes());
+
+    let records: Vec<_> = rdr
+        .records()
+        .collect::<Result<Vec<_>, _>>()
+        .context("Failed to parse train_categories CSV records")?;
+
+    let mut tx = pool.begin().await.context("Failed to start transaction")?;
+
+    for chunk in records.chunks(CHUNK_SIZE) {
+        let mut query_builder: QueryBuilder<sqlx::Sqlite> =
+            QueryBuilder::new("INSERT INTO formation_categories (id, name, is_custom) ");
+
+        query_builder.push_values(chunk, |mut b, record| {
+            let name = record.get(0).unwrap_or_default();
+            let id = format!("trn:formation-category:{}", slugify(name));
+
+            b.push_bind(id).push_bind(name.to_string()).push_bind(0i64);
+        });
+
+        query_builder.push(" ON CONFLICT(id) DO UPDATE SET name = EXCLUDED.name");
+
+        query_builder
+            .build()
+            .execute(&mut *tx)
+            .await
+            .context("Failed to execute formation_categories upsert chunk")?;
+    }
+
+    tx.commit().await.context("Failed to commit transaction")?;
+    Ok(())
+}
+
+/// Seed the default prototype catalogue from the embedded CSV file.
+///
+/// Uses an `ON CONFLICT(id) DO UPDATE SET` upsert so it is safe to call
+/// on every application startup. `is_custom` is always `0` for seeded rows.
+pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(PROTOTYPES.as_bytes());
+
+    let records: Vec<_> = rdr
+        .records()
+        .collect::<Result<Vec<_>, _>>()
+        .context("Failed to parse prototypes CSV records")?;
+
+    let now = Utc::now().to_rfc3339();
+    let mut tx = pool.begin().await.context("Failed to start transaction")?;
+
+    let insert_cmd = r#"
+        INSERT INTO prototypes (
+            id, railway_company_id, series_code, car_type, service_level,
+            category, is_motorized, default_is_dummy, is_custom,
+            created_at, updated_at, version
+        )
+    "#;
+
+    for chunk in records.chunks(CHUNK_SIZE) {
+        let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
+
+        query_builder.push_values(chunk, |mut b, record| {
+            let id = record.get(0).unwrap_or_default();
+            let railway_company_id = record.get(1).unwrap_or_default();
+            let series_code = record.get(2).unwrap_or_default();
+            let car_type = record.get(3).unwrap_or_default();
+            let service_level: Option<String> =
+                record.get(4).filter(|s| !s.is_empty()).map(str::to_string);
+            let category = record.get(5).unwrap_or_default();
+            let is_motorized: i64 = record.get(6).unwrap_or("0").parse().unwrap_or(0);
+            let default_is_dummy: i64 = record.get(7).unwrap_or("0").parse().unwrap_or(0);
+
+            b.push_bind(id.to_string())
+                .push_bind(railway_company_id.to_string())
+                .push_bind(series_code.to_string())
+                .push_bind(car_type.to_string())
+                .push_bind(service_level)
+                .push_bind(category.to_string())
+                .push_bind(is_motorized)
+                .push_bind(default_is_dummy)
+                .push_bind(0i64)
+                .push_bind(&now)
+                .push_bind(&now)
+                .push_bind(0i64);
+        });
+
+        query_builder.push(" ON CONFLICT(id) DO UPDATE SET ");
+        query_builder.push("series_code = EXCLUDED.series_code, ");
+        query_builder.push("car_type = EXCLUDED.car_type, ");
+        query_builder.push("service_level = EXCLUDED.service_level, ");
+        query_builder.push("category = EXCLUDED.category, ");
+        query_builder.push("is_motorized = EXCLUDED.is_motorized, ");
+        query_builder.push("default_is_dummy = EXCLUDED.default_is_dummy, ");
+        query_builder.push("updated_at = EXCLUDED.updated_at");
+
+        query_builder
+            .build()
+            .execute(&mut *tx)
+            .await
+            .context("Failed to execute prototypes upsert chunk")?;
     }
 
     tx.commit().await.context("Failed to commit transaction")?;

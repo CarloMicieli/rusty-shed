@@ -1029,7 +1029,7 @@ mod tests {
     async fn test_seed_prototypes_idempotent(pool: SqlitePool) {
         insert_test_companies(&pool).await;
 
-        crate::trains::infrastructure::seed_data::insert_default_prototypes(&pool)
+        crate::core::infrastructure::seeder::seed_prototypes(&pool)
             .await
             .expect("first seed");
         let count_first: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prototypes")
@@ -1037,7 +1037,7 @@ mod tests {
             .await
             .expect("count after first seed");
 
-        crate::trains::infrastructure::seed_data::insert_default_prototypes(&pool)
+        crate::core::infrastructure::seeder::seed_prototypes(&pool)
             .await
             .expect("second seed");
         let count_second: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prototypes")
