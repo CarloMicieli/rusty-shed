@@ -19,6 +19,8 @@ pub struct ExportEntitySelection {
     pub include_track_inventory: bool,
     /// Include train formations (formations, elements, prototypes, categories)
     pub include_train_formations: bool,
+    /// Include wishlists and their items
+    pub include_wishlists: bool,
 }
 
 impl ExportEntitySelection {
@@ -31,6 +33,7 @@ impl ExportEntitySelection {
             || self.include_dcc_roster
             || self.include_track_inventory
             || self.include_train_formations
+            || self.include_wishlists
     }
 
     /// Get count of entity types selected
@@ -55,6 +58,9 @@ impl ExportEntitySelection {
             count += 1;
         }
         if self.include_train_formations {
+            count += 1;
+        }
+        if self.include_wishlists {
             count += 1;
         }
         count
@@ -238,6 +244,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: false,
+            include_wishlists: false,
         };
         assert!(!selection.is_valid());
     }
@@ -253,6 +260,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: false,
+            include_wishlists: false,
         };
         assert!(selection.is_valid());
     }
@@ -267,6 +275,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: false,
+            include_wishlists: false,
         }
     }
 
@@ -375,6 +384,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: true,
             include_train_formations: false,
+            include_wishlists: false,
         };
         assert_eq!(selection.get_entity_count(), 6);
     }

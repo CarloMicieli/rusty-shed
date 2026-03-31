@@ -81,6 +81,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: true,
             include_train_formations: false,
+            include_wishlists: false,
         }
     }
 

@@ -26,6 +26,7 @@ pub async fn get_export_preview(state: State<'_, AppState>) -> Result<ExportPrev
         include_orphaned_images: false,
         include_track_inventory: true,
         include_train_formations: true,
+        include_wishlists: true,
     };
 
     preview_export::get_export_preview(&state.db_pool(), &selection)
@@ -83,6 +84,7 @@ pub async fn execute_export(
         include_orphaned_images: false,
         include_track_inventory: true,
         include_train_formations: true,
+        include_wishlists: true,
     };
 
     execute_export::export_to_archive(&state.db_pool(), archive_path, media_dir, &selection)

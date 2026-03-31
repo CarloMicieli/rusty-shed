@@ -79,6 +79,7 @@ impl ImportRepository for SqliteImportRepository {
             formation_category_dupes,
             train_formation_dupes,
             prototype_dupes,
+            wishlist_dupes,
         ) = tokio::try_join!(
             checker.check_manufacturers(&data.manufacturers),
             checker.check_railway_models(&data.railway_models),
@@ -89,6 +90,7 @@ impl ImportRepository for SqliteImportRepository {
             checker.check_formation_categories(&data.formation_categories),
             checker.check_train_formations(&data.train_formations),
             checker.check_prototypes(&data.prototypes),
+            checker.check_wishlists(&data.wishlists),
         )
         .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
@@ -102,6 +104,7 @@ impl ImportRepository for SqliteImportRepository {
             formation_category_dupes,
             train_formation_dupes,
             prototype_dupes,
+            wishlist_dupes,
         })
     }
 
@@ -715,6 +718,62 @@ impl ImportRepository for SqliteImportRepository {
 
         added.train_formations = duplicates.train_formation_dupes.new_count() as u32;
         skipped.train_formations = duplicates.train_formation_dupes.duplicate_count() as u32;
+
+        // 12. Insert new wishlists + items
+        let new_wishlist_ids: HashSet<&str> = duplicates
+            .wishlist_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+
+        for wishlist in data
+            .wishlists
+            .iter()
+            .filter(|w| new_wishlist_ids.contains(w.id.as_str()))
+        {
+            // Always import with is_default = 0 to avoid overriding the user's existing default
+            sqlx::query(
+                "INSERT OR IGNORE INTO wishlists \
+                 (id, name, notes, is_default, version, created_at, updated_at) \
+                 VALUES (?, ?, ?, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            )
+            .bind(&wishlist.id)
+            .bind(&wishlist.name)
+            .bind(&wishlist.notes)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            for item in &wishlist.items {
+                sqlx::query(
+                    "INSERT OR IGNORE INTO wishlist_items \
+                     (id, wishlist_id, railway_model_id, priority, status, \
+                      desired_price_amount, desired_price_currency, \
+                      added_date, removed_date, notes, \
+                      purchased_at, purchased_price_amount, purchased_price_currency) \
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)",
+                )
+                .bind(&item.id)
+                .bind(&wishlist.id)
+                .bind(&item.railway_model_id)
+                .bind(&item.priority)
+                .bind(&item.status)
+                .bind(item.desired_price.as_ref().map(|p| p.amount as i64))
+                .bind(item.desired_price.as_ref().map(|p| p.currency.as_str()))
+                .bind(&item.added_date)
+                .bind(&item.removed_date)
+                .bind(&item.notes)
+                .bind(item.purchased_price.as_ref().map(|p| p.amount as i64))
+                .bind(item.purchased_price.as_ref().map(|p| p.currency.as_str()))
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            }
+        }
+
+        added.wishlists = duplicates.wishlist_dupes.new_count() as u32;
+        skipped.wishlists = duplicates.wishlist_dupes.duplicate_count() as u32;
 
         // Commit the transaction — all DB work done before any file I/O
         tx.commit()

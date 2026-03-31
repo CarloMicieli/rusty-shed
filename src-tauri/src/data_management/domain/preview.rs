@@ -20,6 +20,8 @@ pub struct DuplicateDetails {
     pub track_inventories: Vec<String>,
     /// Duplicate train formation names
     pub train_formations: Vec<String>,
+    /// Duplicate wishlist names
+    pub wishlists: Vec<String>,
 }
 
 /// Preview of import before confirmation.

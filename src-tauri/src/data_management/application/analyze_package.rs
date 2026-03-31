@@ -128,6 +128,7 @@ impl ValidatePackageUseCase {
             prototypes: manifest.data.prototypes.len() as u32,
             formation_categories: manifest.data.formation_categories.len() as u32,
             train_formations: manifest.data.train_formations.len() as u32,
+            wishlists: manifest.data.wishlists.len() as u32,
         }
     }
 }
@@ -155,6 +156,7 @@ mod tests {
                 prototypes: vec![],
                 formation_categories: vec![],
                 train_formations: vec![],
+                wishlists: vec![],
             },
         };
 

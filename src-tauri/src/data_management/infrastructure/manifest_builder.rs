@@ -229,7 +229,10 @@ pub async fn build_manifest(
     // Each entity must be present whenever something that references it is exported.
     let include_maintenance_logs = selection.include_maintenance_logs;
     let include_collection_items = selection.include_collection_items || include_maintenance_logs;
-    let include_railway_models = selection.include_railway_models || include_collection_items;
+    // Wishlists reference railway_model_id — export railway models when wishlists are included
+    let include_wishlists = selection.include_wishlists;
+    let include_railway_models =
+        selection.include_railway_models || include_collection_items || include_wishlists;
     let include_track_inventory = selection.include_track_inventory;
     let include_sellers = selection.include_sellers;
 
@@ -948,6 +951,84 @@ pub async fn build_manifest(
             })));
         }
         data["trainFormations"] = json!(train_formations);
+    }
+
+    if include_wishlists {
+        let wl_rows =
+            sqlx::query("SELECT id, name, notes, is_default FROM wishlists ORDER BY name")
+                .fetch_all(pool)
+                .await
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let mut wishlists: Vec<Value> = Vec::new();
+        for wl_row in &wl_rows {
+            let wl_id: String = wl_row
+                .try_get("id")
+                .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let item_rows = sqlx::query(
+                "SELECT id, railway_model_id, priority, status, added_date, removed_date, \
+                        notes, desired_price_amount, desired_price_currency, \
+                        purchased_price_amount, purchased_price_currency \
+                 FROM wishlist_items WHERE wishlist_id = ? ORDER BY added_date",
+            )
+            .bind(&wl_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let items: Vec<Value> = item_rows
+                .iter()
+                .map(|row| {
+                    let desired_price = match (
+                        row.try_get::<Option<i64>, _>("desired_price_amount")
+                            .ok()
+                            .flatten(),
+                        row.try_get::<Option<String>, _>("desired_price_currency")
+                            .ok()
+                            .flatten(),
+                    ) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+                    let purchased_price = match (
+                        row.try_get::<Option<i64>, _>("purchased_price_amount")
+                            .ok()
+                            .flatten(),
+                        row.try_get::<Option<String>, _>("purchased_price_currency")
+                            .ok()
+                            .flatten(),
+                    ) {
+                        (Some(amount), Some(currency)) => {
+                            json!({ "amount": amount, "currency": currency })
+                        }
+                        _ => Value::Null,
+                    };
+                    strip_null_fields(json!({
+                        "id": row.try_get::<String, _>("id").ok(),
+                        "railwayModelId": row.try_get::<String, _>("railway_model_id").ok(),
+                        "priority": row.try_get::<String, _>("priority").ok(),
+                        "status": row.try_get::<String, _>("status").ok(),
+                        "addedDate": row.try_get::<String, _>("added_date").ok(),
+                        "removedDate": row.try_get::<Option<String>, _>("removed_date").ok().flatten(),
+                        "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                        "desiredPrice": desired_price,
+                        "purchasedPrice": purchased_price,
+                    }))
+                })
+                .collect();
+
+            wishlists.push(strip_null_fields(json!({
+                "id": wl_id,
+                "name": wl_row.try_get::<String, _>("name").ok(),
+                "notes": wl_row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                "isDefault": wl_row.try_get::<i64, _>("is_default").ok().map(|v| v != 0).unwrap_or(false),
+                "items": items,
+            })));
+        }
+        data["wishlists"] = json!(wishlists);
     }
 
     // Build final manifest — "data" key matches ManifestDto.data in the import feature

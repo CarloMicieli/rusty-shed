@@ -16,6 +16,7 @@ pub struct RecordCounts {
     pub prototypes: u32,
     pub formation_categories: u32,
     pub train_formations: u32,
+    pub wishlists: u32,
 }
 
 impl RecordCounts {
@@ -37,6 +38,7 @@ impl RecordCounts {
             + self.prototypes
             + self.formation_categories
             + self.train_formations
+            + self.wishlists
     }
 
     /// Add counts from another `RecordCounts` instance.
@@ -52,6 +54,7 @@ impl RecordCounts {
         self.prototypes += other.prototypes;
         self.formation_categories += other.formation_categories;
         self.train_formations += other.train_formations;
+        self.wishlists += other.wishlists;
     }
 }
 
@@ -73,6 +76,7 @@ mod tests {
             prototypes: 0,
             formation_categories: 0,
             train_formations: 0,
+            wishlists: 0,
         };
         assert_eq!(counts.total(), 36);
     }

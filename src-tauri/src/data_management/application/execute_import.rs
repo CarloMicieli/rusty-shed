@@ -75,6 +75,7 @@ mod tests {
                 formation_category_dupes: DuplicateCheckResult::default(),
                 train_formation_dupes: DuplicateCheckResult::default(),
                 prototype_dupes: DuplicateCheckResult::default(),
+                wishlist_dupes: DuplicateCheckResult::default(),
             })
         }
 

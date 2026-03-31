@@ -139,6 +139,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: false,
+            include_wishlists: false,
         }
     }
 
@@ -249,6 +250,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: false,
+            include_wishlists: false,
         };
 
         let preview = get_export_preview(&pool, &selection)
@@ -279,6 +281,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: false,
+            include_wishlists: false,
         };
 
         let preview = get_export_preview(&pool, &selection)
@@ -320,6 +323,7 @@ mod tests {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: true,
+            include_wishlists: false,
         };
 
         let preview = get_export_preview(&pool, &selection)

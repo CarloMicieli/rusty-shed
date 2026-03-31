@@ -41,6 +41,8 @@ pub struct DataContainerDto {
     pub formation_categories: Vec<FormationCategoryRecord>,
     #[serde(rename = "trainFormations", default)]
     pub train_formations: Vec<TrainFormationRecord>,
+    #[serde(default)]
+    pub wishlists: Vec<WishlistRecord>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
@@ -396,4 +398,36 @@ pub struct FormationElementRecord {
     pub position_order: i64,
     /// 1 = traction required, -1 = traction excluded, 0 = default
     pub traction_override: i64,
+}
+
+/// A user wishlist with its items.
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct WishlistRecord {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub notes: Option<String>,
+    pub is_default: bool,
+    #[serde(default)]
+    pub items: Vec<WishlistItemRecord>,
+}
+
+/// A single item in a wishlist.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct WishlistItemRecord {
+    pub id: String,
+    pub railway_model_id: String,
+    pub priority: String,
+    pub status: String,
+    pub added_date: String,
+    #[serde(default)]
+    pub removed_date: Option<String>,
+    #[serde(default)]
+    pub notes: Option<String>,
+    #[serde(default)]
+    pub desired_price: Option<MoneyRecord>,
+    #[serde(default)]
+    pub purchased_price: Option<MoneyRecord>,
 }

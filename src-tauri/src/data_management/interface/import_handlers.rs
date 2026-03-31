@@ -162,6 +162,10 @@ pub async fn get_import_preview(
             .total_records
             .train_formations
             .saturating_sub(preview.duplicate_records.train_formations),
+        wishlists: preview
+            .total_records
+            .wishlists
+            .saturating_sub(preview.duplicate_records.wishlists),
     };
 
     let can_import = preview.can_import();

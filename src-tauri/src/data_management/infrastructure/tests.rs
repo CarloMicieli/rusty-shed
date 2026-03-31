@@ -30,6 +30,7 @@ mod roundtrip {
             include_orphaned_images: false,
             include_track_inventory: false,
             include_train_formations: true,
+            include_wishlists: true,
         }
     }
 
@@ -258,6 +259,35 @@ mod roundtrip {
         .execute(pool)
         .await
         .expect("seed formation element");
+
+        sqlx::query(
+            "INSERT INTO wishlists (id, name, notes, is_default, version) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind("wl-test-001")
+        .bind("Test Wishlist")
+        .bind("My wishlist notes")
+        .bind(0_i64)
+        .bind(0_i64)
+        .execute(pool)
+        .await
+        .expect("seed wishlist");
+
+        sqlx::query(
+            "INSERT INTO wishlist_items \
+             (id, wishlist_id, railway_model_id, priority, status, added_date, desired_price_amount, desired_price_currency) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind("wi-test-001")
+        .bind("wl-test-001")
+        .bind("trn:railway-model:test-manufacturer:test-001")
+        .bind("NORMAL")
+        .bind("WANTED")
+        .bind("2024-02-01")
+        .bind(12000_i64)
+        .bind("EUR")
+        .execute(pool)
+        .await
+        .expect("seed wishlist item");
     }
 
     /// Export the seeded pool to a new archive and return the archive path.
@@ -365,6 +395,7 @@ mod roundtrip {
             result.added.train_formations, 1,
             "one train formation added"
         );
+        assert_eq!(result.added.wishlists, 1, "one wishlist added");
         assert_eq!(
             result.skipped.manufacturers, 0,
             "no duplicate manufacturers"
@@ -460,6 +491,23 @@ mod roundtrip {
             maintenance_event_count, 1,
             "maintenance events must roundtrip"
         );
+
+        let wishlist_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM wishlists WHERE id = 'wl-test-001'")
+                .fetch_one(&import_pool)
+                .await
+                .unwrap();
+        assert_eq!(wishlist_count, 1, "wishlist must exist in import DB");
+
+        let wishlist_item_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM wishlist_items WHERE id = 'wi-test-001' \
+             AND wishlist_id = 'wl-test-001' AND status = 'WANTED' \
+             AND desired_price_amount = 12000 AND desired_price_currency = 'EUR'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(wishlist_item_count, 1, "wishlist item must roundtrip");
     }
 
     /// Importing the same archive twice must not create duplicates.
@@ -497,6 +545,7 @@ mod roundtrip {
         assert_eq!(first.added.sellers, 1);
         assert_eq!(first.added.maintenance_cards, 1);
         assert_eq!(first.added.train_formations, 1);
+        assert_eq!(first.added.wishlists, 1);
 
         // Second import of the same archive into the same pool
         let second = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
@@ -545,6 +594,11 @@ mod roundtrip {
         assert_eq!(
             second.skipped.train_formations, 1,
             "duplicate train formation must be skipped"
+        );
+        assert_eq!(second.added.wishlists, 0, "no new wishlists on re-import");
+        assert_eq!(
+            second.skipped.wishlists, 1,
+            "duplicate wishlist must be skipped"
         );
 
         // Row counts must not grow

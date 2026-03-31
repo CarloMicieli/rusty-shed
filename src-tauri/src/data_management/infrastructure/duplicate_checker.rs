@@ -1,7 +1,7 @@
 use crate::data_management::domain::{
     CollectionItemRecord, FormationCategoryRecord, ManufacturerRecord, PrototypeRecord,
     RailwayModelRecord, SellerRecord, TrackInventoryRecord, TrackProductRecord,
-    TrainFormationRecord,
+    TrainFormationRecord, WishlistRecord,
 };
 use sqlx::SqlitePool;
 use std::collections::HashSet;
@@ -457,6 +457,50 @@ impl DuplicateChecker {
         })
     }
 
+    /// Check for duplicate wishlists by name (case-sensitive).
+    pub async fn check_wishlists(
+        &self,
+        wishlists: &[WishlistRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if wishlists.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let names: Vec<String> = wishlists.iter().map(|w| w.name.clone()).collect();
+
+        let query = format!(
+            "SELECT name FROM wishlists WHERE name IN ({})",
+            names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for name in &names {
+            query_builder = query_builder.bind(name);
+        }
+
+        let existing_names: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for wishlist in wishlists {
+            if existing_names.contains(&wishlist.name) {
+                duplicate_ids.push(wishlist.id.clone());
+            } else {
+                new_ids.push(wishlist.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
+
     /// Check for duplicate prototypes by railway_company_id + series_code + car_type.
     pub async fn check_prototypes(
         &self,
@@ -595,6 +639,44 @@ mod tests {
         assert_eq!(result.new_count(), 1);
         assert!(result.duplicate_ids.contains(&"existing-id".to_string()));
         assert!(result.new_ids.contains(&"new-id".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_check_wishlists_detects_duplicate_name() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE wishlists (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, \
+             notes TEXT, is_default INTEGER NOT NULL DEFAULT 0, version INTEGER NOT NULL DEFAULT 0, \
+             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+        sqlx::query("INSERT INTO wishlists (id, name) VALUES ('w1', 'My Wishlist')")
+            .execute(&pool)
+            .await
+            .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let wishlists = vec![
+            WishlistRecord {
+                id: "w1".to_string(),
+                name: "My Wishlist".to_string(),
+                ..Default::default()
+            },
+            WishlistRecord {
+                id: "w2".to_string(),
+                name: "New Wishlist".to_string(),
+                ..Default::default()
+            },
+        ];
+
+        let result = checker.check_wishlists(&wishlists).await.expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(result.duplicate_ids.contains(&"w1".to_string()));
+        assert!(result.new_ids.contains(&"w2".to_string()));
     }
 
     #[tokio::test]
