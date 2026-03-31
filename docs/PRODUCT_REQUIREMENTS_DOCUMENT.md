@@ -1,21 +1,82 @@
-# Product Requirements Document: Rusty Shed
+# Product Requirements: Rusty Shed
 
-## Functional Requirements Table
+## 1. Product Purpose
 
-| #        | Title                      | User Story Description                                                                                                            | Priority | Notes                                                                        |
-| -------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| **1.1**  | **Unified Entry System**   | As a user, I can input all information for a railway model once and then choose to add it to either the Collection or a Wishlist. | **P0**   | Essential for data integrity. Includes "Rolling Stock List" as a sub-entity. |
-| **1.2**  | **Collection Management**  | As a user, I can track technical specs, maintenance status, and purchase info (seller/price) for my models.                       | **P0**   | The primary inventory "Source of Truth."                                     |
-| **1.3**  | **Digital Roster (DCC)**   | As a user, I can manage digital rolling stock, tracking the decoder model and the DCC address.                                    | **P0**   | Critical for operational layouts.                                            |
-| **1.4**  | **Sellers Directory**      | As a user, I can manage a directory of sellers (shops, auctions, private) to track purchase origins.                              | **P1**   | Links to purchase history for financial analytics.                           |
-| **1.5**  | **Cloud Backup (G-Drive)** | As a user, I want to back up my collection database to Google Drive to prevent data loss and sync across devices.                 | **P1**   | Requires OAuth2 integration in Rust. Svelte handles the "Sync Now" UI.       |
-| **1.6**  | **Data Import Utility**    | As a user, I can import railway models from a file (CSV/JSON) to quickly populate my collection.                                  | **P1**   | Rust handles parsing/validation; Svelte provides the field-mapping UI.       |
-| **1.7**  | **Depot View**             | As a user, I want a categorized view of all rolling stock (Locos, Passenger, Freight) for quick access.                           | **P1**   | Filterable gallery view using Tailwind Grid.                                 |
-| **1.8**  | **Maintenance System**     | As a user, I can create maintenance cards and log specific events for each piece of rolling stock.                                | **P1**   | Tracks usage history and service intervals.                                  |
-| **1.9**  | **Track Inventory**        | As a user, I want to manage my track inventory (count and price) for layout planning.                                             | **P2**   | Aggregates costs of turnouts, flex-track, etc.                               |
-| **1.10** | **Wishlist Management**    | As a user, I can create multiple named wishlists with priorities and target prices.                                               | **P2**   | Supports [0..n] lists with drag-and-drop priority.                           |
-| **1.11** | **Financial Tracking**     | As a user, I want to track past spending and define monthly/yearly budget limits.                                                 | **P2**   | Visual indicators for budget "overages."                                     |
-| **1.12** | **Insights Dashboard**     | As a user, I want a dashboard with charts for spending, maintenance alerts, and highlights.                                       | **P2**   | Summary view using Svelte reactivity.                                        |
-| **1.13** | **Global Preferences**     | As a user, I can manage favorites (Scale, AC/DC, Companies) and localization.                                                     | **P3**   | Provides default values for new entries.                                     |
+Rusty Shed is a unified digital workspace for railway collectors to manage the lifecycle of their hobby. It moves beyond simple lists to provide **confidence and clarity** through:
+
+- **Centralized Records:** Every model, rolling stock detail, and purchase history in one place.
+- **Seamless Transitions:** Moving items from wishlist to ownership while preserving context.
+- **Proactive Management:** Integrated maintenance, budgeting, and data backups to prevent lost tasks or data.
 
 ---
+
+## 2. User Experience & Interface
+
+### Layout & Adaptability
+
+The system maintains a consistent identity while optimizing for the user's device:
+
+- **Desktop:** Features a persistent left sidebar for rapid navigation between all sections.
+- **Mobile:** Prioritizes core tasks via a five-slot bottom bar, tucking secondary features into a "More" panel.
+- **Contextual Editing:** Uses cards, side panels, and drawers to allow information entry without losing the user’s current place in the app.
+
+### Product Feel
+
+- **Fast & Direct:** In-place editing with automatic saving.
+- **Immersive:** Uses collector-friendly terminology (e.g., "Signal Failure" for errors).
+- **Calm:** Background operations (sync/search) run without interrupting active work.
+
+---
+
+## 3. Feature Pillars
+
+### A. Collection & Inventory Management
+
+- **Model Registry:** Add models with full technical data to the collection or wishlist.
+- **Visual Browsing:** Use preview cards with thumbnails, badges, and status labels to scan the fleet.
+- **Digital Roster:** Manage decoders and DCC addresses with filterable operational views.
+- **Track & Depot:** Track bulk inventory (track pieces, accessories) with required quantities and stock levels.
+- **Train Formations:** Create "consists" (train sets) with composition planning and readiness checks.
+
+### B. Acquisition & Finance
+
+- **Wishlist to Owned:** Track desired items with priority/price; convert to "Owned" with a single click.
+- **Hobby Budgeting:** Set monthly/yearly limits with rollover tracking and spend visualization.
+- **Acquisition History:** Review recent purchases grouped by event (date, seller, and batch notes).
+- **Batch Entry:** Record multiple items at once via a single drawer with smart defaults.
+
+### C. Maintenance & Operations
+
+- **Maintenance Tracker:** A dedicated view for upcoming and overdue tasks, ranked by visual urgency.
+- **Integrity Rules:** The system prevents duplicate maintenance cards per item to keep schedules clean.
+- **Formatted Notes:** Write rich-text notes (bold, italics, lists) for specific model history or repair logs.
+
+### D. Search & Organization
+
+- **Global Search:** A single search bar to find items across both the collection and wishlist.
+- **Categorized Browsing:** Filter the "Depot" by category with collapsible technical rows.
+- **Localization:** Support for custom currencies, units (scale/power), and multi-language descriptions.
+
+---
+
+## 4. System Intelligence & Media
+
+- **Smart Media:** Upload images via drag-and-drop; includes a built-in cropper to standardize photo framing.
+- **Background Continuity:** Syncing and saving happen in the background with non-blocking status toasts.
+- **Proactive Defaults:** The system remembers favorite scales, common sellers, and recent dates to speed up data entry.
+- **Error Recovery:** Critical issues trigger a "Signal Failure" view with clear instructions on how to retry or seek support.
+
+---
+
+## 5. Data Privacy & Trust
+
+- **Local First:** Core collection data stays on the user's device by default.
+- **Cloud Sync:** Optional cloud backup only triggers after explicit account connection.
+- **Portability:** Users can export their entire collection (including images) into a single archive for migration or safekeeping.
+- **Data Integrity:** The system automatically prevents "orphaned" records (e.g., a maintenance log existing without a model).
+
+---
+
+> **Source Scope:** This specification is derived from technical requirements and architectural decisions (ADRs) to provide a non-technical overview of system behavior.
+
+**Would you like me to create a "Minimum Viable Product" (MVP) checklist based on these reorganized features?**
