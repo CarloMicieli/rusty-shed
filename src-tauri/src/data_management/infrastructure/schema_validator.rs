@@ -223,7 +223,7 @@ impl SchemaValidator {
 
     /// Load the embedded manifest schema.
     fn load_embedded_schema() -> Result<Value, SchemaValidationError> {
-        let schema_str = include_str!("../domain/manifest_schema.json");
+        let schema_str = include_str!("../../../schemas/manifest_schema.json");
         serde_json::from_str(schema_str)
             .map_err(|e| SchemaValidationError::LoadError(format!("Failed to parse schema: {}", e)))
     }
@@ -293,7 +293,7 @@ mod tests {
             "data": {
                 "manufacturers": [
                     {
-                        "id": "mfr1",
+                        "id": "trn:manufacturer:marklin",
                         "name": "Märklin"
                     }
                 ]
@@ -310,7 +310,7 @@ mod tests {
             "data": {
                 "railwayCompanies": [
                     {
-                        "id": "rc1",
+                        "id": "trn:railway-company:deutsche-bahn",
                         "name": "Deutsche Bahn",
                         "countryCode": "DE"
                     }

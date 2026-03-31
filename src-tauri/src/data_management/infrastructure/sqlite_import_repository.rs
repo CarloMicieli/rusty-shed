@@ -5,8 +5,10 @@ use crate::data_management::domain::{
 use crate::data_management::infrastructure::ArchiveExtractor;
 use crate::data_management::infrastructure::DuplicateChecker;
 use crate::data_management::infrastructure::schema_mapper::{
-    model_category_to_rolling_stock_category, schema_category_to_db, schema_maintenance_type_to_db,
-    schema_power_method_to_db, schema_seller_type_to_db,
+    model_category_to_rolling_stock_category, schema_box_condition_to_db, schema_category_to_db,
+    schema_maintenance_type_to_db, schema_manufacturer_status_to_db, schema_model_condition_to_db,
+    schema_power_method_to_db, schema_purchase_condition_to_db, schema_purchase_type_to_db,
+    schema_railway_company_status_to_db, schema_seller_type_to_db,
 };
 use async_trait::async_trait;
 use log::warn;
@@ -16,7 +18,34 @@ use std::path::Path;
 use uuid::Uuid;
 
 const DEFAULT_COLLECTION_ID: &str = "trn:collection:1";
-const DEFAULT_LANGUAGE_CODE: &str = "en";
+
+fn format_decimal_for_text(value: f64) -> String {
+    if value.fract() == 0.0 {
+        format!("{value:.0}")
+    } else {
+        let mut text = value.to_string();
+        while text.contains('.') && text.ends_with('0') {
+            text.pop();
+        }
+        if text.ends_with('.') {
+            text.pop();
+        }
+        text
+    }
+}
+
+fn synthesize_rolling_stock_id(
+    model_id: &str,
+    railway_company_id: &str,
+    series_code: &str,
+    road_number: Option<&str>,
+    index: usize,
+) -> String {
+    format!(
+        "rs::{model_id}::{railway_company_id}::{series_code}::{}::{index}",
+        road_number.unwrap_or_default()
+    )
+}
 
 /// SQLite-backed implementation of the `ImportRepository` port.
 ///
@@ -163,17 +192,24 @@ impl ImportRepository for SqliteImportRepository {
             .iter()
             .filter(|m| new_manufacturer_ids.contains(m.id.as_str()))
         {
+            let status = schema_manufacturer_status_to_db(m.status.as_deref())?;
             sqlx::query(
                 "INSERT OR IGNORE INTO manufacturers \
-                 (id, name, registered_company_name, country_code, website_url, status) \
-                 VALUES (?, ?, ?, ?, ?, ?)",
+                 (id, name, registered_company_name, country_code, website_url, status, \
+                  street_address, extended_address, city, state_region, postal_code) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             )
             .bind(&m.id)
             .bind(&m.name)
             .bind(&m.registered_company_name)
             .bind(&m.country_code)
             .bind(&m.website_url)
-            .bind(m.status.as_deref().unwrap_or("ACTIVE"))
+            .bind(status)
+            .bind(&m.street_address)
+            .bind(&m.extended_address)
+            .bind(&m.city)
+            .bind(&m.state_region)
+            .bind(&m.postal_code)
             .execute(&mut *tx)
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
@@ -184,15 +220,18 @@ impl ImportRepository for SqliteImportRepository {
 
         // 2. Insert new railway companies (INSERT OR IGNORE — no explicit duplicate check)
         for rc in &data.railway_companies {
+            let status = schema_railway_company_status_to_db(rc.status.as_deref())?;
             sqlx::query(
                 "INSERT OR IGNORE INTO railway_companies \
-                 (id, name, country_code, status) \
-                 VALUES (?, ?, ?, ?)",
+                 (id, name, country_code, status, operating_since, operating_until) \
+                 VALUES (?, ?, ?, ?, ?, ?)",
             )
             .bind(&rc.id)
             .bind(&rc.name)
             .bind(&rc.country_code)
-            .bind(rc.status.as_deref().unwrap_or("ACTIVE"))
+            .bind(status)
+            .bind(&rc.operating_since)
+            .bind(&rc.operating_until)
             .execute(&mut *tx)
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
@@ -228,38 +267,86 @@ impl ImportRepository for SqliteImportRepository {
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
-            if !model.description.is_empty() || model.details.is_some() {
-                sqlx::query(
-                    "INSERT OR IGNORE INTO railway_model_translations \
-                     (railway_model_id, language_code, description, details) \
-                     VALUES (?, ?, ?, ?)",
-                )
-                .bind(&model.id)
-                .bind(DEFAULT_LANGUAGE_CODE)
-                .bind(&model.description)
-                .bind(&model.details)
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            for language_code in ["en", "it"] {
+                let description = match language_code {
+                    "en" => model.description.en.as_deref(),
+                    _ => model.description.it.as_deref(),
+                };
+                let details = model.details.as_ref().and_then(|d| match language_code {
+                    "en" => d.en.as_deref(),
+                    _ => d.it.as_deref(),
+                });
+
+                if description.is_some() || details.is_some() {
+                    sqlx::query(
+                        "INSERT OR REPLACE INTO railway_model_translations \
+                         (railway_model_id, language_code, description, details) \
+                         VALUES (?, ?, ?, ?)",
+                    )
+                    .bind(&model.id)
+                    .bind(language_code)
+                    .bind(description)
+                    .bind(details)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                }
             }
 
             let rolling_stock_category = model_category_to_rolling_stock_category(category);
-            for rs in &model.rolling_stocks {
-                let rs_id = Uuid::new_v4().to_string();
+            for (index, rs) in model.rolling_stocks.iter().enumerate() {
+                let rs_id = rs.id.clone().unwrap_or_else(|| {
+                    synthesize_rolling_stock_id(
+                        &model.id,
+                        &rs.railway_company_id,
+                        &rs.series_code,
+                        rs.road_number.as_deref(),
+                        index,
+                    )
+                });
                 sqlx::query(
                     "INSERT OR IGNORE INTO rolling_stocks \
                      (id, railway_model_id, category, railway_company_id, series_code, \
-                      road_number, livery, friendly_name, is_dummy) \
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                      series, road_number, friendly_name, depot, livery, \
+                      electric_multiple_unit_type, freight_car_type, locomotive_type, \
+                      passenger_car_type, railcar_type, service_level, length_inches, \
+                      length_millimeters, technical_minimum_radius_mm, technical_coupling_socket, \
+                      technical_coupling_close_couplers, technical_coupling_digital_shunting, \
+                      technical_flywheel_fitted, technical_body_shell, technical_chassis, \
+                      technical_interior_lights, technical_lights, technical_sprung_buffers, \
+                      dcc_interface, control, is_dummy) \
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 )
                 .bind(&rs_id)
                 .bind(&model.id)
                 .bind(rolling_stock_category)
                 .bind(&rs.railway_company_id)
                 .bind(&rs.series_code)
+                .bind(&rs.series)
                 .bind(&rs.road_number)
-                .bind(&rs.livery)
                 .bind(&rs.friendly_name)
+                .bind(&rs.depot)
+                .bind(&rs.livery)
+                .bind(&rs.electric_multiple_unit_type)
+                .bind(&rs.freight_car_type)
+                .bind(&rs.locomotive_type)
+                .bind(&rs.passenger_car_type)
+                .bind(&rs.railcar_type)
+                .bind(&rs.service_level)
+                .bind(rs.length_inches.map(format_decimal_for_text))
+                .bind(rs.length_millimeters.map(format_decimal_for_text))
+                .bind(rs.technical_minimum_radius_mm.map(format_decimal_for_text))
+                .bind(&rs.technical_coupling_socket)
+                .bind(&rs.technical_coupling_close_couplers)
+                .bind(&rs.technical_coupling_digital_shunting)
+                .bind(&rs.technical_flywheel_fitted)
+                .bind(&rs.technical_body_shell)
+                .bind(&rs.technical_chassis)
+                .bind(&rs.technical_interior_lights)
+                .bind(&rs.technical_lights)
+                .bind(&rs.technical_sprung_buffers)
+                .bind(&rs.dcc_interface)
+                .bind(&rs.control)
                 .bind(rs.is_dummy.unwrap_or(false) as i64)
                 .execute(&mut *tx)
                 .await
@@ -302,6 +389,10 @@ impl ImportRepository for SqliteImportRepository {
             .iter()
             .filter(|i| new_item_ids.contains(i.id.as_str()))
         {
+            let purchase_condition =
+                schema_purchase_condition_to_db(item.purchase_condition.as_deref())?;
+            let model_condition = schema_model_condition_to_db(item.model_condition.as_deref())?;
+            let box_condition = schema_box_condition_to_db(item.box_condition.as_deref())?;
             sqlx::query(
                 "INSERT OR IGNORE INTO collection_items \
                  (id, collection_id, railway_model_id, added_date, removed_date, \
@@ -313,9 +404,9 @@ impl ImportRepository for SqliteImportRepository {
             .bind(&item.railway_model_id)
             .bind(&item.added_date)
             .bind(&item.removed_date)
-            .bind(&item.purchase_condition)
-            .bind(&item.model_condition)
-            .bind(&item.box_condition)
+            .bind(purchase_condition)
+            .bind(model_condition)
+            .bind(box_condition)
             .bind(&item.notes)
             .execute(&mut *tx)
             .await
@@ -332,6 +423,7 @@ impl ImportRepository for SqliteImportRepository {
                     .as_deref()
                     .unwrap_or(item.added_date.as_str());
                 let purchase_id = Uuid::new_v4().to_string();
+                let purchase_type = schema_purchase_type_to_db(&purchase.r#type)?;
                 sqlx::query(
                     "INSERT OR IGNORE INTO purchase_infos \
                      (id, collection_item_id, purchase_type, purchase_date, seller_id, \
@@ -342,7 +434,7 @@ impl ImportRepository for SqliteImportRepository {
                 )
                 .bind(&purchase_id)
                 .bind(&item.id)
-                .bind(&purchase.r#type)
+                .bind(purchase_type)
                 .bind(purchase_date)
                 .bind(&purchase.seller_id)
                 .bind(purchase.price.as_ref().map(|p| p.amount as i64))

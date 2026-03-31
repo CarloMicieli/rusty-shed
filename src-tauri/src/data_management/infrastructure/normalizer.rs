@@ -1,7 +1,7 @@
 /// Manifest normalization utilities.
 ///
-/// Converts old-format (DB-native SCREAMING_SNAKE_CASE) enum values to
-/// their schema-canonical lowercase/camelCase equivalents before validation.
+/// Converts old-format (lowercase/camelCase) enum values to
+/// schema-canonical tokens before validation.
 /// This allows importing archives produced by earlier versions of the app.
 use serde_json::Value;
 
@@ -14,8 +14,8 @@ impl Normalizer {
 
     /// Normalize all enum fields in a manifest JSON value in-place.
     ///
-    /// Must be called before schema validation so that DB-native values
-    /// like `"ORIGINAL_MINT"` are accepted as the canonical `"mint"`.
+    /// Must be called before schema validation so that legacy values
+    /// like `"mint"` are accepted as the canonical `"ORIGINAL_MINT"`.
     pub fn normalize_manifest(manifest: &mut Value) {
         let data = match manifest.get_mut("data").and_then(|d| d.as_object_mut()) {
             Some(d) => d,
@@ -47,6 +47,17 @@ impl Normalizer {
             for item in models.iter_mut() {
                 normalize_field(item, "availabilityStatus", normalize_availability_status);
                 normalize_field(item, "powerMethod", normalize_power_method);
+                if let Some(category) = item.get_mut("category") {
+                    normalize_field(category, "type", normalize_category);
+                }
+                if let Some(rolling_stocks) =
+                    item.get_mut("rollingStocks").and_then(|v| v.as_array_mut())
+                {
+                    for rs in rolling_stocks.iter_mut() {
+                        normalize_field(rs, "serviceLevel", normalize_service_level);
+                        normalize_field(rs, "control", normalize_control);
+                    }
+                }
             }
         }
 
@@ -104,46 +115,80 @@ where
 
 fn normalize_manufacturer_status(s: &str) -> Option<&'static str> {
     match s {
-        "ACTIVE" => Some("active"),
-        "MERGED" => Some("merged"),
-        "OUT_OF_BUSINESS" => Some("outOfBusiness"),
+        "active" => Some("ACTIVE"),
+        "merged" => Some("MERGED"),
+        "outOfBusiness" => Some("OUT_OF_BUSINESS"),
         _ => None,
     }
 }
 
 fn normalize_railway_company_status(s: &str) -> Option<&'static str> {
     match s {
-        "ACTIVE" => Some("active"),
-        "INACTIVE" => Some("inactive"),
+        "active" => Some("ACTIVE"),
+        "inactive" => Some("INACTIVE"),
         _ => None,
     }
 }
 
 fn normalize_availability_status(s: &str) -> Option<&'static str> {
     match s {
-        "AVAILABLE" => Some("available"),
-        "ANNOUNCED" => Some("announced"),
-        "CANCELLED" => Some("cancelled"),
-        "DISCONTINUED" => Some("discontinued"),
+        "available" => Some("AVAILABLE"),
+        "announced" => Some("ANNOUNCED"),
+        "cancelled" => Some("CANCELLED"),
+        "discontinued" => Some("DISCONTINUED"),
         _ => None,
     }
 }
 
 fn normalize_power_method(s: &str) -> Option<&'static str> {
     match s {
-        "AC" => Some("ac"),
-        "DC" => Some("dc"),
-        "TRIX_EXPRESS" => Some("trixExpress"),
+        "ac" => Some("AC"),
+        "dc" => Some("DC"),
+        "trixExpress" => Some("TRIX_EXPRESS"),
         _ => None,
     }
 }
 
 fn normalize_seller_type(s: &str) -> Option<&'static str> {
     match s {
-        "SHOP" => Some("shop"),
-        "PRIVATE" => Some("private"),
-        "MARKETPLACE" => Some("marketplace"),
-        "DISTRIBUTOR" => Some("distributor"),
+        "shop" => Some("SHOP"),
+        "private" => Some("PRIVATE"),
+        "marketplace" => Some("MARKETPLACE"),
+        "distributor" => Some("DISTRIBUTOR"),
+        _ => None,
+    }
+}
+
+fn normalize_category(s: &str) -> Option<&'static str> {
+    match s {
+        "locomotive" => Some("LOCOMOTIVES"),
+        "trainSet" => Some("TRAIN_SETS"),
+        "freightCar" => Some("FREIGHT_CARS"),
+        "passengerCar" => Some("PASSENGER_CARS"),
+        "electricMultipleUnit" => Some("ELECTRIC_MULTIPLE_UNITS"),
+        "railcar" => Some("RAILCARS"),
+        _ => None,
+    }
+}
+
+fn normalize_service_level(s: &str) -> Option<&'static str> {
+    match s {
+        "1" => Some("FIRST"),
+        "2" => Some("SECOND"),
+        "3" => Some("THIRD"),
+        "1/2" => Some("FIRST_SECOND"),
+        "2/3" => Some("SECOND_THIRD"),
+        "1/2/3" => Some("FIRST_SECOND_THIRD"),
+        _ => None,
+    }
+}
+
+fn normalize_control(s: &str) -> Option<&'static str> {
+    match s {
+        "dccReady" => Some("DCC_READY"),
+        "dccFitted" => Some("DCC_FITTED"),
+        "dccSound" => Some("DCC_SOUND"),
+        "noDcc" => Some("NO_DCC"),
         _ => None,
     }
 }
@@ -152,37 +197,36 @@ fn normalize_purchase_type(s: &str) -> Option<&'static str> {
     match s.to_ascii_uppercase().as_str() {
         "PURCHASED" => Some("purchased"),
         "SOLD" => Some("sold"),
-        "PREORDERED" => Some("preordered"),
+        "PREORDERED" => Some("preOrdered"),
         _ => None,
     }
 }
 
 fn normalize_purchase_condition(s: &str) -> Option<&'static str> {
     match s {
-        "NEW" => Some("new"),
-        "PRE_OWNED" => Some("preowned"),
-        "USED" => Some("used"),
+        "new" => Some("NEW"),
+        "used" | "preowned" => Some("PRE_OWNED"),
         _ => None,
     }
 }
 
 fn normalize_model_condition(s: &str) -> Option<&'static str> {
     match s {
-        "MINT" | "NEAR_MINT" => Some("mint"),
-        "EXCELLENT" | "VERY_GOOD" => Some("excellent"),
-        "GOOD" => Some("good"),
-        "FAIR" => Some("fair"),
-        "POOR" | "FOR_PARTS" => Some("poor"),
+        "mint" => Some("MINT"),
+        "excellent" => Some("EXCELLENT"),
+        "good" => Some("GOOD"),
+        "fair" => Some("FAIR"),
+        "poor" => Some("POOR"),
         _ => None,
     }
 }
 
 fn normalize_box_condition(s: &str) -> Option<&'static str> {
     match s {
-        "ORIGINAL_MINT" => Some("mint"),
-        "ORIGINAL_GOOD" | "REPLACEMENT_BOX" => Some("good"),
-        "ORIGINAL_WORN" => Some("damaged"),
-        "NO_BOX" => Some("missing"),
+        "mint" => Some("ORIGINAL_MINT"),
+        "good" => Some("ORIGINAL_GOOD"),
+        "damaged" => Some("ORIGINAL_WORN"),
+        "missing" => Some("NO_BOX"),
         _ => None,
     }
 }
@@ -241,7 +285,7 @@ mod tests {
             }
         });
         Normalizer::normalize_manifest(&mut m);
-        assert_eq!(m["data"]["manufacturers"][0]["status"], "active");
+        assert_eq!(m["data"]["manufacturers"][0]["status"], "ACTIVE");
     }
 
     #[test]
@@ -256,7 +300,10 @@ mod tests {
             }
         });
         Normalizer::normalize_manifest(&mut m);
-        assert_eq!(m["data"]["collectionItems"][0]["boxCondition"], "mint");
+        assert_eq!(
+            m["data"]["collectionItems"][0]["boxCondition"],
+            "ORIGINAL_MINT"
+        );
     }
 
     #[test]
@@ -336,10 +383,10 @@ mod tests {
         let mut m = json!({
             "version": "1.0",
             "data": {
-                "manufacturers": [{"id": "m1", "name": "Märklin", "status": "active"}]
+                "manufacturers": [{"id": "m1", "name": "Märklin", "status": "ACTIVE"}]
             }
         });
         Normalizer::normalize_manifest(&mut m);
-        assert_eq!(m["data"]["manufacturers"][0]["status"], "active");
+        assert_eq!(m["data"]["manufacturers"][0]["status"], "ACTIVE");
     }
 }

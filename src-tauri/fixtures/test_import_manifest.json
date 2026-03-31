@@ -6,119 +6,203 @@
   "data": {
     "manufacturers": [
       {
-        "id": "mfr-001",
+        "id": "trn:manufacturer:marklin",
         "name": "Märklin",
-        "abbreviation": "MAR",
         "websiteUrl": "https://www.maerklin.de",
-        "countryCode": "DE"
+        "countryCode": "DE",
+        "status": "ACTIVE",
+        "streetAddress": "Stuttgarter Strasse 55",
+        "city": "Göppingen",
+        "postalCode": "73033"
       },
       {
-        "id": "mfr-002",
+        "id": "trn:manufacturer:roco",
         "name": "Roco",
-        "abbreviation": "ROCO",
         "websiteUrl": "https://www.roco.cc",
-        "countryCode": "AT"
+        "countryCode": "AT",
+        "status": "ACTIVE"
       }
     ],
     "railwayCompanies": [
       {
-        "id": "rc-001",
+        "id": "trn:railway-company:deutsche-bahn",
         "name": "Deutsche Bahn",
-        "abbreviation": "DB",
         "countryCode": "DE",
-        "status": "active"
+        "status": "ACTIVE",
+        "operatingSince": "1994-01-01"
       },
       {
-        "id": "rc-002",
+        "id": "trn:railway-company:obb",
         "name": "Österreichische Bundesbahnen",
-        "abbreviation": "ÖBB",
         "countryCode": "AT",
-        "status": "active"
+        "status": "ACTIVE",
+        "operatingSince": "1923-01-01"
       }
     ],
     "railwayModels": [
       {
-        "id": "rm-001",
-        "manufacturerId": "mfr-001",
-        "railwayCompanyId": "rc-001",
-        "seriesCode": "ICE 3",
+        "id": "trn:railway-model:marklin:37710",
+        "manufacturerId": "trn:manufacturer:marklin",
         "productCode": "37710",
-        "description": "ICE 3 Electric Trainset",
+        "description": {
+          "en": "ICE 3 Electric Trainset",
+          "it": "ICE 3 convoglio elettrico"
+        },
+        "details": {
+          "en": "Factory sound decoder included"
+        },
         "scale": "H0",
         "epoch": "VI",
-        "powerMethod": "ac",
-        "minimumRadius": 360,
-        "image": "images/maerklin-37710.png"
+        "category": {
+          "type": "TRAIN_SETS"
+        },
+        "powerMethod": "AC",
+        "availabilityStatus": "AVAILABLE",
+        "image": "images/maerklin-37710.png",
+        "rollingStocks": [
+          {
+            "id": "rs-rm001-001",
+            "railwayCompanyId": "trn:railway-company:deutsche-bahn",
+            "seriesCode": "ICE 3",
+            "roadNumber": "403 573-0",
+            "series": "BR 403",
+            "depot": "DB Fernverkehr",
+            "electricMultipleUnitType": "TRAIN_SET",
+            "serviceLevel": "FIRST_SECOND",
+            "lengthInches": 11.46,
+            "lengthMillimeters": 291,
+            "technicalMinimumRadiusMm": 360,
+            "technicalCouplingSocket": "NEM_362",
+            "technicalCouplingCloseCouplers": "YES",
+            "technicalCouplingDigitalShunting": "NO",
+            "technicalFlywheelFitted": "YES",
+            "technicalBodyShell": "PLASTIC",
+            "technicalChassis": "METAL_DIE_CAST",
+            "technicalInteriorLights": "YES",
+            "technicalLights": "YES",
+            "technicalSprungBuffers": "NO",
+            "dccInterface": "PLUX_22",
+            "control": "DCC_SOUND",
+            "isDummy": false
+          }
+        ]
       },
       {
-        "id": "rm-002",
-        "manufacturerId": "mfr-002",
-        "railwayCompanyId": "rc-002",
-        "seriesCode": "1116",
+        "id": "trn:railway-model:roco:73234",
+        "manufacturerId": "trn:manufacturer:roco",
         "productCode": "73234",
-        "description": "Taurus Electric Locomotive",
+        "description": {
+          "en": "Taurus Electric Locomotive"
+        },
         "scale": "H0",
         "epoch": "VI",
-        "powerMethod": "ac",
-        "minimumRadius": 358,
-        "image": "images/roco-73234.jpg"
+        "category": {
+          "type": "LOCOMOTIVES"
+        },
+        "powerMethod": "AC",
+        "availabilityStatus": "AVAILABLE",
+        "image": "images/roco-73234.jpg",
+        "rollingStocks": [
+          {
+            "id": "rs-rm002-001",
+            "railwayCompanyId": "trn:railway-company:obb",
+            "seriesCode": "1116",
+            "roadNumber": "1116 141-5",
+            "locomotiveType": "ELECTRIC_LOCOMOTIVE",
+            "lengthInches": 8.39,
+            "lengthMillimeters": 213,
+            "technicalMinimumRadiusMm": 358,
+            "control": "DCC_READY",
+            "isDummy": false
+          }
+        ]
       }
     ],
     "collectionItems": [
       {
-        "id": "ci-001",
-        "railwayModelId": "rm-001",
-        "purchaseDate": "2024-01-15",
-        "purchasePrice": 349.99,
-        "purchaseCurrency": "EUR",
-        "condition": "new",
-        "retailer": "Model Train Shop"
+        "id": "trn:collection-item:00000000-0000-0000-0000-000000000001",
+        "railwayModelId": "trn:railway-model:marklin:37710",
+        "addedDate": "2024-01-15",
+        "purchaseCondition": "NEW",
+        "modelCondition": "MINT",
+        "boxCondition": "ORIGINAL_MINT",
+        "purchase": {
+          "type": "purchased",
+          "purchaseDate": "2024-01-15",
+          "price": {
+            "amount": 34999,
+            "currency": "EUR"
+          },
+          "sellerId": "trn:seller:model-train-shop"
+        }
       },
       {
-        "id": "ci-002",
-        "railwayModelId": "rm-002",
-        "purchaseDate": "2024-03-20",
-        "purchasePrice": 299.5,
-        "purchaseCurrency": "EUR",
-        "condition": "new",
-        "retailer": "Online Model Store"
+        "id": "trn:collection-item:00000000-0000-0000-0000-000000000002",
+        "railwayModelId": "trn:railway-model:roco:73234",
+        "addedDate": "2024-03-20",
+        "purchaseCondition": "NEW",
+        "modelCondition": "EXCELLENT",
+        "boxCondition": "ORIGINAL_GOOD",
+        "purchase": {
+          "type": "preOrdered",
+          "sellerId": "trn:seller:online-model-store",
+          "depositAmount": {
+            "amount": 5000,
+            "currency": "EUR"
+          },
+          "expectedDelivery": "2024-04-15"
+        }
       }
     ],
     "sellers": [
       {
-        "id": "seller-001",
+        "id": "trn:seller:model-train-shop",
         "name": "Model Train Shop",
+        "sellerType": "SHOP",
         "websiteUrl": "https://www.modeltrainshop.example",
-        "emailAddress": "info@modeltrainshop.example",
-        "phoneNumber": "+49 123 456789",
+        "email": "info@modeltrainshop.example",
+        "phone": "+49 123 456789",
         "address": {
           "street": "Bahnhofstraße 1",
           "city": "Munich",
           "postalCode": "80335",
-          "country": "Germany"
+          "countryCode": "DE"
         }
       },
       {
-        "id": "seller-002",
+        "id": "trn:seller:online-model-store",
         "name": "Online Model Store",
+        "sellerType": "SHOP",
         "websiteUrl": "https://www.onlinemodels.example",
-        "emailAddress": "contact@onlinemodels.example"
+        "email": "contact@onlinemodels.example"
       }
     ],
     "maintenanceCards": [
       {
-        "id": "mc-001",
-        "collectionItemId": "ci-001",
-        "performedAt": "2024-06-15",
-        "description": "Regular cleaning and lubrication",
-        "notes": "All wheels cleaned, gears lubricated with light oil"
+        "id": "trn:maintenance-card:00000000-0000-0000-0000-000000000101",
+        "collectionItemId": "trn:collection-item:00000000-0000-0000-0000-000000000001",
+        "lastMaintenanceDate": "2024-06-15",
+        "events": [
+          {
+            "id": "trn:maintenance-event:00000000-0000-0000-0000-000000000201",
+            "date": "2024-06-15",
+            "type": "cleaning",
+            "description": "Regular cleaning and lubrication"
+          }
+        ]
       },
       {
-        "id": "mc-002",
-        "collectionItemId": "ci-002",
-        "performedAt": "2024-08-10",
-        "description": "Track test and adjustment",
-        "notes": "Tested on test track, adjusted pickup shoes for better contact"
+        "id": "trn:maintenance-card:00000000-0000-0000-0000-000000000102",
+        "collectionItemId": "trn:collection-item:00000000-0000-0000-0000-000000000002",
+        "lastMaintenanceDate": "2024-08-10",
+        "events": [
+          {
+            "id": "trn:maintenance-event:00000000-0000-0000-0000-000000000202",
+            "date": "2024-08-10",
+            "type": "inspection",
+            "description": "Track test and adjustment"
+          }
+        ]
       }
     ]
   }

@@ -9,57 +9,58 @@ use crate::data_management::domain::{ExportEntitySelection, ExportError};
 
 fn db_category_to_schema(db_value: &str) -> &'static str {
     match db_value {
-        "LOCOMOTIVES" => "locomotive",
-        "PASSENGER_CARS" => "passengerCar",
-        "FREIGHT_CARS" => "freightCar",
-        "ELECTRIC_MULTIPLE_UNITS" => "electricMultipleUnit",
-        "RAILCARS" => "railcar",
-        "TRAIN_SETS" | "STARTER_SETS" => "trainSet",
-        _ => "locomotive",
+        "LOCOMOTIVES" => "LOCOMOTIVES",
+        "PASSENGER_CARS" => "PASSENGER_CARS",
+        "FREIGHT_CARS" => "FREIGHT_CARS",
+        "ELECTRIC_MULTIPLE_UNITS" => "ELECTRIC_MULTIPLE_UNITS",
+        "RAILCARS" => "RAILCARS",
+        "TRAIN_SETS" => "TRAIN_SETS",
+        "STARTER_SETS" => "STARTER_SETS",
+        _ => "LOCOMOTIVES",
     }
 }
 
 fn db_power_method_to_schema(db_value: &str) -> &'static str {
     match db_value {
-        "AC" => "ac",
-        "TRIX_EXPRESS" => "trixExpress",
-        _ => "dc",
+        "AC" => "AC",
+        "TRIX_EXPRESS" => "TRIX_EXPRESS",
+        _ => "DC",
     }
 }
 
 fn db_manufacturer_status_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "ACTIVE" => Some("active"),
-        "MERGED" => Some("merged"),
-        "OUT_OF_BUSINESS" => Some("outOfBusiness"),
+        "ACTIVE" => Some("ACTIVE"),
+        "MERGED" => Some("MERGED"),
+        "OUT_OF_BUSINESS" => Some("OUT_OF_BUSINESS"),
         _ => None,
     }
 }
 
 fn db_railway_company_status_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "ACTIVE" => Some("active"),
-        "INACTIVE" => Some("inactive"),
+        "ACTIVE" => Some("ACTIVE"),
+        "INACTIVE" => Some("INACTIVE"),
         _ => None,
     }
 }
 
 fn db_availability_status_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "AVAILABLE" => Some("available"),
-        "ANNOUNCED" => Some("announced"),
-        "CANCELLED" => Some("cancelled"),
-        "DISCONTINUED" => Some("discontinued"),
+        "AVAILABLE" => Some("AVAILABLE"),
+        "ANNOUNCED" => Some("ANNOUNCED"),
+        "CANCELLED" => Some("CANCELLED"),
+        "DISCONTINUED" => Some("DISCONTINUED"),
         _ => None,
     }
 }
 
 fn db_seller_type_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "SHOP" => Some("shop"),
-        "PRIVATE" => Some("private"),
-        "MARKETPLACE" => Some("marketplace"),
-        "DISTRIBUTOR" => Some("distributor"),
+        "SHOP" => Some("SHOP"),
+        "PRIVATE" => Some("PRIVATE"),
+        "MARKETPLACE" => Some("MARKETPLACE"),
+        "DISTRIBUTOR" => Some("DISTRIBUTOR"),
         _ => None,
     }
 }
@@ -68,37 +69,40 @@ fn db_purchase_type_to_schema(s: &str) -> Option<&'static str> {
     match s.to_ascii_uppercase().as_str() {
         "PURCHASED" => Some("purchased"),
         "SOLD" => Some("sold"),
-        "PREORDERED" => Some("preordered"),
+        "PRE_ORDERED" | "PREORDERED" => Some("preOrdered"),
         _ => None,
     }
 }
 
 fn db_purchase_condition_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "NEW" => Some("new"),
-        "PRE_OWNED" => Some("preowned"),
-        "USED" => Some("used"),
+        "NEW" => Some("NEW"),
+        "PRE_OWNED" | "USED" => Some("PRE_OWNED"),
         _ => None,
     }
 }
 
 fn db_model_condition_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "MINT" | "NEAR_MINT" => Some("mint"),
-        "EXCELLENT" | "VERY_GOOD" => Some("excellent"),
-        "GOOD" => Some("good"),
-        "FAIR" => Some("fair"),
-        "POOR" | "FOR_PARTS" => Some("poor"),
+        "MINT" => Some("MINT"),
+        "NEAR_MINT" => Some("NEAR_MINT"),
+        "EXCELLENT" => Some("EXCELLENT"),
+        "VERY_GOOD" => Some("VERY_GOOD"),
+        "GOOD" => Some("GOOD"),
+        "FAIR" => Some("FAIR"),
+        "POOR" => Some("POOR"),
+        "FOR_PARTS" => Some("FOR_PARTS"),
         _ => None,
     }
 }
 
 fn db_box_condition_to_schema(s: &str) -> Option<&'static str> {
     match s {
-        "ORIGINAL_MINT" => Some("mint"),
-        "ORIGINAL_GOOD" | "REPLACEMENT_BOX" => Some("good"),
-        "ORIGINAL_WORN" => Some("damaged"),
-        "NO_BOX" => Some("missing"),
+        "ORIGINAL_MINT" => Some("ORIGINAL_MINT"),
+        "ORIGINAL_GOOD" => Some("ORIGINAL_GOOD"),
+        "ORIGINAL_WORN" => Some("ORIGINAL_WORN"),
+        "REPLACEMENT_BOX" => Some("REPLACEMENT_BOX"),
+        "NO_BOX" => Some("NO_BOX"),
         _ => None,
     }
 }
@@ -232,7 +236,8 @@ pub async fn build_manifest(
     // Export manufacturers when railway models or track inventory are selected (FK dependency)
     if include_railway_models || include_track_inventory {
         let rows = sqlx::query(
-            "SELECT id, name, registered_company_name, country_code, status, website_url \
+            "SELECT id, name, registered_company_name, country_code, status, website_url, \
+                    street_address, extended_address, city, state_region, postal_code \
              FROM manufacturers ORDER BY name",
         )
         .fetch_all(pool)
@@ -249,6 +254,11 @@ pub async fn build_manifest(
                     "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
                     "status": enum_value(row.try_get::<String, _>("status").ok(), db_manufacturer_status_to_schema),
                     "websiteUrl": row.try_get::<Option<String>, _>("website_url").ok().flatten(),
+                    "streetAddress": row.try_get::<Option<String>, _>("street_address").ok().flatten(),
+                    "extendedAddress": row.try_get::<Option<String>, _>("extended_address").ok().flatten(),
+                    "city": row.try_get::<Option<String>, _>("city").ok().flatten(),
+                    "stateRegion": row.try_get::<Option<String>, _>("state_region").ok().flatten(),
+                    "postalCode": row.try_get::<Option<String>, _>("postal_code").ok().flatten(),
                 }))
             })
             .collect();
@@ -258,7 +268,8 @@ pub async fn build_manifest(
     if include_railway_models {
         // Railway companies (referenced by rolling stocks)
         let rc_rows = sqlx::query(
-            "SELECT id, name, country_code, status FROM railway_companies ORDER BY name",
+            "SELECT id, name, country_code, status, operating_since, operating_until \
+             FROM railway_companies ORDER BY name",
         )
         .fetch_all(pool)
         .await
@@ -272,19 +283,18 @@ pub async fn build_manifest(
                     "name": row.try_get::<String, _>("name").ok(),
                     "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
                     "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
+                    "operatingSince": row.try_get::<Option<String>, _>("operating_since").ok().flatten(),
+                    "operatingUntil": row.try_get::<Option<String>, _>("operating_until").ok().flatten(),
                 }))
             })
             .collect();
         data["railwayCompanies"] = json!(railway_companies);
 
-        // Railway models with description/details from translations + nested rolling stocks
+        // Railway models with localized description/details + nested rolling stocks
         let model_rows = sqlx::query(
             "SELECT rm.id, rm.manufacturer_id, rm.product_code, rm.category, rm.scale, \
-                    rm.power_method, rm.epoch, rm.delivery_date, rm.availability_status, \
-                    rmt.description, rmt.details \
-             FROM railway_models rm \
-             LEFT JOIN railway_model_translations rmt \
-               ON rmt.railway_model_id = rm.id AND rmt.language_code = 'en' \
+                                        rm.power_method, rm.epoch, rm.delivery_date, rm.availability_status \
+                         FROM railway_models rm \
              ORDER BY rm.id",
         )
         .fetch_all(pool)
@@ -299,8 +309,15 @@ pub async fn build_manifest(
 
             // Fetch nested rolling stocks
             let rs_rows = sqlx::query(
-                "SELECT railway_company_id, series_code, road_number, livery, \
-                        friendly_name, is_dummy, length_millimeters \
+                "SELECT id, railway_company_id, series_code, series, road_number, \
+                    friendly_name, depot, livery, electric_multiple_unit_type, \
+                    freight_car_type, locomotive_type, passenger_car_type, railcar_type, \
+                    service_level, length_inches, length_millimeters, \
+                    technical_minimum_radius_mm, technical_coupling_socket, \
+                    technical_coupling_close_couplers, technical_coupling_digital_shunting, \
+                    technical_flywheel_fitted, technical_body_shell, technical_chassis, \
+                    technical_interior_lights, technical_lights, technical_sprung_buffers, \
+                    dcc_interface, control, is_dummy \
                  FROM rolling_stocks WHERE railway_model_id = ? ORDER BY series_code",
             )
             .bind(&model_id)
@@ -312,16 +329,44 @@ pub async fn build_manifest(
                 .iter()
                 .map(|rs| {
                     strip_null_fields(json!({
+                        "id": rs.try_get::<String, _>("id").ok(),
                         "railwayCompanyId": rs.try_get::<String, _>("railway_company_id").ok(),
                         "seriesCode": rs.try_get::<String, _>("series_code").ok(),
+                        "series": rs.try_get::<Option<String>, _>("series").ok().flatten(),
                         "roadNumber": rs.try_get::<Option<String>, _>("road_number").ok().flatten(),
+                        "depot": rs.try_get::<Option<String>, _>("depot").ok().flatten(),
                         "livery": rs.try_get::<Option<String>, _>("livery").ok().flatten(),
                         "friendlyName": rs.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
+                        "electricMultipleUnitType": rs.try_get::<Option<String>, _>("electric_multiple_unit_type").ok().flatten(),
+                        "freightCarType": rs.try_get::<Option<String>, _>("freight_car_type").ok().flatten(),
+                        "locomotiveType": rs.try_get::<Option<String>, _>("locomotive_type").ok().flatten(),
+                        "passengerCarType": rs.try_get::<Option<String>, _>("passenger_car_type").ok().flatten(),
+                        "railcarType": rs.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
+                        "serviceLevel": rs.try_get::<Option<String>, _>("service_level").ok().flatten(),
                         "isDummy": rs.try_get::<i64, _>("is_dummy").ok().map(|v| v != 0),
-                        "lengthOverBuffers": rs.try_get::<Option<String>, _>("length_millimeters")
+                        "lengthInches": rs.try_get::<Option<String>, _>("length_inches")
                             .ok()
                             .flatten()
                             .and_then(|s| s.parse::<f64>().ok()),
+                        "lengthMillimeters": rs.try_get::<Option<String>, _>("length_millimeters")
+                            .ok()
+                            .flatten()
+                            .and_then(|s| s.parse::<f64>().ok()),
+                        "technicalMinimumRadiusMm": rs.try_get::<Option<String>, _>("technical_minimum_radius_mm")
+                            .ok()
+                            .flatten()
+                            .and_then(|s| s.parse::<f64>().ok()),
+                        "technicalCouplingSocket": rs.try_get::<Option<String>, _>("technical_coupling_socket").ok().flatten(),
+                        "technicalCouplingCloseCouplers": rs.try_get::<Option<String>, _>("technical_coupling_close_couplers").ok().flatten(),
+                        "technicalCouplingDigitalShunting": rs.try_get::<Option<String>, _>("technical_coupling_digital_shunting").ok().flatten(),
+                        "technicalFlywheelFitted": rs.try_get::<Option<String>, _>("technical_flywheel_fitted").ok().flatten(),
+                        "technicalBodyShell": rs.try_get::<Option<String>, _>("technical_body_shell").ok().flatten(),
+                        "technicalChassis": rs.try_get::<Option<String>, _>("technical_chassis").ok().flatten(),
+                        "technicalInteriorLights": rs.try_get::<Option<String>, _>("technical_interior_lights").ok().flatten(),
+                        "technicalLights": rs.try_get::<Option<String>, _>("technical_lights").ok().flatten(),
+                        "technicalSprungBuffers": rs.try_get::<Option<String>, _>("technical_sprung_buffers").ok().flatten(),
+                        "dccInterface": rs.try_get::<Option<String>, _>("dcc_interface").ok().flatten(),
+                        "control": rs.try_get::<Option<String>, _>("control").ok().flatten(),
                     }))
                 })
                 .collect();
@@ -333,11 +378,39 @@ pub async fn build_manifest(
                 .try_get("power_method")
                 .unwrap_or_else(|_| "DC".to_string());
             let product_code: String = row.try_get("product_code").unwrap_or_default();
-            let description: String = row
-                .try_get::<Option<String>, _>("description")
-                .ok()
-                .flatten()
-                .unwrap_or_else(|| product_code.clone());
+
+            let translation_rows = sqlx::query(
+                "SELECT language_code, description, details \
+                 FROM railway_model_translations WHERE railway_model_id = ?",
+            )
+            .bind(&model_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+            let mut description = Map::new();
+            let mut details = Map::new();
+            for tr in &translation_rows {
+                let language = tr
+                    .try_get::<String, _>("language_code")
+                    .unwrap_or_else(|_| "en".to_string());
+                if language != "en" && language != "it" {
+                    continue;
+                }
+                if let Some(text) = tr
+                    .try_get::<Option<String>, _>("description")
+                    .ok()
+                    .flatten()
+                {
+                    description.insert(language.clone(), Value::String(text));
+                }
+                if let Some(text) = tr.try_get::<Option<String>, _>("details").ok().flatten() {
+                    details.insert(language, Value::String(text));
+                }
+            }
+            if !description.contains_key("en") {
+                description.insert("en".to_string(), Value::String(product_code.clone()));
+            }
 
             let availability_status = enum_value(
                 row.try_get::<Option<String>, _>("availability_status")
@@ -350,8 +423,8 @@ pub async fn build_manifest(
                 "id": model_id,
                 "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
                 "productCode": product_code,
-                "description": description,
-                "details": row.try_get::<Option<String>, _>("details").ok().flatten(),
+                "description": Value::Object(description),
+                "details": if details.is_empty() { Value::Null } else { Value::Object(details) },
                 "scale": row.try_get::<String, _>("scale").ok(),
                 "epoch": row.try_get::<String, _>("epoch").ok(),
                 "category": {
@@ -415,7 +488,7 @@ pub async fn build_manifest(
                     let conditions_met = match pt {
                         "purchased" => purchase_date.is_some(),
                         "sold" => purchase_date.is_some() && sale_date.is_some(),
-                        "preordered" => seller_id.is_some(),
+                        "preOrdered" => seller_id.is_some(),
                         _ => true,
                     };
 
@@ -802,7 +875,8 @@ pub async fn build_manifest(
         // Ensure railway_companies is exported (FK dependency)
         if data["railwayCompanies"].is_null() || data["railwayCompanies"] == json!(null) {
             let rc_rows = sqlx::query(
-                "SELECT id, name, country_code, status FROM railway_companies ORDER BY name",
+                "SELECT id, name, country_code, status, operating_since, operating_until \
+                 FROM railway_companies ORDER BY name",
             )
             .fetch_all(pool)
             .await
@@ -816,6 +890,8 @@ pub async fn build_manifest(
                         "name": row.try_get::<String, _>("name").ok(),
                         "countryCode": row.try_get::<Option<String>, _>("country_code").ok().flatten(),
                         "status": enum_value(row.try_get::<Option<String>, _>("status").ok().flatten(), db_railway_company_status_to_schema),
+                        "operatingSince": row.try_get::<Option<String>, _>("operating_since").ok().flatten(),
+                        "operatingUntil": row.try_get::<Option<String>, _>("operating_until").ok().flatten(),
                     }))
                 })
                 .collect();
@@ -930,7 +1006,7 @@ mod tests {
     #[test]
     fn test_enum_value_known_input() {
         let result = enum_value(Some("ACTIVE".to_string()), db_manufacturer_status_to_schema);
-        assert_eq!(result, Value::String("active".to_string()));
+        assert_eq!(result, Value::String("ACTIVE".to_string()));
     }
 
     #[test]
@@ -952,37 +1028,37 @@ mod tests {
 
     #[test]
     fn test_db_category_to_schema_all_variants() {
-        assert_eq!(db_category_to_schema("LOCOMOTIVES"), "locomotive");
-        assert_eq!(db_category_to_schema("PASSENGER_CARS"), "passengerCar");
-        assert_eq!(db_category_to_schema("FREIGHT_CARS"), "freightCar");
+        assert_eq!(db_category_to_schema("LOCOMOTIVES"), "LOCOMOTIVES");
+        assert_eq!(db_category_to_schema("PASSENGER_CARS"), "PASSENGER_CARS");
+        assert_eq!(db_category_to_schema("FREIGHT_CARS"), "FREIGHT_CARS");
         assert_eq!(
             db_category_to_schema("ELECTRIC_MULTIPLE_UNITS"),
-            "electricMultipleUnit"
+            "ELECTRIC_MULTIPLE_UNITS"
         );
-        assert_eq!(db_category_to_schema("RAILCARS"), "railcar");
-        assert_eq!(db_category_to_schema("TRAIN_SETS"), "trainSet");
-        assert_eq!(db_category_to_schema("STARTER_SETS"), "trainSet");
-        assert_eq!(db_category_to_schema("UNKNOWN"), "locomotive");
+        assert_eq!(db_category_to_schema("RAILCARS"), "RAILCARS");
+        assert_eq!(db_category_to_schema("TRAIN_SETS"), "TRAIN_SETS");
+        assert_eq!(db_category_to_schema("STARTER_SETS"), "STARTER_SETS");
+        assert_eq!(db_category_to_schema("UNKNOWN"), "LOCOMOTIVES");
     }
 
     // ─── db_power_method_to_schema ────────────────────────────────────────────
 
     #[test]
     fn test_db_power_method_to_schema_all_variants() {
-        assert_eq!(db_power_method_to_schema("AC"), "ac");
-        assert_eq!(db_power_method_to_schema("TRIX_EXPRESS"), "trixExpress");
-        assert_eq!(db_power_method_to_schema("DC"), "dc");
-        assert_eq!(db_power_method_to_schema("UNKNOWN"), "dc");
+        assert_eq!(db_power_method_to_schema("AC"), "AC");
+        assert_eq!(db_power_method_to_schema("TRIX_EXPRESS"), "TRIX_EXPRESS");
+        assert_eq!(db_power_method_to_schema("DC"), "DC");
+        assert_eq!(db_power_method_to_schema("UNKNOWN"), "DC");
     }
 
     // ─── db_seller_type_to_schema ─────────────────────────────────────────────
 
     #[test]
     fn test_db_seller_type_to_schema_all_variants() {
-        assert_eq!(db_seller_type_to_schema("SHOP"), Some("shop"));
-        assert_eq!(db_seller_type_to_schema("PRIVATE"), Some("private"));
-        assert_eq!(db_seller_type_to_schema("MARKETPLACE"), Some("marketplace"));
-        assert_eq!(db_seller_type_to_schema("DISTRIBUTOR"), Some("distributor"));
+        assert_eq!(db_seller_type_to_schema("SHOP"), Some("SHOP"));
+        assert_eq!(db_seller_type_to_schema("PRIVATE"), Some("PRIVATE"));
+        assert_eq!(db_seller_type_to_schema("MARKETPLACE"), Some("MARKETPLACE"));
+        assert_eq!(db_seller_type_to_schema("DISTRIBUTOR"), Some("DISTRIBUTOR"));
         assert_eq!(db_seller_type_to_schema("UNKNOWN"), None);
     }
 
@@ -1059,14 +1135,14 @@ mod tests {
 
     #[test]
     fn test_db_model_condition_to_schema_all_variants() {
-        assert_eq!(db_model_condition_to_schema("MINT"), Some("mint"));
-        assert_eq!(db_model_condition_to_schema("NEAR_MINT"), Some("mint"));
-        assert_eq!(db_model_condition_to_schema("EXCELLENT"), Some("excellent"));
-        assert_eq!(db_model_condition_to_schema("VERY_GOOD"), Some("excellent"));
-        assert_eq!(db_model_condition_to_schema("GOOD"), Some("good"));
-        assert_eq!(db_model_condition_to_schema("FAIR"), Some("fair"));
-        assert_eq!(db_model_condition_to_schema("POOR"), Some("poor"));
-        assert_eq!(db_model_condition_to_schema("FOR_PARTS"), Some("poor"));
+        assert_eq!(db_model_condition_to_schema("MINT"), Some("MINT"));
+        assert_eq!(db_model_condition_to_schema("NEAR_MINT"), Some("NEAR_MINT"));
+        assert_eq!(db_model_condition_to_schema("EXCELLENT"), Some("EXCELLENT"));
+        assert_eq!(db_model_condition_to_schema("VERY_GOOD"), Some("VERY_GOOD"));
+        assert_eq!(db_model_condition_to_schema("GOOD"), Some("GOOD"));
+        assert_eq!(db_model_condition_to_schema("FAIR"), Some("FAIR"));
+        assert_eq!(db_model_condition_to_schema("POOR"), Some("POOR"));
+        assert_eq!(db_model_condition_to_schema("FOR_PARTS"), Some("FOR_PARTS"));
         assert_eq!(db_model_condition_to_schema("UNKNOWN"), None);
     }
 
@@ -1074,12 +1150,12 @@ mod tests {
 
     #[test]
     fn test_db_purchase_condition_to_schema_all_variants() {
-        assert_eq!(db_purchase_condition_to_schema("NEW"), Some("new"));
+        assert_eq!(db_purchase_condition_to_schema("NEW"), Some("NEW"));
         assert_eq!(
             db_purchase_condition_to_schema("PRE_OWNED"),
-            Some("preowned")
+            Some("PRE_OWNED")
         );
-        assert_eq!(db_purchase_condition_to_schema("USED"), Some("used"));
+        assert_eq!(db_purchase_condition_to_schema("USED"), Some("PRE_OWNED"));
         assert_eq!(db_purchase_condition_to_schema("UNKNOWN"), None);
     }
 }

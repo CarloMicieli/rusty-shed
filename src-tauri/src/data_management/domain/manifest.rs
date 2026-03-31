@@ -56,6 +56,16 @@ pub struct ManufacturerRecord {
     pub status: Option<String>,
     #[serde(default)]
     pub website_url: Option<String>,
+    #[serde(default)]
+    pub street_address: Option<String>,
+    #[serde(default)]
+    pub extended_address: Option<String>,
+    #[serde(default)]
+    pub city: Option<String>,
+    #[serde(default)]
+    pub state_region: Option<String>,
+    #[serde(default)]
+    pub postal_code: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -67,6 +77,10 @@ pub struct RailwayCompanyRecord {
     pub country_code: Option<String>,
     #[serde(default)]
     pub status: Option<String>,
+    #[serde(default)]
+    pub operating_since: Option<String>,
+    #[serde(default)]
+    pub operating_until: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
@@ -75,13 +89,13 @@ pub struct RailwayModelRecord {
     pub id: String,
     pub manufacturer_id: String,
     pub product_code: String,
-    pub description: String,
+    pub description: LocalizedTextRecord,
     pub scale: String,
     pub epoch: String,
     pub category: CategoryRecord,
     pub power_method: String,
     #[serde(default)]
-    pub details: Option<String>,
+    pub details: Option<LocalizedTextRecord>,
     #[serde(default)]
     pub delivery_date: Option<String>,
     #[serde(default)]
@@ -96,13 +110,22 @@ pub struct RailwayModelRecord {
 #[serde(rename_all = "camelCase")]
 pub struct CategoryRecord {
     pub r#type: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalizedTextRecord {
     #[serde(default)]
-    pub sub_type: Option<String>,
+    pub en: Option<String>,
+    #[serde(default)]
+    pub it: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct RollingStockRecord {
+    #[serde(default)]
+    pub id: Option<String>,
     pub railway_company_id: String,
     pub series_code: String,
     #[serde(default)]
@@ -112,9 +135,51 @@ pub struct RollingStockRecord {
     #[serde(default)]
     pub friendly_name: Option<String>,
     #[serde(default)]
+    pub series: Option<String>,
+    #[serde(default)]
+    pub depot: Option<String>,
+    #[serde(default)]
+    pub electric_multiple_unit_type: Option<String>,
+    #[serde(default)]
+    pub freight_car_type: Option<String>,
+    #[serde(default)]
+    pub locomotive_type: Option<String>,
+    #[serde(default)]
+    pub passenger_car_type: Option<String>,
+    #[serde(default)]
+    pub railcar_type: Option<String>,
+    #[serde(default)]
+    pub service_level: Option<String>,
+    #[serde(default)]
     pub is_dummy: Option<bool>,
     #[serde(default)]
-    pub length_over_buffers: Option<f64>,
+    pub length_inches: Option<f64>,
+    #[serde(default)]
+    pub length_millimeters: Option<f64>,
+    #[serde(default)]
+    pub technical_minimum_radius_mm: Option<f64>,
+    #[serde(default)]
+    pub technical_coupling_socket: Option<String>,
+    #[serde(default)]
+    pub technical_coupling_close_couplers: Option<String>,
+    #[serde(default)]
+    pub technical_coupling_digital_shunting: Option<String>,
+    #[serde(default)]
+    pub technical_flywheel_fitted: Option<String>,
+    #[serde(default)]
+    pub technical_body_shell: Option<String>,
+    #[serde(default)]
+    pub technical_chassis: Option<String>,
+    #[serde(default)]
+    pub technical_interior_lights: Option<String>,
+    #[serde(default)]
+    pub technical_lights: Option<String>,
+    #[serde(default)]
+    pub technical_sprung_buffers: Option<String>,
+    #[serde(default)]
+    pub dcc_interface: Option<String>,
+    #[serde(default)]
+    pub control: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
