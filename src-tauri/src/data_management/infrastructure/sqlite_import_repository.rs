@@ -80,6 +80,8 @@ impl ImportRepository for SqliteImportRepository {
             train_formation_dupes,
             prototype_dupes,
             wishlist_dupes,
+            decoder_dupes,
+            digital_roster_dupes,
         ) = tokio::try_join!(
             checker.check_manufacturers(&data.manufacturers),
             checker.check_railway_models(&data.railway_models),
@@ -91,6 +93,8 @@ impl ImportRepository for SqliteImportRepository {
             checker.check_train_formations(&data.train_formations),
             checker.check_prototypes(&data.prototypes),
             checker.check_wishlists(&data.wishlists),
+            checker.check_decoders(&data.decoders),
+            checker.check_digital_roster(&data.digital_rolling_stocks),
         )
         .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
@@ -105,6 +109,8 @@ impl ImportRepository for SqliteImportRepository {
             train_formation_dupes,
             prototype_dupes,
             wishlist_dupes,
+            decoder_dupes,
+            digital_roster_dupes,
         })
     }
 
@@ -774,6 +780,89 @@ impl ImportRepository for SqliteImportRepository {
 
         added.wishlists = duplicates.wishlist_dupes.new_count() as u32;
         skipped.wishlists = duplicates.wishlist_dupes.duplicate_count() as u32;
+
+        // 13. Insert new decoders
+        let new_decoder_ids: HashSet<&str> = duplicates
+            .decoder_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+
+        for decoder in data
+            .decoders
+            .iter()
+            .filter(|d| new_decoder_ids.contains(d.id.as_str()))
+        {
+            sqlx::query(
+                "INSERT OR IGNORE INTO decoders \
+                 (id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface) \
+                 VALUES (?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&decoder.id)
+            .bind(&decoder.manufacturer_id)
+            .bind(&decoder.product_code)
+            .bind(&decoder.decoder_type)
+            .bind(&decoder.protocol)
+            .bind(&decoder.decoder_interface)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+        }
+
+        added.decoders = duplicates.decoder_dupes.new_count() as u32;
+        skipped.decoders = duplicates.decoder_dupes.duplicate_count() as u32;
+
+        // 14. Insert new digital roster entries
+        let new_roster_ids: HashSet<&str> = duplicates
+            .digital_roster_dupes
+            .new_ids
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+
+        for item in data
+            .digital_rolling_stocks
+            .iter()
+            .filter(|i| new_roster_ids.contains(i.id.as_str()))
+        {
+            // owned_rolling_stock_id is a DB-internal FK; skip entries whose reference
+            // doesn't exist in the target database (same pattern as maintenance card import).
+            let ors_exists: bool =
+                sqlx::query_scalar("SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?")
+                    .bind(&item.owned_rolling_stock_id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map(|count: i64| count > 0)
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            if !ors_exists {
+                warn!(
+                    "Skipping digital roster entry '{}': owned rolling stock '{}' not found",
+                    item.id, item.owned_rolling_stock_id
+                );
+                skipped.digital_rolling_stocks += 1;
+                continue;
+            }
+
+            sqlx::query(
+                "INSERT OR IGNORE INTO digital_rolling_stocks \
+                 (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
+                 VALUES (?, ?, ?, ?)",
+            )
+            .bind(&item.id)
+            .bind(&item.owned_rolling_stock_id)
+            .bind(item.dcc_address)
+            .bind(&item.decoder_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            added.digital_rolling_stocks += 1;
+        }
+
+        // Skipped count already accumulated above; also add deduplication skips
+        skipped.digital_rolling_stocks += duplicates.digital_roster_dupes.duplicate_count() as u32;
 
         // Commit the transaction — all DB work done before any file I/O
         tx.commit()

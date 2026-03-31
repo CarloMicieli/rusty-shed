@@ -1,7 +1,7 @@
 use crate::data_management::domain::{
-    CollectionItemRecord, FormationCategoryRecord, ManufacturerRecord, PrototypeRecord,
-    RailwayModelRecord, SellerRecord, TrackInventoryRecord, TrackProductRecord,
-    TrainFormationRecord, WishlistRecord,
+    CollectionItemRecord, DecoderRecord, DigitalRollingStockRecord, FormationCategoryRecord,
+    ManufacturerRecord, PrototypeRecord, RailwayModelRecord, SellerRecord, TrackInventoryRecord,
+    TrackProductRecord, TrainFormationRecord, WishlistRecord,
 };
 use sqlx::SqlitePool;
 use std::collections::HashSet;
@@ -557,6 +557,101 @@ impl DuplicateChecker {
             new_ids,
         })
     }
+
+    /// Check for duplicate decoders by primary key (URN id).
+    pub async fn check_decoders(
+        &self,
+        decoders: &[DecoderRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if decoders.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let ids: Vec<String> = decoders.iter().map(|d| d.id.clone()).collect();
+
+        let query = format!(
+            "SELECT id FROM decoders WHERE id IN ({})",
+            ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for id in &ids {
+            query_builder = query_builder.bind(id);
+        }
+
+        let existing_ids: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for decoder in decoders {
+            if existing_ids.contains(&decoder.id) {
+                duplicate_ids.push(decoder.id.clone());
+            } else {
+                new_ids.push(decoder.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
+
+    /// Check for duplicate digital roster entries by `owned_rolling_stock_id`.
+    ///
+    /// A collection item can have at most one roster entry, so `owned_rolling_stock_id`
+    /// is the natural uniqueness key.
+    pub async fn check_digital_roster(
+        &self,
+        items: &[DigitalRollingStockRecord],
+    ) -> Result<DuplicateCheckResult, sqlx::Error> {
+        if items.is_empty() {
+            return Ok(DuplicateCheckResult::default());
+        }
+
+        let owned_ids: Vec<String> = items
+            .iter()
+            .map(|i| i.owned_rolling_stock_id.clone())
+            .collect();
+
+        let query = format!(
+            "SELECT owned_rolling_stock_id FROM digital_rolling_stocks \
+             WHERE owned_rolling_stock_id IN ({})",
+            owned_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+        );
+
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for oid in &owned_ids {
+            query_builder = query_builder.bind(oid);
+        }
+
+        let existing_owned_ids: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
+
+        let mut duplicate_ids = Vec::new();
+        let mut new_ids = Vec::new();
+
+        for item in items {
+            if existing_owned_ids.contains(&item.owned_rolling_stock_id) {
+                duplicate_ids.push(item.id.clone());
+            } else {
+                new_ids.push(item.id.clone());
+            }
+        }
+
+        Ok(DuplicateCheckResult {
+            duplicate_ids,
+            new_ids,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -719,5 +814,137 @@ mod tests {
         assert_eq!(result.new_count(), 1);
         assert!(result.duplicate_ids.contains(&"p1".to_string()));
         assert!(result.new_ids.contains(&"p2".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_check_decoders_empty_input() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE decoders (id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL, \
+             product_code TEXT, decoder_type TEXT NOT NULL, protocol TEXT NOT NULL, \
+             decoder_interface TEXT NOT NULL)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+
+        let checker = DuplicateChecker::new(pool);
+        let result = checker.check_decoders(&[]).await.expect("check");
+        assert_eq!(result.total_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_check_decoders_detects_duplicate_id() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE decoders (id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL, \
+             product_code TEXT, decoder_type TEXT NOT NULL, protocol TEXT NOT NULL, \
+             decoder_interface TEXT NOT NULL)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+        sqlx::query(
+            "INSERT INTO decoders (id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface) \
+             VALUES ('trn:decoder:marklin:d100', 'marklin', 'D-100', 'PLAIN', 'DCC', 'NEM651')",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let decoders = vec![
+            DecoderRecord {
+                id: "trn:decoder:marklin:d100".to_string(),
+                manufacturer_id: "marklin".to_string(),
+                product_code: "D-100".to_string(),
+                decoder_type: "PLAIN".to_string(),
+                protocol: "DCC".to_string(),
+                decoder_interface: "NEM651".to_string(),
+            },
+            DecoderRecord {
+                id: "trn:decoder:marklin:d200".to_string(),
+                manufacturer_id: "marklin".to_string(),
+                product_code: "D-200".to_string(),
+                decoder_type: "SOUND".to_string(),
+                protocol: "DCC".to_string(),
+                decoder_interface: "NEM651".to_string(),
+            },
+        ];
+
+        let result = checker.check_decoders(&decoders).await.expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(
+            result
+                .duplicate_ids
+                .contains(&"trn:decoder:marklin:d100".to_string())
+        );
+        assert!(
+            result
+                .new_ids
+                .contains(&"trn:decoder:marklin:d200".to_string())
+        );
+    }
+
+    #[tokio::test]
+    async fn test_check_digital_roster_empty_input() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE digital_rolling_stocks (id TEXT PRIMARY KEY, \
+             owned_rolling_stock_id TEXT NOT NULL, dcc_address INTEGER NOT NULL, \
+             installed_decoder_id TEXT)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+
+        let checker = DuplicateChecker::new(pool);
+        let result = checker.check_digital_roster(&[]).await.expect("check");
+        assert_eq!(result.total_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_check_digital_roster_detects_duplicate_by_owned_id() {
+        let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
+        sqlx::query(
+            "CREATE TABLE digital_rolling_stocks (id TEXT PRIMARY KEY, \
+             owned_rolling_stock_id TEXT NOT NULL, dcc_address INTEGER NOT NULL, \
+             installed_decoder_id TEXT)",
+        )
+        .execute(&pool)
+        .await
+        .expect("create table");
+        sqlx::query(
+            "INSERT INTO digital_rolling_stocks (id, owned_rolling_stock_id, dcc_address) \
+             VALUES ('drs-1', 'ors-abc', 3)",
+        )
+        .execute(&pool)
+        .await
+        .expect("insert");
+
+        let checker = DuplicateChecker::new(pool);
+        let items = vec![
+            DigitalRollingStockRecord {
+                id: "drs-1".to_string(),
+                owned_rolling_stock_id: "ors-abc".to_string(),
+                dcc_address: 3,
+                decoder_id: None,
+            },
+            DigitalRollingStockRecord {
+                id: "drs-2".to_string(),
+                owned_rolling_stock_id: "ors-xyz".to_string(),
+                dcc_address: 7,
+                decoder_id: None,
+            },
+        ];
+
+        let result = checker.check_digital_roster(&items).await.expect("check");
+
+        assert_eq!(result.duplicate_count(), 1);
+        assert_eq!(result.new_count(), 1);
+        assert!(result.duplicate_ids.contains(&"drs-1".to_string()));
+        assert!(result.new_ids.contains(&"drs-2".to_string()));
     }
 }

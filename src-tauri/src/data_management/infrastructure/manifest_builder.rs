@@ -235,9 +235,11 @@ pub async fn build_manifest(
         selection.include_railway_models || include_collection_items || include_wishlists;
     let include_track_inventory = selection.include_track_inventory;
     let include_sellers = selection.include_sellers;
+    // Decoders reference manufacturer_id — export manufacturers when DCC roster is included
+    let include_dcc_roster = selection.include_dcc_roster;
 
-    // Export manufacturers when railway models or track inventory are selected (FK dependency)
-    if include_railway_models || include_track_inventory {
+    // Export manufacturers when railway models, track inventory, or DCC roster are selected (FK dependency)
+    if include_railway_models || include_track_inventory || include_dcc_roster {
         let rows = sqlx::query(
             "SELECT id, name, registered_company_name, country_code, status, website_url, \
                     street_address, extended_address, city, state_region, postal_code \
@@ -1029,6 +1031,52 @@ pub async fn build_manifest(
             })));
         }
         data["wishlists"] = json!(wishlists);
+    }
+
+    if include_dcc_roster {
+        let decoder_rows = sqlx::query(
+            "SELECT id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface \
+             FROM decoders ORDER BY id",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let decoders: Vec<Value> = decoder_rows
+            .iter()
+            .map(|row| {
+                json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "manufacturerId": row.try_get::<String, _>("manufacturer_id").ok(),
+                    "productCode": row.try_get::<String, _>("product_code").ok(),
+                    "decoderType": row.try_get::<String, _>("decoder_type").ok(),
+                    "protocol": row.try_get::<String, _>("protocol").ok(),
+                    "decoderInterface": row.try_get::<String, _>("decoder_interface").ok(),
+                })
+            })
+            .collect();
+        data["decoders"] = json!(decoders);
+
+        let roster_rows = sqlx::query(
+            "SELECT id, owned_rolling_stock_id, dcc_address, installed_decoder_id \
+             FROM digital_rolling_stocks ORDER BY id",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let digital_rolling_stocks: Vec<Value> = roster_rows
+            .iter()
+            .map(|row| {
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "ownedRollingStockId": row.try_get::<String, _>("owned_rolling_stock_id").ok(),
+                    "dccAddress": row.try_get::<i64, _>("dcc_address").ok(),
+                    "decoderId": row.try_get::<Option<String>, _>("installed_decoder_id").ok().flatten(),
+                }))
+            })
+            .collect();
+        data["digitalRollingStocks"] = json!(digital_rolling_stocks);
     }
 
     // Build final manifest — "data" key matches ManifestDto.data in the import feature

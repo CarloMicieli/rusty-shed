@@ -624,4 +624,208 @@ mod roundtrip {
                 .unwrap();
         assert_eq!(item_count, 1, "collection item must not be duplicated");
     }
+
+    /// DCC roster (decoders + digital_rolling_stocks) roundtrip.
+    ///
+    /// Seeds one decoder and one digital roster entry, exports with
+    /// `include_dcc_roster: true`, imports into a fresh pool, and asserts
+    /// that both records are present and correct.
+    #[sqlx::test(migrations = "./migrations")]
+    async fn roundtrip_dcc_roster(pool: sqlx::SqlitePool) {
+        seed_pool(&pool).await;
+
+        // Seed a decoder
+        sqlx::query(
+            "INSERT INTO decoders \
+             (id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface) \
+             VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind("trn:decoder:test-manufacturer:d100")
+        .bind("trn:manufacturer:test-manufacturer")
+        .bind("D-100")
+        .bind("PLAIN")
+        .bind("DCC")
+        .bind("NEM651")
+        .execute(&pool)
+        .await
+        .expect("seed decoder");
+
+        // Seed a digital roster entry linked to the owned rolling stock seeded by seed_pool
+        sqlx::query(
+            "INSERT INTO digital_rolling_stocks \
+             (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
+             VALUES (?, ?, ?, ?)",
+        )
+        .bind("drs-test-001")
+        .bind("ors-test-001")
+        .bind(42_i64)
+        .bind("trn:decoder:test-manufacturer:d100")
+        .execute(&pool)
+        .await
+        .expect("seed digital roster entry");
+
+        let selection = ExportEntitySelection {
+            include_railway_models: false,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: false,
+            include_dcc_roster: true,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+            include_train_formations: false,
+            include_wishlists: false,
+        };
+
+        let test_exports = Path::new("test_exports");
+        tokio::fs::create_dir_all(test_exports)
+            .await
+            .expect("create test_exports dir");
+        let archive_path = test_exports.join(format!("{}.zip", uuid::Uuid::new_v4()));
+        let media_dir = tempfile::tempdir().expect("media tempdir");
+
+        export_to_archive(&pool, &archive_path, media_dir.path(), &selection)
+            .await
+            .expect("export_to_archive should succeed");
+
+        let import_pool = fresh_import_pool().await;
+        let import_media_dir = tempfile::tempdir().expect("import media tempdir");
+        let result = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
+
+        // Manufacturers are auto-included with DCC roster export (FK dependency), so one decoder
+        // is imported successfully. Digital roster entries reference owned_rolling_stock_id which
+        // is a DB-internal ID not preserved across imports — they are skipped with a warning.
+        assert_eq!(result.added.decoders, 1, "one decoder added");
+        assert_eq!(result.skipped.decoders, 0, "no duplicate decoders");
+        assert_eq!(
+            result.added.digital_rolling_stocks, 0,
+            "roster entry skipped: owned_rolling_stock not in import DB"
+        );
+        assert_eq!(
+            result.skipped.digital_rolling_stocks, 1,
+            "roster entry counted as skipped due to missing owned_rolling_stock"
+        );
+
+        let decoder_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM decoders WHERE id = 'trn:decoder:test-manufacturer:d100' \
+             AND product_code = 'D-100' AND decoder_type = 'PLAIN' AND protocol = 'DCC'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(decoder_count, 1, "decoder must exist in import DB");
+
+        let roster_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM digital_rolling_stocks WHERE id = 'drs-test-001'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(
+            roster_count, 0,
+            "digital roster entry must NOT be imported (no owned_rolling_stock in import DB)"
+        );
+    }
+
+    /// Re-importing the same DCC roster must skip duplicates.
+    #[sqlx::test(migrations = "./migrations")]
+    async fn second_import_skips_dcc_roster_duplicates(pool: sqlx::SqlitePool) {
+        seed_pool(&pool).await;
+
+        sqlx::query(
+            "INSERT INTO decoders \
+             (id, manufacturer_id, product_code, decoder_type, protocol, decoder_interface) \
+             VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind("trn:decoder:test-manufacturer:d100")
+        .bind("trn:manufacturer:test-manufacturer")
+        .bind("D-100")
+        .bind("PLAIN")
+        .bind("DCC")
+        .bind("NEM651")
+        .execute(&pool)
+        .await
+        .expect("seed decoder");
+
+        sqlx::query(
+            "INSERT INTO digital_rolling_stocks \
+             (id, owned_rolling_stock_id, dcc_address, installed_decoder_id) \
+             VALUES (?, ?, ?, ?)",
+        )
+        .bind("drs-test-001")
+        .bind("ors-test-001")
+        .bind(42_i64)
+        .bind("trn:decoder:test-manufacturer:d100")
+        .execute(&pool)
+        .await
+        .expect("seed digital roster entry");
+
+        let selection = ExportEntitySelection {
+            include_railway_models: false,
+            include_collection_items: false,
+            include_sellers: false,
+            include_maintenance_logs: false,
+            include_dcc_roster: true,
+            include_orphaned_images: false,
+            include_track_inventory: false,
+            include_train_formations: false,
+            include_wishlists: false,
+        };
+
+        let test_exports = Path::new("test_exports");
+        tokio::fs::create_dir_all(test_exports)
+            .await
+            .expect("create test_exports dir");
+        let archive_path = test_exports.join(format!("{}.zip", uuid::Uuid::new_v4()));
+        let media_dir = tempfile::tempdir().expect("media tempdir");
+
+        export_to_archive(&pool, &archive_path, media_dir.path(), &selection)
+            .await
+            .expect("export_to_archive should succeed");
+
+        let import_pool = fresh_import_pool().await;
+        let import_media_dir = tempfile::tempdir().expect("import media tempdir");
+
+        // First import: decoder succeeds (manufacturer auto-included), roster entry skipped
+        // (owned_rolling_stock_id not in import DB — DB-internal ID not preserved across imports)
+        let first = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
+        assert_eq!(first.added.decoders, 1);
+        assert_eq!(first.skipped.decoders, 0);
+        assert_eq!(first.added.digital_rolling_stocks, 0);
+        assert_eq!(first.skipped.digital_rolling_stocks, 1);
+
+        // Second import: decoder is now a duplicate (same URN already exists)
+        let second = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
+        assert_eq!(second.added.decoders, 0, "no new decoders on re-import");
+        assert_eq!(
+            second.skipped.decoders, 1,
+            "decoder must be skipped as duplicate"
+        );
+        assert_eq!(
+            second.added.digital_rolling_stocks, 0,
+            "still skipped: owned_rolling_stock absent"
+        );
+        assert_eq!(
+            second.skipped.digital_rolling_stocks, 1,
+            "still counted as skipped"
+        );
+
+        let decoder_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM decoders WHERE id = 'trn:decoder:test-manufacturer:d100'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(decoder_count, 1, "decoder must not be duplicated");
+
+        let roster_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM digital_rolling_stocks WHERE id = 'drs-test-001'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(
+            roster_count, 0,
+            "roster entry must not exist (never inserted)"
+        );
+    }
 }

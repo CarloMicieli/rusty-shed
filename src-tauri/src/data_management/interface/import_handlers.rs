@@ -166,6 +166,14 @@ pub async fn get_import_preview(
             .total_records
             .wishlists
             .saturating_sub(preview.duplicate_records.wishlists),
+        decoders: preview
+            .total_records
+            .decoders
+            .saturating_sub(preview.duplicate_records.decoders),
+        digital_rolling_stocks: preview
+            .total_records
+            .digital_rolling_stocks
+            .saturating_sub(preview.duplicate_records.digital_rolling_stocks),
     };
 
     let can_import = preview.can_import();

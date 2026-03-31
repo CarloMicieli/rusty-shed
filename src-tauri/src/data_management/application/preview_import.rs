@@ -70,6 +70,8 @@ impl PreviewImportUseCase {
             formation_categories: manifest.data.formation_categories.len() as u32,
             train_formations: manifest.data.train_formations.len() as u32,
             wishlists: manifest.data.wishlists.len() as u32,
+            decoders: manifest.data.decoders.len() as u32,
+            digital_rolling_stocks: manifest.data.digital_rolling_stocks.len() as u32,
         };
 
         // Check for duplicates via repository port
@@ -93,6 +95,8 @@ impl PreviewImportUseCase {
             formation_categories: duplicates.formation_category_dupes.duplicate_count() as u32,
             train_formations: duplicates.train_formation_dupes.duplicate_count() as u32,
             wishlists: duplicates.wishlist_dupes.duplicate_count() as u32,
+            decoders: duplicates.decoder_dupes.duplicate_count() as u32,
+            digital_rolling_stocks: duplicates.digital_roster_dupes.duplicate_count() as u32,
         };
 
         // Calculate new records
@@ -109,6 +113,8 @@ impl PreviewImportUseCase {
             formation_categories: duplicates.formation_category_dupes.new_count() as u32,
             train_formations: duplicates.train_formation_dupes.new_count() as u32,
             wishlists: duplicates.wishlist_dupes.new_count() as u32,
+            decoders: duplicates.decoder_dupes.new_count() as u32,
+            digital_rolling_stocks: duplicates.digital_roster_dupes.new_count() as u32,
         };
 
         // Create preview
@@ -125,6 +131,9 @@ impl PreviewImportUseCase {
             duplicates.track_inventory_dupes.duplicate_ids;
         preview.duplicate_details.train_formations = duplicates.train_formation_dupes.duplicate_ids;
         preview.duplicate_details.wishlists = duplicates.wishlist_dupes.duplicate_ids;
+        preview.duplicate_details.decoders = duplicates.decoder_dupes.duplicate_ids;
+        preview.duplicate_details.digital_rolling_stocks =
+            duplicates.digital_roster_dupes.duplicate_ids;
 
         // Check for missing images if archive path is provided
         if let Some(path) = archive_path {

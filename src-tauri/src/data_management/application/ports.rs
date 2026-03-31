@@ -17,6 +17,8 @@ pub struct AllDuplicates {
     pub train_formation_dupes: DuplicateCheckResult,
     pub prototype_dupes: DuplicateCheckResult,
     pub wishlist_dupes: DuplicateCheckResult,
+    pub decoder_dupes: DuplicateCheckResult,
+    pub digital_roster_dupes: DuplicateCheckResult,
 }
 
 /// Statistics returned after all records have been persisted.

@@ -76,6 +76,8 @@ mod tests {
                 train_formation_dupes: DuplicateCheckResult::default(),
                 prototype_dupes: DuplicateCheckResult::default(),
                 wishlist_dupes: DuplicateCheckResult::default(),
+                decoder_dupes: DuplicateCheckResult::default(),
+                digital_roster_dupes: DuplicateCheckResult::default(),
             })
         }
 

@@ -43,6 +43,10 @@ pub struct DataContainerDto {
     pub train_formations: Vec<TrainFormationRecord>,
     #[serde(default)]
     pub wishlists: Vec<WishlistRecord>,
+    #[serde(default)]
+    pub decoders: Vec<DecoderRecord>,
+    #[serde(rename = "digitalRollingStocks", default)]
+    pub digital_rolling_stocks: Vec<DigitalRollingStockRecord>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
@@ -411,6 +415,31 @@ pub struct WishlistRecord {
     pub is_default: bool,
     #[serde(default)]
     pub items: Vec<WishlistItemRecord>,
+}
+
+/// A decoder master record (hardware DCC decoder or similar).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DecoderRecord {
+    pub id: String,
+    pub manufacturer_id: String,
+    pub product_code: String,
+    pub decoder_type: String,
+    pub protocol: String,
+    pub decoder_interface: String,
+}
+
+/// A digital roster entry linking a collection item to its DCC address and decoder.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DigitalRollingStockRecord {
+    pub id: String,
+    /// References an owned rolling stock (collection item) in the source database.
+    /// Preserved for informational purposes; not validated on import.
+    pub owned_rolling_stock_id: String,
+    pub dcc_address: i64,
+    #[serde(default)]
+    pub decoder_id: Option<String>,
 }
 
 /// A single item in a wishlist.

@@ -129,6 +129,8 @@ impl ValidatePackageUseCase {
             formation_categories: manifest.data.formation_categories.len() as u32,
             train_formations: manifest.data.train_formations.len() as u32,
             wishlists: manifest.data.wishlists.len() as u32,
+            decoders: manifest.data.decoders.len() as u32,
+            digital_rolling_stocks: manifest.data.digital_rolling_stocks.len() as u32,
         }
     }
 }
@@ -157,6 +159,8 @@ mod tests {
                 formation_categories: vec![],
                 train_formations: vec![],
                 wishlists: vec![],
+                decoders: vec![],
+                digital_rolling_stocks: vec![],
             },
         };
 

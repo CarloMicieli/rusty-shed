@@ -17,6 +17,8 @@ pub struct RecordCounts {
     pub formation_categories: u32,
     pub train_formations: u32,
     pub wishlists: u32,
+    pub decoders: u32,
+    pub digital_rolling_stocks: u32,
 }
 
 impl RecordCounts {
@@ -39,6 +41,8 @@ impl RecordCounts {
             + self.formation_categories
             + self.train_formations
             + self.wishlists
+            + self.decoders
+            + self.digital_rolling_stocks
     }
 
     /// Add counts from another `RecordCounts` instance.
@@ -55,6 +59,8 @@ impl RecordCounts {
         self.formation_categories += other.formation_categories;
         self.train_formations += other.train_formations;
         self.wishlists += other.wishlists;
+        self.decoders += other.decoders;
+        self.digital_rolling_stocks += other.digital_rolling_stocks;
     }
 }
 
@@ -77,6 +83,8 @@ mod tests {
             formation_categories: 0,
             train_formations: 0,
             wishlists: 0,
+            decoders: 0,
+            digital_rolling_stocks: 0,
         };
         assert_eq!(counts.total(), 36);
     }
