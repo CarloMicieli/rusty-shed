@@ -370,6 +370,7 @@ pub struct UpdateWishlistItemArgs {
     pub status: Option<WishlistStatus>,
     /// `null` clears the price; a number sets it (in smallest unit, must be >= 0); absent = unchanged.
     #[serde(default, deserialize_with = "deserialize_double_option")]
+    #[specta(type = Option<i64>)]
     #[garde(custom(validate_opt_price_amount))]
     pub desired_price_amount: Option<Option<i64>>,
     /// ISO 4217 currency code (3 characters); required when `desired_price_amount` is a number.

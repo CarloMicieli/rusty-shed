@@ -37,11 +37,12 @@
   );
 
   const totalValue = $derived.by(() => {
+    const defaultCurrency = regionalManager.currency || 'EUR';
     if (!activeInventory || activeInventory.purchases.length === 0) {
-      return regionalManager.formatCurrencyWith(0, regionalManager.currency);
+      return regionalManager.formatCurrencyWith(0, defaultCurrency);
     }
     const raw = activeInventory.purchases.reduce((acc, p) => acc + Number(p.price.amount), 0);
-    const currency = activeInventory.purchases[0]?.price.currency ?? regionalManager.currency;
+    const currency = activeInventory.purchases[0]?.price.currency ?? defaultCurrency;
     return regionalManager.formatCurrencyWith(raw, currency);
   });
 

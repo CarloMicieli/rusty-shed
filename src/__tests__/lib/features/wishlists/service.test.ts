@@ -82,7 +82,7 @@ describe('WishlistState', () => {
   describe('fetchWishlists', () => {
     it('should load wishlists', async () => {
       const mockList = [
-        { id: '1', name: 'Main', is_default: true, count: 0n, updated_at: '', total_value: {} }
+        { id: '1', name: 'Main', is_default: true, count: 0, updated_at: '', total_value: {} }
       ];
       tauriMock.mockCommand('get_wishlists', mockList);
 
@@ -100,7 +100,7 @@ describe('WishlistState', () => {
         id: 'real-id',
         name: inputName,
         is_default: false,
-        count: 0n,
+        count: 0,
         updated_at: '',
         total_value: {}
       };

@@ -69,7 +69,7 @@ describe('ExportController', () => {
           ok: true,
           data: {
             archivePath: '/home/user/export.zip',
-            file_size_bytes: BigInt(1024),
+            file_size_bytes: Number(1024),
             records_exported: 42,
             warnings: []
           }
@@ -92,7 +92,7 @@ describe('ExportController', () => {
           ok: true,
           data: {
             archivePath: destinationPath,
-            file_size_bytes: BigInt(512),
+            file_size_bytes: Number(512),
             records_exported: 10,
             warnings: []
           }
@@ -142,7 +142,7 @@ describe('ExportController', () => {
           ok: true,
           data: {
             archivePath: '/path/out.zip',
-            file_size_bytes: BigInt(100),
+            file_size_bytes: Number(100),
             records_exported: 1,
             warnings: []
           }

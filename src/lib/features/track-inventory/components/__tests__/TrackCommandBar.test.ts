@@ -32,8 +32,8 @@ function makeListItem(shortId: string, name: string, quantity = 0): TrackInvento
     id: `trn:track-inventory:${shortId}` as TrackInventoryId,
     name,
     description: null,
-    total_items: BigInt(0),
-    total_quantity: BigInt(quantity)
+    total_items: Number(0),
+    total_quantity: Number(quantity)
   };
 }
 
@@ -46,22 +46,22 @@ function makeInventoryView(shortId: string, name: string): TrackInventoryView {
       {
         track_id: 'trn:track:acme:r1' as never,
         track_product: {} as never,
-        quantity: BigInt(10),
-        required: BigInt(0)
+        quantity: Number(10),
+        required: Number(0)
       },
       {
         track_id: 'trn:track:acme:r2' as never,
         track_product: {} as never,
-        quantity: BigInt(5),
-        required: BigInt(0)
+        quantity: Number(5),
+        required: Number(0)
       }
     ],
     purchases: [
       {
         id: 'trn:track-purchase:p1' as never,
         track_product: {} as never,
-        quantity: BigInt(10),
-        price: { amount: BigInt(1999), currency: 'EUR' as never },
+        quantity: Number(10),
+        price: { amount: Number(1999), currency: 'EUR' as never },
         seller_name: 'Acme Shop',
         purchase_date: '2026-01-15'
       }

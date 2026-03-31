@@ -3,9 +3,8 @@ use specta::Type;
 
 /// A validation error that blocks import.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
-#[serde(rename_all = "camelCase")]
-#[specta(rename = "ImportValidationError")]
-pub struct ValidationError {
+#[serde(rename = "ImportValidationError", rename_all = "camelCase")]
+pub struct ImportValidationError {
     /// JSON path to the error (e.g., "data.railwayModels\[3\].productCode")
     pub path: String,
     /// Error code for i18n lookup
@@ -14,7 +13,7 @@ pub struct ValidationError {
     pub message: String,
 }
 
-impl ValidationError {
+impl ImportValidationError {
     /// Create a new validation error.
     pub fn new(
         path: impl Into<String>,
@@ -74,6 +73,9 @@ impl ValidationError {
         )
     }
 }
+
+/// Backward-compatible alias used across the import domain.
+pub type ValidationError = ImportValidationError;
 
 #[cfg(test)]
 mod tests {

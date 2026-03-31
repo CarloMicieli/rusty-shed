@@ -80,7 +80,7 @@
     return {
       sellerId: null,
       priceAmount: null,
-      priceCurrency: settingsState.settings.currency,
+      priceCurrency: settingsState.settings.currency ?? 'EUR',
       purchaseCondition: null,
       modelCondition: null,
       boxCondition: null,
@@ -206,7 +206,7 @@
           category: rs.category!
         }))
       },
-      priceAmount: priceInCents as unknown as bigint,
+      priceAmount: priceInCents as number,
       priceCurrency: formState.purchase.priceCurrency,
       sellerId: formState.purchase.sellerId,
       addedDate: today,

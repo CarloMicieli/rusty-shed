@@ -38,7 +38,7 @@ function makeWishlist(overrides: Partial<WishlistPreview> = {}): WishlistPreview
     name: 'My Wishlist',
     notes: null,
     isDefault: false,
-    count: 0n,
+    count: 0,
     updatedAt: '2024-01-01T00:00:00Z',
     totalValue: {},
     ...overrides

@@ -20,9 +20,11 @@ pub struct Gauge {
     /// This field is serialized/deserialized using the dedicated `Length`
     /// serde helpers so it can be stored consistently in DB rows.
     #[serde(with = "crate::core::domain::length::serde::millimeters")]
+    #[specta(type = Decimal)]
     pub millimeters: Length,
     /// The distance between the rails in inches.
     #[serde(with = "crate::core::domain::length::serde::inches")]
+    #[specta(type = Decimal)]
     pub inches: Length,
     /// The track gauge classification (e.g. `Standard`, `Narrow`).
     pub track_gauge: TrackGauge,

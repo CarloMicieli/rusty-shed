@@ -137,12 +137,13 @@
     if (result.status !== 'ok' || !result.data) return;
 
     const rsView = result.data.rollingStock.find((r: RollingStockView) => {
-      if ('locomotive' in r) return r.locomotive.id === rollingStock.rollingStockId;
-      if ('electricMultipleUnit' in r)
+      if ('locomotive' in r && r.locomotive) return r.locomotive.id === rollingStock.rollingStockId;
+      if ('electricMultipleUnit' in r && r.electricMultipleUnit)
         return r.electricMultipleUnit.id === rollingStock.rollingStockId;
-      if ('freightCar' in r) return r.freightCar.id === rollingStock.rollingStockId;
-      if ('passengerCar' in r) return r.passengerCar.id === rollingStock.rollingStockId;
-      if ('railcar' in r) return r.railcar.id === rollingStock.rollingStockId;
+      if ('freightCar' in r && r.freightCar) return r.freightCar.id === rollingStock.rollingStockId;
+      if ('passengerCar' in r && r.passengerCar)
+        return r.passengerCar.id === rollingStock.rollingStockId;
+      if ('railcar' in r && r.railcar) return r.railcar.id === rollingStock.rollingStockId;
       return false;
     });
     if (!rsView) return;
@@ -155,30 +156,33 @@
     else if ('railcar' in rsView) localCategory = 'RAILCAR';
 
     // Extract prototype series and friendly_name
-    if ('locomotive' in rsView) {
+    if ('locomotive' in rsView && rsView.locomotive) {
       localPrototypeSeries = rsView.locomotive.series ?? null;
       localFriendlyName = rsView.locomotive.friendly_name ?? null;
-    } else if ('electricMultipleUnit' in rsView) {
+    } else if ('electricMultipleUnit' in rsView && rsView.electricMultipleUnit) {
       localPrototypeSeries = rsView.electricMultipleUnit.series ?? null;
       localFriendlyName = rsView.electricMultipleUnit.friendly_name ?? null;
-    } else if ('freightCar' in rsView) {
+    } else if ('freightCar' in rsView && rsView.freightCar) {
       localPrototypeSeries = null;
       localFriendlyName = rsView.freightCar.friendly_name ?? null;
-    } else if ('passengerCar' in rsView) {
+    } else if ('passengerCar' in rsView && rsView.passengerCar) {
       localPrototypeSeries = rsView.passengerCar.series ?? null;
       localFriendlyName = rsView.passengerCar.friendly_name ?? null;
-    } else if ('railcar' in rsView) {
+    } else if ('railcar' in rsView && rsView.railcar) {
       localPrototypeSeries = rsView.railcar.series ?? null;
       localFriendlyName = rsView.railcar.friendly_name ?? null;
     }
 
     let ts: TechnicalSpecifications | null = null;
-    if ('locomotive' in rsView) ts = rsView.locomotive.technical_specifications;
-    else if ('electricMultipleUnit' in rsView)
+    if ('locomotive' in rsView && rsView.locomotive)
+      ts = rsView.locomotive.technical_specifications;
+    else if ('electricMultipleUnit' in rsView && rsView.electricMultipleUnit)
       ts = rsView.electricMultipleUnit.technical_specifications;
-    else if ('freightCar' in rsView) ts = rsView.freightCar.technical_specifications;
-    else if ('passengerCar' in rsView) ts = rsView.passengerCar.technical_specifications;
-    else if ('railcar' in rsView) ts = rsView.railcar.technical_specifications;
+    else if ('freightCar' in rsView && rsView.freightCar)
+      ts = rsView.freightCar.technical_specifications;
+    else if ('passengerCar' in rsView && rsView.passengerCar)
+      ts = rsView.passengerCar.technical_specifications;
+    else if ('railcar' in rsView && rsView.railcar) ts = rsView.railcar.technical_specifications;
 
     const coupling = ts?.coupling;
     localFlywheelFitted =

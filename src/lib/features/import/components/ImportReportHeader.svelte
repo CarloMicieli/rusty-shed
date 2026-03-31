@@ -3,12 +3,12 @@
 
   interface Props {
     isSuccess: boolean;
-    durationMs: bigint;
+    durationMs: number;
   }
 
   const { isSuccess, durationMs }: Props = $props();
 
-  function formatDuration(ms: bigint): string {
+  function formatDuration(ms: number): string {
     const msNumber = Number(ms);
     if (msNumber < 1000) return `${msNumber}ms`;
     const seconds = (msNumber / 1000).toFixed(1);

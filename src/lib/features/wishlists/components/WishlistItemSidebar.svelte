@@ -46,7 +46,7 @@
   const formatDate = (iso: string) => regionalManager.formatDate(iso);
 
   // ── Price formatter ─────────────────────────────────────────────────────
-  const formatPrice = (amount: bigint, currency: string) =>
+  const formatPrice = (amount: number, currency: string) =>
     regionalManager.formatCurrencyWith(amount, currency);
 
   // ── Priority label ───────────────────────────────────────────────────────
@@ -93,7 +93,7 @@
     partialArgs: Partial<{
       priority: WishlistPriority | null;
       status: WishlistStatus | null;
-      desiredPriceAmount: bigint | null | undefined;
+      desiredPriceAmount: number | null | undefined;
       desiredPriceCurrency: string | null;
       addedDate: string | null;
     }>,
@@ -206,9 +206,9 @@
     const prev = item.desiredPrice;
 
     void saveField(
-      { desiredPriceAmount: amountCents as unknown as bigint, desiredPriceCurrency: currency },
+      { desiredPriceAmount: amountCents as number, desiredPriceCurrency: currency },
       () => {
-        item = { ...item, desiredPrice: { amount: amountCents as unknown as bigint, currency } };
+        item = { ...item, desiredPrice: { amount: amountCents as number, currency } };
       },
       () => {
         item = { ...item, desiredPrice: prev };

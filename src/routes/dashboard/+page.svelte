@@ -84,7 +84,7 @@
   });
 
   // Helpers
-  function formatMoney(amount?: { amount: bigint; currency: string } | null) {
+  function formatMoney(amount?: { amount: number; currency: string } | null) {
     if (!amount) return '—';
     return regionalManager.formatCurrencyWith(amount.amount, amount.currency);
   }

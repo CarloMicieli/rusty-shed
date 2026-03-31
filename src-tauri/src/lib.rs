@@ -49,7 +49,7 @@ use crate::tracks_inventory::interface::command_handlers as tracks_inventory_com
 use crate::tracks_inventory::interface::query_handlers as tracks_inventory_query_handlers;
 use crate::trains::interface::command_handlers as trains_command_handlers;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
-use specta_typescript::{BigIntExportBehavior, Typescript};
+use specta_typescript::Typescript;
 use std::fs;
 use std::path::{Component, Path};
 use tauri::path::BaseDirectory;
@@ -272,7 +272,7 @@ pub fn run() {
     ]);
 
     #[allow(unused_variables)]
-    let ts_config = Typescript::default().bigint(BigIntExportBehavior::BigInt);
+    let ts_config = Typescript::default();
 
     // 2. Export the bindings (This creates the TS file)
     #[cfg(debug_assertions)] // Only export during development

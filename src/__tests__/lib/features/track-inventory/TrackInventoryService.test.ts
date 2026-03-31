@@ -47,7 +47,7 @@ describe('TrackInventoryService', () => {
           description: 'Primary track layout',
           track_count: 5,
           purchase_count: 3,
-          total_value: { amount: 15000n, currency: 'EUR' as Currency }
+          total_value: { amount: 15000, currency: 'EUR' as Currency }
         } as any,
         {
           id: 'inv-2',
@@ -55,7 +55,7 @@ describe('TrackInventoryService', () => {
           description: null,
           track_count: 8,
           purchase_count: 0,
-          total_value: { amount: 0n, currency: 'EUR' as Currency }
+          total_value: { amount: 0, currency: 'EUR' as Currency }
         } as any
       ];
 
@@ -92,7 +92,7 @@ describe('TrackInventoryService', () => {
         description: 'Primary track layout',
         track_count: 5,
         purchase_count: 3,
-        total_value: { amount: 15000n, currency: 'EUR' as Currency },
+        total_value: { amount: 15000, currency: 'EUR' as Currency },
         items: []
       } as any;
 
@@ -125,7 +125,7 @@ describe('TrackInventoryService', () => {
           track_type: 'STRAIGHT',
           total_length_mm: 1000,
           purchase_count: 5,
-          total_value: { amount: 2500n, currency: 'EUR' as Currency }
+          total_value: { amount: 2500, currency: 'EUR' as Currency }
         } as any
       ];
 

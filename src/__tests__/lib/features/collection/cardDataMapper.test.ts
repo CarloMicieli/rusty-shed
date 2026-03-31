@@ -247,8 +247,8 @@ describe('extractPurchaseDate', () => {
       data: {
         id: 'po-1',
         orderDate: '2024-06-01',
-        deposit: { amount: 5000n, currency: 'EUR' },
-        totalPrice: { amount: 25000n, currency: 'EUR' },
+        deposit: { amount: 5000, currency: 'EUR' },
+        totalPrice: { amount: 25000, currency: 'EUR' },
         seller: null,
         expectedDate: null
       }
@@ -264,7 +264,7 @@ describe('extractPurchaseDate', () => {
         purchaseDate: '2023-01-01',
         purchasePrice: null,
         saleDate: '2024-12-01',
-        salePrice: { amount: 15000n, currency: 'EUR' },
+        salePrice: { amount: 15000, currency: 'EUR' },
         buyer: null,
         seller: null
       }

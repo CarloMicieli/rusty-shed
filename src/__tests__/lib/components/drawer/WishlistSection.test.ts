@@ -24,8 +24,8 @@ import WishlistSection from '$lib/components/drawer/sections/WishlistSection.sve
 import type { WishlistPreview } from '$lib/bindings';
 
 const wishlists: WishlistPreview[] = [
-  { id: 'wl-1', name: 'My Wishlist', isDefault: true, count: 0n } as WishlistPreview,
-  { id: 'wl-2', name: 'Future Buys', isDefault: false, count: 0n } as WishlistPreview
+  { id: 'wl-1', name: 'My Wishlist', isDefault: true, count: 0 } as WishlistPreview,
+  { id: 'wl-2', name: 'Future Buys', isDefault: false, count: 0 } as WishlistPreview
 ];
 
 const defaultProps = {

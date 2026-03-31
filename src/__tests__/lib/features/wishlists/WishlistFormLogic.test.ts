@@ -152,23 +152,23 @@ describe('Wishlist - Form Logic', () => {
   describe('Price Conversion', () => {
     it('should convert price amount to bigint cents', () => {
       const priceAmount = '149.99';
-      const priceInCents = BigInt(Math.round(parseFloat(priceAmount) * 100));
+      const priceInCents = Number(Math.round(parseFloat(priceAmount) * 100));
 
-      expect(priceInCents).toBe(14999n);
+      expect(priceInCents).toBe(14999);
     });
 
     it('should handle empty price amount as null', () => {
       const priceAmount = '';
-      const priceInCents = priceAmount ? BigInt(Math.round(parseFloat(priceAmount) * 100)) : null;
+      const priceInCents = priceAmount ? Number(Math.round(parseFloat(priceAmount) * 100)) : null;
 
       expect(priceInCents).toBeNull();
     });
 
     it('should handle zero price', () => {
       const priceAmount = '0';
-      const priceInCents = BigInt(Math.round(parseFloat(priceAmount) * 100));
+      const priceInCents = Number(Math.round(parseFloat(priceAmount) * 100));
 
-      expect(priceInCents).toBe(0n);
+      expect(priceInCents).toBe(0);
     });
   });
 

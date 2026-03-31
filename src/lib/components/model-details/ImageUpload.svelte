@@ -100,7 +100,7 @@
       if (result.status === 'error') {
         const err = result.error;
         if (typeof err === 'object') {
-          if ('BusinessRule' in err) {
+          if ('BusinessRule' in err && err.BusinessRule) {
             error = err.BusinessRule;
           } else if ('NotFound' in err) {
             error = upload_error_model_not_found();

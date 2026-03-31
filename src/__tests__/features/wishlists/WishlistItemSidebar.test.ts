@@ -97,8 +97,8 @@ describe('WishlistItemSidebar — rendering', () => {
   it('hides "Not set" when desiredPrice is set; shows purchased price row when purchasedPrice is set', () => {
     renderSidebar({
       ...baseItem,
-      desiredPrice: { amount: BigInt(9900), currency: 'EUR' },
-      purchasedPrice: { amount: BigInt(8500), currency: 'GBP' }
+      desiredPrice: { amount: Number(9900), currency: 'EUR' },
+      purchasedPrice: { amount: Number(8500), currency: 'GBP' }
     });
     expect(screen.queryByText('Not set')).toBeNull();
     expect(screen.getByText('Purchased Price')).toBeTruthy();
@@ -252,7 +252,7 @@ describe('WishlistItemSidebar — US3 Desired Price inline edit', () => {
     const user = userEvent.setup();
     renderSidebar({
       ...baseItem,
-      desiredPrice: { amount: BigInt(9900), currency: 'EUR' }
+      desiredPrice: { amount: Number(9900), currency: 'EUR' }
     });
     await user.click(screen.getByRole('button', { name: /Edit Desired Price/i }));
     const input = await waitFor(() => screen.getByRole('textbox'));

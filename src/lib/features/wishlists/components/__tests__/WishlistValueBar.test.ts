@@ -38,7 +38,7 @@ function makeItem(
     removedDate: null,
     notes: null,
     desiredPrice: price
-      ? { amount: BigInt(price.amount), currency: price.currency as never }
+      ? { amount: Number(price.amount), currency: price.currency as never }
       : null,
     purchasedPrice: null,
     ...overrides

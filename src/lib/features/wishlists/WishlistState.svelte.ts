@@ -91,7 +91,7 @@ export class WishlistState {
       notes: (o.notes as string | null) ?? null,
       isDefault:
         (o.isDefault as boolean | undefined) ?? (o['is_default'] as boolean | undefined) ?? false,
-      count: o.count as unknown as bigint,
+      count: o.count as number,
       updatedAt:
         (o.updatedAt as string | undefined) ??
         (o['updated_at'] as string | undefined) ??
@@ -228,7 +228,7 @@ export class WishlistState {
       name,
       notes: null,
       isDefault: isDefault,
-      count: 0n,
+      count: 0,
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
       updatedAt: new Date().toISOString(),
       totalValue: {}
@@ -367,7 +367,7 @@ export class WishlistState {
     const bucket = this.#itemsByWishlist[wishlistId] ?? [];
     this.#itemsByWishlist = { ...this.#itemsByWishlist, [wishlistId]: [...bucket, optimistic] };
     this.#wishlists = this.#wishlists.map((w) =>
-      w.id === wishlistId ? { ...w, count: w.count + 1n } : w
+      w.id === wishlistId ? { ...w, count: w.count + 1 } : w
     );
     toastLoading(toastId);
 
@@ -418,7 +418,7 @@ export class WishlistState {
       [wishlistId]: bucket.filter((i) => i.id !== itemId)
     };
     this.#wishlists = this.#wishlists.map((w) =>
-      w.id === wishlistId ? { ...w, count: w.count > 0n ? w.count - 1n : 0n } : w
+      w.id === wishlistId ? { ...w, count: w.count > 0 ? w.count - 1 : 0 } : w
     );
     toastLoading(toastId);
 
@@ -456,8 +456,8 @@ export class WishlistState {
     };
 
     this.#wishlists = this.#wishlists.map((w) => {
-      if (w.id === fromWishlistId) return { ...w, count: w.count > 0n ? w.count - 1n : 0n };
-      if (w.id === toWishlistId) return { ...w, count: w.count + 1n };
+      if (w.id === fromWishlistId) return { ...w, count: w.count > 0 ? w.count - 1 : 0 };
+      if (w.id === toWishlistId) return { ...w, count: w.count + 1 };
       return w;
     });
     toastLoading(toastId);

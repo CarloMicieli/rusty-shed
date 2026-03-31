@@ -8,7 +8,7 @@ vi.mock('$lib/bindings', () => ({
 }));
 
 import { commands } from '$lib/bindings';
-import type { CollectionView, Scale } from '$lib/bindings';
+import type { CollectionView_Serialize as CollectionView, Scale } from '$lib/bindings';
 
 // Factory to create a fresh store for each test (module singleton must be re-created)
 // Because the store is a module-level singleton, we need to re-import per test via a helper

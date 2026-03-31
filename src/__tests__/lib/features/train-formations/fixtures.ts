@@ -45,7 +45,7 @@ export function makeElement(overrides: Partial<FormationElementView> = {}): Form
     snapshot_series_code: null,
     snapshot_company_name: null,
     stock_not_found: false,
-    owned_count_for_prototype: 0n,
+    owned_count_for_prototype: 0,
     traction_override: 0,
     is_traction_slot: prototype.is_motorized && !prototype.default_is_dummy,
     ...overrides
@@ -73,10 +73,10 @@ export function makeSummary(overrides: Partial<TrainFormationSummary> = {}): Tra
     name: 'Gottardo 1974',
     category: makeCategory(),
     epoch: 'IV',
-    element_count: 3n,
+    element_count: 3,
     has_traction: true,
-    owned_count: 2n,
-    planned_count: 1n,
+    owned_count: 2,
+    planned_count: 1,
     ...overrides
   };
 }

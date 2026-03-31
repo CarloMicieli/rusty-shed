@@ -192,7 +192,7 @@ describe('toRecordAcquisitionArgs', () => {
       makeForm({ items: [makeItem({ priceAmount: 20000 })] }),
       'EUR'
     );
-    expect(args.items[0].priceAmount).toBe(BigInt(20000));
+    expect(args.items[0].priceAmount).toBe(Number(20000));
   });
 
   it('handles whole-number price (e.g. 200 cents = €2.00) correctly', () => {
@@ -200,15 +200,15 @@ describe('toRecordAcquisitionArgs', () => {
       makeForm({ items: [makeItem({ priceAmount: 200 })] }),
       'EUR'
     );
-    expect(args.items[0].priceAmount).toBe(BigInt(200));
+    expect(args.items[0].priceAmount).toBe(Number(200));
   });
 
-  it('maps null price to BigInt(0)', () => {
+  it('maps null price to Number(0)', () => {
     const args = toRecordAcquisitionArgs(
       makeForm({ items: [makeItem({ priceAmount: null })] }),
       'EUR'
     );
-    expect(args.items[0].priceAmount).toBe(BigInt(0));
+    expect(args.items[0].priceAmount).toBe(Number(0));
   });
 
   it('passes the currency string to each item', () => {
@@ -231,7 +231,7 @@ describe('toRecordAcquisitionArgs', () => {
     ];
     const args = toRecordAcquisitionArgs(makeForm({ items }), 'EUR');
     expect(args.items).toHaveLength(2);
-    expect(args.items[0].priceAmount).toBe(BigInt(1000));
-    expect(args.items[1].priceAmount).toBe(BigInt(2550));
+    expect(args.items[0].priceAmount).toBe(Number(1000));
+    expect(args.items[1].priceAmount).toBe(Number(2550));
   });
 });

@@ -193,7 +193,7 @@ export class WishlistService {
       name,
       notes: null,
       isDefault: isDefault,
-      count: 0n,
+      count: 0,
       updatedAt: new SvelteDate().toISOString(),
       totalValue: {}
     };

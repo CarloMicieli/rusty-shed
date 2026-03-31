@@ -118,8 +118,7 @@
         return;
       }
 
-      const priceAmount =
-        f.values.desiredPrice !== null ? (f.values.desiredPrice as unknown as bigint) : null;
+      const priceAmount = f.values.desiredPrice !== null ? (f.values.desiredPrice as number) : null;
 
       const success = await wishlistService.addRailwayModelToWishlist({
         railwayModel: {

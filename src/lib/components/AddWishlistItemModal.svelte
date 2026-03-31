@@ -125,7 +125,7 @@
 
       const priceAmount =
         form.desiredPrice !== ''
-          ? (Math.round(parseFloat(form.desiredPrice) * 100) as unknown as bigint)
+          ? (Math.round(parseFloat(form.desiredPrice) * 100) as number)
           : null;
 
       const success = await wishlistService.addRailwayModelToWishlist({

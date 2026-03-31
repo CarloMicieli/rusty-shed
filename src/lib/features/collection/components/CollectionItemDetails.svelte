@@ -25,7 +25,7 @@
 
   let sellers = $state<SellerView[]>([]);
 
-  function formatPrice(amount: bigint, currency: string): string {
+  function formatPrice(amount: number, currency: string): string {
     return new Intl.NumberFormat(getLocale(), {
       style: 'currency',
       currency
@@ -120,7 +120,7 @@
           return;
         }
 
-        const amount = amountToSave as unknown as bigint;
+        const amount = amountToSave as number;
         console.log(`[CollectionItemDetails] Sending amount: ${amount} (as cents)`);
         await saveUpdate({ kind: 'price', data: { amount, currency: currencyToSave } });
       }

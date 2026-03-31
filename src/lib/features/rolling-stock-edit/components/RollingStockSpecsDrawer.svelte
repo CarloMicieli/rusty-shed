@@ -136,13 +136,15 @@
 
   // ── Data loading ─────────────────────────────────────────────────────────────
   function extractRsData(view: RollingStockView): FormState {
-    let rs;
-    if ('locomotive' in view) rs = view.locomotive;
-    else if ('electricMultipleUnit' in view) rs = view.electricMultipleUnit;
-    else if ('freightCar' in view) rs = view.freightCar;
-    else if ('passengerCar' in view) rs = view.passengerCar;
-    else if ('railcar' in view) rs = view.railcar;
-    else return { ...emptyForm };
+    const rs =
+      ('locomotive' in view && view.locomotive) ||
+      ('electricMultipleUnit' in view && view.electricMultipleUnit) ||
+      ('freightCar' in view && view.freightCar) ||
+      ('passengerCar' in view && view.passengerCar) ||
+      ('railcar' in view && view.railcar) ||
+      null;
+
+    if (!rs) return { ...emptyForm };
 
     const ts = rs.technical_specifications;
     return {
@@ -204,11 +206,12 @@
       }
 
       const rs = modelResult.data.rollingStock.find((r) => {
-        if ('locomotive' in r) return r.locomotive.id === rollingStockId;
-        if ('electricMultipleUnit' in r) return r.electricMultipleUnit.id === rollingStockId;
-        if ('freightCar' in r) return r.freightCar.id === rollingStockId;
-        if ('passengerCar' in r) return r.passengerCar.id === rollingStockId;
-        if ('railcar' in r) return r.railcar.id === rollingStockId;
+        if ('locomotive' in r && r.locomotive) return r.locomotive.id === rollingStockId;
+        if ('electricMultipleUnit' in r && r.electricMultipleUnit)
+          return r.electricMultipleUnit.id === rollingStockId;
+        if ('freightCar' in r && r.freightCar) return r.freightCar.id === rollingStockId;
+        if ('passengerCar' in r && r.passengerCar) return r.passengerCar.id === rollingStockId;
+        if ('railcar' in r && r.railcar) return r.railcar.id === rollingStockId;
         return false;
       });
       if (!rs) {

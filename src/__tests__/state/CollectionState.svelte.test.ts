@@ -313,7 +313,7 @@ describe('CollectionState', () => {
           powerMethod: 'DC',
           rollingStocks: []
         },
-        priceAmount: BigInt(0),
+        priceAmount: Number(0),
         priceCurrency: 'EUR',
         sellerId: null,
         addedDate: '2026-01-01',
@@ -342,7 +342,7 @@ describe('CollectionState', () => {
           powerMethod: 'DC',
           rollingStocks: []
         },
-        priceAmount: BigInt(0),
+        priceAmount: Number(0),
         priceCurrency: 'EUR',
         sellerId: null,
         addedDate: '2026-01-01',

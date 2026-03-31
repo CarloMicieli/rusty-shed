@@ -38,7 +38,7 @@
     error = null;
     try {
       await service.setItemRequired(inventoryId, item.track_product.track_id, newRequired);
-      item.required = BigInt(newRequired);
+      item.required = Number(newRequired);
       isEditingRequired = false;
     } catch (err) {
       console.error('Failed to update required quantity:', err);

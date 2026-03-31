@@ -35,7 +35,7 @@ function makePreview(id: string, isDefault = false): WishlistPreview {
     name: `Wishlist ${id}`,
     notes: null,
     isDefault,
-    count: 0n,
+    count: 0,
     updatedAt: '2026-01-01T00:00:00Z',
     totalValue: {}
   };

@@ -1,6 +1,8 @@
 import { commands } from '$lib/bindings';
 import adapter, { type FormSeller } from './sellerAdapter';
-import type { Result as CmdResult, CommandError } from '$lib/bindings';
+import type { CommandError } from '$lib/bindings';
+
+type CmdResult<T, E> = { status: 'ok'; data: T } | { status: 'error'; error: E };
 
 export async function getSellers(): Promise<CmdResult<FormSeller[], CommandError>> {
   const res = await commands.getSellers();

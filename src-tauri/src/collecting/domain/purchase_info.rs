@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 ///   have paid a deposit and the full total price is known as well.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(tag = "kind", content = "data", rename_all = "camelCase")]
-#[specta(tag = "kind", content = "data")]
 pub enum PurchaseInfo {
     /// A standard purchase record.
     Purchased(PurchasedInfo),

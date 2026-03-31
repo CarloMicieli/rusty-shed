@@ -55,13 +55,15 @@ function getEmptyRsForm(): RsFormState {
 }
 
 function extractRsDataFromView(view: RollingStockView): RsFormState {
-  let rs;
-  if ('locomotive' in view) rs = view.locomotive;
-  else if ('electricMultipleUnit' in view) rs = view.electricMultipleUnit;
-  else if ('freightCar' in view) rs = view.freightCar;
-  else if ('passengerCar' in view) rs = view.passengerCar;
-  else if ('railcar' in view) rs = view.railcar;
-  else return getEmptyRsForm();
+  const rs =
+    ('locomotive' in view && view.locomotive) ||
+    ('electricMultipleUnit' in view && view.electricMultipleUnit) ||
+    ('freightCar' in view && view.freightCar) ||
+    ('passengerCar' in view && view.passengerCar) ||
+    ('railcar' in view && view.railcar) ||
+    null;
+
+  if (!rs) return getEmptyRsForm();
 
   const ts = rs.technical_specifications;
 
@@ -69,20 +71,20 @@ function extractRsDataFromView(view: RollingStockView): RsFormState {
   let subcategory: string | null = null;
   let serviceLevel: string | null = null;
 
-  if ('locomotive' in view) {
+  if ('locomotive' in view && view.locomotive) {
     category = 'LOCOMOTIVE';
     subcategory = view.locomotive.locomotive_type ?? null;
-  } else if ('electricMultipleUnit' in view) {
+  } else if ('electricMultipleUnit' in view && view.electricMultipleUnit) {
     category = 'ELECTRIC_MULTIPLE_UNIT';
     subcategory = view.electricMultipleUnit.electric_multiple_unit_type ?? null;
-  } else if ('freightCar' in view) {
+  } else if ('freightCar' in view && view.freightCar) {
     category = 'FREIGHT_CAR';
     subcategory = view.freightCar.freight_car_type ?? null;
-  } else if ('passengerCar' in view) {
+  } else if ('passengerCar' in view && view.passengerCar) {
     category = 'PASSENGER_CAR';
     subcategory = view.passengerCar.passenger_car_type ?? null;
     serviceLevel = view.passengerCar.service_level ?? null;
-  } else if ('railcar' in view) {
+  } else if ('railcar' in view && view.railcar) {
     category = 'RAILCAR';
     subcategory = view.railcar.railcar_type ?? null;
   }
@@ -154,11 +156,12 @@ export function useRollingStockEditor(
       }
 
       const rsView = result.data.rollingStock.find((r) => {
-        if ('locomotive' in r) return r.locomotive.id === unitId;
-        if ('electricMultipleUnit' in r) return r.electricMultipleUnit.id === unitId;
-        if ('freightCar' in r) return r.freightCar.id === unitId;
-        if ('passengerCar' in r) return r.passengerCar.id === unitId;
-        if ('railcar' in r) return r.railcar.id === unitId;
+        if ('locomotive' in r && r.locomotive) return r.locomotive.id === unitId;
+        if ('electricMultipleUnit' in r && r.electricMultipleUnit)
+          return r.electricMultipleUnit.id === unitId;
+        if ('freightCar' in r && r.freightCar) return r.freightCar.id === unitId;
+        if ('passengerCar' in r && r.passengerCar) return r.passengerCar.id === unitId;
+        if ('railcar' in r && r.railcar) return r.railcar.id === unitId;
         return false;
       });
 

@@ -53,7 +53,7 @@
         commands.getSettings()
       ]);
       if (sellersResult.status === 'ok') sellers = sellersResult.data;
-      if (settingsResult.status === 'ok') priceCurrency = settingsResult.data.currency;
+      if (settingsResult.status === 'ok') priceCurrency = settingsResult.data.currency ?? 'EUR';
     } catch (e) {
       console.warn('Failed to load purchase dialog data', e);
     } finally {
@@ -107,7 +107,7 @@
       const result = await commands.purchaseWishlistItem({
         wishlistId,
         wishlistItemId,
-        priceAmount: amountCents as unknown as bigint,
+        priceAmount: amountCents as number,
         priceCurrency,
         purchaseDate,
         sellerId: selectedSellerId || null,

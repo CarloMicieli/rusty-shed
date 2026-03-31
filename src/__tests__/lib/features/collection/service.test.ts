@@ -133,7 +133,7 @@ describe('CollectionState (Read-Only)', () => {
       electricMultipleUnitsCount: 0,
       starterSetsCount: 0
     },
-    totalValue: { amount: 50000n, currency: 'EUR' },
+    totalValue: { amount: 50000, currency: 'EUR' },
     items: [
       {
         id: '1',

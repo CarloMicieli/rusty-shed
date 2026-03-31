@@ -132,7 +132,7 @@ function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollec
         category: rs.category!
       }))
     },
-    priceAmount: priceInCents as unknown as bigint,
+    priceAmount: priceInCents as number,
     priceCurrency: form.purchase.priceCurrency,
     sellerId: form.purchase.sellerId,
     addedDate: today,
@@ -290,7 +290,7 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
     expect(args.railwayModel.rollingStocks[0].seriesCode).toBe('218');
     expect(args.railwayModel.rollingStocks[0].roadNumber).toBe('218 101-3');
     expect(args.railwayModel.rollingStocks[0].category).toBe('DIESEL_LOCOMOTIVE');
-    expect(args.priceAmount).toBe(24999 as unknown as bigint); // 249.99 * 100
+    expect(args.priceAmount).toBe(24999 as number); // 249.99 * 100
     expect(args.sellerId).toBe('trn:seller:modellbahnshop');
   });
 
@@ -310,16 +310,16 @@ describe('AddModelForm - toAddRailwayModelArgs Transformation', () => {
 
     // Test various price formats
     form.purchase.priceAmount = 9999;
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(9999 as unknown as bigint);
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(9999 as number);
 
     form.purchase.priceAmount = 10000;
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(10000 as unknown as bigint);
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(10000 as number);
 
     form.purchase.priceAmount = 50;
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(50 as unknown as bigint);
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(50 as number);
 
     form.purchase.priceAmount = null;
-    expect(toAddRailwayModelArgs(form).priceAmount).toBe(0 as unknown as bigint);
+    expect(toAddRailwayModelArgs(form).priceAmount).toBe(0 as number);
   });
 
   it('should handle multiple rolling stocks', () => {

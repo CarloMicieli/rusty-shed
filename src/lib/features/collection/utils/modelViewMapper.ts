@@ -170,8 +170,9 @@ function formatDeliveryDate(d: DeliveryDate | null): string | null {
   // Runtime fast-path: Rust serialises DeliveryDate as a Display string.
   if (typeof d === 'string') return d;
   if ('Year' in d) return String(d.Year);
-  if ('YearMonth' in d) return `${d.YearMonth.year}/${String(d.YearMonth.month).padStart(2, '0')}`;
-  if ('YearQuarter' in d) return `${d.YearQuarter.year}/${d.YearQuarter.quarter}`;
+  if ('YearMonth' in d && d.YearMonth)
+    return `${d.YearMonth.year}/${String(d.YearMonth.month).padStart(2, '0')}`;
+  if ('YearQuarter' in d && d.YearQuarter) return `${d.YearQuarter.year}/${d.YearQuarter.quarter}`;
   return null;
 }
 
@@ -179,11 +180,11 @@ function formatDeliveryDate(d: DeliveryDate | null): string | null {
  * Extract the high-level rolling stock type label from a RollingStockView.
  */
 function extractRollingStockType(view: RollingStockView): string | null {
-  if ('locomotive' in view) return 'Locomotive';
-  if ('electricMultipleUnit' in view) return 'Electric Multiple Unit';
-  if ('freightCar' in view) return 'Freight Car';
-  if ('passengerCar' in view) return 'Passenger Car';
-  if ('railcar' in view) return 'Railcar';
+  if ('locomotive' in view && view.locomotive) return 'Locomotive';
+  if ('electricMultipleUnit' in view && view.electricMultipleUnit) return 'Electric Multiple Unit';
+  if ('freightCar' in view && view.freightCar) return 'Freight Car';
+  if ('passengerCar' in view && view.passengerCar) return 'Passenger Car';
+  if ('railcar' in view && view.railcar) return 'Railcar';
   return null;
 }
 
@@ -220,7 +221,7 @@ function extractRollingStockData(view: RollingStockView): {
     return null;
   };
 
-  if ('locomotive' in view) {
+  if ('locomotive' in view && view.locomotive) {
     const ts = view.locomotive.technical_specifications;
     return {
       id: view.locomotive.id,
@@ -238,7 +239,7 @@ function extractRollingStockData(view: RollingStockView): {
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
-  } else if ('electricMultipleUnit' in view) {
+  } else if ('electricMultipleUnit' in view && view.electricMultipleUnit) {
     const ts = view.electricMultipleUnit.technical_specifications;
     return {
       id: view.electricMultipleUnit.id,
@@ -256,7 +257,7 @@ function extractRollingStockData(view: RollingStockView): {
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
-  } else if ('railcar' in view) {
+  } else if ('railcar' in view && view.railcar) {
     const ts = view.railcar.technical_specifications;
     return {
       id: view.railcar.id,
@@ -274,7 +275,7 @@ function extractRollingStockData(view: RollingStockView): {
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
-  } else if ('passengerCar' in view) {
+  } else if ('passengerCar' in view && view.passengerCar) {
     const ts = view.passengerCar.technical_specifications;
     return {
       id: view.passengerCar.id,
@@ -292,7 +293,7 @@ function extractRollingStockData(view: RollingStockView): {
       close_couplers: flagToBool(ts?.coupling?.close_couplers),
       digital_shunting: flagToBool(ts?.coupling?.digital_shunting)
     };
-  } else if ('freightCar' in view) {
+  } else if ('freightCar' in view && view.freightCar) {
     const ts = view.freightCar.technical_specifications;
     return {
       id: view.freightCar.id,
@@ -341,15 +342,15 @@ function extractRollingStockData(view: RollingStockView): {
  * @returns Category string or null if not available
  */
 function extractCategory(view: RollingStockView): string | null {
-  if ('locomotive' in view) {
+  if ('locomotive' in view && view.locomotive) {
     return view.locomotive.locomotive_type;
-  } else if ('electricMultipleUnit' in view) {
+  } else if ('electricMultipleUnit' in view && view.electricMultipleUnit) {
     return 'ELECTRIC_MULTIPLE_UNIT';
-  } else if ('railcar' in view) {
+  } else if ('railcar' in view && view.railcar) {
     return 'RAILCAR';
-  } else if ('passengerCar' in view) {
+  } else if ('passengerCar' in view && view.passengerCar) {
     return view.passengerCar.passenger_car_type;
-  } else if ('freightCar' in view) {
+  } else if ('freightCar' in view && view.freightCar) {
     return view.freightCar.freight_car_type;
   }
   return null;
@@ -365,9 +366,9 @@ function extractCategory(view: RollingStockView): string | null {
  * @returns Subcategory string or null if not available
  */
 function extractSubcategory(view: RollingStockView): string | null {
-  if ('electricMultipleUnit' in view) {
+  if ('electricMultipleUnit' in view && view.electricMultipleUnit) {
     return view.electricMultipleUnit.electric_multiple_unit_type;
-  } else if ('railcar' in view) {
+  } else if ('railcar' in view && view.railcar) {
     return view.railcar.railcar_type;
   }
   return null;

@@ -37,7 +37,6 @@ pub struct ValidationError {
 /// `value` keys (useful for interop with TypeScript and the frontend).
 #[derive(Debug, PartialEq, Clone, Serialize, specta::Type)]
 #[serde(tag = "type", content = "value")]
-#[specta(tag = "type", content = "value")]
 pub enum ValidationErrorParam {
     /// A numeric parameter (for example: a failing boundary value).
     Number(i64),

@@ -11,7 +11,11 @@ use thiserror::Error;
 /// A `Radius` wraps a `Length` expressed in millimeters and enforces
 /// that the value is non-negative.
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize, specta::Type)]
-pub struct Radius(#[serde(with = "crate::core::domain::length::serde::millimeters")] Length);
+pub struct Radius(
+    #[serde(with = "crate::core::domain::length::serde::millimeters")]
+    #[specta(type = Decimal)]
+    Length,
+);
 
 impl Radius {
     /// Create a new `Radius` from a millimeters value.

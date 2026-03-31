@@ -8,7 +8,6 @@
 import { commands } from '$lib/bindings';
 import type {
   CommandError,
-  Result,
   TrainFormationSummary,
   TrainFormationDetail,
   TrainFormationView,
@@ -27,19 +26,26 @@ import type {
 } from '$lib/bindings';
 import type { NormalizedError, SafeResult } from '$lib/services';
 
+type CommandResult<T, E> = { status: 'ok'; data: T } | { status: 'error'; error: E };
+
 function fromCommandError(err: CommandError): NormalizedError {
-  if ('DatabaseError' in err) return { kind: 'database', message: err.DatabaseError };
-  if ('NotFound' in err) return { kind: 'not_found', message: err.NotFound };
+  if ('DatabaseError' in err && err.DatabaseError)
+    return { kind: 'database', message: err.DatabaseError };
+  if ('NotFound' in err && err.NotFound) return { kind: 'not_found', message: err.NotFound };
   if ('ValidationError' in err) return { kind: 'validation', message: 'Validation failed' };
-  if ('PermissionDenied' in err)
+  if ('PermissionDenied' in err && err.PermissionDenied)
     return { kind: 'permission_denied', message: err.PermissionDenied };
-  if ('Conflict' in err) return { kind: 'unknown', message: err.Conflict };
-  if ('BusinessRule' in err) return { kind: 'unknown', message: err.BusinessRule };
-  if ('Unknown' in err) return { kind: 'unknown', message: err.Unknown.message };
+  if ('Conflict' in err && err.Conflict) return { kind: 'unknown', message: err.Conflict };
+  if ('BusinessRule' in err && err.BusinessRule)
+    return { kind: 'unknown', message: err.BusinessRule };
+  if ('Unknown' in err && err.Unknown)
+    return { kind: 'unknown', message: err.Unknown.message ?? 'Unknown error' };
   return { kind: 'unknown', message: 'Unknown error' };
 }
 
-async function safeCmd<T>(fn: () => Promise<Result<T, CommandError>>): Promise<SafeResult<T>> {
+async function safeCmd<T>(
+  fn: () => Promise<CommandResult<T, CommandError>>
+): Promise<SafeResult<T>> {
   try {
     const result = await fn();
     if (result.status === 'ok') return { ok: true, data: result.data };

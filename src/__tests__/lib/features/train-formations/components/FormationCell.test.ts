@@ -40,7 +40,7 @@ describe('FormationCell.svelte', () => {
     const onOpenPicker = vi.fn();
     render(FormationCellHarness, {
       props: {
-        element: makeElement({ owned_count_for_prototype: 1n }),
+        element: makeElement({ owned_count_for_prototype: 1 }),
         onOpenPicker
       }
     });
@@ -52,7 +52,7 @@ describe('FormationCell.svelte', () => {
   it('shows assign model when multiple owned models match', () => {
     render(FormationCellHarness, {
       props: {
-        element: makeElement({ owned_count_for_prototype: 3n })
+        element: makeElement({ owned_count_for_prototype: 3 })
       }
     });
 

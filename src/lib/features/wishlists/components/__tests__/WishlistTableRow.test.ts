@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/svelte';
-import type { RailwayModelView } from '$lib/bindings';
+import type { RailwayModelView_Serialize } from '$lib/bindings';
 
 vi.mock('$lib/bindings', () => ({
   commands: {
@@ -19,7 +19,7 @@ vi.mock('$lib/bindings', () => ({
         deliveryDate: null,
         availabilityStatus: null,
         details: null
-      } as RailwayModelView
+      } as unknown as RailwayModelView_Serialize
     }),
     getRailwayModelImage: vi.fn().mockResolvedValue({
       status: 'ok',
@@ -99,7 +99,7 @@ describe('WishlistTableRow', () => {
         deliveryDate: null,
         availabilityStatus: null,
         details: null
-      } as RailwayModelView
+      } as unknown as RailwayModelView_Serialize
     });
     vi.mocked(commands.getRailwayModelImage).mockResolvedValue({
       status: 'ok',
@@ -185,7 +185,7 @@ describe('WishlistTableRow', () => {
 
   it('displays price target when desiredPrice is set', () => {
     const item = makeItem({
-      desiredPrice: { amount: BigInt(8999), currency: 'EUR' as never }
+      desiredPrice: { amount: Number(8999), currency: 'EUR' as never }
     } as unknown as Partial<WishlistItem>);
     render(WishlistTableRow, { props: { item, wishlistId: 'wl-1' } });
 

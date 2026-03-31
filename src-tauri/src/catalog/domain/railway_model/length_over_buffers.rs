@@ -16,9 +16,11 @@ use thiserror::Error;
 pub struct LengthOverBuffers {
     /// the overall length in inches
     #[serde(with = "crate::core::domain::length::serde::inches_option")]
+    #[specta(type = Option<Decimal>)]
     pub inches: Option<Length>,
     /// the overall length in millimeters
     #[serde(with = "crate::core::domain::length::serde::millimeters_option")]
+    #[specta(type = Option<Decimal>)]
     pub millimeters: Option<Length>,
 }
 

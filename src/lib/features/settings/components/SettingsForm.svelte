@@ -10,14 +10,15 @@
   import PowerSystemSelector from './PowerSystemSelector.svelte';
   import ThemeSelector from './ThemeSelector.svelte';
   import { Button } from '$lib/components';
+  import type { AppTheme, Language, MeasureUnit, PowerMethod } from '$lib/bindings';
 
   // Local state for form inputs
-  let currency = $state(settingsState.settings.currency);
-  let language = $state(settingsState.settings.language);
-  let theme = $state(settingsState.settings.theme);
-  let measureUnit = $state(settingsState.settings.measureUnit);
-  let favouriteScale = $state(settingsState.settings.favouriteScale);
-  let powerMethod = $state(settingsState.settings.powerMethod);
+  let currency = $state(settingsState.settings.currency ?? 'EUR');
+  let language = $state<Language>(settingsState.settings.language ?? 'en');
+  let theme = $state<AppTheme>(settingsState.settings.theme ?? 'steampunk-dark');
+  let measureUnit = $state<MeasureUnit>(settingsState.settings.measureUnit ?? 'Metric');
+  let favouriteScale = $state(settingsState.settings.favouriteScale ?? '');
+  let powerMethod = $state<PowerMethod>(settingsState.settings.powerMethod ?? 'DC');
 
   let saving = $state(false);
   let saveError = $state<string | null>(null);
@@ -30,12 +31,12 @@
 
   // Update local state when settings change
   $effect(() => {
-    currency = settingsState.settings.currency;
-    language = settingsState.settings.language;
-    theme = settingsState.settings.theme;
-    measureUnit = settingsState.settings.measureUnit;
-    favouriteScale = settingsState.settings.favouriteScale;
-    powerMethod = settingsState.settings.powerMethod;
+    currency = settingsState.settings.currency ?? 'EUR';
+    language = settingsState.settings.language ?? 'en';
+    theme = settingsState.settings.theme ?? 'steampunk-dark';
+    measureUnit = settingsState.settings.measureUnit ?? 'Metric';
+    favouriteScale = settingsState.settings.favouriteScale ?? '';
+    powerMethod = settingsState.settings.powerMethod ?? 'DC';
   });
 
   async function handleSubmit(event: Event) {

@@ -103,7 +103,7 @@ export function toRecordAcquisitionArgs(
       scale: item.scale ?? '',
       epoch: item.epoch ?? '',
       powerMethod: item.powerMethod ?? '',
-      priceAmount: item.priceAmount != null ? BigInt(item.priceAmount) : BigInt(0),
+      priceAmount: item.priceAmount != null ? Number(item.priceAmount) : Number(0),
       priceCurrency: currency
     }))
   };

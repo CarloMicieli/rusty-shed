@@ -31,7 +31,7 @@ function makeWishlist(shortId: string, name: string, isDefault = false): Wishlis
     name,
     notes: null,
     isDefault,
-    count: BigInt(0),
+    count: Number(0),
     updatedAt: '2025-01-01T00:00:00Z',
     totalValue: {}
   } as unknown as WishlistPreview;
@@ -50,7 +50,7 @@ function makeItem(
     removedDate: null,
     notes: null,
     desiredPrice: price
-      ? { amount: BigInt(price.amount), currency: price.currency as never }
+      ? { amount: Number(price.amount), currency: price.currency as never }
       : null,
     purchasedPrice: null,
     ...overrides
