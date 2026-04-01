@@ -25,10 +25,12 @@
       description={m.formations_description()}
     >
       {#snippet actions()}
-        <Button variant="rusty" size="sm" onclick={() => (showCreateDialog = true)}>
-          <Plus class="h-4 w-4" />
-          {m.formations_new_formation()}
-        </Button>
+        {#if ctx.summaries.length > 0}
+          <Button variant="rusty" size="sm" onclick={() => (showCreateDialog = true)}>
+            <Plus class="h-4 w-4" />
+            {m.formations_new_formation()}
+          </Button>
+        {/if}
       {/snippet}
     </PageHeader>
   </div>
@@ -99,9 +101,8 @@
     <FormationForm
       categories={ctx.categories}
       onsubmit={async (args) => {
-        const id = await ctx.create(args);
+        await ctx.create(args);
         showCreateDialog = false;
-        if (id) goto(resolve(`/train-formations/${id}`));
       }}
       oncancel={() => (showCreateDialog = false)}
     />
