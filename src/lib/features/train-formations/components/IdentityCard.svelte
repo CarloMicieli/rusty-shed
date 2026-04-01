@@ -1,11 +1,10 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
   import { Pencil, Trash2 } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog';
+  import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
   import FormationForm from './FormationForm.svelte';
-  import TractionWarning from './TractionWarning.svelte';
   import type { TrainFormationState } from '../TrainFormationState.svelte.js';
   import { resolve } from '$app/paths';
   import { goto } from '$app/navigation';
@@ -16,47 +15,81 @@
   let showDeleteDialog = $state(false);
 
   const formation = $derived(ctx.detail);
+
+  async function saveNotes(value: string) {
+    if (!formation) return;
+    await ctx.update(formation.id, {
+      name: null,
+      category_id: null,
+      start_year: null,
+      end_year: null,
+      epoch: null,
+      notes: value
+    });
+  }
 </script>
 
 {#if formation}
-  <div class="flex items-start justify-between gap-2">
-    <h2 class="text-base leading-tight font-semibold">{formation.name}</h2>
-    <div class="flex shrink-0 gap-1">
-      <Button variant="ghost" size="icon" class="size-7" onclick={() => (showEditDialog = true)}>
+  <div class="flex flex-col gap-1.5">
+    <!-- Title row -->
+    <div class="flex items-center gap-2">
+      <h2 class="font-bebas text-xl leading-none tracking-wider text-foreground">
+        {formation.name}
+      </h2>
+      <button
+        type="button"
+        class="text-muted-foreground transition-colors hover:text-primary"
+        aria-label={m.formations_edit_formation()}
+        onclick={() => (showEditDialog = true)}
+      >
         <Pencil class="size-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        class="size-7 text-destructive"
+      </button>
+      <button
+        type="button"
+        class="text-muted-foreground transition-colors hover:text-destructive"
+        aria-label={m.formations_delete_formation()}
         onclick={() => (showDeleteDialog = true)}
       >
         <Trash2 class="size-3.5" />
-      </Button>
+      </button>
+    </div>
+
+    <!-- Inline notes editor -->
+    <InPlaceEdit
+      value={formation.notes ?? ''}
+      placeholder={m.formations_notes_placeholder()}
+      multiline={false}
+      onSave={saveNotes}
+    />
+
+    <!-- Three-column horizontal metadata -->
+    <div class="flex gap-6 pt-0.5">
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+          {m.formations_meta_era()}
+        </span>
+        <span class="font-mono text-sm text-foreground">{formation.epoch ?? '—'}</span>
+      </div>
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+          {m.formations_meta_traction()}
+        </span>
+        <span class="font-mono text-sm text-foreground">
+          {ctx.hasTraction ? m.formations_meta_traction_yes() : m.formations_meta_traction_no()}
+        </span>
+      </div>
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+          {m.formations_meta_years()}
+        </span>
+        <span class="font-mono text-sm text-foreground">
+          {formation.start_year ?? '?'} – {formation.end_year ?? '…'}
+        </span>
+      </div>
     </div>
   </div>
-
-  <div class="flex flex-wrap gap-1">
-    {#if formation.category}
-      <Badge variant="secondary" class="text-xs">{formation.category.name}</Badge>
-    {/if}
-    {#if formation.epoch}
-      <Badge variant="outline" class="text-xs">{formation.epoch}</Badge>
-    {/if}
-    {#if formation.start_year || formation.end_year}
-      <Badge variant="outline" class="text-xs">
-        {formation.start_year ?? '?'} – {formation.end_year ?? '…'}
-      </Badge>
-    {/if}
-  </div>
-
-  {#if formation.notes}
-    <p class="text-xs text-muted-foreground">{formation.notes}</p>
-  {/if}
-
-  <TractionWarning hasTraction={ctx.hasTraction} />
 {:else}
-  <div class="h-24 animate-pulse rounded bg-muted"></div>
+  <div class="h-16 animate-pulse rounded bg-muted"></div>
 {/if}
 
 <!-- Edit dialog -->

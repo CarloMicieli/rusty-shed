@@ -1243,5 +1243,12 @@
   "formations_traction_override_enable": "Forza trazione",
   "formations_traction_override_disable": "Escludi dalla trazione",
   "formations_back": "Indietro",
-  "formations_no_units": "NESSUN MATERIALE ROTABILE ASSEGNATO"
+  "formations_no_units": "NESSUN MATERIALE ROTABILE ASSEGNATO",
+  "formations_meta_era": "Epoca",
+  "formations_meta_years": "Anni",
+  "formations_meta_traction": "Trazione",
+  "formations_meta_units": "Unità",
+  "formations_meta_traction_yes": "Sì",
+  "formations_meta_traction_no": "No",
+  "formations_notes_placeholder": "Aggiungi note al logbook..."
 }

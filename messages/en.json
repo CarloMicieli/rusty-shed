@@ -1243,5 +1243,12 @@
   "formations_traction_override_enable": "Force traction",
   "formations_traction_override_disable": "Exclude from traction",
   "formations_back": "Back",
-  "formations_no_units": "NO ROLLING STOCK ASSIGNED"
+  "formations_no_units": "NO ROLLING STOCK ASSIGNED",
+  "formations_meta_era": "Era",
+  "formations_meta_years": "Years",
+  "formations_meta_traction": "Traction",
+  "formations_meta_units": "Units",
+  "formations_meta_traction_yes": "Yes",
+  "formations_meta_traction_no": "No",
+  "formations_notes_placeholder": "Add logbook notes..."
 }
