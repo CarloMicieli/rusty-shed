@@ -84,6 +84,7 @@
           <FormationCard
             {summary}
             onclick={() => goto(resolve(`/train-formations/${summary.id}`))}
+            ondelete={() => ctx.delete(summary.id)}
           />
         {/each}
       </div>
