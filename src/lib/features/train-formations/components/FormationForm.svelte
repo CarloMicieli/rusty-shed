@@ -3,6 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
+  import EpochPicker from '$lib/components/drawer/EpochPicker.svelte';
   import { Textarea } from '$lib/components/ui/textarea';
   import * as Select from '$lib/components/ui/select';
   import type {
@@ -27,7 +28,7 @@
 
   let name = $state('');
   let categoryId = $state<string | null>(null);
-  let epoch = $state('');
+  let epoch = $state<string | null>(null);
   let startYear = $state('');
   let endYear = $state('');
   let notes = $state('');
@@ -45,7 +46,7 @@
     hydratedInitialId = nextInitialId;
     name = initial?.name ?? '';
     categoryId = initial?.category?.id ?? null;
-    epoch = initial?.epoch ?? '';
+    epoch = initial?.epoch ?? null;
     startYear = initial?.start_year?.toString() ?? '';
     endYear = initial?.end_year?.toString() ?? '';
     notes = initial?.notes ?? '';
@@ -149,10 +150,7 @@
     </div>
   </div>
 
-  <div class="space-y-1.5">
-    <Label for="formation-epoch">{m.formations_form_epoch_label()}</Label>
-    <Input id="formation-epoch" bind:value={epoch} placeholder="e.g. IV" autocomplete="off" />
-  </div>
+  <EpochPicker label={m.formations_form_epoch_label()} bind:value={epoch} />
 
   <div class="space-y-1.5">
     <Label for="formation-notes">{m.formations_form_notes_label()}</Label>

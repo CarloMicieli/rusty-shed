@@ -19,20 +19,14 @@
     onchange
   }: Props = $props();
 
-  let selected = $state<string[]>(value ? value.split('/').filter(Boolean) : []);
-
-  $effect(() => {
-    const next = selected.length > 0 ? selected.join('/') : null;
-    value = next;
-    onchange?.(next);
-  });
+  const selected = $derived(value ? value.split('/').filter(Boolean) : []);
 
   function toggle(epoch: string) {
-    if (selected.includes(epoch)) {
-      selected = selected.filter((e) => e !== epoch);
-    } else {
-      selected = [...selected, epoch];
-    }
+    const next = selected.includes(epoch)
+      ? selected.filter((e) => e !== epoch)
+      : [...selected, epoch];
+    value = next.length > 0 ? next.join('/') : null;
+    onchange?.(value);
   }
 </script>
 

@@ -40,7 +40,8 @@ describe('FormationForm.svelte', () => {
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('TEE Helvetia')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('IV')).toBeInTheDocument();
+      // EpochPicker renders pill buttons; the selected epoch has the amber highlight class
+      expect(screen.getByRole('button', { name: 'IV' }).className).toContain('border-amber-500');
       expect(screen.getByDisplayValue('1971')).toBeInTheDocument();
       expect(screen.getByDisplayValue('1979')).toBeInTheDocument();
       expect(screen.getByDisplayValue('International service')).toBeInTheDocument();
@@ -99,7 +100,8 @@ describe('FormationForm.svelte', () => {
     await fireEvent.input(screen.getByLabelText('Name'), { target: { value: '  EC 22  ' } });
     await fireEvent.input(screen.getByLabelText('Start year'), { target: { value: '1988' } });
     await fireEvent.input(screen.getByLabelText('End year'), { target: { value: '1991' } });
-    await fireEvent.input(screen.getByLabelText('Epoch'), { target: { value: 'V' } });
+    // EpochPicker: click the "V" pill button to select it
+    await fireEvent.click(screen.getByRole('button', { name: 'V' }));
     await fireEvent.input(screen.getByLabelText('Notes'), {
       target: { value: '  Cross-border service  ' }
     });
