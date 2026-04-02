@@ -10,7 +10,7 @@ use crate::trains::domain::formation::formation_element::FormationElement;
 use crate::trains::domain::formation::train_formation::TrainFormation;
 use crate::trains::infrastructure::entities::{
     FormationCategoryRow, FormationElementDetailRow, FormationElementRow, PrototypeRow,
-    TrainFormationRow, TrainFormationSummaryRow,
+    PrototypeWithCompanyRow, TrainFormationRow, TrainFormationSummaryRow,
 };
 use crate::trains::infrastructure::mappers::{
     self, FormationCategoryView, FormationElementView, PrototypeGroupView, PrototypeView,
@@ -274,10 +274,16 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                    tf.epoch,
                    COUNT(fe.id) AS element_count,
                    COUNT(fe.owned_rolling_stock_id) AS owned_count,
-                   tf.version
+                   tf.version,
+                   CAST(SUM(CASE
+                       WHEN (p.is_motorized = 1 AND p.default_is_dummy = 0 AND fe.traction_override != -1)
+                            OR fe.traction_override = 1
+                       THEN 1 ELSE 0
+                   END) > 0 AS INTEGER) AS has_traction
                FROM train_formations tf
                LEFT JOIN formation_categories fc ON fc.id = tf.category_id
                LEFT JOIN formation_elements fe ON fe.formation_id = tf.id
+               LEFT JOIN prototypes p ON p.id = fe.prototype_id
                GROUP BY tf.id
                ORDER BY tf.name ASC"#,
         )
@@ -287,8 +293,7 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
 
         let mut summaries = Vec::with_capacity(rows.len());
         for row in rows {
-            // Compute has_traction via the element join data
-            let has_traction = self.compute_has_traction(row.id.as_str()).await?;
+            let has_traction = row.has_traction != 0;
             let category = if let Some(ref cat_id) = row.category_id {
                 row.category_name
                     .as_ref()
@@ -583,31 +588,38 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         &mut self,
         query: Option<&str>,
     ) -> Result<Vec<PrototypeGroupView>, DomainError> {
-        let rows: Vec<PrototypeRow> = if let Some(q) = query.filter(|s| !s.trim().is_empty()) {
-            let pattern = format!("%{}%", q.to_lowercase());
-            sqlx::query_as(
-                r#"SELECT id, railway_company_id, series_code, car_type, service_level,
-                          category, is_motorized, default_is_dummy, is_custom, notes, version
-                   FROM prototypes
-                   WHERE LOWER(series_code) LIKE ? OR LOWER(car_type) LIKE ?
-                   ORDER BY railway_company_id, series_code"#,
-            )
-            .bind(&pattern)
-            .bind(&pattern)
-            .fetch_all(&mut *self.conn)
-            .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?
-        } else {
-            sqlx::query_as(
-                r#"SELECT id, railway_company_id, series_code, car_type, service_level,
-                          category, is_motorized, default_is_dummy, is_custom, notes, version
-                   FROM prototypes
-                   ORDER BY railway_company_id, series_code"#,
-            )
-            .fetch_all(&mut *self.conn)
-            .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?
-        };
+        let rows: Vec<PrototypeWithCompanyRow> =
+            if let Some(q) = query.filter(|s| !s.trim().is_empty()) {
+                let pattern = format!("%{}%", q.to_lowercase());
+                sqlx::query_as(
+                    r#"SELECT p.id, p.railway_company_id, rc.name AS company_name,
+                              p.series_code, p.car_type, p.service_level,
+                              p.category, p.is_motorized, p.default_is_dummy,
+                              p.is_custom, p.notes, p.version
+                       FROM prototypes p
+                       JOIN railway_companies rc ON rc.id = p.railway_company_id
+                       WHERE LOWER(p.series_code) LIKE ? OR LOWER(p.car_type) LIKE ?
+                       ORDER BY p.railway_company_id, p.series_code"#,
+                )
+                .bind(&pattern)
+                .bind(&pattern)
+                .fetch_all(&mut *self.conn)
+                .await
+                .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+            } else {
+                sqlx::query_as(
+                    r#"SELECT p.id, p.railway_company_id, rc.name AS company_name,
+                              p.series_code, p.car_type, p.service_level,
+                              p.category, p.is_motorized, p.default_is_dummy,
+                              p.is_custom, p.notes, p.version
+                       FROM prototypes p
+                       JOIN railway_companies rc ON rc.id = p.railway_company_id
+                       ORDER BY p.railway_company_id, p.series_code"#,
+                )
+                .fetch_all(&mut *self.conn)
+                .await
+                .map_err(|e| DomainError::Infrastructure(e.to_string()))?
+            };
 
         // Group by railway company preserving ORDER BY order
         let mut group_order: Vec<String> = Vec::new();
@@ -615,8 +627,9 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             std::collections::HashMap::new();
         for row in rows {
             let company_id = row.railway_company_id.clone();
-            let company_name = self.get_company_name(&company_id).await?;
-            let view = mappers::prototype_row_to_view(row, company_name.clone());
+            let company_name = row.company_name.clone();
+            let view =
+                mappers::prototype_row_to_view(PrototypeRow::from(row), company_name.clone());
             if !groups.contains_key(&company_id) {
                 group_order.push(company_id.clone());
                 groups.insert(company_id.clone(), (company_name, Vec::new()));

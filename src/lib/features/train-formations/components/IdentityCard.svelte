@@ -5,6 +5,7 @@
   import * as Dialog from '$lib/components/ui/dialog';
   import * as Tooltip from '$lib/components/ui/tooltip';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import EpochInlineSelect from './EpochInlineSelect.svelte';
   import FormationForm from './FormationForm.svelte';
   import type { TrainFormationState } from '../TrainFormationState.svelte.js';
   import { resolve } from '$app/paths';
@@ -160,33 +161,30 @@
     </div>
 
     <!-- Two-column horizontal metadata: ERA | YEARS -->
-    <div class="flex gap-6 pt-0.5">
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
-          {m.formations_meta_era()}
-        </span>
-        <InPlaceEdit value={formation.epoch ?? ''} placeholder="—" onSave={saveEpoch} />
-      </div>
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
-          {m.formations_meta_years()}
-        </span>
-        <div class="flex items-center gap-1 font-mono text-sm text-foreground">
-          <div class="w-12">
-            <InPlaceEdit
-              value={String(formation.start_year ?? '')}
-              placeholder="?"
-              onSave={saveStartYear}
-            />
-          </div>
-          <span class="text-muted-foreground">–</span>
-          <div class="w-12">
-            <InPlaceEdit
-              value={String(formation.end_year ?? '')}
-              placeholder="…"
-              onSave={saveEndYear}
-            />
-          </div>
+    <!-- Grid keeps labels in row-1 and values in row-2, guaranteeing alignment -->
+    <div class="grid grid-cols-[auto_auto] items-center gap-x-6 gap-y-0.5 pt-0.5">
+      <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+        {m.formations_meta_era()}
+      </span>
+      <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
+        {m.formations_meta_years()}
+      </span>
+      <EpochInlineSelect value={formation.epoch ?? null} onSave={saveEpoch} />
+      <div class="flex items-center gap-1 font-mono text-sm text-foreground">
+        <div class="w-12">
+          <InPlaceEdit
+            value={String(formation.start_year ?? '')}
+            placeholder="?"
+            onSave={saveStartYear}
+          />
+        </div>
+        <span class="text-muted-foreground">–</span>
+        <div class="w-12">
+          <InPlaceEdit
+            value={String(formation.end_year ?? '')}
+            placeholder="…"
+            onSave={saveEndYear}
+          />
         </div>
       </div>
     </div>

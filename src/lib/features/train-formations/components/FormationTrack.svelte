@@ -46,21 +46,29 @@
     </span>
   </div>
 {:else}
-  <div
-    class="flex flex-wrap gap-2 pt-3 pr-2"
-    use:dndzone={{ items, flipDurationMs: 200, type: 'formation-cell' }}
-    onconsider={handleConsider}
-    onfinalize={handleFinalize}
-  >
-    {#each items as element (element.id)}
-      <div animate:flip={{ duration: 200 }} class="group overflow-visible">
-        <FormationCell
-          {element}
-          onRemove={handleRemove}
-          {onOpenPicker}
-          onTractionToggle={handleTractionToggle}
-        />
-      </div>
-    {/each}
+  <!-- Threaded yard: left rail guides the eye across wrapped rows -->
+  <div class="relative pl-7">
+    <!-- Connecting pipe: vertical rail flush with left edge -->
+    <div class="absolute top-3 bottom-2 left-2.5 w-0.5 rounded-full bg-border/60"></div>
+    <!-- Rail cap dot at the top -->
+    <div class="absolute top-3 left-[0.5625rem] size-1.5 rounded-full bg-primary/50"></div>
+
+    <div
+      class="flex flex-wrap gap-2 pt-3 pr-2"
+      use:dndzone={{ items, flipDurationMs: 200, type: 'formation-cell' }}
+      onconsider={handleConsider}
+      onfinalize={handleFinalize}
+    >
+      {#each items as element (element.id)}
+        <div animate:flip={{ duration: 200 }} class="group overflow-visible">
+          <FormationCell
+            {element}
+            onRemove={handleRemove}
+            {onOpenPicker}
+            onTractionToggle={handleTractionToggle}
+          />
+        </div>
+      {/each}
+    </div>
   </div>
 {/if}

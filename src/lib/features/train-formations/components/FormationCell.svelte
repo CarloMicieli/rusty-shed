@@ -27,7 +27,7 @@
 </script>
 
 <div
-  class="variant-steampunk-riveted group relative flex min-w-[5.25rem] flex-col items-center gap-2 overflow-visible rounded-sm border p-3 shadow-sm transition-all duration-150 ease-out
+  class="variant-steampunk-riveted group relative flex min-w-[6.25rem] flex-col items-center gap-2 overflow-visible rounded-sm border p-3 shadow-sm transition-all duration-150 ease-out
     {element.owned_rolling_stock_id
     ? 'border-primary/45 bg-primary/8 text-foreground'
     : ownedCount > 0
@@ -44,7 +44,7 @@
   {/if}
 
   <div
-    class="absolute top-2 left-2 max-w-[3.5rem] truncate rounded-sm border border-border bg-background/85 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase"
+    class="absolute top-2 left-2 max-w-[4.5rem] truncate rounded-sm border border-border bg-background/85 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase"
   >
     {displayCompany}
   </div>
@@ -56,11 +56,13 @@
   />
 
   <div class="flex flex-col items-center gap-0.5 text-center">
-    <span class="max-w-[4.5rem] truncate font-mono text-[11px] leading-tight text-foreground">
+    <span class="max-w-[5.5rem] truncate font-mono text-[11px] leading-tight text-foreground">
       {displayCode}
     </span>
     {#if prototype.service_level}
-      <span class="max-w-[4.5rem] truncate text-[9px] leading-tight text-muted-foreground">
+      <span
+        class="max-w-[5.5rem] truncate font-mono text-[10px] leading-tight text-muted-foreground uppercase"
+      >
         {prototype.service_level}
       </span>
     {/if}

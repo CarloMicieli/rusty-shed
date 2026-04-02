@@ -1250,5 +1250,7 @@
   "formations_meta_units": "Unità",
   "formations_meta_traction_yes": "Sì",
   "formations_meta_traction_no": "No",
-  "formations_notes_placeholder": "Aggiungi note al logbook..."
+  "formations_notes_placeholder": "Aggiungi note al logbook...",
+  "formations_notes_read_more": "Leggi tutto",
+  "formations_notes_collapse": "Comprimi"
 }

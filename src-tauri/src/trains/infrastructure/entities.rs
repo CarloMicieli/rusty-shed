@@ -102,4 +102,41 @@ pub struct TrainFormationSummaryRow {
     pub element_count: i64,
     pub owned_count: i64,
     pub version: i64,
+    /// Aggregated traction flag (1 = has traction, 0 = none). Computed via SQL SUM/CASE.
+    pub has_traction: i64,
+}
+
+/// Prototype row joined with its railway company name, used by `search_prototypes()`.
+#[derive(Debug, Clone, FromRow)]
+pub struct PrototypeWithCompanyRow {
+    pub id: String,
+    pub railway_company_id: String,
+    pub company_name: String,
+    pub series_code: String,
+    pub car_type: String,
+    pub service_level: Option<String>,
+    pub category: String,
+    pub is_motorized: i64,
+    pub default_is_dummy: i64,
+    pub is_custom: i64,
+    pub notes: Option<String>,
+    pub version: i64,
+}
+
+impl From<PrototypeWithCompanyRow> for PrototypeRow {
+    fn from(r: PrototypeWithCompanyRow) -> Self {
+        PrototypeRow {
+            id: r.id,
+            railway_company_id: r.railway_company_id,
+            series_code: r.series_code,
+            car_type: r.car_type,
+            service_level: r.service_level,
+            category: r.category,
+            is_motorized: r.is_motorized,
+            default_is_dummy: r.default_is_dummy,
+            is_custom: r.is_custom,
+            notes: r.notes,
+            version: r.version,
+        }
+    }
 }

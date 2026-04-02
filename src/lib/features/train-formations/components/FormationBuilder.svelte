@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { Button } from '$lib/components/ui/button';
-  import { Plus, ChevronLeft } from 'lucide-svelte';
+  import { Plus, ChevronLeft, ChevronDown } from 'lucide-svelte';
   import * as Tooltip from '$lib/components/ui/tooltip';
   import IdentityCard from './IdentityCard.svelte';
   import FormationTrack from './FormationTrack.svelte';
@@ -20,6 +20,7 @@
   } = $props();
 
   let drawerOpen = $state(false);
+  let notesExpanded = $state(false);
 
   let pickerOpen = $state(false);
   let activeElementId = $state('');
@@ -94,19 +95,65 @@
       </div>
     </header>
 
-    <!-- ② Logbook Notes -->
-    <div class="rounded-sm border border-border bg-card px-4 py-3">
-      <RichTextEditor
-        value={ctx.detail?.notes ?? null}
-        editable={true}
-        placeholder={m.formations_notes_placeholder()}
-        onSave={saveNotes}
-      />
-    </div>
-
-    <!-- ③ Main Yard -->
+    <!-- ② Main Yard -->
     <div class="rounded-sm border border-border bg-background/50 p-3">
       <FormationTrack state={ctx} {formationId} onOpenPicker={openPicker} />
+    </div>
+
+    <!-- ③ Logbook Notes (Accordion) -->
+    <div class="rounded-sm border border-border bg-card">
+      <!-- Accordion header — click to expand/collapse -->
+      <button
+        type="button"
+        class="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-white/5"
+        onclick={() => (notesExpanded = !notesExpanded)}
+      >
+        <span class="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+          {m.formations_form_notes_label()}
+        </span>
+        <ChevronDown
+          size={14}
+          class="text-muted-foreground transition-transform duration-300 {notesExpanded
+            ? 'rotate-180'
+            : ''}"
+        />
+      </button>
+
+      <!-- Separator -->
+      <div class="h-px bg-border/40"></div>
+
+      <!-- Sliding panel: max-height animates between preview and full -->
+      <div
+        class="relative overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style="max-height: {notesExpanded ? '600px' : '5.5rem'}"
+      >
+        <div class="px-4 py-3">
+          <RichTextEditor
+            value={ctx.detail?.notes ?? null}
+            editable={true}
+            placeholder={m.formations_notes_placeholder()}
+            onSave={saveNotes}
+          />
+        </div>
+
+        <!-- Collapsed overlay: gradient fade + Read More button -->
+        {#if !notesExpanded && ctx.detail?.notes}
+          <div
+            class="pointer-events-none absolute right-0 bottom-0 left-0 flex items-end justify-end bg-gradient-to-t from-card/95 to-transparent px-4 pt-8 pb-2"
+          >
+            <button
+              type="button"
+              class="pointer-events-auto font-mono text-[9px] tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"
+              onclick={(e) => {
+                e.stopPropagation();
+                notesExpanded = true;
+              }}
+            >
+              {m.formations_notes_read_more()}
+            </button>
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 
