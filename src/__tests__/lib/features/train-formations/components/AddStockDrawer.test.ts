@@ -9,7 +9,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   formations_search_placeholder: () => 'Search prototypes',
   formations_add_prototype_action: () => 'Add prototype',
   formations_prototype_series_code: () => 'Series code',
-  formations_prototype_car_type: () => 'Car type',
+  formations_prototype_specification_type: () => 'Specification type',
   formations_prototype_service_level: () => 'Service level',
   formations_save: () => 'Save',
   formations_cancel: () => 'Cancel'
@@ -155,7 +155,11 @@ describe('AddStockDrawer.svelte', () => {
       expect(state.createCustomPrototype).toHaveBeenCalledWith(
         expect.objectContaining({
           series_code: 'EW IV Bistro',
-          category: 'Freight'
+          specification_type: 'PASSENGER_CAR',
+          friendly_name: null,
+          locomotive_type: null,
+          passenger_car_type: null,
+          freight_car_type: null
         })
       );
       expect(state.addElement).toHaveBeenCalledWith('formation-1', {

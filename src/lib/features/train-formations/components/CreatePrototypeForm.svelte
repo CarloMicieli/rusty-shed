@@ -7,16 +7,12 @@
   import { Checkbox } from '$lib/components/ui/checkbox';
   import type { TrainFormationState } from '../TrainFormationState.svelte.js';
 
-  const CAR_TYPES = [
-    'Locomotive',
-    'Coach',
-    'Wagon',
-    'PowerCar',
-    'ControlCar',
-    'MotorUnitCar',
-    'DrivingTrailer',
-    'TrailerCar',
-    'CateringCar'
+  const SPECIFICATION_TYPES = [
+    'LOCOMOTIVE',
+    'PASSENGER_CAR',
+    'FREIGHT_CAR',
+    'RAILCAR',
+    'ELECTRIC_MULTIPLE_UNIT'
   ] as const;
 
   let {
@@ -31,9 +27,8 @@
 
   let railwayCompanyId = $state('');
   let seriesCode = $state('');
-  let carType = $state('Coach');
+  let specificationType = $state('PASSENGER_CAR');
   let serviceLevel = $state('');
-  let category = $state('');
   let isMotorized = $state(false);
   let defaultIsDummy = $state(false);
   let submitting = $state(false);
@@ -46,12 +41,20 @@
       const proto = await ctx.createCustomPrototype({
         railway_company_id: railwayCompanyId.trim(),
         series_code: seriesCode.trim(),
-        car_type: carType,
+        friendly_name: null,
+        specification_type: specificationType,
         service_level: serviceLevel.trim() || null,
-        category: category.trim() || 'Freight',
         is_motorized: isMotorized,
         default_is_dummy: defaultIsDummy,
-        notes: null
+        notes: null,
+        locomotive_type: null,
+        locomotive_series: null,
+        passenger_car_type: null,
+        freight_car_type: null,
+        railcar_type: null,
+        electric_multiple_unit_type: null,
+        elements_count: null,
+        is_permanently_coupled: null
       });
       if (proto) onCreated(proto.id);
     } finally {
@@ -85,12 +88,12 @@
   </div>
 
   <div class="space-y-1">
-    <Label for="cp-type" class="text-xs">{m.formations_prototype_car_type()}</Label>
-    <Select.Root type="single" bind:value={carType}>
-      <Select.Trigger id="cp-type" class="h-8 text-sm">{carType}</Select.Trigger>
+    <Label for="cp-type" class="text-xs">{m.formations_prototype_specification_type()}</Label>
+    <Select.Root type="single" bind:value={specificationType}>
+      <Select.Trigger id="cp-type" class="h-8 text-sm">{specificationType}</Select.Trigger>
       <Select.Content>
-        {#each CAR_TYPES as ct (ct)}
-          <Select.Item value={ct}>{ct}</Select.Item>
+        {#each SPECIFICATION_TYPES as st (st)}
+          <Select.Item value={st}>{st}</Select.Item>
         {/each}
       </Select.Content>
     </Select.Root>

@@ -5,6 +5,7 @@
   import PrototypeIcon from './icons/PrototypeIcon.svelte';
   import OwnershipBadge from './OwnershipBadge.svelte';
   import type { FormationElementView } from '$lib/bindings.js';
+  import { prototypeIconType } from '../domain/prototype.js';
 
   let {
     element,
@@ -50,7 +51,7 @@
   </div>
 
   <PrototypeIcon
-    type={prototype.car_type}
+    type={prototypeIconType(prototype)}
     isOwned={!!element.owned_rolling_stock_id || ownedCount > 0}
     class="mt-4 size-8"
   />
