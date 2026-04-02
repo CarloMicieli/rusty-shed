@@ -46,23 +46,21 @@
     </span>
   </div>
 {:else}
-  <div class="scrollbar-thin overflow-x-auto pb-2">
-    <div
-      class="flex gap-2 pt-3 pr-2"
-      use:dndzone={{ items, flipDurationMs: 200, type: 'formation-cell' }}
-      onconsider={handleConsider}
-      onfinalize={handleFinalize}
-    >
-      {#each items as element (element.id)}
-        <div animate:flip={{ duration: 200 }} class="group shrink-0 overflow-visible">
-          <FormationCell
-            {element}
-            onRemove={handleRemove}
-            {onOpenPicker}
-            onTractionToggle={handleTractionToggle}
-          />
-        </div>
-      {/each}
-    </div>
+  <div
+    class="flex flex-wrap gap-2 pt-3 pr-2"
+    use:dndzone={{ items, flipDurationMs: 200, type: 'formation-cell' }}
+    onconsider={handleConsider}
+    onfinalize={handleFinalize}
+  >
+    {#each items as element (element.id)}
+      <div animate:flip={{ duration: 200 }} class="group overflow-visible">
+        <FormationCell
+          {element}
+          onRemove={handleRemove}
+          {onOpenPicker}
+          onTractionToggle={handleTractionToggle}
+        />
+      </div>
+    {/each}
   </div>
 {/if}

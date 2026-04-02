@@ -7,6 +7,7 @@
   import FormationTrack from './FormationTrack.svelte';
   import AddStockDrawer from './AddStockDrawer.svelte';
   import AssignModelPicker from './AssignModelPicker.svelte';
+  import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   import type { TrainFormationState } from '../TrainFormationState.svelte.js';
   import { resolve } from '$app/paths';
 
@@ -33,6 +34,19 @@
   }
 
   const elementCount = $derived(ctx.detail?.elements?.length ?? 0);
+
+  async function saveNotes(value: string) {
+    const f = ctx.detail;
+    if (!f) return;
+    await ctx.update(f.id, {
+      name: null,
+      category_id: f.category?.id ?? null,
+      start_year: f.start_year ?? null,
+      end_year: f.end_year ?? null,
+      epoch: f.epoch ?? null,
+      notes: value
+    });
+  }
 </script>
 
 <Tooltip.Provider>
@@ -80,7 +94,17 @@
       </div>
     </header>
 
-    <!-- ② Main Yard -->
+    <!-- ② Logbook Notes -->
+    <div class="rounded-sm border border-border bg-card px-4 py-3">
+      <RichTextEditor
+        value={ctx.detail?.notes ?? null}
+        editable={true}
+        placeholder={m.formations_notes_placeholder()}
+        onSave={saveNotes}
+      />
+    </div>
+
+    <!-- ③ Main Yard -->
     <div class="rounded-sm border border-border bg-background/50 p-3">
       <FormationTrack state={ctx} {formationId} onOpenPicker={openPicker} />
     </div>
