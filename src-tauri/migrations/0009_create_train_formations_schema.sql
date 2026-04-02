@@ -4,24 +4,32 @@
 
 CREATE TABLE IF NOT EXISTS prototypes
 (
-    id                  TEXT NOT NULL PRIMARY KEY,
-    railway_company_id   TEXT NOT NULL,
-    series_code         TEXT NOT NULL,
-    car_type            TEXT NOT NULL,
-    service_level       TEXT,
-    category            TEXT NOT NULL,
-    is_motorized        INTEGER NOT NULL DEFAULT 0 CHECK (is_motorized IN (0,1)),
-    default_is_dummy    INTEGER NOT NULL DEFAULT 0 CHECK (default_is_dummy IN (0,1)),
-    is_custom           INTEGER NOT NULL DEFAULT 0 CHECK (is_custom IN (0,1)),
-    notes               TEXT,
-    created_at          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version             INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY (railway_company_id) REFERENCES railway_companies(id) ON DELETE RESTRICT
-);
+    id                          TEXT    NOT NULL PRIMARY KEY,
+    railway_company_id          TEXT    NOT NULL,
+    series_code                 TEXT    NOT NULL,
+    friendly_name               TEXT,
+    is_motorized                INTEGER NOT NULL DEFAULT 0 CHECK (is_motorized IN (0, 1)),
+    default_is_dummy            INTEGER NOT NULL DEFAULT 0 CHECK (default_is_dummy IN (0, 1)),
+    is_custom                   INTEGER NOT NULL DEFAULT 0 CHECK (is_custom IN (0, 1)),
+    notes                       TEXT,
+    specification_type          TEXT    NOT NULL,
+    locomotive_type             TEXT,
+    locomotive_series           TEXT,
+    service_level               TEXT,
+    passenger_car_type          TEXT,
+    freight_car_type            TEXT,
+    railcar_type                TEXT,
+    electric_multiple_unit_type TEXT,
+    elements_count              INTEGER,
+    is_permanently_coupled      INTEGER CHECK (is_permanently_coupled IN (0, 1)),
+    created_at                  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                     INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (railway_company_id) REFERENCES railway_companies (id) ON DELETE RESTRICT
+    );
 
 CREATE INDEX IF NOT EXISTS idx_prototypes_company_series ON prototypes (railway_company_id, series_code);
-CREATE INDEX IF NOT EXISTS idx_prototypes_car_type ON prototypes (car_type);
+CREATE INDEX IF NOT EXISTS idx_prototypes_specification_type ON prototypes (specification_type);
 CREATE INDEX IF NOT EXISTS idx_prototypes_is_custom ON prototypes (is_custom);
 
 CREATE TABLE IF NOT EXISTS formation_categories
