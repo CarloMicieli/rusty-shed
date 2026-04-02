@@ -1,10 +1,10 @@
-id,railway_company_id,series_code,car_type,service_level,category,is_motorized,default_is_dummy
-trn:prototype:fs-e444-tartaruga,trn:railway-company:fs,E.444 Tartaruga,Locomotive,,Locomotive,1,0
-trn:prototype:fs-e646,trn:railway-company:fs,E.646,Locomotive,,Locomotive,1,0
-trn:prototype:sbb-re44-ii,trn:railway-company:sbb-cff-ffs,Re 4/4 II,Locomotive,,Locomotive,1,0
-trn:prototype:db-e103,trn:railway-company:db,Baureihe 103,Locomotive,,Locomotive,1,0
-trn:prototype:fs-uic-z1-gran-comfort,trn:railway-company:fs,UIC-Z1 Gran Comfort,Coach,1st Class,Passenger,0,0
-trn:prototype:fs-uic-x-1cl,trn:railway-company:fs,UIC-X (1982),Coach,1st Class,Passenger,0,0
-trn:prototype:fs-uic-x-2cl,trn:railway-company:fs,UIC-X (1982),Coach,2nd Class,Passenger,0,0
-trn:prototype:sbb-ewiv-1cl,trn:railway-company:sbb-cff-ffs,EW IV,Coach,1st Class,Passenger,0,0
-trn:prototype:db-avmz-eurocity,trn:railway-company:db,Avmz (EuroCity),Coach,1st Class,Passenger,0,0
+id,railway_company_id,series_code,friendly_name,specification_type,locomotive_type,locomotive_series,service_level,passenger_car_type,freight_car_type,railcar_type,electric_multiple_unit_type,elements_count,is_permanently_coupled,is_motorized,default_is_dummy
+trn:prototype:fs-e444-tartaruga,trn:railway-company:fs,E.444 Tartaruga,Tartaruga,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
+trn:prototype:fs-e646,trn:railway-company:fs,E.646,Caimano,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
+trn:prototype:sbb-re44-ii,trn:railway-company:sbb-cff-ffs,Re 4/4 II,,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
+trn:prototype:db-e103,trn:railway-company:db,Baureihe 103,,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
+trn:prototype:fs-uic-z1-gran-comfort,trn:railway-company:fs,UIC-Z1 Gran Comfort,,PASSENGER_CAR,,,FIRST,COMPARTMENT_COACH,,,,,,0,0
+trn:prototype:fs-uic-x-1cl,trn:railway-company:fs,UIC-X (1982),,PASSENGER_CAR,,,FIRST,COMPARTMENT_COACH,,,,,,0,0
+trn:prototype:fs-uic-x-2cl,trn:railway-company:fs,UIC-X (1982),,PASSENGER_CAR,,,SECOND,COMPARTMENT_COACH,,,,,,0,0
+trn:prototype:sbb-ewiv-1cl,trn:railway-company:sbb-cff-ffs,EW IV,,PASSENGER_CAR,,,FIRST,OPEN_COACH,,,,,,0,0
+trn:prototype:db-avmz-eurocity,trn:railway-company:db,Avmz (EuroCity),,PASSENGER_CAR,,,FIRST,COMPARTMENT_COACH,,,,,,0,0

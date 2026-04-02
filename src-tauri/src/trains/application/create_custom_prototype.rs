@@ -21,12 +21,20 @@ impl CreateCustomPrototypeUseCase {
             id: &id,
             railway_company_id: &args.railway_company_id,
             series_code: &args.series_code,
-            car_type: &args.car_type,
-            service_level: args.service_level.as_deref(),
-            category: &args.category,
+            friendly_name: args.friendly_name.as_deref(),
             is_motorized: args.is_motorized,
             default_is_dummy: args.default_is_dummy,
             notes: args.notes.as_deref(),
+            specification_type: &args.specification_type,
+            locomotive_type: args.locomotive_type.as_deref(),
+            locomotive_series: args.locomotive_series.as_deref(),
+            service_level: args.service_level.as_deref(),
+            passenger_car_type: args.passenger_car_type.as_deref(),
+            freight_car_type: args.freight_car_type.as_deref(),
+            railcar_type: args.railcar_type.as_deref(),
+            electric_multiple_unit_type: args.electric_multiple_unit_type.as_deref(),
+            elements_count: args.elements_count,
+            is_permanently_coupled: args.is_permanently_coupled,
         })
         .await
     }

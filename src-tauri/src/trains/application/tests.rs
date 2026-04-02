@@ -195,10 +195,11 @@ mod reorder_formation_elements {
         let now = Utc::now().to_rfc3339();
         sqlx::query(
             "INSERT INTO prototypes
-             (id, railway_company_id, series_code, car_type, service_level,
-              category, is_motorized, default_is_dummy, is_custom, created_at, updated_at, version)
+             (id, railway_company_id, series_code, specification_type,
+              locomotive_type, is_motorized, default_is_dummy, is_custom,
+              created_at, updated_at, version)
              VALUES ('proto-reorder-1', 'trn:railway-company:fs', 'Re 4/4 II',
-                     'Locomotive', NULL, 'Locomotive', 1, 0, 0, ?, ?, 0)",
+                     'LOCOMOTIVE', 'ELECTRIC_LOCOMOTIVE', 1, 0, 0, ?, ?, 0)",
         )
         .bind(&now)
         .bind(&now)
@@ -278,22 +279,30 @@ mod create_custom_prototype {
     use crate::trains::interface::command_args::CreateCustomPrototypeArgs;
     use garde::Validate;
 
-    /// An unrecognised `car_type` must fail `garde` validation at the boundary.
+    /// An unrecognised `specification_type` must fail `garde` validation at the boundary.
     #[test]
-    fn test_create_custom_prototype_invalid_car_type_fails_validation() {
+    fn test_create_custom_prototype_invalid_specification_type_fails_validation() {
         let args = CreateCustomPrototypeArgs {
             railway_company_id: "trn:railway-company:fs".into(),
             series_code: "Test 1".into(),
-            car_type: "FlyingSaucer".into(), // not in the allowed enum
-            service_level: None,
-            category: "Locomotive".into(),
+            friendly_name: None,
             is_motorized: true,
             default_is_dummy: false,
             notes: None,
+            specification_type: "FLYING_SAUCER".into(), // not a valid discriminator
+            locomotive_type: None,
+            locomotive_series: None,
+            service_level: None,
+            passenger_car_type: None,
+            freight_car_type: None,
+            railcar_type: None,
+            electric_multiple_unit_type: None,
+            elements_count: None,
+            is_permanently_coupled: None,
         };
         assert!(
             args.validate().is_err(),
-            "invalid car_type must fail garde validation"
+            "invalid specification_type must fail garde validation"
         );
     }
 
@@ -308,12 +317,20 @@ mod create_custom_prototype {
             CreateCustomPrototypeArgs {
                 railway_company_id: "trn:railway-company:non-existent".into(),
                 series_code: "E.444 Custom".into(),
-                car_type: "Locomotive".into(),
-                service_level: None,
-                category: "Locomotive".into(),
+                friendly_name: None,
                 is_motorized: true,
                 default_is_dummy: false,
                 notes: None,
+                specification_type: "LOCOMOTIVE".into(),
+                locomotive_type: Some("ELECTRIC_LOCOMOTIVE".into()),
+                locomotive_series: None,
+                service_level: None,
+                passenger_car_type: None,
+                freight_car_type: None,
+                railcar_type: None,
+                electric_multiple_unit_type: None,
+                elements_count: None,
+                is_permanently_coupled: None,
             },
         )
         .await;

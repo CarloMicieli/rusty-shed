@@ -218,14 +218,15 @@ mod roundtrip {
 
         sqlx::query(
             "INSERT INTO prototypes \
-             (id, railway_company_id, series_code, car_type, category, is_motorized, is_custom) \
+             (id, railway_company_id, series_code, specification_type, \
+              locomotive_type, is_motorized, is_custom) \
              VALUES (?, ?, ?, ?, ?, ?, ?)",
         )
         .bind("proto-test-001")
         .bind("trn:railway-company:test-railway")
         .bind("BR 101")
-        .bind("Locomotive")
-        .bind("LOCOMOTIVES")
+        .bind("LOCOMOTIVE")
+        .bind("ELECTRIC_LOCOMOTIVE")
         .bind(1_i64)
         .bind(1_i64)
         .execute(pool)

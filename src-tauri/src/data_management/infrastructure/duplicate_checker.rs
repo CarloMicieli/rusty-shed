@@ -501,7 +501,7 @@ impl DuplicateChecker {
         })
     }
 
-    /// Check for duplicate prototypes by railway_company_id + series_code + car_type.
+    /// Check for duplicate prototypes by `railway_company_id + series_code + specification_type`.
     pub async fn check_prototypes(
         &self,
         prototypes: &[PrototypeRecord],
@@ -512,13 +512,18 @@ impl DuplicateChecker {
 
         let composite_keys: Vec<String> = prototypes
             .iter()
-            .map(|p| format!("{}|{}|{}", p.railway_company_id, p.series_code, p.car_type))
+            .map(|p| {
+                format!(
+                    "{}|{}|{}",
+                    p.railway_company_id, p.series_code, p.specification_type
+                )
+            })
             .collect();
 
         let query = format!(
-            "SELECT (railway_company_id || '|' || series_code || '|' || car_type) \
+            "SELECT (railway_company_id || '|' || series_code || '|' || specification_type) \
              FROM prototypes \
-             WHERE (railway_company_id || '|' || series_code || '|' || car_type) IN ({})",
+             WHERE (railway_company_id || '|' || series_code || '|' || specification_type) IN ({})",
             composite_keys
                 .iter()
                 .map(|_| "?")
@@ -543,7 +548,7 @@ impl DuplicateChecker {
         for prototype in prototypes {
             let key = format!(
                 "{}|{}|{}",
-                prototype.railway_company_id, prototype.series_code, prototype.car_type
+                prototype.railway_company_id, prototype.series_code, prototype.specification_type
             );
             if existing_keys.contains(&key) {
                 duplicate_ids.push(prototype.id.clone());
@@ -778,13 +783,13 @@ mod tests {
     async fn test_check_prototypes_uses_composite_key() {
         let pool = sqlx::SqlitePool::connect(":memory:").await.expect("pool");
         sqlx::query(
-            "CREATE TABLE prototypes (id TEXT PRIMARY KEY, railway_company_id TEXT NOT NULL, series_code TEXT NOT NULL, car_type TEXT NOT NULL, is_custom INTEGER NOT NULL DEFAULT 0)",
+            "CREATE TABLE prototypes (id TEXT PRIMARY KEY, railway_company_id TEXT NOT NULL, series_code TEXT NOT NULL, specification_type TEXT NOT NULL, is_custom INTEGER NOT NULL DEFAULT 0)",
         )
         .execute(&pool)
         .await
         .expect("create table");
         sqlx::query(
-            "INSERT INTO prototypes (id, railway_company_id, series_code, car_type, is_custom) VALUES ('p1', 'rc1', 'BR 01', 'Locomotive', 0)",
+            "INSERT INTO prototypes (id, railway_company_id, series_code, specification_type, is_custom) VALUES ('p1', 'rc1', 'BR 01', 'LOCOMOTIVE', 0)",
         )
         .execute(&pool)
         .await
@@ -796,14 +801,14 @@ mod tests {
                 id: "p1".to_string(),
                 railway_company_id: "rc1".to_string(),
                 series_code: "BR 01".to_string(),
-                car_type: "Locomotive".to_string(),
+                specification_type: "LOCOMOTIVE".to_string(),
                 ..Default::default()
             },
             PrototypeRecord {
                 id: "p2".to_string(),
                 railway_company_id: "rc1".to_string(),
                 series_code: "BR 50".to_string(),
-                car_type: "Locomotive".to_string(),
+                specification_type: "LOCOMOTIVE".to_string(),
                 ..Default::default()
             },
         ];

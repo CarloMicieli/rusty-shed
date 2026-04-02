@@ -844,8 +844,13 @@ pub async fn build_manifest(
 
         // Prototypes referenced by formations (and custom ones)
         let proto_rows = sqlx::query(
-            "SELECT DISTINCT p.id, p.railway_company_id, p.series_code, p.car_type, \
-                    p.service_level, p.category, p.is_motorized, p.is_custom \
+            "SELECT DISTINCT p.id, p.railway_company_id, p.series_code, p.friendly_name, \
+                    p.specification_type, \
+                    p.locomotive_type, p.locomotive_series, \
+                    p.service_level, p.passenger_car_type, \
+                    p.freight_car_type, p.railcar_type, \
+                    p.electric_multiple_unit_type, p.elements_count, p.is_permanently_coupled, \
+                    p.is_motorized, p.is_custom \
              FROM prototypes p \
              WHERE p.is_custom = 1 \
                 OR p.id IN ( \
@@ -866,9 +871,17 @@ pub async fn build_manifest(
                     "id": row.try_get::<String, _>("id").ok(),
                     "railwayCompanyId": row.try_get::<String, _>("railway_company_id").ok(),
                     "seriesCode": row.try_get::<String, _>("series_code").ok(),
-                    "carType": row.try_get::<String, _>("car_type").ok(),
+                    "friendlyName": row.try_get::<Option<String>, _>("friendly_name").ok().flatten(),
+                    "specificationType": row.try_get::<String, _>("specification_type").ok(),
+                    "locomotiveType": row.try_get::<Option<String>, _>("locomotive_type").ok().flatten(),
+                    "locomotiveSeries": row.try_get::<Option<String>, _>("locomotive_series").ok().flatten(),
                     "serviceLevel": row.try_get::<Option<String>, _>("service_level").ok().flatten(),
-                    "category": row.try_get::<String, _>("category").ok(),
+                    "passengerCarType": row.try_get::<Option<String>, _>("passenger_car_type").ok().flatten(),
+                    "freightCarType": row.try_get::<Option<String>, _>("freight_car_type").ok().flatten(),
+                    "railcarType": row.try_get::<Option<String>, _>("railcar_type").ok().flatten(),
+                    "electricMultipleUnitType": row.try_get::<Option<String>, _>("electric_multiple_unit_type").ok().flatten(),
+                    "elementsCount": row.try_get::<Option<i64>, _>("elements_count").ok().flatten(),
+                    "isPermanentlyCoupled": row.try_get::<Option<i64>, _>("is_permanently_coupled").ok().flatten().map(|v| v != 0),
                     "isMotorized": row.try_get::<i64, _>("is_motorized").ok().map(|v| v != 0).unwrap_or(false),
                     "isCustom": row.try_get::<i64, _>("is_custom").ok().map(|v| v != 0).unwrap_or(false),
                 }))

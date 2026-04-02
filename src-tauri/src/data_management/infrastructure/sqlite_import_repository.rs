@@ -660,16 +660,29 @@ impl ImportRepository for SqliteImportRepository {
         {
             sqlx::query(
                 "INSERT OR IGNORE INTO prototypes \
-                 (id, railway_company_id, series_code, car_type, service_level, \
-                  category, is_motorized, is_custom) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                 (id, railway_company_id, series_code, friendly_name, \
+                  specification_type, \
+                  locomotive_type, locomotive_series, \
+                  service_level, passenger_car_type, \
+                  freight_car_type, railcar_type, \
+                  electric_multiple_unit_type, elements_count, is_permanently_coupled, \
+                  is_motorized, is_custom) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             )
             .bind(&proto.id)
             .bind(&proto.railway_company_id)
             .bind(&proto.series_code)
-            .bind(&proto.car_type)
+            .bind(&proto.friendly_name)
+            .bind(&proto.specification_type)
+            .bind(&proto.locomotive_type)
+            .bind(&proto.locomotive_series)
             .bind(&proto.service_level)
-            .bind(&proto.category)
+            .bind(&proto.passenger_car_type)
+            .bind(&proto.freight_car_type)
+            .bind(&proto.railcar_type)
+            .bind(&proto.electric_multiple_unit_type)
+            .bind(proto.elements_count)
+            .bind(proto.is_permanently_coupled.map(i64::from))
             .bind(proto.is_motorized as i64)
             .bind(proto.is_custom as i64)
             .execute(&mut *tx)

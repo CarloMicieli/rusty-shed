@@ -9,26 +9,22 @@ use garde::Validate;
 
 // ── Shared validation helpers ─────────────────────────────────────────────────
 
-/// Allowed `car_type` values (mirrors `data-model.md` enum).
-const VALID_CAR_TYPES: &[&str] = &[
-    "Locomotive",
-    "PowerCar",
-    "Coach",
-    "Couchette",
-    "Dining",
-    "Sleeping",
-    "BaggageCar",
-    "ControlCar",
-    "FreightWagon",
+/// Valid `specification_type` discriminator values.
+const VALID_SPECIFICATION_TYPES: &[&str] = &[
+    "LOCOMOTIVE",
+    "PASSENGER_CAR",
+    "FREIGHT_CAR",
+    "RAILCAR",
+    "ELECTRIC_MULTIPLE_UNIT",
 ];
 
-fn validate_car_type_enum(car_type: &str, _ctx: &()) -> garde::Result {
-    if VALID_CAR_TYPES.contains(&car_type) {
+fn validate_specification_type(value: &str, _ctx: &()) -> garde::Result {
+    if VALID_SPECIFICATION_TYPES.contains(&value) {
         Ok(())
     } else {
         Err(garde::Error::new(format!(
-            "car_type '{car_type}' is not a valid car type; expected one of: {}",
-            VALID_CAR_TYPES.join(", ")
+            "specification_type '{value}' is not valid; expected one of: {}",
+            VALID_SPECIFICATION_TYPES.join(", ")
         )))
     }
 }
@@ -128,14 +124,8 @@ pub struct CreateCustomPrototypeArgs {
     #[garde(length(min = 1, max = 50))]
     pub series_code: String,
 
-    #[garde(custom(validate_car_type_enum))]
-    pub car_type: String,
-
     #[garde(skip)]
-    pub service_level: Option<String>,
-
-    #[garde(skip)]
-    pub category: String,
+    pub friendly_name: Option<String>,
 
     #[garde(skip)]
     pub is_motorized: bool,
@@ -145,6 +135,39 @@ pub struct CreateCustomPrototypeArgs {
 
     #[garde(skip)]
     pub notes: Option<String>,
+
+    /// Specification discriminator: `LOCOMOTIVE` | `PASSENGER_CAR` | `FREIGHT_CAR` |
+    /// `RAILCAR` | `ELECTRIC_MULTIPLE_UNIT`
+    #[garde(custom(validate_specification_type))]
+    pub specification_type: String,
+
+    // Locomotive-specific
+    #[garde(skip)]
+    pub locomotive_type: Option<String>,
+    #[garde(skip)]
+    pub locomotive_series: Option<String>,
+
+    // PassengerCar-specific
+    #[garde(skip)]
+    pub service_level: Option<String>,
+    #[garde(skip)]
+    pub passenger_car_type: Option<String>,
+
+    // FreightCar-specific
+    #[garde(skip)]
+    pub freight_car_type: Option<String>,
+
+    // Railcar-specific
+    #[garde(skip)]
+    pub railcar_type: Option<String>,
+
+    // ElectricMultipleUnit-specific
+    #[garde(skip)]
+    pub electric_multiple_unit_type: Option<String>,
+    #[garde(skip)]
+    pub elements_count: Option<i64>,
+    #[garde(skip)]
+    pub is_permanently_coupled: Option<bool>,
 }
 
 // ── Formation Categories ──────────────────────────────────────────────────────

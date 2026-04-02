@@ -76,19 +76,39 @@ pub struct FormationElementView {
     pub is_traction_slot: bool,
 }
 
-/// Prototype in search results.
+/// Prototype in search results and formation element views.
+///
+/// Uses a flat layout with a `specification_type` discriminator and nullable
+/// per-specification fields so that TypeScript consumers can switch on
+/// `specification_type` at runtime without requiring discriminated-union
+/// deserialization.
 #[derive(Debug, Clone, serde::Serialize, specta::Type)]
 pub struct PrototypeView {
     pub id: String,
     pub railway_company_id: String,
     pub company_name: String,
     pub series_code: String,
-    pub car_type: String,
-    pub service_level: Option<String>,
-    pub category: String,
+    pub friendly_name: Option<String>,
     pub is_motorized: bool,
     pub default_is_dummy: bool,
     pub is_custom: bool,
+    /// Specification discriminator: `LOCOMOTIVE` | `PASSENGER_CAR` | `FREIGHT_CAR` |
+    /// `RAILCAR` | `ELECTRIC_MULTIPLE_UNIT`
+    pub specification_type: String,
+    // Locomotive-specific (non-null when specification_type = "LOCOMOTIVE")
+    pub locomotive_type: Option<String>,
+    pub locomotive_series: Option<String>,
+    // PassengerCar-specific (non-null when specification_type = "PASSENGER_CAR")
+    pub service_level: Option<String>,
+    pub passenger_car_type: Option<String>,
+    // FreightCar-specific (non-null when specification_type = "FREIGHT_CAR")
+    pub freight_car_type: Option<String>,
+    // Railcar-specific (non-null when specification_type = "RAILCAR")
+    pub railcar_type: Option<String>,
+    // ElectricMultipleUnit-specific (non-null when specification_type = "ELECTRIC_MULTIPLE_UNIT")
+    pub electric_multiple_unit_type: Option<String>,
+    pub elements_count: Option<i64>,
+    pub is_permanently_coupled: Option<bool>,
 }
 
 /// Prototypes grouped by railway company (for the search drawer).
@@ -125,12 +145,20 @@ pub fn prototype_row_to_view(row: PrototypeRow, company_name: String) -> Prototy
         railway_company_id: row.railway_company_id,
         company_name,
         series_code: row.series_code,
-        car_type: row.car_type,
-        service_level: row.service_level,
-        category: row.category,
+        friendly_name: row.friendly_name,
         is_motorized: row.is_motorized != 0,
         default_is_dummy: row.default_is_dummy != 0,
         is_custom: row.is_custom != 0,
+        specification_type: row.specification_type,
+        locomotive_type: row.locomotive_type,
+        locomotive_series: row.locomotive_series,
+        service_level: row.service_level,
+        passenger_car_type: row.passenger_car_type,
+        freight_car_type: row.freight_car_type,
+        railcar_type: row.railcar_type,
+        electric_multiple_unit_type: row.electric_multiple_unit_type,
+        elements_count: row.elements_count,
+        is_permanently_coupled: row.is_permanently_coupled.map(|v| v != 0),
     }
 }
 
@@ -164,12 +192,20 @@ pub fn element_detail_row_to_view(row: FormationElementDetailRow) -> FormationEl
             railway_company_id: row.proto_railway_company_id,
             company_name: row.proto_company_name,
             series_code: row.proto_series_code,
-            car_type: row.proto_car_type,
-            service_level: row.proto_service_level,
-            category: row.proto_category,
+            friendly_name: row.proto_friendly_name,
             is_motorized,
             default_is_dummy,
             is_custom: row.proto_is_custom != 0,
+            specification_type: row.proto_specification_type,
+            locomotive_type: row.proto_locomotive_type,
+            locomotive_series: row.proto_locomotive_series,
+            service_level: row.proto_service_level,
+            passenger_car_type: row.proto_passenger_car_type,
+            freight_car_type: row.proto_freight_car_type,
+            railcar_type: row.proto_railcar_type,
+            electric_multiple_unit_type: row.proto_electric_multiple_unit_type,
+            elements_count: row.proto_elements_count,
+            is_permanently_coupled: row.proto_is_permanently_coupled.map(|v| v != 0),
         },
         owned_rolling_stock_id: row.owned_rolling_stock_id,
         snapshot_series_code: row.snapshot_series_code,

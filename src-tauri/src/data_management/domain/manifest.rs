@@ -350,10 +350,29 @@ pub struct PrototypeRecord {
     pub id: String,
     pub railway_company_id: String,
     pub series_code: String,
-    pub car_type: String,
+    #[serde(default)]
+    pub friendly_name: Option<String>,
+    /// Specification discriminator: `LOCOMOTIVE` | `PASSENGER_CAR` | `FREIGHT_CAR` |
+    /// `RAILCAR` | `ELECTRIC_MULTIPLE_UNIT`
+    pub specification_type: String,
+    #[serde(default)]
+    pub locomotive_type: Option<String>,
+    #[serde(default)]
+    pub locomotive_series: Option<String>,
     #[serde(default)]
     pub service_level: Option<String>,
-    pub category: String,
+    #[serde(default)]
+    pub passenger_car_type: Option<String>,
+    #[serde(default)]
+    pub freight_car_type: Option<String>,
+    #[serde(default)]
+    pub railcar_type: Option<String>,
+    #[serde(default)]
+    pub electric_multiple_unit_type: Option<String>,
+    #[serde(default)]
+    pub elements_count: Option<i64>,
+    #[serde(default)]
+    pub is_permanently_coupled: Option<bool>,
     pub is_motorized: bool,
     pub is_custom: bool,
 }

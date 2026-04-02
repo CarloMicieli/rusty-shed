@@ -24,12 +24,27 @@ pub struct SavePrototypeParams<'a> {
     pub id: &'a str,
     pub railway_company_id: &'a str,
     pub series_code: &'a str,
-    pub car_type: &'a str,
-    pub service_level: Option<&'a str>,
-    pub category: &'a str,
+    pub friendly_name: Option<&'a str>,
     pub is_motorized: bool,
     pub default_is_dummy: bool,
     pub notes: Option<&'a str>,
+    /// Specification discriminator: `LOCOMOTIVE` | `PASSENGER_CAR` | `FREIGHT_CAR` |
+    /// `RAILCAR` | `ELECTRIC_MULTIPLE_UNIT`
+    pub specification_type: &'a str,
+    // Locomotive-specific
+    pub locomotive_type: Option<&'a str>,
+    pub locomotive_series: Option<&'a str>,
+    // PassengerCar-specific
+    pub service_level: Option<&'a str>,
+    pub passenger_car_type: Option<&'a str>,
+    // FreightCar-specific
+    pub freight_car_type: Option<&'a str>,
+    // Railcar-specific
+    pub railcar_type: Option<&'a str>,
+    // ElectricMultipleUnit-specific
+    pub electric_multiple_unit_type: Option<&'a str>,
+    pub elements_count: Option<i64>,
+    pub is_permanently_coupled: Option<bool>,
 }
 
 /// Repository for [`TrainFormation`] backed by an SQLite transaction.
@@ -222,12 +237,20 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                    p.railway_company_id AS proto_railway_company_id,
                    rc.name AS proto_company_name,
                    p.series_code AS proto_series_code,
-                   p.car_type AS proto_car_type,
-                   p.service_level AS proto_service_level,
-                   p.category AS proto_category,
+                   p.friendly_name AS proto_friendly_name,
                    p.is_motorized AS proto_is_motorized,
                    p.default_is_dummy AS proto_default_is_dummy,
                    p.is_custom AS proto_is_custom,
+                   p.specification_type AS proto_specification_type,
+                   p.locomotive_type AS proto_locomotive_type,
+                   p.locomotive_series AS proto_locomotive_series,
+                   p.service_level AS proto_service_level,
+                   p.passenger_car_type AS proto_passenger_car_type,
+                   p.freight_car_type AS proto_freight_car_type,
+                   p.railcar_type AS proto_railcar_type,
+                   p.electric_multiple_unit_type AS proto_electric_multiple_unit_type,
+                   p.elements_count AS proto_elements_count,
+                   p.is_permanently_coupled AS proto_is_permanently_coupled,
                    (SELECT COUNT(*) FROM owned_rolling_stocks ors
                     WHERE ors.prototype_id = fe.prototype_id) AS owned_count_for_prototype
                FROM formation_elements fe
@@ -555,12 +578,20 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                    p.railway_company_id AS proto_railway_company_id,
                    rc.name AS proto_company_name,
                    p.series_code AS proto_series_code,
-                   p.car_type AS proto_car_type,
-                   p.service_level AS proto_service_level,
-                   p.category AS proto_category,
+                   p.friendly_name AS proto_friendly_name,
                    p.is_motorized AS proto_is_motorized,
                    p.default_is_dummy AS proto_default_is_dummy,
                    p.is_custom AS proto_is_custom,
+                   p.specification_type AS proto_specification_type,
+                   p.locomotive_type AS proto_locomotive_type,
+                   p.locomotive_series AS proto_locomotive_series,
+                   p.service_level AS proto_service_level,
+                   p.passenger_car_type AS proto_passenger_car_type,
+                   p.freight_car_type AS proto_freight_car_type,
+                   p.railcar_type AS proto_railcar_type,
+                   p.electric_multiple_unit_type AS proto_electric_multiple_unit_type,
+                   p.elements_count AS proto_elements_count,
+                   p.is_permanently_coupled AS proto_is_permanently_coupled,
                    (SELECT COUNT(*) FROM owned_rolling_stocks ors
                     WHERE ors.prototype_id = fe.prototype_id) AS owned_count_for_prototype
                FROM formation_elements fe
@@ -593,12 +624,17 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                 let pattern = format!("%{}%", q.to_lowercase());
                 sqlx::query_as(
                     r#"SELECT p.id, p.railway_company_id, rc.name AS company_name,
-                              p.series_code, p.car_type, p.service_level,
-                              p.category, p.is_motorized, p.default_is_dummy,
-                              p.is_custom, p.notes, p.version
+                              p.series_code, p.friendly_name,
+                              p.is_motorized, p.default_is_dummy, p.is_custom, p.notes,
+                              p.specification_type,
+                              p.locomotive_type, p.locomotive_series,
+                              p.service_level, p.passenger_car_type,
+                              p.freight_car_type, p.railcar_type,
+                              p.electric_multiple_unit_type, p.elements_count,
+                              p.is_permanently_coupled, p.version
                        FROM prototypes p
                        JOIN railway_companies rc ON rc.id = p.railway_company_id
-                       WHERE LOWER(p.series_code) LIKE ? OR LOWER(p.car_type) LIKE ?
+                       WHERE LOWER(p.series_code) LIKE ? OR LOWER(p.specification_type) LIKE ?
                        ORDER BY p.railway_company_id, p.series_code"#,
                 )
                 .bind(&pattern)
@@ -609,9 +645,14 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             } else {
                 sqlx::query_as(
                     r#"SELECT p.id, p.railway_company_id, rc.name AS company_name,
-                              p.series_code, p.car_type, p.service_level,
-                              p.category, p.is_motorized, p.default_is_dummy,
-                              p.is_custom, p.notes, p.version
+                              p.series_code, p.friendly_name,
+                              p.is_motorized, p.default_is_dummy, p.is_custom, p.notes,
+                              p.specification_type,
+                              p.locomotive_type, p.locomotive_series,
+                              p.service_level, p.passenger_car_type,
+                              p.freight_car_type, p.railcar_type,
+                              p.electric_multiple_unit_type, p.elements_count,
+                              p.is_permanently_coupled, p.version
                        FROM prototypes p
                        JOIN railway_companies rc ON rc.id = p.railway_company_id
                        ORDER BY p.railway_company_id, p.series_code"#,
@@ -661,20 +702,33 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
 
         sqlx::query(
             r#"INSERT INTO prototypes
-               (id, railway_company_id, series_code, car_type, service_level,
-                category, is_motorized, default_is_dummy, is_custom,
-                notes, created_at, updated_at, version)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 0)"#,
+               (id, railway_company_id, series_code, friendly_name,
+                is_motorized, default_is_dummy, is_custom, notes,
+                specification_type,
+                locomotive_type, locomotive_series,
+                service_level, passenger_car_type,
+                freight_car_type, railcar_type,
+                electric_multiple_unit_type, elements_count, is_permanently_coupled,
+                created_at, updated_at, version)
+               VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"#,
         )
         .bind(params.id)
         .bind(params.railway_company_id)
         .bind(params.series_code)
-        .bind(params.car_type)
-        .bind(params.service_level)
-        .bind(params.category)
+        .bind(params.friendly_name)
         .bind(i64::from(params.is_motorized))
         .bind(i64::from(params.default_is_dummy))
         .bind(params.notes)
+        .bind(params.specification_type)
+        .bind(params.locomotive_type)
+        .bind(params.locomotive_series)
+        .bind(params.service_level)
+        .bind(params.passenger_car_type)
+        .bind(params.freight_car_type)
+        .bind(params.railcar_type)
+        .bind(params.electric_multiple_unit_type)
+        .bind(params.elements_count)
+        .bind(params.is_permanently_coupled.map(i64::from))
         .bind(&now)
         .bind(&now)
         .execute(&mut *self.conn)
@@ -695,12 +749,20 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             railway_company_id: params.railway_company_id.to_string(),
             company_name,
             series_code: params.series_code.to_string(),
-            car_type: params.car_type.to_string(),
-            service_level: params.service_level.map(|s| s.to_string()),
-            category: params.category.to_string(),
+            friendly_name: params.friendly_name.map(str::to_string),
             is_motorized: params.is_motorized,
             default_is_dummy: params.default_is_dummy,
             is_custom: true,
+            specification_type: params.specification_type.to_string(),
+            locomotive_type: params.locomotive_type.map(str::to_string),
+            locomotive_series: params.locomotive_series.map(str::to_string),
+            service_level: params.service_level.map(str::to_string),
+            passenger_car_type: params.passenger_car_type.map(str::to_string),
+            freight_car_type: params.freight_car_type.map(str::to_string),
+            railcar_type: params.railcar_type.map(str::to_string),
+            electric_multiple_unit_type: params.electric_multiple_unit_type.map(str::to_string),
+            elements_count: params.elements_count,
+            is_permanently_coupled: params.is_permanently_coupled,
         })
     }
 
@@ -855,10 +917,10 @@ mod tests {
         let now = Utc::now().to_rfc3339();
         sqlx::query(
             "INSERT INTO prototypes
-             (id, railway_company_id, series_code, car_type, service_level,
-              category, is_motorized, default_is_dummy, is_custom,
+             (id, railway_company_id, series_code, specification_type,
+              locomotive_type, is_motorized, default_is_dummy, is_custom,
               created_at, updated_at, version)
-             VALUES (?, ?, ?, 'Locomotive', NULL, 'Locomotive', 1, 0, 0, ?, ?, 0)",
+             VALUES (?, ?, ?, 'LOCOMOTIVE', 'ELECTRIC_LOCOMOTIVE', 1, 0, 0, ?, ?, 0)",
         )
         .bind(id)
         .bind(company_id)
@@ -1078,12 +1140,20 @@ mod tests {
                 id: "proto-custom-1",
                 railway_company_id: "trn:railway-company:fs",
                 series_code: "E.656 Custom",
-                car_type: "Locomotive",
-                service_level: None,
-                category: "Locomotive",
+                friendly_name: None,
                 is_motorized: true,
                 default_is_dummy: false,
                 notes: None,
+                specification_type: "LOCOMOTIVE",
+                locomotive_type: Some("ELECTRIC_LOCOMOTIVE"),
+                locomotive_series: None,
+                service_level: None,
+                passenger_car_type: None,
+                freight_car_type: None,
+                railcar_type: None,
+                electric_multiple_unit_type: None,
+                elements_count: None,
+                is_permanently_coupled: None,
             })
             .await
             .expect("save prototype");
@@ -1103,13 +1173,14 @@ mod tests {
         let now = Utc::now().to_rfc3339();
         sqlx::query(
             "INSERT INTO prototypes
-             (id, railway_company_id, series_code, car_type, service_level,
-              category, is_motorized, default_is_dummy, is_custom, created_at, updated_at, version)
+             (id, railway_company_id, series_code, specification_type,
+              service_level, passenger_car_type,
+              is_motorized, default_is_dummy, is_custom, created_at, updated_at, version)
              VALUES
-               ('proto-gc', 'trn:railway-company:fs', 'UIC-Z1 Gran Comfort', 'Coach',
-                '1st Class', 'Passenger', 0, 0, 0, ?, ?, 0),
-               ('proto-loco-x', 'trn:railway-company:fs', 'E.444 Tartaruga', 'Locomotive',
-                NULL, 'Locomotive', 1, 0, 0, ?, ?, 0)",
+               ('proto-gc', 'trn:railway-company:fs', 'UIC-Z1 Gran Comfort', 'PASSENGER_CAR',
+                'FIRST', 'OPEN_COACH', 0, 0, 0, ?, ?, 0),
+               ('proto-loco-x', 'trn:railway-company:fs', 'E.444 Tartaruga', 'LOCOMOTIVE',
+                NULL, NULL, 1, 0, 0, ?, ?, 0)",
         )
         .bind(&now)
         .bind(&now)
@@ -1149,15 +1220,15 @@ mod tests {
         let now = Utc::now().to_rfc3339();
         sqlx::query(
             "INSERT INTO prototypes
-             (id, railway_company_id, series_code, car_type, service_level,
-              category, is_motorized, default_is_dummy, is_custom, created_at, updated_at, version)
+             (id, railway_company_id, series_code, specification_type,
+              is_motorized, default_is_dummy, is_custom, created_at, updated_at, version)
              VALUES
-               ('proto-grp-fs-1', 'trn:railway-company:fs', 'E.444', 'Locomotive',
-                NULL, 'Locomotive', 1, 0, 0, ?, ?, 0),
-               ('proto-grp-fs-2', 'trn:railway-company:fs', 'E.646', 'Locomotive',
-                NULL, 'Locomotive', 1, 0, 0, ?, ?, 0),
-               ('proto-grp-sbb-1', 'trn:railway-company:sbb-cff-ffs', 'Re 4/4 II', 'Locomotive',
-                NULL, 'Locomotive', 1, 0, 0, ?, ?, 0)",
+               ('proto-grp-fs-1', 'trn:railway-company:fs', 'E.444', 'LOCOMOTIVE',
+                1, 0, 0, ?, ?, 0),
+               ('proto-grp-fs-2', 'trn:railway-company:fs', 'E.646', 'LOCOMOTIVE',
+                1, 0, 0, ?, ?, 0),
+               ('proto-grp-sbb-1', 'trn:railway-company:sbb-cff-ffs', 'Re 4/4 II', 'LOCOMOTIVE',
+                1, 0, 0, ?, ?, 0)",
         )
         .bind(&now)
         .bind(&now)

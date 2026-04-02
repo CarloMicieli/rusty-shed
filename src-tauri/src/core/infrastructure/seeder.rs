@@ -548,6 +548,26 @@ pub async fn seed_train_categories(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// Seed the default prototype catalogue from the embedded CSV file.
 ///
+/// CSV columns (0-based index):
+/// ```text
+/// 0:  id
+/// 1:  railway_company_id
+/// 2:  series_code
+/// 3:  friendly_name               (may be empty)
+/// 4:  specification_type          (LOCOMOTIVE | PASSENGER_CAR | FREIGHT_CAR | RAILCAR | ELECTRIC_MULTIPLE_UNIT)
+/// 5:  locomotive_type             (may be empty)
+/// 6:  locomotive_series           (may be empty)
+/// 7:  service_level               (may be empty)
+/// 8:  passenger_car_type          (may be empty)
+/// 9:  freight_car_type            (may be empty)
+/// 10: railcar_type                (may be empty)
+/// 11: electric_multiple_unit_type (may be empty)
+/// 12: elements_count              (may be empty)
+/// 13: is_permanently_coupled      (0|1, may be empty)
+/// 14: is_motorized                (0|1)
+/// 15: default_is_dummy            (0|1)
+/// ```
+///
 /// Uses an `ON CONFLICT(id) DO UPDATE SET` upsert so it is safe to call
 /// on every application startup. `is_custom` is always `0` for seeded rows.
 pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
@@ -565,8 +585,13 @@ pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
 
     let insert_cmd = r#"
         INSERT INTO prototypes (
-            id, railway_company_id, series_code, car_type, service_level,
-            category, is_motorized, default_is_dummy, is_custom,
+            id, railway_company_id, series_code, friendly_name,
+            specification_type,
+            locomotive_type, locomotive_series,
+            service_level, passenger_car_type,
+            freight_car_type, railcar_type,
+            electric_multiple_unit_type, elements_count, is_permanently_coupled,
+            is_motorized, default_is_dummy, is_custom,
             created_at, updated_at, version
         )
     "#;
@@ -575,22 +600,44 @@ pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
         let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(insert_cmd);
 
         query_builder.push_values(chunk, |mut b, record| {
+            let opt = |col: usize| -> Option<String> {
+                record
+                    .get(col)
+                    .filter(|s| !s.is_empty())
+                    .map(str::to_string)
+            };
+
             let id = record.get(0).unwrap_or_default();
             let railway_company_id = record.get(1).unwrap_or_default();
             let series_code = record.get(2).unwrap_or_default();
-            let car_type = record.get(3).unwrap_or_default();
-            let service_level: Option<String> =
-                record.get(4).filter(|s| !s.is_empty()).map(str::to_string);
-            let category = record.get(5).unwrap_or_default();
-            let is_motorized: i64 = record.get(6).unwrap_or("0").parse().unwrap_or(0);
-            let default_is_dummy: i64 = record.get(7).unwrap_or("0").parse().unwrap_or(0);
+            let friendly_name = opt(3);
+            let specification_type = record.get(4).unwrap_or_default();
+            let locomotive_type = opt(5);
+            let locomotive_series = opt(6);
+            let service_level = opt(7);
+            let passenger_car_type = opt(8);
+            let freight_car_type = opt(9);
+            let railcar_type = opt(10);
+            let electric_multiple_unit_type = opt(11);
+            let elements_count: Option<i64> = opt(12).and_then(|s| s.parse().ok());
+            let is_permanently_coupled: Option<i64> = opt(13).and_then(|s| s.parse().ok());
+            let is_motorized: i64 = record.get(14).unwrap_or("0").parse().unwrap_or(0);
+            let default_is_dummy: i64 = record.get(15).unwrap_or("0").parse().unwrap_or(0);
 
             b.push_bind(id.to_string())
                 .push_bind(railway_company_id.to_string())
                 .push_bind(series_code.to_string())
-                .push_bind(car_type.to_string())
+                .push_bind(friendly_name)
+                .push_bind(specification_type.to_string())
+                .push_bind(locomotive_type)
+                .push_bind(locomotive_series)
                 .push_bind(service_level)
-                .push_bind(category.to_string())
+                .push_bind(passenger_car_type)
+                .push_bind(freight_car_type)
+                .push_bind(railcar_type)
+                .push_bind(electric_multiple_unit_type)
+                .push_bind(elements_count)
+                .push_bind(is_permanently_coupled)
                 .push_bind(is_motorized)
                 .push_bind(default_is_dummy)
                 .push_bind(0i64)
@@ -601,9 +648,17 @@ pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
 
         query_builder.push(" ON CONFLICT(id) DO UPDATE SET ");
         query_builder.push("series_code = EXCLUDED.series_code, ");
-        query_builder.push("car_type = EXCLUDED.car_type, ");
+        query_builder.push("friendly_name = EXCLUDED.friendly_name, ");
+        query_builder.push("specification_type = EXCLUDED.specification_type, ");
+        query_builder.push("locomotive_type = EXCLUDED.locomotive_type, ");
+        query_builder.push("locomotive_series = EXCLUDED.locomotive_series, ");
         query_builder.push("service_level = EXCLUDED.service_level, ");
-        query_builder.push("category = EXCLUDED.category, ");
+        query_builder.push("passenger_car_type = EXCLUDED.passenger_car_type, ");
+        query_builder.push("freight_car_type = EXCLUDED.freight_car_type, ");
+        query_builder.push("railcar_type = EXCLUDED.railcar_type, ");
+        query_builder.push("electric_multiple_unit_type = EXCLUDED.electric_multiple_unit_type, ");
+        query_builder.push("elements_count = EXCLUDED.elements_count, ");
+        query_builder.push("is_permanently_coupled = EXCLUDED.is_permanently_coupled, ");
         query_builder.push("is_motorized = EXCLUDED.is_motorized, ");
         query_builder.push("default_is_dummy = EXCLUDED.default_is_dummy, ");
         query_builder.push("updated_at = EXCLUDED.updated_at");
