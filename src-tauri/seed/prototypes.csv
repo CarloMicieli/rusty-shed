@@ -1,15 +1,15 @@
 id,railway_company_id,series_code,friendly_name,specification_type,locomotive_type,locomotive_series,service_level,passenger_car_type,freight_car_type,railcar_type,electric_multiple_unit_type,elements_count,is_permanently_coupled,is_motorized,default_is_dummy
 trn:prototype:fs-214,trn:railway-company:fs,Series 214,,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
-trn:prototype:fs-aln663,trn:railway-company:fs,ALn 663,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln668,trn:railway-company:fs,ALn 668,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln556-fiat,trn:railway-company:fs,ALn 556 (Fiat),Littorina,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln556-breda,trn:railway-company:fs,ALn 556 (Breda),,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln772,trn:railway-company:fs,ALn 772,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln773,trn:railway-company:fs,ALn 773,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln873,trn:railway-company:fs,ALn 873,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln990,trn:railway-company:fs,ALn 990,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-aln442-448,trn:railway-company:fs,ALn 442/448,Binato TEE,RAILCAR,,,FIRST,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-alnd642,trn:railway-company:fs,ALnD 642,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
+trn:prototype:fs-aln663,trn:railway-company:fs,ALn 663,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln668,trn:railway-company:fs,ALn 668,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln556-fiat,trn:railway-company:fs,ALn 556 (Fiat),Littorina,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln556-breda,trn:railway-company:fs,ALn 556 (Breda),,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln772,trn:railway-company:fs,ALn 772,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln773,trn:railway-company:fs,ALn 773,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln873,trn:railway-company:fs,ALn 873,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln990,trn:railway-company:fs,ALn 990,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln442-448,trn:railway-company:fs,ALn 442/448,Binato TEE,RAILCAR,,,FIRST,,,POWER_CAR,,,,1,0
+trn:prototype:fs-alnd642,trn:railway-company:fs,ALnD 642,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-d141,trn:railway-company:fs,D.141,,LOCOMOTIVE,DIESEL_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:fs-d143,trn:railway-company:fs,D.143,Truman,LOCOMOTIVE,DIESEL_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:fs-d145,trn:railway-company:fs,D.145,Arancia Meccanica,LOCOMOTIVE,DIESEL_LOCOMOTIVE,,,,,,,,,1,0
@@ -126,22 +126,22 @@ trn:prototype:fs-shimms,trn:railway-company:fs,Carro Shimms,,FREIGHT_CAR,,,,,TEL
 trn:prototype:fs-vgh-cisterna,trn:railway-company:fs,Carro Cisterna (Vgh),,FREIGHT_CAR,,,,,TANK_CARS,,,,,0,0
 trn:prototype:fs-po-carro-scorie,trn:railway-company:fs,Carro Pozzo (Po),,FREIGHT_CAR,,,,,DEEP_WELL_FLAT_CARS,,,,,0,0
 trn:prototype:fs-ufa-auto,trn:railway-company:fs,Carro Ufa (Bisarca),,FREIGHT_CAR,,,,,AUTO_TRANSPORT_CARS,,,,,0,0
-trn:prototype:fs-ale790,trn:railway-company:fs,ALe 790 / 880,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-ale840,trn:railway-company:fs,ALe 840,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-ale601,trn:railway-company:fs,ALe 601,Albatros,RAILCAR,,,FIRST,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-ale801,trn:railway-company:fs,ALe 801/940,Fanta,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAIN_SET,,,1,0
-trn:prototype:fs-ale582,trn:railway-company:fs,ALe 582,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-ale642,trn:railway-company:fs,ALe 642,,RAILCAR,,,SECOND,,,POWER_CAR,,,,,1,0
-trn:prototype:fs-ale426,trn:railway-company:fs,ALe 426/506,TAF,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAIN_SET,,,1,0
-trn:prototype:fs-ale501,trn:railway-company:fs,ALe 501,Minuetto,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAIN_SET,,,1,0
-trn:prototype:fs-le640,trn:railway-company:fs,Le 640,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le760,trn:railway-company:fs,Le 760,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le840,trn:railway-company:fs,Le 840,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le601,trn:railway-company:fs,Le 601,,ELECTRIC_MULTIPLE_UNIT,,,FIRST,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le480,trn:railway-company:fs,Le 480 (Ristorante),,ELECTRIC_MULTIPLE_UNIT,,,FIRST,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le108,trn:railway-company:fs,Le 108,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le582,trn:railway-company:fs,Le 582,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAILER_CAR,,,0,0
-trn:prototype:fs-le763,trn:railway-company:fs,Le 763,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-ale790,trn:railway-company:fs,ALe 790 / 880,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-ale840,trn:railway-company:fs,ALe 840,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-ale601,trn:railway-company:fs,ALe 601,Albatros,RAILCAR,,,FIRST,,,POWER_CAR,,,,1,0
+trn:prototype:fs-ale801,trn:railway-company:fs,ALe 801/940,Fanta,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAIN_SET,,,1,0
+trn:prototype:fs-ale582,trn:railway-company:fs,ALe 582,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-ale642,trn:railway-company:fs,ALe 642,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-ale426,trn:railway-company:fs,ALe 426/506,TAF,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAIN_SET,,,1,0
+trn:prototype:fs-ale501,trn:railway-company:fs,ALe 501,Minuetto,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAIN_SET,,,1,0
+trn:prototype:fs-le640,trn:railway-company:fs,Le 640,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le760,trn:railway-company:fs,Le 760,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le840,trn:railway-company:fs,Le 840,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le601,trn:railway-company:fs,Le 601,,ELECTRIC_MULTIPLE_UNIT,,,FIRST,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le480,trn:railway-company:fs,Le 480 (Ristorante),,ELECTRIC_MULTIPLE_UNIT,,,FIRST,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le108,trn:railway-company:fs,Le 108,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le582,trn:railway-company:fs,Le 582,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAILER_CAR,,,0,0
+trn:prototype:fs-le763,trn:railway-company:fs,Le 763,,ELECTRIC_MULTIPLE_UNIT,,,SECOND,,,,TRAILER_CAR,,,0,0
 trn:prototype:e483-mercitalia,trn:railway-company:mercitalia,E.483 (TRAXX DC),,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:e483-oceanogate,trn:railway-company:oceanogate,E.483 (TRAXX DC),,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:e483-db-cargo,trn:railway-company:db-cargo-it,E.483 (TRAXX DC),,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0

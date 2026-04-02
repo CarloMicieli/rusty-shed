@@ -1102,7 +1102,9 @@ mod tests {
     /// Running the prototype seed twice must not change the row count (`INSERT OR IGNORE`).
     #[sqlx::test(migrations = "./migrations")]
     async fn test_seed_prototypes_idempotent(pool: SqlitePool) {
-        insert_test_companies(&pool).await;
+        crate::core::infrastructure::seeder::seed_railway_companies(&pool)
+            .await
+            .expect("seed railway companies");
 
         crate::core::infrastructure::seeder::seed_prototypes(&pool)
             .await

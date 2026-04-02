@@ -2070,12 +2070,24 @@ export type CouplingSocket = "NONE" |
 export type CreateCustomPrototypeArgs = {
 	railway_company_id: string,
 	series_code: string,
-	car_type: string,
-	service_level: string | null,
-	category: string,
+	friendly_name: string | null,
 	is_motorized: boolean,
 	default_is_dummy: boolean,
 	notes: string | null,
+	/**
+	 *  Specification discriminator: `LOCOMOTIVE` | `PASSENGER_CAR` | `FREIGHT_CAR` |
+	 *  `RAILCAR` | `ELECTRIC_MULTIPLE_UNIT`
+	 */
+	specification_type: string,
+	locomotive_type: string | null,
+	locomotive_series: string | null,
+	service_level: string | null,
+	passenger_car_type: string | null,
+	freight_car_type: string | null,
+	railcar_type: string | null,
+	electric_multiple_unit_type: string | null,
+	elements_count: number | null,
+	is_permanently_coupled: boolean | null,
 };
 
 // Arguments for `create_formation_category`.
@@ -3529,18 +3541,37 @@ export type PrototypeGroupView = {
 	prototypes: PrototypeView[],
 };
 
-// Prototype in search results.
+/**
+ *  Prototype in search results and formation element views.
+ * 
+ *  Uses a flat layout with a `specification_type` discriminator and nullable
+ *  per-specification fields so that TypeScript consumers can switch on
+ *  `specification_type` at runtime without requiring discriminated-union
+ *  deserialization.
+ */
 export type PrototypeView = {
 	id: string,
 	railway_company_id: string,
 	company_name: string,
 	series_code: string,
-	car_type: string,
-	service_level: string | null,
-	category: string,
+	friendly_name: string | null,
 	is_motorized: boolean,
 	default_is_dummy: boolean,
 	is_custom: boolean,
+	/**
+	 *  Specification discriminator: `LOCOMOTIVE` | `PASSENGER_CAR` | `FREIGHT_CAR` |
+	 *  `RAILCAR` | `ELECTRIC_MULTIPLE_UNIT`
+	 */
+	specification_type: string,
+	locomotive_type: string | null,
+	locomotive_series: string | null,
+	service_level: string | null,
+	passenger_car_type: string | null,
+	freight_car_type: string | null,
+	railcar_type: string | null,
+	electric_multiple_unit_type: string | null,
+	elements_count: number | null,
+	is_permanently_coupled: boolean | null,
 };
 
 // The condition under which a collectible item was purchased.
