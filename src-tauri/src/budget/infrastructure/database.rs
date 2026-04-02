@@ -151,6 +151,43 @@ pub async fn remove_extra_budget(
     Ok(())
 }
 
+/// Get monthly spending for a range of years in a single query.
+///
+/// Returns `(year, month, total_amount)` triples for all months in `[start_year, end_year]`
+/// that have at least one purchase in the given `currency`.  Months with no spending are omitted.
+///
+/// Prefer this over calling [`get_monthly_spending`] in a loop when multiple years of data
+/// are needed at once (e.g., the 5-year heatmap in the budget dashboard).
+pub async fn get_multi_year_monthly_spending(
+    executor: &mut SqliteConnection,
+    start_year: i32,
+    end_year: i32,
+    currency: &str,
+) -> Result<Vec<(i32, i32, i64)>, DomainError> {
+    let sql = r#"
+        SELECT
+            CAST(strftime('%Y', pi.purchase_date) AS INTEGER) AS year,
+            CAST(strftime('%m', pi.purchase_date) AS INTEGER) AS month,
+            SUM(pi.purchased_price_amount) AS total_amount
+        FROM collection_items ci
+        JOIN purchase_infos pi ON ci.id = pi.collection_item_id
+        WHERE pi.purchase_date IS NOT NULL
+            AND CAST(strftime('%Y', pi.purchase_date) AS INTEGER) BETWEEN ?1 AND ?2
+            AND pi.purchased_price_currency = ?3
+        GROUP BY year, month
+        ORDER BY year ASC, month ASC
+    "#;
+
+    let rows: Vec<(i32, i32, i64)> = sqlx::query_as(sql)
+        .bind(start_year)
+        .bind(end_year)
+        .bind(currency)
+        .fetch_all(executor)
+        .await?;
+
+    Ok(rows)
+}
+
 /// Get monthly spending aggregated from collection_items.purchase_info.
 /// Returns list of (month, total_amount) pairs for a given year.
 pub async fn get_monthly_spending(

@@ -154,41 +154,68 @@ pub async fn get_budget_dashboard(
             Currency::from_code(user_currency).unwrap_or(Currency::EUR)
         });
 
-    // Get budget-specific data if budget is configured
-    let (remaining_amount, remaining_percentage, total_available, monthly_goal) =
-        if let Some(ref config) = config_option {
-            // Get monthly records for the current year
-            let monthly_records = get_monthly_budget_records(uow, current_year).await?;
+    // Fetch all multi-year spending data in ONE query (covers bar chart + heatmap).
+    // The heatmap spans the last 5 years; remaining budget uses the rollover chain which
+    // calls get_monthly_spending internally, so for the budget case we reuse the records
+    // from that chain for the bar chart to avoid fetching current_year a second time.
+    let start_year = current_year - 4;
+    let all_spending = database::get_multi_year_monthly_spending(
+        &mut uow.tx,
+        start_year,
+        current_year,
+        currency_code,
+    )
+    .await?;
 
-            // Find current month's record
-            let current_record = monthly_records
-                .iter()
-                .find(|r| r.month == current_month)
-                .ok_or_else(|| {
-                    DomainError::BusinessRule("Current month record not found".to_string())
-                })?;
+    // Get budget-specific data if budget is configured.
+    // monthly_records already contain actual_spend per month, so use them for the bar chart.
+    let (
+        remaining_amount,
+        remaining_percentage,
+        total_available,
+        monthly_goal,
+        monthly_records_opt,
+    ) = if let Some(ref config) = config_option {
+        // Get monthly records for the current year (contains rollover chain + actual spend)
+        let monthly_records = get_monthly_budget_records(uow, current_year).await?;
 
-            (
-                Some(current_record.remaining()),
-                Some(current_record.remaining_percentage()),
-                Some(current_record.available()),
-                Some(config.monthly_amount()),
-            )
-        } else {
-            (None, None, None, None)
-        };
+        // Find current month's record
+        let current_record = monthly_records
+            .iter()
+            .find(|r| r.month == current_month)
+            .ok_or_else(|| {
+                DomainError::BusinessRule("Current month record not found".to_string())
+            })?;
 
-    // Build monthly spending points for bar chart (current year)
-    let year_spending =
-        database::get_monthly_spending(&mut uow.tx, current_year, currency_code).await?;
+        (
+            Some(current_record.remaining()),
+            Some(current_record.remaining_percentage()),
+            Some(current_record.available()),
+            Some(config.monthly_amount()),
+            Some(monthly_records),
+        )
+    } else {
+        (None, None, None, None, None)
+    };
 
-    let monthly_spending: Vec<MonthlySpendingPoint> = (1..=12)
+    // Build monthly spending points for bar chart (current year).
+    // When budget is configured, use the already-computed monthly records to avoid re-reading
+    // current-year data from all_spending (the rollover chain already has actual_spend).
+    let monthly_spending: Vec<MonthlySpendingPoint> = (1i32..=12)
         .map(|month| {
-            let amount = year_spending
-                .iter()
-                .find(|(m, _)| *m == month)
-                .map(|(_, amt)| *amt)
-                .unwrap_or(0);
+            let amount = if let Some(ref records) = monthly_records_opt {
+                records
+                    .iter()
+                    .find(|r| r.month as i32 == month)
+                    .map(|r| r.actual_spend)
+                    .unwrap_or(0)
+            } else {
+                all_spending
+                    .iter()
+                    .find(|(y, m, _)| *y == current_year && *m == month)
+                    .map(|(_, _, amt)| *amt)
+                    .unwrap_or(0)
+            };
 
             MonthlySpendingPoint {
                 month: month as u8,
@@ -198,22 +225,19 @@ pub async fn get_budget_dashboard(
         })
         .collect();
 
-    // Build quarterly activity for heatmap (last 5 years)
-    let start_year = current_year - 4;
+    // Build quarterly activity for heatmap (last 5 years) from in-memory data — no extra queries.
     let mut quarterly_activity = Vec::new();
 
     for year in start_year..=current_year {
-        // Get spending for this year
-        let year_spending =
-            database::get_monthly_spending(&mut uow.tx, year, currency_code).await?;
-
-        // Group by quarter
         let mut q1_total = 0i64;
         let mut q2_total = 0i64;
         let mut q3_total = 0i64;
         let mut q4_total = 0i64;
 
-        for (month, amount) in year_spending {
+        for &(y, month, amount) in &all_spending {
+            if y != year {
+                continue;
+            }
             match BudgetQuarter::from_month(month as u8) {
                 BudgetQuarter::Q1 => q1_total += amount,
                 BudgetQuarter::Q2 => q2_total += amount,
@@ -229,7 +253,6 @@ pub async fn get_budget_dashboard(
             .copied()
             .unwrap_or(0);
 
-        // Add quarterly points
         for (quarter, total) in [
             (BudgetQuarter::Q1, q1_total),
             (BudgetQuarter::Q2, q2_total),
