@@ -134,22 +134,20 @@
 
   <!-- Discard dialog -->
   {#if showDiscardDialog}
-    <div
-      class="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm"
-    >
-      <div class="w-full max-w-md rounded-sm border border-border bg-background p-6 shadow-xl">
-        <h3 class="mb-2 text-lg font-bold text-foreground">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div class="w-full max-w-md rounded-sm border-2 border-destructive bg-card p-6 shadow-xl">
+        <h3 class="mb-2 font-bebas text-xl tracking-widest text-destructive uppercase">
           {discardTitle ?? m.drawer_discard_title()}
         </h3>
-        <p class="mb-4 text-muted-foreground">
+        <p class="mb-6 text-sm text-muted-foreground">
           {discardDescription ?? m.drawer_discard_description()}
         </p>
         <div class="flex justify-end gap-3">
-          <Button type="button" variant="ghost" onclick={handleDiscardCancel}>
-            {discardCancel ?? m.drawer_discard_cancel()}
-          </Button>
-          <Button type="button" variant="destructive" onclick={handleDiscardConfirm}>
+          <Button type="button" variant="ghost" onclick={handleDiscardConfirm}>
             {discardConfirm ?? m.drawer_discard_confirm()}
+          </Button>
+          <Button type="button" variant="default" onclick={handleDiscardCancel}>
+            {discardCancel ?? m.drawer_discard_cancel()}
           </Button>
         </div>
       </div>

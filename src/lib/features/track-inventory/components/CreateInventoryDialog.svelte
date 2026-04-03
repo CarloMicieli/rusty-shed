@@ -73,9 +73,9 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-  <!-- 1. Overlay: inset-0, heavy blur, semi-transparent black -->
+  <!-- 1. Overlay: softer veil for light theme -->
   <div
-    class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md transition-all duration-300"
+    class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm transition-all duration-300"
     onclick={handleClose}
     aria-hidden="true"
   ></div>
@@ -87,19 +87,19 @@
     aria-modal="true"
     aria-labelledby="modal-title"
   >
-    <!-- 3. Container: Deep charcoal background, amber-tinted border, rounded-2xl -->
+    <!-- 3. Container: Parchment card, industrial hard-offset shadow, sharp corners -->
     <div
-      class="flex flex-col overflow-hidden rounded-2xl border border-amber-500/20 bg-layout-surface shadow-2xl"
+      class="flex flex-col overflow-hidden rounded-sm border-2 border-border bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-white/5 p-6">
-        <h2 id="modal-title" class="text-xl font-bold tracking-tight text-zinc-100 uppercase">
+      <div class="flex items-center justify-between border-b border-border p-6">
+        <h2 id="modal-title" class="font-bebas text-2xl tracking-wider text-primary uppercase">
           {m.track_inventory_create_dialog_title()}
         </h2>
         <!-- Close icon in top right corner -->
         <button
           onclick={handleClose}
-          class="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-white"
+          class="rounded-sm p-2 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
           disabled={submitting}
           aria-label={m.dialog_close_button()}
         >
@@ -109,67 +109,68 @@
 
       <!-- Form Body -->
       <form onsubmit={handleSubmit} class="space-y-6 p-6">
-        <!-- Labels: small, uppercase, tracking-widest in zinc-500 -->
+        <!-- Name field: stamped label + parchment input -->
         <div class="space-y-2">
           <label
             for="inventory-name"
-            class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
+            class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
           >
             {m.track_inventory_create_field_name()}
           </label>
-          <!-- Input: dark background, subtle border, amber focus ring -->
           <Input
             id="inventory-name"
             bind:value={name}
             placeholder={m.create_inventory_name_placeholder()}
-            class="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:border-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
+            class="h-12 rounded-sm border-border bg-background text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
             disabled={submitting}
             required
             autofocus
           />
         </div>
 
+        <!-- Description field: stamped label + parchment textarea -->
         <div class="space-y-2">
           <label
             for="inventory-desc"
-            class="ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
+            class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
           >
             {m.track_inventory_create_field_description()}
           </label>
-          <!-- Textarea: dark background, subtle border, amber focus ring -->
           <Textarea
             id="inventory-desc"
             bind:value={description}
             placeholder={m.create_inventory_desc_placeholder()}
-            class="min-h-[120px] resize-none rounded-xl border-white/10 bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:border-white/20 focus-visible:ring-0 focus-visible:ring-offset-0"
+            class="min-h-[120px] resize-none rounded-sm border-border bg-background text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
             disabled={submitting}
           />
         </div>
 
         {#if error}
-          <div class="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+          <div
+            class="rounded-sm border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+          >
             {error}
           </div>
         {/if}
 
         <!-- Actions -->
         <div class="flex items-center justify-end gap-3 pt-4">
-          <!-- Cancel Button: ghost style -->
+          <!-- Cancel Button: secondary/outline style -->
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onclick={handleClose}
-            class="px-6 text-zinc-500 transition-colors hover:bg-transparent hover:text-white"
+            class="rounded-sm border-border px-6 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
             disabled={submitting}
           >
             {m.track_inventory_create_cancel()}
           </Button>
 
-          <!-- Create Button: Primary amber button (rusty variant) -->
+          <!-- Create Button: Brass mechanical lever -->
           <Button
             type="submit"
-            variant="rusty"
-            class="h-12 min-w-[140px] px-8 text-base"
+            variant="default"
+            class="variant-steampunk-lever h-12 min-w-[140px] rounded-sm px-8 font-bebas text-lg uppercase shadow-inner"
             disabled={submitting || !name.trim()}
           >
             {#if submitting}

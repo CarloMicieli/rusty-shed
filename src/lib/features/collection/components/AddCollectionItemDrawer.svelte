@@ -235,6 +235,7 @@
       console.log('Submitting railway model to collection:', args);
       const success = await collectionService.addRailwayModel(args);
       if (success) {
+        f.reset(createDefaultFormState());
         onSuccess();
       }
     } catch (error) {
