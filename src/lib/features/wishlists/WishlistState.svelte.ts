@@ -218,7 +218,7 @@ export class WishlistState {
     }
   }
 
-  async createWishlist(name: string, isDefault = false) {
+  async createWishlist(name: string, isDefault = false, silent = false) {
     const toastId = randomId();
     this.#captureSnapshot();
 
@@ -239,7 +239,7 @@ export class WishlistState {
       : this.#wishlists;
     this.#wishlists = [...cleared, optimistic];
     if (isDefault || cleared.length === 0) this.#activeWishlistId = tempId;
-    toastLoading(toastId);
+    if (!silent) toastLoading(toastId);
 
     const result = await safeInvoke<WishlistPreview>('create_wishlist', {
       input: { name, notes: null, isDefault }
@@ -265,7 +265,7 @@ export class WishlistState {
         await this.loadWishlistItems(result.data.id);
       }
     }
-    toastSuccess(toastId);
+    if (!silent) toastSuccess(toastId);
     return result.data;
   }
 

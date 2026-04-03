@@ -6,7 +6,11 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   drawer_section_wishlist: () => 'Wishlist Preferences',
   wishlist_modal_choose_or_create: () => 'Choose or Create Wishlist',
   wishlist_modal_select_list: () => 'Select a wishlist',
-  wishlist_modal_select_placeholder: () => 'Select a wishlist',
+  wishlist_modal_select_placeholder: () => 'No wishlists found',
+  wishlist_picker_search_placeholder: () => 'Search wishlists or type to create new...',
+  wishlist_picker_new_badge: () => '[new]',
+  wishlist_picker_create_label: () => 'Create',
+  wishlist_picker_no_results: () => 'No wishlists found',
   wishlist_modal_new_list_placeholder: () => 'Or create new list...',
   wishlist_modal_priority: () => 'Priority',
   wishlist_modal_desired_price: () => 'Desired Price',
@@ -45,11 +49,10 @@ describe('WishlistSection', () => {
 
   // ── Section header & initial render ────────────────────────────────────────
 
-  it('renders section header, wishlist selector, new list input, and desired price label', () => {
+  it('renders section header, wishlist selector, and desired price label', () => {
     render(WishlistSection, { props: defaultProps });
     expect(screen.getByText('Wishlist Preferences')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /select a wishlist/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Or create new list...')).toBeInTheDocument();
     expect(screen.getByText('Desired Price')).toBeInTheDocument();
   });
 
@@ -61,6 +64,31 @@ describe('WishlistSection', () => {
 
     await screen.findByRole('option', { name: /my wishlist/i });
     expect(screen.getByRole('option', { name: /future buys/i })).toBeInTheDocument();
+  });
+
+  it('filters wishlists by search query and shows Create option for no-exact-match input', async () => {
+    const user = userEvent.setup();
+    render(WishlistSection, { props: defaultProps });
+
+    // Open the combobox
+    await user.click(screen.getByRole('button', { name: /select a wishlist/i }));
+
+    // Search input should be present with the right placeholder
+    const searchInput = await screen.findByPlaceholderText(
+      'Search wishlists or type to create new...'
+    );
+    expect(searchInput).toBeInTheDocument();
+
+    // Type a query that partially matches one wishlist
+    await user.type(searchInput, 'My');
+    await screen.findByRole('option', { name: /my wishlist/i });
+    expect(screen.queryByRole('option', { name: /future buys/i })).toBeNull();
+
+    // Type a query with no match — Create option should appear
+    await user.clear(searchInput);
+    await user.type(searchInput, 'Brand New List');
+    expect(await screen.findByRole('button', { name: /create/i })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /my wishlist/i })).toBeNull();
   });
 
   // ── Priority toggle styling ─────────────────────────────────────────────────
