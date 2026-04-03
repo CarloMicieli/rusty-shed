@@ -136,7 +136,7 @@
 
         {#if filteredWishlists.length === 0 && !showCreateOption}
           <p class="px-3 py-2 text-sm text-muted-foreground">
-            {m.wishlist_modal_select_placeholder()}
+            {m.wishlist_picker_no_results()}
           </p>
         {/if}
 

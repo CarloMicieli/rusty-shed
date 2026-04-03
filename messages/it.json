@@ -235,6 +235,7 @@
   "wishlist_picker_search_placeholder": "Cerca liste o digita per crearne una nuova...",
   "wishlist_picker_new_badge": "[nuovo]",
   "wishlist_picker_create_label": "Crea",
+  "wishlist_picker_no_results": "Nessuna lista trovata",
   "wishlist_modal_title": "Aggiungi Elemento alla Lista Desideri",
   "wishlist_modal_choose_or_create": "Scegli o Crea Lista Desideri",
   "wishlist_modal_select_list": "Seleziona una lista desideri",

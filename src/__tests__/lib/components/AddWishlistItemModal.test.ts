@@ -29,6 +29,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_picker_search_placeholder: () => 'Search wishlists or type to create new...',
   wishlist_picker_new_badge: () => '[new]',
   wishlist_picker_create_label: () => 'Create',
+  wishlist_picker_no_results: () => 'No wishlists found',
   wishlist_modal_notes_label: () => 'Notes',
   wishlist_modal_notes_placeholder: () => 'Optional notes',
   wishlist_modal_create_failed: () => 'Failed to create wishlist',
