@@ -1,8 +1,9 @@
 use crate::catalog::domain::railway_company::RailwayCompanyId;
-use crate::catalog::domain::railway_model::RollingStockParams;
 use crate::catalog::domain::railway_model::{
-    Control, ElectricMultipleUnitType, LocomotiveType, RailcarType, RailwayModelId,
-    RailwayModelUowExt, RollingStockCategory, RollingStockId,
+    Control, Coupling, CouplingSocket, DccInterface, ElectricMultipleUnitType, FeatureFlag,
+    FreightCarType, LocomotiveType, PassengerCarType, RailcarType, RailwayModelId,
+    RailwayModelUowExt, RollingStockCategory, RollingStockId, RollingStockParams,
+    TechnicalSpecifications, TechnicalSpecificationsBuilder,
 };
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
@@ -26,6 +27,16 @@ pub struct AddRollingStockToModelInput {
     pub depot: Option<String>,
     /// Optional control type.
     pub control: Option<Control>,
+    /// Optional DCC decoder interface connector.
+    pub dcc_interface: Option<DccInterface>,
+    /// Optional coupling socket standard (e.g. "NEM_362").
+    pub coupling_socket: Option<String>,
+    /// Optional short-coupler flag. Only meaningful when `coupling_socket` is `Some`.
+    pub close_couplers: Option<bool>,
+    /// Optional category-specific sub-type string.
+    pub sub_type: Option<String>,
+    /// Optional display/friendly name (falls back to series_code if absent).
+    pub friendly_name: Option<String>,
 }
 
 /// Use case that adds a new rolling stock variant to an existing [`RailwayModel`] aggregate.
@@ -64,77 +75,143 @@ impl AddRollingStockToModel {
 
 /// Build `RollingStockParams` from the input using per-category defaults.
 fn build_params(input: AddRollingStockToModelInput) -> RollingStockParams {
+    let coupling_socket = input
+        .coupling_socket
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .and_then(|s| s.parse::<CouplingSocket>().ok());
+
+    let technical_specifications: Option<TechnicalSpecifications> = coupling_socket.map(|socket| {
+        let close_couplers = input
+            .close_couplers
+            .map(|v| if v { FeatureFlag::Yes } else { FeatureFlag::No });
+        let coupling = Coupling {
+            socket: Some(socket),
+            close_couplers,
+            digital_shunting: None,
+        };
+        TechnicalSpecificationsBuilder::default()
+            .with_coupling(coupling)
+            .build()
+    });
+
     match input.category {
-        RollingStockCategory::Locomotive => RollingStockParams::LocomotiveParams {
-            railway_company_id: input.railway_company_id,
-            friendly_name: input.series_code.clone(),
-            series_code: Some(input.series_code),
-            road_number: input.road_number.unwrap_or_default(),
-            series: None,
-            depot: input.depot,
-            livery: input.livery,
-            locomotive_type: LocomotiveType::ElectricLocomotive,
-            dcc_interface: None,
-            control: input.control,
-            is_dummy: false,
-            length_over_buffers: None,
-            technical_specifications: None,
-        },
+        RollingStockCategory::Locomotive => {
+            let locomotive_type = input
+                .sub_type
+                .as_deref()
+                .and_then(|s| s.parse::<LocomotiveType>().ok())
+                .unwrap_or(LocomotiveType::ElectricLocomotive);
+            RollingStockParams::LocomotiveParams {
+                railway_company_id: input.railway_company_id,
+                friendly_name: input
+                    .friendly_name
+                    .clone()
+                    .unwrap_or_else(|| input.series_code.clone()),
+                series_code: Some(input.series_code),
+                road_number: input.road_number.unwrap_or_default(),
+                series: None,
+                depot: input.depot,
+                livery: input.livery,
+                locomotive_type,
+                dcc_interface: input.dcc_interface,
+                control: input.control,
+                is_dummy: false,
+                length_over_buffers: None,
+                technical_specifications,
+            }
+        }
         RollingStockCategory::ElectricMultipleUnit => {
+            let electric_multiple_unit_type = input
+                .sub_type
+                .as_deref()
+                .and_then(|s| s.parse::<ElectricMultipleUnitType>().ok())
+                .unwrap_or(ElectricMultipleUnitType::MotorCar);
             RollingStockParams::ElectricMultipleUnitParams {
                 railway_company_id: input.railway_company_id,
-                friendly_name: input.series_code.clone(),
+                friendly_name: input
+                    .friendly_name
+                    .clone()
+                    .unwrap_or_else(|| input.series_code.clone()),
                 series_code: Some(input.series_code),
                 road_number: input.road_number,
                 series: None,
                 depot: input.depot,
                 livery: input.livery,
-                electric_multiple_unit_type: ElectricMultipleUnitType::MotorCar,
-                dcc_interface: None,
+                electric_multiple_unit_type,
+                dcc_interface: input.dcc_interface,
                 control: input.control,
                 is_dummy: false,
                 length_over_buffers: None,
-                technical_specifications: None,
+                technical_specifications,
             }
         }
-        RollingStockCategory::Railcar => RollingStockParams::RailcarParams {
-            railway_company_id: input.railway_company_id,
-            friendly_name: input.series_code.clone(),
-            series_code: Some(input.series_code),
-            road_number: input.road_number,
-            series: None,
-            depot: input.depot,
-            livery: input.livery,
-            railcar_type: RailcarType::PowerCar,
-            dcc_interface: None,
-            control: input.control,
-            is_dummy: false,
-            length_over_buffers: None,
-            technical_specifications: None,
-        },
-        RollingStockCategory::PassengerCar => RollingStockParams::PassengerCarParams {
-            railway_company_id: input.railway_company_id,
-            friendly_name: input.series_code.clone(),
-            series_code: Some(input.series_code),
-            road_number: input.road_number,
-            series: None,
-            livery: input.livery,
-            passenger_car_type: None,
-            service_level: None,
-            length_over_buffers: None,
-            technical_specifications: None,
-        },
-        RollingStockCategory::FreightCar => RollingStockParams::FreightCarParams {
-            railway_company_id: input.railway_company_id,
-            friendly_name: input.series_code.clone(),
-            series_code: Some(input.series_code),
-            road_number: input.road_number,
-            series: None,
-            livery: input.livery,
-            freight_car_type: None,
-            length_over_buffers: None,
-            technical_specifications: None,
-        },
+        RollingStockCategory::Railcar => {
+            let railcar_type = input
+                .sub_type
+                .as_deref()
+                .and_then(|s| s.parse::<RailcarType>().ok())
+                .unwrap_or(RailcarType::PowerCar);
+            RollingStockParams::RailcarParams {
+                railway_company_id: input.railway_company_id,
+                friendly_name: input
+                    .friendly_name
+                    .clone()
+                    .unwrap_or_else(|| input.series_code.clone()),
+                series_code: Some(input.series_code),
+                road_number: input.road_number,
+                series: None,
+                depot: input.depot,
+                livery: input.livery,
+                railcar_type,
+                dcc_interface: input.dcc_interface,
+                control: input.control,
+                is_dummy: false,
+                length_over_buffers: None,
+                technical_specifications,
+            }
+        }
+        RollingStockCategory::PassengerCar => {
+            let passenger_car_type = input
+                .sub_type
+                .as_deref()
+                .and_then(|s| s.parse::<PassengerCarType>().ok());
+            RollingStockParams::PassengerCarParams {
+                railway_company_id: input.railway_company_id,
+                friendly_name: input
+                    .friendly_name
+                    .clone()
+                    .unwrap_or_else(|| input.series_code.clone()),
+                series_code: Some(input.series_code),
+                road_number: input.road_number,
+                series: None,
+                livery: input.livery,
+                passenger_car_type,
+                service_level: None,
+                length_over_buffers: None,
+                technical_specifications,
+            }
+        }
+        RollingStockCategory::FreightCar => {
+            let freight_car_type = input
+                .sub_type
+                .as_deref()
+                .and_then(|s| s.parse::<FreightCarType>().ok());
+            RollingStockParams::FreightCarParams {
+                railway_company_id: input.railway_company_id,
+                friendly_name: input
+                    .friendly_name
+                    .clone()
+                    .unwrap_or_else(|| input.series_code.clone()),
+                series_code: Some(input.series_code),
+                road_number: input.road_number,
+                series: None,
+                livery: input.livery,
+                freight_car_type,
+                length_over_buffers: None,
+                technical_specifications,
+            }
+        }
     }
 }
 
@@ -149,6 +226,11 @@ pub fn parse_add_rolling_stock_args(
     livery: Option<String>,
     depot: Option<String>,
     control: Option<String>,
+    dcc_interface: Option<String>,
+    coupling_socket: Option<String>,
+    close_couplers: Option<bool>,
+    sub_type: Option<String>,
+    friendly_name: Option<String>,
 ) -> Result<AddRollingStockToModelInput, DomainError> {
     let mut ctx = ValidationContext::default();
 
@@ -162,6 +244,11 @@ pub fn parse_add_rolling_stock_args(
     );
     let cat = ctx.collect("category", category.parse::<RollingStockCategory>());
     let control_val = control.and_then(|s| ctx.collect("control", s.parse::<Control>()));
+
+    // DCC interface is optional and non-fatal — silently ignore unrecognised values.
+    let dcc_interface_val = dcc_interface
+        .filter(|s| !s.is_empty())
+        .and_then(|s| s.parse::<DccInterface>().ok());
 
     if series_code.trim().is_empty() {
         ctx.push_error("series_code", "length", "series_code must not be empty");
@@ -178,6 +265,11 @@ pub fn parse_add_rolling_stock_args(
         livery,
         depot,
         control: control_val,
+        dcc_interface: dcc_interface_val,
+        coupling_socket: coupling_socket.filter(|s| !s.is_empty()),
+        close_couplers,
+        sub_type: sub_type.filter(|s| !s.is_empty()),
+        friendly_name: friendly_name.filter(|s| !s.is_empty()),
     })
 }
 
@@ -229,6 +321,11 @@ mod tests {
             livery: None,
             depot: None,
             control: None,
+            dcc_interface: None,
+            coupling_socket: None,
+            close_couplers: None,
+            sub_type: None,
+            friendly_name: None,
         }
     }
 
@@ -331,6 +428,11 @@ mod tests {
             "trn:railway-company:fs".to_string(),
             "LOCOMOTIVE".to_string(),
             "".to_string(),
+            None,
+            None,
+            None,
+            None,
+            None,
             None,
             None,
             None,

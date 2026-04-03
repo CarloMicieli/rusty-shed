@@ -1314,6 +1314,21 @@ pub struct AddRollingStockToModelArgs {
 
     /// Optional control type (Control enum serialized as string, e.g. "DCC_READY").
     pub control: Option<String>,
+
+    /// Optional DCC decoder interface connector (e.g. "NEXT_18", "MTC_21").
+    pub dcc_interface: Option<String>,
+
+    /// Optional coupling socket standard (e.g. "NEM_362", "NEM_360").
+    pub coupling_socket: Option<String>,
+
+    /// Optional short-coupler flag. Only meaningful when `coupling_socket` is provided.
+    pub close_couplers: Option<bool>,
+
+    /// Optional category-specific sub-type string (e.g. "ELECTRIC_LOCOMOTIVE", "OPEN_COACH").
+    pub sub_type: Option<String>,
+
+    /// Optional display/friendly name for the rolling stock.
+    pub friendly_name: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

@@ -415,6 +415,11 @@ pub async fn add_rolling_stock_to_model(
         args.livery,
         args.depot,
         args.control,
+        args.dcc_interface,
+        args.coupling_socket,
+        args.close_couplers,
+        args.sub_type,
+        args.friendly_name,
     )?;
 
     let mut unit_of_work = state.unit_of_work().await?;

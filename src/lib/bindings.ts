@@ -1405,6 +1405,16 @@ export type AddRollingStockToModelArgs = {
 	depot: string | null,
 	// Optional control type (Control enum serialized as string, e.g. "DCC_READY").
 	control: string | null,
+	// Optional DCC decoder interface connector (e.g. "NEXT_18", "MTC_21").
+	dccInterface: string | null,
+	// Optional coupling socket standard (e.g. "NEM_362", "NEM_360").
+	couplingSocket: string | null,
+	// Optional short-coupler flag. Only meaningful when `coupling_socket` is provided.
+	closeCouplers: boolean | null,
+	// Optional category-specific sub-type string (e.g. "ELECTRIC_LOCOMOTIVE", "OPEN_COACH").
+	subType: string | null,
+	// Optional display/friendly name for the rolling stock.
+	friendlyName: string | null,
 };
 
 // Arguments structure for adding an item to a wishlist.

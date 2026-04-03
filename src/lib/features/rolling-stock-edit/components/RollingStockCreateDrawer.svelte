@@ -2,17 +2,26 @@
   import { Train } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages';
   import { toaster } from '$lib/toaster';
-  import { commands, type RailwayModelId, type RollingStockId } from '$lib/bindings';
+  import {
+    commands,
+    type RailwayModelId,
+    type RollingStockCategory,
+    type RollingStockId
+  } from '$lib/bindings';
   import { onMount } from 'svelte';
-  import RollingStockCategoryFields from './RollingStockCategoryFields.svelte';
-  import RollingStockBasicFields from './RollingStockBasicFields.svelte';
-  import RollingStockControlField from './RollingStockControlField.svelte';
   import {
     DrawerShell,
     DrawerHeader,
     DrawerFooter,
+    FormInput,
+    FormSelect,
     createDrawerForm
   } from '$lib/components/drawer';
+  import {
+    CONTROL_OPTIONS,
+    DCC_INTERFACE_OPTIONS,
+    getSubcategoryOptions
+  } from '$lib/components/model-details/components/constants';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -30,15 +39,17 @@
   const f = createDrawerForm({
     initial: () => ({
       railwayCompanyId: '',
-      railwayCompanyName: '',
       category: '',
       seriesCode: '',
-      series: '',
-      roadNumber: '',
       friendlyName: '',
+      roadNumber: '',
       livery: '',
       depot: '',
-      control: ''
+      control: '',
+      dccInterface: '',
+      couplingSocket: '',
+      closeCouplers: false,
+      subType: ''
     }),
     validate: (v) => ({
       seriesCode: !v.seriesCode.trim() ? m.error_required() : undefined,
@@ -51,13 +62,12 @@
   let inlineError = $state<string | null>(null);
 
   // ── Company options ──────────────────────────────────────────────────────────
-  let companyOptions = $state<{ id: string; label: string }[]>([]);
-  const mappedBasicOptions = $derived(companyOptions.map((c) => ({ value: c.id, label: c.label })));
+  let companyOptions = $state<{ value: string; label: string }[]>([]);
 
   onMount(async () => {
     const result = await commands.getRailwayCompanies();
     if (result.status === 'ok') {
-      companyOptions = result.data.map((c) => ({ id: c.id, label: c.name }));
+      companyOptions = result.data.map((c) => ({ value: c.id, label: c.name }));
     }
   });
 
@@ -69,23 +79,56 @@
     }
   });
 
-  // ── Category options ─────────────────────────────────────────────────────────
-  const categoryOptions = [
+  // ── Derived state ────────────────────────────────────────────────────────────
+  const subTypeOptions = $derived(
+    getSubcategoryOptions((f.values.category as RollingStockCategory) || null).map((o) => ({
+      value: o.id,
+      label: o.label
+    }))
+  );
+
+  const hasSubTypes = $derived(subTypeOptions.length > 0);
+
+  // Reset sub-type when category changes
+  $effect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    f.values.category;
+    f.values.subType = '';
+  });
+
+  // ── Coupling socket options ──────────────────────────────────────────────────
+  const couplingSocketOptions = [
     { value: '', label: '—' },
+    { value: 'NONE', label: 'None' },
+    { value: 'NEM_355', label: 'NEM 355' },
+    { value: 'NEM_356', label: 'NEM 356' },
+    { value: 'NEM_357', label: 'NEM 357' },
+    { value: 'NEM_359', label: 'NEM 359' },
+    { value: 'NEM_360', label: 'NEM 360' },
+    { value: 'NEM_362', label: 'NEM 362' },
+    { value: 'NEM_365', label: 'NEM 365' }
+  ] as const;
+
+  const dccInterfaceOptions = [
+    { value: '', label: '—' },
+    ...DCC_INTERFACE_OPTIONS.filter((o) => o.id !== '').map((o) => ({
+      value: o.id,
+      label: o.label
+    }))
+  ] as const;
+
+  const controlOptions = [
+    { value: '', label: '—' },
+    ...CONTROL_OPTIONS.filter((o) => o.id !== '').map((o) => ({ value: o.id, label: o.label }))
+  ] as const;
+
+  const categoryOptions = [
     { value: 'LOCOMOTIVE', label: 'Locomotive' },
     { value: 'ELECTRIC_MULTIPLE_UNIT', label: 'Electric Multiple Unit' },
     { value: 'PASSENGER_CAR', label: 'Passenger Car' },
     { value: 'FREIGHT_CAR', label: 'Freight Car' },
     { value: 'RAILCAR', label: 'Railcar' }
-  ];
-
-  // ── Control options ──────────────────────────────────────────────────────────
-  const controlOptions = [
-    { value: 'DCC_READY', label: 'DCC Ready' },
-    { value: 'DCC_FITTED', label: 'DCC Fitted' },
-    { value: 'DCC_SOUND', label: 'DCC Sound' },
-    { value: 'NO_DCC', label: 'Analogue (No DCC)' }
-  ];
+  ] as const;
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   async function handleSave() {
@@ -98,10 +141,15 @@
         railwayCompanyId: f.values.railwayCompanyId,
         category: f.values.category,
         seriesCode: f.values.seriesCode.trim(),
+        friendlyName: f.values.friendlyName || null,
         roadNumber: f.values.roadNumber || null,
         livery: f.values.livery || null,
         depot: f.values.depot || null,
-        control: f.values.control || null
+        control: f.values.control || null,
+        dccInterface: f.values.dccInterface || null,
+        couplingSocket: f.values.couplingSocket || null,
+        closeCouplers: f.values.couplingSocket ? f.values.closeCouplers : null,
+        subType: f.values.subType || null
       });
 
       if (result.status === 'error') {
@@ -135,21 +183,130 @@
     />
   {/snippet}
 
-  <div class="space-y-6">
-    <RollingStockCategoryFields bind:category={f.values.category} {categoryOptions} />
+  <div class="space-y-3">
+    <!-- Category + Type row (no card) -->
+    <div class="grid grid-cols-2 gap-3">
+      <FormSelect
+        id="create-category"
+        label={m.rolling_stock_field_category()}
+        options={[...categoryOptions]}
+        bind:value={f.values.category}
+        placeholder={m.rolling_stock_select_category()}
+        required
+      />
+      {#if hasSubTypes}
+        <FormSelect
+          id="create-sub-type"
+          label={m.rolling_stock_field_type()}
+          options={subTypeOptions}
+          bind:value={f.values.subType}
+          placeholder={m.rolling_stock_select_sub_type()}
+        />
+      {:else}
+        <div></div>
+      {/if}
+    </div>
 
-    <RollingStockBasicFields
-      bind:railwayCompanyId={f.values.railwayCompanyId}
-      companyOptions={mappedBasicOptions}
-      bind:seriesCode={f.values.seriesCode}
-      bind:series={f.values.series}
-      bind:roadNumber={f.values.roadNumber}
-      bind:friendlyName={f.values.friendlyName}
-      bind:livery={f.values.livery}
-      bind:depot={f.values.depot}
-    />
+    <!-- Block: Identification -->
+    <div class="rounded-sm border border-border bg-background/30 p-4">
+      <p class="mb-3 font-bebas text-xs tracking-widest text-muted-foreground uppercase">
+        {m.rolling_stock_create_section_prototype()}
+      </p>
+      <div class="space-y-4">
+        <FormSelect
+          id="create-company"
+          label={m.rolling_stock_field_railway_company()}
+          options={companyOptions}
+          bind:value={f.values.railwayCompanyId}
+          placeholder={m.rolling_stock_select_category()}
+          isSearchable
+          required
+        />
+        <div class="grid grid-cols-2 gap-3">
+          <FormInput
+            id="create-series-code"
+            label={m.rolling_stock_field_series_code()}
+            bind:value={f.values.seriesCode}
+            placeholder="e.g. BR 218"
+            required
+          />
+          <FormInput
+            id="create-friendly-name"
+            label={m.rolling_stock_field_friendly_name()}
+            bind:value={f.values.friendlyName}
+            placeholder="e.g. Krocodile"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <FormInput
+            id="create-road-number"
+            label={m.rolling_stock_field_road_number()}
+            bind:value={f.values.roadNumber}
+            placeholder="e.g. 218 401-6"
+          />
+          <FormInput
+            id="create-livery"
+            label={m.rolling_stock_field_livery()}
+            bind:value={f.values.livery}
+            placeholder="e.g. Orient Red"
+          />
+        </div>
+        <FormInput
+          id="create-depot"
+          label={m.rolling_stock_field_depot()}
+          bind:value={f.values.depot}
+          placeholder="e.g. München Hbf"
+        />
+      </div>
+    </div>
 
-    <RollingStockControlField bind:control={f.values.control} {controlOptions} />
+    <!-- Block: Technical Specifications -->
+    <div class="rounded-sm border border-border bg-background/30 p-4">
+      <p class="mb-3 font-bebas text-xs tracking-widest text-muted-foreground uppercase">
+        {m.rolling_stock_create_section_technical()}
+      </p>
+      <div class="space-y-4">
+        <div class="flex items-end gap-3">
+          <div class="flex-1">
+            <FormSelect
+              id="create-coupling-socket"
+              label={m.specs_drawer_field_coupling_socket()}
+              options={[...couplingSocketOptions]}
+              bind:value={f.values.couplingSocket}
+              placeholder={m.rolling_stock_select_coupling()}
+            />
+          </div>
+          {#if f.values.couplingSocket}
+            <label class="mb-1 flex cursor-pointer items-center gap-2 pb-2.5">
+              <input
+                type="checkbox"
+                class="variant-steampunk-valve"
+                bind:checked={f.values.closeCouplers}
+              />
+              <span class="text-[10px] font-bold text-muted-foreground uppercase">
+                {m.rolling_stock_field_short_coupler()}
+              </span>
+            </label>
+          {/if}
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <FormSelect
+            id="create-control"
+            label={m.rolling_stock_field_control_type()}
+            options={[...controlOptions]}
+            bind:value={f.values.control}
+            placeholder={m.rolling_stock_select_control()}
+          />
+          <FormSelect
+            id="create-dcc-interface"
+            label={m.rolling_stock_field_dcc_interface()}
+            options={[...dccInterfaceOptions]}
+            bind:value={f.values.dccInterface}
+            placeholder={m.rolling_stock_select_dcc_interface()}
+          />
+        </div>
+      </div>
+    </div>
   </div>
 
   {#snippet footer({ requestClose })}
