@@ -1253,5 +1253,16 @@
   "formations_meta_traction_no": "No",
   "formations_notes_placeholder": "Add logbook notes...",
   "formations_notes_read_more": "Read More",
-  "formations_notes_collapse": "Collapse"
+  "formations_notes_collapse": "Collapse",
+  "log_maintenance_select_loco_label": "Select Locomotive",
+  "log_maintenance_select_loco_placeholder": "Search rolling stock...",
+  "log_maintenance_status_active_card": "Active Card Linked",
+  "log_maintenance_status_new_card_required": "New Card Setup Required",
+  "log_maintenance_init_card_section": "Initialize Maintenance Card",
+  "log_maintenance_add_event_section": "Add New Event",
+  "log_maintenance_initial_condition_label": "Initial Condition",
+  "log_maintenance_initial_condition_placeholder": "Describe the current condition of the rolling stock...",
+  "log_maintenance_last_run_date_label": "Last Run Date",
+  "log_maintenance_service_interval_label": "Service Interval (days)",
+  "log_maintenance_service_interval_placeholder": "e.g. 90"
 }

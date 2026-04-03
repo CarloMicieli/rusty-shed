@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Wrench, AlertTriangle, Info } from 'lucide-svelte';
+  import { slide } from 'svelte/transition';
+  import { Wrench } from 'lucide-svelte';
   import {
     commands,
     type MaintenanceType,
@@ -16,6 +17,7 @@
     DrawerFooter,
     createDrawerForm
   } from '$lib/components/drawer';
+  import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 
   interface Props {
     open: boolean;
@@ -35,16 +37,16 @@
 
   const f = createDrawerForm({
     initial: () => ({
-      mode: 'rolling-stock' as 'rolling-stock' | 'card',
-      selectedRsId: null as string | null,
-      selectedCardId: null as string | null,
+      selectedLocoId: null as string | null,
       datePerformed: getTodayLocal(),
       maintenanceType: null as string | null,
-      notes: ''
+      notes: '',
+      initialCondition: '',
+      lastRunDate: getTodayLocal(),
+      serviceInterval: ''
     }),
     validate: (v) => ({
-      selectedRsId: v.mode === 'rolling-stock' && !v.selectedRsId ? m.error_required() : undefined,
-      selectedCardId: v.mode === 'card' && !v.selectedCardId ? m.error_required() : undefined,
+      selectedLocoId: !v.selectedLocoId ? m.error_required() : undefined,
       datePerformed: !v.datePerformed ? m.error_required() : undefined
     })
   });
@@ -65,24 +67,27 @@
     { value: 'DETAIL_REPAIR', label: m.maintenance_type_repair() }
   ];
 
-  // Derived: cross-reference selected RS against loaded cards
-  const existingCardForRs = $derived(
-    maintenanceCards.find((c) => c.ownedRollingStockId === f.values.selectedRsId) ?? null
+  // Searchable combobox options derived from loaded rolling stocks
+  const rsOptions = $derived(
+    rollingStocks.map((rs) => ({
+      value: rs.id,
+      label: [rs.railwayCompanyName, rs.series, rs.roadNumber].filter(Boolean).join(' - ') || rs.id
+    }))
   );
 
-  // Derived: selected card's display info for road number pill
-  const selectedCard = $derived(
-    maintenanceCards.find((c) => c.id === f.values.selectedCardId) ?? null
+  // Cross-reference selected loco against existing maintenance cards
+  const existingCardForLoco = $derived(
+    maintenanceCards.find((c) => c.ownedRollingStockId === f.values.selectedLocoId) ?? null
   );
 
-  const hasSelection = $derived(
-    (f.values.mode === 'rolling-stock' && f.values.selectedRsId !== null) ||
-      (f.values.mode === 'card' && f.values.selectedCardId !== null)
+  // Smart-switch: does the selected loco already have a maintenance card?
+  const hasMaintenanceCard = $derived(existingCardForLoco !== null);
+
+  const isFormValid = $derived(
+    f.values.selectedLocoId !== null && f.values.datePerformed !== ''
   );
 
-  const isFormValid = $derived(hasSelection && f.values.datePerformed !== '');
-
-  // Watch for open/close — load data
+  // Watch for open/close — load data and reset form
   $effect(() => {
     if (open) {
       f.reset();
@@ -92,9 +97,9 @@
     }
   });
 
-  // Clear error when RS selection changes
+  // Clear error when loco selection changes
   $effect(() => {
-    if (f.values.selectedRsId) error = null;
+    if (f.values.selectedLocoId) error = null;
   });
 
   async function loadRollingStocks() {
@@ -112,11 +117,6 @@
     }
   }
 
-  function formatRollingStock(rs: OwnedRollingStockView): string {
-    const parts = [rs.railwayCompanyName, rs.series, rs.roadNumber].filter(Boolean);
-    return parts.join(' - ') || rs.id;
-  }
-
   async function loadMaintenanceCards() {
     const result = await commands.getMaintenanceDashboard();
     if (result.status === 'ok') {
@@ -124,22 +124,8 @@
     }
   }
 
-  function formatCardLabel(card: MaintenanceCardView): string {
-    const info = card.displayInfo;
-    if (!info) return card.id;
-    const parts = [info.seriesCode, info.roadNumber].filter(Boolean);
-    return parts.join(' ') || card.id;
-  }
-
-  function handleModeChange(newMode: 'rolling-stock' | 'card') {
-    f.values.mode = newMode;
-    f.values.selectedRsId = null;
-    f.values.selectedCardId = null;
-    error = null;
-  }
-
   async function handleSubmit() {
-    if (!isFormValid || !f.values.datePerformed) return;
+    if (!isFormValid || !f.values.selectedLocoId || !f.values.datePerformed) return;
 
     isSubmitting = true;
     error = null;
@@ -147,25 +133,31 @@
     try {
       let cardId: string;
 
-      if (f.values.mode === 'rolling-stock') {
-        if (!f.values.selectedRsId) return;
-        // Step 1: create (or get existing) maintenance card
-        const cardResult = await commands.addMaintenanceCard(f.values.selectedRsId);
+      if (hasMaintenanceCard && existingCardForLoco) {
+        // Existing card: use it directly
+        cardId = existingCardForLoco.id;
+      } else {
+        // No card yet: create one first
+        const cardResult = await commands.addMaintenanceCard(f.values.selectedLocoId);
         if (cardResult.status !== 'ok') {
           throw new Error(JSON.stringify(cardResult.error));
         }
         cardId = cardResult.data;
-      } else {
-        if (!f.values.selectedCardId) return;
-        cardId = f.values.selectedCardId;
       }
 
-      // Step 2: log the event
+      // Build notes: prepend initialCondition when creating a new card
+      const trimmedCondition = !hasMaintenanceCard ? f.values.initialCondition.trim() : '';
+      let notesText = f.values.notes.trim();
+      if (trimmedCondition) {
+        notesText = trimmedCondition + (notesText ? '\n' + notesText : '');
+      }
+
+      // Log the maintenance event
       const eventResult = await commands.addMaintenanceEvent({
         maintenanceCardId: cardId,
         datePerformed: f.values.datePerformed,
         maintenanceType: f.values.maintenanceType,
-        notes: f.values.notes.trim() || null
+        notes: notesText || null
       });
       if (eventResult.status !== 'ok') {
         throw new Error(JSON.stringify(eventResult.error));
@@ -207,187 +199,187 @@
   {/snippet}
 
   <div class="space-y-5">
-    <!-- Mode toggle -->
-    <div class="flex rounded-lg border border-white/10 bg-zinc-900 p-1">
-      <button
-        type="button"
-        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values.mode ===
-        'rolling-stock'
-          ? 'bg-amber-500/20 text-amber-400'
-          : 'text-zinc-400 hover:text-zinc-200'}"
-        onclick={() => handleModeChange('rolling-stock')}
+    <!-- Subject-First Selector: single searchable combobox -->
+    <div class="space-y-2">
+      <label
+        for="loco-select"
+        class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
       >
-        {m.log_maintenance_mode_new_card()}
-      </button>
-      <button
-        type="button"
-        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors {f.values.mode ===
-        'card'
-          ? 'bg-amber-500/20 text-amber-400'
-          : 'text-zinc-400 hover:text-zinc-200'}"
-        onclick={() => handleModeChange('card')}
-      >
-        {m.log_maintenance_mode_existing_card()}
-      </button>
+        {m.log_maintenance_select_loco_label()}
+      </label>
+      {#if isLoadingRs}
+        <div class="flex h-12 items-center px-4 text-sm text-muted-foreground">
+          <span
+            class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary"
+          ></span>
+          {m.app_loading()}
+        </div>
+      {:else}
+        <SearchableSelect
+          id="loco-select"
+          options={rsOptions}
+          value={f.values.selectedLocoId ?? ''}
+          placeholder={m.log_maintenance_select_loco_placeholder()}
+          onSelect={(val) => {
+            f.values.selectedLocoId = val || null;
+          }}
+        />
+      {/if}
     </div>
 
-    <!-- Mode A: Rolling stock selector -->
-    {#if f.values.mode === 'rolling-stock'}
-      <div class="space-y-2">
-        <label
-          for="rs-select"
-          class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
+    <!-- Dynamic form unfolding: appears after a loco is chosen -->
+    {#if f.values.selectedLocoId !== null}
+      <!-- Status Lamp -->
+      <div transition:slide={{ duration: 200 }} class="flex items-center gap-2">
+        <span
+          class="h-2.5 w-2.5 rounded-full {hasMaintenanceCard
+            ? 'bg-green-500 shadow-[0_0_6px_2px_rgba(34,197,94,0.4)]'
+            : 'bg-amber-500 shadow-[0_0_6px_2px_rgba(245,158,11,0.4)]'}"
+        ></span>
+        <span
+          class="text-[11px] font-semibold uppercase tracking-widest {hasMaintenanceCard
+            ? 'text-green-400'
+            : 'text-amber-400'}"
         >
-          {m.maintenance_create_card_select_rolling_stock()}
-        </label>
-        {#if isLoadingRs}
-          <div class="flex h-10 items-center px-3 text-sm text-zinc-500">
-            <span
-              class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent"
-            ></span>
-            {m.app_loading()}
+          {hasMaintenanceCard
+            ? m.log_maintenance_status_active_card()
+            : m.log_maintenance_status_new_card_required()}
+        </span>
+      </div>
+
+      <!-- Initialize Maintenance Card section (only when no card exists) -->
+      {#if !hasMaintenanceCard}
+        <div
+          transition:slide={{ duration: 250 }}
+          class="space-y-4 rounded-sm border-t-2 border-primary/30 bg-background/40 px-4 pt-4 pb-4"
+        >
+          <h3 class="font-bebas text-xl uppercase tracking-widest text-foreground">
+            {m.log_maintenance_init_card_section()}
+          </h3>
+
+          <!-- Initial Condition -->
+          <div class="space-y-2">
+            <label
+              for="initial-condition"
+              class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              {m.log_maintenance_initial_condition_label()}
+            </label>
+            <textarea
+              id="initial-condition"
+              class="flex min-h-[72px] w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
+              placeholder={m.log_maintenance_initial_condition_placeholder()}
+              value={f.values.initialCondition}
+              oninput={(e) =>
+                (f.values.initialCondition = (e.target as HTMLTextAreaElement).value)}
+            ></textarea>
           </div>
-        {:else}
+
+          <!-- Last Run Date -->
+          <div class="space-y-2">
+            <label
+              for="last-run-date"
+              class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              {m.log_maintenance_last_run_date_label()}
+            </label>
+            <input
+              id="last-run-date"
+              type="date"
+              class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
+              value={f.values.lastRunDate}
+              oninput={(e) => (f.values.lastRunDate = (e.target as HTMLInputElement).value)}
+            />
+          </div>
+
+          <!-- Service Interval -->
+          <div class="space-y-2">
+            <label
+              for="service-interval"
+              class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              {m.log_maintenance_service_interval_label()}
+            </label>
+            <input
+              id="service-interval"
+              type="number"
+              min="1"
+              class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
+              placeholder={m.log_maintenance_service_interval_placeholder()}
+              value={f.values.serviceInterval}
+              oninput={(e) => (f.values.serviceInterval = (e.target as HTMLInputElement).value)}
+            />
+          </div>
+        </div>
+      {/if}
+
+      <!-- Add New Event section -->
+      <div
+        transition:slide={{ duration: 250 }}
+        class="space-y-4 rounded-sm border-t-2 border-primary/30 bg-background/40 px-4 pt-4 pb-4"
+      >
+        <h3 class="font-bebas text-xl uppercase tracking-widest text-foreground">
+          {m.log_maintenance_add_event_section()}
+        </h3>
+
+        <!-- Date Performed -->
+        <div class="space-y-2">
+          <label
+            for="date-performed"
+            class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            {m.maintenance_add_event_date_label()}
+          </label>
+          <input
+            id="date-performed"
+            type="date"
+            class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
+            value={f.values.datePerformed}
+            oninput={(e) => (f.values.datePerformed = (e.target as HTMLInputElement).value)}
+            required
+          />
+        </div>
+
+        <!-- Maintenance Type -->
+        <div class="space-y-2">
+          <label
+            for="maintenance-type"
+            class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            {m.maintenance_add_event_type_label()}
+          </label>
           <select
-            id="rs-select"
-            class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            value={f.values.selectedRsId ?? ''}
+            id="maintenance-type"
+            class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            value={f.values.maintenanceType ?? ''}
             onchange={(e) => {
-              f.values.selectedRsId = (e.target as HTMLSelectElement).value || null;
+              const v = (e.target as HTMLSelectElement).value;
+              f.values.maintenanceType = v || null;
             }}
           >
-            <option value="" disabled>{m.maintenance_create_card_placeholder()}</option>
-            {#each rollingStocks as rs (rs.id)}
-              <option value={rs.id} class="bg-zinc-950 text-zinc-100">
-                {formatRollingStock(rs)}
-              </option>
+            <option value="">{m.maintenance_add_event_type_placeholder()}</option>
+            {#each maintenanceTypes as mt (mt.value)}
+              <option value={mt.value}>{mt.label}</option>
             {/each}
           </select>
-        {/if}
+        </div>
 
-        <!-- Contextual pill after RS selection -->
-        {#if f.values.selectedRsId !== null}
-          {#if existingCardForRs !== null}
-            <div
-              class="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400"
-            >
-              <AlertTriangle class="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{m.log_maintenance_existing_card_warning()}</span>
-            </div>
-          {:else}
-            <div
-              class="flex items-start gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-xs text-zinc-400"
-            >
-              <Info class="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{m.log_maintenance_new_card_info()}</span>
-            </div>
-          {/if}
-        {/if}
-      </div>
-    {/if}
-
-    <!-- Mode B: Maintenance card selector -->
-    {#if f.values.mode === 'card'}
-      <div class="space-y-2">
-        <label
-          for="card-select"
-          class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-        >
-          {m.maintenance_add_event_select_card()}
-        </label>
-        <select
-          id="card-select"
-          class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          value={f.values.selectedCardId ?? ''}
-          onchange={(e) => {
-            f.values.selectedCardId = (e.target as HTMLSelectElement).value || null;
-            error = null;
-          }}
-        >
-          <option value="" disabled>{m.maintenance_add_event_card_placeholder()}</option>
-          {#each maintenanceCards as card (card.id)}
-            <option value={card.id} class="bg-zinc-950 text-zinc-100">
-              {formatCardLabel(card)}
-            </option>
-          {/each}
-        </select>
-
-        <!-- Road number info pill -->
-        {#if selectedCard !== null && selectedCard.displayInfo !== null}
-          <div
-            class="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-xs text-zinc-400"
+        <!-- Notes -->
+        <div class="space-y-2">
+          <label
+            for="event-notes"
+            class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
           >
-            <Info class="h-3.5 w-3.5 shrink-0" />
-            <span
-              >{m.log_maintenance_road_number_info()}:
-              {[selectedCard.displayInfo.seriesCode, selectedCard.displayInfo.roadNumber]
-                .filter(Boolean)
-                .join(' ')}</span
-            >
-          </div>
-        {/if}
-      </div>
-    {/if}
-
-    <!-- Event fields: progressive disclosure after selection -->
-    {#if hasSelection}
-      <!-- Date Performed -->
-      <div class="space-y-2">
-        <label
-          for="date-performed"
-          class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-        >
-          {m.maintenance_add_event_date_label()}
-        </label>
-        <input
-          id="date-performed"
-          type="date"
-          class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-          value={f.values.datePerformed}
-          oninput={(e) => (f.values.datePerformed = (e.target as HTMLInputElement).value)}
-          required
-        />
-      </div>
-
-      <!-- Maintenance Type -->
-      <div class="space-y-2">
-        <label
-          for="maintenance-type"
-          class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-        >
-          {m.maintenance_add_event_type_label()}
-        </label>
-        <select
-          id="maintenance-type"
-          class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          value={f.values.maintenanceType ?? ''}
-          onchange={(e) => {
-            const v = (e.target as HTMLSelectElement).value;
-            f.values.maintenanceType = v || null;
-          }}
-        >
-          <option value="">{m.maintenance_add_event_type_placeholder()}</option>
-          {#each maintenanceTypes as mt (mt.value)}
-            <option value={mt.value} class="bg-zinc-950 text-zinc-100">{mt.label}</option>
-          {/each}
-        </select>
-      </div>
-
-      <!-- Notes -->
-      <div class="space-y-2">
-        <label
-          for="event-notes"
-          class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
-        >
-          {m.maintenance_add_event_notes_label()}
-        </label>
-        <textarea
-          id="event-notes"
-          class="flex min-h-[80px] w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-          placeholder={m.maintenance_add_event_notes_placeholder()}
-          value={f.values.notes}
-          oninput={(e) => (f.values.notes = (e.target as HTMLTextAreaElement).value)}
-        ></textarea>
+            {m.maintenance_add_event_notes_label()}
+          </label>
+          <textarea
+            id="event-notes"
+            class="flex min-h-[80px] w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
+            placeholder={m.maintenance_add_event_notes_placeholder()}
+            value={f.values.notes}
+            oninput={(e) => (f.values.notes = (e.target as HTMLTextAreaElement).value)}
+          ></textarea>
+        </div>
       </div>
     {/if}
   </div>

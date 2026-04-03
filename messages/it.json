@@ -1253,5 +1253,16 @@
   "formations_meta_traction_no": "No",
   "formations_notes_placeholder": "Aggiungi note al logbook...",
   "formations_notes_read_more": "Leggi tutto",
-  "formations_notes_collapse": "Comprimi"
+  "formations_notes_collapse": "Comprimi",
+  "log_maintenance_select_loco_label": "Seleziona Locomotiva",
+  "log_maintenance_select_loco_placeholder": "Cerca rotabile...",
+  "log_maintenance_status_active_card": "Scheda Attiva Collegata",
+  "log_maintenance_status_new_card_required": "Impostazione Nuova Scheda Richiesta",
+  "log_maintenance_init_card_section": "Inizializza Scheda Manutenzione",
+  "log_maintenance_add_event_section": "Aggiungi Nuovo Evento",
+  "log_maintenance_initial_condition_label": "Condizione Iniziale",
+  "log_maintenance_initial_condition_placeholder": "Descrivi la condizione attuale del rotabile...",
+  "log_maintenance_last_run_date_label": "Data Ultimo Utilizzo",
+  "log_maintenance_service_interval_label": "Intervallo Manutenzione (giorni)",
+  "log_maintenance_service_interval_placeholder": "es. 90"
 }
