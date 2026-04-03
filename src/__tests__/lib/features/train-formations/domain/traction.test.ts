@@ -11,7 +11,7 @@ describe('train-formations traction domain', () => {
     expect(
       isTractionSlot(
         makeElement({
-          prototype: makePrototype({ car_type: 'Coach', is_motorized: false })
+          prototype: makePrototype({ specification_type: 'PASSENGER_CAR', is_motorized: false })
         })
       )
     ).toBe(false);
@@ -25,7 +25,7 @@ describe('train-formations traction domain', () => {
     expect(
       isTractionSlot(
         makeElement({
-          prototype: makePrototype({ car_type: 'PowerCar', series_code: 'RAe TEE II' })
+          prototype: makePrototype({ specification_type: 'LOCOMOTIVE', series_code: 'RAe TEE II' })
         })
       )
     ).toBe(true);
@@ -45,7 +45,7 @@ describe('train-formations traction domain', () => {
     expect(
       isTractionSlot(
         makeElement({
-          prototype: makePrototype({ car_type: 'Coach', is_motorized: false }),
+          prototype: makePrototype({ specification_type: 'PASSENGER_CAR', is_motorized: false }),
           traction_override: 1
         })
       )
@@ -62,7 +62,7 @@ describe('train-formations traction domain', () => {
         makeElement({ id: 'a', traction_override: -1 }),
         makeElement({
           id: 'b',
-          prototype: makePrototype({ car_type: 'PowerCar' }),
+          prototype: makePrototype({ specification_type: 'LOCOMOTIVE' }),
           traction_override: -1
         })
       ])
@@ -74,7 +74,7 @@ describe('train-formations traction domain', () => {
       hasTraction([
         makeElement({
           id: 'coach',
-          prototype: makePrototype({ car_type: 'Coach', is_motorized: false })
+          prototype: makePrototype({ specification_type: 'PASSENGER_CAR', is_motorized: false })
         }),
         makeElement({ id: 'loco' })
       ])
@@ -85,7 +85,7 @@ describe('train-formations traction domain', () => {
     expect(
       isTractionSlot(
         makeElement({
-          prototype: makePrototype({ car_type: 'BaggageCar', is_motorized: false })
+          prototype: makePrototype({ specification_type: 'FREIGHT_CAR', is_motorized: false })
         })
       )
     ).toBe(false);

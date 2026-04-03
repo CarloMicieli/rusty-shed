@@ -1208,6 +1208,7 @@
   "formations_owned_badge": "{n} possedute",
   "formations_planned_status": "Pianificato",
   "formations_prototype_series_code": "Codice serie",
+  "formations_prototype_specification_type": "Tipo specifiche",
   "formations_prototype_car_type": "Tipo veicolo",
   "formations_prototype_service_level": "Classe servizio",
   "formations_search_placeholder": "Cerca prototipi...",

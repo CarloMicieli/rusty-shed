@@ -24,12 +24,20 @@ export function makePrototype(overrides: Partial<PrototypeView> = {}): Prototype
     railway_company_id: 'trn:railway-company:sbb-cff-ffs',
     company_name: 'SBB',
     series_code: 'Re 4/4 II',
-    car_type: 'Locomotive',
-    service_level: null,
-    category: 'Passenger',
+    friendly_name: null,
     is_motorized: true,
     default_is_dummy: false,
     is_custom: false,
+    specification_type: 'LOCOMOTIVE',
+    locomotive_type: null,
+    locomotive_series: null,
+    service_level: null,
+    passenger_car_type: null,
+    freight_car_type: null,
+    railcar_type: null,
+    electric_multiple_unit_type: null,
+    elements_count: null,
+    is_permanently_coupled: null,
     ...overrides
   };
 }

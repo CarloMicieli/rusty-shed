@@ -1208,6 +1208,7 @@
   "formations_owned_badge": "{n} owned",
   "formations_planned_status": "Planned",
   "formations_prototype_series_code": "Series Code",
+  "formations_prototype_specification_type": "Specification Type",
   "formations_prototype_car_type": "Car Type",
   "formations_prototype_service_level": "Service Level",
   "formations_search_placeholder": "Search prototypes...",
