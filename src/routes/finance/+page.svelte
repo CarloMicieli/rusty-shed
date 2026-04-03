@@ -48,6 +48,11 @@
     'December'
   ];
 
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
   onMount(async () => {
     await budgetState.load();
     if (budgetState.hasConfig) {
@@ -97,77 +102,92 @@
         </p>
       </div>
     {:else if budgetState.hasConfig}
-      <div class="grid gap-4 md:grid-cols-3">
-        <GaugeStatCard
-          label="Monthly Allocation"
-          value={budgetState.formattedMonthlyBudget}
-          icon={CalendarDays}
-        />
-        <GaugeStatCard
-          label="Yearly Forecast"
-          value={budgetState.formattedYearlyBudget}
-          icon={TrendingUp}
-        />
+      <div
+        class="relative transition-opacity duration-150"
+        class:opacity-50={budgetState.isTransitioning}
+        class:pointer-events-none={budgetState.isTransitioning}
+      >
+        {#if budgetState.isTransitioning}
+          <div class="absolute inset-0 z-10 flex items-center justify-center">
+            <div
+              class="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary"
+            ></div>
+          </div>
+        {/if}
+
+        <div class="grid gap-4 md:grid-cols-3">
+          <GaugeStatCard
+            label="Monthly Allocation"
+            value={budgetState.formattedMonthlyBudget}
+            icon={CalendarDays}
+          />
+          <GaugeStatCard
+            label="Yearly Forecast"
+            value={budgetState.formattedYearlyBudget}
+            icon={TrendingUp}
+          />
+          <Card class="border-border bg-card">
+            <CardContent class="pt-6">
+              <Button variant="outline" class="w-full" onclick={() => (configSheetOpen = true)}>
+                <Settings2 size={16} class="mr-2" />
+                System Config
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div class="mt-6">
         <Card class="border-border bg-card">
-          <CardContent class="pt-6">
-            <Button variant="outline" class="w-full" onclick={() => (configSheetOpen = true)}>
-              <Settings2 size={16} class="mr-2" />
-              System Config
-            </Button>
+          <CardHeader class="border-b border-border/50 pb-4">
+            <div class="flex items-center justify-between">
+              <CardTitle class="text-sm font-bold tracking-tight uppercase"
+                >Ledger_{selectedYear}</CardTitle
+              >
+              <select
+                bind:value={selectedYear}
+                onchange={() => handleYearChange(selectedYear)}
+                class="h-8 rounded border border-border bg-card px-2 font-mono text-xs text-foreground outline-none focus:border-primary/50"
+              >
+                {#each yearOptions as year (year)}
+                  <option value={year}>{year}</option>
+                {/each}
+              </select>
+            </div>
+          </CardHeader>
+
+          <CardContent class="p-0">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse text-left">
+                <thead>
+                  <tr
+                    class="border-b border-border bg-card/30 text-[9px] font-bold tracking-widest text-muted-foreground uppercase"
+                  >
+                    <th class="px-4 py-3">Month</th>
+                    <th class="px-4 py-3 text-right">Base</th>
+                    <th class="px-4 py-3 text-right">Extra</th>
+                    <th class="px-4 py-3 text-right">Available</th>
+                    <th class="px-4 py-3 text-right">Spent</th>
+                    <th class="px-4 py-3 text-right">Remaining</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each budgetState.enhancedMonthlyRecords as record (record.month)}
+                    <BudgetMonthRow
+                      {record}
+                      monthName={monthNames[record.month - 1]}
+                      isCurrent={record.year === currentYear && record.month === currentMonth}
+                      onExtra={openExtraBudget}
+                    />
+                  {/each}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-
-      <Card class="border-border bg-card">
-        <CardHeader class="border-b border-border/50 pb-4">
-          <div class="flex items-center justify-between">
-            <CardTitle class="text-sm font-bold tracking-tight uppercase"
-              >Ledger_{selectedYear}</CardTitle
-            >
-            <select
-              bind:value={selectedYear}
-              onchange={() => handleYearChange(selectedYear)}
-              class="h-8 rounded border border-border bg-card px-2 font-mono text-xs text-foreground outline-none focus:border-primary/50"
-            >
-              {#each Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i) as year (year)}
-                <option value={year}>{year}</option>
-              {/each}
-            </select>
-          </div>
-        </CardHeader>
-
-        <CardContent class="p-0">
-          <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-left">
-              <thead>
-                <tr
-                  class="border-b border-border bg-card/30 text-[9px] font-bold tracking-widest text-muted-foreground uppercase"
-                >
-                  <th class="px-4 py-3">Month</th>
-                  <th class="px-4 py-3 text-right">Base</th>
-                  <th class="px-4 py-3 text-right">Extra</th>
-                  <th class="px-4 py-3 text-right">Available</th>
-                  <th class="px-4 py-3 text-right">Spent</th>
-                  <th class="px-4 py-3 text-right">Remaining</th>
-                  <th class="px-4 py-3">Status</th>
-                  <th class="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {#each budgetState.enhancedMonthlyRecords as record (record.month)}
-                  <BudgetMonthRow
-                    {record}
-                    monthName={monthNames[record.month - 1]}
-                    isCurrent={record.year === new Date().getFullYear() &&
-                      record.month === new Date().getMonth() + 1}
-                    onExtra={openExtraBudget}
-                  />
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     {:else}
       <EmptyState
         icon={Wallet}

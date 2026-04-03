@@ -434,8 +434,7 @@ describe('BudgetService', () => {
   describe('addExtraBudget()', () => {
     it('returns the created extra budget on success', async () => {
       const extra = makeExtraBudget();
-      // Note: loadMonthlyRecords is called internally but skipped (isLoading guard)
-      setupInvokeMock({ add_extra_budget: () => extra });
+      setupInvokeMock({ add_extra_budget: () => extra, get_monthly_budget_records: () => [] });
 
       const result = await service.addExtraBudget({
         year: 2026,
@@ -449,7 +448,10 @@ describe('BudgetService', () => {
     });
 
     it('sets isLoading to false after success', async () => {
-      setupInvokeMock({ add_extra_budget: () => makeExtraBudget() });
+      setupInvokeMock({
+        add_extra_budget: () => makeExtraBudget(),
+        get_monthly_budget_records: () => []
+      });
 
       await service.addExtraBudget({ year: 2026, month: 3, amount: 5000 });
 
@@ -457,7 +459,10 @@ describe('BudgetService', () => {
     });
 
     it('toasts success', async () => {
-      setupInvokeMock({ add_extra_budget: () => makeExtraBudget() });
+      setupInvokeMock({
+        add_extra_budget: () => makeExtraBudget(),
+        get_monthly_budget_records: () => []
+      });
 
       await service.addExtraBudget({ year: 2026, month: 1, amount: 1000 });
 
@@ -501,8 +506,10 @@ describe('BudgetService', () => {
 
   describe('removeExtraBudget()', () => {
     it('calls remove_extra_budget with the correct id', async () => {
-      // Note: loadMonthlyRecords is called internally but skipped (isLoading guard)
-      setupInvokeMock({ remove_extra_budget: () => undefined });
+      setupInvokeMock({
+        remove_extra_budget: () => undefined,
+        get_monthly_budget_records: () => []
+      });
 
       await service.removeExtraBudget('extra-1', 2026);
 
@@ -513,7 +520,10 @@ describe('BudgetService', () => {
     });
 
     it('resets isLoading after success', async () => {
-      setupInvokeMock({ remove_extra_budget: () => undefined });
+      setupInvokeMock({
+        remove_extra_budget: () => undefined,
+        get_monthly_budget_records: () => []
+      });
 
       await service.removeExtraBudget('extra-1', 2026);
 
@@ -521,7 +531,10 @@ describe('BudgetService', () => {
     });
 
     it('toasts success', async () => {
-      setupInvokeMock({ remove_extra_budget: () => undefined });
+      setupInvokeMock({
+        remove_extra_budget: () => undefined,
+        get_monthly_budget_records: () => []
+      });
 
       await service.removeExtraBudget('extra-1', 2026);
 

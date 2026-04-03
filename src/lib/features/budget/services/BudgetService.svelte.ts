@@ -9,7 +9,7 @@
  */
 
 import { setContext, getContext } from 'svelte';
-import { SvelteDate } from 'svelte/reactivity';
+import { SvelteDate, SvelteMap } from 'svelte/reactivity';
 import { toaster } from '$lib/toaster';
 import * as m from '$lib/paraglide/messages.js';
 import { safeInvoke } from '$lib/shared/services/TauriAdapter';
@@ -152,6 +152,8 @@ export class BudgetService {
   #extraBudgets = $state<ExtraBudgetDto[]>([]);
   #quarterlySummaries = $state<QuarterlySummary[]>([]);
   #isLoading = $state(false);
+  #isTransitioning = $state(false);
+  #yearCache = new SvelteMap<number, MonthlyBudgetRecordDto[]>();
   #snapshot: BudgetConfigDto | null = null;
 
   // Public readonly getters (defensive encapsulation)
@@ -177,6 +179,10 @@ export class BudgetService {
 
   get isLoading(): boolean {
     return this.#isLoading;
+  }
+
+  get isTransitioning(): boolean {
+    return this.#isTransitioning;
   }
 
   get hasConfig(): boolean {
@@ -220,9 +226,19 @@ export class BudgetService {
    * Defaults to the current year if not specified.
    */
   async loadMonthlyRecords(year?: number): Promise<void> {
-    if (this.#isLoading) return;
+    if (this.#isLoading || this.#isTransitioning) return;
 
-    this.#isLoading = true;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const targetYear = year ?? new Date().getFullYear();
+
+    // Cache hit — instant return with no IPC call
+    const cached = this.#yearCache.get(targetYear);
+    if (cached) {
+      this.#monthlyRecords = cached;
+      return;
+    }
+
+    this.#isTransitioning = true;
     try {
       const args: GetMonthlyBudgetRecordsArgs = { year };
       const result = await safeInvoke<MonthlyBudgetRecordDto[]>('get_monthly_budget_records', {
@@ -233,6 +249,7 @@ export class BudgetService {
         throw new Error(getErrorMessage(result.error));
       }
 
+      this.#yearCache.set(targetYear, result.data);
       this.#monthlyRecords = result.data;
     } catch (error) {
       const message =
@@ -240,7 +257,7 @@ export class BudgetService {
       toaster.error({ title: message, duration: 5000 });
       throw error;
     } finally {
-      this.#isLoading = false;
+      this.#isTransitioning = false;
     }
   }
 
@@ -337,7 +354,9 @@ export class BudgetService {
         throw new Error(getErrorMessage(result.error));
       }
 
-      // Reload monthly records to reflect the new extra budget
+      // Invalidate cache and reload monthly records to reflect the new extra budget
+      this.#yearCache.delete(args.year);
+      this.#isLoading = false; // release lock so loadMonthlyRecords can proceed
       await this.loadMonthlyRecords(args.year);
 
       toaster.success({ title: 'Extra budget added successfully', duration: 2000 });
@@ -368,7 +387,9 @@ export class BudgetService {
         throw new Error(getErrorMessage(result.error));
       }
 
-      // Reload monthly records to reflect the removed extra budget
+      // Invalidate cache and reload monthly records to reflect the removed extra budget
+      this.#yearCache.delete(year);
+      this.#isLoading = false; // release lock so loadMonthlyRecords can proceed
       await this.loadMonthlyRecords(year);
 
       toaster.success({ title: 'Extra budget removed successfully', duration: 2000 });
@@ -445,6 +466,8 @@ export class BudgetService {
     this.#extraBudgets = [];
     this.#quarterlySummaries = [];
     this.#isLoading = false;
+    this.#isTransitioning = false;
+    this.#yearCache.clear();
     this.#snapshot = null;
   }
 }
