@@ -137,55 +137,55 @@
         </div>
 
         <div class="mt-6">
-        <Card class="border-border bg-card">
-          <CardHeader class="border-b border-border/50 pb-4">
-            <div class="flex items-center justify-between">
-              <CardTitle class="text-sm font-bold tracking-tight uppercase"
-                >Ledger_{selectedYear}</CardTitle
-              >
-              <select
-                bind:value={selectedYear}
-                onchange={() => handleYearChange(selectedYear)}
-                class="h-8 rounded border border-border bg-card px-2 font-mono text-xs text-foreground outline-none focus:border-primary/50"
-              >
-                {#each yearOptions as year (year)}
-                  <option value={year}>{year}</option>
-                {/each}
-              </select>
-            </div>
-          </CardHeader>
-
-          <CardContent class="p-0">
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse text-left">
-                <thead>
-                  <tr
-                    class="border-b border-border bg-card/30 text-[9px] font-bold tracking-widest text-muted-foreground uppercase"
-                  >
-                    <th class="px-4 py-3">Month</th>
-                    <th class="px-4 py-3 text-right">Base</th>
-                    <th class="px-4 py-3 text-right">Extra</th>
-                    <th class="px-4 py-3 text-right">Available</th>
-                    <th class="px-4 py-3 text-right">Spent</th>
-                    <th class="px-4 py-3 text-right">Remaining</th>
-                    <th class="px-4 py-3">Status</th>
-                    <th class="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each budgetState.enhancedMonthlyRecords as record (record.month)}
-                    <BudgetMonthRow
-                      {record}
-                      monthName={monthNames[record.month - 1]}
-                      isCurrent={record.year === currentYear && record.month === currentMonth}
-                      onExtra={openExtraBudget}
-                    />
+          <Card class="border-border bg-card">
+            <CardHeader class="border-b border-border/50 pb-4">
+              <div class="flex items-center justify-between">
+                <CardTitle class="text-sm font-bold tracking-tight uppercase"
+                  >Ledger_{selectedYear}</CardTitle
+                >
+                <select
+                  bind:value={selectedYear}
+                  onchange={() => handleYearChange(selectedYear)}
+                  class="h-8 rounded border border-border bg-card px-2 font-mono text-xs text-foreground outline-none focus:border-primary/50"
+                >
+                  {#each yearOptions as year (year)}
+                    <option value={year}>{year}</option>
                   {/each}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                </select>
+              </div>
+            </CardHeader>
+
+            <CardContent class="p-0">
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left">
+                  <thead>
+                    <tr
+                      class="border-b border-border bg-card/30 text-[9px] font-bold tracking-widest text-muted-foreground uppercase"
+                    >
+                      <th class="px-4 py-3">Month</th>
+                      <th class="px-4 py-3 text-right">Base</th>
+                      <th class="px-4 py-3 text-right">Extra</th>
+                      <th class="px-4 py-3 text-right">Available</th>
+                      <th class="px-4 py-3 text-right">Spent</th>
+                      <th class="px-4 py-3 text-right">Remaining</th>
+                      <th class="px-4 py-3">Status</th>
+                      <th class="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each budgetState.enhancedMonthlyRecords as record (record.month)}
+                      <BudgetMonthRow
+                        {record}
+                        monthName={monthNames[record.month - 1]}
+                        isCurrent={record.year === currentYear && record.month === currentMonth}
+                        onExtra={openExtraBudget}
+                      />
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     {:else}

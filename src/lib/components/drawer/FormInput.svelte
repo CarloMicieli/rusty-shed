@@ -28,7 +28,9 @@
 </script>
 
 <div class="space-y-1">
-  <label for={id} class="text-xs text-zinc-400">{label}{required ? ' *' : ''}</label>
+  <label for={id} class="text-[10px] font-bold text-muted-foreground uppercase"
+    >{label}{required ? ' *' : ''}</label
+  >
   <DrawerInput bind:value {id} {...rest} />
   {#if error}
     <p class="text-xs text-destructive">{error}</p>

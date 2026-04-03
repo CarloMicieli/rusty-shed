@@ -40,7 +40,9 @@
 </script>
 
 <div class="space-y-1">
-  <span class="text-xs text-zinc-400">{label}{required ? ' *' : ''}</span>
+  <span class="text-[10px] font-bold text-muted-foreground uppercase"
+    >{label}{required ? ' *' : ''}</span
+  >
   {#if isSearchable}
     <SearchableSelect
       {id}
@@ -58,11 +60,11 @@
       {disabled}
       onValueChange={(v) => (value = v)}
     >
-      <Select.Trigger {id} class="w-full border-layout-border bg-layout-surface text-foreground">
+      <Select.Trigger {id} class="w-full border-border bg-background text-foreground">
         {#if value}
           {selectedLabel}
         {:else}
-          <span class="text-zinc-500">{placeholder}</span>
+          <span class="text-muted-foreground">{placeholder}</span>
         {/if}
       </Select.Trigger>
       <Select.Content>

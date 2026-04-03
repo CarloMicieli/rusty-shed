@@ -206,7 +206,7 @@
     />
 
     <!-- Section 3: Wishlist Preferences -->
-    <div class="overflow-hidden rounded-lg border border-layout-border bg-layout-surface p-4">
+    <div class="overflow-hidden rounded-sm border border-border bg-card p-4">
       <section>
         <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
           {m.drawer_section_wishlist()}
@@ -237,7 +237,7 @@
         type="button"
         variant="default"
         size="sm"
-        class="bg-primary font-bold text-primary-foreground hover:bg-primary/90"
+        class="variant-steampunk-lever rounded-sm bg-primary font-bebas font-bold text-primary-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:bg-primary/90"
         onclick={handleSubmit}
         disabled={isSubmitting}
       >

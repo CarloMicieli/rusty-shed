@@ -45,7 +45,7 @@
   const selectedManufacturer = $derived(manufacturers.find((mfr) => mfr.id === manufacturerId));
 </script>
 
-<div class="overflow-hidden rounded-lg border border-layout-border bg-layout-surface p-4">
+<div class="overflow-hidden rounded-sm border border-border bg-card p-4">
   <section>
     <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       {m.drawer_section_model_info()}
@@ -55,9 +55,11 @@
       <div class="grid grid-cols-[2fr_1fr] gap-3">
         <!-- Manufacturer: kept inline due to loading state -->
         <div class="space-y-1">
-          <span class="text-xs text-zinc-400">{m.wishlist_modal_manufacturer()} *</span>
+          <span class="text-[10px] font-bold text-muted-foreground uppercase"
+            >{m.wishlist_modal_manufacturer()} *</span
+          >
           {#if isLoading}
-            <p class="text-sm text-zinc-500">{m.wishlist_modal_loading()}</p>
+            <p class="font-mono text-xs text-muted-foreground">{m.wishlist_modal_loading()}</p>
           {:else}
             <Select.Root
               type="single"
@@ -68,13 +70,15 @@
               }}
             >
               <Select.Trigger
-                class="w-full border-layout-border bg-layout-surface text-foreground"
+                class="w-full border-border bg-background text-foreground"
                 aria-label={m.wishlist_modal_manufacturer()}
               >
                 {#if selectedManufacturer}
                   {selectedManufacturer.name}
                 {:else}
-                  <span class="text-zinc-500">{m.wishlist_modal_manufacturer_placeholder()}</span>
+                  <span class="text-muted-foreground"
+                    >{m.wishlist_modal_manufacturer_placeholder()}</span
+                  >
                 {/if}
               </Select.Trigger>
               <Select.Content>

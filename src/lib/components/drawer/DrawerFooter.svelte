@@ -28,7 +28,7 @@
 <div
   class="flex {leading
     ? 'justify-between'
-    : 'justify-end'} items-center gap-3 border-t border-white/10 px-6 py-4"
+    : 'justify-end'} items-center gap-3 border-t border-border px-6 py-4"
 >
   {#if leading}
     <div>{@render leading()}</div>
@@ -41,12 +41,14 @@
       type="button"
       onclick={onSubmit}
       disabled={submitting || isLoading || disabled}
-      class="bg-primary font-bold text-primary-foreground hover:bg-primary/90"
+      class="variant-steampunk-lever rounded-sm bg-primary font-bebas font-bold text-primary-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:bg-primary/90"
     >
       {#if submitting}
         <span
-          class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent"
-        ></span>
+          class="mr-2 inline-flex items-center gap-1 rounded-sm border border-primary/50 bg-background px-1.5 font-mono text-[10px]"
+        >
+          <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary"></span>
+        </span>
       {/if}
       {submitLabel}
     </Button>

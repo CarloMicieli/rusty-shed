@@ -41,7 +41,7 @@
 <div class="space-y-3">
   <!-- Priority tri-state toggle -->
   <div class="space-y-1">
-    <span class="text-xs text-zinc-400">
+    <span class="text-[10px] font-bold text-muted-foreground uppercase">
       {m.wishlist_modal_priority()}
     </span>
     <div class="flex gap-2">
@@ -71,7 +71,7 @@
     id="wishlist-section-desired-price"
     bind:value={desiredPrice}
     symbol={currencySymbol}
-    inputClass="bg-layout-surface border-layout-border rounded-[8px] text-foreground placeholder:text-muted-foreground"
+    inputClass="bg-background border-border rounded-sm text-foreground placeholder:text-muted-foreground"
     {disabled}
     error={errors.desiredPrice}
   />
@@ -79,7 +79,10 @@
   <!-- Notes (optional) -->
   {#if notes !== undefined}
     <div class="space-y-1">
-      <label for="wishlist-preferences-notes" class="text-xs text-zinc-400">
+      <label
+        for="wishlist-preferences-notes"
+        class="text-[10px] font-bold text-muted-foreground uppercase"
+      >
         {m.wishlist_field_notes()}
       </label>
       <textarea
@@ -88,7 +91,7 @@
         {disabled}
         rows={3}
         placeholder="Additional notes..."
-        class="flex w-full rounded-md border border-layout-border bg-layout-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       ></textarea>
     </div>
   {/if}

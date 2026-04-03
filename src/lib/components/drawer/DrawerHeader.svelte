@@ -16,15 +16,15 @@
 
 <div class="flex items-center justify-between p-4">
   <div class="flex items-center gap-3">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-layout-border">
-      <Icon size={20} class="text-amber-500" />
+    <div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">
+      <Icon size={20} class="text-primary" />
     </div>
     <div>
-      <h2 {id} class="text-sm font-bold tracking-wider text-amber-500 uppercase">
+      <h2 {id} class="font-bebas text-2xl tracking-widest text-foreground">
         {title}
       </h2>
       {#if subtitle}
-        <p class="text-sm text-muted-foreground">{subtitle}</p>
+        <p class="text-[10px] font-bold text-muted-foreground uppercase">{subtitle}</p>
       {/if}
     </div>
   </div>
@@ -33,7 +33,7 @@
     onclick={onClose}
     {disabled}
     aria-label="close"
-    class="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-white"
+    class="flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
   >
     <X size={16} />
   </button>

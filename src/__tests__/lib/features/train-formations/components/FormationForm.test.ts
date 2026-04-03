@@ -40,8 +40,8 @@ describe('FormationForm.svelte', () => {
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('TEE Helvetia')).toBeInTheDocument();
-      // EpochPicker renders pill buttons; the selected epoch has the amber highlight class
-      expect(screen.getByRole('button', { name: 'IV' }).className).toContain('border-amber-500');
+      // EpochPicker renders pill buttons; the selected epoch has the primary highlight class
+      expect(screen.getByRole('button', { name: 'IV' }).className).toContain('border-primary');
       expect(screen.getByDisplayValue('1971')).toBeInTheDocument();
       expect(screen.getByDisplayValue('1979')).toBeInTheDocument();
       expect(screen.getByDisplayValue('International service')).toBeInTheDocument();

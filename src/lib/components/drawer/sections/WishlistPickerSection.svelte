@@ -44,14 +44,14 @@
       }}
     >
       <Select.Trigger
-        class="w-full border-layout-border bg-layout-surface text-foreground"
+        class="w-full border-border bg-background text-foreground"
         aria-label={m.wishlist_modal_select_list()}
       >
         {#if selectedWishlist}
           {selectedWishlist.name}{#if selectedWishlist.isDefault}
             (default){/if}
         {:else}
-          <span class="text-zinc-500">{m.wishlist_modal_select_placeholder()}</span>
+          <span class="text-muted-foreground">{m.wishlist_modal_select_placeholder()}</span>
         {/if}
       </Select.Trigger>
       <Select.Content>

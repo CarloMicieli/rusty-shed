@@ -96,19 +96,19 @@
 
   <!-- Drawer panel -->
   <div
-    class="fixed inset-y-0 right-0 z-50 flex w-full {sizeClass} translate-x-0 flex-col bg-zinc-950 shadow-2xl transition-transform duration-300"
+    class="fixed inset-y-0 right-0 z-50 flex w-full {sizeClass} translate-x-0 flex-col border-l-2 border-primary bg-card shadow-2xl transition-transform duration-300"
     role="dialog"
     aria-modal="true"
     aria-labelledby={labelledby}
   >
     <!-- Sticky header -->
-    <div class="border-b border-white/10">
+    <div class="border-b border-border">
       {@render header({ requestClose: handleCloseRequest })}
     </div>
 
     <!-- Optional sticky band (e.g. batch fields) -->
     {#if stickyBand}
-      <div class="border-b border-white/10">
+      <div class="border-b border-border">
         {@render stickyBand()}
       </div>
     {/if}
@@ -119,7 +119,7 @@
 
       {#if error}
         <div
-          class="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          class="mt-4 rounded-sm border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
         >
           {error}
         </div>
@@ -127,7 +127,7 @@
     </div>
 
     <!-- Sticky footer -->
-    <div class="border-t border-white/10">
+    <div class="border-t border-border">
       {@render footer({ requestClose: handleCloseRequest })}
     </div>
   </div>
@@ -137,7 +137,7 @@
     <div
       class="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm"
     >
-      <div class="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-xl">
+      <div class="w-full max-w-md rounded-sm border border-border bg-background p-6 shadow-xl">
         <h3 class="mb-2 text-lg font-bold text-foreground">
           {discardTitle ?? m.drawer_discard_title()}
         </h3>
