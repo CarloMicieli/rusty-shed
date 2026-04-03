@@ -52,6 +52,7 @@
 
   // ── Company options ──────────────────────────────────────────────────────────
   let companyOptions = $state<{ id: string; label: string }[]>([]);
+  const mappedBasicOptions = $derived(companyOptions.map((c) => ({ value: c.id, label: c.label })));
 
   onMount(async () => {
     const result = await commands.getRailwayCompanies();
@@ -135,15 +136,11 @@
   {/snippet}
 
   <div class="space-y-6">
-    <RollingStockCategoryFields
-      bind:railwayCompanyId={f.values.railwayCompanyId}
-      bind:railwayCompanyName={f.values.railwayCompanyName}
-      bind:category={f.values.category}
-      {companyOptions}
-      {categoryOptions}
-    />
+    <RollingStockCategoryFields bind:category={f.values.category} {categoryOptions} />
 
     <RollingStockBasicFields
+      bind:railwayCompanyId={f.values.railwayCompanyId}
+      companyOptions={mappedBasicOptions}
       bind:seriesCode={f.values.seriesCode}
       bind:series={f.values.series}
       bind:roadNumber={f.values.roadNumber}
