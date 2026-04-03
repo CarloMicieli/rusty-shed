@@ -36,6 +36,7 @@ export { default as QuickActionButtons } from './QuickActionButtons.svelte';
 export { default as SmartImage } from './SmartImage.svelte';
 export { default as CurrencyInput } from './CurrencyInput.svelte';
 export { default as DatePickerField } from './DatePickerField.svelte';
+export { default as EmptyState } from './EmptyState.svelte';
 
 // Feature-specific components
 export { default as SellerForm } from './SellerForm.svelte';

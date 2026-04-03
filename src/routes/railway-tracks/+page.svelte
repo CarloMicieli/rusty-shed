@@ -10,7 +10,7 @@
   import AddTracksPurchaseDrawer from '$lib/features/track-inventory/components/AddTracksPurchaseDrawer.svelte';
   import { onMount } from 'svelte';
   import { Plus, TrainTrack } from 'lucide-svelte';
-  import { Button, PageHeader } from '$lib/components';
+  import { Button, PageHeader, EmptyState } from '$lib/components';
 
   const service = getTrackInventoryContext();
 
@@ -124,38 +124,13 @@
   {:else if inventories.length === 0}
     <!-- Full empty state when no inventories exist -->
     <div class="p-6">
-      <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
-        <div
-          class="flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center"
-        >
-          <div class="relative">
-            <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
-            <div
-              class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
-            >
-              <TrainTrack size={56} class="text-zinc-600 opacity-50" />
-            </div>
-          </div>
-
-          <div class="flex max-w-sm flex-col items-center gap-3 text-center">
-            <h3 class="font-bebas text-4xl tracking-widest text-foreground uppercase">
-              {m.track_inventories_empty_title()}
-            </h3>
-            <p class="text-sm leading-relaxed text-zinc-500">
-              {m.track_inventories_empty_message()}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            class="variant-steampunk-lever mt-2 inline-flex cursor-pointer items-center gap-3 rounded-sm bg-primary px-8 py-4 font-bold tracking-wide text-primary-foreground transition-all duration-150"
-            onclick={() => (createDialogOpen = true)}
-          >
-            <TrainTrack class="h-5 w-5" />
-            <span>{m.track_inventories_create_button()}</span>
-          </button>
-        </div>
-      </div>
+      <EmptyState
+        icon={TrainTrack}
+        title={m.track_inventories_empty_title()}
+        description={m.track_inventories_empty_message()}
+        ctaLabel={m.track_inventories_create_button()}
+        onCta={() => (createDialogOpen = true)}
+      />
     </div>
   {:else}
     <!-- Command Bar + full-width content -->

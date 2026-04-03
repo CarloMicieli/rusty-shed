@@ -4,6 +4,7 @@
   import { Search, X, Filter, Microchip, Cpu, Trash2 } from 'lucide-svelte';
   import { Badge, Button } from '$lib/components';
   import InPlaceDccAddressEdit from './InPlaceDccAddressEdit.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
 
   interface Props {
     rollingStocks: DigitalRollingStockView[];
@@ -47,10 +48,6 @@
     onFilterChange?.('');
   }
 
-  const emptyStateClass =
-    'flex flex-col items-center justify-center gap-8 rounded-3xl border border-white/5 bg-layout-surface/50 px-4 py-24 text-center';
-  const ctaButtonClass =
-    'group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95';
   const decoderBadgeClass =
     'inline-flex items-center gap-1.5 rounded-md border border-amber-600/40 bg-amber-950/40 px-2.5 py-1 text-xs font-medium text-amber-400 transition-colors hover:border-amber-500/60 hover:bg-amber-900/50';
 </script>
@@ -90,37 +87,21 @@
   {/if}
 
   <!-- Content Area -->
-  <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
-    {#if loading}
-      <div class="flex items-center justify-center py-12">
-        <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
-      </div>
-    {:else if rollingStocks.length === 0}
-      <!-- Empty State -->
-      <div class={emptyStateClass}>
-        <div class="relative">
-          <div class="absolute inset-0 rounded-full bg-zinc-500/10 blur-3xl"></div>
-          <div
-            class="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-zinc-900/50"
-          >
-            <Microchip size={56} class="text-zinc-600 opacity-50" />
-          </div>
-        </div>
-        <div class="flex max-w-sm flex-col items-center gap-3 text-center">
-          <h3 class="text-2xl font-bold text-zinc-200">{m.digital_roster_empty()}</h3>
-          <p class="text-sm leading-relaxed text-zinc-500">{m.digital_roster_empty_message()}</p>
-        </div>
-        {#if onInstallDecoder}
-          <button type="button" class={ctaButtonClass} onclick={onInstallDecoder}>
-            <div
-              class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
-            ></div>
-            <Microchip class="h-5 w-5" />
-            <span>{m.digital_roster_install_decoder()}</span>
-          </button>
-        {/if}
-      </div>
-    {:else}
+  {#if loading}
+    <div class="flex items-center justify-center py-12">
+      <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
+    </div>
+  {:else if rollingStocks.length === 0}
+    <!-- Empty State -->
+    <EmptyState
+      icon={Microchip}
+      title={m.digital_roster_empty()}
+      description={m.digital_roster_empty_message()}
+      ctaLabel={onInstallDecoder ? m.digital_roster_install_decoder() : undefined}
+      onCta={onInstallDecoder}
+    />
+  {:else}
+    <div class="space-y-4 rounded-lg border border-white/10 bg-black/20 p-4">
       <!-- CSS Grid data table -->
       <div class="@container overflow-hidden rounded-lg">
         <!-- Header row -->
@@ -222,6 +203,6 @@
           {/each}
         </div>
       </div>
-    {/if}
-  </div>
+    </div>
+  {/if}
 </div>
