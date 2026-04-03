@@ -101,7 +101,7 @@
   }
 
   function handleAddItem() {
-    form.items = [...form.items, createDefaultItem(form.batchDefaults)];
+    form.items = [...form.items, createDefaultItem()];
   }
 
   function handleDuplicate(uid: string) {
@@ -128,11 +128,7 @@
   }
 
   function handleBatchDefaultChange(field: 'scale' | 'powerMethod', value: string | null) {
-    const oldValue = form.batchDefaults[field];
     form.batchDefaults = { ...form.batchDefaults, [field]: value };
-    form.items = form.items.map((item) =>
-      item[field] === oldValue ? { ...item, [field]: value } : item
-    );
   }
 
   async function handleFinalize() {

@@ -19,9 +19,7 @@ export interface AcquisitionItemEntry {
   productCode: string;
   description: string;
   category: Category | null;
-  scale: Scale | null;
   epoch: string | null;
-  powerMethod: PowerMethod | null;
   priceAmount: number | null;
 }
 
@@ -36,16 +34,14 @@ export interface AcquisitionValidationErrors {
   items?: AcquisitionItemErrors[];
 }
 
-export function createDefaultItem(defaults: BatchDefaults): AcquisitionItemEntry {
+export function createDefaultItem(): AcquisitionItemEntry {
   return {
     uid: crypto.randomUUID(),
     manufacturerId: null,
     productCode: '',
     description: '',
     category: null,
-    scale: defaults.scale,
     epoch: null,
-    powerMethod: defaults.powerMethod,
     priceAmount: null
   };
 }
@@ -61,7 +57,7 @@ export function createDefaultFormState(
     sellerId: null,
     purchaseDate: new Date().toISOString().split('T')[0],
     batchDefaults,
-    items: [createDefaultItem(batchDefaults)]
+    items: [createDefaultItem()]
   };
 }
 
@@ -100,9 +96,9 @@ export function toRecordAcquisitionArgs(
       productCode: item.productCode,
       description: item.description,
       category: item.category!,
-      scale: item.scale ?? '',
+      scale: f.batchDefaults.scale ?? '',
       epoch: item.epoch ?? '',
-      powerMethod: item.powerMethod ?? '',
+      powerMethod: f.batchDefaults.powerMethod ?? '',
       priceAmount: item.priceAmount != null ? Number(item.priceAmount) : Number(0),
       priceCurrency: currency
     }))

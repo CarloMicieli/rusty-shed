@@ -6,7 +6,7 @@ import {
   hasErrors,
   toRecordAcquisitionArgs
 } from '../types.js';
-import type { AcquisitionFormState, AcquisitionItemEntry, BatchDefaults } from '../types.js';
+import type { AcquisitionFormState, AcquisitionItemEntry } from '../types.js';
 
 vi.mock('$lib/bindings', () => ({}));
 
@@ -21,9 +21,7 @@ function makeItem(overrides: Partial<AcquisitionItemEntry> = {}): AcquisitionIte
     productCode: 'CODE-123',
     description: 'A test item',
     category: 'LOCOMOTIVES',
-    scale: 'H0',
     epoch: 'IV',
-    powerMethod: 'DC',
     priceAmount: null,
     ...overrides
   };
@@ -44,41 +42,33 @@ function makeForm(overrides: Partial<AcquisitionFormState> = {}): AcquisitionFor
 // ---------------------------------------------------------------------------
 
 describe('createDefaultItem', () => {
-  const defaults: BatchDefaults = { scale: 'N', powerMethod: 'AC' };
-
-  it('applies batch defaults for scale and powerMethod', () => {
-    const item = createDefaultItem(defaults);
-    expect(item.scale).toBe('N');
-    expect(item.powerMethod).toBe('AC');
-  });
-
   it('starts with priceAmount null', () => {
-    const item = createDefaultItem(defaults);
+    const item = createDefaultItem();
     expect(item.priceAmount).toBeNull();
   });
 
   it('starts with empty strings for productCode and description', () => {
-    const item = createDefaultItem(defaults);
+    const item = createDefaultItem();
     expect(item.productCode).toBe('');
     expect(item.description).toBe('');
   });
 
   it('starts with null for manufacturerId, category, epoch', () => {
-    const item = createDefaultItem(defaults);
+    const item = createDefaultItem();
     expect(item.manufacturerId).toBeNull();
     expect(item.category).toBeNull();
     expect(item.epoch).toBeNull();
   });
 
   it('generates a non-empty uid', () => {
-    const item = createDefaultItem(defaults);
+    const item = createDefaultItem();
     expect(item.uid).toBeTruthy();
     expect(typeof item.uid).toBe('string');
   });
 
   it('generates unique uids for each call', () => {
-    const a = createDefaultItem(defaults);
-    const b = createDefaultItem(defaults);
+    const a = createDefaultItem();
+    const b = createDefaultItem();
     expect(a.uid).not.toBe(b.uid);
   });
 });
@@ -217,8 +207,13 @@ describe('toRecordAcquisitionArgs', () => {
   });
 
   it('maps optional fields: null scale/epoch/powerMethod become empty strings', () => {
-    const item = makeItem({ scale: null, epoch: null, powerMethod: null });
-    const args = toRecordAcquisitionArgs(makeForm({ items: [item] }), 'EUR');
+    const args = toRecordAcquisitionArgs(
+      makeForm({
+        batchDefaults: { scale: null, powerMethod: null },
+        items: [makeItem({ epoch: null })]
+      }),
+      'EUR'
+    );
     expect(args.items[0].scale).toBe('');
     expect(args.items[0].epoch).toBe('');
     expect(args.items[0].powerMethod).toBe('');

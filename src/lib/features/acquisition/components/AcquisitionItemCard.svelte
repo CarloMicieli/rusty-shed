@@ -2,20 +2,12 @@
   import * as m from '$lib/paraglide/messages.js';
   import * as Select from '$lib/components/ui/select';
   import { CurrencyInput } from '$lib/components';
-  import { DrawerInput } from '$lib/components/drawer';
+  import { DrawerInput, EpochPicker } from '$lib/components/drawer';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import { Copy, Trash2 } from 'lucide-svelte';
-  import type { Category, Manufacturer, PowerMethod, Scale } from '$lib/bindings';
+  import type { Category, Manufacturer } from '$lib/bindings';
   import type { AcquisitionItemEntry, AcquisitionItemErrors } from '../types.js';
-  import { EPOCHS } from '$lib/features/wishlists/constants.js';
-  import {
-    scaleOptions,
-    powerMethodOptions,
-    powerMethodLabel,
-    categoryOptions,
-    SCALE_DISPLAY_MAP,
-    categoryLabel
-  } from '$lib/utils/enum-options';
+  import { categoryOptions, categoryLabel } from '$lib/utils/enum-options';
 
   interface Props {
     item: AcquisitionItemEntry;
@@ -188,79 +180,13 @@
       {/if}
     </div>
 
-    <!-- Scale -->
-    <div class="space-y-1">
-      <label for="item-{item.uid}-scale" class={LABEL_CLASS}>
-        {m.acquisition_item_scale_label()}
-      </label>
-      <Select.Root
-        type="single"
-        value={item.scale ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { scale: (v as Scale) || null })}
-      >
-        <Select.Trigger id="item-{item.uid}-scale" class={TRIGGER_CLASS}>
-          {#if item.scale}
-            {SCALE_DISPLAY_MAP[item.scale] ?? item.scale}
-          {:else}
-            <span class="text-zinc-500">—</span>
-          {/if}
-        </Select.Trigger>
-        <Select.Content>
-          {#each scaleOptions() as opt (opt.value)}
-            <Select.Item value={opt.value} label={opt.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
-
     <!-- Epoch -->
-    <div class="space-y-1">
-      <label for="item-{item.uid}-epoch" class={LABEL_CLASS}>
-        {m.acquisition_item_epoch_label()}
-      </label>
-      <Select.Root
-        type="single"
-        value={item.epoch ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { epoch: v || null })}
-      >
-        <Select.Trigger id="item-{item.uid}-epoch" class={TRIGGER_CLASS}>
-          {#if item.epoch}
-            {item.epoch}
-          {:else}
-            <span class="text-zinc-500">—</span>
-          {/if}
-        </Select.Trigger>
-        <Select.Content>
-          {#each EPOCHS as epoch (epoch)}
-            <Select.Item value={epoch} label={epoch} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
-
-    <!-- Power Method -->
-    <div class="space-y-1">
-      <label for="item-{item.uid}-power" class={LABEL_CLASS}>
-        {m.acquisition_item_power_label()}
-      </label>
-      <Select.Root
-        type="single"
-        value={item.powerMethod ?? undefined}
-        onValueChange={(v) => onUpdate(item.uid, { powerMethod: (v as PowerMethod) || null })}
-      >
-        <Select.Trigger id="item-{item.uid}-power" class={TRIGGER_CLASS}>
-          {#if item.powerMethod}
-            {powerMethodLabel(item.powerMethod)}
-          {:else}
-            <span class="text-zinc-500">—</span>
-          {/if}
-        </Select.Trigger>
-        <Select.Content>
-          {#each powerMethodOptions() as opt (opt.value)}
-            <Select.Item value={opt.value} label={opt.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
+    <div class="col-span-2 space-y-1">
+      <EpochPicker
+        label={m.acquisition_item_epoch_label()}
+        value={item.epoch}
+        onchange={(v) => onUpdate(item.uid, { epoch: v })}
+      />
     </div>
 
     <!-- Price (full width) -->
