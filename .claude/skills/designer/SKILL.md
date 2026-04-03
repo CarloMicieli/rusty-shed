@@ -50,15 +50,14 @@ The action color (`--primary`) adapts based on the active `data-theme`.
 ---
 
 ## 🎨 Design Tokens (Tailwind 4 Variable Mapping)
-- **Background:** `bg-background` (Mapped to `--background`)
-- **Surface:** `bg-card` (Mapped to `--card`)
-- **Border:** `border-border` (Mapped to `--border`)
-- **Primary:** `bg-primary` (Mapped to `--primary` — Amber/Brass)
-- **Primary-Muted:** `bg-primary/15` (For hovers and active states)
-- **Text-Main:** `text-foreground` (Mapped to `--foreground`)
-- **Text-Muted:** `text-muted-foreground` (Mapped to `--muted-foreground`)
-- **Font-Heading:** `font-bebas` (Bebas Neue)
-- **Font-Data:** `font-mono` (JetBrains Mono / Courier Prime)
+* **Background & Surface:**
+   - **Light Theme:** `bg-background` is parchment (#f2ead3); `bg-card` is aged paper (#eaddbc).
+   - **Dark Theme:** `bg-background` is charcoal (#1a1a1a); `bg-card` is deep iron (#242424).
+ * **Primary (The Brass/Copper):** - Use `bg-primary` for action buttons. In light theme, ensure text is `text-primary-foreground` (usually white or deep brown) for legibility.
+* **Typography (Non-Negotiable):**
+   - **Headings:** `font-bebas uppercase tracking-widest`.
+   - **Data/Numbers:** `font-mono` (JetBrains Mono).
+   - **Labels:** `text-[10px] uppercase text-muted-foreground font-bold`.
 
 ---
 
