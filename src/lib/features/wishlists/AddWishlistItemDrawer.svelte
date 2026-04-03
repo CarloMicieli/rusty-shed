@@ -74,7 +74,7 @@
   );
 
   $effect(() => {
-    if (defaultWishlist && f.values.wishlistId === '') {
+    if (defaultWishlist && f.values.wishlistId === '' && !f.values.newListName) {
       f.reset(makeInitial());
     }
   });

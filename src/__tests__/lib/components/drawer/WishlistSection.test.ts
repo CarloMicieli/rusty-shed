@@ -6,7 +6,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   drawer_section_wishlist: () => 'Wishlist Preferences',
   wishlist_modal_choose_or_create: () => 'Choose or Create Wishlist',
   wishlist_modal_select_list: () => 'Select a wishlist',
-  wishlist_modal_select_placeholder: () => 'Select a wishlist',
+  wishlist_modal_select_placeholder: () => 'No wishlists found',
+  wishlist_picker_search_placeholder: () => 'Search wishlists or type to create new...',
+  wishlist_picker_new_badge: () => '[new]',
+  wishlist_picker_create_label: () => 'Create',
   wishlist_modal_new_list_placeholder: () => 'Or create new list...',
   wishlist_modal_priority: () => 'Priority',
   wishlist_modal_desired_price: () => 'Desired Price',
@@ -45,11 +48,10 @@ describe('WishlistSection', () => {
 
   // ── Section header & initial render ────────────────────────────────────────
 
-  it('renders section header, wishlist selector, new list input, and desired price label', () => {
+  it('renders section header, wishlist selector, and desired price label', () => {
     render(WishlistSection, { props: defaultProps });
     expect(screen.getByText('Wishlist Preferences')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /select a wishlist/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Or create new list...')).toBeInTheDocument();
     expect(screen.getByText('Desired Price')).toBeInTheDocument();
   });
 

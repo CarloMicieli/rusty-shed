@@ -24,8 +24,11 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_modal_saving: () => 'Saving...',
   wishlist_modal_choose_or_create: () => 'Choose or Create Wishlist',
   wishlist_modal_select_list: () => 'Select a wishlist',
-  wishlist_modal_select_placeholder: () => 'Select a wishlist',
+  wishlist_modal_select_placeholder: () => 'No wishlists found',
   wishlist_modal_new_list_placeholder: () => 'Or create new list',
+  wishlist_picker_search_placeholder: () => 'Search wishlists or type to create new...',
+  wishlist_picker_new_badge: () => '[new]',
+  wishlist_picker_create_label: () => 'Create',
   wishlist_modal_notes_label: () => 'Notes',
   wishlist_modal_notes_placeholder: () => 'Optional notes',
   wishlist_modal_create_failed: () => 'Failed to create wishlist',
@@ -338,8 +341,14 @@ describe('AddWishlistItemDrawer', () => {
 
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    // Enter new list name (fills wishlistId indirectly via newListName)
-    await user.type(screen.getByPlaceholderText('Or create new list'), 'N');
+    // Open the combobox and type a new list name, then click Create
+    const wishlistTrigger = await screen.findByRole('button', { name: /select a wishlist/i });
+    await user.click(wishlistTrigger);
+    const searchInput = await screen.findByPlaceholderText(
+      'Search wishlists or type to create new...'
+    );
+    await user.type(searchInput, 'N');
+    await user.click(await screen.findByRole('button', { name: /create/i }));
 
     // Fill required fields
     await selectManufacturerWithUser(user, 'Märklin');
@@ -369,7 +378,14 @@ describe('AddWishlistItemDrawer', () => {
 
     render(AddWishlistItemDrawer, { props: defaultProps });
 
-    await user.type(screen.getByPlaceholderText('Or create new list'), 'D');
+    // Open the combobox and type a new list name, then click Create
+    const wishlistTrigger = await screen.findByRole('button', { name: /select a wishlist/i });
+    await user.click(wishlistTrigger);
+    const searchInput = await screen.findByPlaceholderText(
+      'Search wishlists or type to create new...'
+    );
+    await user.type(searchInput, 'D');
+    await user.click(await screen.findByRole('button', { name: /create/i }));
 
     await selectManufacturerWithUser(user, 'Märklin');
 
