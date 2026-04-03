@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { beforeNavigate } from '$app/navigation';
   import '../app.css';
   import './layout.css';
   import SidebarNavigation from '$lib/components/SidebarNavigation.svelte';
@@ -49,6 +50,13 @@
   let showLogMaintenanceDrawer = $state(false);
   let sidebarCollapsed = $state(false);
   let { children } = $props();
+
+  // Close all layout-level drawers when the user navigates to another page
+  beforeNavigate(() => {
+    showAcquisitionDrawer = false;
+    showWishlistDrawer = false;
+    showLogMaintenanceDrawer = false;
+  });
 
   // Expose open function so any child route can open the acquisition drawer
   setContext('openAcquisitionDrawer', () => {

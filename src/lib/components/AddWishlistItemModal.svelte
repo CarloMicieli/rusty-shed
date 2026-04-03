@@ -3,6 +3,7 @@
   import * as Select from '$lib/components/ui/select';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
+  import { WishlistPickerSection } from '$lib/components/drawer';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { commands } from '$lib/bindings';
   import type { Category, Manufacturer, PowerMethod, Scale, WishlistPriority } from '$lib/bindings';
@@ -67,8 +68,6 @@
   let isLoadingData = $state(false);
   let isSubmitting = $state(false);
   let formError = $state<string | null>(null);
-
-  const isDropdownDisabled = $derived(form.newListName.trim() !== '');
 
   $effect(() => {
     if (defaultWishlist && form.wishlistId === '') {
@@ -189,50 +188,18 @@
     return PRIORITY_LABEL_FN_MAP[priority]();
   }
 
-  const selectedWishlist = $derived(wishlists.find((l) => l.id === form.wishlistId));
   const selectedManufacturer = $derived(
     manufacturers.find((mfr) => mfr.id === form.manufacturerId)
   );
 </script>
 
 {#snippet wishlistSelectionRow()}
-  <div class="space-y-2">
-    <span class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-      {m.wishlist_modal_choose_or_create()}
-    </span>
-    <div class="grid grid-cols-2 gap-3">
-      <Select.Root
-        type="single"
-        value={form.wishlistId || undefined}
-        disabled={isDropdownDisabled}
-        onValueChange={(v) => {
-          form.wishlistId = v;
-        }}
-      >
-        <Select.Trigger class="w-full" aria-label={m.wishlist_modal_select_list()}>
-          {#if selectedWishlist}
-            {selectedWishlist.name}{#if selectedWishlist.isDefault}
-              (default){/if}
-          {:else}
-            <span class="text-muted-foreground">{m.wishlist_modal_select_placeholder()}</span>
-          {/if}
-        </Select.Trigger>
-        <Select.Content>
-          {#each wishlists as list (list.id)}
-            <Select.Item value={list.id} label={list.name}>
-              {list.name}{#if list.isDefault}
-                (default){/if}
-            </Select.Item>
-          {/each}
-        </Select.Content>
-      </Select.Root>
-      <Input
-        type="text"
-        placeholder={m.wishlist_modal_new_list_placeholder()}
-        bind:value={form.newListName}
-      />
-    </div>
-  </div>
+  <WishlistPickerSection
+    bind:wishlistId={form.wishlistId}
+    bind:newListName={form.newListName}
+    {wishlists}
+    disabled={isSubmitting}
+  />
 {/snippet}
 
 {#snippet modelDetailsSection()}
