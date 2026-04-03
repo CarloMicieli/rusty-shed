@@ -8,7 +8,7 @@ use crate::{
     catalog::application::{
         CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
         RailwayModelTextField, SaveRailwayModelInput, SearchRailwayModelsInput,
-        SimplifiedRollingStockInput, TechnicalSpecificationsInput,
+        SetRollingStockCouplerInput, SimplifiedRollingStockInput, TechnicalSpecificationsInput,
         UpdateRailwayModelClassificationInput, UpdateRailwayModelDeliveryDateInput,
         UpdateRailwayModelTextInput, UpdateRollingStockCategoryInput, UpdateRollingStockDccInput,
         UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
@@ -18,11 +18,12 @@ use crate::{
     catalog::domain::railway_company::RailwayCompanyId,
     catalog::domain::railway_model::RollingStockCategory,
     catalog::domain::railway_model::{
-        BodyShellType, Category, ChassisType, Control, CouplingSocket, DccInterface, DeliveryDate,
-        Epoch, FeatureFlag, LengthOverBuffers, RailwayModelId, RollingStockId,
+        BodyShellType, Category, ChassisType, Control, CouplerTypeId, CouplingSocket, DccInterface,
+        DeliveryDate, Epoch, FeatureFlag, LengthOverBuffers, RailwayModelId, RollingStockId,
         RollingStockSpecPatch, ServiceLevel,
     },
     catalog::domain::scale::Scale,
+    collecting::domain::OwnedRollingStockId,
     core::domain::length::Length,
     core::domain::{Language, domain_error::DomainError},
 };
@@ -1413,6 +1414,25 @@ impl From<UpdateRollingStockServiceLevelArgs> for UpdateRollingStockServiceLevel
             railway_model_id: args.railway_model_id,
             rolling_stock_id: args.rolling_stock_id,
             service_level: args.service_level,
+        }
+    }
+}
+
+/// Arguments for setting (or clearing) the installed coupler on an owned rolling stock.
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SetRollingStockCouplerArgs {
+    /// The owned rolling stock to update.
+    pub owned_rolling_stock_id: OwnedRollingStockId,
+    /// The coupler type to install; `None` clears the current value.
+    pub coupler_type_id: Option<CouplerTypeId>,
+}
+
+impl From<SetRollingStockCouplerArgs> for SetRollingStockCouplerInput {
+    fn from(args: SetRollingStockCouplerArgs) -> Self {
+        Self {
+            owned_rolling_stock_id: args.owned_rolling_stock_id,
+            coupler_type_id: args.coupler_type_id,
         }
     }
 }

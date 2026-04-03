@@ -173,6 +173,8 @@ pub fn run() {
         catalog_command_handlers::upsert_railway_model_translation,
         catalog_command_handlers::search_railway_models,
         catalog_command_handlers::add_rolling_stock_to_model,
+        catalog_command_handlers::get_coupler_types,
+        catalog_command_handlers::set_rolling_stock_coupler,
         collecting_command_handlers::add_railway_model_to_collection,
         collecting_command_handlers::record_acquisition,
         collecting_command_handlers::update_collection_item,

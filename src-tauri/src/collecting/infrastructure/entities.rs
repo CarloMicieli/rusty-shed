@@ -93,6 +93,8 @@ pub struct OwnedRollingStockRow {
     // Length over buffers stored as TEXT in the DB
     pub length_millimeters: Option<String>,
     pub length_inches: Option<String>,
+    // Currently installed coupler type id (FK to coupler_types.id)
+    pub current_coupler_id: Option<String>,
 }
 
 /// Row mapping for the `decoders` table.

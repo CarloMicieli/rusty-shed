@@ -1,6 +1,7 @@
 use crate::catalog::application::{
-    AddRailwayModel, AddRollingStockToModel, GetRailwayModelTranslations, GetRailwayModelViewById,
-    SearchRailwayModels, UpdateRailwayModelClassification, UpdateRailwayModelDeliveryDate,
+    AddRailwayModel, AddRollingStockToModel, GetCouplerTypes, GetCouplerTypesInput,
+    GetRailwayModelTranslations, GetRailwayModelViewById, SearchRailwayModels,
+    SetRollingStockCoupler, UpdateRailwayModelClassification, UpdateRailwayModelDeliveryDate,
     UpdateRailwayModelText, UpdateRollingStockCategory, UpdateRollingStockDcc,
     UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
     UpdateRollingStockServiceLevel, UpdateRollingStockSpecifications,
@@ -10,13 +11,15 @@ use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::RollingStockId;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
+use crate::catalog::domain::railway_model::{CouplerType, CouplingSocket};
 use crate::catalog::interface::{
     AddRollingStockToModelArgs, CreateRailwayModelArgs, SearchRailwayModelsArgs,
-    UpdateRailwayModelClassificationArgs, UpdateRailwayModelDeliveryDateArgs,
-    UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs, UpdateRollingStockDccArgs,
-    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
-    UpdateRollingStockServiceLevelArgs, UpdateRollingStockSpecificationsArgs,
-    UpdateRollingStockSubcategoryArgs, UpsertRailwayModelTranslationArgs,
+    SetRollingStockCouplerArgs, UpdateRailwayModelClassificationArgs,
+    UpdateRailwayModelDeliveryDateArgs, UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs,
+    UpdateRollingStockDccArgs, UpdateRollingStockIdentificationArgs,
+    UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockServiceLevelArgs,
+    UpdateRollingStockSpecificationsArgs, UpdateRollingStockSubcategoryArgs,
+    UpsertRailwayModelTranslationArgs,
 };
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
@@ -473,6 +476,72 @@ pub async fn update_rolling_stock_service_level(
 
     let mut unit_of_work = state.unit_of_work().await?;
     UpdateRollingStockServiceLevel::execute(&mut unit_of_work, args.into()).await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+
+    Ok(())
+}
+
+/// Return the coupler type catalogue, optionally filtered to a specific coupling socket.
+///
+/// When `socket` is provided (e.g. `"NEM_362"`), only couplers compatible with that
+/// socket are returned. When omitted, the full catalogue is returned.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `socket` - Optional coupling socket filter string.
+///
+/// # Returns
+/// - `Ok(Vec<CouplerType>)` on success.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_coupler_types(
+    state: tauri::State<'_, AppState>,
+    socket: Option<String>,
+) -> Result<Vec<CouplerType>, CommandError> {
+    let socket_filter = socket
+        .as_deref()
+        .map(|s| s.parse::<CouplingSocket>())
+        .transpose()
+        .map_err(|_| CommandError::validation_field("socket", "Invalid coupling socket value"))?;
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let result = GetCouplerTypes::execute(
+        &mut unit_of_work,
+        GetCouplerTypesInput {
+            socket: socket_filter,
+        },
+    )
+    .await?;
+    unit_of_work.commit().await.map_err(CommandError::from)?;
+    Ok(result)
+}
+
+/// Set (or clear) the installed coupler on an owned rolling stock.
+///
+/// After updating `current_coupler_id`, a `CouplerChange` maintenance event is
+/// automatically recorded on the rolling stock's maintenance card if one exists.
+///
+/// # Arguments
+/// * `state` - Tauri-managed application `AppState` providing the database pool.
+/// * `args` - The owned rolling stock id and the coupler type id to install (or `null`).
+///
+/// # Returns
+/// - `Ok(())` on success.
+/// - `Err(CommandError::DatabaseError)` on persistence failure.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_rolling_stock_coupler(
+    state: tauri::State<'_, AppState>,
+    args: SetRollingStockCouplerArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Setting coupler {:?} on owned rolling stock {}",
+        args.coupler_type_id, args.owned_rolling_stock_id
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    SetRollingStockCoupler::execute(&mut unit_of_work, args.into()).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(())

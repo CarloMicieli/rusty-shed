@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::CouplerTypeId;
 use crate::core::domain::identifiers::Identifier;
 use crate::dcc_inventory::domain::DecoderId;
 use anyhow::Context;
@@ -25,6 +26,7 @@ static TRAIN_CATEGORIES: &str = include_str!(concat!(
     "/seed/train_categories.csv"
 ));
 static PROTOTYPES: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/prototypes.csv"));
+static COUPLERS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/seed/couplers.csv"));
 
 const CHUNK_SIZE: usize = 50;
 
@@ -668,6 +670,57 @@ pub async fn seed_prototypes(pool: &SqlitePool) -> anyhow::Result<()> {
             .execute(&mut *tx)
             .await
             .context("Failed to execute prototypes upsert chunk")?;
+    }
+
+    tx.commit().await.context("Failed to commit transaction")?;
+    Ok(())
+}
+
+/// Seed the coupler type catalogue from the embedded CSV file.
+///
+/// CSV columns (0-based): manufacturer, name, compatible_socket
+/// ID is derived as `trn:coupler:{slugify(manufacturer)}:{slugify(name)}`.
+/// Uses an `ON CONFLICT(id) DO UPDATE SET` upsert so it is safe to call on every startup.
+pub async fn seed_coupler_types(pool: &SqlitePool) -> anyhow::Result<()> {
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(COUPLERS.as_bytes());
+
+    let records: Vec<_> = rdr
+        .records()
+        .collect::<Result<Vec<_>, _>>()
+        .context("Failed to parse couplers CSV records")?;
+
+    let mut tx = pool.begin().await.context("Failed to start transaction")?;
+
+    for chunk in records.chunks(CHUNK_SIZE) {
+        let mut query_builder: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(
+            "INSERT INTO coupler_types (id, manufacturer, name, compatible_socket) ",
+        );
+
+        query_builder.push_values(chunk, |mut b, record| {
+            let manufacturer = record.get(0).unwrap_or_default();
+            let name = record.get(1).unwrap_or_default();
+            let compatible_socket = record.get(2).unwrap_or_default();
+
+            let id = CouplerTypeId::new_from_parts(&[manufacturer, name]).to_string();
+
+            b.push_bind(id)
+                .push_bind(manufacturer.to_string())
+                .push_bind(name.to_string())
+                .push_bind(compatible_socket.to_string());
+        });
+
+        query_builder.push(" ON CONFLICT(id) DO UPDATE SET ");
+        query_builder.push("manufacturer = EXCLUDED.manufacturer, ");
+        query_builder.push("name = EXCLUDED.name, ");
+        query_builder.push("compatible_socket = EXCLUDED.compatible_socket");
+
+        query_builder
+            .build()
+            .execute(&mut *tx)
+            .await
+            .context("Failed to execute coupler_types upsert chunk")?;
     }
 
     tx.commit().await.context("Failed to commit transaction")?;

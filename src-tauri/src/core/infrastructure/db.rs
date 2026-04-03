@@ -81,6 +81,7 @@ impl Database {
         seeder::seed_sellers(pool).await?;
         seeder::seed_train_categories(pool).await?;
         seeder::seed_prototypes(pool).await?;
+        seeder::seed_coupler_types(pool).await?;
         Ok(())
     }
 }

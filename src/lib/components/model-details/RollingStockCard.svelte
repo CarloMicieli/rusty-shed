@@ -62,6 +62,7 @@
   let localCouplingSocket = $state<string | null>(null);
   let localCloseCouplers = $state<'YES' | 'NO' | null>(null);
   let localDigitalShunting = $state<'YES' | 'NO' | null>(null);
+  let localCurrentCoupler = $state<string | null>(null);
 
   // ── US5: derived edit-permission flag ────────────────────────────────────────
   /** True when no other card is editing, or when this specific card is the active one. */
@@ -80,6 +81,7 @@
     localDccInterface = rollingStock.dccInterface;
     localLengthMm = extractMm(rollingStock.lengthOverBuffers);
     localLengthInches = extractInches(rollingStock.lengthOverBuffers);
+    localCurrentCoupler = rollingStock.currentCouplerId ?? null;
   });
 
   // ── Specs drawer ──────────────────────────────────────────────────────────────
@@ -425,6 +427,10 @@
       throw e;
     }
   }
+
+  function onCouplerChange(id: string | null) {
+    localCurrentCoupler = id;
+  }
 </script>
 
 <div
@@ -500,6 +506,8 @@
           {onSaveCouplingSocket}
           {onSaveCloseCouplers}
           {onSaveDigitalShunting}
+          {localCurrentCoupler}
+          {onCouplerChange}
           {onFieldActivate}
           {onFieldDeactivate}
         />

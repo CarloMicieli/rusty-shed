@@ -4,6 +4,7 @@
   import InPlaceBooleanEdit from '$lib/components/InPlaceBooleanEdit.svelte';
   import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
   import SpecRow from './SpecRow.svelte';
+  import CouplerPicker from '$lib/features/rolling-stock-edit/components/CouplerPicker.svelte';
 
   interface Props {
     canEdit: boolean;
@@ -16,6 +17,7 @@
     localCouplingSocket: string | null;
     localCloseCouplers: 'YES' | 'NO' | null;
     localDigitalShunting: 'YES' | 'NO' | null;
+    localCurrentCoupler: string | null;
     onSaveFlywheelFitted: (v: 'YES' | 'NO' | null) => Promise<void>;
     onSaveBodyShell: (v: string | null) => Promise<void>;
     onSaveChassis: (v: string | null) => Promise<void>;
@@ -24,6 +26,7 @@
     onSaveCouplingSocket: (v: string | null) => Promise<void>;
     onSaveCloseCouplers: (v: 'YES' | 'NO' | null) => Promise<void>;
     onSaveDigitalShunting: (v: 'YES' | 'NO' | null) => Promise<void>;
+    onCouplerChange: (id: string | null) => void;
     onFieldActivate: () => void;
     onFieldDeactivate: () => void;
   }
@@ -39,6 +42,7 @@
     localCouplingSocket,
     localCloseCouplers,
     localDigitalShunting,
+    localCurrentCoupler,
     onSaveFlywheelFitted,
     onSaveBodyShell,
     onSaveChassis,
@@ -47,6 +51,7 @@
     onSaveCouplingSocket,
     onSaveCloseCouplers,
     onSaveDigitalShunting,
+    onCouplerChange,
     onFieldActivate,
     onFieldDeactivate
   }: Props = $props();
@@ -191,6 +196,24 @@
   <SpecRow label={m.specs_drawer_field_digital_shunting()}>
     {@render booleanValue(localDigitalShunting, onSaveDigitalShunting)}
   </SpecRow>
+
+  <!-- Row 6: Installed Coupler (spans full width) -->
+  <div class="col-span-3">
+    <SpecRow label="Installed Coupler">
+      {#if canEdit}
+        <CouplerPicker
+          compatibleSocket={localCouplingSocket}
+          currentCouplerTypeId={localCurrentCoupler}
+          ownedRollingStockId={rollingStock.id}
+          onChange={onCouplerChange}
+        />
+      {:else if localCurrentCoupler}
+        <span class="text-sm text-foreground">{localCurrentCoupler}</span>
+      {:else}
+        <span class="text-sm text-muted-foreground italic">—</span>
+      {/if}
+    </SpecRow>
+  </div>
 </div>
 
 <!-- Digital Setup (when decoder is installed) -->

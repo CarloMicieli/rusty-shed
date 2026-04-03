@@ -1,4 +1,6 @@
-use crate::catalog::domain::railway_model::{Control, DccInterface, LengthOverBuffers};
+use crate::catalog::domain::railway_model::{
+    Control, CouplerTypeId, DccInterface, LengthOverBuffers,
+};
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRailwayModel;
 use crate::collecting::domain::CollectionSummary;
@@ -144,6 +146,10 @@ impl CollectionMapper {
                             depot: rs_row.depot.clone(),
                             dcc_interface,
                             length_over_buffers,
+                            current_coupler_id: rs_row
+                                .current_coupler_id
+                                .as_deref()
+                                .and_then(|id| CouplerTypeId::try_from(id).ok()),
                         };
 
                         // If a decoder is installed (installed_decoder_id present), try to build DigitalSetup
@@ -459,6 +465,7 @@ mod tests {
             rs_dcc_interface: None,
             length_millimeters: None,
             length_inches: None,
+            current_coupler_id: None,
         };
 
         let purchase_id =

@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS prototypes
     updated_at                  TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version                     INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (railway_company_id) REFERENCES railway_companies (id) ON DELETE RESTRICT
-    );
+);
 
 CREATE INDEX IF NOT EXISTS idx_prototypes_company_series ON prototypes (railway_company_id, series_code);
 CREATE INDEX IF NOT EXISTS idx_prototypes_specification_type ON prototypes (specification_type);

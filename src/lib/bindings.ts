@@ -332,6 +332,36 @@ export const commands = {
 	 *  - `Err(CommandError)` — when validation fails, the model is not found, or a database error occurs.
 	 */
 	addRollingStockToModel: (args: AddRollingStockToModelArgs) => typedError<RollingStockId, CommandError>(__TAURI_INVOKE("add_rolling_stock_to_model", { args })),
+	/**
+	 *  Return the coupler type catalogue, optionally filtered to a specific coupling socket.
+	 * 
+	 *  When `socket` is provided (e.g. `"NEM_362"`), only couplers compatible with that
+	 *  socket are returned. When omitted, the full catalogue is returned.
+	 * 
+	 *  # Arguments
+	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
+	 *  * `socket` - Optional coupling socket filter string.
+	 * 
+	 *  # Returns
+	 *  - `Ok(Vec<CouplerType>)` on success.
+	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
+	 */
+	getCouplerTypes: (socket: string | null) => typedError<CouplerType[], CommandError>(__TAURI_INVOKE("get_coupler_types", { socket })),
+	/**
+	 *  Set (or clear) the installed coupler on an owned rolling stock.
+	 * 
+	 *  After updating `current_coupler_id`, a `CouplerChange` maintenance event is
+	 *  automatically recorded on the rolling stock's maintenance card if one exists.
+	 * 
+	 *  # Arguments
+	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
+	 *  * `args` - The owned rolling stock id and the coupler type id to install (or `null`).
+	 * 
+	 *  # Returns
+	 *  - `Ok(())` on success.
+	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
+	 */
+	setRollingStockCoupler: (args: SetRollingStockCouplerArgs) => typedError<null, CommandError>(__TAURI_INVOKE("set_rolling_stock_coupler", { args })),
 	// Simplified flow: save (merge) the railway model and add it to the default collection.
 	addRailwayModelToCollection: (args: AddRailwayModelToCollectionArgs) => typedError<null, CommandError>(__TAURI_INVOKE("add_railway_model_to_collection", { args })),
 	// Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
@@ -2030,6 +2060,31 @@ export type Control =
 // The model has no dcc support (like no standard decoder plug)
 "NO_DCC";
 
+/**
+ *  A physical coupler product that can be installed on owned rolling stock.
+ * 
+ *  `CouplerType` is a reference/lookup entity — rows are seeded from `couplers.csv`
+ *  and are keyed by `CouplerTypeId`.  The `compatible_socket` field drives UI
+ *  filtering so only couplers that fit the vehicle's socket are shown.
+ */
+export type CouplerType = {
+	// Unique TRN identifier (e.g. `trn:coupler:roco:roco-universal-40397`).
+	id: CouplerTypeId,
+	// Manufacturer of the coupler (e.g. "Roco").
+	manufacturer: string,
+	// Commercial name / product description (e.g. "Roco Universal (40397)").
+	name: string,
+	// Socket standard this coupler fits into.
+	compatible_socket: CouplingSocket,
+};
+
+/**
+ *  Strongly-typed identifier for a coupler type (master record).
+ * 
+ *  URNs are of the form `trn:coupler:{manufacturer}:{slug}`.
+ */
+export type CouplerTypeId = string;
+
 // It represents the coupling configuration for a rolling stock.
 export type Coupling = {
 	// the rolling stock coupling socket
@@ -3118,6 +3173,8 @@ export type MaintenanceType =
 "STAY_ALIVE_INSTALL" | 
 // Adjusting coupler height, centering springs, or replacing trip pins for reliable switching.
 "COUPLER_ADJUSTMENT" | 
+// Replacing the physical coupler head on a piece of rolling stock.
+"COUPLER_CHANGE" | 
 // Re-attaching or replacing fine scale details like handrails, whistles, or air hoses.
 "DETAIL_REPAIR" | 
 // Applying powders, airbrushing, or washes to simulate real-world grime and age.
@@ -3360,6 +3417,8 @@ export type OwnedRollingStockView_Deserialize = {
 	dccInterface: DccInterface | null,
 	// Length over buffers from the catalog rolling stock data.
 	lengthOverBuffers: LengthOverBuffers_Deserialize | null,
+	// The currently installed coupler type, if any.
+	currentCouplerId: CouplerTypeId | null,
 };
 
 /**
@@ -3400,6 +3459,8 @@ export type OwnedRollingStockView_Serialize = {
 	dccInterface: DccInterface | null,
 	// Length over buffers from the catalog rolling stock data.
 	lengthOverBuffers: LengthOverBuffers_Serialize | null,
+	// The currently installed coupler type, if any.
+	currentCouplerId: CouplerTypeId | null,
 };
 
 // The types for passenger car rolling stocks
@@ -4522,6 +4583,14 @@ export type SetItemRequiredArgs = {
 	trackId: TrackId,
 	// Required quantity for planning
 	required: number,
+};
+
+// Arguments for setting (or clearing) the installed coupler on an owned rolling stock.
+export type SetRollingStockCouplerArgs = {
+	// The owned rolling stock to update.
+	ownedRollingStockId: OwnedRollingStockId,
+	// The coupler type to install; `None` clears the current value.
+	couplerTypeId: CouplerTypeId | null,
 };
 
 // Command argument to set the quantity of a track item in an inventory

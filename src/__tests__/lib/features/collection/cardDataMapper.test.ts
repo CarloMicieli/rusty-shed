@@ -25,6 +25,7 @@ function makeRollingStock(overrides: Partial<OwnedRollingStockView> = {}): Owned
     depot: null,
     dccInterface: null,
     lengthOverBuffers: null,
+    currentCouplerId: null,
     ...overrides
   };
 }

@@ -12,7 +12,9 @@ vi.mock('$lib/bindings', () => ({
     updateRollingStockDcc: vi.fn(),
     updateRollingStockCategory: vi.fn(),
     getRailwayModelById: vi.fn(),
-    updateRollingStockSpecifications: vi.fn()
+    updateRollingStockSpecifications: vi.fn(),
+    getCouplerTypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    setRollingStockCoupler: vi.fn().mockResolvedValue({ status: 'ok', data: null })
   }
 }));
 
@@ -175,7 +177,8 @@ const mockRollingStock: OwnedRollingStockView = {
   digital: null,
   depot: null,
   dccInterface: null,
-  lengthOverBuffers: null
+  lengthOverBuffers: null,
+  currentCouplerId: null
 };
 
 /** Minimal RailwayModelView for the specs drawer fixture */

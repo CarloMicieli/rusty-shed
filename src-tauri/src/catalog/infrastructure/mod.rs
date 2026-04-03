@@ -1,3 +1,4 @@
+pub mod coupler;
 pub mod entities;
 pub mod manufacturer;
 pub mod mappers;

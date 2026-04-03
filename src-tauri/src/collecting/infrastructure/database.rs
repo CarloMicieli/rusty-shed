@@ -116,7 +116,8 @@ pub async fn get_owned_rolling_stock(
             rs.depot,
             rs.dcc_interface AS rs_dcc_interface,
             rs.length_millimeters,
-            rs.length_inches
+            rs.length_inches,
+            ors.current_coupler_id
        FROM owned_rolling_stocks AS ors
        LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id
        LEFT JOIN railway_companies AS rc ON rc.id = rs.railway_company_id
@@ -163,7 +164,8 @@ pub async fn get_owned_rolling_stocks(
              rs.depot,
              rs.dcc_interface AS rs_dcc_interface,
              rs.length_millimeters,
-             rs.length_inches
+             rs.length_inches,
+             ors.current_coupler_id
    FROM owned_rolling_stocks AS ors
    JOIN collection_items AS ci ON ci.id = ors.collection_item_id
    LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id

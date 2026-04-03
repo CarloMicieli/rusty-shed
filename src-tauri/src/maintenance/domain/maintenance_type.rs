@@ -36,6 +36,8 @@ pub enum MaintenanceType {
 
     /// Adjusting coupler height, centering springs, or replacing trip pins for reliable switching.
     CouplerAdjustment,
+    /// Replacing the physical coupler head on a piece of rolling stock.
+    CouplerChange,
     /// Re-attaching or replacing fine scale details like handrails, whistles, or air hoses.
     DetailRepair,
     /// Applying powders, airbrushing, or washes to simulate real-world grime and age.
@@ -76,6 +78,7 @@ mod validator_tests {
     #[case("SPEAKER_REPAIR")]
     #[case("STAY_ALIVE_INSTALL")]
     #[case("COUPLER_ADJUSTMENT")]
+    #[case("COUPLER_CHANGE")]
     #[case("DETAIL_REPAIR")]
     #[case("WEATHERING")]
     #[case("GENERAL_INSPECTION")]
@@ -111,6 +114,7 @@ mod tests {
     #[case(MaintenanceType::SpeakerRepair, "SPEAKER_REPAIR")]
     #[case(MaintenanceType::StayAliveInstall, "STAY_ALIVE_INSTALL")]
     #[case(MaintenanceType::CouplerAdjustment, "COUPLER_ADJUSTMENT")]
+    #[case(MaintenanceType::CouplerChange, "COUPLER_CHANGE")]
     #[case(MaintenanceType::DetailRepair, "DETAIL_REPAIR")]
     #[case(MaintenanceType::Weathering, "WEATHERING")]
     #[case(MaintenanceType::GeneralInspection, "GENERAL_INSPECTION")]

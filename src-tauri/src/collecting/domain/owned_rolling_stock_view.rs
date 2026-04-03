@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::{
-    Control, DccInterface, LengthOverBuffers, RollingStockId,
+    Control, CouplerTypeId, DccInterface, LengthOverBuffers, RollingStockId,
 };
 use crate::collecting::domain::{DigitalSetup, OwnedRollingStockId};
 use serde::Serialize;
@@ -51,4 +51,7 @@ pub struct OwnedRollingStockView {
 
     /// Length over buffers from the catalog rolling stock data.
     pub length_over_buffers: Option<LengthOverBuffers>,
+
+    /// The currently installed coupler type, if any.
+    pub current_coupler_id: Option<CouplerTypeId>,
 }

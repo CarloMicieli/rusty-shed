@@ -2,6 +2,13 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 -- noinspection SqlResolveInspectionForFile
 
+CREATE TABLE IF NOT EXISTS coupler_types (
+  id                                    TEXT PRIMARY KEY,
+  manufacturer                          TEXT NOT NULL,
+  name                                  TEXT NOT NULL,
+  compatible_socket                     TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS decoders (
   id                                    TEXT PRIMARY KEY,
   manufacturer_id                       TEXT NOT NULL,
@@ -70,9 +77,11 @@ CREATE TABLE IF NOT EXISTS owned_rolling_stocks (
   notes                                 TEXT,
   dcc_address                           INTEGER,
   installed_decoder_id                  TEXT,
+  current_coupler_id                    TEXT,
   FOREIGN KEY (collection_item_id)   REFERENCES collection_items(id) ON DELETE CASCADE,
   FOREIGN KEY (rolling_stock_id)     REFERENCES rolling_stocks(id)   ON DELETE SET NULL,
-  FOREIGN KEY (installed_decoder_id) REFERENCES decoders(id)         ON DELETE SET NULL
+  FOREIGN KEY (installed_decoder_id) REFERENCES decoders(id)         ON DELETE SET NULL,
+  FOREIGN KEY (current_coupler_id)   REFERENCES coupler_types(id)   ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS purchase_infos (
