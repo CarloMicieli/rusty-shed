@@ -43,7 +43,11 @@
           onkeydown={(e) => e.key === 'Enter' && onSelect(proto.id)}
         >
           <div class="flex items-center gap-3">
-            <PrototypeIcon type={prototypeIconType(proto)} isOwned={false} class="size-6 shrink-0" />
+            <PrototypeIcon
+              type={prototypeIconType(proto)}
+              isOwned={false}
+              class="size-6 shrink-0"
+            />
             <div class="flex flex-col">
               <span class="text-sm leading-tight font-bold">{proto.series_code}</span>
               {#if proto.service_level}
