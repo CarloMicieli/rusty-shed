@@ -105,7 +105,11 @@
       let targetId = f.values.wishlistId;
 
       if (f.values.newListName.trim()) {
-        const created = await wishlistService.createWishlist(f.values.newListName.trim(), false);
+        const created = await wishlistService.createWishlist(
+          f.values.newListName.trim(),
+          false,
+          true
+        );
         if (!created) {
           asyncError = m.wishlist_modal_create_failed();
           return;
