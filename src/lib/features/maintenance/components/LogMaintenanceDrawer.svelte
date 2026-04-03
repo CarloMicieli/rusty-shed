@@ -85,11 +85,19 @@
 
   const isFormValid = $derived(f.values.selectedLocoId !== null && f.values.datePerformed !== '');
 
-  // Watch for open/close — load data and reset form
-  $effect(() => {
+  // Reset form synchronously before render so isDirty is false when the
+  // drawer first becomes visible — prevents a spurious Discard dialog on
+  // re-open after a prior dirty session.
+  $effect.pre(() => {
     if (open) {
       f.reset();
       error = null;
+    }
+  });
+
+  // Load reference data after render (async is fine here).
+  $effect(() => {
+    if (open) {
       void loadRollingStocks();
       void loadMaintenanceCards();
     }
