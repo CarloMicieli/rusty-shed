@@ -45,7 +45,7 @@
     <div class="flex flex-col items-center justify-center py-16 text-center">
       <div class="relative mb-4">
         <div class="absolute inset-0 scale-150 rounded-full bg-zinc-500/5 blur-3xl"></div>
-        <History size={40} class="relative text-zinc-800" />
+        <History size={40} class="relative text-muted-foreground/30" />
       </div>
       <p class="text-xs font-bold tracking-[0.2em] text-zinc-600 uppercase">
         {m.track_purchase_history_empty()}
@@ -55,11 +55,11 @@
     {#each groupedPurchases as group (group.monthKey)}
       <div class="space-y-4">
         <div class="flex items-center gap-3">
-          <div class="h-px flex-1 bg-gradient-to-r from-transparent to-white/5"></div>
-          <h4 class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">
+          <div class="flex-1 border-t border-dashed border-border"></div>
+          <h4 class="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase">
             {group.displayMonth}
           </h4>
-          <div class="h-px flex-1 bg-gradient-to-l from-transparent to-white/5"></div>
+          <div class="flex-1 border-t border-dashed border-border"></div>
         </div>
 
         <div class="space-y-1">

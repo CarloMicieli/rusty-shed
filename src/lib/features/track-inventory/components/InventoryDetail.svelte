@@ -18,32 +18,36 @@
   <!-- Items List Section -->
   <div class="space-y-6">
     <div class="flex items-center gap-3">
-      <TrainTrack size={20} class="text-amber-500/60" />
-      <h3 class="text-lg font-bold tracking-tight text-zinc-200">
+      <TrainTrack size={20} class="text-primary" />
+      <h3 class="font-bebas text-2xl tracking-widest text-foreground uppercase">
         {m.track_inventory_detail_items_tab()}
       </h3>
       <div
-        class="ml-auto flex items-center gap-2 rounded-full bg-zinc-900/50 px-3 py-1 text-[10px] font-bold text-zinc-500"
+        class="ml-auto flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-1 font-mono text-[10px] font-bold text-muted-foreground uppercase"
       >
-        <span class="text-zinc-300">{inventory.items.length}</span>
+        <span class="text-foreground">{inventory.items.length}</span>
         TYPES
       </div>
     </div>
 
     {#if inventory.items.length === 0}
       <div
-        class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/5 bg-zinc-900/10 py-20 text-center"
+        class="flex flex-col items-center justify-center rounded-sm border border-dashed border-border bg-card/30 py-20 text-center"
       >
         <TrainTrack size={48} class="mb-4 text-zinc-700 opacity-20" />
         <p class="max-w-[200px] text-sm text-zinc-500">
           {m.track_inventory_detail_empty_items()}
         </p>
-        <Button variant="rusty" class="mt-6 shadow-lg shadow-amber-500/10" onclick={onAddPurchase}>
+        <Button
+          variant="default"
+          class="variant-steampunk-lever mt-6 rounded-sm"
+          onclick={onAddPurchase}
+        >
           {m.track_inventory_detail_add_first_piece()}
         </Button>
       </div>
     {:else}
-      <div class="space-y-3">
+      <div class="space-y-3 rounded-sm border border-border bg-card p-4">
         {#each inventory.items as item (item.track_id)}
           <InventoryItemRow {item} inventoryId={inventory.id} />
         {/each}
@@ -54,13 +58,13 @@
   <!-- Purchase History Section -->
   <div class="space-y-6">
     <div class="flex items-center gap-3">
-      <History size={20} class="text-zinc-500" />
-      <h3 class="text-lg font-bold tracking-tight text-zinc-200">
+      <History size={20} class="text-primary" />
+      <h3 class="font-bebas text-2xl tracking-widest text-foreground uppercase">
         {m.track_inventory_detail_history_tab()}
       </h3>
     </div>
 
-    <div class="rounded-2xl border border-white/5 bg-zinc-950/20 p-1">
+    <div class="rounded-sm border border-border bg-card/50 p-1">
       <PurchaseHistory purchases={inventory.purchases} />
     </div>
   </div>

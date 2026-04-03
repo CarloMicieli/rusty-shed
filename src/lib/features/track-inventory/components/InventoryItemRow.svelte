@@ -23,7 +23,7 @@
   );
 
   const rowClass = $derived(
-    hasShortage ? 'bg-red-950/10 border-red-500/20' : 'bg-zinc-900 border-white/5'
+    hasShortage ? 'bg-destructive/5 border-destructive/30' : 'bg-card border-border'
   );
   const shortageCount = $derived(Number(item.required) - Number(item.quantity));
 
@@ -70,17 +70,17 @@
 </script>
 
 <div
-  class="group relative flex flex-col gap-4 overflow-hidden rounded-xl border p-5 transition-all duration-300 {rowClass}"
+  class="group relative flex flex-col gap-4 overflow-hidden rounded-sm border p-5 shadow-[2px_2px_0px_0px_var(--border)] transition-all duration-300 {rowClass}"
 >
   <div class="flex items-start justify-between">
     <div class="flex flex-col gap-1">
       <div class="flex items-center gap-3">
-        <h4 class="text-base font-bold text-zinc-100">
+        <h4 class="text-base font-bold text-foreground">
           {item.track_product.description || item.track_product.product_code}
         </h4>
         {#if hasShortage}
           <div
-            class="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-0.5 text-red-500"
+            class="flex items-center gap-1.5 rounded-none border-l-4 border-destructive bg-destructive/10 px-2 py-1 font-mono text-destructive"
           >
             <AlertTriangle size={12} />
             <span class="text-[10px] font-bold tracking-wider uppercase">
@@ -90,12 +90,12 @@
         {/if}
       </div>
       <div
-        class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium tracking-wide text-zinc-500 uppercase"
+        class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
       >
         <span>{item.track_product.manufacturer_name}</span>
-        <span class="h-1 w-1 rounded-full bg-zinc-800"></span>
-        <span class="text-zinc-400">{item.track_product.product_code}</span>
-        <span class="h-1 w-1 rounded-full bg-zinc-800"></span>
+        <span class="h-1 w-1 rounded-full bg-border"></span>
+        <span class="text-foreground/60">{item.track_product.product_code}</span>
+        <span class="h-1 w-1 rounded-full bg-border"></span>
         <span>{item.track_product.track_type}</span>
       </div>
     </div>
@@ -103,13 +103,13 @@
     <div class="flex items-center gap-8">
       <!-- Quantity - Ledger Style -->
       <div class="flex flex-col items-end">
-        <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
+        <span class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
           {m.track_inventory_item_quantity()}
         </span>
         <span
           class="font-mono text-2xl font-bold tracking-tighter"
-          class:text-red-400={hasShortage}
-          class:text-zinc-100={!hasShortage}
+          class:text-destructive={hasShortage}
+          class:text-foreground={!hasShortage}
         >
           {item.quantity.toString().padStart(2, '0')}
         </span>
@@ -117,7 +117,7 @@
 
       <!-- Required - Ledger Style -->
       <div class="flex flex-col items-end">
-        <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
+        <span class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
           {m.track_inventory_item_required()}
         </span>
 
@@ -129,20 +129,20 @@
               bind:value={requiredInput}
               onkeydown={handleKeydown}
               disabled={isSaving}
-              class="h-9 w-16 border-white/10 bg-zinc-950 px-2 text-center font-mono text-sm focus:ring-amber-500"
+              class="h-9 w-16 border-border bg-background px-2 text-center font-mono text-sm focus:ring-primary"
               autofocus
             />
             <button
               onclick={saveRequired}
               disabled={isSaving}
-              class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-50"
+              class="variant-steampunk-lever flex h-9 w-9 items-center justify-center rounded-sm bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               <Check size={16} />
             </button>
             <button
               onclick={cancelEditing}
               disabled={isSaving}
-              class="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-50"
+              class="flex h-9 w-9 items-center justify-center rounded-sm bg-card text-muted-foreground hover:bg-card/80 disabled:opacity-50"
             >
               <X size={16} />
             </button>
@@ -150,10 +150,10 @@
         {:else}
           <button
             onclick={startEditing}
-            class="group/edit relative mt-1 flex items-baseline gap-2 transition-colors hover:text-amber-500"
+            class="group/edit relative mt-1 flex items-baseline gap-2 transition-colors hover:text-primary"
           >
             <span
-              class="font-mono text-2xl font-bold tracking-tighter text-zinc-400 group-hover/edit:text-amber-500"
+              class="font-mono text-2xl font-bold tracking-tighter text-muted-foreground group-hover/edit:text-primary"
             >
               {item.required.toString().padStart(2, '0')}
             </span>

@@ -138,7 +138,9 @@
           </div>
 
           <div class="flex max-w-sm flex-col items-center gap-3 text-center">
-            <h3 class="text-2xl font-bold text-zinc-200">{m.track_inventories_empty_title()}</h3>
+            <h3 class="font-bebas text-4xl tracking-widest text-foreground uppercase">
+              {m.track_inventories_empty_title()}
+            </h3>
             <p class="text-sm leading-relaxed text-zinc-500">
               {m.track_inventories_empty_message()}
             </p>
@@ -146,12 +148,9 @@
 
           <button
             type="button"
-            class="group relative mt-2 inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-full bg-amber-500 px-8 py-4 font-bold tracking-wide text-black transition-all hover:scale-105 hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
+            class="variant-steampunk-lever mt-2 inline-flex cursor-pointer items-center gap-3 rounded-sm bg-primary px-8 py-4 font-bold tracking-wide text-primary-foreground transition-all duration-150"
             onclick={() => (createDialogOpen = true)}
           >
-            <div
-              class="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 group-hover:translate-y-0"
-            ></div>
             <TrainTrack class="h-5 w-5" />
             <span>{m.track_inventories_create_button()}</span>
           </button>

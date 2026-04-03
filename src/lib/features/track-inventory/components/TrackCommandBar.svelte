@@ -137,7 +137,7 @@
       <div class="relative">
         <Button
           variant="outline"
-          class="h-9 border-layout-border bg-layout-surface text-muted-foreground hover:text-foreground"
+          class="variant-steampunk-lever h-9 rounded-sm border-layout-border bg-layout-surface text-muted-foreground hover:text-foreground"
           onclick={() => (showSettings = !showSettings)}
         >
           <Settings size={16} class={showSettings ? 'rotate-90 transition-transform' : ''} />
@@ -178,8 +178,8 @@
 
       {#if onAddPurchase}
         <Button
-          variant="rusty"
-          class="h-9 px-5 shadow-lg shadow-amber-500/10"
+          variant="default"
+          class="variant-steampunk-lever h-9 rounded-sm px-5"
           onclick={onAddPurchase}
         >
           <Plus size={16} />
