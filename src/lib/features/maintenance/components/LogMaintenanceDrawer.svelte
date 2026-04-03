@@ -83,9 +83,7 @@
   // Smart-switch: does the selected loco already have a maintenance card?
   const hasMaintenanceCard = $derived(existingCardForLoco !== null);
 
-  const isFormValid = $derived(
-    f.values.selectedLocoId !== null && f.values.datePerformed !== ''
-  );
+  const isFormValid = $derived(f.values.selectedLocoId !== null && f.values.datePerformed !== '');
 
   // Watch for open/close — load data and reset form
   $effect(() => {
@@ -203,7 +201,7 @@
     <div class="space-y-2">
       <label
         for="loco-select"
-        class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+        class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
       >
         {m.log_maintenance_select_loco_label()}
       </label>
@@ -237,7 +235,7 @@
             : 'bg-amber-500 shadow-[0_0_6px_2px_rgba(245,158,11,0.4)]'}"
         ></span>
         <span
-          class="text-[11px] font-semibold uppercase tracking-widest {hasMaintenanceCard
+          class="text-[11px] font-semibold tracking-widest uppercase {hasMaintenanceCard
             ? 'text-green-400'
             : 'text-amber-400'}"
         >
@@ -253,7 +251,7 @@
           transition:slide={{ duration: 250 }}
           class="space-y-4 rounded-sm border-t-2 border-primary/30 bg-background/40 px-4 pt-4 pb-4"
         >
-          <h3 class="font-bebas text-xl uppercase tracking-widest text-foreground">
+          <h3 class="font-bebas text-xl tracking-widest text-foreground uppercase">
             {m.log_maintenance_init_card_section()}
           </h3>
 
@@ -261,7 +259,7 @@
           <div class="space-y-2">
             <label
               for="initial-condition"
-              class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+              class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
             >
               {m.log_maintenance_initial_condition_label()}
             </label>
@@ -270,8 +268,7 @@
               class="flex min-h-[72px] w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
               placeholder={m.log_maintenance_initial_condition_placeholder()}
               value={f.values.initialCondition}
-              oninput={(e) =>
-                (f.values.initialCondition = (e.target as HTMLTextAreaElement).value)}
+              oninput={(e) => (f.values.initialCondition = (e.target as HTMLTextAreaElement).value)}
             ></textarea>
           </div>
 
@@ -279,7 +276,7 @@
           <div class="space-y-2">
             <label
               for="last-run-date"
-              class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+              class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
             >
               {m.log_maintenance_last_run_date_label()}
             </label>
@@ -296,7 +293,7 @@
           <div class="space-y-2">
             <label
               for="service-interval"
-              class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+              class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
             >
               {m.log_maintenance_service_interval_label()}
             </label>
@@ -318,7 +315,7 @@
         transition:slide={{ duration: 250 }}
         class="space-y-4 rounded-sm border-t-2 border-primary/30 bg-background/40 px-4 pt-4 pb-4"
       >
-        <h3 class="font-bebas text-xl uppercase tracking-widest text-foreground">
+        <h3 class="font-bebas text-xl tracking-widest text-foreground uppercase">
           {m.log_maintenance_add_event_section()}
         </h3>
 
@@ -326,7 +323,7 @@
         <div class="space-y-2">
           <label
             for="date-performed"
-            class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
           >
             {m.maintenance_add_event_date_label()}
           </label>
@@ -344,7 +341,7 @@
         <div class="space-y-2">
           <label
             for="maintenance-type"
-            class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
           >
             {m.maintenance_add_event_type_label()}
           </label>
@@ -368,7 +365,7 @@
         <div class="space-y-2">
           <label
             for="event-notes"
-            class="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
+            class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
           >
             {m.maintenance_add_event_notes_label()}
           </label>
