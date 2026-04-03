@@ -17,6 +17,7 @@ export default defineConfig({
   // Optimize bundle size and loading
   build: {
     rolldownOptions: {
+      external: ['@vinejs/vine'],
       output: {
         // Split large icon library into separate chunk
         manualChunks: (id) => (id.includes('lucide-svelte') ? 'lucide' : undefined)
