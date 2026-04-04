@@ -87,7 +87,7 @@ describe('RollingStockCard', () => {
   });
 
   describe('Rendering', () => {
-    it('should render card header with series and road number', () => {
+    it('should render card header with railway name and road number', () => {
       render(RollingStockCard, {
         props: {
           railwayModelId: 'trn:railway-model:acme:test-001',
@@ -95,8 +95,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      // Series and road number are rendered in separate spans
-      expect(screen.getByText('218')).toBeInTheDocument();
+      expect(screen.getByText('Deutsche Bahn')).toBeInTheDocument();
       expect(screen.getByText('218 217-8')).toBeInTheDocument();
     });
 

@@ -3,29 +3,17 @@ import type { RollingStockView } from '$lib/bindings';
 import { commands } from '$lib/bindings';
 import { getLocale } from '$lib/paraglide/runtime.js';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+import type { RollingStockUnitSpecsFormState } from './components/rolling-stock-unit-specs-form-state';
 
-export interface RsFormState {
-  seriesCode: string;
+export interface RsFormState extends RollingStockUnitSpecsFormState {
   series: string;
-  roadNumber: string;
   friendlyName: string;
-  livery: string;
-  depot: string;
   flywheelFitted: boolean | null;
   sprungBuffers: boolean | null;
   bodyShell: string;
   chassis: string;
   interiorLights: string;
   lights: string;
-  dccInterface: string;
-  control: string;
-  couplingSocket: string;
-  closeCouplers: boolean | null;
-  digitalShunting: boolean | null;
-  category: string | null;
-  subcategory: string | null;
-  serviceLevel: string | null;
-  subcategoryFlashed: boolean;
   isDummy: boolean | null;
 }
 

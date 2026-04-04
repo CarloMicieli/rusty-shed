@@ -81,10 +81,9 @@ describe('RollingStockList', () => {
         }
       });
 
-      // Series and road numbers are rendered separately in RollingStockCard
-      expect(screen.getByText('218')).toBeInTheDocument();
+      // Railway company and road numbers are rendered in RollingStockCard headers
+      expect(screen.getAllByText('Deutsche Bahn').length).toBe(2);
       expect(screen.getByText('218 217-8')).toBeInTheDocument();
-      expect(screen.getByText('103')).toBeInTheDocument();
       expect(screen.getByText('103 113-6')).toBeInTheDocument();
     });
 
@@ -242,7 +241,7 @@ describe('RollingStockList', () => {
         }
       });
 
-      expect(screen.getByText('218')).toBeInTheDocument();
+      expect(screen.getByText('Deutsche Bahn')).toBeInTheDocument();
       expect(screen.getByText('218 217-8')).toBeInTheDocument();
       expect(screen.queryByText('103')).not.toBeInTheDocument();
     });

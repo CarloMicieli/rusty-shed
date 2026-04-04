@@ -419,7 +419,7 @@ describe('RailwayModelCard', () => {
 
       // Count the rolling stock containers (multi-unit renders each unit as a mini-card)
       const unitContainers = Array.from(
-        tabsBox?.querySelectorAll('div.rounded-lg.border.border-border') || []
+        tabsBox?.querySelectorAll('div.rounded-sm.border.border-border') || []
       ).filter((div) => {
         const html = (div as HTMLElement).innerHTML;
         return html.includes('Railjet') || html.includes('Control Car');

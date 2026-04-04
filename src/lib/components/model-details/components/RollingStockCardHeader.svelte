@@ -2,10 +2,12 @@
   import { ChevronDown, ChevronUp, Settings } from 'lucide-svelte';
   import { getFlag } from '$lib/utils/flags';
   import * as m from '$lib/paraglide/messages.js';
+  import RollingStockCardHeaderShell from './RollingStockCardHeaderShell.svelte';
 
   interface Props {
     countryCode?: string | null;
-    series?: string | null;
+    /** Railway / operator name (Bebas line). */
+    railwayName?: string | null;
     roadNumber?: string | null;
     category?: string | null;
     subcategory?: string | null;
@@ -17,7 +19,7 @@
 
   const {
     countryCode,
-    series,
+    railwayName,
     roadNumber,
     category,
     subcategory,
@@ -26,10 +28,12 @@
     onToggle,
     onEditSpecs
   }: Props = $props();
+
+  const editSpecsClass =
+    'variant-steampunk-lever flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95';
 </script>
 
-<div class="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-card px-4 py-2">
-  <!-- Left: Identity -->
+{#snippet collectionIdentity()}
   <button
     type="button"
     class="group flex min-w-0 items-center gap-3 text-left transition-opacity hover:opacity-80"
@@ -43,7 +47,7 @@
       <div class="flex flex-col">
         <div class="flex items-center gap-2">
           <span class="font-bebas tracking-widest text-muted-foreground uppercase">
-            {series || '—'}
+            {railwayName || '—'}
           </span>
           <span class="font-mono font-bold text-foreground">
             {roadNumber || '—'}
@@ -52,7 +56,6 @@
       </div>
     </div>
 
-    <!-- Toggle Indicator -->
     <div
       class="flex h-5 w-5 items-center justify-center rounded-full border border-layout-border text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary"
     >
@@ -63,8 +66,9 @@
       {/if}
     </div>
   </button>
+{/snippet}
 
-  <!-- Center: Classification -->
+{#snippet collectionClassification()}
   <div class="flex items-center justify-center px-4">
     <div
       class="flex items-center gap-1.5 font-sans text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase"
@@ -74,13 +78,14 @@
       <span>{subcategory || '—'}</span>
     </div>
   </div>
+{/snippet}
 
-  <!-- Right: Actions -->
+{#snippet collectionActions()}
   <div class="flex justify-end">
     {#if editable}
       <button
         type="button"
-        class="variant-steampunk-lever flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95"
+        class={editSpecsClass}
         onclick={(e) => {
           e.stopPropagation();
           onEditSpecs?.();
@@ -91,4 +96,10 @@
       </button>
     {/if}
   </div>
-</div>
+{/snippet}
+
+<RollingStockCardHeaderShell
+  identity={collectionIdentity}
+  classification={collectionClassification}
+  actions={collectionActions}
+/>

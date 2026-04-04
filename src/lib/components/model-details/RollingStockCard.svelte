@@ -436,7 +436,7 @@
   <!-- Card Header (Always Visible) -->
   <RollingStockCardHeader
     countryCode={rollingStock.countryCode}
-    series={localSeries}
+    railwayName={rollingStock.railwayCompanyName ?? localSeries ?? ''}
     roadNumber={localRoadNumber}
     category={localCategory}
     subcategory={rollingStock.subcategory}
