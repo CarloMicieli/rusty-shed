@@ -4,11 +4,13 @@
   import { toaster } from '$lib/toaster';
   import {
     commands,
+    type PrototypeView,
     type RailwayModelId,
     type RollingStockCategory,
     type RollingStockId
   } from '$lib/bindings';
   import { onMount } from 'svelte';
+  import PrototypeLibraryPicker from './PrototypeLibraryPicker.svelte';
   import {
     DrawerShell,
     DrawerHeader,
@@ -38,6 +40,7 @@
 
   const f = createDrawerForm({
     initial: () => ({
+      prototypeId: '',
       railwayCompanyId: '',
       category: '',
       seriesCode: '',
@@ -130,6 +133,26 @@
     { value: 'RAILCAR', label: 'Railcar' }
   ] as const;
 
+  // ── Prototype autofill ────────────────────────────────────────────────────────
+  function handlePrototypeSelect(p: PrototypeView) {
+    f.values.prototypeId = p.id;
+    f.values.railwayCompanyId = p.railway_company_id;
+    f.values.seriesCode = p.series_code;
+    f.values.friendlyName = p.friendly_name ?? '';
+    const subType =
+      p.locomotive_type ??
+      p.passenger_car_type ??
+      p.freight_car_type ??
+      p.railcar_type ??
+      p.electric_multiple_unit_type ??
+      '';
+    if (subType) f.values.subType = subType;
+  }
+
+  function handlePrototypeClear() {
+    f.values.prototypeId = '';
+  }
+
   // ── Save ─────────────────────────────────────────────────────────────────────
   async function handleSave() {
     if (!f.isValid) return;
@@ -149,7 +172,8 @@
         dccInterface: f.values.dccInterface || null,
         couplingSocket: f.values.couplingSocket || null,
         closeCouplers: f.values.couplingSocket ? f.values.closeCouplers : null,
-        subType: f.values.subType || null
+        subType: f.values.subType || null,
+        prototypeId: f.values.prototypeId || null
       });
 
       if (result.status === 'error') {
@@ -178,6 +202,7 @@
     <DrawerHeader
       id="rs-create-title"
       title={m.rolling_stock_create_drawer_title()}
+      subtitle={m.rolling_stock_create_drawer_subtitle()}
       icon={Train}
       onClose={requestClose}
     />
@@ -213,6 +238,15 @@
         {m.rolling_stock_create_section_prototype()}
       </p>
       <div class="space-y-4">
+        <PrototypeLibraryPicker
+          category={f.values.category}
+          selectedId={f.values.prototypeId}
+          onSelect={handlePrototypeSelect}
+          onClear={handlePrototypeClear}
+        />
+
+        <div class="border-t border-border/40"></div>
+
         <FormSelect
           id="create-company"
           label={m.rolling_stock_field_railway_company()}

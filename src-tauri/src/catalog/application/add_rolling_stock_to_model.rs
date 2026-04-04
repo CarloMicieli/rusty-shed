@@ -37,6 +37,8 @@ pub struct AddRollingStockToModelInput {
     pub sub_type: Option<String>,
     /// Optional display/friendly name (falls back to series_code if absent).
     pub friendly_name: Option<String>,
+    /// Optional prototype this rolling stock is linked to.
+    pub prototype_id: Option<String>,
 }
 
 /// Use case that adds a new rolling stock variant to an existing [`RailwayModel`] aggregate.
@@ -231,6 +233,7 @@ pub fn parse_add_rolling_stock_args(
     close_couplers: Option<bool>,
     sub_type: Option<String>,
     friendly_name: Option<String>,
+    prototype_id: Option<String>,
 ) -> Result<AddRollingStockToModelInput, DomainError> {
     let mut ctx = ValidationContext::default();
 
@@ -270,6 +273,7 @@ pub fn parse_add_rolling_stock_args(
         close_couplers,
         sub_type: sub_type.filter(|s| !s.is_empty()),
         friendly_name: friendly_name.filter(|s| !s.is_empty()),
+        prototype_id: prototype_id.filter(|s| !s.is_empty()),
     })
 }
 
@@ -326,6 +330,7 @@ mod tests {
             close_couplers: None,
             sub_type: None,
             friendly_name: None,
+            prototype_id: None,
         }
     }
 
@@ -428,6 +433,7 @@ mod tests {
             "trn:railway-company:fs".to_string(),
             "LOCOMOTIVE".to_string(),
             "".to_string(),
+            None,
             None,
             None,
             None,

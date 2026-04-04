@@ -1329,6 +1329,9 @@ pub struct AddRollingStockToModelArgs {
 
     /// Optional display/friendly name for the rolling stock.
     pub friendly_name: Option<String>,
+
+    /// Optional prototype this rolling stock is linked to (TRN string).
+    pub prototype_id: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

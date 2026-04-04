@@ -420,6 +420,7 @@ pub async fn add_rolling_stock_to_model(
         args.close_couplers,
         args.sub_type,
         args.friendly_name,
+        args.prototype_id,
     )?;
 
     let mut unit_of_work = state.unit_of_work().await?;

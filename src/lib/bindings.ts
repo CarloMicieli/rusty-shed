@@ -1415,6 +1415,8 @@ export type AddRollingStockToModelArgs = {
 	subType: string | null,
 	// Optional display/friendly name for the rolling stock.
 	friendlyName: string | null,
+	// Optional prototype this rolling stock is linked to (TRN string).
+	prototypeId: string | null,
 };
 
 // Arguments structure for adding an item to a wishlist.
@@ -2778,7 +2780,7 @@ export type FreightCarType =
  */
 "DUMP_CARS" | 
 /**
- *  These wagons are the "blank canvas" of the railway, used to transport everything from 
+ *  These wagons are the "blank canvas" of the railway, used to transport everything from
  *  logs and steel beams to military vehicles and shipping containers.
  */
 "FLAT_WAGON" | 
@@ -3811,7 +3813,7 @@ export type RailcarType =
  */
 "TRAILER_CAR" | 
 /**
- *  A non-motorized railcar trailer specifically configured for luggage, 
+ *  A non-motorized railcar trailer specifically configured for luggage,
  *  mail, or parcel transport.
  */
 "TRAILER_BAGGAGE_CAR";
