@@ -347,6 +347,8 @@
     open={specsDrawerOpen}
     {railwayModelId}
     rollingStockId={unit.id}
+    ownedRollingStockId={unit.ownedRollingStockId}
+    currentCouplerId={unit.currentCouplerId}
     onClose={() => {
       specsDrawerOpen = false;
     }}

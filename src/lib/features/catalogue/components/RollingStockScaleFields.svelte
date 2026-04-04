@@ -15,10 +15,6 @@
   const { rs, errorsFn, formLabels, roadNumberRequired = false }: Props = $props();
 </script>
 
-<FormField label={formLabels.friendlyName} error={errorsFn('friendly_name')} required>
-  <Input type="text" bind:value={rs.friendly_name} />
-</FormField>
-
 <FormField label={formLabels.seriesCode} error={errorsFn('series_code')} required>
   <Input type="text" bind:value={rs.series_code} />
 </FormField>
@@ -29,6 +25,10 @@
   required={roadNumberRequired}
 >
   <Input type="text" bind:value={rs.road_number} />
+</FormField>
+
+<FormField label={formLabels.friendlyName} error={errorsFn('friendly_name')} required>
+  <Input type="text" bind:value={rs.friendly_name} />
 </FormField>
 
 <FormField label={formLabels.series} error={errorsFn('series')}>

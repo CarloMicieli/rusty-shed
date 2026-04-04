@@ -1455,6 +1455,20 @@ impl From<SetRollingStockCouplerArgs> for SetRollingStockCouplerInput {
     }
 }
 
+/// Result returned by `add_rolling_stock_to_model`.
+///
+/// Contains both the catalog rolling stock ID and the owned rolling stock ID
+/// created for the collection item, so the frontend can immediately apply
+/// collection-level changes (e.g. setting the installed coupler type).
+#[derive(Debug, Clone, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AddRollingStockResult {
+    /// Catalog rolling stock identifier.
+    pub rolling_stock_id: RollingStockId,
+    /// The owned rolling stock row created for this collection item.
+    pub owned_rolling_stock_id: OwnedRollingStockId,
+}
+
 // ---------------------------------------------------------------------------
 // Garde validation tests
 // ---------------------------------------------------------------------------

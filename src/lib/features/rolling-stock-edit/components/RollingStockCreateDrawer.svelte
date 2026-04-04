@@ -5,6 +5,7 @@
   import {
     commands,
     type Control,
+    type CouplerType,
     type DccInterface,
     type PrototypeView,
     type RailwayModelId,
@@ -63,7 +64,8 @@
       interiorLights: '',
       lights: '',
       digitalShunting: null as boolean | null,
-      lengthMm: null as number | null
+      lengthMm: null as number | null,
+      selectedCouplerTypeId: null as string | null
     }),
     validate: (v) => ({
       seriesCode: !v.seriesCode.trim() ? m.error_required() : undefined,
@@ -76,13 +78,20 @@
   let inlineError = $state<string | null>(null);
   let expandTechnical = $state(false);
 
-  // ── Company options ──────────────────────────────────────────────────────────
+  // ── Company + coupler options ─────────────────────────────────────────────────
   let companyOptions = $state<{ value: string; label: string }[]>([]);
+  let allCouplers = $state<CouplerType[]>([]);
 
   onMount(async () => {
-    const result = await commands.getRailwayCompanies();
-    if (result.status === 'ok') {
-      companyOptions = result.data.map((c) => ({ value: c.id, label: c.name }));
+    const [companiesResult, couplersResult] = await Promise.all([
+      commands.getRailwayCompanies(),
+      commands.getCouplerTypes(null)
+    ]);
+    if (companiesResult.status === 'ok') {
+      companyOptions = companiesResult.data.map((c) => ({ value: c.id, label: c.name }));
+    }
+    if (couplersResult.status === 'ok') {
+      allCouplers = couplersResult.data;
     }
   });
 
@@ -104,6 +113,22 @@
   );
 
   const hasSubTypes = $derived(subTypeOptions.length > 0);
+
+  const filteredCouplers = $derived(
+    f.values.couplingSocket
+      ? allCouplers.filter((c) => c.compatible_socket === f.values.couplingSocket)
+      : []
+  );
+
+  // Clear coupler type when socket changes and it's no longer compatible
+  $effect(() => {
+    if (
+      f.values.selectedCouplerTypeId &&
+      !filteredCouplers.some((c) => c.id === f.values.selectedCouplerTypeId)
+    ) {
+      f.values.selectedCouplerTypeId = null;
+    }
+  });
 
   // Reset sub-type when category changes
   $effect(() => {
@@ -214,7 +239,7 @@
         return;
       }
 
-      const newId = result.data;
+      const { rollingStockId: newId, ownedRollingStockId } = result.data;
 
       // Save extended technical specs if any are filled
       const hasExtendedSpecs =
@@ -265,6 +290,18 @@
           lengthMillimeters: f.values.lengthMm,
           lengthInches: null
         });
+      }
+
+      // Save coupler type if selected
+      if (f.values.selectedCouplerTypeId) {
+        const couplerResult = await commands.setRollingStockCoupler({
+          ownedRollingStockId,
+          couplerTypeId: f.values.selectedCouplerTypeId
+        });
+        if (couplerResult.status === 'error') {
+          inlineError = m.rolling_stock_create_error();
+          return;
+        }
       }
 
       toaster.success(m.rolling_stock_create_success());
@@ -354,6 +391,8 @@
       controlOptions={[...controlOptions]}
       dccInterfaceOptions={[...dccInterfaceOptions]}
       couplingSockeOptions={[...couplingSocketOptions]}
+      {filteredCouplers}
+      bind:selectedCouplerTypeId={f.values.selectedCouplerTypeId}
       {expandTechnical}
     />
   </div>

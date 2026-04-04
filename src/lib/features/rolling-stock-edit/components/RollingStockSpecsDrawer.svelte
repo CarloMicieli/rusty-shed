@@ -6,6 +6,7 @@
   import {
     commands,
     type Control,
+    type CouplerType,
     type DccInterface,
     type PrototypeView,
     type RailwayCompanyId,
@@ -24,13 +25,25 @@
     railwayModelId: RailwayModelId;
     /** The rolling stock unit to edit. */
     rollingStockId: RollingStockId;
+    /** The owned rolling stock ID. */
+    ownedRollingStockId: string;
+    /** The currently installed coupler type ID, if any. */
+    currentCouplerId?: string | null;
     /** Called after a successful save (to trigger parent refresh). */
     onSaved?: () => void;
     /** Called when the drawer requests to close. */
     onClose: () => void;
   }
 
-  let { open, railwayModelId, rollingStockId, onSaved, onClose }: Props = $props();
+  let {
+    open,
+    railwayModelId,
+    rollingStockId,
+    ownedRollingStockId,
+    currentCouplerId = null,
+    onSaved,
+    onClose
+  }: Props = $props();
 
   // ── Form state ──────────────────────────────────────────────────────────────
   interface FormState {
@@ -53,6 +66,7 @@
     couplingSocket: string;
     closeCouplers: boolean | null;
     digitalShunting: boolean | null;
+    selectedCouplerTypeId: string | null;
     lengthMm: number | null;
   }
 
@@ -76,6 +90,7 @@
     couplingSocket: '',
     closeCouplers: null,
     digitalShunting: null,
+    selectedCouplerTypeId: null,
     lengthMm: null
   };
 
@@ -86,9 +101,26 @@
   let inlineError = $state<string | null>(null);
   let companyOptions = $state<{ value: string; label: string }[]>([]);
   let expandTechnical = $state(false);
+  let allCouplers = $state<CouplerType[]>([]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
+
+  const filteredCouplers = $derived(
+    form.couplingSocket
+      ? allCouplers.filter((c) => c.compatible_socket === form.couplingSocket)
+      : []
+  );
+
+  // Clear selected coupler when the socket changes and it's no longer compatible
+  $effect(() => {
+    if (
+      form.selectedCouplerTypeId &&
+      !filteredCouplers.some((c) => c.id === form.selectedCouplerTypeId)
+    ) {
+      form.selectedCouplerTypeId = null;
+    }
+  });
 
   // ── Option lists ────────────────────────────────────────────────────────────
   const bodyShellOptions = [
@@ -200,6 +232,7 @@
           : ts?.coupling?.digital_shunting === 'NO'
             ? false
             : null,
+      selectedCouplerTypeId: null,
       lengthMm: lob?.millimeters ? Number(lob.millimeters) : null
     };
   }
@@ -214,9 +247,10 @@
     inlineError = null;
     expandTechnical = false;
     try {
-      const [modelResult, companiesResult] = await Promise.all([
+      const [modelResult, companiesResult, couplersResult] = await Promise.all([
         commands.getRailwayModelById(railwayModelId, getLocale()),
-        commands.getRailwayCompanies()
+        commands.getRailwayCompanies(),
+        commands.getCouplerTypes(null)
       ]);
 
       if (modelResult.status === 'error' || !modelResult.data) {
@@ -227,6 +261,10 @@
 
       if (companiesResult.status === 'ok' && companiesResult.data) {
         companyOptions = companiesResult.data.map((c) => ({ value: c.id, label: c.name }));
+      }
+
+      if (couplersResult.status === 'ok' && couplersResult.data) {
+        allCouplers = couplersResult.data;
       }
 
       const rs = modelResult.data.rollingStock.find((r) => {
@@ -244,6 +282,7 @@
         return;
       }
       const data = extractRsData(rs);
+      data.selectedCouplerTypeId = currentCouplerId ?? null;
       form = { ...data };
       originalForm = { ...data };
     } finally {
@@ -307,6 +346,18 @@
           railwayCompanyId: form.railwayCompanyId as RailwayCompanyId
         });
         if (companyResult.status === 'error') {
+          inlineError = m.specs_drawer_save_error();
+          return;
+        }
+      }
+
+      // Save coupler type if it changed.
+      if (form.selectedCouplerTypeId !== originalForm.selectedCouplerTypeId) {
+        const couplerResult = await commands.setRollingStockCoupler({
+          ownedRollingStockId,
+          couplerTypeId: form.selectedCouplerTypeId
+        });
+        if (couplerResult.status === 'error') {
           inlineError = m.specs_drawer_save_error();
           return;
         }
@@ -390,6 +441,7 @@
         bind:couplingSocket={form.couplingSocket}
         bind:closeCouplers={form.closeCouplers}
         bind:digitalShunting={form.digitalShunting}
+        bind:selectedCouplerTypeId={form.selectedCouplerTypeId}
         bind:lengthMm={form.lengthMm}
         {bodyShellOptions}
         {chassisOptions}
@@ -397,6 +449,7 @@
         {controlOptions}
         {dccInterfaceOptions}
         {couplingSockeOptions}
+        {filteredCouplers}
         {expandTechnical}
       />
     </div>

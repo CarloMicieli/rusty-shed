@@ -26,6 +26,8 @@ export interface RailwayModel {
 
 export interface RollingStock {
   id: string;
+  ownedRollingStockId: string;
+  currentCouplerId: string | null;
   railway_model_id: number;
   railway_company: string | null;
   series_code: string;

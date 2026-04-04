@@ -737,13 +737,14 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         &mut self,
         railway_model_id: &RailwayModelId,
         rolling_stock_id: &RollingStockId,
-    ) -> Result<(), DomainError> {
+    ) -> Result<Vec<OwnedRollingStockId>, DomainError> {
         let collection_item_ids = database::find_collection_item_ids_by_railway_model(
             &mut *self.executor,
             railway_model_id,
         )
         .await?;
 
+        let mut owned_ids = Vec::new();
         for collection_item_id in &collection_item_ids {
             let owned_rs_id = OwnedRollingStockId::default();
             self.insert_owned_rolling_stocks(
@@ -753,9 +754,10 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                 None,
             )
             .await?;
+            owned_ids.push(owned_rs_id);
         }
 
-        Ok(())
+        Ok(owned_ids)
     }
 }
 

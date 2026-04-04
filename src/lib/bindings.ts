@@ -331,7 +331,7 @@ export const commands = {
 	 *  - `Ok(RollingStockId)` — the identifier of the newly created rolling stock on success.
 	 *  - `Err(CommandError)` — when validation fails, the model is not found, or a database error occurs.
 	 */
-	addRollingStockToModel: (args: AddRollingStockToModelArgs) => typedError<RollingStockId, CommandError>(__TAURI_INVOKE("add_rolling_stock_to_model", { args })),
+	addRollingStockToModel: (args: AddRollingStockToModelArgs) => typedError<AddRollingStockResult, CommandError>(__TAURI_INVOKE("add_rolling_stock_to_model", { args })),
 	/**
 	 *  Return the coupler type catalogue, optionally filtered to a specific coupling socket.
 	 * 
@@ -1378,6 +1378,20 @@ export type AddRailwayModelToWishListArgs = {
 	notes: string | null,
 	// The date the item was added to the wishlist (optional).
 	addedDate: string | null,
+};
+
+/**
+ *  Result returned by `add_rolling_stock_to_model`.
+ * 
+ *  Contains both the catalog rolling stock ID and the owned rolling stock ID
+ *  created for the collection item, so the frontend can immediately apply
+ *  collection-level changes (e.g. setting the installed coupler type).
+ */
+export type AddRollingStockResult = {
+	// Catalog rolling stock identifier.
+	rollingStockId: RollingStockId,
+	// The owned rolling stock row created for this collection item.
+	ownedRollingStockId: OwnedRollingStockId,
 };
 
 /**

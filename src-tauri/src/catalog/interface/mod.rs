@@ -3,6 +3,7 @@ pub mod command_handlers;
 pub mod manufacturers;
 pub mod railway_companies;
 
+pub use command_args::AddRollingStockResult;
 pub use command_args::AddRollingStockToModelArgs;
 pub use command_args::CouplingArgs;
 pub use command_args::CreateRailwayModelArgs;

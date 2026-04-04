@@ -73,6 +73,8 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
 
     return {
       id: common.id,
+      ownedRollingStockId: '',
+      currentCouplerId: null,
       railway_model_id: 0, // Not available from view
       railway_company: common.railway_company,
       series_code: common.series_code,
@@ -122,6 +124,8 @@ function transformOwnedRollingStock(
       // Use the catalog rolling stock ID so the backend update command can
       // locate the unit within the railway model aggregate.
       id: owned.rollingStockId,
+      ownedRollingStockId: owned.id,
+      currentCouplerId: owned.currentCouplerId ?? null,
       railway_model_id: 0, // Not used
       railway_company: common?.railway_company ?? null,
       series_code: common?.series_code ?? '',

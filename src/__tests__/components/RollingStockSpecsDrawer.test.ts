@@ -8,10 +8,12 @@ vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayModelById: vi.fn(),
     getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    getCouplerTypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
     getPrototypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
     updateRollingStockSpecifications: vi.fn(),
     updateRollingStockRailwayCompany: vi.fn(),
-    updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null })
+    updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    setRollingStockCoupler: vi.fn().mockResolvedValue({ status: 'ok', data: null })
   }
 }));
 
@@ -199,6 +201,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose: vi.fn()
         }
       });
@@ -251,6 +254,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose
         }
       });
@@ -281,6 +285,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose
         }
       });
@@ -315,6 +320,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose
         }
       });
@@ -362,6 +368,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose
         }
       });
@@ -404,6 +411,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: true,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose
         }
       });
@@ -427,6 +435,7 @@ describe('RollingStockSpecsDrawer', () => {
           open: false,
           railwayModelId: RAILWAY_MODEL_ID,
           rollingStockId: ROLLING_STOCK_ID,
+          ownedRollingStockId: 'owned-rs-1',
           onClose: vi.fn()
         }
       });

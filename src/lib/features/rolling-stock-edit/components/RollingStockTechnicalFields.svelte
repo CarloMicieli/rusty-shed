@@ -2,7 +2,9 @@
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
   import { slide } from 'svelte/transition';
   import * as m from '$lib/paraglide/messages';
+  import * as Select from '$lib/components/ui/select';
   import { FormSelect, FormBooleanSelect, FormInput } from '$lib/components/drawer';
+  import type { CouplerType } from '$lib/bindings';
 
   interface SelectOption {
     value: string;
@@ -28,6 +30,8 @@
     controlOptions: SelectOption[];
     dccInterfaceOptions: SelectOption[];
     couplingSockeOptions: SelectOption[];
+    filteredCouplers?: CouplerType[];
+    selectedCouplerTypeId?: string | null;
     expandTechnical?: boolean;
   }
 
@@ -50,8 +54,16 @@
     controlOptions,
     dccInterfaceOptions,
     couplingSockeOptions,
+    filteredCouplers = [],
+    selectedCouplerTypeId = $bindable<string | null>(null),
     expandTechnical = false
   }: Props = $props();
+
+  const selectedCoupler = $derived(
+    filteredCouplers.find((c) => c.id === selectedCouplerTypeId) ?? null
+  );
+
+  const isActive = $derived(filteredCouplers.length > 0);
 
   let technicalOpen = $state(false);
   let controlOpen = $state(false);
@@ -192,6 +204,41 @@
           options={couplingSockeOptions}
           bind:value={couplingSocket}
         />
+        <div class="flex flex-col gap-1">
+          <label
+            for="drawer-coupler-type"
+            class="text-[10px] tracking-tighter text-muted-foreground uppercase"
+          >
+            Coupler Type
+          </label>
+          <Select.Root
+            type="single"
+            value={selectedCouplerTypeId ?? undefined}
+            onValueChange={(v) => (selectedCouplerTypeId = v || null)}
+            disabled={!isActive}
+          >
+            <Select.Trigger
+              id="drawer-coupler-type"
+              class="w-full transition-colors duration-150 ease-out {isActive
+                ? 'border-border bg-background text-foreground'
+                : 'cursor-not-allowed border-border/50 bg-muted/20 text-muted-foreground/50 !opacity-100'}"
+            >
+              {#if selectedCoupler}
+                <span class="font-mono">{selectedCoupler.manufacturer} {selectedCoupler.name}</span>
+              {:else}
+                <span class="text-xs text-muted-foreground italic">
+                  {couplingSocket ? '—' : 'Select socket first…'}
+                </span>
+              {/if}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value="" label="—" />
+              {#each filteredCouplers as c (c.id)}
+                <Select.Item value={c.id} label="{c.manufacturer} {c.name}" />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
         <FormBooleanSelect
           id="drawer-close-couplers"
           label={m.specs_drawer_field_close_coupling()}

@@ -101,17 +101,17 @@
             placeholder={m.rolling_stock_placeholder_series()}
           />
           <FormInput
-            id="proto-friendly-name"
-            label={m.rolling_stock_field_friendly_name()}
-            bind:value={friendlyName}
-            placeholder={m.rolling_stock_placeholder_friendly_name()}
-          />
-          <FormInput
             id="proto-road-number"
             label={m.rolling_stock_field_road_number()}
             bind:value={roadNumber}
             placeholder={m.rolling_stock_placeholder_road_number()}
             class="font-mono"
+          />
+          <FormInput
+            id="proto-friendly-name"
+            label={m.rolling_stock_field_friendly_name()}
+            bind:value={friendlyName}
+            placeholder={m.rolling_stock_placeholder_friendly_name()}
           />
           <FormInput
             id="proto-livery"

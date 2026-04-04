@@ -56,6 +56,7 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayCompanies: vi.fn(() => Promise.resolve({ status: 'ok', data: [] })),
+    getCouplerTypes: vi.fn(() => Promise.resolve({ status: 'ok', data: [] })),
     uploadModelImageBytes: vi.fn(() => Promise.resolve({ status: 'ok', data: null })),
     updateRailwayModelClassification: vi.fn(() => Promise.resolve({ status: 'ok', data: null })),
     updateRailwayModelDeliveryDate: vi.fn(() => Promise.resolve({ status: 'ok', data: null }))
@@ -163,7 +164,9 @@ describe('RailwayModelCard', () => {
           dcc_interface: '21-pin MTC',
           coupling_type: 'NEM 362',
           close_couplers: null,
-          digital_shunting: null
+          digital_shunting: null,
+          ownedRollingStockId: 'owned-rs-1',
+          currentCouplerId: null
         }
       ]
     };
@@ -202,7 +205,9 @@ describe('RailwayModelCard', () => {
           dcc_interface: null,
           coupling_type: 'NEM 362',
           close_couplers: null,
-          digital_shunting: null
+          digital_shunting: null,
+          ownedRollingStockId: 'owned-rs-1',
+          currentCouplerId: null
         },
         {
           id: 'trn:rolling-stock:roco:72198:2',
@@ -221,7 +226,9 @@ describe('RailwayModelCard', () => {
           dcc_interface: null,
           coupling_type: 'NEM 362',
           close_couplers: null,
-          digital_shunting: null
+          digital_shunting: null,
+          ownedRollingStockId: 'owned-rs-1',
+          currentCouplerId: null
         },
         {
           id: 'trn:rolling-stock:roco:72198:3',
@@ -240,7 +247,9 @@ describe('RailwayModelCard', () => {
           dcc_interface: null,
           coupling_type: 'NEM 362',
           close_couplers: null,
-          digital_shunting: null
+          digital_shunting: null,
+          ownedRollingStockId: 'owned-rs-1',
+          currentCouplerId: null
         }
       ]
     };

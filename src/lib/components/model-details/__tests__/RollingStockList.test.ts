@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/svelte';
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    getCouplerTypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
     updateRollingStockIdentification: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
     updateRollingStockRailwayCompany: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
     updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null })

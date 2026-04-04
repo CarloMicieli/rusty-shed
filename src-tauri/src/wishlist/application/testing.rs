@@ -156,7 +156,7 @@ impl<'a> CollectionRepository for CollectionRepoRef<'a> {
         &mut self,
         railway_model_id: &crate::catalog::domain::railway_model::RailwayModelId,
         rolling_stock_id: &crate::catalog::domain::railway_model::RollingStockId,
-    ) -> Result<(), DomainError> {
+    ) -> Result<Vec<crate::collecting::domain::OwnedRollingStockId>, DomainError> {
         self.inner
             .add_owned_rolling_stock_for_collection_items(railway_model_id, rolling_stock_id)
             .await

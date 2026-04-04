@@ -1,6 +1,7 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::OwnedRollingStockId;
 use crate::collecting::domain::UpdateCollectionItemInput;
 use crate::collecting::domain::collection_view::CollectionView;
 use crate::collecting::domain::depot_view::DepotView;
@@ -57,7 +58,7 @@ pub trait CollectionRepository: Send + Sync {
         &mut self,
         railway_model_id: &RailwayModelId,
         rolling_stock_id: &RollingStockId,
-    ) -> Result<(), DomainError>;
+    ) -> Result<Vec<OwnedRollingStockId>, DomainError>;
 }
 
 /// An extension trait that provides access to the `CollectionRepository`.
