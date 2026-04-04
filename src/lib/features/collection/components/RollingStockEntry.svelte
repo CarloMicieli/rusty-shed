@@ -7,6 +7,7 @@
   import type { RollingStockFormEntry } from '$lib/features/collection/types/AddModelFormTypes';
   import rollingStockCategories from '$lib/data/constants/rollingStockCategories.json';
   import { getSubcategoryOptions } from '$lib/components/model-details/components/constants';
+  import { getFlag } from '$lib/utils/flags';
 
   interface Props {
     /** Entry data bound two-way */
@@ -55,7 +56,14 @@
   });
 
   // Map options to { value, label }[] for FormSelect
-  const companyOptions = $derived(railwayCompanies.map((c) => ({ value: c.id, label: c.name })));
+  const companyOptions = $derived(
+    railwayCompanies.map((c) => ({
+      value: c.id,
+      label: c.name,
+      countryCode: c.countryCode,
+      registeredCompanyName: c.registeredCompanyName
+    }))
+  );
 
   const categoryOptions = $derived(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,8 +88,42 @@
       bind:value={entry.railwayCompanyId}
       placeholder="-- {m.add_model_railway_company()} --"
       error={errors?.railwayCompanyId}
+      isSearchable
       required
-    />
+    >
+      {#snippet item(opt)}
+        <div class="flex items-center gap-3">
+          <div class="flex shrink-0 items-center gap-1.5">
+            <span class="text-lg leading-none" aria-hidden="true">{getFlag(opt.countryCode)}</span>
+            <span class="font-mono text-[10px] text-muted-foreground/50"
+              >[{opt.countryCode ?? '??'}]</span
+            >
+          </div>
+          <div class="flex min-w-0 flex-col leading-tight">
+            <span class="truncate font-bold text-foreground">{opt.label}</span>
+            {#if opt.registeredCompanyName}
+              <span
+                class="truncate font-mono text-[9px] font-medium tracking-tight text-muted-foreground/70 uppercase"
+              >
+                {opt.registeredCompanyName}
+              </span>
+            {/if}
+          </div>
+        </div>
+      {/snippet}
+
+      {#snippet trigger(opt)}
+        {#if opt}
+          <div class="flex items-center gap-2">
+            <span class="text-base leading-none" aria-hidden="true">{getFlag(opt.countryCode)}</span
+            >
+            <span class="font-bold text-foreground">{opt.label}</span>
+          </div>
+        {:else}
+          <span class="text-muted-foreground">-- {m.add_model_railway_company()} --</span>
+        {/if}
+      {/snippet}
+    </FormSelect>
     <div></div>
   </div>
 

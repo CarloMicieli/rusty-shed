@@ -1,11 +1,15 @@
 <script lang="ts">
   import { Search, ChevronDown, Check } from 'lucide-svelte';
-  import type { Component } from 'svelte';
+  import type { Component, Snippet } from 'svelte';
   import * as Popover from '$lib/components/ui/popover';
 
-  interface SelectOption {
+  export interface SelectOption {
     value: string;
     label: string;
+    /** The legally registered company name (optional). */
+    registeredCompanyName?: string | null;
+    /** The ISO 3166-1 alpha-2 country code (optional). */
+    countryCode?: string | null;
   }
 
   interface Props {
@@ -25,6 +29,10 @@
     icon?: Component<{ size?: number | undefined; class?: string | undefined }>;
     /** Optional callback fired when a selection is made */
     onSelect?: (value: string) => void;
+    /** Optional custom rendering for each list item */
+    item?: Snippet<[SelectOption]>;
+    /** Optional custom rendering for the trigger content */
+    trigger?: Snippet<[SelectOption | undefined]>;
   }
 
   let {
@@ -35,7 +43,9 @@
     disabled = false,
     id,
     icon: LeadingIcon,
-    onSelect
+    onSelect,
+    item,
+    trigger
   }: Props = $props();
 
   let open = $state(false);
@@ -69,7 +79,8 @@
       : allOptions.filter((o) => o.label.toLowerCase().includes(filter.toLowerCase()))
   );
 
-  const selectedLabel = $derived(allOptions.find((o) => o.value === value)?.label ?? '');
+  const selectedOption = $derived(allOptions.find((o) => o.value === value));
+  const selectedLabel = $derived(selectedOption?.label ?? '');
 
   function select(opt: SelectOption) {
     value = opt.value;
@@ -93,7 +104,13 @@
         <LeadingIcon size={16} class="shrink-0 text-zinc-600" />
       {/if}
       <span class="truncate {value ? 'text-zinc-100' : 'text-zinc-500'}">
-        {selectedLabel || placeholder}
+        {#if trigger}
+          {@render trigger(selectedOption)}
+        {:else if selectedLabel}
+          {selectedLabel}
+        {:else}
+          {placeholder}
+        {/if}
       </span>
     </span>
     <ChevronDown
@@ -108,7 +125,7 @@
     align="start"
     sideOffset={4}
     style="width: {contentWidth}px;"
-    class="border-white/10 bg-zinc-950 p-2 shadow-xl"
+    class="rounded-sm border-border bg-card p-2 shadow-xl"
   >
     <!-- Filter input -->
     <div class="relative mb-2">
@@ -148,7 +165,13 @@
             {:else}
               <span class="w-[13px] shrink-0"></span>
             {/if}
-            <span class="truncate">{opt.label}</span>
+            <span class="truncate">
+              {#if item}
+                {@render item(opt)}
+              {:else}
+                {opt.label}
+              {/if}
+            </span>
           </button>
         {/each}
       {/if}

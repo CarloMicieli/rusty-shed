@@ -246,7 +246,12 @@
       }
 
       if (companiesResult.status === 'ok' && companiesResult.data) {
-        companyOptions = companiesResult.data.map((c) => ({ value: c.id, label: c.name }));
+        companyOptions = companiesResult.data.map((c) => ({
+          value: c.id,
+          label: c.name,
+          registeredCompanyName: c.registeredCompanyName,
+          countryCode: c.countryCode
+        }));
       }
 
       if (couplersResult.status === 'ok' && couplersResult.data) {

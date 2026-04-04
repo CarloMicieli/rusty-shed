@@ -2,6 +2,8 @@
   import * as m from '$lib/paraglide/messages.js';
   import { X } from 'lucide-svelte';
   import { Input, Button } from '$lib/components';
+  import { FormSelect } from '$lib/components/drawer';
+  import { getFlag } from '$lib/utils/flags';
   import type { RailwayCompany, Category } from '$lib/bindings';
   import type { RollingStockFormEntry } from '../types';
   import { ROLLING_STOCK_CATEGORIES } from '../constants';
@@ -26,23 +28,56 @@
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <!-- Railway Company -->
-    <div>
-      <label for="railway-company-{entry.id}" class="block space-y-1">
-        <span class="text-[10px] text-muted-foreground uppercase"
-          >{m.wishlist_field_railway_company()}</span
-        >
-      </label>
-      <select
+    <div class="col-span-1">
+      <FormSelect
         id="railway-company-{entry.id}"
+        label={m.wishlist_field_railway_company()}
+        options={railwayCompanies.map((c) => ({
+          value: c.id,
+          label: c.name,
+          countryCode: c.countryCode,
+          registeredCompanyName: c.registeredCompanyName
+        }))}
         bind:value={entry.railwayCompanyId}
-        class="flex h-10 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        placeholder="-- {m.wishlist_field_railway_company()} --"
+        isSearchable
         required
       >
-        <option value="">-- {m.wishlist_field_railway_company()} --</option>
-        {#each railwayCompanies as company (company.id)}
-          <option value={company.id}>{company.name}</option>
-        {/each}
-      </select>
+        {#snippet item(opt)}
+          <div class="flex items-center gap-3">
+            <div class="flex shrink-0 items-center gap-1.5">
+              <span class="text-lg leading-none" aria-hidden="true">{getFlag(opt.countryCode)}</span
+              >
+              <span class="font-mono text-[10px] text-muted-foreground/50"
+                >[{opt.countryCode ?? '??'}]</span
+              >
+            </div>
+            <div class="flex min-w-0 flex-col leading-tight">
+              <span class="truncate font-bold text-foreground">{opt.label}</span>
+              {#if opt.registeredCompanyName}
+                <span
+                  class="truncate font-mono text-[9px] font-medium tracking-tight text-muted-foreground/70 uppercase"
+                >
+                  {opt.registeredCompanyName}
+                </span>
+              {/if}
+            </div>
+          </div>
+        {/snippet}
+
+        {#snippet trigger(opt)}
+          {#if opt}
+            <div class="flex items-center gap-2">
+              <span class="text-base leading-none" aria-hidden="true"
+                >{getFlag(opt.countryCode)}</span
+              >
+              <span class="font-bold text-foreground">{opt.label}</span>
+            </div>
+          {:else}
+            <span class="text-muted-foreground">-- {m.wishlist_field_railway_company()} --</span>
+          {/if}
+        {/snippet}
+      </FormSelect>
     </div>
 
     <!-- Series Code -->
