@@ -5,12 +5,15 @@
   import { toaster } from '$lib/toaster';
   import {
     commands,
+    type Control,
+    type DccInterface,
+    type PrototypeView,
     type RailwayCompanyId,
     type RailwayModelId,
     type RollingStockId,
     type RollingStockView
   } from '$lib/bindings';
-  import RollingStockBasicFields from './RollingStockBasicFields.svelte';
+  import RollingStockPrototypeSection from './RollingStockPrototypeSection.svelte';
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
 
@@ -31,6 +34,7 @@
 
   // ── Form state ──────────────────────────────────────────────────────────────
   interface FormState {
+    category: string;
     railwayCompanyId: string;
     seriesCode: string;
     series: string;
@@ -49,9 +53,11 @@
     couplingSocket: string;
     closeCouplers: boolean | null;
     digitalShunting: boolean | null;
+    lengthMm: number | null;
   }
 
   const emptyForm: FormState = {
+    category: '',
     railwayCompanyId: '',
     seriesCode: '',
     series: '',
@@ -69,7 +75,8 @@
     control: '',
     couplingSocket: '',
     closeCouplers: null,
-    digitalShunting: null
+    digitalShunting: null,
+    lengthMm: null
   };
 
   let form = $state<FormState>({ ...emptyForm });
@@ -146,8 +153,22 @@
 
     if (!rs) return { ...emptyForm };
 
+    const category =
+      'locomotive' in view && view.locomotive
+        ? 'LOCOMOTIVE'
+        : 'electricMultipleUnit' in view && view.electricMultipleUnit
+          ? 'ELECTRIC_MULTIPLE_UNIT'
+          : 'freightCar' in view && view.freightCar
+            ? 'FREIGHT_CAR'
+            : 'passengerCar' in view && view.passengerCar
+              ? 'PASSENGER_CAR'
+              : 'RAILCAR';
+
     const ts = rs.technical_specifications;
+    const lob = rs.length_over_buffer;
+
     return {
+      category,
       railwayCompanyId: rs.railway.railwayCompanyId ?? '',
       seriesCode: rs.series_code,
       series: 'series' in rs ? (rs.series ?? '') : '',
@@ -177,7 +198,8 @@
           ? true
           : ts?.coupling?.digital_shunting === 'NO'
             ? false
-            : null
+            : null,
+      lengthMm: lob?.millimeters ? Number(lob.millimeters) : null
     };
   }
 
@@ -225,6 +247,17 @@
     } finally {
       isLoading = false;
     }
+  }
+
+  // ── Prototype autofill (edit drawer — does not persist prototype association) ─
+  function handlePrototypeSelect(p: PrototypeView) {
+    form.railwayCompanyId = p.railway_company_id;
+    form.seriesCode = p.series_code;
+    form.friendlyName = p.friendly_name ?? '';
+  }
+
+  function handlePrototypeClear() {
+    // No-op: clearing prototype in edit mode only resets the picker UI
   }
 
   // ── Save ────────────────────────────────────────────────────────────────────
@@ -276,6 +309,22 @@
         }
       }
 
+      // Save length if it changed.
+      if (form.lengthMm !== originalForm.lengthMm) {
+        const dccResult = await commands.updateRollingStockDcc({
+          railwayModelId,
+          rollingStockId,
+          control: (form.control || null) as Control | null,
+          dccInterface: (form.dccInterface || null) as DccInterface | null,
+          lengthMillimeters: form.lengthMm,
+          lengthInches: null
+        });
+        if (dccResult.status === 'error') {
+          inlineError = m.specs_drawer_save_error();
+          return;
+        }
+      }
+
       toaster.success(m.specs_drawer_save_success());
       originalForm = { ...form };
       onSaved?.();
@@ -298,6 +347,7 @@
     <DrawerHeader
       id="rs-specs-title"
       title={m.specs_drawer_title()}
+      subtitle={m.specs_drawer_subtitle()}
       icon={Settings}
       onClose={requestClose}
     />
@@ -310,16 +360,19 @@
       ></div>
     </div>
   {:else}
-    <div class="space-y-6">
-      <RollingStockBasicFields
-        bind:seriesCode={form.seriesCode}
-        bind:series={form.series}
-        bind:roadNumber={form.roadNumber}
-        bind:friendlyName={form.friendlyName}
-        bind:livery={form.livery}
-        bind:depot={form.depot}
+    <div class="space-y-3">
+      <RollingStockPrototypeSection
         bind:railwayCompanyId={form.railwayCompanyId}
         {companyOptions}
+        bind:seriesCode={form.seriesCode}
+        bind:series={form.series}
+        bind:friendlyName={form.friendlyName}
+        bind:roadNumber={form.roadNumber}
+        bind:livery={form.livery}
+        bind:depot={form.depot}
+        category={form.category}
+        onPrototypeSelect={handlePrototypeSelect}
+        onPrototypeClear={handlePrototypeClear}
       />
 
       <RollingStockTechnicalFields
@@ -334,6 +387,7 @@
         bind:couplingSocket={form.couplingSocket}
         bind:closeCouplers={form.closeCouplers}
         bind:digitalShunting={form.digitalShunting}
+        bind:lengthMm={form.lengthMm}
         {bodyShellOptions}
         {chassisOptions}
         {featureFlagOptions}

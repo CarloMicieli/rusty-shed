@@ -12,6 +12,7 @@
     disabled?: boolean;
     error?: string;
     required?: boolean;
+    class?: string;
     'aria-invalid'?: boolean | 'true' | 'false';
     'aria-describedby'?: string;
     oninput?: (e: Event & { currentTarget: HTMLInputElement }) => void;
@@ -23,6 +24,7 @@
     value = $bindable<string | number | null>(''),
     error,
     required,
+    class: className,
     ...rest
   }: Props = $props();
 </script>
@@ -31,7 +33,7 @@
   <label for={id} class="text-[10px] font-bold text-muted-foreground uppercase"
     >{label}{required ? ' *' : ''}</label
   >
-  <DrawerInput bind:value {id} {...rest} />
+  <DrawerInput bind:value {id} class={className} {...rest} />
   {#if error}
     <p class="text-xs text-destructive">{error}</p>
   {/if}

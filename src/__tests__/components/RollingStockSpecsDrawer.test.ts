@@ -8,8 +8,10 @@ vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayModelById: vi.fn(),
     getRailwayCompanies: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
+    getPrototypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
     updateRollingStockSpecifications: vi.fn(),
-    updateRollingStockRailwayCompany: vi.fn()
+    updateRollingStockRailwayCompany: vi.fn(),
+    updateRollingStockDcc: vi.fn().mockResolvedValue({ status: 'ok', data: null })
   }
 }));
 
@@ -17,6 +19,7 @@ vi.mock('$lib/bindings', () => ({
 // NOTE: vi.mock is hoisted so factories must be fully self-contained.
 vi.mock('$lib/paraglide/messages', () => ({
   specs_drawer_title: () => 'Edit Specifications',
+  specs_drawer_subtitle: () => 'Manage the rolling stock specifications',
   specs_drawer_cancel: () => 'Cancel',
   specs_drawer_save: () => 'Save',
   specs_drawer_save_error: () => 'Failed to save. Please try again.',
@@ -32,12 +35,15 @@ vi.mock('$lib/paraglide/messages', () => ({
   specs_drawer_section_technical: () => 'Technical',
   specs_drawer_section_control: () => 'Control',
   specs_drawer_section_coupling: () => 'Coupling',
+  rolling_stock_create_section_prototype: () => 'Prototype',
+  rolling_stock_field_railway_company: () => 'Railway Company',
   rolling_stock_field_series_code: () => 'Series Code',
   rolling_stock_field_series: () => 'Series',
   rolling_stock_field_road_number: () => 'Road Number',
   rolling_stock_field_friendly_name: () => 'Friendly Name',
   rolling_stock_field_livery: () => 'Livery',
   rolling_stock_field_depot: () => 'Depot',
+  rolling_stock_field_length: () => 'Length',
   rolling_stock_placeholder_series_code: () => 'e.g. Re 4/4',
   rolling_stock_placeholder_series: () => 'e.g. Re 4/4 II, Class 37',
   rolling_stock_placeholder_road_number: () => 'e.g. 218 101-3',
@@ -46,6 +52,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_placeholder_depot: () => 'e.g. Basel',
   model_rolling_stock_field_company: () => 'Company',
   rolling_stock_select_company: () => '— Select company —',
+  rolling_stock_prototype_search_placeholder: () => 'Search prototype library…',
+  rolling_stock_prototype_no_results: () => 'No prototypes found',
+  rolling_stock_prototype_clear: () => 'Clear prototype',
   specs_drawer_field_flywheel: () => 'Flywheel Fitted',
   specs_drawer_field_body_material: () => 'Body Material',
   specs_drawer_field_chassis_material: () => 'Chassis Material',
@@ -61,6 +70,7 @@ vi.mock('$lib/paraglide/messages', () => ({
 }));
 vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_title: () => 'Edit Specifications',
+  specs_drawer_subtitle: () => 'Manage the rolling stock specifications',
   specs_drawer_cancel: () => 'Cancel',
   specs_drawer_save: () => 'Save',
   specs_drawer_save_error: () => 'Failed to save. Please try again.',
@@ -76,12 +86,15 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_section_technical: () => 'Technical',
   specs_drawer_section_control: () => 'Control',
   specs_drawer_section_coupling: () => 'Coupling',
+  rolling_stock_create_section_prototype: () => 'Prototype',
+  rolling_stock_field_railway_company: () => 'Railway Company',
   rolling_stock_field_series_code: () => 'Series Code',
   rolling_stock_field_series: () => 'Series',
   rolling_stock_field_road_number: () => 'Road Number',
   rolling_stock_field_friendly_name: () => 'Friendly Name',
   rolling_stock_field_livery: () => 'Livery',
   rolling_stock_field_depot: () => 'Depot',
+  rolling_stock_field_length: () => 'Length',
   rolling_stock_placeholder_series_code: () => 'e.g. Re 4/4',
   rolling_stock_placeholder_series: () => 'e.g. Re 4/4 II, Class 37',
   rolling_stock_placeholder_road_number: () => 'e.g. 218 101-3',
@@ -90,6 +103,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_placeholder_depot: () => 'e.g. Basel',
   model_rolling_stock_field_company: () => 'Company',
   rolling_stock_select_company: () => '— Select company —',
+  rolling_stock_prototype_search_placeholder: () => 'Search prototype library…',
+  rolling_stock_prototype_no_results: () => 'No prototypes found',
+  rolling_stock_prototype_clear: () => 'Clear prototype',
   specs_drawer_field_flywheel: () => 'Flywheel Fitted',
   specs_drawer_field_body_material: () => 'Body Material',
   specs_drawer_field_chassis_material: () => 'Chassis Material',
@@ -191,13 +207,13 @@ describe('RollingStockSpecsDrawer', () => {
       await screen.findByDisplayValue('E.656');
 
       // Road number, livery, depot
-      expect((container.querySelector('#drawer-road-number') as HTMLInputElement)?.value).toBe(
+      expect((container.querySelector('#proto-road-number') as HTMLInputElement)?.value).toBe(
         '656 001'
       );
-      expect((container.querySelector('#drawer-livery') as HTMLInputElement)?.value).toBe(
+      expect((container.querySelector('#proto-livery') as HTMLInputElement)?.value).toBe(
         'Verde FS'
       );
-      expect((container.querySelector('#drawer-depot') as HTMLInputElement)?.value).toBe(
+      expect((container.querySelector('#proto-depot') as HTMLInputElement)?.value).toBe(
         'Milano Centrale'
       );
 
@@ -212,7 +228,7 @@ describe('RollingStockSpecsDrawer', () => {
       expect(couplingSocket?.textContent?.trim()).toBe('NEM 362');
 
       // All four sections visible
-      expect(container.textContent).toContain('Identification');
+      expect(container.textContent).toContain('Prototype');
       expect(container.textContent).toContain('Technical');
       expect(container.textContent).toContain('Control');
       expect(container.textContent).toContain('Coupling');
@@ -235,7 +251,7 @@ describe('RollingStockSpecsDrawer', () => {
       await screen.findByDisplayValue('E.656');
 
       // Modify a field to make the form dirty
-      const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
+      const seriesInput = container.querySelector('#proto-series-code') as HTMLInputElement;
       seriesInput.value = 'E.646';
       await fireEvent.input(seriesInput);
 
@@ -265,7 +281,7 @@ describe('RollingStockSpecsDrawer', () => {
       await screen.findByDisplayValue('E.656');
 
       // Make the form dirty
-      const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
+      const seriesInput = container.querySelector('#proto-series-code') as HTMLInputElement;
       seriesInput.value = 'E.646';
       await fireEvent.input(seriesInput);
 
@@ -298,7 +314,7 @@ describe('RollingStockSpecsDrawer', () => {
       await screen.findByDisplayValue('E.656');
 
       // Make dirty and trigger dirty-check dialog
-      const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
+      const seriesInput = container.querySelector('#proto-series-code') as HTMLInputElement;
       seriesInput.value = 'E.646';
       await fireEvent.input(seriesInput);
 
@@ -346,7 +362,7 @@ describe('RollingStockSpecsDrawer', () => {
       await screen.findByDisplayValue('E.656');
 
       // Change a value so we have something to save
-      const seriesInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
+      const seriesInput = container.querySelector('#proto-series-code') as HTMLInputElement;
       await fireEvent.input(seriesInput, { target: { value: 'E.646' } });
 
       // Click the Save button
@@ -367,7 +383,7 @@ describe('RollingStockSpecsDrawer', () => {
       expect(onClose).not.toHaveBeenCalled();
 
       // Entered values should be preserved in the form
-      const stillVisible = container.querySelector('#drawer-series-code') as HTMLInputElement;
+      const stillVisible = container.querySelector('#proto-series-code') as HTMLInputElement;
       expect(stillVisible?.value).toBe('E.646');
     });
   });

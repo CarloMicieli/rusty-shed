@@ -7,6 +7,7 @@ import type { OwnedRollingStockView, RailwayModelId, RollingStockId } from '$lib
 vi.mock('$lib/bindings', () => ({
   commands: {
     getRailwayCompanies: vi.fn(),
+    getPrototypes: vi.fn().mockResolvedValue({ status: 'ok', data: [] }),
     updateRollingStockIdentification: vi.fn(),
     updateRollingStockRailwayCompany: vi.fn(),
     updateRollingStockDcc: vi.fn(),
@@ -68,6 +69,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   edit_save_error: () => 'Failed to save. Your changes are preserved.',
   badge_picker_close: () => 'Close',
   specs_drawer_title: () => 'Edit Specifications',
+  specs_drawer_subtitle: () => 'Manage the rolling stock specifications',
   specs_drawer_cancel: () => 'Cancel',
   specs_drawer_save: () => 'Save',
   specs_drawer_save_error: () => 'Failed to save',
@@ -89,6 +91,10 @@ vi.mock('$lib/paraglide/messages', () => ({
   specs_drawer_field_sprung_buffers: () => 'Sprung Buffers',
   specs_drawer_field_close_coupling: () => 'Close Couplers',
   specs_drawer_field_digital_shunting: () => 'Digital Shunting',
+  rolling_stock_create_section_prototype: () => 'Prototype',
+  rolling_stock_prototype_search_placeholder: () => 'Search prototype library…',
+  rolling_stock_prototype_no_results: () => 'No prototypes found',
+  rolling_stock_prototype_clear: () => 'Clear prototype',
   rolling_stock_field_category: () => 'Category',
   rolling_stock_select_company: () => '— Select company —'
 }));
@@ -129,6 +135,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   edit_save_error: () => 'Failed to save. Your changes are preserved.',
   badge_picker_close: () => 'Close',
   specs_drawer_title: () => 'Edit Specifications',
+  specs_drawer_subtitle: () => 'Manage the rolling stock specifications',
   specs_drawer_cancel: () => 'Cancel',
   specs_drawer_save: () => 'Save',
   specs_drawer_save_error: () => 'Failed to save',
@@ -150,6 +157,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_field_sprung_buffers: () => 'Sprung Buffers',
   specs_drawer_field_close_coupling: () => 'Close Couplers',
   specs_drawer_field_digital_shunting: () => 'Digital Shunting',
+  rolling_stock_create_section_prototype: () => 'Prototype',
+  rolling_stock_prototype_search_placeholder: () => 'Search prototype library…',
+  rolling_stock_prototype_no_results: () => 'No prototypes found',
+  rolling_stock_prototype_clear: () => 'Clear prototype',
   rolling_stock_field_category: () => 'Category',
   rolling_stock_select_company: () => '— Select company —'
 }));
@@ -415,7 +426,7 @@ describe('RollingStockCard', () => {
       });
 
       // Drawer should be visible with the updated series code
-      const seriesCodeInput = container.querySelector('#drawer-series-code') as HTMLInputElement;
+      const seriesCodeInput = container.querySelector('#proto-series-code') as HTMLInputElement;
       expect(seriesCodeInput).not.toBeNull();
       expect(seriesCodeInput.value).toBe('E.646');
     });

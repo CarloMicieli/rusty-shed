@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
-  import { FormSelect, FormBooleanSelect } from '$lib/components/drawer';
+  import { FormSelect, FormBooleanSelect, FormInput } from '$lib/components/drawer';
 
   interface SelectOption {
     value: string;
@@ -19,6 +19,7 @@
     couplingSocket: string;
     closeCouplers?: boolean | null;
     digitalShunting?: boolean | null;
+    lengthMm?: number | null;
     bodyShellOptions: SelectOption[];
     chassisOptions: SelectOption[];
     featureFlagOptions: SelectOption[];
@@ -39,6 +40,7 @@
     couplingSocket = $bindable(),
     closeCouplers = $bindable<boolean | null>(null),
     digitalShunting = $bindable<boolean | null>(null),
+    lengthMm = $bindable<number | null>(null),
     bodyShellOptions,
     chassisOptions,
     featureFlagOptions,
@@ -49,9 +51,9 @@
 </script>
 
 <!-- ── Technical section ───────────────────────────────────────── -->
-<div class="overflow-hidden rounded-lg border border-border bg-card p-4">
+<div class="rounded-sm border border-border bg-card p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+    <p class="mb-3 font-bebas text-sm tracking-widest text-muted-foreground uppercase">
       {m.specs_drawer_section_technical()}
     </p>
     <div class="grid grid-cols-2 gap-3">
@@ -89,14 +91,22 @@
         label={m.specs_drawer_field_sprung_buffers()}
         bind:value={sprungBuffers}
       />
+      <FormInput
+        id="drawer-length-mm"
+        label="{m.rolling_stock_field_length()} (mm)"
+        type="number"
+        min={0}
+        class="font-mono"
+        bind:value={lengthMm}
+      />
     </div>
   </section>
 </div>
 
 <!-- ── Control section ────────────────────────────────────────── -->
-<div class="overflow-hidden rounded-lg border border-border bg-card p-4">
+<div class="rounded-sm border border-border bg-card p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+    <p class="mb-3 font-bebas text-sm tracking-widest text-muted-foreground uppercase">
       {m.specs_drawer_section_control()}
     </p>
     <div class="grid grid-cols-2 gap-3">
@@ -117,9 +127,9 @@
 </div>
 
 <!-- ── Coupling section ───────────────────────────────────────── -->
-<div class="overflow-hidden rounded-lg border border-border bg-card p-4">
+<div class="rounded-sm border border-border bg-card p-4">
   <section>
-    <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+    <p class="mb-3 font-bebas text-sm tracking-widest text-muted-foreground uppercase">
       {m.specs_drawer_section_coupling()}
     </p>
     <div class="grid grid-cols-2 gap-3">

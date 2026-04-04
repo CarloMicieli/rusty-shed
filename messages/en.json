@@ -952,6 +952,7 @@
   "rolling_stock_field_lights": "Lights",
   "rolling_stock_edit_specs_button": "Edit Specs",
   "specs_drawer_title": "Rolling Stock Specifications",
+  "specs_drawer_subtitle": "Manage the rolling stock specifications",
   "specs_drawer_section_identification": "Identification",
   "specs_drawer_section_technical": "Technical",
   "specs_drawer_section_control": "Control",

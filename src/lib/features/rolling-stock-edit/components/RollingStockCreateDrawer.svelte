@@ -4,18 +4,20 @@
   import { toaster } from '$lib/toaster';
   import {
     commands,
+    type Control,
+    type DccInterface,
     type PrototypeView,
     type RailwayModelId,
     type RollingStockCategory,
     type RollingStockId
   } from '$lib/bindings';
   import { onMount } from 'svelte';
-  import PrototypeLibraryPicker from './PrototypeLibraryPicker.svelte';
+  import RollingStockPrototypeSection from './RollingStockPrototypeSection.svelte';
+  import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import {
     DrawerShell,
     DrawerHeader,
     DrawerFooter,
-    FormInput,
     FormSelect,
     createDrawerForm
   } from '$lib/components/drawer';
@@ -44,6 +46,7 @@
       railwayCompanyId: '',
       category: '',
       seriesCode: '',
+      series: '',
       friendlyName: '',
       roadNumber: '',
       livery: '',
@@ -52,7 +55,15 @@
       dccInterface: '',
       couplingSocket: '',
       closeCouplers: false,
-      subType: ''
+      subType: '',
+      flywheelFitted: null as boolean | null,
+      sprungBuffers: null as boolean | null,
+      bodyShell: '',
+      chassis: '',
+      interiorLights: '',
+      lights: '',
+      digitalShunting: null as boolean | null,
+      lengthMm: null as number | null
     }),
     validate: (v) => ({
       seriesCode: !v.seriesCode.trim() ? m.error_required() : undefined,
@@ -99,7 +110,25 @@
     f.values.subType = '';
   });
 
-  // ── Coupling socket options ──────────────────────────────────────────────────
+  // ── Option lists ─────────────────────────────────────────────────────────────
+  const bodyShellOptions = [
+    { value: '', label: '—' },
+    { value: 'PLASTIC', label: 'Plastic' },
+    { value: 'METAL_DIE_CAST', label: 'Metal die-cast' }
+  ];
+
+  const chassisOptions = [
+    { value: '', label: '—' },
+    { value: 'PLASTIC', label: 'Plastic' },
+    { value: 'METAL_DIE_CAST', label: 'Metal die-cast' }
+  ];
+
+  const featureFlagOptions = [
+    { value: '', label: '—' },
+    { value: 'YES', label: 'Yes' },
+    { value: 'NO', label: 'No' }
+  ];
+
   const couplingSocketOptions = [
     { value: '', label: '—' },
     { value: 'NONE', label: 'None' },
@@ -155,6 +184,7 @@
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   async function handleSave() {
+    f.touch();
     if (!f.isValid) return;
     isSaving = true;
     inlineError = null;
@@ -181,8 +211,61 @@
         return;
       }
 
+      const newId = result.data;
+
+      // Save extended technical specs if any are filled
+      const hasExtendedSpecs =
+        f.values.flywheelFitted !== null ||
+        f.values.sprungBuffers !== null ||
+        f.values.bodyShell ||
+        f.values.chassis ||
+        f.values.interiorLights ||
+        f.values.lights ||
+        f.values.digitalShunting !== null ||
+        f.values.series;
+
+      if (hasExtendedSpecs) {
+        const specsResult = await commands.updateRollingStockSpecifications({
+          railwayModelId,
+          rollingStockId: newId,
+          seriesCode: f.values.seriesCode.trim(),
+          series: f.values.series || null,
+          roadNumber: f.values.roadNumber || null,
+          friendlyName: f.values.friendlyName || null,
+          livery: f.values.livery || null,
+          depot: f.values.depot || null,
+          flywheelFitted: f.values.flywheelFitted,
+          sprungBuffers: f.values.sprungBuffers,
+          bodyShell: f.values.bodyShell || null,
+          chassis: f.values.chassis || null,
+          interiorLights: f.values.interiorLights || null,
+          lights: f.values.lights || null,
+          dccInterface: (f.values.dccInterface || null) as DccInterface | null,
+          control: (f.values.control || null) as Control | null,
+          couplingSocket: f.values.couplingSocket || null,
+          closeCouplers: f.values.couplingSocket ? f.values.closeCouplers : null,
+          digitalShunting: f.values.digitalShunting
+        });
+        if (specsResult.status === 'error') {
+          inlineError = m.rolling_stock_create_error();
+          return;
+        }
+      }
+
+      // Save length if provided
+      if (f.values.lengthMm !== null) {
+        await commands.updateRollingStockDcc({
+          railwayModelId,
+          rollingStockId: newId,
+          control: (f.values.control || null) as Control | null,
+          dccInterface: (f.values.dccInterface || null) as DccInterface | null,
+          lengthMillimeters: f.values.lengthMm,
+          lengthInches: null
+        });
+      }
+
       toaster.success(m.rolling_stock_create_success());
-      onCreated?.(result.data);
+      onCreated?.(newId);
       onClose();
     } finally {
       isSaving = false;
@@ -232,115 +315,43 @@
       {/if}
     </div>
 
-    <!-- Block: Identification -->
-    <div class="rounded-sm border border-border bg-background/30 p-4">
-      <p class="mb-3 font-bebas text-xs tracking-widest text-muted-foreground uppercase">
-        {m.rolling_stock_create_section_prototype()}
-      </p>
-      <div class="space-y-4">
-        <PrototypeLibraryPicker
-          category={f.values.category}
-          selectedId={f.values.prototypeId}
-          onSelect={handlePrototypeSelect}
-          onClear={handlePrototypeClear}
-        />
+    <!-- Prototype / Identification -->
+    <RollingStockPrototypeSection
+      bind:railwayCompanyId={f.values.railwayCompanyId}
+      {companyOptions}
+      bind:seriesCode={f.values.seriesCode}
+      bind:series={f.values.series}
+      bind:friendlyName={f.values.friendlyName}
+      bind:roadNumber={f.values.roadNumber}
+      bind:livery={f.values.livery}
+      bind:depot={f.values.depot}
+      category={f.values.category}
+      selectedPrototypeId={f.values.prototypeId}
+      onPrototypeSelect={handlePrototypeSelect}
+      onPrototypeClear={handlePrototypeClear}
+    />
 
-        <div class="border-t border-border/40"></div>
-
-        <FormSelect
-          id="create-company"
-          label={m.rolling_stock_field_railway_company()}
-          options={companyOptions}
-          bind:value={f.values.railwayCompanyId}
-          placeholder={m.rolling_stock_select_category()}
-          isSearchable
-          required
-        />
-        <div class="grid grid-cols-2 gap-3">
-          <FormInput
-            id="create-series-code"
-            label={m.rolling_stock_field_series_code()}
-            bind:value={f.values.seriesCode}
-            placeholder="e.g. BR 218"
-            required
-          />
-          <FormInput
-            id="create-friendly-name"
-            label={m.rolling_stock_field_friendly_name()}
-            bind:value={f.values.friendlyName}
-            placeholder="e.g. Krocodile"
-          />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <FormInput
-            id="create-road-number"
-            label={m.rolling_stock_field_road_number()}
-            bind:value={f.values.roadNumber}
-            placeholder="e.g. 218 401-6"
-          />
-          <FormInput
-            id="create-livery"
-            label={m.rolling_stock_field_livery()}
-            bind:value={f.values.livery}
-            placeholder="e.g. Orient Red"
-          />
-        </div>
-        <FormInput
-          id="create-depot"
-          label={m.rolling_stock_field_depot()}
-          bind:value={f.values.depot}
-          placeholder="e.g. München Hbf"
-        />
-      </div>
-    </div>
-
-    <!-- Block: Technical Specifications -->
-    <div class="rounded-sm border border-border bg-background/30 p-4">
-      <p class="mb-3 font-bebas text-xs tracking-widest text-muted-foreground uppercase">
-        {m.rolling_stock_create_section_technical()}
-      </p>
-      <div class="space-y-4">
-        <div class="flex items-end gap-3">
-          <div class="flex-1">
-            <FormSelect
-              id="create-coupling-socket"
-              label={m.specs_drawer_field_coupling_socket()}
-              options={[...couplingSocketOptions]}
-              bind:value={f.values.couplingSocket}
-              placeholder={m.rolling_stock_select_coupling()}
-            />
-          </div>
-          {#if f.values.couplingSocket}
-            <label class="mb-1 flex cursor-pointer items-center gap-2 pb-2.5">
-              <input
-                type="checkbox"
-                class="variant-steampunk-valve"
-                bind:checked={f.values.closeCouplers}
-              />
-              <span class="text-[10px] font-bold text-muted-foreground uppercase">
-                {m.rolling_stock_field_short_coupler()}
-              </span>
-            </label>
-          {/if}
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <FormSelect
-            id="create-control"
-            label={m.rolling_stock_field_control_type()}
-            options={[...controlOptions]}
-            bind:value={f.values.control}
-            placeholder={m.rolling_stock_select_control()}
-          />
-          <FormSelect
-            id="create-dcc-interface"
-            label={m.rolling_stock_field_dcc_interface()}
-            options={[...dccInterfaceOptions]}
-            bind:value={f.values.dccInterface}
-            placeholder={m.rolling_stock_select_dcc_interface()}
-          />
-        </div>
-      </div>
-    </div>
+    <!-- Technical Specifications -->
+    <RollingStockTechnicalFields
+      bind:flywheelFitted={f.values.flywheelFitted}
+      bind:sprungBuffers={f.values.sprungBuffers}
+      bind:bodyShell={f.values.bodyShell}
+      bind:chassis={f.values.chassis}
+      bind:interiorLights={f.values.interiorLights}
+      bind:lights={f.values.lights}
+      bind:dccInterface={f.values.dccInterface}
+      bind:control={f.values.control}
+      bind:couplingSocket={f.values.couplingSocket}
+      bind:closeCouplers={f.values.closeCouplers}
+      bind:digitalShunting={f.values.digitalShunting}
+      bind:lengthMm={f.values.lengthMm}
+      {bodyShellOptions}
+      {chassisOptions}
+      {featureFlagOptions}
+      controlOptions={[...controlOptions]}
+      dccInterfaceOptions={[...dccInterfaceOptions]}
+      couplingSockeOptions={[...couplingSocketOptions]}
+    />
   </div>
 
   {#snippet footer({ requestClose })}

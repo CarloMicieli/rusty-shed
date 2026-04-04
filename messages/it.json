@@ -912,6 +912,7 @@
   "rolling_stock_field_dcc_interface": "Interfaccia DCC",
   "rolling_stock_edit_specs_button": "Modifica Specifiche",
   "specs_drawer_title": "Specifiche del Materiale Rotabile",
+  "specs_drawer_subtitle": "Gestisci le specifiche del materiale rotabile",
   "specs_drawer_section_identification": "Identificazione",
   "specs_drawer_section_technical": "Tecnico",
   "specs_drawer_section_control": "Controllo",
