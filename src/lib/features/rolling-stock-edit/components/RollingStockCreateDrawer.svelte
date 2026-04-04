@@ -74,6 +74,7 @@
 
   let isSaving = $state(false);
   let inlineError = $state<string | null>(null);
+  let expandTechnical = $state(false);
 
   // ── Company options ──────────────────────────────────────────────────────────
   let companyOptions = $state<{ value: string; label: string }[]>([]);
@@ -90,6 +91,7 @@
     if (open) {
       f.reset();
       inlineError = null;
+      expandTechnical = false;
     }
   });
 
@@ -176,6 +178,7 @@
       p.electric_multiple_unit_type ??
       '';
     if (subType) f.values.subType = subType;
+    expandTechnical = true;
   }
 
   function handlePrototypeClear() {
@@ -351,6 +354,7 @@
       controlOptions={[...controlOptions]}
       dccInterfaceOptions={[...dccInterfaceOptions]}
       couplingSockeOptions={[...couplingSocketOptions]}
+      {expandTechnical}
     />
   </div>
 

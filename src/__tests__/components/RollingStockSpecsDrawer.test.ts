@@ -217,6 +217,20 @@ describe('RollingStockSpecsDrawer', () => {
         'Milano Centrale'
       );
 
+      // All four section headers are always visible (even when collapsed)
+      expect(container.textContent).toContain('Prototype');
+      expect(container.textContent).toContain('Technical');
+      expect(container.textContent).toContain('Control');
+      expect(container.textContent).toContain('Coupling');
+
+      // Expand Technical and Coupling sections to access their fields
+      fireEvent.click(screen.getByText('Technical'));
+      fireEvent.click(screen.getByText('Coupling'));
+
+      await waitFor(() => {
+        expect(container.querySelector('#drawer-flywheel')).not.toBeNull();
+      });
+
       // Technical spec selects
       const flywheel = container.querySelector('#drawer-flywheel') as HTMLButtonElement;
       const bodyShell = container.querySelector('#drawer-body-shell') as HTMLButtonElement;
@@ -226,12 +240,6 @@ describe('RollingStockSpecsDrawer', () => {
       expect(flywheel?.textContent?.trim()).toBe('Yes');
       expect(bodyShell?.textContent?.trim()).toBe('Metal die-cast');
       expect(couplingSocket?.textContent?.trim()).toBe('NEM 362');
-
-      // All four sections visible
-      expect(container.textContent).toContain('Prototype');
-      expect(container.textContent).toContain('Technical');
-      expect(container.textContent).toContain('Control');
-      expect(container.textContent).toContain('Coupling');
     });
   });
 

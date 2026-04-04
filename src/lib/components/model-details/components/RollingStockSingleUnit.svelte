@@ -88,7 +88,7 @@
         </span>
       {/if}
       {#if editable}
-        <div class="font-mono text-sm font-bold text-foreground whitespace-nowrap">
+        <div class="font-mono text-sm font-bold whitespace-nowrap text-foreground">
           <InPlaceEdit
             value={unit.road_number ?? ''}
             placeholder={m.road_number()}
@@ -96,7 +96,7 @@
           />
         </div>
       {:else}
-        <span class="font-mono text-sm font-bold text-foreground normal-case whitespace-nowrap">
+        <span class="font-mono text-sm font-bold whitespace-nowrap text-foreground normal-case">
           {unit.road_number ?? '—'}
         </span>
       {/if}

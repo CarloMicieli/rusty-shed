@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ChevronDown from '@lucide/svelte/icons/chevron-down';
+  import { slide } from 'svelte/transition';
   import * as m from '$lib/paraglide/messages';
   import { FormSelect, FormBooleanSelect, FormInput } from '$lib/components/drawer';
 
@@ -26,6 +28,7 @@
     controlOptions: SelectOption[];
     dccInterfaceOptions: SelectOption[];
     couplingSockeOptions: SelectOption[];
+    expandTechnical?: boolean;
   }
 
   let {
@@ -46,109 +49,160 @@
     featureFlagOptions,
     controlOptions,
     dccInterfaceOptions,
-    couplingSockeOptions
+    couplingSockeOptions,
+    expandTechnical = false
   }: Props = $props();
+
+  let technicalOpen = $state(false);
+  let controlOpen = $state(false);
+  let couplingOpen = $state(false);
+
+  $effect(() => {
+    if (expandTechnical) technicalOpen = true;
+  });
 </script>
 
 <!-- ── Technical section ───────────────────────────────────────── -->
-<div class="rounded-sm border border-border bg-card p-4">
-  <section>
-    <p class="mb-3 font-bebas text-sm tracking-widest text-muted-foreground uppercase">
+<div class="overflow-hidden rounded-sm border border-border bg-card">
+  <button
+    type="button"
+    onclick={() => (technicalOpen = !technicalOpen)}
+    class="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-white/5"
+  >
+    <span class="font-bebas text-sm tracking-widest text-muted-foreground uppercase">
       {m.specs_drawer_section_technical()}
-    </p>
-    <div class="grid grid-cols-2 gap-3">
-      <FormBooleanSelect
-        id="drawer-flywheel"
-        label={m.specs_drawer_field_flywheel()}
-        bind:value={flywheelFitted}
-      />
-      <FormSelect
-        id="drawer-body-shell"
-        label={m.specs_drawer_field_body_material()}
-        options={bodyShellOptions}
-        bind:value={bodyShell}
-      />
-      <FormSelect
-        id="drawer-chassis"
-        label={m.specs_drawer_field_chassis_material()}
-        options={chassisOptions}
-        bind:value={chassis}
-      />
-      <FormSelect
-        id="drawer-interior-lights"
-        label="{m.specs_drawer_field_lighting()} (interior)"
-        options={featureFlagOptions}
-        bind:value={interiorLights}
-      />
-      <FormSelect
-        id="drawer-lights"
-        label="{m.specs_drawer_field_lighting()} (headlights)"
-        options={featureFlagOptions}
-        bind:value={lights}
-      />
-      <FormBooleanSelect
-        id="drawer-sprung-buffers"
-        label={m.specs_drawer_field_sprung_buffers()}
-        bind:value={sprungBuffers}
-      />
-      <FormInput
-        id="drawer-length-mm"
-        label="{m.rolling_stock_field_length()} (mm)"
-        type="number"
-        min={0}
-        class="font-mono"
-        bind:value={lengthMm}
-      />
+    </span>
+    <ChevronDown
+      size={14}
+      class="text-muted-foreground transition-transform duration-200 {technicalOpen
+        ? 'rotate-180'
+        : ''}"
+    />
+  </button>
+  {#if technicalOpen}
+    <div class="px-4 pb-4" transition:slide={{ duration: 200 }}>
+      <div class="grid grid-cols-2 gap-3">
+        <FormBooleanSelect
+          id="drawer-flywheel"
+          label={m.specs_drawer_field_flywheel()}
+          bind:value={flywheelFitted}
+        />
+        <FormSelect
+          id="drawer-body-shell"
+          label={m.specs_drawer_field_body_material()}
+          options={bodyShellOptions}
+          bind:value={bodyShell}
+        />
+        <FormSelect
+          id="drawer-chassis"
+          label={m.specs_drawer_field_chassis_material()}
+          options={chassisOptions}
+          bind:value={chassis}
+        />
+        <FormSelect
+          id="drawer-interior-lights"
+          label="{m.specs_drawer_field_lighting()} (interior)"
+          options={featureFlagOptions}
+          bind:value={interiorLights}
+        />
+        <FormSelect
+          id="drawer-lights"
+          label="{m.specs_drawer_field_lighting()} (headlights)"
+          options={featureFlagOptions}
+          bind:value={lights}
+        />
+        <FormBooleanSelect
+          id="drawer-sprung-buffers"
+          label={m.specs_drawer_field_sprung_buffers()}
+          bind:value={sprungBuffers}
+        />
+        <FormInput
+          id="drawer-length-mm"
+          label="{m.rolling_stock_field_length()} (mm)"
+          type="number"
+          min={0}
+          class="font-mono"
+          bind:value={lengthMm}
+        />
+      </div>
     </div>
-  </section>
+  {/if}
 </div>
 
 <!-- ── Control section ────────────────────────────────────────── -->
-<div class="rounded-sm border border-border bg-card p-4">
-  <section>
-    <p class="mb-3 font-bebas text-sm tracking-widest text-muted-foreground uppercase">
+<div class="overflow-hidden rounded-sm border border-border bg-card">
+  <button
+    type="button"
+    onclick={() => (controlOpen = !controlOpen)}
+    class="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-white/5"
+  >
+    <span class="font-bebas text-sm tracking-widest text-muted-foreground uppercase">
       {m.specs_drawer_section_control()}
-    </p>
-    <div class="grid grid-cols-2 gap-3">
-      <FormSelect
-        id="drawer-control"
-        label={m.specs_drawer_field_control_type()}
-        options={controlOptions}
-        bind:value={control}
-      />
-      <FormSelect
-        id="drawer-dcc-interface"
-        label={m.specs_drawer_field_dcc_interface()}
-        options={dccInterfaceOptions}
-        bind:value={dccInterface}
-      />
+    </span>
+    <ChevronDown
+      size={14}
+      class="text-muted-foreground transition-transform duration-200 {controlOpen
+        ? 'rotate-180'
+        : ''}"
+    />
+  </button>
+  {#if controlOpen}
+    <div class="px-4 pb-4" transition:slide={{ duration: 200 }}>
+      <div class="grid grid-cols-2 gap-3">
+        <FormSelect
+          id="drawer-control"
+          label={m.specs_drawer_field_control_type()}
+          options={controlOptions}
+          bind:value={control}
+        />
+        <FormSelect
+          id="drawer-dcc-interface"
+          label={m.specs_drawer_field_dcc_interface()}
+          options={dccInterfaceOptions}
+          bind:value={dccInterface}
+        />
+      </div>
     </div>
-  </section>
+  {/if}
 </div>
 
 <!-- ── Coupling section ───────────────────────────────────────── -->
-<div class="rounded-sm border border-border bg-card p-4">
-  <section>
-    <p class="mb-3 font-bebas text-sm tracking-widest text-muted-foreground uppercase">
+<div class="overflow-hidden rounded-sm border border-border bg-card">
+  <button
+    type="button"
+    onclick={() => (couplingOpen = !couplingOpen)}
+    class="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-white/5"
+  >
+    <span class="font-bebas text-sm tracking-widest text-muted-foreground uppercase">
       {m.specs_drawer_section_coupling()}
-    </p>
-    <div class="grid grid-cols-2 gap-3">
-      <FormSelect
-        id="drawer-coupling-socket"
-        label={m.specs_drawer_field_coupling_socket()}
-        options={couplingSockeOptions}
-        bind:value={couplingSocket}
-      />
-      <FormBooleanSelect
-        id="drawer-close-couplers"
-        label={m.specs_drawer_field_close_coupling()}
-        bind:value={closeCouplers}
-      />
-      <FormBooleanSelect
-        id="drawer-digital-shunting"
-        label={m.specs_drawer_field_digital_shunting()}
-        bind:value={digitalShunting}
-      />
+    </span>
+    <ChevronDown
+      size={14}
+      class="text-muted-foreground transition-transform duration-200 {couplingOpen
+        ? 'rotate-180'
+        : ''}"
+    />
+  </button>
+  {#if couplingOpen}
+    <div class="px-4 pb-4" transition:slide={{ duration: 200 }}>
+      <div class="grid grid-cols-2 gap-3">
+        <FormSelect
+          id="drawer-coupling-socket"
+          label={m.specs_drawer_field_coupling_socket()}
+          options={couplingSockeOptions}
+          bind:value={couplingSocket}
+        />
+        <FormBooleanSelect
+          id="drawer-close-couplers"
+          label={m.specs_drawer_field_close_coupling()}
+          bind:value={closeCouplers}
+        />
+        <FormBooleanSelect
+          id="drawer-digital-shunting"
+          label={m.specs_drawer_field_digital_shunting()}
+          bind:value={digitalShunting}
+        />
+      </div>
     </div>
-  </section>
+  {/if}
 </div>

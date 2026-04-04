@@ -85,6 +85,7 @@
   let isSaving = $state(false);
   let inlineError = $state<string | null>(null);
   let companyOptions = $state<{ value: string; label: string }[]>([]);
+  let expandTechnical = $state(false);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
@@ -211,6 +212,7 @@
   async function loadData() {
     isLoading = true;
     inlineError = null;
+    expandTechnical = false;
     try {
       const [modelResult, companiesResult] = await Promise.all([
         commands.getRailwayModelById(railwayModelId, getLocale()),
@@ -254,6 +256,7 @@
     form.railwayCompanyId = p.railway_company_id;
     form.seriesCode = p.series_code;
     form.friendlyName = p.friendly_name ?? '';
+    expandTechnical = true;
   }
 
   function handlePrototypeClear() {
@@ -394,6 +397,7 @@
         {controlOptions}
         {dccInterfaceOptions}
         {couplingSockeOptions}
+        {expandTechnical}
       />
     </div>
   {/if}
