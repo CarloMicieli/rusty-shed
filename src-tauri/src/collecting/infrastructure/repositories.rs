@@ -732,6 +732,31 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
         Ok(Some(collection))
     }
+
+    async fn add_owned_rolling_stock_for_collection_items(
+        &mut self,
+        railway_model_id: &RailwayModelId,
+        rolling_stock_id: &RollingStockId,
+    ) -> Result<(), DomainError> {
+        let collection_item_ids = database::find_collection_item_ids_by_railway_model(
+            &mut *self.executor,
+            railway_model_id,
+        )
+        .await?;
+
+        for collection_item_id in &collection_item_ids {
+            let owned_rs_id = OwnedRollingStockId::default();
+            self.insert_owned_rolling_stocks(
+                &owned_rs_id,
+                collection_item_id,
+                rolling_stock_id,
+                None,
+            )
+            .await?;
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]

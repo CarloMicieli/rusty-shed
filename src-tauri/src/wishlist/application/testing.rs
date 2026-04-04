@@ -151,6 +151,16 @@ impl<'a> CollectionRepository for CollectionRepoRef<'a> {
     async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError> {
         self.inner.update_item(input).await
     }
+
+    async fn add_owned_rolling_stock_for_collection_items(
+        &mut self,
+        railway_model_id: &crate::catalog::domain::railway_model::RailwayModelId,
+        rolling_stock_id: &crate::catalog::domain::railway_model::RollingStockId,
+    ) -> Result<(), DomainError> {
+        self.inner
+            .add_owned_rolling_stock_for_collection_items(railway_model_id, rolling_stock_id)
+            .await
+    }
 }
 
 /// Wrapper for railway model repository

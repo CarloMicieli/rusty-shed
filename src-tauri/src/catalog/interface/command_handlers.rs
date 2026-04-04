@@ -21,6 +21,7 @@ use crate::catalog::interface::{
     UpdateRollingStockSpecificationsArgs, UpdateRollingStockSubcategoryArgs,
     UpsertRailwayModelTranslationArgs,
 };
+use crate::collecting::domain::CollectionUowExt;
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -423,8 +424,16 @@ pub async fn add_rolling_stock_to_model(
         args.prototype_id,
     )?;
 
+    let railway_model_id = input.railway_model_id.clone();
     let mut unit_of_work = state.unit_of_work().await?;
     let rs_id = AddRollingStockToModel::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work
+        .collections_repository()
+        .add_owned_rolling_stock_for_collection_items(&railway_model_id, &rs_id)
+        .await
+        .map_err(CommandError::from)?;
+
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(rs_id)

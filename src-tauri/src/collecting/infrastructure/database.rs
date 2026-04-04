@@ -1,8 +1,9 @@
+use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::collecting::infrastructure::entities::{
     CollectionItemRow, CollectionRow, OwnedRollingStockRow, PurchaseInfoRow,
 };
 
-use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::{CollectionId, CollectionItemId};
 use crate::core::domain::domain_error::DomainError;
 
 /// Fetch a single collection row by id.
@@ -220,6 +221,25 @@ pub async fn get_purchase_infos(
         .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
     Ok(rows)
+}
+
+/// Fetch the IDs of active (non-removed) collection items that reference the given railway model.
+pub async fn find_collection_item_ids_by_railway_model(
+    conn: &mut sqlx::SqliteConnection,
+    railway_model_id: &RailwayModelId,
+) -> Result<Vec<CollectionItemId>, DomainError> {
+    let sql = r#"SELECT id
+   FROM collection_items
+   WHERE railway_model_id = ?1
+     AND removed_date IS NULL"#;
+
+    let ids = sqlx::query_scalar::<_, CollectionItemId>(sql)
+        .bind(railway_model_id.to_string())
+        .fetch_all(conn)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+
+    Ok(ids)
 }
 
 #[cfg(test)]

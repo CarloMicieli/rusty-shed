@@ -1,3 +1,4 @@
+use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::UpdateCollectionItemInput;
@@ -45,6 +46,18 @@ pub trait CollectionRepository: Send + Sync {
     /// Implementations should persist only the targeted field and keep
     /// collection metadata coherent after the mutation.
     async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError>;
+
+    /// Creates an `owned_rolling_stocks` row for every active collection item
+    /// that references `railway_model_id`.
+    ///
+    /// Called after a new rolling stock variant is added to a model that already
+    /// belongs to one or more collections, so that the ownership link is created
+    /// for every existing collection item automatically.
+    async fn add_owned_rolling_stock_for_collection_items(
+        &mut self,
+        railway_model_id: &RailwayModelId,
+        rolling_stock_id: &RollingStockId,
+    ) -> Result<(), DomainError>;
 }
 
 /// An extension trait that provides access to the `CollectionRepository`.
