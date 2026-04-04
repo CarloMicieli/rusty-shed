@@ -178,4 +178,13 @@ describe('RichTextToolbar - Button clicks', () => {
     const { getByRole } = render(RichTextToolbar, { props: { editor: null } });
     await expect(fireEvent.click(getByRole('button', { name: 'Bold' }))).resolves.not.toThrow();
   });
+
+  it('mousedown on toolbar container calls preventDefault to preserve editor focus', () => {
+    const mock = buildMockEditor();
+    const { container } = render(RichTextToolbar, { props: { editor: asEditor(mock) } });
+    const toolbar = container.firstElementChild as HTMLElement;
+    const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    toolbar.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });

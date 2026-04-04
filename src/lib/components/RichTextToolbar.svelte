@@ -12,7 +12,12 @@
   let isOrdered = $derived(editor?.isActive('orderedList') ?? false);
 </script>
 
-<div class="flex items-center gap-1 border-b border-border/40 px-2 py-1">
+<div
+  role="toolbar"
+  tabindex="-1"
+  class="flex items-center gap-1 border-b border-border/40 px-2 py-1"
+  onmousedown={(e) => e.preventDefault()}
+>
   <Button
     variant={isBold ? 'secondary' : 'ghost'}
     size="icon"
