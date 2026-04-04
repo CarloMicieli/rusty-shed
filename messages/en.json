@@ -967,6 +967,7 @@
   "specs_drawer_field_coupling_socket": "Coupling Socket",
   "specs_drawer_field_close_coupling": "Close Coupling",
   "specs_drawer_field_digital_shunting": "Digital Shunting",
+  "specs_drawer_field_is_dummy": "Dummy Unit",
   "specs_drawer_save": "Save",
   "specs_drawer_cancel": "Cancel",
   "specs_drawer_unsaved_title": "Discard changes?",

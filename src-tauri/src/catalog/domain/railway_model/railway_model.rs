@@ -689,6 +689,7 @@ mod tests {
             coupling_socket: None,
             close_couplers: None,
             digital_shunting: None,
+            is_dummy: None,
         };
 
         let result = model.update_rolling_stock_specifications(&rs_id, spec);
@@ -729,6 +730,7 @@ mod tests {
             coupling_socket: None,
             close_couplers: None,
             digital_shunting: None,
+            is_dummy: None,
         };
 
         let result = model.update_rolling_stock_specifications(&rs_id, spec);
@@ -760,6 +762,7 @@ mod tests {
             coupling_socket: None,
             close_couplers: None,
             digital_shunting: None,
+            is_dummy: None,
         };
 
         let result = model.update_rolling_stock_specifications(&rs_id, spec);

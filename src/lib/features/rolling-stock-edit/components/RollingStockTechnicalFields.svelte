@@ -24,6 +24,8 @@
     couplingSocket: string;
     closeCouplers?: FeatureFlag | null;
     digitalShunting?: FeatureFlag | null;
+    isDummy?: FeatureFlag | null;
+    category?: string | null;
     lengthMm?: number | null;
     bodyShellOptions: SelectOption[];
     chassisOptions: SelectOption[];
@@ -47,6 +49,8 @@
     couplingSocket = $bindable(),
     closeCouplers = $bindable<FeatureFlag | null>(null),
     digitalShunting = $bindable<FeatureFlag | null>(null),
+    isDummy = $bindable<FeatureFlag | null>(null),
+    category = null,
     lengthMm = $bindable<number | null>(null),
     bodyShellOptions,
     chassisOptions,
@@ -70,6 +74,18 @@
 
   $effect(() => {
     if (expandTechnical) technicalOpen = true;
+  });
+
+  const isPoweredUnit = $derived(
+    category === 'LOCOMOTIVE' || category === 'ELECTRIC_MULTIPLE_UNIT' || category === 'RAILCAR'
+  );
+
+  $effect(() => {
+    if (!isPoweredUnit && isDummy !== 'NOT_APPLICABLE') {
+      setTimeout(() => {
+        isDummy = 'NOT_APPLICABLE';
+      }, 150);
+    }
   });
 </script>
 
@@ -170,6 +186,14 @@
           options={dccInterfaceOptions}
           bind:value={dccInterface}
         />
+        <div class="col-span-1 mt-1">
+          <FeatureFlagSwitch
+            id="drawer-is-dummy"
+            label={m.specs_drawer_field_is_dummy()}
+            bind:value={isDummy}
+            disabled={!isPoweredUnit}
+          />
+        </div>
       </div>
     </div>
   {/if}

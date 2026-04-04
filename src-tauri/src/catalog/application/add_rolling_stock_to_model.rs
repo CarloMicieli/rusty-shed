@@ -39,6 +39,7 @@ pub struct AddRollingStockToModelInput {
     pub friendly_name: Option<String>,
     /// Optional prototype this rolling stock is linked to.
     pub prototype_id: Option<String>,
+    pub is_dummy: Option<bool>,
 }
 
 /// Use case that adds a new rolling stock variant to an existing [`RailwayModel`] aggregate.
@@ -118,7 +119,7 @@ fn build_params(input: AddRollingStockToModelInput) -> RollingStockParams {
                 locomotive_type,
                 dcc_interface: input.dcc_interface,
                 control: input.control,
-                is_dummy: false,
+                is_dummy: input.is_dummy.unwrap_or(false),
                 length_over_buffers: None,
                 technical_specifications,
             }
@@ -143,7 +144,7 @@ fn build_params(input: AddRollingStockToModelInput) -> RollingStockParams {
                 electric_multiple_unit_type,
                 dcc_interface: input.dcc_interface,
                 control: input.control,
-                is_dummy: false,
+                is_dummy: input.is_dummy.unwrap_or(false),
                 length_over_buffers: None,
                 technical_specifications,
             }
@@ -168,7 +169,7 @@ fn build_params(input: AddRollingStockToModelInput) -> RollingStockParams {
                 railcar_type,
                 dcc_interface: input.dcc_interface,
                 control: input.control,
-                is_dummy: false,
+                is_dummy: input.is_dummy.unwrap_or(false),
                 length_over_buffers: None,
                 technical_specifications,
             }
@@ -234,6 +235,7 @@ pub fn parse_add_rolling_stock_args(
     sub_type: Option<String>,
     friendly_name: Option<String>,
     prototype_id: Option<String>,
+    is_dummy: Option<bool>,
 ) -> Result<AddRollingStockToModelInput, DomainError> {
     let mut ctx = ValidationContext::default();
 
@@ -274,6 +276,7 @@ pub fn parse_add_rolling_stock_args(
         sub_type: sub_type.filter(|s| !s.is_empty()),
         friendly_name: friendly_name.filter(|s| !s.is_empty()),
         prototype_id: prototype_id.filter(|s| !s.is_empty()),
+        is_dummy,
     })
 }
 
@@ -331,6 +334,7 @@ mod tests {
             sub_type: None,
             friendly_name: None,
             prototype_id: None,
+            is_dummy: None,
         }
     }
 
@@ -433,6 +437,7 @@ mod tests {
             "trn:railway-company:fs".to_string(),
             "LOCOMOTIVE".to_string(),
             "".to_string(),
+            None,
             None,
             None,
             None,

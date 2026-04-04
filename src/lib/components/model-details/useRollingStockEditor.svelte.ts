@@ -26,6 +26,7 @@ export interface RsFormState {
   subcategory: string | null;
   serviceLevel: string | null;
   subcategoryFlashed: boolean;
+  isDummy: boolean | null;
 }
 
 function getEmptyRsForm(): RsFormState {
@@ -50,7 +51,8 @@ function getEmptyRsForm(): RsFormState {
     category: null,
     subcategory: null,
     serviceLevel: null,
-    subcategoryFlashed: false
+    subcategoryFlashed: false,
+    isDummy: null
   };
 }
 
@@ -121,7 +123,8 @@ function extractRsDataFromView(view: RollingStockView): RsFormState {
     category,
     subcategory,
     serviceLevel,
-    subcategoryFlashed: false
+    subcategoryFlashed: false,
+    isDummy: 'is_dummy' in rs ? (rs.is_dummy as boolean) : null
   };
 }
 
@@ -266,7 +269,8 @@ export function useRollingStockEditor(
       >[0]['control'],
       couplingSocket: form.couplingSocket || null,
       closeCouplers: form.closeCouplers,
-      digitalShunting: form.digitalShunting
+      digitalShunting: form.digitalShunting,
+      isDummy: form.isDummy
     });
 
     if (result.status === 'error') throw new Error('Failed to save');
@@ -304,7 +308,8 @@ export function useRollingStockEditor(
       >[0]['control'],
       couplingSocket: form.couplingSocket || null,
       closeCouplers: form.closeCouplers,
-      digitalShunting: form.digitalShunting
+      digitalShunting: form.digitalShunting,
+      isDummy: form.isDummy
     });
 
     if (result.status === 'error') throw new Error('Failed to save');

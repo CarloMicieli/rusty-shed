@@ -53,6 +53,8 @@ pub struct RollingStockSpecPatch {
     pub close_couplers: Option<FeatureFlag>,
     /// Optional digital shunting flag.
     pub digital_shunting: Option<FeatureFlag>,
+    /// Optional dummy unit flag.
+    pub is_dummy: Option<bool>,
 }
 
 /// A focused patch for control type, DCC interface, and length — applied without
@@ -486,6 +488,7 @@ impl RollingStock {
                 technical_specifications: ts,
                 dcc_interface: di,
                 control: ct,
+                is_dummy: id,
                 ..
             } => {
                 *sc = spec.series_code.clone();
@@ -497,6 +500,9 @@ impl RollingStock {
                 *ts = Some(tech_specs);
                 *di = spec.dcc_interface;
                 *ct = spec.control;
+                if let Some(dummy) = spec.is_dummy {
+                    *id = dummy;
+                }
             }
             RollingStock::ElectricMultipleUnit {
                 series_code: sc,
@@ -508,6 +514,7 @@ impl RollingStock {
                 technical_specifications: ts,
                 dcc_interface: di,
                 control: ct,
+                is_dummy: id,
                 ..
             } => {
                 *sc = spec.series_code.clone();
@@ -519,6 +526,9 @@ impl RollingStock {
                 *ts = Some(tech_specs);
                 *di = spec.dcc_interface;
                 *ct = spec.control;
+                if let Some(dummy) = spec.is_dummy {
+                    *id = dummy;
+                }
             }
             RollingStock::Railcar {
                 series_code: sc,
@@ -530,6 +540,7 @@ impl RollingStock {
                 technical_specifications: ts,
                 dcc_interface: di,
                 control: ct,
+                is_dummy: id,
                 ..
             } => {
                 *sc = spec.series_code.clone();
@@ -541,6 +552,9 @@ impl RollingStock {
                 *ts = Some(tech_specs);
                 *di = spec.dcc_interface;
                 *ct = spec.control;
+                if let Some(dummy) = spec.is_dummy {
+                    *id = dummy;
+                }
             }
             RollingStock::FreightCar {
                 series_code: sc,
@@ -592,6 +606,7 @@ impl RollingStock {
             "coupling_socket": spec.coupling_socket.map(|s| s.to_string()),
             "close_couplers": spec.close_couplers.map(|f| f.to_string()),
             "digital_shunting": spec.digital_shunting.map(|f| f.to_string()),
+            "is_dummy": spec.is_dummy,
         })
     }
 

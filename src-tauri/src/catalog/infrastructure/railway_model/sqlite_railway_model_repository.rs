@@ -188,9 +188,13 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             let sprung_buffers = map.get("sprung_buffers").and_then(|v| v.as_str());
             let dcc_interface = map.get("dcc_interface").and_then(|v| v.as_str());
             let control = map.get("control").and_then(|v| v.as_str());
-            let coupling_socket = map.get("coupling_socket").and_then(|v| v.as_str());
-            let close_couplers = map.get("close_couplers").and_then(|v| v.as_str());
+            let coupling_socket = map.get("coupling_socket").and_then(|s| s.as_str());
+            let close_couplers = map.get("close_couplers").and_then(|s| s.as_str());
             let digital_shunting = map.get("digital_shunting").and_then(|v| v.as_str());
+            let is_dummy = map
+                .get("is_dummy")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
 
             sqlx::query(
                 r#"
@@ -211,8 +215,9 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                     control = ?14,
                     technical_coupling_socket = ?15,
                     technical_coupling_close_couplers = ?16,
-                    technical_coupling_digital_shunting = ?17
-                WHERE id = ?18
+                    technical_coupling_digital_shunting = ?17,
+                    is_dummy = ?18
+                WHERE id = ?19
             "#,
             )
             .bind(series_code)
@@ -232,6 +237,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             .bind(coupling_socket)
             .bind(close_couplers)
             .bind(digital_shunting)
+            .bind(is_dummy)
             .bind(rolling_stock_id)
             .execute(&mut *self.executor)
             .await
@@ -1583,6 +1589,58 @@ mod tests {
         assert_eq!(is_dummy, 1);
         assert_eq!(dcc_interface, Some("NEM_651".to_string()));
         assert_eq!(control, Some("DCC_READY".to_string()));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../../fixtures/test_railway_model.sql")
+    )]
+    async fn it_should_update_is_dummy_through_spec_patch(pool: sqlx::SqlitePool) {
+        let railway_model_id =
+            RailwayModelId::try_from(TEST_RAILWAY_MODEL_ID).expect("should parse railway model id");
+        let mut conn = pool.acquire().await.expect("should acquire connection");
+
+        let rs_id = RollingStockId::default();
+        let params = RollingStockParams::LocomotiveParams {
+            railway_company_id: RailwayCompanyId::try_from("trn:railway-company:fs").unwrap(),
+            livery: Some("Blue".to_string()),
+            length_over_buffers: None,
+            technical_specifications: None,
+            friendly_name: "Blue Loco".to_string(),
+            series_code: Some("SC".to_string()),
+            road_number: "RN100".to_string(),
+            series: Some("S1".to_string()),
+            depot: Some("Depot".to_string()),
+            locomotive_type: LocomotiveType::DieselLocomotive,
+            dcc_interface: Some(DccInterface::Nem652),
+            control: Some(Control::DccReady),
+            is_dummy: false,
+        };
+
+        let mut repo = SqliteRailwayModelRepository::new(&mut conn);
+        repo.insert_rolling_stock(&rs_id, &railway_model_id, &params)
+            .await
+            .expect("should insert rolling stock");
+
+        // Apply a patch that changes is_dummy to true
+        let patch = serde_json::json!({
+            "series_code": "SC-NEW",
+            "flywheel_fitted": "NOT_APPLICABLE",
+            "is_dummy": true
+        });
+
+        repo.update_rolling_stock_from_patch(&rs_id, &patch)
+            .await
+            .expect("should apply patch");
+
+        let row = sqlx::query("SELECT is_dummy FROM rolling_stocks WHERE id = ?1")
+            .bind(&rs_id)
+            .fetch_one(&mut *conn)
+            .await
+            .expect("should fetch updated row");
+
+        let is_dummy: i64 = row.get("is_dummy");
+        assert_eq!(is_dummy, 1, "is_dummy should be persisted as 1 (true)");
     }
 }
 

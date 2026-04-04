@@ -927,6 +927,7 @@
   "specs_drawer_field_coupling_socket": "Presa Aggancio",
   "specs_drawer_field_close_coupling": "Aggancio Ravvicinato",
   "specs_drawer_field_digital_shunting": "Manovra Digitale",
+  "specs_drawer_field_is_dummy": "Unità Dummy",
   "specs_drawer_save": "Salva",
   "specs_drawer_cancel": "Annulla",
   "specs_drawer_unsaved_title": "Scartare le modifiche?",

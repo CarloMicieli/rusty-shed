@@ -421,6 +421,7 @@ pub async fn add_rolling_stock_to_model(
         args.sub_type,
         args.friendly_name,
         args.prototype_id,
+        args.is_dummy,
     )?;
 
     let railway_model_id = input.railway_model_id.clone();

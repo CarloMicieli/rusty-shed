@@ -45,6 +45,7 @@
   let localControl = $state<Control | null>(null);
   let localDccInterface = $state<DccInterface | null>(null);
   let localCategory = $state<RollingStockCategory | null>(null);
+  let localIsDummy = $state(false);
   let localLengthMm = $state('');
   let localLengthInches = $state('');
 
@@ -161,18 +162,23 @@
     if ('locomotive' in rsView && rsView.locomotive) {
       localPrototypeSeries = rsView.locomotive.series ?? null;
       localFriendlyName = rsView.locomotive.friendly_name ?? null;
+      localIsDummy = rsView.locomotive.is_dummy;
     } else if ('electricMultipleUnit' in rsView && rsView.electricMultipleUnit) {
       localPrototypeSeries = rsView.electricMultipleUnit.series ?? null;
       localFriendlyName = rsView.electricMultipleUnit.friendly_name ?? null;
+      localIsDummy = rsView.electricMultipleUnit.is_dummy;
     } else if ('freightCar' in rsView && rsView.freightCar) {
       localPrototypeSeries = null;
       localFriendlyName = rsView.freightCar.friendly_name ?? null;
+      localIsDummy = false;
     } else if ('passengerCar' in rsView && rsView.passengerCar) {
       localPrototypeSeries = rsView.passengerCar.series ?? null;
       localFriendlyName = rsView.passengerCar.friendly_name ?? null;
+      localIsDummy = false;
     } else if ('railcar' in rsView && rsView.railcar) {
       localPrototypeSeries = rsView.railcar.series ?? null;
       localFriendlyName = rsView.railcar.friendly_name ?? null;
+      localIsDummy = rsView.railcar.is_dummy;
     }
 
     let ts: TechnicalSpecifications | null = null;
@@ -334,7 +340,8 @@
       control: localControl,
       couplingSocket: localCouplingSocket || null,
       closeCouplers: featureFlagToBool(localCloseCouplers),
-      digitalShunting: featureFlagToBool(localDigitalShunting)
+      digitalShunting: featureFlagToBool(localDigitalShunting),
+      isDummy: localIsDummy
     });
     if (result.status === 'error') throw new Error('Failed to save specifications');
   }

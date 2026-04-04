@@ -144,6 +144,7 @@ mod tests {
                     coupling_socket: None,
                     close_couplers: None,
                     digital_shunting: None,
+                    is_dummy: None,
                 },
             },
         )
@@ -192,6 +193,7 @@ mod tests {
                     coupling_socket: None,
                     close_couplers: None,
                     digital_shunting: None,
+                    is_dummy: None,
                 },
             },
         )

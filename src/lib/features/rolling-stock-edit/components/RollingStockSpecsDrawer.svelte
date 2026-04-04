@@ -69,6 +69,7 @@
     digitalShunting: FeatureFlag;
     selectedCouplerTypeId: string | null;
     lengthMm: number | null;
+    isDummy: FeatureFlag;
   }
 
   const emptyForm: FormState = {
@@ -92,7 +93,8 @@
     closeCouplers: 'NOT_APPLICABLE',
     digitalShunting: 'NOT_APPLICABLE',
     selectedCouplerTypeId: null,
-    lengthMm: null
+    lengthMm: null,
+    isDummy: 'NOT_APPLICABLE'
   };
 
   let form = $state<FormState>({ ...emptyForm });
@@ -216,7 +218,8 @@
       closeCouplers: ts?.coupling?.close_couplers ?? 'NOT_APPLICABLE',
       digitalShunting: ts?.coupling?.digital_shunting ?? 'NOT_APPLICABLE',
       selectedCouplerTypeId: null,
-      lengthMm: lob?.millimeters ? Number(lob.millimeters) : null
+      lengthMm: lob?.millimeters ? Number(lob.millimeters) : null,
+      isDummy: 'is_dummy' in rs ? (rs.is_dummy ? 'YES' : 'NO') : 'NOT_APPLICABLE'
     };
   }
 
@@ -318,7 +321,8 @@
         closeCouplers:
           form.closeCouplers === 'YES' ? true : form.closeCouplers === 'NO' ? false : null,
         digitalShunting:
-          form.digitalShunting === 'YES' ? true : form.digitalShunting === 'NO' ? false : null
+          form.digitalShunting === 'YES' ? true : form.digitalShunting === 'NO' ? false : null,
+        isDummy: form.isDummy === 'YES' ? true : form.isDummy === 'NO' ? false : null
       });
 
       if (result.status === 'error') {
@@ -429,8 +433,9 @@
         bind:couplingSocket={form.couplingSocket}
         bind:closeCouplers={form.closeCouplers}
         bind:digitalShunting={form.digitalShunting}
-        bind:selectedCouplerTypeId={form.selectedCouplerTypeId}
+        bind:isDummy={form.isDummy}
         bind:lengthMm={form.lengthMm}
+        category={form.category}
         {bodyShellOptions}
         {chassisOptions}
         {controlOptions}

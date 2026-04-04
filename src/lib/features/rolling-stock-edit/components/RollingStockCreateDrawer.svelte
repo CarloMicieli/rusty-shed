@@ -66,7 +66,8 @@
       lights: 'NOT_APPLICABLE' as FeatureFlag,
       digitalShunting: 'NOT_APPLICABLE' as FeatureFlag,
       lengthMm: null as number | null,
-      selectedCouplerTypeId: null as string | null
+      selectedCouplerTypeId: null as string | null,
+      isDummy: 'NOT_APPLICABLE' as FeatureFlag
     }),
     validate: (v) => ({
       seriesCode: !v.seriesCode.trim() ? m.error_required() : undefined,
@@ -198,6 +199,7 @@
       p.electric_multiple_unit_type ??
       '';
     if (subType) f.values.subType = subType;
+    f.values.isDummy = p.default_is_dummy ? 'YES' : 'NO';
     expandTechnical = true;
   }
 
@@ -232,8 +234,9 @@
               : null
           : null,
         subType: f.values.subType || null,
-        prototypeId: f.values.prototypeId || null
-      });
+        prototypeId: f.values.prototypeId || null,
+        isDummy: f.values.isDummy === 'YES' ? true : f.values.isDummy === 'NO' ? false : null
+      } as Parameters<typeof commands.addRollingStockToModel>[0]);
 
       if (result.status === 'error') {
         inlineError = m.rolling_stock_create_error();
@@ -297,7 +300,8 @@
               ? true
               : f.values.digitalShunting === 'NO'
                 ? false
-                : null
+                : null,
+          isDummy: f.values.isDummy === 'YES' ? true : f.values.isDummy === 'NO' ? false : null
         });
         if (specsResult.status === 'error') {
           inlineError = m.rolling_stock_create_error();
@@ -409,6 +413,7 @@
       bind:couplingSocket={f.values.couplingSocket}
       bind:closeCouplers={f.values.closeCouplers}
       bind:digitalShunting={f.values.digitalShunting}
+      bind:isDummy={f.values.isDummy}
       bind:lengthMm={f.values.lengthMm}
       {bodyShellOptions}
       {chassisOptions}
@@ -418,6 +423,7 @@
       {filteredCouplers}
       bind:selectedCouplerTypeId={f.values.selectedCouplerTypeId}
       {expandTechnical}
+      category={f.values.category}
     />
   </div>
 

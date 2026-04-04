@@ -1431,6 +1431,7 @@ export type AddRollingStockToModelArgs = {
 	friendlyName: string | null,
 	// Optional prototype this rolling stock is linked to (TRN string).
 	prototypeId: string | null,
+	isDummy: boolean | null,
 };
 
 // Arguments structure for adding an item to a wishlist.
@@ -5080,6 +5081,7 @@ export type UpdateRollingStockSpecificationsArgs = {
 	couplingSocket: string | null,
 	closeCouplers: boolean | null,
 	digitalShunting: boolean | null,
+	isDummy: boolean | null,
 };
 
 // Arguments for changing the subcategory (type field) of a rolling stock unit.

@@ -1178,6 +1178,7 @@ pub struct UpdateRollingStockSpecificationsArgs {
     pub coupling_socket: Option<String>,
     pub close_couplers: Option<bool>,
     pub digital_shunting: Option<bool>,
+    pub is_dummy: Option<bool>,
 }
 
 impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecificationsInput {
@@ -1225,6 +1226,7 @@ impl TryFrom<UpdateRollingStockSpecificationsArgs> for UpdateRollingStockSpecifi
                 )?,
                 close_couplers: bool_to_flag(args.close_couplers),
                 digital_shunting: bool_to_flag(args.digital_shunting),
+                is_dummy: args.is_dummy,
             },
         })
     }
@@ -1332,6 +1334,7 @@ pub struct AddRollingStockToModelArgs {
 
     /// Optional prototype this rolling stock is linked to (TRN string).
     pub prototype_id: Option<String>,
+    pub is_dummy: Option<bool>,
 }
 
 // ---------------------------------------------------------------------------
