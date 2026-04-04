@@ -14,6 +14,7 @@
     type RollingStockId
   } from '$lib/bindings';
   import { onMount } from 'svelte';
+  import type { SelectOption } from '$lib/components/SearchableSelect.svelte';
   import RollingStockPrototypeSection from './RollingStockPrototypeSection.svelte';
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import {
@@ -81,7 +82,7 @@
   let expandTechnical = $state(false);
 
   // ── Company + coupler options ─────────────────────────────────────────────────
-  let companyOptions = $state<{ value: string; label: string }[]>([]);
+  let companyOptions = $state<SelectOption[]>([]);
   let allCouplers = $state<CouplerType[]>([]);
 
   onMount(async () => {
@@ -90,7 +91,12 @@
       commands.getCouplerTypes(null)
     ]);
     if (companiesResult.status === 'ok') {
-      companyOptions = companiesResult.data.map((c) => ({ value: c.id, label: c.name }));
+      companyOptions = companiesResult.data.map((c) => ({
+        value: c.id,
+        label: c.name,
+        countryCode: c.countryCode,
+        registeredCompanyName: c.registeredCompanyName
+      }));
     }
     if (couplersResult.status === 'ok') {
       allCouplers = couplersResult.data;
@@ -115,6 +121,10 @@
   );
 
   const hasSubTypes = $derived(subTypeOptions.length > 0);
+
+  const isFormValid = $derived(
+    !!f.values.seriesCode.trim() && !!f.values.railwayCompanyId && !!f.values.category
+  );
 
   const filteredCouplers = $derived(
     f.values.couplingSocket
@@ -434,7 +444,7 @@
       onCancel={requestClose}
       onSubmit={handleSave}
       submitting={isSaving}
-      disabled={!f.isValid}
+      disabled={!isFormValid}
     />
   {/snippet}
 </DrawerShell>
