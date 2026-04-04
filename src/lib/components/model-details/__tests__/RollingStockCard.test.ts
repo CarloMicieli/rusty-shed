@@ -154,7 +154,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       // Should now show expanded content
@@ -170,7 +170,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
 
       // Expand
       await fireEvent.click(button);
@@ -189,7 +189,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
 
       // Initially collapsed - should have ChevronDown
       expect(container.querySelector('svg')).toBeInTheDocument();
@@ -211,7 +211,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       // Check field labels present in the 5×3 grid
@@ -234,7 +234,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       expect(screen.getByText('Digital Setup')).toBeInTheDocument();
@@ -251,7 +251,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       expect(screen.getByText('Test notes')).toBeInTheDocument();
@@ -278,7 +278,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       // Labels always render (US1: fields show "—" instead of being hidden)
@@ -299,7 +299,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       expect(button).toBeInTheDocument();
     });
 
@@ -311,7 +311,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       expect(button).toHaveAttribute('aria-expanded', 'false');
 
       await fireEvent.click(button);
@@ -326,7 +326,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
 
       // Simulate Enter key press
       await fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' });
@@ -343,7 +343,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       // Find the footer grid (grid-cols-3) not the header grid (grid-cols-[1fr_auto_1fr])
@@ -362,7 +362,7 @@ describe('RollingStockCard', () => {
         }
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole('button', { name: 'Expand' });
       await fireEvent.click(button);
 
       // Find the footer grid (grid-cols-3) not the header grid (grid-cols-[1fr_auto_1fr])

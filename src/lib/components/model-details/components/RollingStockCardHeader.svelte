@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronDown, ChevronUp, Settings } from 'lucide-svelte';
+  import { ChevronDown, Settings } from 'lucide-svelte';
   import { getFlag } from '$lib/utils/flags';
   import * as m from '$lib/paraglide/messages.js';
   import RollingStockCardHeaderShell from './RollingStockCardHeaderShell.svelte';
@@ -12,6 +12,7 @@
     category?: string | null;
     subcategory?: string | null;
     isExpanded: boolean;
+    isCollapsible?: boolean;
     editable?: boolean;
     onToggle: () => void;
     onEditSpecs?: () => void;
@@ -24,6 +25,7 @@
     category,
     subcategory,
     isExpanded,
+    isCollapsible = false,
     editable = false,
     onToggle,
     onEditSpecs
@@ -34,38 +36,36 @@
 </script>
 
 {#snippet collectionIdentity()}
-  <button
-    type="button"
-    class="group flex min-w-0 items-center gap-3 text-left transition-opacity hover:opacity-80"
-    aria-expanded={isExpanded}
-    onclick={onToggle}
-  >
-    <div class="flex items-center gap-2">
+  {#if isCollapsible}
+    <button
+      type="button"
+      class="flex min-w-0 items-center gap-2 text-left transition-opacity hover:opacity-80"
+      aria-expanded={isExpanded}
+      onclick={onToggle}
+    >
       <span class="text-lg leading-none" title={countryCode ?? ''}>
         {getFlag(countryCode)}
       </span>
-      <div class="flex flex-col">
-        <div class="flex items-center gap-2">
-          <span class="font-bebas tracking-widest text-muted-foreground uppercase">
-            {railwayName || '—'}
-          </span>
-          <span class="font-mono font-bold text-foreground">
-            {roadNumber || '—'}
-          </span>
-        </div>
-      </div>
+      <span class="font-bebas tracking-widest text-muted-foreground uppercase">
+        {railwayName || '—'}
+      </span>
+      <span class="font-mono font-bold text-foreground">
+        {roadNumber || '—'}
+      </span>
+    </button>
+  {:else}
+    <div class="flex min-w-0 items-center gap-2">
+      <span class="text-lg leading-none" title={countryCode ?? ''}>
+        {getFlag(countryCode)}
+      </span>
+      <span class="font-bebas tracking-widest text-muted-foreground uppercase">
+        {railwayName || '—'}
+      </span>
+      <span class="font-mono font-bold text-foreground">
+        {roadNumber || '—'}
+      </span>
     </div>
-
-    <div
-      class="flex h-5 w-5 items-center justify-center rounded-full border border-layout-border text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary"
-    >
-      {#if isExpanded}
-        <ChevronUp class="h-3 w-3" />
-      {:else}
-        <ChevronDown class="h-3 w-3" />
-      {/if}
-    </div>
-  </button>
+  {/if}
 {/snippet}
 
 {#snippet collectionClassification()}
@@ -81,7 +81,7 @@
 {/snippet}
 
 {#snippet collectionActions()}
-  <div class="flex justify-end">
+  <div class="flex items-center justify-end gap-2">
     {#if editable}
       <button
         type="button"
@@ -93,6 +93,22 @@
       >
         <Settings size={12} />
         {m.rolling_stock_edit_specs_button()}
+      </button>
+    {/if}
+    {#if isCollapsible}
+      <button
+        type="button"
+        class="flex items-center justify-center rounded-sm border border-border p-0.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        aria-expanded={isExpanded}
+        onclick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        aria-label={isExpanded ? 'Collapse' : 'Expand'}
+      >
+        <ChevronDown
+          class="h-4 w-4 transition-transform duration-300 {isExpanded ? 'rotate-180' : ''}"
+        />
       </button>
     {/if}
   </div>

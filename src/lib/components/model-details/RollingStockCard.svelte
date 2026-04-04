@@ -441,6 +441,7 @@
     category={localCategory}
     subcategory={rollingStock.subcategory}
     {isExpanded}
+    isCollapsible={true}
     {editable}
     onToggle={toggleExpand}
     onEditSpecs={() => {

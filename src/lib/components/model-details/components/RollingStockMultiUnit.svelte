@@ -75,31 +75,28 @@
       <AccordionPrimitive.Header
         class="border-b border-border bg-card px-3 py-2 data-[state=closed]:rounded-b-sm data-[state=closed]:border-b-transparent"
       >
-        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <AccordionPrimitive.Trigger
-            class="col-span-2 flex min-w-0 items-center gap-2 text-left outline-none [&[data-state=open]>div.chevron-wrap>svg]:rotate-180"
-          >
+        {@const isOpen = accordionValue === unit.id}
+        <div class="grid grid-cols-3 items-center gap-2">
+          <div class="flex min-w-0 items-center">
             <RollingStockIdentityCluster
               {unit}
               {editable}
               onSaveRoadNumber={(v) => onSaveIdentification(unit.id, 'roadNumber', v)}
             />
-            <div class="flex min-w-0 flex-1 justify-center">
-              <RollingStockClassificationCluster
-                {unit}
-                {editable}
-                {specLoaded}
-                {formState}
-                onSaveCategory={(c) => onSaveCategory(unit.id, c)}
-                onSaveSubcategory={(s) => onSaveSubcategory(unit.id, s)}
-              />
-            </div>
-            <div class="chevron-wrap shrink-0">
-              <ChevronDown class="size-4 text-muted-foreground transition-transform duration-200" />
-            </div>
-          </AccordionPrimitive.Trigger>
+          </div>
 
-          <div class="flex justify-end">
+          <div class="flex justify-center">
+            <RollingStockClassificationCluster
+              {unit}
+              {editable}
+              {specLoaded}
+              {formState}
+              onSaveCategory={(c) => onSaveCategory(unit.id, c)}
+              onSaveSubcategory={(s) => onSaveSubcategory(unit.id, s)}
+            />
+          </div>
+
+          <div class="flex items-center justify-end gap-2">
             {#if editable}
               <button
                 type="button"
@@ -112,6 +109,14 @@
                 {m.rolling_stock_edit_specs_button()}
               </button>
             {/if}
+            <AccordionPrimitive.Trigger
+              class="flex items-center justify-center rounded-sm border border-border p-0.5 text-muted-foreground transition-colors outline-none hover:border-primary hover:text-primary"
+              aria-label={isOpen ? 'Collapse' : 'Expand'}
+            >
+              <ChevronDown
+                class="h-4 w-4 transition-transform duration-300 {isOpen ? 'rotate-180' : ''}"
+              />
+            </AccordionPrimitive.Trigger>
           </div>
         </div>
       </AccordionPrimitive.Header>
