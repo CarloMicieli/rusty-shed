@@ -420,12 +420,10 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
     /// Inserts a new rolling stock into the database.
     async fn insert_rolling_stock(
         &mut self,
+        id: &RollingStockId,
         railway_model_id: &RailwayModelId,
         rolling_stock: &RollingStockParams,
     ) -> Result<(), DomainError> {
-        // Bind parameters and execute the insert command here...
-        let id = RollingStockId::from_uuid(&Uuid::new_v4());
-
         let (
             technical_coupling,
             technical_flywheel_fitted,
@@ -746,7 +744,9 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
         let railway_model_id = self.insert_railway_model(params).await?;
 
         for rs in params.rolling_stocks.iter() {
-            self.insert_rolling_stock(&railway_model_id, rs).await?;
+            let rs_id = RollingStockId::from_uuid(&Uuid::new_v4());
+            self.insert_rolling_stock(&rs_id, &railway_model_id, rs)
+                .await?;
         }
 
         Ok(railway_model_id)
@@ -942,7 +942,8 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     // Reuse existing helpers which bind to the repository's executor.
                     let _id = self.insert_railway_model(&params).await?;
                     for rs in params.rolling_stocks.iter() {
-                        self.insert_rolling_stock(&_id, rs).await?;
+                        let rs_id = RollingStockId::from_uuid(&Uuid::new_v4());
+                        self.insert_rolling_stock(&rs_id, &_id, rs).await?;
                     }
                 }
                 RailwayModelEvent::RailwayModelUpdated {
@@ -1065,12 +1066,18 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 }
                 RailwayModelEvent::RollingStockAdded {
                     railway_model_id,
+                    rolling_stock_id,
                     rolling_stock_params,
                     ..
                 } => {
-                    // Insert a new rolling stock for the given railway model.
-                    self.insert_rolling_stock(&railway_model_id, &rolling_stock_params)
-                        .await?;
+                    // Insert a new rolling stock for the given railway model using the
+                    // domain-assigned ID so callers can reference it after commit.
+                    self.insert_rolling_stock(
+                        &rolling_stock_id,
+                        &railway_model_id,
+                        &rolling_stock_params,
+                    )
+                    .await?;
                 }
                 RailwayModelEvent::RollingStockRemoved {
                     rolling_stock_id, ..
@@ -1306,7 +1313,9 @@ mod tests {
         };
 
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
-        let result = repo.insert_rolling_stock(&railway_model_id, &params).await;
+        let result = repo
+            .insert_rolling_stock(&RollingStockId::default(), &railway_model_id, &params)
+            .await;
 
         assert!(result.is_ok(), "should insert rolling stock without errors");
 
@@ -1363,7 +1372,9 @@ mod tests {
         };
 
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
-        let result = repo.insert_rolling_stock(&railway_model_id, &params).await;
+        let result = repo
+            .insert_rolling_stock(&RollingStockId::default(), &railway_model_id, &params)
+            .await;
 
         assert!(result.is_ok(), "should insert rolling stock without errors");
 
@@ -1415,7 +1426,9 @@ mod tests {
         };
 
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
-        let result = repo.insert_rolling_stock(&railway_model_id, &params).await;
+        let result = repo
+            .insert_rolling_stock(&RollingStockId::default(), &railway_model_id, &params)
+            .await;
 
         assert!(result.is_ok(), "should insert rolling stock without errors");
 
@@ -1472,7 +1485,9 @@ mod tests {
         };
 
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
-        let result = repo.insert_rolling_stock(&railway_model_id, &params).await;
+        let result = repo
+            .insert_rolling_stock(&RollingStockId::default(), &railway_model_id, &params)
+            .await;
 
         assert!(result.is_ok(), "should insert rolling stock without errors");
 
@@ -1533,7 +1548,9 @@ mod tests {
         };
 
         let mut repo = SqliteRailwayModelRepository::new(&mut conn);
-        let result = repo.insert_rolling_stock(&railway_model_id, &params).await;
+        let result = repo
+            .insert_rolling_stock(&RollingStockId::default(), &railway_model_id, &params)
+            .await;
 
         assert!(result.is_ok(), "should insert rolling stock without errors");
 
