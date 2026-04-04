@@ -3,6 +3,7 @@
   import type { RailwayModelId, RollingStockCategory } from '$lib/bindings';
   import BadgePicker from '$lib/components/BadgePicker.svelte';
   import InPlaceEdit from '$lib/components/InPlaceEdit.svelte';
+  import FeatureFlagSwitch from '$lib/components/FeatureFlagSwitch.svelte';
   import RollingStockSpecsDrawer from '$lib/features/rolling-stock-edit/components/RollingStockSpecsDrawer.svelte';
   import { Settings } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages';
@@ -303,19 +304,18 @@
         {m.rolling_stock_field_close_couplers()}
       </dt>
       <dd class="text-xs text-foreground">
-        {#if editable && specLoaded}
-          <input
-            type="checkbox"
-            class="accent-primary"
-            checked={formState?.closeCouplers ?? unit.close_couplers ?? false}
-            onchange={(e) =>
-              onSaveBoolSpec('closeCouplers', (e.target as HTMLInputElement).checked)}
-          />
-        {:else if editable}
-          <span class="text-xs text-muted-foreground italic">Loading…</span>
-        {:else}
-          {unit.close_couplers === true ? '✓' : unit.close_couplers === false ? '✗' : '—'}
-        {/if}
+        <FeatureFlagSwitch
+          label={m.rolling_stock_field_close_couplers()}
+          value={(formState?.closeCouplers ?? unit.close_couplers) === true
+            ? 'YES'
+            : (formState?.closeCouplers ?? unit.close_couplers) === false
+              ? 'NO'
+              : 'NOT_APPLICABLE'}
+          compact={true}
+          disabled={!editable || !specLoaded}
+          onUpdate={(v) =>
+            onSaveBoolSpec('closeCouplers', v === 'YES' ? true : v === 'NO' ? false : null)}
+        />
       </dd>
     </div>
     <div class="flex flex-col gap-0.5">
@@ -323,19 +323,18 @@
         {m.rolling_stock_field_digital_shunting()}
       </dt>
       <dd class="text-xs text-foreground">
-        {#if editable && specLoaded}
-          <input
-            type="checkbox"
-            class="accent-primary"
-            checked={formState?.digitalShunting ?? unit.digital_shunting ?? false}
-            onchange={(e) =>
-              onSaveBoolSpec('digitalShunting', (e.target as HTMLInputElement).checked)}
-          />
-        {:else if editable}
-          <span class="text-xs text-muted-foreground italic">Loading…</span>
-        {:else}
-          {unit.digital_shunting === true ? '✓' : unit.digital_shunting === false ? '✗' : '—'}
-        {/if}
+        <FeatureFlagSwitch
+          label={m.rolling_stock_field_digital_shunting()}
+          value={(formState?.digitalShunting ?? unit.digital_shunting) === true
+            ? 'YES'
+            : (formState?.digitalShunting ?? unit.digital_shunting) === false
+              ? 'NO'
+              : 'NOT_APPLICABLE'}
+          compact={true}
+          disabled={!editable || !specLoaded}
+          onUpdate={(v) =>
+            onSaveBoolSpec('digitalShunting', v === 'YES' ? true : v === 'NO' ? false : null)}
+        />
       </dd>
     </div>
     <div></div>

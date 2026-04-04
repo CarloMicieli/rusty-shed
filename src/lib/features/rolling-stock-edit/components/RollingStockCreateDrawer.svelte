@@ -7,6 +7,7 @@
     type Control,
     type CouplerType,
     type DccInterface,
+    type FeatureFlag,
     type PrototypeView,
     type RailwayModelId,
     type RollingStockCategory,
@@ -55,15 +56,15 @@
       control: '',
       dccInterface: '',
       couplingSocket: '',
-      closeCouplers: false,
+      closeCouplers: 'NOT_APPLICABLE' as FeatureFlag,
       subType: '',
-      flywheelFitted: null as boolean | null,
-      sprungBuffers: null as boolean | null,
+      flywheelFitted: 'NOT_APPLICABLE' as FeatureFlag,
+      sprungBuffers: 'NOT_APPLICABLE' as FeatureFlag,
       bodyShell: '',
       chassis: '',
-      interiorLights: '',
-      lights: '',
-      digitalShunting: null as boolean | null,
+      interiorLights: 'NOT_APPLICABLE' as FeatureFlag,
+      lights: 'NOT_APPLICABLE' as FeatureFlag,
+      digitalShunting: 'NOT_APPLICABLE' as FeatureFlag,
       lengthMm: null as number | null,
       selectedCouplerTypeId: null as string | null
     }),
@@ -150,12 +151,6 @@
     { value: 'METAL_DIE_CAST', label: 'Metal die-cast' }
   ];
 
-  const featureFlagOptions = [
-    { value: '', label: '—' },
-    { value: 'YES', label: 'Yes' },
-    { value: 'NO', label: 'No' }
-  ];
-
   const couplingSocketOptions = [
     { value: '', label: '—' },
     { value: 'NONE', label: 'None' },
@@ -229,7 +224,13 @@
         control: f.values.control || null,
         dccInterface: f.values.dccInterface || null,
         couplingSocket: f.values.couplingSocket || null,
-        closeCouplers: f.values.couplingSocket ? f.values.closeCouplers : null,
+        closeCouplers: f.values.couplingSocket
+          ? f.values.closeCouplers === 'YES'
+            ? true
+            : f.values.closeCouplers === 'NO'
+              ? false
+              : null
+          : null,
         subType: f.values.subType || null,
         prototypeId: f.values.prototypeId || null
       });
@@ -243,13 +244,13 @@
 
       // Save extended technical specs if any are filled
       const hasExtendedSpecs =
-        f.values.flywheelFitted !== null ||
-        f.values.sprungBuffers !== null ||
+        f.values.flywheelFitted !== 'NOT_APPLICABLE' ||
+        f.values.sprungBuffers !== 'NOT_APPLICABLE' ||
         f.values.bodyShell ||
         f.values.chassis ||
-        f.values.interiorLights ||
-        f.values.lights ||
-        f.values.digitalShunting !== null ||
+        f.values.interiorLights !== 'NOT_APPLICABLE' ||
+        f.values.lights !== 'NOT_APPLICABLE' ||
+        f.values.digitalShunting !== 'NOT_APPLICABLE' ||
         f.values.series;
 
       if (hasExtendedSpecs) {
@@ -262,17 +263,41 @@
           friendlyName: f.values.friendlyName || null,
           livery: f.values.livery || null,
           depot: f.values.depot || null,
-          flywheelFitted: f.values.flywheelFitted,
-          sprungBuffers: f.values.sprungBuffers,
+          flywheelFitted:
+            f.values.flywheelFitted === 'YES'
+              ? true
+              : f.values.flywheelFitted === 'NO'
+                ? false
+                : null,
+          sprungBuffers:
+            f.values.sprungBuffers === 'YES'
+              ? true
+              : f.values.sprungBuffers === 'NO'
+                ? false
+                : null,
           bodyShell: f.values.bodyShell || null,
           chassis: f.values.chassis || null,
-          interiorLights: f.values.interiorLights || null,
-          lights: f.values.lights || null,
+          interiorLights:
+            f.values.interiorLights === 'NOT_APPLICABLE'
+              ? null
+              : (f.values.interiorLights as string),
+          lights: f.values.lights === 'NOT_APPLICABLE' ? null : (f.values.lights as string),
           dccInterface: (f.values.dccInterface || null) as DccInterface | null,
           control: (f.values.control || null) as Control | null,
           couplingSocket: f.values.couplingSocket || null,
-          closeCouplers: f.values.couplingSocket ? f.values.closeCouplers : null,
-          digitalShunting: f.values.digitalShunting
+          closeCouplers: f.values.couplingSocket
+            ? f.values.closeCouplers === 'YES'
+              ? true
+              : f.values.closeCouplers === 'NO'
+                ? false
+                : null
+            : null,
+          digitalShunting:
+            f.values.digitalShunting === 'YES'
+              ? true
+              : f.values.digitalShunting === 'NO'
+                ? false
+                : null
         });
         if (specsResult.status === 'error') {
           inlineError = m.rolling_stock_create_error();
@@ -387,7 +412,6 @@
       bind:lengthMm={f.values.lengthMm}
       {bodyShellOptions}
       {chassisOptions}
-      {featureFlagOptions}
       controlOptions={[...controlOptions]}
       dccInterfaceOptions={[...dccInterfaceOptions]}
       couplingSockeOptions={[...couplingSocketOptions]}

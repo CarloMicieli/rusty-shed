@@ -3,8 +3,9 @@
   import { slide } from 'svelte/transition';
   import * as m from '$lib/paraglide/messages';
   import * as Select from '$lib/components/ui/select';
-  import { FormSelect, FormBooleanSelect, FormInput } from '$lib/components/drawer';
-  import type { CouplerType } from '$lib/bindings';
+  import { FormSelect, FormInput } from '$lib/components/drawer';
+  import FeatureFlagSwitch from '$lib/components/FeatureFlagSwitch.svelte';
+  import type { CouplerType, FeatureFlag } from '$lib/bindings';
 
   interface SelectOption {
     value: string;
@@ -12,21 +13,20 @@
   }
 
   interface Props {
-    flywheelFitted?: boolean | null;
-    sprungBuffers?: boolean | null;
+    flywheelFitted?: FeatureFlag | null;
+    sprungBuffers?: FeatureFlag | null;
     bodyShell: string;
     chassis: string;
-    interiorLights: string;
-    lights: string;
+    interiorLights: FeatureFlag | null;
+    lights: FeatureFlag | null;
     dccInterface: string;
     control: string;
     couplingSocket: string;
-    closeCouplers?: boolean | null;
-    digitalShunting?: boolean | null;
+    closeCouplers?: FeatureFlag | null;
+    digitalShunting?: FeatureFlag | null;
     lengthMm?: number | null;
     bodyShellOptions: SelectOption[];
     chassisOptions: SelectOption[];
-    featureFlagOptions: SelectOption[];
     controlOptions: SelectOption[];
     dccInterfaceOptions: SelectOption[];
     couplingSockeOptions: SelectOption[];
@@ -36,21 +36,20 @@
   }
 
   let {
-    flywheelFitted = $bindable<boolean | null>(null),
-    sprungBuffers = $bindable<boolean | null>(null),
+    flywheelFitted = $bindable<FeatureFlag | null>(null),
+    sprungBuffers = $bindable<FeatureFlag | null>(null),
     bodyShell = $bindable(),
     chassis = $bindable(),
-    interiorLights = $bindable(),
-    lights = $bindable(),
+    interiorLights = $bindable<FeatureFlag | null>(null),
+    lights = $bindable<FeatureFlag | null>(null),
     dccInterface = $bindable(),
     control = $bindable(),
     couplingSocket = $bindable(),
-    closeCouplers = $bindable<boolean | null>(null),
-    digitalShunting = $bindable<boolean | null>(null),
+    closeCouplers = $bindable<FeatureFlag | null>(null),
+    digitalShunting = $bindable<FeatureFlag | null>(null),
     lengthMm = $bindable<number | null>(null),
     bodyShellOptions,
     chassisOptions,
-    featureFlagOptions,
     controlOptions,
     dccInterfaceOptions,
     couplingSockeOptions,
@@ -94,7 +93,7 @@
   {#if technicalOpen}
     <div class="px-4 pb-4" transition:slide={{ duration: 200 }}>
       <div class="grid grid-cols-2 gap-3">
-        <FormBooleanSelect
+        <FeatureFlagSwitch
           id="drawer-flywheel"
           label={m.specs_drawer_field_flywheel()}
           bind:value={flywheelFitted}
@@ -111,19 +110,17 @@
           options={chassisOptions}
           bind:value={chassis}
         />
-        <FormSelect
+        <FeatureFlagSwitch
           id="drawer-interior-lights"
           label="{m.specs_drawer_field_lighting()} (interior)"
-          options={featureFlagOptions}
           bind:value={interiorLights}
         />
-        <FormSelect
+        <FeatureFlagSwitch
           id="drawer-lights"
           label="{m.specs_drawer_field_lighting()} (headlights)"
-          options={featureFlagOptions}
           bind:value={lights}
         />
-        <FormBooleanSelect
+        <FeatureFlagSwitch
           id="drawer-sprung-buffers"
           label={m.specs_drawer_field_sprung_buffers()}
           bind:value={sprungBuffers}
@@ -239,12 +236,12 @@
             </Select.Content>
           </Select.Root>
         </div>
-        <FormBooleanSelect
+        <FeatureFlagSwitch
           id="drawer-close-couplers"
           label={m.specs_drawer_field_close_coupling()}
           bind:value={closeCouplers}
         />
-        <FormBooleanSelect
+        <FeatureFlagSwitch
           id="drawer-digital-shunting"
           label={m.specs_drawer_field_digital_shunting()}
           bind:value={digitalShunting}

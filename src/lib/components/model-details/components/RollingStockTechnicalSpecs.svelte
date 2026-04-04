@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { OwnedRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
-  import InPlaceBooleanEdit from '$lib/components/InPlaceBooleanEdit.svelte';
+  import FeatureFlagSwitch from '$lib/components/FeatureFlagSwitch.svelte';
   import InPlaceSelectEdit from '$lib/components/InPlaceSelectEdit.svelte';
   import SpecRow from './SpecRow.svelte';
   import CouplerPicker from '$lib/features/rolling-stock-edit/components/CouplerPicker.svelte';
@@ -82,35 +82,27 @@
 </script>
 
 {#snippet booleanValue(
+  label: string,
   value: 'YES' | 'NO' | null,
   onSave: (v: 'YES' | 'NO' | null) => Promise<void>
 )}
-  {#if canEdit}
-    <InPlaceBooleanEdit
-      {value}
-      {onSave}
-      onActivate={onFieldActivate}
-      onDeactivate={onFieldDeactivate}
-    />
-  {:else if value === 'YES'}
-    <div class="flex items-center gap-2">
-      <div class="h-3 w-3 rounded-sm bg-primary"></div>
-      <span class="text-xs font-medium text-foreground">Yes</span>
-    </div>
-  {:else if value === 'NO'}
-    <div class="flex items-center gap-2">
-      <div class="h-3 w-3 rounded-sm border border-layout-border bg-layout-surface"></div>
-      <span class="text-xs font-medium text-muted-foreground">No</span>
-    </div>
-  {:else}
-    <span class="text-sm text-muted-foreground italic">—</span>
-  {/if}
+  <FeatureFlagSwitch
+    {label}
+    value={value ?? 'NOT_APPLICABLE'}
+    compact={true}
+    disabled={!canEdit}
+    onUpdate={(v) => onSave(v === 'NOT_APPLICABLE' ? null : v)}
+  />
 {/snippet}
 
 <div class="grid grid-cols-3 gap-x-4 gap-y-3">
   <!-- Row 3: Flywheel Fitted · Body Shell · Chassis -->
   <SpecRow label={m.specs_drawer_field_flywheel()}>
-    {@render booleanValue(localFlywheelFitted, onSaveFlywheelFitted)}
+    {@render booleanValue(
+      m.specs_drawer_field_flywheel(),
+      localFlywheelFitted,
+      onSaveFlywheelFitted
+    )}
   </SpecRow>
 
   <SpecRow label={m.specs_drawer_field_body_material()}>
@@ -120,7 +112,7 @@
         displayLabel={BODY_SHELL_OPTIONS.find((o) => o.value === localBodyShell)?.label ?? ''}
         options={[...BODY_SHELL_OPTIONS]}
         placeholder={m.specs_drawer_field_body_material()}
-        onSave={async (v) => {
+        onSave={async (v: string) => {
           await onSaveBodyShell(v || null);
         }}
         onActivate={onFieldActivate}
@@ -140,7 +132,7 @@
         displayLabel={CHASSIS_OPTIONS.find((o) => o.value === localChassis)?.label ?? ''}
         options={[...CHASSIS_OPTIONS]}
         placeholder={m.specs_drawer_field_chassis_material()}
-        onSave={async (v) => {
+        onSave={async (v: string) => {
           await onSaveChassis(v || null);
         }}
         onActivate={onFieldActivate}
@@ -155,11 +147,15 @@
 
   <!-- Row 4: Interior Lights · Lights · (spacer) -->
   <SpecRow label={m.rolling_stock_field_interior_lights()}>
-    {@render booleanValue(localInteriorLights, onSaveInteriorLights)}
+    {@render booleanValue(
+      m.rolling_stock_field_interior_lights(),
+      localInteriorLights,
+      onSaveInteriorLights
+    )}
   </SpecRow>
 
   <SpecRow label={m.rolling_stock_field_lights()}>
-    {@render booleanValue(localLights, onSaveLights)}
+    {@render booleanValue(m.rolling_stock_field_lights(), localLights, onSaveLights)}
   </SpecRow>
 
   <!-- Spacer: Row 4, Col 3 -->
@@ -174,7 +170,7 @@
           ''}
         options={[...COUPLING_SOCKET_OPTIONS]}
         placeholder={m.specs_drawer_field_coupling_socket()}
-        onSave={async (v) => {
+        onSave={async (v: string) => {
           await onSaveCouplingSocket(v || null);
         }}
         onActivate={onFieldActivate}
@@ -190,11 +186,19 @@
   </SpecRow>
 
   <SpecRow label={m.specs_drawer_field_close_coupling()}>
-    {@render booleanValue(localCloseCouplers, onSaveCloseCouplers)}
+    {@render booleanValue(
+      m.specs_drawer_field_close_coupling(),
+      localCloseCouplers,
+      onSaveCloseCouplers
+    )}
   </SpecRow>
 
   <SpecRow label={m.specs_drawer_field_digital_shunting()}>
-    {@render booleanValue(localDigitalShunting, onSaveDigitalShunting)}
+    {@render booleanValue(
+      m.specs_drawer_field_digital_shunting(),
+      localDigitalShunting,
+      onSaveDigitalShunting
+    )}
   </SpecRow>
 
   <!-- Row 6: Installed Coupler (spans full width) -->

@@ -8,6 +8,7 @@
     type Control,
     type CouplerType,
     type DccInterface,
+    type FeatureFlag,
     type PrototypeView,
     type RailwayCompanyId,
     type RailwayModelId,
@@ -55,17 +56,17 @@
     friendlyName: string;
     livery: string;
     depot: string;
-    flywheelFitted: boolean | null;
-    sprungBuffers: boolean | null;
+    flywheelFitted: FeatureFlag;
+    sprungBuffers: FeatureFlag;
     bodyShell: string;
     chassis: string;
-    interiorLights: string;
-    lights: string;
+    interiorLights: FeatureFlag;
+    lights: FeatureFlag;
     dccInterface: string;
     control: string;
     couplingSocket: string;
-    closeCouplers: boolean | null;
-    digitalShunting: boolean | null;
+    closeCouplers: FeatureFlag;
+    digitalShunting: FeatureFlag;
     selectedCouplerTypeId: string | null;
     lengthMm: number | null;
   }
@@ -79,17 +80,17 @@
     friendlyName: '',
     livery: '',
     depot: '',
-    flywheelFitted: null,
-    sprungBuffers: null,
+    flywheelFitted: 'NOT_APPLICABLE',
+    sprungBuffers: 'NOT_APPLICABLE',
     bodyShell: '',
     chassis: '',
-    interiorLights: '',
-    lights: '',
+    interiorLights: 'NOT_APPLICABLE',
+    lights: 'NOT_APPLICABLE',
     dccInterface: '',
     control: '',
     couplingSocket: '',
-    closeCouplers: null,
-    digitalShunting: null,
+    closeCouplers: 'NOT_APPLICABLE',
+    digitalShunting: 'NOT_APPLICABLE',
     selectedCouplerTypeId: null,
     lengthMm: null
   };
@@ -133,12 +134,6 @@
     { value: '', label: '—' },
     { value: 'PLASTIC', label: 'Plastic' },
     { value: 'METAL_DIE_CAST', label: 'Metal die-cast' }
-  ];
-
-  const featureFlagOptions = [
-    { value: '', label: '—' },
-    { value: 'YES', label: 'Yes' },
-    { value: 'NO', label: 'No' }
   ];
 
   const controlOptions = [
@@ -209,29 +204,17 @@
       friendlyName: rs.friendly_name ?? '',
       livery: rs.livery ?? '',
       depot: 'depot' in rs ? (rs.depot ?? '') : '',
-      flywheelFitted:
-        ts?.flywheel_fitted === 'YES' ? true : ts?.flywheel_fitted === 'NO' ? false : null,
-      sprungBuffers:
-        ts?.sprung_buffers === 'YES' ? true : ts?.sprung_buffers === 'NO' ? false : null,
+      flywheelFitted: ts?.flywheel_fitted ?? 'NOT_APPLICABLE',
+      sprungBuffers: ts?.sprung_buffers ?? 'NOT_APPLICABLE',
       bodyShell: ts?.body_shell ?? '',
       chassis: ts?.chassis ?? '',
-      interiorLights: ts?.interior_lights ?? '',
-      lights: ts?.lights ?? '',
+      interiorLights: ts?.interior_lights ?? 'NOT_APPLICABLE',
+      lights: ts?.lights ?? 'NOT_APPLICABLE',
       dccInterface: 'dcc_interface' in rs ? (rs.dcc_interface ?? '') : '',
       control: 'control' in rs ? (rs.control ?? '') : '',
       couplingSocket: ts?.coupling?.socket ?? '',
-      closeCouplers:
-        ts?.coupling?.close_couplers === 'YES'
-          ? true
-          : ts?.coupling?.close_couplers === 'NO'
-            ? false
-            : null,
-      digitalShunting:
-        ts?.coupling?.digital_shunting === 'YES'
-          ? true
-          : ts?.coupling?.digital_shunting === 'NO'
-            ? false
-            : null,
+      closeCouplers: ts?.coupling?.close_couplers ?? 'NOT_APPLICABLE',
+      digitalShunting: ts?.coupling?.digital_shunting ?? 'NOT_APPLICABLE',
       selectedCouplerTypeId: null,
       lengthMm: lob?.millimeters ? Number(lob.millimeters) : null
     };
@@ -316,12 +299,15 @@
         friendlyName: form.friendlyName || null,
         livery: form.livery || null,
         depot: form.depot || null,
-        flywheelFitted: form.flywheelFitted,
-        sprungBuffers: form.sprungBuffers,
+        flywheelFitted:
+          form.flywheelFitted === 'YES' ? true : form.flywheelFitted === 'NO' ? false : null,
+        sprungBuffers:
+          form.sprungBuffers === 'YES' ? true : form.sprungBuffers === 'NO' ? false : null,
         bodyShell: form.bodyShell || null,
         chassis: form.chassis || null,
-        interiorLights: form.interiorLights || null,
-        lights: form.lights || null,
+        interiorLights:
+          form.interiorLights === 'NOT_APPLICABLE' ? null : (form.interiorLights as string),
+        lights: form.lights === 'NOT_APPLICABLE' ? null : (form.lights as string),
         dccInterface: (form.dccInterface || null) as Parameters<
           typeof commands.updateRollingStockSpecifications
         >[0]['dccInterface'],
@@ -329,8 +315,10 @@
           typeof commands.updateRollingStockSpecifications
         >[0]['control'],
         couplingSocket: form.couplingSocket || null,
-        closeCouplers: form.closeCouplers,
-        digitalShunting: form.digitalShunting
+        closeCouplers:
+          form.closeCouplers === 'YES' ? true : form.closeCouplers === 'NO' ? false : null,
+        digitalShunting:
+          form.digitalShunting === 'YES' ? true : form.digitalShunting === 'NO' ? false : null
       });
 
       if (result.status === 'error') {
@@ -445,7 +433,6 @@
         bind:lengthMm={form.lengthMm}
         {bodyShellOptions}
         {chassisOptions}
-        {featureFlagOptions}
         {controlOptions}
         {dccInterfaceOptions}
         {couplingSockeOptions}
