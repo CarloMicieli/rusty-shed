@@ -30,6 +30,7 @@ export interface RollingStock {
   currentCouplerId: string | null;
   railway_model_id: number;
   railway_company: string | null;
+  country_code: string | null;
   series_code: string;
   series_name: string | null;
   rolling_stock_type: string | null;

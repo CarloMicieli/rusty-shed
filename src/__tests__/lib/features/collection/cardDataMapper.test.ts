@@ -19,6 +19,9 @@ function makeRollingStock(overrides: Partial<OwnedRollingStockView> = {}): Owned
     series: null,
     roadNumber: null,
     livery: null,
+    countryCode: null,
+    category: null,
+    subcategory: null,
     control: null,
     railwayCompanyName: null,
     digital: null,
@@ -26,8 +29,8 @@ function makeRollingStock(overrides: Partial<OwnedRollingStockView> = {}): Owned
     dccInterface: null,
     lengthOverBuffers: null,
     currentCouplerId: null,
-    ...overrides
-  };
+    ...(overrides as object)
+  } as OwnedRollingStockView;
 }
 
 function makeItem(overrides: Partial<CollectionItemView> = {}): CollectionItemView {

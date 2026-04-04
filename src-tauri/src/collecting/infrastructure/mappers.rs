@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::{
-    Control, CouplerTypeId, DccInterface, LengthOverBuffers,
+    Control, CouplerTypeId, DccInterface, LengthOverBuffers, RollingStockCategory,
 };
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRailwayModel;
@@ -142,6 +142,12 @@ impl CollectionMapper {
                                 .as_deref()
                                 .and_then(|c| Control::from_str(c).ok()),
                             railway_company_name: rs_row.railway_company_name.clone(),
+                            country_code: rs_row.country_code.clone(),
+                            category: rs_row
+                                .category
+                                .as_deref()
+                                .and_then(|c| RollingStockCategory::from_str(c).ok()),
+                            subcategory: rs_row.subcategory.clone(),
                             digital: None,
                             depot: rs_row.depot.clone(),
                             dcc_interface,
@@ -461,6 +467,9 @@ mod tests {
             livery: None,
             control: None,
             railway_company_name: None,
+            country_code: None,
+            category: None,
+            subcategory: None,
             depot: None,
             rs_dcc_interface: None,
             length_millimeters: None,

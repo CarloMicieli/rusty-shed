@@ -12,6 +12,7 @@
   import * as m from '$lib/paraglide/messages';
   import { CATEGORY_OPTIONS, getSubcategoryOptions, SERVICE_LEVEL_OPTIONS } from './constants';
   import { untrack } from 'svelte';
+  import { getFlag } from '$lib/utils/flags';
 
   interface RsFormState {
     seriesCode: string;
@@ -94,12 +95,13 @@
         <AccordionPrimitive.Trigger
           class="flex flex-1 items-center gap-2 text-left outline-none [&[data-state=open]>div.chevron-wrap>svg]:rotate-180"
         >
-          <!-- ID cluster: company badge + road number -->
+          <!-- ID cluster: flag + company name + road number -->
           <div class="flex items-center gap-2">
+            <span class="text-base leading-none" title={unit.country_code ?? ''}>
+              {getFlag(unit.country_code)}
+            </span>
             {#if unit.railway_company}
-              <span
-                class="rounded bg-primary px-1.5 py-0.5 font-mono text-[10px] font-black tracking-wider text-primary-foreground uppercase"
-              >
+              <span class="font-bebas tracking-widest text-muted-foreground uppercase">
                 {unit.railway_company}
               </span>
             {/if}
@@ -168,7 +170,7 @@
         {#if editable}
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
+            class="variant-steampunk-lever flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95"
             onclick={() => {
               specsDrawerOpenFor = unit.id;
             }}

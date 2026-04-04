@@ -3437,6 +3437,12 @@ export type OwnedRollingStockView_Deserialize = {
 	roadNumber: string | null,
 	// Livery derived from the catalog rolling stock data.
 	livery: string | null,
+	// The ISO 3166-1 alpha-2 country code of the railway company.
+	countryCode: string | null,
+	// The category of the rolling stock (e.g. LOCOMOTIVE).
+	category: RollingStockCategory | null,
+	// The subcategory or type of the rolling stock.
+	subcategory: string | null,
 	// Control system derived from the catalog rolling stock data.
 	control: Control | null,
 	// Railway company name derived from the catalog rolling stock data.
@@ -3479,6 +3485,12 @@ export type OwnedRollingStockView_Serialize = {
 	roadNumber: string | null,
 	// Livery derived from the catalog rolling stock data.
 	livery: string | null,
+	// The ISO 3166-1 alpha-2 country code of the railway company.
+	countryCode: string | null,
+	// The category of the rolling stock (e.g. LOCOMOTIVE).
+	category: RollingStockCategory | null,
+	// The subcategory or type of the rolling stock.
+	subcategory: string | null,
 	// Control system derived from the catalog rolling stock data.
 	control: Control | null,
 	// Railway company name derived from the catalog rolling stock data.

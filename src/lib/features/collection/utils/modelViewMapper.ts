@@ -77,6 +77,7 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
       currentCouplerId: null,
       railway_model_id: 0, // Not available from view
       railway_company: common.railway_company,
+      country_code: null,
       series_code: common.series_code,
       series_name: common.series ?? null,
       rolling_stock_type: common.rolling_stock_type,
@@ -128,6 +129,7 @@ function transformOwnedRollingStock(
       currentCouplerId: owned.currentCouplerId ?? null,
       railway_model_id: 0, // Not used
       railway_company: common?.railway_company ?? null,
+      country_code: owned.countryCode ?? null,
       series_code: common?.series_code ?? '',
       series_name: common?.series ?? null,
       rolling_stock_type: common?.rolling_stock_type ?? null,

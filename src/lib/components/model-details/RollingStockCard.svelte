@@ -10,8 +10,6 @@
     TechnicalSpecifications
   } from '$lib/bindings';
   import { commands } from '$lib/bindings';
-  import { Settings } from 'lucide-svelte';
-  import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import RollingStockCardHeader from './components/RollingStockCardHeader.svelte';
@@ -40,7 +38,6 @@
   let localSeries = $state('');
   let localRoadNumber = $state('');
   let localLivery = $state('');
-  let localRailwayCompanyName = $state('');
   let localDepot = $state('');
   let localControl = $state<Control | null>(null);
   let localDccInterface = $state<DccInterface | null>(null);
@@ -76,7 +73,6 @@
     localSeries = rollingStock.series ?? '';
     localRoadNumber = rollingStock.roadNumber ?? '';
     localLivery = rollingStock.livery ?? '';
-    localRailwayCompanyName = rollingStock.railwayCompanyName ?? '';
     localDepot = rollingStock.depot ?? '';
     localControl = rollingStock.control;
     localDccInterface = rollingStock.dccInterface;
@@ -119,12 +115,6 @@
 
   function displayLength(): string {
     return settingsState.settings.measureUnit === 'Metric' ? localLengthMm : localLengthInches;
-  }
-
-  function formatSeriesRoadNumber() {
-    const series = localSeries || m.model_rolling_stock_unknown_series();
-    const roadNumber = localRoadNumber || m.model_rolling_stock_na();
-    return `${series} — ${roadNumber}`;
   }
 
   function featureFlagToBool(v: 'YES' | 'NO' | null): boolean | null {
@@ -445,10 +435,17 @@
 >
   <!-- Card Header (Always Visible) -->
   <RollingStockCardHeader
-    seriesRoadNumber={formatSeriesRoadNumber()}
-    railwayCompanyName={localRailwayCompanyName}
+    countryCode={rollingStock.countryCode}
+    series={localSeries}
+    roadNumber={localRoadNumber}
+    category={localCategory}
+    subcategory={rollingStock.subcategory}
     {isExpanded}
+    {editable}
     onToggle={toggleExpand}
+    onEditSpecs={() => {
+      specsDrawerOpen = true;
+    }}
   />
 
   <!-- Card Body (Expandable) -->
@@ -456,21 +453,6 @@
     <div class="border-t border-layout-border p-4">
       {#if rollingStock.notes}
         <p class="mb-4 text-muted-foreground">{rollingStock.notes}</p>
-      {/if}
-
-      {#if editable}
-        <div class="mb-3 flex justify-end">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-md border border-layout-border bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
-            onclick={() => {
-              specsDrawerOpen = true;
-            }}
-          >
-            <Settings size={12} />
-            {m.rolling_stock_edit_specs_button()}
-          </button>
-        </div>
       {/if}
 
       <!-- Identification Fields (Rows 1-2) -->

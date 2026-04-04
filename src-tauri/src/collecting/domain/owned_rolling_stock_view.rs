@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::{
-    Control, CouplerTypeId, DccInterface, LengthOverBuffers, RollingStockId,
+    Control, CouplerTypeId, DccInterface, LengthOverBuffers, RollingStockCategory, RollingStockId,
 };
 use crate::collecting::domain::{DigitalSetup, OwnedRollingStockId};
 use serde::Serialize;
@@ -33,6 +33,15 @@ pub struct OwnedRollingStockView {
 
     /// Livery derived from the catalog rolling stock data.
     pub livery: Option<String>,
+
+    /// The ISO 3166-1 alpha-2 country code of the railway company.
+    pub country_code: Option<String>,
+
+    /// The category of the rolling stock (e.g. LOCOMOTIVE).
+    pub category: Option<RollingStockCategory>,
+
+    /// The subcategory or type of the rolling stock.
+    pub subcategory: Option<String>,
 
     /// Control system derived from the catalog rolling stock data.
     pub control: Option<Control>,

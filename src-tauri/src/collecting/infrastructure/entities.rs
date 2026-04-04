@@ -87,6 +87,9 @@ pub struct OwnedRollingStockRow {
     pub livery: Option<String>,
     pub control: Option<String>,
     pub railway_company_name: Option<String>,
+    pub country_code: Option<String>,
+    pub category: Option<String>,
+    pub subcategory: Option<String>,
     pub depot: Option<String>,
     // Rolling stock DCC interface connector (aliased to avoid clash with decoder_interface)
     pub rs_dcc_interface: Option<String>,
