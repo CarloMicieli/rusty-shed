@@ -5,6 +5,7 @@
   { "id": "COVERED_FREIGHT_CARS", "labelKey": "constants_freight_car_types_covered_freight_cars" },
   { "id": "DEEP_WELL_FLAT_CARS", "labelKey": "constants_freight_car_types_deep_well_flat_cars" },
   { "id": "DUMP_CARS", "labelKey": "constants_freight_car_types_dump_cars" },
+  { "id": "FLAT_WAGON", "labelKey": "constants_freight_car_types_flat_wagon" },
   { "id": "GONDOLA", "labelKey": "constants_freight_car_types_gondola" },
   { "id": "HEAVY_GOODS_WAGONS", "labelKey": "constants_freight_car_types_heavy_goods_wagons" },
   { "id": "HINGED_COVER_WAGONS", "labelKey": "constants_freight_car_types_hinged_cover_wagons" },

@@ -23,6 +23,7 @@ export const FREIGHT_CAR_TYPE_OPTIONS: { id: string; label: string }[] = [
   { id: 'COVERED_FREIGHT_CARS', label: 'Covered Freight Cars' },
   { id: 'DEEP_WELL_FLAT_CARS', label: 'Deep Well Flat Cars' },
   { id: 'DUMP_CARS', label: 'Dump Cars' },
+  { id: 'FLAT_WAGON', label: 'Flat Wagon' },
   { id: 'GONDOLA', label: 'Gondola' },
   { id: 'HEAVY_GOODS_WAGONS', label: 'Heavy Goods Wagons' },
   { id: 'HINGED_COVER_WAGONS', label: 'Hinged Cover Wagons' },
@@ -67,7 +68,8 @@ export const EMU_TYPE_OPTIONS: { id: string; label: string }[] = [
 
 export const RAILCAR_TYPE_OPTIONS: { id: string; label: string }[] = [
   { id: 'POWER_CAR', label: 'Power Car' },
-  { id: 'TRAILER_CAR', label: 'Trailer Car' }
+  { id: 'TRAILER_CAR', label: 'Trailer Car' },
+  { id: 'TRAILER_BAGGAGE_CAR', label: 'Trailer Baggage Car' }
 ];
 
 export const SERVICE_LEVEL_OPTIONS: { id: string; label: string }[] = [

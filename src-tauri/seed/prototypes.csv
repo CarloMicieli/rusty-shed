@@ -2,6 +2,9 @@ id,railway_company_id,series_code,friendly_name,specification_type,locomotive_ty
 trn:prototype:fs-214,trn:railway-company:fs,Series 214,,LOCOMOTIVE,ELECTRIC_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:fs-aln663,trn:railway-company:fs,ALn 663,,RAILCAR,,,FIRST_SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-aln668,trn:railway-company:fs,ALn 668,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-aln56-fiat,trn:railway-company:fs,ALn 56 (Fiat),ALn 56 "Littorina" Fiat,RAILCAR,,,SECOND,,,POWER_CAR,,1,0,1,0
+trn:prototype:fs-aln56-breda,trn:railway-company:fs,ALn 56 (Breda),ALn 56 "Littorina" Breda,RAILCAR,,,SECOND,,,POWER_CAR,,1,0,1,0
+trn:prototype:fs-ln56,trn:railway-company:fs,Ln 56,Rimorchiata per ALn 56,RAILCAR,,,SECOND,,,TRAILER_CAR,,1,0,0,0
 trn:prototype:fs-aln556-fiat,trn:railway-company:fs,ALn 556 (Fiat),Littorina,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-aln556-breda,trn:railway-company:fs,ALn 556 (Breda),,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-aln772,trn:railway-company:fs,ALn 772,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
@@ -10,6 +13,11 @@ trn:prototype:fs-aln873,trn:railway-company:fs,ALn 873,,RAILCAR,,,FIRST_SECOND,,
 trn:prototype:fs-aln990,trn:railway-company:fs,ALn 990,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-aln442-448,trn:railway-company:fs,ALn 442/448,Binato TEE,RAILCAR,,,FIRST,,,POWER_CAR,,,,1,0
 trn:prototype:fs-alnd642,trn:railway-company:fs,ALnD 642,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
+trn:prototype:fs-ln664,trn:railway-company:fs,Ln 664,Rimorchiata per ALn 668,RAILCAR,,,SECOND,,,TRAILER_CAR,,1,0,0,0
+trn:prototype:fs-ln663,trn:railway-company:fs,Ln 663,Rimorchiata per ALn 663,RAILCAR,,,SECOND,,,TRAILER_CAR,,1,0,0,0
+trn:prototype:fs-ln556,trn:railway-company:fs,Ln 556,Rimorchiata per ALn 556 Breda,RAILCAR,,,SECOND,,,TRAILER_CAR,,1,0,0,0
+trn:prototype:fs-ln880,trn:railway-company:fs,Ln 880,Rimorchiata per ALn 773,RAILCAR,,,FIRST_SECOND,,,TRAILER_CAR,,1,0,0,0
+trn:prototype:fs-ldn24,trn:railway-company:fs,LDn 24,Rimorchiata Postale/Bagagliaio,RAILCAR,,,,,,TRAILER_BAGGAGE_CAR,,1,0,0,0
 trn:prototype:fs-d141,trn:railway-company:fs,D.141,,LOCOMOTIVE,DIESEL_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:fs-d143,trn:railway-company:fs,D.143,Truman,LOCOMOTIVE,DIESEL_LOCOMOTIVE,,,,,,,,,1,0
 trn:prototype:fs-d145,trn:railway-company:fs,D.145,Arancia Meccanica,LOCOMOTIVE,DIESEL_LOCOMOTIVE,,,,,,,,,1,0
@@ -117,15 +125,6 @@ trn:prototype:fs-dui-1964,trn:railway-company:fs,Bagagliaio-Posta Tipo 1964,,PAS
 trn:prototype:fs-dui-uic-x-1970,trn:railway-company:fs,Bagagliaio-Posta UIC-X,,PASSENGER_CAR,,,,COMBINE_CAR,,,,,,0,0
 trn:prototype:fs-dui-uic-x-1975,trn:railway-company:fs,Bagagliaio-Posta UIC-X (Ribbed),,PASSENGER_CAR,,,,COMBINE_CAR,,,,,,0,0
 trn:prototype:fs-uz-posta-1970,trn:railway-company:fs,Carrozza Postale Tipo UM,,PASSENGER_CAR,,,,RAILWAY_POST_OFFICE,,,,,,0,0
-trn:prototype:fs-ghkkms,trn:railway-company:fs,Carro G (Ghkkms),,FREIGHT_CAR,,,,, COVERED_FREIGHT_CARS,,,,,0,0
-trn:prototype:fs-f-tipo-1925,trn:railway-company:fs,Carro F (Tipo 1925),,FREIGHT_CAR,,,,,COVERED_FREIGHT_CARS,,,,,0,0
-trn:prototype:fs-e-tipo-1945,trn:railway-company:fs,Carro E (Open),,FREIGHT_CAR,,,,,GONDOLA,,,,,0,0
-trn:prototype:fs-kgps-flat,trn:railway-company:fs,Carro K (Kgps),,FREIGHT_CAR,,,,,STAKE_WAGONS,,,,,0,0
-trn:prototype:fs-habis,trn:railway-company:fs,Carro Habis,,FREIGHT_CAR,,,,,SLIDING_WALL_BOXCARS,,,,,0,0
-trn:prototype:fs-shimms,trn:railway-company:fs,Carro Shimms,,FREIGHT_CAR,,,,,TELESCOPE_HOOD_WAGONS,,,,,0,0
-trn:prototype:fs-vgh-cisterna,trn:railway-company:fs,Carro Cisterna (Vgh),,FREIGHT_CAR,,,,,TANK_CARS,,,,,0,0
-trn:prototype:fs-po-carro-scorie,trn:railway-company:fs,Carro Pozzo (Po),,FREIGHT_CAR,,,,,DEEP_WELL_FLAT_CARS,,,,,0,0
-trn:prototype:fs-ufa-auto,trn:railway-company:fs,Carro Ufa (Bisarca),,FREIGHT_CAR,,,,,AUTO_TRANSPORT_CARS,,,,,0,0
 trn:prototype:fs-ale790,trn:railway-company:fs,ALe 790 / 880,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-ale840,trn:railway-company:fs,ALe 840,,RAILCAR,,,SECOND,,,POWER_CAR,,,,1,0
 trn:prototype:fs-ale601,trn:railway-company:fs,ALe 601,Albatros,RAILCAR,,,FIRST,,,POWER_CAR,,,,1,0
@@ -205,3 +204,27 @@ trn:prototype:fs-corb-47-bz,trn:railway-company:fs,Corbellini Tipo 1947 (Bz),,PA
 trn:prototype:fs-corb-51r-bz,trn:railway-company:fs,Corbellini Tipo 1951R (Bz),,PASSENGER_CAR,,,SECOND,COMPARTMENT_COACH,,,,,,0,0
 trn:prototype:fs-corb-57r-abz,trn:railway-company:fs,Corbellini Tipo 1957R (ABz),,PASSENGER_CAR,,,FIRST_SECOND,COMPARTMENT_COACH,,,,,,0,0
 trn:prototype:fs-corb-38900,trn:railway-company:fs,Corbellini (Bz 38900-929),,PASSENGER_CAR,,,SECOND,COMPARTMENT_COACH,,,,,,0,0
+trn:prototype:fs-e-tipo-1945,trn:railway-company:fs,Carro E (Open),,FREIGHT_CAR,,,,,GONDOLA,,,,,0,0
+trn:prototype:fs-eaos,trn:railway-company:fs,Eaos,Carro a sponde alte,FREIGHT_CAR,,,,,OPEN_HIGH_SIDES,,,1,0,0,0
+trn:prototype:fs-f-tipo-1925,trn:railway-company:fs,Carro F (Tipo 1925),,FREIGHT_CAR,,,,,COVERED_FREIGHT_CARS,,,,,0,0
+trn:prototype:fs-fals,trn:railway-company:fs,Fals,Carro tramoggia,FREIGHT_CAR,,,,,HOPPER_WAGON,,,1,0,0,0
+trn:prototype:fs-ghkkms,trn:railway-company:fs,Carro G (Ghkkms),,FREIGHT_CAR,,,,, COVERED_FREIGHT_CARS,,,,,0,0
+trn:prototype:fs-gs,trn:railway-company:fs,Gs,Carro coperto standard,FREIGHT_CAR,,,,,COVERED_FREIGHT_CAR,,,1,0,0,0
+trn:prototype:fs-habis,trn:railway-company:fs,Carro Habis,,FREIGHT_CAR,,,,,SLIDING_WALL_BOXCARS,,,,,0,0
+trn:prototype:fs-hbbillns,trn:railway-company:fs,Hbbillns,Carro a pareti scorrevoli,FREIGHT_CAR,,,,,COVERED_FREIGHT_CAR,,,1,0,0,0
+trn:prototype:fs-kgps-flat,trn:railway-company:fs,Carro K (Kgps),,FREIGHT_CAR,,,,,STAKE_WAGONS,,,,,0,0
+trn:prototype:fs-ks,trn:railway-company:fs,Ks,Pianale a due assi,FREIGHT_CAR,,,,,FLAT_WAGON,,,1,0,0,0
+trn:prototype:fs-po-carro-scorie,trn:railway-company:fs,Carro Pozzo (Po),,FREIGHT_CAR,,,,,DEEP_WELL_FLAT_CARS,,,,,0,0
+trn:prototype:fs-res,trn:railway-company:fs,Res,Pianale a carrelli con stanti,FREIGHT_CAR,,,,,FLAT_WAGON,,,1,0,0,0
+trn:prototype:fs-sgnss,trn:railway-company:fs,Sgnss,Pianale porta-container,FREIGHT_CAR,,,,,FLAT_WAGON,,,1,0,0,0
+trn:prototype:fs-shimms,trn:railway-company:fs,Carro Shimms,,FREIGHT_CAR,,,,,TELESCOPE_HOOD_WAGONS,,,,,0,0
+trn:prototype:fs-ufa-auto,trn:railway-company:fs,Carro Ufa (Bisarca),,FREIGHT_CAR,,,,,AUTO_TRANSPORT_CARS,,,,,0,0
+trn:prototype:fs-vgh-cisterna,trn:railway-company:fs,Carro Cisterna (Vgh),,FREIGHT_CAR,,,,,TANK_CARS,,,,,0,0
+trn:prototype:fs-z,trn:railway-company:fs,Tipo Z,Carro cisterna,FREIGHT_CAR,,,,,TANK_CARS,,,1,0,0,0
+trn:prototype:fs-hg,trn:railway-company:fs,Tipo Hg,Carro Frigorifero a due assi,FREIGHT_CAR,,,,,REFRIGERATOR_CARS,,,1,0,0,0
+trn:prototype:fs-ibbps,trn:railway-company:fs,Ibbps,Carro Frigo a carrelli (Interfrigo),FREIGHT_CAR,,,,,REFRIGERATOR_CARS,,,1,0,0,0
+trn:prototype:fs-uagps,trn:railway-company:fs,Uagps,Carro Silo per Cereali,FREIGHT_CAR,,,,,HOPPER_WAGON,,,1,0,0,0
+trn:prototype:fs-fcc,trn:railway-company:fs,Carro Fcc,Tramoggia per Massicciata (Ballast),FREIGHT_CAR,,,,,HOPPER_WAGON,,,1,0,0,0
+trn:prototype:fs-sdggmrss,trn:railway-company:fs,Sdggmrss,Carro Tasca (Pocket Wagon),FREIGHT_CAR,,,,,DEEP_WELL_FLAT_CARS,,,1,0,0,0
+trn:prototype:fs-smnps,trn:railway-company:fs,Smnps,Pianale per Coils (Scoperto),FREIGHT_CAR,,,,,FLAT_WAGON,,,1,0,0,0
+trn:prototype:fs-gabs,trn:railway-company:fs,Gabs,Carro Coperto Gran Volume,FREIGHT_CAR,,,,,COVERED_FREIGHT_CARS,,,1,0,0,0

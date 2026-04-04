@@ -2778,6 +2778,11 @@ export type FreightCarType =
  */
 "DUMP_CARS" | 
 /**
+ *  These wagons are the "blank canvas" of the railway, used to transport everything from 
+ *  logs and steel beams to military vehicles and shipping containers.
+ */
+"FLAT_WAGON" | 
+/**
  *  Open-topped rail vehicles used for transporting loose bulk
  *  materials such as coal, ore, or scrap metal.
  */
@@ -3804,7 +3809,12 @@ export type RailcarType =
  *  traction or power related equipment, and are similar to passenger cars in a
  *  locomotive-hauled train.
  */
-"TRAILER_CAR";
+"TRAILER_CAR" | 
+/**
+ *  A non-motorized railcar trailer specifically configured for luggage, 
+ *  mail, or parcel transport.
+ */
+"TRAILER_BAGGAGE_CAR";
 
 /**
  *  A railway company (operator or owner).

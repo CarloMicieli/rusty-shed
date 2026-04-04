@@ -232,7 +232,7 @@
         },
         "epoch": {
           "type": "string",
-          "pattern": "^(?:I{1,3}|IV|V|VI)(?:[aAbB])?$|^(?:I/II|II/III|III/IV|IV/V|V/VI)$|^Vm$",
+          "pattern": "^(?:I{1,3}|IV|V|VI)(?:[aAbB])?$|^(?:I{1,3}|IV|V|VI)(?:[aAbB])?/(?:I{1,3}|IV|V|VI)$|^Vm$",
           "description": "Historical epoch token"
         },
         "category": {
@@ -411,6 +411,7 @@
             "COVERED_FREIGHT_CARS",
             "DEEP_WELL_FLAT_CARS",
             "DUMP_CARS",
+            "FLAT_WAGON",
             "GONDOLA",
             "HEAVY_GOODS_WAGONS",
             "HINGED_COVER_WAGONS",
@@ -454,7 +455,7 @@
         },
         "railcarType": {
           "type": "string",
-          "enum": ["POWER_CAR", "TRAILER_CAR"],
+          "enum": ["POWER_CAR", "TRAILER_CAR", "TRAILER_BAGGAGE_CAR"],
           "description": "Subtype used when the rolling stock is a railcar"
         },
         "serviceLevel": {
