@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CheckCircle2, XCircle } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
 
   interface Props {
@@ -22,44 +23,50 @@
 
 <div class="report-header">
   <div class="status-icon {isSuccess ? 'success' : 'error'}">
-    {isSuccess ? '✓' : '✗'}
+    {#if isSuccess}
+      <CheckCircle2 size={32} />
+    {:else}
+      <XCircle size={32} />
+    {/if}
   </div>
-  <h2>{title}</h2>
-  <p class="report-subtitle">
-    {m.import_report_completed_in({ duration: formatDuration(durationMs) })}
-  </p>
+  <h2 class="font-bebas text-2xl tracking-widest uppercase">IMPORT LOG: {title}</h2>
+  <div class="duration-readout">
+    <span class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+      >DURATION:</span
+    >
+    <span class="font-mono text-sm text-primary">{formatDuration(durationMs)}</span>
+  </div>
 </div>
 
 <style>
   .report-header {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .status-icon {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 0 auto 1rem;
   }
 
   .status-icon.success {
-    background: hsl(var(--success) / 0.1);
-    color: hsl(var(--success));
+    color: hsl(var(--primary));
+    filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.6));
   }
 
   .status-icon.error {
-    background: hsl(var(--destructive) / 0.1);
     color: hsl(var(--destructive));
+    filter: drop-shadow(0 0 6px hsl(var(--destructive) / 0.6));
   }
 
-  .report-subtitle {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
+  .duration-readout {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
   }
 </style>

@@ -31,94 +31,82 @@
   }
 </script>
 
+<hr class="border-t border-dashed border-border/50" />
+
 <div class="report-summary">
   <div class="summary-card success">
-    <div class="card-header">
-      <h3>{m.import_report_added_title()}</h3>
+    <div class="card-label font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+      {m.import_report_added_title()}
     </div>
-    <div class="card-body">
-      <div class="count-large">{totalAdded}</div>
-      <div class="count-detail">{formatRecordCounts(added)}</div>
+    <div class="count-large font-mono">{totalAdded}</div>
+    <div class="count-detail font-mono text-[10px] text-muted-foreground">
+      {formatRecordCounts(added)}
     </div>
   </div>
 
   <div class="summary-card neutral">
-    <div class="card-header">
-      <h3>{m.import_report_skipped_title()}</h3>
+    <div class="card-label font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+      {m.import_report_skipped_title()}
     </div>
-    <div class="card-body">
-      <div class="count-large">{totalSkipped}</div>
-      <div class="count-detail">{formatRecordCounts(skipped)}</div>
+    <div class="count-large font-mono">{totalSkipped}</div>
+    <div class="count-detail font-mono text-[10px] text-muted-foreground">
+      {formatRecordCounts(skipped)}
     </div>
   </div>
 
   <div class="summary-card info">
-    <div class="card-header">
-      <h3>{m.import_report_images_title()}</h3>
+    <div class="card-label font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+      {m.import_report_images_title()}
     </div>
-    <div class="card-body">
-      <div class="count-large">{imagesImported}</div>
-      {#if hasImageFailures}
-        <div class="count-detail warning-text">
-          {m.import_report_images_failed_count({ count: imagesFailed.length })}
-        </div>
-      {/if}
-    </div>
+    <div class="count-large font-mono">{imagesImported}</div>
+    {#if hasImageFailures}
+      <div class="count-detail text-warning font-mono text-[10px]">
+        {m.import_report_images_failed_count({ count: imagesFailed.length })}
+      </div>
+    {/if}
   </div>
 </div>
 
 <style>
   .report-summary {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
   }
 
   .summary-card {
-    padding: 1.5rem;
-    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    border-radius: var(--radius-sm);
     border: 1px solid hsl(var(--border));
     background: hsl(var(--background));
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .summary-card.success {
-    border-color: hsl(var(--success) / 0.5);
+    border-color: hsl(var(--success) / 0.4);
     background: hsl(var(--success) / 0.05);
   }
 
   .summary-card.neutral {
-    border-color: hsl(var(--muted) / 0.5);
+    border-color: hsl(var(--border) / 0.6);
     background: hsl(var(--muted) / 0.05);
   }
 
   .summary-card.info {
-    border-color: hsl(var(--primary) / 0.5);
+    border-color: hsl(var(--primary) / 0.4);
     background: hsl(var(--primary) / 0.05);
   }
 
-  .card-header h3 {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: hsl(var(--muted-foreground));
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.75rem;
+  .card-label {
+    margin-bottom: 0.5rem;
   }
 
   .count-large {
     font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
-    margin-bottom: 0.5rem;
-  }
-
-  .count-detail {
-    font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .warning-text {
-    color: hsl(var(--warning));
-    font-weight: 500;
+    color: hsl(var(--foreground));
   }
 </style>

@@ -47,9 +47,7 @@ impl Normalizer {
             for item in models.iter_mut() {
                 normalize_field(item, "availabilityStatus", normalize_availability_status);
                 normalize_field(item, "powerMethod", normalize_power_method);
-                if let Some(category) = item.get_mut("category") {
-                    normalize_field(category, "type", normalize_category);
-                }
+                normalize_field(item, "category", normalize_category);
                 if let Some(rolling_stocks) =
                     item.get_mut("rollingStocks").and_then(|v| v.as_array_mut())
                 {
@@ -126,6 +124,7 @@ fn normalize_railway_company_status(s: &str) -> Option<&'static str> {
     match s {
         "active" => Some("ACTIVE"),
         "inactive" => Some("INACTIVE"),
+        "merged" => Some("MERGED"),
         _ => None,
     }
 }

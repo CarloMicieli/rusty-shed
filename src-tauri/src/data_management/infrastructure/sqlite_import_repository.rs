@@ -10,6 +10,7 @@ use crate::data_management::infrastructure::schema_mapper::{
     schema_power_method_to_db, schema_purchase_condition_to_db, schema_purchase_type_to_db,
     schema_railway_company_status_to_db, schema_seller_type_to_db,
 };
+use crate::search::infrastructure::sqlite_global_search_repository::rebuild_search_index;
 use async_trait::async_trait;
 use log::warn;
 use sqlx::SqlitePool;
@@ -255,7 +256,7 @@ impl ImportRepository for SqliteImportRepository {
             .filter(|m| new_model_ids.contains(m.id.as_str()))
         {
             let power_method = schema_power_method_to_db(&model.power_method)?;
-            let category = schema_category_to_db(&model.category.r#type)?;
+            let category = schema_category_to_db(&model.category)?;
 
             sqlx::query(
                 "INSERT OR IGNORE INTO railway_models \
@@ -365,6 +366,14 @@ impl ImportRepository for SqliteImportRepository {
 
         added.railway_models = duplicates.railway_model_dupes.new_count() as u32;
         skipped.railway_models = duplicates.railway_model_dupes.duplicate_count() as u32;
+
+        // Rebuild FTS search index for all newly inserted models.
+        // Must run after translations and rolling_stocks are inserted (they feed the index).
+        for model_id in &duplicates.railway_model_dupes.new_ids {
+            rebuild_search_index(model_id, &mut tx)
+                .await
+                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+        }
 
         // 4. Insert new sellers
         for seller in data
@@ -876,6 +885,68 @@ impl ImportRepository for SqliteImportRepository {
 
         // Skipped count already accumulated above; also add deduplication skips
         skipped.digital_rolling_stocks += duplicates.digital_roster_dupes.duplicate_count() as u32;
+
+        // Recalculate the collection summary from live data.
+        // The import writes directly to collection_items / purchase_infos without going
+        // through the domain's save() path, so the denormalized counts and total_value
+        // in the collections row must be refreshed here.
+        sqlx::query(
+            r#"UPDATE collections SET
+                locomotives_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'LOCOMOTIVES'
+                ),
+                passenger_cars_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'PASSENGER_CARS'
+                ),
+                freight_cars_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'FREIGHT_CARS'
+                ),
+                railcars_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'RAILCARS'
+                ),
+                train_sets_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'TRAIN_SETS'
+                ),
+                starter_sets_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'STARTER_SETS'
+                ),
+                electric_multiple_units_count = (
+                    SELECT COUNT(*) FROM collection_items ci
+                    JOIN railway_models rm ON rm.id = ci.railway_model_id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL AND rm.category = 'ELECTRIC_MULTIPLE_UNITS'
+                ),
+                total_value_amount = (
+                    SELECT COALESCE(SUM(pi.purchased_price_amount), 0)
+                    FROM collection_items ci
+                    JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                    WHERE ci.collection_id = ? AND ci.removed_date IS NULL
+                )
+            WHERE id = ?"#,
+        )
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .bind(DEFAULT_COLLECTION_ID)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
         // Commit the transaction — all DB work done before any file I/O
         tx.commit()

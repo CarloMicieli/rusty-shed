@@ -80,6 +80,7 @@ pub(crate) fn schema_railway_company_status_to_db(
     match schema_value.unwrap_or("ACTIVE") {
         "ACTIVE" | "active" => Ok("ACTIVE"),
         "INACTIVE" | "inactive" => Ok("INACTIVE"),
+        "MERGED" | "merged" => Ok("MERGED"),
         other => Err(DataManagementError::SchemaViolation(format!(
             "Unknown railway company status: '{other}'"
         ))),
@@ -269,6 +270,10 @@ mod tests {
         assert_eq!(
             schema_railway_company_status_to_db(Some("INACTIVE")).unwrap(),
             "INACTIVE"
+        );
+        assert_eq!(
+            schema_railway_company_status_to_db(Some("MERGED")).unwrap(),
+            "MERGED"
         );
     }
 

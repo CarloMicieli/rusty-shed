@@ -102,7 +102,15 @@
     </svg>
     <h3>{m['import.dropzone.title']()}</h3>
     <p>{m['import.dropzone.subtitle']()}</p>
-    <Button onclick={handleClick} type="button" {disabled} class="pointer-events-auto">
+    <Button
+      onclick={(e: MouseEvent) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      type="button"
+      {disabled}
+      class="pointer-events-auto"
+    >
       {m['import.dropzone.select']()}
     </Button>
     {#if error}

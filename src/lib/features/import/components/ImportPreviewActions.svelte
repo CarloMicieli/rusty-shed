@@ -23,7 +23,7 @@
     {m.common_cancel()}
   </Button>
   <Button onclick={onConfirm} disabled={!preview.canImport || loading} type="button">
-    {loading ? m.app_loading() : 'Confirm Import'}
+    {loading ? m.app_loading() : m['import.confirm.button']()}
   </Button>
 </div>
 

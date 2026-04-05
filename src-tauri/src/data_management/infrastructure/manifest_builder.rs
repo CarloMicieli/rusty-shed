@@ -41,6 +41,7 @@ fn db_railway_company_status_to_schema(s: &str) -> Option<&'static str> {
     match s {
         "ACTIVE" => Some("ACTIVE"),
         "INACTIVE" => Some("INACTIVE"),
+        "MERGED" => Some("MERGED"),
         _ => None,
     }
 }
@@ -432,9 +433,7 @@ pub async fn build_manifest(
                 "details": if details.is_empty() { Value::Null } else { Value::Object(details) },
                 "scale": row.try_get::<String, _>("scale").ok(),
                 "epoch": row.try_get::<String, _>("epoch").ok(),
-                "category": {
-                    "type": db_category_to_schema(&category_db),
-                },
+                "category": db_category_to_schema(&category_db),
                 "powerMethod": db_power_method_to_schema(&power_method_db),
                 "deliveryDate": row.try_get::<Option<String>, _>("delivery_date").ok().flatten(),
                 "availabilityStatus": availability_status,

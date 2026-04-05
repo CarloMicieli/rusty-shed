@@ -10,7 +10,13 @@
 </script>
 
 <div class="report-actions">
-  <Button onclick={onClose} type="button">{m.common_cancel()}</Button>
+  <Button
+    class="variant-steampunk-lever font-bebas font-bold tracking-widest"
+    onclick={onClose}
+    type="button"
+  >
+    {m.common_close()}
+  </Button>
 </div>
 
 <style>
