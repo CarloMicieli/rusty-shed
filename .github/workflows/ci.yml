@@ -49,7 +49,7 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4 # v4 is current stable
         with:
-          node-version: '22' # Svelte 5/Tauri 2 works best on 20 or 22 (LTS)
+          node-version: '24'
           cache: 'pnpm'
 
       - name: 📦 Install frontend dependencies
