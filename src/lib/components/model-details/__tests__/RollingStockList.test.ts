@@ -34,7 +34,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_edit_specs_button: () => 'Edit Specs',
   edit_field_placeholder_empty: () => 'Click to add...',
   edit_save_error: () => 'Failed to save.',
-  badge_picker_close: () => 'Close'
+  badge_picker_close: () => 'Close',
+  error_required: () => 'Required'
 }));
 
 import RollingStockList from '../RollingStockList.svelte';

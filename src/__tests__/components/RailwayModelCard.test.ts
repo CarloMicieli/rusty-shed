@@ -119,7 +119,8 @@ vi.mock('$lib/paraglide/messages', () => ({
   uploading: () => 'Uploading...',
   railway_model_image_alt: () => 'Railway model image',
   railway_model_no_image: () => 'No image available',
-  rolling_stock_edit_specs_button: () => 'Edit Specs'
+  rolling_stock_edit_specs_button: () => 'Edit Specs',
+  error_required: () => 'Required'
 }));
 
 describe('RailwayModelCard', () => {

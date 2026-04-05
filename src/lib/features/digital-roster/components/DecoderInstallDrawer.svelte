@@ -13,12 +13,10 @@
   import DecoderInstallConfirmDialog from './DecoderInstallConfirmDialog.svelte';
   import DecoderRollingStockPicker from './DecoderRollingStockPicker.svelte';
   import DecoderPicker from './DecoderPicker.svelte';
-  import {
-    DrawerShell,
-    DrawerHeader,
-    DigitalSection,
-    createDrawerForm
-  } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DigitalSection } from '$lib/components/drawer';
+  import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { decoderInstallSchema } from '$lib/schemas/decoder-install-form';
 
   interface Props {
     open: boolean;
@@ -36,24 +34,14 @@
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
   }
 
-  const f = createDrawerForm({
-    initial: () => ({
+  function getInitialData() {
+    return {
       selectedRollingStockId: null as string | null,
       selectedDecoderId: null as string | null,
       dccAddress: null as number | null,
       installationDate: getTodayStr()
-    }),
-    validate: (v) => ({
-      rollingStock: !v.selectedRollingStockId
-        ? m.digital_roster_validation_rolling_stock()
-        : undefined,
-      decoder: !v.selectedDecoderId ? m.digital_roster_validation_decoder() : undefined,
-      address:
-        v.dccAddress === null || v.dccAddress < 1 || v.dccAddress > 9999
-          ? m.digital_roster_address_range()
-          : undefined
-    })
-  });
+    };
+  }
 
   // Reference data
   let installableRollingStocks = $state<InstallableRollingStockView[]>([]);
@@ -65,11 +53,38 @@
   let isSubmitting = $state(false);
   let showConfirmDialog = $state(false);
   let duplicateWarning = $state<string | null>(null);
+  let hasSubmitted = $state(false);
+  let formEl: HTMLFormElement | undefined = $state();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { form, errors, tainted, enhance, reset, isTainted } = superForm(getInitialData() as any, {
+    SPA: true,
+    dataType: 'json',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    validators: zod(decoderInstallSchema as any),
+    onUpdate: async ({ form: fd }) => {
+      if (!fd.valid) return;
+      if (selectedRollingStock?.has_decoder && !showConfirmDialog) {
+        showConfirmDialog = true;
+        return;
+      }
+      await performInstallation();
+    }
+  });
+
+  const hasChanges = $derived(isTainted($tainted));
+
+  // Map schema field names → child component prop names
+  const mappedErrors = $derived({
+    rollingStock: $errors.selectedRollingStockId?.[0] as string | undefined,
+    decoder: $errors.selectedDecoderId?.[0] as string | undefined,
+    address: $errors.dccAddress?.[0] as string | undefined
+  });
 
   // Derived state
   let selectedRollingStock = $derived(
     installableRollingStocks.find(
-      (rs) => rs.owned_rolling_stock_id === f.values.selectedRollingStockId
+      (rs) => rs.owned_rolling_stock_id === $form.selectedRollingStockId
     ) ?? null
   );
 
@@ -77,7 +92,7 @@
     if (!selectedRollingStock || !controller.state.rollingStocks) return null;
     return (
       controller.state.rollingStocks.find(
-        (drs) => drs.owned_rolling_stock_id === f.values.selectedRollingStockId
+        (drs) => drs.owned_rolling_stock_id === $form.selectedRollingStockId
       ) ?? null
     );
   });
@@ -89,41 +104,46 @@
   });
 
   $effect(() => {
-    if (open) handleOpen();
+    if (open) void handleOpen();
   });
 
   $effect(() => {
     if (selectedRollingStock?.has_decoder && existingDigitalRollingStock) {
-      f.values.dccAddress = existingDigitalRollingStock.dcc_address;
-      f.values.selectedDecoderId = existingDigitalRollingStock.decoder.id;
+      $form.dccAddress = existingDigitalRollingStock.dcc_address;
+      $form.selectedDecoderId = existingDigitalRollingStock.decoder.id;
     }
   });
 
   $effect(() => {
     if (
-      f.values.selectedDecoderId &&
-      !compatibleDecoders.some((d) => d.id === f.values.selectedDecoderId)
+      $form.selectedDecoderId &&
+      !compatibleDecoders.some((d) => d.id === $form.selectedDecoderId)
     ) {
-      f.values.selectedDecoderId = null;
+      $form.selectedDecoderId = null;
     }
   });
 
   async function handleOpen() {
-    f.reset();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reset({ data: getInitialData() as any });
+    hasSubmitted = false;
     duplicateWarning = null;
     showConfirmDialog = false;
     await loadReferenceData();
     if (preselectedStockId) {
-      f.values.selectedRollingStockId = preselectedStockId;
       const existing =
         controller.state.rollingStocks?.find(
           (drs) => drs.owned_rolling_stock_id === preselectedStockId
         ) ?? null;
-      if (existing) {
-        f.values.dccAddress = existing.dcc_address;
-        f.values.selectedDecoderId = existing.decoder.id;
-      }
-      f.syncInitial();
+      const preselectedData = {
+        ...getInitialData(),
+        selectedRollingStockId: preselectedStockId,
+        dccAddress: existing?.dcc_address ?? null,
+        selectedDecoderId: existing?.decoder.id ?? null
+      };
+      // Reset with preselected data as baseline so dirty check is accurate
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: preselectedData as any });
     }
   }
 
@@ -148,9 +168,6 @@
     }
   }
 
-  // Expose current validation errors (touched-gated) for child components
-  const validationErrors = $derived(f.errors);
-
   async function handleAddressChange(addr: number | null) {
     if (addr !== null && addr >= 1 && addr <= 9999) {
       const excludeId = existingDigitalRollingStock?.id ?? null;
@@ -163,24 +180,13 @@
     }
   }
 
-  async function handleSubmit() {
-    f.touch();
-    if (!f.isValid || duplicateWarning) return;
-
-    if (selectedRollingStock?.has_decoder && !showConfirmDialog) {
-      showConfirmDialog = true;
-      return;
-    }
-
-    await performInstallation();
+  function handleSubmit() {
+    hasSubmitted = true;
+    formEl?.requestSubmit();
   }
 
   async function performInstallation() {
-    if (
-      !f.values.selectedRollingStockId ||
-      !f.values.selectedDecoderId ||
-      f.values.dccAddress === null
-    )
+    if (!$form.selectedRollingStockId || !$form.selectedDecoderId || $form.dccAddress === null)
       return;
 
     try {
@@ -190,19 +196,19 @@
       if (existingDigitalRollingStock) {
         success = await controller.replaceDecoder(
           existingDigitalRollingStock.id,
-          f.values.selectedDecoderId
+          $form.selectedDecoderId as string
         );
-        if (success && f.values.dccAddress !== existingDigitalRollingStock.dcc_address) {
+        if (success && $form.dccAddress !== existingDigitalRollingStock.dcc_address) {
           success = await controller.changeDccAddress(
             existingDigitalRollingStock.id,
-            f.values.dccAddress
+            $form.dccAddress as number
           );
         }
       } else {
         success = await controller.installDecoder(
-          f.values.selectedRollingStockId,
-          f.values.selectedDecoderId,
-          f.values.dccAddress
+          $form.selectedRollingStockId as string,
+          $form.selectedDecoderId as string,
+          $form.dccAddress as number
         );
       }
 
@@ -220,17 +226,11 @@
 
   function handleConfirmReplace() {
     showConfirmDialog = false;
-    performInstallation();
+    void performInstallation();
   }
 </script>
 
-<DrawerShell
-  {open}
-  {onClose}
-  size="xl"
-  hasChanges={f.isDirty}
-  labelledby="decoder-install-drawer-title"
->
+<DrawerShell {open} {onClose} size="xl" {hasChanges} labelledby="decoder-install-drawer-title">
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="decoder-install-drawer-title"
@@ -246,31 +246,31 @@
       <div class="border-primary-500 h-12 w-12 animate-spin rounded-full border-b-2"></div>
     </div>
   {:else}
-    <form id="install-decoder-form" class="space-y-6" onsubmit={(e) => e.preventDefault()}>
+    <form id="install-decoder-form" bind:this={formEl} use:enhance class="space-y-6">
       <DecoderRollingStockPicker
         rollingStocks={installableRollingStocks}
-        selectedId={f.values.selectedRollingStockId}
-        error={validationErrors.rollingStock}
-        touched={f.touched}
-        onChange={(id) => (f.values.selectedRollingStockId = id)}
+        selectedId={$form.selectedRollingStockId}
+        error={mappedErrors.rollingStock}
+        touched={hasSubmitted}
+        onChange={(id) => ($form.selectedRollingStockId = id)}
       />
 
       <DecoderPicker
         decoders={compatibleDecoders}
         {manufacturers}
-        selectedId={f.values.selectedDecoderId}
-        error={validationErrors.decoder}
-        touched={f.touched}
-        onChange={(id) => (f.values.selectedDecoderId = id)}
+        selectedId={$form.selectedDecoderId}
+        error={mappedErrors.decoder}
+        touched={hasSubmitted}
+        onChange={(id) => ($form.selectedDecoderId = id)}
       />
 
       <DigitalSection
-        bind:dccAddress={f.values.dccAddress}
-        bind:installationDate={f.values.installationDate}
+        bind:dccAddress={$form.dccAddress}
+        bind:installationDate={$form.installationDate}
         onAddressChange={handleAddressChange}
         {duplicateWarning}
-        errors={validationErrors}
-        touched={f.touched}
+        errors={mappedErrors}
+        touched={hasSubmitted}
         disabled={isSubmitting}
       />
     </form>
@@ -286,7 +286,7 @@
         variant="default"
         class="bg-amber-500 font-bold text-black hover:bg-amber-500/90"
         onclick={handleSubmit}
-        disabled={isSubmitting || isLoadingData || (!f.touched && !f.isValid)}
+        disabled={isSubmitting || isLoadingData}
       >
         {#if isSubmitting}
           {m.app_loading()}

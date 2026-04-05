@@ -1,12 +1,10 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
   import { TrainFront } from 'lucide-svelte';
-  import {
-    DrawerShell,
-    DrawerHeader,
-    DrawerFooter,
-    createDrawerForm
-  } from '$lib/components/drawer';
+  import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { addCollectionSchema } from '$lib/schemas/collection-form';
+  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import type {
     AddModelFormState,
@@ -45,25 +43,7 @@
   let isSubmitting = $state(false);
   let isLoadingData = $state(false);
   let showPurchaseSection = $state(false);
-
-  // Validation
-  interface ValidationErrors {
-    manufacturerId?: string;
-    productCode?: string;
-    description?: string;
-    category?: string;
-    scale?: string;
-    powerMethod?: string;
-    epoch?: string;
-    rollingStocks?: string;
-    rollingStockErrors?: Array<{
-      railwayCompanyId?: string;
-      seriesCode?: string;
-      category?: string;
-    }>;
-  }
-
-  let validationErrors = $state<ValidationErrors>({});
+  let formEl: HTMLFormElement | undefined = $state();
 
   function createDefaultRollingStock(): RollingStockFormEntry {
     return {
@@ -103,41 +83,36 @@
     };
   }
 
-  function validateForm(formState: AddModelFormState): ValidationErrors {
-    const errors: ValidationErrors = {};
-
-    // Railway model validation
-    if (!formState.manufacturerId) errors.manufacturerId = m.add_model_validation_manufacturer();
-    if (!formState.productCode.trim()) errors.productCode = m.add_model_validation_product_code();
-    if (!formState.description.trim()) errors.description = m.add_model_validation_description();
-    if (!formState.category) errors.category = m.add_model_validation_category();
-    if (!formState.scale) errors.scale = m.add_model_validation_scale();
-    if (!formState.powerMethod) errors.powerMethod = m.add_model_validation_power();
-    if (!formState.epoch) errors.epoch = m.add_model_validation_epoch();
-
-    // Rolling stocks validation
-    if (formState.rollingStocks.length === 0) {
-      errors.rollingStocks = m.add_model_validation_rs_required();
-    } else {
-      const rsErrors = formState.rollingStocks.map((rs) => {
-        const err: { railwayCompanyId?: string; seriesCode?: string; category?: string } = {};
-        if (!rs.railwayCompanyId) err.railwayCompanyId = m.add_model_validation_rs_company();
-        if (!rs.seriesCode.trim()) err.seriesCode = m.add_model_validation_rs_series();
-        if (!rs.category) err.category = m.add_model_validation_rs_category();
-        return err;
-      });
-
-      if (rsErrors.some((e) => Object.keys(e).length > 0)) {
-        errors.rollingStockErrors = rsErrors;
+  const { form, errors, tainted, enhance, reset, isTainted } = superForm(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createDefaultFormState() as any,
+    {
+      SPA: true,
+      dataType: 'json',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      validators: zod(addCollectionSchema as any),
+      onUpdate: async ({ form: fd }) => {
+        if (fd.valid) {
+          isSubmitting = true;
+          try {
+            const args = toAddRailwayModelArgs($form as AddModelFormState);
+            const success = await collectionService.addRailwayModel(args);
+            if (success) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              reset({ data: createDefaultFormState() as any });
+              onSuccess();
+            }
+          } catch (err) {
+            console.error('Error submitting railway model:', err);
+          } finally {
+            isSubmitting = false;
+          }
+        }
       }
     }
+  );
 
-    return errors;
-  }
-
-  const f = createDrawerForm({
-    initial: createDefaultFormState
-  });
+  const hasChanges = $derived(isTainted($tainted));
 
   // Watch for drawer open/close
   $effect(() => {
@@ -147,8 +122,8 @@
   });
 
   async function handleOpen() {
-    f.reset(createDefaultFormState());
-    validationErrors = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reset({ data: createDefaultFormState() as any });
     showPurchaseSection = false;
 
     // Load all reference data from backend to ensure IDs match database
@@ -159,10 +134,6 @@
         commands.getRailwayCompanies(),
         commands.getSellers()
       ]);
-
-      console.debug('getManufacturers result:', mfgResult);
-      console.debug('getRailwayCompanies result:', rcResult);
-      console.debug('getSellers result:', sellerResult);
 
       manufacturers = mfgResult.status === 'ok' ? mfgResult.data : [];
       railwayCompanies = rcResult.status === 'ok' ? rcResult.data : [];
@@ -175,18 +146,22 @@
   }
 
   function handleAddRollingStock() {
-    f.values.rollingStocks = [...f.values.rollingStocks, createDefaultRollingStock()];
+    $form.rollingStocks = [
+      ...($form.rollingStocks as RollingStockFormEntry[]),
+      createDefaultRollingStock()
+    ];
   }
 
   function handleRemoveRollingStock(uid: string) {
-    if (f.values.rollingStocks.length <= 1) return;
-    f.values.rollingStocks = f.values.rollingStocks.filter((rs) => rs.uid !== uid);
+    const stocks = $form.rollingStocks as RollingStockFormEntry[];
+    if (stocks.length <= 1) return;
+    $form.rollingStocks = stocks.filter((rs) => rs.uid !== uid);
   }
 
   function toAddRailwayModelArgs(formState: AddModelFormState): AddRailwayModelToCollectionArgs {
     const today = new Date().toISOString().split('T')[0];
 
-    // priceAmount is now stored as integer cents in the form state
+    // priceAmount is stored as integer cents in the form state
     const priceInCents = formState.purchase.priceAmount ?? 0;
 
     return {
@@ -218,35 +193,31 @@
     };
   }
 
-  async function handleSubmit() {
-    f.touch();
+  // Flatten Superforms array errors to string | undefined for child components
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rsErrors = $derived($errors.rollingStocks as any);
+  const mappedErrors = $derived({
+    manufacturerId: $errors.manufacturerId?.[0] as string | undefined,
+    productCode: $errors.productCode?.[0] as string | undefined,
+    description: $errors.description?.[0] as string | undefined,
+    category: $errors.category?.[0] as string | undefined,
+    scale: $errors.scale?.[0] as string | undefined,
+    powerMethod: $errors.powerMethod?.[0] as string | undefined,
+    epoch: $errors.epoch?.[0] as string | undefined,
+    rollingStocks: rsErrors?._errors?.[0] as string | undefined,
+    rollingStockErrors: ($form.rollingStocks as RollingStockFormEntry[]).map((_, i) => ({
+      railwayCompanyId: rsErrors?.[i]?.railwayCompanyId?.[0] as string | undefined,
+      seriesCode: rsErrors?.[i]?.seriesCode?.[0] as string | undefined,
+      category: rsErrors?.[i]?.category?.[0] as string | undefined
+    }))
+  });
 
-    const errors = validateForm(f.values);
-    validationErrors = errors;
-
-    if (Object.keys(errors).length > 0) {
-      console.error('Form validation errors:', errors);
-      return;
-    }
-
-    isSubmitting = true;
-    try {
-      const args = toAddRailwayModelArgs(f.values);
-      console.log('Submitting railway model to collection:', args);
-      const success = await collectionService.addRailwayModel(args);
-      if (success) {
-        f.reset(createDefaultFormState());
-        onSuccess();
-      }
-    } catch (error) {
-      console.error('Error submitting railway model:', error);
-    } finally {
-      isSubmitting = false;
-    }
+  function handleSubmit() {
+    formEl?.requestSubmit();
   }
 </script>
 
-<DrawerShell {open} {onClose} size="xl" hasChanges={f.isDirty} labelledby="drawer-title">
+<DrawerShell {open} {onClose} size="xl" {hasChanges} labelledby="drawer-title">
   {#snippet header({ requestClose })}
     <DrawerHeader
       id="drawer-title"
@@ -257,14 +228,14 @@
     />
   {/snippet}
 
-  <form id="add-model-form" class="space-y-6">
+  <form bind:this={formEl} use:enhance class="space-y-6">
     <ModelSearchSection
-      bind:form={f.values}
+      bind:form={$form as AddModelFormState}
       {manufacturers}
       {railwayCompanies}
       {sellers}
       bind:showPurchaseSection
-      {validationErrors}
+      validationErrors={mappedErrors}
       isLoading={isLoadingData}
       onAddRollingStock={handleAddRollingStock}
       onRemoveRollingStock={handleRemoveRollingStock}

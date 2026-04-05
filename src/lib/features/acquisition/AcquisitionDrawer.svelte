@@ -11,21 +11,14 @@
   import { toaster } from '$lib/toaster';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import { Button } from '$lib/components';
-  import type {
-    AcquisitionFormState,
-    AcquisitionItemEntry,
-    AcquisitionValidationErrors
-  } from './types.js';
-  import {
-    createDefaultFormState,
-    createDefaultItem,
-    validateForm,
-    hasErrors,
-    toRecordAcquisitionArgs
-  } from './types.js';
+  import type { AcquisitionFormState, AcquisitionItemEntry, BatchDefaults } from './types.js';
+  import { createDefaultFormState, createDefaultItem, toRecordAcquisitionArgs } from './types.js';
   import AcquisitionBatchFields from './components/AcquisitionBatchFields.svelte';
   import AcquisitionItemCard from './components/AcquisitionItemCard.svelte';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { acquisitionSchema } from '$lib/schemas/acquisition-form';
 
   interface Props {
     open: boolean;
@@ -42,49 +35,67 @@
   // UI state
   let isSubmitting = $state(false);
   let isLoadingData = $state(false);
-  let touched = $state(false);
-  let validationErrors = $state<AcquisitionValidationErrors>({});
-  // Form state
-  let form = $state<AcquisitionFormState>(
-    createDefaultFormState({
+  let formEl: HTMLFormElement | undefined = $state();
+
+  function getDefaults() {
+    return {
       scale: (settingsState.settings?.favouriteScale as Scale) || null,
       powerMethod: (settingsState.settings?.powerMethod as PowerMethod) || null
-    })
-  );
+    };
+  }
 
-  // Derived values
-  let hasChanges = $derived(
-    form.sellerId !== null ||
-      form.items.length > 1 ||
-      form.items.some(
-        (i) =>
-          i.manufacturerId !== null || i.productCode.trim() !== '' || i.description.trim() !== ''
-      )
+  const { form, errors, tainted, enhance, reset, isTainted } = superForm(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createDefaultFormState(getDefaults()) as any,
+    {
+      SPA: true,
+      dataType: 'json',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      validators: zod(acquisitionSchema as any),
+      onUpdate: async ({ form: fd }) => {
+        if (!fd.valid) return;
+        isSubmitting = true;
+        try {
+          const args = toRecordAcquisitionArgs($form as AcquisitionFormState, currency);
+          const result = await commands.recordAcquisition(args);
+          if (result.status === 'ok') {
+            toaster.success(m.acquisition_toast_success());
+            onSuccess();
+            onClose();
+          } else {
+            toaster.error(m.acquisition_error_finalize());
+          }
+        } catch (e) {
+          console.error('Error saving acquisition:', e);
+          toaster.error(m.acquisition_error_finalize());
+        } finally {
+          isSubmitting = false;
+        }
+      }
+    }
   );
 
   let currency = $derived(settingsState.settings.currency ?? 'EUR');
+  let hasChanges = $derived(isTainted($tainted));
 
-  // Reactive validation
-  let _validationReactive = $derived.by(() => {
-    if (!touched) return;
-    validationErrors = validateForm(form);
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const itemsErrors = $derived($errors.items as any);
+  const formItems = $derived($form.items as AcquisitionItemEntry[]);
 
-  // Watch for drawer open — load data
-  $effect(() => {
+  $effect.pre(() => {
     if (open) {
-      handleOpen();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: createDefaultFormState(getDefaults()) as any });
     }
   });
 
-  async function handleOpen() {
-    form = createDefaultFormState({
-      scale: (settingsState.settings?.favouriteScale as Scale) || null,
-      powerMethod: (settingsState.settings?.powerMethod as PowerMethod) || null
-    });
-    touched = false;
-    validationErrors = {};
+  $effect(() => {
+    if (open) {
+      void loadReferenceData();
+    }
+  });
 
+  async function loadReferenceData() {
     isLoadingData = true;
     try {
       const [mfgResult, sellerResult] = await Promise.all([
@@ -101,59 +112,34 @@
   }
 
   function handleAddItem() {
-    form.items = [...form.items, createDefaultItem()];
+    $form.items = [...formItems, createDefaultItem()];
   }
 
   function handleDuplicate(uid: string) {
-    const source = form.items.find((i) => i.uid === uid);
+    const source = formItems.find((i) => i.uid === uid);
     if (!source) return;
-    const clone: AcquisitionItemEntry = {
-      ...source,
-      uid: crypto.randomUUID(),
-      productCode: ''
-    };
-    const idx = form.items.findIndex((i) => i.uid === uid);
-    const next = [...form.items];
+    const clone: AcquisitionItemEntry = { ...source, uid: crypto.randomUUID(), productCode: '' };
+    const idx = formItems.findIndex((i) => i.uid === uid);
+    const next = [...formItems];
     next.splice(idx + 1, 0, clone);
-    form.items = next;
+    $form.items = next;
   }
 
   function handleRemove(uid: string) {
-    if (form.items.length <= 1) return;
-    form.items = form.items.filter((i) => i.uid !== uid);
+    if (formItems.length <= 1) return;
+    $form.items = formItems.filter((i) => i.uid !== uid);
   }
 
   function handleUpdateItem(uid: string, patch: Partial<AcquisitionItemEntry>) {
-    form.items = form.items.map((i) => (i.uid === uid ? { ...i, ...patch } : i));
+    $form.items = formItems.map((i) => (i.uid === uid ? { ...i, ...patch } : i));
   }
 
   function handleBatchDefaultChange(field: 'scale' | 'powerMethod', value: string | null) {
-    form.batchDefaults = { ...form.batchDefaults, [field]: value };
+    $form.batchDefaults = { ...($form.batchDefaults as BatchDefaults), [field]: value };
   }
 
-  async function handleFinalize() {
-    touched = true;
-    const errors = validateForm(form);
-    validationErrors = errors;
-
-    if (hasErrors(errors)) return;
-
-    isSubmitting = true;
-    try {
-      const args = toRecordAcquisitionArgs(form, currency);
-      const result = await commands.recordAcquisition(args);
-      if (result.status === 'ok') {
-        toaster.success(m.acquisition_toast_success());
-        onSuccess();
-      } else {
-        toaster.error(m.acquisition_error_finalize());
-      }
-    } catch (e) {
-      console.error('Error saving acquisition:', e);
-      toaster.error(m.acquisition_error_finalize());
-    } finally {
-      isSubmitting = false;
-    }
+  function handleSubmit() {
+    formEl?.requestSubmit();
   }
 </script>
 
@@ -181,23 +167,23 @@
   {#snippet stickyBand()}
     <div class="px-4 py-3">
       <AcquisitionBatchFields
-        sellerId={form.sellerId}
-        onSellerChange={(id) => (form.sellerId = id)}
-        purchaseDate={form.purchaseDate}
-        onDateChange={(date) => (form.purchaseDate = date)}
-        batchDefaults={form.batchDefaults}
+        sellerId={$form.sellerId as string | null}
+        onSellerChange={(id) => ($form.sellerId = id)}
+        purchaseDate={$form.purchaseDate as string}
+        onDateChange={(date) => ($form.purchaseDate = date)}
+        batchDefaults={$form.batchDefaults as BatchDefaults}
         onBatchDefaultChange={handleBatchDefaultChange}
         {sellers}
       />
     </div>
   {/snippet}
 
-  <div class="space-y-3">
-    {#if validationErrors.general}
+  <form bind:this={formEl} use:enhance class="space-y-3">
+    {#if itemsErrors?._errors?.[0]}
       <div
         class="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
       >
-        {validationErrors.general}
+        {itemsErrors._errors[0]}
       </div>
     {/if}
 
@@ -206,21 +192,25 @@
         <p class="text-sm text-zinc-500">Loading…</p>
       </div>
     {:else}
-      {#each form.items as item (item.uid)}
+      {#each formItems as item, idx (item.uid)}
         <AcquisitionItemCard
           {item}
-          index={form.items.indexOf(item)}
+          index={idx}
           {manufacturers}
           {currency}
-          errors={validationErrors.items?.[form.items.indexOf(item)] ?? {}}
-          canRemove={form.items.length > 1}
+          errors={{
+            manufacturerId: itemsErrors?.[idx]?.manufacturerId?.[0],
+            productCode: itemsErrors?.[idx]?.productCode?.[0],
+            category: itemsErrors?.[idx]?.category?.[0]
+          }}
+          canRemove={formItems.length > 1}
           onUpdate={handleUpdateItem}
           onDuplicate={handleDuplicate}
           onRemove={handleRemove}
         />
       {/each}
     {/if}
-  </div>
+  </form>
 
   {#snippet footer({ requestClose })}
     <DrawerFooter
@@ -229,7 +219,7 @@
         ? m.acquisition_finalizing_button()
         : m.acquisition_finalize_button()}
       onCancel={requestClose}
-      onSubmit={handleFinalize}
+      onSubmit={handleSubmit}
       submitting={isSubmitting}
       isLoading={isLoadingData}
     >

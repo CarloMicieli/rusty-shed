@@ -61,29 +61,6 @@ export function createDefaultFormState(
   };
 }
 
-export function validateForm(form: AcquisitionFormState): AcquisitionValidationErrors {
-  const errors: AcquisitionValidationErrors = {};
-  if (form.items.length === 0) {
-    errors.general = 'Add at least one item before saving.';
-    return errors;
-  }
-  const itemErrors: AcquisitionItemErrors[] = form.items.map((item) => {
-    const e: AcquisitionItemErrors = {};
-    if (!item.manufacturerId) e.manufacturerId = 'Manufacturer is required';
-    if (!item.productCode.trim()) e.productCode = 'Product code is required';
-    if (!item.category) e.category = 'Category is required';
-    return e;
-  });
-  if (itemErrors.some((e) => Object.keys(e).length > 0)) {
-    errors.items = itemErrors;
-  }
-  return errors;
-}
-
-export function hasErrors(errors: AcquisitionValidationErrors): boolean {
-  return !!errors.general || (errors.items?.some((e) => Object.keys(e).length > 0) ?? false);
-}
-
 export function toRecordAcquisitionArgs(
   f: AcquisitionFormState,
   currency: string

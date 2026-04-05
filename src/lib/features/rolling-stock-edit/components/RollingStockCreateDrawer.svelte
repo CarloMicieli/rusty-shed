@@ -13,22 +13,19 @@
     type RollingStockCategory,
     type RollingStockId
   } from '$lib/bindings';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import type { SelectOption } from '$lib/components/SearchableSelect.svelte';
   import RollingStockPrototypeSection from './RollingStockPrototypeSection.svelte';
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
-  import {
-    DrawerShell,
-    DrawerHeader,
-    DrawerFooter,
-    FormSelect,
-    createDrawerForm
-  } from '$lib/components/drawer';
+  import { DrawerShell, DrawerHeader, DrawerFooter, FormSelect } from '$lib/components/drawer';
   import {
     CONTROL_OPTIONS,
     DCC_INTERFACE_OPTIONS,
     getSubcategoryOptions
   } from '$lib/components/model-details/components/constants';
+  import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { rollingStockCreateSchema } from '$lib/schemas/rolling-stock-form';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -43,8 +40,8 @@
 
   let { open, railwayModelId, onCreated, onClose }: Props = $props();
 
-  const f = createDrawerForm({
-    initial: () => ({
+  function getInitialData() {
+    return {
       prototypeId: '',
       railwayCompanyId: '',
       category: '',
@@ -69,21 +66,31 @@
       lengthMm: null as number | null,
       selectedCouplerTypeId: null as string | null,
       isDummy: 'NOT_APPLICABLE' as FeatureFlag
-    }),
-    validate: (v) => ({
-      seriesCode: !v.seriesCode.trim() ? m.error_required() : undefined,
-      railwayCompanyId: !v.railwayCompanyId ? m.error_required() : undefined,
-      category: !v.category ? m.error_required() : undefined
-    })
-  });
+    };
+  }
 
   let isSaving = $state(false);
   let inlineError = $state<string | null>(null);
   let expandTechnical = $state(false);
+  let formEl: HTMLFormElement | undefined = $state();
 
   // ── Company + coupler options ─────────────────────────────────────────────────
   let companyOptions = $state<SelectOption[]>([]);
   let allCouplers = $state<CouplerType[]>([]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { form, tainted, enhance, reset, isTainted } = superForm(getInitialData() as any, {
+    SPA: true,
+    dataType: 'json',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    validators: zod(rollingStockCreateSchema as any),
+    onUpdate: async ({ form: fd }) => {
+      if (!fd.valid) return;
+      await handleSave();
+    }
+  });
+
+  const hasChanges = $derived(isTainted($tainted));
 
   onMount(async () => {
     const [companiesResult, couplersResult] = await Promise.all([
@@ -104,9 +111,11 @@
   });
 
   // ── Reset form when drawer opens ────────────────────────────────────────────
-  $effect(() => {
+  $effect.pre(() => {
     if (open) {
-      f.reset();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: getInitialData() as any });
+      _prevCategory = '';
       inlineError = null;
       expandTechnical = false;
     }
@@ -114,7 +123,7 @@
 
   // ── Derived state ────────────────────────────────────────────────────────────
   const subTypeOptions = $derived(
-    getSubcategoryOptions((f.values.category as RollingStockCategory) || null).map((o) => ({
+    getSubcategoryOptions(($form.category as RollingStockCategory) || null).map((o) => ({
       value: o.id,
       label: o.label
     }))
@@ -123,30 +132,40 @@
   const hasSubTypes = $derived(subTypeOptions.length > 0);
 
   const isFormValid = $derived(
-    !!f.values.seriesCode.trim() && !!f.values.railwayCompanyId && !!f.values.category
+    !!($form.seriesCode as string).trim() && !!$form.railwayCompanyId && !!$form.category
   );
 
   const filteredCouplers = $derived(
-    f.values.couplingSocket
-      ? allCouplers.filter((c) => c.compatible_socket === f.values.couplingSocket)
+    $form.couplingSocket
+      ? allCouplers.filter((c) => c.compatible_socket === ($form.couplingSocket as string))
       : []
   );
 
   // Clear coupler type when socket changes and it's no longer compatible
   $effect(() => {
-    if (
-      f.values.selectedCouplerTypeId &&
-      !filteredCouplers.some((c) => c.id === f.values.selectedCouplerTypeId)
-    ) {
-      f.values.selectedCouplerTypeId = null;
+    const coupler = $form.selectedCouplerTypeId;
+    const valid = filteredCouplers.some((c) => c.id === coupler);
+    if (coupler && !valid) {
+      untrack(() => {
+        $form.selectedCouplerTypeId = null;
+      });
     }
   });
 
-  // Reset sub-type when category changes
+  // Reset sub-type when category actually changes (plain var avoids reactive loop)
+  let _prevCategory = '';
+
   $effect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    f.values.category;
-    f.values.subType = '';
+    const cat = $form.category as string;
+    if (cat !== _prevCategory) {
+      const isInitial = _prevCategory === '';
+      _prevCategory = cat;
+      if (!isInitial) {
+        untrack(() => {
+          $form.subType = '';
+        });
+      }
+    }
   });
 
   // ── Option lists ─────────────────────────────────────────────────────────────
@@ -197,10 +216,10 @@
 
   // ── Prototype autofill ────────────────────────────────────────────────────────
   function handlePrototypeSelect(p: PrototypeView) {
-    f.values.prototypeId = p.id;
-    f.values.railwayCompanyId = p.railway_company_id;
-    f.values.seriesCode = p.series_code;
-    f.values.friendlyName = p.friendly_name ?? '';
+    $form.prototypeId = p.id;
+    $form.railwayCompanyId = p.railway_company_id;
+    $form.seriesCode = p.series_code;
+    $form.friendlyName = p.friendly_name ?? '';
     const subType =
       p.locomotive_type ??
       p.passenger_car_type ??
@@ -208,44 +227,42 @@
       p.railcar_type ??
       p.electric_multiple_unit_type ??
       '';
-    if (subType) f.values.subType = subType;
-    f.values.isDummy = p.default_is_dummy ? 'YES' : 'NO';
+    if (subType) $form.subType = subType;
+    $form.isDummy = p.default_is_dummy ? 'YES' : 'NO';
     expandTechnical = true;
   }
 
   function handlePrototypeClear() {
-    f.values.prototypeId = '';
+    $form.prototypeId = '';
   }
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   async function handleSave() {
-    f.touch();
-    if (!f.isValid) return;
     isSaving = true;
     inlineError = null;
     try {
       const result = await commands.addRollingStockToModel({
         railwayModelId,
-        railwayCompanyId: f.values.railwayCompanyId,
-        category: f.values.category,
-        seriesCode: f.values.seriesCode.trim(),
-        friendlyName: f.values.friendlyName || null,
-        roadNumber: f.values.roadNumber || null,
-        livery: f.values.livery || null,
-        depot: f.values.depot || null,
-        control: f.values.control || null,
-        dccInterface: f.values.dccInterface || null,
-        couplingSocket: f.values.couplingSocket || null,
-        closeCouplers: f.values.couplingSocket
-          ? f.values.closeCouplers === 'YES'
+        railwayCompanyId: $form.railwayCompanyId,
+        category: $form.category,
+        seriesCode: ($form.seriesCode as string).trim(),
+        friendlyName: ($form.friendlyName as string) || null,
+        roadNumber: ($form.roadNumber as string) || null,
+        livery: ($form.livery as string) || null,
+        depot: ($form.depot as string) || null,
+        control: ($form.control as string) || null,
+        dccInterface: ($form.dccInterface as string) || null,
+        couplingSocket: ($form.couplingSocket as string) || null,
+        closeCouplers: $form.couplingSocket
+          ? $form.closeCouplers === 'YES'
             ? true
-            : f.values.closeCouplers === 'NO'
+            : $form.closeCouplers === 'NO'
               ? false
               : null
           : null,
-        subType: f.values.subType || null,
-        prototypeId: f.values.prototypeId || null,
-        isDummy: f.values.isDummy === 'YES' ? true : f.values.isDummy === 'NO' ? false : null
+        subType: ($form.subType as string) || null,
+        prototypeId: ($form.prototypeId as string) || null,
+        isDummy: $form.isDummy === 'YES' ? true : $form.isDummy === 'NO' ? false : null
       } as Parameters<typeof commands.addRollingStockToModel>[0]);
 
       if (result.status === 'error') {
@@ -257,61 +274,47 @@
 
       // Save extended technical specs if any are filled
       const hasExtendedSpecs =
-        f.values.flywheelFitted !== 'NOT_APPLICABLE' ||
-        f.values.sprungBuffers !== 'NOT_APPLICABLE' ||
-        f.values.bodyShell ||
-        f.values.chassis ||
-        f.values.interiorLights !== 'NOT_APPLICABLE' ||
-        f.values.lights !== 'NOT_APPLICABLE' ||
-        f.values.digitalShunting !== 'NOT_APPLICABLE' ||
-        f.values.series;
+        $form.flywheelFitted !== 'NOT_APPLICABLE' ||
+        $form.sprungBuffers !== 'NOT_APPLICABLE' ||
+        $form.bodyShell ||
+        $form.chassis ||
+        $form.interiorLights !== 'NOT_APPLICABLE' ||
+        $form.lights !== 'NOT_APPLICABLE' ||
+        $form.digitalShunting !== 'NOT_APPLICABLE' ||
+        $form.series;
 
       if (hasExtendedSpecs) {
         const specsResult = await commands.updateRollingStockSpecifications({
           railwayModelId,
           rollingStockId: newId,
-          seriesCode: f.values.seriesCode.trim(),
-          series: f.values.series || null,
-          roadNumber: f.values.roadNumber || null,
-          friendlyName: f.values.friendlyName || null,
-          livery: f.values.livery || null,
-          depot: f.values.depot || null,
+          seriesCode: ($form.seriesCode as string).trim(),
+          series: ($form.series as string) || null,
+          roadNumber: ($form.roadNumber as string) || null,
+          friendlyName: ($form.friendlyName as string) || null,
+          livery: ($form.livery as string) || null,
+          depot: ($form.depot as string) || null,
           flywheelFitted:
-            f.values.flywheelFitted === 'YES'
-              ? true
-              : f.values.flywheelFitted === 'NO'
-                ? false
-                : null,
+            $form.flywheelFitted === 'YES' ? true : $form.flywheelFitted === 'NO' ? false : null,
           sprungBuffers:
-            f.values.sprungBuffers === 'YES'
-              ? true
-              : f.values.sprungBuffers === 'NO'
-                ? false
-                : null,
-          bodyShell: f.values.bodyShell || null,
-          chassis: f.values.chassis || null,
+            $form.sprungBuffers === 'YES' ? true : $form.sprungBuffers === 'NO' ? false : null,
+          bodyShell: ($form.bodyShell as string) || null,
+          chassis: ($form.chassis as string) || null,
           interiorLights:
-            f.values.interiorLights === 'NOT_APPLICABLE'
-              ? null
-              : (f.values.interiorLights as string),
-          lights: f.values.lights === 'NOT_APPLICABLE' ? null : (f.values.lights as string),
-          dccInterface: (f.values.dccInterface || null) as DccInterface | null,
-          control: (f.values.control || null) as Control | null,
-          couplingSocket: f.values.couplingSocket || null,
-          closeCouplers: f.values.couplingSocket
-            ? f.values.closeCouplers === 'YES'
+            $form.interiorLights === 'NOT_APPLICABLE' ? null : ($form.interiorLights as string),
+          lights: $form.lights === 'NOT_APPLICABLE' ? null : ($form.lights as string),
+          dccInterface: (($form.dccInterface as string) || null) as DccInterface | null,
+          control: (($form.control as string) || null) as Control | null,
+          couplingSocket: ($form.couplingSocket as string) || null,
+          closeCouplers: $form.couplingSocket
+            ? $form.closeCouplers === 'YES'
               ? true
-              : f.values.closeCouplers === 'NO'
+              : $form.closeCouplers === 'NO'
                 ? false
                 : null
             : null,
           digitalShunting:
-            f.values.digitalShunting === 'YES'
-              ? true
-              : f.values.digitalShunting === 'NO'
-                ? false
-                : null,
-          isDummy: f.values.isDummy === 'YES' ? true : f.values.isDummy === 'NO' ? false : null
+            $form.digitalShunting === 'YES' ? true : $form.digitalShunting === 'NO' ? false : null,
+          isDummy: $form.isDummy === 'YES' ? true : $form.isDummy === 'NO' ? false : null
         });
         if (specsResult.status === 'error') {
           inlineError = m.rolling_stock_create_error();
@@ -320,22 +323,22 @@
       }
 
       // Save length if provided
-      if (f.values.lengthMm !== null) {
+      if ($form.lengthMm !== null) {
         await commands.updateRollingStockDcc({
           railwayModelId,
           rollingStockId: newId,
-          control: (f.values.control || null) as Control | null,
-          dccInterface: (f.values.dccInterface || null) as DccInterface | null,
-          lengthMillimeters: f.values.lengthMm,
+          control: (($form.control as string) || null) as Control | null,
+          dccInterface: (($form.dccInterface as string) || null) as DccInterface | null,
+          lengthMillimeters: $form.lengthMm as number,
           lengthInches: null
         });
       }
 
       // Save coupler type if selected
-      if (f.values.selectedCouplerTypeId) {
+      if ($form.selectedCouplerTypeId) {
         const couplerResult = await commands.setRollingStockCoupler({
           ownedRollingStockId,
-          couplerTypeId: f.values.selectedCouplerTypeId
+          couplerTypeId: $form.selectedCouplerTypeId as string
         });
         if (couplerResult.status === 'error') {
           inlineError = m.rolling_stock_create_error();
@@ -350,13 +353,17 @@
       isSaving = false;
     }
   }
+
+  function handleSubmit() {
+    formEl?.requestSubmit();
+  }
 </script>
 
 <DrawerShell
   {open}
   {onClose}
   size="xl"
-  hasChanges={f.isDirty}
+  {hasChanges}
   labelledby="rs-create-title"
   error={inlineError}
 >
@@ -370,79 +377,81 @@
     />
   {/snippet}
 
-  <div class="space-y-3">
-    <!-- Category + Type row (no card) -->
-    <div class="grid grid-cols-2 gap-3">
-      <FormSelect
-        id="create-category"
-        label={m.rolling_stock_field_category()}
-        options={[...categoryOptions]}
-        bind:value={f.values.category}
-        placeholder={m.rolling_stock_select_category()}
-        required
-      />
-      {#if hasSubTypes}
+  <form bind:this={formEl} use:enhance class="contents">
+    <div class="space-y-3">
+      <!-- Category + Type row (no card) -->
+      <div class="grid grid-cols-2 gap-3">
         <FormSelect
-          id="create-sub-type"
-          label={m.rolling_stock_field_type()}
-          options={subTypeOptions}
-          bind:value={f.values.subType}
-          placeholder={m.rolling_stock_select_sub_type()}
+          id="create-category"
+          label={m.rolling_stock_field_category()}
+          options={[...categoryOptions]}
+          bind:value={$form.category}
+          placeholder={m.rolling_stock_select_category()}
+          required
         />
-      {:else}
-        <div></div>
-      {/if}
+        {#if hasSubTypes}
+          <FormSelect
+            id="create-sub-type"
+            label={m.rolling_stock_field_type()}
+            options={subTypeOptions}
+            bind:value={$form.subType}
+            placeholder={m.rolling_stock_select_sub_type()}
+          />
+        {:else}
+          <div></div>
+        {/if}
+      </div>
+
+      <!-- Prototype / Identification -->
+      <RollingStockPrototypeSection
+        bind:railwayCompanyId={$form.railwayCompanyId}
+        {companyOptions}
+        bind:seriesCode={$form.seriesCode}
+        bind:series={$form.series}
+        bind:friendlyName={$form.friendlyName}
+        bind:roadNumber={$form.roadNumber}
+        bind:livery={$form.livery}
+        bind:depot={$form.depot}
+        category={$form.category}
+        selectedPrototypeId={$form.prototypeId}
+        onPrototypeSelect={handlePrototypeSelect}
+        onPrototypeClear={handlePrototypeClear}
+      />
+
+      <!-- Technical Specifications -->
+      <RollingStockTechnicalFields
+        bind:flywheelFitted={$form.flywheelFitted}
+        bind:sprungBuffers={$form.sprungBuffers}
+        bind:bodyShell={$form.bodyShell}
+        bind:chassis={$form.chassis}
+        bind:interiorLights={$form.interiorLights}
+        bind:lights={$form.lights}
+        bind:dccInterface={$form.dccInterface}
+        bind:control={$form.control}
+        bind:couplingSocket={$form.couplingSocket}
+        bind:closeCouplers={$form.closeCouplers}
+        bind:digitalShunting={$form.digitalShunting}
+        bind:isDummy={$form.isDummy}
+        bind:lengthMm={$form.lengthMm}
+        {bodyShellOptions}
+        {chassisOptions}
+        controlOptions={[...controlOptions]}
+        dccInterfaceOptions={[...dccInterfaceOptions]}
+        couplingSockeOptions={[...couplingSocketOptions]}
+        {filteredCouplers}
+        bind:selectedCouplerTypeId={$form.selectedCouplerTypeId}
+        {expandTechnical}
+        category={$form.category}
+      />
     </div>
-
-    <!-- Prototype / Identification -->
-    <RollingStockPrototypeSection
-      bind:railwayCompanyId={f.values.railwayCompanyId}
-      {companyOptions}
-      bind:seriesCode={f.values.seriesCode}
-      bind:series={f.values.series}
-      bind:friendlyName={f.values.friendlyName}
-      bind:roadNumber={f.values.roadNumber}
-      bind:livery={f.values.livery}
-      bind:depot={f.values.depot}
-      category={f.values.category}
-      selectedPrototypeId={f.values.prototypeId}
-      onPrototypeSelect={handlePrototypeSelect}
-      onPrototypeClear={handlePrototypeClear}
-    />
-
-    <!-- Technical Specifications -->
-    <RollingStockTechnicalFields
-      bind:flywheelFitted={f.values.flywheelFitted}
-      bind:sprungBuffers={f.values.sprungBuffers}
-      bind:bodyShell={f.values.bodyShell}
-      bind:chassis={f.values.chassis}
-      bind:interiorLights={f.values.interiorLights}
-      bind:lights={f.values.lights}
-      bind:dccInterface={f.values.dccInterface}
-      bind:control={f.values.control}
-      bind:couplingSocket={f.values.couplingSocket}
-      bind:closeCouplers={f.values.closeCouplers}
-      bind:digitalShunting={f.values.digitalShunting}
-      bind:isDummy={f.values.isDummy}
-      bind:lengthMm={f.values.lengthMm}
-      {bodyShellOptions}
-      {chassisOptions}
-      controlOptions={[...controlOptions]}
-      dccInterfaceOptions={[...dccInterfaceOptions]}
-      couplingSockeOptions={[...couplingSocketOptions]}
-      {filteredCouplers}
-      bind:selectedCouplerTypeId={f.values.selectedCouplerTypeId}
-      {expandTechnical}
-      category={f.values.category}
-    />
-  </div>
+  </form>
 
   {#snippet footer({ requestClose })}
     <DrawerFooter
       cancelLabel={m.specs_drawer_cancel()}
       submitLabel={m.specs_drawer_save()}
       onCancel={requestClose}
-      onSubmit={handleSave}
+      onSubmit={handleSubmit}
       submitting={isSaving}
       disabled={!isFormValid}
     />

@@ -1,11 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  createDefaultItem,
-  createDefaultFormState,
-  validateForm,
-  hasErrors,
-  toRecordAcquisitionArgs
-} from '../types.js';
+import { createDefaultItem, createDefaultFormState, toRecordAcquisitionArgs } from '../types.js';
 import type { AcquisitionFormState, AcquisitionItemEntry } from '../types.js';
 
 vi.mock('$lib/bindings', () => ({}));
@@ -96,72 +90,6 @@ describe('createDefaultFormState', () => {
     const { batchDefaults } = createDefaultFormState();
     expect(batchDefaults.scale).toBeNull();
     expect(batchDefaults.powerMethod).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// validateForm
-// ---------------------------------------------------------------------------
-
-describe('validateForm', () => {
-  it('returns no errors for a valid form', () => {
-    const errors = validateForm(makeForm());
-    expect(errors.general).toBeUndefined();
-    expect(errors.items).toBeUndefined();
-  });
-
-  it('returns a general error when items list is empty', () => {
-    const errors = validateForm(makeForm({ items: [] }));
-    expect(errors.general).toBeTruthy();
-  });
-
-  it('flags missing manufacturerId', () => {
-    const errors = validateForm(makeForm({ items: [makeItem({ manufacturerId: null })] }));
-    expect(errors.items?.[0].manufacturerId).toBeTruthy();
-  });
-
-  it('flags empty productCode', () => {
-    const errors = validateForm(makeForm({ items: [makeItem({ productCode: '   ' })] }));
-    expect(errors.items?.[0].productCode).toBeTruthy();
-  });
-
-  it('flags missing category', () => {
-    const errors = validateForm(makeForm({ items: [makeItem({ category: null })] }));
-    expect(errors.items?.[0].category).toBeTruthy();
-  });
-
-  it('reports per-item errors for multiple items', () => {
-    const items = [
-      makeItem({ uid: 'a', manufacturerId: null }),
-      makeItem({ uid: 'b' }),
-      makeItem({ uid: 'c', category: null })
-    ];
-    const errors = validateForm(makeForm({ items }));
-    expect(errors.items?.[0].manufacturerId).toBeTruthy();
-    expect(errors.items?.[1]).toEqual({});
-    expect(errors.items?.[2].category).toBeTruthy();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// hasErrors
-// ---------------------------------------------------------------------------
-
-describe('hasErrors', () => {
-  it('returns false when errors object is empty', () => {
-    expect(hasErrors({})).toBe(false);
-  });
-
-  it('returns true when general error is present', () => {
-    expect(hasErrors({ general: 'Something went wrong' })).toBe(true);
-  });
-
-  it('returns true when any item has an error', () => {
-    expect(hasErrors({ items: [{ manufacturerId: 'required' }, {}] })).toBe(true);
-  });
-
-  it('returns false when all item error objects are empty', () => {
-    expect(hasErrors({ items: [{}, {}] })).toBe(false);
   });
 });
 

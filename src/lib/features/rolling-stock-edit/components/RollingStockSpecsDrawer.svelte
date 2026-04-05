@@ -18,6 +18,7 @@
   import RollingStockPrototypeSection from './RollingStockPrototypeSection.svelte';
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
+  import { superForm } from 'sveltekit-superforms';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -97,7 +98,11 @@
     isDummy: 'NOT_APPLICABLE'
   };
 
-  let form = $state<FormState>({ ...emptyForm });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { form, tainted, reset, isTainted } = superForm(emptyForm as any, {
+    SPA: true,
+    dataType: 'json'
+  });
   let originalForm = $state<FormState>({ ...emptyForm });
   let isLoading = $state(false);
   let isSaving = $state(false);
@@ -107,21 +112,21 @@
   let allCouplers = $state<CouplerType[]>([]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const isDirty = $derived(JSON.stringify(form) !== JSON.stringify(originalForm));
+  const hasChanges = $derived(isTainted($tainted));
 
   const filteredCouplers = $derived(
-    form.couplingSocket
-      ? allCouplers.filter((c) => c.compatible_socket === form.couplingSocket)
+    ($form.couplingSocket as string)
+      ? allCouplers.filter((c) => c.compatible_socket === ($form.couplingSocket as string))
       : []
   );
 
   // Clear selected coupler when the socket changes and it's no longer compatible
   $effect(() => {
     if (
-      form.selectedCouplerTypeId &&
-      !filteredCouplers.some((c) => c.id === form.selectedCouplerTypeId)
+      $form.selectedCouplerTypeId &&
+      !filteredCouplers.some((c) => c.id === $form.selectedCouplerTypeId)
     ) {
-      form.selectedCouplerTypeId = null;
+      $form.selectedCouplerTypeId = null;
     }
   });
 
@@ -274,7 +279,8 @@
       }
       const data = extractRsData(rs);
       data.selectedCouplerTypeId = currentCouplerId ?? null;
-      form = { ...data };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: { ...data } as any });
       originalForm = { ...data };
     } finally {
       isLoading = false;
@@ -283,9 +289,9 @@
 
   // ── Prototype autofill (edit drawer — does not persist prototype association) ─
   function handlePrototypeSelect(p: PrototypeView) {
-    form.railwayCompanyId = p.railway_company_id;
-    form.seriesCode = p.series_code;
-    form.friendlyName = p.friendly_name ?? '';
+    $form.railwayCompanyId = p.railway_company_id;
+    $form.seriesCode = p.series_code;
+    $form.friendlyName = p.friendly_name ?? '';
     expandTechnical = true;
   }
 
@@ -301,33 +307,33 @@
       const result = await commands.updateRollingStockSpecifications({
         railwayModelId,
         rollingStockId,
-        seriesCode: form.seriesCode,
-        series: form.series || null,
-        roadNumber: form.roadNumber || null,
-        friendlyName: form.friendlyName || null,
-        livery: form.livery || null,
-        depot: form.depot || null,
+        seriesCode: $form.seriesCode as string,
+        series: ($form.series as string) || null,
+        roadNumber: ($form.roadNumber as string) || null,
+        friendlyName: ($form.friendlyName as string) || null,
+        livery: ($form.livery as string) || null,
+        depot: ($form.depot as string) || null,
         flywheelFitted:
-          form.flywheelFitted === 'YES' ? true : form.flywheelFitted === 'NO' ? false : null,
+          $form.flywheelFitted === 'YES' ? true : $form.flywheelFitted === 'NO' ? false : null,
         sprungBuffers:
-          form.sprungBuffers === 'YES' ? true : form.sprungBuffers === 'NO' ? false : null,
-        bodyShell: form.bodyShell || null,
-        chassis: form.chassis || null,
+          $form.sprungBuffers === 'YES' ? true : $form.sprungBuffers === 'NO' ? false : null,
+        bodyShell: ($form.bodyShell as string) || null,
+        chassis: ($form.chassis as string) || null,
         interiorLights:
-          form.interiorLights === 'NOT_APPLICABLE' ? null : (form.interiorLights as string),
-        lights: form.lights === 'NOT_APPLICABLE' ? null : (form.lights as string),
-        dccInterface: (form.dccInterface || null) as Parameters<
+          $form.interiorLights === 'NOT_APPLICABLE' ? null : ($form.interiorLights as string),
+        lights: $form.lights === 'NOT_APPLICABLE' ? null : ($form.lights as string),
+        dccInterface: (($form.dccInterface as string) || null) as Parameters<
           typeof commands.updateRollingStockSpecifications
         >[0]['dccInterface'],
-        control: (form.control || null) as Parameters<
+        control: (($form.control as string) || null) as Parameters<
           typeof commands.updateRollingStockSpecifications
         >[0]['control'],
-        couplingSocket: form.couplingSocket || null,
+        couplingSocket: ($form.couplingSocket as string) || null,
         closeCouplers:
-          form.closeCouplers === 'YES' ? true : form.closeCouplers === 'NO' ? false : null,
+          $form.closeCouplers === 'YES' ? true : $form.closeCouplers === 'NO' ? false : null,
         digitalShunting:
-          form.digitalShunting === 'YES' ? true : form.digitalShunting === 'NO' ? false : null,
-        isDummy: form.isDummy === 'YES' ? true : form.isDummy === 'NO' ? false : null
+          $form.digitalShunting === 'YES' ? true : $form.digitalShunting === 'NO' ? false : null,
+        isDummy: $form.isDummy === 'YES' ? true : $form.isDummy === 'NO' ? false : null
       });
 
       if (result.status === 'error') {
@@ -336,11 +342,11 @@
       }
 
       // Save railway company separately if it changed.
-      if (form.railwayCompanyId && form.railwayCompanyId !== originalForm.railwayCompanyId) {
+      if ($form.railwayCompanyId && $form.railwayCompanyId !== originalForm.railwayCompanyId) {
         const companyResult = await commands.updateRollingStockRailwayCompany({
           railwayModelId,
           rollingStockId,
-          railwayCompanyId: form.railwayCompanyId as RailwayCompanyId
+          railwayCompanyId: $form.railwayCompanyId as RailwayCompanyId
         });
         if (companyResult.status === 'error') {
           inlineError = m.specs_drawer_save_error();
@@ -349,10 +355,10 @@
       }
 
       // Save coupler type if it changed.
-      if (form.selectedCouplerTypeId !== originalForm.selectedCouplerTypeId) {
+      if ($form.selectedCouplerTypeId !== originalForm.selectedCouplerTypeId) {
         const couplerResult = await commands.setRollingStockCoupler({
           ownedRollingStockId,
-          couplerTypeId: form.selectedCouplerTypeId
+          couplerTypeId: $form.selectedCouplerTypeId as string | null
         });
         if (couplerResult.status === 'error') {
           inlineError = m.specs_drawer_save_error();
@@ -361,13 +367,13 @@
       }
 
       // Save length if it changed.
-      if (form.lengthMm !== originalForm.lengthMm) {
+      if ($form.lengthMm !== originalForm.lengthMm) {
         const dccResult = await commands.updateRollingStockDcc({
           railwayModelId,
           rollingStockId,
-          control: (form.control || null) as Control | null,
-          dccInterface: (form.dccInterface || null) as DccInterface | null,
-          lengthMillimeters: form.lengthMm,
+          control: (($form.control as string) || null) as Control | null,
+          dccInterface: (($form.dccInterface as string) || null) as DccInterface | null,
+          lengthMillimeters: $form.lengthMm as number | null,
           lengthInches: null
         });
         if (dccResult.status === 'error') {
@@ -377,7 +383,9 @@
       }
 
       toaster.success(m.specs_drawer_save_success());
-      originalForm = { ...form };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: { ...$form } as any });
+      originalForm = { ...$form } as FormState;
       onSaved?.();
       onClose();
     } finally {
@@ -390,7 +398,7 @@
   {open}
   {onClose}
   size="xl"
-  hasChanges={isDirty}
+  {hasChanges}
   labelledby="rs-specs-title"
   error={inlineError}
 >
@@ -413,34 +421,34 @@
   {:else}
     <div class="space-y-3">
       <RollingStockPrototypeSection
-        bind:railwayCompanyId={form.railwayCompanyId}
+        bind:railwayCompanyId={$form.railwayCompanyId}
         {companyOptions}
-        bind:seriesCode={form.seriesCode}
-        bind:series={form.series}
-        bind:friendlyName={form.friendlyName}
-        bind:roadNumber={form.roadNumber}
-        bind:livery={form.livery}
-        bind:depot={form.depot}
-        category={form.category}
+        bind:seriesCode={$form.seriesCode}
+        bind:series={$form.series}
+        bind:friendlyName={$form.friendlyName}
+        bind:roadNumber={$form.roadNumber}
+        bind:livery={$form.livery}
+        bind:depot={$form.depot}
+        category={$form.category}
         onPrototypeSelect={handlePrototypeSelect}
         onPrototypeClear={handlePrototypeClear}
       />
 
       <RollingStockTechnicalFields
-        bind:flywheelFitted={form.flywheelFitted}
-        bind:sprungBuffers={form.sprungBuffers}
-        bind:bodyShell={form.bodyShell}
-        bind:chassis={form.chassis}
-        bind:interiorLights={form.interiorLights}
-        bind:lights={form.lights}
-        bind:dccInterface={form.dccInterface}
-        bind:control={form.control}
-        bind:couplingSocket={form.couplingSocket}
-        bind:closeCouplers={form.closeCouplers}
-        bind:digitalShunting={form.digitalShunting}
-        bind:isDummy={form.isDummy}
-        bind:lengthMm={form.lengthMm}
-        category={form.category}
+        bind:flywheelFitted={$form.flywheelFitted}
+        bind:sprungBuffers={$form.sprungBuffers}
+        bind:bodyShell={$form.bodyShell}
+        bind:chassis={$form.chassis}
+        bind:interiorLights={$form.interiorLights}
+        bind:lights={$form.lights}
+        bind:dccInterface={$form.dccInterface}
+        bind:control={$form.control}
+        bind:couplingSocket={$form.couplingSocket}
+        bind:closeCouplers={$form.closeCouplers}
+        bind:digitalShunting={$form.digitalShunting}
+        bind:isDummy={$form.isDummy}
+        bind:lengthMm={$form.lengthMm}
+        category={$form.category}
         {bodyShellOptions}
         {chassisOptions}
         {controlOptions}
@@ -460,7 +468,7 @@
       onSubmit={handleSave}
       submitting={isSaving}
       {isLoading}
-      disabled={!form.seriesCode.trim()}
+      disabled={!($form.seriesCode as string).trim()}
     />
   {/snippet}
 </DrawerShell>

@@ -11,12 +11,10 @@
   import { safeInvoke } from '$lib/shared/services/TauriAdapter';
   import { toaster } from '$lib/toaster';
   import * as m from '$lib/paraglide/messages.js';
-  import {
-    DrawerShell,
-    DrawerHeader,
-    DrawerFooter,
-    createDrawerForm
-  } from '$lib/components/drawer';
+  import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { maintenanceSchema } from '$lib/schemas/maintenance-form';
+  import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 
   interface Props {
@@ -35,8 +33,8 @@
     return `${y}-${mo}-${d}`;
   }
 
-  const f = createDrawerForm({
-    initial: () => ({
+  function createInitialFormState() {
+    return {
       selectedLocoId: null as string | null,
       datePerformed: getTodayLocal(),
       maintenanceType: null as string | null,
@@ -44,18 +42,79 @@
       initialCondition: '',
       lastRunDate: getTodayLocal(),
       serviceInterval: ''
-    }),
-    validate: (v) => ({
-      selectedLocoId: !v.selectedLocoId ? m.error_required() : undefined,
-      datePerformed: !v.datePerformed ? m.error_required() : undefined
-    })
-  });
+    };
+  }
 
   let isSubmitting = $state(false);
   let isLoadingRs = $state(false);
   let error = $state<string | null>(null);
   let rollingStocks = $state<OwnedRollingStockView[]>([]);
   let maintenanceCards = $state<MaintenanceCardView[]>([]);
+  let formEl: HTMLFormElement | undefined = $state();
+
+  const { form, errors, tainted, enhance, reset, isTainted } = superForm(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createInitialFormState() as any,
+    {
+      SPA: true,
+      dataType: 'json',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      validators: zod(maintenanceSchema as any),
+      onUpdate: async ({ form: fd }) => {
+        if (!fd.valid) return;
+
+        isSubmitting = true;
+        error = null;
+
+        try {
+          let cardId: string;
+          const locoId = $form.selectedLocoId as string;
+
+          if (hasMaintenanceCard && existingCardForLoco) {
+            cardId = existingCardForLoco.id;
+          } else {
+            const cardResult = await commands.addMaintenanceCard(locoId);
+            if (cardResult.status !== 'ok') {
+              throw new Error(JSON.stringify(cardResult.error));
+            }
+            cardId = cardResult.data;
+          }
+
+          const trimmedCondition = !hasMaintenanceCard
+            ? ($form.initialCondition as string).trim()
+            : '';
+          let notesText = ($form.notes as string).trim();
+          if (trimmedCondition) {
+            notesText = trimmedCondition + (notesText ? '\n' + notesText : '');
+          }
+
+          const eventResult = await commands.addMaintenanceEvent({
+            maintenanceCardId: cardId,
+            datePerformed: $form.datePerformed as string,
+            maintenanceType: $form.maintenanceType as MaintenanceType | null,
+            notes: notesText || null
+          });
+          if (eventResult.status !== 'ok') {
+            throw new Error(JSON.stringify(eventResult.error));
+          }
+
+          toaster.success({
+            id: crypto.randomUUID(),
+            title: m.maintenance_add_event_success(),
+            duration: 3000
+          });
+
+          onSuccess?.();
+          onClose();
+        } catch (err) {
+          error = err instanceof Error ? err.message : m.maintenance_add_event_error();
+          console.error('[LogMaintenanceDrawer] Submit error:', err);
+        } finally {
+          isSubmitting = false;
+        }
+      }
+    }
+  );
 
   // Maintenance type options
   const maintenanceTypes: Array<{ value: MaintenanceType; label: string }> = [
@@ -77,20 +136,23 @@
 
   // Cross-reference selected loco against existing maintenance cards
   const existingCardForLoco = $derived(
-    maintenanceCards.find((c) => c.ownedRollingStockId === f.values.selectedLocoId) ?? null
+    maintenanceCards.find(
+      (c) => c.ownedRollingStockId === ($form.selectedLocoId as string | null)
+    ) ?? null
   );
 
   // Smart-switch: does the selected loco already have a maintenance card?
   const hasMaintenanceCard = $derived(existingCardForLoco !== null);
 
-  const isFormValid = $derived(f.values.selectedLocoId !== null && f.values.datePerformed !== '');
+  const hasChanges = $derived(isTainted($tainted));
 
   // Reset form synchronously before render so isDirty is false when the
   // drawer first becomes visible — prevents a spurious Discard dialog on
   // re-open after a prior dirty session.
   $effect.pre(() => {
     if (open) {
-      f.reset();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: createInitialFormState() as any });
       error = null;
     }
   });
@@ -105,7 +167,7 @@
 
   // Clear error when loco selection changes
   $effect(() => {
-    if (f.values.selectedLocoId) error = null;
+    if ($form.selectedLocoId) error = null;
   });
 
   async function loadRollingStocks() {
@@ -130,59 +192,8 @@
     }
   }
 
-  async function handleSubmit() {
-    if (!isFormValid || !f.values.selectedLocoId || !f.values.datePerformed) return;
-
-    isSubmitting = true;
-    error = null;
-
-    try {
-      let cardId: string;
-
-      if (hasMaintenanceCard && existingCardForLoco) {
-        // Existing card: use it directly
-        cardId = existingCardForLoco.id;
-      } else {
-        // No card yet: create one first
-        const cardResult = await commands.addMaintenanceCard(f.values.selectedLocoId);
-        if (cardResult.status !== 'ok') {
-          throw new Error(JSON.stringify(cardResult.error));
-        }
-        cardId = cardResult.data;
-      }
-
-      // Build notes: prepend initialCondition when creating a new card
-      const trimmedCondition = !hasMaintenanceCard ? f.values.initialCondition.trim() : '';
-      let notesText = f.values.notes.trim();
-      if (trimmedCondition) {
-        notesText = trimmedCondition + (notesText ? '\n' + notesText : '');
-      }
-
-      // Log the maintenance event
-      const eventResult = await commands.addMaintenanceEvent({
-        maintenanceCardId: cardId,
-        datePerformed: f.values.datePerformed,
-        maintenanceType: f.values.maintenanceType,
-        notes: notesText || null
-      });
-      if (eventResult.status !== 'ok') {
-        throw new Error(JSON.stringify(eventResult.error));
-      }
-
-      toaster.success({
-        id: crypto.randomUUID(),
-        title: m.maintenance_add_event_success(),
-        duration: 3000
-      });
-
-      onSuccess?.();
-      onClose();
-    } catch (err) {
-      error = err instanceof Error ? err.message : m.maintenance_add_event_error();
-      console.error('[LogMaintenanceDrawer] Submit error:', err);
-    } finally {
-      isSubmitting = false;
-    }
+  function handleSubmit() {
+    formEl?.requestSubmit();
   }
 </script>
 
@@ -190,7 +201,7 @@
   {open}
   {onClose}
   size="xl"
-  hasChanges={f.isDirty}
+  {hasChanges}
   labelledby="log-maintenance-drawer-title"
   {error}
 >
@@ -204,7 +215,7 @@
     />
   {/snippet}
 
-  <div class="space-y-5">
+  <form bind:this={formEl} use:enhance class="space-y-5">
     <!-- Subject-First Selector: single searchable combobox -->
     <div class="space-y-2">
       <label
@@ -224,17 +235,20 @@
         <SearchableSelect
           id="loco-select"
           options={rsOptions}
-          value={f.values.selectedLocoId ?? ''}
+          value={($form.selectedLocoId as string | null) ?? ''}
           placeholder={m.log_maintenance_select_loco_placeholder()}
           onSelect={(val) => {
-            f.values.selectedLocoId = val || null;
+            $form.selectedLocoId = val || null;
           }}
         />
+      {/if}
+      {#if $errors.selectedLocoId?.[0]}
+        <p class="text-xs text-destructive">{$errors.selectedLocoId[0]}</p>
       {/if}
     </div>
 
     <!-- Dynamic form unfolding: appears after a loco is chosen -->
-    {#if f.values.selectedLocoId !== null}
+    {#if ($form.selectedLocoId as string | null) !== null}
       <!-- Status Lamp -->
       <div transition:slide={{ duration: 200 }} class="flex items-center gap-2">
         <span
@@ -275,8 +289,8 @@
               id="initial-condition"
               class="flex min-h-[72px] w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
               placeholder={m.log_maintenance_initial_condition_placeholder()}
-              value={f.values.initialCondition}
-              oninput={(e) => (f.values.initialCondition = (e.target as HTMLTextAreaElement).value)}
+              value={$form.initialCondition as string}
+              oninput={(e) => ($form.initialCondition = (e.target as HTMLTextAreaElement).value)}
             ></textarea>
           </div>
 
@@ -292,8 +306,8 @@
               id="last-run-date"
               type="date"
               class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
-              value={f.values.lastRunDate}
-              oninput={(e) => (f.values.lastRunDate = (e.target as HTMLInputElement).value)}
+              value={$form.lastRunDate as string}
+              oninput={(e) => ($form.lastRunDate = (e.target as HTMLInputElement).value)}
             />
           </div>
 
@@ -311,8 +325,8 @@
               min="1"
               class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
               placeholder={m.log_maintenance_service_interval_placeholder()}
-              value={f.values.serviceInterval}
-              oninput={(e) => (f.values.serviceInterval = (e.target as HTMLInputElement).value)}
+              value={$form.serviceInterval as string}
+              oninput={(e) => ($form.serviceInterval = (e.target as HTMLInputElement).value)}
             />
           </div>
         </div>
@@ -338,11 +352,15 @@
           <input
             id="date-performed"
             type="date"
-            class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
-            value={f.values.datePerformed}
-            oninput={(e) => (f.values.datePerformed = (e.target as HTMLInputElement).value)}
-            required
+            class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none {$errors.datePerformed
+              ? 'border-destructive'
+              : ''}"
+            value={$form.datePerformed as string}
+            oninput={(e) => ($form.datePerformed = (e.target as HTMLInputElement).value)}
           />
+          {#if $errors.datePerformed?.[0]}
+            <p class="text-xs text-destructive">{$errors.datePerformed[0]}</p>
+          {/if}
         </div>
 
         <!-- Maintenance Type -->
@@ -356,10 +374,10 @@
           <select
             id="maintenance-type"
             class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            value={f.values.maintenanceType ?? ''}
+            value={($form.maintenanceType as string | null) ?? ''}
             onchange={(e) => {
               const v = (e.target as HTMLSelectElement).value;
-              f.values.maintenanceType = v || null;
+              $form.maintenanceType = v || null;
             }}
           >
             <option value="">{m.maintenance_add_event_type_placeholder()}</option>
@@ -381,13 +399,13 @@
             id="event-notes"
             class="flex min-h-[80px] w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
             placeholder={m.maintenance_add_event_notes_placeholder()}
-            value={f.values.notes}
-            oninput={(e) => (f.values.notes = (e.target as HTMLTextAreaElement).value)}
+            value={$form.notes as string}
+            oninput={(e) => ($form.notes = (e.target as HTMLTextAreaElement).value)}
           ></textarea>
         </div>
       </div>
     {/if}
-  </div>
+  </form>
 
   {#snippet footer({ requestClose })}
     <DrawerFooter
@@ -396,7 +414,6 @@
       onCancel={requestClose}
       onSubmit={handleSubmit}
       submitting={isSubmitting}
-      disabled={!isFormValid}
     />
   {/snippet}
 </DrawerShell>

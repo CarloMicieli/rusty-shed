@@ -12,10 +12,12 @@
     DrawerHeader,
     ModelInfoSection,
     WishlistPickerSection,
-    WishlistPreferencesSection,
-    createDrawerForm
+    WishlistPreferencesSection
   } from '$lib/components/drawer';
   import { onMount } from 'svelte';
+  import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { wishlistFormSchema } from '$lib/schemas/wishlist-form';
 
   const wishlistService = getWishlistContext();
 
@@ -35,10 +37,10 @@
     return {
       wishlistId: defaultWishlist?.id ?? '',
       newListName: '',
-      manufacturerId: '',
+      manufacturerId: null as string | null,
       productCode: '',
       description: '',
-      category: '',
+      category: null as string | null,
       scale: settingsState.settings?.favouriteScale || SCALES[0],
       powerMethod: settingsState.settings?.powerMethod || POWER_METHODS[0],
       epoch: null as string | null,
@@ -47,41 +49,57 @@
     };
   }
 
-  const f = createDrawerForm({
-    initial: makeInitial,
-    validate: (v) => ({
-      manufacturerId: !v.manufacturerId ? m.wishlist_modal_missing_manufacturer() : undefined,
-      productCode: !v.productCode.trim() ? m.wishlist_modal_missing_product_code() : undefined,
-      description: !v.description.trim() ? m.wishlist_modal_missing_description() : undefined,
-      desiredPrice:
-        v.desiredPrice !== null && v.desiredPrice <= 0
-          ? m.wishlist_modal_invalid_price()
-          : undefined
-    })
-  });
-
   let manufacturers = $state<Manufacturer[]>([]);
   let isLoadingData = $state(false);
   let isSubmitting = $state(false);
   let asyncError = $state<string | null>(null);
 
+  const { form, errors, tainted, reset, isTainted, validateForm } = superForm(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    makeInitial() as any,
+    {
+      SPA: true,
+      dataType: 'json',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      validators: zod(wishlistFormSchema as any)
+    }
+  );
+
   const currency = $derived(settingsState.settings.currency ?? 'EUR');
   const lockWishlist = $derived(!!preselectedWishlistId);
+  const hasChanges = $derived(isTainted($tainted));
+
+  const mappedErrors = $derived({
+    desiredPrice: $errors.desiredPrice?.[0] as string | undefined
+  });
 
   // Show first validation error or async error in banner
   const formError = $derived(
-    asyncError ?? (Object.values(f.errors).find((e) => !!e) as string | undefined) ?? null
+    asyncError ??
+      (($errors.manufacturerId?.[0] ?? $errors.productCode?.[0] ?? $errors.description?.[0]) as
+        | string
+        | undefined) ??
+      null
   );
 
+  $effect.pre(() => {
+    if (open) {
+      asyncError = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: makeInitial() as any });
+    }
+  });
+
   $effect(() => {
-    if (defaultWishlist && f.values.wishlistId === '' && !f.values.newListName) {
-      f.reset(makeInitial());
+    if (defaultWishlist && ($form.wishlistId as string) === '' && !$form.newListName) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset({ data: makeInitial() as any });
     }
   });
 
   $effect(() => {
     if (open && preselectedWishlistId) {
-      f.values.wishlistId = preselectedWishlistId;
+      $form.wishlistId = preselectedWishlistId;
     }
   });
 
@@ -94,19 +112,24 @@
     isLoadingData = false;
   });
 
-  async function handleSubmit() {
+  function resetAndClose() {
+    onClose();
     asyncError = null;
-    f.touch();
+  }
 
-    if (!f.isValid) return;
+  async function handleSubmit() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await validateForm({ update: true } as any);
+    if (!result.valid) return;
 
     isSubmitting = true;
+    asyncError = null;
     try {
-      let targetId = f.values.wishlistId;
+      let targetId = $form.wishlistId as string;
 
-      if (f.values.newListName.trim()) {
+      if (($form.newListName as string).trim()) {
         const created = await wishlistService.createWishlist(
-          f.values.newListName.trim(),
+          ($form.newListName as string).trim(),
           false,
           true
         );
@@ -122,21 +145,21 @@
         return;
       }
 
-      const priceAmount = f.values.desiredPrice !== null ? (f.values.desiredPrice as number) : null;
+      const priceAmount = $form.desiredPrice !== null ? ($form.desiredPrice as number) : null;
 
       const success = await wishlistService.addRailwayModelToWishlist({
         railwayModel: {
-          manufacturerId: f.values.manufacturerId,
-          productCode: f.values.productCode.trim(),
-          description: f.values.description.trim(),
-          category: f.values.category,
-          scale: f.values.scale,
-          epoch: f.values.epoch ?? '',
-          powerMethod: f.values.powerMethod,
+          manufacturerId: $form.manufacturerId as string,
+          productCode: ($form.productCode as string).trim(),
+          description: ($form.description as string).trim(),
+          category: ($form.category as string | null) ?? '',
+          scale: $form.scale as string,
+          epoch: ($form.epoch as string | null) ?? '',
+          powerMethod: $form.powerMethod as string,
           rollingStocks: []
         },
         wishlistId: targetId,
-        priority: f.values.priority,
+        priority: $form.priority as WishlistPriority,
         status: null,
         desiredPriceAmount: priceAmount,
         desiredPriceCurrency: priceAmount !== null ? currency : null,
@@ -155,19 +178,13 @@
       isSubmitting = false;
     }
   }
-
-  function resetAndClose() {
-    onClose();
-    f.reset(makeInitial());
-    asyncError = null;
-  }
 </script>
 
 <DrawerShell
   {open}
   onClose={resetAndClose}
   size="xl"
-  hasChanges={f.isDirty}
+  {hasChanges}
   labelledby="wishlist-item-drawer-title"
   error={formError}
   discardTitle={m.wishlist_add_item_drawer_discard_title()}
@@ -185,46 +202,48 @@
     />
   {/snippet}
 
-  <div class="space-y-6">
-    <!-- Section 1: Choose or Create Wishlist -->
-    <WishlistPickerSection
-      bind:wishlistId={f.values.wishlistId}
-      bind:newListName={f.values.newListName}
-      {wishlists}
-      disabled={isSubmitting}
-      disableWishlistSelection={lockWishlist}
-    />
+  <form class="contents" onsubmit={(e) => e.preventDefault()}>
+    <div class="space-y-6">
+      <!-- Section 1: Choose or Create Wishlist -->
+      <WishlistPickerSection
+        bind:wishlistId={$form.wishlistId}
+        bind:newListName={$form.newListName}
+        {wishlists}
+        disabled={isSubmitting}
+        disableWishlistSelection={lockWishlist}
+      />
 
-    <!-- Section 2: Model Details -->
-    <ModelInfoSection
-      bind:manufacturerId={f.values.manufacturerId}
-      bind:productCode={f.values.productCode}
-      bind:description={f.values.description}
-      bind:category={f.values.category}
-      bind:scale={f.values.scale}
-      bind:powerMethod={f.values.powerMethod}
-      bind:epoch={f.values.epoch}
-      {manufacturers}
-      isLoading={isLoadingData}
-      disabled={isSubmitting}
-    />
+      <!-- Section 2: Model Details -->
+      <ModelInfoSection
+        bind:manufacturerId={$form.manufacturerId}
+        bind:productCode={$form.productCode}
+        bind:description={$form.description}
+        bind:category={$form.category}
+        bind:scale={$form.scale}
+        bind:powerMethod={$form.powerMethod}
+        bind:epoch={$form.epoch}
+        {manufacturers}
+        isLoading={isLoadingData}
+        disabled={isSubmitting}
+      />
 
-    <!-- Section 3: Wishlist Preferences -->
-    <div class="overflow-hidden rounded-sm border border-border bg-card p-4">
-      <section>
-        <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-          {m.drawer_section_wishlist()}
-        </p>
-        <WishlistPreferencesSection
-          bind:priority={f.values.priority}
-          bind:desiredPrice={f.values.desiredPrice}
-          {currency}
-          errors={f.errors}
-          disabled={isSubmitting}
-        />
-      </section>
+      <!-- Section 3: Wishlist Preferences -->
+      <div class="overflow-hidden rounded-sm border border-border bg-card p-4">
+        <section>
+          <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+            {m.drawer_section_wishlist()}
+          </p>
+          <WishlistPreferencesSection
+            bind:priority={$form.priority}
+            bind:desiredPrice={$form.desiredPrice}
+            {currency}
+            errors={mappedErrors}
+            disabled={isSubmitting}
+          />
+        </section>
+      </div>
     </div>
-  </div>
+  </form>
 
   {#snippet footer({ requestClose })}
     <div class="flex items-center justify-end gap-2 p-4">
