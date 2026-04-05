@@ -1,3 +1,22 @@
+/// Normalises an entity name before slugification.
+///
+/// Periods are stripped entirely so that abbreviations like `"A.C.M.E."` become
+/// `"ACME"` (and subsequently `"acme"`) rather than `"a-c-m-e"`. Leading/trailing
+/// whitespace is trimmed before the transformation.
+///
+/// # Examples
+///
+/// ```
+/// // "A.C.M.E." → "acme"
+/// // "  Deutsche Bahn  " → "deutsche-bahn"
+/// // "A.C.M.E. Ltd." → "acme-ltd"
+/// ```
+fn slugify_entity_name(name: &str) -> String {
+    let trimmed = name.trim();
+    let without_periods = trimmed.replace('.', "");
+    slug::slugify(without_periods)
+}
+
 /// Trait for TRN-based identifiers with automatic validation, parsing, and formatting.
 ///
 /// This trait provides a consistent interface for all domain identifiers, ensuring they:
@@ -48,7 +67,7 @@ pub trait Identifier: Sized + AsRef<str> {
     /// # Returns
     /// A new identifier with slugified parts
     fn new_from_parts(parts: &[&str]) -> Self {
-        let slugified: Vec<String> = parts.iter().map(slug::slugify).collect();
+        let slugified: Vec<String> = parts.iter().map(|p| slugify_entity_name(p)).collect();
         let full_id = format!("{}:{}", Self::PREFIX, slugified.join(":"));
         Self::from_string_unchecked(full_id)
     }
@@ -218,6 +237,43 @@ mod tests {
     fn test_new_from_parts_with_special_chars() {
         let id = TestId::new_from_parts(&["ACME Corp!", "Model #456"]);
         assert_eq!(id.as_ref(), "trn:test:acme-corp:model-456");
+    }
+
+    // --- slugify_entity_name ---
+
+    #[test]
+    fn test_slugify_entity_name_abbreviation() {
+        // Periods are stripped, result is slugified
+        assert_eq!(slugify_entity_name("A.C.M.E."), "acme");
+    }
+
+    #[test]
+    fn test_slugify_entity_name_trims_whitespace() {
+        assert_eq!(slugify_entity_name("  A.C.M.E.  "), "acme");
+    }
+
+    #[test]
+    fn test_slugify_entity_name_plain_words() {
+        // No periods: behaves exactly like slug::slugify
+        assert_eq!(slugify_entity_name("Deutsche Bahn"), "deutsche-bahn");
+    }
+
+    #[test]
+    fn test_slugify_entity_name_mixed() {
+        // Abbreviation with a trailing word
+        assert_eq!(slugify_entity_name("A.C.M.E. Ltd."), "acme-ltd");
+    }
+
+    #[test]
+    fn test_slugify_entity_name_empty() {
+        assert_eq!(slugify_entity_name(""), "");
+    }
+
+    #[test]
+    fn test_new_from_parts_abbreviation_end_to_end() {
+        // Verify the trait method uses slugify_entity_name
+        let id = TestId::new_from_parts(&["A.C.M.E."]);
+        assert_eq!(id.as_ref(), "trn:test:acme");
     }
 
     #[test]
