@@ -15,6 +15,7 @@
   } from '$lib/bindings';
 
   import RailwayModelPreviewCard from '$lib/components/RailwayModelPreviewCard.svelte';
+  import VirtualGrid from '$lib/components/VirtualGrid.svelte';
   import { collectionItemToCardData } from './utils/cardDataMapper';
   import FilterPanel from './components/FilterPanel.svelte';
   import ControlPanel from './components/ControlPanel.svelte';
@@ -111,7 +112,6 @@
 
   function handleSearch(query: string) {
     collectionService.setQuery(query);
-    void collectionService.fetchCollection(query);
   }
 
   function handleScale(scale: string | null) {
@@ -140,7 +140,6 @@
 
   function handleClear() {
     collectionService.clearFilters();
-    void collectionService.fetchCollection('');
   }
 
   function handleCardClick(item: CollectionItemView) {
@@ -272,11 +271,19 @@
           </div>
 
           {#if ui.viewMode === 'grid'}
-            <div
-              class="grid gap-4"
-              style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));"
+            <!--
+              VirtualGrid renders only the rows currently visible in the scroll
+              viewport. itemHeight is an estimate of the card's rendered height;
+              overscan keeps a few extra rows mounted to prevent blank flashes.
+            -->
+            <VirtualGrid
+              items={filteredItems}
+              itemHeight={320}
+              itemMinWidth={240}
+              gap={16}
+              overscan={3}
             >
-              {#each filteredItems as item (item.id)}
+              {#snippet children(item, _idx)}
                 <div
                   role="button"
                   tabindex={0}
@@ -294,8 +301,8 @@
                     onDelete={() => void collectionService.deleteItem(item.id)}
                   />
                 </div>
-              {/each}
-            </div>
+              {/snippet}
+            </VirtualGrid>
           {:else}
             <CollectionTableView items={filteredItems} onRowClick={handleCardClick} />
           {/if}

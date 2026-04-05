@@ -165,6 +165,11 @@ export class CollectionState {
   }
 
   fetchCollection = async (_query?: string) => {
+    if (this.#collection !== null) return; // cache hit — avoid redundant IPC on back-navigation
+    await this.forceRefresh();
+  };
+
+  forceRefresh = async () => {
     this.#isLoading = true;
 
     try {
@@ -255,7 +260,7 @@ export class CollectionState {
 
     if (result.ok) {
       toaster.success(m.add_model_success(), { duration: 3000 });
-      await this.fetchCollection();
+      await this.forceRefresh();
       void collectionStore.refresh();
       return true;
     }
@@ -317,7 +322,7 @@ export class CollectionState {
       }
 
       // Refresh collection after successful deletion
-      await this.fetchCollection();
+      await this.forceRefresh();
       void collectionStore.refresh();
       toaster.success('Item removed from collection');
       return result.data;

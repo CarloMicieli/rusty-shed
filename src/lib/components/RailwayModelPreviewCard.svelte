@@ -86,6 +86,7 @@
   import { readFile } from '@tauri-apps/plugin-fs';
   import { commands } from '$lib/bindings';
   import PreviewCardActions from '$lib/components/model-details/components/PreviewCardActions.svelte';
+  import { getCachedImage, setCachedImage } from '$lib/state/image-cache';
 
   const displayManufacturer = $derived(model.manufacturer ?? m.components_unknownManufacturer());
 
@@ -162,6 +163,13 @@
     let stale = false;
 
     async function load() {
+      // Cache hit — no IPC or file-system read needed (covers virtual scroll remounts).
+      const cached = getCachedImage(modelId);
+      if (cached) {
+        if (!stale) resolvedPhotoUrl = cached;
+        return;
+      }
+
       let newUrl: string | null = null;
       try {
         if (photoUrl) {
@@ -179,18 +187,30 @@
       } catch (e) {
         console.warn(`Failed to load image for model ${modelId}:`, e);
       }
+
       if (stale) {
+        // Effect was superseded — discard the URL we just created.
         if (newUrl?.startsWith('blob:')) URL.revokeObjectURL(newUrl);
         return;
       }
+
+      // Store blob URLs in the cache so remounts are instant.
+      if (newUrl?.startsWith('blob:')) {
+        setCachedImage(modelId, newUrl);
+      }
+
       const prev = resolvedPhotoUrl;
       resolvedPhotoUrl = newUrl;
-      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev);
+      // Only revoke the previous URL if it is not the shared cached value.
+      if (prev?.startsWith('blob:') && getCachedImage(modelId) !== prev) {
+        URL.revokeObjectURL(prev);
+      }
     }
 
     void load();
     return () => {
       stale = true;
+      // Do not revoke resolvedPhotoUrl here — it lives in the cache.
     };
   });
 </script>
