@@ -69,7 +69,7 @@ pub struct FormationElementView {
     pub snapshot_company_name: Option<String>,
     /// `true` when `snapshot_series_code` is set but `owned_rolling_stock_id` is `None`.
     pub stock_not_found: bool,
-    /// Number of `owned_rolling_stocks` rows matching the same `prototype_id`.
+    /// Number of `owned_rolling_stocks` rows whose linked `rolling_stocks.prototype_id` matches.
     pub owned_count_for_prototype: i64,
     pub traction_override: i32,
     /// Derived: whether this slot counts as a traction source.

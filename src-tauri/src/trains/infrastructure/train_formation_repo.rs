@@ -252,7 +252,8 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                    p.elements_count AS proto_elements_count,
                    p.is_permanently_coupled AS proto_is_permanently_coupled,
                    (SELECT COUNT(*) FROM owned_rolling_stocks ors
-                    WHERE ors.prototype_id = fe.prototype_id) AS owned_count_for_prototype
+                    JOIN rolling_stocks rs ON rs.id = ors.rolling_stock_id
+                    WHERE rs.prototype_id = fe.prototype_id) AS owned_count_for_prototype
                FROM formation_elements fe
                LEFT JOIN prototypes p ON p.id = fe.prototype_id
                LEFT JOIN railway_companies rc ON rc.id = p.railway_company_id
@@ -593,7 +594,8 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
                    p.elements_count AS proto_elements_count,
                    p.is_permanently_coupled AS proto_is_permanently_coupled,
                    (SELECT COUNT(*) FROM owned_rolling_stocks ors
-                    WHERE ors.prototype_id = fe.prototype_id) AS owned_count_for_prototype
+                    JOIN rolling_stocks rs ON rs.id = ors.rolling_stock_id
+                    WHERE rs.prototype_id = fe.prototype_id) AS owned_count_for_prototype
                FROM formation_elements fe
                LEFT JOIN prototypes p ON p.id = fe.prototype_id
                LEFT JOIN railway_companies rc ON rc.id = p.railway_company_id

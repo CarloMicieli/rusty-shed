@@ -112,7 +112,7 @@ pub struct FormationElementDetailRow {
     pub proto_elements_count: Option<i64>,
     pub proto_is_permanently_coupled: Option<i64>,
 
-    /// COUNT of `owned_rolling_stocks` rows that reference the same `prototype_id`.
+    /// COUNT of `owned_rolling_stocks` rows whose linked `rolling_stocks.prototype_id` matches.
     pub owned_count_for_prototype: i64,
 }
 

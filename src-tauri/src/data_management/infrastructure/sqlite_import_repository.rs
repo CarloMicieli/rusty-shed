@@ -258,7 +258,7 @@ impl ImportRepository for SqliteImportRepository {
             let power_method = schema_power_method_to_db(&model.power_method)?;
             let category = schema_category_to_db(&model.category)?;
 
-            sqlx::query(
+            let model_result = sqlx::query(
                 "INSERT OR IGNORE INTO railway_models \
                  (id, manufacturer_id, product_code, power_method, scale, epoch, \
                   category, delivery_date, availability_status) \
@@ -277,6 +277,14 @@ impl ImportRepository for SqliteImportRepository {
             .await
             .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
 
+            if model_result.rows_affected() == 0 {
+                warn!(
+                    "Skipping model '{}': manufacturer_id '{}' not found in database",
+                    model.id, model.manufacturer_id
+                );
+                continue;
+            }
+
             for language_code in ["en", "it"] {
                 let description = match language_code {
                     "en" => model.description.en.as_deref(),
@@ -289,7 +297,7 @@ impl ImportRepository for SqliteImportRepository {
 
                 if description.is_some() || details.is_some() {
                     sqlx::query(
-                        "INSERT OR REPLACE INTO railway_model_translations \
+                        "INSERT OR IGNORE INTO railway_model_translations \
                          (railway_model_id, language_code, description, details) \
                          VALUES (?, ?, ?, ?)",
                     )

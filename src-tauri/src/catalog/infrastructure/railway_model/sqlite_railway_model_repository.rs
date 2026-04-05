@@ -101,6 +101,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                 rs.category, 
                 rs.railway_company_id,
                 rc.name as railway_company_name, 
+                rs.prototype_id,
                 rs.livery, 
                 rs.length_inches, 
                 rs.length_millimeters, 
@@ -820,6 +821,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     RollingStockCategory::Locomotive => RollingStockView::Locomotive {
                         id: cr.id,
                         railway,
+                        prototype_id: cr.prototype_id,
                         livery: cr.livery,
                         length_over_buffer,
                         technical_specifications,
@@ -836,6 +838,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     RollingStockCategory::FreightCar => RollingStockView::FreightCar {
                         id: cr.id,
                         railway,
+                        prototype_id: cr.prototype_id,
                         livery: cr.livery,
                         length_over_buffer,
                         technical_specifications,
@@ -847,6 +850,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     RollingStockCategory::PassengerCar => RollingStockView::PassengerCar {
                         id: cr.id,
                         railway,
+                        prototype_id: cr.prototype_id,
                         livery: cr.livery,
                         length_over_buffer,
                         technical_specifications,
@@ -861,6 +865,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                         RollingStockView::ElectricMultipleUnit {
                             id: cr.id,
                             railway,
+                            prototype_id: cr.prototype_id,
                             livery: cr.livery,
                             length_over_buffer,
                             technical_specifications,
@@ -880,6 +885,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                     RollingStockCategory::Railcar => RollingStockView::Railcar {
                         id: cr.id,
                         railway,
+                        prototype_id: cr.prototype_id,
                         livery: cr.livery,
                         length_over_buffer,
                         technical_specifications,

@@ -153,6 +153,9 @@ pub struct RollingStockRow {
     /// Name of the railway company (denormalized for query convenience).
     pub railway_company_name: String,
 
+    /// Optional prototype this rolling stock is linked to (FK to `prototypes.id`).
+    pub prototype_id: Option<String>,
+
     /// Livery description, if available (paint scheme / decoration).
     pub livery: Option<String>,
 

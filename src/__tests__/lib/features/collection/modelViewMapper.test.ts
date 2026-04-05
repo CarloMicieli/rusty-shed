@@ -40,6 +40,7 @@ function makeLocomotiveView(id: string = 'rs-loco-1'): RollingStockView {
     locomotive: {
       id,
       railway: { railwayCompanyId: 'rwy-1', display: 'DB' },
+      prototype_id: null,
       livery: 'Red',
       length_over_buffer: { millimeters: '200', inches: null },
       technical_specifications: null,
@@ -61,6 +62,7 @@ function makeEmuView(id: string = 'rs-emu-1'): RollingStockView {
     electricMultipleUnit: {
       id,
       railway: { railwayCompanyId: 'rwy-1', display: 'SBB' },
+      prototype_id: null,
       livery: 'Silver',
       length_over_buffer: null,
       technical_specifications: null,
@@ -82,6 +84,7 @@ function makeRailcarView(id: string = 'rs-railcar-1'): RollingStockView {
     railcar: {
       id,
       railway: { railwayCompanyId: 'rwy-2', display: 'FS' },
+      prototype_id: null,
       livery: 'Green',
       length_over_buffer: null,
       technical_specifications: null,
@@ -103,6 +106,7 @@ function makePassengerCarView(id: string = 'rs-pass-1'): RollingStockView {
     passengerCar: {
       id,
       railway: { railwayCompanyId: 'rwy-1', display: 'DB' },
+      prototype_id: null,
       livery: 'Blue',
       length_over_buffer: null,
       technical_specifications: null,
@@ -121,6 +125,7 @@ function makeFreightCarView(id: string = 'rs-frt-1'): RollingStockView {
     freightCar: {
       id,
       railway: { railwayCompanyId: 'rwy-1', display: 'DB' },
+      prototype_id: null,
       livery: null,
       length_over_buffer: { millimeters: '95', inches: null },
       technical_specifications: null,

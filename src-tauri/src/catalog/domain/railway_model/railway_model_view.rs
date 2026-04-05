@@ -102,6 +102,9 @@ pub enum RollingStockView {
         /// Railway/company information for this rolling stock (id + display).
         railway: RollingStockRailway,
 
+        /// Optional prototype this rolling stock is linked to.
+        prototype_id: Option<String>,
+
         /// Optional livery name or color scheme.
         livery: Option<String>,
 
@@ -144,6 +147,9 @@ pub enum RollingStockView {
 
         /// Railway/company information for this rolling stock (id + display).
         railway: RollingStockRailway,
+
+        /// Optional prototype this rolling stock is linked to.
+        prototype_id: Option<String>,
 
         /// Optional livery name or color scheme.
         livery: Option<String>,
@@ -188,6 +194,9 @@ pub enum RollingStockView {
         /// Railway/company information for this rolling stock (id + display).
         railway: RollingStockRailway,
 
+        /// Optional prototype this rolling stock is linked to.
+        prototype_id: Option<String>,
+
         /// Optional livery name or color scheme.
         livery: Option<String>,
 
@@ -215,6 +224,9 @@ pub enum RollingStockView {
 
         /// Railway/company information for this rolling stock (id + display).
         railway: RollingStockRailway,
+
+        /// Optional prototype this rolling stock is linked to.
+        prototype_id: Option<String>,
 
         /// Optional livery name or color scheme.
         livery: Option<String>,
@@ -249,6 +261,9 @@ pub enum RollingStockView {
 
         /// Railway/company information for this rolling stock (id + display).
         railway: RollingStockRailway,
+
+        /// Optional prototype this rolling stock is linked to.
+        prototype_id: Option<String>,
 
         /// Optional livery name or color scheme.
         livery: Option<String>,

@@ -2747,7 +2747,7 @@ export type FormationElementView = {
 	snapshot_company_name: string | null,
 	// `true` when `snapshot_series_code` is set but `owned_rolling_stock_id` is `None`.
 	stock_not_found: boolean,
-	// Number of `owned_rolling_stocks` rows matching the same `prototype_id`.
+	// Number of `owned_rolling_stocks` rows whose linked `rolling_stocks.prototype_id` matches.
 	owned_count_for_prototype: number,
 	traction_override: number,
 	// Derived: whether this slot counts as a traction source.
@@ -4194,6 +4194,8 @@ export type RollingStockView_Deserialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4223,6 +4225,8 @@ export type RollingStockView_Deserialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4252,6 +4256,8 @@ export type RollingStockView_Deserialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4271,6 +4277,8 @@ export type RollingStockView_Deserialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4294,6 +4302,8 @@ export type RollingStockView_Deserialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4326,6 +4336,8 @@ export type RollingStockView_Serialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4355,6 +4367,8 @@ export type RollingStockView_Serialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4384,6 +4398,8 @@ export type RollingStockView_Serialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4403,6 +4419,8 @@ export type RollingStockView_Serialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
@@ -4426,6 +4444,8 @@ export type RollingStockView_Serialize = ({ electricMultipleUnit: {
 	id: RollingStockId,
 	// Railway/company information for this rolling stock (id + display).
 	railway: RollingStockRailway,
+	// Optional prototype this rolling stock is linked to.
+	prototype_id: string | null,
 	// Optional livery name or color scheme.
 	livery: string | null,
 	// Optional length over buffers measurement.
