@@ -46,9 +46,9 @@ impl DuplicateChecker {
         Self { pool }
     }
 
-    /// Check for duplicate manufacturers by name (case-insensitive).
+    /// Check for duplicate manufacturers by id.
     ///
-    /// Returns which manufacturer names already exist in the database.
+    /// Returns which manufacturer IDs already exist in the database.
     pub async fn check_manufacturers(
         &self,
         manufacturers: &[ManufacturerRecord],
@@ -57,21 +57,21 @@ impl DuplicateChecker {
             return Ok(DuplicateCheckResult::default());
         }
 
-        // Extract names for lookup
-        let names: Vec<String> = manufacturers.iter().map(|m| m.name.clone()).collect();
+        // Extract ids for lookup
+        let ids: Vec<String> = manufacturers.iter().map(|m| m.id.clone()).collect();
 
-        // Query existing manufacturers by name
+        // Query existing manufacturers by id
         let query = format!(
-            "SELECT name FROM manufacturers WHERE name IN ({})",
-            names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+            "SELECT id FROM manufacturers WHERE id IN ({})",
+            ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
         let mut query_builder = sqlx::query_scalar::<_, String>(&query);
-        for name in &names {
-            query_builder = query_builder.bind(name);
+        for id in &ids {
+            query_builder = query_builder.bind(id);
         }
 
-        let existing_names: HashSet<String> = query_builder
+        let existing_ids: HashSet<String> = query_builder
             .fetch_all(&self.pool)
             .await?
             .into_iter()
@@ -82,7 +82,7 @@ impl DuplicateChecker {
         let mut new_ids = Vec::new();
 
         for manufacturer in manufacturers {
-            if existing_names.contains(&manufacturer.name) {
+            if existing_ids.contains(&manufacturer.id) {
                 duplicate_ids.push(manufacturer.id.clone());
             } else {
                 new_ids.push(manufacturer.id.clone());
@@ -156,9 +156,6 @@ impl DuplicateChecker {
 
     /// Check for duplicate collection items by railway_model_id + added_date.
     ///
-    /// Note: This uses added_date (the date item was added to collection) as the uniqueness
-    /// criterion since the manifest uses this field analogous to purchase_date.
-    ///
     /// Uses a single batch query with composite key concatenation to avoid
     /// the N+1 query problem.
     pub async fn check_collection_items(
@@ -169,61 +166,45 @@ impl DuplicateChecker {
             return Ok(DuplicateCheckResult::default());
         }
 
-        // Build composite keys for items that have a purchase_date.
+        // Build composite keys using added_date (matches the DB column used in the query).
         // Separator '|' must not appear in valid railway_model_id or date values.
         let composite_keys: Vec<String> = items
             .iter()
-            .filter_map(|item| {
-                item.purchase
-                    .as_ref()
-                    .and_then(|p| p.purchase_date.as_ref())
-                    .map(|date| format!("{}|{}", item.railway_model_id, date))
-            })
+            .map(|item| format!("{}|{}", item.railway_model_id, item.added_date))
             .collect();
 
-        let existing_keys: HashSet<String> = if composite_keys.is_empty() {
-            HashSet::new()
-        } else {
-            let query = format!(
-                "SELECT (railway_model_id || '|' || added_date) \
-                 FROM collection_items \
-                 WHERE (railway_model_id || '|' || added_date) IN ({})",
-                composite_keys
-                    .iter()
-                    .map(|_| "?")
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
+        let query = format!(
+            "SELECT (railway_model_id || '|' || added_date) \
+             FROM collection_items \
+             WHERE (railway_model_id || '|' || added_date) IN ({})",
+            composite_keys
+                .iter()
+                .map(|_| "?")
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
 
-            let mut query_builder = sqlx::query_scalar::<_, String>(&query);
-            for key in &composite_keys {
-                query_builder = query_builder.bind(key);
-            }
+        let mut query_builder = sqlx::query_scalar::<_, String>(&query);
+        for key in &composite_keys {
+            query_builder = query_builder.bind(key);
+        }
 
-            query_builder
-                .fetch_all(&self.pool)
-                .await?
-                .into_iter()
-                .collect()
-        };
+        let existing_keys: HashSet<String> = query_builder
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .collect();
 
         let mut duplicate_ids = Vec::new();
         let mut new_ids = Vec::new();
 
         for item in items {
-            if let Some(ref purchase) = item.purchase
-                && let Some(ref purchase_date) = purchase.purchase_date
-            {
-                let key = format!("{}|{}", item.railway_model_id, purchase_date);
-                if existing_keys.contains(&key) {
-                    duplicate_ids.push(item.id.clone());
-                } else {
-                    new_ids.push(item.id.clone());
-                }
-                continue;
+            let key = format!("{}|{}", item.railway_model_id, item.added_date);
+            if existing_keys.contains(&key) {
+                duplicate_ids.push(item.id.clone());
+            } else {
+                new_ids.push(item.id.clone());
             }
-            // Items without purchase record or purchase_date are considered new
-            new_ids.push(item.id.clone());
         }
 
         Ok(DuplicateCheckResult {
@@ -232,9 +213,9 @@ impl DuplicateChecker {
         })
     }
 
-    /// Check for duplicate sellers by name (case-insensitive).
+    /// Check for duplicate sellers by id.
     ///
-    /// Returns which seller names already exist in the database.
+    /// Returns which seller IDs already exist in the database.
     pub async fn check_sellers(
         &self,
         sellers: &[SellerRecord],
@@ -243,21 +224,21 @@ impl DuplicateChecker {
             return Ok(DuplicateCheckResult::default());
         }
 
-        // Extract names for lookup
-        let names: Vec<String> = sellers.iter().map(|s| s.name.clone()).collect();
+        // Extract ids for lookup
+        let ids: Vec<String> = sellers.iter().map(|s| s.id.clone()).collect();
 
-        // Query existing sellers by name
+        // Query existing sellers by id
         let query = format!(
-            "SELECT name FROM sellers WHERE name IN ({})",
-            names.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+            "SELECT id FROM sellers WHERE id IN ({})",
+            ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
         );
 
         let mut query_builder = sqlx::query_scalar::<_, String>(&query);
-        for name in &names {
-            query_builder = query_builder.bind(name);
+        for id in &ids {
+            query_builder = query_builder.bind(id);
         }
 
-        let existing_names: HashSet<String> = query_builder
+        let existing_ids: HashSet<String> = query_builder
             .fetch_all(&self.pool)
             .await?
             .into_iter()
@@ -268,7 +249,7 @@ impl DuplicateChecker {
         let mut new_ids = Vec::new();
 
         for seller in sellers {
-            if existing_names.contains(&seller.name) {
+            if existing_ids.contains(&seller.id) {
                 duplicate_ids.push(seller.id.clone());
             } else {
                 new_ids.push(seller.id.clone());

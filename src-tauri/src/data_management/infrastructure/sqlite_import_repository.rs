@@ -48,6 +48,22 @@ fn synthesize_rolling_stock_id(
     )
 }
 
+/// Map a sqlx error to a `DataManagementError`, producing a human-readable message for
+/// SQLite foreign key violations (error code 787) instead of the raw SQLite error string.
+fn map_db_error(e: sqlx::Error, context: &str) -> DataManagementError {
+    if let sqlx::Error::Database(ref db_err) = e
+        && db_err.code().as_deref() == Some("787")
+    {
+        return DataManagementError::DatabaseError(format!(
+            "Foreign key constraint failed while inserting {context}: \
+             a referenced record does not exist in the database. \
+             Ensure all manufacturers, railway companies, and sellers \
+             in the manifest are present and consistent.",
+        ));
+    }
+    DataManagementError::DatabaseError(e.to_string())
+}
+
 /// SQLite-backed implementation of the `ImportRepository` port.
 ///
 /// Handles all raw SQL, duplicate checking, and transactional writes for the import pipeline.
@@ -222,7 +238,7 @@ impl ImportRepository for SqliteImportRepository {
             .bind(&m.postal_code)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            .map_err(|e| map_db_error(e, "manufacturer"))?;
         }
 
         added.manufacturers = duplicates.manufacturer_dupes.new_count() as u32;
@@ -275,7 +291,7 @@ impl ImportRepository for SqliteImportRepository {
             .bind(&model.availability_status)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            .map_err(|e| map_db_error(e, "railway model"))?;
 
             if model_result.rows_affected() == 0 {
                 warn!(
@@ -368,7 +384,7 @@ impl ImportRepository for SqliteImportRepository {
                 .bind(rs.is_dummy.unwrap_or(false) as i64)
                 .execute(&mut *tx)
                 .await
-                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                .map_err(|e| map_db_error(e, "rolling stock"))?;
             }
         }
 
@@ -403,7 +419,7 @@ impl ImportRepository for SqliteImportRepository {
             .bind(&seller.website_url)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            .map_err(|e| map_db_error(e, "seller"))?;
         }
 
         added.sellers = duplicates.seller_dupes.new_count() as u32;
@@ -436,7 +452,7 @@ impl ImportRepository for SqliteImportRepository {
             .bind(&item.notes)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            .map_err(|e| map_db_error(e, "collection item"))?;
 
             // Collect image filename for post-commit copy (never inside the transaction)
             if let Some(ref image_filename) = item.image {
@@ -478,7 +494,7 @@ impl ImportRepository for SqliteImportRepository {
                 .bind(&purchase.expected_delivery)
                 .execute(&mut *tx)
                 .await
-                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                .map_err(|e| map_db_error(e, "purchase record"))?;
             }
         }
 
