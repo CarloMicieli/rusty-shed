@@ -134,6 +134,10 @@ pub async fn get_import_preview(
             .total_records
             .collection_items
             .saturating_sub(preview.duplicate_records.collection_items),
+        owned_rolling_stocks: preview
+            .total_records
+            .owned_rolling_stocks
+            .saturating_sub(preview.duplicate_records.owned_rolling_stocks),
         sellers: preview
             .total_records
             .sellers

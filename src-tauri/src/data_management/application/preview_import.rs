@@ -62,6 +62,7 @@ impl PreviewImportUseCase {
             railway_companies: manifest.data.railway_companies.len() as u32,
             railway_models: manifest.data.railway_models.len() as u32,
             collection_items: manifest.data.collection_items.len() as u32,
+            owned_rolling_stocks: manifest.data.owned_rolling_stocks.len() as u32,
             sellers: manifest.data.sellers.len() as u32,
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
             track_products: manifest.data.track_products.len() as u32,
@@ -87,6 +88,7 @@ impl PreviewImportUseCase {
             railway_companies: 0, // Railway companies checked by name via unique index
             railway_models: duplicates.railway_model_dupes.duplicate_count() as u32,
             collection_items: duplicates.collection_item_dupes.duplicate_count() as u32,
+            owned_rolling_stocks: 0, // Owned rolling stocks deduplicated via INSERT OR IGNORE
             sellers: duplicates.seller_dupes.duplicate_count() as u32,
             maintenance_cards: 0, // Maintenance cards are linked to collection items
             track_products: duplicates.track_product_dupes.duplicate_count() as u32,
@@ -105,6 +107,7 @@ impl PreviewImportUseCase {
             railway_companies: manifest.data.railway_companies.len() as u32,
             railway_models: duplicates.railway_model_dupes.new_count() as u32,
             collection_items: duplicates.collection_item_dupes.new_count() as u32,
+            owned_rolling_stocks: manifest.data.owned_rolling_stocks.len() as u32,
             sellers: duplicates.seller_dupes.new_count() as u32,
             maintenance_cards: manifest.data.maintenance_cards.len() as u32,
             track_products: duplicates.track_product_dupes.new_count() as u32,

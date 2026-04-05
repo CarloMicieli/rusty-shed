@@ -501,6 +501,47 @@ impl ImportRepository for SqliteImportRepository {
         added.collection_items = duplicates.collection_item_dupes.new_count() as u32;
         skipped.collection_items = duplicates.collection_item_dupes.duplicate_count() as u32;
 
+        // 5.5 Insert owned_rolling_stocks — bridge rows linking collection_items to rolling_stocks.
+        // Uses INSERT OR IGNORE to be idempotent on re-import.
+        let mut added_ors = 0u32;
+        for ors in &data.owned_rolling_stocks {
+            let item_exists: bool =
+                sqlx::query_scalar("SELECT COUNT(1) FROM collection_items WHERE id = ?")
+                    .bind(&ors.collection_item_id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map(|count: i64| count > 0)
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            if !item_exists {
+                warn!(
+                    "Skipping owned_rolling_stock '{}': collection item '{}' not found",
+                    ors.id, ors.collection_item_id
+                );
+                continue;
+            }
+
+            sqlx::query(
+                "INSERT OR IGNORE INTO owned_rolling_stocks \
+                 (id, collection_item_id, rolling_stock_id, notes, dcc_address, \
+                  installed_decoder_id, current_coupler_id) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&ors.id)
+            .bind(&ors.collection_item_id)
+            .bind(&ors.rolling_stock_id)
+            .bind(&ors.notes)
+            .bind(ors.dcc_address)
+            .bind(&ors.installed_decoder_id)
+            .bind(&ors.current_coupler_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+            added_ors += 1;
+        }
+        added.owned_rolling_stocks = added_ors;
+
         // 6. Insert new track products
         for product in data
             .track_products
@@ -622,13 +663,54 @@ impl ImportRepository for SqliteImportRepository {
                 continue;
             }
 
-            let ors_id = Uuid::new_v4().to_string();
-            sqlx::query("INSERT INTO owned_rolling_stocks (id, collection_item_id) VALUES (?, ?)")
-                .bind(&ors_id)
-                .bind(&card.collection_item_id)
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+            // Resolve the owned_rolling_stock id for this maintenance card.
+            // New-format archives carry the original `owned_rolling_stock_id`; when that row
+            // was already inserted by step 5.5 we reuse it directly.  For old-format archives
+            // (field absent) or when the ORS row is missing, fall back to creating a minimal
+            // owned_rolling_stocks row so the maintenance card FK is satisfied.
+            let ors_id = match &card.owned_rolling_stock_id {
+                Some(existing_id) => {
+                    let ors_exists: bool = sqlx::query_scalar(
+                        "SELECT COUNT(1) FROM owned_rolling_stocks WHERE id = ?",
+                    )
+                    .bind(existing_id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map(|count: i64| count > 0)
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+                    if ors_exists {
+                        // Step 5.5 already inserted the full row — nothing more to do.
+                        existing_id.clone()
+                    } else {
+                        // ORS not present (e.g. maintenance-only export without collection items).
+                        // Insert a minimal bridge row to satisfy the FK.
+                        sqlx::query(
+                            "INSERT OR IGNORE INTO owned_rolling_stocks \
+                             (id, collection_item_id) VALUES (?, ?)",
+                        )
+                        .bind(existing_id)
+                        .bind(&card.collection_item_id)
+                        .execute(&mut *tx)
+                        .await
+                        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                        existing_id.clone()
+                    }
+                }
+                None => {
+                    // Old-format archive: generate a fresh id and create a minimal ORS row.
+                    let new_id = Uuid::new_v4().to_string();
+                    sqlx::query(
+                        "INSERT INTO owned_rolling_stocks (id, collection_item_id) VALUES (?, ?)",
+                    )
+                    .bind(&new_id)
+                    .bind(&card.collection_item_id)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+                    new_id
+                }
+            };
 
             sqlx::query(
                 "INSERT INTO maintenance_cards \

@@ -481,6 +481,20 @@ mod roundtrip {
         .unwrap();
         assert_eq!(rs_count, 1, "rolling stock extended fields must roundtrip");
 
+        let ors_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM owned_rolling_stocks \
+             WHERE id = 'ors-test-001' \
+               AND collection_item_id = 'trn:collection-item:00000000-0000-0000-0000-000000000001' \
+               AND rolling_stock_id = 'rs-test-001'",
+        )
+        .fetch_one(&import_pool)
+        .await
+        .unwrap();
+        assert_eq!(
+            ors_count, 1,
+            "owned_rolling_stock must roundtrip with rolling_stock_id"
+        );
+
         let maintenance_event_count: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM maintenance_events \
              WHERE id = 'trn:maintenance-event:00000000-0000-0000-0000-000000000201' AND maintenance_type = 'GENERAL_INSPECTION'",
@@ -693,8 +707,8 @@ mod roundtrip {
         let result = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
 
         // Manufacturers are auto-included with DCC roster export (FK dependency), so one decoder
-        // is imported successfully. Digital roster entries reference owned_rolling_stock_id which
-        // is a DB-internal ID not preserved across imports — they are skipped with a warning.
+        // is imported successfully. The DCC-only export does not include collection items or
+        // owned_rolling_stocks, so digital_rolling_stocks entries are skipped.
         assert_eq!(result.added.decoders, 1, "one decoder added");
         assert_eq!(result.skipped.decoders, 0, "no duplicate decoders");
         assert_eq!(
@@ -787,7 +801,7 @@ mod roundtrip {
         let import_media_dir = tempfile::tempdir().expect("import media tempdir");
 
         // First import: decoder succeeds (manufacturer auto-included), roster entry skipped
-        // (owned_rolling_stock_id not in import DB — DB-internal ID not preserved across imports)
+        // (DCC-only export omits collection items and owned_rolling_stocks).
         let first = run_import(&import_pool, &archive_path, import_media_dir.path()).await;
         assert_eq!(first.added.decoders, 1);
         assert_eq!(first.skipped.decoders, 0);

@@ -588,6 +588,36 @@ pub async fn build_manifest(
             })
             .collect();
         data["collectionItems"] = json!(items);
+
+        // Export owned_rolling_stocks that belong to exported collection items.
+        // These bridge rows link collection_items to rolling_stocks and carry optional
+        // DCC/coupler customisation fields.
+        let ors_rows = sqlx::query(
+            "SELECT id, collection_item_id, rolling_stock_id, notes, dcc_address, \
+                    installed_decoder_id, current_coupler_id \
+             FROM owned_rolling_stocks \
+             WHERE collection_item_id IN (SELECT id FROM collection_items) \
+             ORDER BY id",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ExportError::DatabaseError(e.to_string()))?;
+
+        let owned_rolling_stocks: Vec<Value> = ors_rows
+            .iter()
+            .map(|row| {
+                strip_null_fields(json!({
+                    "id": row.try_get::<String, _>("id").ok(),
+                    "collectionItemId": row.try_get::<String, _>("collection_item_id").ok(),
+                    "rollingStockId": row.try_get::<Option<String>, _>("rolling_stock_id").ok().flatten(),
+                    "notes": row.try_get::<Option<String>, _>("notes").ok().flatten(),
+                    "dccAddress": row.try_get::<Option<i64>, _>("dcc_address").ok().flatten(),
+                    "installedDecoderId": row.try_get::<Option<String>, _>("installed_decoder_id").ok().flatten(),
+                    "currentCouplerId": row.try_get::<Option<String>, _>("current_coupler_id").ok().flatten(),
+                }))
+            })
+            .collect();
+        data["ownedRollingStocks"] = json!(owned_rolling_stocks);
     }
 
     if include_sellers {
@@ -609,7 +639,7 @@ pub async fn build_manifest(
         // The schema requires MaintenanceCard.collectionItemId; the DB stores
         // maintenance_cards.owned_rolling_stock_id → owned_rolling_stocks.collection_item_id.
         let card_rows = sqlx::query(
-            "SELECT mc.id, ors.collection_item_id, \
+            "SELECT mc.id, ors.collection_item_id, ors.id AS owned_rolling_stock_id, \
                     mc.last_maintenance_date, mc.next_maintenance_date \
              FROM maintenance_cards mc \
              JOIN owned_rolling_stocks ors ON ors.id = mc.owned_rolling_stock_id \
@@ -658,6 +688,7 @@ pub async fn build_manifest(
             maintenance_cards.push(strip_null_fields(json!({
                 "id": card_id,
                 "collectionItemId": card_row.try_get::<String, _>("collection_item_id").ok(),
+                "ownedRollingStockId": card_row.try_get::<String, _>("owned_rolling_stock_id").ok(),
                 "lastMaintenanceDate": card_row.try_get::<Option<String>, _>("last_maintenance_date").ok().flatten(),
                 "nextMaintenanceDate": card_row.try_get::<Option<String>, _>("next_maintenance_date").ok().flatten(),
                 "events": events,

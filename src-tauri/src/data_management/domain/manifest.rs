@@ -27,6 +27,8 @@ pub struct DataContainerDto {
     pub railway_models: Vec<RailwayModelRecord>,
     #[serde(rename = "collectionItems", default)]
     pub collection_items: Vec<CollectionItemRecord>,
+    #[serde(rename = "ownedRollingStocks", default)]
+    pub owned_rolling_stocks: Vec<OwnedRollingStockRecord>,
     #[serde(default)]
     pub sellers: Vec<SellerRecord>,
     #[serde(rename = "maintenanceCards", default)]
@@ -262,11 +264,34 @@ pub struct AddressRecord {
     pub country_code: Option<String>,
 }
 
+/// A bridge record linking a physical collection item to a catalogue rolling stock,
+/// with optional digital/coupler customisation fields.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OwnedRollingStockRecord {
+    pub id: String,
+    pub collection_item_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rolling_stock_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notes: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dcc_address: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub installed_decoder_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_coupler_id: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MaintenanceCardRecord {
     pub id: String,
     pub collection_item_id: String,
+    /// The `owned_rolling_stock_id` exported from the source DB.
+    /// Present in archives produced by this version; absent in older archives.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owned_rolling_stock_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub last_maintenance_date: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

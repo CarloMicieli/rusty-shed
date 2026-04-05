@@ -9,6 +9,7 @@ pub struct RecordCounts {
     pub railway_companies: u32,
     pub railway_models: u32,
     pub collection_items: u32,
+    pub owned_rolling_stocks: u32,
     pub sellers: u32,
     pub maintenance_cards: u32,
     pub track_products: u32,
@@ -33,6 +34,7 @@ impl RecordCounts {
             + self.railway_companies
             + self.railway_models
             + self.collection_items
+            + self.owned_rolling_stocks
             + self.sellers
             + self.maintenance_cards
             + self.track_products
@@ -51,6 +53,7 @@ impl RecordCounts {
         self.railway_companies += other.railway_companies;
         self.railway_models += other.railway_models;
         self.collection_items += other.collection_items;
+        self.owned_rolling_stocks += other.owned_rolling_stocks;
         self.sellers += other.sellers;
         self.maintenance_cards += other.maintenance_cards;
         self.track_products += other.track_products;
@@ -75,6 +78,7 @@ mod tests {
             railway_companies: 2,
             railway_models: 3,
             collection_items: 4,
+            owned_rolling_stocks: 0,
             sellers: 5,
             maintenance_cards: 6,
             track_products: 7,
