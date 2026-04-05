@@ -11,7 +11,7 @@
 /// // "  Deutsche Bahn  " → "deutsche-bahn"
 /// // "A.C.M.E. Ltd." → "acme-ltd"
 /// ```
-fn slugify_entity_name(name: &str) -> String {
+pub fn slugify_entity_name(name: &str) -> String {
     let trimmed = name.trim();
     let without_periods = trimmed.replace('.', "");
     slug::slugify(without_periods)

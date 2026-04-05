@@ -1,5 +1,5 @@
 use crate::catalog::domain::railway_model::CouplerTypeId;
-use crate::core::domain::identifiers::Identifier;
+use crate::core::domain::identifiers::{Identifier, slugify_entity_name};
 use crate::dcc_inventory::domain::DecoderId;
 use anyhow::Context;
 use chrono::Utc;
@@ -55,7 +55,7 @@ pub async fn seed_manufacturers(pool: &SqlitePool) -> anyhow::Result<()> {
 
         query_builder.push_values(chunk, |mut b, record| {
             let name = record.get(0).unwrap_or_default();
-            let id = format!("trn:manufacturer:{}", slugify(name));
+            let id = format!("trn:manufacturer:{}", slugify_entity_name(name));
 
             b.push_bind(id)
                 .push_bind(name.to_string())
@@ -195,7 +195,7 @@ pub async fn seed_railway_companies(pool: &SqlitePool) -> anyhow::Result<()> {
                 None
             };
 
-            let id = format!("trn:railway-company:{}", slugify(name));
+            let id = format!("trn:railway-company:{}", slugify_entity_name(name));
 
             b.push_bind(id)
                 .push_bind(name.to_string())
@@ -362,7 +362,7 @@ pub async fn seed_sellers(pool: &SqlitePool) -> anyhow::Result<()> {
                 .map(|s| s.to_string());
 
             // Seller id is derived via slug from the name using slugify
-            let seller_id = format!("trn:seller:{}", slugify(name));
+            let seller_id = format!("trn:seller:{}", slugify_entity_name(name));
 
             b.push_bind(seller_id)
                 .push_bind(name.to_string())
