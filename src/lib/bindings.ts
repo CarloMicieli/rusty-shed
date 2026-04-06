@@ -4059,6 +4059,7 @@ export type RecordCounts = {
 	railwayCompanies: number,
 	railwayModels: number,
 	collectionItems: number,
+	ownedRollingStocks: number,
 	sellers: number,
 	maintenanceCards: number,
 	trackProducts: number,

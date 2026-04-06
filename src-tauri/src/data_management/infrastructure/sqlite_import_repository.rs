@@ -399,6 +399,113 @@ impl ImportRepository for SqliteImportRepository {
                 .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
         }
 
+        // 3b. Insert rolling stocks for duplicate railway models.
+        //
+        // check_railway_models marks a model as duplicate by (manufacturer_id, product_code),
+        // so a model UUID that already exists in the DB never enters new_model_ids and its
+        // rolling stocks are entirely skipped by step 3.  If the manifest contains new
+        // owned_rolling_stocks that reference rolling stock IDs belonging to one of those
+        // "duplicate" models, the INSERT at step 5.5 would fail with FK error 787.
+        //
+        // To fix this we collect the manifest-declared "duplicate" model IDs, verify which of
+        // them actually exist in railway_models (handles the edge case where the manifest has
+        // the same product_code under a different UUID), and then INSERT OR IGNORE their rolling
+        // stocks — merging any new rows without disturbing existing ones.
+        {
+            let dup_model_ids: Vec<&str> = data
+                .railway_models
+                .iter()
+                .filter(|m| !new_model_ids.contains(m.id.as_str()))
+                .map(|m| m.id.as_str())
+                .collect();
+
+            if !dup_model_ids.is_empty() {
+                let placeholders = dup_model_ids
+                    .iter()
+                    .map(|_| "?")
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let q = format!("SELECT id FROM railway_models WHERE id IN ({placeholders})");
+                let mut qb = sqlx::query_scalar::<_, String>(&q);
+                for id in &dup_model_ids {
+                    qb = qb.bind(*id);
+                }
+                let confirmed_dup_ids: HashSet<String> = qb
+                    .fetch_all(&mut *tx)
+                    .await
+                    .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?
+                    .into_iter()
+                    .collect();
+
+                for model in data
+                    .railway_models
+                    .iter()
+                    .filter(|m| confirmed_dup_ids.contains(&m.id))
+                {
+                    let category = schema_category_to_db(&model.category)?;
+                    let rolling_stock_category = model_category_to_rolling_stock_category(category);
+                    for (index, rs) in model.rolling_stocks.iter().enumerate() {
+                        let rs_id = rs.id.clone().unwrap_or_else(|| {
+                            synthesize_rolling_stock_id(
+                                &model.id,
+                                &rs.railway_company_id,
+                                &rs.series_code,
+                                rs.road_number.as_deref(),
+                                index,
+                            )
+                        });
+                        sqlx::query(
+                            "INSERT OR IGNORE INTO rolling_stocks \
+                             (id, railway_model_id, category, railway_company_id, series_code, \
+                              series, road_number, friendly_name, depot, livery, \
+                              electric_multiple_unit_type, freight_car_type, locomotive_type, \
+                              passenger_car_type, railcar_type, service_level, length_inches, \
+                              length_millimeters, technical_minimum_radius_mm, technical_coupling_socket, \
+                              technical_coupling_close_couplers, technical_coupling_digital_shunting, \
+                              technical_flywheel_fitted, technical_body_shell, technical_chassis, \
+                              technical_interior_lights, technical_lights, technical_sprung_buffers, \
+                              dcc_interface, control, is_dummy) \
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        )
+                        .bind(&rs_id)
+                        .bind(&model.id)
+                        .bind(rolling_stock_category)
+                        .bind(&rs.railway_company_id)
+                        .bind(&rs.series_code)
+                        .bind(&rs.series)
+                        .bind(&rs.road_number)
+                        .bind(&rs.friendly_name)
+                        .bind(&rs.depot)
+                        .bind(&rs.livery)
+                        .bind(&rs.electric_multiple_unit_type)
+                        .bind(&rs.freight_car_type)
+                        .bind(&rs.locomotive_type)
+                        .bind(&rs.passenger_car_type)
+                        .bind(&rs.railcar_type)
+                        .bind(&rs.service_level)
+                        .bind(rs.length_inches.map(format_decimal_for_text))
+                        .bind(rs.length_millimeters.map(format_decimal_for_text))
+                        .bind(rs.technical_minimum_radius_mm.map(format_decimal_for_text))
+                        .bind(&rs.technical_coupling_socket)
+                        .bind(&rs.technical_coupling_close_couplers)
+                        .bind(&rs.technical_coupling_digital_shunting)
+                        .bind(&rs.technical_flywheel_fitted)
+                        .bind(&rs.technical_body_shell)
+                        .bind(&rs.technical_chassis)
+                        .bind(&rs.technical_interior_lights)
+                        .bind(&rs.technical_lights)
+                        .bind(&rs.technical_sprung_buffers)
+                        .bind(&rs.dcc_interface)
+                        .bind(&rs.control)
+                        .bind(rs.is_dummy.unwrap_or(false) as i64)
+                        .execute(&mut *tx)
+                        .await
+                        .map_err(|e| map_db_error(e, "rolling stock"))?;
+                    }
+                }
+            }
+        }
+
         // 4. Insert new sellers
         for seller in data
             .sellers
@@ -519,6 +626,27 @@ impl ImportRepository for SqliteImportRepository {
                     ors.id, ors.collection_item_id
                 );
                 continue;
+            }
+
+            // Defence-in-depth: if rolling_stock_id is present, verify it exists before
+            // inserting.  INSERT OR IGNORE does NOT suppress FK violations in SQLite (only
+            // PK/UNIQUE/NOT NULL), so a dangling reference would produce error 787.
+            if let Some(ref rs_id) = ors.rolling_stock_id {
+                let rs_exists: bool =
+                    sqlx::query_scalar("SELECT COUNT(1) FROM rolling_stocks WHERE id = ?")
+                        .bind(rs_id)
+                        .fetch_one(&mut *tx)
+                        .await
+                        .map(|count: i64| count > 0)
+                        .map_err(|e| DataManagementError::DatabaseError(e.to_string()))?;
+
+                if !rs_exists {
+                    warn!(
+                        "Skipping owned_rolling_stock '{}': rolling stock '{}' not found",
+                        ors.id, rs_id
+                    );
+                    continue;
+                }
             }
 
             sqlx::query(
