@@ -152,7 +152,9 @@
       <BadgePicker value={localControl ?? ''} options={CONTROL_OPTIONS} onSelect={onSaveControl} />
     {:else}
       <span class="font-mono text-sm text-foreground">
-        {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
+        {localControl === 'NO_DCC'
+          ? '—'
+          : (CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—')}
       </span>
     {/if}
   </div>
@@ -161,7 +163,9 @@
     <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
       {m.rolling_stock_field_dcc_interface()}
     </p>
-    {#if canEdit}
+    {#if localCategory === 'FREIGHT_CAR'}
+      <span class="font-mono text-sm text-muted-foreground">—</span>
+    {:else if canEdit}
       <BadgePicker
         value={localDccInterface ?? ''}
         options={DCC_INTERFACE_OPTIONS}

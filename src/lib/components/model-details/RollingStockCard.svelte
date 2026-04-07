@@ -512,7 +512,9 @@
             >Control</span
           >
           <span class="font-mono text-xs text-foreground">
-            {CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—'}
+            {localControl === 'NO_DCC'
+              ? '—'
+              : (CONTROL_OPTIONS.find((o) => o.id === localControl)?.label ?? '—')}
           </span>
         </div>
         <div class="flex flex-col gap-1">

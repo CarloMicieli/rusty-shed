@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { OwnedRollingStockView, RailwayModelId, RollingStockId } from '$lib/bindings';
+  import { Plus } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import RollingStockCard from './RollingStockCard.svelte';
   import RollingStockCreateDrawer from '$lib/features/rolling-stock-edit/components/RollingStockCreateDrawer.svelte';
@@ -29,11 +30,12 @@
     <div class="mt-4 flex justify-start">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-md border border-layout-border bg-transparent px-3 py-1.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
+        class="variant-steampunk-lever flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95"
         onclick={() => {
           createDrawerOpen = true;
         }}
       >
+        <Plus size={12} />
         {m.rolling_stock_add_more()}
       </button>
     </div>
@@ -42,11 +44,12 @@
   <div class="rounded-lg border border-dashed border-border p-8 text-center">
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-md border border-layout-border bg-transparent px-4 py-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase transition-colors hover:bg-primary/15 hover:text-primary"
+      class="variant-steampunk-lever flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95"
       onclick={() => {
         createDrawerOpen = true;
       }}
     >
+      <Plus size={12} />
       {m.rolling_stock_add_cta()}
     </button>
   </div>

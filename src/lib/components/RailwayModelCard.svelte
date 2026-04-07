@@ -258,7 +258,7 @@
   <!-- ═══ Specs bar ════════════════════════════════════════════════════════ -->
   <div
     data-testid="specs"
-    class="mx-4 mt-3 grid grid-cols-5 divide-x divide-border rounded-lg border border-border bg-card/40 py-2"
+    class="mx-4 mt-3 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] divide-x divide-border rounded-lg border border-border bg-card/40 py-2"
   >
     <div class="flex flex-col items-center gap-1 px-2">
       <span
