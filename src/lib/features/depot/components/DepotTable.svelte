@@ -31,25 +31,19 @@
     const it = item as unknown as Record<string, unknown>;
     const str = (v: unknown) => (v === undefined || v === null ? '-' : String(v));
 
-    const manufacturer = str(it.manufacturer ?? '');
-    const productCode = str(it.productCode ?? '');
-    const railwayModelId = str(it.railwayModelId ?? '');
-
     return {
       id: str(it.id),
-      productCode,
-      manufacturer,
-      railwayModelId,
+      productCode: str(it.productCode ?? ''),
+      manufacturer: str(it.manufacturer ?? ''),
+      railwayModelId: str(it.railwayModelId ?? ''),
       category: str(it.categoryLabel ?? '-'),
       roadNumber: str(it.roadNumber ?? '-'),
       railway: str(it.railwayCompany ?? '-'),
-      epoch: str(it.epoch ?? '-'),
       livery: str(it.livery ?? '-'),
       control: str(it.control ?? '-'),
       dccAddress: it.dccAddress as number | null,
-      serviceLevel: str(it.serviceLevel ?? '-'),
-      // Status simulation (or use real data if available)
-      status: it.depot ? 'On Track' : 'In Storage'
+      seriesCode: str(it.seriesCode ?? '-'),
+      series: str(it.series ?? '-')
     };
   }
 
@@ -72,34 +66,37 @@
     viewAll || sortedItems.length <= 50 ? sortedItems : sortedItems.slice(0, 50)
   );
 
-  // Table headers
   const headers = [
-    { label: 'STATUS', key: 'status', class: 'w-16' },
-    { label: 'VISUAL', key: '', class: 'w-24' },
-    { label: m.depot_company(), key: 'railway', class: 'w-40 hidden lg:table-cell' },
-    { label: m.depot_road_number(), key: 'roadNumber', class: 'min-w-[200px]' },
-    { label: m.depot_dcc_address(), key: 'dccAddress', class: 'w-32' },
-    { label: m.depot_type(), key: 'control', class: 'w-32 hidden md:table-cell' }
+    { label: '', key: '', class: 'w-20' },
+    { label: m.depot_manufacturer(), key: 'manufacturer', class: 'w-32 hidden lg:table-cell' },
+    { label: m.depot_product_code(), key: 'productCode', class: 'w-28 hidden lg:table-cell' },
+    { label: m.depot_company(), key: 'railway', class: 'w-36' },
+    { label: m.depot_series_code(), key: 'seriesCode', class: 'w-36 hidden xl:table-cell' },
+    { label: m.depot_series(), key: 'series', class: 'w-40 hidden 2xl:table-cell' },
+    { label: m.depot_road_number(), key: 'roadNumber', class: 'min-w-[140px]' },
+    { label: m.depot_type(), key: 'category', class: 'w-28 hidden md:table-cell' },
+    { label: m.depot_livery(), key: 'livery', class: 'w-36 hidden md:table-cell' },
+    { label: m.depot_dcc_address(), key: 'dccAddress', class: 'w-20' }
   ];
 </script>
 
 <div class="px-6 py-4">
-  <table class="w-full border-separate border-spacing-y-3">
+  <table class="w-full border-separate border-spacing-y-2">
     <thead>
       <tr>
         {#each headers as col (col.label)}
           <th
-            class="px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase {col.class}"
+            class="px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase {col.class}"
             onclick={col.key ? () => toggleSort(col.key) : undefined}
-            class:cursor-pointer={col.key}
+            class:cursor-pointer={!!col.key}
           >
             <div class="flex items-center gap-2">
               {col.label}
               {#if sortField === col.key && col.key}
                 {#if sortDirection === 'asc'}
-                  <ArrowUpNarrowWide size={12} class="text-amber-500" />
+                  <ArrowUpNarrowWide size={12} class="text-primary" />
                 {:else}
-                  <ArrowDownWideNarrow size={12} class="text-amber-500" />
+                  <ArrowDownWideNarrow size={12} class="text-primary" />
                 {/if}
               {/if}
             </div>
@@ -109,94 +106,21 @@
     </thead>
     <tbody>
       {#each visibleItems as item (item.id)}
-        {@const props = getItemProps(item)}
-        <tr class="group transition-all duration-300">
-          <!-- Status LED -->
-          <td
-            class="relative rounded-l-xl border-y border-l border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30"
-          >
-            <div
-              class="absolute top-1/4 bottom-1/4 left-0 w-1 bg-transparent transition-all group-hover:bg-amber-500"
-            ></div>
-            <div class="flex items-center justify-center">
-              <div
-                class="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] transition-all"
-                class:bg-emerald-500={props.status === 'On Track'}
-                class:shadow-emerald-500-glow={props.status === 'On Track'}
-                class:bg-zinc-700={props.status !== 'On Track'}
-              ></div>
-            </div>
-          </td>
-
-          <!-- Thumbnail -->
-          <td class="border-y border-white/5 bg-white/5 px-2 py-4 group-hover:border-amber-500/30">
-            <DepotThumbnail railwayModelId={props.railwayModelId} productCode={props.productCode} />
-          </td>
-
-          <!-- Railway -->
-          <td
-            class="hidden border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30 lg:table-cell"
-          >
-            <span class="text-xs font-semibold text-zinc-400">{props.railway}</span>
-          </td>
-
-          <!-- Model Info -->
-          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30">
-            <div class="flex flex-col">
-              <span
-                class="font-mono text-base font-bold text-white transition-colors group-hover:text-amber-500"
-                >{props.roadNumber}</span
-              >
-              <div class="mt-0.5 flex items-center gap-1.5">
-                <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase"
-                  >{props.manufacturer}</span
-                >
-                <span class="h-1 w-1 rounded-full bg-zinc-700"></span>
-                <span class="font-mono text-[10px] tracking-tighter text-zinc-500 uppercase"
-                  >{props.productCode}</span
-                >
-              </div>
-            </div>
-          </td>
-
-          <!-- DCC Address -->
-          <td class="border-y border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30">
-            {#if props.dccAddress !== null}
-              <div class="flex items-center gap-2">
-                <div
-                  class="flex h-7 w-12 items-center justify-center rounded border border-amber-500/30 bg-amber-500/10"
-                >
-                  <span class="font-mono text-sm font-bold text-amber-500">{props.dccAddress}</span>
-                </div>
-              </div>
-            {:else}
-              <span class="font-mono text-xs text-zinc-700">---</span>
-            {/if}
-          </td>
-
-          <!-- Control System -->
-          <td
-            class="hidden rounded-r-xl border-y border-r border-white/5 bg-white/5 px-4 py-4 group-hover:border-amber-500/30 md:table-cell"
-          >
-            <span class="font-mono text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
-              >{props.control.replace('_', ' ')}</span
-            >
-          </td>
-        </tr>
+        {@render rowItem(item)}
       {/each}
     </tbody>
   </table>
 
   {#if hasOverflow}
-    <div class="mt-8 flex items-center justify-between border-t border-white/5 py-4">
-      <p class="font-mono text-[10px] tracking-widest text-zinc-500 uppercase">
+    <div class="mt-8 flex items-center justify-between border-t border-border py-4">
+      <p class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
         {m.depot_overflow_note({ showing: visibleItems.length, total: items.length })}
       </p>
       <Button
         variant="ghost"
         size="sm"
         onclick={() => (viewAll = true)}
-        class="text-amber-500 hover:bg-amber-500/5"
+        class="text-primary hover:bg-primary/5"
       >
         {m.depot_view_all()}
       </Button>
@@ -204,10 +128,97 @@
   {/if}
 </div>
 
-<style>
-  .shadow-emerald-500-glow {
-    box-shadow:
-      0 0 10px rgba(16, 185, 129, 0.4),
-      0 0 20px rgba(16, 185, 129, 0.2);
-  }
-</style>
+{#snippet rowItem(item: T)}
+  {@const props = getItemProps(item)}
+  <tr class="group transition-all duration-150">
+    <!-- Image Preview -->
+    <td
+      class="rounded-l-sm border-y border-l-2 border-border border-l-transparent bg-card px-2 py-3 group-hover:border-l-primary group-hover:bg-primary/15"
+    >
+      <DepotThumbnail railwayModelId={props.railwayModelId} productCode={props.productCode} />
+    </td>
+
+    <!-- Manufacturer -->
+    <td
+      class="hidden border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15 lg:table-cell"
+    >
+      <span class="text-sm text-foreground">{props.manufacturer}</span>
+    </td>
+
+    <!-- Product Code -->
+    <td
+      class="hidden border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15 lg:table-cell"
+    >
+      <span class="font-mono text-sm text-foreground">{props.productCode}</span>
+    </td>
+
+    <!-- Railway Company -->
+    <td class="border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15">
+      <span class="text-sm font-bold text-primary">{props.railway}</span>
+    </td>
+
+    <!-- Series Code -->
+    <td
+      class="hidden border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15 xl:table-cell"
+    >
+      <span class="font-mono text-sm text-foreground">{props.seriesCode}</span>
+    </td>
+
+    <!-- Series -->
+    <td
+      class="hidden border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15 2xl:table-cell"
+    >
+      <span class="text-sm text-muted-foreground">{props.series}</span>
+    </td>
+
+    <!-- Road Number -->
+    <td class="border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15">
+      <span class="font-mono text-lg font-bold text-foreground">{props.roadNumber}</span>
+    </td>
+
+    <!-- Type -->
+    <td
+      class="hidden border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15 md:table-cell"
+    >
+      <span class="text-[10px] tracking-tighter text-muted-foreground uppercase"
+        >{props.category}</span
+      >
+    </td>
+
+    <!-- Livery Pill -->
+    <td
+      class="hidden border-y border-border bg-card px-4 py-3 group-hover:bg-primary/15 md:table-cell"
+    >
+      {#if props.livery !== '-'}
+        <span
+          class="rounded-full border border-primary px-2 py-0.5 font-mono text-[10px] text-primary"
+        >
+          {props.livery}
+        </span>
+      {:else}
+        <span class="font-mono text-[10px] text-muted-foreground">—</span>
+      {/if}
+    </td>
+
+    <!-- DCC Gauge (last column) -->
+    <td
+      class="rounded-r-sm border-y border-r border-border bg-card px-4 py-3 group-hover:bg-primary/15"
+    >
+      <div
+        class="variant-steampunk-gauge h-8 w-8 {props.dccAddress !== null
+          ? 'border-emerald-500 text-emerald-500'
+          : props.control !== '-' && props.control !== 'analog' && props.control !== 'ANALOG'
+            ? 'border-primary text-primary'
+            : 'border-border text-muted-foreground'}"
+      >
+        <span class="font-mono text-[10px]">
+          {props.dccAddress !== null
+            ? String(props.dccAddress)
+            : props.control !== '-' && props.control !== 'analog' && props.control !== 'ANALOG'
+              ? 'DCC'
+              : '—'}
+        </span>
+      </div>
+    </td>
+  </tr>
+{/snippet}

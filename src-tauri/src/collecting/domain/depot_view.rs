@@ -30,8 +30,11 @@ pub struct DepotRollingStockView {
     /// The railway model identifier, used for image lookup.
     pub railway_model_id: RailwayModelId,
 
-    /// Series or class code for the rolling stock (e.g. "Class 37").
+    /// Series or class code for the rolling stock (e.g. "Class 37", "E.645").
     pub series_code: String,
+
+    /// Prototype series name (e.g. "E.645 express freight locomotive").
+    pub series: Option<String>,
 
     /// Optional road number used to disambiguate items in the same series.
     pub road_number: Option<String>,

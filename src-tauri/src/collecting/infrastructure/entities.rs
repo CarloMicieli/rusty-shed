@@ -83,6 +83,7 @@ pub struct OwnedRollingStockRow {
 
     // Joined fields from rolling_stocks and railway_companies
     pub series: Option<String>,
+    pub series_name: Option<String>,
     pub road_number: Option<String>,
     pub livery: Option<String>,
     pub control: Option<String>,

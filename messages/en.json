@@ -139,6 +139,8 @@
   "depot_dcc_address": "DCC",
   "depot_road_number": "Road number",
   "depot_company": "Railway company",
+  "depot_series_code": "Series Code",
+  "depot_series": "Series",
   "depot_livery": "Livery",
   "depot_type": "Type",
   "depot_service_level": "Service level",

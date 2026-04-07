@@ -2479,8 +2479,10 @@ export type DepotRollingStockView = {
 	id: OwnedRollingStockId,
 	// The railway model identifier, used for image lookup.
 	railwayModelId: RailwayModelId,
-	// Series or class code for the rolling stock (e.g. "Class 37").
+	// Series or class code for the rolling stock (e.g. "Class 37", "E.645").
 	seriesCode: string,
+	// Prototype series name (e.g. "E.645 express freight locomotive").
+	series: string | null,
 	// Optional road number used to disambiguate items in the same series.
 	roadNumber: string | null,
 	// Optional user-facing friendly name for the item.
@@ -3431,8 +3433,10 @@ export type OwnedRollingStockView_Deserialize = {
 	 *  Use this for short owner notes or a brief textual label.
 	 */
 	notes: string | null,
-	// Series derived from the catalog rolling stock data.
+	// Series code derived from the catalog rolling stock data (e.g. "E.645").
 	series: string | null,
+	// Prototype series name derived from the catalog rolling stock data (e.g. "E.645 express freight locomotive").
+	seriesName: string | null,
 	// Road number derived from the catalog rolling stock data.
 	roadNumber: string | null,
 	// Livery derived from the catalog rolling stock data.
@@ -3479,8 +3483,10 @@ export type OwnedRollingStockView_Serialize = {
 	 *  Use this for short owner notes or a brief textual label.
 	 */
 	notes: string | null,
-	// Series derived from the catalog rolling stock data.
+	// Series code derived from the catalog rolling stock data (e.g. "E.645").
 	series: string | null,
+	// Prototype series name derived from the catalog rolling stock data (e.g. "E.645 express freight locomotive").
+	seriesName: string | null,
 	// Road number derived from the catalog rolling stock data.
 	roadNumber: string | null,
 	// Livery derived from the catalog rolling stock data.

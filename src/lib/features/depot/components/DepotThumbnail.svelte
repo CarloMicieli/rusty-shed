@@ -47,7 +47,7 @@
 </script>
 
 <div
-  class="flex h-10 w-16 items-center justify-center overflow-hidden rounded border border-white/10 bg-black"
+  class="variant-steampunk-riveted flex h-12 w-[72px] items-center justify-center overflow-hidden rounded-sm border border-border bg-card"
 >
   {#if src}
     <img

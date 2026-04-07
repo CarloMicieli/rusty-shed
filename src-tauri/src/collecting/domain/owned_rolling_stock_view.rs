@@ -25,8 +25,11 @@ pub struct OwnedRollingStockView {
     /// Use this for short owner notes or a brief textual label.
     pub notes: Option<String>,
 
-    /// Series derived from the catalog rolling stock data.
+    /// Series code derived from the catalog rolling stock data (e.g. "E.645").
     pub series: Option<String>,
+
+    /// Prototype series name derived from the catalog rolling stock data (e.g. "E.645 express freight locomotive").
+    pub series_name: Option<String>,
 
     /// Road number derived from the catalog rolling stock data.
     pub road_number: Option<String>,

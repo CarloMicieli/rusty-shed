@@ -41,6 +41,7 @@ function makeDepotItem(
     id: `item-${Math.random().toString(36).slice(2)}`,
     railwayModelId: 'model-1',
     seriesCode: 'BR101',
+    series: null,
     roadNumber: null,
     friendlyName: null,
     depot: null,

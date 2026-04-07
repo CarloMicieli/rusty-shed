@@ -181,6 +181,7 @@ const mockRollingStock: OwnedRollingStockView = {
   rollingStockId: ROLLING_STOCK_ID,
   notes: null,
   series: 'E.656',
+  seriesName: null,
   roadNumber: '001',
   livery: 'Verde FS',
   countryCode: 'IT',

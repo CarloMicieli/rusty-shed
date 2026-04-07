@@ -135,6 +135,7 @@ impl CollectionMapper {
                             })?,
                             notes: rs_row.notes.clone(),
                             series: rs_row.series.clone(),
+                            series_name: rs_row.series_name.clone(),
                             road_number: rs_row.road_number.clone(),
                             livery: rs_row.livery.clone(),
                             control: rs_row
@@ -338,10 +339,14 @@ impl CollectionMapper {
         Ok(crate::collecting::domain::DepotRollingStockView {
             id: owned.id.clone(),
             railway_model_id: collection_item.railway_model.railway_model_id.clone(),
-            series_code: collection_item.railway_model.product_code.clone(),
+            series_code: owned
+                .series
+                .clone()
+                .unwrap_or_else(|| collection_item.railway_model.product_code.clone()),
+            series: owned.series_name.clone(),
             road_number: owned.road_number.clone(),
             friendly_name: None,
-            depot: None,
+            depot: owned.depot.clone(),
             category,
             manufacturer_name: collection_item.railway_model.manufacturer.clone(),
             product_code,
@@ -463,6 +468,7 @@ mod tests {
 
             // Joined fields from rolling_stocks and railway_companies (optional in tests)
             series: None,
+            series_name: None,
             road_number: None,
             livery: None,
             control: None,
