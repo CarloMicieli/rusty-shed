@@ -240,10 +240,7 @@
           {@render NoResults()}
         {:else}
           <!-- View mode toolbar -->
-          <div class="mb-4 flex items-center justify-between">
-            <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
-              {filteredItems.length} item{filteredItems.length === 1 ? '' : 's'}
-            </span>
+          <div class="mb-4 flex items-center justify-end">
             <div class="flex items-center gap-1 rounded-lg border border-border/60 p-0.5">
               <button
                 type="button"

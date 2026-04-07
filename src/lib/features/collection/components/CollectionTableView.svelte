@@ -56,7 +56,7 @@
           >BRAND & MODEL</th
         >
         <th
-          class="hidden px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase sm:table-cell"
+          class="hidden min-w-[160px] px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase sm:table-cell"
           >ROAD NO.</th
         >
         <th
@@ -108,7 +108,7 @@
           <td class="border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30">
             <div class="flex flex-col gap-0.5">
               <span
-                class="text-xs font-semibold text-zinc-200 transition-colors group-hover:text-primary"
+                class="line-clamp-2 text-xs leading-tight font-semibold text-zinc-200 transition-colors group-hover:text-primary"
                 >{rm.description}</span
               >
               <div class="flex items-center gap-1">
@@ -125,7 +125,7 @@
           <td
             class="hidden border-y border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30 sm:table-cell"
           >
-            <span class="font-mono text-xs text-zinc-300">{roadNumber}</span>
+            <span class="font-mono text-xs whitespace-nowrap text-zinc-300">{roadNumber}</span>
           </td>
 
           <!-- Scale -->
