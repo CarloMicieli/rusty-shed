@@ -278,7 +278,7 @@
             -->
             <VirtualGrid
               items={filteredItems}
-              itemHeight={320}
+              itemHeight={340}
               itemMinWidth={240}
               gap={16}
               overscan={3}

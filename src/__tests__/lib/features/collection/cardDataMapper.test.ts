@@ -89,21 +89,6 @@ describe('collectionItemToCardData', () => {
     expect(result.photoUrl).toBeNull();
   });
 
-  it('extracts roadNumber from first rolling stock', () => {
-    const item = makeItem({
-      rollingStocks: [
-        makeRollingStock({ roadNumber: '50 80 26-81 517-7' }),
-        makeRollingStock({ roadNumber: '50 80 26-81 518-5' })
-      ]
-    });
-    expect(collectionItemToCardData(item).roadNumber).toBe('50 80 26-81 517-7');
-  });
-
-  it('returns null roadNumber when rolling stock array is empty', () => {
-    const item = makeItem({ rollingStocks: [] });
-    expect(collectionItemToCardData(item).roadNumber).toBeNull();
-  });
-
   it('sets unitCount when more than one rolling stock', () => {
     const item = makeItem({
       rollingStocks: [makeRollingStock(), makeRollingStock(), makeRollingStock()]

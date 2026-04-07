@@ -24,7 +24,6 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
     series: railwayModel.description,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     category: mapCategory(railwayModel.category),
-    roadNumber: rollingStocks[0]?.roadNumber ?? null,
     scale: railwayModel.scale,
     powerMethod: railwayModel.powerMethod,
     era: railwayModel.epoch,

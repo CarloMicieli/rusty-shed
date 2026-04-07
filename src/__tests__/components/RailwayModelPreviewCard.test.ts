@@ -10,9 +10,13 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   components_deleteConfirmMessage: ({ model }: { model: string }) =>
     `Are you sure you want to delete ${model}? This action cannot be undone.`,
   components_unknownManufacturer: () => 'Unknown',
-  components_noRoadNumber: () => '---',
-  depot_road_number: () => 'Road / Depot',
+  depot_category: () => 'Category',
   depot_scale: () => 'Scale',
+  enum_category_locomotives: () => 'Locomotives',
+  enum_category_freight_cars: () => 'Freight Cars',
+  enum_category_passenger_cars: () => 'Passenger Cars',
+  enum_category_railcars: () => 'Railcars',
+  enum_category_train_sets: () => 'Train Sets',
   components_purchaseDate: () => 'PURCHASED',
   components_deleteButton: () => 'Delete model',
   common_delete: () => 'Delete',
@@ -43,7 +47,6 @@ describe('RailwayModelPreviewCard', () => {
     productCode: '37586',
     series: 'Class 66',
     category: 'DieselLocomotive' as const,
-    roadNumber: '66 001',
     scale: 'H0',
     powerMethod: 'DCC',
     era: 'VI',
@@ -71,9 +74,7 @@ describe('RailwayModelPreviewCard', () => {
       expect(screen.getByText('Märklin')).toBeTruthy();
       expect(screen.getByText(/37586/)).toBeTruthy();
       expect(screen.getByText(/Class 66/)).toBeTruthy();
-      expect(screen.getByText(/66 001/)).toBeTruthy();
-      const roadNumberElement = screen.getByText(/66 001/).closest('span');
-      expect(roadNumberElement?.classList.contains('font-mono')).toBe(true);
+      expect(screen.getByText('Locomotives')).toBeTruthy();
     });
   });
 
@@ -87,29 +88,17 @@ describe('RailwayModelPreviewCard', () => {
       expect(thumbnail).toBeTruthy();
     });
 
-    it('should truncate long road numbers (>25 chars)', () => {
-      const longRoadNumber = '12 34 56 78 90 12 34 56 78 90 123'; // 35 characters
-      render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, roadNumber: longRoadNumber } }
-      });
-
-      // Should either show truncated version or the full number (both acceptable)
-      const truncated = screen.queryByText(/…/);
-      const fullText = screen.queryByText(longRoadNumber);
-      expect(truncated || fullText).toBeTruthy();
-    });
-
-    it('displays fallbacks for missing road number and manufacturer', () => {
-      const { unmount } = render(RailwayModelPreviewCard, {
-        props: { model: { ...mockModel, roadNumber: null } }
-      });
-      expect(screen.getByText(/—/)).toBeTruthy();
-      unmount();
-
+    it('displays fallback for missing manufacturer', () => {
       render(RailwayModelPreviewCard, {
         props: { model: { ...mockModel, manufacturer: null } }
       });
       expect(screen.getByText('Unknown')).toBeTruthy();
+    });
+
+    it('displays category label in specs row', () => {
+      render(RailwayModelPreviewCard, { props: { model: mockModel } });
+      expect(screen.getByText('Category')).toBeTruthy();
+      expect(screen.getByText('Locomotives')).toBeTruthy();
     });
   });
 
@@ -129,7 +118,9 @@ describe('RailwayModelPreviewCard', () => {
       expect(screen.queryByText('H0')).toBeFalsy();
       expect(screen.queryByText('DCC')).toBeFalsy();
       expect(screen.queryByText(/VI/)).toBeFalsy();
-      expect(screen.queryByText(/PURCHASED/)).toBeFalsy();
+      // Purchase date section is always rendered; it becomes invisible when date is null
+      const purchasedLabel = screen.getByText(/PURCHASED/);
+      expect(purchasedLabel.closest('div.invisible')).toBeTruthy();
     });
 
     it('displays unit count badge when > 1 and hides it when unitCount is 1', () => {

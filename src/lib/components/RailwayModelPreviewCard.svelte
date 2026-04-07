@@ -36,8 +36,6 @@
     series: string | null;
     /** Model category for classification */
     category: ModelCategory;
-    /** Road number / identification marking (e.g., "50 80 26-81 517-7") */
-    roadNumber: string | null;
     /** Model scale (e.g., "H0", "N", "TT", "Z") */
     scale: string | null;
     /** Power method (e.g., "DC", "AC", "DCC") */
@@ -90,13 +88,26 @@
 
   const displayManufacturer = $derived(model.manufacturer ?? m.components_unknownManufacturer());
 
-  const displaySeries = $derived(
-    model.series
-      ? model.series.length > 30
-        ? model.series.substring(0, 30) + '…'
-        : model.series
-      : 'Railway Model'
-  );
+  const displaySeries = $derived(model.series ?? 'Railway Model');
+
+  const displayCategory = $derived.by((): string => {
+    switch (model.category) {
+      case 'SteamLocomotive':
+      case 'ElectricLocomotive':
+      case 'DieselLocomotive':
+        return m.enum_category_locomotives();
+      case 'FreightCar':
+        return m.enum_category_freight_cars();
+      case 'PassengerCar':
+        return m.enum_category_passenger_cars();
+      case 'Railcar':
+        return m.enum_category_railcars();
+      case 'TrainSet':
+        return m.enum_category_train_sets();
+      default:
+        return '—';
+    }
+  });
 
   const displayPurchaseDate = $derived.by((): string | null => {
     if (!model.purchaseDate) return null;
@@ -235,7 +246,7 @@
           {/if}
         </div>
         <!-- Locomotive class / series name -->
-        <h3 class="mt-0.5 truncate text-sm leading-tight font-medium text-zinc-100">
+        <h3 class="mt-0.5 line-clamp-2 text-sm leading-tight font-medium text-zinc-100">
           {displaySeries}
         </h3>
       </div>
@@ -331,9 +342,9 @@
     <div class="grid grid-cols-3 divide-x divide-border">
       <div class="flex flex-col items-center gap-0.5 pr-2">
         <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
-          {m.depot_road_number()}
+          {m.depot_category()}
         </span>
-        <span class="font-mono text-xs text-foreground">{model.roadNumber ?? '—'}</span>
+        <span class="w-full truncate text-center text-xs text-foreground">{displayCategory}</span>
       </div>
       <div class="flex flex-col items-center gap-0.5 px-2">
         <span class="text-[10px] tracking-wider text-muted-foreground uppercase">
@@ -347,13 +358,11 @@
       </div>
     </div>
 
-    {#if displayPurchaseDate}
-      <div class="mt-2.5 text-center">
-        <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
-          {m.components_purchaseDate()}
-        </span>
-        <div class="mt-0.5 font-mono text-xs text-zinc-300">{displayPurchaseDate}</div>
-      </div>
-    {/if}
+    <div class="mt-2.5 text-center" class:invisible={!displayPurchaseDate}>
+      <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
+        {m.components_purchaseDate()}
+      </span>
+      <div class="mt-0.5 font-mono text-xs text-zinc-300">{displayPurchaseDate ?? ''}</div>
+    </div>
   </CardContent>
 </Card>
