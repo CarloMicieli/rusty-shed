@@ -77,7 +77,8 @@ pub struct ModelCardRow {
     pub purchase_condition: Option<String>,
     pub scale: Option<String>,
     pub era: Option<String>,
-    pub road_number: Option<String>,
+    pub price_amount: Option<i64>,
+    pub price_currency: Option<String>,
 }
 
 impl From<ModelCardRow> for ModelCard {
@@ -88,6 +89,13 @@ impl From<ModelCardRow> for ModelCard {
             .and_then(|s| s.parse::<PurchaseCondition>().ok())
             .unwrap_or_default();
 
+        let price = match (row.price_amount, row.price_currency) {
+            (Some(amount), Some(currency_str)) => Currency::from_code(&currency_str)
+                .ok()
+                .map(|currency| MonetaryAmount { amount, currency }),
+            _ => None,
+        };
+
         Self {
             id: row.collection_item_id,
             thumbnail_path: row.image_path,
@@ -97,7 +105,7 @@ impl From<ModelCardRow> for ModelCard {
             description: row.description,
             scale: row.scale,
             era: row.era,
-            road_number: row.road_number,
+            price,
         }
     }
 }

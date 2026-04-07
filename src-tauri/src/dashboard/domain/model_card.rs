@@ -1,5 +1,6 @@
 use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::PurchaseCondition;
+use crate::core::domain::MonetaryAmount;
 use serde::Serialize;
 
 /// Compact view of a railway model for dashboard card display
@@ -31,6 +32,6 @@ pub struct ModelCard {
     /// Era/epoch (e.g., "V", "IV") — from railway_models.epoch
     pub era: Option<String>,
 
-    /// Road number — from rolling_stocks.road_number (first match)
-    pub road_number: Option<String>,
+    /// Purchase price — from purchase_infos.purchased_price_amount/currency
+    pub price: Option<MonetaryAmount>,
 }

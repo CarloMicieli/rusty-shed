@@ -3287,8 +3287,8 @@ export type ModelCard = {
 	scale: string | null,
 	// Era/epoch (e.g., "V", "IV") — from railway_models.epoch
 	era: string | null,
-	// Road number — from rolling_stocks.road_number (first match)
-	roadNumber: string | null,
+	// Purchase price — from purchase_infos.purchased_price_amount/currency
+	price: MonetaryAmount | null,
 };
 
 // This represents the physical and mechanical state of the locomotive or rolling stock.

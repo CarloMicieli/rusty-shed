@@ -4,6 +4,7 @@
   import type { ModelCard as ModelCardType } from '$lib/bindings';
   import { Badge } from '$lib/components';
   import * as m from '$lib/paraglide/messages.js';
+  import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   let { card, onclick }: { card: ModelCardType; onclick?: () => void } = $props();
 
@@ -57,6 +58,10 @@
     if (description.length <= 100) return description;
     return description.slice(0, 100) + '...';
   }
+
+  const formattedPrice = $derived(
+    card.price ? regionalManager.formatCurrencyWith(card.price.amount, card.price.currency) : null
+  );
 </script>
 
 <button
@@ -114,9 +119,9 @@
       </p>
     {/if}
 
-    {#if card.scale || card.era || card.roadNumber}
-      <div class="mt-2 grid grid-cols-3 gap-1 border-t border-border/20 pt-2">
-        {#each [{ label: m.depot_road_number(), val: card.roadNumber }, { label: m.depot_scale(), val: card.scale }, { label: m.depot_era(), val: card.era }] as col (col.label)}
+    {#if card.scale || card.era}
+      <div class="mt-2 grid grid-cols-2 gap-1 border-t border-border/20 pt-2">
+        {#each [{ label: m.depot_scale(), val: card.scale }, { label: m.depot_era(), val: card.era }] as col (col.label)}
           <div class="flex flex-col items-center gap-0.5">
             <span class="text-[9px] tracking-wider text-muted-foreground uppercase"
               >{col.label}</span
@@ -126,5 +131,11 @@
         {/each}
       </div>
     {/if}
+    <div class="mt-2 flex items-baseline justify-between border-t border-border/20 pt-2">
+      <span class="text-[9px] tracking-wider text-muted-foreground uppercase"
+        >{m.dashboard_card_price()}</span
+      >
+      <span class="font-mono text-[11px] font-semibold text-primary">{formattedPrice ?? '—'}</span>
+    </div>
   </div>
 </button>

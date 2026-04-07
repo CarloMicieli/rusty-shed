@@ -147,7 +147,8 @@ impl<'conn> SqliteDashboardRepository<'conn> {
                     ci.purchase_condition,
                     rm.scale,
                     rm.epoch AS era,
-                    (SELECT rs.road_number FROM rolling_stocks rs WHERE rs.railway_model_id = rm.id LIMIT 1) AS road_number
+                    pi.purchased_price_amount AS price_amount,
+                    pi.purchased_price_currency AS price_currency
                 FROM purchase_infos pi
                 JOIN collection_items ci ON pi.collection_item_id = ci.id
                 JOIN railway_models rm ON ci.railway_model_id = rm.id
