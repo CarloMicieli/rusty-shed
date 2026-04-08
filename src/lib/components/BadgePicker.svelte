@@ -40,6 +40,8 @@
   /** Optimistic selected id/value — reverted if onSelect rejects. */
   let selectedValue = $derived(value);
   let focusedIndex = $state(0);
+  let panelTop = $state(0);
+  let panelLeft = $state(0);
   let triggerEl = $state<HTMLDivElement | null>(null);
   let listEl = $state<HTMLUListElement | null>(null);
 
@@ -58,6 +60,11 @@
     if (isSaving) return;
     focusedIndex = options.findIndex((o) => o.id === selectedValue || o.label === selectedValue);
     if (focusedIndex < 0) focusedIndex = 0;
+    if (triggerEl) {
+      const rect = triggerEl.getBoundingClientRect();
+      panelTop = rect.bottom + 4;
+      panelLeft = rect.left;
+    }
     isOpen = true;
   }
 
@@ -120,64 +127,63 @@
 
 <svelte:window onclick={handleOutsideClick} onkeydown={(e) => e.key === 'Escape' && close()} />
 
-<div class="relative inline-block">
-  <!-- Trigger -->
-  <div
-    bind:this={triggerEl}
-    class="group inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 transition-colors hover:bg-primary/15"
-    role="button"
-    tabindex="0"
-    aria-haspopup="listbox"
-    aria-expanded={isOpen}
-    onclick={open}
-    onkeydown={handleTriggerKeydown}
-  >
-    <span class="font-mono text-xs text-foreground">{displayValue}</span>
-    <Pencil
-      size={10}
-      class="text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-    />
-  </div>
-
-  <!-- Picker panel -->
-  {#if isOpen}
-    <div
-      class="absolute top-full left-0 z-50 mt-1 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-card shadow-xl"
-    >
-      <div class="flex items-center justify-between border-b border-border px-2 py-1">
-        <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
-          >{m.badge_picker_close()}</span
-        >
-      </div>
-      <ul
-        bind:this={listEl}
-        role="listbox"
-        tabindex="-1"
-        class="max-h-48 overflow-y-auto py-1 outline-none"
-        onkeydown={handleListKeydown}
-      >
-        {#each options as option, i (option.id)}
-          <li
-            role="option"
-            aria-selected={option.id === selectedValue || option.label === selectedValue}
-            class="flex cursor-pointer items-center px-3 py-1.5 text-xs transition-colors
-              {option.id === selectedValue || option.label === selectedValue
-              ? 'bg-primary/20 text-primary'
-              : 'text-foreground'}
-              {i === focusedIndex ? 'bg-primary/10' : ''}
-              hover:bg-primary/15 hover:text-primary"
-            onclick={() => void select(option.id)}
-            onkeydown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                void select(option.id);
-              }
-            }}
-          >
-            {option.label}
-          </li>
-        {/each}
-      </ul>
-    </div>
-  {/if}
+<!-- Trigger -->
+<div
+  bind:this={triggerEl}
+  class="group inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 transition-colors hover:bg-primary/15"
+  role="button"
+  tabindex="0"
+  aria-haspopup="listbox"
+  aria-expanded={isOpen}
+  onclick={open}
+  onkeydown={handleTriggerKeydown}
+>
+  <span class="font-mono text-xs text-foreground">{displayValue}</span>
+  <Pencil
+    size={10}
+    class="text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+  />
 </div>
+
+<!-- Picker panel: position:fixed so it never affects document flow or scroll containers -->
+{#if isOpen}
+  <div
+    class="fixed z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-card shadow-xl"
+    style="top: {panelTop}px; left: {panelLeft}px;"
+  >
+    <div class="flex items-center justify-between border-b border-border px-2 py-1">
+      <span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
+        >{m.badge_picker_close()}</span
+      >
+    </div>
+    <ul
+      bind:this={listEl}
+      role="listbox"
+      tabindex="-1"
+      class="max-h-48 overflow-y-auto py-1 outline-none"
+      onkeydown={handleListKeydown}
+    >
+      {#each options as option, i (option.id)}
+        <li
+          role="option"
+          aria-selected={option.id === selectedValue || option.label === selectedValue}
+          class="flex cursor-pointer items-center px-3 py-1.5 text-xs transition-colors
+            {option.id === selectedValue || option.label === selectedValue
+            ? 'bg-primary/20 text-primary'
+            : 'text-foreground'}
+            {i === focusedIndex ? 'bg-primary/10' : ''}
+            hover:bg-primary/15 hover:text-primary"
+          onclick={() => void select(option.id)}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              void select(option.id);
+            }
+          }}
+        >
+          {option.label}
+        </li>
+      {/each}
+    </ul>
+  </div>
+{/if}

@@ -71,7 +71,10 @@
   {#each units as unit (unit.id)}
     {@const formState = rollingStockFormState.get(unit.id)}
     {@const specLoaded = rollingStockSpecLoaded.has(unit.id)}
-    <Accordion.Item value={unit.id} class="overflow-hidden rounded-sm border border-border bg-card">
+    <AccordionPrimitive.Item
+      value={unit.id}
+      class="overflow-hidden rounded-sm border border-border bg-card"
+    >
       <AccordionPrimitive.Header
         class="border-b border-border bg-card px-3 py-2 data-[state=closed]:rounded-b-sm data-[state=closed]:border-b-transparent"
       >
@@ -138,7 +141,7 @@
           liveryTruncate={true}
         />
       </Accordion.Content>
-    </Accordion.Item>
+    </AccordionPrimitive.Item>
   {/each}
 </Accordion.Root>
 

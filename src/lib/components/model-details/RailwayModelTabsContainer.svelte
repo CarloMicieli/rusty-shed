@@ -10,6 +10,7 @@
   import RollingStockSingleUnit from './components/RollingStockSingleUnit.svelte';
   import RollingStockMultiUnit from './components/RollingStockMultiUnit.svelte';
   import { useRollingStockEditor } from './useRollingStockEditor.svelte';
+  import { Plus } from 'lucide-svelte';
 
   interface _Props {
     model: RailwayModel;
@@ -185,11 +186,12 @@
         <div class="mt-4 flex justify-start">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/15 hover:text-primary"
+            class="variant-steampunk-lever flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95"
             onclick={() => {
               createDrawerOpen = true;
             }}
           >
+            <Plus size={12} />
             {m.rolling_stock_add_more()}
           </button>
         </div>
@@ -198,11 +200,12 @@
       <div class="rounded-lg border border-dashed border-border p-8 text-center">
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-primary/15 hover:text-primary"
+          class="variant-steampunk-lever flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1 text-[10px] font-bold tracking-widest text-muted-foreground uppercase transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary active:scale-95"
           onclick={() => {
             createDrawerOpen = true;
           }}
         >
+          <Plus size={12} />
           {m.rolling_stock_add_cta()}
         </button>
       </div>
