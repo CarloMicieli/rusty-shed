@@ -67,9 +67,8 @@ coverage/
 *.lcov
 
 # --- 9. Documentation/Specs (Optional) ---
-# Uncomment if you want to exclude specification documents
-# specs/
-# docs/
+specs/
+docs/
 
 # --- 10. Database Files ---
 *.db
