@@ -41,7 +41,8 @@
   let localDepot = $state('');
   let localControl = $state<Control | null>(null);
   let localDccInterface = $state<DccInterface | null>(null);
-  let localCategory = $state<RollingStockCategory | null>(null);
+  let localCategory = $state<RollingStockCategory | null>(rollingStock.category);
+  let localSubcategory = $state<string | null>(rollingStock.subcategory);
   let localIsDummy = $state(false);
   let localLengthMm = $state('');
   let localLengthInches = $state('');
@@ -76,6 +77,8 @@
     localDepot = rollingStock.depot ?? '';
     localControl = rollingStock.control;
     localDccInterface = rollingStock.dccInterface;
+    localCategory = rollingStock.category;
+    localSubcategory = rollingStock.subcategory;
     localLengthMm = extractMm(rollingStock.lengthOverBuffers);
     localLengthInches = extractInches(rollingStock.lengthOverBuffers);
     localCurrentCoupler = rollingStock.currentCouplerId ?? null;
@@ -260,6 +263,22 @@
       localCategory = prev;
       throw new Error('Failed to save category');
     }
+    localSubcategory = null;
+  }
+
+  // ── Save: subcategory ─────────────────────────────────────────────────────────
+  async function saveSubcategory(value: string) {
+    const prev = localSubcategory;
+    localSubcategory = value || null;
+    const result = await commands.updateRollingStockSubcategory({
+      railwayModelId,
+      rollingStockId: rollingStock.rollingStockId,
+      subcategory: value
+    });
+    if (result.status === 'error') {
+      localSubcategory = prev;
+      throw new Error('Failed to save subcategory');
+    }
   }
 
   // ── Save: DCC / control fields ────────────────────────────────────────────────
@@ -439,7 +458,7 @@
     railwayName={rollingStock.railwayCompanyName ?? localSeries ?? ''}
     roadNumber={localRoadNumber}
     category={localCategory}
-    subcategory={rollingStock.subcategory}
+    subcategory={localSubcategory}
     {isExpanded}
     isCollapsible={true}
     {editable}
@@ -471,6 +490,8 @@
         onSaveDccInterface={saveDccInterface}
         onSaveLength={saveLength}
         onSaveCategory={saveCategory}
+        {localSubcategory}
+        onSaveSubcategory={saveSubcategory}
         {onFieldActivate}
         {onFieldDeactivate}
       />

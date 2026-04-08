@@ -13,7 +13,7 @@
 
   const {
     class: className = '',
-    paddingClass = 'px-4 py-2',
+    paddingClass = 'px-4 py-3',
     identity,
     classification,
     actions
@@ -21,7 +21,7 @@
 </script>
 
 <div
-  class="grid grid-cols-[1fr_auto_auto] items-center border-b border-border bg-card {paddingClass} {className}"
+  class="grid grid-cols-[1fr_minmax(0,1fr)_auto] items-start border-b border-border bg-card {paddingClass} {className}"
 >
   {@render identity()}
   {@render classification()}

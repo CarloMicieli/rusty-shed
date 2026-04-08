@@ -69,14 +69,20 @@
 {/snippet}
 
 {#snippet collectionClassification()}
-  <div class="flex items-center justify-center px-4">
-    <div
-      class="flex items-center gap-1.5 font-sans text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase"
+  <div class="grid grid-cols-[1fr_auto_1fr] items-start px-4">
+    <span
+      class="text-right text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase"
     >
-      <span>{category || '—'}</span>
-      <span aria-hidden="true" class="text-[10px] leading-none text-muted-foreground/40">•</span>
-      <span>{subcategory || '—'}</span>
-    </div>
+      {category || '—'}
+    </span>
+    <span aria-hidden="true" class="px-1.5 text-[10px] leading-none text-muted-foreground/40"
+      >•</span
+    >
+    <span
+      class="text-left text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase"
+    >
+      {subcategory || '—'}
+    </span>
   </div>
 {/snippet}
 

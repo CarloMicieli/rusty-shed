@@ -96,6 +96,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_prototype_no_results: () => 'No prototypes found',
   rolling_stock_prototype_clear: () => 'Clear prototype',
   rolling_stock_field_category: () => 'Category',
+  rolling_stock_field_type: () => 'Type',
   rolling_stock_select_company: () => '— Select company —'
 }));
 vi.mock('$lib/paraglide/messages.js', () => ({
@@ -162,6 +163,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_prototype_no_results: () => 'No prototypes found',
   rolling_stock_prototype_clear: () => 'Clear prototype',
   rolling_stock_field_category: () => 'Category',
+  rolling_stock_field_type: () => 'Type',
   rolling_stock_select_company: () => '— Select company —'
 }));
 

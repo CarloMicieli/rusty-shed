@@ -14,6 +14,7 @@
     localControl: Control | null;
     localDccInterface: DccInterface | null;
     localCategory: RollingStockCategory | null;
+    localSubcategory: string | null;
     displayLength: string;
     onSaveIdentification: (
       field: 'series' | 'roadNumber' | 'livery' | 'depot',
@@ -23,6 +24,7 @@
     onSaveDccInterface: (id: string) => Promise<void>;
     onSaveLength: (v: string) => Promise<void>;
     onSaveCategory: (v: RollingStockCategory) => Promise<void>;
+    onSaveSubcategory: (v: string) => Promise<void>;
     onFieldActivate: () => void;
     onFieldDeactivate: () => void;
   }
@@ -35,17 +37,24 @@
     localControl,
     localDccInterface,
     localCategory,
+    localSubcategory,
     displayLength,
     onSaveIdentification,
     onSaveControl,
     onSaveDccInterface,
     onSaveLength,
     onSaveCategory,
+    onSaveSubcategory,
     onFieldActivate,
     onFieldDeactivate
   }: Props = $props();
 
-  import { CONTROL_OPTIONS, DCC_INTERFACE_OPTIONS } from './constants';
+  import { CONTROL_OPTIONS, DCC_INTERFACE_OPTIONS, getSubcategoryOptions } from './constants';
+
+  const subTypeOptions = $derived(
+    getSubcategoryOptions(localCategory).map((o) => ({ value: o.id, label: o.label }))
+  );
+  const hasSubTypes = $derived(subTypeOptions.length > 0);
 
   const CATEGORY_OPTIONS = [
     { value: 'LOCOMOTIVE', label: 'Locomotive' },
@@ -80,6 +89,36 @@
       </span>
     {/if}
   </div>
+
+  {#if hasSubTypes}
+    <div>
+      <p class="mb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+        {m.rolling_stock_field_type()}
+      </p>
+      {#if canEdit}
+        <InPlaceSelectEdit
+          value={localSubcategory ?? ''}
+          displayLabel={subTypeOptions.find((o) => o.value === localSubcategory)?.label ??
+            localSubcategory ??
+            '—'}
+          options={subTypeOptions}
+          onSave={async (v) => {
+            await onSaveSubcategory(v);
+          }}
+          onActivate={onFieldActivate}
+          onDeactivate={onFieldDeactivate}
+        />
+      {:else}
+        <span
+          class="text-sm {localSubcategory ? 'text-foreground' : 'text-muted-foreground italic'}"
+        >
+          {subTypeOptions.find((o) => o.value === localSubcategory)?.label ??
+            localSubcategory ??
+            '—'}
+        </span>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <!-- Row 1: Series · Depot · Livery -->
