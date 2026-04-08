@@ -344,11 +344,31 @@ pub fn run() {
 
             start_connectivity_monitor(app.handle().clone());
 
-            // Setup viewport for main window
-            if let Some(window) = app.get_webview_window("main")
-                && let Err(e) = crate::viewport::setup_viewport(&window)
-            {
-                log::warn!("Failed to setup viewport: {}", e);
+            // Setup viewport and icon for main window
+            if let Some(window) = app.get_webview_window("main") {
+                // Set window icon explicitly so GNOME shows it during `tauri dev`
+                // (no .desktop file exists in dev mode, so we push the pixel buffer directly)
+                let icon_path = app
+                    .path()
+                    .resolve("icons/128x128.png", BaseDirectory::Resource)
+                    .map_err(|e| anyhow::anyhow!("Failed to resolve icon path: {e}"))?;
+
+                match tauri::image::Image::from_path(&icon_path) {
+                    Ok(icon) => {
+                        if let Err(e) = window.set_icon(icon) {
+                            log::warn!("Failed to set window icon: {}", e);
+                        }
+                    }
+                    Err(e) => log::warn!(
+                        "Failed to load window icon from {}: {}",
+                        icon_path.display(),
+                        e
+                    ),
+                }
+
+                if let Err(e) = crate::viewport::setup_viewport(&window) {
+                    log::warn!("Failed to setup viewport: {}", e);
+                }
             }
 
             // Register Ctrl+N global shortcut to open the acquisition drawer

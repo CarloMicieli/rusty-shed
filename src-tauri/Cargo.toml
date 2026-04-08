@@ -54,7 +54,7 @@ sqlx                         = { version = "0.8.6", features = ["sqlite", "runti
 strum                        = "0.28.0"
 strum_macros                 = "0.28.0"
 tar                          = "0.4.45"
-tauri                        = { version = "2.10.3", features = ["protocol-asset"] }
+tauri                        = { version = "2.10.3", features = ["protocol-asset", "image-png"] }
 tauri-plugin-deep-link       = "2.4.8"
 tauri-plugin-global-shortcut = "2.3.1"
 tauri-plugin-dialog          = "2.7.0"
