@@ -5,7 +5,7 @@
   import { Button, DatePickerField } from '$lib/components';
   import { CalendarDate } from '@internationalized/date';
   import { getMaintenanceDetailState } from '../MaintenanceDetailState.svelte';
-  import type { MaintenanceType } from '$lib/bindings';
+  import { getMaintenanceTypes } from '../utils/maintenanceTypes';
 
   interface Props {
     open: boolean;
@@ -30,14 +30,7 @@
 
   const isFormValid = $derived(datePerformed !== '' && datePerformed !== null);
 
-  const maintenanceTypes: Array<{ value: MaintenanceType; label: string }> = [
-    { value: 'WHEEL_CLEANING', label: m.maintenance_type_wheel_cleaning() },
-    { value: 'TRACK_CLEANING', label: m.maintenance_type_track_cleaning() },
-    { value: 'CONTACT_CLEANING', label: m.maintenance_type_contact_cleaning() },
-    { value: 'LUBRICATION', label: m.maintenance_type_lubrication() },
-    { value: 'GENERAL_INSPECTION', label: m.maintenance_type_inspection() },
-    { value: 'DETAIL_REPAIR', label: m.maintenance_type_repair() }
-  ];
+  const maintenanceTypes = getMaintenanceTypes();
 
   async function handleSubmit() {
     if (!isFormValid || !datePerformed) return;

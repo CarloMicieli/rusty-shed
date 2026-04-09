@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ClipboardList } from 'lucide-svelte';
   import { getMaintenanceState } from '../MaintenanceState.svelte';
-  import type { MaintenanceType } from '$lib/bindings';
+  import { getMaintenanceTypes } from '../utils/maintenanceTypes';
   import { toaster } from '$lib/toaster';
   import * as m from '$lib/paraglide/messages.js';
   import MaintenanceEventHeader from './MaintenanceEventHeader.svelte';
@@ -24,15 +24,7 @@
     selectedCardId !== null && datePerformed !== null && datePerformed !== ''
   );
 
-  // Maintenance type options
-  const maintenanceTypes: Array<{ value: MaintenanceType; label: string }> = [
-    { value: 'WHEEL_CLEANING', label: m.maintenance_type_wheel_cleaning() },
-    { value: 'TRACK_CLEANING', label: m.maintenance_type_track_cleaning() },
-    { value: 'CONTACT_CLEANING', label: m.maintenance_type_contact_cleaning() },
-    { value: 'LUBRICATION', label: m.maintenance_type_lubrication() },
-    { value: 'GENERAL_INSPECTION', label: m.maintenance_type_inspection() },
-    { value: 'DETAIL_REPAIR', label: m.maintenance_type_repair() }
-  ];
+  const maintenanceTypes = getMaintenanceTypes();
 
   // Prevent background scrolling when modal is open
   $effect(() => {

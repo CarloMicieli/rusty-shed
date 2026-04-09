@@ -16,6 +16,7 @@
   import { maintenanceSchema } from '$lib/schemas/maintenance-form';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';
+  import { getMaintenanceTypes } from '../utils/maintenanceTypes';
 
   interface Props {
     open: boolean;
@@ -116,15 +117,7 @@
     }
   );
 
-  // Maintenance type options
-  const maintenanceTypes: Array<{ value: MaintenanceType; label: string }> = [
-    { value: 'WHEEL_CLEANING', label: m.maintenance_type_wheel_cleaning() },
-    { value: 'TRACK_CLEANING', label: m.maintenance_type_track_cleaning() },
-    { value: 'CONTACT_CLEANING', label: m.maintenance_type_contact_cleaning() },
-    { value: 'LUBRICATION', label: m.maintenance_type_lubrication() },
-    { value: 'GENERAL_INSPECTION', label: m.maintenance_type_inspection() },
-    { value: 'DETAIL_REPAIR', label: m.maintenance_type_repair() }
-  ];
+  const maintenanceTypes = getMaintenanceTypes();
 
   // Searchable combobox options derived from loaded rolling stocks
   const rsOptions = $derived(
