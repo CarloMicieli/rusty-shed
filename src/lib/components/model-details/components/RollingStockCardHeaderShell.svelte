@@ -21,7 +21,7 @@
 </script>
 
 <div
-  class="grid grid-cols-[1fr_minmax(0,1fr)_auto] items-start border-b border-border bg-card {paddingClass} {className}"
+  class="grid grid-cols-[1fr_minmax(0,1fr)_auto] items-center border-b border-border bg-card {paddingClass} {className}"
 >
   {@render identity()}
   {@render classification()}
