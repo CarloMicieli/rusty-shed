@@ -175,6 +175,17 @@ impl<'conn> BudgetRepository for SqliteBudgetRepository<'conn> {
             .map_err(|e| format!("Failed to get monthly spending: {}", e))
     }
 
+    async fn get_multi_year_monthly_spending(
+        &mut self,
+        start_year: i32,
+        end_year: i32,
+        currency: &str,
+    ) -> Result<Vec<(i32, i32, i64)>, String> {
+        database::get_multi_year_monthly_spending(self.executor, start_year, end_year, currency)
+            .await
+            .map_err(|e| format!("Failed to get multi-year monthly spending: {}", e))
+    }
+
     async fn get_quarterly_spending_by_category(
         &mut self,
         year: i32,

@@ -39,6 +39,21 @@ pub trait BudgetRepository: Send + Sync {
         currency: &str,
     ) -> Result<Vec<(i32, i64)>, String>;
 
+    /// Get monthly spending totals for a range of years in a single query.
+    ///
+    /// Returns `(year, month, total_amount)` triples for all months in
+    /// `[start_year, end_year]` that have at least one purchase in `currency`.
+    /// Months with no spending are omitted.
+    ///
+    /// Prefer this over calling [`get_monthly_spending`] in a loop when multiple
+    /// years of data are needed at once (e.g., the 5-year heatmap).
+    async fn get_multi_year_monthly_spending(
+        &mut self,
+        start_year: i32,
+        end_year: i32,
+        currency: &str,
+    ) -> Result<Vec<(i32, i32, i64)>, String>;
+
     /// Get quarterly spending broken down by rolling-stock category.
     ///
     /// Returns `(quarter_number, category_code, total_amount)` triples.

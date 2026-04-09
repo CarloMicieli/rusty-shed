@@ -163,20 +163,17 @@ where
             Currency::from_code(user_currency).unwrap_or(Currency::EUR)
         });
 
-    // Fetch all multi-year spending data (covers bar chart + heatmap).
-    // Build as Vec<(year, month, amount)> using per-year trait calls.
+    // Fetch all multi-year spending data in ONE query (covers bar chart + heatmap).
+    // The heatmap spans the last 5 years; remaining budget uses the rollover chain which
+    // calls get_monthly_spending internally, so for the budget case we reuse the records
+    // from that chain for the bar chart to avoid fetching current_year a second time.
     let start_year = current_year - 4;
-    let mut all_spending: Vec<(i32, i32, i64)> = Vec::new();
-    for y in start_year..=current_year {
+    let all_spending = {
         let mut repo = uow.budget_repo();
-        let year_data = repo
-            .get_monthly_spending(y, currency_code)
+        repo.get_multi_year_monthly_spending(start_year, current_year, currency_code)
             .await
-            .map_err(DomainError::Infrastructure)?;
-        for (month, amount) in year_data {
-            all_spending.push((y, month, amount));
-        }
-    }
+            .map_err(DomainError::Infrastructure)?
+    };
 
     // Get budget-specific data if budget is configured.
     // monthly_records already contain actual_spend per month, so use them for the bar chart.
