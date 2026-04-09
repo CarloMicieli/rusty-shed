@@ -398,7 +398,11 @@ pub async fn add_rolling_stock_to_model_inner(
     let owned_rolling_stock_id = owned_ids
         .into_iter()
         .next()
-        .ok_or_else(|| CommandError::NotFound("owned rolling stock".to_string()))?;
+        .ok_or_else(|| {
+            CommandError::NotFound(
+                "No owned rolling stock created for collection items".to_string(),
+            )
+        })?;
 
     Ok(AddRollingStockResult {
         rolling_stock_id: rs_id,
