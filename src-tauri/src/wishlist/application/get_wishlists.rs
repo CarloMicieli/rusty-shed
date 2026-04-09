@@ -1,7 +1,6 @@
 use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::domain::repository::WishlistUowExt;
-use anyhow::Result;
 
 /// Query to fetch all wishlists with their previews.
 pub struct GetWishlistsQuery;
@@ -31,56 +30,50 @@ impl GetWishlistsQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::domain::currency::Currency;
-    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-    use anyhow::Result;
-    use pretty_assertions::assert_eq;
-    use sqlx::SqlitePool;
+    use crate::wishlist::application::testing::FakeUow;
+    use crate::wishlist::domain::MockWishlistRepository;
+    use crate::wishlist::domain::wishlist_id::WishlistId;
+    use crate::wishlist::domain::wishlist_preview::WishlistPreview;
+    use chrono::NaiveDateTime;
+    use std::collections::HashMap;
 
-    #[sqlx::test(migrations = "./migrations")]
-    async fn list_wishlists_empty(conn: SqlitePool) -> Result<()> {
-        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let previews = GetWishlistsQuery::execute(&mut unit_of_work)
-            .await
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
-        assert!(previews.is_empty());
-        Ok(())
+    #[tokio::test]
+    async fn list_wishlists_empty() {
+        let mut mock = MockWishlistRepository::new();
+        mock.expect_find_wishlists()
+            .times(1)
+            .returning(|| Ok(vec![]));
+
+        let mut uow = FakeUow::new(mock);
+        let result = GetWishlistsQuery::execute(&mut uow).await.unwrap();
+        assert!(result.is_empty());
     }
 
-    #[sqlx::test(
-        migrations = "./migrations",
-        fixtures("../../../fixtures/test_wishlists.sql")
-    )]
-    async fn list_wishlists_with_totals(conn: SqlitePool) -> Result<()> {
-        let wishlist_id = "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9";
+    #[tokio::test]
+    async fn list_wishlists_returns_views() {
+        let id = WishlistId::default();
+        let id_clone = id.clone();
 
-        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-        let previews = GetWishlistsQuery::execute(&mut unit_of_work)
-            .await
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        let mut mock = MockWishlistRepository::new();
+        mock.expect_find_wishlists().times(1).returning(move || {
+            Ok(vec![WishlistPreview {
+                id: id_clone.clone(),
+                name: "My List".to_string(),
+                notes: None,
+                is_default: true,
+                count: 3,
+                updated_at: NaiveDateTime::default(),
+                total_value: HashMap::new(),
+            }])
+        });
 
-        // find our wishlist
-        let preview = previews
-            .into_iter()
-            .find(|p| p.id.to_string() == wishlist_id)
-            .expect("preview present");
+        let mut uow = FakeUow::new(mock);
+        let result = GetWishlistsQuery::execute(&mut uow).await.unwrap();
 
-        // Fixture contains two items for this wishlist
-        assert_eq!(preview.count, 2);
-        let usd = preview
-            .total_value
-            .get(&Currency::USD)
-            .cloned()
-            .unwrap_or(0);
-        let eur = preview
-            .total_value
-            .get(&Currency::EUR)
-            .cloned()
-            .unwrap_or(0);
-
-        assert_eq!(usd, 0);
-        assert_eq!(eur, 17500 + 15000); // 32500
-
-        Ok(())
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, id);
+        assert_eq!(result[0].name, "My List");
+        assert_eq!(result[0].count, 3);
+        assert!(result[0].is_default);
     }
 }

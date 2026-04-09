@@ -1,8 +1,8 @@
 // Set Budget Use Case
 // Feature: 001-budget-tracking
 
-use crate::budget::domain::{BudgetConfiguration, BudgetMode, BudgetRepository};
-use crate::budget::infrastructure::BudgetUowExt;
+use crate::budget::domain::BudgetUowExt;
+use crate::budget::domain::{BudgetConfiguration, BudgetMode};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 

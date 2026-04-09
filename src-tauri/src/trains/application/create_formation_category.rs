@@ -10,7 +10,7 @@ pub struct CreateFormationCategoryUseCase;
 
 impl CreateFormationCategoryUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         args: CreateFormationCategoryArgs,
     ) -> Result<FormationCategoryView, DomainError> {
         let id = uuid::Uuid::new_v4().to_string();

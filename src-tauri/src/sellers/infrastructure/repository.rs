@@ -296,7 +296,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
     }
 }
 
-impl<'conn> SellersUowExt for SqliteUnitOfWork<'conn> {
+impl SellersUowExt for SqliteUnitOfWork {
     /// Links the SQLite-specific repository to the Unit of Work.
     ///
     /// It re-borrows the internal transaction (`&mut *self.tx`) to provide

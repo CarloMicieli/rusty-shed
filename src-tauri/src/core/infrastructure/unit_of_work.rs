@@ -1,3 +1,8 @@
+use crate::app_uow::{AppUnitOfWork, AppUowFactory};
+use crate::core::infrastructure::error::CommandError;
+use std::future::Future;
+use std::pin::Pin;
+
 /// A specialized implementation of the Unit of Work pattern for SQLite.
 ///
 /// The `SqliteUnitOfWork` manages a single database transaction, ensuring that
@@ -10,19 +15,19 @@
 /// enforces a clear lifecycle: the work must either be explicitly committed
 /// via `.commit()` or it will be automatically rolled back when the struct
 /// is dropped (a safety feature of `sqlx`).
-pub struct SqliteUnitOfWork<'conn> {
+pub struct SqliteUnitOfWork {
     /// The underlying SQLite transaction.
-    pub tx: sqlx::Transaction<'conn, sqlx::Sqlite>,
+    pub tx: sqlx::Transaction<'static, sqlx::Sqlite>,
 }
 
-impl<'conn> SqliteUnitOfWork<'conn> {
+impl SqliteUnitOfWork {
     /// Creates a new Unit of Work by starting a transaction on the provided pool.
     ///
     /// This is the entry point for a business transaction. Once created, the
     /// Unit of Work "locks" the connection for exclusive use until it is consumed.
     pub async fn new(pool: &sqlx::SqlitePool) -> Result<Self, sqlx::Error> {
         Ok(Self {
-            tx: pool.begin().await?,
+            tx: pool.clone().begin().await?,
         })
     }
 
@@ -33,5 +38,40 @@ impl<'conn> SqliteUnitOfWork<'conn> {
     /// If this method is not called, the transaction will roll back on drop.
     pub async fn commit(self) -> Result<(), sqlx::Error> {
         self.tx.commit().await
+    }
+}
+
+impl AppUnitOfWork for SqliteUnitOfWork {
+    fn commit(
+        self: Box<Self>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), CommandError>> + Send + 'static>> {
+        Box::pin(async move {
+            (*self)
+                .commit()
+                .await
+                .map_err(|e| CommandError::DatabaseError(e.to_string()))
+        })
+    }
+}
+
+/// Production `AppUowFactory` that creates a `SqliteUnitOfWork` backed by a
+/// real SQLite connection pool.
+pub struct SqliteUowFactory {
+    pool: sqlx::SqlitePool,
+}
+
+impl SqliteUowFactory {
+    pub fn new(pool: sqlx::SqlitePool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait::async_trait]
+impl AppUowFactory for SqliteUowFactory {
+    async fn create_uow(&self) -> Result<Box<dyn AppUnitOfWork>, CommandError> {
+        let uow = SqliteUnitOfWork::new(&self.pool)
+            .await
+            .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+        Ok(Box::new(uow))
     }
 }

@@ -16,18 +16,13 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::State;
 
-/// Analyze an import package archive.
-///
-/// This command:
-/// 1. Validates the archive format
-/// 2. Extracts and validates the manifest
-/// 3. Creates an import session
-/// 4. Returns validation results and record counts
-#[tauri::command]
-#[specta::specta]
-pub async fn analyze_import_package(
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn analyze_import_package_inner(
+    state: &AppState,
     args: AnalyzeImportPackageArgs,
-    state: State<'_, AppState>,
 ) -> Result<AnalyzeImportPackageResponse, CommandError> {
     info!("analyze_import_package: {}", args.file_path);
 
@@ -67,17 +62,25 @@ pub async fn analyze_import_package(
     })
 }
 
-/// Get a preview of the import before execution.
+/// Analyze an import package archive.
 ///
 /// This command:
-/// 1. Loads the existing session
-/// 2. Checks for duplicate records
-/// 3. Returns record counts and any validation errors
+/// 1. Validates the archive format
+/// 2. Extracts and validates the manifest
+/// 3. Creates an import session
+/// 4. Returns validation results and record counts
 #[tauri::command]
 #[specta::specta]
-pub async fn get_import_preview(
-    args: GetImportPreviewArgs,
+pub async fn analyze_import_package(
+    args: AnalyzeImportPackageArgs,
     state: State<'_, AppState>,
+) -> Result<AnalyzeImportPackageResponse, CommandError> {
+    analyze_import_package_inner(&state, args).await
+}
+
+pub async fn get_import_preview_inner(
+    state: &AppState,
+    args: GetImportPreviewArgs,
 ) -> Result<ImportPreviewResponse, CommandError> {
     info!("get_import_preview: session_id={}", args.session_id);
 
@@ -194,18 +197,24 @@ pub async fn get_import_preview(
     })
 }
 
-/// Execute the import operation.
+/// Get a preview of the import before execution.
 ///
 /// This command:
-/// 1. Loads the validated session and manifest
-/// 2. Checks for duplicates and skips them
-/// 3. Writes new records to the database
-/// 4. Returns import results with added/skipped counts
+/// 1. Loads the existing session
+/// 2. Checks for duplicate records
+/// 3. Returns record counts and any validation errors
 #[tauri::command]
 #[specta::specta]
-pub async fn execute_import(
-    args: ExecuteImportArgs,
+pub async fn get_import_preview(
+    args: GetImportPreviewArgs,
     state: State<'_, AppState>,
+) -> Result<ImportPreviewResponse, CommandError> {
+    get_import_preview_inner(&state, args).await
+}
+
+pub async fn execute_import_inner(
+    state: &AppState,
+    args: ExecuteImportArgs,
 ) -> Result<ImportResultResponse, CommandError> {
     info!("execute_import: session_id={}", args.session_id);
 
@@ -270,17 +279,25 @@ pub async fn execute_import(
     })
 }
 
-/// Cancel an import session.
+/// Execute the import operation.
 ///
 /// This command:
-/// 1. Finds the session
-/// 2. Transitions it to failed state
-/// 3. Cleans up temporary files
+/// 1. Loads the validated session and manifest
+/// 2. Checks for duplicates and skips them
+/// 3. Writes new records to the database
+/// 4. Returns import results with added/skipped counts
 #[tauri::command]
 #[specta::specta]
-pub async fn cancel_import_session(
-    args: CancelImportSessionArgs,
+pub async fn execute_import(
+    args: ExecuteImportArgs,
     state: State<'_, AppState>,
+) -> Result<ImportResultResponse, CommandError> {
+    execute_import_inner(&state, args).await
+}
+
+pub async fn cancel_import_session_inner(
+    state: &AppState,
+    args: CancelImportSessionArgs,
 ) -> Result<CancelImportSessionResponse, CommandError> {
     info!("cancel_import_session: session_id={}", args.session_id);
 
@@ -297,6 +314,21 @@ pub async fn cancel_import_session(
     } else {
         Err(CommandError::unknown("Session not found".to_string()))
     }
+}
+
+/// Cancel an import session.
+///
+/// This command:
+/// 1. Finds the session
+/// 2. Transitions it to failed state
+/// 3. Cleans up temporary files
+#[tauri::command]
+#[specta::specta]
+pub async fn cancel_import_session(
+    args: CancelImportSessionArgs,
+    state: State<'_, AppState>,
+) -> Result<CancelImportSessionResponse, CommandError> {
+    cancel_import_session_inner(&state, args).await
 }
 
 /// Check if an import session is currently in progress.

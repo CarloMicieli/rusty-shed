@@ -183,7 +183,7 @@ impl<'conn> GlobalSearchRepository for SqliteGlobalSearchRepository<'conn> {
     }
 }
 
-impl<'conn> GlobalSearchUowExt for SqliteUnitOfWork<'conn> {
+impl GlobalSearchUowExt for SqliteUnitOfWork {
     fn global_search_repo(&mut self) -> Box<dyn GlobalSearchRepository + '_> {
         Box::new(SqliteGlobalSearchRepository::new(&mut self.tx))
     }

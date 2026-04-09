@@ -22,7 +22,7 @@ impl GetTrackProductsQuery {
     /// * `Vec<TrackProductView>` - List of all track products.
     /// * `DomainError` - On database error.
     pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork,
     ) -> Result<Vec<TrackProductView>, DomainError> {
         let sql = r#"
             SELECT 

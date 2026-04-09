@@ -8,7 +8,7 @@ pub struct RemoveFormationElementUseCase;
 
 impl RemoveFormationElementUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         element_id: String,
     ) -> Result<(), DomainError> {
         let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);

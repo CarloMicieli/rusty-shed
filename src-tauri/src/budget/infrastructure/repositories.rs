@@ -1,8 +1,9 @@
 // Budget Repository Implementation
 // Implements BudgetRepository trait for SQLite
 
+use crate::budget::BudgetEvent;
 use crate::budget::domain::{
-    BudgetConfiguration, BudgetEvent, BudgetRepository, ExtraBudgetEntry, ExtraBudgetId,
+    BudgetConfiguration, BudgetRepository, BudgetUowExt, ExtraBudgetEntry, ExtraBudgetId,
 };
 use crate::budget::infrastructure::database;
 use crate::budget::infrastructure::mappers::{row_to_budget_config, row_to_extra_budget};
@@ -128,25 +129,65 @@ impl<'conn> BudgetRepository for SqliteBudgetRepository<'conn> {
     async fn get_extra_budget_by_id(
         &mut self,
         id: &ExtraBudgetId,
-    ) -> Result<Option<ExtraBudgetEntry>, DomainError> {
-        let row = database::get_extra_budget_by_id(self.executor, id.as_ref()).await?;
+    ) -> Result<Option<ExtraBudgetEntry>, String> {
+        let row = database::get_extra_budget_by_id(self.executor, id.as_ref())
+            .await
+            .map_err(|e| format!("Failed to get extra budget by id: {}", e))?;
 
         match row {
-            Some(r) => Ok(Some(
-                row_to_extra_budget(r).map_err(|e| DomainError::Validation(e.to_string()))?,
-            )),
+            Some(r) => Ok(Some(row_to_extra_budget(r).map_err(|e| e.to_string())?)),
             None => Ok(None),
         }
     }
+    async fn add_extra_budget(&mut self, entry: &ExtraBudgetEntry) -> Result<(), String> {
+        database::add_extra_budget(
+            self.executor,
+            entry.id.as_ref(),
+            entry.year,
+            entry.month as i32,
+            entry.amount.amount,
+            entry.amount.currency.to_code(),
+            entry.reason.as_deref(),
+            &entry.created_at.to_rfc3339(),
+            entry.version as i32,
+        )
+        .await
+        .map_err(|e| format!("Failed to add extra budget: {}", e))?;
+
+        Ok(())
+    }
+
+    async fn remove_extra_budget(&mut self, id: &ExtraBudgetId) -> Result<(), String> {
+        database::remove_extra_budget(self.executor, id.as_ref())
+            .await
+            .map_err(|e| format!("Failed to remove extra budget: {}", e))?;
+
+        Ok(())
+    }
+
+    async fn get_monthly_spending(
+        &mut self,
+        year: i32,
+        currency: &str,
+    ) -> Result<Vec<(i32, i64)>, String> {
+        database::get_monthly_spending(self.executor, year, currency)
+            .await
+            .map_err(|e| format!("Failed to get monthly spending: {}", e))
+    }
+
+    async fn get_quarterly_spending_by_category(
+        &mut self,
+        year: i32,
+        currency: &str,
+    ) -> Result<Vec<(i32, String, i64)>, String> {
+        database::get_quarterly_spending_by_category(self.executor, year, currency)
+            .await
+            .map_err(|e| format!("Failed to get quarterly spending: {}", e))
+    }
 }
 
-/// Extension trait for SqliteUnitOfWork to provide budget repository access.
-pub trait BudgetUowExt {
-    fn budget_repo(&mut self) -> SqliteBudgetRepository<'_>;
-}
-
-impl<'conn> BudgetUowExt for SqliteUnitOfWork<'conn> {
-    fn budget_repo(&mut self) -> SqliteBudgetRepository<'_> {
-        SqliteBudgetRepository::new(&mut self.tx)
+impl BudgetUowExt for SqliteUnitOfWork {
+    fn budget_repo(&mut self) -> Box<dyn BudgetRepository + '_> {
+        Box::new(SqliteBudgetRepository::new(&mut self.tx))
     }
 }

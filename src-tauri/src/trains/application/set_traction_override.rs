@@ -10,7 +10,7 @@ pub struct SetTractionOverrideUseCase;
 
 impl SetTractionOverrideUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         element_id: String,
         args: SetTractionOverrideArgs,
     ) -> Result<FormationElementView, DomainError> {

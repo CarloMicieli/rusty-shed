@@ -12,16 +12,6 @@ use serde::{Deserialize, Serialize};
 ///
 /// The identifier follows the TRN format: `trn:prototype:{railway}-{series-slug}`.
 /// All identifiers are automatically slugified and validated.
-///
-/// # Examples
-///
-/// ```rust,ignore
-/// use rusty_shed_lib::catalog::domain::prototype::prototype_id::PrototypeId;
-/// use rusty_shed_lib::core::domain::identifiers::Identifier;
-///
-/// let id = PrototypeId::new_from_parts(&["fs-e444-tartaruga"]);
-/// assert_eq!(id.as_ref(), "trn:prototype:fs-e444-tartaruga");
-/// ```
 #[derive(
     Debug,
     Clone,

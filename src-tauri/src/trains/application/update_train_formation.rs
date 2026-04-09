@@ -10,7 +10,7 @@ pub struct UpdateTrainFormationUseCase;
 
 impl UpdateTrainFormationUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         id: String,
         args: UpdateTrainFormationArgs,
     ) -> Result<TrainFormationView, DomainError> {

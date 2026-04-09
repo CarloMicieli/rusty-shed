@@ -1,6 +1,7 @@
 //! Query handlers for track inventory read operations.
 
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
 use crate::tracks_inventory::application::{
     GetTrackInventoriesQuery, GetTrackInventoryQuery, GetTrackProductsQuery,
@@ -8,6 +9,25 @@ use crate::tracks_inventory::application::{
 };
 use crate::tracks_inventory::domain::TrackInventoryId;
 use log::info;
+
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn get_track_inventories_inner(
+    state: &AppState,
+) -> Result<Vec<TrackInventoryListItem>, CommandError> {
+    info!("Fetching all track inventories");
+
+    let pool = state.db_pool();
+    let mut uow = SqliteUnitOfWork::new(&pool)
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
+
+    let inventories = GetTrackInventoriesQuery::execute(&mut uow).await?;
+
+    Ok(inventories)
+}
 
 /// Query handler to fetch all track inventories with summary information.
 ///
@@ -21,13 +41,23 @@ use log::info;
 pub async fn get_track_inventories(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<TrackInventoryListItem>, CommandError> {
-    info!("Fetching all track inventories");
+    get_track_inventories_inner(&state).await
+}
 
-    let mut unit_of_work = state.unit_of_work().await?;
+pub async fn get_track_inventory_inner(
+    state: &AppState,
+    id: TrackInventoryId,
+) -> Result<TrackInventoryView, CommandError> {
+    info!("Fetching track inventory: {:?}", id);
 
-    let inventories = GetTrackInventoriesQuery::execute(&mut unit_of_work).await?;
+    let pool = state.db_pool();
+    let mut uow = SqliteUnitOfWork::new(&pool)
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    Ok(inventories)
+    let inventory = GetTrackInventoryQuery::execute(&mut uow, &id).await?;
+
+    Ok(inventory)
 }
 
 /// Query handler to fetch a single track inventory with full details.
@@ -44,13 +74,22 @@ pub async fn get_track_inventory(
     state: tauri::State<'_, AppState>,
     id: TrackInventoryId,
 ) -> Result<TrackInventoryView, CommandError> {
-    info!("Fetching track inventory: {:?}", id);
+    get_track_inventory_inner(&state, id).await
+}
 
-    let mut unit_of_work = state.unit_of_work().await?;
+pub async fn get_track_products_inner(
+    state: &AppState,
+) -> Result<Vec<TrackProductView>, CommandError> {
+    info!("Fetching all track products");
 
-    let inventory = GetTrackInventoryQuery::execute(&mut unit_of_work, &id).await?;
+    let pool = state.db_pool();
+    let mut uow = SqliteUnitOfWork::new(&pool)
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
 
-    Ok(inventory)
+    let products = GetTrackProductsQuery::execute(&mut uow).await?;
+
+    Ok(products)
 }
 
 /// Query handler to fetch all track products.
@@ -65,11 +104,5 @@ pub async fn get_track_inventory(
 pub async fn get_track_products(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<TrackProductView>, CommandError> {
-    info!("Fetching all track products");
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let products = GetTrackProductsQuery::execute(&mut unit_of_work).await?;
-
-    Ok(products)
+    get_track_products_inner(&state).await
 }

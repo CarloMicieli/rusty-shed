@@ -9,7 +9,7 @@ pub struct GetFormationCategoriesUseCase;
 
 impl GetFormationCategoriesUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
     ) -> Result<Vec<FormationCategoryView>, DomainError> {
         let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
         repo.list_categories().await

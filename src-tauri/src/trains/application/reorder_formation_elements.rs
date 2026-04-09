@@ -10,7 +10,7 @@ pub struct ReorderFormationElementsUseCase;
 
 impl ReorderFormationElementsUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         formation_id: String,
         args: ReorderFormationElementsArgs,
     ) -> Result<TrainFormationDetail, DomainError> {

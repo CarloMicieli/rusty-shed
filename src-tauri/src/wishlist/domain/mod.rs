@@ -8,5 +8,7 @@ pub mod wishlist_preview;
 pub mod wishlist_priority;
 pub mod wishlist_status;
 
+pub use repository::WishlistUowExt;
+
 #[cfg(test)]
 pub use repository::MockWishlistRepository;

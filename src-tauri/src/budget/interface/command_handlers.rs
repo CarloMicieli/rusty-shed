@@ -6,11 +6,11 @@ use crate::budget::application::budget_query;
 use crate::budget::application::historical_query;
 use crate::budget::application::remove_extra_budget::RemoveExtraBudgetUseCase;
 use crate::budget::application::set_budget::{SetBudgetInput, SetBudgetUseCase};
+use crate::budget::domain::BudgetUowExt;
+use crate::budget::domain::ExtraBudgetId;
 use crate::budget::domain::dashboard::BudgetDashboardSummary;
 use crate::budget::domain::monthly_budget_record::MonthStatus;
 use crate::budget::domain::quarterly_summary::QuarterlySummary;
-use crate::budget::domain::{BudgetRepository, ExtraBudgetId};
-use crate::budget::infrastructure::BudgetUowExt;
 use crate::budget::interface::command_args::{
     AddExtraBudgetArgs, BudgetConfigDto, ExtraBudgetDto, GetExtraBudgetsArgs,
     GetMonthlyBudgetRecordsArgs, GetQuarterlySummariesArgs, MonthlyBudgetRecordDto,
@@ -24,13 +24,12 @@ use crate::state::AppState;
 use chrono::Datelike;
 use log::info;
 
-/// Tauri command to get the current budget configuration.
-///
-/// Returns `None` if no configuration has been set yet.
-#[tauri::command]
-#[specta::specta]
-pub async fn get_budget_config(
-    state: tauri::State<'_, AppState>,
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn get_budget_config_inner(
+    state: &AppState,
 ) -> Result<Option<BudgetConfigDto>, CommandError> {
     info!("Fetching budget configuration");
 
@@ -40,7 +39,7 @@ pub async fn get_budget_config(
         repo.get_config().await.map_err(CommandError::from)?
     };
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(config.map(|c| BudgetConfigDto {
         id: c.id.value(),
@@ -56,30 +55,12 @@ pub async fn get_budget_config(
     }))
 }
 
-/// Tauri command to set or update the budget configuration.
-#[tauri::command]
-#[specta::specta]
-pub async fn set_budget_config(
-    app: tauri::AppHandle,
-    state: tauri::State<'_, AppState>,
+pub async fn set_budget_config_inner(
+    state: &AppState,
     args: SetBudgetConfigArgs,
+    currency: Currency,
 ) -> Result<BudgetConfigDto, CommandError> {
     info!("Setting budget configuration: {:?}", args);
-
-    // Get currency from args or fall back to settings
-    let currency = match args.currency {
-        Some(ref code) => {
-            Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
-        }
-        None => {
-            // Get currency from new settings system (returns String)
-            let settings = crate::settings::get_settings(app)
-                .await
-                .map_err(|e| CommandError::validation_field("currency", e))?;
-            Currency::from_code(&settings.currency)
-                .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
-        }
-    };
 
     let input = SetBudgetInput {
         mode: args.mode,
@@ -89,7 +70,7 @@ pub async fn set_budget_config(
     let mut unit_of_work = state.unit_of_work().await?;
     let config = SetBudgetUseCase::execute(&mut unit_of_work, input).await?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(BudgetConfigDto {
         id: config.id.value(),
@@ -105,19 +86,8 @@ pub async fn set_budget_config(
     })
 }
 
-// Additional command handlers will be implemented in later phases
-// - get_budget_dashboard (Phase 5 - US3)
-// - add_extra_budget (Phase 6 - US4)
-// - remove_extra_budget (Phase 6 - US4)
-
-/// Tauri command to get monthly budget records for a year.
-///
-/// Returns 12 monthly budget records with rollover calculations.
-/// If year is not specified, uses the current year.
-#[tauri::command]
-#[specta::specta]
-pub async fn get_monthly_budget_records(
-    state: tauri::State<'_, AppState>,
+pub async fn get_monthly_budget_records_inner(
+    state: &AppState,
     args: GetMonthlyBudgetRecordsArgs,
 ) -> Result<Vec<MonthlyBudgetRecordDto>, CommandError> {
     let year = args.year.unwrap_or_else(|| chrono::Utc::now().year());
@@ -127,9 +97,8 @@ pub async fn get_monthly_budget_records(
     let mut unit_of_work = state.unit_of_work().await?;
     let records = budget_query::get_monthly_budget_records(&mut unit_of_work, year).await?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
-    // Convert to DTOs
     let dtos = records
         .into_iter()
         .map(|record| {
@@ -159,6 +128,177 @@ pub async fn get_monthly_budget_records(
     Ok(dtos)
 }
 
+pub async fn get_budget_dashboard_inner(
+    state: &AppState,
+    currency_code: &str,
+) -> Result<BudgetDashboardSummary, CommandError> {
+    info!("Fetching budget dashboard summary");
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let summary = budget_query::get_budget_dashboard(&mut unit_of_work, currency_code).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(summary)
+}
+
+pub async fn add_extra_budget_inner(
+    state: &AppState,
+    args: AddExtraBudgetArgs,
+    currency: Currency,
+) -> Result<ExtraBudgetDto, CommandError> {
+    info!(
+        "Adding extra budget for {}/{}: {}",
+        args.year, args.month, args.amount
+    );
+
+    let input = AddExtraBudgetInput {
+        year: args.year,
+        month: args.month,
+        amount: MonetaryAmount::new(args.amount, currency),
+        reason: args.reason,
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let entry = AddExtraBudgetUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(ExtraBudgetDto {
+        id: entry.id.to_string(),
+        year: entry.year,
+        month: entry.month,
+        amount: entry.amount.amount,
+        currency: entry.amount.currency,
+        reason: entry.reason,
+        created_at: entry.created_at.to_rfc3339(),
+        version: entry.version,
+    })
+}
+
+pub async fn remove_extra_budget_inner(
+    state: &AppState,
+    args: RemoveExtraBudgetArgs,
+) -> Result<(), CommandError> {
+    info!("Removing extra budget entry: {}", args.id);
+
+    let id =
+        ExtraBudgetId::try_from(args.id).map_err(|e| DomainError::Validation(e.to_string()))?;
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    RemoveExtraBudgetUseCase::execute(&mut unit_of_work, id).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+pub async fn get_extra_budgets_inner(
+    state: &AppState,
+    args: GetExtraBudgetsArgs,
+) -> Result<Vec<ExtraBudgetDto>, CommandError> {
+    info!("Fetching extra budgets for year {}", args.year);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let entries = {
+        let mut repo = unit_of_work.budget_repo();
+        repo.get_extra_budgets(args.year)
+            .await
+            .map_err(CommandError::from)?
+    };
+
+    unit_of_work.commit().await?;
+
+    let dtos = entries
+        .into_iter()
+        .map(|entry| ExtraBudgetDto {
+            id: entry.id.to_string(),
+            year: entry.year,
+            month: entry.month,
+            amount: entry.amount.amount,
+            currency: entry.amount.currency,
+            reason: entry.reason,
+            created_at: entry.created_at.to_rfc3339(),
+            version: entry.version,
+        })
+        .collect();
+
+    Ok(dtos)
+}
+
+pub async fn get_quarterly_summaries_inner(
+    state: &AppState,
+    year: i32,
+    currency_code: String,
+) -> Result<Vec<QuarterlySummary>, CommandError> {
+    info!("Fetching quarterly summaries for year {}", year);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let summaries =
+        historical_query::get_quarterly_summaries(&mut unit_of_work, year, &currency_code).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(summaries)
+}
+
+// ---------------------------------------------------------------------------
+// Tauri command wrappers – thin shims that delegate to inner functions
+// ---------------------------------------------------------------------------
+
+/// Tauri command to get the current budget configuration.
+///
+/// Returns `None` if no configuration has been set yet.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_budget_config(
+    state: tauri::State<'_, AppState>,
+) -> Result<Option<BudgetConfigDto>, CommandError> {
+    get_budget_config_inner(&state).await
+}
+
+/// Tauri command to set or update the budget configuration.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_budget_config(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    args: SetBudgetConfigArgs,
+) -> Result<BudgetConfigDto, CommandError> {
+    // Get currency from args or fall back to settings
+    let currency = match args.currency {
+        Some(ref code) => {
+            Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
+        }
+        None => {
+            let settings = crate::settings::get_settings(app)
+                .await
+                .map_err(|e| CommandError::validation_field("currency", e))?;
+            Currency::from_code(&settings.currency)
+                .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
+        }
+    };
+    set_budget_config_inner(&state, args, currency).await
+}
+
+// Additional command handlers will be implemented in later phases
+// - get_budget_dashboard (Phase 5 - US3)
+// - add_extra_budget (Phase 6 - US4)
+// - remove_extra_budget (Phase 6 - US4)
+
+/// Tauri command to get monthly budget records for a year.
+///
+/// Returns 12 monthly budget records with rollover calculations.
+/// If year is not specified, uses the current year.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_monthly_budget_records(
+    state: tauri::State<'_, AppState>,
+    args: GetMonthlyBudgetRecordsArgs,
+) -> Result<Vec<MonthlyBudgetRecordDto>, CommandError> {
+    get_monthly_budget_records_inner(&state, args).await
+}
+
 /// Tauri command to get budget dashboard summary.
 ///
 /// Returns dashboard data for widgets (donut, bar chart, heatmap).
@@ -170,19 +310,10 @@ pub async fn get_budget_dashboard(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<BudgetDashboardSummary, CommandError> {
-    info!("Fetching budget dashboard summary");
-
-    // Get user's preferred currency from settings
     let settings = crate::settings::get_settings(app)
         .await
         .map_err(|e| CommandError::validation_field("settings", e))?;
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    let summary = budget_query::get_budget_dashboard(&mut unit_of_work, &settings.currency).await?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(summary)
+    get_budget_dashboard_inner(&state, &settings.currency).await
 }
 
 // Additional command handlers will be implemented in later phases:
@@ -203,18 +334,12 @@ pub async fn add_extra_budget(
     state: tauri::State<'_, AppState>,
     args: AddExtraBudgetArgs,
 ) -> Result<ExtraBudgetDto, CommandError> {
-    info!(
-        "Adding extra budget for {}/{}: {}",
-        args.year, args.month, args.amount
-    );
-
     // Get currency from args or fall back to settings
     let currency = match args.currency {
         Some(ref code) => {
             Currency::from_code(code).map_err(|e| DomainError::Validation(e.to_string()))?
         }
         None => {
-            // Get currency from new settings system (returns String)
             let settings = crate::settings::get_settings(app)
                 .await
                 .map_err(|e| CommandError::validation_field("currency", e))?;
@@ -222,29 +347,7 @@ pub async fn add_extra_budget(
                 .map_err(|e| CommandError::validation_field("currency", e.to_string()))?
         }
     };
-
-    let input = AddExtraBudgetInput {
-        year: args.year,
-        month: args.month,
-        amount: MonetaryAmount::new(args.amount, currency),
-        reason: args.reason,
-    };
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    let entry = AddExtraBudgetUseCase::execute(&mut unit_of_work, input).await?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(ExtraBudgetDto {
-        id: entry.id.to_string(),
-        year: entry.year,
-        month: entry.month,
-        amount: entry.amount.amount,
-        currency: entry.amount.currency,
-        reason: entry.reason,
-        created_at: entry.created_at.to_rfc3339(),
-        version: entry.version,
-    })
+    add_extra_budget_inner(&state, args, currency).await
 }
 
 /// Tauri command to remove an extra budget entry.
@@ -258,17 +361,7 @@ pub async fn remove_extra_budget(
     state: tauri::State<'_, AppState>,
     args: RemoveExtraBudgetArgs,
 ) -> Result<(), CommandError> {
-    info!("Removing extra budget entry: {}", args.id);
-
-    let id =
-        ExtraBudgetId::try_from(args.id).map_err(|e| DomainError::Validation(e.to_string()))?;
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    RemoveExtraBudgetUseCase::execute(&mut unit_of_work, id).await?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(())
+    remove_extra_budget_inner(&state, args).await
 }
 
 /// Tauri command to get all extra budget entries for a specific year.
@@ -285,33 +378,7 @@ pub async fn get_extra_budgets(
     state: tauri::State<'_, AppState>,
     args: GetExtraBudgetsArgs,
 ) -> Result<Vec<ExtraBudgetDto>, CommandError> {
-    info!("Fetching extra budgets for year {}", args.year);
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    let entries = {
-        let mut repo = unit_of_work.budget_repo();
-        repo.get_extra_budgets(args.year)
-            .await
-            .map_err(CommandError::from)?
-    };
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    let dtos = entries
-        .into_iter()
-        .map(|entry| ExtraBudgetDto {
-            id: entry.id.to_string(),
-            year: entry.year,
-            month: entry.month,
-            amount: entry.amount.amount,
-            currency: entry.amount.currency,
-            reason: entry.reason,
-            created_at: entry.created_at.to_rfc3339(),
-            version: entry.version,
-        })
-        .collect();
-
-    Ok(dtos)
+    get_extra_budgets_inner(&state, args).await
 }
 
 /// Tauri command to get quarterly summaries with category breakdown.
@@ -330,26 +397,14 @@ pub async fn get_quarterly_summaries(
     args: GetQuarterlySummariesArgs,
 ) -> Result<Vec<QuarterlySummary>, CommandError> {
     let year = args.year.unwrap_or_else(|| chrono::Utc::now().year());
-
-    info!("Fetching quarterly summaries for year {}", year);
-
-    // Get currency from args or fall back to settings
     let currency_code = match args.currency {
         Some(ref code) => code.clone(),
         None => {
-            // New settings system: currency is already a String
             let settings = crate::settings::get_settings(app)
                 .await
                 .map_err(|e| CommandError::validation_field("currency", e))?;
             settings.currency
         }
     };
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    let summaries =
-        historical_query::get_quarterly_summaries(&mut unit_of_work, year, &currency_code).await?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(summaries)
+    get_quarterly_summaries_inner(&state, year, currency_code).await
 }

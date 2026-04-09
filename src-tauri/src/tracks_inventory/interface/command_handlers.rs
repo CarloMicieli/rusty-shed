@@ -7,6 +7,7 @@ use crate::tracks_inventory::application::{
     NewTrackInventoryInput, RenameTrackInventoryInput, RenameTrackInventoryUseCase,
     SetTrackItemQuantityInput, SetTrackItemQuantityUseCase,
 };
+use crate::tracks_inventory::domain::TracksInventoryUowExt;
 use crate::tracks_inventory::domain::{TrackId, TrackInventoryId, TrackPurchaseId};
 use crate::tracks_inventory::interface::command_args::{
     AddTrackPurchaseArgs, CreateTrackProductArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
@@ -15,18 +16,12 @@ use crate::tracks_inventory::interface::command_args::{
 use log::info;
 use std::convert::TryInto;
 
-/// Command handler to create a new track inventory.
-///
-/// # Arguments
-/// - `state`: The application state.
-/// - `input`: The arguments required to create a new track inventory.
-///
-/// # Returns
-/// the ID of the newly created track inventory.
-#[tauri::command]
-#[specta::specta]
-pub async fn create_track_inventory(
-    state: tauri::State<'_, AppState>,
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn create_track_inventory_inner(
+    state: &AppState,
     input: NewTrackInventoryArgs,
 ) -> Result<TrackInventoryId, CommandError> {
     info!("Creating track inventory: {:?}", input);
@@ -43,18 +38,25 @@ pub async fn create_track_inventory(
     Ok(id)
 }
 
-/// Command handler to rename an existing track inventory.
+/// Command handler to create a new track inventory.
 ///
 /// # Arguments
 /// - `state`: The application state.
-/// - `input`: The arguments required to rename a track inventory.
+/// - `input`: The arguments required to create a new track inventory.
 ///
 /// # Returns
-/// nothing on success.
+/// the ID of the newly created track inventory.
 #[tauri::command]
 #[specta::specta]
-pub async fn rename_track_inventory(
+pub async fn create_track_inventory(
     state: tauri::State<'_, AppState>,
+    input: NewTrackInventoryArgs,
+) -> Result<TrackInventoryId, CommandError> {
+    create_track_inventory_inner(&state, input).await
+}
+
+pub async fn rename_track_inventory_inner(
+    state: &AppState,
     input: RenameTrackInventoryArgs,
 ) -> Result<(), CommandError> {
     info!("Renaming track inventory: {:?}", input);
@@ -70,18 +72,25 @@ pub async fn rename_track_inventory(
     Ok(())
 }
 
-/// Command handler to add a purchase to an existing track inventory.
+/// Command handler to rename an existing track inventory.
 ///
 /// # Arguments
 /// - `state`: The application state.
-/// - `input`: The arguments required to add a track purchase.
+/// - `input`: The arguments required to rename a track inventory.
 ///
 /// # Returns
-/// the ID of the newly added track purchase.
+/// nothing on success.
 #[tauri::command]
 #[specta::specta]
-pub async fn add_track_purchase(
+pub async fn rename_track_inventory(
     state: tauri::State<'_, AppState>,
+    input: RenameTrackInventoryArgs,
+) -> Result<(), CommandError> {
+    rename_track_inventory_inner(&state, input).await
+}
+
+pub async fn add_track_purchase_inner(
+    state: &AppState,
     input: AddTrackPurchaseArgs,
 ) -> Result<TrackPurchaseId, CommandError> {
     info!("Adding track purchase: {:?}", input);
@@ -98,6 +107,40 @@ pub async fn add_track_purchase(
     Ok(id)
 }
 
+/// Command handler to add a purchase to an existing track inventory.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `input`: The arguments required to add a track purchase.
+///
+/// # Returns
+/// the ID of the newly added track purchase.
+#[tauri::command]
+#[specta::specta]
+pub async fn add_track_purchase(
+    state: tauri::State<'_, AppState>,
+    input: AddTrackPurchaseArgs,
+) -> Result<TrackPurchaseId, CommandError> {
+    add_track_purchase_inner(&state, input).await
+}
+
+pub async fn set_track_item_quantity_inner(
+    state: &AppState,
+    input: SetTrackItemQuantityArgs,
+) -> Result<(), CommandError> {
+    info!("Setting track item quantity: {:?}", input);
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let input: SetTrackItemQuantityInput = input.try_into()?;
+
+    SetTrackItemQuantityUseCase::execute(&mut unit_of_work, input).await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
 /// Command handler to set quantity for a track item in an inventory.
 ///
 /// # Arguments
@@ -112,13 +155,18 @@ pub async fn set_track_item_quantity(
     state: tauri::State<'_, AppState>,
     input: SetTrackItemQuantityArgs,
 ) -> Result<(), CommandError> {
-    info!("Setting track item quantity: {:?}", input);
+    set_track_item_quantity_inner(&state, input).await
+}
+
+pub async fn delete_track_inventory_inner(
+    state: &AppState,
+    id: TrackInventoryId,
+) -> Result<(), CommandError> {
+    info!("Deleting track inventory: {:?}", id);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let input: SetTrackItemQuantityInput = input.try_into()?;
-
-    SetTrackItemQuantityUseCase::execute(&mut unit_of_work, input).await?;
+    DeleteTrackInventoryUseCase::execute(&mut unit_of_work, &id).await?;
 
     unit_of_work.commit().await?;
 
@@ -139,29 +187,11 @@ pub async fn delete_track_inventory(
     state: tauri::State<'_, AppState>,
     id: TrackInventoryId,
 ) -> Result<(), CommandError> {
-    info!("Deleting track inventory: {:?}", id);
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    DeleteTrackInventoryUseCase::execute(&mut unit_of_work, &id).await?;
-
-    unit_of_work.commit().await?;
-
-    Ok(())
+    delete_track_inventory_inner(&state, id).await
 }
 
-/// Command handler to create a new track product.
-///
-/// # Arguments
-/// - `state`: The application state.
-/// - `input`: The arguments required to create a new track product.
-///
-/// # Returns
-/// the ID of the newly created track product.
-#[tauri::command]
-#[specta::specta]
-pub async fn create_track_product(
-    state: tauri::State<'_, AppState>,
+pub async fn create_track_product_inner(
+    state: &AppState,
     input: CreateTrackProductArgs,
 ) -> Result<TrackId, CommandError> {
     info!("Creating track product: {:?}", input);
@@ -178,18 +208,25 @@ pub async fn create_track_product(
     Ok(id)
 }
 
-/// Command handler to set the required quantity for a track item.
+/// Command handler to create a new track product.
 ///
 /// # Arguments
 /// - `state`: The application state.
-/// - `input`: The arguments specifying inventory, track, and required quantity.
+/// - `input`: The arguments required to create a new track product.
 ///
 /// # Returns
-/// Unit type on success.
+/// the ID of the newly created track product.
 #[tauri::command]
 #[specta::specta]
-pub async fn set_item_required(
+pub async fn create_track_product(
     state: tauri::State<'_, AppState>,
+    input: CreateTrackProductArgs,
+) -> Result<TrackId, CommandError> {
+    create_track_product_inner(&state, input).await
+}
+
+pub async fn set_item_required_inner(
+    state: &AppState,
     input: SetItemRequiredArgs,
 ) -> Result<(), CommandError> {
     info!("Setting required quantity: {:?}", input);
@@ -204,21 +241,14 @@ pub async fn set_item_required(
         ));
     }
 
-    // Update required quantity in database
-    let sql = r#"
-        UPDATE track_inventory_items
-        SET required = ?1
-        WHERE inventory_id = ?2 AND track_id = ?3
-    "#;
+    let updated = {
+        let mut repo = unit_of_work.track_inventories_repo();
+        repo.set_item_required(&input.inventory_id, &input.track_id, input.required)
+            .await
+            .map_err(CommandError::from)?
+    };
 
-    let result = sqlx::query(sql)
-        .bind(input.required)
-        .bind(&input.inventory_id)
-        .bind(&input.track_id)
-        .execute(&mut *unit_of_work.tx)
-        .await?;
-
-    if result.rows_affected() == 0 {
+    if !updated {
         return Err(CommandError::NotFound(format!(
             "Track item {} not found in inventory {}",
             input.track_id, input.inventory_id
@@ -228,4 +258,21 @@ pub async fn set_item_required(
     unit_of_work.commit().await?;
 
     Ok(())
+}
+
+/// Command handler to set the required quantity for a track item.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `input`: The arguments specifying inventory, track, and required quantity.
+///
+/// # Returns
+/// Unit type on success.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_item_required(
+    state: tauri::State<'_, AppState>,
+    input: SetItemRequiredArgs,
+) -> Result<(), CommandError> {
+    set_item_required_inner(&state, input).await
 }

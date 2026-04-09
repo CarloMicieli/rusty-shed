@@ -9,7 +9,7 @@ pub struct GetTrainFormationUseCase;
 
 impl GetTrainFormationUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         id: String,
     ) -> Result<TrainFormationDetail, DomainError> {
         let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);

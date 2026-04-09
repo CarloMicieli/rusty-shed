@@ -89,7 +89,7 @@ impl<'conn> RailwayCompanyRepository for SqliteRailwayCompanyRepository<'conn> {
     }
 }
 
-impl<'conn> RailwayCompanyUowExt for SqliteUnitOfWork<'conn> {
+impl RailwayCompanyUowExt for SqliteUnitOfWork {
     /// Links the SQLite-specific repository to the Unit of Work.
     ///
     /// It re-borrows the internal transaction (`&mut *self.tx`) to provide

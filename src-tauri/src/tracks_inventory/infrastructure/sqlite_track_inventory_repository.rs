@@ -142,6 +142,37 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
         self.load_inventory(id).await
     }
 
+    async fn delete(&mut self, id: &TrackInventoryId) -> Result<(), DomainError> {
+        let sql = "DELETE FROM track_inventories WHERE id = ?1";
+        sqlx::query(sql)
+            .bind(id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        Ok(())
+    }
+
+    async fn set_item_required(
+        &mut self,
+        inventory_id: &TrackInventoryId,
+        track_id: &crate::tracks_inventory::domain::TrackId,
+        required: i64,
+    ) -> Result<bool, DomainError> {
+        let sql = r#"
+            UPDATE track_inventory_items
+            SET required = ?1
+            WHERE inventory_id = ?2 AND track_id = ?3
+        "#;
+        let result = sqlx::query(sql)
+            .bind(required)
+            .bind(inventory_id)
+            .bind(track_id)
+            .execute(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+        Ok(result.rows_affected() > 0)
+    }
+
     async fn save(&mut self, inventory: TrackInventory) -> Result<(), DomainError> {
         // Prefer event-driven persistence when the aggregate emitted events.
         let mut inventory = inventory;
@@ -274,7 +305,7 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
     }
 }
 
-impl<'conn> TracksInventoryUowExt for SqliteUnitOfWork<'conn> {
+impl TracksInventoryUowExt for SqliteUnitOfWork {
     fn track_products_repo(&mut self) -> Box<dyn TrackProductRepository + '_> {
         Box::new(SqliteTrackProductRepository::new(&mut self.tx))
     }

@@ -1,16 +1,13 @@
 // Budget Query Service
 // Feature: 001-budget-tracking - Phase 4 (US2) & Phase 5 (US3)
 
-use crate::budget::domain::BudgetRepository;
+use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::dashboard::{
     BudgetDashboardSummary, BudgetQuarter, MonthlySpendingPoint, QuarterlyActivityPoint,
     SpendingLevel,
 };
 use crate::budget::domain::monthly_budget_record::{MonthStatus, MonthlyBudgetRecord};
-use crate::budget::infrastructure::BudgetUowExt;
-use crate::budget::infrastructure::database;
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use chrono::Datelike;
 
 /// Calculate monthly budget records for a given year with rollover chain.
@@ -24,10 +21,13 @@ use chrono::Datelike;
 ///
 /// # Returns
 /// A vector of 12 `MonthlyBudgetRecord` objects, one for each month of the year.
-pub async fn get_monthly_budget_records(
-    uow: &mut SqliteUnitOfWork<'_>,
+pub async fn get_monthly_budget_records<U>(
+    uow: &mut U,
     year: i32,
-) -> Result<Vec<MonthlyBudgetRecord>, DomainError> {
+) -> Result<Vec<MonthlyBudgetRecord>, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
     // Get budget configuration
     let config_option = {
         let mut repo = uow.budget_repo();
@@ -42,9 +42,12 @@ pub async fn get_monthly_budget_records(
     let _needs_reset = current_year > config.last_reset_year;
 
     // Get spending data for the year
-    let monthly_spending =
-        database::get_monthly_spending(&mut uow.tx, year, config.base_amount.currency.to_code())
-            .await?;
+    let monthly_spending = {
+        let mut repo = uow.budget_repo();
+        repo.get_monthly_spending(year, config.base_amount.currency.to_code())
+            .await
+            .map_err(DomainError::Infrastructure)?
+    };
 
     // Convert to a map for easier lookup
     let mut spending_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
@@ -53,12 +56,15 @@ pub async fn get_monthly_budget_records(
     }
 
     // Get extra budgets for the year
-    let extra_budgets = database::get_extra_budgets(&mut uow.tx, year).await?;
+    let extra_budgets = {
+        let mut repo = uow.budget_repo();
+        repo.get_extra_budgets(year).await?
+    };
 
     // Convert to a map for easier lookup
     let mut extra_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
     for extra in extra_budgets {
-        *extra_map.entry(extra.month as u8).or_insert(0) += extra.amount;
+        *extra_map.entry(extra.month).or_insert(0) += extra.amount.amount;
     }
 
     // Calculate monthly records with rollover chain
@@ -124,10 +130,13 @@ pub async fn get_monthly_budget_records(
 /// A `BudgetDashboardSummary` with spending data always populated. Budget-specific fields
 /// (remaining_amount, remaining_percentage, total_available, monthly_goal) are Some() if
 /// budget is configured, None otherwise.
-pub async fn get_budget_dashboard(
-    uow: &mut SqliteUnitOfWork<'_>,
+pub async fn get_budget_dashboard<U>(
+    uow: &mut U,
     user_currency: &str,
-) -> Result<BudgetDashboardSummary, DomainError> {
+) -> Result<BudgetDashboardSummary, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
     // Get budget configuration (optional)
     let config_option = {
         let mut repo = uow.budget_repo();
@@ -154,18 +163,20 @@ pub async fn get_budget_dashboard(
             Currency::from_code(user_currency).unwrap_or(Currency::EUR)
         });
 
-    // Fetch all multi-year spending data in ONE query (covers bar chart + heatmap).
-    // The heatmap spans the last 5 years; remaining budget uses the rollover chain which
-    // calls get_monthly_spending internally, so for the budget case we reuse the records
-    // from that chain for the bar chart to avoid fetching current_year a second time.
+    // Fetch all multi-year spending data (covers bar chart + heatmap).
+    // Build as Vec<(year, month, amount)> using per-year trait calls.
     let start_year = current_year - 4;
-    let all_spending = database::get_multi_year_monthly_spending(
-        &mut uow.tx,
-        start_year,
-        current_year,
-        currency_code,
-    )
-    .await?;
+    let mut all_spending: Vec<(i32, i32, i64)> = Vec::new();
+    for y in start_year..=current_year {
+        let mut repo = uow.budget_repo();
+        let year_data = repo
+            .get_monthly_spending(y, currency_code)
+            .await
+            .map_err(DomainError::Infrastructure)?;
+        for (month, amount) in year_data {
+            all_spending.push((y, month, amount));
+        }
+    }
 
     // Get budget-specific data if budget is configured.
     // monthly_records already contain actual_spend per month, so use them for the bar chart.

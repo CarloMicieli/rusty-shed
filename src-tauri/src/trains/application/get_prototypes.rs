@@ -9,7 +9,7 @@ pub struct GetPrototypesUseCase;
 
 impl GetPrototypesUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         query: Option<String>,
     ) -> Result<Vec<PrototypeGroupView>, DomainError> {
         let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);

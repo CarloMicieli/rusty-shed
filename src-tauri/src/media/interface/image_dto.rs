@@ -8,24 +8,6 @@ use serde::Serialize;
 ///
 /// This DTO contains either the image path (if found) or placeholder HTML.
 /// The frontend can check `has_image` to determine which field to use.
-///
-/// # Example
-///
-/// ```ignore
-/// // Image found
-/// RailwayModelImageResponse {
-///     image_path: Some("/app/data/models/trn_railway-model_roco_43210.png".to_string()),
-///     placeholder_html: None,
-///     has_image: true,
-/// }
-///
-/// // No image (placeholder)
-/// RailwayModelImageResponse {
-///     image_path: None,
-///     placeholder_html: Some("<div>...</div>".to_string()),
-///     has_image: false,
-/// }
-/// ```
 #[derive(Debug, Clone, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct RailwayModelImageResponse {

@@ -18,32 +18,12 @@ use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-/// Get the image for a railway model.
-///
-/// Returns either the path to the image file (if found) or an HTML/CSS
-/// placeholder (if no image exists).
-///
-/// # Arguments
-///
-/// * `state` - Application state containing models directory path
-/// * `railway_model_id` - The model ID to retrieve an image for
-///
-/// # Returns
-///
-/// Returns `RailwayModelImageResponse` with either:
-/// - `image_path` set if image found
-/// - `placeholder_html` set if no image found
-///
-/// # Errors
-///
-/// Returns `CommandError` if:
-/// - Path validation fails (security)
-/// - I/O errors occur
-/// - Model ID is invalid
-#[tauri::command]
-#[specta::specta]
-pub async fn get_railway_model_image(
-    state: tauri::State<'_, AppState>,
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn get_railway_model_image_inner(
+    state: &AppState,
     railway_model_id: RailwayModelId,
 ) -> Result<RailwayModelImageResponse, CommandError> {
     debug!(
@@ -89,27 +69,39 @@ pub async fn get_railway_model_image(
     }
 }
 
-/// Upload a model image from a file path (file explorer selection).
+/// Get the image for a railway model.
+///
+/// Returns either the path to the image file (if found) or an HTML/CSS
+/// placeholder (if no image exists).
 ///
 /// # Arguments
 ///
 /// * `state` - Application state containing models directory path
-/// * `args` - Upload arguments (model ID and file path)
+/// * `railway_model_id` - The model ID to retrieve an image for
 ///
 /// # Returns
 ///
-/// Returns `Ok(())` on success
+/// Returns `RailwayModelImageResponse` with either:
+/// - `image_path` set if image found
+/// - `placeholder_html` set if no image found
 ///
 /// # Errors
 ///
 /// Returns `CommandError` if:
-/// - Model doesn't exist
-/// - File validation fails (format, size)
-/// - Storage operations fail
+/// - Path validation fails (security)
+/// - I/O errors occur
+/// - Model ID is invalid
 #[tauri::command]
 #[specta::specta]
-pub async fn upload_model_image(
+pub async fn get_railway_model_image(
     state: tauri::State<'_, AppState>,
+    railway_model_id: RailwayModelId,
+) -> Result<RailwayModelImageResponse, CommandError> {
+    get_railway_model_image_inner(&state, railway_model_id).await
+}
+
+pub async fn upload_model_image_inner(
+    state: &AppState,
     args: UploadModelImageArgs,
 ) -> Result<(), CommandError> {
     debug!(
@@ -153,7 +145,7 @@ pub async fn upload_model_image(
             map_upload_error(e)
         })?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     debug!(
         "Image uploaded successfully for model: {}",
@@ -162,12 +154,12 @@ pub async fn upload_model_image(
     Ok(())
 }
 
-/// Upload a model image from bytes (drag & drop).
+/// Upload a model image from a file path (file explorer selection).
 ///
 /// # Arguments
 ///
 /// * `state` - Application state containing models directory path
-/// * `args` - Upload arguments (model ID, filename, file data)
+/// * `args` - Upload arguments (model ID and file path)
 ///
 /// # Returns
 ///
@@ -181,8 +173,15 @@ pub async fn upload_model_image(
 /// - Storage operations fail
 #[tauri::command]
 #[specta::specta]
-pub async fn upload_model_image_bytes(
+pub async fn upload_model_image(
     state: tauri::State<'_, AppState>,
+    args: UploadModelImageArgs,
+) -> Result<(), CommandError> {
+    upload_model_image_inner(&state, args).await
+}
+
+pub async fn upload_model_image_bytes_inner(
+    state: &AppState,
     args: UploadModelImageBytesArgs,
 ) -> Result<(), CommandError> {
     debug!("Uploading image bytes for model: {}", args.model_id);
@@ -213,32 +212,40 @@ pub async fn upload_model_image_bytes(
         .await
         .map_err(map_upload_error)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     debug!("Image bytes uploaded successfully");
     Ok(())
 }
 
-/// Delete a model image.
+/// Upload a model image from bytes (drag & drop).
 ///
 /// # Arguments
 ///
 /// * `state` - Application state containing models directory path
-/// * `args` - Delete arguments (model ID)
+/// * `args` - Upload arguments (model ID, filename, file data)
 ///
 /// # Returns
 ///
-/// Returns `Ok(())` on success (idempotent - no error if image doesn't exist)
+/// Returns `Ok(())` on success
 ///
 /// # Errors
 ///
 /// Returns `CommandError` if:
 /// - Model doesn't exist
+/// - File validation fails (format, size)
 /// - Storage operations fail
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_model_image(
+pub async fn upload_model_image_bytes(
     state: tauri::State<'_, AppState>,
+    args: UploadModelImageBytesArgs,
+) -> Result<(), CommandError> {
+    upload_model_image_bytes_inner(&state, args).await
+}
+
+pub async fn delete_model_image_inner(
+    state: &AppState,
     args: DeleteModelImageArgs,
 ) -> Result<(), CommandError> {
     debug!("Deleting image for model: {}", args.model_id);
@@ -265,10 +272,35 @@ pub async fn delete_model_image(
         .await
         .map_err(map_delete_error)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     debug!("Image deleted successfully");
     Ok(())
+}
+
+/// Delete a model image.
+///
+/// # Arguments
+///
+/// * `state` - Application state containing models directory path
+/// * `args` - Delete arguments (model ID)
+///
+/// # Returns
+///
+/// Returns `Ok(())` on success (idempotent - no error if image doesn't exist)
+///
+/// # Errors
+///
+/// Returns `CommandError` if:
+/// - Model doesn't exist
+/// - Storage operations fail
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_model_image(
+    state: tauri::State<'_, AppState>,
+    args: DeleteModelImageArgs,
+) -> Result<(), CommandError> {
+    delete_model_image_inner(&state, args).await
 }
 
 // ============================================================================

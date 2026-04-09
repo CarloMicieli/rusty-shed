@@ -11,7 +11,7 @@ pub struct AddFormationElementUseCase;
 
 impl AddFormationElementUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         formation_id: String,
         args: AddFormationElementArgs,
     ) -> Result<FormationElementView, DomainError> {

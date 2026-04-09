@@ -17,6 +17,25 @@ use crate::state::AppState;
 use garde::Validate;
 use std::convert::TryInto;
 
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn get_maintenance_card_inner(
+    state: &AppState,
+    card_id: MaintenanceCardId,
+) -> Result<Option<MaintenanceCardView>, CommandError> {
+    let mut unit_of_work = state.unit_of_work().await?;
+    let mut repo = unit_of_work.maintenance_repository();
+    let view = repo
+        .find_view_by_id(&card_id)
+        .await
+        .map_err(CommandError::from)?;
+    drop(repo);
+    unit_of_work.commit().await?;
+    Ok(view)
+}
+
 /// Command handler to retrieve a single maintenance card by its ID.
 ///
 /// # Arguments
@@ -31,15 +50,26 @@ pub async fn get_maintenance_card(
     state: tauri::State<'_, AppState>,
     card_id: MaintenanceCardId,
 ) -> Result<Option<MaintenanceCardView>, CommandError> {
+    get_maintenance_card_inner(&state, card_id).await
+}
+
+pub async fn get_maintenance_dashboard_inner(
+    state: &AppState,
+) -> Result<Vec<MaintenanceCardView>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
+
     let mut repo = unit_of_work.maintenance_repository();
-    let view = repo
-        .find_view_by_id(&card_id)
+
+    let views = repo
+        .list_due_card_views()
         .await
         .map_err(CommandError::from)?;
+
+    // Drop the repo borrow before committing the unit of work.
     drop(repo);
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-    Ok(view)
+
+    unit_of_work.commit().await?;
+    Ok(views)
 }
 
 /// Command handler to retrieve maintenance cards that are due or overdue.
@@ -54,20 +84,28 @@ pub async fn get_maintenance_card(
 pub async fn get_maintenance_dashboard(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<MaintenanceCardView>, CommandError> {
+    get_maintenance_dashboard_inner(&state).await
+}
+
+pub async fn add_maintenance_card_inner(
+    state: &AppState,
+    owned_rolling_stock_id: OwnedRollingStockId,
+) -> Result<MaintenanceCardId, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let mut repo = unit_of_work.maintenance_repository();
+    let input = AddMaintenanceCardInput {
+        owned_rolling_stock_id,
+    };
 
-    let views = repo
-        .list_due_card_views()
+    let id_provider = RuntimeIdProvider::new();
+
+    let id = AddMaintenanceCard::execute(&mut unit_of_work, id_provider, input)
         .await
         .map_err(CommandError::from)?;
 
-    // Drop the repo borrow before committing the unit of work.
-    drop(repo);
+    unit_of_work.commit().await?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-    Ok(views)
+    Ok(id)
 }
 
 /// Command handler to create a new maintenance card for the given owned rolling stock.
@@ -84,28 +122,11 @@ pub async fn add_maintenance_card(
     state: tauri::State<'_, AppState>,
     owned_rolling_stock_id: OwnedRollingStockId,
 ) -> Result<MaintenanceCardId, CommandError> {
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let input = AddMaintenanceCardInput {
-        owned_rolling_stock_id,
-    };
-
-    let id_provider = RuntimeIdProvider::new();
-
-    let id = AddMaintenanceCard::execute(&mut unit_of_work, id_provider, input)
-        .await
-        .map_err(CommandError::from)?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(id)
+    add_maintenance_card_inner(&state, owned_rolling_stock_id).await
 }
 
-/// Command handler to delete a single maintenance event.
-#[tauri::command]
-#[specta::specta]
-pub async fn delete_maintenance_event(
-    state: tauri::State<'_, AppState>,
+pub async fn delete_maintenance_event_inner(
+    state: &AppState,
     event_id: uuid::Uuid,
 ) -> Result<(), CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
@@ -116,22 +137,22 @@ pub async fn delete_maintenance_event(
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
     Ok(())
 }
 
-/// Command handler to add a maintenance event and update the card.
-///
-/// # Arguments
-/// - `state`: The application state.
-/// - `input`: The arguments required to add a maintenance event.
-///
-/// # Returns
-/// nothing on success.
+/// Command handler to delete a single maintenance event.
 #[tauri::command]
 #[specta::specta]
-pub async fn add_maintenance_event(
+pub async fn delete_maintenance_event(
     state: tauri::State<'_, AppState>,
+    event_id: uuid::Uuid,
+) -> Result<(), CommandError> {
+    delete_maintenance_event_inner(&state, event_id).await
+}
+
+pub async fn add_maintenance_event_inner(
+    state: &AppState,
     input: AddMaintenanceArgs,
 ) -> Result<(), CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
@@ -161,6 +182,23 @@ pub async fn add_maintenance_event(
     AddMaintenanceEvent::execute(&mut unit_of_work, id_provider, app_input)
         .await
         .map_err(CommandError::from)?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
     Ok(())
+}
+
+/// Command handler to add a maintenance event and update the card.
+///
+/// # Arguments
+/// - `state`: The application state.
+/// - `input`: The arguments required to add a maintenance event.
+///
+/// # Returns
+/// nothing on success.
+#[tauri::command]
+#[specta::specta]
+pub async fn add_maintenance_event(
+    state: tauri::State<'_, AppState>,
+    input: AddMaintenanceArgs,
+) -> Result<(), CommandError> {
+    add_maintenance_event_inner(&state, input).await
 }

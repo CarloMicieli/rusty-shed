@@ -8,4 +8,4 @@ pub mod repositories;
 
 pub use entities::{BudgetConfigRow, ExtraBudgetRow};
 pub use mappers::{row_to_budget_config, row_to_extra_budget};
-pub use repositories::{BudgetUowExt, SqliteBudgetRepository};
+pub use repositories::SqliteBudgetRepository;
