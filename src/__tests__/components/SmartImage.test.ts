@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor, cleanup } from '@testing-library/svelte';
 import SmartImage from '$lib/components/SmartImage.svelte';
 
 // ── Mock @tauri-apps/api/core ────────────────────────────────────────────────
@@ -18,6 +18,7 @@ vi.mock('$lib/services/image.service.svelte', () => ({
 
 describe('SmartImage.svelte', () => {
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

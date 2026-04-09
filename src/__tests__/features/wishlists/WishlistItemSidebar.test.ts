@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
 import type { WishlistItem } from '$lib/bindings';
@@ -48,7 +48,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_item_price_negative: () => 'Price must be zero or greater',
   wishlist_item_edit_field_label: ({ field }: { field: string }) => `Edit ${field}`,
   wishlist_item_edit_cancel_label: () => 'Cancel editing',
-  wishlist_item_error: () => 'Failed to load item'
+  wishlist_item_error: () => 'Failed to load item',
+  placeholder_amount: () => '0.00'
 }));
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -79,6 +80,10 @@ function renderSidebar(item: WishlistItem = baseItem, overrides: object = {}) {
 }
 
 // ── Base rendering tests ──────────────────────────────────────────────────────
+
+beforeEach(() => {
+  cleanup();
+});
 
 describe('WishlistItemSidebar — rendering', () => {
   it('renders initial state: wishlist name, NORMAL priority, no price, no purchased price', () => {

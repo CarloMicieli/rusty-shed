@@ -87,13 +87,13 @@
 
   // Category options
   const categoryOptions: { id: string; label: string }[] = [
-    { id: 'LOCOMOTIVES', label: 'Locomotives' },
-    { id: 'TRAIN_SETS', label: 'Train Sets' },
-    { id: 'STARTER_SETS', label: 'Starter Sets' },
-    { id: 'FREIGHT_CARS', label: 'Freight Cars' },
-    { id: 'PASSENGER_CARS', label: 'Passenger Cars' },
-    { id: 'ELECTRIC_MULTIPLE_UNITS', label: 'Electric Multiple Units' },
-    { id: 'RAILCARS', label: 'Railcars' }
+    { id: 'LOCOMOTIVES', label: m.category_value_locomotives() },
+    { id: 'TRAIN_SETS', label: m.category_value_train_sets() },
+    { id: 'STARTER_SETS', label: m.category_value_starter_sets() },
+    { id: 'FREIGHT_CARS', label: m.category_value_freight_cars() },
+    { id: 'PASSENGER_CARS', label: m.category_value_passenger_cars() },
+    { id: 'ELECTRIC_MULTIPLE_UNITS', label: m.category_value_electric_multiple_units() },
+    { id: 'RAILCARS', label: m.category_value_railcars() }
   ];
 
   // Scale options

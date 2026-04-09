@@ -177,10 +177,10 @@
         ></div>
         <div class="flex items-center gap-2">
           <TrainFront class="text-primary" size={28} />
-          <span class="text-lg font-semibold tracking-wide">Rusty Shed</span>
+          <span class="text-lg font-semibold tracking-wide">{m.app_name()}</span>
         </div>
       </div>
-      <p class="text-sm text-muted-foreground">Preparing your collection...</p>
+      <p class="text-sm text-muted-foreground">{m.app_loading_message()}</p>
     </div>
   </div>
 {:else}
@@ -218,7 +218,7 @@
           <!-- Mobile: Logo / Brand (Visible only when sidebar is hidden) -->
           <div class="flex items-center gap-2 lg:hidden">
             <TrainFront class="text-primary" size={24} />
-            <span class="text-sm font-bold tracking-widest uppercase">Rusty Shed</span>
+            <span class="text-sm font-bold tracking-widest uppercase">{m.app_name()}</span>
           </div>
 
           <!-- Right Actions -->
@@ -227,7 +227,7 @@
 
             <button
               class="relative rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
-              aria-label="Notifications"
+              aria-label={m.notifications_label()}
             >
               <Bell size={20} />
               <span class="absolute top-1 right-1 h-2 w-2 animate-pulse rounded-full bg-destructive"

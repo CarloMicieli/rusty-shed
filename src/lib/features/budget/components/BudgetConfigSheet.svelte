@@ -152,7 +152,7 @@
         required
         disabled={saving}
         class="border-zinc-800 bg-zinc-900 text-zinc-100 placeholder-zinc-500 focus-visible:border-amber-500 focus-visible:ring-amber-500"
-        placeholder="0.00"
+        placeholder={m.placeholder_amount()}
       />
       <p class="text-xs text-zinc-500">
         {m.budget_config_amount_helper()}

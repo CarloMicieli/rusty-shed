@@ -41,7 +41,7 @@
           e.stopPropagation();
           ondelete();
         }}
-        aria-label="Delete formation"
+        aria-label={m.formation_delete()}
       >
         <Trash2 class="size-3.5 text-muted-foreground" />
       </button>
@@ -78,7 +78,10 @@
     {/if}
 
     {#if summary.has_traction}
-      <Zap class="absolute bottom-2 left-2 size-3 text-yellow-500" aria-label="Has traction" />
+      <Zap
+        class="absolute bottom-2 left-2 size-3 text-yellow-500"
+        aria-label={m.formation_has_traction()}
+      />
     {/if}
   </div>
 

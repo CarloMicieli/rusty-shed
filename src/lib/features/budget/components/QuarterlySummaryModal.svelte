@@ -24,19 +24,19 @@
   }
 
   function getCategoryLabel(category: string): string {
-    const categoryMap: Record<string, string> = {
-      LOCOMOTIVES: 'Locomotives',
-      TRAIN_SETS: 'Train Sets',
-      PASSENGER_CARS: 'Passenger Cars',
-      FREIGHT_CARS: 'Freight Cars',
-      TRACK: 'Track',
-      BUILDINGS: 'Buildings',
-      ACCESSORIES: 'Accessories',
-      DIGITAL: 'Digital',
-      BOOKS: 'Books',
-      OTHER: 'Other'
+    const categoryMap: Record<string, () => string> = {
+      LOCOMOTIVES: m.category_value_locomotives,
+      TRAIN_SETS: m.category_value_train_sets,
+      PASSENGER_CARS: m.category_value_passenger_cars,
+      FREIGHT_CARS: m.category_value_freight_cars,
+      TRACK: m.category_value_track,
+      BUILDINGS: m.category_value_buildings,
+      ACCESSORIES: m.category_value_accessories,
+      DIGITAL: m.category_value_digital,
+      BOOKS: m.category_value_books,
+      OTHER: m.category_value_other
     };
-    return categoryMap[category] || category;
+    return categoryMap[category]?.() ?? category;
   }
 
   function getCategoryColor(index: number): string {

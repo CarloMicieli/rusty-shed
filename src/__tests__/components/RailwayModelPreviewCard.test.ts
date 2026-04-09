@@ -24,7 +24,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   railway_model_digital_features_label: () => 'Digital features',
   railway_model_sound_equipped_title: () => 'Sound equipped',
   railway_model_dcc_equipped_title: () => 'DCC equipped',
-  railway_model_fallback_en_title: () => 'Content displayed in English (fallback)'
+  railway_model_fallback_en_title: () => 'Content displayed in English (fallback)',
+  depot_era: () => 'Era',
+  railway_model_image_alt: () => 'Railway model image'
 }));
 
 vi.mock('$lib/bindings', () => ({

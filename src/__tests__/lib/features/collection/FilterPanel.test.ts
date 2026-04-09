@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, cleanup } from '@testing-library/svelte';
 import FilterPanel from '$lib/features/collection/components/FilterPanel.svelte';
 import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
 import { SvelteSet } from 'svelte/reactivity';
@@ -51,6 +51,7 @@ describe('FilterPanel.svelte', () => {
   ];
 
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 

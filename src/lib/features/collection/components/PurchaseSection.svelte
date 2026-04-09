@@ -143,7 +143,7 @@
             id="price-amount"
             bind:value={purchase.priceAmount}
             symbol={regionalManager.getCurrencySymbol(purchase.priceCurrency)}
-            placeholder="0.00"
+            placeholder={m.placeholder_amount()}
             class="w-full"
             label={m.add_model_price()}
             inputClass={dark

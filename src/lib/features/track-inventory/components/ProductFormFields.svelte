@@ -157,7 +157,7 @@
         step="0.01"
         bind:value={length}
         disabled={submitting}
-        placeholder="0.00"
+        placeholder={m.placeholder_amount()}
         class="h-12 rounded-xl border-white/10 bg-zinc-950 font-mono text-zinc-100 placeholder:text-zinc-700"
       />
     </div>
@@ -175,7 +175,7 @@
         step="0.01"
         bind:value={radius}
         disabled={submitting}
-        placeholder="0.00"
+        placeholder={m.placeholder_amount()}
         class="h-12 rounded-xl border-white/10 bg-zinc-950 font-mono text-zinc-100 placeholder:text-zinc-700"
       />
     </div>

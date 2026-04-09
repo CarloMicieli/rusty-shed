@@ -124,7 +124,7 @@
         id="purchase-price"
         bind:value={priceAmount}
         symbol={currencySymbol}
-        placeholder="0.00"
+        placeholder={m.placeholder_amount()}
         disabled={submitting}
         required
         inputClass="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-100 focus:border-amber-500/50 focus:ring-0"

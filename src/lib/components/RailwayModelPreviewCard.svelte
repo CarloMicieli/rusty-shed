@@ -276,7 +276,7 @@
         />
         <img
           src={resolvedPhotoUrl}
-          alt={model.series ?? 'Railway model'}
+          alt={model.series ?? m.railway_model_image_alt()}
           class="absolute inset-0 z-10 h-full w-full object-contain"
           loading="lazy"
           decoding="async"
@@ -353,7 +353,9 @@
         <span class="font-mono text-xs text-foreground">{model.scale ?? '—'}</span>
       </div>
       <div class="flex flex-col items-center gap-0.5 pl-2">
-        <span class="text-[10px] tracking-wider text-muted-foreground uppercase">Era</span>
+        <span class="text-[10px] tracking-wider text-muted-foreground uppercase"
+          >{m.depot_era()}</span
+        >
         <span class="font-mono text-xs text-foreground">{model.era ?? '—'}</span>
       </div>
     </div>

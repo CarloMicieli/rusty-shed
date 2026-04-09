@@ -88,7 +88,7 @@
       {#if editable && specLoaded}
         <InPlaceEdit
           value={unit.length_mm != null ? String(unit.length_mm) : ''}
-          placeholder="mm"
+          placeholder={m.placeholder_mm()}
           onSave={onSaveLength}
         />
       {:else if editable}

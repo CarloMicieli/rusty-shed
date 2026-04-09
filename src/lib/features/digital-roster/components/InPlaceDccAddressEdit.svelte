@@ -102,7 +102,7 @@
           class="rounded p-0.5 text-amber-400 transition-colors hover:bg-amber-950/60 disabled:cursor-not-allowed disabled:opacity-40"
           onclick={save}
           disabled={!canSave}
-          title="Save"
+          title={m.action_save()}
         >
           <Check class="h-4 w-4" />
         </button>
@@ -111,7 +111,7 @@
         type="button"
         class="rounded p-0.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
         onclick={cancel}
-        title="Cancel"
+        title={m.action_cancel()}
       >
         <X class="h-4 w-4" />
       </button>
@@ -127,7 +127,7 @@
     type="button"
     class="cursor-pointer rounded border border-black/60 bg-black/40 px-2 py-0.5 font-mono text-sm text-amber-400/90 tabular-nums transition-colors hover:border-amber-500/40"
     onclick={activate}
-    title="Click to edit"
+    title={m.action_click_to_edit()}
   >
     {value}
   </button>

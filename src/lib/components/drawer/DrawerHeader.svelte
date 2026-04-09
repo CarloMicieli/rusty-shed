@@ -1,6 +1,7 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
   import type { IconComponent } from '$lib/config/icons';
+  import * as m from '$lib/paraglide/messages.js';
 
   interface Props {
     id: string;
@@ -32,7 +33,7 @@
     type="button"
     onclick={onClose}
     {disabled}
-    aria-label="close"
+    aria-label={m.action_close()}
     class="flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
   >
     <X size={16} />

@@ -111,7 +111,7 @@
               element.traction_override === 0 ? 1 : element.traction_override === 1 ? -1 : 0;
             onTractionToggle?.(element.id, next);
           }}
-          aria-label="Toggle traction override"
+          aria-label={m.formation_toggle_traction()}
         >
           <span aria-hidden="true">⚡</span>
         </button>
@@ -128,7 +128,7 @@
     <button
       class="text-destructive-foreground absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border border-destructive/30 bg-destructive text-[10px] leading-none shadow-sm group-focus-within:flex group-hover:flex"
       onclick={() => onRemove(element.id)}
-      aria-label="Remove element"
+      aria-label={m.formation_remove_element()}
     >
       ×
     </button>

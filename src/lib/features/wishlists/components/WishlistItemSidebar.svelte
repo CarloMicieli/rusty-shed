@@ -292,7 +292,7 @@
                 )}
                 onblur={commitPrice}
                 onkeydown={handlePriceKeydown}
-                placeholder="0.00"
+                placeholder={m.placeholder_amount()}
                 class="w-full"
                 inputClass="border-primary ring-primary/30"
                 label={m.wishlist_field_desired_price()}

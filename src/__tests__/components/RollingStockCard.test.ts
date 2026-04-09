@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/svelte';
 import RollingStockCard from '$lib/components/model-details/RollingStockCard.svelte';
 import type { OwnedRollingStockView, RailwayModelId, RollingStockId } from '$lib/bindings';
 
@@ -97,7 +97,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   rolling_stock_prototype_clear: () => 'Clear prototype',
   rolling_stock_field_category: () => 'Category',
   rolling_stock_field_type: () => 'Type',
-  rolling_stock_select_company: () => '— Select company —'
+  rolling_stock_select_company: () => '— Select company —',
+  action_close: () => 'Close',
+  placeholder_mm: () => 'mm'
 }));
 vi.mock('$lib/paraglide/messages.js', () => ({
   model_rolling_stock_unknown_series: () => 'Unknown',
@@ -164,7 +166,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_prototype_clear: () => 'Clear prototype',
   rolling_stock_field_category: () => 'Category',
   rolling_stock_field_type: () => 'Type',
-  rolling_stock_select_company: () => '— Select company —'
+  rolling_stock_select_company: () => '— Select company —',
+  action_close: () => 'Close',
+  placeholder_mm: () => 'mm'
 }));
 
 vi.mock('$lib/toaster', () => ({
@@ -236,6 +240,7 @@ const mockRailwayModelView = {
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 beforeEach(() => {
+  cleanup();
   vi.mocked(commands.getRailwayCompanies).mockResolvedValue({ status: 'ok', data: [] });
   vi.mocked(commands.updateRollingStockIdentification).mockResolvedValue({
     status: 'ok',

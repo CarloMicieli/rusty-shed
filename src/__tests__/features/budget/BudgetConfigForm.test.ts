@@ -1,9 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent, screen } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, fireEvent, screen, cleanup } from '@testing-library/svelte';
 import BudgetConfigForm from '$lib/features/budget/components/BudgetConfigForm.svelte';
 import * as m from '$lib/paraglide/messages';
 
 describe('BudgetConfigForm.svelte', () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   it('renders correctly with default props', () => {
     const onsubmitMock = vi.fn();
     render(BudgetConfigForm, {

@@ -224,12 +224,15 @@
           <div
             class="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
           >
-            {@render StatChip('Locomotives', summaryData.locomotivesCount)}
-            {@render StatChip('Passenger Cars', summaryData.passengerCarsCount)}
-            {@render StatChip('Freight Cars', summaryData.freightCarsCount)}
-            {@render StatChip('Train Sets', summaryData.trainSetsCount)}
-            {@render StatChip('Railcars', summaryData.railcarsCount)}
-            {@render StatChip('EMU', summaryData.electricMultipleUnitsCount)}
+            {@render StatChip(m.category_value_locomotives(), summaryData.locomotivesCount)}
+            {@render StatChip(m.category_value_passenger_cars(), summaryData.passengerCarsCount)}
+            {@render StatChip(m.category_value_freight_cars(), summaryData.freightCarsCount)}
+            {@render StatChip(m.category_value_train_sets(), summaryData.trainSetsCount)}
+            {@render StatChip(m.category_value_railcars(), summaryData.railcarsCount)}
+            {@render StatChip(
+              m.category_value_electric_multiple_units(),
+              summaryData.electricMultipleUnitsCount
+            )}
           </div>
         {/if}
         {#if isLoading && rawItems.length === 0}
@@ -248,7 +251,7 @@
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => ui.setViewMode('grid')}
-                title="Grid view"
+                title={m.view_grid()}
                 aria-pressed={ui.viewMode === 'grid'}
               >
                 <LayoutGrid size={14} />
@@ -259,7 +262,7 @@
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:text-foreground'}"
                 onclick={() => ui.setViewMode('table')}
-                title="Table view"
+                title={m.view_table()}
                 aria-pressed={ui.viewMode === 'table'}
               >
                 <Rows3 size={14} />

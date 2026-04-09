@@ -9,7 +9,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   formations_assign_model: () => 'Assign model',
   formations_unassign_model: () => 'Unassign model',
   formations_traction_override_disable: () => 'Disable traction override',
-  formations_traction_override_enable: () => 'Enable traction override'
+  formations_traction_override_enable: () => 'Enable traction override',
+  formation_toggle_traction: () => 'Toggle traction override',
+  formation_remove_element: () => 'Remove element'
 }));
 
 describe('FormationCell.svelte', () => {

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/svelte';
 import SearchEmptyState from '$lib/features/search/components/SearchEmptyState.svelte';
 
 vi.mock('$lib/paraglide/messages', () => ({
@@ -9,6 +9,11 @@ vi.mock('$lib/paraglide/messages', () => ({
 }));
 
 describe('SearchEmptyState', () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   it('renders the "no results" title', () => {
     render(SearchEmptyState, { props: { query: 'Tartaruga' } });
     expect(screen.getByText('No models found')).toBeInTheDocument();

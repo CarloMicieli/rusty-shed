@@ -87,7 +87,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   drawer_section_rolling_stocks: () => 'Rolling Stocks',
   drawer_section_purchase: () => 'Purchase Details',
   drawer_section_digital: () => 'Digital Settings',
-  rolling_stock_select_category: () => '— Select category —'
+  rolling_stock_select_category: () => '— Select category —',
+  action_close: () => 'Close'
 }));
 
 let activeService: ReturnType<

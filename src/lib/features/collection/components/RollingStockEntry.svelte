@@ -65,9 +65,19 @@
     }))
   );
 
+  const categoryLabelMap: Record<string, () => string> = {
+    enum_category_locomotives: m.enum_category_locomotives,
+    enum_category_passenger_cars: m.enum_category_passenger_cars,
+    enum_category_freight_cars: m.enum_category_freight_cars,
+    enum_category_railcars: m.enum_category_railcars,
+    enum_category_electric_multiple_units: m.enum_category_electric_multiple_units
+  };
+
   const categoryOptions = $derived(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rollingStockCategories.map((cat) => ({ value: cat.id, label: (m as any)[cat.labelKey]() }))
+    rollingStockCategories.map((cat) => ({
+      value: cat.id,
+      label: categoryLabelMap[cat.labelKey]?.() ?? cat.labelKey
+    }))
   );
 </script>
 
@@ -143,7 +153,7 @@
         id="series-code-{entry.uid}"
         type="text"
         bind:value={entry.seriesCode}
-        placeholder="e.g., 218, Re 4/4"
+        placeholder={m.rolling_stock_placeholder_series_code()}
         class={dark ? `${darkInput} font-mono` : 'w-full font-mono'}
         aria-describedby={errors?.seriesCode ? `series-code-error-{entry.uid}` : undefined}
       />
@@ -170,7 +180,7 @@
         id="road-number-{entry.uid}"
         type="text"
         bind:value={entry.roadNumber}
-        placeholder="e.g., 218 101-3"
+        placeholder={m.rolling_stock_placeholder_road_number()}
         class={dark ? `${darkInput} font-mono` : 'w-full font-mono'}
       />
     </div>

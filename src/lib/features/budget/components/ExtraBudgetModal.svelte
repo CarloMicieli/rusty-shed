@@ -133,7 +133,7 @@
         oninput={(e) => (amount = parseFloat(e.currentTarget.value) || 0)}
         disabled={isSubmitting}
         class="w-full py-2 pr-4 pl-8"
-        placeholder="0.00"
+        placeholder={m.placeholder_amount()}
         required
       />
     </div>

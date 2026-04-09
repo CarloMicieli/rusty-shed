@@ -54,7 +54,7 @@
         type="button"
         onclick={() => onDuplicate(item.uid)}
         class="rounded p-1.5 text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300"
-        aria-label="Duplicate item"
+        aria-label={m.action_duplicate_item()}
       >
         <Copy size={14} />
       </button>
@@ -63,7 +63,7 @@
           type="button"
           onclick={() => onRemove(item.uid)}
           class="rounded p-1.5 text-zinc-500 transition-colors hover:bg-destructive/10 hover:text-destructive"
-          aria-label="Remove item"
+          aria-label={m.action_remove_item()}
         >
           <Trash2 size={14} />
         </button>

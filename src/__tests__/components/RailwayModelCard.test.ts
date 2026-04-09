@@ -120,7 +120,16 @@ vi.mock('$lib/paraglide/messages', () => ({
   railway_model_image_alt: () => 'Railway model image',
   railway_model_no_image: () => 'No image available',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
-  error_required: () => 'Required'
+  error_required: () => 'Required',
+  category_value_locomotives: () => 'Locomotives',
+  category_value_train_sets: () => 'Train Sets',
+  category_value_starter_sets: () => 'Starter Sets',
+  category_value_freight_cars: () => 'Freight Cars',
+  category_value_passenger_cars: () => 'Passenger Cars',
+  category_value_electric_multiple_units: () => 'Electric Multiple Units',
+  category_value_railcars: () => 'Railcars',
+  action_close: () => 'Close',
+  placeholder_mm: () => 'mm'
 }));
 
 describe('RailwayModelCard', () => {

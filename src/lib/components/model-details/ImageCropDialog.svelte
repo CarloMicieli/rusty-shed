@@ -237,7 +237,7 @@
     <!-- Cropper canvas — aspect-[16/7] fills the panoramic shape of a locomotive -->
     <div
       class="relative aspect-[16/7] w-full rounded-md border border-white/10"
-      style="background-color: #27272a; background-image: linear-gradient(45deg, #3f3f46 25%, transparent 25%), linear-gradient(-45deg, #3f3f46 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3f3f46 75%), linear-gradient(-45deg, transparent 75%, #3f3f46 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"
+      style="background-color: var(--card); background-image: linear-gradient(45deg, var(--border) 25%, transparent 25%), linear-gradient(-45deg, var(--border) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--border) 75%), linear-gradient(-45deg, transparent 75%, var(--border) 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"
     >
       <!-- keyed by imageSrc so a new blob URL recreates the element, giving a fresh imageEl reference -->
       {#key imageSrc}

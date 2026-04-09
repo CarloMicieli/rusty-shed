@@ -133,7 +133,7 @@
         required
         disabled={saving}
         class="placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500/50 text-surface-100 w-full rounded-lg border border-input bg-background px-4 py-3 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        placeholder="0.00"
+        placeholder={m.placeholder_amount()}
       />
       <p class="text-surface-400 text-xs">
         {m.budget_config_amount_helper()}

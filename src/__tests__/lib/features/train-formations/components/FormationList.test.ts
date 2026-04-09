@@ -17,7 +17,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   formations_empty_sub: () =>
     'Start organizing your locomotives and rolling stock into consist groups.',
   formations_element_count: ({ n }: { n: number }) => `${n} elements`,
-  formations_owned_count: ({ n }: { n: number }) => `${n} owned`
+  formations_owned_count: ({ n }: { n: number }) => `${n} owned`,
+  formation_delete: () => 'Delete formation',
+  formation_has_traction: () => 'Has traction'
 }));
 
 function makeState(overrides: Partial<Record<string, unknown>> = {}): TrainFormationState {

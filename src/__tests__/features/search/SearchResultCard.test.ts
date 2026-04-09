@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/svelte';
 import SearchResultCard from '$lib/features/search/components/SearchResultCard.svelte';
 import type { GlobalSearchResultView } from '$lib/bindings';
 
@@ -19,6 +19,11 @@ const makeResult = (overrides: Partial<GlobalSearchResultView> = {}): GlobalSear
 });
 
 describe('SearchResultCard', () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   it('renders the display name', () => {
     render(SearchResultCard, { props: { result: makeResult() } });
     expect(screen.getByText('Locomotiva E.444 Tartaruga')).toBeInTheDocument();

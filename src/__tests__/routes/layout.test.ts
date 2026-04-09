@@ -195,10 +195,10 @@ describe('routes/+layout.svelte', () => {
     expect(spinner).not.toBeNull();
   });
 
-  it('shows "Rusty Shed" brand during loading', () => {
+  it('shows app brand during loading', () => {
     mockSafeInvoke.mockImplementation(pendingPromise);
     render(Layout, { children: createChildrenSnippet() });
-    expect(screen.getByText('Rusty Shed')).toBeInTheDocument();
+    expect(screen.getByText('app_name')).toBeInTheDocument();
   });
 
   it('shows a "Startup Failed" error when init_database fails', async () => {
@@ -226,7 +226,7 @@ describe('routes/+layout.svelte', () => {
     await waitFor(
       () => {
         expect(container.querySelector('.animate-spin')).toBeNull();
-        expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
+        expect(screen.getByLabelText('notifications_label')).toBeInTheDocument();
       },
       { timeout: 2000 }
     );

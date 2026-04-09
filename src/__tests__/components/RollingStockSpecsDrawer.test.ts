@@ -68,7 +68,9 @@ vi.mock('$lib/paraglide/messages', () => ({
   specs_drawer_field_close_coupling: () => 'Close Couplers',
   specs_drawer_field_digital_shunting: () => 'Digital Shunting',
   boolean_yes: () => 'Yes',
-  boolean_no: () => 'No'
+  boolean_no: () => 'No',
+  action_close: () => 'close',
+  placeholder_mm: () => 'mm'
 }));
 vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_title: () => 'Edit Specifications',
@@ -119,7 +121,9 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   specs_drawer_field_close_coupling: () => 'Close Couplers',
   specs_drawer_field_digital_shunting: () => 'Digital Shunting',
   boolean_yes: () => 'Yes',
-  boolean_no: () => 'No'
+  boolean_no: () => 'No',
+  action_close: () => 'close',
+  placeholder_mm: () => 'mm'
 }));
 
 vi.mock('$lib/toaster', () => ({

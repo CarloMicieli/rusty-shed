@@ -3,6 +3,7 @@
   import * as Accordion from '$lib/components/ui/accordion';
   import { Badge } from '$lib/components';
   import DepotTable from './DepotTable.svelte';
+  import type { IconComponent } from '$lib/config/icons';
 
   let {
     value,
@@ -13,10 +14,8 @@
   } = $props<{
     value: string;
     title: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    icon: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: any[];
+    icon: IconComponent;
+    items: { id: string }[];
     categoryId: string;
   }>();
 </script>

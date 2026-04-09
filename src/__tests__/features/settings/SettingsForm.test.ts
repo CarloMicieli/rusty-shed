@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, screen, waitFor } from '@testing-library/svelte';
+import { render, fireEvent, screen, waitFor, cleanup } from '@testing-library/svelte';
 import SettingsForm from '$lib/features/settings/components/SettingsForm.svelte';
 import { settingsState } from '$lib/features/settings/SettingsState.svelte';
 import * as m from '$lib/paraglide/messages';
@@ -45,6 +45,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 describe('SettingsForm.svelte', () => {
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
