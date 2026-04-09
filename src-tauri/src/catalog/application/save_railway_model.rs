@@ -196,7 +196,9 @@ impl SaveRailwayModel {
             .map_err(|e| DomainError::Validation(e.to_string()))?;
 
         // Try to find an existing aggregate
-        let existing = repo.find_by_id(&railway_model_id, "en").await?;
+        let existing = repo
+            .find_by_id(&railway_model_id, Language::English)
+            .await?;
 
         if let Some(mut aggregate) = existing {
             // Merge: incoming wins for main fields

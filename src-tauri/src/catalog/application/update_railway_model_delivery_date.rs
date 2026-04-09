@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::{DeliveryDate, RailwayModelId, RailwayModelUowExt};
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 
 /// Input for [`UpdateRailwayModelDeliveryDate::execute`].
@@ -30,7 +31,7 @@ impl UpdateRailwayModelDeliveryDate {
         let mut repo = unit_of_work.railway_model_repository();
 
         let mut model = repo
-            .find_by_id(&input.railway_model_id, "en")
+            .find_by_id(&input.railway_model_id, Language::English)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),

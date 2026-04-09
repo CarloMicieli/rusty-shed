@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
 use crate::catalog::domain::railway_model::RailwayModelId;
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::search::domain::global_search_result::{GlobalSearchResult, SearchSource};
@@ -101,7 +102,7 @@ impl<'conn> GlobalSearchRepository for SqliteGlobalSearchRepository<'conn> {
     async fn search(
         &mut self,
         query: &str,
-        lang: &str,
+        lang: Language,
     ) -> Result<Vec<GlobalSearchResult>, DomainError> {
         let sql = r#"
             SELECT
@@ -142,7 +143,7 @@ impl<'conn> GlobalSearchRepository for SqliteGlobalSearchRepository<'conn> {
 
         let rows = sqlx::query_as::<_, SearchResultRow>(sql)
             .bind(query)
-            .bind(lang)
+            .bind(lang.to_string())
             .fetch_all(&mut *self.executor)
             .await
             .map_err(DomainError::from)?;
@@ -327,7 +328,10 @@ mod tests {
 
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
-        let results = repo.search("\"Test locomotive\"*", "en").await.unwrap();
+        let results = repo
+            .search("\"Test locomotive\"*", Language::English)
+            .await
+            .unwrap();
 
         assert!(!results.is_empty(), "should find at least one result");
         let found = results.iter().any(|r| r.source == SearchSource::Collection);
@@ -354,7 +358,10 @@ mod tests {
 
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
-        let results = repo.search("\"SearchBrand\"*", "en").await.unwrap();
+        let results = repo
+            .search("\"SearchBrand\"*", Language::English)
+            .await
+            .unwrap();
 
         assert!(
             !results.is_empty(),
@@ -375,7 +382,10 @@ mod tests {
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
         // Model exists in FTS5 but has no collection/wishlist entry
-        let results = repo.search("\"Test locomotive\"*", "en").await.unwrap();
+        let results = repo
+            .search("\"Test locomotive\"*", Language::English)
+            .await
+            .unwrap();
 
         let matches_this_model = results
             .iter()
@@ -406,7 +416,10 @@ mod tests {
 
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
-        let results = repo.search("\"Test locomotive\"*", "en").await.unwrap();
+        let results = repo
+            .search("\"Test locomotive\"*", Language::English)
+            .await
+            .unwrap();
 
         let found_removed = results.iter().any(|r| r.item_id == "col-item-rmv-001");
         assert!(
@@ -430,7 +443,10 @@ mod tests {
 
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
-        let results = repo.search("\"Test locomotive\"*", "en").await.unwrap();
+        let results = repo
+            .search("\"Test locomotive\"*", Language::English)
+            .await
+            .unwrap();
 
         let col = results.iter().any(|r| r.source == SearchSource::Collection);
         let wl = results.iter().any(|r| r.source == SearchSource::Wishlist);
@@ -453,7 +469,7 @@ mod tests {
 
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
-        let results = repo.search("\"E636\"*", "en").await.unwrap();
+        let results = repo.search("\"E636\"*", Language::English).await.unwrap();
 
         let found = results.iter().any(|r| r.item_id == "col-item-road-001");
         assert!(
@@ -483,7 +499,10 @@ mod tests {
 
         let mut uow = SqliteUnitOfWork::new(&pool).await.unwrap();
         let mut repo = uow.global_search_repo();
-        let results = repo.search("\"Test locomotive\"*", "en").await.unwrap();
+        let results = repo
+            .search("\"Test locomotive\"*", Language::English)
+            .await
+            .unwrap();
 
         let found = results
             .iter()

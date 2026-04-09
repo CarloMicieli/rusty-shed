@@ -1,6 +1,5 @@
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelUowExt};
-#[allow(unused)]
 use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 
@@ -25,7 +24,7 @@ impl GetRailwayModelById {
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_model_id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModel>, DomainError>
     where
         U: RailwayModelUowExt + Send,
@@ -44,7 +43,7 @@ impl GetRailwayModelViewById {
     /// # Arguments
     /// * `unit_of_work` - The unit of work managing the database transaction.
     /// * `railway_model_id` - The identifier of the railway model to retrieve the view for.
-    /// * `lang` - The preferred language code ("en" or "it").
+    /// * `lang` - The preferred display language.
     ///
     /// # Returns
     /// - `Ok(Some(RailwayModelView))` when the railway model view is found.
@@ -56,7 +55,7 @@ impl GetRailwayModelViewById {
     pub async fn execute<U>(
         unit_of_work: &mut U,
         railway_model_id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModelView>, DomainError>
     where
         U: RailwayModelUowExt + Send,
@@ -112,9 +111,10 @@ mod tests {
             .returning(move |_, _| Ok(Some(railway_model.clone())));
         let mut fake_uow = FakeUow::with_railway_models_repo(mock);
 
-        let result = GetRailwayModelViewById::execute(&mut fake_uow, &railway_model_id, "en")
-            .await
-            .expect("it should return");
+        let result =
+            GetRailwayModelViewById::execute(&mut fake_uow, &railway_model_id, Language::English)
+                .await
+                .expect("it should return");
 
         assert!(result.is_some());
     }

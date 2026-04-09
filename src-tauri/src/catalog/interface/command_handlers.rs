@@ -54,14 +54,10 @@ pub async fn get_railway_model_by_id(
 ) -> Result<Option<RailwayModelView>, CommandError> {
     info!("Fetching railway model with ID: {}", railway_model_id);
 
-    let lang_str = match lang {
-        Language::English => "en",
-        Language::Italian => "it",
-    };
     let mut unit_of_work = state.unit_of_work().await?;
 
     let railway_model =
-        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id, lang_str).await?;
+        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id, lang).await?;
     unit_of_work.commit().await.map_err(CommandError::from)?;
 
     Ok(railway_model)

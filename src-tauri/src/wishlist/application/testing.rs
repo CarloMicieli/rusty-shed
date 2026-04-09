@@ -13,6 +13,7 @@ use crate::collecting::domain::CollectionUowExt;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::MockCollectionRepository;
 use crate::collecting::domain::UpdateCollectionItemInput;
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::MockWishlistRepository;
 use crate::wishlist::domain::repository::WishlistRepository;
@@ -177,7 +178,7 @@ impl<'a> RailwayModelRepository for RailwayRepoRef<'a> {
     async fn find_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModel>, DomainError> {
         self.inner.find_by_id(id, lang).await
     }
@@ -185,7 +186,7 @@ impl<'a> RailwayModelRepository for RailwayRepoRef<'a> {
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModelView>, DomainError> {
         self.inner.find_view_by_id(id, lang).await
     }

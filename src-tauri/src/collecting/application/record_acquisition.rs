@@ -7,6 +7,7 @@ use crate::catalog::domain::scale::Scale;
 use crate::collecting::domain::{
     CollectionId, CollectionItemId, CollectionUowExt, NewCollectionItem, PurchaseInfoId,
 };
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::{IdProvider, MonetaryAmount};
 use crate::sellers::domain::seller_id::SellerId;
@@ -77,7 +78,7 @@ impl RecordAcquisition {
             // 2. Upsert catalog entry (create only if absent)
             let existing = unit_of_work
                 .railway_model_repository()
-                .find_by_id(&model_id, "en")
+                .find_by_id(&model_id, Language::English)
                 .await?;
 
             if existing.is_none() {
@@ -107,7 +108,7 @@ impl RecordAcquisition {
             // 3. Load the full aggregate (required by NewCollectionItem)
             let railway_model = unit_of_work
                 .railway_model_repository()
-                .find_by_id(&model_id, "en")
+                .find_by_id(&model_id, Language::English)
                 .await?
                 .ok_or_else(|| DomainError::NotFound {
                     resource: "RailwayModel".to_string(),

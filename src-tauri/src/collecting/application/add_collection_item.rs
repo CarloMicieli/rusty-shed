@@ -3,7 +3,7 @@ use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::collecting::domain::{BoxCondition, ModelCondition, PurchaseCondition};
 use crate::collecting::domain::{CollectionId, NewCollectionItem};
 use crate::collecting::domain::{CollectionItemId, CollectionUowExt, PurchaseInfoId};
-use crate::core::domain::{IdProvider, MonetaryAmount, domain_error::DomainError};
+use crate::core::domain::{IdProvider, Language, MonetaryAmount, domain_error::DomainError};
 use crate::sellers::domain::seller_id::SellerId;
 
 /// Command handler for adding an item to the collection.
@@ -37,8 +37,10 @@ impl AddCollectionItem {
         P: IdProvider<CollectionItemId>,
         Q: IdProvider<PurchaseInfoId>,
     {
-        let railway_model =
-            { GetRailwayModelById::execute(unit_of_work, &input.railway_model_id, "en").await? };
+        let railway_model = {
+            GetRailwayModelById::execute(unit_of_work, &input.railway_model_id, Language::English)
+                .await?
+        };
 
         let railway_model = railway_model.ok_or(DomainError::NotFound {
             resource: "RailwayModel".to_string(),

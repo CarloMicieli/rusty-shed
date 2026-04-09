@@ -46,13 +46,8 @@ impl UpdateRailwayModelText {
     {
         let mut repo = unit_of_work.railway_model_repository();
 
-        let lang_str = match input.lang {
-            Language::English => "en",
-            Language::Italian => "it",
-        };
-
         let mut model = repo
-            .find_by_id(&input.railway_model_id, lang_str)
+            .find_by_id(&input.railway_model_id, input.lang)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),

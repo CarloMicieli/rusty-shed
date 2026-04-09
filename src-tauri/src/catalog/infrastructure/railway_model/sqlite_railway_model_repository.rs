@@ -50,7 +50,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
     async fn select_railway_model_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModelRow>, DomainError> {
         let sql = r#"
             SELECT
@@ -80,7 +80,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
             LIMIT 1"#;
 
         let row = sqlx::query_as::<_, RailwayModelRow>(sql)
-            .bind(lang)
+            .bind(lang.to_string())
             .bind(id)
             .fetch_optional(&mut *self.executor)
             .await
@@ -762,7 +762,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
     async fn find_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModel>, DomainError> {
         let row_opt = self.select_railway_model_by_id(id, lang).await?;
 
@@ -799,7 +799,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModelView>, DomainError> {
         let row_opt = self.select_railway_model_by_id(id, lang).await?;
 

@@ -1,3 +1,4 @@
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::search::domain::global_search_result::GlobalSearchResult;
 
@@ -21,7 +22,7 @@ pub trait GlobalSearchRepository: Send {
     async fn search(
         &mut self,
         query: &str,
-        lang: &str,
+        lang: Language,
     ) -> Result<Vec<GlobalSearchResult>, DomainError>;
 }
 

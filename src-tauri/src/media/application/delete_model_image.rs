@@ -3,6 +3,7 @@
 //! Orchestrates the deletion of model images.
 
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 use crate::media::domain::image_validation::{ImageFormat, ModelImagePath, StorageError};
 use crate::media::infrastructure::FileStorage;
@@ -97,7 +98,7 @@ impl DeleteModelImage {
     {
         let mut repository = unit_of_work.railway_model_repository();
         let model = repository
-            .find_by_id(model_id, "en")
+            .find_by_id(model_id, Language::English)
             .await
             .map_err(DeleteError::Domain)?;
 

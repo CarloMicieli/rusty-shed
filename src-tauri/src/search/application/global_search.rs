@@ -46,12 +46,7 @@ impl GlobalSearch {
         // so "diesel loco" becomes `"diesel loco"*` (phrase + prefix matching).
         let fts_query = format!("\"{}\"*", input.query.trim());
 
-        let lang_str = match input.lang {
-            Language::English => "en",
-            Language::Italian => "it",
-        };
-
         let mut repo = unit_of_work.global_search_repo();
-        repo.search(&fts_query, lang_str).await
+        repo.search(&fts_query, input.lang).await
     }
 }

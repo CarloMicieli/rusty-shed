@@ -1,6 +1,7 @@
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::catalog::domain::railway_model::{RailwayModel, RailwayModelId, RailwayModelParams};
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 
 /// A domain-agnostic interface for railway models data access.
@@ -33,7 +34,7 @@ pub trait RailwayModelRepository: Send + Sync {
     ///
     /// # Arguments
     /// * `id` - The unique identifier of the Railway Model to retrieve.
-    /// * `lang` - The preferred language code ("en" or "it"). Falls back to "en" if unavailable.
+    /// * `lang` - The preferred display language. Falls back to English if unavailable.
     ///
     /// # Returns
     /// * Returns `Ok(Some(RailwayModel))` if found.
@@ -42,7 +43,7 @@ pub trait RailwayModelRepository: Send + Sync {
     async fn find_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModel>, DomainError>;
 
     /// Retrieves a UI-focused view of a Railway Model by id with language-aware text.
@@ -51,11 +52,11 @@ pub trait RailwayModelRepository: Send + Sync {
     ///
     /// # Arguments
     /// * `id` - The unique identifier of the Railway Model.
-    /// * `lang` - The preferred language code ("en" or "it"). Falls back to "en" if unavailable.
+    /// * `lang` - The preferred display language. Falls back to English if unavailable.
     async fn find_view_by_id(
         &mut self,
         id: &RailwayModelId,
-        lang: &str,
+        lang: Language,
     ) -> Result<Option<RailwayModelView>, DomainError>;
 
     /// Retrieves all stored translations for a railway model (used by the edit form).

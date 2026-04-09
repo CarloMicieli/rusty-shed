@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt, RollingStockId};
+use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 
 /// Input for [`UpdateRollingStockSubcategory::execute`].
@@ -32,7 +33,7 @@ impl UpdateRollingStockSubcategory {
         let mut model_repo = unit_of_work.railway_model_repository();
 
         let mut model = model_repo
-            .find_by_id(&input.railway_model_id, "en")
+            .find_by_id(&input.railway_model_id, Language::English)
             .await?
             .ok_or_else(|| DomainError::NotFound {
                 resource: "RailwayModel".to_string(),
