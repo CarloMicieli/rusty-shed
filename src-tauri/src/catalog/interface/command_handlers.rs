@@ -10,16 +10,17 @@ use crate::catalog::application::{
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
-use crate::catalog::domain::railway_model::{CouplerType, CouplingSocket, RollingStockId};
+use crate::catalog::domain::railway_model::{CouplerType, CouplingSocket};
 use crate::catalog::interface::{
-    AddRollingStockToModelArgs, CreateRailwayModelArgs, SearchRailwayModelsArgs,
-    SetRollingStockCouplerArgs, UpdateRailwayModelClassificationArgs,
+    AddRollingStockResult, AddRollingStockToModelArgs, CreateRailwayModelArgs,
+    SearchRailwayModelsArgs, SetRollingStockCouplerArgs, UpdateRailwayModelClassificationArgs,
     UpdateRailwayModelDeliveryDateArgs, UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs,
     UpdateRollingStockDccArgs, UpdateRollingStockIdentificationArgs,
     UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockServiceLevelArgs,
     UpdateRollingStockSpecificationsArgs, UpdateRollingStockSubcategoryArgs,
     UpsertRailwayModelTranslationArgs,
 };
+use crate::collecting::domain::CollectionUowExt;
 use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
@@ -358,7 +359,7 @@ pub async fn search_railway_models(
 pub async fn add_rolling_stock_to_model_inner(
     state: &AppState,
     args: AddRollingStockToModelArgs,
-) -> Result<RollingStockId, CommandError> {
+) -> Result<AddRollingStockResult, CommandError> {
     info!(
         "Adding rolling stock to model {} (category: {})",
         args.railway_model_id, args.category
@@ -382,10 +383,27 @@ pub async fn add_rolling_stock_to_model_inner(
         args.prototype_id,
         args.is_dummy,
     )?;
+    let railway_model_id = input.railway_model_id.clone();
     let mut uow = state.unit_of_work().await?;
     let rs_id = AddRollingStockToModel::execute(&mut uow, input).await?;
+
+    let owned_ids = uow
+        .collections_repository()
+        .add_owned_rolling_stock_for_collection_items(&railway_model_id, &rs_id)
+        .await
+        .map_err(CommandError::from)?;
+
     uow.commit().await?;
-    Ok(rs_id)
+
+    let owned_rolling_stock_id = owned_ids
+        .into_iter()
+        .next()
+        .ok_or_else(|| CommandError::NotFound("owned rolling stock".to_string()))?;
+
+    Ok(AddRollingStockResult {
+        rolling_stock_id: rs_id,
+        owned_rolling_stock_id,
+    })
 }
 
 /// Tauri command to add a rolling stock variant to a railway model.
@@ -394,7 +412,7 @@ pub async fn add_rolling_stock_to_model_inner(
 pub async fn add_rolling_stock_to_model(
     state: tauri::State<'_, AppState>,
     args: AddRollingStockToModelArgs,
-) -> Result<RollingStockId, CommandError> {
+) -> Result<AddRollingStockResult, CommandError> {
     add_rolling_stock_to_model_inner(&state, args).await
 }
 
