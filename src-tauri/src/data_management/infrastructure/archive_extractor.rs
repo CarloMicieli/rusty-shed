@@ -1,7 +1,7 @@
 use crate::data_management::domain::ArchiveFormat;
 use flate2::read::GzDecoder;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use tar::Archive;
 use zip::ZipArchive;
 
@@ -27,6 +27,20 @@ impl ArchiveExtractor {
     /// Create a new archive extractor.
     pub fn new() -> Self {
         Self
+    }
+
+    /// Validate that an archive member path contains no traversal components.
+    ///
+    /// Rejects paths containing `..`, absolute roots, or platform-specific prefixes.
+    /// Only `Component::Normal` segments are permitted — the same check used in
+    /// `get_image_path` to prevent path traversal in Tauri commands.
+    ///
+    /// # Returns
+    /// `true` if every component is a normal filename segment, `false` otherwise.
+    pub fn is_safe_archive_path(member_path: &str) -> bool {
+        Path::new(member_path)
+            .components()
+            .all(|c| matches!(c, Component::Normal(_)))
     }
 
     /// Validate that a file path has an allowed image extension.
@@ -204,7 +218,14 @@ impl ArchiveExtractor {
                 ArchiveError::ExtractError(format!("Failed to read ZIP entry: {}", e))
             })?;
             if !file.is_dir() {
-                files.push(file.name().to_string());
+                let name = file.name().to_string();
+                if !Self::is_safe_archive_path(&name) {
+                    return Err(ArchiveError::InvalidFormat(format!(
+                        "Archive contains unsafe path: {}",
+                        name
+                    )));
+                }
+                files.push(name);
             }
         }
 
@@ -230,7 +251,14 @@ impl ArchiveExtractor {
             if let Ok(path) = entry.path()
                 && !entry.header().entry_type().is_dir()
             {
-                files.push(path.to_string_lossy().into_owned());
+                let name = path.to_string_lossy().into_owned();
+                if !Self::is_safe_archive_path(&name) {
+                    return Err(ArchiveError::InvalidFormat(format!(
+                        "Archive contains unsafe path: {}",
+                        name
+                    )));
+                }
+                files.push(name);
             }
         }
 
@@ -242,6 +270,12 @@ impl ArchiveExtractor {
         archive_path: &Path,
         file_path: &str,
     ) -> Result<Vec<u8>, ArchiveError> {
+        if !Self::is_safe_archive_path(file_path) {
+            return Err(ArchiveError::InvalidFormat(format!(
+                "Unsafe archive member path requested: {}",
+                file_path
+            )));
+        }
         let file = std::fs::File::open(archive_path).map_err(|e| {
             ArchiveError::ExtractError(format!("Failed to open ZIP archive: {}", e))
         })?;
@@ -265,6 +299,12 @@ impl ArchiveExtractor {
         archive_path: &Path,
         file_path: &str,
     ) -> Result<Vec<u8>, ArchiveError> {
+        if !Self::is_safe_archive_path(file_path) {
+            return Err(ArchiveError::InvalidFormat(format!(
+                "Unsafe archive member path requested: {}",
+                file_path
+            )));
+        }
         let file = std::fs::File::open(archive_path).map_err(|e| {
             ArchiveError::ExtractError(format!("Failed to open tar.gz archive: {}", e))
         })?;
@@ -393,6 +433,34 @@ mod tests {
         assert!(matches!(
             result.unwrap_err(),
             ArchiveError::InvalidFormat(_)
+        ));
+    }
+
+    #[test]
+    fn test_is_safe_archive_path_normal() {
+        assert!(ArchiveExtractor::is_safe_archive_path("manifest.json"));
+        assert!(ArchiveExtractor::is_safe_archive_path("images/model.png"));
+        assert!(ArchiveExtractor::is_safe_archive_path(
+            "images/sub/photo.jpg"
+        ));
+    }
+
+    #[test]
+    fn test_is_safe_archive_path_traversal() {
+        assert!(!ArchiveExtractor::is_safe_archive_path("../evil.txt"));
+        assert!(!ArchiveExtractor::is_safe_archive_path(
+            "images/../../etc/passwd"
+        ));
+        assert!(!ArchiveExtractor::is_safe_archive_path(
+            "../../root/.ssh/id_rsa"
+        ));
+    }
+
+    #[test]
+    fn test_is_safe_archive_path_absolute() {
+        assert!(!ArchiveExtractor::is_safe_archive_path("/etc/passwd"));
+        assert!(!ArchiveExtractor::is_safe_archive_path(
+            "/absolute/path.txt"
         ));
     }
 }
