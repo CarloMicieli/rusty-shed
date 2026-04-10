@@ -62,6 +62,9 @@ pub async fn create_wishlist_inner(
     input: CreateWishlistArgs,
 ) -> Result<WishlistPreview, CommandError> {
     info!("Creating wishlist: {:?}", input);
+    input
+        .validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid args: {e}")))?;
     let mut unit_of_work = state.unit_of_work().await?;
     let id_provider = RuntimeIdProvider::new();
     let cmd = CreateWishlistInput::try_from(input).map_err(CommandError::from)?;
@@ -75,6 +78,9 @@ pub async fn rename_wishlist_inner(
     input: RenameWishlistArgs,
 ) -> Result<(), CommandError> {
     info!("Renaming wishlist: {:?}", input);
+    input
+        .validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid args: {e}")))?;
     let mut unit_of_work = state.unit_of_work().await?;
     let cmd = RenameWishlistInput::try_from(input).map_err(CommandError::from)?;
     RenameWishlistUseCase::execute(&mut unit_of_work, cmd).await?;
