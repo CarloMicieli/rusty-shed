@@ -1,21 +1,18 @@
 //! Use case: assign or unassign an owned rolling stock to a formation element.
 
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::trains::infrastructure::mappers::FormationElementView;
-use crate::trains::infrastructure::train_formation_repo::SqlxTrainFormationRepository;
-use crate::trains::interface::command_args::AssignRollingStockToElementArgs;
+use crate::trains::domain::{FormationElementView, TrainsUowExt};
 
 pub struct AssignRollingStockToElementUseCase;
 
 impl AssignRollingStockToElementUseCase {
-    pub async fn execute(
-        uow: &mut SqliteUnitOfWork,
+    pub async fn execute<U: TrainsUowExt + Send>(
+        uow: &mut U,
         element_id: String,
-        args: AssignRollingStockToElementArgs,
+        owned_rolling_stock_id: Option<String>,
     ) -> Result<FormationElementView, DomainError> {
-        let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
-        repo.assign_rolling_stock(&element_id, args.owned_rolling_stock_id.as_deref())
+        uow.trains_repo()
+            .assign_rolling_stock_to_element(&element_id, owned_rolling_stock_id)
             .await
     }
 }

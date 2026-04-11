@@ -872,6 +872,147 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
     }
 }
 
+// ---------------------------------------------------------------------------
+// TrainsRepository trait implementation
+// ---------------------------------------------------------------------------
+
+use crate::trains::domain::repository::{CreatePrototypeInput, TrainsRepository, TrainsUowExt};
+use async_trait::async_trait;
+
+#[async_trait]
+impl TrainsRepository for SqlxTrainFormationRepository<'_> {
+    async fn find_formation_by_id(&mut self, id: &str) -> Result<TrainFormation, DomainError> {
+        self.find_by_id_raw(id).await
+    }
+
+    async fn save_formation(&mut self, formation: &TrainFormation) -> Result<(), DomainError> {
+        self.save(formation).await
+    }
+
+    async fn delete_formation(&mut self, id: &str) -> Result<(), DomainError> {
+        self.delete(id).await
+    }
+
+    async fn get_formation_view(&mut self, id: &str) -> Result<TrainFormationView, DomainError> {
+        self.get_view(id).await
+    }
+
+    async fn get_formation_detail(
+        &mut self,
+        id: &str,
+    ) -> Result<TrainFormationDetail, DomainError> {
+        self.get_detail(id).await
+    }
+
+    async fn get_all_formation_summaries(
+        &mut self,
+    ) -> Result<Vec<TrainFormationSummary>, DomainError> {
+        self.list_summaries().await
+    }
+
+    async fn add_formation_element(
+        &mut self,
+        formation_id: &str,
+        element: FormationElement,
+    ) -> Result<(), DomainError> {
+        self.add_element(formation_id, &element).await
+    }
+
+    async fn remove_formation_element(&mut self, element_id: &str) -> Result<(), DomainError> {
+        self.remove_element_and_shift(element_id).await
+    }
+
+    async fn reorder_formation_elements(
+        &mut self,
+        formation_id: &str,
+        element_ids: Vec<String>,
+    ) -> Result<(), DomainError> {
+        self.bulk_reorder(formation_id, &element_ids).await
+    }
+
+    async fn get_formation_element_view(
+        &mut self,
+        element_id: &str,
+    ) -> Result<FormationElementView, DomainError> {
+        self.get_element_view(element_id).await
+    }
+
+    async fn assign_rolling_stock_to_element(
+        &mut self,
+        element_id: &str,
+        owned_rolling_stock_id: Option<String>,
+    ) -> Result<FormationElementView, DomainError> {
+        self.assign_rolling_stock(element_id, owned_rolling_stock_id.as_deref())
+            .await
+    }
+
+    async fn set_element_traction_override(
+        &mut self,
+        element_id: &str,
+        traction_override: i32,
+    ) -> Result<FormationElementView, DomainError> {
+        self.set_traction_override(element_id, traction_override)
+            .await
+    }
+
+    async fn find_prototypes_by_query(
+        &mut self,
+        query: Option<String>,
+    ) -> Result<Vec<PrototypeGroupView>, DomainError> {
+        self.search_prototypes(query.as_deref()).await
+    }
+
+    async fn create_prototype(
+        &mut self,
+        input: CreatePrototypeInput,
+    ) -> Result<PrototypeView, DomainError> {
+        self.save_prototype(SavePrototypeParams {
+            id: &input.id,
+            railway_company_id: &input.railway_company_id,
+            series_code: &input.series_code,
+            friendly_name: input.friendly_name.as_deref(),
+            is_motorized: input.is_motorized,
+            default_is_dummy: input.default_is_dummy,
+            notes: input.notes.as_deref(),
+            specification_type: &input.specification_type,
+            locomotive_type: input.locomotive_type.as_deref(),
+            locomotive_series: input.locomotive_series.as_deref(),
+            service_level: input.service_level.as_deref(),
+            passenger_car_type: input.passenger_car_type.as_deref(),
+            freight_car_type: input.freight_car_type.as_deref(),
+            railcar_type: input.railcar_type.as_deref(),
+            electric_multiple_unit_type: input.electric_multiple_unit_type.as_deref(),
+            elements_count: input.elements_count,
+            is_permanently_coupled: input.is_permanently_coupled,
+        })
+        .await
+    }
+
+    async fn get_all_categories(&mut self) -> Result<Vec<FormationCategoryView>, DomainError> {
+        self.list_categories().await
+    }
+
+    async fn create_formation_category(
+        &mut self,
+        id: &str,
+        name: &str,
+    ) -> Result<FormationCategoryView, DomainError> {
+        self.create_category(id, name).await
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TrainsUowExt for SqliteUnitOfWork
+// ---------------------------------------------------------------------------
+
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+
+impl TrainsUowExt for SqliteUnitOfWork {
+    fn trains_repo(&mut self) -> Box<dyn TrainsRepository + '_> {
+        Box::new(SqlxTrainFormationRepository::new(&mut self.tx))
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // T080 Integration tests — train_formation_repo & prototype_repo
 // ─────────────────────────────────────────────────────────────────────────────

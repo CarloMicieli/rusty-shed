@@ -5,6 +5,7 @@
 //! - derive `specta::Type` so tauri-specta generates TypeScript bindings
 //! - derive `serde::Deserialize` for Tauri deserialization
 
+use crate::core::domain::calendar::Year;
 use garde::Validate;
 
 // ── Shared validation helpers ─────────────────────────────────────────────────
@@ -41,11 +42,11 @@ pub struct CreateTrainFormationArgs {
     #[garde(skip)]
     pub category_id: Option<String>,
 
-    #[garde(skip)]
-    pub start_year: Option<i32>,
+    #[garde(dive)]
+    pub start_year: Option<Year>,
 
-    #[garde(skip)]
-    pub end_year: Option<i32>,
+    #[garde(dive)]
+    pub end_year: Option<Year>,
 
     #[garde(skip)]
     pub epoch: Option<String>,
@@ -64,11 +65,11 @@ pub struct UpdateTrainFormationArgs {
     #[garde(skip)]
     pub category_id: Option<String>,
 
-    #[garde(skip)]
-    pub start_year: Option<i32>,
+    #[garde(dive)]
+    pub start_year: Option<Year>,
 
-    #[garde(skip)]
-    pub end_year: Option<i32>,
+    #[garde(dive)]
+    pub end_year: Option<Year>,
 
     #[garde(skip)]
     pub epoch: Option<String>,

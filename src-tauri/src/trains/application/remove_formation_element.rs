@@ -1,17 +1,17 @@
 //! Use case: remove an element from a formation.
 
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
-use crate::trains::infrastructure::train_formation_repo::SqlxTrainFormationRepository;
+use crate::trains::domain::TrainsUowExt;
 
 pub struct RemoveFormationElementUseCase;
 
 impl RemoveFormationElementUseCase {
-    pub async fn execute(
-        uow: &mut SqliteUnitOfWork,
+    pub async fn execute<U: TrainsUowExt + Send>(
+        uow: &mut U,
         element_id: String,
     ) -> Result<(), DomainError> {
-        let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
-        repo.remove_element_and_shift(&element_id).await
+        uow.trains_repo()
+            .remove_formation_element(&element_id)
+            .await
     }
 }

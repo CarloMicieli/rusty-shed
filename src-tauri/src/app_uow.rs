@@ -28,6 +28,7 @@ use crate::maintenance::domain::MaintenanceUowExt;
 use crate::search::domain::GlobalSearchUowExt;
 use crate::sellers::domain::SellersUowExt;
 use crate::tracks_inventory::domain::{TrackProductUowExt, TracksInventoryUowExt};
+use crate::trains::domain::{TrainsRepository, TrainsUowExt};
 use crate::wishlist::domain::WishlistUowExt;
 
 // Repository trait imports (needed for Box<dyn AppUnitOfWork> forwarding impls)
@@ -65,6 +66,7 @@ pub trait AppUnitOfWork:
     + RailwayModelUowExt
     + SellersUowExt
     + TracksInventoryUowExt
+    + TrainsUowExt
     + WishlistUowExt
     + Send
     + 'static
@@ -166,6 +168,12 @@ impl TrackProductUowExt for Box<dyn AppUnitOfWork> {
     }
 }
 
+impl TrainsUowExt for Box<dyn AppUnitOfWork> {
+    fn trains_repo(&mut self) -> Box<dyn TrainsRepository + '_> {
+        (**self).trains_repo()
+    }
+}
+
 impl WishlistUowExt for Box<dyn AppUnitOfWork> {
     fn wishlist_repository(&mut self) -> Box<dyn WishlistRepository + '_> {
         (**self).wishlist_repository()
@@ -215,6 +223,7 @@ pub mod testing {
         sellers: Option<Box<dyn SellersRepository + Send>>,
         track_product: Option<Box<dyn TrackProductRepository + Send>>,
         track_inventory: Option<Box<dyn TrackInventoryRepository + Send>>,
+        trains: Option<Box<dyn TrainsRepository + Send>>,
         wishlist: Option<Box<dyn WishlistRepository + Send>>,
     }
 
@@ -276,6 +285,10 @@ pub mod testing {
         }
         pub fn with_track_inventory(mut self, r: impl TrackInventoryRepository + 'static) -> Self {
             self.track_inventory = Some(Box::new(r));
+            self
+        }
+        pub fn with_trains_repo(mut self, r: impl TrainsRepository + 'static) -> Self {
+            self.trains = Some(Box::new(r));
             self
         }
         pub fn with_wishlist(mut self, r: impl WishlistRepository + 'static) -> Self {
@@ -363,6 +376,11 @@ pub mod testing {
     impl TrackProductUowExt for MockAppUow {
         fn track_products_repo(&mut self) -> Box<dyn TrackProductRepository + '_> {
             take_or_panic!(self.track_product, "MockAppUow::track_products_repo")
+        }
+    }
+    impl TrainsUowExt for MockAppUow {
+        fn trains_repo(&mut self) -> Box<dyn TrainsRepository + '_> {
+            take_or_panic!(self.trains, "MockAppUow::trains_repo")
         }
     }
     impl WishlistUowExt for MockAppUow {

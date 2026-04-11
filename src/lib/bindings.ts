@@ -1803,8 +1803,8 @@ export type CreateTrainFormationArgs = {
 	// Formation name — required, 1–100 characters.
 	name: string,
 	category_id: string | null,
-	start_year: number | null,
-	end_year: number | null,
+	start_year: Year | null,
+	end_year: Year | null,
 	epoch: string | null,
 	notes: string | null,
 };
@@ -4712,8 +4712,8 @@ export type UpdateTrainFormationArgs = {
 	// New name for the formation. `None` = keep existing name.
 	name: string | null,
 	category_id: string | null,
-	start_year: number | null,
-	end_year: number | null,
+	start_year: Year | null,
+	end_year: Year | null,
 	epoch: string | null,
 	notes: string | null,
 };

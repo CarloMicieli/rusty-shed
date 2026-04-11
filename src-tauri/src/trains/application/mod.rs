@@ -13,6 +13,3 @@ pub mod remove_formation_element;
 pub mod reorder_formation_elements;
 pub mod set_traction_override;
 pub mod update_train_formation;
-
-#[cfg(test)]
-mod tests;
