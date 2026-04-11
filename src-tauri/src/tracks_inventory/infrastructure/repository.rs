@@ -142,7 +142,7 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
                     database::insert_track_purchase(
                         &mut *self.executor,
                         &inventory.id,
-                        &purchase.track_purchase_id.to_string(),
+                        purchase.track_purchase_id.as_ref(),
                         &purchase.track_id,
                         purchase.quantity,
                         purchase.price.amount,
@@ -287,7 +287,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
     ) -> Result<Option<TrackProduct>, DomainError> {
         let row = database::find_track_product_by_code(
             &mut *self.executor,
-            &manufacturer_id.to_string(),
+            manufacturer_id.as_ref(),
             product_code,
         )
         .await
@@ -313,7 +313,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
         database::upsert_track_product(
             &mut *self.executor,
             &track.track_id,
-            &track.manufacturer_id.to_string(),
+            track.manufacturer_id.as_ref(),
             &track.product_code,
             if track.with_roadbed { 1 } else { 0 },
             track.length.map(|l| l.quantity().to_i32().unwrap_or(0)),

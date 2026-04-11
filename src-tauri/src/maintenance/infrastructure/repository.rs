@@ -159,10 +159,9 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
 
         let maybe = match row {
             Some(r) => {
-                let event_rows =
-                    database::load_events_for_card(&mut *self.executor, &r.id.to_string())
-                        .await
-                        .with_domain_context("Error listing maintenance events for view")?;
+                let event_rows = database::load_events_for_card(&mut *self.executor, r.id.as_ref())
+                    .await
+                    .with_domain_context("Error listing maintenance events for view")?;
 
                 let events = map_event_rows_to_views(event_rows)?;
 
@@ -339,7 +338,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         let mut views = Vec::with_capacity(rows.len());
 
         for r in rows {
-            let event_rows = database::load_events_for_card(&mut *self.executor, &r.id.to_string())
+            let event_rows = database::load_events_for_card(&mut *self.executor, r.id.as_ref())
                 .await
                 .with_domain_context("Error listing maintenance events for view")?;
 
