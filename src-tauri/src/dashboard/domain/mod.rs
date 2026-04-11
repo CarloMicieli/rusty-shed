@@ -14,3 +14,6 @@ pub use purchase_group::PurchaseGroup;
 pub use repository::DashboardRepository;
 pub use repository::DashboardUowExt;
 pub use repository::QueryParams;
+
+#[cfg(test)]
+pub use repository::MockDashboardRepository;
