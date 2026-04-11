@@ -11,7 +11,6 @@ mod get_track_products;
 mod inputs;
 mod rename_track_inventory;
 mod set_item_quantity;
-pub mod views;
 
 pub use add_purchase::AddTrackPurchaseUseCase;
 pub use create_track_inventory::CreateTrackInventoryUseCase;
@@ -27,7 +26,8 @@ pub use inputs::RenameTrackInventoryInput;
 pub use inputs::SetTrackItemQuantityInput;
 pub use rename_track_inventory::RenameTrackInventoryUseCase;
 pub use set_item_quantity::SetTrackItemQuantityUseCase;
-pub use views::{
+// View types live in the domain layer and are re-exported here for convenience.
+pub use crate::tracks_inventory::domain::{
     TrackInventoryItemView, TrackInventoryListItem, TrackInventoryView, TrackProductView,
     TrackPurchaseView,
 };

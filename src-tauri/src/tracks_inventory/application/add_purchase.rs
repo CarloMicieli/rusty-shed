@@ -56,3 +56,76 @@ impl AddTrackPurchaseUseCase {
         repo.save(inventory).await.map(|_| new_purchase_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_uow::testing::{MockAppUow, OneShotFactory};
+    use crate::app_uow::{AppUnitOfWork, AppUowFactory};
+    use crate::core::domain::currency::Currency;
+    use crate::core::domain::monetary_amount::MonetaryAmount;
+    use crate::core::domain::test_utils::MockIdProvider;
+    use crate::tracks_inventory::domain::{MockTrackInventoryRepository, TrackId, TrackInventory};
+    use chrono::NaiveDate;
+
+    fn make_inventory(id: TrackInventoryId) -> TrackInventory {
+        TrackInventory::new(id, "Test Inventory".to_string(), None)
+    }
+
+    #[tokio::test]
+    async fn it_adds_purchase_and_returns_purchase_id() {
+        let inventory_id = TrackInventoryId::default();
+        let purchase_id = TrackPurchaseId::default();
+        let purchase_id_clone = purchase_id.clone();
+        let inventory = make_inventory(inventory_id.clone());
+
+        let mut repo = MockTrackInventoryRepository::new();
+        repo.expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(Some(inventory.clone())));
+        repo.expect_save().times(1).returning(|_| Ok(()));
+
+        let uow = MockAppUow::new().with_track_inventory(repo);
+        let factory = OneShotFactory::new(uow);
+        let mut uow_box: Box<dyn AppUnitOfWork> = factory.create_uow().await.unwrap();
+
+        let id_provider = MockIdProvider::new(purchase_id.clone());
+        let input = AddTrackPurchaseInput {
+            id: inventory_id,
+            track_id: TrackId::try_from("trn:track:acme:60100").unwrap(),
+            quantity: 2,
+            price: MonetaryAmount::new(1234, Currency::EUR),
+            seller_id: None,
+            purchase_date: NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
+        };
+
+        let result = AddTrackPurchaseUseCase::execute(&mut uow_box, id_provider, input).await;
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), purchase_id_clone);
+    }
+
+    #[tokio::test]
+    async fn it_returns_not_found_when_inventory_missing() {
+        let mut repo = MockTrackInventoryRepository::new();
+        repo.expect_find_by_id().times(1).returning(|_| Ok(None));
+
+        let uow = MockAppUow::new().with_track_inventory(repo);
+        let factory = OneShotFactory::new(uow);
+        let mut uow_box: Box<dyn AppUnitOfWork> = factory.create_uow().await.unwrap();
+
+        let id_provider = MockIdProvider::new(TrackPurchaseId::default());
+        let input = AddTrackPurchaseInput {
+            id: TrackInventoryId::default(),
+            track_id: TrackId::try_from("trn:track:acme:60100").unwrap(),
+            quantity: 1,
+            price: MonetaryAmount::new(100, Currency::EUR),
+            seller_id: None,
+            purchase_date: NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
+        };
+
+        let result = AddTrackPurchaseUseCase::execute(&mut uow_box, id_provider, input).await;
+
+        assert!(matches!(result.unwrap_err(), DomainError::NotFound { .. }));
+    }
+}

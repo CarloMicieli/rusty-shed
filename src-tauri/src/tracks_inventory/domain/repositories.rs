@@ -1,5 +1,8 @@
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::domain_error::DomainError;
+use crate::tracks_inventory::domain::views::{
+    TrackInventoryListItem, TrackInventoryView, TrackProductView,
+};
 use crate::tracks_inventory::domain::{TrackId, TrackInventory, TrackInventoryId, TrackProduct};
 
 /// Repository trait for accessing track product master data.
@@ -18,6 +21,9 @@ pub trait TrackProductRepository: Send + Sync {
 
     /// Persist a `TrackProduct` master record.
     async fn save(&mut self, track: TrackProduct) -> Result<(), DomainError>;
+
+    /// Return all track products as display views (joined with manufacturer name).
+    async fn find_all_views(&mut self) -> Result<Vec<TrackProductView>, DomainError>;
 }
 
 /// Repository trait for accessing and persisting track inventories.
@@ -45,6 +51,15 @@ pub trait TrackInventoryRepository: Send + Sync {
         track_id: &TrackId,
         required: i64,
     ) -> Result<bool, DomainError>;
+
+    /// Return all inventories as summary list items (with item/quantity counts).
+    async fn find_all_summaries(&mut self) -> Result<Vec<TrackInventoryListItem>, DomainError>;
+
+    /// Return a fully-populated view for a single inventory, or `None` if not found.
+    async fn find_view_by_id(
+        &mut self,
+        id: &TrackInventoryId,
+    ) -> Result<Option<TrackInventoryView>, DomainError>;
 }
 
 /// Unit of Work extension providing access to track-related repositories.

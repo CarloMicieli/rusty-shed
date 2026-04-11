@@ -40,3 +40,36 @@ impl CreateTrackInventoryUseCase {
         repo.save(aggregate).await.map(|_| id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_uow::testing::{MockAppUow, OneShotFactory};
+    use crate::app_uow::{AppUnitOfWork, AppUowFactory};
+    use crate::core::domain::test_utils::MockIdProvider;
+    use crate::tracks_inventory::domain::MockTrackInventoryRepository;
+
+    #[tokio::test]
+    async fn it_creates_inventory_and_returns_id() {
+        let fixed_id = TrackInventoryId::default();
+        let fixed_id_clone = fixed_id.clone();
+
+        let mut repo = MockTrackInventoryRepository::new();
+        repo.expect_save().times(1).returning(|_| Ok(()));
+
+        let uow = MockAppUow::new().with_track_inventory(repo);
+        let factory = OneShotFactory::new(uow);
+        let mut uow_box: Box<dyn AppUnitOfWork> = factory.create_uow().await.unwrap();
+
+        let id_provider = MockIdProvider::new(fixed_id.clone());
+        let input = NewTrackInventoryInput {
+            name: "Test Inventory".to_string(),
+            description: Some("A test".to_string()),
+        };
+
+        let result = CreateTrackInventoryUseCase::execute(&mut uow_box, id_provider, input).await;
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), fixed_id_clone);
+    }
+}

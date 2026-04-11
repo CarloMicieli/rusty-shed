@@ -1,17 +1,26 @@
 use crate::core::domain::Currency;
 use crate::core::domain::domain_error::DomainError;
+use crate::core::domain::length::Length;
+use crate::core::domain::measure_units::MeasureUnit;
 use crate::core::domain::metadata::Metadata;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::tracks_inventory::domain::views::{
+    TrackInventoryItemView, TrackInventoryListItem, TrackInventoryView, TrackProductView,
+    TrackPurchaseView,
+};
 use crate::tracks_inventory::domain::{
-    TrackInventory, TrackInventoryId, TrackInventoryRepository, TrackProductRepository,
-    TrackPurchase, TrackQuantity, TracksInventoryUowExt,
+    TrackCode, TrackInventory, TrackInventoryId, TrackInventoryRepository, TrackProductRepository,
+    TrackPurchase, TrackQuantity, TrackType, TracksInventoryUowExt,
 };
 use crate::tracks_inventory::infrastructure::SqliteTrackProductRepository;
 use crate::tracks_inventory::infrastructure::entities::{
-    TrackInventoryItemRow, TrackInventoryRow, TrackPurchaseRow,
+    TrackInventoryHeaderViewRow, TrackInventoryItemRow, TrackInventoryItemViewRow,
+    TrackInventoryRow, TrackInventorySummaryRow, TrackPurchaseRow, TrackPurchaseViewRow,
 };
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
+use rust_decimal::prelude::FromPrimitive;
 use sqlx::SqliteConnection;
 use std::collections::HashMap;
 
@@ -131,6 +140,211 @@ impl<'conn> SqliteTrackInventoryRepository<'conn> {
 
         Ok(Some(inventory))
     }
+
+    /// Fetch all inventories as summary list items (COUNT + SUM aggregates).
+    async fn find_all_summaries_impl(
+        &mut self,
+    ) -> Result<Vec<TrackInventoryListItem>, DomainError> {
+        let sql = r#"
+            SELECT 
+                ti.id,
+                ti.name,
+                ti.description,
+                COUNT(DISTINCT tii.track_id) as total_items,
+                COALESCE(SUM(tii.quantity), 0) as total_quantity
+            FROM track_inventories ti
+            LEFT JOIN track_inventory_items tii ON ti.id = tii.inventory_id
+            GROUP BY ti.id, ti.name, ti.description
+            ORDER BY ti.created_at DESC
+        "#;
+
+        let rows: Vec<TrackInventorySummaryRow> = sqlx::query_as(sql)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| TrackInventoryListItem {
+                id: r.id,
+                name: r.name.unwrap_or_default(),
+                description: r.description,
+                total_items: r.total_items,
+                total_quantity: r.total_quantity,
+            })
+            .collect())
+    }
+
+    /// Fetch a single inventory with items and purchases as a view.
+    async fn find_view_by_id_impl(
+        &mut self,
+        id: &TrackInventoryId,
+    ) -> Result<Option<TrackInventoryView>, DomainError> {
+        let header_sql = r#"
+            SELECT id, name, description
+            FROM track_inventories
+            WHERE id = ?1
+        "#;
+
+        let header: Option<TrackInventoryHeaderViewRow> = sqlx::query_as(header_sql)
+            .bind(id)
+            .fetch_optional(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let header = match header {
+            Some(h) => h,
+            None => return Ok(None),
+        };
+
+        let items_sql = r#"
+            SELECT 
+                tii.track_id,
+                tii.quantity,
+                tii.required,
+                tp.product_code,
+                tp.description,
+                tp.track_type,
+                tp.track_code,
+                tp.with_roadbed,
+                tp.length_mm,
+                tp.radius_mm,
+                m.name as manufacturer_name
+            FROM track_inventory_items tii
+            INNER JOIN track_products tp ON tii.track_id = tp.track_id
+            INNER JOIN manufacturers m ON tp.manufacturer_id = m.id
+            WHERE tii.inventory_id = ?1
+            ORDER BY tp.product_code
+        "#;
+
+        let item_rows: Vec<TrackInventoryItemViewRow> = sqlx::query_as(items_sql)
+            .bind(id)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let items: Vec<TrackInventoryItemView> = item_rows
+            .into_iter()
+            .map(|row| {
+                let track_product = map_track_product_view(TrackProductFields {
+                    track_id: row.track_id.clone(),
+                    manufacturer_name: row.manufacturer_name,
+                    product_code: row.product_code,
+                    description: row.description,
+                    track_type: row.track_type,
+                    track_code: row.track_code,
+                    with_roadbed: row.with_roadbed,
+                    length_mm: row.length_mm,
+                    radius_mm: row.radius_mm,
+                });
+                TrackInventoryItemView {
+                    track_id: row.track_id,
+                    track_product,
+                    quantity: row.quantity,
+                    required: row.required,
+                }
+            })
+            .collect();
+
+        let purchases_sql = r#"
+            SELECT 
+                tp_hist.id,
+                tp_hist.track_id,
+                tp_hist.quantity,
+                tp_hist.price_amount,
+                tp_hist.price_currency,
+                tp_hist.purchase_date,
+                s.name as seller_name,
+                tp.product_code,
+                tp.description,
+                tp.track_type,
+                tp.track_code,
+                tp.with_roadbed,
+                tp.length_mm,
+                tp.radius_mm,
+                m.name as manufacturer_name
+            FROM track_purchases tp_hist
+            INNER JOIN track_products tp ON tp_hist.track_id = tp.track_id
+            INNER JOIN manufacturers m ON tp.manufacturer_id = m.id
+            LEFT JOIN sellers s ON tp_hist.seller_id = s.id
+            WHERE tp_hist.inventory_id = ?1
+            ORDER BY tp_hist.purchase_date DESC
+        "#;
+
+        let purchase_rows: Vec<TrackPurchaseViewRow> = sqlx::query_as(purchases_sql)
+            .bind(id)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        let purchases: Vec<TrackPurchaseView> = purchase_rows
+            .into_iter()
+            .map(|row| {
+                let currency = Currency::from_code(&row.price_currency).unwrap_or(Currency::USD);
+                let track_product = map_track_product_view(TrackProductFields {
+                    track_id: row.track_id.clone(),
+                    manufacturer_name: row.manufacturer_name,
+                    product_code: row.product_code,
+                    description: row.description,
+                    track_type: row.track_type,
+                    track_code: row.track_code,
+                    with_roadbed: row.with_roadbed,
+                    length_mm: row.length_mm,
+                    radius_mm: row.radius_mm,
+                });
+                TrackPurchaseView {
+                    id: row.id,
+                    track_product,
+                    quantity: row.quantity,
+                    price: MonetaryAmount::new(row.price_amount, currency),
+                    seller_name: row.seller_name,
+                    purchase_date: row.purchase_date,
+                }
+            })
+            .collect();
+
+        Ok(Some(TrackInventoryView {
+            id: header.id,
+            name: header.name.unwrap_or_default(),
+            description: header.description,
+            items,
+            purchases,
+        }))
+    }
+}
+
+/// Bundles the product-related columns that appear in both item and purchase view rows.
+struct TrackProductFields {
+    track_id: crate::tracks_inventory::domain::TrackId,
+    manufacturer_name: String,
+    product_code: String,
+    description: Option<String>,
+    track_type: Option<String>,
+    track_code: Option<TrackCode>,
+    with_roadbed: i64,
+    length_mm: Option<i32>,
+    radius_mm: Option<i32>,
+}
+
+/// Maps a [`TrackProductFields`] into a [`TrackProductView`].
+fn map_track_product_view(f: TrackProductFields) -> TrackProductView {
+    let mm_to_length = |mm: i32| {
+        Decimal::from_i32(mm).and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
+    };
+    TrackProductView {
+        track_id: f.track_id,
+        manufacturer_name: f.manufacturer_name,
+        product_code: f.product_code,
+        description: f.description.unwrap_or_default(),
+        track_type: f
+            .track_type
+            .and_then(|t| t.parse::<TrackType>().ok())
+            .unwrap_or(TrackType::Straight),
+        track_code: f.track_code.unwrap_or(TrackCode::Code83),
+        with_roadbed: f.with_roadbed == 1,
+        length: f.length_mm.and_then(mm_to_length),
+        radius: f.radius_mm.and_then(mm_to_length),
+    }
 }
 
 #[async_trait::async_trait]
@@ -171,6 +385,17 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
             .await
             .map_err(DomainError::from)?;
         Ok(result.rows_affected() > 0)
+    }
+
+    async fn find_all_summaries(&mut self) -> Result<Vec<TrackInventoryListItem>, DomainError> {
+        self.find_all_summaries_impl().await
+    }
+
+    async fn find_view_by_id(
+        &mut self,
+        id: &TrackInventoryId,
+    ) -> Result<Option<TrackInventoryView>, DomainError> {
+        self.find_view_by_id_impl(id).await
     }
 
     async fn save(&mut self, inventory: TrackInventory) -> Result<(), DomainError> {

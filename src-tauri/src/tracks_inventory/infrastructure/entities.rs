@@ -90,3 +90,118 @@ pub struct TrackInventoryRow {
     /// Version number for optimistic concurrency control.
     pub version: i64,
 }
+
+// ---------------------------------------------------------------------------
+// View-side row types (read models – used by query implementations only)
+// ---------------------------------------------------------------------------
+
+/// Row for the inventory list summary query (COUNT + SUM aggregates).
+#[derive(Debug, Clone, FromRow)]
+pub struct TrackInventorySummaryRow {
+    /// Inventory identifier.
+    pub id: TrackInventoryId,
+    /// Optional inventory name.
+    pub name: Option<String>,
+    /// Optional description.
+    pub description: Option<String>,
+    /// Number of distinct track types in the inventory.
+    pub total_items: i64,
+    /// Sum of all quantities across track types.
+    pub total_quantity: i64,
+}
+
+/// Lightweight header row used when fetching a single inventory view.
+#[derive(Debug, Clone, FromRow)]
+pub struct TrackInventoryHeaderViewRow {
+    /// Inventory identifier.
+    pub id: TrackInventoryId,
+    /// Optional inventory name.
+    pub name: Option<String>,
+    /// Optional description.
+    pub description: Option<String>,
+}
+
+/// Row for the per-item detail inside an inventory view (joined with product + manufacturer).
+#[derive(Debug, Clone, FromRow)]
+pub struct TrackInventoryItemViewRow {
+    /// Track product identifier.
+    pub track_id: TrackId,
+    /// Current stock quantity.
+    pub quantity: i64,
+    /// Required (target) quantity.
+    pub required: i64,
+    /// Manufacturer product code.
+    pub product_code: String,
+    /// Optional human-readable description.
+    pub description: Option<String>,
+    /// Optional track type string.
+    pub track_type: Option<String>,
+    /// Optional rail profile code.
+    pub track_code: Option<TrackCode>,
+    /// 1 if the piece has an integrated roadbed, 0 otherwise.
+    pub with_roadbed: i64,
+    /// Optional length in millimetres.
+    pub length_mm: Option<i32>,
+    /// Optional radius in millimetres.
+    pub radius_mm: Option<i32>,
+    /// Manufacturer name (denormalised from `manufacturers` table).
+    pub manufacturer_name: String,
+}
+
+/// Row for the purchase history inside an inventory view (joined with product, manufacturer, seller).
+#[derive(Debug, Clone, FromRow)]
+pub struct TrackPurchaseViewRow {
+    /// Purchase identifier.
+    pub id: TrackPurchaseId,
+    /// Purchased track identifier.
+    pub track_id: TrackId,
+    /// Purchased quantity.
+    pub quantity: i64,
+    /// Price amount in smallest currency unit.
+    pub price_amount: i64,
+    /// Currency code (e.g. "EUR").
+    pub price_currency: String,
+    /// Date of purchase.
+    pub purchase_date: NaiveDate,
+    /// Optional seller name (denormalised).
+    pub seller_name: Option<String>,
+    /// Manufacturer product code.
+    pub product_code: String,
+    /// Optional human-readable description.
+    pub description: Option<String>,
+    /// Optional track type string.
+    pub track_type: Option<String>,
+    /// Optional rail profile code.
+    pub track_code: Option<TrackCode>,
+    /// 1 if the piece has an integrated roadbed, 0 otherwise.
+    pub with_roadbed: i64,
+    /// Optional length in millimetres.
+    pub length_mm: Option<i32>,
+    /// Optional radius in millimetres.
+    pub radius_mm: Option<i32>,
+    /// Manufacturer name (denormalised from `manufacturers` table).
+    pub manufacturer_name: String,
+}
+
+/// Row for the all-products view query (joined with manufacturer name).
+#[derive(Debug, Clone, FromRow)]
+pub struct TrackProductViewRow {
+    /// Track product identifier.
+    pub track_id: TrackId,
+    /// Manufacturer product code.
+    pub product_code: String,
+    /// Optional human-readable description.
+    pub description: Option<String>,
+    /// Optional track type string.
+    pub track_type: Option<String>,
+    /// Optional rail profile code.
+    pub track_code: Option<TrackCode>,
+    /// 1 if the piece has an integrated roadbed, 0 otherwise.
+    pub with_roadbed: i64,
+    /// Optional length in millimetres.
+    pub length_mm: Option<i32>,
+    /// Optional radius in millimetres.
+    pub radius_mm: Option<i32>,
+    /// Manufacturer name (denormalised from `manufacturers` table).
+    pub manufacturer_name: String,
+}

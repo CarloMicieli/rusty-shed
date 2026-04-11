@@ -4434,7 +4434,7 @@ export type TrackInventoryView = {
 export type TrackProductView = {
 	// Track product identifier.
 	track_id: TrackId,
-	// Manufacturer name (denormalized for display).
+	// Manufacturer name (denormalised for display).
 	manufacturer_name: string,
 	// Manufacturer's product code.
 	product_code: string,
@@ -4465,7 +4465,7 @@ export type TrackPurchaseView = {
 	quantity: number,
 	// Total price.
 	price: MonetaryAmount,
-	// Seller name (denormalized, optional).
+	// Seller name (denormalised, optional).
 	seller_name: string | null,
 	// Purchase date.
 	purchase_date: string,

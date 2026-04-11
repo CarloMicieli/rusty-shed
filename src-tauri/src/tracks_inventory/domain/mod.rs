@@ -9,6 +9,7 @@ mod track_purchase;
 mod track_purchase_id;
 mod track_quantity;
 mod track_type;
+pub mod views;
 
 pub use repositories::TrackProductUowExt;
 pub use repositories::{TrackInventoryRepository, TrackProductRepository, TracksInventoryUowExt};
@@ -22,3 +23,10 @@ pub use track_purchase::TrackPurchase;
 pub use track_purchase_id::TrackPurchaseId;
 pub use track_quantity::TrackQuantity;
 pub use track_type::TrackType;
+pub use views::{
+    TrackInventoryItemView, TrackInventoryListItem, TrackInventoryView, TrackProductView,
+    TrackPurchaseView,
+};
+
+#[cfg(test)]
+pub use repositories::{MockTrackInventoryRepository, MockTrackProductRepository};

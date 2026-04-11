@@ -3,10 +3,11 @@ use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::length::Length;
 use crate::core::domain::measure_units::MeasureUnit;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::tracks_inventory::domain::views::TrackProductView;
 use crate::tracks_inventory::domain::{
     TrackCode, TrackId, TrackProduct, TrackProductRepository, TrackProductUowExt, TrackType,
 };
-use crate::tracks_inventory::infrastructure::entities::TrackProductRow;
+use crate::tracks_inventory::infrastructure::entities::{TrackProductRow, TrackProductViewRow};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use sqlx::SqliteConnection;
@@ -102,6 +103,47 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
         }
 
         Ok(None)
+    }
+
+    async fn find_all_views(&mut self) -> Result<Vec<TrackProductView>, DomainError> {
+        let sql = r#"
+            SELECT 
+                tp.track_id,
+                tp.product_code,
+                tp.description,
+                tp.track_type,
+                tp.track_code,
+                tp.with_roadbed,
+                tp.length_mm,
+                tp.radius_mm,
+                m.name as manufacturer_name
+            FROM track_products tp
+            INNER JOIN manufacturers m ON tp.manufacturer_id = m.id
+            ORDER BY m.name, tp.product_code
+        "#;
+
+        let rows: Vec<TrackProductViewRow> = sqlx::query_as(sql)
+            .fetch_all(&mut *self.executor)
+            .await
+            .map_err(DomainError::from)?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| TrackProductView {
+                track_id: row.track_id,
+                manufacturer_name: row.manufacturer_name,
+                product_code: row.product_code,
+                description: row.description.unwrap_or_default(),
+                track_type: row
+                    .track_type
+                    .and_then(|t| t.parse::<TrackType>().ok())
+                    .unwrap_or(TrackType::Straight),
+                track_code: row.track_code.unwrap_or(TrackCode::Code83),
+                with_roadbed: row.with_roadbed == 1,
+                length: Self::mm_to_length(row.length_mm),
+                radius: Self::mm_to_length(row.radius_mm),
+            })
+            .collect())
     }
 
     async fn save(&mut self, track: TrackProduct) -> Result<(), DomainError> {

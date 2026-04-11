@@ -1,8 +1,8 @@
-//! View structs for track inventory queries.
+//! Read-model view structs for track inventory queries.
 //!
-//! These structs represent read-optimized projections of domain data,
+//! These structs represent read-optimised projections of domain data,
 //! designed specifically for UI consumption. They are returned by query
-//! handlers and may include denormalized data (e.g., manufacturer names).
+//! handlers and may include denormalised data (e.g., manufacturer names).
 
 use crate::core::domain::length::Length;
 use crate::core::domain::monetary_amount::MonetaryAmount;
@@ -60,7 +60,7 @@ pub struct TrackInventoryItemView {
 pub struct TrackProductView {
     /// Track product identifier.
     pub track_id: TrackId,
-    /// Manufacturer name (denormalized for display).
+    /// Manufacturer name (denormalised for display).
     pub manufacturer_name: String,
     /// Manufacturer's product code.
     pub product_code: String,
@@ -89,7 +89,7 @@ pub struct TrackPurchaseView {
     pub quantity: i64,
     /// Total price.
     pub price: MonetaryAmount,
-    /// Seller name (denormalized, optional).
+    /// Seller name (denormalised, optional).
     pub seller_name: Option<String>,
     /// Purchase date.
     pub purchase_date: NaiveDate,
