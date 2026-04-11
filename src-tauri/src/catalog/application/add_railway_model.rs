@@ -389,4 +389,35 @@ mod tests {
             panic!("Expected validation error");
         }
     }
+
+    #[tokio::test]
+    async fn it_creates_railway_model_on_success_path() {
+        let mut mock = MockRailwayModelRepository::new();
+        mock.expect_save().times(1).returning(|_| Ok(()));
+
+        let mut unit_of_work = FakeUow::with_railway_models_repo(mock);
+
+        let input = CreateRailwayModelInput {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "P999".to_string(),
+            power_method: "DC".to_string(),
+            scale: "H0".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            epoch: "IV".to_string(),
+            delivery_date: None,
+            availability_status: None,
+            description: "A fine locomotive".to_string(),
+            details: None,
+            rolling_stocks: vec![],
+        };
+
+        let id = AddRailwayModel::execute(&mut unit_of_work, input)
+            .await
+            .expect("should create railway model");
+
+        assert!(
+            id.to_string().contains("acme"),
+            "returned id should reference the manufacturer"
+        );
+    }
 }

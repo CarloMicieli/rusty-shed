@@ -5,7 +5,8 @@ use crate::catalog::domain::railway_company::{
     MockRailwayCompanyRepository, RailwayCompanyRepository, RailwayCompanyUowExt,
 };
 use crate::catalog::domain::railway_model::{
-    MockRailwayModelRepository, RailwayModelRepository, RailwayModelUowExt,
+    CouplerRepository, CouplerUowExt, MockCouplerRepository, MockRailwayModelRepository,
+    RailwayModelRepository, RailwayModelUowExt,
 };
 
 #[derive(Default)]
@@ -13,6 +14,7 @@ pub struct FakeUow {
     manufacturers_repo: Option<MockManufacturerRepository>,
     railway_companies_repo: Option<MockRailwayCompanyRepository>,
     railway_models_repo: Option<MockRailwayModelRepository>,
+    coupler_repo: Option<MockCouplerRepository>,
 }
 
 impl FakeUow {
@@ -39,6 +41,13 @@ impl FakeUow {
         }
     }
 
+    pub fn with_coupler_repo(coupler_repo: MockCouplerRepository) -> Self {
+        Self {
+            coupler_repo: Some(coupler_repo),
+            ..Default::default()
+        }
+    }
+
     pub fn with_company_and_model_repos(
         railway_companies_repo: MockRailwayCompanyRepository,
         railway_models_repo: MockRailwayModelRepository,
@@ -47,6 +56,7 @@ impl FakeUow {
             manufacturers_repo: None,
             railway_companies_repo: Some(railway_companies_repo),
             railway_models_repo: Some(railway_models_repo),
+            coupler_repo: None,
         }
     }
 }
@@ -77,6 +87,16 @@ impl RailwayModelUowExt for FakeUow {
             self.railway_models_repo
                 .take()
                 .expect("railway model repository already taken"),
+        )
+    }
+}
+
+impl CouplerUowExt for FakeUow {
+    fn coupler_repository(&mut self) -> Box<dyn CouplerRepository + '_> {
+        Box::new(
+            self.coupler_repo
+                .take()
+                .expect("coupler repository already taken"),
         )
     }
 }

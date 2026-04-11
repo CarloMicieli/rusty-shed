@@ -77,4 +77,6 @@ pub use service_level::ServiceLevel;
 pub use technical_specifications::{TechnicalSpecifications, TechnicalSpecificationsBuilder};
 
 #[cfg(test)]
+pub use coupler_repository::MockCouplerRepository;
+#[cfg(test)]
 pub use repository::MockRailwayModelRepository;
