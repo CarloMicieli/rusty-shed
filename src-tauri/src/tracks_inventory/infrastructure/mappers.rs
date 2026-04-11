@@ -167,7 +167,7 @@ pub fn map_purchase_view(row: TrackPurchaseViewRow) -> TrackPurchaseView {
     // Fallback to USD is defensive; invalid currency codes are prevented at write time.
     let currency = Currency::from_code(&row.price_currency).unwrap_or(Currency::USD);
     let track_product = map_track_product_view(TrackProductFields {
-        track_id: row.track_id.clone(), // Clone required: track_id moved into TrackPurchaseView below
+        track_id: row.track_id.clone(), // Clone required: track_id is consumed by map_track_product_view but must also be stored in TrackPurchaseView
         manufacturer_name: row.manufacturer_name,
         product_code: row.product_code,
         description: row.description,
@@ -205,7 +205,7 @@ pub fn map_inventory_summary(row: TrackInventorySummaryRow) -> TrackInventoryLis
 /// Converts a [`TrackInventoryItemViewRow`] into a [`TrackInventoryItemView`].
 pub fn map_inventory_item_view(row: TrackInventoryItemViewRow) -> TrackInventoryItemView {
     let track_product = map_track_product_view(TrackProductFields {
-        track_id: row.track_id.clone(), // Clone required: track_id also stored on TrackInventoryItemView
+        track_id: row.track_id.clone(), // Clone required: track_id is consumed by map_track_product_view but must also be stored in TrackInventoryItemView
         manufacturer_name: row.manufacturer_name,
         product_code: row.product_code,
         description: row.description,
@@ -241,7 +241,7 @@ pub fn assemble_track_inventory(
     let mut inventory_map = HashMap::with_capacity(item_rows.len());
     for item in item_rows {
         inventory_map.insert(
-            item.track_id.clone(), // Clone required: key and value both need the TrackId
+            item.track_id.clone(), // Clone required: track_id is moved into the HashMap key, but must also be stored in the TrackQuantity value
             TrackQuantity {
                 track_id: item.track_id,
                 quantity: item.quantity,

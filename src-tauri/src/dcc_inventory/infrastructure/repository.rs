@@ -98,8 +98,9 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
         &mut self,
         mut digital_rolling_stock: DigitalRollingStock,
     ) -> Result<(), DomainError> {
-        // Clone required: `id` must be borrowed for each iteration of the loop
-        // while `pull_events` mutably borrows the aggregate simultaneously.
+        // Clone required: `pull_events()` consumes the aggregate's pending_events
+        // via mutable borrow, preventing use of other fields; cloning `id` first
+        // allows it to be referenced independently throughout the loop.
         let id = digital_rolling_stock.id.clone();
         for ev in digital_rolling_stock.pull_events() {
             self.handle_event(&id, ev).await?;
