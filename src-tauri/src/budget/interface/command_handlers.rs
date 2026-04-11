@@ -17,6 +17,7 @@ use crate::budget::interface::command_args::{
     RemoveExtraBudgetArgs, SetBudgetConfigArgs,
 };
 use crate::core::domain::Currency;
+use crate::core::domain::calendar::{Month, Year};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::error::CommandError;
@@ -90,16 +91,20 @@ pub async fn get_monthly_budget_records_inner(
     state: &AppState,
     args: GetMonthlyBudgetRecordsArgs,
 ) -> Result<Vec<MonthlyBudgetRecordDto>, CommandError> {
-    let year = args.year.unwrap_or_else(|| chrono::Utc::now().year());
+    let year = match args.year {
+        Some(y) => y,
+        None => Year::try_from(chrono::Utc::now().year())
+            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?,
+    };
 
-    info!("Fetching monthly budget records for year {}", year);
+    info!("Fetching monthly budget records for year {}", year.value());
 
     let mut unit_of_work = state.unit_of_work().await?;
     let records = budget_query::get_monthly_budget_records(&mut unit_of_work, year).await?;
 
     unit_of_work.commit().await?;
 
-    let dtos = records
+    let dtos: Result<Vec<_>, CommandError> = records
         .into_iter()
         .map(|record| {
             let status_str = match record.status {
@@ -108,9 +113,14 @@ pub async fn get_monthly_budget_records_inner(
                 MonthStatus::Completed => "COMPLETED".to_string(),
             };
 
-            MonthlyBudgetRecordDto {
-                year: record.year,
-                month: record.month,
+            let year = Year::try_from(record.year)
+                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+            let month = Month::try_from(record.month)
+                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+
+            Ok(MonthlyBudgetRecordDto {
+                year,
+                month,
                 base_budget: record.base_budget,
                 extra_budget: record.extra_budget,
                 actual_spend: record.actual_spend,
@@ -121,11 +131,11 @@ pub async fn get_monthly_budget_records_inner(
                 remaining_percentage: record.remaining_percentage(),
                 status: status_str,
                 currency: record.currency,
-            }
+            })
         })
         .collect();
 
-    Ok(dtos)
+    dtos
 }
 
 pub async fn get_budget_dashboard_inner(
@@ -149,7 +159,9 @@ pub async fn add_extra_budget_inner(
 ) -> Result<ExtraBudgetDto, CommandError> {
     info!(
         "Adding extra budget for {}/{}: {}",
-        args.year, args.month, args.amount
+        args.year.value(),
+        args.month.value(),
+        args.amount
     );
 
     let input = AddExtraBudgetInput {
@@ -197,12 +209,12 @@ pub async fn get_extra_budgets_inner(
     state: &AppState,
     args: GetExtraBudgetsArgs,
 ) -> Result<Vec<ExtraBudgetDto>, CommandError> {
-    info!("Fetching extra budgets for year {}", args.year);
+    info!("Fetching extra budgets for year {}", args.year.value());
 
     let mut unit_of_work = state.unit_of_work().await?;
     let entries = {
         let mut repo = unit_of_work.budget_repo();
-        repo.get_extra_budgets(args.year)
+        repo.get_extra_budgets(args.year.value())
             .await
             .map_err(CommandError::from)?
     };
@@ -228,10 +240,10 @@ pub async fn get_extra_budgets_inner(
 
 pub async fn get_quarterly_summaries_inner(
     state: &AppState,
-    year: i32,
+    year: Year,
     currency_code: String,
 ) -> Result<Vec<QuarterlySummary>, CommandError> {
-    info!("Fetching quarterly summaries for year {}", year);
+    info!("Fetching quarterly summaries for year {}", year.value());
 
     let mut unit_of_work = state.unit_of_work().await?;
     let summaries =
@@ -396,7 +408,11 @@ pub async fn get_quarterly_summaries(
     state: tauri::State<'_, AppState>,
     args: GetQuarterlySummariesArgs,
 ) -> Result<Vec<QuarterlySummary>, CommandError> {
-    let year = args.year.unwrap_or_else(|| chrono::Utc::now().year());
+    let year = match args.year {
+        Some(y) => y,
+        None => Year::try_from(chrono::Utc::now().year())
+            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?,
+    };
     let currency_code = match args.currency {
         Some(ref code) => code.clone(),
         None => {

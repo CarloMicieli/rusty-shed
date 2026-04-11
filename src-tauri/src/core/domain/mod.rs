@@ -1,4 +1,5 @@
 pub mod address;
+pub mod calendar;
 pub mod currency;
 pub mod domain_error;
 pub mod id_provider;
@@ -15,6 +16,7 @@ mod event_envelope;
 #[cfg(test)]
 pub mod test_utils;
 
+pub use calendar::{Month, Year};
 pub use currency::Currency;
 pub use event_envelope::EventEnvelope;
 pub use id_provider::IdProvider;

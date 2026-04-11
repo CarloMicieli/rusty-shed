@@ -143,8 +143,8 @@ impl<'conn> BudgetRepository for SqliteBudgetRepository<'conn> {
         database::add_extra_budget(
             self.executor,
             entry.id.as_ref(),
-            entry.year,
-            entry.month as i32,
+            entry.year.value(),
+            entry.month.value() as i32,
             entry.amount.amount,
             entry.amount.currency.to_code(),
             entry.reason.as_deref(),

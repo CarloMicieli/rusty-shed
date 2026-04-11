@@ -8,37 +8,9 @@ export const commands = {
 	getAppVersion: () => __TAURI_INVOKE<string>("get_app_version"),
 	initDatabase: () => typedError<null, CommandError>(__TAURI_INVOKE("init_database")),
 	showMainWindow: () => typedError<null, CommandError>(__TAURI_INVOKE("show_main_window")),
-	/**
-	 *  Retrieve all manufacturers from the database.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 * 
-	 *  # Returns
-	 *  - `Ok(Vec<Manufacturer>)` when manufacturers exist, the vector is empty when no manufacturers are found.
-	 *  - `Err(CommandError)` when an error occurs.
-	 */
+	// Tauri command to retrieve all manufacturers.
 	getManufacturers: () => typedError<Manufacturer[], CommandError>(__TAURI_INVOKE("get_manufacturers")),
-	/**
-	 *  Retrieve a manufacturer by its identifier.
-	 * 
-	 *  Parses the provided `manufacturer_id` into a domain `ManufacturerId`,
-	 *  acquires a database connection from the application state, and queries the
-	 *  repository for the matching `Manufacturer`.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 *  * `manufacturer_id` - The manufacturer identifier as a `ManufacturerId`.
-	 * 
-	 *  # Returns
-	 *  - `Ok(Some(Manufacturer))` when a matching manufacturer exists,
-	 *  - `Ok(None)` when no matching row is found
-	 *  - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
-	 * 
-	 *  # Errors
-	 *  Parsing errors for the identifier and database errors are mapped to
-	 *  `CommandError` and returned to the caller.
-	 */
+	// Tauri command to retrieve a manufacturer by its identifier.
 	getManufacturerById: (manufacturerId: ManufacturerId) => typedError<{
 	// Unique identifier for the manufacturer.
 	id: ManufacturerId,
@@ -56,26 +28,7 @@ export const commands = {
 	// Optional website URL for the manufacturer.
 	websiteUrl: string | null,
 } | null, CommandError>(__TAURI_INVOKE("get_manufacturer_by_id", { manufacturerId })),
-	/**
-	 *  Retrieve a railway model by its identifier.
-	 * 
-	 *  Parses the provided `railway_model_id` into a domain `RailwayModelId`,
-	 *  acquires a database connection from the application state, and queries the
-	 *  repository for the matching `RailwayModel`.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 *  * `railway_model_id` - The railway model identifier as a `String`.
-	 * 
-	 *  # Returns
-	 *  - `Ok(Some(RailwayModel))` when a matching model exists,
-	 *  - `Ok(None)` when no matching row is found
-	 *  - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
-	 * 
-	 *  # Errors
-	 *  Parsing errors for the identifier and database errors are mapped to
-	 *  `CommandError` and returned to the caller.
-	 */
+	// Tauri command to retrieve a railway model by its identifier.
 	getRailwayModelById: (railwayModelId: RailwayModelId, lang: Language) => typedError<{
 	// Unique identifier for the railway model.
 	id: RailwayModelId,
@@ -111,38 +64,9 @@ export const commands = {
 	// Rolling stock instances (UI views) associated with this model.
 	rollingStock: RollingStockView_Serialize[],
 } | null, CommandError>(__TAURI_INVOKE("get_railway_model_by_id", { railwayModelId, lang })),
-	/**
-	 *  Retrieve all railway companies from the database.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 * 
-	 *  # Returns
-	 *  - `Ok(Vec<Manufacturer>)` when railway companies exist, the vector is empty when no railway companies are found.
-	 *  - `Err(CommandError)` when an error occurs.
-	 */
+	// Tauri command to retrieve all railway companies.
 	getRailwayCompanies: () => typedError<RailwayCompany[], CommandError>(__TAURI_INVOKE("get_railway_companies")),
-	/**
-	 *  Retrieve a railway company by its identifier.
-	 * 
-	 *  Parses the provided `railway_company_id` into a domain `RailwayCompanyId`,
-	 *  acquires a database connection from the application state, and queries the
-	 *  repository for the matching `RailwayCompany`.
-	 * 
-	 *  # Arguments
-	 * 
-	 *  * `state` - Tauri-managed application `AppState` (provides DB pool).
-	 *  * `railway_company_id` - The railway company identifier as a `String`.
-	 * 
-	 *  # Returns
-	 *  - `Ok(Some(RailwayCompany))` when a matching company exists
-	 *  - `Ok(None)` when no matching row is found
-	 *  - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
-	 * 
-	 *  # Errors
-	 *  Parsing errors for the identifier and database errors are mapped to
-	 *  `CommandError` and returned to the caller.
-	 */
+	// Tauri command to retrieve a railway company by its identifier.
 	getRailwayCompanyById: (railwayCompanyId: RailwayCompanyId) => typedError<{
 	// Unique identifier for the railway company.
 	id: RailwayCompanyId,
@@ -158,179 +82,39 @@ export const commands = {
 	// The period of activity of the railway company (nullable).
 	periodOfActivity: PeriodOfActivity | null,
 } | null, CommandError>(__TAURI_INVOKE("get_railway_company_by_id", { railwayCompanyId })),
-	/**
-	 *  Create a new railway model along with its associated rolling stocks.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The arguments required to create the railway model and its rolling stocks.
-	 * 
-	 *  # Returns
-	 *  - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
-	 *  - `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
-	 */
+	// Tauri command to create a new railway model.
 	createRailwayModel: (args: CreateRailwayModelArgs) => typedError<RailwayModelId, CommandError>(__TAURI_INVOKE("create_railway_model", { args })),
-	/**
-	 *  Update a single free-text field (description or details) of a railway model.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, field, and new value.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model does not exist.
-	 *  - `Err(CommandError::ValidationError)` when the value is invalid (e.g., empty description).
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update a text field of a railway model.
 	updateRailwayModelText: (args: UpdateRailwayModelTextArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_railway_model_text", { args })),
-	/**
-	 *  Update the identification fields (series_code, road_number, livery, depot) of a single
-	 *  rolling stock unit within a railway model.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, rolling stock, and new identification values.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-	 *  - `Err(CommandError::ValidationError)` when `series_code` is empty.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the identification fields of a rolling stock unit.
 	updateRollingStockIdentification: (args: UpdateRollingStockIdentificationArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_identification", { args })),
-	/**
-	 *  Update the constrained classification fields (scale and/or epoch) of a railway model.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model with optional scale and epoch values.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model does not exist.
-	 *  - `Err(CommandError::ValidationError)` when neither scale nor epoch is provided.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the classification of a railway model.
 	updateRailwayModelClassification: (args: UpdateRailwayModelClassificationArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_railway_model_classification", { args })),
-	/**
-	 *  Update the delivery date of a railway model.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model and the new delivery date string (or `None`/`""` to clear).
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model does not exist.
-	 *  - `Err(CommandError::ValidationError)` when the delivery date string cannot be parsed.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the delivery date of a railway model.
 	updateRailwayModelDeliveryDate: (args: UpdateRailwayModelDeliveryDateArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_railway_model_delivery_date", { args })),
-	/**
-	 *  Update the railway company of a single rolling stock unit.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, rolling stock, and new railway company id.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway company, model, or rolling stock does not exist.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the railway company of a rolling stock unit.
 	updateRollingStockRailwayCompany: (args: UpdateRollingStockRailwayCompanyArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_railway_company", { args })),
-	/**
-	 *  Change the category (variant) of a single rolling stock unit.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, rolling stock, and new category.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the category of a rolling stock unit.
 	updateRollingStockCategory: (args: UpdateRollingStockCategoryArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_category", { args })),
-	/**
-	 *  Update the subcategory (type field) of a single rolling stock unit.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, rolling stock, and new subcategory string.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-	 *  - `Err(CommandError::ValidationError)` when the subcategory is invalid for the current category.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the subcategory of a rolling stock unit.
 	updateRollingStockSubcategory: (args: UpdateRollingStockSubcategoryArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_subcategory", { args })),
-	/**
-	 *  Update the service level of a single rolling stock unit.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, rolling stock, and new service level (or None to clear).
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the service level of a rolling stock unit.
 	updateRollingStockServiceLevel: (args: UpdateRollingStockServiceLevelArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_service_level", { args })),
-	/**
-	 *  Update only the control type, DCC interface, and length of a single rolling stock unit.
-	 * 
-	 *  Unlike `update_rolling_stock_specifications`, this command only touches these three fields
-	 *  and leaves all other technical specification fields (flywheel, body shell, etc.) unchanged.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The target model, rolling stock, and new values.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update DCC/length fields of a rolling stock unit.
 	updateRollingStockDcc: (args: UpdateRollingStockDccArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_dcc", { args })),
-	/**
-	 *  Update the full technical specifications of a single rolling stock unit (drawer save).
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - All four specification sections: identification, technical, control, coupling.
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` on success.
-	 *  - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-	 *  - `Err(CommandError::ValidationError)` when `series_code` is empty or enum values are invalid.
-	 *  - `Err(CommandError::DatabaseError)` on persistence failure.
-	 */
+	// Tauri command to update the full technical specifications of a rolling stock unit.
 	updateRollingStockSpecifications: (args: UpdateRollingStockSpecificationsArgs) => typedError<null, CommandError>(__TAURI_INVOKE("update_rolling_stock_specifications", { args })),
-	// Retrieve all stored translations for a railway model (used to pre-populate the edit form).
+	// Tauri command to retrieve all translations for a railway model.
 	getRailwayModelTranslations: (railwayModelId: RailwayModelId) => typedError<{
 	railway_model_id: RailwayModelId,
 	en: RailwayModelTranslationEntry | null,
 	it: RailwayModelTranslationEntry | null,
 } | null, CommandError>(__TAURI_INVOKE("get_railway_model_translations", { railwayModelId })),
-	// Create or replace a translation for one language on a railway model.
+	// Tauri command to upsert a language translation for a railway model.
 	upsertRailwayModelTranslation: (args: UpsertRailwayModelTranslationArgs) => typedError<null, CommandError>(__TAURI_INVOKE("upsert_railway_model_translation", { args })),
-	// Search railway models using FTS5 full-text search across all language translations.
+	// Tauri command to search railway models.
 	searchRailwayModels: (args: SearchRailwayModelsArgs) => typedError<RailwayModelId[], CommandError>(__TAURI_INVOKE("search_railway_models", { args })),
-	/**
-	 *  Add a new rolling stock variant to an existing Railway Model.
-	 * 
-	 *  # Arguments
-	 *  * `state` - Tauri-managed application `AppState` providing the database pool.
-	 *  * `args` - The rolling stock identification data and category.
-	 * 
-	 *  # Returns
-	 *  - `Ok(RollingStockId)` — the identifier of the newly created rolling stock on success.
-	 *  - `Err(CommandError)` — when validation fails, the model is not found, or a database error occurs.
-	 */
+	// Tauri command to add a rolling stock variant to a railway model.
 	addRollingStockToModel: (args: AddRollingStockToModelArgs) => typedError<AddRollingStockResult, CommandError>(__TAURI_INVOKE("add_rolling_stock_to_model", { args })),
 	/**
 	 *  Return the coupler type catalogue, optionally filtered to a specific coupling socket.
@@ -420,59 +204,14 @@ export const commands = {
 	 *  - `Err(CommandError)` when the use-case returns an error.
 	 */
 	getDepot: () => typedError<DepotView, CommandError>(__TAURI_INVOKE("get_depot")),
-	/**
-	 *  Tauri command to retrieve the dashboard summary.
-	 * 
-	 *  This handler constructs the repository and query handler, executes the query
-	 *  asynchronously and returns the `DashboardSummary` on success. On failure, it
-	 *  converts the error into a `CommandError` preserving the error
-	 *  message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `criteria`: Optional query criteria to customize the summary retrieval.
-	 * 
-	 *  Returns:
-	 *  - `Ok(DashboardSummary)` when retrieval succeeds.
-	 *  - `Err(CommandError)` when the use-case returns an error.
-	 */
+	// Tauri command to retrieve the dashboard summary.
 	getDashboardSummary: (criteria: {
 	// Number of recent items to retrieve for the dashboard.
 	numberOfRecentItems: number | null,
 } | null) => typedError<DashboardSummary, CommandError>(__TAURI_INVOKE("get_dashboard_summary", { criteria })),
-	/**
-	 *  Tauri command to retrieve all wishlists.
-	 * 
-	 *  This handler constructs the repository and query handler, executes the query
-	 *  asynchronously and returns the list of `WishlistPreview` on success. On failure, it
-	 *  converts the error into a `CommandError` preserving the error
-	 *  message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 * 
-	 *  Returns:
-	 *  - `Ok(Vec<WishlistView>)` when retrieval succeeds.
-	 *  - `Err(CommandError)` when the use-case returns an error.
-	 */
+	// Tauri command to retrieve all wishlists.
 	getWishlists: () => typedError<WishlistView[], CommandError>(__TAURI_INVOKE("get_wishlists")),
-	/**
-	 *  Tauri command to get a wishlist by its ID.
-	 * 
-	 *  This handler retrieves a wishlist using the provided ID. It constructs the necessary
-	 *  repository and query handler, executes the query asynchronously, and returns the
-	 *  `Wishlist` on success. On failure, it converts the error into a `CommandError
-	 *  preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `id`: The identifier of the wishlist to retrieve.
-	 * 
-	 *  Returns:
-	 *  - `Ok(Some(WishlistView))` when a matching wishlist exists,
-	 *  - `Ok(None)` when no matching row is found
-	 *  - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
-	 */
+	// Tauri command to get a wishlist by its ID.
 	getWishlistById: (id: WishlistId) => typedError<{
 	// Unique identifier for the wishlist (TRN format).
 	id: WishlistId,
@@ -494,141 +233,23 @@ export const commands = {
 	 */
 	items: WishlistItemView[] | null,
 } | null, CommandError>(__TAURI_INVOKE("get_wishlist_by_id", { id })),
-	/**
-	 *  Tauri command to create a new wishlist.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns the created `WishlistPreview` on success. On failure, it
-	 *  converts the error into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `input`: The input data required to create a new wishlist (`CreateWishlistInput`).
-	 * 
-	 *  Returns:
-	 *  - `Ok(WishlistPreview)` when creation succeeds.
-	 *  - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
-	 */
+	// Tauri command to create a new wishlist.
 	createWishlist: (input: CreateWishlistArgs) => typedError<WishlistPreview, CommandError>(__TAURI_INVOKE("create_wishlist", { input })),
-	/**
-	 *  Tauri command to rename an existing wishlist.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns nothing on success. On failure, it converts the error
-	 *  into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `input`: The input data required to rename a wishlist (`RenameWishlistInput`).
-	 * 
-	 *  Returns:
-	 *  - `Ok(())` when renaming succeeds.
-	 *  - `Err(CommandError)` when validation fails, a database error occurs, or business logic
-	 */
+	// Tauri command to rename an existing wishlist.
 	renameWishlist: (input: RenameWishlistArgs) => typedError<null, CommandError>(__TAURI_INVOKE("rename_wishlist", { input })),
-	/**
-	 *  Tauri command to delete a wishlist by its ID.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns nothing on success. On failure, it converts the error
-	 *  into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `id`: The identifier of the wishlist to delete.
-	 * 
-	 *  Returns:
-	 *  - `Ok(())` when the deletion succeeds.
-	 *  - `Err(CommandError)` when the use-case returns an error.
-	 */
+	// Tauri command to delete a wishlist by its ID.
 	deleteWishlist: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("delete_wishlist", { id })),
-	/**
-	 *  Tauri command to set a wishlist as the default wishlist.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns nothing on success. On failure, it converts the error
-	 *  into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `id`: The identifier of the wishlist to set as default.
-	 * 
-	 *  Returns:
-	 *  - `Ok(())` when the operation succeeds.
-	 *  - `Err(CommandError)` when the use-case returns an error.
-	 */
+	// Tauri command to set a wishlist as the default wishlist.
 	setDefaultWishlist: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_default_wishlist", { id })),
-	/**
-	 *  Tauri command to add an item to a wishlist.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns the added `WishlistItem` on success. On failure, it
-	 *  converts the error into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `input`: The input data required to add an item to a wishlist (`AddToWishlistInput`).
-	 * 
-	 *  Returns:
-	 *  - `Ok(WishlistItem)` when the addition succeeds.
-	 *  - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
-	 */
+	// Tauri command to add an item to a wishlist.
 	addToWishlist: (input: AddToWishlistArgs) => typedError<WishlistItem, CommandError>(__TAURI_INVOKE("add_to_wishlist", { input })),
-	/**
-	 *  Tauri command to remove an item from a wishlist.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns nothing on success. On failure, it converts the error
-	 *  into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `item_id`: The identifier of the wishlist item to remove.
-	 * 
-	 *  Returns:
-	 *  - `Ok(())` when removal succeeds.   
-	 *  - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
-	 */
+	// Tauri command to remove an item from a wishlist.
 	removeFromWishlist: (itemId: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_from_wishlist", { itemId })),
-	/**
-	 *  Tauri command to move an item from one wishlist to another.
-	 * 
-	 *  This handler constructs the repository and command handler, executes the command
-	 *  asynchronously and returns nothing on success. On failure, it converts the error
-	 *  into a `CommandError` preserving the error message for logging/debugging.
-	 * 
-	 *  Parameters:
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `input`: The input data required to move a wishlist item (`MoveWishlistItemInput`).
-	 * 
-	 *  Returns:
-	 *  - `Ok(())` when the move succeeds.
-	 *  - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
-	 */
+	// Tauri command to move an item from one wishlist to another.
 	moveItemToList: (input: MoveWishlistItemArgs) => typedError<null, CommandError>(__TAURI_INVOKE("move_item_to_list", { input })),
-	/**
-	 *  Tauri command to purchase a wishlist item and move it into the collection.
-	 * 
-	 *  # Arguments
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `input`: The input data required to purchase a wishlist item (`PurchaseWishlistArgs`).
-	 * 
-	 *  # Returns
-	 *  - `Ok(())` when the purchase and move succeeds.
-	 *  - `Err(CommandError)` when validation fails, a database error occurs, or business logic rejects the operation.
-	 */
+	// Tauri command to purchase a wishlist item and move it into the collection.
 	purchaseWishlistItem: (input: PurchaseWishlistArgs) => typedError<null, CommandError>(__TAURI_INVOKE("purchase_wishlist_item", { input })),
-	/**
-	 *  Tauri command to update one or more editable fields on a wishlist item.
-	 * 
-	 *  # Arguments
-	 *  * `state`: Tauri-managed application state which provides a database pool.
-	 *  * `args`: Transport DTO carrying the patch fields (all optional except wishlist/item IDs).
-	 * 
-	 *  # Returns
-	 *  - `Ok(WishlistItem)` — the full updated item — on success.
-	 *  - `Err(CommandError)` when validation, domain, or database errors occur.
-	 */
+	// Tauri command to update one or more editable fields on a wishlist item.
 	updateWishlistItem: (args: UpdateWishlistItemArgs_Deserialize) => typedError<WishlistItem, CommandError>(__TAURI_INVOKE("update_wishlist_item", { args })),
 	/**
 	 *  Command handler to retrieve maintenance cards that are due or overdue.
@@ -899,89 +520,21 @@ export const commands = {
 	 *  A list of all track products available.
 	 */
 	getTrackProducts: () => typedError<TrackProductView[], CommandError>(__TAURI_INVOKE("get_track_products")),
-	/**
-	 *  A command handler to create a new digital rolling stock.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 *  - `args`: The command arguments.
-	 * 
-	 *  # Returns
-	 *  A result containing the response with the new digital rolling stock ID or a command error.
-	 */
+	// A command handler to create a new digital rolling stock.
 	newDigitalRollingStock: (args: NewDigitalRollingStockArgs) => typedError<ResponseNewDigitalRollingStock, CommandError>(__TAURI_INVOKE("new_digital_rolling_stock", { args })),
-	/**
-	 *  A command handler to change the DCC address of a digital rolling stock.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 *  - `args`: The command arguments.
-	 * 
-	 *  # Returns
-	 *  A result indicating success or a command error.
-	 */
+	// A command handler to change the DCC address of a digital rolling stock.
 	changeDccAddress: (args: ChangeDccAddressArgs) => typedError<null, CommandError>(__TAURI_INVOKE("change_dcc_address", { args })),
-	/**
-	 *  A command handler to change the decoder of a digital rolling stock.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 *  - `args`: The command arguments.
-	 * 
-	 *  # Returns
-	 *  A result indicating success or a command error.
-	 */
+	// A command handler to change the decoder of a digital rolling stock.
 	changeDecoder: (args: ChangeDecoderArgs) => typedError<null, CommandError>(__TAURI_INVOKE("change_decoder", { args })),
-	/**
-	 *  A command handler to retrieve all digital rolling stocks.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 * 
-	 *  # Returns
-	 *  A result containing a list of digital rolling stock views or a command error.
-	 */
+	// A command handler to retrieve all digital rolling stocks.
 	getDigitalRollingStocks: () => typedError<DigitalRollingStockView[], CommandError>(__TAURI_INVOKE("get_digital_rolling_stocks")),
-	/**
-	 *  A command handler to get the digital rolling stock summary.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 * 
-	 *  # Returns
-	 *  A result containing the digital summary or a command error.
-	 */
+	// A command handler to get the digital rolling stock summary.
 	getDigitalSummary: () => typedError<DigitalSummary, CommandError>(__TAURI_INVOKE("get_digital_summary")),
-	/**
-	 *  A command handler to get all available decoders.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 * 
-	 *  # Returns
-	 *  A result containing a list of decoders or a command error.
-	 */
+	// A command handler to get all available decoders.
 	getDecoders: () => typedError<Decoder[], CommandError>(__TAURI_INVOKE("get_decoders")),
-	/**
-	 *  A command handler to check if a DCC address is a duplicate.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 *  - `args`: The command arguments.
-	 * 
-	 *  # Returns
-	 *  A result containing the duplicate check result or a command error.
-	 */
+	// A command handler to check if a DCC address is a duplicate.
 	checkDccAddressDuplicate: (args: CheckDccAddressDuplicateArgs) => typedError<CheckDuplicateAddressResult, CommandError>(__TAURI_INVOKE("check_dcc_address_duplicate", { args })),
-	/**
-	 *  A command handler to get all installable rolling stocks.
-	 * 
-	 *  # Arguments
-	 *  - `state`: The application state.
-	 * 
-	 *  # Returns
-	 *  A result containing a list of installable rolling stock views or a command error.
-	 */
+	// A command handler to get all installable rolling stocks.
 	getInstallableRollingStocks: () => typedError<InstallableRollingStockView[], CommandError>(__TAURI_INVOKE("get_installable_rolling_stocks")),
 	/**
 	 *  Get a preview of what will be included in the export.
@@ -1303,10 +856,10 @@ export type AcquisitionItemArgs = {
 
 // Arguments for adding an extra budget to a specific month.
 export type AddExtraBudgetArgs = {
-	// Target year (2000-2100)
-	year: number,
+	// Target year (1900-2100)
+	year: Year,
 	// Target month (1-12)
-	month: number,
+	month: Month,
 	// Amount in minor currency units (must be positive)
 	amount: number,
 	// Optional currency code (inherits from settings if not provided)
@@ -2698,8 +2251,8 @@ export type ExportResult = {
 // Extra budget entry DTO.
 export type ExtraBudgetDto = {
 	id: string,
-	year: number,
-	month: number,
+	year: Year,
+	month: Month,
 	amount: number,
 	currency: Currency,
 	reason: string | null,
@@ -2870,7 +2423,7 @@ export type FreightCarType =
 // Arguments for querying extra budgets for a year.
 export type GetExtraBudgetsArgs = {
 	// Year to query
-	year: number,
+	year: Year,
 };
 
 // Arguments for get_import_preview command
@@ -2882,13 +2435,13 @@ export type GetImportPreviewArgs = {
 // Arguments for querying monthly budget records.
 export type GetMonthlyBudgetRecordsArgs = {
 	// Year to query (defaults to current year if not provided)
-	year: number | null,
+	year: Year | null,
 };
 
 // Arguments for querying quarterly summaries.
 export type GetQuarterlySummariesArgs = {
 	// Year to query (defaults to current year if not provided)
-	year: number | null,
+	year: Year | null,
 	// Currency code (defaults to settings currency if not provided)
 	currency: string | null,
 };
@@ -3339,10 +2892,18 @@ export type MonetaryAmount = {
 	currency: Currency,
 };
 
+/**
+ *  A valid calendar month in the range 1–12.
+ * 
+ *  The inner value is serialized / deserialized as a plain JSON number.
+ *  TypeScript bindings generated by specta also emit `number`.
+ */
+export type Month = number;
+
 // Monthly budget record DTO.
 export type MonthlyBudgetRecordDto = {
-	year: number,
-	month: number,
+	year: Year,
+	month: Month,
 	baseBudget: number,
 	extraBudget: number,
 	actualSpend: number,
@@ -3900,24 +3461,6 @@ export type RailwayModelId = string;
  * 
  *  This DTO contains either the image path (if found) or placeholder HTML.
  *  The frontend can check `has_image` to determine which field to use.
- * 
- *  # Example
- * 
- *  ```ignore
- *  // Image found
- *  RailwayModelImageResponse {
- *      image_path: Some("/app/data/models/trn_railway-model_roco_43210.png".to_string()),
- *      placeholder_html: None,
- *      has_image: true,
- *  }
- * 
- *  // No image (placeholder)
- *  RailwayModelImageResponse {
- *      image_path: None,
- *      placeholder_html: Some("<div>...</div>".to_string()),
- *      has_image: false,
- *  }
- *  ```
  */
 export type RailwayModelImageResponse = {
 	// Absolute path to the image file (if found)
@@ -5480,6 +5023,14 @@ export type WishlistView = {
 	 */
 	items: WishlistItemView[] | null,
 };
+
+/**
+ *  A valid calendar year in the range 2000–2100.
+ * 
+ *  The inner value is serialized / deserialized as a plain JSON number.
+ *  TypeScript bindings generated by specta also emit `number`.
+ */
+export type Year = number;
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {

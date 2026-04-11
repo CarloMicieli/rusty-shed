@@ -6,6 +6,7 @@ use crate::budget::domain::dashboard::BudgetQuarter;
 use crate::budget::domain::quarterly_summary::{CategorySpending, QuarterlySummary};
 use crate::catalog::domain::railway_model::Category;
 use crate::core::domain::Currency;
+use crate::core::domain::calendar::Year;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use std::collections::HashMap;
@@ -22,7 +23,7 @@ use std::str::FromStr;
 /// A vector of quarterly summaries, one for each quarter that has data.
 pub async fn get_quarterly_summaries<U>(
     uow: &mut U,
-    year: i32,
+    year: Year,
     currency_code: &str,
 ) -> Result<Vec<QuarterlySummary>, DomainError>
 where
@@ -31,7 +32,7 @@ where
     // Fetch quarterly spending by category from database
     let rows = {
         let mut repo = uow.budget_repo();
-        repo.get_quarterly_spending_by_category(year, currency_code)
+        repo.get_quarterly_spending_by_category(year.value(), currency_code)
             .await
             .map_err(DomainError::Infrastructure)?
     };
@@ -79,7 +80,11 @@ where
             })
             .collect();
 
-        summaries.push(QuarterlySummary::new(year, quarter, category_breakdown));
+        summaries.push(QuarterlySummary::new(
+            year.value(),
+            quarter,
+            category_breakdown,
+        ));
     }
 
     // Sort by quarter

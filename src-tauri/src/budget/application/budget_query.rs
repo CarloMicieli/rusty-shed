@@ -7,6 +7,7 @@ use crate::budget::domain::dashboard::{
     SpendingLevel,
 };
 use crate::budget::domain::monthly_budget_record::{MonthStatus, MonthlyBudgetRecord};
+use crate::core::domain::calendar::Year;
 use crate::core::domain::domain_error::DomainError;
 use chrono::Datelike;
 
@@ -23,7 +24,7 @@ use chrono::Datelike;
 /// A vector of 12 `MonthlyBudgetRecord` objects, one for each month of the year.
 pub async fn get_monthly_budget_records<U>(
     uow: &mut U,
-    year: i32,
+    year: Year,
 ) -> Result<Vec<MonthlyBudgetRecord>, DomainError>
 where
     U: BudgetUowExt + Send,
@@ -44,7 +45,7 @@ where
     // Get spending data for the year
     let monthly_spending = {
         let mut repo = uow.budget_repo();
-        repo.get_monthly_spending(year, config.base_amount.currency.to_code())
+        repo.get_monthly_spending(year.value(), config.base_amount.currency.to_code())
             .await
             .map_err(DomainError::Infrastructure)?
     };
@@ -58,13 +59,13 @@ where
     // Get extra budgets for the year
     let extra_budgets = {
         let mut repo = uow.budget_repo();
-        repo.get_extra_budgets(year).await?
+        repo.get_extra_budgets(year.value()).await?
     };
 
     // Convert to a map for easier lookup
     let mut extra_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
     for extra in extra_budgets {
-        *extra_map.entry(extra.month).or_insert(0) += extra.amount.amount;
+        *extra_map.entry(extra.month.value()).or_insert(0) += extra.amount.amount;
     }
 
     // Calculate monthly records with rollover chain
@@ -82,9 +83,11 @@ where
         let extra = extra_map.get(&month).copied().unwrap_or(0);
 
         // Determine month status
-        let status = if year > current_year || (year == current_year && month > current_month) {
+        let status = if year.value() > current_year
+            || (year.value() == current_year && month > current_month)
+        {
             MonthStatus::Projected
-        } else if year == current_year && month == current_month {
+        } else if year.value() == current_year && month == current_month {
             MonthStatus::InProgress
         } else {
             MonthStatus::Completed
@@ -97,7 +100,7 @@ where
         let rollover_out = if remaining > 0 { remaining } else { 0 };
 
         records.push(MonthlyBudgetRecord {
-            year,
+            year: year.value(),
             month,
             base_budget: base_monthly,
             extra_budget: extra,
@@ -185,7 +188,11 @@ where
         monthly_records_opt,
     ) = if let Some(ref config) = config_option {
         // Get monthly records for the current year (contains rollover chain + actual spend)
-        let monthly_records = get_monthly_budget_records(uow, current_year).await?;
+        let monthly_records = get_monthly_budget_records(
+            uow,
+            Year::try_from(current_year).map_err(|e| DomainError::Validation(e.to_string()))?,
+        )
+        .await?;
 
         // Find current month's record
         let current_record = monthly_records

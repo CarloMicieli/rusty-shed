@@ -1,20 +1,9 @@
-// Transport DTOs (Args) for Tauri commands
-// Following ADR 8: Standardize Tauri Command and Use Case Input Handling
-
 use crate::budget::domain::BudgetMode;
 use crate::budget::domain::validate_extra_budget_id;
-use crate::core::domain::Currency;
 use crate::core::domain::currency::validate_opt_currency_code;
+use crate::core::domain::{Currency, Month, Year};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
-
-/// Garde validator for `Option<i32>` year range (2000–2100).
-fn validate_opt_year_range(value: &Option<i32>, _: &()) -> garde::Result {
-    match value {
-        Some(y) if !(2000..=2100).contains(y) => Err(garde::Error::new("error_year_out_of_range")),
-        _ => Ok(()),
-    }
-}
 
 /// Arguments for setting/updating the budget configuration.
 #[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
@@ -36,12 +25,12 @@ pub struct SetBudgetConfigArgs {
 #[garde(allow_unvalidated)]
 #[serde(rename_all = "camelCase")]
 pub struct AddExtraBudgetArgs {
-    /// Target year (2000-2100)
-    #[garde(range(min = 2000, max = 2100))]
-    pub year: i32,
+    /// Target year (1900-2100)
+    #[garde(dive)]
+    pub year: Year,
     /// Target month (1-12)
-    #[garde(range(min = 1, max = 12))]
-    pub month: u8,
+    #[garde(dive)]
+    pub month: Month,
     /// Amount in minor currency units (must be positive)
     #[garde(range(min = 1))]
     pub amount: i64,
@@ -68,8 +57,8 @@ pub struct RemoveExtraBudgetArgs {
 #[serde(rename_all = "camelCase")]
 pub struct GetMonthlyBudgetRecordsArgs {
     /// Year to query (defaults to current year if not provided)
-    #[garde(custom(validate_opt_year_range))]
-    pub year: Option<i32>,
+    #[garde(dive)]
+    pub year: Option<Year>,
 }
 
 /// Arguments for querying extra budgets for a year.
@@ -78,8 +67,8 @@ pub struct GetMonthlyBudgetRecordsArgs {
 #[serde(rename_all = "camelCase")]
 pub struct GetExtraBudgetsArgs {
     /// Year to query
-    #[garde(range(min = 2000, max = 2100))]
-    pub year: i32,
+    #[garde(dive)]
+    pub year: Year,
 }
 
 /// Arguments for querying quarterly summaries.
@@ -88,8 +77,8 @@ pub struct GetExtraBudgetsArgs {
 #[serde(rename_all = "camelCase")]
 pub struct GetQuarterlySummariesArgs {
     /// Year to query (defaults to current year if not provided)
-    #[garde(custom(validate_opt_year_range))]
-    pub year: Option<i32>,
+    #[garde(dive)]
+    pub year: Option<Year>,
     /// Currency code (defaults to settings currency if not provided)
     #[garde(length(min = 3, max = 3), ascii, custom(validate_opt_currency_code))]
     pub currency: Option<String>,
@@ -117,8 +106,8 @@ pub struct BudgetConfigDto {
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MonthlyBudgetRecordDto {
-    pub year: i32,
-    pub month: u8,
+    pub year: Year,
+    pub month: Month,
     pub base_budget: i64,
     pub extra_budget: i64,
     pub actual_spend: i64,
@@ -136,8 +125,8 @@ pub struct MonthlyBudgetRecordDto {
 #[serde(rename_all = "camelCase")]
 pub struct ExtraBudgetDto {
     pub id: String,
-    pub year: i32,
-    pub month: u8,
+    pub year: Year,
+    pub month: Month,
     pub amount: i64,
     pub currency: Currency,
     pub reason: Option<String>,

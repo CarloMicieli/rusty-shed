@@ -3,6 +3,7 @@
 
 use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::{ExtraBudgetEntry, ExtraBudgetId};
+use crate::core::domain::calendar::{Month, Year};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::Utc;
@@ -10,8 +11,8 @@ use chrono::Utc;
 /// Input for adding an extra budget entry.
 #[derive(Debug, Clone)]
 pub struct AddExtraBudgetInput {
-    pub year: i32,
-    pub month: u8,
+    pub year: Year,
+    pub month: Month,
     pub amount: MonetaryAmount,
     pub reason: Option<String>,
 }
@@ -40,18 +41,6 @@ impl AddExtraBudgetUseCase {
         U: BudgetUowExt + Send,
     {
         // Validate input
-        if input.year < 2000 || input.year > 2100 {
-            return Err(DomainError::Validation(
-                "Year must be between 2000 and 2100".to_string(),
-            ));
-        }
-
-        if input.month < 1 || input.month > 12 {
-            return Err(DomainError::Validation(
-                "Month must be between 1 and 12".to_string(),
-            ));
-        }
-
         if input.amount.amount <= 0 {
             return Err(DomainError::Validation(
                 "Amount must be positive".to_string(),
@@ -106,38 +95,13 @@ impl AddExtraBudgetUseCase {
 mod tests {
     use super::*;
     use crate::core::domain::Currency;
-
-    #[test]
-    fn test_validate_year_range() {
-        let input = AddExtraBudgetInput {
-            year: 1999,
-            month: 1,
-            amount: MonetaryAmount::new(1000, Currency::USD),
-            reason: None,
-        };
-
-        // Would fail validation
-        assert!(input.year < 2000);
-    }
-
-    #[test]
-    fn test_validate_month_range() {
-        let input = AddExtraBudgetInput {
-            year: 2026,
-            month: 13,
-            amount: MonetaryAmount::new(1000, Currency::USD),
-            reason: None,
-        };
-
-        // Would fail validation
-        assert!(input.month > 12);
-    }
+    use crate::core::domain::calendar::{Month, Year};
 
     #[test]
     fn test_validate_positive_amount() {
         let input = AddExtraBudgetInput {
-            year: 2026,
-            month: 3,
+            year: Year::try_from(2026).unwrap(),
+            month: Month::try_from(3).unwrap(),
             amount: MonetaryAmount::new(0, Currency::USD),
             reason: None,
         };

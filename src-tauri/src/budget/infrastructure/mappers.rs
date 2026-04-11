@@ -2,6 +2,7 @@ use crate::budget::domain::{
     BudgetConfigId, BudgetConfiguration, BudgetMode, ExtraBudgetEntry, ExtraBudgetId,
 };
 use crate::budget::infrastructure::entities::{BudgetConfigRow, ExtraBudgetRow};
+use crate::core::domain::calendar::{Month, Year};
 use crate::core::domain::currency::Currency;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::{DateTime, Utc};
@@ -49,10 +50,14 @@ pub fn row_to_extra_budget(row: ExtraBudgetRow) -> Result<ExtraBudgetEntry, Stri
     let id = ExtraBudgetId::try_from(row.id.as_str())
         .map_err(|e| format!("Invalid extra budget ID: {}", e))?;
 
+    let year = Year::try_from(row.year).map_err(|e| format!("Invalid year in DB row: {}", e))?;
+    let month =
+        Month::try_from(row.month as u8).map_err(|e| format!("Invalid month in DB row: {}", e))?;
+
     Ok(ExtraBudgetEntry {
         id,
-        year: row.year,
-        month: row.month as u8,
+        year,
+        month,
         amount: MonetaryAmount::new(row.amount, currency),
         reason: row.reason,
         created_at,

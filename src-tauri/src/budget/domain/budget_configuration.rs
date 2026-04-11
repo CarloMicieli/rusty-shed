@@ -80,8 +80,8 @@ impl BudgetConfiguration {
     pub fn add_extra_budget(&mut self, entry: &ExtraBudgetEntry) {
         self.pending_events.push(BudgetEvent::ExtraBudgetAdded {
             extra_budget_id: entry.id.clone(),
-            year: entry.year,
-            month: entry.month,
+            year: entry.year.value(),
+            month: entry.month.value(),
             amount: entry.amount.clone(),
             reason: entry.reason.clone(),
             timestamp: entry.created_at,
