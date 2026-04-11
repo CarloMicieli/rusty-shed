@@ -1,6 +1,6 @@
 # Agent Instructions
 
-You are an expert developer working on this Tauri 2.0 project. 
+You are an expert developer working on this Tauri 2.0 project.
 
 ## Quality Assurance Policy
 Before declaring any task "complete," you MUST verify the project's health. Run the following commands to ensure both frontend and backend compliance:
