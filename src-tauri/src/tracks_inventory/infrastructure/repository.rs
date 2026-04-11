@@ -213,10 +213,7 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
             .await
             .map_err(DomainError::from)?;
 
-        Ok(rows
-            .into_iter()
-            .map(mappers::map_inventory_summary)
-            .collect())
+        Ok(rows.into_iter().map(TrackInventoryListItem::from).collect())
     }
 
     /// Returns a fully-populated view model for a single inventory, or `None`
@@ -277,7 +274,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
             .await
             .map_err(DomainError::from)?;
 
-        row.map(mappers::map_track_product).transpose()
+        row.map(TrackProduct::try_from).transpose()
     }
 
     /// Finds a [`TrackProduct`] by manufacturer ID and product code.
@@ -296,7 +293,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
         .await
         .map_err(DomainError::from)?;
 
-        row.map(mappers::map_track_product).transpose()
+        row.map(TrackProduct::try_from).transpose()
     }
 
     /// Returns all track products as display views joined with manufacturer names.
@@ -305,7 +302,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
             .await
             .map_err(DomainError::from)?;
 
-        Ok(rows.into_iter().map(mappers::map_product_view).collect())
+        Ok(rows.into_iter().map(TrackProductView::from).collect())
     }
 
     /// Persists a [`TrackProduct`] master record.

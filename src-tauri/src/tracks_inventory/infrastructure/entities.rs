@@ -205,3 +205,31 @@ pub struct TrackProductViewRow {
     /// Manufacturer name (denormalised from `manufacturers` table).
     pub manufacturer_name: String,
 }
+
+// ---------------------------------------------------------------------------
+// Intermediate projection helpers
+// ---------------------------------------------------------------------------
+
+/// Bundles the common product columns shared by item-view and purchase-view rows.
+///
+/// Used as an intermediate type by `From` implementations in the `mappers` module.
+pub struct TrackProductFields {
+    /// Canonical track identifier.
+    pub track_id: TrackId,
+    /// Human-readable manufacturer name (denormalised).
+    pub manufacturer_name: String,
+    /// Manufacturer product code.
+    pub product_code: String,
+    /// Optional human-readable description.
+    pub description: Option<String>,
+    /// Optional track type string (parsed to [`TrackType`]).
+    pub track_type: Option<String>,
+    /// Optional rail profile code (parsed to [`TrackCode`]).
+    pub track_code: Option<TrackCode>,
+    /// Non-zero indicates integrated roadbed.
+    pub with_roadbed: i64,
+    /// Optional length in millimetres.
+    pub length_mm: Option<i32>,
+    /// Optional radius in millimetres.
+    pub radius_mm: Option<i32>,
+}

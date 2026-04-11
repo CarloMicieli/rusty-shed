@@ -8,7 +8,7 @@ use crate::dcc_inventory::domain::{
     DccAddress, DccInventoryUowExt, Decoder, DigitalRollingStock, DigitalRollingStockEvent,
     DigitalRollingStockId, DigitalRollingStockRepository,
 };
-use crate::dcc_inventory::infrastructure::{database, mappers};
+use crate::dcc_inventory::infrastructure::database;
 use sqlx::SqliteConnection;
 
 /// SQLite implementation of the [`DigitalRollingStockRepository`].
@@ -91,7 +91,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             .map_err(DomainError::from)?;
 
         // Transpose Option<Result<…>> into Result<Option<…>>
-        row.map(mappers::map_digital_rolling_stock_row).transpose()
+        row.map(DigitalRollingStock::try_from).transpose()
     }
 
     async fn save(
@@ -113,7 +113,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             .await
             .map_err(DomainError::from)?;
 
-        Ok(rows.into_iter().map(mappers::map_decoder_row).collect())
+        Ok(rows.into_iter().map(Decoder::from).collect())
     }
 
     async fn find_all_digital_rolling_stocks(
@@ -124,7 +124,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             .map_err(DomainError::from)?;
 
         rows.into_iter()
-            .map(mappers::map_enriched_row_to_view)
+            .map(DigitalRollingStockView::try_from)
             .collect()
     }
 
@@ -133,7 +133,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             .await
             .map_err(DomainError::from)?;
 
-        Ok(mappers::map_summary_row(row))
+        Ok(DigitalSummary::from(row))
     }
 
     async fn check_address_exists(
@@ -159,7 +159,10 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
             .await
             .map_err(DomainError::from)?;
 
-        Ok(rows.into_iter().map(mappers::map_installable_row).collect())
+        Ok(rows
+            .into_iter()
+            .map(InstallableRollingStockView::from)
+            .collect())
     }
 }
 

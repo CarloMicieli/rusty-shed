@@ -1,57 +1,8 @@
-use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::OwnedRollingStockId;
-use crate::dcc_inventory::domain::{
-    DecoderId, DecoderType, DigitalProtocol, DigitalRollingStockId,
+use crate::dcc_inventory::domain::{DecoderId, DigitalRollingStockId};
+use crate::dcc_inventory::infrastructure::entities::{
+    DecoderRow, DigitalRollingStockRow, EnrichedRow, InstallableRow, SummaryRow,
 };
-use crate::dcc_inventory::infrastructure::entities::{DecoderRow, DigitalRollingStockRow};
-
-// ---------------------------------------------------------------------------
-// Projection row types (internal to the infrastructure layer)
-// ---------------------------------------------------------------------------
-
-/// Full projection row used by the "all digital rolling stocks" view query.
-///
-/// This struct is `pub(crate)` so that `mappers` can convert it to the
-/// application-level `DigitalRollingStockView` without exposing the raw DB
-/// shape to consumers outside this crate.
-#[derive(sqlx::FromRow)]
-pub(crate) struct EnrichedRow {
-    pub id: DigitalRollingStockId,
-    pub owned_rolling_stock_id: OwnedRollingStockId,
-    pub dcc_address: u16,
-    pub decoder_id: DecoderId,
-    pub decoder_product_code: String,
-    pub decoder_type: DecoderType,
-    pub decoder_protocol: DigitalProtocol,
-    pub decoder_interface: DccInterface,
-    pub manufacturer_name: Option<String>,
-    pub category: Option<String>,
-    pub road_number: Option<String>,
-    pub series_code: Option<String>,
-    pub description: Option<String>,
-    pub railway_company_name: Option<String>,
-    pub scale: Option<String>,
-    pub power_method: Option<String>,
-}
-
-/// Projection row for the "installable rolling stocks" query.
-#[derive(sqlx::FromRow)]
-pub(crate) struct InstallableRow {
-    pub owned_rolling_stock_id: OwnedRollingStockId,
-    pub category: Option<String>,
-    pub road_number: Option<String>,
-    pub series_code: Option<String>,
-    pub railway_company_name: Option<String>,
-    pub has_decoder: i32,
-    pub dcc_interface: Option<DccInterface>,
-}
-
-/// Aggregated count row returned by the digital summary query.
-#[derive(sqlx::FromRow)]
-pub(crate) struct SummaryRow {
-    pub total_non_dummy: i64,
-    pub digital_count: i64,
-}
 
 // ---------------------------------------------------------------------------
 // Raw SQL functions

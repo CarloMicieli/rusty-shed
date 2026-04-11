@@ -1,8 +1,8 @@
-//! Pure conversion functions for tracks inventory infrastructure.
+//! Pure conversion implementations for tracks inventory infrastructure.
 //!
 //! This module contains no async code and makes no database calls.
-//! It converts raw SQL row structs (from [`super::entities`]) into
-//! domain types, propagating errors via `?` rather than panicking.
+//! It provides [`From`] and [`TryFrom`] implementations to convert raw SQL
+//! row structs (from [`super::entities`]) into domain types.
 
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::Currency;
@@ -20,8 +20,8 @@ use crate::tracks_inventory::domain::{
 };
 use crate::tracks_inventory::infrastructure::entities::{
     TrackInventoryHeaderViewRow, TrackInventoryItemRow, TrackInventoryItemViewRow,
-    TrackInventoryRow, TrackInventorySummaryRow, TrackProductRow, TrackProductViewRow,
-    TrackPurchaseRow, TrackPurchaseViewRow,
+    TrackInventoryRow, TrackInventorySummaryRow, TrackProductFields, TrackProductRow,
+    TrackProductViewRow, TrackPurchaseRow, TrackPurchaseViewRow,
 };
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
@@ -41,188 +41,159 @@ pub fn mm_to_length(mm: i32) -> Option<Length> {
 }
 
 // ---------------------------------------------------------------------------
-// Track product
+// From / TryFrom implementations
 // ---------------------------------------------------------------------------
 
-/// Bundles the common product columns shared by item-view and purchase-view rows.
-pub struct TrackProductFields {
-    /// Canonical track identifier.
-    pub track_id: TrackId,
-    /// Human-readable manufacturer name (denormalised).
-    pub manufacturer_name: String,
-    /// Manufacturer product code.
-    pub product_code: String,
-    /// Optional human-readable description.
-    pub description: Option<String>,
-    /// Optional track type string (parsed to [`TrackType`]).
-    pub track_type: Option<String>,
-    /// Optional rail profile code (parsed to [`TrackCode`]).
-    pub track_code: Option<TrackCode>,
-    /// Non-zero indicates integrated roadbed.
-    pub with_roadbed: i64,
-    /// Optional length in millimetres.
-    pub length_mm: Option<i32>,
-    /// Optional radius in millimetres.
-    pub radius_mm: Option<i32>,
-}
-
-/// Maps a [`TrackProductFields`] bundle into a [`TrackProductView`].
-pub fn map_track_product_view(f: TrackProductFields) -> TrackProductView {
-    TrackProductView {
-        track_id: f.track_id,
-        manufacturer_name: f.manufacturer_name,
-        product_code: f.product_code,
-        description: f.description.unwrap_or_default(),
-        track_type: f
-            .track_type
-            .and_then(|t| t.parse::<TrackType>().ok())
-            .unwrap_or(TrackType::Straight),
-        track_code: f.track_code.unwrap_or(TrackCode::Code83),
-        with_roadbed: f.with_roadbed == 1,
-        length: f.length_mm.and_then(mm_to_length),
-        radius: f.radius_mm.and_then(mm_to_length),
+impl From<TrackProductFields> for TrackProductView {
+    fn from(f: TrackProductFields) -> Self {
+        TrackProductView {
+            track_id: f.track_id,
+            manufacturer_name: f.manufacturer_name,
+            product_code: f.product_code,
+            description: f.description.unwrap_or_default(),
+            track_type: f
+                .track_type
+                .and_then(|t| t.parse::<TrackType>().ok())
+                .unwrap_or(TrackType::Straight),
+            track_code: f.track_code.unwrap_or(TrackCode::Code83),
+            with_roadbed: f.with_roadbed == 1,
+            length: f.length_mm.and_then(mm_to_length),
+            radius: f.radius_mm.and_then(mm_to_length),
+        }
     }
 }
 
-/// Converts a [`TrackProductRow`] into a [`TrackProduct`] domain aggregate.
-///
-/// # Errors
-///
-/// Returns [`DomainError::Validation`] if the `manufacturer_id` string cannot
-/// be parsed into a [`ManufacturerId`].
-pub fn map_track_product(row: TrackProductRow) -> Result<TrackProduct, DomainError> {
-    let manufacturer_id = ManufacturerId::try_from(row.manufacturer_id)
-        .map_err(|e| DomainError::Validation(e.to_string()))?;
+impl TryFrom<TrackProductRow> for TrackProduct {
+    type Error = DomainError;
 
-    let length = row.length_mm.and_then(|mm| {
-        Decimal::from_i64(mm as i64).and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
-    });
+    fn try_from(row: TrackProductRow) -> Result<Self, Self::Error> {
+        let manufacturer_id = ManufacturerId::try_from(row.manufacturer_id)
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
 
-    let radius = row.radius_mm.and_then(|mm| {
-        Decimal::from_i64(mm as i64).and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
-    });
+        let length = row.length_mm.and_then(|mm| {
+            Decimal::from_i64(mm as i64)
+                .and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
+        });
 
-    Ok(TrackProduct {
-        track_id: row.track_id,
-        product_code: row.product_code,
-        manufacturer_id,
-        description: row.description.unwrap_or_default(),
-        with_roadbed: row.with_roadbed == 1,
-        length,
-        radius,
-        track_code: row.track_code.unwrap_or(TrackCode::Code83),
-        track_type: row
-            .track_type
-            .and_then(|t| t.parse::<TrackType>().ok())
-            .unwrap_or(TrackType::Straight),
-        metadata: Default::default(),
-    })
-}
+        let radius = row.radius_mm.and_then(|mm| {
+            Decimal::from_i64(mm as i64)
+                .and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
+        });
 
-/// Converts a [`TrackProductViewRow`] into a [`TrackProductView`].
-pub fn map_product_view(row: TrackProductViewRow) -> TrackProductView {
-    map_track_product_view(TrackProductFields {
-        track_id: row.track_id,
-        manufacturer_name: row.manufacturer_name,
-        product_code: row.product_code,
-        description: row.description,
-        track_type: row.track_type,
-        track_code: row.track_code,
-        with_roadbed: row.with_roadbed,
-        length_mm: row.length_mm,
-        radius_mm: row.radius_mm,
-    })
-}
-
-// ---------------------------------------------------------------------------
-// Track purchase
-// ---------------------------------------------------------------------------
-
-/// Converts a [`TrackPurchaseRow`] into a [`TrackPurchase`] domain value.
-///
-/// # Errors
-///
-/// Returns [`DomainError::Validation`] if the currency code cannot be parsed.
-pub fn map_track_purchase(row: TrackPurchaseRow) -> Result<TrackPurchase, DomainError> {
-    let currency = Currency::from_code(&row.price_currency)
-        .map_err(|e| DomainError::Validation(e.to_string()))?;
-
-    Ok(TrackPurchase {
-        track_purchase_id: row.id,
-        track_id: row.track_id,
-        quantity: row.quantity,
-        price: MonetaryAmount::new(row.price_amount, currency),
-        seller_id: row.seller_id,
-        purchase_date: row.purchase_date,
-    })
-}
-
-/// Converts a [`TrackPurchaseViewRow`] into a [`TrackPurchaseView`].
-///
-/// Falls back to `Currency::USD` if the stored currency code cannot be parsed
-/// (defensive – should not occur with well-formed data).
-pub fn map_purchase_view(row: TrackPurchaseViewRow) -> TrackPurchaseView {
-    // Fallback to USD is defensive; invalid currency codes are prevented at write time.
-    let currency = Currency::from_code(&row.price_currency).unwrap_or(Currency::USD);
-    let track_product = map_track_product_view(TrackProductFields {
-        track_id: row.track_id.clone(), // Clone required: track_id is consumed by map_track_product_view but must also be stored in TrackPurchaseView
-        manufacturer_name: row.manufacturer_name,
-        product_code: row.product_code,
-        description: row.description,
-        track_type: row.track_type,
-        track_code: row.track_code,
-        with_roadbed: row.with_roadbed,
-        length_mm: row.length_mm,
-        radius_mm: row.radius_mm,
-    });
-    TrackPurchaseView {
-        id: row.id,
-        track_product,
-        quantity: row.quantity,
-        price: MonetaryAmount::new(row.price_amount, currency),
-        seller_name: row.seller_name,
-        purchase_date: row.purchase_date,
+        Ok(TrackProduct {
+            track_id: row.track_id,
+            product_code: row.product_code,
+            manufacturer_id,
+            description: row.description.unwrap_or_default(),
+            with_roadbed: row.with_roadbed == 1,
+            length,
+            radius,
+            track_code: row.track_code.unwrap_or(TrackCode::Code83),
+            track_type: row
+                .track_type
+                .and_then(|t| t.parse::<TrackType>().ok())
+                .unwrap_or(TrackType::Straight),
+            metadata: Default::default(),
+        })
     }
 }
 
-// ---------------------------------------------------------------------------
-// Inventory summaries and item views
-// ---------------------------------------------------------------------------
-
-/// Converts a [`TrackInventorySummaryRow`] into a [`TrackInventoryListItem`].
-pub fn map_inventory_summary(row: TrackInventorySummaryRow) -> TrackInventoryListItem {
-    TrackInventoryListItem {
-        id: row.id,
-        name: row.name.unwrap_or_default(),
-        description: row.description,
-        total_items: row.total_items,
-        total_quantity: row.total_quantity,
+impl From<TrackProductViewRow> for TrackProductView {
+    fn from(row: TrackProductViewRow) -> Self {
+        TrackProductView::from(TrackProductFields {
+            track_id: row.track_id,
+            manufacturer_name: row.manufacturer_name,
+            product_code: row.product_code,
+            description: row.description,
+            track_type: row.track_type,
+            track_code: row.track_code,
+            with_roadbed: row.with_roadbed,
+            length_mm: row.length_mm,
+            radius_mm: row.radius_mm,
+        })
     }
 }
 
-/// Converts a [`TrackInventoryItemViewRow`] into a [`TrackInventoryItemView`].
-pub fn map_inventory_item_view(row: TrackInventoryItemViewRow) -> TrackInventoryItemView {
-    let track_product = map_track_product_view(TrackProductFields {
-        track_id: row.track_id.clone(), // Clone required: track_id is consumed by map_track_product_view but must also be stored in TrackInventoryItemView
-        manufacturer_name: row.manufacturer_name,
-        product_code: row.product_code,
-        description: row.description,
-        track_type: row.track_type,
-        track_code: row.track_code,
-        with_roadbed: row.with_roadbed,
-        length_mm: row.length_mm,
-        radius_mm: row.radius_mm,
-    });
-    TrackInventoryItemView {
-        track_id: row.track_id,
-        track_product,
-        quantity: row.quantity,
-        required: row.required,
+impl TryFrom<TrackPurchaseRow> for TrackPurchase {
+    type Error = DomainError;
+
+    fn try_from(row: TrackPurchaseRow) -> Result<Self, Self::Error> {
+        let currency = Currency::from_code(&row.price_currency)
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
+
+        Ok(TrackPurchase {
+            track_purchase_id: row.id,
+            track_id: row.track_id,
+            quantity: row.quantity,
+            price: MonetaryAmount::new(row.price_amount, currency),
+            seller_id: row.seller_id,
+            purchase_date: row.purchase_date,
+        })
+    }
+}
+
+impl From<TrackPurchaseViewRow> for TrackPurchaseView {
+    fn from(row: TrackPurchaseViewRow) -> Self {
+        // Fallback to USD is defensive; invalid currency codes are prevented at write time.
+        let currency = Currency::from_code(&row.price_currency).unwrap_or(Currency::USD);
+        let track_product = TrackProductView::from(TrackProductFields {
+            track_id: row.track_id.clone(), // Clone required: track_id is consumed by From<TrackProductFields> but must also be stored in TrackPurchaseView
+            manufacturer_name: row.manufacturer_name,
+            product_code: row.product_code,
+            description: row.description,
+            track_type: row.track_type,
+            track_code: row.track_code,
+            with_roadbed: row.with_roadbed,
+            length_mm: row.length_mm,
+            radius_mm: row.radius_mm,
+        });
+        TrackPurchaseView {
+            id: row.id,
+            track_product,
+            quantity: row.quantity,
+            price: MonetaryAmount::new(row.price_amount, currency),
+            seller_name: row.seller_name,
+            purchase_date: row.purchase_date,
+        }
+    }
+}
+
+impl From<TrackInventorySummaryRow> for TrackInventoryListItem {
+    fn from(row: TrackInventorySummaryRow) -> Self {
+        TrackInventoryListItem {
+            id: row.id,
+            name: row.name.unwrap_or_default(),
+            description: row.description,
+            total_items: row.total_items,
+            total_quantity: row.total_quantity,
+        }
+    }
+}
+
+impl From<TrackInventoryItemViewRow> for TrackInventoryItemView {
+    fn from(row: TrackInventoryItemViewRow) -> Self {
+        let track_product = TrackProductView::from(TrackProductFields {
+            track_id: row.track_id.clone(), // Clone required: track_id is consumed by From<TrackProductFields> but must also be stored in TrackInventoryItemView
+            manufacturer_name: row.manufacturer_name,
+            product_code: row.product_code,
+            description: row.description,
+            track_type: row.track_type,
+            track_code: row.track_code,
+            with_roadbed: row.with_roadbed,
+            length_mm: row.length_mm,
+            radius_mm: row.radius_mm,
+        });
+        TrackInventoryItemView {
+            track_id: row.track_id,
+            track_product,
+            quantity: row.quantity,
+            required: row.required,
+        }
     }
 }
 
 // ---------------------------------------------------------------------------
-// Aggregate assembly
+// Aggregate assembly (multi-argument – not suitable for From/TryFrom)
 // ---------------------------------------------------------------------------
 
 /// Assembles a complete [`TrackInventory`] aggregate from its component rows.
@@ -249,7 +220,7 @@ pub fn assemble_track_inventory(
 
     let mut purchases = Vec::with_capacity(purchase_rows.len());
     for row in purchase_rows {
-        purchases.push(map_track_purchase(row)?);
+        purchases.push(TrackPurchase::try_from(row)?);
     }
 
     let created_at: DateTime<Utc> = header.created_at;
@@ -285,10 +256,14 @@ pub fn assemble_inventory_view(
     item_rows: Vec<TrackInventoryItemViewRow>,
     purchase_rows: Vec<TrackPurchaseViewRow>,
 ) -> TrackInventoryView {
-    let items: Vec<TrackInventoryItemView> =
-        item_rows.into_iter().map(map_inventory_item_view).collect();
-    let purchases: Vec<TrackPurchaseView> =
-        purchase_rows.into_iter().map(map_purchase_view).collect();
+    let items: Vec<TrackInventoryItemView> = item_rows
+        .into_iter()
+        .map(TrackInventoryItemView::from)
+        .collect();
+    let purchases: Vec<TrackPurchaseView> = purchase_rows
+        .into_iter()
+        .map(TrackPurchaseView::from)
+        .collect();
 
     TrackInventoryView {
         id: header.id,
@@ -308,7 +283,7 @@ mod tests {
     use super::*;
     use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackPurchaseId};
     use crate::tracks_inventory::infrastructure::entities::{
-        TrackInventoryItemRow, TrackInventoryRow, TrackPurchaseRow,
+        TrackInventoryItemRow, TrackInventoryRow, TrackProductFields, TrackPurchaseRow,
     };
     use chrono::NaiveDate;
     use pretty_assertions::assert_eq;
@@ -339,7 +314,7 @@ mod tests {
             total_items: 3,
             total_quantity: 10,
         };
-        let item = map_inventory_summary(row);
+        let item = TrackInventoryListItem::from(row);
         assert_eq!(item.name, "");
         assert_eq!(item.total_items, 3);
         assert_eq!(item.total_quantity, 10);
@@ -387,7 +362,7 @@ mod tests {
             length_mm: None,
             radius_mm: None,
         };
-        let view = map_track_product_view(fields);
+        let view = TrackProductView::from(fields);
         assert_eq!(view.description, "");
         assert_eq!(view.track_code, TrackCode::Code83);
         assert_eq!(view.track_type, TrackType::Straight);
