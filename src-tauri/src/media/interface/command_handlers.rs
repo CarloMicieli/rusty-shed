@@ -187,8 +187,7 @@ pub async fn upload_model_image_bytes_inner(
     debug!("Uploading image bytes for model: {}", args.model_id);
 
     // Validate arguments
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid upload arguments: {}", e)))?;
+    args.validate().map_err(CommandError::from)?;
 
     // Parse model ID
     let model_id = RailwayModelId::try_from(args.model_id.as_str())
@@ -251,8 +250,7 @@ pub async fn delete_model_image_inner(
     debug!("Deleting image for model: {}", args.model_id);
 
     // Validate arguments
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid delete arguments: {}", e)))?;
+    args.validate().map_err(CommandError::from)?;
 
     // Parse model ID
     let model_id = RailwayModelId::try_from(args.model_id.as_str())

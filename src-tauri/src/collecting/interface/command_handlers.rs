@@ -104,6 +104,8 @@ pub async fn remove_collection_item_inner(
 ) -> Result<CollectionItemId, CommandError> {
     info!("Removing collection item: {:?}", args);
 
+    args.validate().map_err(CommandError::from)?;
+
     let collection_item_id = CollectionItemId::try_from(args.collection_item_id)
         .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
 
@@ -157,6 +159,8 @@ pub async fn update_collection_item_inner(
     args: UpdateCollectionItemArgs,
 ) -> Result<(), CommandError> {
     info!("Updating collection item: {:?}", args);
+
+    args.validate().map_err(CommandError::from)?;
 
     let collection_item_id = CollectionItemId::try_from(args.collection_item_id)
         .map_err(|_| CommandError::validation_field("collection_item_id", "invalid"))?;
@@ -258,6 +262,8 @@ pub async fn add_collection_item_inner(
     args: AddCollectionItemArgs,
 ) -> Result<CollectionItemId, CommandError> {
     info!("Adding collection item: {:?}", args);
+
+    args.validate().map_err(CommandError::from)?;
 
     let domain_cmd = match DomainAddCollectionItemInput::try_from(args) {
         Ok(v) => v,
@@ -489,4 +495,131 @@ pub async fn record_acquisition(
     args: RecordAcquisitionArgs,
 ) -> Result<Vec<CollectionItemId>, CommandError> {
     record_acquisition_inner(&state, args).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDate;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    // ── remove_collection_item_inner ─────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn remove_collection_item_empty_id_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = RemoveCollectionItemArgs {
+            collection_item_id: String::new(),
+            category: "LOCOMOTIVES".to_string(),
+            removed_date: "2025-01-01".to_string(),
+        };
+        let result = remove_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn remove_collection_item_invalid_category_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = RemoveCollectionItemArgs {
+            collection_item_id: "trn:collection-item:some-id".to_string(),
+            category: "NOT_A_CATEGORY".to_string(),
+            removed_date: "2025-01-01".to_string(),
+        };
+        let result = remove_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    // ── update_collection_item_inner ────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_empty_id_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: String::new(),
+            update: CollectionItemUpdateArgs::Notes { notes: None },
+        };
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn update_collection_item_invalid_seller_id_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = UpdateCollectionItemArgs {
+            collection_item_id: "trn:collection-item:some-id".to_string(),
+            update: CollectionItemUpdateArgs::Seller {
+                seller_id: Some("not-a-valid-trn".to_string()),
+            },
+        };
+        let result = update_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    // ── add_collection_item_inner ────────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn add_collection_item_bad_currency_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = AddCollectionItemArgs {
+            railway_model_id: "trn:railway-model:acme:60100".to_string(),
+            price_amount: 1000,
+            price_currency: "TOOSHORT".to_string(), // Must be exactly 3 chars
+            seller_id: None,
+            added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        };
+        let result = add_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn add_collection_item_negative_price_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = AddCollectionItemArgs {
+            railway_model_id: "trn:railway-model:acme:60100".to_string(),
+            price_amount: -1,
+            price_currency: "EUR".to_string(),
+            seller_id: None,
+            added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        };
+        let result = add_collection_item_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
 }

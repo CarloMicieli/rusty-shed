@@ -61,6 +61,7 @@ pub async fn create_railway_model_inner(
     args: CreateRailwayModelArgs,
 ) -> Result<RailwayModelId, CommandError> {
     info!("Creating railway model: {:?}", args);
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     let railway_model_input = args.try_into()?;
     let railway_model_id = AddRailwayModel::execute(&mut uow, railway_model_input).await?;
@@ -87,6 +88,7 @@ pub async fn update_railway_model_text_inner(
         "Updating railway model text field {:?} for {}",
         args.field, args.railway_model_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRailwayModelText::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -112,6 +114,7 @@ pub async fn update_rolling_stock_identification_inner(
         "Updating rolling stock identification for {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRollingStockIdentification::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -137,6 +140,7 @@ pub async fn update_railway_model_classification_inner(
         "Updating railway model classification for {}",
         args.railway_model_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRailwayModelClassification::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -162,6 +166,7 @@ pub async fn update_railway_model_delivery_date_inner(
         "Updating delivery date for railway model {}",
         args.railway_model_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRailwayModelDeliveryDate::execute(&mut uow, args.try_into()?).await?;
     uow.commit().await?;
@@ -187,6 +192,7 @@ pub async fn update_rolling_stock_railway_company_inner(
         "Updating railway company for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRollingStockRailwayCompany::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -212,6 +218,7 @@ pub async fn update_rolling_stock_category_inner(
         "Updating category for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRollingStockCategory::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -262,6 +269,7 @@ pub async fn update_rolling_stock_specifications_inner(
         "Updating rolling stock specifications for {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRollingStockSpecifications::execute(&mut uow, args.try_into()?).await?;
     uow.commit().await?;
@@ -312,8 +320,7 @@ pub async fn upsert_railway_model_translation_inner(
         "Upserting {} translation for railway model {}",
         args.lang, args.railway_model_id
     );
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid translation args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpsertRailwayModelTranslation::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -337,8 +344,7 @@ pub async fn search_railway_models_inner(
     args: SearchRailwayModelsArgs,
 ) -> Result<Vec<RailwayModelId>, CommandError> {
     info!("Searching railway models with query: {}", args.query);
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid search args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     let ids = SearchRailwayModels::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -364,8 +370,7 @@ pub async fn add_rolling_stock_to_model_inner(
         "Adding rolling stock to model {} (category: {})",
         args.railway_model_id, args.category
     );
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Invalid args: {e}")))?;
+    args.validate().map_err(CommandError::from)?;
     let input = parse_add_rolling_stock_args(
         args.railway_model_id,
         args.railway_company_id,
@@ -424,6 +429,7 @@ pub async fn update_rolling_stock_subcategory_inner(
         "Updating subcategory for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRollingStockSubcategory::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -449,6 +455,7 @@ pub async fn update_rolling_stock_service_level_inner(
         "Updating service level for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
+    args.validate().map_err(CommandError::from)?;
     let mut uow = state.unit_of_work().await?;
     UpdateRollingStockServiceLevel::execute(&mut uow, args.into()).await?;
     uow.commit().await?;
@@ -529,4 +536,92 @@ pub async fn set_rolling_stock_coupler(
     unit_of_work.commit().await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    // ── create_railway_model_inner ─────────────────────────────────────────
+
+    /// Validation is enforced before any database access: an empty manufacturer_id
+    /// must immediately return a `ValidationError`, not a `DatabaseError`.
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_railway_model_empty_manufacturer_id_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateRailwayModelArgs {
+            manufacturer_id: String::new(),
+            product_code: "60100".to_string(),
+            description: "Some locomotive".to_string(),
+            details: None,
+            power_method: "DC".to_string(),
+            scale: "H0".to_string(),
+            epoch: "VI".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+        };
+        let result = create_railway_model_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    /// An invalid scale string must be caught by validation before the DB is touched.
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_railway_model_invalid_scale_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateRailwayModelArgs {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "60100".to_string(),
+            description: "Some locomotive".to_string(),
+            details: None,
+            power_method: "DC".to_string(),
+            scale: "INVALID_SCALE".to_string(),
+            epoch: "VI".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+        };
+        let result = create_railway_model_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    /// An empty rolling_stocks list must fail validation (at least one required).
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_railway_model_empty_rolling_stocks_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateRailwayModelArgs {
+            manufacturer_id: "trn:manufacturer:acme".to_string(),
+            product_code: "60100".to_string(),
+            description: "Some locomotive".to_string(),
+            details: None,
+            power_method: "DC".to_string(),
+            scale: "H0".to_string(),
+            epoch: "VI".to_string(),
+            category: "LOCOMOTIVES".to_string(),
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+        };
+        let result = create_railway_model_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
 }
