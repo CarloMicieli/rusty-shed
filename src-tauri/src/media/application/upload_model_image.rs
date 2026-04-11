@@ -8,7 +8,7 @@ use crate::media::domain::image_validation::{
     ImageFormat, ImageValidator, ModelImagePath, StorageError, ValidationError,
 };
 use crate::media::infrastructure::FileStorage;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Input for path-based image upload (file explorer selection)
 #[derive(Debug, Clone)]
@@ -25,6 +25,60 @@ pub struct UploadImageBytesInput {
     pub file_data: Vec<u8>,
 }
 
+// ============================================================================
+// Internal Shared Trait
+// ============================================================================
+
+/// Internal trait that unifies the upload pipeline across path-based and bytes-based inputs.
+///
+/// Implementors supply a [`FileStorage`] reference via [`ImageUploader::storage`]. Both
+/// default methods — [`clear_old_images`][ImageUploader::clear_old_images] and
+/// [`process_upload`][ImageUploader::process_upload] — compose validation, cleanup, and
+/// storage in one authoritative location. Adding a new supported format (e.g. AVIF)
+/// only requires updating [`clear_old_images`][ImageUploader::clear_old_images].
+#[async_trait::async_trait]
+trait ImageUploader {
+    /// Returns a reference to the file storage backend.
+    fn storage(&self) -> &FileStorage;
+
+    /// Deletes every known image format for `model_id`, silently skipping absent files.
+    async fn clear_old_images(&self, model_id: &RailwayModelId) -> Result<(), UploadError> {
+        for format in [ImageFormat::Jpeg, ImageFormat::Png, ImageFormat::WebP] {
+            let path = ModelImagePath::new(self.storage().storage_dir(), model_id.as_ref(), format);
+            log::debug!("Deleting existing image: {}", path.full_path().display());
+            match self.storage().delete_image(&path).await {
+                Ok(()) => {}
+                Err(StorageError::FileNotFound(_)) => {}
+                Err(e) => return Err(UploadError::Storage(e)),
+            }
+        }
+        Ok(())
+    }
+
+    /// Validates `source_path`, removes old images for `model_id`, and copies the file
+    /// to storage — the core upload pipeline shared by both upload use cases.
+    async fn process_upload(
+        &self,
+        model_id: &RailwayModelId,
+        source_path: &Path,
+    ) -> Result<(), UploadError> {
+        let format = ImageValidator::validate(source_path).map_err(UploadError::Validation)?;
+        let dest_path =
+            ModelImagePath::new(self.storage().storage_dir(), model_id.as_ref(), format);
+        self.clear_old_images(model_id).await?;
+        log::debug!("Copying image to {}", dest_path.full_path().display());
+        self.storage()
+            .copy_image(source_path, &dest_path)
+            .await
+            .map_err(UploadError::Storage)?;
+        Ok(())
+    }
+}
+
+// ============================================================================
+// Upload Model Image (Path-based)
+// ============================================================================
+
 /// Use case for uploading model images from file paths
 pub struct UploadModelImage {
     storage: FileStorage,
@@ -36,19 +90,16 @@ impl UploadModelImage {
         Self { storage }
     }
 
-    /// Execute the upload use case (path-based)
+    /// Execute the upload use case (path-based).
     ///
     /// # Steps
-    /// 1. Validate model exists
-    /// 2. Validate source file (format, size)
-    /// 3. Determine destination path
-    /// 4. Delete existing images for this model
-    /// 5. Copy file to destination
+    /// 1. Validate model exists.
+    /// 2. Delegate to [`ImageUploader::process_upload`]: validate source → delete old → copy.
     ///
     /// # Errors
-    /// - [`ValidationError`]: Invalid file format, size, or missing file
-    /// - [`StorageError`]: File operations failed
-    /// - [`DomainError::NotFound`]: Model doesn't exist
+    /// - [`ValidationError`]: Invalid file format, size, or missing file.
+    /// - [`StorageError`]: File operations failed.
+    /// - [`DomainError::NotFound`]: Model doesn't exist.
     pub async fn execute<U>(
         &self,
         input: UploadImageInput,
@@ -57,30 +108,9 @@ impl UploadModelImage {
     where
         U: RailwayModelUowExt + Send,
     {
-        // Step 1: Validate model exists
         validate_model_exists(&input.model_id, unit_of_work).await?;
-
-        // Step 2: Validate source file
-        let format = ImageValidator::validate(&input.file_path).map_err(UploadError::Validation)?;
-
-        // Step 3: Determine destination path
-        let dest_path =
-            ModelImagePath::new(self.storage.storage_dir(), input.model_id.as_ref(), format);
-
-        // Step 4: Delete any existing image (any format) for this model
-        delete_existing_images(&self.storage, &input.model_id).await?;
-
-        // Step 5: Copy file to destination
-        log::debug!(
-            "Copying image from {} to {}",
-            input.file_path.display(),
-            dest_path.full_path().display()
-        );
-        self.storage
-            .copy_image(&input.file_path, &dest_path)
-            .await
-            .map_err(UploadError::Storage)?;
-
+        self.process_upload(&input.model_id, &input.file_path)
+            .await?;
         log::info!(
             "Successfully uploaded image for model {}",
             input.model_id.as_ref()
@@ -88,6 +118,17 @@ impl UploadModelImage {
         Ok(())
     }
 }
+
+#[async_trait::async_trait]
+impl ImageUploader for UploadModelImage {
+    fn storage(&self) -> &FileStorage {
+        &self.storage
+    }
+}
+
+// ============================================================================
+// Upload Model Image Bytes (Drag & Drop)
+// ============================================================================
 
 /// Use case for uploading model images from bytes
 pub struct UploadModelImageBytes {
@@ -100,20 +141,17 @@ impl UploadModelImageBytes {
         Self { storage }
     }
 
-    /// Execute the upload use case (bytes-based)
+    /// Execute the upload use case (bytes-based).
     ///
     /// # Steps
-    /// 1. Validate model exists
-    /// 2. Write bytes to a temporary file (auto-deleted on drop via RAII)
-    /// 3. Validate temporary file (format, size)
-    /// 4. Determine destination path
-    /// 5. Delete existing images for this model
-    /// 6. Copy temporary file to destination
+    /// 1. Validate model exists.
+    /// 2. Write bytes to a temporary file (auto-deleted on drop via RAII).
+    /// 3. Delegate to [`ImageUploader::process_upload`]: validate source → delete old → copy.
     ///
     /// # Errors
-    /// - [`ValidationError`]: Invalid file format, size, or corrupted data
-    /// - [`StorageError`]: File operations failed
-    /// - [`DomainError::NotFound`]: Model doesn't exist
+    /// - [`ValidationError`]: Invalid file format, size, or corrupted data.
+    /// - [`StorageError`]: File operations failed.
+    /// - [`DomainError::NotFound`]: Model doesn't exist.
     pub async fn execute<U>(
         &self,
         input: UploadImageBytesInput,
@@ -122,10 +160,9 @@ impl UploadModelImageBytes {
     where
         U: RailwayModelUowExt + Send,
     {
-        // Step 1: Validate model exists
         validate_model_exists(&input.model_id, unit_of_work).await?;
 
-        // Step 2: Write bytes to a temporary file; auto-deleted when `temp_file` is dropped
+        // Write bytes to a temporary file; auto-deleted when `temp_file` is dropped
         let temp_file = tempfile::NamedTempFile::new().map_err(|e| {
             UploadError::Storage(StorageError::WriteFailed(format!(
                 "Failed to create temp file: {}",
@@ -141,31 +178,20 @@ impl UploadModelImageBytes {
                 )))
             })?;
 
-        // Step 3: Validate temporary file
-        let format = ImageValidator::validate(temp_file.path()).map_err(UploadError::Validation)?;
-
-        // Step 4: Determine destination path
-        let dest_path =
-            ModelImagePath::new(self.storage.storage_dir(), input.model_id.as_ref(), format);
-
-        // Step 5: Delete any existing image (any format) for this model
-        delete_existing_images(&self.storage, &input.model_id).await?;
-
-        // Step 6: Copy temp file to destination
-        log::debug!(
-            "Moving image from temp to {}",
-            dest_path.full_path().display()
-        );
-        self.storage
-            .copy_image(temp_file.path(), &dest_path)
-            .await
-            .map_err(UploadError::Storage)?;
-
+        self.process_upload(&input.model_id, temp_file.path())
+            .await?;
         log::info!(
             "Successfully uploaded image for model {} from bytes",
             input.model_id.as_ref()
         );
         Ok(())
+    }
+}
+
+#[async_trait::async_trait]
+impl ImageUploader for UploadModelImageBytes {
+    fn storage(&self) -> &FileStorage {
+        &self.storage
     }
 }
 
@@ -192,25 +218,6 @@ where
     } else {
         Err(UploadError::ModelNotFound(model_id.as_ref().to_string()))
     }
-}
-
-/// Delete every known image format for `model_id`, silently ignoring files that are
-/// already absent. A single call covers all supported formats, so adding a new format
-/// (e.g. AVIF) only requires updating this function.
-async fn delete_existing_images(
-    storage: &FileStorage,
-    model_id: &RailwayModelId,
-) -> Result<(), UploadError> {
-    for format in [ImageFormat::Jpeg, ImageFormat::Png, ImageFormat::WebP] {
-        let path = ModelImagePath::new(storage.storage_dir(), model_id.as_ref(), format);
-        log::debug!("Deleting existing image: {}", path.full_path().display());
-        match storage.delete_image(&path).await {
-            Ok(()) => {}
-            Err(StorageError::FileNotFound(_)) => {} // already gone, fine
-            Err(e) => return Err(UploadError::Storage(e)),
-        }
-    }
-    Ok(())
 }
 
 /// Errors that can occur during image upload
