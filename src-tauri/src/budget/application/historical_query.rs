@@ -1,6 +1,3 @@
-// Historical Query - Get quarterly summaries with category breakdown
-// Feature: 001-budget-tracking
-
 use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::dashboard::BudgetQuarter;
 use crate::budget::domain::quarterly_summary::{CategorySpending, QuarterlySummary};
@@ -109,5 +106,110 @@ fn quarter_from_number(num: i32) -> Result<BudgetQuarter, DomainError> {
             "Invalid quarter number: {}",
             num
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::budget::application::testing::FakeBudgetUow;
+    use crate::budget::domain::repository::MockBudgetRepository;
+    use crate::core::domain::calendar::Year;
+
+    #[tokio::test]
+    async fn it_should_return_empty_when_no_data() {
+        // Arrange – one budget_repo() call; returns empty rows
+        let mut mock = MockBudgetRepository::new();
+        mock.expect_get_quarterly_spending_by_category()
+            .once()
+            .returning(|_, _| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock);
+        let year = Year::try_from(2025).unwrap();
+
+        // Act
+        let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
+
+        // Assert
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn it_should_group_spending_by_quarter() {
+        // Arrange – Q1 has Locomotives spending, Q2 has FreightCars spending
+        let rows = vec![
+            (1i32, "LOCOMOTIVES".to_string(), 50_000i64),
+            (2i32, "FREIGHT_CARS".to_string(), 30_000i64),
+        ];
+
+        let mut mock = MockBudgetRepository::new();
+        mock.expect_get_quarterly_spending_by_category()
+            .once()
+            .returning(move |_, _| Ok(rows.clone()));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock);
+        let year = Year::try_from(2025).unwrap();
+
+        // Act
+        let result = get_quarterly_summaries(&mut uow, year, "EUR")
+            .await
+            .expect("expected Ok");
+
+        // Assert – two quarters returned, sorted Q1 before Q2
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].quarter, BudgetQuarter::Q1);
+        assert_eq!(result[1].quarter, BudgetQuarter::Q2);
+
+        // Q1 total
+        let q1_total: i64 = result[0]
+            .category_breakdown
+            .iter()
+            .map(|c| c.amount.amount)
+            .sum();
+        assert_eq!(q1_total, 50_000);
+    }
+
+    #[tokio::test]
+    async fn it_should_fail_on_invalid_category_string() {
+        // Arrange – mock returns a category string not in the Category enum
+        let rows = vec![(1i32, "INVALID_CATEGORY_XYZ".to_string(), 10_000i64)];
+
+        let mut mock = MockBudgetRepository::new();
+        mock.expect_get_quarterly_spending_by_category()
+            .once()
+            .returning(move |_, _| Ok(rows.clone()));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock);
+        let year = Year::try_from(2025).unwrap();
+
+        // Act
+        let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
+
+        // Assert
+        assert!(
+            matches!(result, Err(DomainError::Validation(_))),
+            "Expected Validation error for invalid category, got: {:?}",
+            result
+        );
+    }
+
+    #[tokio::test]
+    async fn it_should_propagate_repository_error() {
+        let mut mock = MockBudgetRepository::new();
+        mock.expect_get_quarterly_spending_by_category()
+            .once()
+            .returning(|_, _| Err("db read error".to_string()));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock);
+        let year = Year::try_from(2025).unwrap();
+
+        let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
+
+        assert!(
+            matches!(result, Err(DomainError::Infrastructure(_))),
+            "Expected Infrastructure error, got: {:?}",
+            result
+        );
     }
 }

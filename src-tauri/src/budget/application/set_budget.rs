@@ -1,6 +1,3 @@
-// Set Budget Use Case
-// Feature: 001-budget-tracking
-
 use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::{BudgetConfiguration, BudgetMode};
 use crate::core::domain::domain_error::DomainError;
@@ -58,4 +55,124 @@ impl SetBudgetUseCase {
 pub struct SetBudgetInput {
     pub mode: BudgetMode,
     pub base_amount: MonetaryAmount,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::budget::application::testing::{FakeBudgetUow, sample_budget_config};
+    use crate::budget::domain::repository::MockBudgetRepository;
+    use crate::core::domain::Currency;
+
+    fn valid_input() -> SetBudgetInput {
+        SetBudgetInput {
+            mode: BudgetMode::Monthly,
+            base_amount: MonetaryAmount::new(120_000, Currency::EUR),
+        }
+    }
+
+    #[tokio::test]
+    async fn it_should_create_budget_when_none_exists() {
+        // Arrange – two budget_repo() calls: get_config then save
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut mock_save = MockBudgetRepository::new();
+        mock_save.expect_save().once().returning(|_| Ok(()));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_save);
+
+        // Act
+        let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
+
+        // Assert
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
+        let config = result.unwrap();
+        assert_eq!(config.mode, BudgetMode::Monthly);
+        assert_eq!(config.base_amount.amount, 120_000);
+    }
+
+    #[tokio::test]
+    async fn it_should_update_existing_budget() {
+        // Arrange
+        let existing = sample_budget_config(); // Monthly, 100_000 EUR
+
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(existing.clone())));
+
+        let mut mock_save = MockBudgetRepository::new();
+        mock_save.expect_save().once().returning(|_| Ok(()));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_save);
+
+        let input = SetBudgetInput {
+            mode: BudgetMode::Yearly,
+            base_amount: MonetaryAmount::new(1_200_000, Currency::EUR),
+        };
+
+        // Act
+        let result = SetBudgetUseCase::execute(&mut uow, input).await;
+
+        // Assert
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
+        let config = result.unwrap();
+        assert_eq!(config.mode, BudgetMode::Yearly);
+        assert_eq!(config.base_amount.amount, 1_200_000);
+    }
+
+    #[tokio::test]
+    async fn it_should_propagate_get_config_error() {
+        // Arrange – only one repo call (error on get_config, save never reached)
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get
+            .expect_get_config()
+            .once()
+            .returning(|| Err(DomainError::Infrastructure("db failure".to_string())));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock_get);
+
+        // Act
+        let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
+
+        // Assert
+        assert!(
+            matches!(result, Err(DomainError::Infrastructure(_))),
+            "Expected Infrastructure error, got: {:?}",
+            result
+        );
+    }
+
+    #[tokio::test]
+    async fn it_should_propagate_save_error() {
+        // Arrange
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut mock_save = MockBudgetRepository::new();
+        mock_save
+            .expect_save()
+            .once()
+            .returning(|_| Err(DomainError::Infrastructure("write failed".to_string())));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_save);
+
+        // Act
+        let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
+
+        // Assert
+        assert!(
+            matches!(result, Err(DomainError::Infrastructure(_))),
+            "Expected Infrastructure error, got: {:?}",
+            result
+        );
+    }
 }

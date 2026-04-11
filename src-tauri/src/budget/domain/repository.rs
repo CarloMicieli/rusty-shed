@@ -7,6 +7,7 @@ use async_trait::async_trait;
 /// All writes flow through `save()`, which drains the aggregate's pending events
 /// and dispatches each to the correct SQL operation. Read methods remain
 /// fine-grained because they do not touch aggregate state.
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait BudgetRepository: Send + Sync {
     /// Persist all pending events from the budget configuration aggregate.

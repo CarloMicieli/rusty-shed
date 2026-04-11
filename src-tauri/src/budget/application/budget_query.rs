@@ -1,6 +1,3 @@
-// Budget Query Service
-// Feature: 001-budget-tracking - Phase 4 (US2) & Phase 5 (US3)
-
 use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::dashboard::{
     BudgetDashboardSummary, BudgetQuarter, MonthlySpendingPoint, QuarterlyActivityPoint,
@@ -298,4 +295,164 @@ where
         monthly_goal,
         quarterly_activity,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::budget::application::testing::{FakeBudgetUow, sample_budget_config};
+    use crate::budget::domain::repository::MockBudgetRepository;
+    use crate::core::domain::calendar::Year;
+
+    /// Helper: a mock that returns empty spending and empty extra budget.
+    fn mock_empty_spending() -> MockBudgetRepository {
+        let mut m = MockBudgetRepository::new();
+        m.expect_get_monthly_spending()
+            .once()
+            .returning(|_, _| Ok(vec![]));
+        m
+    }
+
+    fn mock_empty_extra_budgets() -> MockBudgetRepository {
+        let mut m = MockBudgetRepository::new();
+        m.expect_get_extra_budgets()
+            .once()
+            .returning(|_| Ok(vec![]));
+        m
+    }
+
+    #[tokio::test]
+    async fn it_should_return_12_monthly_records() {
+        // Arrange – three budget_repo() calls: get_config, get_monthly_spending, get_extra_budgets
+        let config = sample_budget_config();
+
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(config.clone())));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_empty_spending())
+            .with_repo(mock_empty_extra_budgets());
+
+        let year = Year::try_from(2025).unwrap();
+
+        // Act
+        let result = get_monthly_budget_records(&mut uow, year).await;
+
+        // Assert
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
+        let records = result.unwrap();
+        assert_eq!(records.len(), 12, "Expected 12 monthly records");
+    }
+
+    #[tokio::test]
+    async fn it_should_return_all_12_months_numbered_correctly() {
+        let config = sample_budget_config();
+
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(config.clone())));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_empty_spending())
+            .with_repo(mock_empty_extra_budgets());
+
+        let year = Year::try_from(2025).unwrap();
+        let records = get_monthly_budget_records(&mut uow, year)
+            .await
+            .expect("expected Ok");
+
+        for (i, record) in records.iter().enumerate() {
+            assert_eq!(
+                record.month,
+                (i + 1) as u8,
+                "Month at index {i} should be {}",
+                i + 1
+            );
+            assert_eq!(record.year, 2025);
+        }
+    }
+
+    #[tokio::test]
+    async fn it_should_fail_when_no_budget_config_set() {
+        // Arrange – only get_config is called; returns None → Validation error
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get.expect_get_config().once().returning(|| Ok(None));
+
+        let mut uow = FakeBudgetUow::new().with_repo(mock_get);
+        let year = Year::try_from(2025).unwrap();
+
+        // Act
+        let result = get_monthly_budget_records(&mut uow, year).await;
+
+        // Assert
+        assert!(
+            matches!(result, Err(DomainError::Validation(_))),
+            "Expected Validation error, got: {:?}",
+            result
+        );
+    }
+
+    #[tokio::test]
+    async fn it_should_calculate_rollover_chain() {
+        // Arrange – base budget = 100_000 per month, no extra, spending in Jan = 60_000
+        // → rollover Jan→Feb = 40_000
+        use crate::budget::domain::BudgetMode;
+        use crate::core::domain::Currency;
+        use crate::core::domain::monetary_amount::MonetaryAmount;
+
+        let config = crate::budget::domain::BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(100_000, Currency::EUR),
+        );
+
+        let mut mock_get = MockBudgetRepository::new();
+        mock_get
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(config.clone())));
+
+        // January spending = 60_000 (month 1)
+        let mut mock_spending = MockBudgetRepository::new();
+        mock_spending
+            .expect_get_monthly_spending()
+            .once()
+            .returning(|_, _| Ok(vec![(1, 60_000)]));
+
+        let mut mock_extra = MockBudgetRepository::new();
+        mock_extra
+            .expect_get_extra_budgets()
+            .once()
+            .returning(|_| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get)
+            .with_repo(mock_spending)
+            .with_repo(mock_extra);
+
+        let year = Year::try_from(2020).unwrap(); // past year → all Completed
+
+        // Act
+        let records = get_monthly_budget_records(&mut uow, year)
+            .await
+            .expect("expected Ok");
+
+        // January: available 100_000, spent 60_000, rollover_out 40_000
+        let jan = &records[0];
+        assert_eq!(jan.month, 1);
+        assert_eq!(jan.actual_spend, 60_000);
+        assert_eq!(jan.rollover_out, 40_000);
+
+        // February: rollover_in should be the Jan rollover_out
+        let feb = &records[1];
+        assert_eq!(feb.month, 2);
+        assert_eq!(feb.rollover_in, 40_000);
+        assert_eq!(feb.base_budget, 100_000);
+    }
 }
