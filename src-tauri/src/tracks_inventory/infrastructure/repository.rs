@@ -213,7 +213,10 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
             .await
             .map_err(DomainError::from)?;
 
-        Ok(rows.into_iter().map(mappers::map_inventory_summary).collect())
+        Ok(rows
+            .into_iter()
+            .map(mappers::map_inventory_summary)
+            .collect())
     }
 
     /// Returns a fully-populated view model for a single inventory, or `None`
@@ -371,11 +374,10 @@ mod tests {
             .await
             .expect("unit of work creation should succeed");
 
-        let missing_id =
-            crate::tracks_inventory::domain::TrackInventoryId::try_from(
-                "trn:track-inventory:00000000-0000-0000-0000-999999999999",
-            )
-            .unwrap();
+        let missing_id = crate::tracks_inventory::domain::TrackInventoryId::try_from(
+            "trn:track-inventory:00000000-0000-0000-0000-999999999999",
+        )
+        .unwrap();
 
         let mut repo = uow.track_inventories_repo();
         let result = repo.find_by_id(&missing_id).await;

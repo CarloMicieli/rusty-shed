@@ -1,6 +1,8 @@
 use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::OwnedRollingStockId;
-use crate::dcc_inventory::domain::{DecoderId, DecoderType, DigitalProtocol, DigitalRollingStockId};
+use crate::dcc_inventory::domain::{
+    DecoderId, DecoderType, DigitalProtocol, DigitalRollingStockId,
+};
 use crate::dcc_inventory::infrastructure::entities::{DecoderRow, DigitalRollingStockRow};
 
 // ---------------------------------------------------------------------------
@@ -248,9 +250,7 @@ pub async fn check_address_exists(
         LIMIT 1
     "#;
 
-    let exclude_id_str = exclude_id
-        .map(|id| id.to_string())
-        .unwrap_or_default();
+    let exclude_id_str = exclude_id.map(|id| id.to_string()).unwrap_or_default();
 
     let row: Option<(DigitalRollingStockId,)> = sqlx::query_as(sql)
         .bind(address)

@@ -58,13 +58,9 @@ impl<'conn> SqliteDigitalRollingStockRepository<'conn> {
                 .map_err(DomainError::from)?;
             }
             DigitalRollingStockEvent::DecoderChanged { decoder_id } => {
-                database::update_digital_rolling_stock_decoder(
-                    &mut *self.executor,
-                    id,
-                    decoder_id,
-                )
-                .await
-                .map_err(DomainError::from)?;
+                database::update_digital_rolling_stock_decoder(&mut *self.executor, id, decoder_id)
+                    .await
+                    .map_err(DomainError::from)?;
             }
             DigitalRollingStockEvent::DccAddressChanged { dcc_address } => {
                 database::update_digital_rolling_stock_address(
@@ -141,13 +137,10 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
         address: DccAddress,
         exclude_id: Option<DigitalRollingStockId>,
     ) -> Result<CheckDuplicateAddressResult, DomainError> {
-        let existing_id = database::check_address_exists(
-            &mut *self.executor,
-            *address,
-            exclude_id.as_ref(),
-        )
-        .await
-        .map_err(DomainError::from)?;
+        let existing_id =
+            database::check_address_exists(&mut *self.executor, *address, exclude_id.as_ref())
+                .await
+                .map_err(DomainError::from)?;
 
         Ok(CheckDuplicateAddressResult {
             is_duplicate: existing_id.is_some(),

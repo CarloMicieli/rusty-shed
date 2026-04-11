@@ -95,13 +95,11 @@ pub fn map_track_product(row: TrackProductRow) -> Result<TrackProduct, DomainErr
         .map_err(|e| DomainError::Validation(e.to_string()))?;
 
     let length = row.length_mm.and_then(|mm| {
-        Decimal::from_i64(mm as i64)
-            .and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
+        Decimal::from_i64(mm as i64).and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
     });
 
     let radius = row.radius_mm.and_then(|mm| {
-        Decimal::from_i64(mm as i64)
-            .and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
+        Decimal::from_i64(mm as i64).and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
     });
 
     Ok(TrackProduct {
@@ -361,8 +359,10 @@ mod tests {
     fn assemble_track_inventory_invalid_currency_returns_error() {
         let header = make_header();
         let bad_purchase = TrackPurchaseRow {
-            id: TrackPurchaseId::try_from("trn:track-purchase:00000000-0000-0000-0000-000000000001")
-                .unwrap(),
+            id: TrackPurchaseId::try_from(
+                "trn:track-purchase:00000000-0000-0000-0000-000000000001",
+            )
+            .unwrap(),
             track_id: TrackId::try_from("trn:track:acme:60100").unwrap(),
             quantity: 1,
             price_amount: 100,

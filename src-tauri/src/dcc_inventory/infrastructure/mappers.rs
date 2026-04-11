@@ -18,8 +18,8 @@ use crate::dcc_inventory::infrastructure::entities::{DecoderRow, DigitalRollingS
 pub fn map_digital_rolling_stock_row(
     row: DigitalRollingStockRow,
 ) -> Result<DigitalRollingStock, DomainError> {
-    let dcc_address = DccAddress::new(row.dcc_address)
-        .map_err(|e| DomainError::Validation(e.to_string()))?;
+    let dcc_address =
+        DccAddress::new(row.dcc_address).map_err(|e| DomainError::Validation(e.to_string()))?;
 
     let decoder_id = row.installed_decoder_id.ok_or_else(|| {
         DomainError::Validation("missing decoder for digital rolling stock".to_string())
@@ -52,8 +52,8 @@ pub fn map_decoder_row(row: DecoderRow) -> Decoder {
 /// Returns [`DomainError::Validation`] if the DCC address is out of range or
 /// the rolling stock category string is missing / unrecognised.
 pub fn map_enriched_row_to_view(row: EnrichedRow) -> Result<DigitalRollingStockView, DomainError> {
-    let dcc_address = DccAddress::new(row.dcc_address)
-        .map_err(|e| DomainError::Validation(e.to_string()))?;
+    let dcc_address =
+        DccAddress::new(row.dcc_address).map_err(|e| DomainError::Validation(e.to_string()))?;
 
     let decoder = DecoderView {
         id: row.decoder_id,

@@ -29,10 +29,7 @@ pub async fn find_track_inventory_by_id(
         WHERE id = ?1
         LIMIT 1
     "#;
-    sqlx::query_as(sql)
-        .bind(id)
-        .fetch_optional(executor)
-        .await
+    sqlx::query_as(sql).bind(id).fetch_optional(executor).await
 }
 
 /// Inserts a new track inventory header row.
@@ -121,12 +118,10 @@ pub async fn touch_inventory_updated_at(
     executor: &mut sqlx::SqliteConnection,
     id: &TrackInventoryId,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "UPDATE track_inventories SET updated_at = CURRENT_TIMESTAMP WHERE id = ?1",
-    )
-    .bind(id.to_string())
-    .execute(executor)
-    .await?;
+    sqlx::query("UPDATE track_inventories SET updated_at = CURRENT_TIMESTAMP WHERE id = ?1")
+        .bind(id.to_string())
+        .execute(executor)
+        .await?;
     Ok(())
 }
 
@@ -156,13 +151,11 @@ pub async fn delete_track_inventory_item(
     inventory_id: &TrackInventoryId,
     track_id: &TrackId,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "DELETE FROM track_inventory_items WHERE inventory_id = ?1 AND track_id = ?2",
-    )
-    .bind(inventory_id.to_string())
-    .bind(track_id.to_string())
-    .execute(executor)
-    .await?;
+    sqlx::query("DELETE FROM track_inventory_items WHERE inventory_id = ?1 AND track_id = ?2")
+        .bind(inventory_id.to_string())
+        .bind(track_id.to_string())
+        .execute(executor)
+        .await?;
     Ok(())
 }
 
@@ -327,10 +320,7 @@ pub async fn find_inventory_header_view(
         FROM track_inventories
         WHERE id = ?1
     "#;
-    sqlx::query_as(sql)
-        .bind(id)
-        .fetch_optional(executor)
-        .await
+    sqlx::query_as(sql).bind(id).fetch_optional(executor).await
 }
 
 /// Fetches item detail rows for the view of a single inventory.
@@ -422,10 +412,7 @@ pub async fn find_track_product_by_id(
         WHERE track_id = ?1
         LIMIT 1
     "#;
-    sqlx::query_as(sql)
-        .bind(id)
-        .fetch_optional(executor)
-        .await
+    sqlx::query_as(sql).bind(id).fetch_optional(executor).await
 }
 
 /// Fetches a track product row by manufacturer ID and product code.
