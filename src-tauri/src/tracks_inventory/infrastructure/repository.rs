@@ -394,8 +394,9 @@ mod tests {
         let missing_id =
             crate::tracks_inventory::domain::TrackId::try_from("trn:track:acme:99999").unwrap();
 
-        let mut repo = uow.track_products_repo();
-        let result = repo.find_by_id(&missing_id).await;
+        let mut repo = TracksInventoryUowExt::track_products_repo(&mut uow);
+        let result: Result<Option<crate::tracks_inventory::domain::TrackProduct>, DomainError> =
+            repo.find_by_id(&missing_id).await;
         assert!(result.is_ok());
         assert!(result.unwrap().is_none());
     }

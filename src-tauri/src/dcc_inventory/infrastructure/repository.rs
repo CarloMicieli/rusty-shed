@@ -52,13 +52,13 @@ impl<'conn> SqliteDigitalRollingStockRepository<'conn> {
                     id,
                     &owned_rolling_stock_id,
                     *dcc_address,
-                    decoder_id,
+                    Some(decoder_id),
                 )
                 .await
                 .map_err(DomainError::from)?;
             }
             DigitalRollingStockEvent::DecoderChanged { decoder_id } => {
-                database::update_digital_rolling_stock_decoder(&mut *self.executor, id, decoder_id)
+                database::update_digital_rolling_stock_decoder(&mut *self.executor, id, Some(decoder_id))
                     .await
                     .map_err(DomainError::from)?;
             }
