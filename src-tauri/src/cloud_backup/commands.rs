@@ -62,11 +62,13 @@ impl From<CloudBackupError> for CommandError {
     }
 }
 
-/// Get current Google connection status
-#[tauri::command]
-#[specta::specta]
-pub async fn cloud_backup_get_connection_status(
-    state: State<'_, AppState>,
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+/// Inner implementation for `cloud_backup_get_connection_status`
+pub async fn cloud_backup_get_connection_status_inner(
+    state: &AppState,
 ) -> std::result::Result<ConnectionStatusResponse, CommandError> {
     let storage = Arc::new(KeyringStorage::new(STORAGE_SERVICE.to_string()));
     let user_email = state.connected_email();
@@ -81,6 +83,15 @@ pub async fn cloud_backup_get_connection_status(
     }
 
     Ok(response)
+}
+
+/// Get current Google connection status
+#[tauri::command]
+#[specta::specta]
+pub async fn cloud_backup_get_connection_status(
+    state: State<'_, AppState>,
+) -> std::result::Result<ConnectionStatusResponse, CommandError> {
+    cloud_backup_get_connection_status_inner(&state).await
 }
 
 /// Initiate Google OAuth flow
@@ -105,12 +116,9 @@ pub async fn cloud_backup_connect_google(
     Ok(response)
 }
 
-/// Disconnect Google account
-#[tauri::command]
-#[specta::specta]
-pub async fn cloud_backup_disconnect_google(
-    _app: AppHandle,
-    state: State<'_, AppState>,
+/// Inner implementation for `cloud_backup_disconnect_google`
+pub async fn cloud_backup_disconnect_google_inner(
+    state: &AppState,
 ) -> std::result::Result<(), CommandError> {
     let user_email = state
         .connected_email()
@@ -130,20 +138,34 @@ pub async fn cloud_backup_disconnect_google(
     Ok(())
 }
 
+/// Disconnect Google account
+#[tauri::command]
+#[specta::specta]
+pub async fn cloud_backup_disconnect_google(
+    _app: AppHandle,
+    state: State<'_, AppState>,
+) -> std::result::Result<(), CommandError> {
+    cloud_backup_disconnect_google_inner(&state).await
+}
+
+/// Inner implementation for `cloud_backup_check_connectivity`
+pub async fn cloud_backup_check_connectivity_inner()
+-> std::result::Result<ConnectivityStatus, CommandError> {
+    check_connectivity().await.map_err(CommandError::from)
+}
+
 /// Check internet connectivity
 #[tauri::command]
 #[specta::specta]
 pub async fn cloud_backup_check_connectivity()
 -> std::result::Result<ConnectivityStatus, CommandError> {
-    check_connectivity().await.map_err(CommandError::from)
+    cloud_backup_check_connectivity_inner().await
 }
 
-/// Sync (backup) to Google Drive
-#[tauri::command]
-#[specta::specta]
-pub async fn cloud_backup_sync_now(
-    app: AppHandle,
-    state: State<'_, AppState>,
+/// Inner implementation for `cloud_backup_sync_now`
+pub async fn cloud_backup_sync_now_inner(
+    app: &tauri::AppHandle,
+    state: &AppState,
 ) -> std::result::Result<BackupListItem, CommandError> {
     // Check if online
     if !crate::cloud_backup::infrastructure::is_online().await {
@@ -173,33 +195,36 @@ pub async fn cloud_backup_sync_now(
     // Mark operation as in-progress
     state.set_sync_state(None, true, 0.0, "Preparing backup…");
 
-    // Listen for progress events to update AppState sync state
-    let state_ref = state.inner();
-
     // Wire progress via app event — sync_backup emits events directly
     let result =
-        application::sync_backup(&app, &db_pool, db_path, client, &state.import_session_store)
-            .await;
+        application::sync_backup(app, &db_pool, db_path, client, &state.import_session_store).await;
 
     match &result {
         Ok(item) => {
-            state_ref.set_sync_state(None, false, 100.0, "Backup complete");
-            state_ref.set_last_sync_at(Some(item.created_at.clone()));
+            state.set_sync_state(None, false, 100.0, "Backup complete");
+            state.set_last_sync_at(Some(item.created_at.clone()));
         }
         Err(_) => {
-            state_ref.set_sync_state(None, false, 0.0, "Backup failed");
+            state.set_sync_state(None, false, 0.0, "Backup failed");
         }
     }
 
     result.map_err(CommandError::from)
 }
 
-/// Get list of available backups
+/// Sync (backup) to Google Drive
 #[tauri::command]
 #[specta::specta]
-pub async fn cloud_backup_list_backups(
-    _app: AppHandle,
+pub async fn cloud_backup_sync_now(
+    app: AppHandle,
     state: State<'_, AppState>,
+) -> std::result::Result<BackupListItem, CommandError> {
+    cloud_backup_sync_now_inner(&app, &state).await
+}
+
+/// Inner implementation for `cloud_backup_list_backups`
+pub async fn cloud_backup_list_backups_inner(
+    state: &AppState,
 ) -> std::result::Result<BackupListResponse, CommandError> {
     // Check if online
     if !crate::cloud_backup::infrastructure::is_online().await {
@@ -219,11 +244,19 @@ pub async fn cloud_backup_list_backups(
         .map_err(CommandError::from)
 }
 
-/// Get current sync operation status
+/// Get list of available backups
 #[tauri::command]
 #[specta::specta]
-pub async fn cloud_backup_get_sync_status(
+pub async fn cloud_backup_list_backups(
+    _app: AppHandle,
     state: State<'_, AppState>,
+) -> std::result::Result<BackupListResponse, CommandError> {
+    cloud_backup_list_backups_inner(&state).await
+}
+
+/// Inner implementation for `cloud_backup_get_sync_status`
+pub async fn cloud_backup_get_sync_status_inner(
+    state: &AppState,
 ) -> std::result::Result<SyncStatusResponse, CommandError> {
     let (operation_id, is_syncing, progress_percent, status_message) = state.sync_state();
     Ok(SyncStatusResponse {
@@ -234,13 +267,21 @@ pub async fn cloud_backup_get_sync_status(
     })
 }
 
-/// Restore database from backup
+/// Get current sync operation status
 #[tauri::command]
 #[specta::specta]
-pub async fn cloud_backup_restore(
-    app: AppHandle,
+pub async fn cloud_backup_get_sync_status(
     state: State<'_, AppState>,
+) -> std::result::Result<SyncStatusResponse, CommandError> {
+    cloud_backup_get_sync_status_inner(&state).await
+}
+
+/// Inner implementation for `cloud_backup_restore`
+pub async fn cloud_backup_restore_inner(
+    app: tauri::AppHandle,
+    state: &AppState,
     args: RestoreBackupArgs,
+    db_path: std::path::PathBuf,
 ) -> std::result::Result<(), CommandError> {
     // Validate confirmation
     if args.confirmation != "RESTORE" {
@@ -288,12 +329,6 @@ pub async fn cloud_backup_restore(
         access_token,
     ));
 
-    let db_path = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
-        .join("database.sqlite");
-
     // Close the pool before replacing the database file to prevent corruption.
     // The frontend will reload the app via the restore-complete event.
     state.db_pool().close().await;
@@ -301,6 +336,23 @@ pub async fn cloud_backup_restore(
     application::restore_backup(args, &db_path, drive_client, app)
         .await
         .map_err(CommandError::from)
+}
+
+/// Restore database from backup
+#[tauri::command]
+#[specta::specta]
+pub async fn cloud_backup_restore(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    args: RestoreBackupArgs,
+) -> std::result::Result<(), CommandError> {
+    let db_path = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| CommandError::unknown(format!("Failed to resolve app data dir: {}", e)))?
+        .join("database.sqlite");
+
+    cloud_backup_restore_inner(app, &state, args, db_path).await
 }
 
 #[cfg(test)]

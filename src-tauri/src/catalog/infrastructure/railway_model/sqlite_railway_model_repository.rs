@@ -1195,7 +1195,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
     }
 }
 
-impl<'conn> RailwayModelUowExt for SqliteUnitOfWork<'conn> {
+impl RailwayModelUowExt for SqliteUnitOfWork {
     /// Links the SQLite-specific repository to the Unit of Work.
     ///
     /// It re-borrows the internal transaction (`&mut *self.tx`) to provide

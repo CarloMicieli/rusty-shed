@@ -32,6 +32,19 @@ pub trait TrackInventoryRepository: Send + Sync {
 
     /// Persist a `TrackInventory` aggregate.
     async fn save(&mut self, inventory: TrackInventory) -> Result<(), DomainError>;
+
+    /// Delete a track inventory (cascades to items and purchases via DB constraints).
+    async fn delete(&mut self, id: &TrackInventoryId) -> Result<(), DomainError>;
+
+    /// Update the `required` quantity for a specific track item in an inventory.
+    ///
+    /// Returns `true` if the row was found and updated, `false` otherwise.
+    async fn set_item_required(
+        &mut self,
+        inventory_id: &TrackInventoryId,
+        track_id: &TrackId,
+        required: i64,
+    ) -> Result<bool, DomainError>;
 }
 
 /// Unit of Work extension providing access to track-related repositories.

@@ -130,7 +130,7 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
     }
 }
 
-impl<'conn> TrackProductUowExt for SqliteUnitOfWork<'conn> {
+impl TrackProductUowExt for SqliteUnitOfWork {
     fn track_products_repo(&mut self) -> Box<dyn TrackProductRepository + '_> {
         Box::new(SqliteTrackProductRepository::new(&mut self.tx))
     }

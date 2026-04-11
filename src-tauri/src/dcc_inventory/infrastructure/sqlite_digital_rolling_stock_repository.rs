@@ -425,7 +425,7 @@ impl<'conn> DigitalRollingStockRepository for SqliteDigitalRollingStockRepositor
     }
 }
 
-impl<'conn> DccInventoryUowExt for SqliteUnitOfWork<'conn> {
+impl DccInventoryUowExt for SqliteUnitOfWork {
     fn digital_rolling_stocks_repository(&mut self) -> Box<dyn DigitalRollingStockRepository + '_> {
         Box::new(SqliteDigitalRollingStockRepository::new(&mut self.tx))
     }

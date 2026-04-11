@@ -1,7 +1,6 @@
 //! Use case to delete a track inventory.
 
 use crate::core::domain::domain_error::DomainError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::tracks_inventory::domain::{TrackInventoryId, TracksInventoryUowExt};
 
 /// Use case to delete a track inventory and its associated data.
@@ -23,12 +22,13 @@ impl DeleteTrackInventoryUseCase {
     ///
     /// # Type Parameters
     /// * `U` - The type of the unit of work, which must implement `TracksInventoryUowExt` and be `Send`.
-    pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
-        id: &TrackInventoryId,
-    ) -> Result<(), DomainError> {
-        // Verify inventory exists
+    pub async fn execute<U>(unit_of_work: &mut U, id: &TrackInventoryId) -> Result<(), DomainError>
+    where
+        U: TracksInventoryUowExt + Send,
+    {
         let mut repo = unit_of_work.track_inventories_repo();
+
+        // Verify inventory exists
         let _inventory = repo
             .find_by_id(id)
             .await?
@@ -37,17 +37,10 @@ impl DeleteTrackInventoryUseCase {
                 identifier: id.to_string(),
             })?;
 
-        drop(repo); // Release the repository before making direct SQL calls
-
         // Delete cascades via database constraints:
         // - track_inventory_items (ON DELETE CASCADE)
         // - track_purchases (ON DELETE CASCADE)
-        let sql = "DELETE FROM track_inventories WHERE id = ?1";
-        sqlx::query(sql)
-            .bind(id)
-            .execute(&mut *unit_of_work.tx)
-            .await
-            .map_err(DomainError::from)?;
+        repo.delete(id).await?;
 
         Ok(())
     }

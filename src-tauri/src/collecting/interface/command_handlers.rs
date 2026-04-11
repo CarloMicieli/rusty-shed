@@ -31,6 +31,21 @@ use garde::Validate;
 use log::info;
 use std::convert::TryFrom;
 
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn get_collection_inner(state: &AppState) -> Result<CollectionView, CommandError> {
+    info!("Fetching collection");
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let collection = GetCollection::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await?;
+
+    Ok(collection)
+}
+
 /// Tauri command to retrieve the default collection.
 ///
 /// This handler constructs the repository and query handler, executes the query
@@ -49,14 +64,18 @@ use std::convert::TryFrom;
 pub async fn get_collection(
     state: tauri::State<'_, AppState>,
 ) -> Result<CollectionView, CommandError> {
-    info!("Fetching collection");
+    get_collection_inner(&state).await
+}
+
+pub async fn get_depot_inner(state: &AppState) -> Result<DepotView, CommandError> {
+    info!("Fetching depot view");
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let collection = GetCollection::execute(&mut unit_of_work).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    let depot_view = GetDepot::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await?;
 
-    Ok(collection)
+    Ok(depot_view)
 }
 
 /// Tauri command to retrieve the current depot view: which is the list
@@ -76,34 +95,11 @@ pub async fn get_collection(
 #[tauri::command]
 #[specta::specta]
 pub async fn get_depot(state: tauri::State<'_, AppState>) -> Result<DepotView, CommandError> {
-    info!("Fetching depot view");
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let depot_view = GetDepot::execute(&mut unit_of_work).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(depot_view)
+    get_depot_inner(&state).await
 }
 
-/// Tauri command to remove an item from the collection.
-///
-/// This handler constructs the repository and command handler, executes the command
-/// asynchronously and returns the removed `CollectionItemId` on success. On failure, it
-/// converts the error into a `CommandError` preserving the error
-/// message for logging/debugging.
-///
-/// Parameters:
-/// * `state`: Tauri-managed application state which provides a database pool.
-/// * `args`: Input parameters for removing the collection item.
-///
-/// Returns:
-/// - `Ok(CollectionItemId)` when removal succeeds.
-/// - `Err(CommandError)` when the use-case returns an error.
-#[tauri::command]
-#[specta::specta]
-pub async fn remove_collection_item(
-    state: tauri::State<'_, AppState>,
+pub async fn remove_collection_item_inner(
+    state: &AppState,
     args: RemoveCollectionItemArgs,
 ) -> Result<CollectionItemId, CommandError> {
     info!("Removing collection item: {:?}", args);
@@ -128,16 +124,36 @@ pub async fn remove_collection_item(
     let mut unit_of_work = state.unit_of_work().await?;
 
     let removed_id = RemoveCollectionItem::execute(&mut unit_of_work, domain_cmd).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(removed_id)
 }
 
-/// Tauri command to update mutable fields of an existing collection item.
+/// Tauri command to remove an item from the collection.
+///
+/// This handler constructs the repository and command handler, executes the command
+/// asynchronously and returns the removed `CollectionItemId` on success. On failure, it
+/// converts the error into a `CommandError` preserving the error
+/// message for logging/debugging.
+///
+/// Parameters:
+/// * `state`: Tauri-managed application state which provides a database pool.
+/// * `args`: Input parameters for removing the collection item.
+///
+/// Returns:
+/// - `Ok(CollectionItemId)` when removal succeeds.
+/// - `Err(CommandError)` when the use-case returns an error.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_collection_item(
+pub async fn remove_collection_item(
     state: tauri::State<'_, AppState>,
+    args: RemoveCollectionItemArgs,
+) -> Result<CollectionItemId, CommandError> {
+    remove_collection_item_inner(&state, args).await
+}
+
+pub async fn update_collection_item_inner(
+    state: &AppState,
     args: UpdateCollectionItemArgs,
 ) -> Result<(), CommandError> {
     info!("Updating collection item: {:?}", args);
@@ -222,9 +238,47 @@ pub async fn update_collection_item(
     };
 
     UpdateCollectionItem::execute(&mut unit_of_work, input).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(())
+}
+
+/// Tauri command to update mutable fields of an existing collection item.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_collection_item(
+    state: tauri::State<'_, AppState>,
+    args: UpdateCollectionItemArgs,
+) -> Result<(), CommandError> {
+    update_collection_item_inner(&state, args).await
+}
+
+pub async fn add_collection_item_inner(
+    state: &AppState,
+    args: AddCollectionItemArgs,
+) -> Result<CollectionItemId, CommandError> {
+    info!("Adding collection item: {:?}", args);
+
+    let domain_cmd = match DomainAddCollectionItemInput::try_from(args) {
+        Ok(v) => v,
+        Err(e) => return Err(CommandError::from(e)),
+    };
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let id_provider = RuntimeIdProvider::new();
+    let purchase_info_provider = RuntimeIdProvider::new();
+
+    let item_id = AddCollectionItem::execute(
+        &mut unit_of_work,
+        id_provider,
+        purchase_info_provider,
+        domain_cmd,
+    )
+    .await?;
+
+    unit_of_work.commit().await?;
+
+    Ok(item_id)
 }
 
 /// Tauri command to add a new item to the collection.
@@ -247,37 +301,11 @@ pub async fn add_collection_item(
     state: tauri::State<'_, AppState>,
     args: AddCollectionItemArgs,
 ) -> Result<CollectionItemId, CommandError> {
-    info!("Adding collection item: {:?}", args);
-
-    args.validate().map_err(CommandError::from)?;
-
-    let domain_cmd = match DomainAddCollectionItemInput::try_from(args) {
-        Ok(v) => v,
-        Err(e) => return Err(CommandError::from(e)),
-    };
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let id_provider = RuntimeIdProvider::new();
-    let purchase_info_provider = RuntimeIdProvider::new();
-
-    let item_id = AddCollectionItem::execute(
-        &mut unit_of_work,
-        id_provider,
-        purchase_info_provider,
-        domain_cmd,
-    )
-    .await?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(item_id)
+    add_collection_item_inner(&state, args).await
 }
 
-/// Simplified flow: save (merge) the railway model and add it to the default collection.
-#[tauri::command]
-#[specta::specta]
-pub async fn add_railway_model_to_collection(
-    state: tauri::State<'_, AppState>,
+pub async fn add_railway_model_to_collection_inner(
+    state: &AppState,
     args: AddRailwayModelToCollectionArgs,
 ) -> Result<(), CommandError> {
     info!("add_railway_model_to_collection (collecting): {:?}", args);
@@ -330,7 +358,7 @@ pub async fn add_railway_model_to_collection(
     };
 
     let add_input = DomainAddCollectionItemInput {
-        railway_model_id: railway_model_id.clone(),
+        railway_model_id: railway_model_id.clone(), // Clone required: railway_model_id used in execute above and needed here
         price,
         seller_id,
         added_date: args.added_date,
@@ -352,16 +380,23 @@ pub async fn add_railway_model_to_collection(
     )
     .await?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }
 
-/// Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
+/// Simplified flow: save (merge) the railway model and add it to the default collection.
 #[tauri::command]
 #[specta::specta]
-pub async fn record_acquisition(
+pub async fn add_railway_model_to_collection(
     state: tauri::State<'_, AppState>,
+    args: AddRailwayModelToCollectionArgs,
+) -> Result<(), CommandError> {
+    add_railway_model_to_collection_inner(&state, args).await
+}
+
+pub async fn record_acquisition_inner(
+    state: &AppState,
     args: RecordAcquisitionArgs,
 ) -> Result<Vec<CollectionItemId>, CommandError> {
     info!("Recording acquisition: {} items", args.items.len());
@@ -441,7 +476,17 @@ pub async fn record_acquisition(
     )
     .await?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(ids)
+}
+
+/// Tauri command to record a batch acquisition: upsert catalog entries and add collection items.
+#[tauri::command]
+#[specta::specta]
+pub async fn record_acquisition(
+    state: tauri::State<'_, AppState>,
+    args: RecordAcquisitionArgs,
+) -> Result<Vec<CollectionItemId>, CommandError> {
+    record_acquisition_inner(&state, args).await
 }

@@ -108,7 +108,7 @@ impl CouplerRepository for SqliteCouplerRepository<'_> {
     }
 }
 
-impl<'conn> CouplerUowExt for SqliteUnitOfWork<'conn> {
+impl CouplerUowExt for SqliteUnitOfWork {
     fn coupler_repository(&mut self) -> Box<dyn CouplerRepository + '_> {
         Box::new(SqliteCouplerRepository::new(&mut self.tx))
     }

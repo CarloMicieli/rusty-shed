@@ -11,7 +11,7 @@ pub struct CreateTrainFormationUseCase;
 
 impl CreateTrainFormationUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         args: CreateTrainFormationArgs,
     ) -> Result<TrainFormationView, DomainError> {
         let id = uuid::Uuid::new_v4().to_string();

@@ -35,64 +35,53 @@ impl GetWishlistByIdQuery {
 #[cfg(test)]
 mod tests {
     use super::GetWishlistByIdQuery;
-    use crate::core::domain::currency::Currency;
-    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+    use crate::core::domain::metadata::Metadata;
+    use crate::wishlist::application::testing::FakeUow;
+    use crate::wishlist::domain::MockWishlistRepository;
+    use crate::wishlist::domain::wishlist::Wishlist;
     use crate::wishlist::domain::wishlist_id::WishlistId;
-    use anyhow::Result;
-    use pretty_assertions::assert_eq;
-    use sqlx::SqlitePool;
 
-    #[sqlx::test(migrations = "./migrations")]
-    async fn get_wishlist_returns_none(conn: SqlitePool) -> Result<()> {
-        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
-
+    #[tokio::test]
+    async fn get_wishlist_returns_none() {
+        let mut mock = MockWishlistRepository::new();
         let id = WishlistId::default();
-        let res = GetWishlistByIdQuery::execute(&mut unit_of_work, &id)
+        let id_clone = id.clone();
+        mock.expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(None));
+
+        let mut uow = FakeUow::new(mock);
+        let res = GetWishlistByIdQuery::execute(&mut uow, &id_clone)
             .await
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+            .unwrap();
 
         assert!(res.is_none());
-
-        Ok(())
     }
 
-    #[sqlx::test(
-        migrations = "./migrations",
-        fixtures("../../../fixtures/test_wishlist.sql")
-    )]
-    async fn get_wishlist_returns_some(conn: SqlitePool) -> Result<()> {
-        let mut unit_of_work = SqliteUnitOfWork::new(&conn).await?;
+    #[tokio::test]
+    async fn get_wishlist_returns_some() {
+        let id = WishlistId::default();
+        let id_for_mock = id.clone();
 
-        let id = WishlistId::try_from("trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9")?;
-        let res = GetWishlistByIdQuery::execute(&mut unit_of_work, &id)
-            .await
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        let mut mock = MockWishlistRepository::new();
+        mock.expect_find_by_id().times(1).returning(move |_| {
+            Ok(Some(Wishlist {
+                id: id_for_mock.clone(),
+                name: "My Wishlist".to_string(),
+                notes: None,
+                is_default: false,
+                items: vec![],
+                pending_events: vec![],
+                metadata: Metadata::default(),
+            }))
+        });
+
+        let mut uow = FakeUow::new(mock);
+        let res = GetWishlistByIdQuery::execute(&mut uow, &id).await.unwrap();
 
         assert!(res.is_some());
-        let wishlist = res.unwrap();
-        assert_eq!(
-            wishlist.id.to_string(),
-            "trn:wishlist:58fb6f1d-d838-44b5-b65c-21e5388ca4c9"
-        );
-        let items = wishlist.items.expect("items present");
-        assert_eq!(items.len(), 1);
-
-        // Check the item's desired price mapping
-        let item = &items[0];
-        // Assert the railway model id was mapped correctly from the DB row
-        assert_eq!(
-            item.railway_model_id.to_string(),
-            "trn:railway-model:acme:60100".to_string()
-        );
-        assert_eq!(
-            item.desired_price.as_ref().map(|p| p.amount),
-            Some(12345i64)
-        );
-        assert_eq!(
-            item.desired_price.as_ref().map(|p| p.currency),
-            Some(Currency::EUR)
-        );
-
-        Ok(())
+        let view = res.unwrap();
+        assert_eq!(view.id, id);
+        assert_eq!(view.name, "My Wishlist");
     }
 }

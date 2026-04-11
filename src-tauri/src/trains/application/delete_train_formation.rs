@@ -7,7 +7,7 @@ use crate::trains::infrastructure::train_formation_repo::SqlxTrainFormationRepos
 pub struct DeleteTrainFormationUseCase;
 
 impl DeleteTrainFormationUseCase {
-    pub async fn execute(uow: &mut SqliteUnitOfWork<'_>, id: String) -> Result<(), DomainError> {
+    pub async fn execute(uow: &mut SqliteUnitOfWork, id: String) -> Result<(), DomainError> {
         let mut repo = SqlxTrainFormationRepository::new(&mut uow.tx);
         repo.delete(&id).await
     }

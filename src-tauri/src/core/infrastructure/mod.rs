@@ -7,3 +7,4 @@ pub mod seeder;
 pub mod unit_of_work;
 
 pub use domain_context::WithDomainContext;
+pub use unit_of_work::SqliteUowFactory;

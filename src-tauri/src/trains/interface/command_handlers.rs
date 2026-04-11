@@ -1,6 +1,7 @@
 //! Tauri command handlers for the train-formations feature.
 
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
 use crate::trains::application::{
     add_formation_element::AddFormationElementUseCase,
@@ -28,6 +29,13 @@ use crate::trains::interface::command_args::{
 use garde::Validate;
 use log::info;
 
+/// Helper to open a `SqliteUnitOfWork` directly from the app state pool.
+async fn open_uow(state: &AppState) -> Result<SqliteUnitOfWork, CommandError> {
+    SqliteUnitOfWork::new(&state.db_pool())
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))
+}
+
 // ── Formation CRUD ────────────────────────────────────────────────────────────
 
 /// Create a new train formation.
@@ -41,9 +49,11 @@ pub async fn create_train_formation(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = CreateTrainFormationUseCase::execute(&mut uow, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -59,9 +69,11 @@ pub async fn update_train_formation(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = UpdateTrainFormationUseCase::execute(&mut uow, id, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -74,9 +86,11 @@ pub async fn delete_train_formation(
 ) -> Result<(), CommandError> {
     info!("Deleting train formation {}", id);
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     DeleteTrainFormationUseCase::execute(&mut uow, id).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(())
 }
 
@@ -89,7 +103,7 @@ pub async fn get_train_formation(
 ) -> Result<TrainFormationDetail, CommandError> {
     info!("Getting train formation {}", id);
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = GetTrainFormationUseCase::execute(&mut uow, id).await?;
     Ok(result)
 }
@@ -102,7 +116,7 @@ pub async fn get_train_formations(
 ) -> Result<Vec<TrainFormationSummary>, CommandError> {
     info!("Listing train formations");
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = GetTrainFormationsUseCase::execute(&mut uow).await?;
     Ok(result)
 }
@@ -121,9 +135,11 @@ pub async fn add_formation_element(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = AddFormationElementUseCase::execute(&mut uow, formation_id, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -136,9 +152,11 @@ pub async fn remove_formation_element(
 ) -> Result<(), CommandError> {
     info!("Removing formation element {}", element_id);
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     RemoveFormationElementUseCase::execute(&mut uow, element_id).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(())
 }
 
@@ -157,9 +175,11 @@ pub async fn reorder_formation_elements(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = ReorderFormationElementsUseCase::execute(&mut uow, formation_id, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -178,9 +198,11 @@ pub async fn assign_rolling_stock_to_element(
         element_id, args
     );
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = AssignRollingStockToElementUseCase::execute(&mut uow, element_id, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -201,9 +223,11 @@ pub async fn set_traction_override(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = SetTractionOverrideUseCase::execute(&mut uow, element_id, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -218,7 +242,7 @@ pub async fn get_prototypes(
 ) -> Result<Vec<PrototypeGroupView>, CommandError> {
     info!("Searching prototypes with query: {:?}", query);
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = GetPrototypesUseCase::execute(&mut uow, query).await?;
     Ok(result)
 }
@@ -234,9 +258,11 @@ pub async fn create_custom_prototype(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = CreateCustomPrototypeUseCase::execute(&mut uow, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }
 
@@ -250,7 +276,7 @@ pub async fn get_formation_categories(
 ) -> Result<Vec<FormationCategoryView>, CommandError> {
     info!("Getting formation categories");
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = GetFormationCategoriesUseCase::execute(&mut uow).await?;
     Ok(result)
 }
@@ -266,8 +292,10 @@ pub async fn create_formation_category(
     args.validate()
         .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
 
-    let mut uow = state.unit_of_work().await?;
+    let mut uow = open_uow(&state).await?;
     let result = CreateFormationCategoryUseCase::execute(&mut uow, args).await?;
-    uow.commit().await.map_err(CommandError::from)?;
+    uow.commit()
+        .await
+        .map_err(|e| CommandError::DatabaseError(e.to_string()))?;
     Ok(result)
 }

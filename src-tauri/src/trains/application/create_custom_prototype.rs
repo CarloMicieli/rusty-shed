@@ -12,7 +12,7 @@ pub struct CreateCustomPrototypeUseCase;
 
 impl CreateCustomPrototypeUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         args: CreateCustomPrototypeArgs,
     ) -> Result<PrototypeView, DomainError> {
         let id = uuid::Uuid::new_v4().to_string();

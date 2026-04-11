@@ -1,9 +1,11 @@
+use crate::app_uow::{AppUnitOfWork, AppUowFactory};
 use crate::core::infrastructure::error::CommandError;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::core::infrastructure::unit_of_work::SqliteUowFactory;
 use crate::data_management::application::ImportSessionStore;
 use parking_lot::RwLock;
 use sqlx::sqlite::SqlitePool;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Lightweight sync operation state stored independent of domain types.
@@ -34,11 +36,14 @@ pub struct SyncState {
 ///   read-heavy operations (e.g., checking sync status, getting paths).
 pub struct AppState {
     initialized: AtomicBool,
+    /// Raw pool – kept for direct uses outside the Unit of Work path
+    /// (migrations, backups, import/export, cloud sync).
     db_pool: SqlitePool,
-    /// Models directory path — immutable after initialization.
-    models_dir: Box<Path>,
-    /// Resolved path to the SQLite database file — immutable after initialization.
-    db_path: Box<Path>,
+    /// Factory for creating Units of Work in command handlers.
+    uow_factory: Arc<dyn AppUowFactory>,
+    models_dir: PathBuf,
+    /// Resolved path to the SQLite database file.
+    db_path: PathBuf,
     /// Email of the currently connected Google account (None if not connected).
     connected_email: RwLock<Option<String>>,
     /// Current cloud backup sync operation state.
@@ -52,11 +57,34 @@ pub struct AppState {
 impl AppState {
     /// Create a new `AppState` wrapping an existing `SqlitePool`.
     pub fn new(db_pool: SqlitePool, models_dir: PathBuf, db_path: PathBuf) -> Self {
+        let uow_factory = Arc::new(SqliteUowFactory::new(db_pool.clone()));
         Self {
             initialized: AtomicBool::new(false),
             db_pool,
-            models_dir: models_dir.into_boxed_path(),
-            db_path: db_path.into_boxed_path(),
+            uow_factory,
+            models_dir,
+            db_path,
+            connected_email: RwLock::new(None),
+            sync_state: RwLock::new(SyncState {
+                operation_id: None,
+                is_syncing: false,
+                progress_percent: 0.0,
+                status_message: String::new(),
+            }),
+            last_sync_at: RwLock::new(None),
+            import_session_store: ImportSessionStore::new(),
+        }
+    }
+
+    /// Create an `AppState` with a custom `AppUowFactory` – used in tests to
+    /// inject a mock Unit of Work without a real SQLite database.
+    pub fn new_with_factory(db_pool: SqlitePool, uow_factory: Arc<dyn AppUowFactory>) -> Self {
+        Self {
+            initialized: AtomicBool::new(false),
+            db_pool,
+            uow_factory,
+            models_dir: PathBuf::new(),
+            db_path: PathBuf::new(),
             connected_email: RwLock::new(None),
             sync_state: RwLock::new(SyncState {
                 operation_id: None,
@@ -94,11 +122,9 @@ impl AppState {
         &self.db_path
     }
 
-    /// Create a new `SqliteUnitOfWork` using the internal database pool.
-    pub async fn unit_of_work<'conn>(&'conn self) -> Result<SqliteUnitOfWork<'conn>, CommandError> {
-        SqliteUnitOfWork::new(&self.db_pool())
-            .await
-            .map_err(|e| CommandError::DatabaseError(e.to_string()))
+    /// Create a new `AppUnitOfWork` via the injected factory.
+    pub async fn unit_of_work(&self) -> Result<Box<dyn AppUnitOfWork>, CommandError> {
+        self.uow_factory.create_uow().await
     }
 
     /// Return the email of the currently connected Google account.
@@ -152,16 +178,6 @@ impl AppState {
     /// This method acquires a `parking_lot::RwLock` write guard for the duration
     /// of the closure. All other readers and writers are blocked until the closure
     /// returns and the guard is dropped.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// state.update_sync_state(|s| {
-    ///     s.is_syncing = true;
-    ///     s.progress_percent = 50.0;
-    ///     s.status_message = "Uploading…".to_string();
-    /// });
-    /// ```
     pub fn update_sync_state<F: FnOnce(&mut SyncState)>(&self, f: F) {
         let mut s = self.sync_state.write();
         f(&mut s);
@@ -175,5 +191,14 @@ impl AppState {
     /// Set the last successful cloud backup timestamp.
     pub fn set_last_sync_at(&self, timestamp: Option<String>) {
         *self.last_sync_at.write() = timestamp;
+    }
+
+    /// Create an `AppState` backed by the given pool with no models directory.
+    ///
+    /// Intended for use in `#[sqlx::test]` tests where the pool is provided by
+    /// the test harness and no real filesystem paths are needed.
+    #[cfg(test)]
+    pub fn for_test(pool: SqlitePool) -> Self {
+        Self::new(pool, PathBuf::new(), PathBuf::new())
     }
 }

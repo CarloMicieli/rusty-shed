@@ -523,7 +523,7 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
     }
 }
 
-impl<'conn> MaintenanceUowExt for SqliteUnitOfWork<'conn> {
+impl MaintenanceUowExt for SqliteUnitOfWork {
     fn maintenance_repository(&mut self) -> Box<dyn MaintenanceRepository + Send + '_> {
         Box::new(SqliteMaintenanceRepository::new(&mut self.tx))
             as Box<dyn MaintenanceRepository + Send + '_>

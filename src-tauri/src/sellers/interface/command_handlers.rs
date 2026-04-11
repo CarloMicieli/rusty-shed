@@ -13,6 +13,21 @@ use garde::Validate;
 use log::info;
 use std::convert::TryFrom;
 
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn get_sellers_inner(state: &AppState) -> Result<Vec<SellerView>, CommandError> {
+    info!("Fetching all sellers");
+
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    let sellers = GetSellers::execute(&mut unit_of_work).await?;
+    unit_of_work.commit().await?;
+
+    Ok(sellers)
+}
+
 /// Command handler to retrieve all sellers.
 ///
 /// This handler constructs the repository and query handler, executes the query
@@ -31,14 +46,24 @@ use std::convert::TryFrom;
 pub async fn get_sellers(
     state: tauri::State<'_, AppState>,
 ) -> Result<Vec<SellerView>, CommandError> {
-    info!("Fetching all sellers");
+    get_sellers_inner(&state).await
+}
+
+pub async fn get_seller_by_id_inner(
+    state: &AppState,
+    id: SellerId,
+) -> Result<Option<SellerView>, CommandError> {
+    info!("Fetching seller with ID: {}", id);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let sellers = GetSellers::execute(&mut unit_of_work).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    let result = GetSellerById::execute(&mut unit_of_work, &id)
+        .await
+        .map_err(CommandError::from)?;
 
-    Ok(sellers)
+    unit_of_work.commit().await?;
+
+    Ok(result)
 }
 
 /// Command handler to retrieve a seller by its identifier.
@@ -62,15 +87,35 @@ pub async fn get_seller_by_id(
     state: tauri::State<'_, AppState>,
     id: SellerId,
 ) -> Result<Option<SellerView>, CommandError> {
-    info!("Fetching seller with ID: {}", id);
+    get_seller_by_id_inner(&state, id).await
+}
+
+pub async fn create_seller_inner(
+    state: &AppState,
+    payload: CreateSellerPayload,
+) -> Result<Seller, CommandError> {
+    info!("Creating new seller {:?}", payload);
 
     let mut unit_of_work = state.unit_of_work().await?;
 
-    let result = GetSellerById::execute(&mut unit_of_work, &id)
+    let input = CreateSellerInput {
+        name: payload.name,
+        seller_type: payload.seller_type,
+        email: payload.email,
+        phone: payload.phone,
+        website_url: payload.website_url,
+        street_address: payload.street_address,
+        extended_address: payload.extended_address,
+        city: payload.city,
+        state_region: payload.state_region,
+        postal_code: payload.postal_code,
+        country_code: payload.country_code,
+    };
+    let result = CreateSeller::execute(&mut unit_of_work, input)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(result)
 }
@@ -95,30 +140,24 @@ pub async fn create_seller(
     state: tauri::State<'_, AppState>,
     payload: CreateSellerPayload,
 ) -> Result<Seller, CommandError> {
-    info!("Creating new seller {:?}", payload);
+    create_seller_inner(&state, payload).await
+}
+
+pub async fn update_seller_inner(
+    state: &AppState,
+    payload: UpdateSellerPayload,
+) -> Result<Seller, CommandError> {
+    info!("Updating seller: {:?}", payload);
 
     payload.validate().map_err(CommandError::from)?;
 
     let mut unit_of_work = state.unit_of_work().await?;
-
-    let input = CreateSellerInput {
-        name: payload.name,
-        seller_type: payload.seller_type,
-        email: payload.email,
-        phone: payload.phone,
-        website_url: payload.website_url,
-        street_address: payload.street_address,
-        extended_address: payload.extended_address,
-        city: payload.city,
-        state_region: payload.state_region,
-        postal_code: payload.postal_code,
-        country_code: payload.country_code,
-    };
-    let result = CreateSeller::execute(&mut unit_of_work, input)
+    let input = UpdateSellerInput::try_from(payload)?;
+    let result = UpdateSellerUseCase::execute(&mut unit_of_work, input)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(result)
 }
@@ -144,19 +183,21 @@ pub async fn update_seller(
     state: tauri::State<'_, AppState>,
     payload: UpdateSellerPayload,
 ) -> Result<Seller, CommandError> {
-    info!("Updating seller: {:?}", payload);
+    update_seller_inner(&state, payload).await
+}
 
-    payload.validate().map_err(CommandError::from)?;
+pub async fn delete_seller_inner(state: &AppState, id: SellerId) -> Result<(), CommandError> {
+    info!("Deleting seller with ID: {}", id);
 
     let mut unit_of_work = state.unit_of_work().await?;
-    let input = UpdateSellerInput::try_from(payload)?;
-    let result = UpdateSellerUseCase::execute(&mut unit_of_work, input)
+
+    let _ = DeleteSeller::execute(&mut unit_of_work, &id)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
-    Ok(result)
+    Ok(())
 }
 
 /// Command handler to delete a seller by ID.
@@ -179,15 +220,5 @@ pub async fn delete_seller(
     state: tauri::State<'_, AppState>,
     id: SellerId,
 ) -> Result<(), CommandError> {
-    info!("Deleting seller with ID: {}", id);
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let _ = DeleteSeller::execute(&mut unit_of_work, &id)
-        .await
-        .map_err(CommandError::from)?;
-
-    unit_of_work.commit().await?;
-
-    Ok(())
+    delete_seller_inner(&state, id).await
 }

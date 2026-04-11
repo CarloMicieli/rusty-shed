@@ -5,47 +5,6 @@ use crate::state::AppState;
 use log::info;
 use serde::Deserialize;
 
-/// Tauri command to retrieve the dashboard summary.
-///
-/// This handler constructs the repository and query handler, executes the query
-/// asynchronously and returns the `DashboardSummary` on success. On failure, it
-/// converts the error into a `CommandError` preserving the error
-/// message for logging/debugging.
-///
-/// Parameters:
-/// * `state`: Tauri-managed application state which provides a database pool.
-/// * `criteria`: Optional query criteria to customize the summary retrieval.
-///
-/// Returns:
-/// - `Ok(DashboardSummary)` when retrieval succeeds.
-/// - `Err(CommandError)` when the use-case returns an error.
-#[tauri::command]
-#[specta::specta]
-pub async fn get_dashboard_summary(
-    state: tauri::State<'_, AppState>,
-    criteria: Option<QueryCriteria>,
-) -> Result<DashboardSummary, CommandError> {
-    info!("Fetching dashboard summary");
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let criteria = criteria.unwrap_or_default();
-    let number_of_recent_items = criteria
-        .number_of_recent_items
-        .unwrap_or(DEFAULT_RECENT_ITEMS);
-
-    let dashboard_summary = GetDashboardSummary::execute(
-        &mut unit_of_work,
-        number_of_recent_items,
-        state.models_dir().to_path_buf(),
-    )
-    .await?;
-
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(dashboard_summary)
-}
-
 const DEFAULT_RECENT_ITEMS: u8 = 4;
 
 /// Query criteria for retrieving the dashboard summary.
@@ -63,4 +22,39 @@ impl Default for QueryCriteria {
             number_of_recent_items: Some(DEFAULT_RECENT_ITEMS),
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+/// Retrieve the dashboard summary.
+pub async fn get_dashboard_summary_inner(
+    state: &AppState,
+    criteria: Option<QueryCriteria>,
+) -> Result<DashboardSummary, CommandError> {
+    info!("Fetching dashboard summary");
+    let criteria = criteria.unwrap_or_default();
+    let number_of_recent_items = criteria
+        .number_of_recent_items
+        .unwrap_or(DEFAULT_RECENT_ITEMS);
+    let mut uow = state.unit_of_work().await?;
+    let dashboard_summary = GetDashboardSummary::execute(
+        &mut uow,
+        number_of_recent_items,
+        state.models_dir().to_path_buf(),
+    )
+    .await?;
+    uow.commit().await?;
+    Ok(dashboard_summary)
+}
+
+/// Tauri command to retrieve the dashboard summary.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_dashboard_summary(
+    state: tauri::State<'_, AppState>,
+    criteria: Option<QueryCriteria>,
+) -> Result<DashboardSummary, CommandError> {
+    get_dashboard_summary_inner(&state, criteria).await
 }

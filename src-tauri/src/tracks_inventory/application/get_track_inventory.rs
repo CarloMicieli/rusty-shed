@@ -31,7 +31,7 @@ impl GetTrackInventoryQuery {
     /// * `DomainError::NotFound` - If inventory doesn't exist.
     /// * `DomainError` - On other errors.
     pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork,
         id: &TrackInventoryId,
     ) -> Result<TrackInventoryView, DomainError> {
         // Fetch inventory header

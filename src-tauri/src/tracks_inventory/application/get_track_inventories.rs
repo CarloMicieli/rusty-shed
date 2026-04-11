@@ -20,7 +20,7 @@ impl GetTrackInventoriesQuery {
     /// # Type Parameters
     /// - `U`: Unit of work type implementing `TracksInventoryUowExt` and `Send`.
     pub async fn execute(
-        unit_of_work: &mut SqliteUnitOfWork<'_>,
+        unit_of_work: &mut SqliteUnitOfWork,
     ) -> Result<Vec<TrackInventoryListItem>, DomainError> {
         let sql = r#"
             SELECT 

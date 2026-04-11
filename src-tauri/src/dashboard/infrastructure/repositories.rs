@@ -215,7 +215,7 @@ impl<'conn> DashboardRepository for SqliteDashboardRepository<'conn> {
     }
 }
 
-impl<'conn> DashboardUowExt for SqliteUnitOfWork<'conn> {
+impl DashboardUowExt for SqliteUnitOfWork {
     /// Links the SQLite-specific repository to the Unit of Work.
     ///
     /// It re-borrows the internal transaction (`&mut *self.tx`) to provide

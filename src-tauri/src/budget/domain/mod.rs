@@ -27,4 +27,4 @@ pub use extra_budget_id::ExtraBudgetId;
 pub use extra_budget_id::validate_extra_budget_id;
 pub use monthly_budget_record::{MonthStatus, MonthlyBudgetRecord};
 pub use quarterly_summary::{CategorySpending, QuarterlySummary};
-pub use repository::BudgetRepository;
+pub use repository::{BudgetRepository, BudgetUowExt};

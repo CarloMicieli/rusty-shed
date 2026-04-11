@@ -10,7 +10,7 @@ pub struct AssignRollingStockToElementUseCase;
 
 impl AssignRollingStockToElementUseCase {
     pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+        uow: &mut SqliteUnitOfWork,
         element_id: String,
         args: AssignRollingStockToElementArgs,
     ) -> Result<FormationElementView, DomainError> {

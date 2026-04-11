@@ -1,3 +1,4 @@
+pub mod app_uow;
 pub mod budget;
 pub mod catalog;
 pub mod cloud_backup;
@@ -57,10 +58,13 @@ use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
 
-#[tauri::command]
-#[specta::specta]
-async fn get_image_path(
-    state: tauri::State<'_, AppState>,
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+/// Inner implementation for [`get_image_path`].
+pub async fn get_image_path_inner(
+    state: &AppState,
     id: String,
     category: String,
 ) -> Result<String, CommandError> {
@@ -103,7 +107,16 @@ async fn get_image_path(
 
 #[tauri::command]
 #[specta::specta]
-async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
+async fn get_image_path(
+    state: tauri::State<'_, AppState>,
+    id: String,
+    category: String,
+) -> Result<String, CommandError> {
+    get_image_path_inner(&state, id, category).await
+}
+
+/// Inner implementation for [`init_database`].
+pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError> {
     log::info!("init_database: starting migrations");
     Database::run_migrations(&state.db_pool())
         .await
@@ -130,7 +143,13 @@ async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandE
 
     log::info!("init_database: initialization complete");
     state.set_initialized();
-    Ok(())
+    Ok(true)
+}
+
+#[tauri::command]
+#[specta::specta]
+async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
+    init_database_inner(&state).await.map(|_| ())
 }
 
 #[tauri::command]

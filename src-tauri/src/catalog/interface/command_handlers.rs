@@ -27,24 +27,24 @@ use crate::state::AppState;
 use garde::Validate;
 use log::info;
 
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
 /// Retrieve a railway model by its identifier.
-///
-/// Parses the provided `railway_model_id` into a domain `RailwayModelId`,
-/// acquires a database connection from the application state, and queries the
-/// repository for the matching `RailwayModel`.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` (provides DB pool).
-/// * `railway_model_id` - The railway model identifier as a `String`.
-///
-/// # Returns
-/// - `Ok(Some(RailwayModel))` when a matching model exists,
-/// - `Ok(None)` when no matching row is found
-/// - `Err(CommandError)` when the ID cannot be parsed or a database error occurs.
-///
-/// # Errors
-/// Parsing errors for the identifier and database errors are mapped to
-/// `CommandError` and returned to the caller.
+pub async fn get_railway_model_by_id_inner(
+    state: &AppState,
+    railway_model_id: RailwayModelId,
+    lang: Language,
+) -> Result<Option<RailwayModelView>, CommandError> {
+    info!("Fetching railway model with ID: {}", railway_model_id);
+    let mut uow = state.unit_of_work().await?;
+    let railway_model = GetRailwayModelViewById::execute(&mut uow, &railway_model_id, lang).await?;
+    uow.commit().await?;
+    Ok(railway_model)
+}
+
+/// Tauri command to retrieve a railway model by its identifier.
 #[tauri::command]
 #[specta::specta]
 pub async fn get_railway_model_by_id(
@@ -52,356 +52,320 @@ pub async fn get_railway_model_by_id(
     railway_model_id: RailwayModelId,
     lang: Language,
 ) -> Result<Option<RailwayModelView>, CommandError> {
-    info!("Fetching railway model with ID: {}", railway_model_id);
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let railway_model =
-        GetRailwayModelViewById::execute(&mut unit_of_work, &railway_model_id, lang).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(railway_model)
+    get_railway_model_by_id_inner(&state, railway_model_id, lang).await
 }
 
 /// Create a new railway model along with its associated rolling stocks.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The arguments required to create the railway model and its rolling stocks.
-///
-/// # Returns
-/// - `Ok(RailwayModelId)` — the identifier of the newly created railway model on success.
-/// - `Err(CommandError)` — when validation fails, a database error occurs, or business logic rejects the operation.
+pub async fn create_railway_model_inner(
+    state: &AppState,
+    args: CreateRailwayModelArgs,
+) -> Result<RailwayModelId, CommandError> {
+    info!("Creating railway model: {:?}", args);
+    let mut uow = state.unit_of_work().await?;
+    let railway_model_input = args.try_into()?;
+    let railway_model_id = AddRailwayModel::execute(&mut uow, railway_model_input).await?;
+    uow.commit().await?;
+    Ok(railway_model_id)
+}
+
+/// Tauri command to create a new railway model.
 #[tauri::command]
 #[specta::specta]
 pub async fn create_railway_model(
     state: tauri::State<'_, AppState>,
     args: CreateRailwayModelArgs,
 ) -> Result<RailwayModelId, CommandError> {
-    info!("Creating railway model: {:?}", args);
-
-    let mut unit_of_work = state.unit_of_work().await?;
-
-    let railway_model_input = args.try_into()?;
-    let railway_model_id = AddRailwayModel::execute(&mut unit_of_work, railway_model_input).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(railway_model_id)
+    create_railway_model_inner(&state, args).await
 }
 
 /// Update a single free-text field (description or details) of a railway model.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, field, and new value.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model does not exist.
-/// - `Err(CommandError::ValidationError)` when the value is invalid (e.g., empty description).
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
-#[tauri::command]
-#[specta::specta]
-pub async fn update_railway_model_text(
-    state: tauri::State<'_, AppState>,
+pub async fn update_railway_model_text_inner(
+    state: &AppState,
     args: UpdateRailwayModelTextArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating railway model text field {:?} for {}",
         args.field, args.railway_model_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRailwayModelText::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRailwayModelText::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Update the identification fields (series_code, road_number, livery, depot) of a single
-/// rolling stock unit within a railway model.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, rolling stock, and new identification values.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-/// - `Err(CommandError::ValidationError)` when `series_code` is empty.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update a text field of a railway model.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_rolling_stock_identification(
+pub async fn update_railway_model_text(
     state: tauri::State<'_, AppState>,
+    args: UpdateRailwayModelTextArgs,
+) -> Result<(), CommandError> {
+    update_railway_model_text_inner(&state, args).await
+}
+
+/// Update the identification fields of a single rolling stock unit.
+pub async fn update_rolling_stock_identification_inner(
+    state: &AppState,
     args: UpdateRollingStockIdentificationArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating rolling stock identification for {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockIdentification::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockIdentification::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Update the constrained classification fields (scale and/or epoch) of a railway model.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model with optional scale and epoch values.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model does not exist.
-/// - `Err(CommandError::ValidationError)` when neither scale nor epoch is provided.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update the identification fields of a rolling stock unit.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_railway_model_classification(
+pub async fn update_rolling_stock_identification(
     state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockIdentificationArgs,
+) -> Result<(), CommandError> {
+    update_rolling_stock_identification_inner(&state, args).await
+}
+
+/// Update the constrained classification fields (scale and/or epoch) of a railway model.
+pub async fn update_railway_model_classification_inner(
+    state: &AppState,
     args: UpdateRailwayModelClassificationArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating railway model classification for {}",
         args.railway_model_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRailwayModelClassification::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRailwayModelClassification::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Update the delivery date of a railway model.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model and the new delivery date string (or `None`/`""` to clear).
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model does not exist.
-/// - `Err(CommandError::ValidationError)` when the delivery date string cannot be parsed.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update the classification of a railway model.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_railway_model_delivery_date(
+pub async fn update_railway_model_classification(
     state: tauri::State<'_, AppState>,
+    args: UpdateRailwayModelClassificationArgs,
+) -> Result<(), CommandError> {
+    update_railway_model_classification_inner(&state, args).await
+}
+
+/// Update the delivery date of a railway model.
+pub async fn update_railway_model_delivery_date_inner(
+    state: &AppState,
     args: UpdateRailwayModelDeliveryDateArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating delivery date for railway model {}",
         args.railway_model_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRailwayModelDeliveryDate::execute(&mut unit_of_work, args.try_into()?).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRailwayModelDeliveryDate::execute(&mut uow, args.try_into()?).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Update the railway company of a single rolling stock unit.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, rolling stock, and new railway company id.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway company, model, or rolling stock does not exist.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update the delivery date of a railway model.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_rolling_stock_railway_company(
+pub async fn update_railway_model_delivery_date(
     state: tauri::State<'_, AppState>,
+    args: UpdateRailwayModelDeliveryDateArgs,
+) -> Result<(), CommandError> {
+    update_railway_model_delivery_date_inner(&state, args).await
+}
+
+/// Update the railway company of a single rolling stock unit.
+pub async fn update_rolling_stock_railway_company_inner(
+    state: &AppState,
     args: UpdateRollingStockRailwayCompanyArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating railway company for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockRailwayCompany::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockRailwayCompany::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Change the category (variant) of a single rolling stock unit.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, rolling stock, and new category.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update the railway company of a rolling stock unit.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_rolling_stock_category(
+pub async fn update_rolling_stock_railway_company(
     state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockRailwayCompanyArgs,
+) -> Result<(), CommandError> {
+    update_rolling_stock_railway_company_inner(&state, args).await
+}
+
+/// Change the category (variant) of a single rolling stock unit.
+pub async fn update_rolling_stock_category_inner(
+    state: &AppState,
     args: UpdateRollingStockCategoryArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating category for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockCategory::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockCategory::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Update only the control type, DCC interface, and length of a single rolling stock unit.
-///
-/// Unlike `update_rolling_stock_specifications`, this command only touches these three fields
-/// and leaves all other technical specification fields (flywheel, body shell, etc.) unchanged.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, rolling stock, and new values.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update the category of a rolling stock unit.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_category(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockCategoryArgs,
+) -> Result<(), CommandError> {
+    update_rolling_stock_category_inner(&state, args).await
+}
+
+/// Update the control type, DCC interface, and length of a single rolling stock unit.
+pub async fn update_rolling_stock_dcc_inner(
+    state: &AppState,
+    args: UpdateRollingStockDccArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Updating DCC/length for rolling stock {} / {}",
+        args.railway_model_id, args.rolling_stock_id
+    );
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockDcc::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
+    Ok(())
+}
+
+/// Tauri command to update DCC/length fields of a rolling stock unit.
 #[tauri::command]
 #[specta::specta]
 pub async fn update_rolling_stock_dcc(
     state: tauri::State<'_, AppState>,
     args: UpdateRollingStockDccArgs,
 ) -> Result<(), CommandError> {
-    log::info!(
-        "Updating DCC/length for rolling stock {} / {}",
-        args.railway_model_id,
-        args.rolling_stock_id
-    );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockDcc::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(())
+    update_rolling_stock_dcc_inner(&state, args).await
 }
 
 /// Update the full technical specifications of a single rolling stock unit (drawer save).
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - All four specification sections: identification, technical, control, coupling.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-/// - `Err(CommandError::ValidationError)` when `series_code` is empty or enum values are invalid.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
-#[tauri::command]
-#[specta::specta]
-pub async fn update_rolling_stock_specifications(
-    state: tauri::State<'_, AppState>,
+pub async fn update_rolling_stock_specifications_inner(
+    state: &AppState,
     args: UpdateRollingStockSpecificationsArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating rolling stock specifications for {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockSpecifications::execute(&mut unit_of_work, args.try_into()?).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockSpecifications::execute(&mut uow, args.try_into()?).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Retrieve all stored translations for a railway model (used to pre-populate the edit form).
+/// Tauri command to update the full technical specifications of a rolling stock unit.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_railway_model_translations(
+pub async fn update_rolling_stock_specifications(
     state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockSpecificationsArgs,
+) -> Result<(), CommandError> {
+    update_rolling_stock_specifications_inner(&state, args).await
+}
+
+/// Retrieve all stored translations for a railway model.
+pub async fn get_railway_model_translations_inner(
+    state: &AppState,
     railway_model_id: RailwayModelId,
 ) -> Result<Option<RailwayModelTranslations>, CommandError> {
     info!(
         "Fetching translations for railway model {}",
         railway_model_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    let translations =
-        GetRailwayModelTranslations::execute(&mut unit_of_work, &railway_model_id).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    let translations = GetRailwayModelTranslations::execute(&mut uow, &railway_model_id).await?;
+    uow.commit().await?;
     Ok(translations)
 }
 
-/// Create or replace a translation for one language on a railway model.
+/// Tauri command to retrieve all translations for a railway model.
 #[tauri::command]
 #[specta::specta]
-pub async fn upsert_railway_model_translation(
+pub async fn get_railway_model_translations(
     state: tauri::State<'_, AppState>,
+    railway_model_id: RailwayModelId,
+) -> Result<Option<RailwayModelTranslations>, CommandError> {
+    get_railway_model_translations_inner(&state, railway_model_id).await
+}
+
+/// Create or replace a translation for one language on a railway model.
+pub async fn upsert_railway_model_translation_inner(
+    state: &AppState,
     args: UpsertRailwayModelTranslationArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Upserting {} translation for railway model {}",
         args.lang, args.railway_model_id
     );
-
-    args.validate().map_err(CommandError::from)?;
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpsertRailwayModelTranslation::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid translation args: {e}")))?;
+    let mut uow = state.unit_of_work().await?;
+    UpsertRailwayModelTranslation::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
 
     Ok(())
 }
 
+/// Tauri command to upsert a language translation for a railway model.
+#[tauri::command]
+#[specta::specta]
+pub async fn upsert_railway_model_translation(
+    state: tauri::State<'_, AppState>,
+    args: UpsertRailwayModelTranslationArgs,
+) -> Result<(), CommandError> {
+    upsert_railway_model_translation_inner(&state, args).await
+}
+
 /// Search railway models using FTS5 full-text search across all language translations.
+pub async fn search_railway_models_inner(
+    state: &AppState,
+    args: SearchRailwayModelsArgs,
+) -> Result<Vec<RailwayModelId>, CommandError> {
+    info!("Searching railway models with query: {}", args.query);
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid search args: {e}")))?;
+    let mut uow = state.unit_of_work().await?;
+    let ids = SearchRailwayModels::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
+    Ok(ids)
+}
+
+/// Tauri command to search railway models.
 #[tauri::command]
 #[specta::specta]
 pub async fn search_railway_models(
     state: tauri::State<'_, AppState>,
     args: SearchRailwayModelsArgs,
 ) -> Result<Vec<RailwayModelId>, CommandError> {
-    info!("Searching railway models with query: {}", args.query);
-
-    args.validate().map_err(CommandError::from)?;
-    let mut unit_of_work = state.unit_of_work().await?;
-    let ids = SearchRailwayModels::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
-    Ok(ids)
+    search_railway_models_inner(&state, args).await
 }
 
 /// Add a new rolling stock variant to an existing Railway Model.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The rolling stock identification data and category.
-///
-/// # Returns
-/// - `Ok(RollingStockId)` — the identifier of the newly created rolling stock on success.
-/// - `Err(CommandError)` — when validation fails, the model is not found, or a database error occurs.
-#[tauri::command]
-#[specta::specta]
-pub async fn add_rolling_stock_to_model(
-    state: tauri::State<'_, AppState>,
+pub async fn add_rolling_stock_to_model_inner(
+    state: &AppState,
     args: AddRollingStockToModelArgs,
 ) -> Result<AddRollingStockResult, CommandError> {
     info!(
         "Adding rolling stock to model {} (category: {})",
         args.railway_model_id, args.category
     );
-
-    args.validate().map_err(CommandError::from)?;
-
+    args.validate()
+        .map_err(|e| CommandError::BusinessRule(format!("Invalid args: {e}")))?;
     let input = parse_add_rolling_stock_args(
         args.railway_model_id,
         args.railway_company_id,
@@ -419,23 +383,21 @@ pub async fn add_rolling_stock_to_model(
         args.prototype_id,
         args.is_dummy,
     )?;
-
     let railway_model_id = input.railway_model_id.clone();
-    let mut unit_of_work = state.unit_of_work().await?;
-    let rs_id = AddRollingStockToModel::execute(&mut unit_of_work, input).await?;
+    let mut uow = state.unit_of_work().await?;
+    let rs_id = AddRollingStockToModel::execute(&mut uow, input).await?;
 
-    let owned_ids = unit_of_work
+    let owned_ids = uow
         .collections_repository()
         .add_owned_rolling_stock_for_collection_items(&railway_model_id, &rs_id)
         .await
         .map_err(CommandError::from)?;
 
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    uow.commit().await?;
 
-    let owned_rolling_stock_id = owned_ids
-        .into_iter()
-        .next()
-        .ok_or_else(|| CommandError::NotFound("owned rolling stock".to_string()))?;
+    let owned_rolling_stock_id = owned_ids.into_iter().next().ok_or_else(|| {
+        CommandError::NotFound("No owned rolling stock created for collection items".to_string())
+    })?;
 
     Ok(AddRollingStockResult {
         rolling_stock_id: rs_id,
@@ -443,61 +405,64 @@ pub async fn add_rolling_stock_to_model(
     })
 }
 
-/// Update the subcategory (type field) of a single rolling stock unit.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, rolling stock, and new subcategory string.
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-/// - `Err(CommandError::ValidationError)` when the subcategory is invalid for the current category.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to add a rolling stock variant to a railway model.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_rolling_stock_subcategory(
+pub async fn add_rolling_stock_to_model(
     state: tauri::State<'_, AppState>,
+    args: AddRollingStockToModelArgs,
+) -> Result<AddRollingStockResult, CommandError> {
+    add_rolling_stock_to_model_inner(&state, args).await
+}
+
+/// Update the subcategory (type field) of a single rolling stock unit.
+pub async fn update_rolling_stock_subcategory_inner(
+    state: &AppState,
     args: UpdateRollingStockSubcategoryArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating subcategory for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockSubcategory::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockSubcategory::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
 }
 
-/// Update the service level of a single rolling stock unit.
-///
-/// # Arguments
-/// * `state` - Tauri-managed application `AppState` providing the database pool.
-/// * `args` - The target model, rolling stock, and new service level (or None to clear).
-///
-/// # Returns
-/// - `Ok(())` on success.
-/// - `Err(CommandError::NotFound)` when the railway model or rolling stock does not exist.
-/// - `Err(CommandError::DatabaseError)` on persistence failure.
+/// Tauri command to update the subcategory of a rolling stock unit.
 #[tauri::command]
 #[specta::specta]
-pub async fn update_rolling_stock_service_level(
+pub async fn update_rolling_stock_subcategory(
     state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockSubcategoryArgs,
+) -> Result<(), CommandError> {
+    update_rolling_stock_subcategory_inner(&state, args).await
+}
+
+/// Update the service level of a single rolling stock unit.
+pub async fn update_rolling_stock_service_level_inner(
+    state: &AppState,
     args: UpdateRollingStockServiceLevelArgs,
 ) -> Result<(), CommandError> {
     info!(
         "Updating service level for rolling stock {} / {}",
         args.railway_model_id, args.rolling_stock_id
     );
-
-    let mut unit_of_work = state.unit_of_work().await?;
-    UpdateRollingStockServiceLevel::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
-
+    let mut uow = state.unit_of_work().await?;
+    UpdateRollingStockServiceLevel::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
     Ok(())
+}
+
+/// Tauri command to update the service level of a rolling stock unit.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_rolling_stock_service_level(
+    state: tauri::State<'_, AppState>,
+    args: UpdateRollingStockServiceLevelArgs,
+) -> Result<(), CommandError> {
+    update_rolling_stock_service_level_inner(&state, args).await
 }
 
 /// Return the coupler type catalogue, optionally filtered to a specific coupling socket.
@@ -532,7 +497,7 @@ pub async fn get_coupler_types(
         },
     )
     .await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
     Ok(result)
 }
 
@@ -561,7 +526,7 @@ pub async fn set_rolling_stock_coupler(
 
     let mut unit_of_work = state.unit_of_work().await?;
     SetRollingStockCoupler::execute(&mut unit_of_work, args.into()).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     Ok(())
 }

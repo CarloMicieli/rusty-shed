@@ -1,11 +1,10 @@
 // Add Extra Budget Use Case
 // Feature: 001-budget-tracking - Phase 6 (US4)
 
-use crate::budget::domain::{BudgetRepository, ExtraBudgetEntry, ExtraBudgetId};
-use crate::budget::infrastructure::BudgetUowExt;
+use crate::budget::domain::BudgetUowExt;
+use crate::budget::domain::{ExtraBudgetEntry, ExtraBudgetId};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use chrono::Utc;
 
 /// Input for adding an extra budget entry.
@@ -33,10 +32,13 @@ impl AddExtraBudgetUseCase {
     /// - `Validation`: If year or month is invalid, or amount is not positive
     /// - `NotFound`: If no budget configuration exists yet
     /// - `Infrastructure`: If database operation fails
-    pub async fn execute(
-        uow: &mut SqliteUnitOfWork<'_>,
+    pub async fn execute<U>(
+        uow: &mut U,
         input: AddExtraBudgetInput,
-    ) -> Result<ExtraBudgetEntry, DomainError> {
+    ) -> Result<ExtraBudgetEntry, DomainError>
+    where
+        U: BudgetUowExt + Send,
+    {
         // Validate input
         if input.year < 2000 || input.year > 2100 {
             return Err(DomainError::Validation(

@@ -1,14 +1,13 @@
 // Historical Query - Get quarterly summaries with category breakdown
 // Feature: 001-budget-tracking
 
+use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::dashboard::BudgetQuarter;
 use crate::budget::domain::quarterly_summary::{CategorySpending, QuarterlySummary};
-use crate::budget::infrastructure::database;
 use crate::catalog::domain::railway_model::Category;
 use crate::core::domain::Currency;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
-use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -21,14 +20,21 @@ use std::str::FromStr;
 ///
 /// # Returns
 /// A vector of quarterly summaries, one for each quarter that has data.
-pub async fn get_quarterly_summaries(
-    uow: &mut SqliteUnitOfWork<'_>,
+pub async fn get_quarterly_summaries<U>(
+    uow: &mut U,
     year: i32,
     currency_code: &str,
-) -> Result<Vec<QuarterlySummary>, DomainError> {
+) -> Result<Vec<QuarterlySummary>, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
     // Fetch quarterly spending by category from database
-    let rows =
-        database::get_quarterly_spending_by_category(&mut uow.tx, year, currency_code).await?;
+    let rows = {
+        let mut repo = uow.budget_repo();
+        repo.get_quarterly_spending_by_category(year, currency_code)
+            .await
+            .map_err(DomainError::Infrastructure)?
+    };
 
     // Group by quarter
     let mut quarterly_data: HashMap<i32, Vec<(Category, i64)>> = HashMap::new();

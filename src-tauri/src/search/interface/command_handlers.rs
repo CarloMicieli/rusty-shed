@@ -7,20 +7,12 @@ use crate::search::domain::global_search_result::SearchSource;
 use crate::search::interface::command_args::{GlobalSearchArgs, GlobalSearchResultView};
 use crate::state::AppState;
 
-/// Perform a cross-domain full-text search over the user's collection and wishlist.
-///
-/// # Arguments
-/// - `state` - Tauri-managed application state providing the DB pool.
-/// - `args`  - Validated search input (query string and locale).
-///
-/// # Returns
-/// An ordered list of at most 50 `GlobalSearchResultView` items, ranked by
-/// FTS5 BM25 relevance. A model appearing in both collection and wishlist
-/// produces two separate result entries.
-#[tauri::command]
-#[specta::specta]
-pub async fn global_search(
-    state: tauri::State<'_, AppState>,
+// ---------------------------------------------------------------------------
+// Inner (testable) implementations – take &AppState directly
+// ---------------------------------------------------------------------------
+
+pub async fn global_search_inner(
+    state: &AppState,
     args: GlobalSearchArgs,
 ) -> Result<Vec<GlobalSearchResultView>, CommandError> {
     info!(
@@ -37,7 +29,7 @@ pub async fn global_search(
 
     let mut unit_of_work = state.unit_of_work().await?;
     let results = GlobalSearch::execute(&mut unit_of_work, input).await?;
-    unit_of_work.commit().await.map_err(CommandError::from)?;
+    unit_of_work.commit().await?;
 
     let views = results
         .into_iter()
@@ -55,4 +47,23 @@ pub async fn global_search(
         .collect();
 
     Ok(views)
+}
+
+/// Perform a cross-domain full-text search over the user's collection and wishlist.
+///
+/// # Arguments
+/// - `state` - Tauri-managed application state providing the DB pool.
+/// - `args`  - Validated search input (query string and locale).
+///
+/// # Returns
+/// An ordered list of at most 50 `GlobalSearchResultView` items, ranked by
+/// FTS5 BM25 relevance. A model appearing in both collection and wishlist
+/// produces two separate result entries.
+#[tauri::command]
+#[specta::specta]
+pub async fn global_search(
+    state: tauri::State<'_, AppState>,
+    args: GlobalSearchArgs,
+) -> Result<Vec<GlobalSearchResultView>, CommandError> {
+    global_search_inner(&state, args).await
 }
