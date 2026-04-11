@@ -1,3 +1,3 @@
-mod sqlite_railway_company_repository;
+pub mod repository;
 
-pub use sqlite_railway_company_repository::SqliteRailwayCompanyRepository;
+pub use repository::SqliteRailwayCompanyRepository;

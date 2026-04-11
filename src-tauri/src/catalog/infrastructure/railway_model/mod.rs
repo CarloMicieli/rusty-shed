@@ -1,1 +1,1 @@
-mod sqlite_railway_model_repository;
+pub mod repository;

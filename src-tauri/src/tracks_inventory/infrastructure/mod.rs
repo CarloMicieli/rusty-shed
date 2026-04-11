@@ -1,8 +1,10 @@
+pub mod database;
 pub mod entities;
-mod sqlite_track_inventory_repository;
-mod sqlite_track_product_repository;
+pub mod mappers;
+pub mod repository;
 #[cfg(test)]
 mod tests;
 
-// only export the product repository; the inventory repo is used internally via UoW extension
-pub use sqlite_track_product_repository::SqliteTrackProductRepository;
+// Re-export the product repository for use by other infrastructure modules
+// (e.g. command handlers that need direct repository access without a full UoW).
+pub use repository::SqliteTrackProductRepository;
