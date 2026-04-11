@@ -583,7 +583,7 @@ mod tests {
         let args = AddCollectionItemArgs {
             railway_model_id: "trn:railway-model:acme:60100".to_string(),
             price_amount: 1000,
-            price_currency: "TOOSHORT".to_string(), // Must be exactly 3 chars
+            price_currency: "TOOSHORT".to_string(), // Must be exactly 3 chars — "TOO SHORT"
             seller_id: None,
             added_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
             purchase_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
