@@ -9,10 +9,6 @@ use thiserror::Error;
 /// Maximum file size for uploaded images (50 MB)
 pub const MAX_FILE_SIZE_BYTES: u64 = 50 * 1024 * 1024;
 
-// ============================================================================
-// Enums
-// ============================================================================
-
 /// Supported image formats for model images
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImageFormat {
@@ -53,10 +49,6 @@ impl ImageFormat {
         }
     }
 }
-
-// ============================================================================
-// Value Objects
-// ============================================================================
 
 /// Value object representing validated file size
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -129,10 +121,6 @@ fn sanitize_filename(model_id: &str, format: ImageFormat) -> String {
     format!("{}.{}", sanitized_id, format.extension())
 }
 
-// ============================================================================
-// Errors
-// ============================================================================
-
 /// Validation errors for image uploads
 #[derive(Debug, Error)]
 pub enum ValidationError {
@@ -173,10 +161,6 @@ pub enum StorageError {
     #[error("IO error: {0}")]
     IoError(String),
 }
-
-// ============================================================================
-// Domain Service
-// ============================================================================
 
 /// Domain service for image validation
 pub struct ImageValidator;
@@ -233,10 +217,6 @@ impl ImageValidator {
         Self::detect_format(path)
     }
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 #[cfg(test)]
 mod tests {
@@ -429,10 +409,6 @@ mod tests {
         assert_eq!(result.unwrap(), ImageFormat::Jpeg);
     }
 
-    // ========================================================================
-    // T090: Comprehensive format validation tests for unsupported formats
-    // ========================================================================
-
     #[test]
     fn test_reject_tiff_format() {
         let temp_dir = TempDir::new().unwrap();
@@ -521,10 +497,6 @@ mod tests {
         ));
     }
 
-    // ========================================================================
-    // T091: Test corrupted image file rejection
-    // ========================================================================
-
     #[test]
     fn test_reject_truncated_jpeg() {
         let temp_dir = TempDir::new().unwrap();
@@ -594,10 +566,6 @@ mod tests {
         }
     }
 
-    // ========================================================================
-    // T101: Test special characters in filenames
-    // ========================================================================
-
     #[test]
     fn test_sanitize_filename_with_spaces() {
         assert_eq!(
@@ -622,14 +590,6 @@ mod tests {
         );
     }
 
-    // ========================================================================
-    // T104: Test file size limits
-    // ========================================================================
-
-    // ========================================================================
-    // T102: Test unusual aspect ratios (handled gracefully)
-    // ========================================================================
-
     #[test]
     fn test_validate_extreme_aspect_ratios() {
         // The image validation focuses on format detection (magic bytes),
@@ -651,10 +611,6 @@ mod tests {
         // Clean up
         let _ = std::fs::remove_file(&png_path);
     }
-
-    // ========================================================================
-    // T104: Test file size limits
-    // ========================================================================
 
     #[test]
     fn test_file_size_at_49mb() {
@@ -686,10 +642,6 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(result, Err(ValidationError::FileTooLarge { .. })));
     }
-
-    // ========================================================================
-    // T105: Test filename collision handling (deterministic naming)
-    // ========================================================================
 
     #[test]
     fn test_deterministic_path_for_same_model() {

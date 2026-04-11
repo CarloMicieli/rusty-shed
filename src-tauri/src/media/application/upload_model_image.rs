@@ -10,10 +10,6 @@ use crate::media::domain::image_validation::{
 use crate::media::infrastructure::FileStorage;
 use std::path::PathBuf;
 
-// ============================================================================
-// Use Case Inputs
-// ============================================================================
-
 /// Input for path-based image upload (file explorer selection)
 #[derive(Debug, Clone)]
 pub struct UploadImageInput {
@@ -28,10 +24,6 @@ pub struct UploadImageBytesInput {
     pub file_name: String,
     pub file_data: Vec<u8>,
 }
-
-// ============================================================================
-// Upload Model Image (Path-based)
-// ============================================================================
 
 /// Use case for uploading model images from file paths
 pub struct UploadModelImage {
@@ -50,13 +42,13 @@ impl UploadModelImage {
     /// 1. Validate model exists
     /// 2. Validate source file (format, size)
     /// 3. Determine destination path
-    /// 4. Delete existing image if present
+    /// 4. Delete existing images for this model
     /// 5. Copy file to destination
     ///
     /// # Errors
-    /// - ValidationError: Invalid file format, size, or missing file
-    /// - StorageError: File operations failed
-    /// - DomainError::NotFound: Model doesn't exist
+    /// - [`ValidationError`]: Invalid file format, size, or missing file
+    /// - [`StorageError`]: File operations failed
+    /// - [`DomainError::NotFound`]: Model doesn't exist
     pub async fn execute<U>(
         &self,
         input: UploadImageInput,
@@ -66,8 +58,7 @@ impl UploadModelImage {
         U: RailwayModelUowExt + Send,
     {
         // Step 1: Validate model exists
-        self.validate_model_exists(&input.model_id, unit_of_work)
-            .await?;
+        validate_model_exists(&input.model_id, unit_of_work).await?;
 
         // Step 2: Validate source file
         let format = ImageValidator::validate(&input.file_path).map_err(UploadError::Validation)?;
@@ -76,24 +67,8 @@ impl UploadModelImage {
         let dest_path =
             ModelImagePath::new(self.storage.storage_dir(), input.model_id.as_ref(), format);
 
-        // Step 4: Delete any existing image (any format) for this model before uploading
-        for existing_format in [ImageFormat::Jpeg, ImageFormat::Png, ImageFormat::WebP] {
-            let existing_path = ModelImagePath::new(
-                self.storage.storage_dir(),
-                input.model_id.as_ref(),
-                existing_format,
-            );
-
-            log::debug!(
-                "Deleting existing image: {}",
-                existing_path.full_path().display()
-            );
-            match self.storage.delete_image(&existing_path).await {
-                Ok(()) => {}
-                Err(StorageError::FileNotFound(_)) => {} // already gone, fine
-                Err(e) => return Err(UploadError::Storage(e)),
-            }
-        }
+        // Step 4: Delete any existing image (any format) for this model
+        delete_existing_images(&self.storage, &input.model_id).await?;
 
         // Step 5: Copy file to destination
         log::debug!(
@@ -112,33 +87,7 @@ impl UploadModelImage {
         );
         Ok(())
     }
-
-    /// Validate that the model exists in the database
-    async fn validate_model_exists<U>(
-        &self,
-        model_id: &RailwayModelId,
-        unit_of_work: &mut U,
-    ) -> Result<(), UploadError>
-    where
-        U: RailwayModelUowExt + Send,
-    {
-        let mut repository = unit_of_work.railway_model_repository();
-        let exists = repository
-            .exists_by_id(model_id)
-            .await
-            .map_err(UploadError::Domain)?;
-
-        if exists {
-            Ok(())
-        } else {
-            Err(UploadError::ModelNotFound(model_id.as_ref().to_string()))
-        }
-    }
 }
-
-// ============================================================================
-// Upload Model Image Bytes (Drag & Drop)
-// ============================================================================
 
 /// Use case for uploading model images from bytes
 pub struct UploadModelImageBytes {
@@ -155,17 +104,16 @@ impl UploadModelImageBytes {
     ///
     /// # Steps
     /// 1. Validate model exists
-    /// 2. Write bytes to temporary file
+    /// 2. Write bytes to a temporary file (auto-deleted on drop via RAII)
     /// 3. Validate temporary file (format, size)
     /// 4. Determine destination path
-    /// 5. Delete existing image if present
-    /// 6. Move temporary file to destination
-    /// 7. Clean up temporary file (on error)
+    /// 5. Delete existing images for this model
+    /// 6. Copy temporary file to destination
     ///
     /// # Errors
-    /// - ValidationError: Invalid file format, size, or corrupted data
-    /// - StorageError: File operations failed
-    /// - DomainError::NotFound: Model doesn't exist
+    /// - [`ValidationError`]: Invalid file format, size, or corrupted data
+    /// - [`StorageError`]: File operations failed
+    /// - [`DomainError::NotFound`]: Model doesn't exist
     pub async fn execute<U>(
         &self,
         input: UploadImageBytesInput,
@@ -175,16 +123,16 @@ impl UploadModelImageBytes {
         U: RailwayModelUowExt + Send,
     {
         // Step 1: Validate model exists
-        self.validate_model_exists(&input.model_id, unit_of_work)
-            .await?;
+        validate_model_exists(&input.model_id, unit_of_work).await?;
 
-        // Step 2: Create temporary file
-        let temp_dir = std::env::temp_dir();
-        let temp_filename = format!("rusty_shed_upload_{}", uuid::Uuid::new_v4());
-        let temp_path = temp_dir.join(temp_filename);
-
-        // Write bytes to temp file
-        tokio::fs::write(&temp_path, &input.file_data)
+        // Step 2: Write bytes to a temporary file; auto-deleted when `temp_file` is dropped
+        let temp_file = tempfile::NamedTempFile::new().map_err(|e| {
+            UploadError::Storage(StorageError::WriteFailed(format!(
+                "Failed to create temp file: {}",
+                e
+            )))
+        })?;
+        tokio::fs::write(temp_file.path(), &input.file_data)
             .await
             .map_err(|e| {
                 UploadError::Storage(StorageError::WriteFailed(format!(
@@ -193,84 +141,77 @@ impl UploadModelImageBytes {
                 )))
             })?;
 
-        // Ensure temp file cleanup on any error
-        let cleanup_result = async {
-            // Step 3: Validate temporary file
-            let format = ImageValidator::validate(&temp_path).map_err(UploadError::Validation)?;
+        // Step 3: Validate temporary file
+        let format = ImageValidator::validate(temp_file.path()).map_err(UploadError::Validation)?;
 
-            // Step 4: Determine destination path
-            let dest_path =
-                ModelImagePath::new(self.storage.storage_dir(), input.model_id.as_ref(), format);
+        // Step 4: Determine destination path
+        let dest_path =
+            ModelImagePath::new(self.storage.storage_dir(), input.model_id.as_ref(), format);
 
-            // Step 5: Delete any existing image (any format) for this model before uploading
-            for existing_format in [ImageFormat::Jpeg, ImageFormat::Png, ImageFormat::WebP] {
-                let existing_path = ModelImagePath::new(
-                    self.storage.storage_dir(),
-                    input.model_id.as_ref(),
-                    existing_format,
-                );
+        // Step 5: Delete any existing image (any format) for this model
+        delete_existing_images(&self.storage, &input.model_id).await?;
 
-                log::debug!(
-                    "Deleting existing image: {}",
-                    existing_path.full_path().display()
-                );
-                match self.storage.delete_image(&existing_path).await {
-                    Ok(()) => {}
-                    Err(StorageError::FileNotFound(_)) => {} // already gone, fine
-                    Err(e) => return Err(UploadError::Storage(e)),
-                }
-            }
-
-            // Step 6: Copy temp file to destination
-            log::debug!(
-                "Moving image from temp to {}",
-                dest_path.full_path().display()
-            );
-            self.storage
-                .copy_image(&temp_path, &dest_path)
-                .await
-                .map_err(UploadError::Storage)?;
-
-            log::info!(
-                "Successfully uploaded image for model {} from bytes",
-                input.model_id.as_ref()
-            );
-            Ok::<(), UploadError>(())
-        }
-        .await;
-
-        // Step 7: Clean up temp file
-        tokio::fs::remove_file(&temp_path).await.ok();
-
-        cleanup_result
-    }
-
-    /// Validate that the model exists in the database
-    async fn validate_model_exists<U>(
-        &self,
-        model_id: &RailwayModelId,
-        unit_of_work: &mut U,
-    ) -> Result<(), UploadError>
-    where
-        U: RailwayModelUowExt + Send,
-    {
-        let mut repository = unit_of_work.railway_model_repository();
-        let exists = repository
-            .exists_by_id(model_id)
+        // Step 6: Copy temp file to destination
+        log::debug!(
+            "Moving image from temp to {}",
+            dest_path.full_path().display()
+        );
+        self.storage
+            .copy_image(temp_file.path(), &dest_path)
             .await
-            .map_err(UploadError::Domain)?;
+            .map_err(UploadError::Storage)?;
 
-        if exists {
-            Ok(())
-        } else {
-            Err(UploadError::ModelNotFound(model_id.as_ref().to_string()))
-        }
+        log::info!(
+            "Successfully uploaded image for model {} from bytes",
+            input.model_id.as_ref()
+        );
+        Ok(())
     }
 }
 
 // ============================================================================
-// Errors
+// Shared Helpers
 // ============================================================================
+
+/// Verify that the given model exists, returning [`UploadError::ModelNotFound`] when it does not.
+async fn validate_model_exists<U>(
+    model_id: &RailwayModelId,
+    unit_of_work: &mut U,
+) -> Result<(), UploadError>
+where
+    U: RailwayModelUowExt + Send,
+{
+    let mut repository = unit_of_work.railway_model_repository();
+    let exists = repository
+        .exists_by_id(model_id)
+        .await
+        .map_err(UploadError::Domain)?;
+
+    if exists {
+        Ok(())
+    } else {
+        Err(UploadError::ModelNotFound(model_id.as_ref().to_string()))
+    }
+}
+
+/// Delete every known image format for `model_id`, silently ignoring files that are
+/// already absent. A single call covers all supported formats, so adding a new format
+/// (e.g. AVIF) only requires updating this function.
+async fn delete_existing_images(
+    storage: &FileStorage,
+    model_id: &RailwayModelId,
+) -> Result<(), UploadError> {
+    for format in [ImageFormat::Jpeg, ImageFormat::Png, ImageFormat::WebP] {
+        let path = ModelImagePath::new(storage.storage_dir(), model_id.as_ref(), format);
+        log::debug!("Deleting existing image: {}", path.full_path().display());
+        match storage.delete_image(&path).await {
+            Ok(()) => {}
+            Err(StorageError::FileNotFound(_)) => {} // already gone, fine
+            Err(e) => return Err(UploadError::Storage(e)),
+        }
+    }
+    Ok(())
+}
 
 /// Errors that can occur during image upload
 #[derive(Debug, thiserror::Error)]
@@ -287,10 +228,6 @@ pub enum UploadError {
     #[error("Domain error: {0}")]
     Domain(#[from] DomainError),
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 #[cfg(test)]
 mod tests {
@@ -372,10 +309,6 @@ mod tests {
         file.write_all(b"This is not an image file").unwrap();
         path
     }
-
-    // ========================================================================
-    // UploadModelImage Tests
-    // ========================================================================
 
     #[tokio::test]
     async fn test_upload_image_success() {
@@ -550,10 +483,6 @@ mod tests {
         assert!(matches!(result, Err(UploadError::Validation(_))));
     }
 
-    // ========================================================================
-    // UploadModelImageBytes Tests
-    // ========================================================================
-
     #[tokio::test]
     async fn test_upload_image_bytes_success() {
         let temp_dir = TempDir::new().unwrap();
@@ -706,10 +635,6 @@ mod tests {
         assert_ne!(content, b"old image");
     }
 
-    // ========================================================================
-    // T106: Test image replacement flow - verify old file deleted
-    // ========================================================================
-
     #[tokio::test]
     async fn test_replacement_deletes_old_file() {
         let temp_dir = TempDir::new().unwrap();
@@ -774,10 +699,6 @@ mod tests {
         );
     }
 
-    // ========================================================================
-    // T107-T108: Integration test - multiple replacements without orphans
-    // ========================================================================
-
     #[tokio::test]
     async fn test_multiple_replacements_no_orphans() {
         let temp_dir = TempDir::new().unwrap();
@@ -824,10 +745,6 @@ mod tests {
         let dest_path = ModelImagePath::new(&storage_dir, model_id_str, ImageFormat::Jpeg);
         assert!(dest_path.exists(), "Expected destination file to exist");
     }
-
-    // ========================================================================
-    // T111: Test replacement with different format (JPEG → PNG, PNG → WEBP)
-    // ========================================================================
 
     #[tokio::test]
     async fn test_replacement_different_format_jpeg_to_png() {
@@ -890,10 +807,6 @@ mod tests {
 
         assert_eq!(files.len(), 1, "Only one image file should exist");
     }
-
-    // ========================================================================
-    // T112: Verify destination path changes extension based on format
-    // ========================================================================
 
     #[tokio::test]
     async fn test_destination_path_extension_changes() {

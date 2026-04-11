@@ -8,19 +8,11 @@ use crate::core::domain::domain_error::DomainError;
 use crate::media::domain::image_validation::{ImageFormat, ModelImagePath, StorageError};
 use crate::media::infrastructure::FileStorage;
 
-// ============================================================================
-// Use Case Input
-// ============================================================================
-
 /// Input for image deletion
 #[derive(Debug, Clone)]
 pub struct DeleteImageInput {
     pub model_id: RailwayModelId,
 }
-
-// ============================================================================
-// Delete Model Image Use Case
-// ============================================================================
 
 /// Use case for deleting model images
 pub struct DeleteModelImage {
@@ -109,10 +101,6 @@ impl DeleteModelImage {
     }
 }
 
-// ============================================================================
-// Errors
-// ============================================================================
-
 /// Errors that can occur during image deletion
 #[derive(Debug, thiserror::Error)]
 pub enum DeleteError {
@@ -125,10 +113,6 @@ pub enum DeleteError {
     #[error("Domain error: {0}")]
     Domain(#[from] DomainError),
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 #[cfg(test)]
 mod tests {
