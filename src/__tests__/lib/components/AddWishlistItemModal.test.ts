@@ -1,11 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, cleanup } from '@testing-library/svelte';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-
-// Mock @tauri-apps/api/core BEFORE importing
-vi.mock('@tauri-apps/api/core', () => ({
-  invoke: vi.fn()
-}));
 
 // Mock toaster
 vi.mock('$lib/toaster', () => ({
@@ -91,9 +86,25 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   action_close: () => 'Close'
 }));
 
-let activeService: ReturnType<
-  typeof import('$lib/features/wishlists/WishlistState.svelte').createWishlistState
->;
+vi.mock('$lib/bindings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/bindings')>();
+  return {
+    ...actual,
+    commands: {
+      ...actual.commands,
+      getManufacturers: vi.fn()
+    }
+  };
+});
+
+type WishlistServiceLike = {
+  wishlists: WishlistPreviewLite[];
+  defaultWishlist: WishlistPreviewLite | null;
+  createWishlist: ReturnType<typeof vi.fn>;
+  addRailwayModelToWishlist: ReturnType<typeof vi.fn>;
+};
+
+let activeService: WishlistServiceLike;
 
 vi.mock('$lib/features/wishlists/WishlistState.svelte', async (importOriginal) => {
   const actual =
@@ -104,20 +115,12 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', async (importOriginal) =
   };
 });
 
-// Now import after mocks
 import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
-import {
-  createWishlistState,
-  type WishlistPreviewLite
-} from '$lib/features/wishlists/WishlistState.svelte';
-import { invoke, type InvokeArgs, type InvokeOptions } from '@tauri-apps/api/core';
+import { commands } from '$lib/bindings';
+import type { WishlistPreviewLite } from '$lib/features/wishlists/WishlistState.svelte';
+import type { Manufacturer } from '$lib/bindings';
 
-const mockInvoke = vi.mocked(invoke);
-type InvokeArgType = InvokeArgs | undefined;
-type InvokeOptionType = InvokeOptions | undefined;
-type Handler = (args?: InvokeArgType) => unknown;
-
-activeService = createWishlistState();
+const mockGetManufacturers = vi.mocked(commands.getManufacturers);
 
 const wishlistFixtures: WishlistPreviewLite[] = [
   {
@@ -146,177 +149,134 @@ const wishlistFixtures: WishlistPreviewLite[] = [
   } as unknown as WishlistPreviewLite
 ];
 
-const manufacturerFixtures = [
-  { id: 'märklin', name: 'Märklin', groupName: null },
-  { id: 'fleischmann', name: 'Fleischmann', groupName: null }
+const manufacturerFixtures: Manufacturer[] = [
+  {
+    id: 'marklin',
+    name: 'Märklin',
+    registeredCompanyName: null,
+    countryCode: null,
+    status: 'ACTIVE',
+    websiteUrl: null
+  },
+  {
+    id: 'fleischmann',
+    name: 'Fleischmann',
+    registeredCompanyName: null,
+    countryCode: null,
+    status: 'ACTIVE',
+    websiteUrl: null
+  }
 ];
 
-const wishlistViewFixture = {
-  id: 'wishlist-1',
-  name: 'My Wishlist',
-  notes: null,
-  is_default: true,
-  items: []
-};
-
-// Helper for Tauri mock
-const tauriMock = {
-  handlers: new Map<string, Handler>(),
-  delays: new Map<string, number>(),
-
-  mockCommand<T>(command: string, response: T) {
-    this.handlers.set(command, () => response);
-  },
-
-  mockCommandError(command: string, error: unknown) {
-    this.handlers.set(command, () => {
-      throw error;
-    });
-  },
-
-  mockCommandWithDelay<T>(command: string, delay: number, response: T) {
-    this.delays.set(command, delay);
-    this.mockCommand(command, response);
-  },
-
-  reset() {
-    this.handlers.clear();
-    this.delays.clear();
-    mockInvoke.mockReset();
-    // Re-apply the implementation
-    mockInvoke.mockImplementation(
-      async (command: string, args?: InvokeArgType, _options?: InvokeOptionType) => {
-        const handler = this.handlers.get(command);
-        const delay = this.delays.get(command) || 0;
-
-        if (!handler) {
-          throw new Error(`Unmocked Tauri command: ${command}`);
-        }
-
-        if (delay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        }
-
-        return handler(args);
-      }
-    );
-  }
-};
-
-// Initial setup
-mockInvoke.mockImplementation(
-  async (command: string, args?: InvokeArgType, _options?: InvokeOptionType) => {
-    const handler = tauriMock.handlers.get(command);
-    const delay = tauriMock.delays.get(command) || 0;
-
-    if (!handler) {
-      throw new Error(`Unmocked Tauri command: ${command}`);
-    }
-
-    if (delay > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-
-    return handler(args);
-  }
-);
-
-/**
- * Wait for the manufacturer Select.Trigger to appear (loading done),
- * click it to open the dropdown, then click the matching option.
- */
-async function selectManufacturerWithUser(user: ReturnType<typeof userEvent.setup>, name: string) {
-  const trigger = await screen.findByRole('button', { name: /^manufacturer/i });
-  await user.click(trigger);
-  const item = await screen.findByRole('option', { name: new RegExp(name, 'i') });
-  await user.click(item);
-}
-
-describe('AddWishlistItemDrawer', () => {
-  const defaultProps = {
-    open: true,
-    onClose: vi.fn(),
-    onSaved: vi.fn()
+function createServiceMock(overrides?: Partial<WishlistServiceLike>): WishlistServiceLike {
+  const base: WishlistServiceLike = {
+    wishlists: [],
+    defaultWishlist: null,
+    createWishlist: vi.fn().mockResolvedValue(null),
+    addRailwayModelToWishlist: vi.fn().mockResolvedValue(true)
   };
 
-  beforeEach(async () => {
-    cleanup();
-    activeService = createWishlistState();
-    vi.clearAllMocks();
-    tauriMock.reset();
+  return { ...base, ...overrides };
+}
 
-    tauriMock.mockCommand('get_wishlists', wishlistFixtures);
-    tauriMock.mockCommand('get_manufacturers', manufacturerFixtures);
-    tauriMock.mockCommand('get_wishlist_by_id', wishlistViewFixture);
-    await activeService.fetchWishlists();
+async function renderDrawer(
+  props: {
+    open: boolean;
+    onClose: () => void;
+    onSaved: () => void;
+    preselectedWishlistId?: string;
+  } = defaultProps
+) {
+  render(AddWishlistItemDrawer, { props });
+  await screen.findByRole('button', { name: /^manufacturer/i });
+}
+
+async function selectManufacturerWithUser(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByRole('button', { name: /^manufacturer/i }));
+  await user.click(await screen.findByRole('option', { name: new RegExp(name, 'i') }));
+}
+
+const defaultProps = {
+  open: true,
+  onClose: vi.fn(),
+  onSaved: vi.fn()
+};
+
+describe('AddWishlistItemDrawer', () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+
+    activeService = createServiceMock();
+
+    mockGetManufacturers.mockResolvedValue({
+      status: 'ok',
+      data: manufacturerFixtures
+    });
   });
 
   it('should render modal with title, form fields, and available wishlists', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemDrawer, { props: defaultProps });
+
+    activeService = createServiceMock({
+      wishlists: wishlistFixtures,
+      defaultWishlist: wishlistFixtures[0]
+    });
+
+    await renderDrawer();
 
     expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: /^manufacturer/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^manufacturer/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/product code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
 
-    const trigger = await screen.findByRole('button', { name: /select a wishlist/i });
-    await user.click(trigger);
+    await user.click(screen.getByRole('button', { name: /select a wishlist/i }));
     expect(await screen.findByRole('option', { name: /my wishlist/i })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /future purchases/i })).toBeInTheDocument();
   });
 
   it('should show all validation errors in sequence (manufacturer → product code → description)', async () => {
     const user = userEvent.setup();
-    render(AddWishlistItemDrawer, { props: defaultProps });
+    await renderDrawer();
 
-    // 1. Missing manufacturer
     const saveButton = screen.getByRole('button', { name: /save/i });
-    await user.click(saveButton);
-    await waitFor(() => {
-      expect(screen.getByText('Please select a manufacturer')).toBeInTheDocument();
-    });
 
-    // 2. After selecting manufacturer, missing product code
+    await user.click(saveButton);
+    expect(await screen.findByText('Please select a manufacturer')).toBeInTheDocument();
+
     await selectManufacturerWithUser(user, 'Märklin');
     await user.click(saveButton);
-    await waitFor(() => {
-      expect(screen.getByText('Please enter a product code')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Please enter a product code')).toBeInTheDocument();
 
-    // 3. After filling product code, missing description
     await user.type(screen.getByLabelText(/product code/i), '1');
     await user.click(saveButton);
-    await waitFor(() => {
-      expect(screen.getByText('Please enter a description')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Please enter a description')).toBeInTheDocument();
   });
 
   it('should add model to existing wishlist', async () => {
     const user = userEvent.setup();
-
-    tauriMock.mockCommand('add_railway_model_to_wish_list', null);
-
     const onSaved = vi.fn();
     const onClose = vi.fn();
-    render(AddWishlistItemDrawer, {
-      props: { open: true, onSaved, onClose }
+
+    activeService = createServiceMock({
+      addRailwayModelToWishlist: vi.fn().mockResolvedValue(true)
     });
 
-    // Select manufacturer via shadcn Select
+    await renderDrawer({ open: true, onSaved, onClose, preselectedWishlistId: 'wishlist-1' });
+
     await selectManufacturerWithUser(user, 'Märklin');
-
-    // Fill product code
     await user.type(screen.getByLabelText(/product code/i), '1');
-
-    // Fill description
     await user.type(screen.getByLabelText(/description/i), 'a');
 
-    // Submit
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
+      expect(activeService.addRailwayModelToWishlist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          wishlistId: 'wishlist-1'
+        })
+      );
       expect(onSaved).toHaveBeenCalled();
       expect(onClose).toHaveBeenCalled();
     });
@@ -338,35 +298,33 @@ describe('AddWishlistItemDrawer', () => {
       totalValue: {}
     } as unknown as WishlistPreviewLite;
 
-    tauriMock.mockCommand('create_wishlist', mockCreatedWishlist);
-    tauriMock.mockCommand('add_railway_model_to_wish_list', null);
+    activeService = createServiceMock({
+      wishlists: wishlistFixtures,
+      defaultWishlist: wishlistFixtures[0],
+      createWishlist: vi.fn().mockResolvedValue(mockCreatedWishlist),
+      addRailwayModelToWishlist: vi.fn().mockResolvedValue(true)
+    });
 
-    render(AddWishlistItemDrawer, { props: defaultProps });
+    await renderDrawer();
 
-    // Open the combobox and type a new list name, then click Create
-    const wishlistTrigger = await screen.findByRole('button', { name: /select a wishlist/i });
-    await user.click(wishlistTrigger);
-    const searchInput = await screen.findByPlaceholderText(
-      'Search wishlists or type to create new...'
+    await user.click(screen.getByRole('button', { name: /select a wishlist/i }));
+    await user.type(
+      await screen.findByPlaceholderText('Search wishlists or type to create new...'),
+      'N'
     );
-    await user.type(searchInput, 'N');
     await user.click(await screen.findByRole('button', { name: /create/i }));
 
-    // Fill required fields
     await selectManufacturerWithUser(user, 'Märklin');
-
     await user.type(screen.getByLabelText(/product code/i), '1');
     await user.type(screen.getByLabelText(/description/i), 'a');
 
-    // Submit
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith('create_wishlist', expect.any(Object));
-      expect(mockInvoke).toHaveBeenCalledWith(
-        'add_railway_model_to_wish_list',
+      expect(activeService.createWishlist).toHaveBeenCalledWith('N', false, true);
+      expect(activeService.addRailwayModelToWishlist).toHaveBeenCalledWith(
         expect.objectContaining({
-          args: expect.objectContaining({ wishlistId: 'new-wishlist' })
+          wishlistId: 'new-wishlist'
         })
       );
     });
@@ -374,85 +332,95 @@ describe('AddWishlistItemDrawer', () => {
 
   it('should show error when creating wishlist fails', async () => {
     const user = userEvent.setup();
-    const error = { ValidationError: { name: 'Name already exists' } };
 
-    tauriMock.mockCommandError('create_wishlist', error);
+    activeService = createServiceMock({
+      wishlists: wishlistFixtures,
+      defaultWishlist: wishlistFixtures[0],
+      createWishlist: vi.fn().mockResolvedValue(null)
+    });
 
-    render(AddWishlistItemDrawer, { props: defaultProps });
+    await renderDrawer();
 
-    // Open the combobox and type a new list name, then click Create
-    const wishlistTrigger = await screen.findByRole('button', { name: /select a wishlist/i });
-    await user.click(wishlistTrigger);
-    const searchInput = await screen.findByPlaceholderText(
-      'Search wishlists or type to create new...'
+    await user.click(screen.getByRole('button', { name: /select a wishlist/i }));
+    await user.type(
+      await screen.findByPlaceholderText('Search wishlists or type to create new...'),
+      'D'
     );
-    await user.type(searchInput, 'D');
     await user.click(await screen.findByRole('button', { name: /create/i }));
 
     await selectManufacturerWithUser(user, 'Märklin');
-
     await user.type(screen.getByLabelText(/product code/i), '1');
     await user.type(screen.getByLabelText(/description/i), 'a');
-
     await user.click(screen.getByRole('button', { name: /save/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Failed to create wishlist')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Failed to create wishlist')).toBeInTheDocument();
   });
 
   it('should show error when adding model fails', async () => {
     const user = userEvent.setup();
 
-    tauriMock.mockCommandError('add_railway_model_to_wish_list', { NotFound: 'Not found' });
+    activeService = createServiceMock({
+      addRailwayModelToWishlist: vi.fn().mockResolvedValue(false)
+    });
 
-    render(AddWishlistItemDrawer, { props: defaultProps });
+    await renderDrawer({
+      open: true,
+      onClose: vi.fn(),
+      onSaved: vi.fn(),
+      preselectedWishlistId: 'wishlist-1'
+    });
 
     await selectManufacturerWithUser(user, 'Märklin');
-
     await user.type(screen.getByLabelText(/product code/i), '1');
     await user.type(screen.getByLabelText(/description/i), 'a');
-
     await user.click(screen.getByRole('button', { name: /save/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Failed to add item')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Failed to add item')).toBeInTheDocument();
   });
 
   it('should disable buttons while submitting', async () => {
     const user = userEvent.setup();
 
-    tauriMock.mockCommandWithDelay('add_railway_model_to_wish_list', 80, null);
+    let resolveSubmit!: (value: boolean) => void;
+    const pendingSubmit = new Promise<boolean>((resolve) => {
+      resolveSubmit = resolve;
+    });
 
-    render(AddWishlistItemDrawer, { props: defaultProps });
+    activeService = createServiceMock({
+      addRailwayModelToWishlist: vi.fn().mockReturnValue(pendingSubmit)
+    });
+
+    await renderDrawer({
+      open: true,
+      onClose: vi.fn(),
+      onSaved: vi.fn(),
+      preselectedWishlistId: 'wishlist-1'
+    });
 
     await selectManufacturerWithUser(user, 'Märklin');
-
     await user.type(screen.getByLabelText(/product code/i), '1');
     await user.type(screen.getByLabelText(/description/i), 'a');
 
     const saveButton = screen.getByRole('button', { name: /save/i });
     await user.click(saveButton);
 
-    // Button should be disabled during submission
     await waitFor(() => {
       expect(saveButton).toBeDisabled();
     });
+
+    resolveSubmit(true);
   });
 
   it('should close drawer directly when no changes have been made', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(AddWishlistItemDrawer, {
-      props: { ...defaultProps, onClose }
+
+    await renderDrawer({
+      ...defaultProps,
+      onClose
     });
 
-    expect(await screen.findByLabelText(/product code/i)).toBeInTheDocument();
-
-    // No changes made — close button should call onClose directly
-    const closeButton = screen.getByRole('button', { name: /close/i });
-    await user.click(closeButton);
+    await user.click(screen.getByRole('button', { name: /close/i }));
 
     expect(onClose).toHaveBeenCalled();
   });
@@ -460,24 +428,18 @@ describe('AddWishlistItemDrawer', () => {
   it('should show discard dialog when closing with unsaved changes', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(AddWishlistItemDrawer, {
-      props: { ...defaultProps, onClose }
-    });
 
-    expect(await screen.findByLabelText(/product code/i)).toBeInTheDocument();
+    await renderDrawer({
+      ...defaultProps,
+      onClose
+    });
 
     await user.type(screen.getByLabelText(/product code/i), 't');
+    await user.click(screen.getByRole('button', { name: /close/i }));
 
-    const closeButton = screen.getByRole('button', { name: /close/i });
-    await user.click(closeButton);
-
-    // Discard dialog should appear, not close immediately
-    await waitFor(() => {
-      expect(screen.getByText('Discard wishlist item?')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Discard wishlist item?')).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
 
-    // Confirm discard
     await user.click(screen.getByRole('button', { name: /discard/i }));
     expect(onClose).toHaveBeenCalled();
   });
