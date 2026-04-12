@@ -41,8 +41,8 @@
   let localDepot = $state('');
   let localControl = $state<Control | null>(null);
   let localDccInterface = $state<DccInterface | null>(null);
-  let localCategory = $state<RollingStockCategory | null>(rollingStock.category);
-  let localSubcategory = $state<string | null>(rollingStock.subcategory);
+  let localCategory = $state<RollingStockCategory | null>(null);
+  let localSubcategory = $state<string | null>(null);
   let localIsDummy = $state(false);
   let localLengthMm = $state('');
   let localLengthInches = $state('');
