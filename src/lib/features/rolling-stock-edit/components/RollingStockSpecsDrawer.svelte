@@ -8,7 +8,6 @@
     type Control,
     type CouplerType,
     type DccInterface,
-    type FeatureFlag,
     type PrototypeView,
     type RailwayCompanyId,
     type RailwayModelId,
@@ -19,6 +18,11 @@
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import { superForm } from 'sveltekit-superforms';
+  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import {
+    rollingStockSpecsSchema,
+    type RollingStockSpecsFormData
+  } from '$lib/schemas/rolling-stock-specs-form';
 
   interface Props {
     /** Controls drawer visibility. */
@@ -48,30 +52,7 @@
   }: Props = $props();
 
   // ── Form state ──────────────────────────────────────────────────────────────
-  interface FormState {
-    category: string;
-    railwayCompanyId: string;
-    seriesCode: string;
-    series: string;
-    roadNumber: string;
-    friendlyName: string;
-    livery: string;
-    depot: string;
-    flywheelFitted: FeatureFlag;
-    sprungBuffers: FeatureFlag;
-    bodyShell: string;
-    chassis: string;
-    interiorLights: FeatureFlag;
-    lights: FeatureFlag;
-    dccInterface: string;
-    control: string;
-    couplingSocket: string;
-    closeCouplers: FeatureFlag;
-    digitalShunting: FeatureFlag;
-    selectedCouplerTypeId: string | null;
-    lengthMm: number | null;
-    isDummy: FeatureFlag;
-  }
+  type FormState = RollingStockSpecsFormData & Record<string, unknown>;
 
   const emptyForm: FormState = {
     category: '',
@@ -98,10 +79,10 @@
     isDummy: 'NOT_APPLICABLE'
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { form, tainted, reset, isTainted } = superForm(emptyForm as any, {
+  const { form, tainted, reset, isTainted } = superForm<FormState>(emptyForm, {
     SPA: true,
-    dataType: 'json'
+    dataType: 'json',
+    validators: zod(rollingStockSpecsSchema)
   });
   let originalForm = $state<FormState>({ ...emptyForm });
   let isLoading = $state(false);
@@ -279,8 +260,7 @@
       }
       const data = extractRsData(rs);
       data.selectedCouplerTypeId = currentCouplerId ?? null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      reset({ data: { ...data } as any });
+      reset({ data: { ...data } });
       originalForm = { ...data };
     } finally {
       isLoading = false;
@@ -383,9 +363,8 @@
       }
 
       toaster.success(m.specs_drawer_save_success());
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      reset({ data: { ...$form } as any });
-      originalForm = { ...$form } as FormState;
+      reset({ data: { ...$form } });
+      originalForm = { ...$form };
       onSaved?.();
       onClose();
     } finally {
