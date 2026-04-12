@@ -34,18 +34,72 @@
   let isExpanded = $state(false);
   let specsLoaded = $state(false);
 
+  interface RollingStockOverrides {
+    series?: string;
+    roadNumber?: string;
+    livery?: string;
+    depot?: string;
+    control?: Control | null;
+    dccInterface?: DccInterface | null;
+    category?: RollingStockCategory | null;
+    subcategory?: string | null;
+    lengthMm?: string;
+    lengthInches?: string;
+    currentCouplerId?: string | null;
+  }
+
+  interface RollingStockSnapshot {
+    series: string;
+    roadNumber: string;
+    livery: string;
+    depot: string;
+    control: Control | null;
+    dccInterface: DccInterface | null;
+    category: RollingStockCategory | null;
+    subcategory: string | null;
+    lengthMm: string;
+    lengthInches: string;
+    currentCouplerId: string | null;
+  }
+
+  let rollingStockOverrides = $state<RollingStockOverrides>({});
+  let previousRollingStockSnapshot: RollingStockSnapshot | null = null;
+
   // ── Identification / Control fields (from OwnedRollingStockView) ─────────────
-  let localSeries = $state('');
-  let localRoadNumber = $state('');
-  let localLivery = $state('');
-  let localDepot = $state('');
-  let localControl = $state<Control | null>(null);
-  let localDccInterface = $state<DccInterface | null>(null);
-  let localCategory = $state<RollingStockCategory | null>(null);
-  let localSubcategory = $state<string | null>(null);
+  const localSeries = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.series, rollingStock.series ?? '')
+  );
+  const localRoadNumber = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.roadNumber, rollingStock.roadNumber ?? '')
+  );
+  const localLivery = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.livery, rollingStock.livery ?? '')
+  );
+  const localDepot = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.depot, rollingStock.depot ?? '')
+  );
+  const localControl = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.control, rollingStock.control)
+  );
+  const localDccInterface = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.dccInterface, rollingStock.dccInterface)
+  );
+  const localCategory = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.category, rollingStock.category)
+  );
+  const localSubcategory = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.subcategory, rollingStock.subcategory)
+  );
   let localIsDummy = $state(false);
-  let localLengthMm = $state('');
-  let localLengthInches = $state('');
+  const localLengthMm = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.lengthMm, extractMm(rollingStock.lengthOverBuffers))
+  );
+  const localLengthInches = $derived.by(() =>
+    resolveOverride(
+      rollingStockOverrides.lengthInches,
+      extractInches(rollingStock.lengthOverBuffers)
+    )
+  );
 
   // ── Additional identification fields (loaded via getRailwayModelById on first expand) ─
   let localPrototypeSeries = $state<string | null>(null);
@@ -61,7 +115,9 @@
   let localCouplingSocket = $state<string | null>(null);
   let localCloseCouplers = $state<'YES' | 'NO' | null>(null);
   let localDigitalShunting = $state<'YES' | 'NO' | null>(null);
-  let localCurrentCoupler = $state<string | null>(null);
+  const localCurrentCoupler = $derived.by(() =>
+    resolveOverride(rollingStockOverrides.currentCouplerId, rollingStock.currentCouplerId ?? null)
+  );
 
   // ── US5: derived edit-permission flag ────────────────────────────────────────
   /** True when no other card is editing, or when this specific card is the active one. */
@@ -69,19 +125,34 @@
     editable && (editCtx.activeEditId === null || editCtx.activeEditId === rollingStock.id)
   );
 
-  // ── Prop sync ─────────────────────────────────────────────────────────────────
+  // ── Prop reconciliation ───────────────────────────────────────────────────────
   $effect(() => {
-    localSeries = rollingStock.series ?? '';
-    localRoadNumber = rollingStock.roadNumber ?? '';
-    localLivery = rollingStock.livery ?? '';
-    localDepot = rollingStock.depot ?? '';
-    localControl = rollingStock.control;
-    localDccInterface = rollingStock.dccInterface;
-    localCategory = rollingStock.category;
-    localSubcategory = rollingStock.subcategory;
-    localLengthMm = extractMm(rollingStock.lengthOverBuffers);
-    localLengthInches = extractInches(rollingStock.lengthOverBuffers);
-    localCurrentCoupler = rollingStock.currentCouplerId ?? null;
+    const nextSnapshot = buildRollingStockSnapshot(rollingStock);
+    const previousSnapshot = previousRollingStockSnapshot;
+
+    if (previousSnapshot) {
+      if (previousSnapshot.series !== nextSnapshot.series) rollingStockOverrides.series = undefined;
+      if (previousSnapshot.roadNumber !== nextSnapshot.roadNumber)
+        rollingStockOverrides.roadNumber = undefined;
+      if (previousSnapshot.livery !== nextSnapshot.livery) rollingStockOverrides.livery = undefined;
+      if (previousSnapshot.depot !== nextSnapshot.depot) rollingStockOverrides.depot = undefined;
+      if (previousSnapshot.control !== nextSnapshot.control)
+        rollingStockOverrides.control = undefined;
+      if (previousSnapshot.dccInterface !== nextSnapshot.dccInterface)
+        rollingStockOverrides.dccInterface = undefined;
+      if (previousSnapshot.category !== nextSnapshot.category)
+        rollingStockOverrides.category = undefined;
+      if (previousSnapshot.subcategory !== nextSnapshot.subcategory)
+        rollingStockOverrides.subcategory = undefined;
+      if (previousSnapshot.lengthMm !== nextSnapshot.lengthMm)
+        rollingStockOverrides.lengthMm = undefined;
+      if (previousSnapshot.lengthInches !== nextSnapshot.lengthInches)
+        rollingStockOverrides.lengthInches = undefined;
+      if (previousSnapshot.currentCouplerId !== nextSnapshot.currentCouplerId)
+        rollingStockOverrides.currentCouplerId = undefined;
+    }
+
+    previousRollingStockSnapshot = nextSnapshot;
   });
 
   // ── Specs drawer ──────────────────────────────────────────────────────────────
@@ -116,6 +187,26 @@
     return '';
   }
 
+  function resolveOverride<T>(override: T | undefined, fallback: T): T {
+    return override !== undefined ? override : fallback;
+  }
+
+  function buildRollingStockSnapshot(stock: OwnedRollingStockView): RollingStockSnapshot {
+    return {
+      series: stock.series ?? '',
+      roadNumber: stock.roadNumber ?? '',
+      livery: stock.livery ?? '',
+      depot: stock.depot ?? '',
+      control: stock.control,
+      dccInterface: stock.dccInterface,
+      category: stock.category,
+      subcategory: stock.subcategory,
+      lengthMm: extractMm(stock.lengthOverBuffers),
+      lengthInches: extractInches(stock.lengthOverBuffers),
+      currentCouplerId: stock.currentCouplerId ?? null
+    };
+  }
+
   function displayLength(): string {
     return settingsState.settings.measureUnit === 'Metric' ? localLengthMm : localLengthInches;
   }
@@ -143,13 +234,6 @@
       return false;
     });
     if (!rsView) return;
-
-    // Extract category from the variant key
-    if ('locomotive' in rsView) localCategory = 'LOCOMOTIVE';
-    else if ('electricMultipleUnit' in rsView) localCategory = 'ELECTRIC_MULTIPLE_UNIT';
-    else if ('freightCar' in rsView) localCategory = 'FREIGHT_CAR';
-    else if ('passengerCar' in rsView) localCategory = 'PASSENGER_CAR';
-    else if ('railcar' in rsView) localCategory = 'RAILCAR';
 
     // Extract prototype series and friendly_name
     if ('locomotive' in rsView && rsView.locomotive) {
@@ -244,39 +328,39 @@
 
     if (result.status === 'error') throw new Error('Failed to save');
 
-    if (field === 'series') localSeries = value;
-    else if (field === 'roadNumber') localRoadNumber = value;
-    else if (field === 'livery') localLivery = value;
-    else if (field === 'depot') localDepot = value;
+    if (field === 'series') rollingStockOverrides.series = value;
+    else if (field === 'roadNumber') rollingStockOverrides.roadNumber = value;
+    else if (field === 'livery') rollingStockOverrides.livery = value;
+    else if (field === 'depot') rollingStockOverrides.depot = value;
   }
 
   // ── Save: category ────────────────────────────────────────────────────────────
   async function saveCategory(newCategory: RollingStockCategory) {
     const prev = localCategory;
-    localCategory = newCategory;
+    rollingStockOverrides.category = newCategory;
     const result = await commands.updateRollingStockCategory({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       category: newCategory
     });
     if (result.status === 'error') {
-      localCategory = prev;
+      rollingStockOverrides.category = prev;
       throw new Error('Failed to save category');
     }
-    localSubcategory = null;
+    rollingStockOverrides.subcategory = null;
   }
 
   // ── Save: subcategory ─────────────────────────────────────────────────────────
   async function saveSubcategory(value: string) {
     const prev = localSubcategory;
-    localSubcategory = value || null;
+    rollingStockOverrides.subcategory = value || null;
     const result = await commands.updateRollingStockSubcategory({
       railwayModelId,
       rollingStockId: rollingStock.rollingStockId,
       subcategory: value
     });
     if (result.status === 'error') {
-      localSubcategory = prev;
+      rollingStockOverrides.subcategory = prev;
       throw new Error('Failed to save subcategory');
     }
   }
@@ -293,7 +377,7 @@
       lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
     });
     if (result.status === 'error') throw new Error('Failed to save control');
-    localControl = control;
+    rollingStockOverrides.control = control;
   }
 
   async function saveDccInterface(id: string) {
@@ -307,7 +391,7 @@
       lengthInches: localLengthInches ? parseFloat(localLengthInches) : null
     });
     if (result.status === 'error') throw new Error('Failed to save DCC interface');
-    localDccInterface = dccInterface;
+    rollingStockOverrides.dccInterface = dccInterface;
   }
 
   async function saveLength(v: string) {
@@ -324,8 +408,8 @@
       lengthInches
     });
     if (result.status === 'error') throw new Error('Failed to save length');
-    if (isMetric) localLengthMm = num > 0 ? String(num) : '';
-    else localLengthInches = num > 0 ? String(num) : '';
+    if (isMetric) rollingStockOverrides.lengthMm = num > 0 ? String(num) : '';
+    else rollingStockOverrides.lengthInches = num > 0 ? String(num) : '';
   }
 
   // ── Save: all spec fields atomically ─────────────────────────────────────────
@@ -445,7 +529,7 @@
   }
 
   function onCouplerChange(id: string | null) {
-    localCurrentCoupler = id;
+    rollingStockOverrides.currentCouplerId = id;
   }
 </script>
 

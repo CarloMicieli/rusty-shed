@@ -12,13 +12,17 @@
   import { Button } from '$lib/components';
   import type { AppTheme, Language, MeasureUnit, PowerMethod } from '$lib/bindings';
 
-  // Local state for form inputs
-  let currency = $state(settingsState.settings.currency ?? 'EUR');
-  let language = $state<Language>(settingsState.settings.language ?? 'en');
-  let theme = $state<AppTheme>(settingsState.settings.theme ?? 'steampunk-dark');
-  let measureUnit = $state<MeasureUnit>(settingsState.settings.measureUnit ?? 'Metric');
-  let favouriteScale = $state(settingsState.settings.favouriteScale ?? '');
-  let powerMethod = $state<PowerMethod>(settingsState.settings.powerMethod ?? 'DC');
+  interface SettingsDraft {
+    currency: string;
+    language: Language;
+    theme: AppTheme;
+    measureUnit: MeasureUnit;
+    favouriteScale: string;
+    powerMethod: PowerMethod;
+  }
+
+  let draft = $state(createSettingsDraft(settingsState.settings));
+  let previousSettingsDraft: SettingsDraft | null = null;
 
   let saving = $state(false);
   let saveError = $state<string | null>(null);
@@ -26,17 +30,29 @@
 
   // Sync language changes with Paraglide
   $effect(() => {
-    setLocale(language);
+    setLocale(draft.language);
   });
 
-  // Update local state when settings change
+  // Reconcile upstream settings changes without mirroring each field separately.
   $effect(() => {
-    currency = settingsState.settings.currency ?? 'EUR';
-    language = settingsState.settings.language ?? 'en';
-    theme = settingsState.settings.theme ?? 'steampunk-dark';
-    measureUnit = settingsState.settings.measureUnit ?? 'Metric';
-    favouriteScale = settingsState.settings.favouriteScale ?? '';
-    powerMethod = settingsState.settings.powerMethod ?? 'DC';
+    const nextSettings = createSettingsDraft(settingsState.settings);
+    const previousSettings = previousSettingsDraft;
+
+    if (previousSettings) {
+      if (previousSettings.currency !== nextSettings.currency)
+        draft.currency = nextSettings.currency;
+      if (previousSettings.language !== nextSettings.language)
+        draft.language = nextSettings.language;
+      if (previousSettings.theme !== nextSettings.theme) draft.theme = nextSettings.theme;
+      if (previousSettings.measureUnit !== nextSettings.measureUnit)
+        draft.measureUnit = nextSettings.measureUnit;
+      if (previousSettings.favouriteScale !== nextSettings.favouriteScale)
+        draft.favouriteScale = nextSettings.favouriteScale;
+      if (previousSettings.powerMethod !== nextSettings.powerMethod)
+        draft.powerMethod = nextSettings.powerMethod;
+    }
+
+    previousSettingsDraft = nextSettings;
   });
 
   async function handleSubmit(event: Event) {
@@ -49,18 +65,18 @@
 
     try {
       const inputData = {
-        currency,
-        language,
-        theme,
-        measureUnit,
-        favouriteScale,
-        powerMethod
+        currency: draft.currency,
+        language: draft.language,
+        theme: draft.theme,
+        measureUnit: draft.measureUnit,
+        favouriteScale: draft.favouriteScale,
+        powerMethod: draft.powerMethod
       };
 
       await settingsState.update(inputData);
 
       const { themeStore } = await import('$lib/stores/themeStore.svelte');
-      await themeStore.setTheme(theme);
+      await themeStore.setTheme(draft.theme);
 
       log.debug('SettingsForm: Save successful');
       saveSuccess = true;
@@ -76,6 +92,17 @@
       saving = false;
     }
   }
+
+  function createSettingsDraft(settings: typeof settingsState.settings): SettingsDraft {
+    return {
+      currency: settings.currency ?? 'EUR',
+      language: settings.language ?? 'en',
+      theme: settings.theme ?? 'steampunk-dark',
+      measureUnit: settings.measureUnit ?? 'Metric',
+      favouriteScale: settings.favouriteScale ?? '',
+      powerMethod: settings.powerMethod ?? 'DC'
+    };
+  }
 </script>
 
 <form onsubmit={handleSubmit} class="space-y-6">
@@ -85,34 +112,38 @@
 
     <div class="space-y-4">
       <CurrencySelector
-        value={currency}
-        onchange={(value) => (currency = value)}
+        value={draft.currency}
+        onchange={(value) => (draft.currency = value)}
         disabled={saving}
       />
 
       <LanguageSelector
-        value={language}
-        onchange={(value) => (language = value)}
+        value={draft.language}
+        onchange={(value) => (draft.language = value)}
         disabled={saving}
       />
 
       <MeasureUnitSelector
-        value={measureUnit}
-        onchange={(value) => (measureUnit = value)}
+        value={draft.measureUnit}
+        onchange={(value) => (draft.measureUnit = value)}
         disabled={saving}
       />
 
-      <ThemeSelector value={theme} onchange={(value) => (theme = value)} disabled={saving} />
+      <ThemeSelector
+        value={draft.theme}
+        onchange={(value) => (draft.theme = value)}
+        disabled={saving}
+      />
 
       <ScaleSelector
-        value={favouriteScale}
-        onchange={(value) => (favouriteScale = value)}
+        value={draft.favouriteScale}
+        onchange={(value) => (draft.favouriteScale = value)}
         disabled={saving}
       />
 
       <PowerSystemSelector
-        value={powerMethod}
-        onchange={(value) => (powerMethod = value)}
+        value={draft.powerMethod}
+        onchange={(value) => (draft.powerMethod = value)}
         disabled={saving}
       />
     </div>
