@@ -4,6 +4,7 @@
   import type { ManufacturerId, TrackType, TrackCode } from '$lib/bindings';
   import { Input } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   interface Props {
     manufacturerId?: string;
@@ -71,13 +72,21 @@
     }
   }
 
-  const trackTypeOptions = $derived(
-    trackTypes.map((type) => ({ value: type, label: trackTypeLabel(type) }))
-  );
+  const trackTypeOptions = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return trackTypes.map((type) => ({ value: type, label: trackTypeLabel(type) }));
+    }
+    return trackTypes.map((type) => ({ value: type, label: trackTypeLabel(type) }));
+  });
 
-  const trackCodeOptions = $derived(
-    trackCodes.map((code) => ({ value: code, label: trackCodeLabel(code) }))
-  );
+  const trackCodeOptions = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return trackCodes.map((code) => ({ value: code, label: trackCodeLabel(code) }));
+    }
+    return trackCodes.map((code) => ({ value: code, label: trackCodeLabel(code) }));
+  });
 
   const getTrackTypeValue = () => trackType;
   const getTrackCodeValue = () => trackCode;

@@ -75,15 +75,7 @@ class ThemeStateClass {
         throw new Error('Failed to get settings');
       }
 
-      const current: UserSettings = getResult.data;
-      const updatePayload: UpdateSettingsInput = {
-        currency: current.currency ?? null,
-        language: current.language ?? null,
-        measureUnit: current.measureUnit ?? null,
-        favouriteScale: current.favouriteScale ?? null,
-        powerMethod: current.powerMethod ?? null,
-        theme
-      };
+      const updatePayload: UpdateSettingsInput = { theme };
 
       const updateResult = await commands.updateSettings(updatePayload);
 

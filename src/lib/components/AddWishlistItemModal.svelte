@@ -21,6 +21,7 @@
   } from '$lib/utils/enum-options';
   import { X } from 'lucide-svelte';
   import { onMount } from 'svelte';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   const wishlistService = getWishlistContext();
 
@@ -192,9 +193,29 @@
     manufacturers.find((mfr) => mfr.id === form.manufacturerId)
   );
 
-  const categoryOptionList = $derived(categoryOptions());
-  const scaleOptionList = $derived(scaleOptions());
-  const powerMethodOptionList = $derived(powerMethodOptions());
+  const categoryOptionList = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return categoryOptions();
+    }
+    return categoryOptions();
+  });
+
+  const scaleOptionList = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return scaleOptions();
+    }
+    return scaleOptions();
+  });
+
+  const powerMethodOptionList = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return powerMethodOptions();
+    }
+    return powerMethodOptions();
+  });
 </script>
 
 {#snippet wishlistSelectionRow()}

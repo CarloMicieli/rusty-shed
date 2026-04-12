@@ -1,4 +1,4 @@
-import { getLocale, setLocale as setParaglideLocale } from '$lib/paraglide/runtime.js';
+import { getLocale } from '$lib/paraglide/runtime.js';
 import type { Language } from '$lib/bindings';
 
 /**
@@ -10,7 +10,6 @@ class LocaleStateClass {
 
   setActiveLocale(locale: Language): void {
     this.activeLocale = locale;
-    setParaglideLocale(locale);
   }
 }
 
