@@ -191,6 +191,10 @@
   const selectedManufacturer = $derived(
     manufacturers.find((mfr) => mfr.id === form.manufacturerId)
   );
+
+  const categoryOptionList = $derived(categoryOptions());
+  const scaleOptionList = $derived(scaleOptions());
+  const powerMethodOptionList = $derived(powerMethodOptions());
 </script>
 
 {#snippet wishlistSelectionRow()}
@@ -287,7 +291,7 @@
           {/if}
         </Select.Trigger>
         <Select.Content>
-          {#each categoryOptions() as opt (opt.value)}
+          {#each categoryOptionList as opt (opt.value)}
             <Select.Item value={opt.value} label={opt.label} />
           {/each}
         </Select.Content>
@@ -315,7 +319,7 @@
             {/if}
           </Select.Trigger>
           <Select.Content>
-            {#each scaleOptions() as opt (opt.value)}
+            {#each scaleOptionList as opt (opt.value)}
               <Select.Item value={opt.value} label={opt.label} />
             {/each}
           </Select.Content>
@@ -340,7 +344,7 @@
             {/if}
           </Select.Trigger>
           <Select.Content>
-            {#each powerMethodOptions() as opt (opt.value)}
+            {#each powerMethodOptionList as opt (opt.value)}
               <Select.Item value={opt.value} label={opt.label} />
             {/each}
           </Select.Content>

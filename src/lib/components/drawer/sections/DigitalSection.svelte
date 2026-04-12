@@ -48,7 +48,7 @@
         dccAddress = val;
         await onAddressChange?.(val);
       }}
-      placeholder="1-9999"
+      placeholder={m.digital_roster_address_range_hint()}
       {disabled}
       error={touched && errors.address ? errors.address : undefined}
     />

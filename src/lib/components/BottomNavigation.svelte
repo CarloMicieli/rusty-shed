@@ -6,7 +6,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components/ui/badge';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
-  import { localeStore } from '$lib/stores/locale';
+  import { localeState } from '$lib/stores/locale.svelte';
   import { PRIMARY_ITEMS, SECONDARY_ITEMS } from './navigation/config';
   import { isActive, isMoreButtonActive } from './navigation/utils';
   import MoreMenu from './navigation/MoreMenu.svelte';
@@ -15,7 +15,7 @@
 
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const pathname = $derived($page.url.pathname as string);
-  const locale = $derived($localeStore);
+  const locale = $derived(localeState.activeLocale);
 
   let moreMenuOpen = $state(false);
 

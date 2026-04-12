@@ -37,12 +37,16 @@ vi.mock('$lib/services/errors', () => ({
   getToastMessage: vi.fn((e: unknown) => String(e))
 }));
 
-vi.mock('$lib/stores/locale', () => ({
+vi.mock('$lib/stores/locale.svelte', () => ({
+  localeState: {
+    activeLocale: 'en',
+    setActiveLocale: vi.fn()
+  },
   setActiveLocale: vi.fn()
 }));
 
 vi.mock('$lib/stores/themeStore.svelte', () => ({
-  themeStore: {
+  themeState: {
     setTheme: vi.fn().mockResolvedValue(undefined),
     initializeFromSettings: vi.fn().mockResolvedValue(undefined)
   }

@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { get } from 'svelte/store';
 
 // Mock Tauri bindings
 vi.mock('$lib/bindings', () => ({
@@ -9,12 +8,7 @@ vi.mock('$lib/bindings', () => ({
   }
 }));
 
-import {
-  themeStore,
-  resolvedTheme,
-  currentTheme,
-  isThemeLoading
-} from '$lib/stores/themeStore.svelte';
+import { themeState } from '$lib/stores/themeStore.svelte';
 import { commands } from '$lib/bindings';
 
 const mockGetSettings = vi.mocked(commands.getSettings);
@@ -22,48 +16,39 @@ const mockUpdateSettings = vi.mocked(commands.updateSettings);
 
 // ─── tests ────────────────────────────────────────────────────────────────
 
-describe('themeStore', () => {
+describe('themeState (runes-based)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset store to initial state
-    themeStore.set({ current: 'system', resolved: 'dark', isLoading: true });
+    themeState.current = 'system';
+    themeState.resolved = 'dark';
+    themeState.isLoading = true;
   });
 
   describe('initial state', () => {
     it('starts with system theme preference', () => {
-      themeStore.set({ current: 'system', resolved: 'dark', isLoading: true });
-      const state = get(themeStore);
-      expect(state.current).toBe('system');
+      expect(themeState.current).toBe('system');
     });
 
     it('starts with dark resolved theme', () => {
-      const state = get(themeStore);
-      expect(state.resolved).toBe('dark');
+      expect(themeState.resolved).toBe('dark');
     });
 
     it('starts with isLoading=true', () => {
-      const state = get(themeStore);
-      expect(state.isLoading).toBe(true);
+      expect(themeState.isLoading).toBe(true);
     });
   });
 
-  describe('derived stores', () => {
-    it('resolvedTheme mirrors resolved from store', () => {
-      themeStore.set({ current: 'steampunk-light', resolved: 'light', isLoading: false });
-      expect(get(resolvedTheme)).toBe('light');
-    });
+  describe('getState synchronous access', () => {
+    it('returns current state object', () => {
+      themeState.current = 'steampunk-light';
+      themeState.resolved = 'light';
+      themeState.isLoading = false;
 
-    it('currentTheme mirrors current from store', () => {
-      themeStore.set({ current: 'steampunk-dark', resolved: 'dark', isLoading: false });
-      expect(get(currentTheme)).toBe('steampunk-dark');
-    });
-
-    it('isThemeLoading mirrors isLoading from store', () => {
-      themeStore.set({ current: 'system', resolved: 'dark', isLoading: false });
-      expect(get(isThemeLoading)).toBe(false);
-
-      themeStore.set({ current: 'system', resolved: 'dark', isLoading: true });
-      expect(get(isThemeLoading)).toBe(true);
+      const state = themeState.getState();
+      expect(state.current).toBe('steampunk-light');
+      expect(state.resolved).toBe('light');
+      expect(state.isLoading).toBe(false);
     });
   });
 
@@ -72,14 +57,13 @@ describe('themeStore', () => {
       mockGetSettings.mockResolvedValueOnce({
         status: 'ok',
         data: { theme: 'steampunk-light' }
-      } as ReturnType<typeof commands.getSettings> extends Promise<infer T> ? T : never);
+      } as never);
 
-      await themeStore.initializeFromSettings();
+      await themeState.initializeFromSettings();
 
-      const state = get(themeStore);
-      expect(state.current).toBe('steampunk-light');
-      expect(state.resolved).toBe('light');
-      expect(state.isLoading).toBe(false);
+      expect(themeState.current).toBe('steampunk-light');
+      expect(themeState.resolved).toBe('light');
+      expect(themeState.isLoading).toBe(false);
     });
 
     it('applies steampunk-dark theme correctly', async () => {
@@ -88,31 +72,28 @@ describe('themeStore', () => {
         data: { theme: 'steampunk-dark' }
       } as never);
 
-      await themeStore.initializeFromSettings();
+      await themeState.initializeFromSettings();
 
-      const state = get(themeStore);
-      expect(state.current).toBe('steampunk-dark');
-      expect(state.resolved).toBe('dark');
-      expect(state.isLoading).toBe(false);
+      expect(themeState.current).toBe('steampunk-dark');
+      expect(themeState.resolved).toBe('dark');
+      expect(themeState.isLoading).toBe(false);
     });
 
     it('falls back to dark theme on error', async () => {
       mockGetSettings.mockRejectedValueOnce(new Error('Tauri not available'));
 
-      await themeStore.initializeFromSettings();
+      await themeState.initializeFromSettings();
 
-      const state = get(themeStore);
-      expect(state.resolved).toBe('dark');
-      expect(state.isLoading).toBe(false);
+      expect(themeState.resolved).toBe('dark');
+      expect(themeState.isLoading).toBe(false);
     });
 
     it('falls back to dark when status is not ok', async () => {
       mockGetSettings.mockResolvedValueOnce({ status: 'error', error: 'E_SETTINGS' } as never);
 
-      await themeStore.initializeFromSettings();
+      await themeState.initializeFromSettings();
 
-      const state = get(themeStore);
-      expect(state.isLoading).toBe(false);
+      expect(themeState.isLoading).toBe(false);
     });
 
     it('uses system preference when theme field is absent', async () => {
@@ -121,11 +102,10 @@ describe('themeStore', () => {
         data: {} // no theme field
       } as never);
 
-      await themeStore.initializeFromSettings();
+      await themeState.initializeFromSettings();
 
-      const state = get(themeStore);
-      expect(state.current).toBe('system');
-      expect(state.isLoading).toBe(false);
+      expect(themeState.current).toBe('system');
+      expect(themeState.isLoading).toBe(false);
     });
 
     it('applies theme to DOM (sets body data-theme)', async () => {
@@ -134,40 +114,42 @@ describe('themeStore', () => {
         data: { theme: 'steampunk-light' }
       } as never);
 
-      await themeStore.initializeFromSettings();
+      await themeState.initializeFromSettings();
 
       expect(document.body.dataset.theme).toBe('steampunk-light');
     });
   });
 
   describe('setTheme', () => {
-    it('updates store and persists via Tauri on success', async () => {
+    it('updates state and persists via Tauri on success', async () => {
       mockGetSettings.mockResolvedValueOnce({ status: 'ok', data: {} } as never);
       mockUpdateSettings.mockResolvedValueOnce({
         status: 'ok',
         data: { theme: 'steampunk-dark' }
       } as never);
 
-      await themeStore.setTheme('steampunk-dark');
+      await themeState.setTheme('steampunk-dark');
 
-      const state = get(themeStore);
-      expect(state.current).toBe('steampunk-dark');
-      expect(state.resolved).toBe('dark');
+      expect(themeState.current).toBe('steampunk-dark');
+      expect(themeState.resolved).toBe('dark');
     });
 
     it('silently swallows errors on failure', async () => {
       mockGetSettings.mockRejectedValueOnce(new Error('Tauri unavailable'));
 
       // Should not throw
-      await expect(themeStore.setTheme('steampunk-light')).resolves.toBeUndefined();
+      await expect(themeState.setTheme('steampunk-light')).resolves.toBeUndefined();
     });
   });
 
   describe('getState', () => {
     it('returns current state synchronously', () => {
-      themeStore.set({ current: 'steampunk-dark', resolved: 'dark', isLoading: false });
-      const state = themeStore.getState();
-      expect(state?.current).toBe('steampunk-dark');
+      themeState.current = 'steampunk-dark';
+      themeState.resolved = 'dark';
+      themeState.isLoading = false;
+
+      const state = themeState.getState();
+      expect(state.current).toBe('steampunk-dark');
     });
   });
 });
