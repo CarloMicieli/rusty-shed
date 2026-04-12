@@ -1,12 +1,12 @@
 use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::identifiers::Identifier;
+use crate::core::domain::metadata::Metadata;
 use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
-use chrono::Utc;
 
 pub struct CreateSeller;
 
@@ -30,7 +30,6 @@ impl CreateSeller {
     where
         U: SellersUowExt + Send,
     {
-        let now = Utc::now();
         let address_fields = AddressFields {
             street: input.street_address.clone(),
             extended: input.extended_address.clone(),
@@ -49,8 +48,7 @@ impl CreateSeller {
             phone: input.phone,
             website_url: input.website_url,
             address,
-            created_at: now,
-            updated_at: now,
+            metadata: Metadata::default(),
             pending_events: Vec::new(),
         };
 
@@ -63,8 +61,7 @@ impl CreateSeller {
             phone: seller.phone.clone(),
             website_url: seller.website_url.clone(),
             address: seller.address.clone(),
-            created_at: seller.created_at,
-            updated_at: seller.updated_at,
+            metadata: seller.metadata,
         });
 
         let mut repo = unit_of_work.sellers_repository();
