@@ -143,7 +143,7 @@
     </a>
   </div>
 {:else if wishlistItem}
-  <div class="mx-auto max-w-7xl">
+  <div class="w-full max-w-full">
     <!-- Back button -->
     <a
       href={resolve('/wishlists')}

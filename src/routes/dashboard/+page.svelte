@@ -171,7 +171,7 @@
           badgeValue={totals?.maintenanceDue}
         />
 
-        <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {#if dashboard.isLoading}
             {#each statSkeletonKeys as key (key)}
               <Skeleton class="h-28 w-full" />
@@ -185,7 +185,9 @@
 
         <div class="my-6 border-t border-border/50"></div>
 
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+        <div
+          class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,4fr)_minmax(0,1fr)]"
+        >
           <div class="space-y-6">
             <div class="lg:hidden">
               <div class="gauge-frame space-y-3 p-4">

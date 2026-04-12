@@ -136,7 +136,7 @@
     </a>
   </div>
 {:else if collectionItem}
-  <div class="mx-auto max-w-7xl">
+  <div class="w-full max-w-full">
     <!-- Back button -->
     <a
       href={resolve('/collection')}

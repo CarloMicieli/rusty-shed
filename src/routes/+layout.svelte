@@ -239,7 +239,7 @@
 
       <!-- Page Content -->
       <main class="relative flex-1 overflow-hidden">
-        <div class="mx-auto h-full w-full max-w-[1600px] overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
+        <div class="h-full w-full max-w-full overflow-y-auto p-4 pb-24 lg:p-8 lg:pb-8">
           {#key $page.url.pathname}
             <div in:fade={{ duration: 150, delay: 1 }} class="space-y-8">
               {@render children()}

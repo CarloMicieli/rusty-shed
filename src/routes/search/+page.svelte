@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page, navigating } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getLocale } from '$lib/paraglide/runtime.js';
@@ -24,10 +25,11 @@
 
   function navigate(result: GlobalSearchResultView) {
     if (result.source === 'collection') {
-      goto(`/collection/${result.itemId.split(':').pop()}`);
+      goto(resolve(`/collection/${result.itemId.split(':').pop()}`));
     } else {
       const wishlistId = result.parentId ?? '';
-      goto(`/wishlists/${wishlistId}`);
+      const wishlistItemId = result.itemId.split(':').pop() ?? result.itemId;
+      goto(resolve(`/wishlists/${wishlistId}/items/${wishlistItemId}`));
     }
   }
 
@@ -38,7 +40,7 @@
   <title>{m.search_page_title()}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-2xl px-4 py-8">
+<div class="w-full max-w-full px-4 py-8">
   <!-- Page header -->
   <header class="mb-6">
     {#if query}
