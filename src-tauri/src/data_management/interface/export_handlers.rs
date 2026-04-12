@@ -5,8 +5,8 @@ use crate::data_management::application::preview_export::{self, ExportPreview};
 use crate::data_management::domain::{ExportEntitySelection, ExportResult};
 use crate::data_management::infrastructure::file_picker;
 use crate::state::AppState;
-use log::info;
 use tauri::{Manager, State};
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

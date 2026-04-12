@@ -47,12 +47,14 @@ pub fn start_connectivity_monitor(app: AppHandle) {
 
                         if let Err(error) = app.emit("cloud-backup://connectivity-changed", payload)
                         {
-                            log::warn!("cloud backup connectivity event emission failed: {error}");
+                            tracing::warn!(
+                                "cloud backup connectivity event emission failed: {error}"
+                            );
                         }
                     }
                 }
                 Err(error) => {
-                    log::warn!("cloud backup connectivity check failed: {error}");
+                    tracing::warn!("cloud backup connectivity check failed: {error}");
                 }
             }
         }

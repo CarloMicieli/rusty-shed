@@ -1,5 +1,5 @@
 use garde::Validate;
-use log::info;
+use tracing::info;
 
 use crate::core::infrastructure::error::CommandError;
 use crate::search::application::global_search::{GlobalSearch, GlobalSearchInput};

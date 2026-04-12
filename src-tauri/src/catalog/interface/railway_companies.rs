@@ -2,7 +2,7 @@ use crate::catalog::application::{GetRailwayCompanies, GetRailwayCompanyById};
 use crate::catalog::domain::railway_company::{RailwayCompany, RailwayCompanyId};
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
-use log::info;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

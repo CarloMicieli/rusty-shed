@@ -10,7 +10,7 @@ pub async fn disconnect_google(user_email: String, oauth_service: Arc<OAuthServi
     // Revoke OAuth tokens
     oauth_service.revoke_token(&user_email).await?;
 
-    log::info!("Google account disconnected");
+    tracing::info!("Google account disconnected");
 
     Ok(())
 }

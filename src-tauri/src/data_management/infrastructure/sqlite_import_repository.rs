@@ -12,10 +12,10 @@ use crate::data_management::infrastructure::schema_mapper::{
 };
 use crate::search::infrastructure::sqlite_global_search_repository::rebuild_search_index;
 use async_trait::async_trait;
-use log::warn;
 use sqlx::SqlitePool;
 use std::collections::HashSet;
 use std::path::Path;
+use tracing::warn;
 use uuid::Uuid;
 
 const DEFAULT_COLLECTION_ID: &str = "trn:collection:1";

@@ -14,9 +14,9 @@ use crate::media::infrastructure::FileStorage;
 use crate::media::interface::RailwayModelImageResponse;
 use crate::state::AppState;
 use garde::Validate;
-use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use tracing::{debug, warn};
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

@@ -1,5 +1,4 @@
 use crate::core::infrastructure::seeder;
-use log::debug;
 use sqlx::SqlitePool;
 use sqlx::migrate::Migrator;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous};
@@ -7,6 +6,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::time::Duration;
 use thiserror::Error;
+use tracing::debug;
 
 /// Embedded SQL migrations for the application.
 ///

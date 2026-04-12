@@ -37,7 +37,9 @@ impl<T> WithDomainContext<T> for Result<T, sqlx::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            log::error!("{}: {:?}", msg, err);
+            let span = tracing::info_span!("with_domain_context_sqlx", context = %msg);
+            let _enter = span.enter();
+            tracing::error!(error = ?err, "infrastructure sqlx error");
             DomainError::Infrastructure(err.to_string())
         })
     }
@@ -47,7 +49,9 @@ impl<T> WithDomainContext<T> for Result<T, std::io::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            log::error!("{}: {:?}", msg, err);
+            let span = tracing::info_span!("with_domain_context_io", context = %msg);
+            let _enter = span.enter();
+            tracing::error!(error = ?err, "infrastructure io error");
             DomainError::Infrastructure(err.to_string())
         })
     }
@@ -57,7 +61,9 @@ impl<T> WithDomainContext<T> for Result<T, serde_json::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            log::error!("{}: {:?}", msg, err);
+            let span = tracing::info_span!("with_domain_context_json", context = %msg);
+            let _enter = span.enter();
+            tracing::error!(error = ?err, "infrastructure serialization error");
             DomainError::Infrastructure(err.to_string())
         })
     }
@@ -67,7 +73,9 @@ impl<T> WithDomainContext<T> for Result<T, anyhow::Error> {
     fn with_domain_context<S: Into<String>>(self, context: S) -> Result<T, DomainError> {
         self.map_err(|err| {
             let msg = context.into();
-            log::error!("{}: {:?}", msg, err);
+            let span = tracing::info_span!("with_domain_context_anyhow", context = %msg);
+            let _enter = span.enter();
+            tracing::error!(error = ?err, "infrastructure generic error");
             DomainError::Infrastructure(err.to_string())
         })
     }

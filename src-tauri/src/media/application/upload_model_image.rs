@@ -45,7 +45,7 @@ trait ImageUploader {
     async fn clear_old_images(&self, model_id: &RailwayModelId) -> Result<(), UploadError> {
         for format in [ImageFormat::Jpeg, ImageFormat::Png, ImageFormat::WebP] {
             let path = ModelImagePath::new(self.storage().storage_dir(), model_id.as_ref(), format);
-            log::debug!("Deleting existing image: {}", path.full_path().display());
+            tracing::debug!("Deleting existing image: {}", path.full_path().display());
             match self.storage().delete_image(&path).await {
                 Ok(()) => {}
                 Err(StorageError::FileNotFound(_)) => {}
@@ -66,7 +66,7 @@ trait ImageUploader {
         let dest_path =
             ModelImagePath::new(self.storage().storage_dir(), model_id.as_ref(), format);
         self.clear_old_images(model_id).await?;
-        log::debug!("Copying image to {}", dest_path.full_path().display());
+        tracing::debug!("Copying image to {}", dest_path.full_path().display());
         self.storage()
             .copy_image(source_path, &dest_path)
             .await
@@ -111,7 +111,7 @@ impl UploadModelImage {
         validate_model_exists(&input.model_id, unit_of_work).await?;
         self.process_upload(&input.model_id, &input.file_path)
             .await?;
-        log::info!(
+        tracing::info!(
             "Successfully uploaded image for model {}",
             input.model_id.as_ref()
         );
@@ -180,7 +180,7 @@ impl UploadModelImageBytes {
 
         self.process_upload(&input.model_id, temp_file.path())
             .await?;
-        log::info!(
+        tracing::info!(
             "Successfully uploaded image for model {} from bytes",
             input.model_id.as_ref()
         );

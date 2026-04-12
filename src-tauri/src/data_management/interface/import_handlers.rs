@@ -11,10 +11,10 @@ use crate::data_management::interface::types::{
     ImportOutcome, ImportPreviewResponse, ImportResultResponse, ValidationStatus,
 };
 use crate::state::AppState;
-use log::info;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::State;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

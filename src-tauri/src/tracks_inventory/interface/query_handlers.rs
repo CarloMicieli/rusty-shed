@@ -8,7 +8,7 @@ use crate::tracks_inventory::application::{
     TrackInventoryListItem, TrackInventoryView, TrackProductView,
 };
 use crate::tracks_inventory::domain::TrackInventoryId;
-use log::info;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

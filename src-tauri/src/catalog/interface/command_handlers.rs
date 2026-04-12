@@ -25,7 +25,7 @@ use crate::core::domain::Language;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use garde::Validate;
-use log::info;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

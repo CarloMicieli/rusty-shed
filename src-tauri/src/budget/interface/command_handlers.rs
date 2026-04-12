@@ -23,7 +23,7 @@ use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use chrono::Datelike;
-use log::info;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

@@ -1,5 +1,5 @@
 use crate::data_management::domain::DataManagementError;
-use log::warn;
+use tracing::warn;
 
 /// Convert schema category value (camelCase) to DB value (SCREAMING_SNAKE_CASE).
 pub(crate) fn schema_category_to_db(

@@ -47,7 +47,7 @@ pub async fn connect_google(
                     ))),
                 };
                 if send_result.is_err() {
-                    log::warn!("OAuth callback: receiver already dropped");
+                    tracing::warn!("OAuth callback: receiver already dropped");
                 }
             }
         })

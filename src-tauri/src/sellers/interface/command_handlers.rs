@@ -10,8 +10,8 @@ use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::interface::{CreateSellerPayload, UpdateSellerPayload};
 use crate::state::AppState;
 use garde::Validate;
-use log::info;
 use std::convert::TryFrom;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

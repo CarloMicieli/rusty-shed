@@ -54,7 +54,7 @@ impl DeleteModelImage {
                 ModelImagePath::new(self.storage.storage_dir(), input.model_id.as_ref(), format);
 
             if path.exists() {
-                log::debug!("Deleting image: {}", path.full_path().display());
+                tracing::debug!("Deleting image: {}", path.full_path().display());
                 self.storage
                     .delete_image(&path)
                     .await
@@ -65,12 +65,12 @@ impl DeleteModelImage {
         }
 
         if deleted {
-            log::info!(
+            tracing::info!(
                 "Successfully deleted image for model {}",
                 input.model_id.as_ref()
             );
         } else {
-            log::debug!(
+            tracing::debug!(
                 "No image found to delete for model {}",
                 input.model_id.as_ref()
             );

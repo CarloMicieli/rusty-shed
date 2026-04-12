@@ -15,7 +15,7 @@ use crate::dcc_inventory::interface::command_args::{
     NewDigitalRollingStockArgs, ResponseNewDigitalRollingStock,
 };
 use crate::state::AppState;
-use log::info;
+use tracing::info;
 use uuid::Uuid;
 
 /// An ID provider for digital rolling stocks.

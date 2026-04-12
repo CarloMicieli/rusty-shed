@@ -28,8 +28,8 @@ use crate::sellers::domain::seller_id::SellerId;
 use crate::state::AppState;
 use chrono::NaiveDate;
 use garde::Validate;
-use log::info;
 use std::convert::TryFrom;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

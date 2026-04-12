@@ -13,8 +13,8 @@ use crate::tracks_inventory::interface::command_args::{
     AddTrackPurchaseArgs, CreateTrackProductArgs, NewTrackInventoryArgs, RenameTrackInventoryArgs,
     SetItemRequiredArgs, SetTrackItemQuantityArgs,
 };
-use log::info;
 use std::convert::TryInto;
+use tracing::info;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly

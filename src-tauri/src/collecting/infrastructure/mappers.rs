@@ -241,7 +241,7 @@ impl CollectionMapper {
             pi_row.purchase_type.clone().map(|s| s.to_ascii_lowercase());
         let purchase_type = purchase_type_lower.as_deref();
         let purchase_date = pi_row.purchase_date;
-        log::debug!(
+        tracing::debug!(
             "Mapping purchase info row: {:?} with type {:?}",
             pi_row.id,
             purchase_type
@@ -251,14 +251,14 @@ impl CollectionMapper {
             Some("purchased") | None => {
                 let amount = pi_row.purchased_price_amount.unwrap_or(0);
                 let currency_code = pi_row.purchased_price_currency.as_deref();
-                log::debug!(
+                tracing::debug!(
                     "Mapping 'purchased' info: amount={}, currency={:?}",
                     amount,
                     currency_code
                 );
 
                 let price = MonetaryAmount::from_db(amount, currency_code)?;
-                log::debug!("Mapped price result: {:?}", price);
+                tracing::debug!("Mapped price result: {:?}", price);
                 Ok(PurchaseInfo::Purchased(
                     crate::collecting::domain::PurchasedInfo {
                         id: pi_row.id.clone(),

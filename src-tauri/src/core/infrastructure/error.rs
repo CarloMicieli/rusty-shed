@@ -228,7 +228,7 @@ impl CommandError {
     pub fn unknown(msg: impl Into<String>) -> Self {
         let id = ErrorId::generate();
         let message = msg.into();
-        log::error!("Signal Fault: error_id={id}, message={message}");
+        tracing::error!("Signal Fault: error_id={id}, message={message}");
         CommandError::Unknown {
             message,
             error_id: id.to_string(),

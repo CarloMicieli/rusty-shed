@@ -61,12 +61,12 @@ pub fn setup_viewport<R: Runtime>(
     let physical_size = monitor.size();
     let physical_width = physical_size.width;
 
-    log::info!("Detected monitor with physical width: {}px", physical_width);
+    tracing::info!("Detected monitor with physical width: {}px", physical_width);
 
     // Calculate appropriate dimensions
     let (width, height) = calculate_min_size(physical_width);
 
-    log::info!(
+    tracing::info!(
         "Setting window dimensions to {}×{} (logical)",
         width,
         height
@@ -99,7 +99,7 @@ pub fn setup_viewport<R: Runtime>(
 pub fn setup_viewport<R: Runtime>(
     _window: &WebviewWindow<R>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    log::info!("Viewport setup skipped on mobile platform");
+    tracing::info!("Viewport setup skipped on mobile platform");
     Ok(())
 }
 

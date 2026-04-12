@@ -31,6 +31,7 @@ use crate::cloud_backup::infrastructure::start_connectivity_monitor;
 use crate::collecting::interface::command_handlers as collecting_command_handlers;
 use crate::core::infrastructure::db::Database;
 use crate::core::infrastructure::error::CommandError;
+use crate::core::infrastructure::logging::init_tracing;
 use crate::core::interface::command_handlers as core_command_handlers;
 use crate::dashboard::interface::command_handlers as dashboard_command_handlers;
 use crate::data_management::interface::backup_handlers as database_backup_command_handlers;
@@ -57,6 +58,7 @@ use tauri::path::BaseDirectory;
 use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_specta::{Builder, collect_commands};
+use tracing::Instrument;
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly
@@ -117,31 +119,34 @@ async fn get_image_path(
 
 /// Inner implementation for [`init_database`].
 pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError> {
-    log::info!("init_database: starting migrations");
+    let span = tracing::info_span!("init_database");
+    let _enter = span.enter();
+
     Database::run_migrations(&state.db_pool())
+        .instrument(tracing::info_span!("migrations"))
         .await
         .map_err(|e| {
-            log::error!("init_database: migrations failed: {}", e);
+            tracing::error!(error = %e, "database migrations failed");
             CommandError::DatabaseError(e.to_string())
         })?;
 
-    log::info!("init_database: starting seeding");
     Database::run_initial_seed(&state.db_pool())
+        .instrument(tracing::info_span!("initial_seed"))
         .await
         .map_err(|e| {
-            log::error!("init_database: seeding failed: {}", e);
+            tracing::error!(error = %e, "database seeding failed");
             CommandError::DatabaseError(e.to_string())
         })?;
 
-    log::info!("init_database: ensuring default settings");
     ensure_default_settings(&state.db_pool())
+        .instrument(tracing::info_span!("ensure_default_settings"))
         .await
         .map_err(|e| {
-            log::error!("init_database: settings failed: {}", e);
+            tracing::error!(error = %e, "ensuring default settings failed");
             CommandError::DatabaseError(e.to_string())
         })?;
 
-    log::info!("init_database: initialization complete");
+    tracing::info!("database initialized");
     state.set_initialized();
     Ok(true)
 }
@@ -149,13 +154,19 @@ pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError>
 #[tauri::command]
 #[specta::specta]
 async fn init_database(state: tauri::State<'_, AppState>) -> Result<(), CommandError> {
-    init_database_inner(&state).await.map(|_| ())
+    let span = tracing::info_span!("init_database_command");
+    init_database_inner(&state)
+        .instrument(span)
+        .await
+        .map(|_| ())
 }
 
 #[tauri::command]
 #[specta::specta]
 fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
-    log::info!("show_main_window: calling window.show()");
+    let span = tracing::info_span!("show_main_window");
+    let _enter = span.enter();
+
     window
         .show()
         .map_err(|e| CommandError::unknown(e.to_string()))?;
@@ -322,9 +333,13 @@ pub fn run() {
         .plugin(tauri_plugin_oauth::init())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
+            init_tracing().map_err(|e| anyhow::anyhow!("failed to initialize tracing: {e}"))?;
+            let setup_span = tracing::info_span!("app_setup");
+            let _setup_guard = setup_span.enter();
+
             let version = env!("CARGO_PKG_VERSION");
 
-            log::info!("{}", LOGO);
+            tracing::info!("{}", LOGO);
             println!("  Crate v{}", version);
 
             // Compute DB path using tauri path helpers and init the pool
@@ -350,7 +365,7 @@ pub fn run() {
                 .into());
             }
 
-            log::info!("Models directory: {}", models_dir.display());
+            tracing::info!(models_dir = %models_dir.display(), "models directory resolved");
 
             let db_path = app
                 .handle()
@@ -375,10 +390,10 @@ pub fn run() {
                 match tauri::image::Image::from_path(&icon_path) {
                     Ok(icon) => {
                         if let Err(e) = window.set_icon(icon) {
-                            log::warn!("Failed to set window icon: {}", e);
+                            tracing::warn!(error = %e, "failed to set window icon");
                         }
                     }
-                    Err(e) => log::warn!(
+                    Err(e) => tracing::warn!(
                         "Failed to load window icon from {}: {}",
                         icon_path.display(),
                         e
@@ -386,7 +401,7 @@ pub fn run() {
                 }
 
                 if let Err(e) = crate::viewport::setup_viewport(&window) {
-                    log::warn!("Failed to setup viewport: {}", e);
+                    tracing::warn!(error = %e, "failed to setup viewport");
                 }
             }
 

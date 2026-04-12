@@ -109,7 +109,7 @@ fn emit_progress(app: &AppHandle, operation_id: &str, percent: f32, stage: &Sync
         stage: DomainSyncStage::from(stage),
     };
     if let Err(e) = app.emit("cloud-backup://sync-progress", event) {
-        log::warn!("Failed to emit sync progress event: {e}");
+        tracing::warn!("Failed to emit sync progress event: {e}");
     }
 }
 

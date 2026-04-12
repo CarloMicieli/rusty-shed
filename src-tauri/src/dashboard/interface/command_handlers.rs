@@ -2,8 +2,8 @@ use crate::core::infrastructure::error::CommandError;
 use crate::dashboard::application::GetDashboardSummary;
 use crate::dashboard::domain::DashboardSummary;
 use crate::state::AppState;
-use log::info;
 use serde::Deserialize;
+use tracing::info;
 
 const DEFAULT_RECENT_ITEMS: u8 = 4;
 

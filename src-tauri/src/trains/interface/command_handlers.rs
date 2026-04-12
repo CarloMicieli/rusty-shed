@@ -30,7 +30,7 @@ use crate::trains::interface::command_args::{
     SetTractionOverrideArgs, UpdateTrainFormationArgs,
 };
 use garde::Validate;
-use log::info;
+use tracing::info;
 
 // ── Formation CRUD ────────────────────────────────────────────────────────────
 

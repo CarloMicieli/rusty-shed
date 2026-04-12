@@ -64,7 +64,7 @@ pub async fn restore_backup(
         restored_at: Utc::now().to_rfc3339(),
     };
     if let Err(e) = app.emit("cloud-backup://restore-complete", event) {
-        log::warn!("Failed to emit restore-complete event: {e}");
+        tracing::warn!("Failed to emit restore-complete event: {e}");
     }
 
     Ok(())
@@ -117,7 +117,7 @@ async fn create_safety_backup(db_path: &Path) -> Result<()> {
         CloudBackupError::RestoreError(format!("Failed to create safety backup: {}", e))
     })?;
 
-    log::info!("Created safety backup at: {}", backup_path.display());
+    tracing::info!("Created safety backup at: {}", backup_path.display());
 
     Ok(())
 }
@@ -138,7 +138,7 @@ async fn replace_database(db_path: &Path, data: &[u8]) -> Result<()> {
         CloudBackupError::RestoreError(format!("Failed to replace database: {}", e))
     })?;
 
-    log::info!("Database restored successfully");
+    tracing::info!("Database restored successfully");
 
     Ok(())
 }

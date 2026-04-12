@@ -30,7 +30,7 @@ use crate::wishlist::interface::{
     AddToWishlistArgs, CreateWishlistArgs, MoveWishlistItemArgs, RenameWishlistArgs,
 };
 use garde::Validate;
-use log::info;
+use tracing::info;
 // SimplifiedRailwayModelArgs is referenced via the command args; no direct import needed here.
 use crate::core::domain::{Currency, MonetaryAmount};
 
