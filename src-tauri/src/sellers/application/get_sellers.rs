@@ -31,12 +31,12 @@ mod tests {
     use super::*;
     use crate::core::domain::domain_error::DomainError;
     use crate::core::domain::identifiers::Identifier;
+    use crate::core::domain::metadata::Metadata;
     use crate::sellers::application::testing::FakeUow;
     use crate::sellers::domain::MockSellersRepository;
     use crate::sellers::domain::seller::Seller;
     use crate::sellers::domain::seller_id::SellerId;
     use crate::sellers::domain::seller_type::SellerType;
-    use chrono::Utc;
 
     #[tokio::test]
     async fn returns_empty_when_none() -> Result<(), DomainError> {
@@ -60,8 +60,7 @@ mod tests {
             phone: None,
             website_url: None,
             address: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            metadata: Metadata::default(),
             pending_events: Vec::new(),
         };
 
