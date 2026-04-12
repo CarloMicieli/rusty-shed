@@ -21,6 +21,7 @@
   } from '$lib/utils/enum-options';
   import { X } from 'lucide-svelte';
   import { onMount } from 'svelte';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   const wishlistService = getWishlistContext();
 
@@ -191,6 +192,30 @@
   const selectedManufacturer = $derived(
     manufacturers.find((mfr) => mfr.id === form.manufacturerId)
   );
+
+  const categoryOptionList = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return categoryOptions();
+    }
+    return categoryOptions();
+  });
+
+  const scaleOptionList = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return scaleOptions();
+    }
+    return scaleOptions();
+  });
+
+  const powerMethodOptionList = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return powerMethodOptions();
+    }
+    return powerMethodOptions();
+  });
 </script>
 
 {#snippet wishlistSelectionRow()}
@@ -287,7 +312,7 @@
           {/if}
         </Select.Trigger>
         <Select.Content>
-          {#each categoryOptions() as opt (opt.value)}
+          {#each categoryOptionList as opt (opt.value)}
             <Select.Item value={opt.value} label={opt.label} />
           {/each}
         </Select.Content>
@@ -315,7 +340,7 @@
             {/if}
           </Select.Trigger>
           <Select.Content>
-            {#each scaleOptions() as opt (opt.value)}
+            {#each scaleOptionList as opt (opt.value)}
               <Select.Item value={opt.value} label={opt.label} />
             {/each}
           </Select.Content>
@@ -340,7 +365,7 @@
             {/if}
           </Select.Trigger>
           <Select.Content>
-            {#each powerMethodOptions() as opt (opt.value)}
+            {#each powerMethodOptionList as opt (opt.value)}
               <Select.Item value={opt.value} label={opt.label} />
             {/each}
           </Select.Content>

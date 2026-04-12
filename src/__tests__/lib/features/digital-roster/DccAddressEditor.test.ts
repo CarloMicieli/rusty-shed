@@ -8,6 +8,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   digital_roster_edit_address_subtitle: ({ roadNumber, railway }: Record<string, string>) =>
     `Rolling Stock: ${roadNumber} - ${railway}`,
   digital_roster_table_address: () => 'DCC Address',
+  digital_roster_address_range_hint: () => '1-9999',
   digital_roster_address_invalid_range: () => 'Address must be between 1 and 9999',
   digital_roster_duplicate_address_warning: () => 'Address already in use',
   digital_roster_duplicate_address_message: () =>

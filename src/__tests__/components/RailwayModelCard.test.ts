@@ -84,6 +84,7 @@ vi.mock('$lib/paraglide/messages', () => ({
   railway_model_field_era: () => 'Era',
   railway_model_field_category: () => 'Category',
   railway_model_field_delivery_date: () => 'Delivery Date',
+  form_new_model_delivery_date_placeholder: () => 'YYYY/QQ',
   railway_model_field_status: () => 'Status',
   railway_model_field_details: () => 'Details',
   rolling_stock_field_length: () => 'Length',

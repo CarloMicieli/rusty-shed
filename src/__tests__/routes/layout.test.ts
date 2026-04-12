@@ -56,17 +56,19 @@ vi.mock('$lib/features/settings/SettingsState.svelte', () => ({
 // ── Theme store ──
 
 vi.mock('$lib/stores/themeStore.svelte', () => ({
-  themeStore: {
+  themeState: {
     initializeFromSettings: vi.fn().mockResolvedValue(undefined),
     setTheme: vi.fn().mockResolvedValue(undefined)
   }
 }));
 
-// ── App version / version store ──
+// ── App state store ──
 
-vi.mock('$lib/stores/app', () => ({
-  setAppVersion: vi.fn(),
-  appVersion: { subscribe: vi.fn(() => vi.fn()) }
+vi.mock('$lib/stores/app.svelte', () => ({
+  appState: {
+    version: '',
+    setVersion: vi.fn()
+  }
 }));
 
 // ── safeInvoke from $lib/services ──

@@ -4,6 +4,7 @@
   import type { ManufacturerId, TrackType, TrackCode } from '$lib/bindings';
   import { Input } from '$lib/components';
   import { FormSelect } from '$lib/components/drawer';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   interface Props {
     manufacturerId?: string;
@@ -41,37 +42,62 @@
     manufacturers.map((mfr) => ({ value: mfr.id, label: mfr.name }))
   );
 
-  const trackTypeOptions = $derived(
-    trackTypes.map((type) => ({ value: type, label: type.replace('_', ' ') }))
-  );
+  function trackTypeLabel(type: TrackType): string {
+    switch (type) {
+      case 'STRAIGHT':
+        return m.enum_track_type_straight();
+      case 'CURVE':
+        return m.enum_track_type_curve();
+      case 'TURNOUT':
+        return m.enum_track_type_turnout();
+      case 'FLEX_TRACK':
+        return m.enum_track_type_flex_track();
+      default:
+        return type;
+    }
+  }
 
-  const trackCodeOptions = $derived(
-    trackCodes.map((code) => ({ value: code, label: code.replace('CODE_', 'Code ') }))
-  );
+  function trackCodeLabel(code: TrackCode): string {
+    switch (code) {
+      case 'CODE_70':
+        return m.enum_track_code_70();
+      case 'CODE_75':
+        return m.enum_track_code_75();
+      case 'CODE_83':
+        return m.enum_track_code_83();
+      case 'CODE_100':
+        return m.enum_track_code_100();
+      default:
+        return code;
+    }
+  }
 
-  // Local string mirrors for the typed union props (FormSelect operates on string | null).
-  // These must stay writable ($state) so FormSelect can bind:value back to them.
-  // The $effect sync below is intentional — $derived cannot be used on writable locals.
-  /* eslint-disable svelte/prefer-writable-derived */
-  let trackTypeStr = $state('');
-  let trackCodeStr = $state('');
+  const trackTypeOptions = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return trackTypes.map((type) => ({ value: type, label: trackTypeLabel(type) }));
+    }
+    return trackTypes.map((type) => ({ value: type, label: trackTypeLabel(type) }));
+  });
 
-  // Sync prop → local when parent updates externally (also runs on mount)
-  $effect(() => {
-    trackTypeStr = trackType;
+  const trackCodeOptions = $derived.by(() => {
+    const locale = localeState.activeLocale;
+    if (locale === 'it') {
+      return trackCodes.map((code) => ({ value: code, label: trackCodeLabel(code) }));
+    }
+    return trackCodes.map((code) => ({ value: code, label: trackCodeLabel(code) }));
   });
-  $effect(() => {
-    trackCodeStr = trackCode;
-  });
-  /* eslint-enable svelte/prefer-writable-derived */
 
-  // Propagate local string back to typed prop
-  $effect(() => {
-    if (trackTypeStr) trackType = trackTypeStr as TrackType;
-  });
-  $effect(() => {
-    if (trackCodeStr) trackCode = trackCodeStr as TrackCode;
-  });
+  const getTrackTypeValue = () => trackType;
+  const getTrackCodeValue = () => trackCode;
+
+  function setTrackTypeValue(value: string | null): void {
+    if (value) trackType = value as TrackType;
+  }
+
+  function setTrackCodeValue(value: string | null): void {
+    if (value) trackCode = value as TrackCode;
+  }
 </script>
 
 <div class="space-y-8">
@@ -127,7 +153,7 @@
       id="track-type-select"
       label={m.track_product_field_track_type()}
       options={trackTypeOptions}
-      bind:value={trackTypeStr}
+      bind:value={getTrackTypeValue, setTrackTypeValue}
       disabled={submitting}
       required
     />
@@ -137,7 +163,7 @@
       id="track-code-select"
       label={m.track_product_field_track_code()}
       options={trackCodeOptions}
-      bind:value={trackCodeStr}
+      bind:value={getTrackCodeValue, setTrackCodeValue}
       disabled={submitting}
       required
     />
@@ -150,7 +176,7 @@
         class="ml-1 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
       >
         <Ruler size={10} />
-        Length (mm)
+        {m.track_product_field_length_mm()}
       </label>
       <Input
         type="number"
@@ -168,7 +194,7 @@
         class="ml-1 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
       >
         <Compass size={10} />
-        Radius (mm)
+        {m.track_product_field_radius_mm()}
       </label>
       <Input
         type="number"
@@ -200,7 +226,7 @@
         </div>
         <span
           class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase transition-colors group-hover:text-zinc-300"
-          >With Roadbed</span
+          >{m.track_product_field_with_roadbed()}</span
         >
       </label>
     </div>
@@ -210,7 +236,7 @@
     <div
       class="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-bold tracking-widest text-red-500 uppercase"
     >
-      Catalog Error: {error}
+      {m.track_product_error_prefix()}: {error}
     </div>
   {/if}
 </div>

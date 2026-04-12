@@ -15,6 +15,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   wishlist_modal_priority: () => 'Priority',
   wishlist_modal_desired_price: () => 'Desired Price',
   wishlist_field_notes: () => 'Notes',
+  wishlist_modal_notes_placeholder: () => 'Additional notes...',
   wishlist_priority_low: () => 'Low',
   wishlist_priority_normal: () => 'Normal',
   wishlist_priority_high: () => 'High'

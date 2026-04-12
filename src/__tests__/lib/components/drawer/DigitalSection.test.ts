@@ -5,6 +5,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   drawer_section_digital: () => 'Digital Settings',
   digital_roster_address_label: () => 'DCC Address',
   digital_roster_address_range: () => 'Address must be between 1 and 9999',
+  digital_roster_address_range_hint: () => '1-9999',
   digital_roster_date_label: () => 'Installation Date'
 }));
 

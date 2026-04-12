@@ -1,5 +1,6 @@
 /**
- * Theme Store - Manages theme preference and resolution
+ * Theme Store - Runes-based singleton
+ * Manages theme preference and resolution
  *
  * State:
  * - current: User's stored theme preference ('steampunk-light', 'steampunk-dark', 'system')
@@ -7,12 +8,10 @@
  * - isLoading: True during initial settings load from Tauri
  *
  * Feature: 011-steampunk-theme
- *
- * Note: Uses type 'any' for theme field until Tauri bindings regenerate at runtime
  */
 
 import type { ThemeValue } from '$lib/types/theme';
-import { writable, derived } from 'svelte/store';
+import type { UpdateSettingsInput, UserSettings } from '$lib/bindings';
 
 export interface ThemeState {
   current: ThemeValue;
@@ -20,121 +19,125 @@ export interface ThemeState {
   isLoading: boolean;
 }
 
-// Private store - holds full theme state
-const createThemeStore = () => {
-  const {
-    subscribe,
-    set: privateSet,
-    update: privateUpdate
-  } = writable<ThemeState>({
-    current: 'system',
-    resolved: 'dark',
-    isLoading: true
-  });
+class ThemeStateClass {
+  current = $state<ThemeValue>('system');
+  resolved = $state<'light' | 'dark'>('dark');
+  isLoading = $state<boolean>(true);
 
-  return {
-    subscribe,
-    set: privateSet,
-    update: privateUpdate,
+  private mediaQuery: MediaQueryList | null = null;
+  private mediaQueryListener: ((e: MediaQueryListEvent) => void) | null = null;
 
-    /**
-     * Initialize theme from Tauri settings and detect system preference
-     */
-    async initializeFromSettings(): Promise<void> {
-      try {
-        // Import commands from generated bindings
-        const { commands } = await import('$lib/bindings');
-        const result = await commands.getSettings();
+  /**
+   * Initialize theme from Tauri settings and detect system preference
+   */
+  async initializeFromSettings(): Promise<void> {
+    try {
+      // Import commands from generated bindings
+      const { commands } = await import('$lib/bindings');
+      const result = await commands.getSettings();
 
-        if (result.status !== 'ok') {
-          throw new Error('Failed to get settings');
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const settings = result.data as any; // Theme field not yet in UserSettings type
-        const theme = settings.theme || 'system'; // Fallback if theme field doesn't exist
-        const resolved = resolveTheme(theme);
-        privateUpdate((state) => ({
-          ...state,
-          current: theme,
-          resolved,
-          isLoading: false
-        }));
-
-        // Apply to DOM
-        applyTheme(resolved);
-
-        // Listen for system theme changes if 'system' mode
-        if (theme === 'system') {
-          setupSystemThemeListener();
-        }
-      } catch (error) {
-        console.error('Failed to initialize theme:', error);
-        // Fall back to dark theme
-        privateUpdate((state) => ({ ...state, isLoading: false, resolved: 'dark' }));
-        applyTheme('dark');
+      if (result.status !== 'ok') {
+        throw new Error('Failed to get settings');
       }
-    },
 
-    /**
-     * Set user's theme preference and persist to Tauri settings
-     */
-    async setTheme(theme: ThemeValue): Promise<void> {
-      try {
-        const { commands } = await import('$lib/bindings');
-        const getResult = await commands.getSettings();
+      const settings: UserSettings = result.data;
+      const theme = settings.theme ?? 'system';
+      const resolved = resolveTheme(theme);
+      this.current = theme;
+      this.resolved = resolved;
+      this.isLoading = false;
 
-        if (getResult.status !== 'ok') {
-          throw new Error('Failed to get settings');
-        }
+      // Apply to DOM
+      applyTheme(resolved);
 
-        const current = getResult.data;
-
-        // Update via Tauri command (theme field will be added later)
-        const updateResult = await commands.updateSettings({
-          ...current,
-          theme // Theme field will be added to UserSettings type later
-        } as never);
-
-        if (updateResult.status !== 'ok') {
-          throw new Error('Failed to update settings');
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updated = updateResult.data as any;
-        const updatedTheme = updated.theme || theme;
-        const resolved = resolveTheme(updatedTheme);
-        privateUpdate((state) => ({
-          ...state,
-          current: updatedTheme,
-          resolved
-        }));
-
-        applyTheme(resolved);
-
-        // Re-setup system listener if switched to system mode
-        if (theme === 'system') {
-          setupSystemThemeListener();
-        } else {
-          cleanupSystemThemeListener();
-        }
-      } catch (error) {
-        console.error('Failed to set theme:', error);
+      // Listen for system theme changes if 'system' mode
+      if (theme === 'system') {
+        this.setupSystemThemeListener();
       }
-    },
-
-    /**
-     * Get current state synchronously (for emergency use only)
-     */
-    getState(): ThemeState | null {
-      let state: ThemeState | null = null;
-      subscribe((s) => {
-        state = s;
-      })();
-      return state;
+    } catch (error) {
+      console.error('Failed to initialize theme:', error);
+      // Fall back to dark theme
+      this.isLoading = false;
+      this.resolved = 'dark';
+      applyTheme('dark');
     }
-  };
-};
+  }
+
+  /**
+   * Set user's theme preference and persist to Tauri settings
+   */
+  async setTheme(theme: ThemeValue): Promise<void> {
+    try {
+      const { commands } = await import('$lib/bindings');
+      const getResult = await commands.getSettings();
+
+      if (getResult.status !== 'ok') {
+        throw new Error('Failed to get settings');
+      }
+
+      const updatePayload: UpdateSettingsInput = { theme };
+
+      const updateResult = await commands.updateSettings(updatePayload);
+
+      if (updateResult.status !== 'ok') {
+        throw new Error('Failed to update settings');
+      }
+
+      const updated: UserSettings = updateResult.data;
+      const updatedTheme = updated.theme ?? theme;
+      const resolved = resolveTheme(updatedTheme);
+      this.current = updatedTheme;
+      this.resolved = resolved;
+
+      applyTheme(resolved);
+
+      // Re-setup system listener if switched to system mode
+      if (theme === 'system') {
+        this.setupSystemThemeListener();
+      } else {
+        this.cleanupSystemThemeListener();
+      }
+    } catch (error) {
+      console.error('Failed to set theme:', error);
+    }
+  }
+
+  /**
+   * Get current state synchronously (for emergency use only)
+   */
+  getState(): ThemeState {
+    return {
+      current: this.current,
+      resolved: this.resolved,
+      isLoading: this.isLoading
+    };
+  }
+
+  private setupSystemThemeListener(): void {
+    if (typeof window === 'undefined') return;
+    if (this.mediaQuery) return; // Already listening
+
+    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    this.mediaQueryListener = (e: MediaQueryListEvent) => {
+      if (this.current === 'system') {
+        const resolved = e.matches ? 'dark' : 'light';
+        applyTheme(resolved);
+        this.resolved = resolved;
+      }
+    };
+
+    this.mediaQuery.addEventListener('change', this.mediaQueryListener);
+  }
+
+  private cleanupSystemThemeListener(): void {
+    if (this.mediaQuery && this.mediaQueryListener) {
+      this.mediaQuery.removeEventListener('change', this.mediaQueryListener);
+      this.mediaQuery = null;
+      this.mediaQueryListener = null;
+    }
+  }
+}
 
 /**
  * Resolve 'system' preference to actual 'light' or 'dark' theme
@@ -164,57 +167,6 @@ function applyTheme(resolved: 'light' | 'dark'): void {
 }
 
 /**
- * Listen for OS theme changes and update if in 'system' mode
+ * Public theme store singleton
  */
-let mediaQueryListener: ((e: MediaQueryListEvent) => void) | null = null;
-let mediaQuery: MediaQueryList | null = null;
-
-function setupSystemThemeListener(): void {
-  if (typeof window === 'undefined') return;
-  if (mediaQuery) return; // Already listening
-
-  mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-  mediaQueryListener = (e: MediaQueryListEvent) => {
-    const state = themeStore.getState();
-    if (state?.current === 'system') {
-      const resolved = e.matches ? 'dark' : 'light';
-      applyTheme(resolved);
-
-      themeStore.update((s) => ({
-        ...s,
-        resolved
-      }));
-    }
-  };
-
-  mediaQuery.addEventListener('change', mediaQueryListener);
-}
-
-function cleanupSystemThemeListener(): void {
-  if (mediaQuery && mediaQueryListener) {
-    mediaQuery.removeEventListener('change', mediaQueryListener);
-    mediaQuery = null;
-    mediaQueryListener = null;
-  }
-}
-
-/**
- * Public theme store
- */
-export const themeStore = createThemeStore();
-
-/**
- * Derived store for convenience: subscribe to just the resolved theme
- */
-export const resolvedTheme = derived(themeStore, ($state) => $state.resolved);
-
-/**
- * Derived store for convenience: subscribe to just the current preference
- */
-export const currentTheme = derived(themeStore, ($state) => $state.current);
-
-/**
- * Derived store for convenience: is the store loading?
- */
-export const isThemeLoading = derived(themeStore, ($state) => $state.isLoading);
+export const themeState = new ThemeStateClass();

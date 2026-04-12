@@ -20,7 +20,7 @@
   import { toaster } from '$lib/toaster';
   import { getToastMessage } from '$lib/services/errors';
   import * as m from '$lib/paraglide/messages.js';
-  import { setActiveLocale } from '$lib/stores/locale';
+  import { setActiveLocale } from '$lib/stores/locale.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
   let settings: SettingsDto | null = $state(null);
@@ -56,7 +56,7 @@
     loading = false;
   }
 
-  import { themeStore } from '$lib/stores/themeStore.svelte';
+  import { themeState } from '$lib/stores/themeStore.svelte';
 
   async function handleSubmit(payload: UpdateSettingsPayload) {
     saving = true;
@@ -64,7 +64,7 @@
     if (result.ok) {
       settings = result.data;
       await syncLocale(result.data.language);
-      await themeStore.setTheme(result.data.theme);
+      await themeState.setTheme(result.data.theme);
       toaster.success({ title: m.settings_saved_toast() });
     } else {
       toaster.signal(m.signal_toast_title(), { description: m.settings_update_failed() });

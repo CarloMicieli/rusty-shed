@@ -50,22 +50,18 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', () => ({
 }));
 
 // Mock locale store
-vi.mock('$lib/stores/locale', () => ({
-  localeStore: {
-    subscribe: vi.fn((cb) => {
-      cb('en');
-      return () => {};
-    })
+vi.mock('$lib/stores/locale.svelte', () => ({
+  localeState: {
+    activeLocale: 'en',
+    setActiveLocale: vi.fn()
   }
 }));
 
-// Mock app version store
-vi.mock('$lib/stores/app', () => ({
-  appVersion: {
-    subscribe: vi.fn((cb) => {
-      cb('0.1.0');
-      return () => {};
-    })
+// Mock app store
+vi.mock('$lib/stores/app.svelte', () => ({
+  appState: {
+    version: '0.1.0',
+    setVersion: vi.fn()
   }
 }));
 
