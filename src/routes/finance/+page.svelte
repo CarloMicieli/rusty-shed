@@ -14,14 +14,7 @@
   import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
 
   // Shared Components
-  import {
-    Card,
-    CardHeader,
-    CardContent,
-    Button,
-    PageHeader,
-    EmptyState
-  } from '$lib/components';
+  import { Card, CardHeader, CardContent, Button, PageHeader, EmptyState } from '$lib/components';
 
   // Feature Components
   import BudgetConfigSheet from '$lib/features/budget/components/BudgetConfigSheet.svelte';
