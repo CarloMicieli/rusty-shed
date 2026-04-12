@@ -6,6 +6,21 @@ use crate::core::domain::calendar::{Month, Year};
 use crate::core::domain::currency::Currency;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::{DateTime, Utc};
+use tracing::warn;
+
+fn parse_db_datetime_or_fallback(
+    field: &str,
+    value: &str,
+    fallback: DateTime<Utc>,
+) -> DateTime<Utc> {
+    match DateTime::parse_from_rfc3339(value) {
+        Ok(parsed) => parsed.with_timezone(&Utc),
+        Err(error) => {
+            warn!("Invalid {field} in budget_config row: {error}. Falling back to {fallback}");
+            fallback
+        }
+    }
+}
 
 /// Map a BudgetConfigRow to BudgetConfiguration domain entity.
 pub fn row_to_budget_config(row: BudgetConfigRow) -> Result<BudgetConfiguration, String> {
@@ -18,13 +33,9 @@ pub fn row_to_budget_config(row: BudgetConfigRow) -> Result<BudgetConfiguration,
     let currency =
         Currency::from_code(&row.currency).map_err(|e| format!("Invalid currency: {}", e))?;
 
-    let created_at = DateTime::parse_from_rfc3339(&row.created_at)
-        .map_err(|e| format!("Invalid created_at: {}", e))?
-        .with_timezone(&Utc);
-
-    let updated_at = DateTime::parse_from_rfc3339(&row.updated_at)
-        .map_err(|e| format!("Invalid updated_at: {}", e))?
-        .with_timezone(&Utc);
+    let now = Utc::now();
+    let created_at = parse_db_datetime_or_fallback("created_at", &row.created_at, now);
+    let updated_at = parse_db_datetime_or_fallback("updated_at", &row.updated_at, created_at);
 
     Ok(BudgetConfiguration {
         id: BudgetConfigId::new(row.id),
@@ -86,5 +97,22 @@ mod tests {
         assert_eq!(config.mode, BudgetMode::Yearly);
         assert_eq!(config.base_amount.amount, 120_000);
         assert_eq!(config.monthly_amount(), 10_000);
+    }
+
+    #[test]
+    fn test_row_to_budget_config_falls_back_when_updated_at_is_invalid() {
+        let row = BudgetConfigRow {
+            id: 1,
+            mode: "MONTHLY".to_string(),
+            base_amount: 90_000,
+            currency: "EUR".to_string(),
+            last_reset_year: 2026,
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            updated_at: "".to_string(),
+            version: 1,
+        };
+
+        let config = row_to_budget_config(row).expect("budget config should still map");
+        assert_eq!(config.created_at, config.updated_at);
     }
 }

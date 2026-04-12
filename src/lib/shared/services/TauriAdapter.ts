@@ -16,11 +16,53 @@ import type { NormalizedError, SafeResult } from '../domain/errors';
 type CommandError =
   | { DatabaseError: string }
   | { NotFound: string }
-  | { ValidationError: Record<string, string> }
+  | { ValidationError: Record<string, unknown> }
   | { PermissionDenied: string }
-  | { Unknown: { message: string; error_id: string } }
+  | { Unknown: string | { message?: string; error_id?: string } }
   | { BusinessRule: string }
   | { Conflict: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeValidationIssue(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (isRecord(value)) {
+    if (typeof value.message === 'string' && value.message.length > 0) {
+      return value.message;
+    }
+
+    if (typeof value.code === 'string' && value.code.length > 0) {
+      return value.code;
+    }
+  }
+
+  return 'Invalid value';
+}
+
+function normalizeValidationFields(value: unknown): Record<string, string> {
+  if (!isRecord(value)) {
+    return { _general: 'Invalid input' };
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([field, rawIssue]) => {
+      if (Array.isArray(rawIssue)) {
+        const messages = rawIssue
+          .map((issue) => normalizeValidationIssue(issue))
+          .filter((msg) => msg.length > 0);
+
+        return [field, messages.length > 0 ? messages.join('; ') : 'Invalid value'];
+      }
+
+      return [field, normalizeValidationIssue(rawIssue)];
+    })
+  );
+}
 
 /**
  * Normalize a Rust CommandError into our application's NormalizedError format.
@@ -53,7 +95,7 @@ function normalizeError(error: unknown): NormalizedError {
       return {
         kind: 'validation',
         message: 'Validation failed',
-        fields: err.ValidationError as Record<string, string>,
+        fields: normalizeValidationFields(err.ValidationError),
         retryable: false
       };
     }
@@ -66,14 +108,26 @@ function normalizeError(error: unknown): NormalizedError {
       };
     }
 
-    if ('Unknown' in err && err.Unknown !== null && typeof err.Unknown === 'object') {
-      const unknown = err.Unknown as { message: string; error_id: string };
-      return {
-        kind: 'unknown',
-        message: unknown.message,
-        errorId: unknown.error_id,
-        retryable: false
-      };
+    if ('Unknown' in err) {
+      if (typeof err.Unknown === 'string') {
+        return {
+          kind: 'unknown',
+          message: err.Unknown,
+          retryable: false
+        };
+      }
+
+      if (isRecord(err.Unknown)) {
+        return {
+          kind: 'unknown',
+          message:
+            typeof err.Unknown.message === 'string' && err.Unknown.message.length > 0
+              ? err.Unknown.message
+              : 'An unexpected error occurred',
+          ...(typeof err.Unknown.error_id === 'string' ? { errorId: err.Unknown.error_id } : {}),
+          retryable: false
+        };
+      }
     }
 
     if ('BusinessRule' in err && typeof err.BusinessRule === 'string') {

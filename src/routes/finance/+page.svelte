@@ -17,7 +17,6 @@
   import {
     Card,
     CardHeader,
-    CardTitle,
     CardContent,
     Button,
     PageHeader,
@@ -67,14 +66,22 @@
       if (budgetState.hasConfig) {
         await budgetState.loadMonthlyRecords(selectedYear);
       }
-    })().finally(() => {
-      financeInitInFlight = null;
-    });
+    })()
+      .catch((error) => {
+        console.error('[finance] Failed to initialize budget page', error);
+      })
+      .finally(() => {
+        financeInitInFlight = null;
+      });
   });
 
   async function handleYearChange(year: number) {
     selectedYear = year;
-    await budgetState.loadMonthlyRecords(year);
+    try {
+      await budgetState.loadMonthlyRecords(year);
+    } catch (error) {
+      console.error('[finance] Failed to load monthly records', error);
+    }
   }
 
   function openExtraBudget(year: number, month: number) {
@@ -152,10 +159,7 @@
         <div class="mt-6">
           <Card class="border-border bg-card">
             <CardHeader class="border-b border-border/50 pb-4">
-              <div class="flex items-center justify-between">
-                <CardTitle class="text-sm font-bold tracking-tight uppercase"
-                  >Ledger_{selectedYear}</CardTitle
-                >
+              <div class="flex items-center justify-end">
                 <select
                   bind:value={selectedYear}
                   onchange={() => handleYearChange(selectedYear)}

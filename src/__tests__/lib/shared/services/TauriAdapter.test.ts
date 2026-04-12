@@ -71,9 +71,25 @@ describe('TauriAdapter', () => {
       }
     });
 
-    it('normalizes ValidationError with fields', async () => {
+    it('normalizes ValidationError with structured fields', async () => {
       mockInvoke.mockRejectedValueOnce({
-        ValidationError: { name: 'Name is required', amount: 'Must be positive' }
+        ValidationError: {
+          name: [
+            {
+              code: 'required',
+              message: 'Name is required',
+              params: {}
+            }
+          ],
+          amount: [
+            {
+              code: 'invalid',
+              message: null,
+              params: {}
+            }
+          ],
+          _general: [{ code: 'error_budget_state_invalid', message: null, params: {} }]
+        }
       });
 
       const result = await safeInvoke('create_item');
@@ -83,7 +99,8 @@ describe('TauriAdapter', () => {
         expect(result.error.kind).toBe('validation');
         expect(result.error.fields).toEqual({
           name: 'Name is required',
-          amount: 'Must be positive'
+          amount: 'invalid',
+          _general: 'error_budget_state_invalid'
         });
         expect(result.error.retryable).toBe(false);
       }
@@ -101,7 +118,7 @@ describe('TauriAdapter', () => {
       }
     });
 
-    it('normalizes Unknown error', async () => {
+    it('normalizes Unknown error string', async () => {
       mockInvoke.mockRejectedValueOnce({ Unknown: 'Something went wrong' });
 
       const result = await safeInvoke('cmd');
@@ -109,6 +126,26 @@ describe('TauriAdapter', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.kind).toBe('unknown');
+        expect(result.error.message).toBe('Something went wrong');
+        expect(result.error.retryable).toBe(false);
+      }
+    });
+
+    it('normalizes Unknown error object', async () => {
+      mockInvoke.mockRejectedValueOnce({
+        Unknown: {
+          message: 'Internal failure',
+          error_id: 'ERR-1234-A'
+        }
+      });
+
+      const result = await safeInvoke('cmd');
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.kind).toBe('unknown');
+        expect(result.error.message).toBe('Internal failure');
+        expect(result.error.errorId).toBe('ERR-1234-A');
         expect(result.error.retryable).toBe(false);
       }
     });
