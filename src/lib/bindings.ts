@@ -4062,7 +4062,7 @@ export type SearchRailwayModelsArgs = {
  *  Represents a seller (a shop, private seller or distributor) in the system.
  * 
  *  This domain-level struct is used by application use-cases and persisted via
- *  the sellers repository. Timestamps are represented using `chrono::DateTime<Utc>`.
+ *  the sellers repository.
  */
 export type Seller = {
 	// Strongly-typed seller identifier (format: `trn:seller:{slug}`).
@@ -4084,10 +4084,8 @@ export type Seller = {
 	 *  postal code and country as a single value object.
 	 */
 	address: Address | null,
-	// Creation timestamp (UTC).
-	createdAt: string,
-	// Last update timestamp (UTC).
-	updatedAt: string,
+	// Metadata about the seller (creation date, last modified, version, etc.).
+	metadata: Metadata,
 	/**
 	 *  Events produced by operations on the aggregate that have not yet been
 	 *  persisted/handled by a repository or unit of work.
@@ -4104,8 +4102,7 @@ export type SellerEvent = ({ created: {
 	phone: string | null,
 	website_url: string | null,
 	address: Address | null,
-	created_at: string,
-	updated_at: string,
+	metadata: Metadata,
 } }) & { deleted?: never; updated?: never } | ({ updated: {
 	aggregate_id: SellerId,
 	name: string,
@@ -4114,8 +4111,7 @@ export type SellerEvent = ({ created: {
 	phone: string | null,
 	website_url: string | null,
 	address: Address | null,
-	created_at: string,
-	updated_at: string,
+	metadata: Metadata,
 } }) & { created?: never; deleted?: never } | ({ deleted: {
 	aggregate_id: SellerId,
 } }) & { created?: never; updated?: never };
