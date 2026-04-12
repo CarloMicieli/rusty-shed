@@ -54,7 +54,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                 .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
         let created_at_to_use =
-            existing_created_at.unwrap_or_else(|| seller.created_at.to_rfc3339());
+            existing_created_at.unwrap_or_else(|| seller.metadata.created_at.to_rfc3339());
         let updated_at = Utc::now().to_rfc3339();
 
         // Decompose address into flat column values.
@@ -108,8 +108,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                     phone,
                     website_url,
                     address,
-                    created_at,
-                    updated_at,
+                    metadata,
                 }
                 | SellerEvent::Updated {
                     aggregate_id,
@@ -119,8 +118,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                     phone,
                     website_url,
                     address,
-                    created_at,
-                    updated_at,
+                    metadata,
                 } => {
                     // Preserve the original created_at when the row already exists.
                     let existing_created_at =
@@ -129,8 +127,8 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                             .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
                     let created_at_to_use =
-                        existing_created_at.unwrap_or_else(|| created_at.to_rfc3339());
-                    let updated_at_to_use = updated_at.to_rfc3339();
+                        existing_created_at.unwrap_or_else(|| metadata.created_at.to_rfc3339());
+                    let updated_at_to_use = metadata.updated_at.to_rfc3339();
 
                     let (street, extended, city, region, postal, country) = match &address {
                         Some(addr) => (

@@ -16,4 +16,5 @@ pub struct SellerRow {
     pub country_code: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub version: i64,
 }
