@@ -120,8 +120,11 @@ export function makeMockSeller(overrides?: Partial<Seller>) {
       postal_code: '',
       country: ''
     },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    metadata: {
+      version: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
   };
   return { ...base, ...(overrides ?? {}) };
 }

@@ -155,20 +155,6 @@ This document provides a structural audit and component mapping for all "Page" c
 
 ---
 
-## Catalogue New Model (`src/routes/catalogue/new-model/+page.svelte`)
-
-### Hierarchy
-
-- **New Model Page**
-  - **Location:** src/routes/catalogue/new-model/+page.svelte
-  - **Summary:** Form for creating a new railway model.
-  - **Children:**
-    - **CreateRailwayModel**  
-       _Location:_ src/lib/features/catalogue/CreateRailwayModel.svelte  
-       _Summary:_ Handles the new model creation form and logic.
-
----
-
 ## Train Formations (`src/routes/train-formations/+page.svelte`)
 
 ### Hierarchy

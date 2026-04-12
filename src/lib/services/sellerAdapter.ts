@@ -60,6 +60,8 @@ export function mapFormToUpdatePayload(f: FormSeller): UpdateSellerPayload {
 
 export function mapSellerToForm(s: SellerView | Seller): FormSeller {
   const addr: Address | null = s.address ?? null;
+  const metadata = 'metadata' in s ? s.metadata : null;
+
   return {
     id: s.id,
     name: s.name,
@@ -73,8 +75,8 @@ export function mapSellerToForm(s: SellerView | Seller): FormSeller {
     stateRegion: addr?.region ?? null,
     postalCode: addr?.postal_code ?? null,
     countryCode: addr?.country ?? null,
-    createdAt: 'createdAt' in s ? (s.createdAt ?? null) : null,
-    updatedAt: 'updatedAt' in s ? (s.updatedAt ?? null) : null
+    createdAt: metadata?.created_at ?? null,
+    updatedAt: metadata?.updated_at ?? null
   };
 }
 

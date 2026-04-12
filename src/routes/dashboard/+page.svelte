@@ -2,7 +2,7 @@
   import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Heart, Plus, ShoppingBag, RefreshCw, House, Wrench, Wallet, Train } from 'lucide-svelte';
+  import { Heart, ShoppingBag, RefreshCw, House, Wrench, Wallet, Train } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { Button, Card, CardContent, Skeleton } from '$lib/components';
 
@@ -224,9 +224,22 @@
               <p class="mt-2 mb-5 text-sm text-muted-foreground">
                 {m.dashboard_empty_acquisitions_message()}
               </p>
-              <Button variant="secondary" onclick={() => goto(resolve('/catalogue/new-model'))}
-                ><Plus class="mr-2" />{m.actions_add_railway_model()}</Button
+              <button
+                type="button"
+                aria-label={m.dashboard_action_new_acquisition()}
+                class="group inline-flex cursor-pointer items-center justify-start gap-3 rounded-lg border-2 border-border/70 bg-card/80 px-4 py-3 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-2px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:bg-primary/15 active:translate-y-0"
+                onclick={() => openAcquisitionDrawer()}
               >
+                <ShoppingBag
+                  class="text-primary transition-transform group-hover:scale-110 group-hover:text-primary-foreground"
+                  size={20}
+                />
+                <span
+                  class="text-xs font-semibold tracking-[0.2em] uppercase group-hover:text-primary-foreground"
+                >
+                  {m.dashboard_action_new_acquisition()}
+                </span>
+              </button>
             </CardContent>
           </Card>
         {:else}
