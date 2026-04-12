@@ -1,3 +1,8 @@
+//! SQLite implementation of [`MaintenanceRepository`].
+//!
+//! All SQL is delegated to the private [`super::database`] module; this file is
+//! responsible only for orchestration, error mapping, and domain assembly.
+
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::identifiers::Identifier;
@@ -12,33 +17,35 @@ use crate::maintenance::domain::read_models::{
 };
 use crate::maintenance::domain::{MaintenanceCard, MaintenanceEventId};
 use crate::maintenance::domain::{MaintenanceRepository, MaintenanceUowExt};
-use crate::maintenance::infrastructure::entities::{
-    MaintenanceCardRow, MaintenanceCardWithDisplayInfoRow, MaintenanceEventRow,
-};
+use crate::maintenance::infrastructure::database;
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
-/// Loads all persisted `MaintenanceEvent` records for a given card TRN.
+// ─── Repository ──────────────────────────────────────────────────────────────
+
+/// SQLite implementation of [`MaintenanceRepository`].
+pub struct SqliteMaintenanceRepository<'conn> {
+    executor: &'conn mut SqliteConnection,
+}
+
+impl<'conn> SqliteMaintenanceRepository<'conn> {
+    /// Create a new repository bound to the given connection / transaction executor.
+    pub fn new(executor: &'conn mut SqliteConnection) -> Self {
+        Self { executor }
+    }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/// Load all persisted [`MaintenanceEvent`] domain objects for a given card TRN.
 ///
-/// Extracted to eliminate the identical query-and-map block duplicated across
-/// `find_by_rolling_stock_id` and `find_by_id`.
-async fn load_events_for_card(
+/// Delegates the query to [`database::load_events_for_card`] and converts each row
+/// to a domain event via `TryFrom`.
+async fn load_domain_events_for_card(
     executor: &mut SqliteConnection,
     card_trn: &str,
 ) -> Result<Vec<MaintenanceEvent>, DomainError> {
-    let events_q = r#"SELECT
-        id,
-        maintenance_card_id,
-        date_performed,
-        notes,
-        maintenance_type
-    FROM maintenance_events
-    WHERE maintenance_card_id = ?
-    ORDER BY date_performed DESC"#;
-
-    let rows = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
-        .bind(card_trn)
-        .fetch_all(executor)
+    let rows = database::load_events_for_card(executor, card_trn)
         .await
         .with_domain_context("Error listing maintenance events for card")?;
 
@@ -47,49 +54,62 @@ async fn load_events_for_card(
         .collect()
 }
 
-/// SQLite implementation of the MaintenanceRepository.
-pub struct SqliteMaintenanceRepository<'conn> {
-    executor: &'conn mut SqliteConnection,
+/// Convert a slice of [`MaintenanceEventRow`]s into [`MaintenanceCardEventView`]s.
+///
+/// Extracted to de-duplicate the identical mapping block used by both
+/// [`find_view_by_id`](SqliteMaintenanceRepository::find_view_by_id) and
+/// [`list_due_card_views`](SqliteMaintenanceRepository::list_due_card_views).
+fn map_event_rows_to_views(
+    rows: Vec<crate::maintenance::infrastructure::entities::MaintenanceEventRow>,
+) -> Result<Vec<MaintenanceCardEventView>, DomainError> {
+    let mut events = Vec::with_capacity(rows.len());
+
+    for er in rows {
+        let event_id = MaintenanceEventId::try_from(er.id.as_ref())?;
+        let uuid_str = &event_id.as_ref()[MaintenanceEventId::PREFIX.len() + 1..];
+        let evt_uuid = uuid::Uuid::parse_str(uuid_str)
+            .map_err(|_| DomainError::Infrastructure("invalid event id uuid".to_string()))?;
+
+        let maintenance_type = er
+            .maintenance_type
+            .as_ref()
+            .and_then(|s| s.parse::<MaintenanceType>().ok());
+
+        events.push(MaintenanceCardEventView {
+            id: evt_uuid,
+            date_performed: er.date_performed,
+            maintenance_type,
+            notes: er.notes,
+        });
+    }
+
+    Ok(events)
 }
 
-impl<'conn> SqliteMaintenanceRepository<'conn> {
-    /// Create a new repository bound to the given executor.
-    pub fn new(executor: &'conn mut SqliteConnection) -> Self {
-        Self { executor }
-    }
-}
+// ─── MaintenanceRepository impl ──────────────────────────────────────────────
 
 #[async_trait]
 impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
+    /// Find the maintenance card for the given owned rolling stock.
+    ///
+    /// Loads all persisted events onto the returned card.
     async fn find_by_rolling_stock_id(
         &mut self,
         owned_rolling_stock_id: &OwnedRollingStockId,
     ) -> Result<Option<MaintenanceCard>, DomainError> {
-        let q = r#"SELECT
-            id,
-            owned_rolling_stock_id,
-            last_maintenance_date,
-            next_maintenance_date,
-            created_at,
-            updated_at,
-            version
-        FROM maintenance_cards
-        WHERE owned_rolling_stock_id = ?"#;
-        // OwnedRollingStockId is stored as a TRN string in the database
+        // OwnedRollingStockId is stored as a TRN string in the database.
         let trn = owned_rolling_stock_id.to_string();
 
-        let row = sqlx::query_as::<_, MaintenanceCardRow>(q)
-            .bind(trn)
-            .fetch_optional(&mut *self.executor)
+        let row = database::find_maintenance_card_by_stock_id(&mut *self.executor, &trn)
             .await
             .with_domain_context("Error fetching maintenance card by stock id")?;
 
-        // Map infra row into domain model when present and load persisted events.
         let maybe_card = match row {
             Some(r) => {
                 let card_trn = r.id.clone();
                 let mut card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
-                card.events = load_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
+                card.events =
+                    load_domain_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
                 Some(card)
             }
             None => None,
@@ -98,27 +118,17 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(maybe_card)
     }
 
+    /// Find a maintenance card by its own TRN id.
+    ///
+    /// Loads all persisted events onto the returned card.
     async fn find_by_id(
         &mut self,
         id: &MaintenanceCardId,
     ) -> Result<Option<MaintenanceCard>, DomainError> {
-        let q = r#"SELECT
-            id,
-            owned_rolling_stock_id,
-            last_maintenance_date,
-            next_maintenance_date,
-            created_at,
-            updated_at,
-            version
-        FROM maintenance_cards
-        WHERE id = ?"#;
-
-        // MaintenanceCardId is stored as a TRN string in the database
+        // MaintenanceCardId is stored as a TRN string in the database.
         let trn = id.to_string();
 
-        let row = sqlx::query_as::<_, MaintenanceCardRow>(q)
-            .bind(trn)
-            .fetch_optional(&mut *self.executor)
+        let row = database::find_maintenance_card_by_id(&mut *self.executor, &trn)
             .await
             .with_domain_context("Error fetching maintenance card by id")?;
 
@@ -126,7 +136,8 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
             Some(r) => {
                 let card_trn = r.id.clone();
                 let mut card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
-                card.events = load_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
+                card.events =
+                    load_domain_events_for_card(&mut *self.executor, card_trn.as_ref()).await?;
                 Some(card)
             }
             None => None,
@@ -135,76 +146,24 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(maybe_card)
     }
 
-    // Persist changes for a maintenance card by consuming its pending events.
-
+    /// Fetch a rich view of a maintenance card, including catalog display info and event history.
     async fn find_view_by_id(
         &mut self,
         id: &MaintenanceCardId,
     ) -> Result<Option<MaintenanceCardView>, DomainError> {
-        let q = r#"SELECT
-            mc.id,
-            mc.owned_rolling_stock_id,
-            mc.last_maintenance_date,
-            mc.next_maintenance_date,
-            mfr.name            AS manufacturer_name,
-            rm.product_code     AS product_code,
-            rs.series_code      AS series_code,
-            rs.road_number      AS road_number,
-            rs.category         AS rolling_stock_category
-        FROM maintenance_cards mc
-        LEFT JOIN owned_rolling_stocks ors ON mc.owned_rolling_stock_id = ors.id
-        LEFT JOIN rolling_stocks rs        ON ors.rolling_stock_id = rs.id
-        LEFT JOIN railway_models rm        ON rs.railway_model_id = rm.id
-        LEFT JOIN manufacturers mfr        ON rm.manufacturer_id = mfr.id
-        WHERE mc.id = ?"#;
-
         let trn = id.to_string();
 
-        let row = sqlx::query_as::<_, MaintenanceCardWithDisplayInfoRow>(q)
-            .bind(trn)
-            .fetch_optional(&mut *self.executor)
+        let row = database::find_maintenance_card_with_display_by_id(&mut *self.executor, &trn)
             .await
             .with_domain_context("Error fetching maintenance card by id for view")?;
 
         let maybe = match row {
             Some(r) => {
-                // load events for view
-                let events_q = r#"SELECT
-                    id,
-                    maintenance_card_id,
-                    date_performed,
-                    notes,
-                    maintenance_type
-                FROM maintenance_events
-                WHERE maintenance_card_id = ?
-                ORDER BY date_performed DESC"#;
-
-                let rows = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
-                    .bind(r.id.to_string())
-                    .fetch_all(&mut *self.executor)
+                let event_rows = database::load_events_for_card(&mut *self.executor, r.id.as_ref())
                     .await
                     .with_domain_context("Error listing maintenance events for view")?;
 
-                let mut events = Vec::with_capacity(rows.len());
-                for er in rows.into_iter() {
-                    let event_id = MaintenanceEventId::try_from(er.id.as_ref())?;
-                    let uuid_str = &event_id.as_ref()[MaintenanceEventId::PREFIX.len() + 1..];
-                    let evt_uuid = uuid::Uuid::parse_str(uuid_str).map_err(|_| {
-                        DomainError::Infrastructure("invalid event id uuid".to_string())
-                    })?;
-
-                    let maintenance_type = er
-                        .maintenance_type
-                        .as_ref()
-                        .and_then(|s| s.parse::<MaintenanceType>().ok());
-
-                    events.push(MaintenanceCardEventView {
-                        id: evt_uuid,
-                        date_performed: er.date_performed,
-                        maintenance_type,
-                        notes: er.notes,
-                    });
-                }
+                let events = map_event_rows_to_views(event_rows)?;
 
                 let display_info = if r.manufacturer_name.is_some()
                     || r.product_code.is_some()
@@ -237,22 +196,13 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(maybe)
     }
 
+    /// Persist changes for a maintenance card by consuming its pending domain events.
+    ///
+    /// # Errors
+    /// Returns [`DomainError::Conflict`] when a `Created` event attempts to insert a card
+    /// for a rolling stock that already has one.
     async fn save(&mut self, maintenance_card: MaintenanceCard) -> Result<(), DomainError> {
-        let insert_sql = r#"INSERT INTO maintenance_events (
-            id,
-            maintenance_card_id,
-            date_performed,
-            maintenance_type,
-            notes
-        ) VALUES (?, ?, ?, ?, ?)"#;
-
-        let update_sql = r#"UPDATE maintenance_cards
-            SET
-                last_maintenance_date = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?"#;
-
-        let owned_rolling_stock_id = maintenance_card.owned_rolling_stock_id.to_string();
+        let owned_rolling_stock_trn = maintenance_card.owned_rolling_stock_id.to_string();
 
         for ev in maintenance_card.pending_events.into_iter() {
             match ev {
@@ -263,29 +213,31 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                     maintenance_type,
                     notes,
                 } => {
-                    // Build TRN strings for database storage
                     let event_trn = format!("trn:maintenance-event:{}", id);
                     let card_trn = format!("trn:maintenance-card:{}", maintenance_card_id);
+                    let date_str = date_performed.format("%Y-%m-%d").to_string();
+                    let type_str = maintenance_type.as_ref().map(|t| t.to_string());
 
-                    sqlx::query(insert_sql)
-                        .bind(event_trn)
-                        .bind(&card_trn)
-                        .bind(date_performed.format("%Y-%m-%d").to_string())
-                        .bind(maintenance_type.as_ref().map(|t| t.to_string()))
-                        .bind(notes.clone())
-                        .execute(&mut *self.executor)
-                        .await
-                        .with_domain_context("Error inserting new maintenance event")?;
+                    database::insert_maintenance_event(
+                        &mut *self.executor,
+                        &event_trn,
+                        &card_trn,
+                        &date_str,
+                        type_str.as_deref(),
+                        notes.as_deref(),
+                    )
+                    .await
+                    .with_domain_context("Error inserting new maintenance event")?;
 
-                    sqlx::query(update_sql)
-                        .bind(date_performed.format("%Y-%m-%d").to_string())
-                        .bind(&card_trn)
-                        .execute(&mut *self.executor)
-                        .await
-                        .with_domain_context(
-                            "Error updating maintenance card last_maintenance_date",
-                        )?;
+                    database::update_maintenance_card_last_date(
+                        &mut *self.executor,
+                        &date_str,
+                        &card_trn,
+                    )
+                    .await
+                    .with_domain_context("Error updating maintenance card last_maintenance_date")?;
                 }
+
                 MaintenanceCardEvent::Created {
                     id,
                     maintenance_card_id,
@@ -293,29 +245,20 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                 } => {
                     let event_trn = format!("trn:maintenance-event:{}", id);
                     let card_trn = format!("trn:maintenance-card:{}", maintenance_card_id);
-
-                    // Insert the maintenance card row first (required by the FK constraint
-                    // on maintenance_events.maintenance_card_id → maintenance_cards.id)
-                    let insert_card_sql = r#"INSERT INTO maintenance_cards (
-                        id,
-                        owned_rolling_stock_id,
-                        created_at,
-                        updated_at,
-                        version
-                    ) VALUES (?, ?, ?, ?, 0)"#;
-
                     let now_dt = chrono::Local::now()
                         .naive_local()
                         .format("%Y-%m-%d %H:%M:%S")
                         .to_string();
 
-                    let insert_result = sqlx::query(insert_card_sql)
-                        .bind(&card_trn)
-                        .bind(&owned_rolling_stock_id)
-                        .bind(&now_dt)
-                        .bind(&now_dt)
-                        .execute(&mut *self.executor)
-                        .await;
+                    // Insert the maintenance card row first (required by the FK constraint
+                    // on maintenance_events.maintenance_card_id → maintenance_cards.id).
+                    let insert_result = database::insert_maintenance_card(
+                        &mut *self.executor,
+                        &card_trn,
+                        &owned_rolling_stock_trn,
+                        &now_dt,
+                    )
+                    .await;
 
                     if let Err(e) = insert_result {
                         if e.to_string().contains("UNIQUE constraint failed") {
@@ -327,15 +270,16 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                         return Err(DomainError::Infrastructure(e.to_string()));
                     }
 
-                    sqlx::query(insert_sql)
-                        .bind(event_trn)
-                        .bind(&card_trn)
-                        .bind(created_at.format("%Y-%m-%d").to_string())
-                        .bind(None::<String>)
-                        .bind(None::<String>)
-                        .execute(&mut *self.executor)
-                        .await
-                        .with_domain_context("Error inserting maintenance created event")?;
+                    database::insert_maintenance_event(
+                        &mut *self.executor,
+                        &event_trn,
+                        &card_trn,
+                        &created_at.format("%Y-%m-%d").to_string(),
+                        None,
+                        None,
+                    )
+                    .await
+                    .with_domain_context("Error inserting maintenance created event")?;
                 }
             }
         }
@@ -343,35 +287,14 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(())
     }
 
+    /// Return all maintenance cards that are currently due.
     async fn list_due_cards(&mut self) -> Result<Vec<MaintenanceCard>, DomainError> {
-        let q = r#"SELECT
-            id,
-            owned_rolling_stock_id,
-            last_maintenance_date,
-            next_maintenance_date,
-            created_at,
-            updated_at,
-            version
-        FROM maintenance_cards
-        WHERE next_maintenance_date <= date('now')
-           OR (
-               next_maintenance_date IS NULL
-               AND last_maintenance_date IS NOT NULL
-               AND last_maintenance_date <= date('now')
-           )
-           OR (
-               next_maintenance_date IS NULL
-               AND last_maintenance_date IS NULL
-           )"#;
-
-        let rows = sqlx::query_as::<_, MaintenanceCardRow>(q)
-            .fetch_all(&mut *self.executor)
+        let rows = database::find_due_maintenance_cards(&mut *self.executor)
             .await
             .with_domain_context("Error querying due maintenance cards")?;
 
-        // Map infra rows into domain `MaintenanceCard`
-        let mut cards: Vec<MaintenanceCard> = Vec::with_capacity(rows.len());
-        for r in rows.into_iter() {
+        let mut cards = Vec::with_capacity(rows.len());
+        for r in rows {
             let card = MaintenanceCard::try_from(r).map_err(DomainError::Validation)?;
             cards.push(card);
         }
@@ -379,119 +302,47 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
         Ok(cards)
     }
 
+    /// Delete a single maintenance event and recalculate `last_maintenance_date` for its card.
+    ///
+    /// # Errors
+    /// Returns [`DomainError::NotFound`] when no event with `event_id` exists.
     async fn delete_event(&mut self, event_id: &MaintenanceEventId) -> Result<(), DomainError> {
         let event_trn = event_id.to_string();
 
         // Retrieve the owning card's TRN before deleting so we can update its projection.
-        let card_trn: Option<String> =
-            sqlx::query_scalar("SELECT maintenance_card_id FROM maintenance_events WHERE id = ?")
-                .bind(&event_trn)
-                .fetch_optional(&mut *self.executor)
-                .await
-                .with_domain_context("Error finding owning card for maintenance event")?;
+        let card_trn = database::find_event_card_id(&mut *self.executor, &event_trn)
+            .await
+            .with_domain_context("Error finding owning card for maintenance event")?
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "MaintenanceEvent".to_string(),
+                identifier: event_trn.clone(),
+            })?;
 
-        let card_trn = card_trn.ok_or_else(|| DomainError::NotFound {
-            resource: "MaintenanceEvent".to_string(),
-            identifier: event_trn.clone(),
-        })?;
-
-        sqlx::query("DELETE FROM maintenance_events WHERE id = ?")
-            .bind(&event_trn)
-            .execute(&mut *self.executor)
+        database::delete_maintenance_event(&mut *self.executor, &event_trn)
             .await
             .with_domain_context("Error deleting maintenance event")?;
 
-        // Recalculate last_maintenance_date from the remaining events for this card.
-        sqlx::query(
-            r#"UPDATE maintenance_cards
-               SET last_maintenance_date = (
-                   SELECT MAX(date_performed)
-                   FROM maintenance_events
-                   WHERE maintenance_card_id = ?
-               ),
-               updated_at = CURRENT_TIMESTAMP
-               WHERE id = ?"#,
-        )
-        .bind(&card_trn)
-        .bind(&card_trn)
-        .execute(&mut *self.executor)
-        .await
-        .with_domain_context("Error updating maintenance card after event deletion")?;
+        database::recalculate_last_maintenance_date(&mut *self.executor, &card_trn)
+            .await
+            .with_domain_context("Error updating maintenance card after event deletion")?;
 
         Ok(())
     }
 
+    /// Return rich view models for all currently due maintenance cards.
     async fn list_due_card_views(&mut self) -> Result<Vec<MaintenanceCardView>, DomainError> {
-        let q = r#"SELECT
-            mc.id,
-            mc.owned_rolling_stock_id,
-            mc.last_maintenance_date,
-            mc.next_maintenance_date,
-            mfr.name            AS manufacturer_name,
-            rm.product_code     AS product_code,
-            rs.series_code      AS series_code,
-            rs.road_number      AS road_number,
-            rs.category         AS rolling_stock_category
-        FROM maintenance_cards mc
-        LEFT JOIN owned_rolling_stocks ors ON mc.owned_rolling_stock_id = ors.id
-        LEFT JOIN rolling_stocks rs        ON ors.rolling_stock_id = rs.id
-        LEFT JOIN railway_models rm        ON rs.railway_model_id = rm.id
-        LEFT JOIN manufacturers mfr        ON rm.manufacturer_id = mfr.id
-        WHERE mc.next_maintenance_date <= date('now')
-           OR (
-               mc.next_maintenance_date IS NULL
-               AND mc.last_maintenance_date IS NOT NULL
-               AND mc.last_maintenance_date <= date('now')
-           )
-           OR (
-               mc.next_maintenance_date IS NULL
-               AND mc.last_maintenance_date IS NULL
-           )"#;
-
-        let rows = sqlx::query_as::<_, MaintenanceCardWithDisplayInfoRow>(q)
-            .fetch_all(&mut *self.executor)
+        let rows = database::find_due_maintenance_card_views(&mut *self.executor)
             .await
             .with_domain_context("Error querying due maintenance cards for view")?;
 
         let mut views = Vec::with_capacity(rows.len());
-        for r in rows.into_iter() {
-            // load events for each card
-            let events_q = r#"SELECT
-                id,
-                maintenance_card_id,
-                date_performed,
-                notes,
-                maintenance_type
-            FROM maintenance_events
-            WHERE maintenance_card_id = ?
-            ORDER BY date_performed DESC"#;
 
-            let rows_ev = sqlx::query_as::<_, MaintenanceEventRow>(events_q)
-                .bind(r.id.to_string())
-                .fetch_all(&mut *self.executor)
+        for r in rows {
+            let event_rows = database::load_events_for_card(&mut *self.executor, r.id.as_ref())
                 .await
                 .with_domain_context("Error listing maintenance events for view")?;
 
-            let mut events = Vec::with_capacity(rows_ev.len());
-            for er in rows_ev.into_iter() {
-                let event_id = MaintenanceEventId::try_from(er.id.as_ref())?;
-                let uuid_str = &event_id.as_ref()[MaintenanceEventId::PREFIX.len() + 1..];
-                let evt_uuid = uuid::Uuid::parse_str(uuid_str).map_err(|_| {
-                    DomainError::Infrastructure("invalid event id uuid".to_string())
-                })?;
-
-                let maintenance_type = er
-                    .maintenance_type
-                    .as_ref()
-                    .and_then(|s| s.parse::<MaintenanceType>().ok());
-
-                events.push(MaintenanceCardEventView {
-                    id: evt_uuid,
-                    date_performed: er.date_performed,
-                    maintenance_type,
-                    notes: er.notes,
-                });
-            }
+            let events = map_event_rows_to_views(event_rows)?;
 
             let display_info = if r.manufacturer_name.is_some()
                 || r.product_code.is_some()
@@ -523,12 +374,16 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
     }
 }
 
+// ─── UoW extension ───────────────────────────────────────────────────────────
+
 impl MaintenanceUowExt for SqliteUnitOfWork {
     fn maintenance_repository(&mut self) -> Box<dyn MaintenanceRepository + Send + '_> {
         Box::new(SqliteMaintenanceRepository::new(&mut self.tx))
             as Box<dyn MaintenanceRepository + Send + '_>
     }
 }
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -643,7 +498,7 @@ mod tests {
             notes: Some("Repo-level transaction test".to_string()),
         };
 
-        // perform the transactional operation via the repository
+        // Perform the transactional operation via the repository.
         let card_id = match &new_event {
             MaintenanceCardEvent::MaintenanceRecorded {
                 maintenance_card_id,
@@ -658,7 +513,7 @@ mod tests {
         card.pending_events = vec![new_event.clone()];
         repo.save(card).await.expect("record event");
 
-        // Extract inner fields from the enum variant for assertions
+        // Extract inner fields from the enum variant for assertions.
         let (evt_id, evt_card_id, evt_date) = match &new_event {
             MaintenanceCardEvent::MaintenanceRecorded {
                 id,
@@ -673,7 +528,7 @@ mod tests {
             } => (*id, *maintenance_card_id, *created_at),
         };
 
-        // Query the card by ID to verify the event was recorded
+        // Query the card by ID to verify the event was recorded.
         let card_with_events = repo
             .find_by_id(&MaintenanceCardId::from_uuid(&evt_card_id))
             .await
@@ -819,7 +674,7 @@ mod tests {
         let mut repo = unit_of_work.maintenance_repository();
         repo.delete_event(&event_id).await.expect("delete");
 
-        // Load the card and confirm event is gone
+        // Load the card and confirm event is gone.
         let card_id = MaintenanceCardId::try_from(
             "trn:maintenance-card:3284cc76-1472-4b12-a7d4-62043416adc2",
         )

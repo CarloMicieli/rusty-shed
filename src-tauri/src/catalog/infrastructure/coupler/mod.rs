@@ -1,1 +1,3 @@
-pub mod sqlite_coupler_repository;
+pub mod repository;
+
+pub use repository::SqliteCouplerRepository;

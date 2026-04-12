@@ -1,3 +1,3 @@
-mod sqlite_manufacturer_repository;
+pub mod repository;
 
-pub use sqlite_manufacturer_repository::SqliteManufacturerRepository;
+pub use repository::SqliteManufacturerRepository;

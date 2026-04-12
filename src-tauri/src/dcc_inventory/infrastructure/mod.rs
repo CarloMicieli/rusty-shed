@@ -1,4 +1,6 @@
+pub mod database;
 pub mod entities;
-mod sqlite_digital_rolling_stock_repository;
+pub mod mappers;
+pub mod repository;
 
-pub use sqlite_digital_rolling_stock_repository::SqliteDigitalRollingStockRepository;
+pub use repository::SqliteDigitalRollingStockRepository;

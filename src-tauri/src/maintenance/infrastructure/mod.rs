@@ -1,3 +1,4 @@
+pub mod database;
 pub mod entities;
 pub mod mappers;
-pub mod sqlite_repository;
+pub mod repository;

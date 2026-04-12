@@ -4,7 +4,7 @@ use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::{SellersRepository, SellersUowExt};
-use crate::sellers::infrastructure::entities::SellerRow;
+use crate::sellers::infrastructure::database;
 use chrono::Utc;
 
 pub struct SqliteSellersRepository<'conn> {
@@ -20,55 +20,14 @@ impl<'conn> SqliteSellersRepository<'conn> {
 #[async_trait::async_trait]
 impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
     async fn list(&mut self) -> Result<Vec<Seller>, DomainError> {
-        let sql = r#"
-        SELECT
-            id,
-            name,
-            type AS seller_type,
-            email,
-            phone,
-            website_url,
-            street_address,
-            extended_address,
-            city,
-            state_region,
-            postal_code,
-            country_code,
-            created_at,
-            updated_at
-        FROM sellers
-        ORDER BY name
-        "#;
-        let rows = sqlx::query_as::<_, SellerRow>(sql)
-            .fetch_all(&mut *self.executor)
+        let rows = database::list_sellers(&mut *self.executor)
             .await
             .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(rows.into_iter().map(Into::into).collect())
     }
 
     async fn get(&mut self, id: &SellerId) -> Result<Option<Seller>, DomainError> {
-        let sql = r#"
-        SELECT
-            id,
-            name,
-            type AS seller_type,
-            email,
-            phone,
-            website_url,
-            street_address,
-            extended_address,
-            city,
-            state_region,
-            postal_code,
-            country_code,
-            created_at,
-            updated_at
-        FROM sellers
-        WHERE id = ?
-        "#;
-        let row = sqlx::query_as::<_, SellerRow>(sql)
-            .bind(&id.0)
-            .fetch_optional(&mut *self.executor)
+        let row = database::find_seller_by_id(&mut *self.executor, &id.0)
             .await
             .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(row.map(Into::into))
@@ -78,28 +37,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
         &mut self,
         id: &SellerId,
     ) -> Result<Option<crate::sellers::application::seller_view::SellerView>, DomainError> {
-        let sql = r#"
-        SELECT
-            id,
-            name,
-            type AS seller_type,
-            email,
-            phone,
-            website_url,
-            street_address,
-            extended_address,
-            city,
-            state_region,
-            postal_code,
-            country_code,
-            created_at,
-            updated_at
-        FROM sellers
-        WHERE id = ?
-        "#;
-        let row = sqlx::query_as::<_, SellerRow>(sql)
-            .bind(&id.0)
-            .fetch_optional(&mut *self.executor)
+        let row = database::find_seller_by_id(&mut *self.executor, &id.0)
             .await
             .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
         Ok(row.map(|r| {
@@ -109,11 +47,9 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
     }
 
     async fn upsert(&mut self, seller: &Seller) -> Result<(), DomainError> {
-        // Keep existing created_at if row exists; otherwise use provided created_at.
-        let existing_created_at: Option<String> =
-            sqlx::query_scalar("SELECT created_at FROM sellers WHERE id = ?")
-                .bind(&seller.id.0)
-                .fetch_optional(&mut *self.executor)
+        // Preserve the original created_at when the row already exists.
+        let existing_created_at =
+            database::get_seller_created_at(&mut *self.executor, &seller.id.0)
                 .await
                 .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
@@ -121,69 +57,44 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
             existing_created_at.unwrap_or_else(|| seller.created_at.to_rfc3339());
         let updated_at = Utc::now().to_rfc3339();
 
-        // Extract address components for DB binding
-        let (street_address, extended_address, city, state_region, postal_code, country_code) =
-            match &seller.address {
-                Some(addr) => (
-                    Some(addr.street_address().to_string()),
-                    addr.extended_address().map(|s| s.to_string()),
-                    Some(addr.city().to_string()),
-                    addr.region().map(|s| s.to_string()),
-                    Some(addr.postal_code().to_string()),
-                    Some(addr.country_code().to_string()),
-                ),
-                None => (None, None, None, None, None, None),
-            };
+        // Decompose address into flat column values.
+        let (street, extended, city, region, postal, country) = match &seller.address {
+            Some(addr) => (
+                Some(addr.street_address().to_string()),
+                addr.extended_address().map(|s| s.to_string()),
+                Some(addr.city().to_string()),
+                addr.region().map(|s| s.to_string()),
+                Some(addr.postal_code().to_string()),
+                Some(addr.country_code().to_string()),
+            ),
+            None => (None, None, None, None, None, None),
+        };
 
-        let sql = r#"
-        INSERT INTO sellers (
-            id, name, type, email, phone, website_url,
-            street_address, extended_address, city, state_region, postal_code, country_code,
-            created_at, updated_at
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                        ON CONFLICT(id) DO UPDATE SET
-              name = excluded.name,
-              type = excluded.type,
-              email = excluded.email,
-              phone = excluded.phone,
-              website_url = excluded.website_url,
-              street_address = excluded.street_address,
-              extended_address = excluded.extended_address,
-              city = excluded.city,
-              state_region = excluded.state_region,
-              postal_code = excluded.postal_code,
-              country_code = excluded.country_code,
-              updated_at = excluded.updated_at
-        "#;
-        sqlx::query(sql)
-            .bind(&seller.id.0)
-            .bind(&seller.name)
-            .bind(&seller.seller_type)
-            .bind(&seller.email)
-            .bind(&seller.phone)
-            .bind(&seller.website_url)
-            .bind(&street_address)
-            .bind(&extended_address)
-            .bind(&city)
-            .bind(&state_region)
-            .bind(&postal_code)
-            .bind(&country_code)
-            .bind(&created_at_to_use)
-            .bind(&updated_at)
-            .execute(&mut *self.executor)
-            .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
-        Ok(())
+        database::upsert_seller(
+            &mut *self.executor,
+            &seller.id.0,
+            &seller.name,
+            &seller.seller_type,
+            seller.email.as_deref(),
+            seller.phone.as_deref(),
+            seller.website_url.as_deref(),
+            street.as_deref(),
+            extended.as_deref(),
+            city.as_deref(),
+            region.as_deref(),
+            postal.as_deref(),
+            country.as_deref(),
+            &created_at_to_use,
+            &updated_at,
+        )
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))
     }
 
     async fn delete(&mut self, id: &SellerId) -> Result<u64, DomainError> {
-        let sql = "DELETE FROM sellers WHERE id = ?";
-        let res = sqlx::query(sql)
-            .bind(&id.0)
-            .execute(&mut *self.executor)
+        database::delete_seller(&mut *self.executor, &id.0)
             .await
-            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
-        Ok(res.rows_affected())
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))
     }
 
     async fn save(&mut self, seller: &mut Seller) -> Result<(), DomainError> {
@@ -211,11 +122,9 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                     created_at,
                     updated_at,
                 } => {
-                    // Keep existing created_at if row exists; otherwise use provided created_at.
-                    let existing_created_at: Option<String> =
-                        sqlx::query_scalar("SELECT created_at FROM sellers WHERE id = ?")
-                            .bind(&aggregate_id.0)
-                            .fetch_optional(&mut *self.executor)
+                    // Preserve the original created_at when the row already exists.
+                    let existing_created_at =
+                        database::get_seller_created_at(&mut *self.executor, &aggregate_id.0)
                             .await
                             .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
@@ -223,14 +132,7 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                         existing_created_at.unwrap_or_else(|| created_at.to_rfc3339());
                     let updated_at_to_use = updated_at.to_rfc3339();
 
-                    let (
-                        street_address,
-                        extended_address,
-                        city,
-                        state_region,
-                        postal_code,
-                        country_code,
-                    ) = match &address {
+                    let (street, extended, city, region, postal, country) = match &address {
                         Some(addr) => (
                             Some(addr.street_address().to_string()),
                             addr.extended_address().map(|s| s.to_string()),
@@ -242,50 +144,28 @@ impl<'conn> SellersRepository for SqliteSellersRepository<'conn> {
                         None => (None, None, None, None, None, None),
                     };
 
-                    let sql = r#"
-                    INSERT INTO sellers (
-                        id, name, type, email, phone, website_url,
-                        street_address, extended_address, city, state_region, postal_code, country_code,
-                        created_at, updated_at
-                    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                                    ON CONFLICT(id) DO UPDATE SET
-                          name = excluded.name,
-                          type = excluded.type,
-                          email = excluded.email,
-                          phone = excluded.phone,
-                          website_url = excluded.website_url,
-                          street_address = excluded.street_address,
-                          extended_address = excluded.extended_address,
-                          city = excluded.city,
-                          state_region = excluded.state_region,
-                          postal_code = excluded.postal_code,
-                          country_code = excluded.country_code,
-                          updated_at = excluded.updated_at
-                    "#;
-                    sqlx::query(sql)
-                        .bind(&aggregate_id.0)
-                        .bind(&name)
-                        .bind(&seller_type)
-                        .bind(&email)
-                        .bind(&phone)
-                        .bind(&website_url)
-                        .bind(&street_address)
-                        .bind(&extended_address)
-                        .bind(&city)
-                        .bind(&state_region)
-                        .bind(&postal_code)
-                        .bind(&country_code)
-                        .bind(&created_at_to_use)
-                        .bind(&updated_at_to_use)
-                        .execute(&mut *self.executor)
-                        .await
-                        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+                    database::upsert_seller(
+                        &mut *self.executor,
+                        &aggregate_id.0,
+                        &name,
+                        &seller_type,
+                        email.as_deref(),
+                        phone.as_deref(),
+                        website_url.as_deref(),
+                        street.as_deref(),
+                        extended.as_deref(),
+                        city.as_deref(),
+                        region.as_deref(),
+                        postal.as_deref(),
+                        country.as_deref(),
+                        &created_at_to_use,
+                        &updated_at_to_use,
+                    )
+                    .await
+                    .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
                 }
                 SellerEvent::Deleted { aggregate_id } => {
-                    let sql = "DELETE FROM sellers WHERE id = ?";
-                    sqlx::query(sql)
-                        .bind(&aggregate_id.0)
-                        .execute(&mut *self.executor)
+                    database::delete_seller(&mut *self.executor, &aggregate_id.0)
                         .await
                         .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
                 }
