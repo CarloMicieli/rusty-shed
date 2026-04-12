@@ -21,6 +21,7 @@ export class DashboardState {
   #budgetData = $state<BudgetDashboardSummary | null>(null);
   #isLoading = $state(false);
   #error = $state<string | null>(null);
+  #budgetLoadInFlight: Promise<void> | null = null;
 
   // 2. Getters (providing read-only reactive access)
   get data() {
@@ -73,16 +74,29 @@ export class DashboardState {
    * Loads budget dashboard data
    */
   async loadBudget() {
-    console.debug('Invoking get_budget_dashboard');
-    const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
+    if (this.#budgetLoadInFlight) {
+      await this.#budgetLoadInFlight;
+      return;
+    }
 
-    if (result.ok) {
-      this.#budgetData = result.data;
-    } else {
-      const errorMsg = getErrorMessage(result.error);
-      console.warn('Budget Dashboard Error:', errorMsg, { raw: result.error });
-      // Don't show error toast for budget - it's optional data
-      this.#budgetData = null;
+    this.#budgetLoadInFlight = (async () => {
+      console.debug('Invoking get_budget_dashboard');
+      const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
+
+      if (result.ok) {
+        this.#budgetData = result.data;
+      } else {
+        const errorMsg = getErrorMessage(result.error);
+        console.warn('Budget Dashboard Error:', errorMsg, { raw: result.error });
+        // Don't show error toast for budget - it's optional data
+        this.#budgetData = null;
+      }
+    })();
+
+    try {
+      await this.#budgetLoadInFlight;
+    } finally {
+      this.#budgetLoadInFlight = null;
     }
   }
 

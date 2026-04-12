@@ -1,3 +1,7 @@
+<script module lang="ts">
+  let dashboardInitInFlight: Promise<void> | null = null;
+</script>
+
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -82,8 +86,16 @@
   const acquisitionSkeletonKeys = ['acq-1', 'acq-2'] as const;
 
   onMount(() => {
-    void dashboard.load();
-    void dashboard.loadBudget();
+    if (dashboardInitInFlight) {
+      return;
+    }
+
+    dashboardInitInFlight = (async () => {
+      await dashboard.load();
+      await dashboard.loadBudget();
+    })().finally(() => {
+      dashboardInitInFlight = null;
+    });
   });
 
   // Helpers

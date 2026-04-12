@@ -1,3 +1,7 @@
+<script module lang="ts">
+  let financeInitInFlight: Promise<void> | null = null;
+</script>
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Settings2, CalendarDays, TrendingUp, Wallet } from 'lucide-svelte';
@@ -53,11 +57,19 @@
   const currentMonth = now.getMonth() + 1;
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  onMount(async () => {
-    await budgetState.load();
-    if (budgetState.hasConfig) {
-      await budgetState.loadMonthlyRecords(selectedYear);
+  onMount(() => {
+    if (financeInitInFlight) {
+      return;
     }
+
+    financeInitInFlight = (async () => {
+      await budgetState.load();
+      if (budgetState.hasConfig) {
+        await budgetState.loadMonthlyRecords(selectedYear);
+      }
+    })().finally(() => {
+      financeInitInFlight = null;
+    });
   });
 
   async function handleYearChange(year: number) {
