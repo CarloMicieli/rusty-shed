@@ -103,9 +103,10 @@
       </div>
     {:else if budgetState.hasConfig}
       <div
-        class="relative transition-opacity duration-150"
-        class:opacity-50={budgetState.isTransitioning}
-        class:pointer-events-none={budgetState.isTransitioning}
+        class={[
+          'relative transition-opacity duration-150',
+          budgetState.isTransitioning && 'pointer-events-none opacity-50'
+        ]}
       >
         {#if budgetState.isTransitioning}
           <div class="absolute inset-0 z-10 flex items-center justify-center">

@@ -14,19 +14,19 @@
   import { page } from '$app/stores';
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
-  import { appVersion } from '$lib/stores/app';
+  import { appState } from '$lib/stores/app.svelte';
   import { Badge } from '$lib/components';
   import { cn } from '$lib/utils';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
-  import { localeStore } from '$lib/stores/locale';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   const collectionService = getCollectionContext();
   const wishlistService = getWishlistContext();
 
   const totalCount = $derived(collectionService.totalCount);
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
-  const locale = $derived($localeStore);
+  const locale = $derived(localeState.activeLocale);
 
   function navLinkClasses(active: boolean, withSpaceBetween = false): string {
     return cn(
@@ -128,7 +128,7 @@
       </a>
       <div class="px-4 py-2 text-center text-xs tracking-widest text-muted-foreground uppercase">
         {m.app_version_prefix()}
-        {$appVersion || '—'}
+        {appState.version || '—'}
       </div>
     </div>
   </nav>

@@ -9,8 +9,8 @@
   import SignalFailureView from '$lib/components/signal-failure/SignalFailureView.svelte';
   import { Bell, TrainFront } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
-  import { setAppVersion } from '$lib/stores/app';
-  import { themeStore } from '$lib/stores/themeStore.svelte';
+  import { appState } from '$lib/stores/app.svelte';
+  import { themeState } from '$lib/stores/themeStore.svelte';
   import { log } from '$lib/tauri-logger';
   import * as m from '$lib/paraglide/messages.js';
   import { generateErrorId } from '$lib/services/error-id';
@@ -115,7 +115,7 @@
     await regionalManager.init();
 
     // 1. Initialize theme from settings
-    await themeStore.initializeFromSettings();
+    await themeState.initializeFromSettings();
 
     // 2. Show main window immediately so the user sees *something* (loading state)
     // We don't block on this failing, but log it if it does.
@@ -133,7 +133,7 @@
       // 3. Fetch app version (non-critical, but good to have early)
       const versionResult = await safeInvoke<string>('get_app_version');
       if (versionResult.ok) {
-        setAppVersion(versionResult.data);
+        appState.setVersion(versionResult.data);
       }
 
       // 4. Initialize Database (Critical)

@@ -29,10 +29,14 @@ vi.mock('$lib/paraglide/runtime.js', async (importOriginal) => {
   };
 });
 
-// Mock themeStore dynamic import
+// Mock themeState (runes-based singleton)
 vi.mock('$lib/stores/themeStore.svelte', () => ({
-  themeStore: {
-    setTheme: vi.fn().mockResolvedValue(undefined)
+  themeState: {
+    current: 'steampunk-dark',
+    resolved: 'dark',
+    isLoading: false,
+    setTheme: vi.fn().mockResolvedValue(undefined),
+    getState: vi.fn().mockReturnValue({ current: 'steampunk-dark', resolved: 'dark' })
   }
 }));
 

@@ -90,7 +90,7 @@
         bind:value={notes}
         {disabled}
         rows={3}
-        placeholder="Additional notes..."
+        placeholder={m.wishlist_modal_notes_placeholder()}
         class="flex w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       ></textarea>
     </div>

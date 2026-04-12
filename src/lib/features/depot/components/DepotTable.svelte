@@ -86,9 +86,11 @@
       <tr>
         {#each headers as col (col.label)}
           <th
-            class="px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase {col.class}"
+            class={[
+              `px-4 py-2 text-left text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase ${col.class}`,
+              col.key && 'cursor-pointer'
+            ]}
             onclick={col.key ? () => toggleSort(col.key) : undefined}
-            class:cursor-pointer={!!col.key}
           >
             <div class="flex items-center gap-2">
               {col.label}
@@ -205,11 +207,14 @@
       class="rounded-r-sm border-y border-r border-border bg-card px-4 py-3 group-hover:bg-primary/15"
     >
       <div
-        class="variant-steampunk-gauge h-8 w-8 {props.dccAddress !== null
-          ? 'border-emerald-500 text-emerald-500'
-          : props.control !== '-' && props.control !== 'analog' && props.control !== 'ANALOG'
-            ? 'border-primary text-primary'
-            : 'border-border text-muted-foreground'}"
+        class={[
+          'variant-steampunk-gauge h-8 w-8',
+          props.dccAddress !== null
+            ? 'border-emerald-500 text-emerald-500'
+            : props.control !== '-' && props.control !== 'analog' && props.control !== 'ANALOG'
+              ? 'border-primary text-primary'
+              : 'border-border text-muted-foreground'
+        ]}
       >
         <span class="font-mono text-[10px]">
           {props.dccAddress !== null

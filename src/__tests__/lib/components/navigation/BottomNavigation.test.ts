@@ -44,13 +44,11 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', () => ({
   })
 }));
 
-// Mock locale store
-vi.mock('$lib/stores/locale', () => ({
-  localeStore: {
-    subscribe: vi.fn((cb) => {
-      cb('en');
-      return () => {};
-    })
+// Mock localeStore with runes-based singleton
+vi.mock('$lib/stores/locale.svelte', () => ({
+  localeState: {
+    activeLocale: 'en',
+    setActiveLocale: vi.fn()
   }
 }));
 

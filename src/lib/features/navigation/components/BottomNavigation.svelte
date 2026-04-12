@@ -6,13 +6,13 @@
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
-  import { localeStore } from '$lib/stores/locale';
+  import { localeState } from '$lib/stores/locale.svelte';
 
   const wishlistService = getWishlistContext();
 
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
   const pathname = $derived($page.url.pathname as string);
-  const locale = $derived($localeStore);
+  const locale = $derived(localeState.activeLocale);
 </script>
 
 <div

@@ -5,9 +5,9 @@
   import { resolve } from '$app/paths';
   import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components/ui/badge';
-  import { appVersion } from '$lib/stores/app';
+  import { appState } from '$lib/stores/app.svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
-  import { localeStore } from '$lib/stores/locale';
+  import { localeState } from '$lib/stores/locale.svelte';
   import { NAVIGATION_ITEMS } from './navigation/config';
   import { isActive } from './navigation/utils';
   import type { SidebarNavigationProps } from './navigation/types';
@@ -17,7 +17,7 @@
   const wishlistService = getWishlistContext();
 
   const defaultWishlist = $derived(wishlistService.defaultWishlist);
-  const locale = $derived($localeStore);
+  const locale = $derived(localeState.activeLocale);
   const pathname = $derived(($page.url.pathname as string) || '');
 
   function navLinkClass(active: boolean): string {
@@ -140,7 +140,7 @@
             class="px-4 py-2 text-center text-xs tracking-widest text-muted-foreground uppercase"
           >
             {m.app_version_prefix()}
-            {$appVersion || '—'}
+            {appState.version || '—'}
           </div>
         {/if}
       </div>

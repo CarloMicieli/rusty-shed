@@ -64,14 +64,14 @@
               : await sellerService.createSeller(payload);
 
             if (res.status === 'ok') {
-              toaster.success('Seller saved successfully');
+              toaster.success(m.seller_form_save_success());
               onSaved(res.data);
               onClose();
             } else {
-              toaster.error('Failed to save seller');
+              toaster.error(m.seller_form_save_failed());
             }
           } catch {
-            toaster.error('An unexpected error occurred');
+            toaster.error(m.seller_form_error_unexpected());
           }
         }
       }
@@ -91,7 +91,9 @@
 
 <div class="card">
   <div class="card-header">
-    <h3 class="text-base font-semibold">{$form.id ? 'Edit Seller' : 'New Seller'}</h3>
+    <h3 class="text-base font-semibold">
+      {$form.id ? m.seller_form_edit_title() : m.seller_form_new_title()}
+    </h3>
     <Button variant="ghost" onclick={close}>×</Button>
   </div>
 
@@ -100,8 +102,12 @@
       <Form.Field form={formObj} name="name">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label required>Name</Form.Label>
-            <Input {...props} bind:value={$form.name} placeholder="Seller name" />
+            <Form.Label required>{m.seller_form_field_name()}</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.name}
+              placeholder={m.seller_form_placeholder_name()}
+            />
           {/snippet}
         </Form.Control>
         <Form.FieldErrors />
@@ -110,15 +116,15 @@
       <Form.Field form={formObj} name="sellerType">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label required>Seller Type</Form.Label>
+            <Form.Label required>{m.seller_form_field_seller_type()}</Form.Label>
             <select
               {...props}
               bind:value={$form.sellerType}
               class="h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
             >
-              <option value="SHOP">Shop</option>
-              <option value="PRIVATE">Private</option>
-              <option value="MANUFACTURER">Manufacturer</option>
+              <option value="SHOP">{m.seller_form_type_shop()}</option>
+              <option value="PRIVATE">{m.seller_form_type_private()}</option>
+              <option value="MANUFACTURER">{m.seller_form_type_manufacturer()}</option>
             </select>
           {/snippet}
         </Form.Control>
@@ -128,11 +134,11 @@
       <Form.Field form={formObj} name="email">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label>Email</Form.Label>
+            <Form.Label>{m.seller_form_field_email()}</Form.Label>
             <Input
               {...props}
               bind:value={$form.email}
-              placeholder="email@example.com"
+              placeholder={m.seller_form_placeholder_email()}
               type="email"
             />
           {/snippet}
@@ -143,8 +149,12 @@
       <Form.Field form={formObj} name="phone">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label>Phone</Form.Label>
-            <Input {...props} bind:value={$form.phone} placeholder="Phone number" />
+            <Form.Label>{m.seller_form_field_phone()}</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.phone}
+              placeholder={m.seller_form_placeholder_phone()}
+            />
           {/snippet}
         </Form.Control>
         <Form.FieldErrors />
@@ -153,11 +163,11 @@
       <Form.Field form={formObj} name="websiteUrl">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label>Website</Form.Label>
+            <Form.Label>{m.seller_form_field_website()}</Form.Label>
             <Input
               {...props}
               bind:value={$form.websiteUrl}
-              placeholder="https://example.com"
+              placeholder={m.seller_form_placeholder_website()}
               type="url"
             />
           {/snippet}
@@ -168,8 +178,12 @@
       <Form.Field form={formObj} name="streetAddress">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label>Street Address</Form.Label>
-            <Input {...props} bind:value={$form.streetAddress} placeholder="123 Main St" />
+            <Form.Label>{m.seller_form_field_street_address()}</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.streetAddress}
+              placeholder={m.seller_form_placeholder_street_address()}
+            />
           {/snippet}
         </Form.Control>
         <Form.FieldErrors />
@@ -178,8 +192,12 @@
       <Form.Field form={formObj} name="extendedAddress">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label>Extended Address</Form.Label>
-            <Input {...props} bind:value={$form.extendedAddress} placeholder="Apt 4B" />
+            <Form.Label>{m.seller_form_field_extended_address()}</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.extendedAddress}
+              placeholder={m.seller_form_placeholder_extended_address()}
+            />
           {/snippet}
         </Form.Control>
         <Form.FieldErrors />
@@ -189,8 +207,12 @@
         <Form.Field form={formObj} name="city">
           <Form.Control>
             {#snippet children({ props }: { props: ControlAttrs })}
-              <Form.Label>City</Form.Label>
-              <Input {...props} bind:value={$form.city} placeholder="City" />
+              <Form.Label>{m.seller_form_field_city()}</Form.Label>
+              <Input
+                {...props}
+                bind:value={$form.city}
+                placeholder={m.seller_form_placeholder_city()}
+              />
             {/snippet}
           </Form.Control>
           <Form.FieldErrors />
@@ -199,8 +221,12 @@
         <Form.Field form={formObj} name="stateRegion">
           <Form.Control>
             {#snippet children({ props }: { props: ControlAttrs })}
-              <Form.Label>Region</Form.Label>
-              <Input {...props} bind:value={$form.stateRegion} placeholder="Region" />
+              <Form.Label>{m.seller_form_field_region()}</Form.Label>
+              <Input
+                {...props}
+                bind:value={$form.stateRegion}
+                placeholder={m.seller_form_placeholder_region()}
+              />
             {/snippet}
           </Form.Control>
           <Form.FieldErrors />
@@ -209,8 +235,12 @@
         <Form.Field form={formObj} name="postalCode">
           <Form.Control>
             {#snippet children({ props }: { props: ControlAttrs })}
-              <Form.Label>Postal Code</Form.Label>
-              <Input {...props} bind:value={$form.postalCode} placeholder="12345" />
+              <Form.Label>{m.seller_form_field_postal_code()}</Form.Label>
+              <Input
+                {...props}
+                bind:value={$form.postalCode}
+                placeholder={m.seller_form_placeholder_postal_code()}
+              />
             {/snippet}
           </Form.Control>
           <Form.FieldErrors />
@@ -220,15 +250,19 @@
       <Form.Field form={formObj} name="countryCode">
         <Form.Control>
           {#snippet children({ props }: { props: ControlAttrs })}
-            <Form.Label>Country Code</Form.Label>
-            <Input {...props} bind:value={$form.countryCode} placeholder="US" />
+            <Form.Label>{m.seller_form_field_country_code()}</Form.Label>
+            <Input
+              {...props}
+              bind:value={$form.countryCode}
+              placeholder={m.seller_form_placeholder_country_code()}
+            />
           {/snippet}
         </Form.Control>
         <Form.FieldErrors />
       </Form.Field>
 
       {#if hasUnsavedChanges}
-        <p class="text-warning text-sm">You have unsaved changes</p>
+        <p class="text-warning text-sm">{m.seller_form_unsaved_changes()}</p>
       {/if}
     </div>
 
@@ -237,7 +271,11 @@
         >{m.form_new_model_cancel()}</Button
       >
       <Button variant="default" type="submit" disabled={$submitting}>
-        {$submitting ? m.wishlist_modal_saving() : m.form_new_model_create()}
+        {$submitting
+          ? m.wishlist_modal_saving()
+          : $form.id
+            ? m.seller_form_submit_update()
+            : m.seller_form_submit_create()}
       </Button>
     </div>
   </form>

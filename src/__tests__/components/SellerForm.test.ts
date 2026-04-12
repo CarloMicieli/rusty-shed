@@ -5,8 +5,39 @@ import SellerForm from '$lib/components/SellerForm.svelte';
 // ── Paraglide messages ───────────────────────────────────────────────────────
 vi.mock('$lib/paraglide/messages.js', () => ({
   form_new_model_cancel: () => 'Cancel',
-  form_new_model_create: () => 'Create Railway Model',
-  wishlist_modal_saving: () => 'Saving...'
+  wishlist_modal_saving: () => 'Saving...',
+  seller_form_edit_title: () => 'Edit Seller',
+  seller_form_new_title: () => 'New Seller',
+  seller_form_field_name: () => 'Name',
+  seller_form_placeholder_name: () => 'Seller name',
+  seller_form_field_seller_type: () => 'Seller Type',
+  seller_form_type_shop: () => 'Shop',
+  seller_form_type_private: () => 'Private',
+  seller_form_type_manufacturer: () => 'Manufacturer',
+  seller_form_field_email: () => 'Email',
+  seller_form_placeholder_email: () => 'email@example.com',
+  seller_form_field_phone: () => 'Phone',
+  seller_form_placeholder_phone: () => 'Phone number',
+  seller_form_field_website: () => 'Website',
+  seller_form_placeholder_website: () => 'https://example.com',
+  seller_form_field_street_address: () => 'Street Address',
+  seller_form_placeholder_street_address: () => '123 Main St',
+  seller_form_field_extended_address: () => 'Extended Address',
+  seller_form_placeholder_extended_address: () => 'Apt 4B',
+  seller_form_field_city: () => 'City',
+  seller_form_placeholder_city: () => 'City',
+  seller_form_field_region: () => 'Region',
+  seller_form_placeholder_region: () => 'Region',
+  seller_form_field_postal_code: () => 'Postal Code',
+  seller_form_placeholder_postal_code: () => '12345',
+  seller_form_field_country_code: () => 'Country Code',
+  seller_form_placeholder_country_code: () => 'US',
+  seller_form_unsaved_changes: () => 'You have unsaved changes',
+  seller_form_save_success: () => 'Seller saved successfully',
+  seller_form_save_failed: () => 'Failed to save seller',
+  seller_form_error_unexpected: () => 'An unexpected error occurred',
+  seller_form_submit_create: () => 'Create Seller',
+  seller_form_submit_update: () => 'Update Seller'
 }));
 
 // ── Seller service ───────────────────────────────────────────────────────────
@@ -49,7 +80,7 @@ describe('SellerForm.svelte', () => {
     expect(screen.getByPlaceholderText('12345')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     const submitBtn = screen.getByRole('button', {
-      name: 'Create Railway Model'
+      name: 'Create Seller'
     }) as HTMLButtonElement;
     expect(submitBtn).toBeInTheDocument();
     expect(submitBtn.disabled).toBe(false);

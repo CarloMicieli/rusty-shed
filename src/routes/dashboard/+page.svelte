@@ -78,6 +78,9 @@
     }
   ]);
 
+  const statSkeletonKeys = ['stat-total', 'stat-rolling-stock', 'stat-maintenance'] as const;
+  const acquisitionSkeletonKeys = ['acq-1', 'acq-2'] as const;
+
   onMount(() => {
     void dashboard.load();
     void dashboard.loadBudget();
@@ -158,7 +161,7 @@
 
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {#if dashboard.isLoading}
-            {#each Array(3) as _, i (i)}
+            {#each statSkeletonKeys as key (key)}
               <Skeleton class="h-28 w-full" />
             {/each}
           {:else}
@@ -210,7 +213,7 @@
 
         {#if dashboard.isLoading}
           <div class="space-y-4">
-            {#each Array(2) as _, i (i)}
+            {#each acquisitionSkeletonKeys as key (key)}
               <Skeleton class="h-48 w-full" />
             {/each}
           </div>

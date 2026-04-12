@@ -75,8 +75,8 @@
 
       await settingsState.update(inputData);
 
-      const { themeStore } = await import('$lib/stores/themeStore.svelte');
-      await themeStore.setTheme(draft.theme);
+      const { themeState } = await import('$lib/stores/themeStore.svelte');
+      await themeState.setTheme(draft.theme);
 
       log.debug('SettingsForm: Save successful');
       saveSuccess = true;

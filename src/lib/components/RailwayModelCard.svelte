@@ -354,7 +354,11 @@
       >
       <div class="flex h-4 items-center justify-center">
         {#if editable}
-          <InPlaceEdit value={localDeliveryDate} placeholder="YYYY/QQ" onSave={saveDeliveryDate} />
+          <InPlaceEdit
+            value={localDeliveryDate}
+            placeholder={m.form_new_model_delivery_date_placeholder()}
+            onSave={saveDeliveryDate}
+          />
         {:else}
           <span class="font-mono text-xs leading-none text-foreground"
             >{model.delivery_date ?? '—'}</span
