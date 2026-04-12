@@ -2,7 +2,6 @@
   import type { DigitalRollingStockView } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages';
   import { AlertTriangle } from 'lucide-svelte';
-  import { untrack } from 'svelte';
   import { Button, Input } from '$lib/components';
 
   interface Props {
@@ -18,19 +17,27 @@
 
   let { open, stock, onSave, onCheckDuplicate, onClose }: Props = $props();
 
-  // eslint-disable-next-line svelte/prefer-writable-derived
-  let localAddress = $state(untrack(() => stock.dcc_address));
-  let newAddress = $derived(localAddress);
+  let addressOverride = $state<number | null>(null);
+  let previousAddress: number | null = null;
+  let newAddress = $derived(addressOverride ?? stock.dcc_address);
   let isDuplicateWarning = $state(false);
   let isSaving = $state(false);
   let validationError = $state<string | null>(null);
 
   $effect(() => {
-    localAddress = stock.dcc_address;
+    if (previousAddress === null) {
+      previousAddress = stock.dcc_address;
+      return;
+    }
+
+    if (stock.dcc_address !== previousAddress) {
+      addressOverride = null;
+      previousAddress = stock.dcc_address;
+    }
   });
 
   async function handleAddressChange(value: number) {
-    localAddress = value;
+    addressOverride = value;
     validationError = null;
     isDuplicateWarning = false;
 

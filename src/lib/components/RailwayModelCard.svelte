@@ -56,17 +56,45 @@
   // Incremented after each successful upload to bust the browser image cache
   let imageVersion = $state(0);
 
-  // Local copies for editable fields
-  let localScale = $state('');
-  let localEra = $state('');
-  let localCategory = $state('');
-  let localDeliveryDate = $state('');
+  interface ModelOverrides {
+    scale?: string;
+    era?: string;
+    category?: string;
+    deliveryDate?: string;
+  }
+
+  interface ModelSnapshot {
+    scale: string;
+    era: string;
+    category: string;
+    deliveryDate: string;
+  }
+
+  let modelOverrides = $state<ModelOverrides>({});
+  let previousModelSnapshot: ModelSnapshot | null = null;
+
+  const localScale = $derived.by(() => resolveOverride(modelOverrides.scale, model.scale ?? ''));
+  const localEra = $derived.by(() => resolveOverride(modelOverrides.era, model.era ?? ''));
+  const localCategory = $derived.by(() =>
+    resolveOverride(modelOverrides.category, model.category ?? '')
+  );
+  const localDeliveryDate = $derived.by(() =>
+    resolveOverride(modelOverrides.deliveryDate, model.delivery_date ?? '')
+  );
 
   $effect(() => {
-    localScale = model.scale ?? '';
-    localEra = model.era ?? '';
-    localCategory = model.category ?? '';
-    localDeliveryDate = model.delivery_date ?? '';
+    const nextSnapshot = buildModelSnapshot(model);
+    const previousSnapshot = previousModelSnapshot;
+
+    if (previousSnapshot) {
+      if (previousSnapshot.scale !== nextSnapshot.scale) modelOverrides.scale = undefined;
+      if (previousSnapshot.era !== nextSnapshot.era) modelOverrides.era = undefined;
+      if (previousSnapshot.category !== nextSnapshot.category) modelOverrides.category = undefined;
+      if (previousSnapshot.deliveryDate !== nextSnapshot.deliveryDate)
+        modelOverrides.deliveryDate = undefined;
+    }
+
+    previousModelSnapshot = nextSnapshot;
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -169,7 +197,7 @@
     if (result.status === 'error') {
       throw new Error('Failed to save scale');
     }
-    localScale = id;
+    modelOverrides.scale = id;
     await onModelUpdated?.();
   }
 
@@ -183,7 +211,7 @@
     if (result.status === 'error') {
       throw new Error('Failed to save era');
     }
-    localEra = id;
+    modelOverrides.era = id;
     await onModelUpdated?.();
   }
 
@@ -197,7 +225,7 @@
     if (result.status === 'error') {
       throw new Error('Failed to save category');
     }
-    localCategory = id;
+    modelOverrides.category = id;
     await onModelUpdated?.();
   }
 
@@ -209,8 +237,21 @@
     if (result.status === 'error') {
       throw new Error('Failed to save delivery date');
     }
-    localDeliveryDate = value;
+    modelOverrides.deliveryDate = value;
     await onModelUpdated?.();
+  }
+
+  function resolveOverride<T>(override: T | undefined, fallback: T): T {
+    return override !== undefined ? override : fallback;
+  }
+
+  function buildModelSnapshot(currentModel: RailwayModel): ModelSnapshot {
+    return {
+      scale: currentModel.scale ?? '',
+      era: currentModel.era ?? '',
+      category: currentModel.category ?? '',
+      deliveryDate: currentModel.delivery_date ?? ''
+    };
   }
 
   // ─────────────────────────────────────────────────────────────────────────

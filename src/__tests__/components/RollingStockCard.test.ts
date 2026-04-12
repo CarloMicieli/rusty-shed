@@ -441,5 +441,37 @@ describe('RollingStockCard', () => {
       expect(seriesCodeInput).not.toBeNull();
       expect(seriesCodeInput.value).toBe('E.646');
     });
+
+    it('shows optimistic edits immediately but yields to later parent prop updates', async () => {
+      const { container, rerender } = await renderExpandedCard();
+
+      const inPlaceEdits = Array.from(container.querySelectorAll('button'));
+      const seriesEdit = inPlaceEdits.find(
+        (el) => el.textContent?.trim() === 'E.656'
+      ) as HTMLElement;
+      await fireEvent.click(seriesEdit);
+
+      const input = container.querySelector('input') as HTMLInputElement;
+      await fireEvent.input(input, { target: { value: 'E.646' } });
+      await fireEvent.blur(input);
+
+      await waitFor(() => {
+        expect(commands.updateRollingStockIdentification).toHaveBeenCalled();
+        expect(container.textContent).toContain('E.646');
+      });
+
+      await rerender({
+        rollingStock: {
+          ...mockRollingStock,
+          series: 'E.444'
+        },
+        railwayModelId: RAILWAY_MODEL_ID,
+        editable: true
+      });
+
+      await waitFor(() => {
+        expect(container.textContent).toContain('E.444');
+      });
+    });
   });
 });
