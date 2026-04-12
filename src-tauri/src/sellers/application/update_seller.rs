@@ -1,6 +1,7 @@
 use crate::core::domain::address::{Address, AddressFields};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::identifiers::Identifier;
+use crate::core::domain::metadata::Metadata;
 use crate::sellers::domain::SellersUowExt;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_event::SellerEvent;
@@ -42,6 +43,12 @@ impl UpdateSellerUseCase {
         };
         let address = Address::try_from(address_fields).ok();
 
+        let metadata = Metadata {
+            version: 0,
+            created_at,
+            updated_at: now,
+        };
+
         let seller = Seller {
             id: input.id.clone(),
             name: input.name,
@@ -50,8 +57,7 @@ impl UpdateSellerUseCase {
             phone: input.phone,
             website_url: input.website_url,
             address,
-            created_at,
-            updated_at: now,
+            metadata,
             pending_events: Vec::new(),
         };
 
@@ -71,8 +77,7 @@ impl UpdateSellerUseCase {
             phone: seller.phone.clone(),
             website_url: seller.website_url.clone(),
             address: seller.address.clone(),
-            created_at: seller.created_at,
-            updated_at: seller.updated_at,
+            metadata: seller.metadata,
         });
 
         let mut repo = unit_of_work.sellers_repository();

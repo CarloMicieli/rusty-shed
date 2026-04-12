@@ -1,14 +1,14 @@
 use crate::core::domain::address::Address;
+use crate::core::domain::metadata::Metadata;
 use crate::sellers::domain::seller_event::SellerEvent;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Represents a seller (a shop, private seller or distributor) in the system.
 ///
 /// This domain-level struct is used by application use-cases and persisted via
-/// the sellers repository. Timestamps are represented using `chrono::DateTime<Utc>`.
+/// the sellers repository.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Seller {
@@ -36,11 +36,9 @@ pub struct Seller {
     /// postal code and country as a single value object.
     pub address: Option<Address>,
 
-    /// Creation timestamp (UTC).
-    pub created_at: DateTime<Utc>,
+    /// Metadata about the seller (creation date, last modified, version, etc.).
+    pub metadata: Metadata,
 
-    /// Last update timestamp (UTC).
-    pub updated_at: DateTime<Utc>,
     /// Events produced by operations on the aggregate that have not yet been
     /// persisted/handled by a repository or unit of work.
     pub pending_events: Vec<SellerEvent>,

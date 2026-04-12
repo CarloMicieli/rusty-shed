@@ -20,7 +20,8 @@ pub async fn list_sellers(
             postal_code,
             country_code,
             created_at,
-            updated_at
+            updated_at,
+            version
         FROM sellers
         ORDER BY name
     "#;
@@ -52,7 +53,8 @@ pub async fn find_seller_by_id(
             postal_code,
             country_code,
             created_at,
-            updated_at
+            updated_at,
+            version
         FROM sellers
         WHERE id = ?
     "#;
@@ -117,7 +119,8 @@ pub async fn upsert_seller(
             state_region     = excluded.state_region,
             postal_code      = excluded.postal_code,
             country_code     = excluded.country_code,
-            updated_at       = excluded.updated_at
+            updated_at       = excluded.updated_at,
+            version          = version + 1
     "#;
 
     sqlx::query(sql)

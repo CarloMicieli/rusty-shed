@@ -1,4 +1,5 @@
 use crate::core::domain::address::{Address, AddressFields};
+use crate::core::domain::metadata::Metadata;
 use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::infrastructure::entities::SellerRow;
@@ -17,12 +18,18 @@ impl From<SellerRow> for Seller {
         let address = Address::try_from(address_fields).ok();
 
         // Parse timestamps from DB (stored as RFC3339 strings)
-        let created_at_dt = DateTime::parse_from_rfc3339(&row.created_at)
+        let created_at = DateTime::parse_from_rfc3339(&row.created_at)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| Utc::now());
-        let updated_at_dt = DateTime::parse_from_rfc3339(&row.updated_at)
+        let updated_at = DateTime::parse_from_rfc3339(&row.updated_at)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| Utc::now());
+
+        let metadata = Metadata {
+            version: row.version as u8,
+            created_at,
+            updated_at,
+        };
 
         Seller {
             id: SellerId(row.id),
@@ -32,8 +39,7 @@ impl From<SellerRow> for Seller {
             phone: row.phone,
             website_url: row.website_url,
             address,
-            created_at: created_at_dt,
-            updated_at: updated_at_dt,
+            metadata,
             pending_events: Vec::new(),
         }
     }
