@@ -96,6 +96,8 @@ pub async fn create_seller_inner(
 ) -> Result<Seller, CommandError> {
     info!("Creating new seller {:?}", payload);
 
+    payload.validate().map_err(CommandError::from)?;
+
     let mut unit_of_work = state.unit_of_work().await?;
 
     let input = CreateSellerInput {
@@ -221,4 +223,74 @@ pub async fn delete_seller(
     id: SellerId,
 ) -> Result<(), CommandError> {
     delete_seller_inner(&state, id).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::sellers::domain::seller_type::SellerType;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    fn minimal_payload(name: &str) -> CreateSellerPayload {
+        CreateSellerPayload {
+            name: name.to_string(),
+            seller_type: SellerType::Shop,
+            email: None,
+            phone: None,
+            website_url: None,
+            street_address: None,
+            extended_address: None,
+            city: None,
+            state_region: None,
+            postal_code: None,
+            country_code: None,
+        }
+    }
+
+    // ── create_seller_inner ──────────────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_seller_empty_name_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let result = create_seller_inner(&state, minimal_payload("")).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_seller_invalid_country_code_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let payload = CreateSellerPayload {
+            country_code: Some("USA".to_string()), // Must be exactly 2 chars
+            ..minimal_payload("Test Shop")
+        };
+        let result = create_seller_inner(&state, payload).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_seller_valid_args_does_not_return_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let payload = CreateSellerPayload {
+            country_code: Some("IT".to_string()),
+            ..minimal_payload("Test Shop")
+        };
+        let result = create_seller_inner(&state, payload).await;
+        assert!(
+            !matches!(result, Err(CommandError::ValidationError(_))),
+            "Did not expect ValidationError, got: {:?}",
+            result
+        );
+    }
 }

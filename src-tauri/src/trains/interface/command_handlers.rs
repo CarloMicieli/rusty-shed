@@ -40,6 +40,8 @@ pub async fn create_train_formation_inner(
 ) -> Result<TrainFormationView, CommandError> {
     info!("Creating train formation: {:?}", args);
 
+    args.validate().map_err(CommandError::from)?;
+
     let mut uow = state.unit_of_work().await?;
     let result = CreateTrainFormationUseCase::execute(
         &mut uow,
@@ -61,6 +63,8 @@ pub async fn update_train_formation_inner(
     args: UpdateTrainFormationArgs,
 ) -> Result<TrainFormationView, CommandError> {
     info!("Updating train formation {}: {:?}", id, args);
+
+    args.validate().map_err(CommandError::from)?;
 
     let mut uow = state.unit_of_work().await?;
     let result = UpdateTrainFormationUseCase::execute(
@@ -122,6 +126,8 @@ pub async fn add_formation_element_inner(
 ) -> Result<FormationElementView, CommandError> {
     info!("Adding element to formation {}: {:?}", formation_id, args);
 
+    args.validate().map_err(CommandError::from)?;
+
     let mut uow = state.unit_of_work().await?;
     let result = AddFormationElementUseCase::execute(
         &mut uow,
@@ -156,6 +162,8 @@ pub async fn reorder_formation_elements_inner(
         formation_id, args
     );
 
+    args.validate().map_err(CommandError::from)?;
+
     let mut uow = state.unit_of_work().await?;
     let result =
         ReorderFormationElementsUseCase::execute(&mut uow, formation_id, args.element_ids).await?;
@@ -174,6 +182,8 @@ pub async fn assign_rolling_stock_to_element_inner(
         "Assigning rolling stock to element {}: {:?}",
         element_id, args
     );
+
+    args.validate().map_err(CommandError::from)?;
 
     let mut uow = state.unit_of_work().await?;
     let result = AssignRollingStockToElementUseCase::execute(
@@ -197,6 +207,8 @@ pub async fn set_traction_override_inner(
         "Setting traction override for element {}: {:?}",
         element_id, args
     );
+
+    args.validate().map_err(CommandError::from)?;
 
     let mut uow = state.unit_of_work().await?;
     let result =
@@ -224,6 +236,8 @@ pub async fn create_custom_prototype_inner(
     args: CreateCustomPrototypeArgs,
 ) -> Result<PrototypeView, CommandError> {
     info!("Creating custom prototype: {:?}", args);
+
+    args.validate().map_err(CommandError::from)?;
 
     let mut uow = state.unit_of_work().await?;
     let result = CreateCustomPrototypeUseCase::execute(
@@ -269,6 +283,8 @@ pub async fn create_formation_category_inner(
 ) -> Result<FormationCategoryView, CommandError> {
     info!("Creating formation category: {:?}", args);
 
+    args.validate().map_err(CommandError::from)?;
+
     let mut uow = state.unit_of_work().await?;
     let result = CreateFormationCategoryUseCase::execute(&mut uow, args.name).await?;
     uow.commit().await?;
@@ -284,8 +300,6 @@ pub async fn create_train_formation(
     state: tauri::State<'_, AppState>,
     args: CreateTrainFormationArgs,
 ) -> Result<TrainFormationView, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     create_train_formation_inner(&state, args).await
 }
 
@@ -297,8 +311,6 @@ pub async fn update_train_formation(
     id: String,
     args: UpdateTrainFormationArgs,
 ) -> Result<TrainFormationView, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     update_train_formation_inner(&state, id, args).await
 }
 
@@ -339,8 +351,6 @@ pub async fn add_formation_element(
     formation_id: String,
     args: AddFormationElementArgs,
 ) -> Result<FormationElementView, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     add_formation_element_inner(&state, formation_id, args).await
 }
 
@@ -362,8 +372,6 @@ pub async fn reorder_formation_elements(
     formation_id: String,
     args: ReorderFormationElementsArgs,
 ) -> Result<TrainFormationDetail, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     reorder_formation_elements_inner(&state, formation_id, args).await
 }
 
@@ -386,8 +394,6 @@ pub async fn set_traction_override(
     element_id: String,
     args: SetTractionOverrideArgs,
 ) -> Result<FormationElementView, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     set_traction_override_inner(&state, element_id, args).await
 }
 
@@ -408,8 +414,6 @@ pub async fn create_custom_prototype(
     state: tauri::State<'_, AppState>,
     args: CreateCustomPrototypeArgs,
 ) -> Result<PrototypeView, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     create_custom_prototype_inner(&state, args).await
 }
 
@@ -429,7 +433,197 @@ pub async fn create_formation_category(
     state: tauri::State<'_, AppState>,
     args: CreateFormationCategoryArgs,
 ) -> Result<FormationCategoryView, CommandError> {
-    args.validate()
-        .map_err(|e| CommandError::BusinessRule(format!("Validation failed: {e}")))?;
     create_formation_category_inner(&state, args).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    fn app_state(pool: SqlitePool) -> AppState {
+        AppState::for_test(pool)
+    }
+
+    // ── create_train_formation_inner ─────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_train_formation_empty_name_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateTrainFormationArgs {
+            name: String::new(),
+            category_id: None,
+            start_year: None,
+            end_year: None,
+            epoch: None,
+            notes: None,
+        };
+        let result = create_train_formation_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_train_formation_valid_args_does_not_return_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateTrainFormationArgs {
+            name: "IC 700".to_string(),
+            category_id: None,
+            start_year: None,
+            end_year: None,
+            epoch: None,
+            notes: None,
+        };
+        let result = create_train_formation_inner(&state, args).await;
+        assert!(
+            !matches!(result, Err(CommandError::ValidationError(_))),
+            "Did not expect ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    // ── reorder_formation_elements_inner ─────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn reorder_formation_elements_empty_list_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = ReorderFormationElementsArgs {
+            element_ids: vec![],
+        };
+        let result = reorder_formation_elements_inner(&state, "some-id".to_string(), args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    // ── set_traction_override_inner ──────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn set_traction_override_out_of_range_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = SetTractionOverrideArgs {
+            traction_override: 2, // Valid range: -1..=1
+        };
+        let result = set_traction_override_inner(&state, "some-element-id".to_string(), args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn set_traction_override_negative_out_of_range_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = SetTractionOverrideArgs {
+            traction_override: -2, // Valid range: -1..=1
+        };
+        let result = set_traction_override_inner(&state, "some-element-id".to_string(), args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    // ── create_custom_prototype_inner ────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_custom_prototype_invalid_specification_type_returns_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = CreateCustomPrototypeArgs {
+            railway_company_id: "trn:railway-company:db".to_string(),
+            series_code: "BR 101".to_string(),
+            friendly_name: None,
+            is_motorized: true,
+            default_is_dummy: false,
+            notes: None,
+            specification_type: "INVALID_TYPE".to_string(),
+            locomotive_type: None,
+            locomotive_series: None,
+            service_level: None,
+            passenger_car_type: None,
+            freight_car_type: None,
+            railcar_type: None,
+            electric_multiple_unit_type: None,
+            elements_count: None,
+            is_permanently_coupled: None,
+        };
+        let result = create_custom_prototype_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_custom_prototype_empty_series_code_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateCustomPrototypeArgs {
+            railway_company_id: "trn:railway-company:db".to_string(),
+            series_code: String::new(), // Fails: length(min = 1, max = 50)
+            friendly_name: None,
+            is_motorized: true,
+            default_is_dummy: false,
+            notes: None,
+            specification_type: "LOCOMOTIVE".to_string(),
+            locomotive_type: None,
+            locomotive_series: None,
+            service_level: None,
+            passenger_car_type: None,
+            freight_car_type: None,
+            railcar_type: None,
+            electric_multiple_unit_type: None,
+            elements_count: None,
+            is_permanently_coupled: None,
+        };
+        let result = create_custom_prototype_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    // ── create_formation_category_inner ──────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_formation_category_empty_name_returns_validation_error(pool: SqlitePool) {
+        let state = app_state(pool);
+        let args = CreateFormationCategoryArgs {
+            name: String::new(),
+        };
+        let result = create_formation_category_inner(&state, args).await;
+        assert!(
+            matches!(result, Err(CommandError::ValidationError(_))),
+            "Expected ValidationError, got: {:?}",
+            result
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn create_formation_category_valid_name_does_not_return_validation_error(
+        pool: SqlitePool,
+    ) {
+        let state = app_state(pool);
+        let args = CreateFormationCategoryArgs {
+            name: "Intercity".to_string(),
+        };
+        let result = create_formation_category_inner(&state, args).await;
+        assert!(
+            !matches!(result, Err(CommandError::ValidationError(_))),
+            "Did not expect ValidationError, got: {:?}",
+            result
+        );
+    }
 }
