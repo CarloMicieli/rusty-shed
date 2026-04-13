@@ -1205,6 +1205,7 @@
   "wishlists_move_destination_label": "Select destination wishlist",
   "wishlists_move_submit": "Move Model",
   "wishlists_active_list_label": "ACTIVE LIST",
+  "wishlists_switch_list_label": "SWITCH LIST",
   "wishlists_select_list_placeholder": "Select a list…",
   "dialog_close_button": "Close",
   "filter_panel_close_title": "Close filters",

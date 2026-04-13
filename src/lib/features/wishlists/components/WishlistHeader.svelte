@@ -1,46 +1,14 @@
 <script lang="ts">
-  import { Settings, Plus, Star, Trash2, Edit2, X } from 'lucide-svelte';
+  import { Plus } from 'lucide-svelte';
   import type { WishlistPreview } from '$lib/bindings';
   import * as m from '$lib/paraglide/messages.js';
-  import { Button, Input } from '$lib/components';
+  import { Button } from '$lib/components';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
 
-  const { wishlist, onRename, onSetDefault, onAddModel, onDelete } = $props<{
+  const { wishlist, onAddModel } = $props<{
     wishlist: WishlistPreview | null;
-    onRename?: (name: string) => void;
-    onSetDefault?: () => void;
     onAddModel?: () => void;
-    onDelete?: (id: string) => void;
   }>();
-
-  let isEditing = $state(false);
-  let nameDraft = $state('');
-  let showSettings = $state(false);
-
-  $effect(() => {
-    if (!wishlist) return;
-    if (!isEditing) nameDraft = wishlist.name;
-  });
-
-  async function handleRenameSubmit() {
-    if (!wishlist) return;
-    if (nameDraft.trim() && nameDraft !== wishlist.name) {
-      onRename?.(nameDraft.trim());
-    }
-    isEditing = false;
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') void handleRenameSubmit();
-    if (e.key === 'Escape') {
-      isEditing = false;
-      if (wishlist) nameDraft = wishlist.name;
-    }
-  }
-
-  function toggleSettings() {
-    showSettings = !showSettings;
-  }
 
   function formatDate(value: string): string {
     const d = new Date(value);
@@ -49,95 +17,16 @@
 </script>
 
 {#if wishlist}
-  <div class="flex flex-col gap-6 border-b border-border/20 pb-6">
-    <div class="flex items-start justify-between">
-      <div class="flex items-center gap-3">
-        {#if isEditing}
-          <div class="flex items-center gap-2">
-            <Input
-              bind:value={nameDraft}
-              onkeydown={handleKeydown}
-              class="h-8 min-w-[300px] bg-card font-bold text-card-foreground shadow-inner focus:ring-amber-500/50"
-              autofocus
-            />
-            <Button size="sm" class="h-8" onclick={handleRenameSubmit}
-              >{m.wishlist_modal_save()}</Button
-            >
-            <Button size="sm" variant="ghost" class="h-8" onclick={() => (isEditing = false)}
-              >{m.wishlist_modal_cancel()}</Button
-            >
-          </div>
-        {:else}
-          <p class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
-            {m.wishlist_header_last_updated()}
-            {formatDate(wishlist.updatedAt)}
-          </p>
-        {/if}
-      </div>
+  <div class="flex items-center justify-between border-b border-border/20 pb-6">
+    <p class="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+      {m.wishlist_header_last_updated()}
+      {formatDate(wishlist.updatedAt)}
+    </p>
 
-      <div class="flex items-center gap-3">
-        <Button onclick={onAddModel} variant="rusty" class="shadow-lg shadow-amber-500/10">
-          <Plus size={18} class="mr-2" />
-          {m.wishlist_add_model_button()}
-        </Button>
-
-        <div class="relative">
-          <Button
-            variant="outline"
-            size="icon"
-            onclick={toggleSettings}
-            class="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            {#if showSettings}
-              <X size={18} />
-            {:else}
-              <Settings size={18} />
-            {/if}
-          </Button>
-
-          {#if showSettings}
-            <div
-              class="absolute top-12 right-0 z-50 w-48 animate-in rounded-[8px] border border-border bg-card p-1 shadow-2xl duration-200 fade-in zoom-in"
-              onmouseleave={() => (showSettings = false)}
-              role="menu"
-              tabindex="-1"
-            >
-              <button
-                onclick={() => {
-                  isEditing = true;
-                  showSettings = false;
-                }}
-                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-              >
-                <Edit2 size={14} class="mr-2" />
-                {m.wishlist_header_rename()}
-              </button>
-              <button
-                onclick={() => {
-                  onSetDefault?.();
-                  showSettings = false;
-                }}
-                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-              >
-                <Star size={14} class="mr-2" />
-                {m.wishlist_header_set_default()}
-              </button>
-              <div class="my-1 h-px bg-border"></div>
-              <button
-                onclick={() => {
-                  onDelete?.(wishlist.id);
-                  showSettings = false;
-                }}
-                class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-900/20"
-              >
-                <Trash2 size={14} class="mr-2" />
-                {m.wishlist_header_delete_list()}
-              </button>
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
+    <Button onclick={onAddModel} variant="rusty" class="shadow-lg shadow-amber-500/10">
+      <Plus size={18} class="mr-2" />
+      {m.wishlist_add_model_button()}
+    </Button>
   </div>
 {:else}
   <!-- Empty selection handled by Dashboard -->

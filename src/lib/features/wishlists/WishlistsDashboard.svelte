@@ -158,9 +158,13 @@
       <div class="border-b border-layout-border px-6 py-4">
         <WishlistDashboardHeader
           {wishlists}
+          {activeWishlist}
           {activeWishlistId}
           items={wishlistItems}
           onSelect={handleSelect}
+          onRename={handleRename}
+          onSetDefault={handleSetDefault}
+          onDelete={_handleDelete}
         />
       </div>
     {/if}
@@ -186,13 +190,7 @@
           </div>
         {:else if activeWishlist}
           <div class="space-y-4">
-            <WishlistHeader
-              wishlist={activeWishlist}
-              onRename={handleRename}
-              onSetDefault={handleSetDefault}
-              onAddModel={openAddModelDrawer}
-              onDelete={_handleDelete}
-            />
+            <WishlistHeader wishlist={activeWishlist} onAddModel={openAddModelDrawer} />
 
             <!-- View Mode Toggle -->
             <div class="flex items-center justify-end gap-1">

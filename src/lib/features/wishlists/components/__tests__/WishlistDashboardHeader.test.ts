@@ -11,8 +11,13 @@ vi.mock('$lib/features/settings/RegionalManager.svelte', () => ({
 }));
 
 vi.mock('$lib/paraglide/messages.js', () => ({
-  wishlists_active_list_label: () => 'ACTIVE LIST',
+  wishlists_switch_list_label: () => 'SWITCH LIST',
   wishlists_select_list_placeholder: () => 'Select a list…',
+  wishlist_modal_save: () => 'Save',
+  wishlist_modal_cancel: () => 'Cancel',
+  wishlist_header_rename: () => 'Rename',
+  wishlist_header_set_default: () => 'Set as default',
+  wishlist_header_delete_list: () => 'Delete list',
   wishlist_procurement_summary: () => 'Summary',
   wishlist_value_bar_no_price_data: () => 'No price data',
   wishlist_stat_total_cost: () => 'Total Estimated Cost',
@@ -63,13 +68,13 @@ describe('WishlistDashboardHeader', () => {
     vi.clearAllMocks();
   });
 
-  // ── Zone A labels ────────────────────────────────────────────────────────────
+  // ── Header labels ────────────────────────────────────────────────────────────
 
-  it('renders "ACTIVE LIST" label', () => {
+  it('renders "SWITCH LIST" label', () => {
     render(WishlistDashboardHeader, {
       props: { wishlists: [], activeWishlistId: null, items: [], onSelect: vi.fn() }
     });
-    expect(screen.getByText('ACTIVE LIST')).toBeInTheDocument();
+    expect(screen.getByText('SWITCH LIST')).toBeInTheDocument();
   });
 
   // ── Zone C labels ────────────────────────────────────────────────────────────
@@ -93,7 +98,7 @@ describe('WishlistDashboardHeader', () => {
         onSelect: vi.fn()
       }
     });
-    expect(screen.getByText('Main List')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Main List' })).toBeInTheDocument();
   });
 
   it('shows placeholder text when no wishlist is active', () => {
@@ -101,7 +106,7 @@ describe('WishlistDashboardHeader', () => {
     render(WishlistDashboardHeader, {
       props: { wishlists, activeWishlistId: null, items: [], onSelect: vi.fn() }
     });
-    expect(screen.getByText('Select a list…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select a list…' })).toBeInTheDocument();
   });
 
   // ── Zone A: Select options ────────────────────────────────────────────────────
@@ -113,12 +118,12 @@ describe('WishlistDashboardHeader', () => {
       props: { wishlists, activeWishlistId: null, items: [], onSelect: vi.fn() }
     });
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: 'Select a list…' });
     await user.click(trigger);
 
     await waitFor(
       () => {
-        expect(screen.getByText('Main List')).toBeInTheDocument();
+        expect(screen.getAllByText('Main List').length).toBeGreaterThan(0);
         expect(screen.getByText('Track Plans')).toBeInTheDocument();
       },
       { timeout: 2000 }
@@ -138,7 +143,7 @@ describe('WishlistDashboardHeader', () => {
       }
     });
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: 'Main List' });
     await user.click(trigger);
 
     await waitFor(() => expect(screen.getByText('Track Plans')).toBeInTheDocument(), {
