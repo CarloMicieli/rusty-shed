@@ -12,6 +12,9 @@ function toastError(message?: string) {
   });
 }
 
+// Shared across instances to prevent redundant IPC calls during rapid navigation or re-renders
+let sharedBudgetLoadInFlight: Promise<BudgetDashboardSummary | null> | null = null;
+
 /**
  * DashboardState loads dashboard data and handles state transitions
  */
@@ -21,7 +24,6 @@ export class DashboardState {
   #budgetData = $state<BudgetDashboardSummary | null>(null);
   #isLoading = $state(false);
   #error = $state<string | null>(null);
-  #budgetLoadInFlight: Promise<void> | null = null;
 
   // 2. Getters (providing read-only reactive access)
   get data() {
@@ -74,29 +76,28 @@ export class DashboardState {
    * Loads budget dashboard data
    */
   async loadBudget() {
-    if (this.#budgetLoadInFlight) {
-      await this.#budgetLoadInFlight;
+    if (sharedBudgetLoadInFlight) {
+      this.#budgetData = await sharedBudgetLoadInFlight;
       return;
     }
 
-    this.#budgetLoadInFlight = (async () => {
+    sharedBudgetLoadInFlight = (async () => {
       console.debug('Invoking get_budget_dashboard');
       const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
 
       if (result.ok) {
-        this.#budgetData = result.data;
+        return result.data;
       } else {
         const errorMsg = getErrorMessage(result.error);
         console.warn('Budget Dashboard Error:', errorMsg, { raw: result.error });
-        // Don't show error toast for budget - it's optional data
-        this.#budgetData = null;
+        return null;
       }
     })();
 
     try {
-      await this.#budgetLoadInFlight;
+      this.#budgetData = await sharedBudgetLoadInFlight;
     } finally {
-      this.#budgetLoadInFlight = null;
+      sharedBudgetLoadInFlight = null;
     }
   }
 

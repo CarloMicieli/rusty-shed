@@ -29,10 +29,3 @@ CREATE TABLE IF NOT EXISTS extra_budgets (
 -- Indexes for extra_budgets
 CREATE INDEX IF NOT EXISTS idx_extra_budgets_year_month 
     ON extra_budgets(year, month);
-
--- Trigger to update updated_at on budget_config
-CREATE TRIGGER IF NOT EXISTS budget_config_update_timestamp
-AFTER UPDATE ON budget_config
-BEGIN
-    UPDATE budget_config SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;

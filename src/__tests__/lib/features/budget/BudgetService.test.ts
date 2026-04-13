@@ -21,7 +21,10 @@ vi.mock('$lib/paraglide/messages.js', () => ({
 
 import { invoke } from '@tauri-apps/api/core';
 import { toaster } from '$lib/toaster';
-import { BudgetService } from '$lib/features/budget/services/BudgetService.svelte';
+import {
+  __resetBudgetServiceSharedState,
+  BudgetService
+} from '$lib/features/budget/services/BudgetService.svelte';
 import type {
   BudgetConfigDto,
   MonthlyBudgetRecordDto,
@@ -121,6 +124,7 @@ describe('BudgetService', () => {
   let service: BudgetService;
 
   beforeEach(() => {
+    __resetBudgetServiceSharedState();
     service = new BudgetService();
     // resetAllMocks clears implementations AND once-queues, preventing cross-test contamination
     vi.resetAllMocks();

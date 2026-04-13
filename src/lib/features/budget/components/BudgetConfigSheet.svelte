@@ -12,6 +12,7 @@
     currency?: string;
     saving?: boolean;
     onsubmit: (mode: BudgetMode, amount: number) => void;
+    onSave?: () => void;
   }
 
   let {
@@ -20,7 +21,8 @@
     baseAmount = $bindable(0),
     currency,
     saving = false,
-    onsubmit
+    onsubmit,
+    onSave
   }: Props = $props();
 
   // Local form state for amount input (in major units)
@@ -56,6 +58,7 @@
     baseAmount = minorUnits;
 
     onsubmit(mode, minorUnits);
+    onSave?.();
   }
 
   function formatCurrency(value: number): string {
@@ -151,7 +154,7 @@
         bind:value={amountInputValue}
         required
         disabled={saving}
-        class="border-zinc-800 bg-zinc-900 text-zinc-100 placeholder-zinc-500 focus-visible:border-amber-500 focus-visible:ring-amber-500"
+        class="border-0 bg-zinc-900 text-zinc-100 placeholder-zinc-500 focus-visible:ring-1 focus-visible:ring-amber-500/50"
         placeholder={m.placeholder_amount()}
       />
       <p class="text-xs text-zinc-500">

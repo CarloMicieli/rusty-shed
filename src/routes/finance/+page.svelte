@@ -1,33 +1,29 @@
-<script module lang="ts">
-  let financeInitInFlight: Promise<void> | null = null;
-</script>
-
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Settings2, CalendarDays, TrendingUp, Wallet } from 'lucide-svelte';
-  import GaugeStatCard from '$lib/components/GaugeStatCard.svelte';
-  import * as m from '$lib/paraglide/messages.js';
+  import { CalendarDays, Gauge, TrendingUp, Wallet } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog';
+  import * as m from '$lib/paraglide/messages.js';
 
-  // State & Services
+  import { Card, CardContent, CardHeader, EmptyState, PageHeader } from '$lib/components';
+
   import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
   import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
-
-  // Shared Components
-  import { Card, CardHeader, CardContent, Button, PageHeader, EmptyState } from '$lib/components';
-
-  // Feature Components
   import BudgetConfigSheet from '$lib/features/budget/components/BudgetConfigSheet.svelte';
   import BudgetMonthRow from '$lib/features/budget/components/BudgetMonthRow.svelte';
   import ExtraBudgetModal from '$lib/features/budget/components/ExtraBudgetModal.svelte';
+  import FinanceSettingsButton from '$lib/features/budget/components/FinanceSettingsButton.svelte';
 
   const service = createBudgetService();
   const budgetState = createBudgetState(service);
-  // UI Local State
+  const SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
+  const gaugeRadius = 48;
+  const gaugeCircumference = 2 * Math.PI * gaugeRadius;
+
   let selectedYear = $state(new Date().getFullYear());
   let configSheetOpen = $state(false);
   let extraBudgetDialogOpen = $state(false);
   let selectedExtraBudget = $state<{ year: number; month: number } | null>(null);
+  let initialized = $state(false);
 
   const monthNames = [
     'January',
@@ -49,23 +45,60 @@
   const currentMonth = now.getMonth() + 1;
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  onMount(() => {
-    if (financeInitInFlight) {
-      return;
-    }
+  const financialSummary = $derived.by(() => {
+    const dashboardSummary = budgetState.dashboardSummary;
+    const monthlyRecords = budgetState.monthlyRecords ?? [];
 
-    financeInitInFlight = (async () => {
+    const totalAvailable =
+      dashboardSummary?.totalAvailable ??
+      monthlyRecords.reduce((sum, record) => sum + record.available, 0);
+    const remainingAmount =
+      dashboardSummary?.remainingAmount ??
+      monthlyRecords.reduce((sum, record) => sum + record.remaining, 0);
+    const rawRemainingPercentage =
+      dashboardSummary?.remainingPercentage ??
+      (totalAvailable > 0 ? (remainingAmount / totalAvailable) * 100 : 0);
+    const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemainingPercentage)));
+
+    return {
+      monthlyAllocation: budgetState.formattedMonthlyBudget,
+      yearlyForecast: budgetState.formattedYearlyBudget,
+      remainingAmount: budgetState.formatAmount(remainingAmount),
+      remainingPercentage,
+      totalAvailable: budgetState.formatAmount(totalAvailable)
+    };
+  });
+
+  const remainingGaugeOffset = $derived(
+    gaugeCircumference - (financialSummary.remainingPercentage / 100) * gaugeCircumference
+  );
+
+  onMount(async () => {
+    try {
+      const storedYear = window.localStorage.getItem(SELECTED_YEAR_STORAGE_KEY);
+      const parsedYear = Number(storedYear);
+      if (yearOptions.includes(parsedYear)) {
+        selectedYear = parsedYear;
+      }
+
       await budgetState.load();
+      await budgetState.loadDashboard();
       if (budgetState.hasConfig) {
         await budgetState.loadMonthlyRecords(selectedYear);
       }
-    })()
-      .catch((error) => {
-        console.error('[finance] Failed to initialize budget page', error);
-      })
-      .finally(() => {
-        financeInitInFlight = null;
-      });
+    } catch (error) {
+      console.error('[finance] Failed to initialize budget page', error);
+    } finally {
+      initialized = true;
+    }
+  });
+
+  $effect(() => {
+    try {
+      window.localStorage.setItem(SELECTED_YEAR_STORAGE_KEY, String(selectedYear));
+    } catch (error) {
+      console.warn('[finance] Failed to persist selected year', error);
+    }
   });
 
   async function handleYearChange(year: number) {
@@ -92,6 +125,107 @@
   <title>{m.app_name()} | {m.budget_title()}</title>
 </svelte:head>
 
+{#snippet metricDataCard(
+  title: string,
+  value: string,
+  footerLabel: string,
+  footerValue: string,
+  Icon: typeof CalendarDays
+)}
+  <Card class="variant-steampunk-riveted rounded-sm border border-border bg-card">
+    <CardContent class="flex h-full flex-col gap-6 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="space-y-2">
+          <p class="font-bebas text-lg tracking-widest text-foreground uppercase">{title}</p>
+          <p class="font-mono text-3xl text-foreground">{value}</p>
+        </div>
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-sm border border-border bg-background/50 text-primary"
+        >
+          <Icon size={18} />
+        </div>
+      </div>
+
+      <div class="rounded-sm border border-border bg-background/50 p-3">
+        <p class="text-[10px] tracking-tighter text-muted-foreground uppercase">{footerLabel}</p>
+        <p class="font-mono text-sm text-foreground">{footerValue}</p>
+      </div>
+    </CardContent>
+  </Card>
+{/snippet}
+
+{#snippet remainingGaugeCard()}
+  <Card class="variant-steampunk-riveted rounded-sm border border-border bg-card">
+    <CardContent class="flex h-full flex-col gap-6 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="space-y-2">
+          <p class="font-bebas text-lg tracking-widest text-foreground uppercase">
+            {m.dashboard_chart_budget_title()}
+          </p>
+          <p class="text-[10px] tracking-tighter text-muted-foreground uppercase">
+            {m.dashboard_chart_budget_label()}
+          </p>
+        </div>
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-sm border border-border bg-background/50 text-primary"
+        >
+          <Gauge size={18} />
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div
+          class="variant-steampunk-gauge relative flex h-32 w-32 items-center justify-center rounded-full border border-border bg-background/60"
+        >
+          <svg class="h-28 w-28 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+            <circle
+              class="stroke-muted/20"
+              cx="60"
+              cy="60"
+              r={gaugeRadius}
+              fill="none"
+              stroke-width="8"
+            />
+            <circle
+              class="stroke-primary transition-all duration-300 ease-out"
+              cx="60"
+              cy="60"
+              r={gaugeRadius}
+              fill="none"
+              stroke-width="8"
+              stroke-linecap="round"
+              stroke-dasharray={gaugeCircumference}
+              stroke-dashoffset={remainingGaugeOffset}
+            />
+          </svg>
+
+          <div
+            class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <span class="font-mono text-2xl text-foreground">
+              {financialSummary.remainingPercentage}%
+            </span>
+            <span class="text-[10px] tracking-tighter text-muted-foreground uppercase">
+              {m.dashboard_chart_budget_remaining()}
+            </span>
+          </div>
+        </div>
+
+        <div class="min-w-0 flex-1 rounded-sm border border-border bg-background/50 p-3">
+          <p class="text-[10px] tracking-tighter text-muted-foreground uppercase">
+            {m.budget_summary_total_available()}
+          </p>
+          <p class="font-mono text-sm text-foreground">{financialSummary.totalAvailable}</p>
+          <p class="mt-3 text-[10px] tracking-tighter text-muted-foreground uppercase">
+            {m.dashboard_chart_budget_title()}
+          </p>
+          <p class="font-mono text-sm text-foreground">{financialSummary.remainingAmount}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+{/snippet}
+
 <div class="flex flex-col">
   <div
     class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
@@ -100,11 +234,15 @@
       title={m.budget_title()}
       subtitle={m.app_finance()}
       description={m.budget_subtitle()}
-    />
+    >
+      {#snippet actions()}
+        <FinanceSettingsButton onclick={() => (configSheetOpen = true)} />
+      {/snippet}
+    </PageHeader>
   </div>
 
   <div class="space-y-6">
-    {#if budgetState.isLoading}
+    {#if !initialized || budgetState.isLoading}
       <div class="flex flex-col items-center justify-center gap-4 py-24">
         <div
           class="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary"
@@ -128,35 +266,40 @@
           </div>
         {/if}
 
-        <div class="grid gap-4 md:grid-cols-3">
-          <GaugeStatCard
-            label="Monthly Allocation"
-            value={budgetState.formattedMonthlyBudget}
-            icon={CalendarDays}
-          />
-          <GaugeStatCard
-            label="Yearly Forecast"
-            value={budgetState.formattedYearlyBudget}
-            icon={TrendingUp}
-          />
-          <Card class="border-border bg-card">
-            <CardContent class="pt-6">
-              <Button variant="outline" class="w-full" onclick={() => (configSheetOpen = true)}>
-                <Settings2 size={16} class="mr-2" />
-                System Config
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <div class="space-y-6">
+          <div class="grid gap-4 lg:grid-cols-3">
+            {@render metricDataCard(
+              m.budget_summary_monthly_allocation(),
+              financialSummary.monthlyAllocation,
+              m.budget_summary_budget_mode(),
+              budgetState.modeLabel,
+              CalendarDays
+            )}
+            {@render metricDataCard(
+              m.budget_summary_yearly_forecast(),
+              financialSummary.yearlyForecast,
+              m.budget_summary_tracking_year(),
+              String(selectedYear),
+              TrendingUp
+            )}
+            {@render remainingGaugeCard()}
+          </div>
 
-        <div class="mt-6">
-          <Card class="border-border bg-card">
+          <Card class="variant-steampunk-riveted rounded-sm border border-border bg-card">
             <CardHeader class="border-b border-border/50 pb-4">
-              <div class="flex items-center justify-end">
+              <div class="flex items-center justify-between gap-4">
+                <div class="space-y-1">
+                  <p class="font-bebas text-lg tracking-widest text-foreground uppercase">
+                    {m.budget_summary_tracking_year()}
+                  </p>
+                  <p class="text-[10px] tracking-tighter text-muted-foreground uppercase">
+                    {m.budget_subtitle()}
+                  </p>
+                </div>
                 <select
                   bind:value={selectedYear}
                   onchange={() => handleYearChange(selectedYear)}
-                  class="h-8 rounded border border-border bg-card px-2 font-mono text-xs text-foreground outline-none focus:border-primary/50"
+                  class="h-10 rounded-sm border border-border bg-card px-3 font-mono text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 >
                   {#each yearOptions as year (year)}
                     <option value={year}>{year}</option>
@@ -215,6 +358,12 @@
   onsubmit={async (mode, amount) => {
     configSheetOpen = false;
     await budgetState.save(mode, amount, budgetState.currency);
+    await budgetState.loadDashboard();
+    await budgetState.loadMonthlyRecords(selectedYear);
+  }}
+  onSave={async () => {
+    await budgetState.loadDashboard();
+    await budgetState.loadMonthlyRecords(selectedYear);
   }}
 />
 

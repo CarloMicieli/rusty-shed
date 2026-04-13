@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 
 // ── Mocks ────────────────────────────────────────────────────
 
@@ -22,12 +22,25 @@ const { mockBudgetState, mockBudgetService } = vi.hoisted(() => ({
     isLoading: false,
     hasConfig: false,
     currency: 'EUR',
+    modeLabel: 'budget_mode_monthly',
     formattedMonthlyBudget: '€100.00',
     formattedYearlyBudget: '€1,200.00',
+    dashboardSummary: {
+      remainingAmount: 9000,
+      remainingPercentage: 75,
+      totalAvailable: 12000,
+      currency: 'EUR',
+      monthlySpending: [],
+      monthlyGoal: 10000,
+      quarterlyActivity: []
+    },
+    monthlyRecords: [] as unknown[],
     enhancedMonthlyRecords: [] as unknown[],
     load: vi.fn().mockResolvedValue(undefined),
+    loadDashboard: vi.fn().mockResolvedValue(undefined),
     loadMonthlyRecords: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined)
+    save: vi.fn().mockResolvedValue(undefined),
+    formatAmount: vi.fn((minorUnits: number) => `€${(minorUnits / 100).toFixed(2)}`)
   },
   mockBudgetService: {
     isLoading: false
@@ -63,13 +76,33 @@ vi.mock('$lib/components/PageHeader.svelte', () => ({
 import FinancePage from '../../routes/finance/+page.svelte';
 
 describe('routes/finance/+page.svelte', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = false;
+    mockBudgetState.modeLabel = 'budget_mode_monthly';
+    mockBudgetState.dashboardSummary = {
+      remainingAmount: 9000,
+      remainingPercentage: 75,
+      totalAvailable: 12000,
+      currency: 'EUR',
+      monthlySpending: [],
+      monthlyGoal: 10000,
+      quarterlyActivity: []
+    };
+    mockBudgetState.monthlyRecords = [];
     mockBudgetState.enhancedMonthlyRecords = [];
     mockBudgetState.load = vi.fn().mockResolvedValue(undefined);
+    mockBudgetState.loadDashboard = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.loadMonthlyRecords = vi.fn().mockResolvedValue(undefined);
+    mockBudgetState.formatAmount = vi.fn(
+      (minorUnits: number) => `€${(minorUnits / 100).toFixed(2)}`
+    );
   });
 
   it('renders without throwing', () => {
@@ -93,23 +126,29 @@ describe('routes/finance/+page.svelte', () => {
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = false;
     render(FinancePage);
-    expect(screen.getByText('budget_empty_state_title')).toBeInTheDocument();
-    expect(screen.getByText('budget_empty_state_message')).toBeInTheDocument();
+    return waitFor(() => {
+      expect(screen.getByText('budget_empty_state_title')).toBeInTheDocument();
+      expect(screen.getByText('budget_empty_state_message')).toBeInTheDocument();
+    });
   });
 
   it('shows the "dashboard_chart_budget_set_cta" button when no config exists', () => {
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = false;
     render(FinancePage);
-    expect(screen.getByText('dashboard_chart_budget_set_cta')).toBeInTheDocument();
+    return waitFor(() => {
+      expect(screen.getByText('dashboard_chart_budget_set_cta')).toBeInTheDocument();
+    });
   });
 
   it('shows monthly allocation card when hasConfig is true', () => {
     mockBudgetState.isLoading = false;
     mockBudgetState.hasConfig = true;
     render(FinancePage);
-    expect(screen.getByText('Monthly Allocation')).toBeInTheDocument();
-    expect(screen.getByText('Yearly Forecast')).toBeInTheDocument();
+    return waitFor(() => {
+      expect(screen.getByText('budget_summary_monthly_allocation')).toBeInTheDocument();
+      expect(screen.getByText('budget_summary_yearly_forecast')).toBeInTheDocument();
+    });
   });
 
   it('shows the formatted monthly budget when hasConfig is true', () => {
@@ -117,7 +156,9 @@ describe('routes/finance/+page.svelte', () => {
     mockBudgetState.hasConfig = true;
     mockBudgetState.formattedMonthlyBudget = '€100.00';
     render(FinancePage);
-    expect(screen.getByText('€100.00')).toBeInTheDocument();
+    return waitFor(() => {
+      expect(screen.getByText('€100.00')).toBeInTheDocument();
+    });
   });
 
   it('renders a year selector with current year', () => {
@@ -125,13 +166,22 @@ describe('routes/finance/+page.svelte', () => {
     mockBudgetState.hasConfig = true;
     render(FinancePage);
     const currentYear = new Date().getFullYear().toString();
-    expect(screen.getByText(currentYear)).toBeInTheDocument();
+    return waitFor(() => {
+      expect(screen.getByDisplayValue(currentYear)).toBeInTheDocument();
+    });
   });
 
   it('calls budgetState.load on mount', async () => {
     render(FinancePage);
     await waitFor(() => {
       expect(mockBudgetState.load).toHaveBeenCalledOnce();
+    });
+  });
+
+  it('calls budgetState.loadDashboard on mount', async () => {
+    render(FinancePage);
+    await waitFor(() => {
+      expect(mockBudgetState.loadDashboard).toHaveBeenCalledOnce();
     });
   });
 
