@@ -116,6 +116,8 @@ export const commands = {
 	searchRailwayModels: (args: SearchRailwayModelsArgs) => typedError<RailwayModelId[], CommandError>(__TAURI_INVOKE("search_railway_models", { args })),
 	// Tauri command to add a rolling stock variant to a railway model.
 	addRollingStockToModel: (args: AddRollingStockToModelArgs) => typedError<AddRollingStockResult, CommandError>(__TAURI_INVOKE("add_rolling_stock_to_model", { args })),
+	// Tauri command to delete a rolling stock variant from a railway model.
+	deleteRollingStock: (args: DeleteRollingStockArgs) => typedError<null, CommandError>(__TAURI_INVOKE("delete_rolling_stock", { args })),
 	/**
 	 *  Return the coupler type catalogue, optionally filtered to a specific coupling socket.
 	 * 
@@ -1995,6 +1997,14 @@ export type DecoderView = {
 // Arguments for deleting a model image
 export type DeleteModelImageArgs = {
 	modelId: string,
+};
+
+// Arguments for deleting a rolling stock unit from a railway model.
+export type DeleteRollingStockArgs = {
+	// The parent railway model.
+	railwayModelId: RailwayModelId,
+	// The rolling stock unit to delete.
+	rollingStockId: RollingStockId,
 };
 
 /**

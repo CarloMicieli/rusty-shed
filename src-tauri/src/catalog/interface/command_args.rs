@@ -6,11 +6,12 @@ use rust_decimal::prelude::FromPrimitive;
 
 use crate::{
     catalog::application::{
-        CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, LengthOverBuffersInput,
-        RailwayModelTextField, SaveRailwayModelInput, SearchRailwayModelsInput,
-        SetRollingStockCouplerInput, SimplifiedRollingStockInput, TechnicalSpecificationsInput,
-        UpdateRailwayModelClassificationInput, UpdateRailwayModelDeliveryDateInput,
-        UpdateRailwayModelTextInput, UpdateRollingStockCategoryInput, UpdateRollingStockDccInput,
+        CouplingInput, CreateRailwayModelInput, CreateRollingStockInput, DeleteRollingStockInput,
+        LengthOverBuffersInput, RailwayModelTextField, SaveRailwayModelInput,
+        SearchRailwayModelsInput, SetRollingStockCouplerInput, SimplifiedRollingStockInput,
+        TechnicalSpecificationsInput, UpdateRailwayModelClassificationInput,
+        UpdateRailwayModelDeliveryDateInput, UpdateRailwayModelTextInput,
+        UpdateRollingStockCategoryInput, UpdateRollingStockDccInput,
         UpdateRollingStockIdentificationInput, UpdateRollingStockRailwayCompanyInput,
         UpdateRollingStockServiceLevelInput, UpdateRollingStockSpecificationsInput,
         UpdateRollingStockSubcategoryInput, UpsertRailwayModelTranslationInput,
@@ -1133,6 +1134,26 @@ impl From<UpdateRollingStockCategoryArgs> for UpdateRollingStockCategoryInput {
             railway_model_id: args.railway_model_id,
             rolling_stock_id: args.rolling_stock_id,
             category: args.category,
+        }
+    }
+}
+
+/// Arguments for deleting a rolling stock unit from a railway model.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteRollingStockArgs {
+    /// The parent railway model.
+    pub railway_model_id: RailwayModelId,
+    /// The rolling stock unit to delete.
+    pub rolling_stock_id: RollingStockId,
+}
+
+impl From<DeleteRollingStockArgs> for DeleteRollingStockInput {
+    fn from(args: DeleteRollingStockArgs) -> Self {
+        Self {
+            railway_model_id: args.railway_model_id,
+            rolling_stock_id: args.rolling_stock_id,
         }
     }
 }

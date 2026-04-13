@@ -11,6 +11,13 @@ vi.mock('$lib/paraglide/runtime.js', () => ({
 
 vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_edit_specs_button: () => 'Edit Specs',
+  rolling_stock_delete_button: () => 'Delete rolling stock',
+  rolling_stock_delete_confirm_title: () => 'Delete rolling stock?',
+  rolling_stock_delete_confirm_message: () =>
+    'Are you sure you want to delete this rolling stock? This action cannot be undone.',
+  rolling_stock_delete_loading: () => 'Deleting...',
+  common_cancel: () => 'Cancel',
+  common_delete: () => 'Delete',
   road_number: () => 'Road Number',
   edit_field_placeholder_empty: () => 'Click to add...',
   edit_save_error: () => 'Failed to save.',
@@ -51,7 +58,8 @@ const defaultProps = {
   onSaveRoadNumber: vi.fn().mockResolvedValue(undefined),
   onSaveCategory: vi.fn().mockResolvedValue(undefined),
   onSaveSubcategory: vi.fn().mockResolvedValue(undefined),
-  onEditSpecs: vi.fn()
+  onEditSpecs: vi.fn(),
+  onDelete: vi.fn().mockResolvedValue(undefined)
 };
 
 describe('RollingStockListItemHeader', () => {
@@ -123,6 +131,25 @@ describe('RollingStockListItemHeader', () => {
       });
       await fireEvent.click(screen.getByRole('button', { name: /Edit Specs/i }));
       expect(onEditSpecs).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('Delete action', () => {
+    it('is visible when editable is true', () => {
+      render(RollingStockListItemHeader, { props: { ...defaultProps, editable: true } });
+      expect(screen.getByRole('button', { name: /Delete rolling stock/i })).toBeInTheDocument();
+    });
+
+    it('calls onDelete when confirmed in dialog', async () => {
+      const onDelete = vi.fn().mockResolvedValue(undefined);
+      render(RollingStockListItemHeader, {
+        props: { ...defaultProps, editable: true, onDelete }
+      });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Delete rolling stock/i }));
+      await fireEvent.click(screen.getByRole('button', { name: /^Delete$/i }));
+
+      expect(onDelete).toHaveBeenCalledWith('rs-1');
     });
   });
 

@@ -1,9 +1,9 @@
 use crate::catalog::application::{
-    AddRailwayModel, AddRollingStockToModel, GetCouplerTypes, GetCouplerTypesInput,
-    GetRailwayModelTranslations, GetRailwayModelViewById, SearchRailwayModels,
-    SetRollingStockCoupler, UpdateRailwayModelClassification, UpdateRailwayModelDeliveryDate,
-    UpdateRailwayModelText, UpdateRollingStockCategory, UpdateRollingStockDcc,
-    UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
+    AddRailwayModel, AddRollingStockToModel, DeleteRollingStock, GetCouplerTypes,
+    GetCouplerTypesInput, GetRailwayModelTranslations, GetRailwayModelViewById,
+    SearchRailwayModels, SetRollingStockCoupler, UpdateRailwayModelClassification,
+    UpdateRailwayModelDeliveryDate, UpdateRailwayModelText, UpdateRollingStockCategory,
+    UpdateRollingStockDcc, UpdateRollingStockIdentification, UpdateRollingStockRailwayCompany,
     UpdateRollingStockServiceLevel, UpdateRollingStockSpecifications,
     UpdateRollingStockSubcategory, UpsertRailwayModelTranslation, parse_add_rolling_stock_args,
 };
@@ -13,12 +13,12 @@ use crate::catalog::domain::railway_model::railway_model_translation::RailwayMod
 use crate::catalog::domain::railway_model::{CouplerType, CouplingSocket};
 use crate::catalog::interface::{
     AddRollingStockResult, AddRollingStockToModelArgs, CreateRailwayModelArgs,
-    SearchRailwayModelsArgs, SetRollingStockCouplerArgs, UpdateRailwayModelClassificationArgs,
-    UpdateRailwayModelDeliveryDateArgs, UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs,
-    UpdateRollingStockDccArgs, UpdateRollingStockIdentificationArgs,
-    UpdateRollingStockRailwayCompanyArgs, UpdateRollingStockServiceLevelArgs,
-    UpdateRollingStockSpecificationsArgs, UpdateRollingStockSubcategoryArgs,
-    UpsertRailwayModelTranslationArgs,
+    DeleteRollingStockArgs, SearchRailwayModelsArgs, SetRollingStockCouplerArgs,
+    UpdateRailwayModelClassificationArgs, UpdateRailwayModelDeliveryDateArgs,
+    UpdateRailwayModelTextArgs, UpdateRollingStockCategoryArgs, UpdateRollingStockDccArgs,
+    UpdateRollingStockIdentificationArgs, UpdateRollingStockRailwayCompanyArgs,
+    UpdateRollingStockServiceLevelArgs, UpdateRollingStockSpecificationsArgs,
+    UpdateRollingStockSubcategoryArgs, UpsertRailwayModelTranslationArgs,
 };
 use crate::collecting::domain::CollectionUowExt;
 use crate::core::domain::Language;
@@ -416,6 +416,32 @@ pub async fn add_rolling_stock_to_model(
     args: AddRollingStockToModelArgs,
 ) -> Result<AddRollingStockResult, CommandError> {
     add_rolling_stock_to_model_inner(&state, args).await
+}
+
+/// Delete a rolling stock variant from an existing Railway Model.
+pub async fn delete_rolling_stock_inner(
+    state: &AppState,
+    args: DeleteRollingStockArgs,
+) -> Result<(), CommandError> {
+    info!(
+        "Deleting rolling stock {} from model {}",
+        args.rolling_stock_id, args.railway_model_id
+    );
+    args.validate().map_err(CommandError::from)?;
+    let mut uow = state.unit_of_work().await?;
+    DeleteRollingStock::execute(&mut uow, args.into()).await?;
+    uow.commit().await?;
+    Ok(())
+}
+
+/// Tauri command to delete a rolling stock variant from a railway model.
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_rolling_stock(
+    state: tauri::State<'_, AppState>,
+    args: DeleteRollingStockArgs,
+) -> Result<(), CommandError> {
+    delete_rolling_stock_inner(&state, args).await
 }
 
 /// Update the subcategory (type field) of a single rolling stock unit.

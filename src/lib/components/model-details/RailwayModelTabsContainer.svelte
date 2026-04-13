@@ -11,6 +11,7 @@
   import RollingStockMultiUnit from './components/RollingStockMultiUnit.svelte';
   import { useRollingStockEditor } from './useRollingStockEditor.svelte';
   import { Plus } from 'lucide-svelte';
+  import { toaster } from '$lib/toaster';
 
   interface _Props {
     model: RailwayModel;
@@ -47,7 +48,12 @@
     }
   });
 
-  const isSingleUnit = $derived(model.rolling_stock?.length === 1);
+  let localRollingStockOverride = $state<NonNullable<RailwayModel['rolling_stock']> | null>(null);
+  let deletingUnitId = $state<string | null>(null);
+
+  const localRollingStock = $derived(localRollingStockOverride ?? model.rolling_stock ?? []);
+
+  const isSingleUnit = $derived(localRollingStock.length === 1);
 
   let createDrawerOpen = $state(false);
 
@@ -99,6 +105,28 @@
     }
     await onModelUpdated?.();
   }
+
+  async function deleteRollingStock(unitId: string) {
+    if (deletingUnitId) return;
+
+    const beforeDelete = [...localRollingStock];
+    localRollingStockOverride = localRollingStock.filter((unit) => unit.id !== unitId);
+    deletingUnitId = unitId;
+    const toastId = toaster.loading(m.rolling_stock_delete_loading());
+
+    try {
+      await rs.deleteUnit(unitId);
+      localRollingStockOverride = null;
+      toaster.dismiss(toastId);
+      toaster.success(m.rolling_stock_delete_success());
+    } catch {
+      localRollingStockOverride = beforeDelete;
+      toaster.dismiss(toastId);
+      toaster.error(m.rolling_stock_delete_error());
+    } finally {
+      deletingUnitId = null;
+    }
+  }
 </script>
 
 <Tabs bind:value={activeTab} class="w-full">
@@ -132,9 +160,9 @@
 
   <!-- ── Tab 2: Rolling Stock ───────────────────────────────────────────── -->
   <TabsContent value="rolling-stock" class="mt-2">
-    {#if model.rolling_stock && model.rolling_stock.length > 0}
+    {#if localRollingStock.length > 0}
       {#if isSingleUnit}
-        {@const unit = model.rolling_stock[0]}
+        {@const unit = localRollingStock[0]}
         <RollingStockSingleUnit
           {unit}
           {editable}
@@ -152,6 +180,8 @@
           onSaveCategory={(category) => rs.saveCategory(unit.id, category)}
           onSaveSubcategory={(subcategory) => rs.saveSubcategory(unit.id, subcategory)}
           onSaveServiceLevel={(sl) => rs.saveServiceLevel(unit.id, sl)}
+          onDelete={deleteRollingStock}
+          deletePending={deletingUnitId === unit.id}
           onSpecsSaved={async () => {
             await rs.reloadSpec(unit.id);
             await onModelUpdated?.();
@@ -159,7 +189,7 @@
         />
       {:else}
         <RollingStockMultiUnit
-          units={model.rolling_stock}
+          units={localRollingStock}
           {editable}
           railwayModelId={model.id}
           rollingStockFormState={rs.formState}
@@ -168,7 +198,8 @@
           {dccInterfaceOptions}
           {couplingSocketOptions}
           onSaveIdentification={(unitId, field, value) => {
-            const unit = model.rolling_stock.find((u) => u.id === unitId)!;
+            const unit = localRollingStock.find((u) => u.id === unitId);
+            if (!unit) throw new Error('Rolling stock not found while saving identification');
             return rs.saveIdentification(unitId, field, value, unit);
           }}
           onSaveSpec={(unitId, field, value) => rs.saveSpec(unitId, field, value)}
@@ -177,6 +208,8 @@
           onSaveCategory={(unitId, category) => rs.saveCategory(unitId, category)}
           onSaveSubcategory={(unitId, subcategory) => rs.saveSubcategory(unitId, subcategory)}
           onSaveServiceLevel={(unitId, sl) => rs.saveServiceLevel(unitId, sl)}
+          onDelete={deleteRollingStock}
+          deletePendingId={deletingUnitId}
           onSpecsSaved={async (unitId) => {
             await rs.reloadSpec(unitId);
             await onModelUpdated?.();

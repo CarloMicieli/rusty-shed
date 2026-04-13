@@ -121,6 +121,13 @@ vi.mock('$lib/paraglide/messages', () => ({
   railway_model_image_alt: () => 'Railway model image',
   railway_model_no_image: () => 'No image available',
   rolling_stock_edit_specs_button: () => 'Edit Specs',
+  rolling_stock_delete_button: () => 'Delete rolling stock',
+  rolling_stock_delete_confirm_title: () => 'Delete rolling stock?',
+  rolling_stock_delete_confirm_message: () =>
+    'Are you sure you want to delete this rolling stock? This action cannot be undone.',
+  rolling_stock_delete_loading: () => 'Deleting...',
+  common_cancel: () => 'Cancel',
+  common_delete: () => 'Delete',
   error_required: () => 'Required',
   category_value_locomotives: () => 'Locomotives',
   category_value_train_sets: () => 'Train Sets',

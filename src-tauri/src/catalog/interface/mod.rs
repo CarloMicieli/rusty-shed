@@ -8,6 +8,7 @@ pub use command_args::AddRollingStockToModelArgs;
 pub use command_args::CouplingArgs;
 pub use command_args::CreateRailwayModelArgs;
 pub use command_args::CreateRollingStockArgs;
+pub use command_args::DeleteRollingStockArgs;
 pub use command_args::LengthOverBuffersArgs;
 pub use command_args::SearchRailwayModelsArgs;
 pub use command_args::SetRollingStockCouplerArgs;

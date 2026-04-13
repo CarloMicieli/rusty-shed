@@ -1,5 +1,6 @@
 mod add_railway_model;
 mod add_rolling_stock_to_model;
+mod delete_rolling_stock;
 mod get_coupler_types;
 mod get_manufacturer_by_id;
 mod get_manufacturers;
@@ -33,6 +34,7 @@ pub use add_railway_model::{
 pub use add_rolling_stock_to_model::{
     AddRollingStockToModel, AddRollingStockToModelInput, parse_add_rolling_stock_args,
 };
+pub use delete_rolling_stock::{DeleteRollingStock, DeleteRollingStockInput};
 pub use get_coupler_types::{GetCouplerTypes, GetCouplerTypesInput};
 pub use get_manufacturer_by_id::GetManufacturerById;
 pub use get_manufacturers::GetManufacturers;

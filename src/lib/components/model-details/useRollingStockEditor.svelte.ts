@@ -360,6 +360,18 @@ export function useRollingStockEditor(
     await onModelUpdated();
   }
 
+  async function deleteUnit(unitId: string) {
+    const model = getModel();
+    const result = await commands.deleteRollingStock({
+      railwayModelId: model.id,
+      rollingStockId: unitId
+    });
+
+    if (result.status === 'error') throw new Error('Failed to delete rolling stock');
+
+    await onModelUpdated();
+  }
+
   return {
     formState,
     specLoaded,
@@ -371,6 +383,7 @@ export function useRollingStockEditor(
     saveBoolSpec,
     saveCategory,
     saveSubcategory,
-    saveServiceLevel
+    saveServiceLevel,
+    deleteUnit
   };
 }

@@ -29,6 +29,8 @@
     onSaveCategory: (category: string) => Promise<void>;
     onSaveSubcategory: (subcategory: string) => Promise<void>;
     onSaveServiceLevel: (serviceLevel: string) => Promise<void>;
+    onDelete?: (unitId: string) => Promise<void>;
+    deletePending?: boolean;
     onSpecsSaved?: () => Promise<void> | void;
   }
 
@@ -48,6 +50,8 @@
     onSaveCategory,
     onSaveSubcategory,
     onSaveServiceLevel,
+    onDelete,
+    deletePending = false,
     onSpecsSaved
   }: Props = $props();
 
@@ -69,6 +73,8 @@
       onEditSpecs={() => {
         specsDrawerOpen = true;
       }}
+      {onDelete}
+      {deletePending}
     />
   </div>
 

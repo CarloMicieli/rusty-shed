@@ -35,6 +35,8 @@
     onSaveCategory: (unitId: string, category: string) => Promise<void>;
     onSaveSubcategory: (unitId: string, subcategory: string) => Promise<void>;
     onSaveServiceLevel: (unitId: string, serviceLevel: string) => Promise<void>;
+    onDelete?: (unitId: string) => Promise<void>;
+    deletePendingId?: string | null;
     onSpecsSaved?: (unitId: string) => Promise<void> | void;
   }
 
@@ -54,6 +56,8 @@
     onSaveCategory,
     onSaveSubcategory,
     onSaveServiceLevel,
+    onDelete,
+    deletePendingId = null,
     onSpecsSaved
   }: Props = $props();
 
@@ -85,6 +89,8 @@
           onEditSpecs={() => {
             specsDrawerOpenFor = unit.id;
           }}
+          {onDelete}
+          deletePending={deletePendingId === unit.id}
         >
           {#snippet extraActions()}
             <AccordionPrimitive.Trigger
