@@ -101,6 +101,7 @@ impl<'conn> SqliteRailwayModelRepository<'conn> {
                 rs.category, 
                 rs.railway_company_id,
                 rc.name as railway_company_name, 
+                rc.country_code as railway_company_country_code,
                 rs.prototype_id,
                 rs.livery, 
                 rs.length_inches, 
@@ -812,6 +813,7 @@ impl<'conn> RailwayModelRepository for SqliteRailwayModelRepository<'conn> {
                 let railway = RollingStockRailway {
                     railway_company_id: cr.railway_company_id.clone(),
                     display: cr.railway_company_name.clone(),
+                    country_code: cr.railway_company_country_code.clone(),
                 };
 
                 let length_over_buffer = reconstruct_length_over_buffers(&cr);

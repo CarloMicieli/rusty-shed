@@ -153,6 +153,9 @@ pub struct RollingStockRow {
     /// Name of the railway company (denormalized for query convenience).
     pub railway_company_name: String,
 
+    /// Optional ISO 3166-1 alpha-2 country code of the railway company.
+    pub railway_company_country_code: Option<String>,
+
     /// Optional prototype this rolling stock is linked to (FK to `prototypes.id`).
     pub prototype_id: Option<String>,
 

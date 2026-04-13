@@ -77,7 +77,7 @@ function transformRollingStock(rollingStockViews: RollingStockView[]): RollingSt
       currentCouplerId: null,
       railway_model_id: 0, // Not available from view
       railway_company: common.railway_company,
-      country_code: null,
+      country_code: common.country_code,
       series_code: common.series_code,
       series_name: common.series ?? null,
       rolling_stock_type: common.rolling_stock_type,
@@ -207,6 +207,7 @@ function extractRollingStockData(view: RollingStockView): {
   id: string;
   rolling_stock_type: string | null;
   railway_company: string;
+  country_code: string | null;
   series_code: string;
   road_number: string | null;
   depot: string | null;
@@ -233,6 +234,7 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.locomotive.id,
       rolling_stock_type,
       railway_company: view.locomotive.railway.display,
+      country_code: view.locomotive.railway.countryCode,
       series_code: view.locomotive.series_code,
       road_number: view.locomotive.road_number,
       depot: view.locomotive.depot,
@@ -251,6 +253,7 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.electricMultipleUnit.id,
       rolling_stock_type,
       railway_company: view.electricMultipleUnit.railway.display,
+      country_code: view.electricMultipleUnit.railway.countryCode,
       series_code: view.electricMultipleUnit.series_code,
       road_number: view.electricMultipleUnit.road_number,
       depot: view.electricMultipleUnit.depot,
@@ -269,6 +272,7 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.railcar.id,
       rolling_stock_type,
       railway_company: view.railcar.railway.display,
+      country_code: view.railcar.railway.countryCode,
       series_code: view.railcar.series_code,
       road_number: view.railcar.road_number,
       depot: view.railcar.depot,
@@ -287,6 +291,7 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.passengerCar.id,
       rolling_stock_type,
       railway_company: view.passengerCar.railway.display,
+      country_code: view.passengerCar.railway.countryCode,
       series_code: view.passengerCar.series_code,
       road_number: view.passengerCar.road_number,
       depot: null,
@@ -305,6 +310,7 @@ function extractRollingStockData(view: RollingStockView): {
       id: view.freightCar.id,
       rolling_stock_type,
       railway_company: view.freightCar.railway.display,
+      country_code: view.freightCar.railway.countryCode,
       series_code: view.freightCar.series_code,
       road_number: view.freightCar.road_number,
       depot: null,
@@ -324,6 +330,7 @@ function extractRollingStockData(view: RollingStockView): {
     id: '',
     rolling_stock_type: null,
     railway_company: '',
+    country_code: null,
     series_code: '',
     road_number: null,
     depot: null,

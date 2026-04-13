@@ -220,7 +220,7 @@ const mockRailwayModelView = {
     {
       locomotive: {
         id: ROLLING_STOCK_ID,
-        railway: { railwayCompanyId: 'trn:railway-company:fs', display: 'FS' },
+        railway: { railwayCompanyId: 'trn:railway-company:fs', display: 'FS', countryCode: 'IT' },
         livery: 'Verde FS',
         length_over_buffer: null,
         technical_specifications: null,

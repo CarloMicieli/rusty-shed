@@ -89,6 +89,9 @@ pub struct RollingStockRailway {
 
     /// The railway display name used in UIs.
     pub display: String,
+
+    /// Optional ISO 3166-1 alpha-2 country code for the railway company.
+    pub country_code: Option<String>,
 }
 
 /// A UI-focused view of a rolling stock item used by the frontend.

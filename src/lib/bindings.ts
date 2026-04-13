@@ -3734,6 +3734,8 @@ export type RollingStockRailway = {
 	railwayCompanyId: RailwayCompanyId,
 	// The railway display name used in UIs.
 	display: string,
+	// Optional ISO 3166-1 alpha-2 country code for the railway company.
+	countryCode: string | null,
 };
 
 // A UI-focused view of a rolling stock item used by the frontend.
