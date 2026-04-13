@@ -10,12 +10,7 @@
   let { class: className, children }: Props = $props();
 
   const cardClass = $derived(
-    twMerge(
-      'rounded-lg border border-[var(--color-surface-300)]',
-      'bg-[var(--color-surface-100)] text-[var(--color-surface-900)]',
-      'shadow-sm',
-      className
-    )
+    twMerge('rounded-sm border border-border bg-card text-foreground', 'shadow-sm', className)
   );
 </script>
 

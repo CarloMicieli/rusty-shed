@@ -110,7 +110,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
   }
 
   .smart-image__placeholder,
@@ -119,9 +119,16 @@
     place-items: center;
     width: 100%;
     height: 100%;
-    border-radius: 0.5rem;
-    background: repeating-linear-gradient(45deg, #262626, #262626 10px, #1f1f1f 10px, #1f1f1f 20px);
-    color: #c7c7c7;
+    border-radius: 0.125rem;
+    border: 1px solid hsl(var(--border));
+    background: repeating-linear-gradient(
+      45deg,
+      hsl(var(--card)),
+      hsl(var(--card)) 10px,
+      hsl(var(--background)) 10px,
+      hsl(var(--background)) 20px
+    );
+    color: hsl(var(--muted-foreground));
     font-size: 0.875rem;
     text-align: center;
     padding: 0.5rem;

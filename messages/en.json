@@ -668,6 +668,8 @@
   "maintenance_card_title": "Maintenance Card",
   "maintenance_card_due_date": "Due",
   "maintenance_card_last_maintenance": "Last serviced",
+  "maintenance_card_total_events": "Total events",
+  "maintenance_history_title": "Maintenance history",
   "maintenance_card_no_last_maintenance": "Never serviced",
   "maintenance_empty_title": "No Maintenance Cards",
   "maintenance_empty_message": "Start tracking maintenance by creating your first maintenance card",

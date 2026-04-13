@@ -654,6 +654,8 @@
   "maintenance_card_title": "Scheda Manutenzione",
   "maintenance_card_due_date": "Scadenza",
   "maintenance_card_last_maintenance": "Ultima manutenzione",
+  "maintenance_card_total_events": "Eventi totali",
+  "maintenance_history_title": "Cronologia manutenzione",
   "maintenance_card_no_last_maintenance": "Mai eseguita",
   "maintenance_empty_title": "Nessuna Scheda Manutenzione",
   "maintenance_empty_message": "Inizia a monitorare la manutenzione creando la tua prima scheda",
