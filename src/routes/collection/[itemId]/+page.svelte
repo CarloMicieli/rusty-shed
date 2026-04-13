@@ -3,13 +3,12 @@
   import { onMount } from 'svelte';
   import { collectionStore } from '$lib/state/collection.svelte';
   import { commands } from '$lib/bindings';
-  import { ChevronLeft } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
+  import DetailBackLink from '$lib/components/DetailBackLink.svelte';
   import CollectionItemSidebar from '$lib/features/collection/components/CollectionItemSidebar.svelte';
-  import { resolve } from '$app/paths';
   import type {
     RailwayModelView,
     RailwayModelImageResponse,
@@ -116,35 +115,17 @@
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{m.collection_item_not_found()}</p>
     <p class="text-sm text-muted-foreground">{m.collection_item_not_found_message()}</p>
-    <a
-      href={resolve('/collection')}
-      class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-      aria-label={m.collection_item_back()}
-    >
-      <ChevronLeft size={22} />
-    </a>
+    <DetailBackLink path="/collection" ariaLabel={m.collection_item_back()} />
   </div>
 {:else if error}
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{error}</p>
-    <a
-      href={resolve('/collection')}
-      class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-      aria-label={m.collection_item_back()}
-    >
-      <ChevronLeft size={22} />
-    </a>
+    <DetailBackLink path="/collection" ariaLabel={m.collection_item_back()} />
   </div>
 {:else if collectionItem}
   <div class="w-full max-w-full">
     <!-- Back button -->
-    <a
-      href={resolve('/collection')}
-      class="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-      aria-label={m.collection_item_back()}
-    >
-      <ChevronLeft size={22} />
-    </a>
+    <DetailBackLink path="/collection" ariaLabel={m.collection_item_back()} class="mb-6" />
 
     <!-- Two-panel layout -->
     <div class="flex flex-col gap-6 lg:flex-row">

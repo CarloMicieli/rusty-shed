@@ -1,14 +1,14 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { resolve } from '$app/paths';
   import { commands } from '$lib/bindings';
-  import { ChevronLeft, ShoppingCart } from 'lucide-svelte';
+  import { ShoppingCart } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
   import type { Currency } from '$lib/bindings';
   import { toRailwayModel } from '$lib/features/collection/utils/modelViewMapper';
+  import DetailBackLink from '$lib/components/DetailBackLink.svelte';
   import RailwayModelCard from '$lib/components/RailwayModelCard.svelte';
   import WishlistItemSidebar from '$lib/features/wishlists/components/WishlistItemSidebar.svelte';
   import PurchaseDialog from '$lib/features/wishlists/components/PurchaseDialog.svelte';
@@ -123,35 +123,17 @@
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{m.wishlist_item_not_found()}</p>
     <p class="text-sm text-muted-foreground">{m.wishlist_item_not_found_message()}</p>
-    <a
-      href={resolve('/wishlists')}
-      class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-      aria-label={m.wishlist_item_back()}
-    >
-      <ChevronLeft size={22} />
-    </a>
+    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} />
   </div>
 {:else if error}
   <div class="flex h-64 flex-col items-center justify-center gap-4 text-center">
     <p class="text-lg font-semibold text-destructive">{error}</p>
-    <a
-      href={resolve('/wishlists')}
-      class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-      aria-label={m.wishlist_item_back()}
-    >
-      <ChevronLeft size={22} />
-    </a>
+    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} />
   </div>
 {:else if wishlistItem}
   <div class="w-full max-w-full">
     <!-- Back button -->
-    <a
-      href={resolve('/wishlists')}
-      class="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-zinc-900/50 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-      aria-label={m.wishlist_item_back()}
-    >
-      <ChevronLeft size={22} />
-    </a>
+    <DetailBackLink path="/wishlists" ariaLabel={m.wishlist_item_back()} class="mb-6" />
 
     <!-- Two-panel layout -->
     <div class="flex flex-col gap-6 lg:flex-row">
