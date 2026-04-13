@@ -31,6 +31,9 @@
 
     /** Callback after a successful model update */
     onModelUpdated?: () => Promise<void> | void;
+
+    /** When true, hides collection-only fields like Coupler Type. */
+    isWishlist?: boolean;
   }
 
   let {
@@ -39,7 +42,8 @@
     class: className = '',
     onImageUploaded,
     onError,
-    onModelUpdated
+    onModelUpdated,
+    isWishlist = false
   }: RailwayModelCardProps = $props();
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -382,7 +386,7 @@
 
   <!-- ═══ Tabs ══════════════════════════════════════════════════════════════ -->
   <div data-testid="tabs-box" class="mx-4 mt-3 mb-4">
-    <RailwayModelTabsContainer {model} {editable} {onModelUpdated} {onError} />
+    <RailwayModelTabsContainer {model} {editable} {onModelUpdated} {onError} {isWishlist} />
   </div>
 
   <!-- ═══ Crop dialogs ════════════════════════════════════════════════════ -->

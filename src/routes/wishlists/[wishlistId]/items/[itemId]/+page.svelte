@@ -161,6 +161,7 @@
           <RailwayModelCard
             model={displayModel}
             editable={true}
+            isWishlist={true}
             onModelUpdated={handleModelUpdated}
           />
         {/if}

@@ -35,6 +35,8 @@
     filteredCouplers?: CouplerType[];
     selectedCouplerTypeId?: string | null;
     expandTechnical?: boolean;
+    /** When false, the Coupler Type selector is hidden (e.g. wishlist context). */
+    showCouplerType?: boolean;
   }
 
   let {
@@ -59,7 +61,8 @@
     couplingSockeOptions,
     filteredCouplers = [],
     selectedCouplerTypeId = $bindable<string | null>(null),
-    expandTechnical = false
+    expandTechnical = false,
+    showCouplerType = true
   }: Props = $props();
 
   const selectedCoupler = $derived(
@@ -225,41 +228,45 @@
           options={couplingSockeOptions}
           bind:value={couplingSocket}
         />
-        <div class="flex flex-col gap-1">
-          <label
-            for="drawer-coupler-type"
-            class="text-[10px] tracking-tighter text-muted-foreground uppercase"
-          >
-            Coupler Type
-          </label>
-          <Select.Root
-            type="single"
-            value={selectedCouplerTypeId ?? undefined}
-            onValueChange={(v) => (selectedCouplerTypeId = v || null)}
-            disabled={!isActive}
-          >
-            <Select.Trigger
-              id="drawer-coupler-type"
-              class="w-full transition-colors duration-150 ease-out {isActive
-                ? 'border-border bg-background text-foreground'
-                : 'cursor-not-allowed border-border/50 bg-muted/20 text-muted-foreground/50 !opacity-100'}"
+        {#if showCouplerType}
+          <div class="flex flex-col gap-1">
+            <label
+              for="drawer-coupler-type"
+              class="text-[10px] tracking-tighter text-muted-foreground uppercase"
             >
-              {#if selectedCoupler}
-                <span class="font-mono">{selectedCoupler.manufacturer} {selectedCoupler.name}</span>
-              {:else}
-                <span class="text-xs text-muted-foreground italic">
-                  {couplingSocket ? '—' : 'Select socket first…'}
-                </span>
-              {/if}
-            </Select.Trigger>
-            <Select.Content>
-              <Select.Item value="" label="—" />
-              {#each filteredCouplers as c (c.id)}
-                <Select.Item value={c.id} label="{c.manufacturer} {c.name}" />
-              {/each}
-            </Select.Content>
-          </Select.Root>
-        </div>
+              Coupler Type
+            </label>
+            <Select.Root
+              type="single"
+              value={selectedCouplerTypeId ?? undefined}
+              onValueChange={(v) => (selectedCouplerTypeId = v || null)}
+              disabled={!isActive}
+            >
+              <Select.Trigger
+                id="drawer-coupler-type"
+                class="w-full transition-colors duration-150 ease-out {isActive
+                  ? 'border-border bg-background text-foreground'
+                  : 'cursor-not-allowed border-border/50 bg-muted/20 text-muted-foreground/50 !opacity-100'}"
+              >
+                {#if selectedCoupler}
+                  <span class="font-mono"
+                    >{selectedCoupler.manufacturer} {selectedCoupler.name}</span
+                  >
+                {:else}
+                  <span class="text-xs text-muted-foreground italic">
+                    {couplingSocket ? '—' : 'Select socket first…'}
+                  </span>
+                {/if}
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="" label="—" />
+                {#each filteredCouplers as c (c.id)}
+                  <Select.Item value={c.id} label="{c.manufacturer} {c.name}" />
+                {/each}
+              </Select.Content>
+            </Select.Root>
+          </div>
+        {/if}
         <FeatureFlagSwitch
           id="drawer-close-couplers"
           label={m.specs_drawer_field_close_coupling()}

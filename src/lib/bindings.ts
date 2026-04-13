@@ -936,15 +936,16 @@ export type AddRailwayModelToWishListArgs = {
 /**
  *  Result returned by `add_rolling_stock_to_model`.
  * 
- *  Contains both the catalog rolling stock ID and the owned rolling stock ID
- *  created for the collection item, so the frontend can immediately apply
- *  collection-level changes (e.g. setting the installed coupler type).
+ *  Contains the catalog rolling stock ID and, when the model is part of a
+ *  collection, the owned rolling stock ID created for that collection item.
+ *  When the model exists only in a wishlist there is no collection ownership
+ *  record yet, so `owned_rolling_stock_id` is `None`.
  */
 export type AddRollingStockResult = {
 	// Catalog rolling stock identifier.
 	rollingStockId: RollingStockId,
-	// The owned rolling stock row created for this collection item.
-	ownedRollingStockId: OwnedRollingStockId,
+	// The owned rolling stock row created for the collection item, if any.
+	ownedRollingStockId: OwnedRollingStockId | null,
 };
 
 /**

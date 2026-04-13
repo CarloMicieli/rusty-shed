@@ -36,9 +36,14 @@
     onCreated?: (id: RollingStockId) => void;
     /** Called when the drawer requests to close. */
     onClose: () => void;
+    /**
+     * When false, the Coupler Type selector is hidden.
+     * Set to false in wishlist context where no owned rolling stock exists yet.
+     */
+    showCouplerType?: boolean;
   }
 
-  let { open, railwayModelId, onCreated, onClose }: Props = $props();
+  let { open, railwayModelId, onCreated, onClose, showCouplerType = true }: Props = $props();
 
   function getInitialData() {
     return {
@@ -266,6 +271,7 @@
       } as Parameters<typeof commands.addRollingStockToModel>[0]);
 
       if (result.status === 'error') {
+        console.error('[RollingStockCreateDrawer] addRollingStockToModel error:', result.error);
         inlineError = m.rolling_stock_create_error();
         return;
       }
@@ -335,7 +341,7 @@
       }
 
       // Save coupler type if selected
-      if ($form.selectedCouplerTypeId) {
+      if ($form.selectedCouplerTypeId && ownedRollingStockId !== null) {
         const couplerResult = await commands.setRollingStockCoupler({
           ownedRollingStockId,
           couplerTypeId: $form.selectedCouplerTypeId as string
@@ -442,6 +448,7 @@
         bind:selectedCouplerTypeId={$form.selectedCouplerTypeId}
         {expandTechnical}
         category={$form.category}
+        {showCouplerType}
       />
     </div>
   </form>

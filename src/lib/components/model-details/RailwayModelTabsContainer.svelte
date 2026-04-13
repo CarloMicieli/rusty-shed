@@ -17,9 +17,11 @@
     editable?: boolean;
     onModelUpdated?: () => Promise<void> | void;
     onError?: (error: string) => void;
+    /** When true, hides collection-specific fields (e.g. Coupler Type). */
+    isWishlist?: boolean;
   }
 
-  const { model, editable = false, onModelUpdated, onError }: _Props = $props();
+  const { model, editable = false, onModelUpdated, onError, isWishlist = false }: _Props = $props();
 
   const currentLocale = getLocale() as Language;
 
@@ -220,6 +222,7 @@
 <RollingStockCreateDrawer
   open={createDrawerOpen}
   railwayModelId={model.id}
+  showCouplerType={!isWishlist}
   onCreated={(_id: RollingStockId) => {
     void onModelUpdated?.();
   }}
