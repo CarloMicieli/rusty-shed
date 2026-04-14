@@ -102,7 +102,11 @@
     >
       {#snippet actions()}
         {#if !loading && inventories.length > 0}
-          <Button variant="default" onclick={() => (createDialogOpen = true)}>
+          <Button
+            variant="default"
+            class="rounded-sm bg-primary text-primary-foreground transition-all duration-150 ease-out hover:brightness-110 active:scale-[0.99]"
+            onclick={() => (createDialogOpen = true)}
+          >
             <Plus size={18} />
             <span>{m.track_inventories_create_button()}</span>
           </Button>
@@ -157,11 +161,14 @@
           onAddPurchase={() => (addPurchaseDrawerOpen = true)}
         />
       {:else}
-        <div
-          class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/5 bg-zinc-900/10 py-20 text-center"
-        >
-          <TrainTrack size={48} class="mb-4 text-zinc-700 opacity-20" />
-          <p class="text-sm text-zinc-500">{m.track_inventories_empty_title()}</p>
+        <div class="rounded-sm border border-border bg-card p-4">
+          <EmptyState
+            icon={TrainTrack}
+            title={m.track_inventories_empty_title()}
+            description={m.track_inventories_empty_message()}
+            ctaLabel={m.track_inventories_create_button()}
+            onCta={() => (createDialogOpen = true)}
+          />
         </div>
       {/if}
     </div>

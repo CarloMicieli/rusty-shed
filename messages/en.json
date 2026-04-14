@@ -574,6 +574,7 @@
   "track_inventories_card_total_quantity": "Total pieces",
   "track_inventory_detail_title": "Track Inventory",
   "track_inventory_detail_items_tab": "Items",
+  "track_inventory_detail_types_label": "Types",
   "track_inventory_detail_history_tab": "Purchase History",
   "track_inventory_detail_empty_items": "No items in this inventory yet",
   "track_inventory_detail_add_purchase": "Add Purchase",

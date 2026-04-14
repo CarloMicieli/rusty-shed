@@ -40,14 +40,16 @@
   });
 </script>
 
-<div class="space-y-8 p-4">
+<div class="space-y-6">
   {#if purchases.length === 0}
-    <div class="flex flex-col items-center justify-center py-16 text-center">
+    <div
+      class="flex flex-col items-center justify-center rounded-sm border border-dashed border-border bg-background/50 py-16 text-center"
+    >
       <div class="relative mb-4">
-        <div class="absolute inset-0 scale-150 rounded-full bg-zinc-500/5 blur-3xl"></div>
+        <div class="absolute inset-0 scale-150 rounded-full bg-muted blur-3xl"></div>
         <History size={40} class="relative text-muted-foreground/30" />
       </div>
-      <p class="text-xs font-bold tracking-[0.2em] text-zinc-600 uppercase">
+      <p class="text-xs tracking-wider text-muted-foreground uppercase">
         {m.track_purchase_history_empty()}
       </p>
     </div>
@@ -56,13 +58,13 @@
       <div class="space-y-4">
         <div class="flex items-center gap-3">
           <div class="flex-1 border-t border-dashed border-border"></div>
-          <h4 class="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase">
+          <h4 class="text-xs tracking-wider text-muted-foreground uppercase">
             {group.displayMonth}
           </h4>
           <div class="flex-1 border-t border-dashed border-border"></div>
         </div>
 
-        <div class="space-y-1">
+        <div class="space-y-2">
           {#each group.purchases as purchase (purchase.id)}
             <PurchaseHistoryItem {purchase} />
           {/each}

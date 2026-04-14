@@ -560,6 +560,7 @@
   "track_inventories_card_total_quantity": "Pezzi totali",
   "track_inventory_detail_title": "Inventario Binari",
   "track_inventory_detail_items_tab": "Articoli",
+  "track_inventory_detail_types_label": "Tipi",
   "track_inventory_detail_history_tab": "Storico Acquisti",
   "track_inventory_detail_empty_items": "Nessun articolo in questo inventario",
   "track_inventory_detail_add_purchase": "Aggiungi Acquisto",
