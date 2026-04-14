@@ -42,6 +42,22 @@ describe('DigitalSection', () => {
     expect(screen.getByText('Digital Settings')).toBeInTheDocument();
   });
 
+  it('renders digital settings inside a dark card wrapper', () => {
+    render(DigitalSection, {
+      props: { dccAddress: null, installationDate: '2026-03-17' }
+    });
+
+    const title = screen.getByText('Digital Settings');
+    const wrapper = title.closest('div.overflow-hidden');
+
+    expect(wrapper).toBeInTheDocument();
+    expect(wrapper).toHaveClass('rounded-lg');
+    expect(wrapper).toHaveClass('border');
+    expect(wrapper).toHaveClass('border-layout-border');
+    expect(wrapper).toHaveClass('bg-layout-surface');
+    expect(wrapper).toHaveClass('p-4');
+  });
+
   // ── DCC address input ────────────────────────────────────────────────────────
 
   it('renders DCC address label and input', () => {

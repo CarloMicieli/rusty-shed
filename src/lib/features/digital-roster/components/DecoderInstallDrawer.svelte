@@ -255,15 +255,6 @@
         onChange={(id) => ($form.selectedRollingStockId = id)}
       />
 
-      <DecoderPicker
-        decoders={compatibleDecoders}
-        {manufacturers}
-        selectedId={$form.selectedDecoderId}
-        error={mappedErrors.decoder}
-        touched={hasSubmitted}
-        onChange={(id) => ($form.selectedDecoderId = id)}
-      />
-
       <DigitalSection
         bind:dccAddress={$form.dccAddress}
         bind:installationDate={$form.installationDate}
@@ -272,7 +263,16 @@
         errors={mappedErrors}
         touched={hasSubmitted}
         disabled={isSubmitting}
-      />
+      >
+        <DecoderPicker
+          decoders={compatibleDecoders}
+          {manufacturers}
+          selectedId={$form.selectedDecoderId}
+          error={mappedErrors.decoder}
+          touched={hasSubmitted}
+          onChange={(id) => ($form.selectedDecoderId = id)}
+        />
+      </DigitalSection>
     </form>
   {/if}
 
