@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages';
   import * as Select from '$lib/components/ui/select';
-  import { Settings, Plus, Trash2, Edit2 } from 'lucide-svelte';
+  import { Settings, Plus, Trash2, Edit2, X } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { TrackInventoryListItem, TrackInventoryView } from '$lib/features/track-inventory';
@@ -69,76 +69,90 @@
         <span class="text-xs tracking-wider text-muted-foreground uppercase">
           {m.track_inventory_active_label()}
         </span>
-        <Select.Root
-          type="single"
-          value={activeInventoryId ?? undefined}
-          onValueChange={(v) => {
-            if (v) onSelect(v);
-          }}
-        >
-          <Select.Trigger class="h-9 w-full border-layout-border bg-layout-surface">
-            {#if activeInventoryName}
-              <span class="font-bold text-primary">{activeInventoryName}</span>
-            {:else}
-              <span class="text-muted-foreground">{m.track_inventory_select_placeholder()}</span>
+        <div class="flex items-center gap-1">
+          <div class="min-w-0 flex-1">
+            <Select.Root
+              type="single"
+              value={activeInventoryId ?? undefined}
+              onValueChange={(v) => {
+                if (v) onSelect(v);
+              }}
+            >
+              <Select.Trigger class="h-9 w-full border-layout-border bg-layout-surface">
+                {#if activeInventoryName}
+                  <span class="font-bold text-primary">{activeInventoryName}</span>
+                {:else}
+                  <span class="text-muted-foreground">{m.track_inventory_select_placeholder()}</span
+                  >
+                {/if}
+              </Select.Trigger>
+              <Select.Content>
+                {#each inventories as inv (inv.id)}
+                  <Select.Item value={inv.id} label={inv.name} />
+                {/each}
+              </Select.Content>
+            </Select.Root>
+          </div>
+
+          <div class="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-9 w-9 cursor-pointer border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-muted hover:text-foreground"
+              onclick={() => (showSettings = !showSettings)}
+              aria-expanded={showSettings}
+              aria-haspopup="menu"
+              aria-label={m.track_inventory_management_button()}
+            >
+              {#if showSettings}
+                <X size={18} />
+              {:else}
+                <Settings size={18} />
+              {/if}
+            </Button>
+
+            {#if showSettings}
+              <div
+                class="absolute top-11 left-0 z-50 w-56 animate-in rounded-[8px] border border-border bg-card p-1 shadow-2xl duration-200 fade-in zoom-in"
+                onmouseleave={() => (showSettings = false)}
+                role="menu"
+                tabindex="-1"
+              >
+                {#if onRename}
+                  <button
+                    onclick={() => {
+                      showSettings = false;
+                      onRename?.();
+                    }}
+                    class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                  >
+                    <Edit2 size={14} class="mr-2" />
+                    {m.track_inventory_rename_button()}
+                  </button>
+                {/if}
+                {#if onRename && onDelete}
+                  <div class="my-1 h-px bg-border"></div>
+                {/if}
+                {#if onDelete}
+                  <button
+                    onclick={() => {
+                      showSettings = false;
+                      onDelete?.();
+                    }}
+                    class="flex w-full items-center rounded-[8px] px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-900/20"
+                  >
+                    <Trash2 size={14} class="mr-2" />
+                    {m.inventory_delete_action()}
+                  </button>
+                {/if}
+              </div>
             {/if}
-          </Select.Trigger>
-          <Select.Content>
-            {#each inventories as inv (inv.id)}
-              <Select.Item value={inv.id} label={inv.name} />
-            {/each}
-          </Select.Content>
-        </Select.Root>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="flex items-center gap-2 self-end">
-      <div class="relative">
-        <Button
-          variant="outline"
-          class="h-9 rounded-sm border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-muted hover:text-foreground"
-          onclick={() => (showSettings = !showSettings)}
-          aria-expanded={showSettings}
-          aria-haspopup="menu"
-        >
-          <Settings size={16} class={showSettings ? 'rotate-90 transition-transform' : ''} />
-          <span>{m.track_inventory_management_button()}</span>
-        </Button>
-
-        {#if showSettings}
-          <div
-            class="absolute top-11 right-0 z-20 w-48 overflow-hidden rounded-sm border border-border bg-card p-1 shadow-2xl"
-            role="menu"
-            tabindex="-1"
-          >
-            {#if onRename}
-              <button
-                onclick={() => {
-                  showSettings = false;
-                  onRename?.();
-                }}
-                class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm text-foreground transition-all duration-150 ease-out hover:bg-muted"
-              >
-                <Edit2 size={14} />
-                <span>{m.track_inventory_rename_button()}</span>
-              </button>
-            {/if}
-            {#if onDelete}
-              <button
-                onclick={() => {
-                  showSettings = false;
-                  onDelete?.();
-                }}
-                class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive transition-all duration-150 ease-out hover:bg-destructive/10"
-              >
-                <Trash2 size={14} />
-                <span>{m.inventory_delete_action()}</span>
-              </button>
-            {/if}
-          </div>
-        {/if}
-      </div>
-
       {#if onAddPurchase}
         <Button
           variant="default"

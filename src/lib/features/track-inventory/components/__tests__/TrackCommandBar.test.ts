@@ -164,7 +164,7 @@ describe('TrackCommandBar', () => {
         onAddPurchase: vi.fn()
       }
     });
-    expect(screen.getByText('Management')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Management' })).toBeInTheDocument();
     expect(screen.getByText('Add Purchase')).toBeInTheDocument();
   });
 
@@ -181,7 +181,7 @@ describe('TrackCommandBar', () => {
       }
     });
 
-    await user.click(screen.getByText('Management'));
+    await user.click(screen.getByRole('button', { name: 'Management' }));
 
     expect(screen.getByText('Rename')).toBeInTheDocument();
     expect(screen.getByText('Delete')).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe('TrackCommandBar', () => {
       }
     });
 
-    await user.click(screen.getByText('Management'));
+    await user.click(screen.getByRole('button', { name: 'Management' }));
     await user.click(screen.getByText('Rename'));
 
     expect(onRename).toHaveBeenCalledOnce();
@@ -219,7 +219,7 @@ describe('TrackCommandBar', () => {
       }
     });
 
-    await user.click(screen.getByText('Management'));
+    await user.click(screen.getByRole('button', { name: 'Management' }));
     await user.click(screen.getByText('Delete'));
 
     expect(onDelete).toHaveBeenCalledOnce();
