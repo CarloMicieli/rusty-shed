@@ -3,6 +3,7 @@ import type {
   NewTrackInventoryArgs,
   RenameTrackInventoryArgs,
   CreateTrackProductArgs,
+  SetTrackItemQuantityArgs,
   TrackInventoryListItem,
   TrackInventoryView,
   TrackProductView,
@@ -91,6 +92,21 @@ export class TrackInventoryService {
         required
       }
     });
+  }
+
+  /**
+   * Set the quantity of a track item in an inventory.
+   * Quantity <= 0 removes the item from inventory.
+   */
+  async setItemQuantity(input: SetTrackItemQuantityArgs): Promise<void> {
+    await invoke('set_track_item_quantity', { input });
+  }
+
+  /**
+   * Remove a track item from inventory by setting quantity to zero.
+   */
+  async removeItem(inventoryId: string, trackId: string): Promise<void> {
+    await this.setItemQuantity({ inventoryId, trackId, quantity: 0 });
   }
 }
 

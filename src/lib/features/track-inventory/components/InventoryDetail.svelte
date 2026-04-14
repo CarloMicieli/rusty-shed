@@ -9,9 +9,10 @@
   interface Props {
     inventory: TrackInventoryView;
     onAddPurchase?: () => void;
+    onInventoryChanged?: () => void | Promise<void>;
   }
 
-  const { inventory, onAddPurchase }: Props = $props();
+  const { inventory, onAddPurchase, onInventoryChanged }: Props = $props();
 </script>
 
 <div class="space-y-12">
@@ -43,7 +44,7 @@
     {:else}
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {#each inventory.items as item (item.track_id)}
-          <TrackItemCard {item} inventoryId={inventory.id} />
+          <TrackItemCard {item} inventoryId={inventory.id} onDeleted={onInventoryChanged} />
         {/each}
       </div>
     {/if}

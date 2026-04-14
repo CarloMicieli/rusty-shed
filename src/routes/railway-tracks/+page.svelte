@@ -159,6 +159,7 @@
         <InventoryDetail
           inventory={activeInventory}
           onAddPurchase={() => (addPurchaseDrawerOpen = true)}
+          onInventoryChanged={loadActiveInventory}
         />
       {:else}
         <div class="rounded-sm border border-border bg-card p-4">

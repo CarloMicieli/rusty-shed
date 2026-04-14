@@ -2,18 +2,22 @@
   import type { TrackInventoryItemView } from '$lib/features/track-inventory';
   import { getTrackInventoryContext } from '$lib/features/track-inventory';
   import * as m from '$lib/paraglide/messages';
-  import { AlertTriangle, Edit2, Check, X } from 'lucide-svelte';
+  import { AlertTriangle, Edit2, Check, X, Trash2 } from 'lucide-svelte';
   import { Input } from '$lib/components';
+  import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
   interface Props {
     item: TrackInventoryItemView;
     inventoryId: string;
+    onDeleted?: () => void | Promise<void>;
   }
 
-  const { item, inventoryId }: Props = $props();
+  const { item, inventoryId, onDeleted }: Props = $props();
   const service = getTrackInventoryContext();
 
   let isEditingRequired = $state(false);
+  let showDeleteDialog = $state(false);
+  let isDeleting = $state(false);
   let requiredInput = $state('');
   let isSaving = $state(false);
   let error = $state<string | null>(null);
@@ -62,18 +66,46 @@
       cancelEditing();
     }
   }
+
+  async function deleteItem() {
+    isDeleting = true;
+    error = null;
+    try {
+      await service.removeItem(inventoryId, item.track_product.track_id);
+      showDeleteDialog = false;
+      await onDeleted?.();
+    } catch {
+      error = m.track_inventory_delete_item_failed();
+    } finally {
+      isDeleting = false;
+    }
+  }
 </script>
 
 <article
   class="flex h-full flex-col gap-4 rounded-sm border border-border bg-card p-4 transition-all duration-150 ease-out hover:border-primary/40"
 >
   <header class="space-y-2">
-    <p class="text-xs tracking-wider text-muted-foreground uppercase">
-      {item.track_product.manufacturer_name}
-    </p>
-    <h4 class="line-clamp-2 font-bebas text-xl tracking-widest text-foreground uppercase">
-      {item.track_product.description || item.track_product.product_code}
-    </h4>
+    <div class="flex items-start justify-between gap-2">
+      <div class="space-y-2">
+        <p class="text-xs tracking-wider text-muted-foreground uppercase">
+          {item.track_product.manufacturer_name}
+        </p>
+        <h4 class="line-clamp-2 font-bebas text-xl tracking-widest text-foreground uppercase">
+          {item.track_product.description || item.track_product.product_code}
+        </h4>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm border border-border bg-background/50 text-muted-foreground transition-all duration-150 ease-out hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+        onclick={() => (showDeleteDialog = true)}
+        aria-label={m.track_inventory_delete_item_aria()}
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
+
     <div class="flex flex-wrap items-center gap-2">
       <span
         class="rounded-sm border border-border bg-background/50 px-2 py-1 font-mono text-xs text-muted-foreground uppercase"
@@ -87,6 +119,25 @@
       </span>
     </div>
   </header>
+
+  <AlertDialog.Root bind:open={showDeleteDialog}>
+    <AlertDialog.Content>
+      <AlertDialog.Header>
+        <AlertDialog.Title>{m.track_inventory_delete_item_confirm_title()}</AlertDialog.Title>
+        <AlertDialog.Description>
+          {m.track_inventory_delete_item_confirm_message({
+            item: item.track_product.description || item.track_product.product_code
+          })}
+        </AlertDialog.Description>
+      </AlertDialog.Header>
+      <AlertDialog.Footer>
+        <AlertDialog.Cancel disabled={isDeleting}>{m.common_cancel()}</AlertDialog.Cancel>
+        <AlertDialog.Action onclick={() => void deleteItem()} disabled={isDeleting}>
+          {m.common_delete()}
+        </AlertDialog.Action>
+      </AlertDialog.Footer>
+    </AlertDialog.Content>
+  </AlertDialog.Root>
 
   {#if hasShortage}
     <div
