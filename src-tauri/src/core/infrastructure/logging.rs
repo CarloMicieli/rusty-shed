@@ -1,11 +1,90 @@
 use std::sync::OnceLock;
-use tracing_subscriber::fmt;
-use tracing_subscriber::layer::SubscriberExt;
+use tauri_plugin_log::log::{self, Level as LogLevel, Record};
+use tracing::{Event, Subscriber};
+use tracing_subscriber::field::Visit;
+use tracing_subscriber::layer::{Context, Layer, SubscriberExt};
 use tracing_subscriber::{EnvFilter, Registry};
 
 const DEFAULT_LOG_FILTER: &str = "info,sqlx=warn";
 
 static TRACING_INITIALIZER: OnceLock<()> = OnceLock::new();
+
+#[derive(Default)]
+struct EventMessageVisitor {
+    message: Option<String>,
+    fields: Vec<String>,
+}
+
+impl Visit for EventMessageVisitor {
+    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+        self.push_field(field.name(), format!("{value:?}"));
+    }
+
+    fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
+        self.push_field(field.name(), value.to_owned());
+    }
+}
+
+impl EventMessageVisitor {
+    fn push_field(&mut self, name: &str, value: String) {
+        if name == "message" {
+            self.message = Some(value);
+            return;
+        }
+
+        self.fields.push(format!("{name}={value}"));
+    }
+
+    fn finish(self, event_name: &str) -> String {
+        let mut rendered = self.message.unwrap_or_else(|| event_name.to_owned());
+
+        if !self.fields.is_empty() {
+            rendered.push(' ');
+            rendered.push('{');
+            rendered.push_str(&self.fields.join(", "));
+            rendered.push('}');
+        }
+
+        rendered
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct TauriLogLayer;
+
+impl<S> Layer<S> for TauriLogLayer
+where
+    S: Subscriber,
+{
+    fn on_event(&self, event: &Event<'_>, _ctx: Context<'_, S>) {
+        let metadata = event.metadata();
+        let mut visitor = EventMessageVisitor::default();
+        event.record(&mut visitor);
+        let message = visitor.finish(metadata.name());
+        let args = format_args!("{message}");
+
+        let record = Record::builder()
+            .args(args)
+            .level(tracing_level_to_log_level(*metadata.level()))
+            .target(metadata.target())
+            .module_path_static(metadata.module_path())
+            .file_static(metadata.file())
+            .line(metadata.line())
+            .build();
+
+        log::logger().log(&record);
+    }
+}
+
+const fn tracing_level_to_log_level(level: tracing::Level) -> LogLevel {
+    match level {
+        tracing::Level::ERROR => LogLevel::Error,
+        tracing::Level::WARN => LogLevel::Warn,
+        tracing::Level::INFO => LogLevel::Info,
+        tracing::Level::DEBUG => LogLevel::Debug,
+        tracing::Level::TRACE => LogLevel::Trace,
+    }
+}
 
 /// Initializes global tracing with an environment-driven filter.
 ///
@@ -20,13 +99,7 @@ pub fn init_tracing() -> anyhow::Result<()> {
         .or_else(|_| EnvFilter::try_new(DEFAULT_LOG_FILTER))
         .map_err(|e| anyhow::anyhow!("invalid tracing filter: {e}"))?;
 
-    let subscriber = Registry::default().with(env_filter).with(
-        fmt::layer()
-            .compact()
-            .with_target(true)
-            .with_thread_ids(false)
-            .with_thread_names(false),
-    );
+    let subscriber = Registry::default().with(env_filter).with(TauriLogLayer);
 
     tracing::subscriber::set_global_default(subscriber)
         .map_err(|e| anyhow::anyhow!("failed to initialize tracing subscriber: {e}"))?;
