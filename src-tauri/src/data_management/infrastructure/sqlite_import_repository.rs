@@ -1201,7 +1201,7 @@ impl ImportRepository for SqliteImportRepository {
 
         let mut images_imported: u32 = 0;
         let mut images_failed: Vec<ImageFailure> = vec![];
-        for (image_filename, extract_result) in pending_images.iter().zip(extracted.into_iter()) {
+        for (image_filename, extract_result) in pending_images.iter().zip(extracted) {
             let (_, bytes_result) = extract_result;
             match bytes_result {
                 Ok(bytes) => {
