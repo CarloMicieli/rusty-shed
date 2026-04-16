@@ -61,6 +61,16 @@ pub struct GetMonthlyBudgetRecordsArgs {
     pub year: Option<Year>,
 }
 
+/// Arguments for querying the Finance page bootstrap payload.
+#[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
+#[garde(allow_unvalidated)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBudgetBootstrapArgs {
+    /// Year to query for the Finance page monthly records.
+    #[garde(dive)]
+    pub year: Option<Year>,
+}
+
 /// Arguments for querying extra budgets for a year.
 #[derive(Debug, Clone, Deserialize, Serialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]
@@ -118,6 +128,15 @@ pub struct MonthlyBudgetRecordDto {
     pub remaining_percentage: f64,
     pub status: String, // "PROJECTED", "IN_PROGRESS", "COMPLETED"
     pub currency: Currency,
+}
+
+/// Combined Finance page bootstrap payload.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BudgetBootstrapDto {
+    pub config: Option<BudgetConfigDto>,
+    pub dashboard_summary: crate::budget::domain::dashboard::BudgetDashboardSummary,
+    pub monthly_records: Option<Vec<MonthlyBudgetRecordDto>>,
 }
 
 /// Extra budget entry DTO.

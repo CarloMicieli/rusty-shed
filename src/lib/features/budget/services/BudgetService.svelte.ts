@@ -76,13 +76,23 @@ export interface QuarterlyActivityPoint {
 }
 
 export interface BudgetDashboardSummary {
-  remainingAmount: number;
-  remainingPercentage: number;
-  totalAvailable: number;
+  remainingAmount: number | null;
+  remainingPercentage: number | null;
+  totalAvailable: number | null;
   currency: string;
   monthlySpending: MonthlySpendingPoint[];
-  monthlyGoal: number;
+  monthlyGoal: number | null;
   quarterlyActivity: QuarterlyActivityPoint[];
+}
+
+export interface GetBudgetBootstrapArgs {
+  year?: number;
+}
+
+export interface BudgetBootstrapDto {
+  config: BudgetConfigDto | null;
+  dashboardSummary: BudgetDashboardSummary;
+  monthlyRecords: MonthlyBudgetRecordDto[] | null;
 }
 
 export interface ExtraBudgetDto {
@@ -212,6 +222,105 @@ export class BudgetService {
     return this.#config !== null;
   }
 
+  #showLoadError(error: unknown, fallbackMessage: string): Error {
+    const normalizedError =
+      error instanceof Error ? error : new Error(fallbackMessage || m.budget_error_load_failed());
+    toaster.error({ title: normalizedError.message, duration: 5000 });
+    return normalizedError;
+  }
+
+  async #fetchConfig(): Promise<BudgetConfigDto | null> {
+    const result = await safeInvoke<BudgetConfigDto | null>('get_budget_config');
+    if (!result.ok) {
+      throw new Error(getErrorMessage(result.error));
+    }
+    return result.data;
+  }
+
+  async #fetchDashboard(): Promise<BudgetDashboardSummary> {
+    const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
+
+    if (!result.ok) {
+      throw new Error(getErrorMessage(result.error));
+    }
+
+    return result.data;
+  }
+
+  async #fetchMonthlyRecords(year?: number): Promise<MonthlyBudgetRecordDto[]> {
+    const args: GetMonthlyBudgetRecordsArgs = { year };
+    const result = await safeInvoke<MonthlyBudgetRecordDto[]>('get_monthly_budget_records', {
+      args
+    });
+
+    if (!result.ok) {
+      throw new Error(getErrorMessage(result.error));
+    }
+
+    return result.data;
+  }
+
+  #applyBootstrapData(targetYear: number, data: BudgetBootstrapDto): void {
+    this.#config = data.config;
+    this.#dashboardSummary = data.dashboardSummary;
+
+    if (data.monthlyRecords) {
+      this.#yearCache.set(targetYear, data.monthlyRecords);
+      this.#monthlyRecords = data.monthlyRecords;
+      return;
+    }
+
+    this.#monthlyRecords = [];
+  }
+
+  async #fallbackBootstrap(targetYear: number): Promise<void> {
+    const [configResult, dashboardResult] = await Promise.allSettled([
+      this.#fetchConfig(),
+      this.#fetchDashboard()
+    ]);
+
+    const errors: Error[] = [];
+    let resolvedConfig: BudgetConfigDto | null = null;
+
+    if (configResult.status === 'fulfilled') {
+      resolvedConfig = configResult.value;
+      this.#config = resolvedConfig;
+    } else {
+      errors.push(this.#showLoadError(configResult.reason, m.budget_error_load_failed()));
+    }
+
+    if (dashboardResult.status === 'fulfilled') {
+      this.#dashboardSummary = dashboardResult.value;
+    } else {
+      errors.push(this.#showLoadError(dashboardResult.reason, 'Failed to load budget dashboard'));
+    }
+
+    if (!resolvedConfig) {
+      this.#monthlyRecords = [];
+      if (errors.length === 2) {
+        throw errors[0];
+      }
+      return;
+    }
+
+    const recordsResult = await Promise.allSettled([this.#fetchMonthlyRecords(targetYear)]);
+    const monthlyRecordsResult = recordsResult[0];
+
+    if (monthlyRecordsResult.status === 'fulfilled') {
+      this.#yearCache.set(targetYear, monthlyRecordsResult.value);
+      this.#monthlyRecords = monthlyRecordsResult.value;
+    } else {
+      this.#monthlyRecords = [];
+      errors.push(
+        this.#showLoadError(monthlyRecordsResult.reason, 'Failed to load monthly budget records')
+      );
+    }
+
+    if (errors.length === 3) {
+      throw errors[0];
+    }
+  }
+
   // ───────────────────────────────────────────────────────────
   // INITIALIZATION
   // ───────────────────────────────────────────────────────────
@@ -224,19 +333,45 @@ export class BudgetService {
 
     try {
       this.#isLoading = true;
-      const data = await dedupeReadRequest('budget:get_budget_config', async () => {
-        const result = await safeInvoke<BudgetConfigDto | null>('get_budget_config');
-        if (!result.ok) {
-          throw new Error(getErrorMessage(result.error));
-        }
-        return result.data;
-      });
+      const data = await dedupeReadRequest('budget:get_budget_config', () => this.#fetchConfig());
 
       this.#config = data;
     } catch (error) {
-      const message = error instanceof Error ? error.message : m.budget_error_load_failed();
-      toaster.error({ title: message, duration: 5000 });
+      this.#showLoadError(error, m.budget_error_load_failed());
       throw error;
+    } finally {
+      this.#isLoading = false;
+    }
+  }
+
+  /**
+   * Load the Finance page bootstrap payload in one request, with a partial-data fallback.
+   */
+  async loadBootstrap(year?: number): Promise<void> {
+    if (this.#isLoading || this.#isTransitioning) return;
+
+    const targetYear = year ?? new SvelteDate().getFullYear();
+
+    try {
+      this.#isLoading = true;
+      const data = await dedupeReadRequest(
+        `budget:get_budget_bootstrap:${targetYear}`,
+        async () => {
+          const args: GetBudgetBootstrapArgs = { year: targetYear };
+          const result = await safeInvoke<BudgetBootstrapDto>('get_budget_bootstrap', { args });
+
+          if (!result.ok) {
+            throw new Error(getErrorMessage(result.error));
+          }
+
+          return result.data;
+        }
+      );
+
+      this.#applyBootstrapData(targetYear, data);
+    } catch (error) {
+      console.warn('[budget] Bootstrap request failed, falling back to partial loading', error);
+      await this.#fallbackBootstrap(targetYear);
     } finally {
       this.#isLoading = false;
     }
@@ -251,8 +386,7 @@ export class BudgetService {
    * Defaults to the current year if not specified.
    */
   async loadMonthlyRecords(year?: number): Promise<void> {
-    // eslint-disable-next-line svelte/prefer-svelte-reactivity
-    const targetYear = year ?? new Date().getFullYear();
+    const targetYear = year ?? new SvelteDate().getFullYear();
 
     // Cache hit — instant return with no IPC call
     const cached = this.#yearCache.get(targetYear);
@@ -265,27 +399,14 @@ export class BudgetService {
 
     try {
       this.#isTransitioning = true;
-      const data = await dedupeReadRequest(
-        `budget:get_monthly_budget_records:${targetYear}`,
-        async () => {
-          const args: GetMonthlyBudgetRecordsArgs = { year };
-          const result = await safeInvoke<MonthlyBudgetRecordDto[]>('get_monthly_budget_records', {
-            args
-          });
-
-          if (!result.ok) {
-            throw new Error(getErrorMessage(result.error));
-          }
-          return result.data;
-        }
+      const data = await dedupeReadRequest(`budget:get_monthly_budget_records:${targetYear}`, () =>
+        this.#fetchMonthlyRecords(year)
       );
 
       this.#yearCache.set(targetYear, data);
       this.#monthlyRecords = data;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to load monthly budget records';
-      toaster.error({ title: message, duration: 5000 });
+      this.#showLoadError(error, 'Failed to load monthly budget records');
       throw error;
     } finally {
       this.#isTransitioning = false;
@@ -300,19 +421,13 @@ export class BudgetService {
 
     try {
       this.#isLoading = true;
-      const data = await dedupeReadRequest('budget:get_budget_dashboard', async () => {
-        const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
-
-        if (!result.ok) {
-          throw new Error(getErrorMessage(result.error));
-        }
-        return result.data;
-      });
+      const data = await dedupeReadRequest('budget:get_budget_dashboard', () =>
+        this.#fetchDashboard()
+      );
 
       this.#dashboardSummary = data;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load budget dashboard';
-      toaster.error({ title: message, duration: 5000 });
+      this.#showLoadError(error, 'Failed to load budget dashboard');
       throw error;
     } finally {
       this.#isLoading = false;

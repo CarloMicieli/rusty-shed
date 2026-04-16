@@ -632,6 +632,13 @@ export const commands = {
 	 */
 	getBudgetDashboard: () => typedError<BudgetDashboardSummary, CommandError>(__TAURI_INVOKE("get_budget_dashboard")),
 	/**
+	 *  Tauri command to get the Finance page bootstrap payload.
+	 * 
+	 *  Returns the config, dashboard summary, and selected-year monthly records in a single
+	 *  response so the Finance page can hydrate without a request waterfall.
+	 */
+	getBudgetBootstrap: (args: GetBudgetBootstrapArgs) => typedError<BudgetBootstrapDto, CommandError>(__TAURI_INVOKE("get_budget_bootstrap", { args })),
+	/**
 	 *  Tauri command to add a one-time budget injection.
 	 * 
 	 *  # Arguments
@@ -1145,6 +1152,13 @@ export type BoxCondition =
 "REPLACEMENT_BOX" | 
 // "Loose" model with no packaging at all.
 "NO_BOX";
+
+// Combined Finance page bootstrap payload.
+export type BudgetBootstrapDto = {
+	config: BudgetConfigDto | null,
+	dashboardSummary: BudgetDashboardSummary,
+	monthlyRecords: MonthlyBudgetRecordDto[] | null,
+};
 
 // Budget configuration DTO for transport layer.
 export type BudgetConfigDto = {
@@ -2430,6 +2444,12 @@ export type FreightCarType =
  *  over each other, used for protecting steel coils or heavy machinery.
  */
 "TELESCOPE_HOOD_WAGONS";
+
+// Arguments for querying the Finance page bootstrap payload.
+export type GetBudgetBootstrapArgs = {
+	// Year to query for the Finance page monthly records.
+	year: Year | null,
+};
 
 // Arguments for querying extra budgets for a year.
 export type GetExtraBudgetsArgs = {

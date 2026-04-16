@@ -158,6 +158,10 @@ export class BudgetState {
     await this.#service.loadConfig();
   }
 
+  async loadBootstrap(year?: number): Promise<void> {
+    await this.#service.loadBootstrap(year);
+  }
+
   async loadMonthlyRecords(year?: number): Promise<void> {
     await this.#service.loadMonthlyRecords(year);
   }

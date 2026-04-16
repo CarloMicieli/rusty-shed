@@ -10,11 +10,12 @@ use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::ExtraBudgetId;
 use crate::budget::domain::dashboard::BudgetDashboardSummary;
 use crate::budget::domain::monthly_budget_record::MonthStatus;
+use crate::budget::domain::monthly_budget_record::MonthlyBudgetRecord;
 use crate::budget::domain::quarterly_summary::QuarterlySummary;
 use crate::budget::interface::command_args::{
-    AddExtraBudgetArgs, BudgetConfigDto, ExtraBudgetDto, GetExtraBudgetsArgs,
-    GetMonthlyBudgetRecordsArgs, GetQuarterlySummariesArgs, MonthlyBudgetRecordDto,
-    RemoveExtraBudgetArgs, SetBudgetConfigArgs,
+    AddExtraBudgetArgs, BudgetBootstrapDto, BudgetConfigDto, ExtraBudgetDto,
+    GetBudgetBootstrapArgs, GetExtraBudgetsArgs, GetMonthlyBudgetRecordsArgs,
+    GetQuarterlySummariesArgs, MonthlyBudgetRecordDto, RemoveExtraBudgetArgs, SetBudgetConfigArgs,
 };
 use crate::core::domain::Currency;
 use crate::core::domain::calendar::{Month, Year};
@@ -24,6 +25,51 @@ use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use chrono::Datelike;
 use tracing::info;
+
+fn map_budget_config_dto(config: crate::budget::domain::BudgetConfiguration) -> BudgetConfigDto {
+    BudgetConfigDto {
+        id: config.id.value(),
+        mode: config.mode,
+        base_amount: config.base_amount.amount,
+        monthly_amount: config.monthly_amount(),
+        yearly_amount: config.yearly_amount(),
+        currency: config.base_amount.currency,
+        last_reset_year: config.last_reset_year,
+        created_at: config.created_at.to_rfc3339(),
+        updated_at: config.updated_at.to_rfc3339(),
+        version: config.version,
+    }
+}
+
+fn map_monthly_budget_record_dto(
+    record: MonthlyBudgetRecord,
+) -> Result<MonthlyBudgetRecordDto, CommandError> {
+    let status_str = match record.status {
+        MonthStatus::Projected => "PROJECTED".to_string(),
+        MonthStatus::InProgress => "IN_PROGRESS".to_string(),
+        MonthStatus::Completed => "COMPLETED".to_string(),
+    };
+
+    let year = Year::try_from(record.year)
+        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+    let month = Month::try_from(record.month)
+        .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
+
+    Ok(MonthlyBudgetRecordDto {
+        year,
+        month,
+        base_budget: record.base_budget,
+        extra_budget: record.extra_budget,
+        actual_spend: record.actual_spend,
+        rollover_in: record.rollover_in,
+        rollover_out: record.rollover_out,
+        available: record.available(),
+        remaining: record.remaining(),
+        remaining_percentage: record.remaining_percentage(),
+        status: status_str,
+        currency: record.currency,
+    })
+}
 
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly
@@ -42,18 +88,7 @@ pub async fn get_budget_config_inner(
 
     unit_of_work.commit().await?;
 
-    Ok(config.map(|c| BudgetConfigDto {
-        id: c.id.value(),
-        mode: c.mode,
-        base_amount: c.base_amount.amount,
-        monthly_amount: c.monthly_amount(),
-        yearly_amount: c.yearly_amount(),
-        currency: c.base_amount.currency,
-        last_reset_year: c.last_reset_year,
-        created_at: c.created_at.to_rfc3339(),
-        updated_at: c.updated_at.to_rfc3339(),
-        version: c.version,
-    }))
+    Ok(config.map(map_budget_config_dto))
 }
 
 pub async fn set_budget_config_inner(
@@ -73,18 +108,7 @@ pub async fn set_budget_config_inner(
 
     unit_of_work.commit().await?;
 
-    Ok(BudgetConfigDto {
-        id: config.id.value(),
-        mode: config.mode,
-        base_amount: config.base_amount.amount,
-        monthly_amount: config.monthly_amount(),
-        yearly_amount: config.yearly_amount(),
-        currency: config.base_amount.currency,
-        last_reset_year: config.last_reset_year,
-        created_at: config.created_at.to_rfc3339(),
-        updated_at: config.updated_at.to_rfc3339(),
-        version: config.version,
-    })
+    Ok(map_budget_config_dto(config))
 }
 
 pub async fn get_monthly_budget_records_inner(
@@ -106,33 +130,7 @@ pub async fn get_monthly_budget_records_inner(
 
     let dtos: Result<Vec<_>, CommandError> = records
         .into_iter()
-        .map(|record| {
-            let status_str = match record.status {
-                MonthStatus::Projected => "PROJECTED".to_string(),
-                MonthStatus::InProgress => "IN_PROGRESS".to_string(),
-                MonthStatus::Completed => "COMPLETED".to_string(),
-            };
-
-            let year = Year::try_from(record.year)
-                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
-            let month = Month::try_from(record.month)
-                .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?;
-
-            Ok(MonthlyBudgetRecordDto {
-                year,
-                month,
-                base_budget: record.base_budget,
-                extra_budget: record.extra_budget,
-                actual_spend: record.actual_spend,
-                rollover_in: record.rollover_in,
-                rollover_out: record.rollover_out,
-                available: record.available(),
-                remaining: record.remaining(),
-                remaining_percentage: record.remaining_percentage(),
-                status: status_str,
-                currency: record.currency,
-            })
-        })
+        .map(map_monthly_budget_record_dto)
         .collect();
 
     dtos
@@ -150,6 +148,45 @@ pub async fn get_budget_dashboard_inner(
     unit_of_work.commit().await?;
 
     Ok(summary)
+}
+
+pub async fn get_budget_bootstrap_inner(
+    state: &AppState,
+    args: GetBudgetBootstrapArgs,
+    currency_code: &str,
+) -> Result<BudgetBootstrapDto, CommandError> {
+    let year = match args.year {
+        Some(year) => year,
+        None => Year::try_from(chrono::Utc::now().year())
+            .map_err(|e| CommandError::from(DomainError::Validation(e.to_string())))?,
+    };
+
+    info!(
+        "Fetching budget bootstrap payload for year {}",
+        year.value()
+    );
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    let bootstrap =
+        budget_query::get_budget_bootstrap(&mut unit_of_work, year, currency_code).await?;
+
+    unit_of_work.commit().await?;
+
+    let monthly_records = bootstrap
+        .monthly_records
+        .map(|records| {
+            records
+                .into_iter()
+                .map(map_monthly_budget_record_dto)
+                .collect()
+        })
+        .transpose()?;
+
+    Ok(BudgetBootstrapDto {
+        config: bootstrap.config.map(map_budget_config_dto),
+        dashboard_summary: bootstrap.dashboard_summary,
+        monthly_records,
+    })
 }
 
 pub async fn add_extra_budget_inner(
@@ -326,6 +363,23 @@ pub async fn get_budget_dashboard(
         .await
         .map_err(|e| CommandError::validation_field("settings", e))?;
     get_budget_dashboard_inner(&state, &settings.currency).await
+}
+
+/// Tauri command to get the Finance page bootstrap payload.
+///
+/// Returns the config, dashboard summary, and selected-year monthly records in a single
+/// response so the Finance page can hydrate without a request waterfall.
+#[tauri::command]
+#[specta::specta]
+pub async fn get_budget_bootstrap(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    args: GetBudgetBootstrapArgs,
+) -> Result<BudgetBootstrapDto, CommandError> {
+    let settings = crate::settings::get_settings(app)
+        .await
+        .map_err(|e| CommandError::validation_field("settings", e))?;
+    get_budget_bootstrap_inner(&state, args, &settings.currency).await
 }
 
 // Additional command handlers will be implemented in later phases:

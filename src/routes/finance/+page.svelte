@@ -81,11 +81,7 @@
         selectedYear = parsedYear;
       }
 
-      await budgetState.load();
-      await budgetState.loadDashboard();
-      if (budgetState.hasConfig) {
-        await budgetState.loadMonthlyRecords(selectedYear);
-      }
+      await budgetState.loadBootstrap(selectedYear);
     } catch (error) {
       console.error('[finance] Failed to initialize budget page', error);
     } finally {

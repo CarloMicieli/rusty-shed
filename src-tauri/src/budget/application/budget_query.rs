@@ -1,3 +1,4 @@
+use crate::budget::domain::BudgetConfiguration;
 use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::dashboard::{
     BudgetDashboardSummary, BudgetQuarter, MonthlySpendingPoint, QuarterlyActivityPoint,
@@ -7,6 +8,14 @@ use crate::budget::domain::monthly_budget_record::{MonthStatus, MonthlyBudgetRec
 use crate::core::domain::calendar::Year;
 use crate::core::domain::domain_error::DomainError;
 use chrono::Datelike;
+
+/// Aggregate result for the Finance page bootstrap request.
+#[derive(Debug, Clone)]
+pub struct BudgetBootstrapData {
+    pub config: Option<BudgetConfiguration>,
+    pub dashboard_summary: BudgetDashboardSummary,
+    pub monthly_records: Option<Vec<MonthlyBudgetRecord>>,
+}
 
 /// Calculate monthly budget records for a given year with rollover chain.
 ///
@@ -297,6 +306,37 @@ where
     })
 }
 
+/// Get the combined Finance page bootstrap payload.
+///
+/// This query shares one unit-of-work and computes the current dashboard summary and the
+/// requested year's monthly records from the same budget configuration lookup.
+pub async fn get_budget_bootstrap<U>(
+    uow: &mut U,
+    year: Year,
+    user_currency: &str,
+) -> Result<BudgetBootstrapData, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
+    let config = {
+        let mut repo = uow.budget_repo();
+        repo.get_config().await?
+    };
+
+    let dashboard_summary = get_budget_dashboard(uow, user_currency).await?;
+    let monthly_records = if config.is_some() {
+        Some(get_monthly_budget_records(uow, year).await?)
+    } else {
+        None
+    };
+
+    Ok(BudgetBootstrapData {
+        config,
+        dashboard_summary,
+        monthly_records,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -454,5 +494,85 @@ mod tests {
         assert_eq!(feb.month, 2);
         assert_eq!(feb.rollover_in, 40_000);
         assert_eq!(feb.base_budget, 100_000);
+    }
+
+    #[tokio::test]
+    async fn it_should_return_budget_bootstrap_without_duplicate_year_records_query() {
+        let config = sample_budget_config();
+
+        let mut mock_get_config = MockBudgetRepository::new();
+        mock_get_config
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(config.clone())));
+
+        let mut mock_dashboard_config = MockBudgetRepository::new();
+        mock_dashboard_config
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(sample_budget_config())));
+
+        let mut mock_dashboard_spending = MockBudgetRepository::new();
+        mock_dashboard_spending
+            .expect_get_multi_year_monthly_spending()
+            .once()
+            .returning(|_, _, _| Ok(vec![]));
+
+        let mut mock_dashboard_monthly_config = MockBudgetRepository::new();
+        mock_dashboard_monthly_config
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(sample_budget_config())));
+
+        let mut mock_dashboard_monthly_spending = MockBudgetRepository::new();
+        mock_dashboard_monthly_spending
+            .expect_get_monthly_spending()
+            .once()
+            .returning(|_, _| Ok(vec![]));
+
+        let mut mock_dashboard_extra = MockBudgetRepository::new();
+        mock_dashboard_extra
+            .expect_get_extra_budgets()
+            .once()
+            .returning(|_| Ok(vec![]));
+
+        let mut mock_requested_year_config = MockBudgetRepository::new();
+        mock_requested_year_config
+            .expect_get_config()
+            .once()
+            .returning(move || Ok(Some(sample_budget_config())));
+
+        let mut mock_requested_year_spending = MockBudgetRepository::new();
+        mock_requested_year_spending
+            .expect_get_monthly_spending()
+            .once()
+            .returning(|_, _| Ok(vec![]));
+
+        let mut mock_requested_year_extra = MockBudgetRepository::new();
+        mock_requested_year_extra
+            .expect_get_extra_budgets()
+            .once()
+            .returning(|_| Ok(vec![]));
+
+        let mut uow = FakeBudgetUow::new()
+            .with_repo(mock_get_config)
+            .with_repo(mock_dashboard_config)
+            .with_repo(mock_dashboard_spending)
+            .with_repo(mock_dashboard_monthly_config)
+            .with_repo(mock_dashboard_monthly_spending)
+            .with_repo(mock_dashboard_extra)
+            .with_repo(mock_requested_year_config)
+            .with_repo(mock_requested_year_spending)
+            .with_repo(mock_requested_year_extra);
+
+        let year = Year::try_from(2025).unwrap();
+
+        let result = get_budget_bootstrap(&mut uow, year, "EUR")
+            .await
+            .expect("expected bootstrap query to succeed");
+
+        assert!(result.config.is_some());
+        assert!(result.monthly_records.is_some());
+        assert_eq!(result.dashboard_summary.monthly_spending.len(), 12);
     }
 }

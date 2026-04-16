@@ -36,6 +36,7 @@ const { mockBudgetState, mockBudgetService } = vi.hoisted(() => ({
     },
     monthlyRecords: [] as unknown[],
     enhancedMonthlyRecords: [] as unknown[],
+    loadBootstrap: vi.fn().mockResolvedValue(undefined),
     load: vi.fn().mockResolvedValue(undefined),
     loadDashboard: vi.fn().mockResolvedValue(undefined),
     loadMonthlyRecords: vi.fn().mockResolvedValue(undefined),
@@ -97,6 +98,7 @@ describe('routes/finance/+page.svelte', () => {
     };
     mockBudgetState.monthlyRecords = [];
     mockBudgetState.enhancedMonthlyRecords = [];
+    mockBudgetState.loadBootstrap = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.load = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.loadDashboard = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.loadMonthlyRecords = vi.fn().mockResolvedValue(undefined);
@@ -171,27 +173,27 @@ describe('routes/finance/+page.svelte', () => {
     });
   });
 
-  it('calls budgetState.load on mount', async () => {
+  it('calls budgetState.loadBootstrap on mount', async () => {
     render(FinancePage);
     await waitFor(() => {
-      expect(mockBudgetState.load).toHaveBeenCalledOnce();
+      expect(mockBudgetState.loadBootstrap).toHaveBeenCalledOnce();
     });
   });
 
-  it('calls budgetState.loadDashboard on mount', async () => {
+  it('passes the selected year to budgetState.loadBootstrap on mount', async () => {
+    window.localStorage.setItem('finance:selected-year', '2024');
     render(FinancePage);
     await waitFor(() => {
-      expect(mockBudgetState.loadDashboard).toHaveBeenCalledOnce();
+      expect(mockBudgetState.loadBootstrap).toHaveBeenCalledWith(2024);
     });
   });
 
-  it('calls loadMonthlyRecords when hasConfig becomes true after load', async () => {
-    mockBudgetState.load = vi.fn().mockImplementation(async () => {
-      mockBudgetState.hasConfig = true;
-    });
+  it('does not orchestrate legacy sequential budget calls on mount', async () => {
     render(FinancePage);
     await waitFor(() => {
-      expect(mockBudgetState.loadMonthlyRecords).toHaveBeenCalled();
+      expect(mockBudgetState.load).not.toHaveBeenCalled();
+      expect(mockBudgetState.loadDashboard).not.toHaveBeenCalled();
+      expect(mockBudgetState.loadMonthlyRecords).not.toHaveBeenCalled();
     });
   });
 });

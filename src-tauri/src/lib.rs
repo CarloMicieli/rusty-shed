@@ -264,6 +264,7 @@ pub fn run() {
         budget_command_handlers::set_budget_config,
         budget_command_handlers::get_monthly_budget_records,
         budget_command_handlers::get_budget_dashboard,
+        budget_command_handlers::get_budget_bootstrap,
         budget_command_handlers::add_extra_budget,
         budget_command_handlers::remove_extra_budget,
         budget_command_handlers::get_extra_budgets,
