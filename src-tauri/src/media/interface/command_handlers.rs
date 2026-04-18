@@ -519,7 +519,8 @@ mod tests {
         let temp_dir = tempdir().expect("tempdir");
         let state = test_state(temp_dir.path().to_path_buf()).await;
 
-        let result = get_image_path_inner(&state, "logo.svg".to_string(), "static".to_string()).await;
+        let result =
+            get_image_path_inner(&state, "logo.svg".to_string(), "static".to_string()).await;
         assert_eq!(result.expect("should return static id"), "logo.svg");
     }
 
