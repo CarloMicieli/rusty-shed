@@ -15,6 +15,10 @@ use crate::catalog::domain::railway_model::length_over_buffers::LengthOverBuffer
 use crate::catalog::domain::railway_model::rolling_stock_id::RollingStockId;
 use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecifications;
 use crate::core::domain::domain_error::DomainError;
+#[cfg(test)]
+use crate::core::domain::identifiers::Identifier;
+#[cfg(test)]
+use rand::RngExt;
 
 /// A patch containing all fields that can be updated in the technical specification drawer.
 #[derive(Debug, Clone)]

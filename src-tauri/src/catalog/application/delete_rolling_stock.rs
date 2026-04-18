@@ -65,10 +65,11 @@ mod tests {
         let rolling_stock_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
         let mut model: RailwayModel = Faker.fake();
         model.id = railway_model_id.clone();
-        model.rolling_stocks = vec![RollingStock::Locomotive {
-            id: rolling_stock_id.clone(),
-            ..Faker.fake()
-        }];
+        let mut rolling_stock: RollingStock = Faker.fake();
+        if let RollingStock::Locomotive { id, .. } = &mut rolling_stock {
+            *id = rolling_stock_id.clone();
+        }
+        model.rolling_stocks = vec![rolling_stock];
 
         let mut repo = MockRailwayModelRepository::new();
         repo.expect_find_by_id()
