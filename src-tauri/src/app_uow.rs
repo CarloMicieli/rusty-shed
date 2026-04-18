@@ -23,6 +23,7 @@ use crate::catalog::domain::railway_model::coupler_repository::CouplerUowExt;
 use crate::collecting::domain::CollectionUowExt;
 use crate::core::infrastructure::error::CommandError;
 use crate::dashboard::domain::DashboardUowExt;
+use crate::data_management::domain::ExportUowExt;
 use crate::dcc_inventory::domain::DccInventoryUowExt;
 use crate::maintenance::domain::MaintenanceUowExt;
 use crate::search::domain::GlobalSearchUowExt;
@@ -39,6 +40,7 @@ use crate::catalog::domain::railway_model::RailwayModelRepository;
 use crate::catalog::domain::railway_model::coupler_repository::CouplerRepository;
 use crate::collecting::domain::CollectionRepository;
 use crate::dashboard::domain::DashboardRepository;
+use crate::data_management::domain::ExportRepository;
 use crate::dcc_inventory::domain::DigitalRollingStockRepository;
 use crate::maintenance::domain::MaintenanceRepository;
 use crate::search::domain::GlobalSearchRepository;
@@ -58,6 +60,7 @@ pub trait AppUnitOfWork:
     + CollectionUowExt
     + CouplerUowExt
     + DashboardUowExt
+    + ExportUowExt
     + DccInventoryUowExt
     + GlobalSearchUowExt
     + MaintenanceUowExt
@@ -102,6 +105,12 @@ impl CollectionUowExt for Box<dyn AppUnitOfWork> {
 impl DashboardUowExt for Box<dyn AppUnitOfWork> {
     fn dashboard_repository(&mut self) -> Box<dyn DashboardRepository + '_> {
         (**self).dashboard_repository()
+    }
+}
+
+impl ExportUowExt for Box<dyn AppUnitOfWork> {
+    fn export_repo(&mut self) -> Box<dyn ExportRepository + '_> {
+        (**self).export_repo()
     }
 }
 
@@ -214,6 +223,7 @@ pub mod testing {
         collection: Option<Box<dyn CollectionRepository + Send>>,
         coupler: Option<Box<dyn CouplerRepository + Send>>,
         dashboard: Option<Box<dyn DashboardRepository + Send>>,
+        export: Option<Box<dyn ExportRepository + Send>>,
         dcc_inventory: Option<Box<dyn DigitalRollingStockRepository + Send>>,
         global_search: Option<Box<dyn GlobalSearchRepository + Send>>,
         maintenance: Option<Box<dyn MaintenanceRepository + Send>>,
@@ -246,6 +256,10 @@ pub mod testing {
         }
         pub fn with_dashboard(mut self, r: impl DashboardRepository + 'static) -> Self {
             self.dashboard = Some(Box::new(r));
+            self
+        }
+        pub fn with_export(mut self, r: impl ExportRepository + 'static) -> Self {
+            self.export = Some(Box::new(r));
             self
         }
         pub fn with_dcc_inventory(
@@ -322,6 +336,11 @@ pub mod testing {
     impl DashboardUowExt for MockAppUow {
         fn dashboard_repository(&mut self) -> Box<dyn DashboardRepository + '_> {
             take_or_panic!(self.dashboard, "MockAppUow::dashboard_repository")
+        }
+    }
+    impl ExportUowExt for MockAppUow {
+        fn export_repo(&mut self) -> Box<dyn ExportRepository + '_> {
+            take_or_panic!(self.export, "MockAppUow::export_repo")
         }
     }
     impl DccInventoryUowExt for MockAppUow {

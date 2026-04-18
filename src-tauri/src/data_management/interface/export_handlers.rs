@@ -103,7 +103,9 @@ pub async fn execute_export_inner(
         include_wishlists: true,
     };
 
-    execute_export::export_to_archive(&state.db_pool(), archive_path, media_dir, &selection)
+    let mut unit_of_work = state.unit_of_work().await?;
+
+    execute_export::export_to_archive(&mut unit_of_work, archive_path, media_dir, &selection)
         .await
         .map_err(|e| CommandError::unknown(e.to_string()))
 }
