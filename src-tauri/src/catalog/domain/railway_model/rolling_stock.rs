@@ -15,6 +15,10 @@ use crate::catalog::domain::railway_model::length_over_buffers::LengthOverBuffer
 use crate::catalog::domain::railway_model::rolling_stock_id::RollingStockId;
 use crate::catalog::domain::railway_model::technical_specifications::TechnicalSpecifications;
 use crate::core::domain::domain_error::DomainError;
+#[cfg(test)]
+use crate::core::domain::identifiers::Identifier;
+#[cfg(test)]
+use rand::RngExt;
 
 /// A patch containing all fields that can be updated in the technical specification drawer.
 #[derive(Debug, Clone)]
@@ -211,6 +215,35 @@ pub enum RollingStock {
         /// indicate whether the rolling stock has a motor or not
         is_dummy: bool,
     },
+}
+
+#[cfg(test)]
+impl fake::Dummy<fake::Faker> for RollingStock {
+    fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &fake::Faker, rng: &mut R) -> Self {
+        let serial = rng.random_range(1..=999);
+        let locomotive_type = match rng.random_range(0..=2) {
+            0 => LocomotiveType::ElectricLocomotive,
+            1 => LocomotiveType::DieselLocomotive,
+            _ => LocomotiveType::SteamLocomotive,
+        };
+
+        Self::Locomotive {
+            id: RollingStockId::default(),
+            railway_id: RailwayCompanyId::new_from_parts(&["fs"]),
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: format!("E.{serial}"),
+            road_number: Some(format!("{serial:03}")),
+            series: None,
+            depot: None,
+            locomotive_type,
+            dcc_interface: None,
+            control: None,
+            is_dummy: rng.random(),
+        }
+    }
 }
 
 impl RollingStock {
