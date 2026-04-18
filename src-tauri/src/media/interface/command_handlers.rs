@@ -15,7 +15,7 @@ use crate::media::interface::RailwayModelImageResponse;
 use crate::state::AppState;
 use garde::Validate;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
 use tracing::{debug, warn};
 
 // ---------------------------------------------------------------------------
@@ -67,6 +67,57 @@ pub async fn get_railway_model_image_inner(
         }
         Err(err) => Err(map_image_error(err)),
     }
+}
+
+/// Inner implementation for [`get_image_path`].
+pub async fn get_image_path_inner(
+    state: &AppState,
+    id: String,
+    category: String,
+) -> Result<String, CommandError> {
+    match category.as_str() {
+        "static" => Ok(id),
+        "railway_model" => {
+            let id_path = Path::new(&id);
+            let valid = id_path
+                .components()
+                .all(|c| matches!(c, Component::Normal(_)));
+
+            if !valid {
+                return Err(CommandError::validation_field(
+                    "id",
+                    "Invalid image id; must be a file name",
+                ));
+            }
+
+            let mut full_path = state.models_dir().to_path_buf();
+            full_path.push(id_path);
+
+            match tokio::fs::metadata(&full_path).await {
+                Ok(meta) if meta.is_file() => Ok(full_path
+                    .to_str()
+                    .map(|s| s.to_string())
+                    .ok_or_else(|| CommandError::unknown("Non-Unicode path"))?),
+                _ => Err(CommandError::NotFound(format!(
+                    "No image found for railway model {id}"
+                ))),
+            }
+        }
+        other => Err(CommandError::validation_field(
+            "category",
+            format!("Unsupported category '{other}'"),
+        )),
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_image_path(
+    state: tauri::State<'_, AppState>,
+    id: String,
+    category: String,
+) -> Result<String, CommandError> {
+    get_image_path_inner(&state, id, category).await
 }
 
 /// Get the image for a railway model.
@@ -420,6 +471,8 @@ fn map_image_error(err: ImageError) -> CommandError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sqlx::SqlitePool;
+    use tempfile::tempdir;
 
     #[test]
     fn test_map_image_error_not_found() {
@@ -452,5 +505,80 @@ mod tests {
             CommandError::DatabaseError(msg) => assert!(msg.contains("I/O error")),
             _ => panic!("Expected DatabaseError variant"),
         }
+    }
+
+    async fn test_state(models_dir: std::path::PathBuf) -> AppState {
+        let pool = SqlitePool::connect(":memory:")
+            .await
+            .expect("in-memory pool");
+        AppState::new(pool, models_dir, std::path::PathBuf::new())
+    }
+
+    #[tokio::test]
+    async fn test_get_image_path_static_returns_id() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+
+        let result = get_image_path_inner(&state, "logo.svg".to_string(), "static".to_string()).await;
+        assert_eq!(result.expect("should return static id"), "logo.svg");
+    }
+
+    #[tokio::test]
+    async fn test_get_image_path_railway_model_returns_absolute_path_when_file_exists() {
+        let temp_dir = tempdir().expect("tempdir");
+        let file_name = "abc123.png";
+        let file_path = temp_dir.path().join(file_name);
+        tokio::fs::write(&file_path, b"image")
+            .await
+            .expect("write image");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+
+        let result =
+            get_image_path_inner(&state, file_name.to_string(), "railway_model".to_string()).await;
+
+        assert_eq!(
+            result.expect("path expected"),
+            file_path.to_str().expect("unicode path")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_get_image_path_rejects_path_traversal() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+
+        let result = get_image_path_inner(
+            &state,
+            "../secret.png".to_string(),
+            "railway_model".to_string(),
+        )
+        .await;
+
+        assert!(matches!(result, Err(CommandError::Validation(_))));
+    }
+
+    #[tokio::test]
+    async fn test_get_image_path_rejects_unsupported_category() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+
+        let result = get_image_path_inner(&state, "x.png".to_string(), "other".to_string()).await;
+
+        assert!(matches!(result, Err(CommandError::Validation(_))));
+    }
+
+    #[tokio::test]
+    async fn test_get_image_path_returns_not_found_for_missing_file() {
+        let temp_dir = tempdir().expect("tempdir");
+        let state = test_state(temp_dir.path().to_path_buf()).await;
+
+        let result = get_image_path_inner(
+            &state,
+            "missing.png".to_string(),
+            "railway_model".to_string(),
+        )
+        .await;
+
+        assert!(matches!(result, Err(CommandError::NotFound(_))));
     }
 }
