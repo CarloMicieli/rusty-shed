@@ -303,7 +303,7 @@ mod roundtrip {
             .expect("create test_exports dir");
 
         let archive_path = test_exports.join(format!("{}.zip", uuid::Uuid::new_v4()));
-        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
+        let mut unit_of_work = SqliteUnitOfWork::new(pool)
             .await
             .expect("create export unit of work");
         export_to_archive(
