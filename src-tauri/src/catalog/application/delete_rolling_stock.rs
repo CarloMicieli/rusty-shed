@@ -46,7 +46,9 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
-    use crate::catalog::domain::railway_model::{MockRailwayModelRepository, RailwayModel, RollingStock};
+    use crate::catalog::domain::railway_model::{
+        MockRailwayModelRepository, RailwayModel, RollingStock,
+    };
     use fake::{Fake, Faker};
 
     fn model_id() -> RailwayModelId {

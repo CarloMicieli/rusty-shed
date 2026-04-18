@@ -43,7 +43,10 @@ pub struct RailwayModel {
     pub manufacturer_id: ManufacturerId,
 
     /// Manufacturer-assigned product code.
-    #[cfg_attr(test, dummy(expr = "ProductCode::try_from(\"P100\").expect(\"valid product code\")"))]
+    #[cfg_attr(
+        test,
+        dummy(expr = "ProductCode::try_from(\"P100\").expect(\"valid product code\")")
+    )]
     pub product_code: ProductCode,
 
     /// Human-readable description of the model (localized).
