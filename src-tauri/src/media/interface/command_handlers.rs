@@ -555,7 +555,7 @@ mod tests {
         )
         .await;
 
-        assert!(matches!(result, Err(CommandError::Validation(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
     }
 
     #[tokio::test]
@@ -565,7 +565,7 @@ mod tests {
 
         let result = get_image_path_inner(&state, "x.png".to_string(), "other".to_string()).await;
 
-        assert!(matches!(result, Err(CommandError::Validation(_))));
+        assert!(matches!(result, Err(CommandError::ValidationError(_))));
     }
 
     #[tokio::test]
