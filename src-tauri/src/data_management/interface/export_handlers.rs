@@ -3,7 +3,7 @@ use crate::core::infrastructure::error::CommandError;
 use crate::data_management::application::execute_export;
 use crate::data_management::application::preview_export::{self, ExportPreview};
 use crate::data_management::domain::{ExportEntitySelection, ExportResult};
-use crate::data_management::infrastructure::{SqliteExportRepository, file_picker};
+use crate::data_management::infrastructure::file_picker;
 use crate::state::AppState;
 use tauri::{Manager, State};
 use tracing::info;
@@ -103,9 +103,9 @@ pub async fn execute_export_inner(
         include_wishlists: true,
     };
 
-    let repo = SqliteExportRepository::new(state.db_pool());
+    let mut unit_of_work = state.unit_of_work().await?;
 
-    execute_export::export_to_archive(&repo, archive_path, media_dir, &selection)
+    execute_export::export_to_archive(&mut unit_of_work, archive_path, media_dir, &selection)
         .await
         .map_err(|e| CommandError::unknown(e.to_string()))
 }

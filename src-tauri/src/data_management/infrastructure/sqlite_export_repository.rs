@@ -2,7 +2,10 @@ use async_trait::async_trait;
 use sqlx::SqlitePool;
 use std::path::{Path, PathBuf};
 
-use crate::data_management::domain::{ExportEntitySelection, ExportError, ExportRepository};
+use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
+use crate::data_management::domain::{
+    ExportEntitySelection, ExportError, ExportRepository, ExportUowExt,
+};
 use crate::data_management::infrastructure::{manifest_builder, media_collector};
 use serde_json::Value;
 
@@ -34,5 +37,11 @@ impl ExportRepository for SqliteExportRepository {
         media_dir: &Path,
     ) -> Result<Vec<PathBuf>, ExportError> {
         media_collector::collect_media_files(&self.pool, selection, media_dir).await
+    }
+}
+
+impl ExportUowExt for SqliteUnitOfWork {
+    fn export_repo(&mut self) -> Box<dyn ExportRepository + '_> {
+        Box::new(SqliteExportRepository::new(self.pool()))
     }
 }

@@ -18,6 +18,7 @@ use std::pin::Pin;
 pub struct SqliteUnitOfWork {
     /// The underlying SQLite transaction.
     pub tx: sqlx::Transaction<'static, sqlx::Sqlite>,
+    pool: sqlx::SqlitePool,
 }
 
 impl SqliteUnitOfWork {
@@ -28,7 +29,13 @@ impl SqliteUnitOfWork {
     pub async fn new(pool: &sqlx::SqlitePool) -> Result<Self, sqlx::Error> {
         Ok(Self {
             tx: pool.clone().begin().await?,
+            pool: pool.clone(),
         })
+    }
+
+    /// Returns a cloned handle to the backing SQLite pool.
+    pub fn pool(&self) -> sqlx::SqlitePool {
+        self.pool.clone()
     }
 
     /// Commits the atomic transaction to the database.

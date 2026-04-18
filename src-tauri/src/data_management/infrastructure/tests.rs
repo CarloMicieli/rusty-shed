@@ -10,10 +10,11 @@
 /// and real archive I/O — both infrastructure concerns.
 #[cfg(test)]
 mod roundtrip {
+    use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
     use crate::data_management::application::execute_export::export_to_archive;
     use crate::data_management::application::{ExecuteImportUseCase, ValidatePackageUseCase};
     use crate::data_management::domain::{ExportEntitySelection, ImportResult, ImportSession};
-    use crate::data_management::infrastructure::{SqliteExportRepository, SqliteImportRepository};
+    use crate::data_management::infrastructure::SqliteImportRepository;
     use std::path::Path;
     use std::sync::Arc;
 
@@ -302,10 +303,17 @@ mod roundtrip {
             .expect("create test_exports dir");
 
         let archive_path = test_exports.join(format!("{}.zip", uuid::Uuid::new_v4()));
-        let repo = SqliteExportRepository::new(pool.clone());
-        export_to_archive(&repo, &archive_path, media_dir, &test_selection())
+        let mut unit_of_work = SqliteUnitOfWork::new(pool)
             .await
-            .expect("export_to_archive should succeed");
+            .expect("create export unit of work");
+        export_to_archive(
+            &mut unit_of_work,
+            &archive_path,
+            media_dir,
+            &test_selection(),
+        )
+        .await
+        .expect("export_to_archive should succeed");
         archive_path
     }
 
@@ -699,10 +707,17 @@ mod roundtrip {
         let archive_path = test_exports.join(format!("{}.zip", uuid::Uuid::new_v4()));
         let media_dir = tempfile::tempdir().expect("media tempdir");
 
-        let repo = SqliteExportRepository::new(pool.clone());
-        export_to_archive(&repo, &archive_path, media_dir.path(), &selection)
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
             .await
-            .expect("export_to_archive should succeed");
+            .expect("create export unit of work");
+        export_to_archive(
+            &mut unit_of_work,
+            &archive_path,
+            media_dir.path(),
+            &selection,
+        )
+        .await
+        .expect("export_to_archive should succeed");
 
         let import_pool = fresh_import_pool().await;
         let import_media_dir = tempfile::tempdir().expect("import media tempdir");
@@ -795,10 +810,17 @@ mod roundtrip {
         let archive_path = test_exports.join(format!("{}.zip", uuid::Uuid::new_v4()));
         let media_dir = tempfile::tempdir().expect("media tempdir");
 
-        let repo = SqliteExportRepository::new(pool.clone());
-        export_to_archive(&repo, &archive_path, media_dir.path(), &selection)
+        let mut unit_of_work = SqliteUnitOfWork::new(&pool)
             .await
-            .expect("export_to_archive should succeed");
+            .expect("create export unit of work");
+        export_to_archive(
+            &mut unit_of_work,
+            &archive_path,
+            media_dir.path(),
+            &selection,
+        )
+        .await
+        .expect("export_to_archive should succeed");
 
         let import_pool = fresh_import_pool().await;
         let import_media_dir = tempfile::tempdir().expect("import media tempdir");

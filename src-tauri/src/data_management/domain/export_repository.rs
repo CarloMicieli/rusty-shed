@@ -25,3 +25,9 @@ pub trait ExportRepository: Send + Sync {
         media_dir: &Path,
     ) -> Result<Vec<PathBuf>, ExportError>;
 }
+
+/// Unit-of-work extension for export operations.
+pub trait ExportUowExt: Send {
+    /// Returns an export repository bound to the current unit of work.
+    fn export_repo(&mut self) -> Box<dyn ExportRepository + '_>;
+}

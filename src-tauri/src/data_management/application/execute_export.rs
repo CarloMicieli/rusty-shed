@@ -2,23 +2,26 @@
 use std::path::{Path, PathBuf};
 
 use crate::data_management::domain::{
-    ExportEntitySelection, ExportError, ExportRepository, ExportResult,
+    ExportEntitySelection, ExportError, ExportResult, ExportUowExt,
 };
 use crate::data_management::infrastructure::{archive_writer, disk_space_checker};
 
 /// Execute the export operation.
 ///
 /// # Arguments
-/// * `repo` - Export repository abstraction
+/// * `unit_of_work` - Unit of work exposing export repositories
 /// * `archive_path` - Full path of the output ZIP file (e.g. `/home/user/Desktop/rusty-shed-export-2026-03-15.zip`)
 /// * `media_dir` - App media/models directory where images are stored
 /// * `selection` - Entity types to include in the export
-pub async fn export_to_archive(
-    repo: &dyn ExportRepository,
+pub async fn export_to_archive<U>(
+    unit_of_work: &mut U,
     archive_path: &Path,
     media_dir: &Path,
     selection: &ExportEntitySelection,
-) -> Result<ExportResult, ExportError> {
+) -> Result<ExportResult, ExportError>
+where
+    U: ExportUowExt + Send,
+{
     // Validate entity selection
     if !selection.is_valid() {
         return Err(ExportError::NoDataToExport);
@@ -36,6 +39,8 @@ pub async fn export_to_archive(
     // Check available disk space (100 MB estimated)
     const ESTIMATED_SIZE: u64 = 100 * 1024 * 1024;
     disk_space_checker::validate_disk_space(dest_dir, ESTIMATED_SIZE)?;
+
+    let repo = unit_of_work.export_repo();
 
     // Build manifest from database
     let manifest = repo.build_manifest(selection, media_dir).await?;
