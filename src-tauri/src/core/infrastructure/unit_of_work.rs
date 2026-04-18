@@ -34,6 +34,8 @@ impl SqliteUnitOfWork {
     }
 
     /// Returns a cloned handle to the backing SQLite pool.
+    ///
+    /// `SqlitePool` is an internally shared handle, so cloning is cheap.
     pub fn pool(&self) -> sqlx::SqlitePool {
         self.pool.clone()
     }
