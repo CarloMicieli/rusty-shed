@@ -46,13 +46,8 @@ mod tests {
     use super::*;
     use crate::catalog::application::testing::FakeUow;
     use crate::catalog::domain::manufacturer::ManufacturerId;
-    use crate::catalog::domain::railway_company::RailwayCompanyId;
-    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
-    use crate::catalog::domain::railway_model::{
-        Category, LocomotiveType, MockRailwayModelRepository, PowerMethod, ProductCode,
-        RailwayModel, RollingStock,
-    };
-    use crate::catalog::domain::scale::Scale;
+    use crate::catalog::domain::railway_model::{MockRailwayModelRepository, RailwayModel, RollingStock};
+    use fake::{Fake, Faker};
 
     fn model_id() -> RailwayModelId {
         RailwayModelId::new(
@@ -62,52 +57,16 @@ mod tests {
         .expect("valid model id")
     }
 
-    fn make_model_with_stock(
-        railway_model_id: RailwayModelId,
-        rolling_stock_id: RollingStockId,
-    ) -> RailwayModel {
-        RailwayModel {
-            id: railway_model_id,
-            manufacturer_id: ManufacturerId::try_from("trn:manufacturer:acme")
-                .expect("valid manufacturer id"),
-            product_code: ProductCode::try_from("P100").expect("valid product code"),
-            description: LocalizedField {
-                lang: Language::English,
-                value: "Test".into(),
-            },
-            details: None,
-            power_method: PowerMethod::DC,
-            scale: Scale::H0,
-            epoch: "IV".into(),
-            category: Category::Locomotives,
-            delivery_date: None,
-            availability_status: None,
-            rolling_stocks: vec![RollingStock::Locomotive {
-                id: rolling_stock_id,
-                railway_id: RailwayCompanyId::try_from("trn:railway-company:fs")
-                    .expect("valid railway company id"),
-                livery: None,
-                length_over_buffer: None,
-                technical_specifications: None,
-                friendly_name: None,
-                series_code: "E.656".into(),
-                road_number: Some("001".into()),
-                series: None,
-                depot: None,
-                locomotive_type: LocomotiveType::ElectricLocomotive,
-                dcc_interface: None,
-                control: None,
-                is_dummy: false,
-            }],
-            pending_events: vec![],
-        }
-    }
-
     #[tokio::test]
     async fn removes_rolling_stock_and_saves_model() {
         let railway_model_id = model_id();
         let rolling_stock_id = RollingStockId::from_uuid(&uuid::Uuid::new_v4());
-        let model = make_model_with_stock(railway_model_id.clone(), rolling_stock_id.clone());
+        let mut model: RailwayModel = Faker.fake();
+        model.id = railway_model_id.clone();
+        model.rolling_stocks = vec![RollingStock::Locomotive {
+            id: rolling_stock_id.clone(),
+            ..Faker.fake()
+        }];
 
         let mut repo = MockRailwayModelRepository::new();
         repo.expect_find_by_id()

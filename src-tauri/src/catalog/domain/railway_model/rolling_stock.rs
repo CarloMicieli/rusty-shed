@@ -213,6 +213,28 @@ pub enum RollingStock {
     },
 }
 
+#[cfg(test)]
+impl fake::Dummy<fake::Faker> for RollingStock {
+    fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &fake::Faker, _: &mut R) -> Self {
+        Self::Locomotive {
+            id: RollingStockId::default(),
+            railway_id: RailwayCompanyId::new_from_parts(&["fs"]),
+            livery: None,
+            length_over_buffer: None,
+            technical_specifications: None,
+            friendly_name: None,
+            series_code: "E.656".to_string(),
+            road_number: Some("001".to_string()),
+            series: None,
+            depot: None,
+            locomotive_type: LocomotiveType::ElectricLocomotive,
+            dcc_interface: None,
+            control: None,
+            is_dummy: false,
+        }
+    }
+}
+
 impl RollingStock {
     /// The category for this rolling stock
     pub fn category(&self) -> RollingStockCategory {

@@ -21,15 +21,29 @@ use uuid::Uuid;
 /// It contains metadata about the product (manufacturer, product code,
 /// scale, epoch, etc.) and a list of `RollingStock` instances that correspond
 /// to specific owned or catalogued items of this model.
+#[cfg_attr(test, derive(fake::Dummy))]
 #[derive(Debug, Clone)]
 pub struct RailwayModel {
     /// Unique identifier for the railway model.
+    #[cfg_attr(
+        test,
+        dummy(
+            expr = "RailwayModelId::try_from(\"trn:railway-model:acme:p100\").expect(\"valid railway model id\")"
+        )
+    )]
     pub id: RailwayModelId,
 
     /// Reference to the manufacturer id of the model (e.g. Bachmann, Märklin).
+    #[cfg_attr(
+        test,
+        dummy(
+            expr = "ManufacturerId::try_from(\"trn:manufacturer:acme\").expect(\"valid manufacturer id\")"
+        )
+    )]
     pub manufacturer_id: ManufacturerId,
 
     /// Manufacturer-assigned product code.
+    #[cfg_attr(test, dummy(expr = "ProductCode::try_from(\"P100\").expect(\"valid product code\")"))]
     pub product_code: ProductCode,
 
     /// Human-readable description of the model (localized).
@@ -39,27 +53,34 @@ pub struct RailwayModel {
     pub details: Option<LocalizedField>,
 
     /// The power method used by this model (e.g. Diesel, Electric, None for non-powered models).
+    #[cfg_attr(test, dummy(expr = "PowerMethod::DC"))]
     pub power_method: PowerMethod,
 
     /// The scale of the model (e.g. HO, N).
+    #[cfg_attr(test, dummy(expr = "Scale::H0"))]
     pub scale: Scale,
 
     /// The historical epoch the model belongs to.
+    #[cfg_attr(test, dummy(expr = "Epoch(\"IV\".to_string())"))]
     pub epoch: Epoch,
 
     /// Classification category for the model (e.g. locomotive, freight car).
+    #[cfg_attr(test, dummy(expr = "Category::Locomotives"))]
     pub category: Category,
 
     /// Delivery or release date information for the product.
+    #[cfg_attr(test, dummy(expr = "None"))]
     pub delivery_date: Option<DeliveryDate>,
 
     /// the availability status
+    #[cfg_attr(test, dummy(expr = "None"))]
     pub availability_status: Option<AvailabilityStatus>,
 
     /// Rolling stock instances (specific vehicles) that correspond to this model.
     pub rolling_stocks: Vec<RollingStock>,
 
     /// Pending domain events produced by operations on this aggregate.
+    #[cfg_attr(test, dummy(expr = "vec![]"))]
     pub pending_events: Vec<RailwayModelEvent>,
 }
 
