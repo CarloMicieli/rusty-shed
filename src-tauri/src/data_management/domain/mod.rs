@@ -1,5 +1,6 @@
 mod error;
 mod export_domain;
+mod export_repository;
 mod manifest;
 mod preview;
 mod record_counts;
@@ -10,6 +11,7 @@ mod warning;
 
 pub use error::*;
 pub use export_domain::*;
+pub use export_repository::*;
 pub use manifest::*;
 pub use preview::*;
 pub use record_counts::*;

@@ -12,6 +12,7 @@ pub mod media_storage;
 pub mod normalizer;
 pub mod schema_mapper;
 pub mod schema_validator;
+pub mod sqlite_export_repository;
 pub mod sqlite_import_repository;
 
 pub use archive_extractor::*;
@@ -24,6 +25,7 @@ pub use media_collector::*;
 pub use media_storage::*;
 pub use normalizer::*;
 pub use schema_validator::*;
+pub use sqlite_export_repository::SqliteExportRepository;
 pub use sqlite_import_repository::SqliteImportRepository;
 
 pub mod backup_file_operations;
