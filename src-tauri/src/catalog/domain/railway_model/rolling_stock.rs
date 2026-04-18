@@ -215,7 +215,14 @@ pub enum RollingStock {
 
 #[cfg(test)]
 impl fake::Dummy<fake::Faker> for RollingStock {
-    fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &fake::Faker, _: &mut R) -> Self {
+    fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &fake::Faker, rng: &mut R) -> Self {
+        let serial = rng.random_range(1..=999);
+        let locomotive_type = match rng.random_range(0..=2) {
+            0 => LocomotiveType::ElectricLocomotive,
+            1 => LocomotiveType::DieselLocomotive,
+            _ => LocomotiveType::SteamLocomotive,
+        };
+
         Self::Locomotive {
             id: RollingStockId::default(),
             railway_id: RailwayCompanyId::new_from_parts(&["fs"]),
@@ -223,14 +230,14 @@ impl fake::Dummy<fake::Faker> for RollingStock {
             length_over_buffer: None,
             technical_specifications: None,
             friendly_name: None,
-            series_code: "E.656".to_string(),
-            road_number: Some("001".to_string()),
+            series_code: format!("E.{serial}"),
+            road_number: Some(format!("{serial:03}")),
             series: None,
             depot: None,
-            locomotive_type: LocomotiveType::ElectricLocomotive,
+            locomotive_type,
             dcc_interface: None,
             control: None,
-            is_dummy: false,
+            is_dummy: rng.random(),
         }
     }
 }
