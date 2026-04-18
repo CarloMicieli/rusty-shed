@@ -53,7 +53,6 @@ use crate::trains::interface::command_handlers as trains_command_handlers;
 use crate::wishlist::interface::command_handlers as wishlist_command_handlers;
 use specta_typescript::Typescript;
 use std::fs;
-use std::path::{Component, Path};
 use tauri::path::BaseDirectory;
 use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
@@ -63,59 +62,6 @@ use tracing::Instrument;
 // ---------------------------------------------------------------------------
 // Inner (testable) implementations – take &AppState directly
 // ---------------------------------------------------------------------------
-
-/// Inner implementation for [`get_image_path`].
-pub async fn get_image_path_inner(
-    state: &AppState,
-    id: String,
-    category: String,
-) -> Result<String, CommandError> {
-    match category.as_str() {
-        "static" => Ok(id),
-        "railway_model" => {
-            // Prevent path traversal by rejecting any component that isn't normal
-            let id_path = Path::new(&id);
-            let valid = id_path
-                .components()
-                .all(|c| matches!(c, Component::Normal(_)));
-
-            if !valid {
-                return Err(CommandError::validation_field(
-                    "id",
-                    "Invalid image id; must be a file name",
-                ));
-            }
-
-            let mut full_path = state.models_dir().to_path_buf();
-            full_path.push(id_path);
-
-            // Ensure the file exists before returning the absolute path
-            match tokio::fs::metadata(&full_path).await {
-                Ok(meta) if meta.is_file() => Ok(full_path
-                    .to_str()
-                    .map(|s| s.to_string())
-                    .ok_or_else(|| CommandError::unknown("Non-Unicode path"))?),
-                _ => Err(CommandError::NotFound(format!(
-                    "No image found for railway model {id}"
-                ))),
-            }
-        }
-        other => Err(CommandError::validation_field(
-            "category",
-            format!("Unsupported category '{other}'"),
-        )),
-    }
-}
-
-#[tauri::command]
-#[specta::specta]
-async fn get_image_path(
-    state: tauri::State<'_, AppState>,
-    id: String,
-    category: String,
-) -> Result<String, CommandError> {
-    get_image_path_inner(&state, id, category).await
-}
 
 /// Inner implementation for [`init_database`].
 pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError> {
@@ -281,7 +227,7 @@ pub fn run() {
         media_command_handlers::upload_model_image,
         media_command_handlers::upload_model_image_bytes,
         media_command_handlers::delete_model_image,
-        get_image_path,
+        media_command_handlers::get_image_path,
         initialize_settings,
         get_settings,
         update_settings,
