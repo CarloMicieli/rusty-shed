@@ -75,7 +75,10 @@ mod tests {
         .await;
 
         assert!(result.is_ok(), "{result:?}");
-        assert_eq!(result.unwrap().owned_rolling_stock_id.as_deref(), Some("ors-1"));
+        assert_eq!(
+            result.unwrap().owned_rolling_stock_id.as_deref(),
+            Some("ors-1")
+        );
     }
 
     #[tokio::test]

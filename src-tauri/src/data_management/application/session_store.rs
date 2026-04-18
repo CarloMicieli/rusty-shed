@@ -77,13 +77,19 @@ mod tests {
 
         let loaded = store.get(&session_id).await;
         assert!(loaded.is_some());
-        assert!(matches!(loaded.expect("session should exist").state, ImportState::Analyzed));
+        assert!(matches!(
+            loaded.expect("session should exist").state,
+            ImportState::Analyzed
+        ));
 
         store
             .update(&session_id, |s| s.transition(ImportState::Completed))
             .await;
 
-        let updated = store.get(&session_id).await.expect("session should still exist");
+        let updated = store
+            .get(&session_id)
+            .await
+            .expect("session should still exist");
         assert!(matches!(updated.state, ImportState::Completed));
 
         let removed = store.remove(&session_id).await;

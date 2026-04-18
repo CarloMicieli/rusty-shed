@@ -41,10 +41,12 @@ mod tests {
         let mut repo = MockTrainsRepository::new();
         repo.expect_remove_formation_element()
             .times(1)
-            .returning(|_| Err(DomainError::NotFound {
-                resource: "FormationElement".into(),
-                identifier: "el-404".into(),
-            }));
+            .returning(|_| {
+                Err(DomainError::NotFound {
+                    resource: "FormationElement".into(),
+                    identifier: "el-404".into(),
+                })
+            });
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);
         let result = RemoveFormationElementUseCase::execute(&mut uow, "el-404".into()).await;

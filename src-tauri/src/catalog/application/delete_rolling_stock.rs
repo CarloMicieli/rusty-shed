@@ -49,8 +49,8 @@ mod tests {
     use crate::catalog::domain::railway_company::RailwayCompanyId;
     use crate::catalog::domain::railway_model::localized_field::LocalizedField;
     use crate::catalog::domain::railway_model::{
-        Category, LocomotiveType, MockRailwayModelRepository, PowerMethod, ProductCode, RailwayModel,
-        RollingStock,
+        Category, LocomotiveType, MockRailwayModelRepository, PowerMethod, ProductCode,
+        RailwayModel, RollingStock,
     };
     use crate::catalog::domain::scale::Scale;
 

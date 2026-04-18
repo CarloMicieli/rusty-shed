@@ -23,14 +23,16 @@ mod tests {
     use super::*;
     use crate::catalog::domain::railway_model::MockRailwayModelRepository;
     use crate::collecting::application::testing::FakeUow;
-    use crate::collecting::domain::{CollectionFieldUpdate, CollectionItemId, MockCollectionRepository};
+    use crate::collecting::domain::{
+        CollectionItemId, CollectionItemUpdate, MockCollectionRepository,
+    };
     use crate::core::domain::domain_error::DomainError;
     use crate::core::domain::identifiers::Identifier;
 
     fn make_input() -> UpdateCollectionItemInput {
         UpdateCollectionItemInput {
-            item_id: CollectionItemId::new_from_parts(&["item-1"]),
-            update: CollectionFieldUpdate::Notes(Some("updated notes".into())),
+            collection_item_id: CollectionItemId::new_from_parts(&["item-1"]),
+            update: CollectionItemUpdate::Notes(Some("updated notes".into())),
         }
     }
 

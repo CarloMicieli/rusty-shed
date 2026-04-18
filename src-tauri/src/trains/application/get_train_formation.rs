@@ -83,12 +83,12 @@ mod tests {
     #[tokio::test]
     async fn not_found_propagates() {
         let mut repo = MockTrainsRepository::new();
-        repo.expect_get_formation_detail()
-            .times(1)
-            .returning(|id| Err(DomainError::NotFound {
+        repo.expect_get_formation_detail().times(1).returning(|id| {
+            Err(DomainError::NotFound {
                 resource: "TrainFormation".into(),
                 identifier: id.into(),
-            }));
+            })
+        });
 
         let mut uow = MockAppUow::new().with_trains_repo(repo);
         let result = GetTrainFormationUseCase::execute(&mut uow, "f-missing".into()).await;
