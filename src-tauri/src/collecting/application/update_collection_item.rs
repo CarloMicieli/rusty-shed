@@ -17,3 +17,50 @@ impl UpdateCollectionItem {
         repo.update_item(&input).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::domain::railway_model::MockRailwayModelRepository;
+    use crate::collecting::application::testing::FakeUow;
+    use crate::collecting::domain::{CollectionFieldUpdate, CollectionItemId, MockCollectionRepository};
+    use crate::core::domain::domain_error::DomainError;
+    use crate::core::domain::identifiers::Identifier;
+
+    fn make_input() -> UpdateCollectionItemInput {
+        UpdateCollectionItemInput {
+            item_id: CollectionItemId::new_from_parts(&["item-1"]),
+            update: CollectionFieldUpdate::Notes(Some("updated notes".into())),
+        }
+    }
+
+    #[tokio::test]
+    async fn happy_path_updates_item() {
+        let mut collection_repo = MockCollectionRepository::new();
+        collection_repo
+            .expect_update_item()
+            .times(1)
+            .returning(|_| Ok(()));
+
+        let railway_repo = MockRailwayModelRepository::new();
+        let mut uow = FakeUow::new(collection_repo, railway_repo);
+        let result = UpdateCollectionItem::execute(&mut uow, make_input()).await;
+
+        assert!(result.is_ok(), "{result:?}");
+    }
+
+    #[tokio::test]
+    async fn repo_error_propagates() {
+        let mut collection_repo = MockCollectionRepository::new();
+        collection_repo
+            .expect_update_item()
+            .times(1)
+            .returning(|_| Err(DomainError::Infrastructure("write failed".into())));
+
+        let railway_repo = MockRailwayModelRepository::new();
+        let mut uow = FakeUow::new(collection_repo, railway_repo);
+        let result = UpdateCollectionItem::execute(&mut uow, make_input()).await;
+
+        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+    }
+}

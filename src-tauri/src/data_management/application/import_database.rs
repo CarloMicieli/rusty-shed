@@ -49,3 +49,21 @@ pub async fn import_database(
         requires_restart: true,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn rejects_import_when_confirmation_is_invalid() {
+        let source = std::path::PathBuf::from("/tmp/non-existing-source.db");
+        let destination = std::path::PathBuf::from("/tmp/non-existing-destination.db");
+
+        let result = import_database(&source, &destination, "WRONG").await;
+
+        assert!(matches!(
+            result,
+            Err(DatabaseBackupError::ConfirmationFailed(_))
+        ));
+    }
+}

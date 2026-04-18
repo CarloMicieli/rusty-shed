@@ -50,3 +50,20 @@ pub async fn export_database(
         duration_ms,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn returns_invalid_path_when_destination_parent_does_not_exist() {
+        let pool = SqlitePool::connect("sqlite::memory:")
+            .await
+            .expect("in-memory sqlite should connect");
+        let destination = std::path::PathBuf::from("/definitely-not-existing-rusty-shed/export.db");
+
+        let result = export_database(&pool, &destination).await;
+
+        assert!(matches!(result, Err(DatabaseBackupError::InvalidPath(_))));
+    }
+}

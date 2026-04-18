@@ -59,3 +59,56 @@ impl Default for ImportSessionStore {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_management::domain::{ArchiveFormat, ImportState};
+    use std::path::PathBuf;
+
+    #[tokio::test]
+    async fn insert_get_update_and_remove_session() {
+        let store = ImportSessionStore::new();
+        let mut session = ImportSession::new(PathBuf::from("/tmp/import.zip"), ArchiveFormat::Zip);
+        let session_id = session.id.clone();
+        session.transition(ImportState::Analyzed);
+
+        store.insert(session.clone()).await;
+
+        let loaded = store.get(&session_id).await;
+        assert!(loaded.is_some());
+        assert!(matches!(loaded.expect("session should exist").state, ImportState::Analyzed));
+
+        store
+            .update(&session_id, |s| s.transition(ImportState::Completed))
+            .await;
+
+        let updated = store.get(&session_id).await.expect("session should still exist");
+        assert!(matches!(updated.state, ImportState::Completed));
+
+        let removed = store.remove(&session_id).await;
+        assert!(removed.is_some());
+        assert!(store.get(&session_id).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn any_returns_true_only_when_predicate_matches() {
+        let store = ImportSessionStore::new();
+        let session = ImportSession::new(PathBuf::from("/tmp/import.tar.gz"), ArchiveFormat::TarGz);
+        let session_id = session.id.clone();
+        store.insert(session).await;
+
+        let has_importing = store
+            .any(|s| matches!(s.state, ImportState::Importing))
+            .await;
+        assert!(!has_importing);
+
+        store
+            .update(&session_id, |s| s.transition(ImportState::Importing))
+            .await;
+        let has_importing = store
+            .any(|s| matches!(s.state, ImportState::Importing))
+            .await;
+        assert!(has_importing);
+    }
+}

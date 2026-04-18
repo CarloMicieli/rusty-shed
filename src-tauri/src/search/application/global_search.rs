@@ -50,3 +50,67 @@ impl GlobalSearch {
         repo.search(&fts_query, input.lang).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_uow::testing::MockAppUow;
+    use crate::catalog::domain::railway_model::RailwayModelId;
+    use crate::core::domain::identifiers::Identifier;
+    use crate::search::domain::global_search_result::{GlobalSearchResult, SearchSource};
+    use crate::search::domain::repository::MockGlobalSearchRepository;
+
+    fn make_result() -> GlobalSearchResult {
+        GlobalSearchResult {
+            railway_model_id: RailwayModelId::from_string_unchecked(
+                "trn:railway-model:acme:p100".into(),
+            ),
+            source: SearchSource::Collection,
+            item_id: "item-1".into(),
+            parent_id: None,
+            display_name: "E.656".into(),
+            manufacturer_name: "ACME".into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn rejects_short_query() {
+        let mut repo = MockGlobalSearchRepository::new();
+        repo.expect_search().times(0);
+
+        let mut uow = MockAppUow::new().with_global_search(repo);
+        let result = GlobalSearch::execute(
+            &mut uow,
+            GlobalSearchInput {
+                query: "a".into(),
+                lang: Language::English,
+            },
+        )
+        .await;
+
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[tokio::test]
+    async fn transforms_query_to_fts_prefix_and_returns_results() {
+        let expected = "\"diesel loco\"*".to_string();
+        let mut repo = MockGlobalSearchRepository::new();
+        repo.expect_search()
+            .times(1)
+            .withf(move |query, lang| *query == expected && *lang == Language::Italian)
+            .return_once(|_, _| Ok(vec![make_result()]));
+
+        let mut uow = MockAppUow::new().with_global_search(repo);
+        let result = GlobalSearch::execute(
+            &mut uow,
+            GlobalSearchInput {
+                query: " diesel loco ".into(),
+                lang: Language::Italian,
+            },
+        )
+        .await;
+
+        assert!(result.is_ok(), "{result:?}");
+        assert_eq!(result.unwrap().len(), 1);
+    }
+}
