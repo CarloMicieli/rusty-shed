@@ -153,6 +153,7 @@ impl AddRailwayModel {
 
 /// Input for creating a new railway model.
 #[derive(Debug, Clone, Validate)]
+// `details` and `rolling_stocks` are intentionally validated in later domain conversion steps.
 #[garde(allow_unvalidated)]
 pub struct CreateRailwayModelInput {
     /// Manufacturer identifier as a string.
