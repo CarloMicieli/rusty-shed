@@ -40,7 +40,7 @@ impl AddRailwayModel {
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        input.validate(&()).map_err(DomainError::from)?;
+        input.validate().map_err(DomainError::from)?;
 
         let manufacturer_id = ManufacturerId::try_from(&input.manufacturer_id).map_err(|e| {
             DomainError::validation_general(format!("invalid manufacturer_id: {e}"))
@@ -408,11 +408,13 @@ mod tests {
         let result = AddRailwayModel::execute(&mut unit_of_work, input).await;
 
         if let Err(DomainError::ValidationError(e)) = result {
-            assert_eq!(e.len(), 6);
+            assert_eq!(e.len(), 8);
             let errors = e;
             assert!(errors.contains_key("product_code"));
+            assert!(errors.contains_key("description"));
             assert!(errors.contains_key("power_method"));
             assert!(errors.contains_key("scale"));
+            assert!(errors.contains_key("epoch"));
             assert!(errors.contains_key("category"));
             assert!(errors.contains_key("availability_status"));
             assert!(errors.contains_key("delivery_date"));
