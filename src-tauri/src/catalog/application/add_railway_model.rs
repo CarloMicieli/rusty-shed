@@ -42,8 +42,9 @@ impl AddRailwayModel {
         let mut repository = unit_of_work.railway_model_repository();
         input.validate(&()).map_err(DomainError::from)?;
 
-        let manufacturer_id = ManufacturerId::try_from(&input.manufacturer_id)
-            .map_err(|e| DomainError::validation_general(format!("invalid manufacturer_id: {e}")))?;
+        let manufacturer_id = ManufacturerId::try_from(&input.manufacturer_id).map_err(|e| {
+            DomainError::validation_general(format!("invalid manufacturer_id: {e}"))
+        })?;
         let product_code = ProductCode::try_from(input.product_code.as_str())
             .map_err(|e| DomainError::validation_general(format!("invalid product_code: {e}")))?;
         let power_method = input
