@@ -16,6 +16,7 @@
   const { open, onClose, maintenanceCardId }: Props = $props();
 
   const maintenanceDetailState = getMaintenanceDetailState();
+  const currentCard = $derived(maintenanceDetailState.card);
 
   let datePerformed = $state<string | null>(new Date().toISOString().split('T')[0]);
 
@@ -24,6 +25,9 @@
     return new CalendarDate(n.getFullYear(), n.getMonth() + 1, n.getDate());
   });
   let maintenanceType = $state<string | null>(null);
+  let nextMaintenanceDate = $state<string | null>(
+    maintenanceDetailState.card?.nextMaintenanceDate ?? null
+  );
   let notes = $state<string>('');
   let isSubmitting = $state(false);
   let error = $state<string | null>(null);
@@ -45,7 +49,8 @@
         maintenanceCardId,
         datePerformed: date,
         maintenanceType,
-        notes: notes.trim() || null
+        notes: notes.trim() || null,
+        nextMaintenanceDate
       });
 
       resetForm();
@@ -62,9 +67,16 @@
     const n = new Date();
     datePerformed = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
     maintenanceType = null;
+    nextMaintenanceDate = maintenanceDetailState.card?.nextMaintenanceDate ?? null;
     notes = '';
     error = null;
   }
+
+  $effect(() => {
+    if (open) {
+      nextMaintenanceDate = currentCard?.nextMaintenanceDate ?? null;
+    }
+  });
 
   function handleClose() {
     resetForm();
@@ -149,6 +161,29 @@
             <option value={type.value} class="bg-zinc-950 text-zinc-100">{type.label}</option>
           {/each}
         </select>
+      </div>
+
+      <div class="space-y-2">
+        <label
+          for="add-event-next-date"
+          class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase"
+        >
+          {m.maintenance_schedule_next_date_label()}
+        </label>
+        <input
+          id="add-event-next-date"
+          type="date"
+          min={datePerformed ?? undefined}
+          class="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 ring-offset-black transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          value={nextMaintenanceDate ?? ''}
+          oninput={(e) => {
+            const value = (e.target as HTMLInputElement).value;
+            nextMaintenanceDate = value || null;
+          }}
+        />
+        <p class="text-xs leading-relaxed text-zinc-500">
+          {m.maintenance_schedule_next_date_hint()}
+        </p>
       </div>
 
       <!-- Notes -->

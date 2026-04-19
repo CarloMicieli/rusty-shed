@@ -171,6 +171,7 @@ pub async fn add_maintenance_event_inner(
         date_performed: date,
         maintenance_type,
         notes: input.notes,
+        next_maintenance_date: input.next_maintenance_date,
     };
 
     args.validate().map_err(CommandError::from)?;

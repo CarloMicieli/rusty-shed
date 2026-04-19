@@ -1,10 +1,9 @@
 use crate::core::domain::IdProvider;
 use crate::core::domain::domain_error::DomainError;
-use crate::core::domain::identifiers::Identifier;
+use crate::maintenance::domain::MaintenanceCardId;
 use crate::maintenance::domain::MaintenanceEventId;
 use crate::maintenance::domain::MaintenanceType;
 use crate::maintenance::domain::MaintenanceUowExt;
-use crate::maintenance::domain::{MaintenanceCard, MaintenanceCardId};
 use uuid::Uuid;
 
 /// Input DTO for the AddMaintenanceEvent use-case.
@@ -18,6 +17,9 @@ pub struct AddMaintenanceEventInput {
     pub maintenance_type: Option<MaintenanceType>,
     /// Optional free-text notes.
     pub notes: Option<String>,
+
+    /// Optional scheduled date for the next maintenance event.
+    pub next_maintenance_date: Option<chrono::NaiveDate>,
 }
 
 /// Use-case responsible for adding a maintenance event and updating the card.
@@ -48,17 +50,13 @@ impl AddMaintenanceEvent {
         P: IdProvider<MaintenanceEventId>,
     {
         let mut repo = unit_of_work.maintenance_repository();
-
-        // Input contains a `MaintenanceCardId` TRN. Convert it to UUID for the
-        // aggregate constructor which expects a UUID.
-        let card_trn = input.maintenance_card_id.to_string();
-        let uuid_str = card_trn
-            .trim_start_matches(MaintenanceCardId::PREFIX)
-            .trim_start_matches(':');
-        let card_id =
-            Uuid::parse_str(uuid_str).map_err(|e| DomainError::Validation(e.to_string()))?;
-
-        let mut card = MaintenanceCard::from_id(card_id);
+        let mut card = repo
+            .find_by_id(&input.maintenance_card_id)
+            .await?
+            .ok_or_else(|| DomainError::NotFound {
+                resource: "MaintenanceCard".to_string(),
+                identifier: input.maintenance_card_id.to_string(),
+            })?;
 
         let event_id = id_provider.next_id();
         let event_uuid_str = event_id
@@ -73,6 +71,10 @@ impl AddMaintenanceEvent {
             input.maintenance_type,
             input.notes,
         );
+
+        if let Some(next_maintenance_date) = input.next_maintenance_date {
+            card.schedule_next_maintenance(next_maintenance_date);
+        }
 
         repo.save(card).await?;
         Ok(())
@@ -93,6 +95,20 @@ mod tests {
         let mut mock = MockMaintenanceRepository::new();
         let fixed_event_uuid = Uuid::parse_str("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").unwrap();
         let fixed_event_id = MaintenanceEventId::from_uuid(&fixed_event_uuid);
+        let card_uuid = Uuid::parse_str("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").unwrap();
+        let card_id = MaintenanceCardId::from_uuid(&card_uuid);
+
+        mock.expect_find_by_id()
+            .times(1)
+            .withf({
+                let card_id = card_id.clone();
+                move |id| id == &card_id
+            })
+            .returning(move |_| {
+                Ok(Some(crate::maintenance::domain::MaintenanceCard::from_id(
+                    card_uuid,
+                )))
+            });
 
         mock.expect_save()
             .times(1)
@@ -102,23 +118,53 @@ mod tests {
                     Some(crate::maintenance::domain::maintenance_card_event::MaintenanceCardEvent::MaintenanceRecorded { id, .. })
                     if *id == fixed_event_uuid
                 )
+                    && card.next_maintenance_date
+                        == Some(NaiveDate::from_ymd_opt(2025, 7, 1).unwrap())
             })
             .returning(|_| Ok(()));
 
         let mut uow = FakeUow::new(mock);
-        let card_id = MaintenanceCardId::from_uuid(
-            &Uuid::parse_str("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").unwrap(),
-        );
         let input = AddMaintenanceEventInput {
             maintenance_card_id: card_id,
             date_performed: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
             maintenance_type: None,
             notes: None,
+            next_maintenance_date: Some(NaiveDate::from_ymd_opt(2025, 7, 1).unwrap()),
         };
         let id_provider = MockIdProvider::new(fixed_event_id);
         AddMaintenanceEvent::execute(&mut uow, id_provider, input)
             .await
             .expect("execute should succeed");
+    }
+
+    #[tokio::test]
+    async fn it_returns_not_found_when_card_is_missing() {
+        let mut mock = MockMaintenanceRepository::new();
+        let card_id = MaintenanceCardId::from_uuid(
+            &Uuid::parse_str("dddddddd-dddd-dddd-dddd-dddddddddddd").unwrap(),
+        );
+
+        mock.expect_find_by_id().times(1).returning(|_| Ok(None));
+
+        let mut uow = FakeUow::new(mock);
+        let input = AddMaintenanceEventInput {
+            maintenance_card_id: card_id.clone(),
+            date_performed: NaiveDate::from_ymd_opt(2025, 6, 1).unwrap(),
+            maintenance_type: None,
+            notes: None,
+            next_maintenance_date: None,
+        };
+        let id_provider = MockIdProvider::new(MaintenanceEventId::from_uuid(
+            &Uuid::parse_str("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee").unwrap(),
+        ));
+
+        let result = AddMaintenanceEvent::execute(&mut uow, id_provider, input).await;
+
+        assert!(matches!(
+            result,
+            Err(DomainError::NotFound { resource, identifier })
+                if resource == "MaintenanceCard" && identifier == card_id.to_string()
+        ));
     }
 
     #[tokio::test]

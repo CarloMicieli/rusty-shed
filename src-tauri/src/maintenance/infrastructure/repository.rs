@@ -236,6 +236,18 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
                     )
                     .await
                     .with_domain_context("Error updating maintenance card last_maintenance_date")?;
+
+                    let next_date_str = maintenance_card
+                        .next_maintenance_date
+                        .map(|date| date.format("%Y-%m-%d").to_string());
+
+                    database::update_maintenance_card_next_date(
+                        &mut *self.executor,
+                        next_date_str.as_deref(),
+                        &card_trn,
+                    )
+                    .await
+                    .with_domain_context("Error updating maintenance card next_maintenance_date")?;
                 }
 
                 MaintenanceCardEvent::Created {
@@ -510,6 +522,7 @@ mod tests {
             } => *maintenance_card_id,
         };
         let mut card = MaintenanceCard::from_id(card_id);
+        card.schedule_next_maintenance(NaiveDate::from_ymd_opt(2026, 1, 20).unwrap());
         card.pending_events = vec![new_event.clone()];
         repo.save(card).await.expect("record event");
 
@@ -541,6 +554,10 @@ mod tests {
         assert_eq!(
             card_with_events.last_maintenance_date.expect("date"),
             evt_date
+        );
+        assert_eq!(
+            card_with_events.next_maintenance_date,
+            Some(NaiveDate::from_ymd_opt(2026, 1, 20).unwrap())
         );
     }
 

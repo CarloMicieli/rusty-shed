@@ -53,6 +53,8 @@
 
   const statusLabel = $derived(item.status);
 
+  const showPurchaseAction = $derived(item.status === 'WANTED' || item.status === 'ON_ORDER');
+
   const desiredPriceStr = $derived.by(() => {
     if (!item.desiredPrice) return null;
     const price = item.desiredPrice as MonetaryAmount;
@@ -93,16 +95,51 @@
           </h3>
         </div>
 
-        <button
-          type="button"
-          onclick={(e) => {
-            e.stopPropagation();
-            onRemove?.(item.id);
-          }}
-          class="rounded-[8px] border border-border p-1 text-muted-foreground transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
-        >
-          <Trash2 size={14} />
-        </button>
+        <div class="flex shrink-0 items-center gap-1.5">
+          {#if showPurchaseAction && onPurchase}
+            <Button
+              variant="secondary"
+              size="sm"
+              class="h-8 border-amber-500/40 bg-amber-500/12 px-2.5 text-[11px] font-bold text-amber-200 hover:bg-amber-500/20"
+              aria-label={m.wishlist_item_card_purchase()}
+              onclick={(e: MouseEvent) => {
+                e.stopPropagation();
+                onPurchase(item.id);
+              }}
+            >
+              <ShoppingCart size={12} />
+              <span class="ml-1.5">{m.wishlist_item_card_purchase()}</span>
+            </Button>
+          {/if}
+
+          {#if onMove}
+            <button
+              type="button"
+              aria-label={m.wishlist_item_card_move()}
+              title={m.wishlist_item_card_move()}
+              onclick={(e) => {
+                e.stopPropagation();
+                onMove(item.id);
+              }}
+              class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-500"
+            >
+              <MoveRight size={13} />
+            </button>
+          {/if}
+
+          <button
+            type="button"
+            aria-label={m.wishlist_table_row_remove_title()}
+            title={m.wishlist_table_row_remove_title()}
+            onclick={(e) => {
+              e.stopPropagation();
+              onRemove?.(item.id);
+            }}
+            class="rounded-[8px] border border-border p-1.5 text-muted-foreground transition-colors hover:border-red-800/40 hover:bg-red-900/20 hover:text-red-400"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
     </CardHeader>
 
@@ -170,36 +207,6 @@
             {modelDetails?.productCode ?? '—'}
           </p>
         </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="mt-auto flex gap-2 pt-4">
-        <Button
-          variant="secondary"
-          size="sm"
-          class="h-8 flex-1 border-border bg-muted text-[11px] font-bold hover:bg-muted/80"
-          onclick={(e: MouseEvent) => {
-            e.stopPropagation();
-            onMove?.(item.id);
-          }}
-        >
-          <MoveRight size={12} />
-          <span class="ml-1.5">{m.wishlist_item_card_move()}</span>
-        </Button>
-        {#if item.status === 'WANTED' || item.status === 'ON_ORDER'}
-          <Button
-            variant="secondary"
-            size="sm"
-            class="h-8 flex-1 border-border bg-muted text-[11px] font-bold hover:bg-muted/80"
-            onclick={(e: MouseEvent) => {
-              e.stopPropagation();
-              onPurchase?.(item.id);
-            }}
-          >
-            <ShoppingCart size={12} />
-            <span class="ml-1.5">{m.wishlist_item_card_purchase()}</span>
-          </Button>
-        {/if}
       </div>
     </CardContent>
   </Card>

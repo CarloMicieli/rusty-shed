@@ -8,6 +8,8 @@ import { SvelteSet } from 'svelte/reactivity';
 vi.mock('$lib/paraglide/messages.js', () => ({
   collection_filters_title: () => 'Filters',
   collection_search_placeholder: () => 'Search your collection...',
+  collection_search_hint: () =>
+    'Search manufacturer, product code, or description while keeping your filters applied.',
   collection_filter_scales: () => 'Scales',
   collection_filter_tags: () => 'Tags',
   collection_clear_filters: () => 'Clear all filters',
@@ -181,6 +183,21 @@ describe('FilterPanel.svelte', () => {
       }
     });
     expect(screen.getByPlaceholderText('Search your collection...')).toBeInTheDocument();
+  });
+
+  it('renders the persistent search hint', () => {
+    render(FilterPanel, {
+      props: {
+        filters: makeFilters(),
+        availableTags: [],
+        availableScales: scales
+      }
+    });
+    expect(
+      screen.getByText(
+        'Search manufacturer, product code, or description while keeping your filters applied.'
+      )
+    ).toBeInTheDocument();
   });
 
   it('renders with active scale filter highlighted (All badge when scale is null)', () => {

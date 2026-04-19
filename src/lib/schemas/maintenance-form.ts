@@ -16,8 +16,7 @@ export const maintenanceSchema = z.object({
   maintenanceType: z.string().nullable().default(null),
   notes: z.string().default(''),
   initialCondition: z.string().default(''),
-  lastRunDate: z.string().default(''),
-  serviceInterval: z.string().default('')
+  nextMaintenanceDate: z.string().nullable().default(null)
 });
 
 export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;

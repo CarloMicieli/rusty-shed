@@ -41,8 +41,7 @@
       maintenanceType: null as string | null,
       notes: '',
       initialCondition: '',
-      lastRunDate: getTodayLocal(),
-      serviceInterval: ''
+      nextMaintenanceDate: null as string | null
     };
   }
 
@@ -89,11 +88,15 @@
             notesText = trimmedCondition + (notesText ? '\n' + notesText : '');
           }
 
+          const nextMaintenanceDate =
+            (($form.nextMaintenanceDate as string | null) ?? '').trim() || null;
+
           const eventResult = await commands.addMaintenanceEvent({
             maintenanceCardId: cardId,
             datePerformed: $form.datePerformed as string,
             maintenanceType: $form.maintenanceType as MaintenanceType | null,
-            notes: notesText || null
+            notes: notesText || null,
+            nextMaintenanceDate
           });
           if (eventResult.status !== 'ok') {
             throw new Error(JSON.stringify(eventResult.error));
@@ -286,42 +289,6 @@
               oninput={(e) => ($form.initialCondition = (e.target as HTMLTextAreaElement).value)}
             ></textarea>
           </div>
-
-          <!-- Last Run Date -->
-          <div class="space-y-2">
-            <label
-              for="last-run-date"
-              class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
-            >
-              {m.log_maintenance_last_run_date_label()}
-            </label>
-            <input
-              id="last-run-date"
-              type="date"
-              class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
-              value={$form.lastRunDate as string}
-              oninput={(e) => ($form.lastRunDate = (e.target as HTMLInputElement).value)}
-            />
-          </div>
-
-          <!-- Service Interval -->
-          <div class="space-y-2">
-            <label
-              for="service-interval"
-              class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
-            >
-              {m.log_maintenance_service_interval_label()}
-            </label>
-            <input
-              id="service-interval"
-              type="number"
-              min="1"
-              class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
-              placeholder={m.log_maintenance_service_interval_placeholder()}
-              value={$form.serviceInterval as string}
-              oninput={(e) => ($form.serviceInterval = (e.target as HTMLInputElement).value)}
-            />
-          </div>
         </div>
       {/if}
 
@@ -354,6 +321,29 @@
           {#if $errors.datePerformed?.[0]}
             <p class="text-xs text-destructive">{$errors.datePerformed[0]}</p>
           {/if}
+        </div>
+
+        <div class="space-y-2">
+          <label
+            for="next-maintenance-date"
+            class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
+          >
+            {m.maintenance_schedule_next_date_label()}
+          </label>
+          <input
+            id="next-maintenance-date"
+            type="date"
+            class="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 font-mono text-sm text-foreground ring-offset-background transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring focus:outline-none"
+            min={$form.datePerformed as string}
+            value={($form.nextMaintenanceDate as string | null) ?? ''}
+            oninput={(e) => {
+              const value = (e.target as HTMLInputElement).value;
+              $form.nextMaintenanceDate = value || null;
+            }}
+          />
+          <p class="text-xs leading-relaxed text-muted-foreground">
+            {m.maintenance_schedule_next_date_hint()}
+          </p>
         </div>
 
         <!-- Maintenance Type -->

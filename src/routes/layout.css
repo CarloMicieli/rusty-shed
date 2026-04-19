@@ -10,6 +10,7 @@
 
 :root {
   --radius: 0.625rem;
+  --page-content-max-width: 88rem;
 
   /* Layout structure colors — theme-switchable */
   --layout-bg: color-mix(in srgb, #0d0d0d, hsl(30 50% 50%) 5%);
@@ -217,6 +218,11 @@
 }
 
 @layer components {
+  .page-content-constrained {
+    width: min(100%, var(--page-content-max-width));
+    margin-inline: auto;
+  }
+
   .gauge-frame {
     border: 2px solid var(--border);
     border-image: linear-gradient(

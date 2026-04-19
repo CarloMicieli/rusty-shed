@@ -91,7 +91,8 @@ describe('MaintenanceDetailState', () => {
         maintenanceCardId: 'trn:maintenance-card:test-card',
         datePerformed: '2026-03-05',
         maintenanceType: null,
-        notes: null
+        notes: null,
+        nextMaintenanceDate: null
       };
 
       // Start addEvent but do NOT await — optimistic update should happen synchronously
@@ -113,7 +114,8 @@ describe('MaintenanceDetailState', () => {
         maintenanceCardId: 'mc-1',
         datePerformed: '2026-03-05',
         maintenanceType: null,
-        notes: null
+        notes: null,
+        nextMaintenanceDate: null
       });
       expect(mockSafeInvoke).not.toHaveBeenCalled();
     });

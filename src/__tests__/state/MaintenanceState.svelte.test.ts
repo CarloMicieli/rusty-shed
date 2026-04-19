@@ -162,7 +162,8 @@ describe('MaintenanceState', () => {
         maintenanceCardId: 'mc-1',
         datePerformed: '2026-01-15',
         maintenanceType: null,
-        notes: null
+        notes: null,
+        nextMaintenanceDate: null
       });
 
       expect(state.cards).toHaveLength(1);
@@ -180,7 +181,8 @@ describe('MaintenanceState', () => {
           maintenanceCardId: 'bad-id',
           datePerformed: '2026-01-15',
           maintenanceType: null,
-          notes: null
+          notes: null,
+          nextMaintenanceDate: null
         })
       ).rejects.toThrow('Card not found');
     });

@@ -28,6 +28,10 @@ pub struct AddMaintenanceEventArgs {
     /// Optional free-text notes.
     #[garde(length(max = 2000))]
     pub notes: Option<String>,
+
+    /// Optional scheduled date for the next maintenance event.
+    #[garde(skip)]
+    pub next_maintenance_date: Option<NaiveDate>,
 }
 
 fn validate_opt_maintenance_type_parse(value: &Option<String>, _: &()) -> garde::Result {
@@ -56,6 +60,10 @@ pub struct AddMaintenanceArgs {
     /// Additional notes about the maintenance (optional).
     #[garde(length(max = 2000))]
     pub notes: Option<String>,
+
+    /// Optional scheduled date for the next maintenance event.
+    #[garde(skip)]
+    pub next_maintenance_date: Option<NaiveDate>,
 }
 
 impl TryFrom<AddMaintenanceEventArgs> for AddMaintenanceEventInput {
@@ -70,6 +78,7 @@ impl TryFrom<AddMaintenanceEventArgs> for AddMaintenanceEventInput {
             date_performed: value.date_performed,
             maintenance_type: value.maintenance_type,
             notes: value.notes,
+            next_maintenance_date: value.next_maintenance_date,
         })
     }
 }
@@ -89,6 +98,7 @@ mod garde_tests {
             date_performed: NaiveDate::from_ymd_opt(2025, 3, 1).unwrap(),
             maintenance_type: None,
             notes: None,
+            next_maintenance_date: None,
         }
     }
 
@@ -150,6 +160,7 @@ mod garde_tests {
             date_performed: NaiveDate::from_ymd_opt(2025, 3, 1).unwrap(),
             maintenance_type: None,
             notes: None,
+            next_maintenance_date: None,
         }
     }
 
@@ -237,10 +248,15 @@ mod tests {
             date_performed: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
             maintenance_type: None,
             notes: Some("note".to_string()),
+            next_maintenance_date: Some(NaiveDate::from_ymd_opt(2025, 2, 1).unwrap()),
         };
 
         let input: AddMaintenanceEventInput = args.try_into().expect("conversion");
         assert_eq!(input.maintenance_card_id, MaintenanceCardId::from_uuid(&id));
         assert_eq!(input.notes.unwrap(), "note");
+        assert_eq!(
+            input.next_maintenance_date,
+            Some(NaiveDate::from_ymd_opt(2025, 2, 1).unwrap())
+        );
     }
 }

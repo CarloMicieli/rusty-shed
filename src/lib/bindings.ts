@@ -893,6 +893,8 @@ export type AddMaintenanceArgs = {
 	maintenanceType: string | null,
 	// Additional notes about the maintenance (optional).
 	notes: string | null,
+	// Optional scheduled date for the next maintenance event.
+	nextMaintenanceDate: string | null,
 };
 
 // Arguments for creating a simplified railway model and adding it to the collection.

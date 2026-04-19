@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { Calendar, AlertTriangle, CheckCircle2 } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { getUrgencyLevel } from '../utils/urgency';
@@ -57,7 +58,7 @@
 </script>
 
 <a
-  href="/maintenance/{encodeURIComponent(card.id)}"
+  href={resolve(`/maintenance/${encodeURIComponent(card.id)}`)}
   class="group relative block overflow-hidden rounded-xl border border-white/10 bg-layout-surface transition-all hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
 >
   <!-- Status Stripe -->
@@ -162,7 +163,11 @@
           <Calendar
             class="h-3.5 w-3.5 {urgency === 'overdue' ? 'text-red-500' : 'text-zinc-600'}"
           />
-          {formatDate(card.nextMaintenanceDate)}
+          {#if card.nextMaintenanceDate}
+            {formatDate(card.nextMaintenanceDate)}
+          {:else}
+            <span class="text-amber-400">{m.maintenance_schedule_missing_due()}</span>
+          {/if}
         </div>
       </div>
     </div>

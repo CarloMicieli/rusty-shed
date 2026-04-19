@@ -31,6 +31,7 @@ function makeEventArgs(overrides: Partial<AddMaintenanceArgs> = {}): AddMaintena
     datePerformed: '2026-03-01',
     maintenanceType: null,
     notes: null,
+    nextMaintenanceDate: null,
     ...overrides
   };
 }

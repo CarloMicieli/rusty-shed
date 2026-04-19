@@ -177,6 +177,27 @@ pub async fn update_maintenance_card_last_date(
     Ok(())
 }
 
+/// Set `next_maintenance_date` on a maintenance card and bump `updated_at`.
+pub async fn update_maintenance_card_next_date(
+    executor: &mut SqliteConnection,
+    next_maintenance_date: Option<&str>,
+    card_trn: &str,
+) -> Result<(), sqlx::Error> {
+    let sql = r#"UPDATE maintenance_cards
+        SET
+            next_maintenance_date = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?"#;
+
+    sqlx::query(sql)
+        .bind(next_maintenance_date)
+        .bind(card_trn)
+        .execute(executor)
+        .await?;
+
+    Ok(())
+}
+
 /// Insert a new row into `maintenance_cards`.
 ///
 /// Returns the raw `sqlx::Error` so the caller can inspect UNIQUE constraint violations

@@ -94,6 +94,9 @@
           value={query}
           oninput={(e) => handleSearch((e.target as HTMLInputElement).value)}
         />
+        <p class="text-xs leading-relaxed text-muted-foreground">
+          {m.collection_search_hint()}
+        </p>
       </div>
 
       <!-- Scales -->

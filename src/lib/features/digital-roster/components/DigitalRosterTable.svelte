@@ -83,6 +83,9 @@
           <span>Filter</span>
         </Button>
       </div>
+      <p class="mt-2 px-1 text-xs leading-relaxed text-muted-foreground">
+        {m.digital_roster_filter_hint()}
+      </p>
     </div>
   {/if}
 

@@ -121,6 +121,11 @@ impl MaintenanceCard {
         self.pending_events.push(evt);
     }
 
+    /// Update the scheduled next maintenance date for this card.
+    pub fn schedule_next_maintenance(&mut self, next_maintenance_date: NaiveDate) {
+        self.next_maintenance_date = Some(next_maintenance_date);
+    }
+
     /// Take pending events and clear the list.
     pub fn take_events(&mut self) -> Vec<MaintenanceCardEvent> {
         std::mem::take(&mut self.pending_events)

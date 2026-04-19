@@ -47,7 +47,8 @@
         maintenanceCardId: selectedCardId,
         datePerformed,
         maintenanceType,
-        notes: notes.trim() || null
+        notes: notes.trim() || null,
+        nextMaintenanceDate: null
       });
 
       toaster.success({

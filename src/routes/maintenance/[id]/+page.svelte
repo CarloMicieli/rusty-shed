@@ -122,7 +122,9 @@
         <div class="flex items-center gap-3">
           <Button variant="default" size="sm" onclick={() => (showAddEventModal = true)}>
             <CalendarPlus class="mr-2 h-4 w-4" />
-            {m.maintenance_add_event_button()}
+            {card.nextMaintenanceDate
+              ? m.maintenance_add_event_button()
+              : m.maintenance_schedule_set_due_date()}
           </Button>
         </div>
       </div>
@@ -170,6 +172,25 @@
         'text-primary'
       )}
     </div>
+
+    {#if !card.nextMaintenanceDate}
+      <div
+        class="flex flex-col gap-3 rounded-sm border border-amber-500/30 bg-amber-500/8 p-4 md:flex-row md:items-center md:justify-between"
+      >
+        <div class="space-y-1">
+          <p class="text-sm font-semibold text-amber-300">
+            {m.maintenance_schedule_missing_due()}
+          </p>
+          <p class="text-sm text-muted-foreground">
+            {m.maintenance_schedule_missing_due_hint()}
+          </p>
+        </div>
+        <Button variant="outline" onclick={() => (showAddEventModal = true)}>
+          <CalendarPlus class="mr-2 h-4 w-4" />
+          {m.maintenance_schedule_set_due_date()}
+        </Button>
+      </div>
+    {/if}
 
     <!-- Event Timeline -->
     <div class="space-y-4">
