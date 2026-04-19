@@ -123,6 +123,10 @@ export class BudgetState {
     return this.#service.monthlyRecords.length > 0;
   }
 
+  hasWarmFinanceState(year: number): boolean {
+    return this.#service.hasWarmFinanceState(year);
+  }
+
   // ───────────────────────────────────────────────────────────
   // DERIVED CALCULATIONS (Financial)
   // ───────────────────────────────────────────────────────────

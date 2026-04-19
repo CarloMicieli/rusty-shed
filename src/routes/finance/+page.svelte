@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { browser } from '$app/environment';
   import { onMount } from 'svelte';
   import { CalendarDays, Gauge, TrendingUp, Wallet } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog';
   import * as m from '$lib/paraglide/messages.js';
 
-  import { Card, CardContent, CardHeader, EmptyState, PageHeader } from '$lib/components';
+  import { Card, CardContent, CardHeader, EmptyState, PageHeader, Skeleton } from '$lib/components';
 
   import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
   import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
@@ -13,17 +14,9 @@
   import ExtraBudgetModal from '$lib/features/budget/components/ExtraBudgetModal.svelte';
   import FinanceSettingsButton from '$lib/features/budget/components/FinanceSettingsButton.svelte';
 
-  const service = createBudgetService();
-  const budgetState = createBudgetState(service);
   const SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
   const gaugeRadius = 48;
   const gaugeCircumference = 2 * Math.PI * gaugeRadius;
-
-  let selectedYear = $state(new Date().getFullYear());
-  let configSheetOpen = $state(false);
-  let extraBudgetDialogOpen = $state(false);
-  let selectedExtraBudget = $state<{ year: number; month: number } | null>(null);
-  let initialized = $state(false);
 
   const monthNames = [
     'January',
@@ -44,6 +37,31 @@
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  function getInitialSelectedYear(): number {
+    if (!browser) {
+      return currentYear;
+    }
+
+    try {
+      const storedYear = window.localStorage.getItem(SELECTED_YEAR_STORAGE_KEY);
+      const parsedYear = Number(storedYear);
+      return yearOptions.includes(parsedYear) ? parsedYear : currentYear;
+    } catch (error) {
+      console.warn('[finance] Failed to read selected year', error);
+      return currentYear;
+    }
+  }
+
+  const service = createBudgetService();
+  const budgetState = createBudgetState(service);
+  const initialSelectedYear = getInitialSelectedYear();
+
+  let selectedYear = $state(initialSelectedYear);
+  let configSheetOpen = $state(false);
+  let extraBudgetDialogOpen = $state(false);
+  let selectedExtraBudget = $state<{ year: number; month: number } | null>(null);
+  let initialized = $state(budgetState.hasWarmFinanceState(initialSelectedYear));
 
   const financialSummary = $derived.by(() => {
     const dashboardSummary = budgetState.dashboardSummary;
@@ -75,12 +93,6 @@
 
   onMount(async () => {
     try {
-      const storedYear = window.localStorage.getItem(SELECTED_YEAR_STORAGE_KEY);
-      const parsedYear = Number(storedYear);
-      if (yearOptions.includes(parsedYear)) {
-        selectedYear = parsedYear;
-      }
-
       await budgetState.loadBootstrap(selectedYear);
     } catch (error) {
       console.error('[finance] Failed to initialize budget page', error);
@@ -222,6 +234,115 @@
   </Card>
 {/snippet}
 
+{#snippet metricDataCardSkeleton()}
+  <Card class="variant-steampunk-riveted rounded-sm border border-border bg-card">
+    <CardContent class="flex h-full flex-col gap-6 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 space-y-2">
+          <Skeleton class="h-4 w-28 rounded-sm" />
+          <Skeleton class="h-8 w-32 rounded-sm" />
+        </div>
+        <Skeleton class="h-10 w-10 rounded-sm" />
+      </div>
+
+      <div class="rounded-sm border border-border bg-background/50 p-3">
+        <Skeleton class="h-3 w-24 rounded-sm" />
+        <Skeleton class="mt-2 h-4 w-32 rounded-sm" />
+      </div>
+    </CardContent>
+  </Card>
+{/snippet}
+
+{#snippet remainingGaugeCardSkeleton()}
+  <Card class="variant-steampunk-riveted rounded-sm border border-border bg-card">
+    <CardContent class="flex h-full flex-col gap-6 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 space-y-2">
+          <Skeleton class="h-4 w-32 rounded-sm" />
+          <Skeleton class="h-3 w-24 rounded-sm" />
+        </div>
+        <Skeleton class="h-10 w-10 rounded-sm" />
+      </div>
+
+      <div class="flex items-center gap-4">
+        <Skeleton class="h-32 w-32 rounded-full" />
+
+        <div class="min-w-0 flex-1 rounded-sm border border-border bg-background/50 p-3">
+          <Skeleton class="h-3 w-28 rounded-sm" />
+          <Skeleton class="mt-2 h-4 w-32 rounded-sm" />
+          <Skeleton class="mt-4 h-3 w-24 rounded-sm" />
+          <Skeleton class="mt-2 h-4 w-28 rounded-sm" />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+{/snippet}
+
+{#snippet financeTableSkeleton()}
+  <Card class="variant-steampunk-riveted rounded-sm border border-border bg-card">
+    <CardHeader class="border-b border-border/50 pb-4">
+      <div class="flex items-center justify-between gap-4">
+        <div class="space-y-2">
+          <Skeleton class="h-4 w-32 rounded-sm" />
+          <Skeleton class="h-3 w-48 rounded-sm" />
+        </div>
+        <Skeleton class="h-10 w-28 rounded-sm" />
+      </div>
+    </CardHeader>
+
+    <CardContent class="p-0">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-left">
+          <thead>
+            <tr
+              class="border-b border-border bg-card/30 text-[9px] font-bold tracking-widest text-muted-foreground uppercase"
+            >
+              <th class="px-4 py-3">Month</th>
+              <th class="px-4 py-3 text-right">Base</th>
+              <th class="px-4 py-3 text-right">Extra</th>
+              <th class="px-4 py-3 text-right">Available</th>
+              <th class="px-4 py-3 text-right">Spent</th>
+              <th class="px-4 py-3 text-right">Remaining</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each monthNames as monthName (monthName)}
+              <tr class="border-b border-border/40">
+                <td class="px-4 py-3">
+                  <Skeleton class="h-4 w-20 rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="ml-auto h-4 w-16 rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="ml-auto h-4 w-14 rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="ml-auto h-4 w-[4.5rem] rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="ml-auto h-4 w-16 rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="ml-auto h-4 w-[4.5rem] rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="h-6 w-20 rounded-sm" />
+                </td>
+                <td class="px-4 py-3">
+                  <Skeleton class="ml-auto h-8 w-8 rounded-sm" />
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </CardContent>
+  </Card>
+{/snippet}
+
 <div class="flex flex-col">
   <div
     class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
@@ -238,14 +359,15 @@
   </div>
 
   <div class="space-y-6">
-    {#if !initialized || budgetState.isLoading}
-      <div class="flex flex-col items-center justify-center gap-4 py-24">
-        <div
-          class="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary"
-        ></div>
-        <p class="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-          {m.budget_loading()}
-        </p>
+    {#if !initialized}
+      <div class="space-y-6" aria-busy="true" aria-label={m.budget_loading()}>
+        <div class="grid gap-4 lg:grid-cols-3">
+          {@render metricDataCardSkeleton()}
+          {@render metricDataCardSkeleton()}
+          {@render remainingGaugeCardSkeleton()}
+        </div>
+
+        {@render financeTableSkeleton()}
       </div>
     {:else if budgetState.hasConfig}
       <div

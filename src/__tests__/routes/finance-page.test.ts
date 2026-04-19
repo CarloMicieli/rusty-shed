@@ -36,6 +36,7 @@ const { mockBudgetState, mockBudgetService } = vi.hoisted(() => ({
     },
     monthlyRecords: [] as unknown[],
     enhancedMonthlyRecords: [] as unknown[],
+    hasWarmFinanceState: vi.fn(() => false),
     loadBootstrap: vi.fn().mockResolvedValue(undefined),
     load: vi.fn().mockResolvedValue(undefined),
     loadDashboard: vi.fn().mockResolvedValue(undefined),
@@ -98,6 +99,7 @@ describe('routes/finance/+page.svelte', () => {
     };
     mockBudgetState.monthlyRecords = [];
     mockBudgetState.enhancedMonthlyRecords = [];
+    mockBudgetState.hasWarmFinanceState = vi.fn(() => false);
     mockBudgetState.loadBootstrap = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.load = vi.fn().mockResolvedValue(undefined);
     mockBudgetState.loadDashboard = vi.fn().mockResolvedValue(undefined);
@@ -111,17 +113,15 @@ describe('routes/finance/+page.svelte', () => {
     expect(() => render(FinancePage)).not.toThrow();
   });
 
-  it('shows a loading spinner when isLoading is true', () => {
-    mockBudgetState.isLoading = true;
+  it('shows the Finance skeleton shell before initialization completes', () => {
     const { container } = render(FinancePage);
-    const spinner = container.querySelector('.animate-spin');
-    expect(spinner).not.toBeNull();
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
   });
 
-  it('shows loading message text when isLoading', () => {
-    mockBudgetState.isLoading = true;
+  it('exposes the loading label during the skeleton state', () => {
     render(FinancePage);
-    expect(screen.getByText('budget_loading')).toBeInTheDocument();
+    expect(screen.getByLabelText('budget_loading')).toBeInTheDocument();
   });
 
   it('shows "budget_empty_state_title" and message when hasConfig is false', () => {

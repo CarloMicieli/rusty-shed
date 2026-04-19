@@ -9,6 +9,307 @@ use crate::core::domain::calendar::Year;
 use crate::core::domain::domain_error::DomainError;
 use chrono::Datelike;
 
+async fn get_budget_config<U>(uow: &mut U) -> Result<Option<BudgetConfiguration>, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
+    let mut repo = uow.budget_repo();
+    repo.get_config().await
+}
+
+async fn get_monthly_spending_totals<U>(
+    uow: &mut U,
+    year: i32,
+    currency_code: &str,
+) -> Result<[i64; 12], DomainError>
+where
+    U: BudgetUowExt + Send,
+{
+    let monthly_spending = {
+        let mut repo = uow.budget_repo();
+        repo.get_monthly_spending(year, currency_code)
+            .await
+            .map_err(DomainError::Infrastructure)?
+    };
+
+    let mut spending_totals = [0i64; 12];
+    for (month, amount) in monthly_spending {
+        if let Some(total) = spending_totals.get_mut((month.saturating_sub(1)) as usize) {
+            *total = amount;
+        }
+    }
+
+    Ok(spending_totals)
+}
+
+async fn get_extra_budget_totals<U>(uow: &mut U, year: i32) -> Result<[i64; 12], DomainError>
+where
+    U: BudgetUowExt + Send,
+{
+    let extra_budgets = {
+        let mut repo = uow.budget_repo();
+        repo.get_extra_budgets(year).await?
+    };
+
+    let mut extra_totals = [0i64; 12];
+    for extra in extra_budgets {
+        let month_index = (extra.month.value().saturating_sub(1)) as usize;
+        if let Some(total) = extra_totals.get_mut(month_index) {
+            *total += extra.amount.amount;
+        }
+    }
+
+    Ok(extra_totals)
+}
+
+fn build_monthly_budget_records(
+    year: Year,
+    config: &BudgetConfiguration,
+    monthly_spending: [i64; 12],
+    extra_totals: [i64; 12],
+) -> Vec<MonthlyBudgetRecord> {
+    let current_year = chrono::Utc::now().year();
+    let current_month = chrono::Utc::now().month() as u8;
+    let base_monthly = config.monthly_amount();
+    let mut records = Vec::with_capacity(12);
+    let mut rollover = 0;
+
+    for month in 1..=12 {
+        let index = (month - 1) as usize;
+        let actual_spend = monthly_spending[index];
+        let extra = extra_totals[index];
+
+        let status = if year.value() > current_year
+            || (year.value() == current_year && month > current_month)
+        {
+            MonthStatus::Projected
+        } else if year.value() == current_year && month == current_month {
+            MonthStatus::InProgress
+        } else {
+            MonthStatus::Completed
+        };
+
+        let available = base_monthly + extra + rollover;
+        let remaining = available - actual_spend;
+        let rollover_out = if remaining > 0 { remaining } else { 0 };
+
+        records.push(MonthlyBudgetRecord {
+            year: year.value(),
+            month,
+            base_budget: base_monthly,
+            extra_budget: extra,
+            actual_spend,
+            rollover_in: rollover,
+            rollover_out,
+            status,
+            currency: config.base_amount.currency,
+        });
+
+        rollover = rollover_out;
+    }
+
+    records
+}
+
+async fn get_monthly_budget_records_for_config<U>(
+    uow: &mut U,
+    year: Year,
+    config: &BudgetConfiguration,
+) -> Result<Vec<MonthlyBudgetRecord>, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
+    let monthly_spending =
+        get_monthly_spending_totals(uow, year.value(), config.base_amount.currency.to_code())
+            .await?;
+    let extra_totals = get_extra_budget_totals(uow, year.value()).await?;
+
+    Ok(build_monthly_budget_records(
+        year,
+        config,
+        monthly_spending,
+        extra_totals,
+    ))
+}
+
+fn resolve_dashboard_currency<'a>(
+    config: Option<&BudgetConfiguration>,
+    user_currency: &'a str,
+) -> (crate::core::domain::currency::Currency, &'a str) {
+    let currency_code = config
+        .map(|c| c.base_amount.currency.to_code())
+        .unwrap_or(user_currency);
+
+    let currency = config.map(|c| c.base_amount.currency).unwrap_or_else(|| {
+        use crate::core::domain::currency::Currency;
+        Currency::from_code(user_currency).unwrap_or(Currency::EUR)
+    });
+
+    (currency, currency_code)
+}
+
+fn build_monthly_spending_points(
+    currency: crate::core::domain::currency::Currency,
+    current_year: i32,
+    all_spending: &[(i32, i32, i64)],
+    current_year_records: Option<&[MonthlyBudgetRecord]>,
+) -> Vec<MonthlySpendingPoint> {
+    let mut monthly_totals = [0i64; 12];
+
+    if let Some(records) = current_year_records {
+        for record in records {
+            monthly_totals[(record.month - 1) as usize] = record.actual_spend;
+        }
+    } else {
+        for &(year, month, amount) in all_spending {
+            if year != current_year {
+                continue;
+            }
+
+            if let Some(total) = monthly_totals.get_mut((month.saturating_sub(1)) as usize) {
+                *total = amount;
+            }
+        }
+    }
+
+    monthly_totals
+        .into_iter()
+        .enumerate()
+        .map(|(index, amount)| MonthlySpendingPoint {
+            month: (index + 1) as u8,
+            amount,
+            currency,
+        })
+        .collect()
+}
+
+fn build_quarterly_activity_points(
+    start_year: i32,
+    current_year: i32,
+    all_spending: &[(i32, i32, i64)],
+) -> Vec<QuarterlyActivityPoint> {
+    let year_count = (current_year - start_year + 1) as usize;
+    let mut quarter_totals = vec![[0i64; 4]; year_count];
+
+    for &(year, month, amount) in all_spending {
+        if !(start_year..=current_year).contains(&year) {
+            continue;
+        }
+
+        let year_index = (year - start_year) as usize;
+        let quarter_index = (BudgetQuarter::from_month(month as u8).number() - 1) as usize;
+        quarter_totals[year_index][quarter_index] += amount;
+    }
+
+    let mut quarterly_activity = Vec::with_capacity(year_count * 4);
+    for (year_index, totals) in quarter_totals.into_iter().enumerate() {
+        let year = start_year + year_index as i32;
+        let max_quarter = totals.iter().copied().max().unwrap_or(0);
+
+        for (quarter_index, total) in totals.into_iter().enumerate() {
+            let percentage = if max_quarter > 0 {
+                (total as f64 / max_quarter as f64) * 100.0
+            } else {
+                0.0
+            };
+
+            quarterly_activity.push(QuarterlyActivityPoint {
+                year,
+                quarter: match quarter_index {
+                    0 => BudgetQuarter::Q1,
+                    1 => BudgetQuarter::Q2,
+                    2 => BudgetQuarter::Q3,
+                    _ => BudgetQuarter::Q4,
+                },
+                spending_level: SpendingLevel::from_percentage(percentage),
+                amount: total,
+            });
+        }
+    }
+
+    quarterly_activity
+}
+
+async fn get_budget_dashboard_with_context<U>(
+    uow: &mut U,
+    user_currency: &str,
+    config: Option<&BudgetConfiguration>,
+    current_year_records: Option<&[MonthlyBudgetRecord]>,
+) -> Result<BudgetDashboardSummary, DomainError>
+where
+    U: BudgetUowExt + Send,
+{
+    let now = chrono::Utc::now();
+    let current_year = now.year();
+    let current_month = now.month() as u8;
+    let (currency, currency_code) = resolve_dashboard_currency(config, user_currency);
+
+    let start_year = current_year - 4;
+    let all_spending = {
+        let mut repo = uow.budget_repo();
+        repo.get_multi_year_monthly_spending(start_year, current_year, currency_code)
+            .await
+            .map_err(DomainError::Infrastructure)?
+    };
+
+    let owned_current_year_records = if current_year_records.is_none() {
+        match config {
+            Some(config) => Some(
+                get_monthly_budget_records_for_config(
+                    uow,
+                    Year::try_from(current_year)
+                        .map_err(|e| DomainError::Validation(e.to_string()))?,
+                    config,
+                )
+                .await?,
+            ),
+            None => None,
+        }
+    } else {
+        None
+    };
+
+    let current_year_records = current_year_records.or(owned_current_year_records.as_deref());
+
+    let (remaining_amount, remaining_percentage, total_available, monthly_goal) =
+        if let (Some(config), Some(records)) = (config, current_year_records) {
+            let current_record = records
+                .iter()
+                .find(|record| record.month == current_month)
+                .ok_or_else(|| {
+                    DomainError::BusinessRule("Current month record not found".to_string())
+                })?;
+
+            (
+                Some(current_record.remaining()),
+                Some(current_record.remaining_percentage()),
+                Some(current_record.available()),
+                Some(config.monthly_amount()),
+            )
+        } else {
+            (None, None, None, None)
+        };
+
+    Ok(BudgetDashboardSummary {
+        remaining_amount,
+        remaining_percentage,
+        total_available,
+        currency,
+        monthly_spending: build_monthly_spending_points(
+            currency,
+            current_year,
+            &all_spending,
+            current_year_records,
+        ),
+        monthly_goal,
+        quarterly_activity: build_quarterly_activity_points(
+            start_year,
+            current_year,
+            &all_spending,
+        ),
+    })
+}
+
 /// Aggregate result for the Finance page bootstrap request.
 #[derive(Debug, Clone)]
 pub struct BudgetBootstrapData {
@@ -35,93 +336,11 @@ pub async fn get_monthly_budget_records<U>(
 where
     U: BudgetUowExt + Send,
 {
-    // Get budget configuration
-    let config_option = {
-        let mut repo = uow.budget_repo();
-        repo.get_config().await?
-    };
-
-    let config = config_option
+    let config = get_budget_config(uow)
+        .await?
         .ok_or_else(|| DomainError::Validation("Budget configuration not set".to_string()))?;
 
-    // Check if annual reset is needed
-    let current_year = chrono::Utc::now().year();
-    let _needs_reset = current_year > config.last_reset_year;
-
-    // Get spending data for the year
-    let monthly_spending = {
-        let mut repo = uow.budget_repo();
-        repo.get_monthly_spending(year.value(), config.base_amount.currency.to_code())
-            .await
-            .map_err(DomainError::Infrastructure)?
-    };
-
-    // Convert to a map for easier lookup
-    let mut spending_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
-    for (month, amount) in monthly_spending {
-        spending_map.insert(month as u8, amount);
-    }
-
-    // Get extra budgets for the year
-    let extra_budgets = {
-        let mut repo = uow.budget_repo();
-        repo.get_extra_budgets(year.value()).await?
-    };
-
-    // Convert to a map for easier lookup
-    let mut extra_map: std::collections::HashMap<u8, i64> = std::collections::HashMap::new();
-    for extra in extra_budgets {
-        *extra_map.entry(extra.month.value()).or_insert(0) += extra.amount.amount;
-    }
-
-    // Calculate monthly records with rollover chain
-    let base_monthly = config.monthly_amount();
-    let mut records = Vec::with_capacity(12);
-    // For now, always start with 0 rollover
-    // TODO: In the future, can carry over from previous year for historical data
-    let mut rollover = 0;
-
-    let now = chrono::Utc::now();
-    let current_month = now.month() as u8;
-
-    for month in 1..=12 {
-        let actual_spend = spending_map.get(&month).copied().unwrap_or(0);
-        let extra = extra_map.get(&month).copied().unwrap_or(0);
-
-        // Determine month status
-        let status = if year.value() > current_year
-            || (year.value() == current_year && month > current_month)
-        {
-            MonthStatus::Projected
-        } else if year.value() == current_year && month == current_month {
-            MonthStatus::InProgress
-        } else {
-            MonthStatus::Completed
-        };
-
-        let available = base_monthly + extra + rollover;
-        let remaining = available - actual_spend;
-
-        // Rollover only positive amounts to next month
-        let rollover_out = if remaining > 0 { remaining } else { 0 };
-
-        records.push(MonthlyBudgetRecord {
-            year: year.value(),
-            month,
-            base_budget: base_monthly,
-            extra_budget: extra,
-            actual_spend,
-            rollover_in: rollover,
-            rollover_out,
-            status,
-            currency: config.base_amount.currency,
-        });
-
-        // Set rollover for next month
-        rollover = rollover_out;
-    }
-
-    Ok(records)
+    get_monthly_budget_records_for_config(uow, year, &config).await
 }
 
 /// Get budget dashboard summary for widgets.
@@ -146,164 +365,8 @@ pub async fn get_budget_dashboard<U>(
 where
     U: BudgetUowExt + Send,
 {
-    // Get budget configuration (optional)
-    let config_option = {
-        let mut repo = uow.budget_repo();
-        repo.get_config().await?
-    };
-
-    let now = chrono::Utc::now();
-    let current_year = now.year();
-    let current_month = now.month() as u8;
-
-    // Determine currency to use
-    let currency_code = config_option
-        .as_ref()
-        .map(|c| c.base_amount.currency.to_code())
-        .unwrap_or(user_currency);
-
-    // Parse currency for the response
-    let currency = config_option
-        .as_ref()
-        .map(|c| c.base_amount.currency)
-        .unwrap_or_else(|| {
-            // Try to parse user currency, fallback to EUR if invalid
-            use crate::core::domain::currency::Currency;
-            Currency::from_code(user_currency).unwrap_or(Currency::EUR)
-        });
-
-    // Fetch all multi-year spending data in ONE query (covers bar chart + heatmap).
-    // The heatmap spans the last 5 years; remaining budget uses the rollover chain which
-    // calls get_monthly_spending internally, so for the budget case we reuse the records
-    // from that chain for the bar chart to avoid fetching current_year a second time.
-    let start_year = current_year - 4;
-    let all_spending = {
-        let mut repo = uow.budget_repo();
-        repo.get_multi_year_monthly_spending(start_year, current_year, currency_code)
-            .await
-            .map_err(DomainError::Infrastructure)?
-    };
-
-    // Get budget-specific data if budget is configured.
-    // monthly_records already contain actual_spend per month, so use them for the bar chart.
-    let (
-        remaining_amount,
-        remaining_percentage,
-        total_available,
-        monthly_goal,
-        monthly_records_opt,
-    ) = if let Some(ref config) = config_option {
-        // Get monthly records for the current year (contains rollover chain + actual spend)
-        let monthly_records = get_monthly_budget_records(
-            uow,
-            Year::try_from(current_year).map_err(|e| DomainError::Validation(e.to_string()))?,
-        )
-        .await?;
-
-        // Find current month's record
-        let current_record = monthly_records
-            .iter()
-            .find(|r| r.month == current_month)
-            .ok_or_else(|| {
-                DomainError::BusinessRule("Current month record not found".to_string())
-            })?;
-
-        (
-            Some(current_record.remaining()),
-            Some(current_record.remaining_percentage()),
-            Some(current_record.available()),
-            Some(config.monthly_amount()),
-            Some(monthly_records),
-        )
-    } else {
-        (None, None, None, None, None)
-    };
-
-    // Build monthly spending points for bar chart (current year).
-    // When budget is configured, use the already-computed monthly records to avoid re-reading
-    // current-year data from all_spending (the rollover chain already has actual_spend).
-    let monthly_spending: Vec<MonthlySpendingPoint> = (1i32..=12)
-        .map(|month| {
-            let amount = if let Some(ref records) = monthly_records_opt {
-                records
-                    .iter()
-                    .find(|r| r.month as i32 == month)
-                    .map(|r| r.actual_spend)
-                    .unwrap_or(0)
-            } else {
-                all_spending
-                    .iter()
-                    .find(|(y, m, _)| *y == current_year && *m == month)
-                    .map(|(_, _, amt)| *amt)
-                    .unwrap_or(0)
-            };
-
-            MonthlySpendingPoint {
-                month: month as u8,
-                amount,
-                currency,
-            }
-        })
-        .collect();
-
-    // Build quarterly activity for heatmap (last 5 years) from in-memory data — no extra queries.
-    let mut quarterly_activity = Vec::new();
-
-    for year in start_year..=current_year {
-        let mut q1_total = 0i64;
-        let mut q2_total = 0i64;
-        let mut q3_total = 0i64;
-        let mut q4_total = 0i64;
-
-        for &(y, month, amount) in &all_spending {
-            if y != year {
-                continue;
-            }
-            match BudgetQuarter::from_month(month as u8) {
-                BudgetQuarter::Q1 => q1_total += amount,
-                BudgetQuarter::Q2 => q2_total += amount,
-                BudgetQuarter::Q3 => q3_total += amount,
-                BudgetQuarter::Q4 => q4_total += amount,
-            }
-        }
-
-        // Calculate max spending for the year to determine levels
-        let max_quarter = [q1_total, q2_total, q3_total, q4_total]
-            .iter()
-            .max()
-            .copied()
-            .unwrap_or(0);
-
-        for (quarter, total) in [
-            (BudgetQuarter::Q1, q1_total),
-            (BudgetQuarter::Q2, q2_total),
-            (BudgetQuarter::Q3, q3_total),
-            (BudgetQuarter::Q4, q4_total),
-        ] {
-            let percentage = if max_quarter > 0 {
-                (total as f64 / max_quarter as f64) * 100.0
-            } else {
-                0.0
-            };
-
-            quarterly_activity.push(QuarterlyActivityPoint {
-                year,
-                quarter,
-                spending_level: SpendingLevel::from_percentage(percentage),
-                amount: total,
-            });
-        }
-    }
-
-    Ok(BudgetDashboardSummary {
-        remaining_amount,
-        remaining_percentage,
-        total_available,
-        currency,
-        monthly_spending,
-        monthly_goal,
-        quarterly_activity,
-    })
+    let config = get_budget_config(uow).await?;
+    get_budget_dashboard_with_context(uow, user_currency, config.as_ref(), None).await
 }
 
 /// Get the combined Finance page bootstrap payload.
@@ -318,17 +381,26 @@ pub async fn get_budget_bootstrap<U>(
 where
     U: BudgetUowExt + Send,
 {
-    let config = {
-        let mut repo = uow.budget_repo();
-        repo.get_config().await?
-    };
+    let config = get_budget_config(uow).await?;
+    let current_year = chrono::Utc::now().year();
 
-    let dashboard_summary = get_budget_dashboard(uow, user_currency).await?;
-    let monthly_records = if config.is_some() {
-        Some(get_monthly_budget_records(uow, year).await?)
+    let monthly_records = if let Some(config) = config.as_ref() {
+        Some(get_monthly_budget_records_for_config(uow, year, config).await?)
     } else {
         None
     };
+
+    let dashboard_summary = get_budget_dashboard_with_context(
+        uow,
+        user_currency,
+        config.as_ref(),
+        if year.value() == current_year {
+            monthly_records.as_deref()
+        } else {
+            None
+        },
+    )
+    .await?;
 
     Ok(BudgetBootstrapData {
         config,
@@ -506,66 +578,31 @@ mod tests {
             .once()
             .returning(move || Ok(Some(config.clone())));
 
-        let mut mock_dashboard_config = MockBudgetRepository::new();
-        mock_dashboard_config
-            .expect_get_config()
-            .once()
-            .returning(move || Ok(Some(sample_budget_config())));
-
         let mut mock_dashboard_spending = MockBudgetRepository::new();
         mock_dashboard_spending
             .expect_get_multi_year_monthly_spending()
             .once()
             .returning(|_, _, _| Ok(vec![]));
 
-        let mut mock_dashboard_monthly_config = MockBudgetRepository::new();
-        mock_dashboard_monthly_config
-            .expect_get_config()
-            .once()
-            .returning(move || Ok(Some(sample_budget_config())));
-
-        let mut mock_dashboard_monthly_spending = MockBudgetRepository::new();
-        mock_dashboard_monthly_spending
+        let mut mock_current_year_spending = MockBudgetRepository::new();
+        mock_current_year_spending
             .expect_get_monthly_spending()
             .once()
             .returning(|_, _| Ok(vec![]));
 
-        let mut mock_dashboard_extra = MockBudgetRepository::new();
-        mock_dashboard_extra
-            .expect_get_extra_budgets()
-            .once()
-            .returning(|_| Ok(vec![]));
-
-        let mut mock_requested_year_config = MockBudgetRepository::new();
-        mock_requested_year_config
-            .expect_get_config()
-            .once()
-            .returning(move || Ok(Some(sample_budget_config())));
-
-        let mut mock_requested_year_spending = MockBudgetRepository::new();
-        mock_requested_year_spending
-            .expect_get_monthly_spending()
-            .once()
-            .returning(|_, _| Ok(vec![]));
-
-        let mut mock_requested_year_extra = MockBudgetRepository::new();
-        mock_requested_year_extra
+        let mut mock_current_year_extra = MockBudgetRepository::new();
+        mock_current_year_extra
             .expect_get_extra_budgets()
             .once()
             .returning(|_| Ok(vec![]));
 
         let mut uow = FakeBudgetUow::new()
             .with_repo(mock_get_config)
-            .with_repo(mock_dashboard_config)
-            .with_repo(mock_dashboard_spending)
-            .with_repo(mock_dashboard_monthly_config)
-            .with_repo(mock_dashboard_monthly_spending)
-            .with_repo(mock_dashboard_extra)
-            .with_repo(mock_requested_year_config)
-            .with_repo(mock_requested_year_spending)
-            .with_repo(mock_requested_year_extra);
+            .with_repo(mock_current_year_spending)
+            .with_repo(mock_current_year_extra)
+            .with_repo(mock_dashboard_spending);
 
-        let year = Year::try_from(2025).unwrap();
+        let year = Year::try_from(chrono::Utc::now().year()).unwrap();
 
         let result = get_budget_bootstrap(&mut uow, year, "EUR")
             .await

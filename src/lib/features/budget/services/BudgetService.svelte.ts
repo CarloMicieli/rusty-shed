@@ -150,6 +150,7 @@ export interface GetQuarterlySummariesArgs {
 // CONTEXT KEY (for Dependency Injection)
 // ─────────────────────────────────────────────────────────────
 const SERVICE_KEY = Symbol('budget-service');
+let sharedBudgetService: BudgetService | null = null;
 
 // ─────────────────────────────────────────────────────────────
 // SHARED STATE (Module Level for Cross-Instance Deduplication)
@@ -179,11 +180,11 @@ async function dedupeReadRequest<T>(key: string, request: () => Promise<T>): Pro
 // ─────────────────────────────────────────────────────────────
 export class BudgetService {
   // Private reactive state
-  #config = $state<BudgetConfigDto | null>(null);
-  #monthlyRecords = $state<MonthlyBudgetRecordDto[]>([]);
-  #dashboardSummary = $state<BudgetDashboardSummary | null>(null);
-  #extraBudgets = $state<ExtraBudgetDto[]>([]);
-  #quarterlySummaries = $state<QuarterlySummary[]>([]);
+  #config = $state.raw<BudgetConfigDto | null>(null);
+  #monthlyRecords = $state.raw<MonthlyBudgetRecordDto[]>([]);
+  #dashboardSummary = $state.raw<BudgetDashboardSummary | null>(null);
+  #extraBudgets = $state.raw<ExtraBudgetDto[]>([]);
+  #quarterlySummaries = $state.raw<QuarterlySummary[]>([]);
   #isLoading = $state(false);
   #isTransitioning = $state(false);
   #yearCache = new SvelteMap<number, MonthlyBudgetRecordDto[]>();
@@ -220,6 +221,14 @@ export class BudgetService {
 
   get hasConfig(): boolean {
     return this.#config !== null;
+  }
+
+  hasWarmFinanceState(targetYear: number): boolean {
+    if (this.#dashboardSummary === null) {
+      return false;
+    }
+
+    return this.#config === null || this.#yearCache.has(targetYear);
   }
 
   #showLoadError(error: unknown, fallbackMessage: string): Error {
@@ -348,9 +357,14 @@ export class BudgetService {
    * Load the Finance page bootstrap payload in one request, with a partial-data fallback.
    */
   async loadBootstrap(year?: number): Promise<void> {
-    if (this.#isLoading || this.#isTransitioning) return;
-
     const targetYear = year ?? new SvelteDate().getFullYear();
+
+    if (this.hasWarmFinanceState(targetYear)) {
+      this.#monthlyRecords = this.#yearCache.get(targetYear) ?? [];
+      return;
+    }
+
+    if (this.#isLoading || this.#isTransitioning) return;
 
     try {
       this.#isLoading = true;
@@ -631,7 +645,7 @@ export class BudgetService {
  * Call this at the root of your feature or layout.
  */
 export function createBudgetService(): BudgetService {
-  const service = new BudgetService();
+  const service = sharedBudgetService ?? (sharedBudgetService = new BudgetService());
   setContext(SERVICE_KEY, service);
   return service;
 }
