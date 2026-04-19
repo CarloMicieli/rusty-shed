@@ -112,6 +112,20 @@ vi.mock('$lib/features/dashboard/DashboardState.svelte', () => ({
   getDashboardContext: vi.fn(() => ({}))
 }));
 
+const mockBudgetState = {
+  loadBootstrap: vi.fn().mockResolvedValue(undefined)
+};
+
+vi.mock('$lib/features/budget/services/BudgetService.svelte', () => ({
+  createBudgetService: vi.fn(() => ({})),
+  getBudgetService: vi.fn(() => ({}))
+}));
+
+vi.mock('$lib/features/budget/BudgetState.svelte', () => ({
+  createBudgetState: vi.fn(() => mockBudgetState),
+  getBudgetState: vi.fn(() => mockBudgetState)
+}));
+
 vi.mock('$lib/features/depot/DepotState.svelte', () => ({
   createDepotState: vi.fn(() => ({})),
   setDepotContext: vi.fn(),

@@ -17,7 +17,7 @@ vi.mock('$lib/toaster', () => ({
 }));
 
 // Mutable state shared across tests
-const { mockBudgetState, mockBudgetService } = vi.hoisted(() => ({
+const { mockBudgetState } = vi.hoisted(() => ({
   mockBudgetState: {
     isLoading: false,
     hasConfig: false,
@@ -43,19 +43,11 @@ const { mockBudgetState, mockBudgetService } = vi.hoisted(() => ({
     loadMonthlyRecords: vi.fn().mockResolvedValue(undefined),
     save: vi.fn().mockResolvedValue(undefined),
     formatAmount: vi.fn((minorUnits: number) => `€${(minorUnits / 100).toFixed(2)}`)
-  },
-  mockBudgetService: {
-    isLoading: false
   }
 }));
 
-vi.mock('$lib/features/budget/services/BudgetService.svelte', () => ({
-  createBudgetService: vi.fn(() => mockBudgetService),
-  BudgetService: vi.fn(() => mockBudgetService)
-}));
-
 vi.mock('$lib/features/budget/BudgetState.svelte', () => ({
-  createBudgetState: vi.fn(() => mockBudgetState),
+  getBudgetState: vi.fn(() => mockBudgetState),
   BudgetState: vi.fn(() => mockBudgetState)
 }));
 

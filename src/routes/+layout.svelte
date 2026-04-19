@@ -26,6 +26,8 @@
     createDashboardState,
     setDashboardContext
   } from '$lib/features/dashboard/DashboardState.svelte';
+  import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
+  import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
   import { createDepotState, setDepotContext } from '$lib/features/depot/DepotState.svelte';
   import { TrackInventoryService, setTrackInventoryContext } from '$lib/features/track-inventory';
   import {
@@ -86,6 +88,8 @@
   const collectionState = createCollectionState();
   const wishlistState = createWishlistState();
   const dashboardState = createDashboardState();
+  const budgetService = createBudgetService();
+  const budgetState = createBudgetState(budgetService);
   const depotState = createDepotState();
   const trackInventoryService = new TrackInventoryService();
   const exportController = createExportController();
@@ -96,6 +100,22 @@
   setDepotContext(depotState);
   setTrackInventoryContext(trackInventoryService);
   setExportContext(exportController);
+
+  const FINANCE_SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
+
+  function getInitialFinanceYear(): number {
+    const currentYear = new Date().getFullYear();
+    const validYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+    try {
+      const storedYear = window.localStorage.getItem(FINANCE_SELECTED_YEAR_STORAGE_KEY);
+      const parsedYear = Number(storedYear);
+      return validYears.includes(parsedYear) ? parsedYear : currentYear;
+    } catch (error) {
+      log.warn(`Failed to read Finance selected year: ${String(error)}`);
+      return currentYear;
+    }
+  }
 
   let unlistenAcquisition: (() => void) | undefined;
 
@@ -154,7 +174,11 @@
       }
 
       // 5. Preload data (only if DB is ready)
-      await Promise.all([collectionStore.fetch(), wishlistState.fetchWishlists()]);
+      await Promise.all([
+        collectionStore.fetch(),
+        wishlistState.fetchWishlists(),
+        budgetState.loadBootstrap(getInitialFinanceYear())
+      ]);
     } catch (err) {
       log.error(`Startup failed: ${String(err)}`);
       // Capture the error to show in the UI

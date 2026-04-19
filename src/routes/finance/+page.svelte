@@ -7,8 +7,7 @@
 
   import { Card, CardContent, CardHeader, EmptyState, PageHeader, Skeleton } from '$lib/components';
 
-  import { createBudgetService } from '$lib/features/budget/services/BudgetService.svelte';
-  import { createBudgetState } from '$lib/features/budget/BudgetState.svelte';
+  import { getBudgetState } from '$lib/features/budget/BudgetState.svelte';
   import BudgetConfigSheet from '$lib/features/budget/components/BudgetConfigSheet.svelte';
   import BudgetMonthRow from '$lib/features/budget/components/BudgetMonthRow.svelte';
   import ExtraBudgetModal from '$lib/features/budget/components/ExtraBudgetModal.svelte';
@@ -53,8 +52,7 @@
     }
   }
 
-  const service = createBudgetService();
-  const budgetState = createBudgetState(service);
+  const budgetState = getBudgetState();
   const initialSelectedYear = getInitialSelectedYear();
 
   let selectedYear = $state(initialSelectedYear);
