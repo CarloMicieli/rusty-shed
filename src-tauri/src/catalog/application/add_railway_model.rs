@@ -11,8 +11,9 @@ use crate::catalog::domain::railway_model::{
     RailwayModel, RailwayModelEvent, RailwayModelParams, RollingStockParams,
 };
 use crate::catalog::domain::scale::Scale;
-use crate::core::domain::{Language, domain_error::DomainError, validation::ValidationContext};
+use crate::core::domain::{Language, domain_error::DomainError};
 use chrono::Utc;
+use garde::Validate;
 use uuid::Uuid;
 
 /// Use case for creating a new railway model.
@@ -39,31 +40,36 @@ impl AddRailwayModel {
         U: RailwayModelUowExt + Send,
     {
         let mut repository = unit_of_work.railway_model_repository();
-        let mut validation_context = ValidationContext::default();
+        input.validate(&()).map_err(DomainError::from)?;
 
-        // Collect all potential failures
-        let manufacturer_id = validation_context.collect(
-            "manufacturer_id",
-            ManufacturerId::try_from(&input.manufacturer_id),
-        );
-        let product_code =
-            validation_context.collect("product_code", ProductCode::try_from(input.product_code));
-        let power_method =
-            validation_context.collect("power_method", input.power_method.parse::<PowerMethod>());
-        let scale = validation_context.collect("scale", Scale::try_from(input.scale.as_str()));
-        let category = validation_context.collect("category", input.category.parse::<Category>());
-
+        let manufacturer_id = ManufacturerId::try_from(&input.manufacturer_id)
+            .map_err(|e| DomainError::validation_general(format!("invalid manufacturer_id: {e}")))?;
+        let product_code = ProductCode::try_from(input.product_code.as_str())
+            .map_err(|e| DomainError::validation_general(format!("invalid product_code: {e}")))?;
+        let power_method = input
+            .power_method
+            .parse::<PowerMethod>()
+            .map_err(|e| DomainError::validation_general(format!("invalid power_method: {e}")))?;
+        let scale = Scale::try_from(input.scale.as_str())
+            .map_err(|e| DomainError::validation_general(format!("invalid scale: {e}")))?;
+        let category = input
+            .category
+            .parse::<Category>()
+            .map_err(|e| DomainError::validation_general(format!("invalid category: {e}")))?;
         let delivery_date = input
             .delivery_date
             .as_ref()
-            .and_then(|s| validation_context.collect("delivery_date", DeliveryDate::parse(s)));
-
-        let availability_status = input.availability_status.as_ref().and_then(|s| {
-            validation_context.collect("availability_status", s.parse::<AvailabilityStatus>())
-        });
-
-        // Checkpoint: Stop if validation failed
-        validation_context.finish()?;
+            .map(|s| DeliveryDate::parse(s))
+            .transpose()
+            .map_err(|e| DomainError::validation_general(format!("invalid delivery_date: {e}")))?;
+        let availability_status = input
+            .availability_status
+            .as_ref()
+            .map(|s| s.parse::<AvailabilityStatus>())
+            .transpose()
+            .map_err(|e| {
+                DomainError::validation_general(format!("invalid availability_status: {e}"))
+            })?;
 
         let rolling_stocks = input
             .rolling_stocks
@@ -71,13 +77,12 @@ impl AddRailwayModel {
             .map(RollingStockParams::try_from)
             .collect::<Result<Vec<RollingStockParams>, DomainError>>()?;
 
-        // Final Assembly (Safe unwraps because ctx.finish() passed)
         let railway_model_params = RailwayModelParams {
-            manufacturer_id: manufacturer_id.unwrap(),
-            product_code: product_code.unwrap(),
-            power_method: power_method.unwrap(),
-            scale: scale.unwrap(),
-            category: category.unwrap(),
+            manufacturer_id,
+            product_code,
+            power_method,
+            scale,
+            category,
             epoch: Epoch::from(input.epoch.as_str()),
             delivery_date,
             availability_status,
@@ -146,30 +151,54 @@ impl AddRailwayModel {
 }
 
 /// Input for creating a new railway model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Validate)]
+#[garde(allow_unvalidated)]
 pub struct CreateRailwayModelInput {
     /// Manufacturer identifier as a string.
+    #[garde(
+        length(min = 1),
+        custom(crate::catalog::domain::manufacturer::validate_manufacturer_id)
+    )]
     pub manufacturer_id: String,
     /// Display name of the manufacturer.
+    #[garde(length(min = 1, max = 20))]
     pub product_code: String,
     /// Description of the railway model.
+    #[garde(length(min = 1, max = 500))]
     pub description: String,
     /// Additional details about the railway model.
     pub details: Option<String>,
     /// Power method used by the railway model.
+    #[garde(custom(crate::catalog::domain::railway_model::power_method::validate_power_method))]
     pub power_method: String,
     /// Scale of the railway model.
+    #[garde(custom(crate::catalog::domain::scale::scale::validate_scale))]
     pub scale: String,
     /// Epoch of the railway model.
+    #[garde(length(min = 1, max = 10))]
     pub epoch: String,
     /// Category of the railway model.
+    #[garde(custom(crate::catalog::domain::railway_model::category::validate_category))]
     pub category: String,
     /// Optional delivery date of the railway model.
+    #[garde(custom(validate_opt_delivery_date))]
     pub delivery_date: Option<String>,
     /// Optional availability status of the railway model.
+    #[garde(custom(
+        crate::catalog::domain::railway_model::availability_status::validate_opt_availability_status
+    ))]
     pub availability_status: Option<String>,
     /// Rolling stocks associated with the railway model.
     pub rolling_stocks: Vec<CreateRollingStockInput>,
+}
+
+fn validate_opt_delivery_date(value: &Option<String>, _: &()) -> garde::Result {
+    match value {
+        Some(v) => DeliveryDate::parse(v)
+            .map(|_| ())
+            .map_err(|_| garde::Error::new("error_invalid_delivery_date")),
+        None => Ok(()),
+    }
 }
 
 /// Input for creating a rolling stock.

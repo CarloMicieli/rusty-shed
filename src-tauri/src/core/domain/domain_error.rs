@@ -89,3 +89,90 @@ impl DomainError {
         DomainError::ValidationError(map)
     }
 }
+
+impl From<garde::Report> for DomainError {
+    fn from(report: garde::Report) -> Self {
+        let mut fields: HashMap<String, Vec<ValidationError>> = HashMap::new();
+
+        for (path, error) in report.into_inner() {
+            let raw = error.to_string();
+            let code = extract_machine_validation_code(&raw)
+                .map(Cow::Owned)
+                .unwrap_or(Cow::Borrowed("invalid"));
+
+            let message = if code.as_ref() == raw {
+                None
+            } else {
+                Some(Cow::Owned(raw))
+            };
+
+            fields
+                .entry(path.to_string())
+                .or_default()
+                .push(ValidationError {
+                    code,
+                    message,
+                    params: HashMap::new(),
+                });
+        }
+
+        DomainError::ValidationError(fields)
+    }
+}
+
+fn extract_machine_validation_code(input: &str) -> Option<String> {
+    let candidate = input.trim();
+    if candidate.starts_with("error_")
+        && candidate
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+    {
+        Some(candidate.to_string())
+    } else {
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use garde::Validate;
+
+    fn validate_magic(value: &str, _: &()) -> garde::Result {
+        if value == "ok" {
+            Ok(())
+        } else {
+            Err(garde::Error::new("error_invalid_magic"))
+        }
+    }
+
+    #[derive(Validate)]
+    struct InvalidFixture {
+        #[garde(custom(validate_magic))]
+        coded: String,
+        #[garde(length(min = 3))]
+        generic: String,
+    }
+
+    #[test]
+    fn garde_report_maps_to_structured_validation_error() {
+        let fixture = InvalidFixture {
+            coded: "bad".to_string(),
+            generic: "x".to_string(),
+        };
+
+        let report = fixture.validate().expect_err("fixture should be invalid");
+        let err = DomainError::from(report);
+
+        match err {
+            DomainError::ValidationError(map) => {
+                assert_eq!(map["coded"][0].code, "error_invalid_magic");
+                assert!(map["coded"][0].message.is_none());
+
+                assert_eq!(map["generic"][0].code, "invalid");
+                assert!(map["generic"][0].message.is_some());
+            }
+            other => panic!("expected ValidationError, got {other:?}"),
+        }
+    }
+}
