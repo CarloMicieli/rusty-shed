@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack, onDestroy } from 'svelte';
+  import { untrack, onDestroy, type Snippet } from 'svelte';
   import { Editor } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
   import { Markdown } from '@tiptap/markdown';
@@ -10,14 +10,22 @@
     value: string | null;
     editable?: boolean;
     placeholder?: string;
+    class?: string;
+    toolbar?: Snippet<[Editor | null]>;
+    footer?: Snippet;
     onSave: (value: string) => Promise<void>;
+    onEditingChange?: (isEditing: boolean) => void;
   }
 
   let {
     value,
     editable = false,
     placeholder = 'Click to add details...',
-    onSave
+    class: className = '',
+    toolbar,
+    footer,
+    onSave,
+    onEditingChange
   }: Props = $props();
 
   let isEditing = $state(false);
@@ -27,6 +35,11 @@
   let editorElement = $state<HTMLDivElement | undefined>(undefined);
   let editor = $state<Editor | null>(null);
   let isDirty = $state(false);
+
+  // Notify parent when editing state changes
+  $effect(() => {
+    onEditingChange?.(isEditing);
+  });
 
   // Sync when external prop changes (model reload) — but not on isEditing transitions
   $effect(() => {
@@ -78,7 +91,7 @@
         contentType: 'markdown',
         editorProps: {
           attributes: {
-            class: 'prose prose-invert max-w-none focus:outline-none min-h-[4rem]'
+            class: 'prose prose-invert max-w-none focus:outline-none min-h-[200px] h-full flex-1'
           }
         },
         onTransaction: () => {
@@ -106,17 +119,26 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="relative rounded-md transition-colors {editable && !isEditing
+  class="relative flex flex-col rounded-md transition-colors {className} {editable && !isEditing
     ? 'ring-border/40 hover:bg-white/5 hover:ring-1'
     : ''}"
   onclick={startEditing}
 >
   {#if isEditing}
-    <div class="rounded-md ring-1 ring-primary/40">
-      <RichTextToolbar {editor} />
-      <div class="p-3">
-        <div bind:this={editorElement}></div>
+    <div class="flex h-full flex-1 flex-col rounded-md ring-1 ring-primary/40">
+      {#if toolbar}
+        {@render toolbar(editor)}
+      {:else}
+        <RichTextToolbar {editor} />
+      {/if}
+
+      <div class="flex flex-1 overflow-auto p-3">
+        <div bind:this={editorElement} class="h-full flex-1"></div>
       </div>
+
+      {#if footer}
+        {@render footer()}
+      {/if}
     </div>
   {:else if localValue}
     <div class="prose max-w-none px-1 py-0.5 text-sm prose-invert">
@@ -129,3 +151,10 @@
     </p>
   {/if}
 </div>
+
+<style>
+  :global(.tiptap) {
+    height: 100%;
+    min-height: inherit;
+  }
+</style>

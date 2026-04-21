@@ -21,6 +21,7 @@
 
   let drawerOpen = $state(false);
   let notesExpanded = $state(false);
+  let isEditingNotes = $state(false);
 
   let pickerOpen = $state(false);
   let activeElementId = $state('');
@@ -105,18 +106,22 @@
       <!-- Accordion header — click to expand/collapse -->
       <button
         type="button"
-        class="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-white/5"
-        onclick={() => (notesExpanded = !notesExpanded)}
+        class="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors {isEditingNotes
+          ? 'cursor-default'
+          : 'hover:bg-white/5'}"
+        onclick={() => !isEditingNotes && (notesExpanded = !notesExpanded)}
       >
         <span class="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
           {m.formations_form_notes_label()}
         </span>
-        <ChevronDown
-          size={14}
-          class="text-muted-foreground transition-transform duration-300 {notesExpanded
-            ? 'rotate-180'
-            : ''}"
-        />
+        {#if !isEditingNotes}
+          <ChevronDown
+            size={14}
+            class="text-muted-foreground transition-transform duration-300 {notesExpanded
+              ? 'rotate-180'
+              : ''}"
+          />
+        {/if}
       </button>
 
       <!-- Separator -->
@@ -124,15 +129,22 @@
 
       <!-- Sliding panel: max-height animates between preview and full -->
       <div
-        class="relative overflow-hidden transition-[max-height] duration-300 ease-in-out"
-        style="max-height: {notesExpanded ? '600px' : '5.5rem'}"
+        class="relative flex flex-col transition-[max-height] duration-300 ease-in-out {notesExpanded
+          ? 'overflow-visible'
+          : 'overflow-hidden'}"
+        style="max-height: {notesExpanded ? '2000px' : '20rem'}"
       >
-        <div class="px-4 py-3">
+        <div class="flex-1 px-4 py-3">
           <RichTextEditor
             value={ctx.detail?.notes ?? null}
             editable={true}
             placeholder={m.formations_notes_placeholder()}
             onSave={saveNotes}
+            class="h-full"
+            onEditingChange={(isEditing) => {
+              isEditingNotes = isEditing;
+              if (isEditing) notesExpanded = true;
+            }}
           />
         </div>
 
