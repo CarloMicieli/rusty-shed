@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: 📂 Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 🛠️ Install system packages (Ubuntu)
         run: |
@@ -41,13 +41,11 @@ jobs:
             libwebkit2gtk-4.1-dev \
             librsvg2-dev
 
-      # 1. Install PNPM first without specific versioning constraints
       - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
-      # 2. Setup Node and let it find the pnpm store automatically
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4 # v4 is current stable
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -70,13 +68,11 @@ jobs:
       - name: 🔬 Run frontend tests
         run: pnpm test
 
-      # 3. Modern Rust Setup (The actions-rs organization is unmaintained)
       - name: 🦀 Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
 
-      # 4. Superior caching for Rust
       - name: ⚡ Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
