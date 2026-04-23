@@ -1,17 +1,7 @@
-//! Raw SQL query functions for the `maintenance` infrastructure layer.
-//!
-//! Every function accepts a `&mut sqlx::SqliteConnection` as its first argument and
-//! returns a bare `sqlx::Error` on failure.  Error mapping to [`DomainError`] is the
-//! responsibility of the calling repository layer.
-//!
-//! [`DomainError`]: crate::core::domain::domain_error::DomainError
-
 use crate::maintenance::infrastructure::entities::{
     MaintenanceCardRow, MaintenanceCardWithDisplayInfoRow, MaintenanceEventRow,
 };
 use sqlx::SqliteConnection;
-
-// ─── Queries ─────────────────────────────────────────────────────────────────
 
 /// Fetch a single [`MaintenanceCardRow`] for the given `owned_rolling_stock_id` TRN.
 ///

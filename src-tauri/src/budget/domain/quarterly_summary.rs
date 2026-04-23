@@ -1,6 +1,3 @@
-// Quarterly Summary Domain Types
-// Feature: 001-budget-tracking
-
 use super::dashboard::BudgetQuarter;
 use crate::catalog::domain::railway_model::Category;
 use crate::core::domain::monetary_amount::MonetaryAmount;

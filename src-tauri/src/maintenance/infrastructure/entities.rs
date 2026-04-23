@@ -1,9 +1,3 @@
-//! SQL row mappers for the `maintenance` module.
-//!
-//! These types mirror the columns in the SQLite tables and provide
-//! parsing helpers to convert TEXT TRNs and TEXT dates into
-//! domain types and `chrono::NaiveDate` respectively.
-
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::maintenance::domain::{MaintenanceCardId, MaintenanceEventId};
 use chrono::NaiveDate;

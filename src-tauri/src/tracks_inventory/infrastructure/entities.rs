@@ -1,9 +1,3 @@
-//! Infrastructure entities for the tracks inventory feature.
-//!
-//! This module contains SQL row representations used by the repository
-//! layer. The structs are annotated with `sqlx::FromRow` so they can be
-//! populated directly from query results.
-
 use crate::sellers::domain::seller_id::SellerId;
 use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackPurchaseId};
 use chrono::{DateTime, NaiveDate, Utc};
@@ -90,10 +84,6 @@ pub struct TrackInventoryRow {
     /// Version number for optimistic concurrency control.
     pub version: i64,
 }
-
-// ---------------------------------------------------------------------------
-// View-side row types (read models – used by query implementations only)
-// ---------------------------------------------------------------------------
 
 /// Row for the inventory list summary query (COUNT + SUM aggregates).
 #[derive(Debug, Clone, FromRow)]
@@ -205,10 +195,6 @@ pub struct TrackProductViewRow {
     /// Manufacturer name (denormalised from `manufacturers` table).
     pub manufacturer_name: String,
 }
-
-// ---------------------------------------------------------------------------
-// Intermediate projection helpers
-// ---------------------------------------------------------------------------
 
 /// Bundles the common product columns shared by item-view and purchase-view rows.
 ///

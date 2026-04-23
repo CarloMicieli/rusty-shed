@@ -1,9 +1,3 @@
-//! Pure conversion implementations for tracks inventory infrastructure.
-//!
-//! This module contains no async code and makes no database calls.
-//! It provides [`From`] and [`TryFrom`] implementations to convert raw SQL
-//! row structs (from [`super::entities`]) into domain types.
-
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::Currency;
 use crate::core::domain::domain_error::DomainError;
@@ -28,10 +22,6 @@ use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 use std::collections::HashMap;
 
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
-
 /// Converts a millimetre integer value to a [`Length`].
 ///
 /// Returns `None` if the integer cannot be represented as a `Decimal` or if
@@ -39,10 +29,6 @@ use std::collections::HashMap;
 pub fn mm_to_length(mm: i32) -> Option<Length> {
     Decimal::from_i32(mm).and_then(|d| Length::try_new(d, MeasureUnit::Millimeters).ok())
 }
-
-// ---------------------------------------------------------------------------
-// From / TryFrom implementations
-// ---------------------------------------------------------------------------
 
 impl From<TrackProductFields> for TrackProductView {
     fn from(f: TrackProductFields) -> Self {
@@ -192,10 +178,6 @@ impl From<TrackInventoryItemViewRow> for TrackInventoryItemView {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Aggregate assembly (multi-argument – not suitable for From/TryFrom)
-// ---------------------------------------------------------------------------
-
 /// Assembles a complete [`TrackInventory`] aggregate from its component rows.
 ///
 /// # Errors
@@ -273,10 +255,6 @@ pub fn assemble_inventory_view(
         purchases,
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

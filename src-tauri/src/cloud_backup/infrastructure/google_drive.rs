@@ -1,4 +1,3 @@
-/// Google Drive API client for backup operations
 use crate::cloud_backup::domain::{CloudBackupError, Result};
 use reqwest::Client;
 use serde_json::json;

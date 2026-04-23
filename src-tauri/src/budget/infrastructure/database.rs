@@ -1,6 +1,3 @@
-// Budget Database Queries
-// SQL queries for budget_config and extra_budgets tables
-
 use crate::budget::infrastructure::entities::{BudgetConfigRow, ExtraBudgetRow};
 use crate::core::domain::domain_error::DomainError;
 use sqlx::SqliteConnection;

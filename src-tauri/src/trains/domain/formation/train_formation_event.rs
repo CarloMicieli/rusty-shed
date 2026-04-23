@@ -1,9 +1,3 @@
-//! Domain events for the `TrainFormation` aggregate.
-//!
-//! Each variant represents a discrete, past-tense fact that occurred to
-//! a [`TrainFormation`]. Events are recorded in `pending_events` and
-//! drained by the repository after every successful persistence cycle.
-
 use crate::trains::domain::formation::formation_element::FormationElement;
 use serde::{Deserialize, Serialize};
 

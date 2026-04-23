@@ -1,8 +1,3 @@
-//! SQLite implementation of [`MaintenanceRepository`].
-//!
-//! All SQL is delegated to the private [`super::database`] module; this file is
-//! responsible only for orchestration, error mapping, and domain assembly.
-
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::identifiers::Identifier;
@@ -21,8 +16,6 @@ use crate::maintenance::infrastructure::database;
 use async_trait::async_trait;
 use sqlx::SqliteConnection;
 
-// ─── Repository ──────────────────────────────────────────────────────────────
-
 /// SQLite implementation of [`MaintenanceRepository`].
 pub struct SqliteMaintenanceRepository<'conn> {
     executor: &'conn mut SqliteConnection,
@@ -34,8 +27,6 @@ impl<'conn> SqliteMaintenanceRepository<'conn> {
         Self { executor }
     }
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /// Load all persisted [`MaintenanceEvent`] domain objects for a given card TRN.
 ///
@@ -85,8 +76,6 @@ fn map_event_rows_to_views(
 
     Ok(events)
 }
-
-// ─── MaintenanceRepository impl ──────────────────────────────────────────────
 
 #[async_trait]
 impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
@@ -386,16 +375,12 @@ impl<'conn> MaintenanceRepository for SqliteMaintenanceRepository<'conn> {
     }
 }
 
-// ─── UoW extension ───────────────────────────────────────────────────────────
-
 impl MaintenanceUowExt for SqliteUnitOfWork {
     fn maintenance_repository(&mut self) -> Box<dyn MaintenanceRepository + Send + '_> {
         Box::new(SqliteMaintenanceRepository::new(&mut self.tx))
             as Box<dyn MaintenanceRepository + Send + '_>
     }
 }
-
-// ─── Tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {

@@ -1,4 +1,3 @@
-/// Network connectivity checking
 use crate::cloud_backup::domain::{ConnectivityChangedEvent, ConnectivityStatus, Result};
 use chrono::Utc;
 use std::time::Duration;

@@ -4,10 +4,6 @@ use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use tracing::info;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 /// Retrieve all manufacturers from the database.
 pub async fn get_manufacturers_inner(state: &AppState) -> Result<Vec<Manufacturer>, CommandError> {
     info!("Fetching all manufacturers from the database.");

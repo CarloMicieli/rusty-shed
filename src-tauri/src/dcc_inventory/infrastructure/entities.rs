@@ -30,10 +30,6 @@ pub struct ManufacturerNameRow {
     pub name: String,
 }
 
-// ---------------------------------------------------------------------------
-// Projection row types (view-side – used by query implementations only)
-// ---------------------------------------------------------------------------
-
 /// Full projection row used by the "all digital rolling stocks" view query.
 ///
 /// This struct is `pub(crate)` so that `mappers` can convert it to the

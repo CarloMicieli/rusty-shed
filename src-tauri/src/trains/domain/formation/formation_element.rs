@@ -1,6 +1,3 @@
-//! `FormationElement` value object representing a single ordered slot
-//! in a train formation's composition.
-
 use serde::{Deserialize, Serialize};
 
 /// An ordered slot in a `TrainFormation`'s composition.

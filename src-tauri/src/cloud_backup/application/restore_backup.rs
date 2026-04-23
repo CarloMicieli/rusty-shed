@@ -1,5 +1,4 @@
 use crate::cloud_backup::application::operation_lock::{OperationType, try_acquire_lock};
-/// Use case: Restore database from Google Drive backup
 use crate::cloud_backup::domain::{
     CloudBackupError, RestoreCompleteEvent, Result, dtos::RestoreBackupArgs,
 };

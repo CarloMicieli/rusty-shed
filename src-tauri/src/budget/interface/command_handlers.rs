@@ -1,6 +1,3 @@
-// Tauri Command Handlers for Budget Feature
-// Feature: 001-budget-tracking
-
 use crate::budget::application::add_extra_budget::{AddExtraBudgetInput, AddExtraBudgetUseCase};
 use crate::budget::application::budget_query;
 use crate::budget::application::historical_query;

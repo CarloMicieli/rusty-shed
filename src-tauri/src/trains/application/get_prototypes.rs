@@ -1,5 +1,3 @@
-//! Use case: search prototypes, optionally grouped by company.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{PrototypeGroupView, TrainsUowExt};
 

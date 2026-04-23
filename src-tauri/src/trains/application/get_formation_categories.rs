@@ -1,5 +1,3 @@
-//! Use case: list all formation categories.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{FormationCategoryView, TrainsUowExt};
 

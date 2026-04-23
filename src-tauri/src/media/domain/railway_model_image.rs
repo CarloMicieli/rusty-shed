@@ -1,7 +1,3 @@
-//! Railway Model Image Entity
-//!
-//! Domain entity representing an image associated with a railway model.
-
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::media::domain::ImageError;
 use std::path::{Path, PathBuf};

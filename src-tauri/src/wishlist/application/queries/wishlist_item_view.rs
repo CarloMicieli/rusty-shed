@@ -1,8 +1,3 @@
-//! View model for wishlist items used by application queries.
-//!
-//! This module exposes `WishlistItemView` — a serializable representation of a
-//! wishlist item tailored for the interface layer.
-
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::domain::MonetaryAmount;
 use crate::wishlist::domain::wishlist_item_id::WishlistItemId;

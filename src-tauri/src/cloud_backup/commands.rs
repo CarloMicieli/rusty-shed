@@ -1,7 +1,3 @@
-/// Cloud backup Tauri command handlers
-///
-/// These commands provide the IPC interface between the frontend
-/// and the cloud backup backend functionality.
 use crate::cloud_backup::application;
 use crate::cloud_backup::domain::*;
 use crate::cloud_backup::infrastructure::secure_storage::SecureStorage;

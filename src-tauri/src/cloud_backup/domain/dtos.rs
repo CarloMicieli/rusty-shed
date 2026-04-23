@@ -1,4 +1,3 @@
-/// Data Transfer Objects for cloud backup commands
 use garde::Validate;
 use serde::{Deserialize, Serialize};
 

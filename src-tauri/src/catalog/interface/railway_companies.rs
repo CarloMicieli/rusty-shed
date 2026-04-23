@@ -4,10 +4,6 @@ use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use tracing::info;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 /// Retrieve all railway companies from the database.
 pub async fn get_railway_companies_inner(
     state: &AppState,

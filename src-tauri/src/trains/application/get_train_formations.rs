@@ -1,5 +1,3 @@
-//! Use case: list all train formations as summaries.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{TrainFormationSummary, TrainsUowExt};
 

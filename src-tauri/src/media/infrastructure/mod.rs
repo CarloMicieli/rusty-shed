@@ -1,7 +1,3 @@
-//! Infrastructure Layer
-//!
-//! Contains implementations for external services, file I/O, and data access.
-
 pub mod file_storage;
 pub mod image_repository;
 pub mod placeholder_generator;

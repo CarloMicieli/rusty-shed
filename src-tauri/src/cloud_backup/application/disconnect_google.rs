@@ -1,4 +1,3 @@
-/// Disconnect Google account use case
 use crate::cloud_backup::domain::CloudBackupError;
 use crate::cloud_backup::infrastructure::OAuthService;
 use std::sync::Arc;

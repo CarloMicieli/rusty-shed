@@ -1,9 +1,5 @@
 use crate::state::AppState;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 pub fn is_db_initialized_inner(state: &AppState) -> bool {
     state.is_initialized()
 }
@@ -11,10 +7,6 @@ pub fn is_db_initialized_inner(state: &AppState) -> bool {
 pub fn get_app_version_inner() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
-
-// ---------------------------------------------------------------------------
-// Tauri command wrappers – thin shims that delegate to inner functions
-// ---------------------------------------------------------------------------
 
 #[tauri::command]
 #[specta::specta]

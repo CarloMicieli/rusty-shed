@@ -4,10 +4,6 @@ use crate::dcc_inventory::infrastructure::entities::{
     DecoderRow, DigitalRollingStockRow, EnrichedRow, InstallableRow, SummaryRow,
 };
 
-// ---------------------------------------------------------------------------
-// Raw SQL functions
-// ---------------------------------------------------------------------------
-
 /// Fetch a single `digital_rolling_stocks` row by primary key.
 ///
 /// Returns `Ok(None)` when no row matches.

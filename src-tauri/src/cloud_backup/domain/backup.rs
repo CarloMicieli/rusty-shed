@@ -1,4 +1,3 @@
-/// CloudBackup entity and related types
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

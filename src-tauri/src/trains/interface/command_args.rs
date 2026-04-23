@@ -1,14 +1,5 @@
-//! Input argument structs for the train-formations Tauri commands.
-//!
-//! All structs:
-//! - derive `garde::Validate` for boundary validation
-//! - derive `specta::Type` so tauri-specta generates TypeScript bindings
-//! - derive `serde::Deserialize` for Tauri deserialization
-
 use crate::core::domain::calendar::Year;
 use garde::Validate;
-
-// ── Shared validation helpers ─────────────────────────────────────────────────
 
 /// Valid `specification_type` discriminator values.
 const VALID_SPECIFICATION_TYPES: &[&str] = &[
@@ -29,8 +20,6 @@ fn validate_specification_type(value: &str, _ctx: &()) -> garde::Result {
         )))
     }
 }
-
-// ── Formation CRUD ────────────────────────────────────────────────────────────
 
 /// Arguments for `create_train_formation`.
 #[derive(Debug, Clone, serde::Deserialize, specta::Type, Validate)]
@@ -78,8 +67,6 @@ pub struct UpdateTrainFormationArgs {
     pub notes: Option<String>,
 }
 
-// ── Composition CRUD ──────────────────────────────────────────────────────────
-
 /// Arguments for `add_formation_element`.
 #[derive(Debug, Clone, serde::Deserialize, specta::Type, Validate)]
 pub struct AddFormationElementArgs {
@@ -113,8 +100,6 @@ pub struct SetTractionOverrideArgs {
     #[garde(range(min = -1, max = 1))]
     pub traction_override: i32,
 }
-
-// ── Prototype Library ─────────────────────────────────────────────────────────
 
 /// Arguments for `create_custom_prototype`.
 #[derive(Debug, Clone, serde::Deserialize, specta::Type, Validate)]
@@ -170,8 +155,6 @@ pub struct CreateCustomPrototypeArgs {
     #[garde(skip)]
     pub is_permanently_coupled: Option<bool>,
 }
-
-// ── Formation Categories ──────────────────────────────────────────────────────
 
 /// Arguments for `create_formation_category`.
 #[derive(Debug, Clone, serde::Deserialize, specta::Type, Validate)]

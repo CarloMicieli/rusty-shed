@@ -1,9 +1,3 @@
-//! Read-model view structs for track inventory queries.
-//!
-//! These structs represent read-optimised projections of domain data,
-//! designed specifically for UI consumption. They are returned by query
-//! handlers and may include denormalised data (e.g., manufacturer names).
-
 use crate::core::domain::length::Length;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use crate::tracks_inventory::domain::{

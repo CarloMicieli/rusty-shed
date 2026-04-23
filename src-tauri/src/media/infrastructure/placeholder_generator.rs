@@ -1,7 +1,3 @@
-//! Placeholder Generator
-//!
-//! Infrastructure service for generating HTML/CSS image placeholders.
-
 use crate::media::domain::ImagePlaceholder;
 
 /// Service for generating image placeholders.

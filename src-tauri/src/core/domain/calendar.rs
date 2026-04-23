@@ -1,15 +1,5 @@
-// Calendar primitive types: Year and Month
-//
-// These newtypes wrap `i32` / `u8` with business-rule validation baked in.
-// They are transparent to both serde (JSON remains a plain number) and specta
-// (TypeScript binding remains `number`), so the API contract is unchanged.
-
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
-// ---------------------------------------------------------------------------
-// Year
-// ---------------------------------------------------------------------------
 
 /// A valid calendar year in the range 2000–2100.
 ///
@@ -73,10 +63,6 @@ impl garde::Validate for Year {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Month
-// ---------------------------------------------------------------------------
 
 /// A valid calendar month in the range 1–12.
 ///
@@ -159,10 +145,6 @@ impl garde::Validate for Month {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

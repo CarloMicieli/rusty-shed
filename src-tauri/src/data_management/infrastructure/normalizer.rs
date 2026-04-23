@@ -1,10 +1,10 @@
+use serde_json::Value;
+
 /// Manifest normalization utilities.
 ///
 /// Converts old-format (lowercase/camelCase) enum values to
 /// schema-canonical tokens before validation.
 /// This allows importing archives produced by earlier versions of the app.
-use serde_json::Value;
-
 pub struct Normalizer;
 
 impl Normalizer {

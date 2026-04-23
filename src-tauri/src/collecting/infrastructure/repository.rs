@@ -1,6 +1,3 @@
-// Catalog domain types: only import the identifiers required by the
-// repository implementation signatures. Test-only types are imported in
-// the `#[cfg(test)]` modules below.
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::{

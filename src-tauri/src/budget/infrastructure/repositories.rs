@@ -1,6 +1,3 @@
-// Budget Repository Implementation
-// Implements BudgetRepository trait for SQLite
-
 use crate::budget::BudgetEvent;
 use crate::budget::domain::{
     BudgetConfiguration, BudgetRepository, BudgetUowExt, ExtraBudgetEntry, ExtraBudgetId,

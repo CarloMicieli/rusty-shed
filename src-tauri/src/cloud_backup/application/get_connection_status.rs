@@ -1,4 +1,3 @@
-/// Get connection status use case
 use crate::cloud_backup::domain::{CloudBackupError, ConnectionStatusResponse};
 use crate::cloud_backup::infrastructure::SecureStorage;
 use std::sync::Arc;

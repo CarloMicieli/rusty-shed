@@ -1,5 +1,3 @@
-//! Language enum for multilingual support across the application.
-
 use std::fmt;
 
 use serde::{Deserialize, Serialize};

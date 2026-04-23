@@ -1,5 +1,3 @@
-//! OS language detection using tauri-plugin-os
-
 use crate::core::domain::Language;
 
 /// Detect OS language using tauri-plugin-os

@@ -1,4 +1,3 @@
-//! Application use-case handlers for train formations.
 pub mod add_formation_element;
 pub mod assign_rolling_stock_to_element;
 pub mod create_custom_prototype;

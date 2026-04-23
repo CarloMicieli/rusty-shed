@@ -1,7 +1,3 @@
-//! Upload Model Image Use Case
-//!
-//! Orchestrates the upload of model images from user-selected files.
-
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::domain_error::DomainError;
 use crate::media::domain::image_validation::{
@@ -24,10 +20,6 @@ pub struct UploadImageBytesInput {
     pub file_name: String,
     pub file_data: Vec<u8>,
 }
-
-// ============================================================================
-// Internal Shared Trait
-// ============================================================================
 
 /// Internal trait that unifies the upload pipeline across path-based and bytes-based inputs.
 ///
@@ -75,10 +67,6 @@ trait ImageUploader {
     }
 }
 
-// ============================================================================
-// Upload Model Image (Path-based)
-// ============================================================================
-
 /// Use case for uploading model images from file paths
 pub struct UploadModelImage {
     storage: FileStorage,
@@ -125,10 +113,6 @@ impl ImageUploader for UploadModelImage {
         &self.storage
     }
 }
-
-// ============================================================================
-// Upload Model Image Bytes (Drag & Drop)
-// ============================================================================
 
 /// Use case for uploading model images from bytes
 pub struct UploadModelImageBytes {
@@ -194,10 +178,6 @@ impl ImageUploader for UploadModelImageBytes {
         &self.storage
     }
 }
-
-// ============================================================================
-// Shared Helpers
-// ============================================================================
 
 /// Verify that the given model exists, returning [`UploadError::ModelNotFound`] when it does not.
 async fn validate_model_exists<U>(

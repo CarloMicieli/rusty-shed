@@ -1,8 +1,3 @@
-//! File storage infrastructure for model images
-//!
-//! This module provides filesystem operations for storing, retrieving,
-//! and deleting model images in the application's data directory.
-
 use crate::media::domain::image_validation::{ModelImagePath, StorageError};
 use std::path::{Path, PathBuf};
 use tokio::fs;

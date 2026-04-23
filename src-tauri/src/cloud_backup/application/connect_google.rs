@@ -1,4 +1,3 @@
-/// Connect Google account use case
 use crate::cloud_backup::domain::{CloudBackupError, ConnectionStatusResponse};
 use crate::cloud_backup::infrastructure::OAuthService;
 use std::sync::{Arc, Mutex};

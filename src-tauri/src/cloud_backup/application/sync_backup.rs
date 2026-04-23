@@ -1,5 +1,4 @@
 use crate::cloud_backup::application::operation_lock::{OperationType, try_acquire_lock};
-/// Sync (backup) use case for uploading database to Google Drive
 use crate::cloud_backup::domain::{
     BackupLabel, BackupListItem, BackupMetadata, CloudBackupError, Result, SyncProgressEvent,
     SyncStage as DomainSyncStage,

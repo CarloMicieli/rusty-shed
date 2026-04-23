@@ -1,4 +1,3 @@
-//! Formation domain module.
 pub mod formation_element;
 pub mod repositories;
 pub mod train_formation;

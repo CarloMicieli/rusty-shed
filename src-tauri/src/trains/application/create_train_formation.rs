@@ -1,5 +1,3 @@
-//! Use case: create a new train formation.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::formation::train_formation::TrainFormation;
 use crate::trains::domain::{TrainFormationView, TrainsUowExt};

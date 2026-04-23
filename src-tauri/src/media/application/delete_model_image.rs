@@ -1,7 +1,3 @@
-//! Delete Model Image Use Case
-//!
-//! Orchestrates the deletion of model images.
-
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt};
 use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;

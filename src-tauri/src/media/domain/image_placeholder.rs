@@ -1,7 +1,3 @@
-//! Image Placeholder Value Object
-//!
-//! Represents an HTML/CSS placeholder for missing railway model images.
-
 /// A placeholder image rendered as HTML/CSS.
 ///
 /// Used when a railway model has no associated image file.

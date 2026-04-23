@@ -1,4 +1,3 @@
-/// File picker integration for export destination selection
 use std::path::PathBuf;
 
 use tauri::AppHandle;

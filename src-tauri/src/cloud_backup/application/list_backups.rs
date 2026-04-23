@@ -1,4 +1,3 @@
-/// Use case: List all available backups from Google Drive
 use crate::cloud_backup::domain::{
     CloudBackupError, Result,
     dtos::{BackupListItem, BackupListResponse, ListBackupsArgs},

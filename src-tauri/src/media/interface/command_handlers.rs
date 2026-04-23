@@ -1,7 +1,3 @@
-//! Tauri Command Handlers for Media Module
-//!
-//! Exposes media functionality to the frontend via Tauri IPC.
-
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::core::infrastructure::error::CommandError;
 use crate::media::application::{
@@ -17,10 +13,6 @@ use garde::Validate;
 use serde::{Deserialize, Serialize};
 use std::path::{Component, Path, PathBuf};
 use tracing::{debug, warn};
-
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
 
 pub async fn get_railway_model_image_inner(
     state: &AppState,

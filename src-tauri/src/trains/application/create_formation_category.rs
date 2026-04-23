@@ -1,5 +1,3 @@
-//! Use case: create a custom formation category.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{FormationCategoryView, TrainsUowExt};
 

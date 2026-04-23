@@ -31,10 +31,6 @@ use garde::Validate;
 use std::convert::TryFrom;
 use tracing::info;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 pub async fn get_collection_inner(state: &AppState) -> Result<CollectionView, CommandError> {
     info!("Fetching collection");
 

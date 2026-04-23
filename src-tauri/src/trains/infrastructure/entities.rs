@@ -1,9 +1,3 @@
-//! SQLx row structs for the train-formations tables.
-//!
-//! These are thin wrappers around raw SQL columns, annotated with
-//! `sqlx::FromRow` so they can be populated directly from query results.
-//! They are converted to domain types via the functions in [`super::mappers`].
-
 use sqlx::FromRow;
 
 /// Row representation for `train_formations`.

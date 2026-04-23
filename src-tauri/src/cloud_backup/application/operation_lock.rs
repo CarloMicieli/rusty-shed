@@ -1,9 +1,3 @@
-/// Operation locking to prevent concurrent backup/restore from multiple invocations
-///
-/// This module provides a simple lock mechanism to ensure that only one
-/// backup or restore operation can run at a time within the same process.
-/// This is an MVP implementation - in production, this could be extended to
-/// support cross-device synchronization using the database.
 use crate::cloud_backup::domain::{CloudBackupError, Result};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;

@@ -1,5 +1,3 @@
-//! Use case: get a single train formation with full element detail.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{TrainFormationDetail, TrainsUowExt};
 

@@ -24,10 +24,6 @@ impl Default for QueryCriteria {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 /// Retrieve the dashboard summary.
 pub async fn get_dashboard_summary_inner(
     state: &AppState,

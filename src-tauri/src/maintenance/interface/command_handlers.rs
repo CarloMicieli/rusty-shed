@@ -17,10 +17,6 @@ use crate::state::AppState;
 use garde::Validate;
 use std::convert::TryInto;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 pub async fn get_maintenance_card_inner(
     state: &AppState,
     card_id: MaintenanceCardId,

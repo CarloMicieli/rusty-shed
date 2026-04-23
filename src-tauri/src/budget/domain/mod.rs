@@ -1,6 +1,3 @@
-// Budget Domain Layer
-// Contains: Aggregates, Value Objects, Domain Events, Repository Traits
-
 pub mod budget_configuration;
 pub mod budget_events;
 pub mod budget_mode;

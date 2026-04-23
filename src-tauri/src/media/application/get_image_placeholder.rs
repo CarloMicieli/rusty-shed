@@ -1,7 +1,3 @@
-//! Get Image Placeholder Use Case
-//!
-//! Generates HTML/CSS placeholder for missing railway model images.
-
 use crate::media::domain::ImagePlaceholder;
 
 /// Use case for generating image placeholders.

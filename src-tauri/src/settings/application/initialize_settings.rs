@@ -1,5 +1,3 @@
-//! Initialize settings use case - detects OS language on first run
-
 use crate::settings::domain::user_settings::UserSettings;
 use crate::settings::infrastructure::os_language::detect_os_language;
 use crate::settings::infrastructure::{SettingsRepository, StoreSettingsRepository};

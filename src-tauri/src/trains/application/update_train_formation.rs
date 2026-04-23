@@ -1,5 +1,3 @@
-//! Use case: update metadata on an existing train formation.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{TrainFormationView, TrainsUowExt};
 

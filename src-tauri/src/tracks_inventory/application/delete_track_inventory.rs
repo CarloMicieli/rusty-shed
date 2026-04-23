@@ -1,5 +1,3 @@
-//! Use case to delete a track inventory.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::tracks_inventory::domain::{TrackInventoryId, TracksInventoryUowExt};
 

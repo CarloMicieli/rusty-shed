@@ -1,5 +1,3 @@
-//! Use case: add a prototype element to a formation.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::formation::formation_element::FormationElement;
 use crate::trains::domain::{FormationElementView, TrainsUowExt};

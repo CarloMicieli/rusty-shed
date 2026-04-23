@@ -1,9 +1,3 @@
-/// Integration tests for the tracks_inventory use cases.
-///
-/// Moved here from the application layer because these tests require a real
-/// `SqliteUnitOfWork`, which is an infrastructure concern. Application-layer
-/// tests should use mock/fake UoW implementations; tests that need a real
-/// database belong in the infrastructure layer.
 #[cfg(test)]
 mod create_track_inventory {
     use crate::core::domain::test_utils::MockIdProvider;

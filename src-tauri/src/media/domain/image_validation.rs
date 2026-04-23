@@ -1,8 +1,3 @@
-//! Image validation domain types and services
-//!
-//! This module provides validation for uploaded image files, including
-//! format detection, size limits, and filename sanitization.
-
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 

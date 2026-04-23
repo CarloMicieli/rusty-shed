@@ -113,10 +113,6 @@ pub async fn get_installable_rolling_stocks_inner(
     Ok(list)
 }
 
-// ---------------------------------------------------------------------------
-// Tauri command wrappers (thin delegation to the inner functions above)
-// ---------------------------------------------------------------------------
-
 /// A command handler to create a new digital rolling stock.
 #[tauri::command]
 #[specta::specta]

@@ -1,5 +1,3 @@
-//! Query to fetch all track products for selection in forms.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::tracks_inventory::domain::TrackProductUowExt;
 use crate::tracks_inventory::domain::views::TrackProductView;

@@ -1,9 +1,3 @@
-//! Mapping functions between SQLx row structs and domain/view types.
-//!
-//! View model structs live in `trains::domain::views`; this module only
-//! contains the mapping functions that convert raw SQLx row structs into
-//! those view types.
-
 use crate::trains::infrastructure::entities::{
     FormationCategoryRow, FormationElementDetailRow, PrototypeRow, TrainFormationRow,
     TrainFormationSummaryRow,
@@ -15,8 +9,6 @@ pub use crate::trains::domain::views::{
     FormationCategoryView, FormationElementView, PrototypeGroupView, PrototypeView,
     TrainFormationDetail, TrainFormationSummary, TrainFormationView,
 };
-
-// ── Mapping functions ─────────────────────────────────────────────────────────
 
 /// Map a [`FormationCategoryRow`] to a [`FormationCategoryView`].
 pub fn category_row_to_view(row: FormationCategoryRow) -> FormationCategoryView {

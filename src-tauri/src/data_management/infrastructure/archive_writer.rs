@@ -1,4 +1,3 @@
-/// ZIP archive writer for export
 use serde_json::Value;
 use std::fs::File;
 use std::io::Write;

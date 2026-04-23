@@ -1,5 +1,3 @@
-//! Update settings use case
-
 use crate::catalog::domain::railway_model::PowerMethod;
 use crate::core::domain::Language;
 use crate::settings::domain::user_settings::{AppTheme, MeasureUnit, UserSettings};

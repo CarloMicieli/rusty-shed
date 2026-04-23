@@ -1,5 +1,3 @@
-//! IPC command handlers for settings management
-
 use crate::settings::application;
 use crate::settings::application::update_settings::UpdateSettingsInput;
 use crate::settings::domain::user_settings::UserSettings;

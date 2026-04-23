@@ -1,5 +1,3 @@
-//! Use case: remove an element from a formation.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::TrainsUowExt;
 

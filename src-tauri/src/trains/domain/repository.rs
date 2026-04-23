@@ -1,10 +1,3 @@
-//! Repository trait and UoW extension for the trains bounded context.
-//!
-//! `TrainsRepository` is the abstract port the application layer programs
-//! against.  The only implementation is `SqlxTrainFormationRepository` in
-//! `infrastructure::train_formation_repo`.  During tests the trait is
-//! auto-mocked via `mockall`.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::formation::formation_element::FormationElement;
 use crate::trains::domain::formation::train_formation::TrainFormation;
@@ -13,10 +6,6 @@ use crate::trains::domain::views::{
     TrainFormationDetail, TrainFormationSummary, TrainFormationView,
 };
 use async_trait::async_trait;
-
-// ---------------------------------------------------------------------------
-// Input type for prototype creation (owned, mockall-compatible)
-// ---------------------------------------------------------------------------
 
 /// Owned input for creating a new prototype; replaces the lifetime-bound
 /// `SavePrototypeParams<'a>` when crossing the application/infrastructure
@@ -44,10 +33,6 @@ pub struct CreatePrototypeInput {
     pub is_permanently_coupled: Option<bool>,
 }
 
-// ---------------------------------------------------------------------------
-// Repository trait
-// ---------------------------------------------------------------------------
-
 /// Abstract repository for all train-formation persistence operations.
 ///
 /// Method names are intentionally distinct from the concrete
@@ -56,8 +41,6 @@ pub struct CreatePrototypeInput {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait TrainsRepository: Send + Sync {
-    // ── Formation CRUD ────────────────────────────────────────────────────
-
     /// Load a formation aggregate by its unique ID.
     ///
     /// Returns [`DomainError::NotFound`] when no matching record exists.
@@ -68,8 +51,6 @@ pub trait TrainsRepository: Send + Sync {
 
     /// Delete a formation and cascade-delete all its elements.
     async fn delete_formation(&mut self, id: &str) -> Result<(), DomainError>;
-
-    // ── Formation read views ──────────────────────────────────────────────
 
     /// Return a lightweight post-write view of a formation.
     async fn get_formation_view(&mut self, id: &str) -> Result<TrainFormationView, DomainError>;
@@ -82,8 +63,6 @@ pub trait TrainsRepository: Send + Sync {
     async fn get_all_formation_summaries(
         &mut self,
     ) -> Result<Vec<TrainFormationSummary>, DomainError>;
-
-    // ── Element operations ────────────────────────────────────────────────
 
     /// Append a new element slot to a formation.
     ///
@@ -131,8 +110,6 @@ pub trait TrainsRepository: Send + Sync {
         traction_override: i32,
     ) -> Result<FormationElementView, DomainError>;
 
-    // ── Prototype operations ──────────────────────────────────────────────
-
     /// Search prototypes by an optional free-text query, grouped by company.
     async fn find_prototypes_by_query(
         &mut self,
@@ -145,8 +122,6 @@ pub trait TrainsRepository: Send + Sync {
         input: CreatePrototypeInput,
     ) -> Result<PrototypeView, DomainError>;
 
-    // ── Category operations ───────────────────────────────────────────────
-
     /// Return all formation categories.
     async fn get_all_categories(&mut self) -> Result<Vec<FormationCategoryView>, DomainError>;
 
@@ -157,10 +132,6 @@ pub trait TrainsRepository: Send + Sync {
         name: &str,
     ) -> Result<FormationCategoryView, DomainError>;
 }
-
-// ---------------------------------------------------------------------------
-// UoW extension trait
-// ---------------------------------------------------------------------------
 
 /// Extension trait that exposes a [`TrainsRepository`] through the Unit of Work.
 pub trait TrainsUowExt: Send {

@@ -13,10 +13,6 @@ use garde::Validate;
 use std::convert::TryFrom;
 use tracing::info;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 pub async fn get_sellers_inner(state: &AppState) -> Result<Vec<SellerView>, CommandError> {
     info!("Fetching all sellers");
 

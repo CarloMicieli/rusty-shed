@@ -1,5 +1,3 @@
-//! Application layer module (use cases)
-
 pub mod connect_google;
 pub mod disconnect_google;
 pub mod get_connection_status;

@@ -1,4 +1,3 @@
-/// OAuth 2.0 service with PKCE flow for Google Drive
 use crate::cloud_backup::domain::{CloudBackupError, GoogleConnection, Result};
 use crate::cloud_backup::infrastructure::{OAuthTokens, SecureStorage};
 use oauth2::{AuthUrl, CsrfToken, PkceCodeChallenge, PkceCodeVerifier};

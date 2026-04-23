@@ -1,4 +1,3 @@
-/// Infrastructure module exports
 pub mod connectivity;
 pub mod google_drive;
 pub mod oauth_service;

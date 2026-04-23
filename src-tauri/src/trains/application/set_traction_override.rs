@@ -1,5 +1,3 @@
-//! Use case: override traction status of a formation element.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{FormationElementView, TrainsUowExt};
 

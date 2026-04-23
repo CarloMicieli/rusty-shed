@@ -1,14 +1,3 @@
-//! SQLite-backed repository implementations for the tracks inventory feature.
-//!
-//! This module implements:
-//! - [`SqliteTrackInventoryRepository`] – persists [`TrackInventory`] aggregates.
-//! - [`SqliteTrackProductRepository`] – persists [`TrackProduct`] master data.
-//! - [`TracksInventoryUowExt`] for [`SqliteUnitOfWork`] – provides both repos.
-//! - [`TrackProductUowExt`] for [`SqliteUnitOfWork`] – focused product-only access.
-//!
-//! Repository methods delegate all raw SQL to [`super::database`] and all
-//! row-to-domain conversions to [`super::mappers`].
-
 use crate::catalog::domain::manufacturer::ManufacturerId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
@@ -22,10 +11,6 @@ use crate::tracks_inventory::domain::{
 use crate::tracks_inventory::infrastructure::{database, mappers};
 use rust_decimal::prelude::ToPrimitive;
 use sqlx::SqliteConnection;
-
-// ---------------------------------------------------------------------------
-// SqliteTrackInventoryRepository
-// ---------------------------------------------------------------------------
 
 /// SQLite-backed repository for [`TrackInventory`] aggregates.
 ///
@@ -247,10 +232,6 @@ impl<'conn> TrackInventoryRepository for SqliteTrackInventoryRepository<'conn> {
     }
 }
 
-// ---------------------------------------------------------------------------
-// SqliteTrackProductRepository
-// ---------------------------------------------------------------------------
-
 /// SQLite-backed repository for [`TrackProduct`] master-data records.
 pub struct SqliteTrackProductRepository<'conn> {
     /// Mutable reference to the active database connection/transaction.
@@ -326,10 +307,6 @@ impl<'conn> TrackProductRepository for SqliteTrackProductRepository<'conn> {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Unit-of-Work extension impls
-// ---------------------------------------------------------------------------
-
 impl TracksInventoryUowExt for SqliteUnitOfWork {
     /// Returns a boxed [`TrackProductRepository`] bound to this unit of work's
     /// transaction lifetime.
@@ -354,10 +331,6 @@ impl TrackProductUowExt for SqliteUnitOfWork {
         Box::new(SqliteTrackProductRepository::new(&mut self.tx))
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

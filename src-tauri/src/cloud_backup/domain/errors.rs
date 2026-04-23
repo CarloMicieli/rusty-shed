@@ -1,4 +1,3 @@
-/// Domain errors for cloud backup feature
 use thiserror::Error;
 
 /// Enumeration of all possible errors that can occur in cloud backup operations

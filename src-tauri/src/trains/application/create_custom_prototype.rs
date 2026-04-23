@@ -1,5 +1,3 @@
-//! Use case: create a new custom prototype.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::repository::CreatePrototypeInput;
 use crate::trains::domain::{PrototypeView, TrainsUowExt};

@@ -1,9 +1,3 @@
-//! Tauri command handlers for the train-formations feature.
-//!
-//! Each handler follows the "Inner-Shim" pattern:
-//!  1. A public `*_inner(state: &AppState, ...)` function holds the testable logic.
-//!  2. A thin `#[tauri::command]` wrapper validates args and delegates to `*_inner`.
-
 use crate::core::infrastructure::error::CommandError;
 use crate::state::AppState;
 use crate::trains::application::{
@@ -31,8 +25,6 @@ use crate::trains::interface::command_args::{
 };
 use garde::Validate;
 use tracing::info;
-
-// ── Formation CRUD ────────────────────────────────────────────────────────────
 
 pub async fn create_train_formation_inner(
     state: &AppState,
@@ -117,8 +109,6 @@ pub async fn get_train_formations_inner(
     Ok(result)
 }
 
-// ── Element composition ───────────────────────────────────────────────────────
-
 pub async fn add_formation_element_inner(
     state: &AppState,
     formation_id: String,
@@ -171,8 +161,6 @@ pub async fn reorder_formation_elements_inner(
     Ok(result)
 }
 
-// ── Ownership ─────────────────────────────────────────────────────────────────
-
 pub async fn assign_rolling_stock_to_element_inner(
     state: &AppState,
     element_id: String,
@@ -196,8 +184,6 @@ pub async fn assign_rolling_stock_to_element_inner(
     Ok(result)
 }
 
-// ── Traction ──────────────────────────────────────────────────────────────────
-
 pub async fn set_traction_override_inner(
     state: &AppState,
     element_id: String,
@@ -216,8 +202,6 @@ pub async fn set_traction_override_inner(
     uow.commit().await?;
     Ok(result)
 }
-
-// ── Prototypes ────────────────────────────────────────────────────────────────
 
 pub async fn get_prototypes_inner(
     state: &AppState,
@@ -264,8 +248,6 @@ pub async fn create_custom_prototype_inner(
     Ok(result)
 }
 
-// ── Categories ────────────────────────────────────────────────────────────────
-
 pub async fn get_formation_categories_inner(
     state: &AppState,
 ) -> Result<Vec<FormationCategoryView>, CommandError> {
@@ -290,8 +272,6 @@ pub async fn create_formation_category_inner(
     uow.commit().await?;
     Ok(result)
 }
-
-// ── Tauri command shims ───────────────────────────────────────────────────────
 
 /// Create a new train formation.
 #[tauri::command]
@@ -445,8 +425,6 @@ mod tests {
         AppState::for_test(pool)
     }
 
-    // ── create_train_formation_inner ─────────────────────────────────────
-
     #[sqlx::test(migrations = "./migrations")]
     async fn create_train_formation_empty_name_returns_validation_error(pool: SqlitePool) {
         let state = app_state(pool);
@@ -485,8 +463,6 @@ mod tests {
         );
     }
 
-    // ── reorder_formation_elements_inner ─────────────────────────────────
-
     #[sqlx::test(migrations = "./migrations")]
     async fn reorder_formation_elements_empty_list_returns_validation_error(pool: SqlitePool) {
         let state = app_state(pool);
@@ -500,8 +476,6 @@ mod tests {
             result
         );
     }
-
-    // ── set_traction_override_inner ──────────────────────────────────────
 
     #[sqlx::test(migrations = "./migrations")]
     async fn set_traction_override_out_of_range_returns_validation_error(pool: SqlitePool) {
@@ -532,8 +506,6 @@ mod tests {
             result
         );
     }
-
-    // ── create_custom_prototype_inner ────────────────────────────────────
 
     #[sqlx::test(migrations = "./migrations")]
     async fn create_custom_prototype_invalid_specification_type_returns_validation_error(
@@ -594,8 +566,6 @@ mod tests {
             result
         );
     }
-
-    // ── create_formation_category_inner ──────────────────────────────────
 
     #[sqlx::test(migrations = "./migrations")]
     async fn create_formation_category_empty_name_returns_validation_error(pool: SqlitePool) {

@@ -1,5 +1,3 @@
-//! `FormationCategory` domain struct.
-
 use serde::{Deserialize, Serialize};
 
 /// A named classification for a type of train formation

@@ -1,5 +1,3 @@
-//! Query handlers for track inventory read operations.
-
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::unit_of_work::SqliteUnitOfWork;
 use crate::state::AppState;
@@ -9,10 +7,6 @@ use crate::tracks_inventory::application::{
 };
 use crate::tracks_inventory::domain::TrackInventoryId;
 use tracing::info;
-
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
 
 pub async fn get_track_inventories_inner(
     state: &AppState,

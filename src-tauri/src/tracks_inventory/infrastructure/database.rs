@@ -1,20 +1,9 @@
-//! Raw SQL operations for the tracks inventory feature.
-//!
-//! Every function accepts a `&mut sqlx::SqliteConnection` (or `&mut`
-//! re-borrow of a transaction) and returns `Result<_, sqlx::Error>`.
-//! No domain business-logic lives here — only parameterised queries and
-//! row-level types from [`super::entities`].
-
 use crate::tracks_inventory::domain::{TrackCode, TrackId, TrackInventoryId, TrackType};
 use crate::tracks_inventory::infrastructure::entities::{
     TrackInventoryHeaderViewRow, TrackInventoryItemRow, TrackInventoryItemViewRow,
     TrackInventoryRow, TrackInventorySummaryRow, TrackProductRow, TrackProductViewRow,
     TrackPurchaseRow, TrackPurchaseViewRow,
 };
-
-// ---------------------------------------------------------------------------
-// Track inventory – header
-// ---------------------------------------------------------------------------
 
 /// Fetches the inventory header row for the given `id`.
 ///
@@ -125,10 +114,6 @@ pub async fn touch_inventory_updated_at(
     Ok(())
 }
 
-// ---------------------------------------------------------------------------
-// Track inventory – items
-// ---------------------------------------------------------------------------
-
 /// Fetches all inventory item rows for the given `inventory_id`.
 pub async fn find_track_inventory_items(
     executor: &mut sqlx::SqliteConnection,
@@ -228,10 +213,6 @@ pub async fn set_inventory_item_required(
     Ok(res.rows_affected())
 }
 
-// ---------------------------------------------------------------------------
-// Track purchases
-// ---------------------------------------------------------------------------
-
 /// Fetches all purchase rows for the given `inventory_id`, ordered by date.
 pub async fn find_track_purchases(
     executor: &mut sqlx::SqliteConnection,
@@ -284,10 +265,6 @@ pub async fn insert_track_purchase(
         .await?;
     Ok(())
 }
-
-// ---------------------------------------------------------------------------
-// View / read-model queries
-// ---------------------------------------------------------------------------
 
 /// Fetches summary rows for all inventories (item count + total quantity).
 pub async fn find_all_inventory_summaries(
@@ -393,10 +370,6 @@ pub async fn find_inventory_purchase_views(
         .fetch_all(executor)
         .await
 }
-
-// ---------------------------------------------------------------------------
-// Track products
-// ---------------------------------------------------------------------------
 
 /// Fetches a track product row by its canonical `TrackId`.
 ///

@@ -1,6 +1,5 @@
 use crate::catalog::domain::railway_company::{RailwayCompanyId, RailwayCompanyUowExt};
 use crate::catalog::domain::railway_model::{RailwayModelId, RailwayModelUowExt, RollingStockId};
-#[allow(unused)]
 use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 

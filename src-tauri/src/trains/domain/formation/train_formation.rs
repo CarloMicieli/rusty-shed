@@ -1,10 +1,3 @@
-//! `TrainFormation` aggregate root.
-//!
-//! Encapsulates the business logic for creating, modifying, and removing
-//! a named train consist.  All mutations emit [`TrainFormationEvent`]s
-//! that are drained by the repository after every successful persistence
-//! cycle.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::metadata::Metadata;
 use crate::trains::domain::formation::formation_element::FormationElement;

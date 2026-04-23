@@ -1,5 +1,3 @@
-//! Query to fetch a single track inventory with full details.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::tracks_inventory::domain::views::TrackInventoryView;
 use crate::tracks_inventory::domain::{TrackInventoryId, TracksInventoryUowExt};

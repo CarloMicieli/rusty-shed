@@ -1,12 +1,3 @@
-//! View DTOs for the trains bounded context.
-//!
-//! These are read-optimised projections used by the application and
-//! interface layers.  They live in the domain to break the dependency
-//! on `infrastructure::mappers` and to enable pure application-layer
-//! testing with mock repositories.
-
-// ── View model structs (specta-typed read DTOs) ───────────────────────────────
-
 /// Post-write response for `create_train_formation` and `update_train_formation`.
 #[derive(Debug, Clone, serde::Serialize, specta::Type)]
 pub struct TrainFormationView {

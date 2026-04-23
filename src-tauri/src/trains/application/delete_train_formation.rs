@@ -1,5 +1,3 @@
-//! Use case: delete a train formation by ID.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::TrainsUowExt;
 

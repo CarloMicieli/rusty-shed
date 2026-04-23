@@ -1,4 +1,3 @@
-/// Media file collector for export
 use sqlx::SqlitePool;
 use std::path::PathBuf;
 

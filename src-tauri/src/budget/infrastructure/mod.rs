@@ -1,6 +1,3 @@
-// Budget Infrastructure Layer
-// Contains: Database entities, Mappers, SQL queries, Repository implementations
-
 pub mod database;
 pub mod entities;
 pub mod mappers;

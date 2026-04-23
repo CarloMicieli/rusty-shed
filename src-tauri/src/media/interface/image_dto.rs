@@ -1,7 +1,3 @@
-//! Railway Model Image Response DTO
-//!
-//! Data Transfer Object for image responses sent to the frontend.
-
 use serde::Serialize;
 
 /// Response DTO for railway model image requests.

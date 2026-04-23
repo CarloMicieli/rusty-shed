@@ -42,7 +42,6 @@ use crate::maintenance::interface::command_handlers as maintenance_command_handl
 use crate::media::interface::command_handlers as media_command_handlers;
 use crate::search::interface::command_handlers as search_command_handlers;
 use crate::sellers::interface::command_handlers as sellers_command_handlers;
-use crate::settings::ensure_default_settings;
 use crate::settings::interface::commands::{
     get_locale, get_settings, initialize_settings, update_settings,
 };
@@ -81,14 +80,6 @@ pub async fn init_database_inner(state: &AppState) -> Result<bool, CommandError>
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "database seeding failed");
-            CommandError::DatabaseError(e.to_string())
-        })?;
-
-    ensure_default_settings(&state.db_pool())
-        .instrument(tracing::info_span!("ensure_default_settings"))
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "ensuring default settings failed");
             CommandError::DatabaseError(e.to_string())
         })?;
 

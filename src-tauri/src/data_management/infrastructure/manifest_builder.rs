@@ -1,6 +1,5 @@
 use serde_json::{Map, Value, json};
 use sqlx::{Row, SqlitePool};
-/// Archive manifest builder
 use std::path::Path;
 
 use crate::data_management::domain::{ExportEntitySelection, ExportError};

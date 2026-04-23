@@ -1,5 +1,3 @@
-//! Query to fetch all track inventories with summary information.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::tracks_inventory::domain::TracksInventoryUowExt;
 use crate::tracks_inventory::domain::views::TrackInventoryListItem;

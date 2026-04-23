@@ -7,10 +7,6 @@ use crate::search::domain::global_search_result::SearchSource;
 use crate::search::interface::command_args::{GlobalSearchArgs, GlobalSearchResultView};
 use crate::state::AppState;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 pub async fn global_search_inner(
     state: &AppState,
     args: GlobalSearchArgs,

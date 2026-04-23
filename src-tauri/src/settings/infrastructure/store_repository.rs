@@ -1,5 +1,3 @@
-//! Settings repository implementation using tauri-plugin-store
-
 use crate::settings::domain::user_settings::UserSettings;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;

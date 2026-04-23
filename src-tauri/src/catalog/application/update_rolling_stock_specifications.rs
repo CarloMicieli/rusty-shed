@@ -1,7 +1,6 @@
 use crate::catalog::domain::railway_model::{
     RailwayModelId, RailwayModelUowExt, RollingStockId, RollingStockSpecPatch,
 };
-#[allow(unused)]
 use crate::core::domain::Language;
 use crate::core::domain::domain_error::DomainError;
 

@@ -16,10 +16,6 @@ use crate::tracks_inventory::interface::command_args::{
 use std::convert::TryInto;
 use tracing::info;
 
-// ---------------------------------------------------------------------------
-// Inner (testable) implementations – take &AppState directly
-// ---------------------------------------------------------------------------
-
 pub async fn create_track_inventory_inner(
     state: &AppState,
     input: NewTrackInventoryArgs,

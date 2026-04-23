@@ -1,7 +1,3 @@
-//! Domain Layer
-//!
-//! Contains core business entities, value objects, and domain logic for the media module.
-
 pub mod image_error;
 pub mod image_placeholder;
 pub mod image_validation;

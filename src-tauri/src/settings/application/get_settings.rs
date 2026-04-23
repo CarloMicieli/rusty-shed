@@ -1,5 +1,3 @@
-//! Get settings use case
-
 use crate::settings::domain::user_settings::UserSettings;
 use crate::settings::infrastructure::{SettingsRepository, StoreSettingsRepository};
 use tauri::AppHandle;

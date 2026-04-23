@@ -1,9 +1,3 @@
-//! SQLite implementation of the train-formation repository.
-//!
-//! This module provides [`SqlxTrainFormationRepository`] which persists
-//! [`TrainFormation`] aggregates and their composition elements using
-//! `sqlx` transactions.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::metadata::Metadata;
 use crate::trains::domain::formation::formation_element::FormationElement;
@@ -57,8 +51,6 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
     pub fn new(conn: &'conn mut SqliteConnection) -> Self {
         Self { conn }
     }
-
-    // ── Formation CRUD ────────────────────────────────────────────────────────
 
     /// Upsert a [`TrainFormation`] — INSERT on new, UPDATE on existing.
     pub async fn save(&mut self, formation: &TrainFormation) -> Result<(), DomainError> {
@@ -202,8 +194,6 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
         }
         Ok(())
     }
-
-    // ── View queries ──────────────────────────────────────────────────────────
 
     /// Return the full [`TrainFormationDetail`] with joined element data.
     pub async fn get_detail(&mut self, id: &str) -> Result<TrainFormationDetail, DomainError> {
@@ -365,8 +355,6 @@ impl<'conn> SqlxTrainFormationRepository<'conn> {
             has_traction,
         ))
     }
-
-    // ── Element CRUD ──────────────────────────────────────────────────────────
 
     /// Append a new element to a formation (position = current max + 1).
     pub async fn add_element(

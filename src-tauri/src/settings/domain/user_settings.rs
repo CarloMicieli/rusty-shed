@@ -1,5 +1,3 @@
-//! User settings domain types and validation logic
-
 use serde::{Deserialize, Serialize};
 use specta::Type;
 

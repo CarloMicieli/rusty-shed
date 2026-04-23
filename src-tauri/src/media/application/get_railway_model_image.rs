@@ -1,7 +1,3 @@
-//! Get Railway Model Image Use Case
-//!
-//! Orchestrates the retrieval of railway model images from the filesystem.
-
 use crate::catalog::domain::railway_model::RailwayModelId;
 use crate::media::domain::{ImageError, RailwayModelImage};
 use crate::media::infrastructure::ImageRepository;

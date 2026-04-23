@@ -1,5 +1,3 @@
-//! Use case: assign or unassign an owned rolling stock to a formation element.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{FormationElementView, TrainsUowExt};
 

@@ -1,6 +1,3 @@
-// Budget Interface Layer
-// Contains: Transport DTOs, Command Arguments, Tauri Command Handlers
-
 pub mod command_args;
 pub mod command_handlers;
 

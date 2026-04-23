@@ -1,5 +1,3 @@
-//! Use case: reorder elements within a formation.
-
 use crate::core::domain::domain_error::DomainError;
 use crate::trains::domain::{TrainFormationDetail, TrainsUowExt};
 
