@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS track_inventory_items
     quantity                            INTEGER NOT NULL DEFAULT 0,
     required                            INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (inventory_id, track_id),
-    FOREIGN KEY (inventory_id)  REFERENCES track_inventories (id) ON DELETE CASCADE,
+    FOREIGN KEY (inventory_id)  REFERENCES track_inventories (id)    ON DELETE CASCADE,
     FOREIGN KEY (track_id)      REFERENCES track_products (track_id) ON DELETE CASCADE
 );
 
@@ -55,14 +55,14 @@ CREATE TABLE IF NOT EXISTS track_purchases
     inventory_id                        TEXT NOT NULL,
     track_id                            TEXT NOT NULL,
     quantity                            INTEGER NOT NULL,
-    price_amount                        INTEGER NOT NULL,
+    price_amount                        INTEGER NOT NULL CHECK(price_amount > 0), -- Minor currency units (must be positive)
     price_currency                      TEXT NOT NULL,
     seller_id                           TEXT,
     purchase_date                       TEXT NOT NULL,
     created_at                          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (inventory_id)  REFERENCES track_inventories (id) ON DELETE CASCADE,
+    FOREIGN KEY (inventory_id)  REFERENCES track_inventories (id)    ON DELETE CASCADE,
     FOREIGN KEY (track_id)      REFERENCES track_products (track_id) ON DELETE RESTRICT,
-    FOREIGN KEY (seller_id)     REFERENCES sellers (id) ON DELETE SET NULL
+    FOREIGN KEY (seller_id)     REFERENCES sellers (id)              ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_track_purchases_inventory_id ON track_purchases (inventory_id);

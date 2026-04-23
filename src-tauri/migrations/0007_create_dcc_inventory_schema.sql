@@ -2,17 +2,14 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 -- noinspection SqlResolveInspectionForFile
 
--- Migration: Create DCC Inventory Schema
--- This migration creates the tables for managing digital rolling stock decoders and DCC addresses.
-
 CREATE TABLE IF NOT EXISTS decoders
 (
-    id                TEXT PRIMARY KEY,  -- URN format: trn:decoder:{manufacturer}:{code}
-    manufacturer_id   TEXT NOT NULL,
-    product_code      TEXT NOT NULL,
-    decoder_type      TEXT NOT NULL,     -- PLAIN, SOUND, FUNCTION, MULTI_PROTOCOL
-    protocol          TEXT NOT NULL,     -- DCC, MFX, SELECTRIX, MOTOROLA, FMZ, NEXT_18
-    decoder_interface TEXT,              -- NEM651, NEM652, PLUX_8, PLUX_16, PLUX_22, etc.
+    id                      TEXT PRIMARY KEY,
+    manufacturer_id         TEXT NOT NULL,
+    product_code            TEXT NOT NULL,
+    decoder_type            TEXT NOT NULL,
+    protocol                TEXT NOT NULL,
+    decoder_interface       TEXT,
     FOREIGN KEY (manufacturer_id) REFERENCES manufacturers (id) ON DELETE CASCADE
 );
 
@@ -21,12 +18,12 @@ CREATE INDEX IF NOT EXISTS idx_decoders_type ON decoders (decoder_type);
 
 CREATE TABLE IF NOT EXISTS digital_rolling_stocks
 (
-    id                     TEXT PRIMARY KEY,  -- URN format: trn:digital-rolling-stock:{uuid}
-    owned_rolling_stock_id TEXT NOT NULL,
-    dcc_address            INTEGER NOT NULL CHECK (dcc_address >= 1 AND dcc_address <= 9999),
-    installed_decoder_id   TEXT,
-    FOREIGN KEY (owned_rolling_stock_id) REFERENCES owned_rolling_stocks (id) ON DELETE CASCADE,
-    FOREIGN KEY (installed_decoder_id) REFERENCES decoders (id) ON DELETE SET NULL
+    id                      TEXT PRIMARY KEY,
+    owned_rolling_stock_id  TEXT NOT NULL,
+    dcc_address             INTEGER NOT NULL CHECK (dcc_address >= 1 AND dcc_address <= 9999),
+    installed_decoder_id    TEXT,
+    FOREIGN KEY (owned_rolling_stock_id) REFERENCES owned_rolling_stocks (id)   ON DELETE CASCADE,
+    FOREIGN KEY (installed_decoder_id)   REFERENCES decoders (id)               ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_digital_rolling_stocks_dcc_address ON digital_rolling_stocks (dcc_address);

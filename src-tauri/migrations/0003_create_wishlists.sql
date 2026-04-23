@@ -2,7 +2,8 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 -- noinspection SqlResolveInspectionForFile
 
-CREATE TABLE IF NOT EXISTS wishlists (
+CREATE TABLE IF NOT EXISTS wishlists
+(
     id                                  TEXT PRIMARY KEY,
     name                                TEXT NOT NULL,
     notes                               TEXT,
@@ -13,19 +14,20 @@ CREATE TABLE IF NOT EXISTS wishlists (
 );
 CREATE INDEX IF NOT EXISTS idx_wishlists_name ON wishlists (name);
 
-CREATE TABLE IF NOT EXISTS wishlist_items (
+CREATE TABLE IF NOT EXISTS wishlist_items
+(
     id                                  TEXT PRIMARY KEY,
     wishlist_id                         TEXT NOT NULL,
     railway_model_id                    TEXT,
     priority                            TEXT NOT NULL DEFAULT 'NORMAL',
     status                              TEXT NOT NULL DEFAULT 'WANTED',
-    desired_price_amount                INTEGER,
+    desired_price_amount                INTEGER CHECK(desired_price_amount > 0), -- Minor currency units (must be positive)
     desired_price_currency              TEXT,
     added_date                          TEXT NOT NULL CHECK(added_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
     removed_date                        TEXT CHECK(removed_date IS NULL OR removed_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
     notes                               TEXT,
     purchased_at                        TEXT,
-    purchased_price_amount              INTEGER,
+    purchased_price_amount              INTEGER CHECK(purchased_price_amount >= 0), -- Minor currency units (must be positive)
     purchased_price_currency            TEXT,
     FOREIGN KEY (wishlist_id)      REFERENCES wishlists (id) ON DELETE CASCADE,
     FOREIGN KEY (railway_model_id) REFERENCES railway_models (id) ON DELETE RESTRICT

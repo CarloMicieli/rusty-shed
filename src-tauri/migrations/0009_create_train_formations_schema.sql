@@ -4,24 +4,24 @@
 
 CREATE TABLE IF NOT EXISTS formation_categories
 (
-    id          TEXT NOT NULL PRIMARY KEY,
-    name        TEXT NOT NULL UNIQUE,
-    is_custom   INTEGER NOT NULL DEFAULT 0 CHECK (is_custom IN (0,1)),
-    created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                      TEXT NOT NULL PRIMARY KEY,
+    name                    TEXT NOT NULL UNIQUE,
+    is_custom               INTEGER NOT NULL DEFAULT 0 CHECK (is_custom IN (0,1)),
+    created_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS train_formations
 (
-    id          TEXT NOT NULL PRIMARY KEY,
-    name        TEXT NOT NULL UNIQUE,
-    category_id TEXT,
-    start_year  INTEGER,
-    end_year    INTEGER,
-    epoch       TEXT,
-    notes       TEXT,
-    created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version     INTEGER NOT NULL DEFAULT 0,
+    id                      TEXT NOT NULL PRIMARY KEY,
+    name                    TEXT NOT NULL UNIQUE,
+    category_id             TEXT,
+    start_year              INTEGER,
+    end_year                INTEGER,
+    epoch                   TEXT,
+    notes                   TEXT,
+    created_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                 INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES formation_categories(id) ON DELETE SET NULL,
     CHECK (start_year IS NULL OR end_year IS NULL OR start_year <= end_year)
 );
