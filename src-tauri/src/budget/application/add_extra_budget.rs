@@ -4,13 +4,18 @@ use crate::core::domain::calendar::{Month, Year};
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::Utc;
+use garde::Validate;
 
 /// Input for adding an extra budget entry.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Validate)]
 pub struct AddExtraBudgetInput {
+    #[garde(skip)]
     pub year: Year,
+    #[garde(skip)]
     pub month: Month,
+    #[garde(dive)]
     pub amount: MonetaryAmount,
+    #[garde(length(max = 500))]
     pub reason: Option<String>,
 }
 
@@ -38,20 +43,9 @@ impl AddExtraBudgetUseCase {
         U: BudgetUowExt + Send,
     {
         // Validate input
-        if input.amount.amount <= 0 {
-            return Err(DomainError::Validation(
-                "Amount must be positive".to_string(),
-            ));
-        }
-
-        // Validate reason length if provided
-        if let Some(ref reason) = input.reason
-            && reason.len() > 500
-        {
-            return Err(DomainError::Validation(
-                "Reason must be 500 characters or less".to_string(),
-            ));
-        }
+        input
+            .validate()
+            .map_err(|e| DomainError::Validation(e.to_string()))?;
 
         // Load the budget configuration aggregate — it is the root for budget events.
         let mut config = {
@@ -95,19 +89,19 @@ mod tests {
     use crate::budget::domain::repository::MockBudgetRepository;
     use crate::core::domain::Currency;
     use crate::core::domain::calendar::{Month, Year};
+    use pretty_assertions::assert_eq;
 
     fn valid_input() -> AddExtraBudgetInput {
         AddExtraBudgetInput {
             year: Year::try_from(2026).unwrap(),
             month: Month::try_from(4).unwrap(),
-            amount: MonetaryAmount::new(5_000, Currency::EUR),
+            amount: MonetaryAmount::new(50_00, Currency::EUR),
             reason: Some("Birthday gift".to_string()),
         }
     }
 
     #[tokio::test]
     async fn it_should_add_extra_budget_successfully() {
-        // Arrange – two budget_repo() calls: get_config then save
         let config = sample_budget_config();
         let mut mock_get = MockBudgetRepository::new();
         mock_get
@@ -122,31 +116,26 @@ mod tests {
             .with_repo(mock_get)
             .with_repo(mock_save);
 
-        // Act
         let result = AddExtraBudgetUseCase::execute(&mut uow, valid_input()).await;
 
-        // Assert
         assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
         let entry = result.unwrap();
         assert_eq!(entry.year.value(), 2026);
         assert_eq!(entry.month.value(), 4);
-        assert_eq!(entry.amount.amount, 5_000);
+        assert_eq!(entry.amount.amount, 50_00);
         assert_eq!(entry.reason.as_deref(), Some("Birthday gift"));
     }
 
     #[tokio::test]
     async fn it_should_fail_when_amount_is_zero() {
-        // Arrange – validation fires before any repo call
         let input = AddExtraBudgetInput {
             amount: MonetaryAmount::new(0, Currency::EUR),
             ..valid_input()
         };
         let mut uow = FakeBudgetUow::new();
 
-        // Act
         let result = AddExtraBudgetUseCase::execute(&mut uow, input).await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::Validation(_))),
             "Expected Validation error, got: {:?}",
@@ -218,16 +207,13 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_fail_when_no_budget_config_exists() {
-        // Arrange – only get_config is called; returns None → NotFound
         let mut mock_get = MockBudgetRepository::new();
         mock_get.expect_get_config().once().returning(|| Ok(None));
 
         let mut uow = FakeBudgetUow::new().with_repo(mock_get);
 
-        // Act
         let result = AddExtraBudgetUseCase::execute(&mut uow, valid_input()).await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::NotFound { .. })),
             "Expected NotFound error, got: {:?}",

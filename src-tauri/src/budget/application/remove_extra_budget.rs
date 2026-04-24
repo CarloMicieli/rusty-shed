@@ -8,17 +8,17 @@ impl RemoveExtraBudgetUseCase {
     /// Remove an extra budget entry.
     ///
     /// # Arguments
-    /// * `uow` - Unit of work for database access
+    /// * `unit_of_work` - Unit of work for database access
     /// * `id` - ID of the extra budget entry to remove
     ///
     /// # Errors
     /// - `NotFound`: If the budget configuration or extra budget entry doesn't exist
     /// - `Infrastructure`: If database operation fails
-    pub async fn execute<U>(uow: &mut U, id: ExtraBudgetId) -> Result<(), DomainError>
+    pub async fn execute<U>(unit_of_work: &mut U, id: ExtraBudgetId) -> Result<(), DomainError>
     where
         U: BudgetUowExt + Send,
     {
-        let mut repo = uow.budget_repo();
+        let mut repo = unit_of_work.budget_repo();
 
         let entry = repo
             .get_extra_budget_by_id(&id)
@@ -49,7 +49,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_remove_extra_budget_successfully() {
-        // Arrange – one budget_repo() call; both methods invoked on the same repo
         let entry = sample_extra_budget_entry();
         let id = sample_extra_budget_id();
 
@@ -63,16 +62,13 @@ mod tests {
 
         let mut uow = FakeBudgetUow::new().with_repo(mock);
 
-        // Act
         let result = RemoveExtraBudgetUseCase::execute(&mut uow, id).await;
 
-        // Assert
         assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
     }
 
     #[tokio::test]
     async fn it_should_fail_when_entry_not_found() {
-        // Arrange – get_extra_budget_by_id returns None → NotFound
         let id = sample_extra_budget_id();
         let id_display = id.as_ref().to_string();
 
@@ -80,14 +76,11 @@ mod tests {
         mock.expect_get_extra_budget_by_id()
             .once()
             .returning(|_| Ok(None));
-        // remove_extra_budget must NOT be called
 
         let mut uow = FakeBudgetUow::new().with_repo(mock);
 
-        // Act
         let result = RemoveExtraBudgetUseCase::execute(&mut uow, id).await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::NotFound { .. })),
             "Expected NotFound for id {id_display}, got: {:?}",
@@ -97,7 +90,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_propagate_remove_error() {
-        // Arrange – entry exists but DELETE fails
         let entry = sample_extra_budget_entry();
         let id = sample_extra_budget_id();
 
@@ -111,10 +103,8 @@ mod tests {
 
         let mut uow = FakeBudgetUow::new().with_repo(mock);
 
-        // Act
         let result = RemoveExtraBudgetUseCase::execute(&mut uow, id).await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::Infrastructure(_))),
             "Expected Infrastructure error, got: {:?}",

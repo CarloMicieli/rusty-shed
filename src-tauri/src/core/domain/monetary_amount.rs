@@ -1,9 +1,7 @@
-type Result<T> = std::result::Result<T, MonetaryAmountError>;
-
+use crate::core::domain::currency::{Currency, CurrencyError};
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
-use crate::core::domain::currency::{Currency, CurrencyError};
 
 /// A monetary amount in the smallest currency unit together with its currency.
 ///
@@ -14,7 +12,7 @@ use crate::core::domain::currency::{Currency, CurrencyError};
 /// `MonetaryAmount` provides helpers to build an instance from database parts
 /// (`MonetaryAmount::from_db`), to add values when currencies match
 /// (`add_same_currency`) and to format the value for display.
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, specta::Type, Validate)]
 pub struct MonetaryAmount {
     /// The monetary amount stored in the minor unit of the currency (e.g., cents for USD).
     ///
@@ -24,9 +22,11 @@ pub struct MonetaryAmount {
     /// - **Range**: An `i64` handles up to ±92 quadrillion units. In USD, this covers
     ///   amounts up to $922 trillion, exceeding global wealth scales.
     /// - **Compatibility**: Maps directly to SQL `BIGINT` without extra crates or complex logic.
+    #[garde(range(min = 1))]
     pub amount: i64,
 
     /// Currency of the amount.
+    #[garde(skip)]
     pub currency: Currency,
 }
 
@@ -41,11 +41,15 @@ impl Default for MonetaryAmount {
 
 impl MonetaryAmount {
     /// Create a new `MonetaryAmount` from a raw amount and currency.
+    ///
+    /// # Arguments
+    /// * `amount` - The monetary amount in the minor unit of the currency (e.g., cents for USD). Must be non-negative.
+    /// * `currency` - The currency that the amount is denominated in.
     pub fn new(amount: i64, currency: Currency) -> Self {
         Self { amount, currency }
     }
 
-    /// Construct from DB parts.
+    /// Construct a `MonetaryAmount` from DB values.
     ///
     /// Interprets `amount_i64` (signed integer read from the DB) and an
     /// optional `currency_code`. If `currency_code` is `None`, this function
@@ -57,7 +61,10 @@ impl MonetaryAmount {
     ///
     /// Returns an error when the currency code is unsupported or the amount is
     /// negative.
-    pub fn from_db(amount_i64: i64, currency_code: Option<&str>) -> Result<Option<MonetaryAmount>> {
+    pub fn from_db(
+        amount_i64: i64,
+        currency_code: Option<&str>,
+    ) -> Result<Option<MonetaryAmount>, MonetaryAmountError> {
         match currency_code {
             None => Ok(None),
             Some(code) => {
@@ -74,7 +81,10 @@ impl MonetaryAmount {
     ///
     /// Returns an error when the currencies differ or when the addition would
     /// overflow the `u64` range.
-    pub fn add_same_currency(&self, other: &MonetaryAmount) -> Result<MonetaryAmount> {
+    pub fn add_same_currency(
+        &self,
+        other: &MonetaryAmount,
+    ) -> Result<MonetaryAmount, MonetaryAmountError> {
         if self.currency != other.currency {
             return Err(MonetaryAmountError::CurrencyMismatch);
         }
@@ -93,7 +103,7 @@ impl MonetaryAmount {
     pub fn add_optional(
         a: Option<&MonetaryAmount>,
         b: Option<&MonetaryAmount>,
-    ) -> Result<Option<MonetaryAmount>> {
+    ) -> Result<Option<MonetaryAmount>, MonetaryAmountError> {
         match (a, b) {
             (None, None) => Ok(None),
             (Some(x), None) => Ok(Some(x.clone())),
@@ -149,6 +159,7 @@ pub enum MonetaryAmountError {
 mod tests {
     use super::*;
     use crate::core::domain::currency::Currency;
+    use pretty_assertions::assert_eq;
     use rstest::rstest;
 
     #[rstest]
@@ -156,7 +167,7 @@ mod tests {
     #[case(1234, Currency::USD, "$12.34")]
     #[case(500, Currency::GBP, "£5.00")]
     #[case(1000, Currency::JPY, "¥1000")]
-    fn monetary_display_formats(
+    fn it_should_display_monetary_values(
         #[case] amount: i64,
         #[case] currency: Currency,
         #[case] expected: &str,
@@ -201,7 +212,7 @@ mod tests {
 
     #[rstest]
     #[case(100, 250, Currency::EUR, 350)]
-    fn add_same_currency_ok(
+    fn it_should_add_same_currency_ok(
         #[case] a: i64,
         #[case] b: i64,
         #[case] currency: Currency,
@@ -214,10 +225,23 @@ mod tests {
         assert_eq!(s.currency, currency);
     }
 
-    #[rstest]
+    #[test]
     fn it_should_add_same_currency_mismatch() {
         let a = MonetaryAmount::new(100, Currency::EUR);
         let b = MonetaryAmount::new(100, Currency::USD);
         assert!(a.add_same_currency(&b).is_err());
+    }
+
+    #[rstest]
+    #[case(100, true)]
+    #[case(1, true)]
+    #[case(0, false)]
+    #[case(-100, false)]
+    fn it_should_validate_monetary_amount(#[case] amount: i64, #[case] is_valid: bool) {
+        let monetary_amount = MonetaryAmount::new(amount, Currency::EUR);
+
+        let result = monetary_amount.validate();
+
+        assert_eq!(is_valid, result.is_ok());
     }
 }

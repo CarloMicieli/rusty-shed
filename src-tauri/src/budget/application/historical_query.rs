@@ -12,29 +12,27 @@ use std::str::FromStr;
 /// Get quarterly summaries with category breakdown for a specific year.
 ///
 /// # Arguments
-/// * `uow` - Unit of work for database access
+/// * `unit_of_work` - Unit of work for database access
 /// * `year` - The year to get quarterly summaries for
 /// * `currency_code` - The currency code to filter by
 ///
 /// # Returns
 /// A vector of quarterly summaries, one for each quarter that has data.
 pub async fn get_quarterly_summaries<U>(
-    uow: &mut U,
+    unit_of_work: &mut U,
     year: Year,
     currency_code: &str,
 ) -> Result<Vec<QuarterlySummary>, DomainError>
 where
     U: BudgetUowExt + Send,
 {
-    // Fetch quarterly spending by category from database
     let rows = {
-        let mut repo = uow.budget_repo();
+        let mut repo = unit_of_work.budget_repo();
         repo.get_quarterly_spending_by_category(year.value(), currency_code)
             .await
             .map_err(DomainError::Infrastructure)?
     };
 
-    // Group by quarter
     let mut quarterly_data: HashMap<i32, Vec<(Category, i64)>> = HashMap::new();
 
     for (quarter_num, category_str, amount) in rows {
@@ -47,16 +45,13 @@ where
             .push((category, amount));
     }
 
-    // Convert to QuarterlySummary objects
     let mut summaries = Vec::new();
 
     for (quarter_num, categories) in quarterly_data {
         let quarter = quarter_from_number(quarter_num)?;
 
-        // Calculate total for percentage calculations
         let total: i64 = categories.iter().map(|(_, amount)| amount).sum();
 
-        // Create category breakdown
         let category_breakdown: Vec<CategorySpending> = categories
             .into_iter()
             .map(|(category, amount)| {
@@ -84,7 +79,6 @@ where
         ));
     }
 
-    // Sort by quarter
     summaries.sort_by_key(|s| match s.quarter {
         BudgetQuarter::Q1 => 1,
         BudgetQuarter::Q2 => 2,
@@ -115,10 +109,10 @@ mod tests {
     use crate::budget::application::testing::FakeBudgetUow;
     use crate::budget::domain::repository::MockBudgetRepository;
     use crate::core::domain::calendar::Year;
+    use rstest::rstest;
 
     #[tokio::test]
     async fn it_should_return_empty_when_no_data() {
-        // Arrange – one budget_repo() call; returns empty rows
         let mut mock = MockBudgetRepository::new();
         mock.expect_get_quarterly_spending_by_category()
             .once()
@@ -127,17 +121,14 @@ mod tests {
         let mut uow = FakeBudgetUow::new().with_repo(mock);
         let year = Year::try_from(2025).unwrap();
 
-        // Act
         let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
 
-        // Assert
         assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
         assert!(result.unwrap().is_empty());
     }
 
     #[tokio::test]
     async fn it_should_group_spending_by_quarter() {
-        // Arrange – Q1 has Locomotives spending, Q2 has FreightCars spending
         let rows = vec![
             (1i32, "LOCOMOTIVES".to_string(), 50_000i64),
             (2i32, "FREIGHT_CARS".to_string(), 30_000i64),
@@ -151,17 +142,14 @@ mod tests {
         let mut uow = FakeBudgetUow::new().with_repo(mock);
         let year = Year::try_from(2025).unwrap();
 
-        // Act
         let result = get_quarterly_summaries(&mut uow, year, "EUR")
             .await
             .expect("expected Ok");
 
-        // Assert – two quarters returned, sorted Q1 before Q2
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].quarter, BudgetQuarter::Q1);
         assert_eq!(result[1].quarter, BudgetQuarter::Q2);
 
-        // Q1 total
         let q1_total: i64 = result[0]
             .category_breakdown
             .iter()
@@ -172,7 +160,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_fail_on_invalid_category_string() {
-        // Arrange – mock returns a category string not in the Category enum
         let rows = vec![(1i32, "INVALID_CATEGORY_XYZ".to_string(), 10_000i64)];
 
         let mut mock = MockBudgetRepository::new();
@@ -183,10 +170,8 @@ mod tests {
         let mut uow = FakeBudgetUow::new().with_repo(mock);
         let year = Year::try_from(2025).unwrap();
 
-        // Act
         let result = get_quarterly_summaries(&mut uow, year, "EUR").await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::Validation(_))),
             "Expected Validation error for invalid category, got: {:?}",
@@ -211,5 +196,36 @@ mod tests {
             "Expected Infrastructure error, got: {:?}",
             result
         );
+    }
+    #[rstest]
+    #[case(1, BudgetQuarter::Q1)]
+    #[case(2, BudgetQuarter::Q2)]
+    #[case(3, BudgetQuarter::Q3)]
+    #[case(4, BudgetQuarter::Q4)]
+    fn quarter_from_number_returns_expected_quarter(
+        #[case] input: i32,
+        #[case] expected: BudgetQuarter,
+    ) {
+        let res = quarter_from_number(input).expect("expected Ok");
+        assert_eq!(res, expected);
+    }
+
+    #[rstest]
+    #[case(0)]
+    #[case(5)]
+    #[case(-1)]
+    #[case(100)]
+    fn quarter_from_number_returns_validation_error_for_invalid_numbers(#[case] input: i32) {
+        match quarter_from_number(input) {
+            Err(DomainError::Validation(msg)) => {
+                // ensure error message contains the invalid number (keeps checks specific)
+                assert!(
+                    msg.contains(&input.to_string()),
+                    "error message should mention the invalid number; got: {}",
+                    msg
+                );
+            }
+            other => panic!("expected DomainError::Validation, got: {:?}", other),
+        }
     }
 }

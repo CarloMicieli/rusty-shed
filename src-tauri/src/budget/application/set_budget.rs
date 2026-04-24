@@ -22,7 +22,6 @@ impl SetBudgetUseCase {
     where
         U: BudgetUowExt + Send,
     {
-        // Get existing config if any
         let existing_config = {
             let mut repo = unit_of_work.budget_repo();
             repo.get_config().await?
@@ -30,17 +29,12 @@ impl SetBudgetUseCase {
 
         let config = match existing_config {
             Some(mut existing) => {
-                // Update existing configuration (emits BudgetConfigured event)
                 existing.update(input.mode, input.base_amount);
                 existing
             }
-            None => {
-                // Create new configuration (emits BudgetConfigured event)
-                BudgetConfiguration::new(input.mode, input.base_amount)
-            }
+            None => BudgetConfiguration::new(input.mode, input.base_amount),
         };
 
-        // Save by draining pending events through handle_event
         {
             let mut repo = unit_of_work.budget_repo();
             repo.save(config.clone()).await?;
@@ -73,7 +67,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_create_budget_when_none_exists() {
-        // Arrange – two budget_repo() calls: get_config then save
         let mut mock_get = MockBudgetRepository::new();
         mock_get.expect_get_config().once().returning(|| Ok(None));
 
@@ -84,10 +77,8 @@ mod tests {
             .with_repo(mock_get)
             .with_repo(mock_save);
 
-        // Act
         let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
 
-        // Assert
         assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
         let config = result.unwrap();
         assert_eq!(config.mode, BudgetMode::Monthly);
@@ -96,7 +87,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_update_existing_budget() {
-        // Arrange
         let existing = sample_budget_config(); // Monthly, 100_000 EUR
 
         let mut mock_get = MockBudgetRepository::new();
@@ -117,10 +107,8 @@ mod tests {
             base_amount: MonetaryAmount::new(1_200_000, Currency::EUR),
         };
 
-        // Act
         let result = SetBudgetUseCase::execute(&mut uow, input).await;
 
-        // Assert
         assert!(result.is_ok(), "Expected Ok, got: {:?}", result);
         let config = result.unwrap();
         assert_eq!(config.mode, BudgetMode::Yearly);
@@ -129,7 +117,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_propagate_get_config_error() {
-        // Arrange – only one repo call (error on get_config, save never reached)
         let mut mock_get = MockBudgetRepository::new();
         mock_get
             .expect_get_config()
@@ -138,10 +125,8 @@ mod tests {
 
         let mut uow = FakeBudgetUow::new().with_repo(mock_get);
 
-        // Act
         let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::Infrastructure(_))),
             "Expected Infrastructure error, got: {:?}",
@@ -151,7 +136,6 @@ mod tests {
 
     #[tokio::test]
     async fn it_should_propagate_save_error() {
-        // Arrange
         let mut mock_get = MockBudgetRepository::new();
         mock_get.expect_get_config().once().returning(|| Ok(None));
 
@@ -165,10 +149,8 @@ mod tests {
             .with_repo(mock_get)
             .with_repo(mock_save);
 
-        // Act
         let result = SetBudgetUseCase::execute(&mut uow, valid_input()).await;
 
-        // Assert
         assert!(
             matches!(result, Err(DomainError::Infrastructure(_))),
             "Expected Infrastructure error, got: {:?}",

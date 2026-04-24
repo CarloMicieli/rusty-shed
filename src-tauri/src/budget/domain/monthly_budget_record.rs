@@ -8,13 +8,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MonthlyBudgetRecord {
+    /// The year this record represents.
     pub year: i32,
-    pub month: u8,         // 1-12
-    pub base_budget: i64,  // Monthly allocation
-    pub extra_budget: i64, // Sum of extra budgets for this month
-    pub actual_spend: i64, // Sum of purchases this month
-    pub rollover_in: i64,  // Rollover from previous month
-    pub rollover_out: i64, // Rollover to next month (calculated)
+    /// The month this record represents.
+    pub month: u8,
+    /// Monthly allocation
+    pub base_budget: i64,
+    /// Sum of extra budgets for this month
+    pub extra_budget: i64,
+    /// Sum of purchases this month
+    pub actual_spend: i64,
+    /// Rollover from previous month
+    pub rollover_in: i64,
+    /// Rollover to next month (calculated)
+    pub rollover_out: i64,
     pub status: MonthStatus,
     pub currency: Currency,
 }
@@ -90,15 +97,15 @@ mod tests {
         let record = MonthlyBudgetRecord {
             year: 2026,
             month: 1,
-            base_budget: 10_000,
-            extra_budget: 2_000,
+            base_budget: 10000,
+            extra_budget: 2000,
             actual_spend: 0,
-            rollover_in: 1_000,
+            rollover_in: 1000,
             rollover_out: 0,
             status: MonthStatus::InProgress,
             currency: Currency::USD,
         };
-        assert_eq!(record.available(), 13_000); // 10k + 2k + 1k
+        assert_eq!(record.available(), 13000);
     }
 
     #[test]
@@ -106,15 +113,15 @@ mod tests {
         let record = MonthlyBudgetRecord {
             year: 2026,
             month: 1,
-            base_budget: 10_000,
+            base_budget: 10000,
             extra_budget: 0,
-            actual_spend: 3_000,
+            actual_spend: 3000,
             rollover_in: 0,
             rollover_out: 0,
             status: MonthStatus::InProgress,
             currency: Currency::USD,
         };
-        assert_eq!(record.remaining(), 7_000); // 10k - 3k
+        assert_eq!(record.remaining(), 7000);
     }
 
     #[test]
@@ -122,15 +129,15 @@ mod tests {
         let record = MonthlyBudgetRecord {
             year: 2026,
             month: 1,
-            base_budget: 10_000,
+            base_budget: 10000,
             extra_budget: 0,
-            actual_spend: 2_500,
+            actual_spend: 2500,
             rollover_in: 0,
             rollover_out: 0,
             status: MonthStatus::InProgress,
             currency: Currency::USD,
         };
-        assert_eq!(record.remaining_percentage(), 75.0); // 7.5k / 10k = 75%
+        assert_eq!(record.remaining_percentage(), 75.0);
     }
 
     #[test]
@@ -138,15 +145,15 @@ mod tests {
         let record = MonthlyBudgetRecord {
             year: 2026,
             month: 1,
-            base_budget: 10_000,
+            base_budget: 10000,
             extra_budget: 0,
-            actual_spend: 12_000,
+            actual_spend: 12000,
             rollover_in: 0,
             rollover_out: 0,
             status: MonthStatus::Completed,
             currency: Currency::USD,
         };
         assert!(record.is_over_budget());
-        assert_eq!(record.remaining(), -2_000);
+        assert_eq!(record.remaining(), -2000);
     }
 }
