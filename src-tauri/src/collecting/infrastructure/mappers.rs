@@ -363,7 +363,7 @@ impl CollectionMapper {
 mod tests {
     use super::*;
     use crate::catalog::domain::railway_model::{
-        Category, PowerMethod, RailwayModelId, RollingStockId,
+        Category, DccInterface, PowerMethod, RailwayModelId, RollingStockId,
     };
     use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::CollectionItemId;
@@ -771,6 +771,216 @@ mod tests {
             }
             _ => panic!("expected PreOrdered variant"),
         }
+    }
+
+    #[test]
+    fn it_should_map_digital_setup_when_decoder_fields_present() {
+        let item_id = CollectionItemId::default();
+        let collection_item = CollectionItemRow {
+            id: item_id.clone(),
+            collection_id: CollectionId::default(),
+            category: Category::Locomotives,
+            scale: Scale::H0,
+            power_method: PowerMethod::DC,
+            epoch: "VI".into(),
+            description: "Some description".to_string(),
+            product_code: "60100".to_string(),
+            manufacturer: "Acme".to_string(),
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap(),
+            added_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            removed_date: None,
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        };
+
+        let owned_rolling_stock = OwnedRollingStockRow {
+            id: OwnedRollingStockId::from_string_unchecked(
+                "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string(),
+            ),
+            collection_item_id: item_id.clone(),
+            rolling_stock_id: Some(RollingStockId::from_uuid(&Uuid::new_v4())),
+            notes: None,
+            dcc_address: Some(18),
+            installed_decoder_id: Some("invalid-decoder-id".to_string()),
+            decoder_id: None,
+            decoder_manufacturer_id: None,
+            decoder_product_code: None,
+            decoder_type: None,
+            decoder_protocol: None,
+            decoder_interface: Some(DccInterface::Mtc21),
+            series: None,
+            series_name: None,
+            road_number: None,
+            livery: None,
+            control: None,
+            railway_company_name: None,
+            country_code: None,
+            category: None,
+            subcategory: None,
+            depot: None,
+            rs_dcc_interface: None,
+            length_millimeters: None,
+            length_inches: None,
+            current_coupler_id: None,
+        };
+
+        let mut owned_rolling_stocks_map = HashMap::new();
+        owned_rolling_stocks_map.insert(item_id.clone(), vec![owned_rolling_stock]);
+        let purchase_infos_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = HashMap::new();
+
+        let mapped_item = CollectionMapper::row_to_collection_item(
+            collection_item,
+            &owned_rolling_stocks_map,
+            &purchase_infos_map,
+        )
+        .expect("mapping item should succeed");
+
+        let digital = mapped_item.rolling_stocks[0]
+            .digital
+            .as_ref()
+            .expect("digital setup should be present");
+        assert_eq!(digital.interface, DccInterface::Mtc21);
+        assert_eq!(digital.dcc_address, 18);
+        assert_eq!(
+            digital.installed_decoder_id.to_string(),
+            "invalid-decoder-id"
+        );
+    }
+
+    #[test]
+    fn it_should_skip_digital_setup_when_decoder_interface_is_missing() {
+        let item_id = CollectionItemId::default();
+        let collection_item = CollectionItemRow {
+            id: item_id.clone(),
+            collection_id: CollectionId::default(),
+            category: Category::Locomotives,
+            scale: Scale::H0,
+            power_method: PowerMethod::DC,
+            epoch: "VI".into(),
+            description: "Some description".to_string(),
+            product_code: "60100".to_string(),
+            manufacturer: "Acme".to_string(),
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap(),
+            added_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            removed_date: None,
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        };
+
+        let owned_rolling_stock = OwnedRollingStockRow {
+            id: OwnedRollingStockId::from_string_unchecked(
+                "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string(),
+            ),
+            collection_item_id: item_id.clone(),
+            rolling_stock_id: Some(RollingStockId::from_uuid(&Uuid::new_v4())),
+            notes: None,
+            dcc_address: Some(12),
+            installed_decoder_id: Some("trn:decoder:acme:d1".to_string()),
+            decoder_id: None,
+            decoder_manufacturer_id: None,
+            decoder_product_code: None,
+            decoder_type: None,
+            decoder_protocol: None,
+            decoder_interface: None,
+            series: None,
+            series_name: None,
+            road_number: None,
+            livery: None,
+            control: None,
+            railway_company_name: None,
+            country_code: None,
+            category: None,
+            subcategory: None,
+            depot: None,
+            rs_dcc_interface: None,
+            length_millimeters: None,
+            length_inches: None,
+            current_coupler_id: None,
+        };
+
+        let mut owned_rolling_stocks_map = HashMap::new();
+        owned_rolling_stocks_map.insert(item_id.clone(), vec![owned_rolling_stock]);
+        let purchase_infos_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = HashMap::new();
+
+        let mapped_item = CollectionMapper::row_to_collection_item(
+            collection_item,
+            &owned_rolling_stocks_map,
+            &purchase_infos_map,
+        )
+        .expect("mapping item should succeed");
+
+        assert!(mapped_item.rolling_stocks[0].digital.is_none());
+    }
+
+    #[test]
+    fn it_should_skip_digital_setup_when_dcc_address_is_missing() {
+        let item_id = CollectionItemId::default();
+        let collection_item = CollectionItemRow {
+            id: item_id.clone(),
+            collection_id: CollectionId::default(),
+            category: Category::Locomotives,
+            scale: Scale::H0,
+            power_method: PowerMethod::DC,
+            epoch: "VI".into(),
+            description: "Some description".to_string(),
+            product_code: "60100".to_string(),
+            manufacturer: "Acme".to_string(),
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap(),
+            added_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            removed_date: None,
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        };
+
+        let owned_rolling_stock = OwnedRollingStockRow {
+            id: OwnedRollingStockId::from_string_unchecked(
+                "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string(),
+            ),
+            collection_item_id: item_id.clone(),
+            rolling_stock_id: Some(RollingStockId::from_uuid(&Uuid::new_v4())),
+            notes: None,
+            dcc_address: None,
+            installed_decoder_id: Some("trn:decoder:acme:d1".to_string()),
+            decoder_id: None,
+            decoder_manufacturer_id: None,
+            decoder_product_code: None,
+            decoder_type: None,
+            decoder_protocol: None,
+            decoder_interface: Some(DccInterface::Mtc21),
+            series: None,
+            series_name: None,
+            road_number: None,
+            livery: None,
+            control: None,
+            railway_company_name: None,
+            country_code: None,
+            category: None,
+            subcategory: None,
+            depot: None,
+            rs_dcc_interface: None,
+            length_millimeters: None,
+            length_inches: None,
+            current_coupler_id: None,
+        };
+
+        let mut owned_rolling_stocks_map = HashMap::new();
+        owned_rolling_stocks_map.insert(item_id.clone(), vec![owned_rolling_stock]);
+        let purchase_infos_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = HashMap::new();
+
+        let mapped_item = CollectionMapper::row_to_collection_item(
+            collection_item,
+            &owned_rolling_stocks_map,
+            &purchase_infos_map,
+        )
+        .expect("mapping item should succeed");
+
+        assert!(mapped_item.rolling_stocks[0].digital.is_none());
     }
 
     #[test]
