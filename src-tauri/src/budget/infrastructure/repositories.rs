@@ -199,3 +199,141 @@ impl BudgetUowExt for SqliteUnitOfWork {
         Box::new(SqliteBudgetRepository::new(&mut self.tx))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::budget::domain::{BudgetMode, ExtraBudgetEntry};
+    use crate::core::domain::calendar::{Month, Year};
+    use crate::core::domain::{Currency, MonetaryAmount};
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_save_and_load_budget_configuration(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        {
+            let mut repo = uow.budget_repo();
+            let config = BudgetConfiguration::new(
+                BudgetMode::Monthly,
+                MonetaryAmount::new(120_000, Currency::EUR),
+            );
+
+            repo.save(config).await.expect("save should succeed");
+        }
+
+        {
+            let mut repo = uow.budget_repo();
+            let loaded = repo
+                .get_config()
+                .await
+                .expect("get_config should succeed")
+                .expect("config should exist");
+
+            assert_eq!(loaded.mode, BudgetMode::Monthly);
+            assert_eq!(loaded.base_amount.amount, 120_000);
+            assert_eq!(loaded.base_amount.currency, Currency::EUR);
+        }
+
+        uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn it_should_add_get_and_remove_extra_budget(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let entry = ExtraBudgetEntry::new(
+            Year::try_from(2026).expect("valid year"),
+            Month::try_from(4).expect("valid month"),
+            MonetaryAmount::new(5_000, Currency::EUR),
+            Some("gift".to_string()),
+        )
+        .expect("valid extra budget entry");
+
+        {
+            let mut repo = uow.budget_repo();
+            repo.add_extra_budget(&entry)
+                .await
+                .expect("add_extra_budget should succeed");
+
+            let found = repo
+                .get_extra_budget_by_id(&entry.id)
+                .await
+                .expect("get_extra_budget_by_id should succeed")
+                .expect("entry should be present");
+            assert_eq!(found.id, entry.id);
+            assert_eq!(found.amount.amount, 5_000);
+
+            repo.remove_extra_budget(&entry.id)
+                .await
+                .expect("remove_extra_budget should succeed");
+
+            let missing = repo
+                .get_extra_budget_by_id(&entry.id)
+                .await
+                .expect("get_extra_budget_by_id should succeed after delete");
+            assert!(missing.is_none());
+        }
+
+        uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_filter_monthly_spending_by_currency(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        {
+            let mut repo = uow.budget_repo();
+
+            let eur = repo
+                .get_monthly_spending(2025, "EUR")
+                .await
+                .expect("EUR spending query should succeed");
+            assert_eq!(eur, vec![(12, 17_500)]);
+
+            let usd = repo
+                .get_monthly_spending(2025, "USD")
+                .await
+                .expect("USD spending query should succeed");
+            assert!(usd.is_empty());
+        }
+
+        uow.commit().await.expect("commit should succeed");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_return_multi_year_and_quarterly_aggregates(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        {
+            let mut repo = uow.budget_repo();
+
+            let multi_year = repo
+                .get_multi_year_monthly_spending(2024, 2025, "EUR")
+                .await
+                .expect("multi year query should succeed");
+            assert_eq!(multi_year, vec![(2025, 12, 17_500)]);
+
+            let quarterly = repo
+                .get_quarterly_spending_by_category(2025, "EUR")
+                .await
+                .expect("quarterly query should succeed");
+            assert_eq!(quarterly, vec![(4, "LOCOMOTIVES".to_string(), 17_500)]);
+        }
+
+        uow.commit().await.expect("commit should succeed");
+    }
+}

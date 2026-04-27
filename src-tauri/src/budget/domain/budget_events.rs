@@ -61,3 +61,58 @@ impl BudgetEvent {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::domain::Currency;
+
+    #[test]
+    fn it_should_return_expected_event_names() {
+        let timestamp = Utc::now();
+
+        let configured = BudgetEvent::BudgetConfigured {
+            config_id: BudgetConfigId::singleton(),
+            mode: "MONTHLY".to_string(),
+            base_amount: MonetaryAmount::new(100_000, Currency::EUR),
+            last_reset_year: 2026,
+            created_at: timestamp,
+            version: 1,
+            timestamp,
+        };
+        assert_eq!(configured.event_name(), "BUDGET_CONFIGURED");
+
+        let added = BudgetEvent::ExtraBudgetAdded {
+            extra_budget_id: ExtraBudgetId::default(),
+            year: 2026,
+            month: 4,
+            amount: MonetaryAmount::new(10_000, Currency::EUR),
+            reason: Some("Gift".to_string()),
+            timestamp,
+        };
+        assert_eq!(added.event_name(), "EXTRA_BUDGET_ADDED");
+
+        let removed = BudgetEvent::ExtraBudgetRemoved {
+            extra_budget_id: ExtraBudgetId::default(),
+            timestamp,
+        };
+        assert_eq!(removed.event_name(), "EXTRA_BUDGET_REMOVED");
+
+        let reset = BudgetEvent::AnnualResetPerformed {
+            year: 2027,
+            timestamp,
+        };
+        assert_eq!(reset.event_name(), "ANNUAL_RESET_PERFORMED");
+    }
+
+    #[test]
+    fn it_should_expose_event_timestamp() {
+        let timestamp = Utc::now();
+        let event = BudgetEvent::AnnualResetPerformed {
+            year: 2027,
+            timestamp,
+        };
+
+        assert_eq!(event.timestamp(), &timestamp);
+    }
+}

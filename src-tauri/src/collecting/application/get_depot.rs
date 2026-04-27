@@ -53,4 +53,18 @@ mod tests {
 
         assert_eq!(result.rolling_stocks.len(), 0);
     }
+
+    #[tokio::test]
+    async fn it_should_propagate_repository_error() {
+        let mut mock = MockCollectionRepository::new();
+        mock.expect_find_depot_view()
+            .times(1)
+            .returning(|| Err(DomainError::Infrastructure("db unavailable".to_string())));
+
+        let mut unit_of_work = FakeUow::new(mock, MockRailwayModelRepository::new());
+
+        let result = GetDepot::execute(&mut unit_of_work).await;
+
+        assert!(matches!(result, Err(DomainError::Infrastructure(_))));
+    }
 }

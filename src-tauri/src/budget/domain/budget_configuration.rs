@@ -162,6 +162,7 @@ impl BudgetConfiguration {
 mod tests {
     use super::*;
     use crate::core::domain::currency::Currency;
+    use chrono::Datelike;
 
     #[test]
     fn test_monthly_amount_calculation() {
@@ -189,5 +190,60 @@ mod tests {
         );
         assert_eq!(config.pending_events().len(), 1);
         assert_eq!(config.pending_events()[0].event_name(), "BUDGET_CONFIGURED");
+    }
+
+    #[test]
+    fn test_update_emits_configured_event() {
+        let mut config = BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(10_000, Currency::USD),
+        );
+
+        config.update(
+            BudgetMode::Yearly,
+            MonetaryAmount::new(120_000, Currency::USD),
+        );
+
+        assert_eq!(config.pending_events().len(), 2);
+        assert_eq!(config.pending_events()[1].event_name(), "BUDGET_CONFIGURED");
+        assert_eq!(config.mode, BudgetMode::Yearly);
+    }
+
+    #[test]
+    fn test_drain_events_clears_pending_events() {
+        let mut config = BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(10_000, Currency::USD),
+        );
+        config.update(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(15_000, Currency::USD),
+        );
+
+        let drained = config.drain_events();
+
+        assert_eq!(drained.len(), 2);
+        assert!(config.pending_events().is_empty());
+    }
+
+    #[test]
+    fn test_perform_annual_reset_adds_event_when_year_is_older() {
+        let mut config = BudgetConfiguration::new(
+            BudgetMode::Monthly,
+            MonetaryAmount::new(10_000, Currency::USD),
+        );
+
+        let old_year = Utc::now().year() - 1;
+        config.last_reset_year = old_year;
+
+        config.perform_annual_reset();
+
+        assert_eq!(config.last_reset_year, Utc::now().year());
+        assert!(
+            config
+                .pending_events()
+                .iter()
+                .any(|event| event.event_name() == "ANNUAL_RESET_PERFORMED")
+        );
     }
 }

@@ -146,3 +146,206 @@ impl RecordAcquisition {
         Ok(ids)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::catalog::domain::manufacturer::ManufacturerId;
+    use crate::catalog::domain::railway_model::localized_field::LocalizedField;
+    use crate::catalog::domain::railway_model::{
+        MockRailwayModelRepository, ProductCode, RailwayModel,
+    };
+    use crate::collecting::application::testing::FakeUow;
+    use crate::collecting::domain::{Collection, MockCollectionRepository};
+    use crate::core::domain::Currency;
+    use crate::core::domain::identifiers::Identifier;
+    use crate::core::domain::test_utils::SequentialIdProvider;
+
+    fn manufacturer_id() -> ManufacturerId {
+        ManufacturerId::from_string_unchecked("trn:manufacturer:acme".to_string())
+    }
+
+    fn railway_model() -> RailwayModel {
+        let model_id = RailwayModelId::new(&manufacturer_id(), "60100").expect("valid model id");
+
+        RailwayModel {
+            id: model_id,
+            manufacturer_id: manufacturer_id(),
+            product_code: ProductCode::try_from("60100").expect("valid product code"),
+            description: LocalizedField {
+                lang: Language::English,
+                value: "ACME test model".to_string(),
+            },
+            details: None,
+            power_method: PowerMethod::DC,
+            scale: Scale::H0,
+            epoch: "IV".into(),
+            category: Category::Locomotives,
+            delivery_date: None,
+            availability_status: None,
+            rolling_stocks: vec![],
+            pending_events: vec![],
+        }
+    }
+
+    fn input_with_product_code(product_code: &str) -> RecordAcquisitionInput {
+        RecordAcquisitionInput {
+            seller_id: None,
+            purchase_date: NaiveDate::from_ymd_opt(2026, 2, 1).expect("valid date"),
+            items: vec![AcquisitionItemInput {
+                manufacturer_id: manufacturer_id(),
+                product_code: product_code.to_string(),
+                description: "ACME test model".to_string(),
+                category: Category::Locomotives,
+                scale: Scale::H0,
+                epoch: "IV".into(),
+                power_method: PowerMethod::DC,
+                price: MonetaryAmount::new(12_500, Currency::EUR),
+            }],
+        }
+    }
+
+    #[tokio::test]
+    async fn it_should_create_missing_catalog_model_and_save_collection() {
+        let model = railway_model();
+        let model_id = model.id.clone();
+
+        let mut collections_find = MockCollectionRepository::new();
+        collections_find
+            .expect_find_by_id()
+            .once()
+            .returning(|_| Ok(None));
+
+        let mut collections_save = MockCollectionRepository::new();
+        collections_save
+            .expect_save()
+            .once()
+            .returning(|collection| {
+                assert_eq!(collection.items.len(), 1);
+                Ok(())
+            });
+
+        let mut railway_find_missing = MockRailwayModelRepository::new();
+        railway_find_missing
+            .expect_find_by_id()
+            .once()
+            .returning(|_, _| Ok(None));
+
+        let model_id_for_create = model_id.clone();
+        let mut railway_create = MockRailwayModelRepository::new();
+        railway_create
+            .expect_create()
+            .once()
+            .returning(move |_| Ok(model_id_for_create.clone()));
+
+        let mut railway_find_created = MockRailwayModelRepository::new();
+        railway_find_created
+            .expect_find_by_id()
+            .once()
+            .returning(move |_, _| Ok(Some(model.clone())));
+
+        let mut uow = FakeUow::default()
+            .with_collection_repo(collections_find)
+            .with_collection_repo(collections_save)
+            .with_railway_repo(railway_find_missing)
+            .with_railway_repo(railway_create)
+            .with_railway_repo(railway_find_created);
+
+        let expected_item_id = CollectionItemId::new_from_parts(&["test-item-id"]);
+        let expected_purchase_id = PurchaseInfoId::new_from_parts(&["test-purchase-id"]);
+
+        let item_id_provider = SequentialIdProvider::new(vec![expected_item_id.clone()]);
+        let purchase_id_provider = SequentialIdProvider::new(vec![expected_purchase_id]);
+
+        let result = RecordAcquisition::execute(
+            &mut uow,
+            item_id_provider,
+            purchase_id_provider,
+            input_with_product_code("60100"),
+        )
+        .await
+        .expect("record acquisition should succeed");
+
+        assert_eq!(result, vec![expected_item_id]);
+    }
+
+    #[tokio::test]
+    async fn it_should_return_not_found_when_model_is_not_retrievable_after_create() {
+        let mut collections_find = MockCollectionRepository::new();
+        collections_find
+            .expect_find_by_id()
+            .once()
+            .returning(|_| Ok(Some(Collection::default())));
+
+        let mut railway_find_missing = MockRailwayModelRepository::new();
+        railway_find_missing
+            .expect_find_by_id()
+            .once()
+            .returning(|_, _| Ok(None));
+
+        let model_id = RailwayModelId::new(&manufacturer_id(), "60100").expect("valid model id");
+        let model_id_for_create = model_id.clone();
+        let mut railway_create = MockRailwayModelRepository::new();
+        railway_create
+            .expect_create()
+            .once()
+            .returning(move |_| Ok(model_id_for_create.clone()));
+
+        let mut railway_find_missing_again = MockRailwayModelRepository::new();
+        railway_find_missing_again
+            .expect_find_by_id()
+            .once()
+            .returning(|_, _| Ok(None));
+
+        let mut uow = FakeUow::default()
+            .with_collection_repo(collections_find)
+            .with_railway_repo(railway_find_missing)
+            .with_railway_repo(railway_create)
+            .with_railway_repo(railway_find_missing_again);
+
+        let item_id_provider = SequentialIdProvider::new(vec![CollectionItemId::default()]);
+        let purchase_id_provider = SequentialIdProvider::new(vec![PurchaseInfoId::default()]);
+
+        let result = RecordAcquisition::execute(
+            &mut uow,
+            item_id_provider,
+            purchase_id_provider,
+            input_with_product_code("60100"),
+        )
+        .await;
+
+        assert!(matches!(result, Err(DomainError::NotFound { .. })));
+    }
+
+    #[tokio::test]
+    async fn it_should_map_invalid_product_code_to_validation_error() {
+        let mut collections_find = MockCollectionRepository::new();
+        collections_find
+            .expect_find_by_id()
+            .once()
+            .returning(|_| Ok(Some(Collection::default())));
+
+        let mut railway_find_missing = MockRailwayModelRepository::new();
+        railway_find_missing
+            .expect_find_by_id()
+            .once()
+            .returning(|_, _| Ok(None));
+
+        let mut uow = FakeUow::default()
+            .with_collection_repo(collections_find)
+            .with_railway_repo(railway_find_missing);
+
+        let item_id_provider = SequentialIdProvider::new(vec![CollectionItemId::default()]);
+        let purchase_id_provider = SequentialIdProvider::new(vec![PurchaseInfoId::default()]);
+
+        let result = RecordAcquisition::execute(
+            &mut uow,
+            item_id_provider,
+            purchase_id_provider,
+            input_with_product_code(""),
+        )
+        .await;
+
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+}

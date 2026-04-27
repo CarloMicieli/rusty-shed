@@ -115,4 +115,40 @@ mod tests {
         let config = row_to_budget_config(row).expect("budget config should still map");
         assert_eq!(config.created_at, config.updated_at);
     }
+
+    #[test]
+    fn test_row_to_extra_budget_fails_on_invalid_currency() {
+        let row = ExtraBudgetRow {
+            id: "trn:extra-budget:11111111-1111-1111-1111-111111111111".to_string(),
+            year: 2026,
+            month: 4,
+            amount: 5_000,
+            currency: "INVALID".to_string(),
+            reason: None,
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            version: 0,
+        };
+
+        let result = row_to_extra_budget(row);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_row_to_extra_budget_fails_on_invalid_month() {
+        let row = ExtraBudgetRow {
+            id: "trn:extra-budget:11111111-1111-1111-1111-111111111111".to_string(),
+            year: 2026,
+            month: 13,
+            amount: 5_000,
+            currency: "EUR".to_string(),
+            reason: None,
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            version: 0,
+        };
+
+        let result = row_to_extra_budget(row);
+
+        assert!(result.is_err());
+    }
 }
