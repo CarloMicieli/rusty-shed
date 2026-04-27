@@ -532,4 +532,237 @@ mod tests {
         assert!(quarterly.contains(&(3, "LOCOMOTIVES".to_string(), 400_i64)));
         assert!(quarterly.contains(&(4, "LOCOMOTIVES".to_string(), 18_000_i64)));
     }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn get_quarterly_spending_keeps_unexpected_legacy_category_values(
+        pool: sqlx::SqlitePool,
+    ) {
+        let mut conn = pool.acquire().await.expect("acquire connection");
+
+        // Insert two legacy-category railway models that may exist in old persisted datasets.
+        sqlx::query(
+            "INSERT INTO railway_models (
+                id, manufacturer_id, product_code, power_method, scale, epoch, category, availability_status
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind("trn:railway-model:acme:legacy-1")
+        .bind("trn:manufacturer:acme")
+        .bind("LEG-1")
+        .bind("DC")
+        .bind("H0")
+        .bind("IV")
+        .bind("LEGACY_LOCO")
+        .bind("AVAILABLE")
+        .execute(&mut *conn)
+        .await
+        .expect("insert legacy model 1");
+
+        sqlx::query(
+            "INSERT INTO railway_models (
+                id, manufacturer_id, product_code, power_method, scale, epoch, category, availability_status
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind("trn:railway-model:acme:legacy-2")
+        .bind("trn:manufacturer:acme")
+        .bind("LEG-2")
+        .bind("DC")
+        .bind("H0")
+        .bind("IV")
+        .bind("legacy_loco")
+        .bind("AVAILABLE")
+        .execute(&mut *conn)
+        .await
+        .expect("insert legacy model 2");
+
+        sqlx::query(
+            "INSERT INTO collection_items (id, collection_id, railway_model_id, added_date)
+             VALUES (?1, ?2, ?3, ?4)",
+        )
+        .bind("trn:collection-item:legacy-11111111-1111-1111-1111-111111111111")
+        .bind("trn:collection:1")
+        .bind("trn:railway-model:acme:legacy-1")
+        .bind("2025-04-01")
+        .execute(&mut *conn)
+        .await
+        .expect("insert collection item for legacy model 1");
+
+        sqlx::query(
+            "INSERT INTO collection_items (id, collection_id, railway_model_id, added_date)
+             VALUES (?1, ?2, ?3, ?4)",
+        )
+        .bind("trn:collection-item:legacy-22222222-2222-2222-2222-222222222222")
+        .bind("trn:collection:1")
+        .bind("trn:railway-model:acme:legacy-2")
+        .bind("2025-04-01")
+        .execute(&mut *conn)
+        .await
+        .expect("insert collection item for legacy model 2");
+
+        // Both purchases in Q2/2025, same currency, distinct legacy category strings.
+        sqlx::query(
+            "INSERT INTO purchase_infos (
+                id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency
+             ) VALUES (?1, ?2, 'PURCHASED', ?3, ?4, ?5)",
+        )
+        .bind("trn:purchase:legacy-11111111-1111-1111-1111-111111111111")
+        .bind("trn:collection-item:legacy-11111111-1111-1111-1111-111111111111")
+        .bind("2025-04-12")
+        .bind(321_i64)
+        .bind("EUR")
+        .execute(&mut *conn)
+        .await
+        .expect("insert purchase for legacy category LEGACY_LOCO");
+
+        sqlx::query(
+            "INSERT INTO purchase_infos (
+                id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency
+             ) VALUES (?1, ?2, 'PURCHASED', ?3, ?4, ?5)",
+        )
+        .bind("trn:purchase:legacy-22222222-2222-2222-2222-222222222222")
+        .bind("trn:collection-item:legacy-22222222-2222-2222-2222-222222222222")
+        .bind("2025-05-12")
+        .bind(654_i64)
+        .bind("EUR")
+        .execute(&mut *conn)
+        .await
+        .expect("insert purchase for legacy category legacy_loco");
+
+        let quarterly = get_quarterly_spending_by_category(&mut conn, 2025, "EUR")
+            .await
+            .expect("quarterly query should succeed");
+
+        // Query should preserve unexpected categories as-is and aggregate per distinct value.
+        assert!(quarterly.contains(&(2, "LEGACY_LOCO".to_string(), 321_i64)));
+        assert!(quarterly.contains(&(2, "legacy_loco".to_string(), 654_i64)));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn get_quarterly_spending_orders_legacy_and_normal_categories_in_same_quarter(
+        pool: sqlx::SqlitePool,
+    ) {
+        let mut conn = pool.acquire().await.expect("acquire connection");
+
+        // Legacy category model.
+        sqlx::query(
+            "INSERT INTO railway_models (
+                id, manufacturer_id, product_code, power_method, scale, epoch, category, availability_status
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        )
+        .bind("trn:railway-model:acme:legacy-mixed")
+        .bind("trn:manufacturer:acme")
+        .bind("LEG-MIX")
+        .bind("DC")
+        .bind("H0")
+        .bind("IV")
+        .bind("LEGACY_MIXED")
+        .bind("AVAILABLE")
+        .execute(&mut *conn)
+        .await
+        .expect("insert legacy mixed model");
+
+        // Three items in the same quarter/currency across legacy + normal categories.
+        sqlx::query(
+            "INSERT INTO collection_items (id, collection_id, railway_model_id, added_date)
+             VALUES (?1, ?2, ?3, ?4)",
+        )
+        .bind("trn:collection-item:mix-11111111-1111-1111-1111-111111111111")
+        .bind("trn:collection:1")
+        .bind("trn:railway-model:acme:legacy-mixed")
+        .bind("2025-04-01")
+        .execute(&mut *conn)
+        .await
+        .expect("insert legacy collection item");
+
+        sqlx::query(
+            "INSERT INTO collection_items (id, collection_id, railway_model_id, added_date)
+             VALUES (?1, ?2, ?3, ?4)",
+        )
+        .bind("trn:collection-item:mix-22222222-2222-2222-2222-222222222222")
+        .bind("trn:collection:1")
+        .bind("trn:railway-model:acme:60100") // LOCOMOTIVES
+        .bind("2025-04-01")
+        .execute(&mut *conn)
+        .await
+        .expect("insert locomotives collection item");
+
+        sqlx::query(
+            "INSERT INTO collection_items (id, collection_id, railway_model_id, added_date)
+             VALUES (?1, ?2, ?3, ?4)",
+        )
+        .bind("trn:collection-item:mix-33333333-3333-3333-3333-333333333333")
+        .bind("trn:collection:1")
+        .bind("trn:railway-model:rivarossi:hr4315") // PASSENGER_CARS
+        .bind("2025-04-01")
+        .execute(&mut *conn)
+        .await
+        .expect("insert passenger cars collection item");
+
+        // All in Q2/2025 and EUR.
+        sqlx::query(
+            "INSERT INTO purchase_infos (
+                id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency
+             ) VALUES (?1, ?2, 'PURCHASED', ?3, ?4, ?5)",
+        )
+        .bind("trn:purchase:mix-11111111-1111-1111-1111-111111111111")
+        .bind("trn:collection-item:mix-11111111-1111-1111-1111-111111111111")
+        .bind("2025-04-10")
+        .bind(111_i64)
+        .bind("EUR")
+        .execute(&mut *conn)
+        .await
+        .expect("insert legacy purchase");
+
+        sqlx::query(
+            "INSERT INTO purchase_infos (
+                id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency
+             ) VALUES (?1, ?2, 'PURCHASED', ?3, ?4, ?5)",
+        )
+        .bind("trn:purchase:mix-22222222-2222-2222-2222-222222222222")
+        .bind("trn:collection-item:mix-22222222-2222-2222-2222-222222222222")
+        .bind("2025-05-10")
+        .bind(222_i64)
+        .bind("EUR")
+        .execute(&mut *conn)
+        .await
+        .expect("insert locomotives purchase");
+
+        sqlx::query(
+            "INSERT INTO purchase_infos (
+                id, collection_item_id, purchase_type, purchase_date, purchased_price_amount, purchased_price_currency
+             ) VALUES (?1, ?2, 'PURCHASED', ?3, ?4, ?5)",
+        )
+        .bind("trn:purchase:mix-33333333-3333-3333-3333-333333333333")
+        .bind("trn:collection-item:mix-33333333-3333-3333-3333-333333333333")
+        .bind("2025-06-10")
+        .bind(333_i64)
+        .bind("EUR")
+        .execute(&mut *conn)
+        .await
+        .expect("insert passenger cars purchase");
+
+        let quarterly = get_quarterly_spending_by_category(&mut conn, 2025, "EUR")
+            .await
+            .expect("quarterly query should succeed");
+
+        let quarter_two_rows: Vec<(i32, String, i64)> = quarterly
+            .into_iter()
+            .filter(|(quarter, _, _)| *quarter == 2)
+            .collect();
+
+        // ORDER BY clause is quarter ASC, category ASC.
+        assert_eq!(
+            quarter_two_rows,
+            vec![
+                (2, "LEGACY_MIXED".to_string(), 111_i64),
+                (2, "LOCOMOTIVES".to_string(), 222_i64),
+                (2, "PASSENGER_CARS".to_string(), 333_i64),
+            ]
+        );
+    }
 }
