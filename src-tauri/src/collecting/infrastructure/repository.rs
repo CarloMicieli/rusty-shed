@@ -770,7 +770,8 @@ mod tests {
     use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
     use crate::catalog::domain::scale::Scale;
     use crate::collecting::domain::{
-        BoxCondition, ModelCondition, OwnedRollingStockId, PurchaseCondition, PurchaseInfo,
+        BoxCondition, CollectionItemUpdate, ModelCondition, OwnedRollingStockId, PurchaseCondition,
+        PurchaseInfo, UpdateCollectionItemInput,
     };
     use crate::core::domain::identifiers::Identifier;
     use crate::core::domain::{Currency, MonetaryAmount};
@@ -1246,5 +1247,126 @@ mod tests {
 
         assert_eq!(coll.id, CollectionId::default());
         assert!(!coll.items.is_empty());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_update_price_and_recalculate_collection_total(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("create unit of work");
+
+        let mut repo = uow.collections_repository();
+        let input = UpdateCollectionItemInput {
+            collection_item_id: CollectionItemId::try_from(
+                "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730",
+            )
+            .expect("valid collection item id"),
+            update: CollectionItemUpdate::Price(Some(MonetaryAmount::new(20_000, Currency::EUR))),
+        };
+
+        repo.update_item(&input)
+            .await
+            .expect("update should succeed");
+        drop(repo);
+        uow.commit().await.expect("commit should succeed");
+
+        let mut conn2 = conn.acquire().await.expect("acquire connection");
+        let updated_amount: i64 =
+            sqlx::query_scalar("SELECT total_value_amount FROM collections WHERE id = ?1 LIMIT 1")
+                .bind(CollectionId::default().to_string())
+                .fetch_one(&mut *conn2)
+                .await
+                .expect("query total value");
+
+        assert_eq!(updated_amount, 20_000);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_return_not_found_when_updating_purchase_info_for_unknown_item(
+        conn: sqlx::SqlitePool,
+    ) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("create unit of work");
+        let mut repo = uow.collections_repository();
+
+        let input = UpdateCollectionItemInput {
+            collection_item_id: CollectionItemId::try_from(
+                "trn:collection-item:11111111-1111-1111-1111-111111111111",
+            )
+            .expect("valid unknown item id"),
+            update: CollectionItemUpdate::Seller(None),
+        };
+
+        let result = repo.update_item(&input).await;
+
+        assert!(matches!(
+            result,
+            Err(DomainError::NotFound { resource, .. }) if resource == "PurchaseInfo"
+        ));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_add_owned_rolling_stock_for_active_collection_items(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("create unit of work");
+        let mut repo = uow.collections_repository();
+
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid railway model id");
+        let rolling_stock_id =
+            RollingStockId::try_from("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8")
+                .expect("valid rolling stock id");
+
+        let inserted_ids = repo
+            .add_owned_rolling_stock_for_collection_items(&railway_model_id, &rolling_stock_id)
+            .await
+            .expect("insert owned rolling stocks should succeed");
+
+        assert_eq!(inserted_ids.len(), 1);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn it_should_not_add_owned_rolling_stock_for_removed_collection_items(
+        conn: sqlx::SqlitePool,
+    ) {
+        let mut conn2 = conn.acquire().await.expect("acquire connection");
+        sqlx::query("UPDATE collection_items SET removed_date = '2026-01-01' WHERE id = ?1")
+            .bind("trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730")
+            .execute(&mut *conn2)
+            .await
+            .expect("soft-delete collection item");
+        drop(conn2);
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("create unit of work");
+        let mut repo = uow.collections_repository();
+
+        let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100")
+            .expect("valid railway model id");
+        let rolling_stock_id =
+            RollingStockId::try_from("trn:rolling-stock:70300b1c-b1df-475f-a7be-291e435b1cf8")
+                .expect("valid rolling stock id");
+
+        let inserted_ids = repo
+            .add_owned_rolling_stock_for_collection_items(&railway_model_id, &rolling_stock_id)
+            .await
+            .expect("insert owned rolling stocks should succeed");
+
+        assert!(inserted_ids.is_empty());
     }
 }

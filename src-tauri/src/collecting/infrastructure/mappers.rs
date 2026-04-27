@@ -426,6 +426,35 @@ mod tests {
     }
 
     #[test]
+    fn it_should_fail_mapping_collection_with_invalid_currency() {
+        let collection_row = CollectionRow {
+            id: CollectionId::default(),
+            name: "My Test Collection".to_string(),
+            electric_multiple_units_count: 0,
+            freight_cars_count: 0,
+            locomotives_count: 0,
+            passenger_cars_count: 0,
+            railcars_count: 0,
+            starter_sets_count: 0,
+            train_sets_count: 0,
+            total_value_amount: 100,
+            total_value_currency: "INVALID".to_string(),
+            created_at: NaiveDate::from_ymd_opt(2025, 12, 26)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+            updated_at: NaiveDate::from_ymd_opt(2025, 12, 27)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap(),
+        };
+
+        let result = CollectionMapper::row_to_collection(collection_row, vec![]);
+
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[test]
     fn it_should_map_collection_item_with_owned_and_purchase_info() {
         let item_id = CollectionItemId::default();
         let railway_model_id = RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap();
@@ -742,5 +771,131 @@ mod tests {
             }
             _ => panic!("expected PreOrdered variant"),
         }
+    }
+
+    #[test]
+    fn it_should_fail_mapping_collection_item_when_rolling_stock_id_is_missing() {
+        let item_id = CollectionItemId::default();
+        let collection_item = CollectionItemRow {
+            id: item_id.clone(),
+            collection_id: CollectionId::default(),
+            category: Category::Locomotives,
+            scale: Scale::H0,
+            power_method: PowerMethod::DC,
+            epoch: "VI".into(),
+            description: "Some description".to_string(),
+            product_code: "60100".to_string(),
+            manufacturer: "Acme".to_string(),
+            railway_model_id: RailwayModelId::try_from("trn:railway-model:acme:60100").unwrap(),
+            added_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            removed_date: None,
+            purchase_condition: None,
+            model_condition: None,
+            box_condition: None,
+            notes: None,
+        };
+
+        let owned_rolling_stock = OwnedRollingStockRow {
+            id: OwnedRollingStockId::from_string_unchecked(
+                "trn:owned-rolling-stock:d3606635-4c4e-462b-ae9f-2c7ce47bc770".to_string(),
+            ),
+            collection_item_id: item_id.clone(),
+            rolling_stock_id: None,
+            notes: None,
+            dcc_address: None,
+            installed_decoder_id: None,
+            decoder_id: None,
+            decoder_manufacturer_id: None,
+            decoder_product_code: None,
+            decoder_type: None,
+            decoder_protocol: None,
+            decoder_interface: None,
+            series: None,
+            series_name: None,
+            road_number: None,
+            livery: None,
+            control: None,
+            railway_company_name: None,
+            country_code: None,
+            category: None,
+            subcategory: None,
+            depot: None,
+            rs_dcc_interface: None,
+            length_millimeters: None,
+            length_inches: None,
+            current_coupler_id: None,
+        };
+
+        let mut owned_rolling_stocks_map = HashMap::new();
+        owned_rolling_stocks_map.insert(item_id.clone(), vec![owned_rolling_stock]);
+        let purchase_infos_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = HashMap::new();
+
+        let result = CollectionMapper::row_to_collection_item(
+            collection_item,
+            &owned_rolling_stocks_map,
+            &purchase_infos_map,
+        );
+
+        assert!(matches!(result, Err(DomainError::Validation(_))));
+    }
+
+    #[test]
+    fn it_should_fail_mapping_purchase_info_with_invalid_type() {
+        let pi_row = PurchaseInfoRow {
+            id: PurchaseInfoId::try_from("trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e")
+                .unwrap(),
+            collection_item_id: CollectionItemId::try_from(
+                "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730",
+            )
+            .unwrap(),
+            purchase_type: Some("unsupported-type".to_string()),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            seller_id: None,
+            buyer_id: None,
+            sale_date: None,
+            purchased_price_amount: Some(100),
+            purchased_price_currency: Some("EUR".to_string()),
+            sale_price_amount: None,
+            sale_price_currency: None,
+            deposit_amount: None,
+            deposit_currency: None,
+            preorder_total_amount: None,
+            preorder_total_currency: None,
+            expected_date: None,
+        };
+
+        let result = CollectionMapper::row_to_purchase_info(&pi_row);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn it_should_fail_mapping_purchase_info_with_invalid_currency() {
+        let pi_row = PurchaseInfoRow {
+            id: PurchaseInfoId::try_from("trn:purchase:59adc26d-0274-4d6b-8c14-61e598d3fe0e")
+                .unwrap(),
+            collection_item_id: CollectionItemId::try_from(
+                "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730",
+            )
+            .unwrap(),
+            purchase_type: Some("purchased".to_string()),
+            purchase_date: NaiveDate::from_ymd_opt(2025, 12, 26).unwrap(),
+            seller_id: None,
+            buyer_id: None,
+            sale_date: None,
+            purchased_price_amount: Some(100),
+            purchased_price_currency: Some("BAD".to_string()),
+            sale_price_amount: None,
+            sale_price_currency: None,
+            deposit_amount: None,
+            deposit_currency: None,
+            preorder_total_amount: None,
+            preorder_total_currency: None,
+            expected_date: None,
+        };
+
+        let result = CollectionMapper::row_to_purchase_info(&pi_row);
+
+        assert!(result.is_err());
     }
 }
