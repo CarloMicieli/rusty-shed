@@ -20,11 +20,10 @@ use crate::wishlist::application::purchase_wishlist_item::PurchaseWishlistItemCo
 use crate::wishlist::application::queries::WishlistView;
 use crate::wishlist::application::{AddToWishlistUseCase, PurchaseWishlistItemService};
 use crate::wishlist::domain::wishlist_id::WishlistId;
-use crate::wishlist::domain::wishlist_item::WishlistItem;
 use crate::wishlist::domain::wishlist_preview::WishlistPreview;
 use crate::wishlist::interface::PurchaseWishlistArgs;
 use crate::wishlist::interface::command_args::{
-    AddRailwayModelToWishListArgs, UpdateWishlistItemArgs,
+    AddRailwayModelToWishListArgs, UpdateWishlistItemArgs, WishlistItem,
 };
 use crate::wishlist::interface::{
     AddToWishlistArgs, CreateWishlistArgs, MoveWishlistItemArgs, RenameWishlistArgs,
@@ -113,7 +112,7 @@ pub async fn add_to_wishlist_inner(
     let cmd = AddToWishlistInput::try_from(input).map_err(CommandError::from)?;
     let item = AddToWishlistUseCase::execute(&mut unit_of_work, id_provider, cmd).await?;
     unit_of_work.commit().await?;
-    Ok(item)
+    Ok(item.into())
 }
 
 pub async fn remove_from_wishlist_inner(
@@ -208,7 +207,7 @@ pub async fn update_wishlist_item_inner(
     let input = UpdateWishlistItemInput::try_from(args).map_err(CommandError::from)?;
     let item = UpdateWishlistItemUseCase::execute(&mut unit_of_work, input).await?;
     unit_of_work.commit().await?;
-    Ok(item)
+    Ok(item.into())
 }
 
 // ---------------------------------------------------------------------------

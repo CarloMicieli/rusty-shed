@@ -1,10 +1,14 @@
+use crate::catalog::domain::manufacturer::ManufacturerId;
+use crate::catalog::domain::railway_model::DccInterface;
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::core::domain::domain_error::DomainError;
 use crate::core::domain::validation::ValidationContext;
 use crate::dcc_inventory::application::change_dcc_address::ChangeDccAddressInput;
 use crate::dcc_inventory::application::change_decoder::ChangeDecoderInput;
 use crate::dcc_inventory::application::new_digital_rolling_stock::NewDigitalRollingStockInput;
-use crate::dcc_inventory::domain::{DccAddress, DecoderId, DigitalRollingStockId};
+use crate::dcc_inventory::domain::{
+    DccAddress, DecoderId, DecoderType, DigitalProtocol, DigitalRollingStockId,
+};
 use garde::Validate;
 use serde::Deserialize;
 
@@ -26,6 +30,31 @@ pub struct NewDigitalRollingStockArgs {
 pub struct ResponseNewDigitalRollingStock {
     /// The new digital rolling stock id.
     pub id: DigitalRollingStockId,
+}
+
+/// Decoder transport contract.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Decoder {
+    pub id: DecoderId,
+    pub manufacturer_id: ManufacturerId,
+    pub product_code: String,
+    pub decoder_type: DecoderType,
+    pub protocol: DigitalProtocol,
+    pub decoder_interface: DccInterface,
+}
+
+impl From<crate::dcc_inventory::domain::Decoder> for Decoder {
+    fn from(value: crate::dcc_inventory::domain::Decoder) -> Self {
+        Self {
+            id: value.id,
+            manufacturer_id: value.manufacturer_id,
+            product_code: value.product_code,
+            decoder_type: value.decoder_type,
+            protocol: value.protocol,
+            decoder_interface: value.decoder_interface,
+        }
+    }
 }
 
 /// Arguments for changing a DCC address.

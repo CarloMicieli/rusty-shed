@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This domain-level struct is used by application use-cases and persisted via
 /// the sellers repository.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Seller {
     /// Strongly-typed seller identifier (format: `trn:seller:{slug}`).

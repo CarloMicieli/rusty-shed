@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 /// This struct is primarily used when recording which decoder model is
 /// installed into a piece of rolling stock and when presenting decoder details
 /// to the user (for example in an equipment detail view).
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Decoder {
     /// Unique identifier (URN) for this decoder.

@@ -5,9 +5,8 @@ use crate::sellers::application::get_seller_by_id::GetSellerById;
 use crate::sellers::application::get_sellers::GetSellers;
 use crate::sellers::application::seller_view::SellerView;
 use crate::sellers::application::update_seller::{UpdateSellerInput, UpdateSellerUseCase};
-use crate::sellers::domain::seller::Seller;
 use crate::sellers::domain::seller_id::SellerId;
-use crate::sellers::interface::{CreateSellerPayload, UpdateSellerPayload};
+use crate::sellers::interface::{CreateSellerPayload, Seller, UpdateSellerPayload};
 use crate::state::AppState;
 use garde::Validate;
 use std::convert::TryFrom;
@@ -115,7 +114,7 @@ pub async fn create_seller_inner(
 
     unit_of_work.commit().await?;
 
-    Ok(result)
+    Ok(result.into())
 }
 
 /// Command handler to create a new seller.
@@ -157,7 +156,7 @@ pub async fn update_seller_inner(
 
     unit_of_work.commit().await?;
 
-    Ok(result)
+    Ok(result.into())
 }
 
 /// Command handler to update an existing seller.

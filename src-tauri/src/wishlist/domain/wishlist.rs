@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// optional notes, a flag indicating whether it is the default list, and
 /// a stable identifier used across the application. Business logic should
 /// operate on this aggregate root when mutating the contained items.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Wishlist {
     /// Unique identifier for the wishlist.

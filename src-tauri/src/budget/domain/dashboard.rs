@@ -2,7 +2,7 @@ use crate::core::domain::currency::Currency;
 use serde::{Deserialize, Serialize};
 
 /// Quarter enum for quarterly summaries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BudgetQuarter {
     Q1,
     Q2,
@@ -34,7 +34,7 @@ impl BudgetQuarter {
 }
 
 /// Spending level for heatmap visualization.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum SpendingLevel {
     None,   // 0
@@ -59,7 +59,7 @@ impl SpendingLevel {
 }
 
 /// Monthly spending point for bar chart.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MonthlySpendingPoint {
     pub month: u8, // 1-12
@@ -68,7 +68,7 @@ pub struct MonthlySpendingPoint {
 }
 
 /// Quarterly activity point for heatmap.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuarterlyActivityPoint {
     pub year: i32,
@@ -82,7 +82,7 @@ pub struct QuarterlyActivityPoint {
 /// When no budget is configured, only spending data (monthly_spending and quarterly_activity)
 /// will be populated. Budget-specific fields (remaining_amount, remaining_percentage,
 /// total_available, monthly_goal) will be None.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BudgetDashboardSummary {
     /// Current month's remaining budget amount (None if no budget configured)

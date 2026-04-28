@@ -1,9 +1,40 @@
+use crate::core::domain::address::Address;
+use crate::core::domain::metadata::Metadata;
 use crate::core::infrastructure::error::CommandError;
 use crate::sellers::application::update_seller::UpdateSellerInput;
+use crate::sellers::domain::seller::Seller as DomainSeller;
 use crate::sellers::domain::seller_id::SellerId;
 use crate::sellers::domain::seller_type::SellerType;
 use garde::Validate;
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Seller {
+    pub id: SellerId,
+    pub name: String,
+    pub seller_type: SellerType,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub website_url: Option<String>,
+    pub address: Option<Address>,
+    pub metadata: Metadata,
+}
+
+impl From<DomainSeller> for Seller {
+    fn from(value: DomainSeller) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            seller_type: value.seller_type,
+            email: value.email,
+            phone: value.phone,
+            website_url: value.website_url,
+            address: value.address,
+            metadata: value.metadata,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, Validate)]
 #[garde(allow_unvalidated)]
