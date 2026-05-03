@@ -82,41 +82,34 @@ describe('User Story 5: Localized Navigation', () => {
     });
   });
 
-  describe('T065-T066: {#key locale} Implementation', () => {
-    it('{#key locale} blocks enable reactive language updates', () => {
-      // T063: Document the Svelte 5 idiom for locale-reactive rendering
+  describe('T065-T066: Paraglide Native Reactivity', () => {
+    it('Paraglide message functions are reactive without {#key} blocks', () => {
+      // T063: Svelte 5 + Paraglide reactivity approach
       //
-      // SidebarNavigation.svelte should contain:
-      // {#key locale}
-      //   {#each NAVIGATION_ITEMS as item}
-      //     ...
-      //   {/each}
-      // {/key}
+      // Navigation components (SidebarNavigation.svelte, BottomNavigation.svelte)
+      // call Paraglide message functions directly in the template:
+      //   {item.label()} → m.app_collection(), m.app_finance(), etc.
       //
-      // BottomNavigation.svelte should contain:
-      // {#key locale}
-      //   {#each PRIMARY_ITEMS as item}
-      //     ...
-      //   {/each}
-      // {/key}
+      // Paraglide-JS message functions are reactive in Svelte 5: when the active
+      // locale changes, Svelte's fine-grained reactivity re-evaluates any expression
+      // that calls a message function, updating the UI without a full DOM remount.
       //
-      // When locale changes, Svelte re-executes the keyed block,
-      // causing all message functions to be called with the new locale
+      // This eliminates the need for {#key locale} wrappers, which would destroy
+      // and re-mount the entire component tree on every locale change.
 
       // This behavior is verified by manual testing (T068)
       expect(true).toBe(true); // Documentation test
     });
 
     it('navigation components use locale store for i18n', () => {
-      // T063, T065-T066: Navigation components subscribe to locale changes
-      // through Paraglide's locale context and Svelte 5's {#key} blocks
+      // T063, T065-T066: Navigation components react to locale changes
+      // through Paraglide's locale context and Svelte 5's fine-grained reactivity.
 
       // When a user changes their language preference:
       // 1. localeStore is updated
       // 2. Paraglide's locale context updates
-      // 3. All {#key locale} blocks re-execute
-      // 4. All m.<key>() functions return translated text
-      // 5. UI reflects new language immediately
+      // 3. All m.<key>() call sites in the template re-evaluate
+      // 4. UI reflects new language immediately (no DOM remount)
 
       expect(true).toBe(true); // Behavior verified in manual testing
     });
@@ -163,6 +156,9 @@ describe('User Story 5: Localized Navigation', () => {
       // - Digital (DCC) → Digitale (DCC)
       // - Railway Tracks → Binari
       // - More → Altro
+      //
+      // Reactivity is provided natively by Paraglide-JS: message functions
+      // re-evaluate when the locale changes, with no {#key} remount needed.
 
       expect(true).toBe(true); // Manual test documented
     });
