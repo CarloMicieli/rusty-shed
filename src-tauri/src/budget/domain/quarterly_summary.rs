@@ -2,10 +2,9 @@ use super::dashboard::BudgetQuarter;
 use crate::catalog::domain::railway_model::Category;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use serde::{Deserialize, Serialize};
-use specta::Type;
 
 /// Spending breakdown for a single category in a quarter.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CategorySpending {
     pub category: Category,
@@ -14,7 +13,7 @@ pub struct CategorySpending {
 }
 
 /// Summary of spending for a quarter with category breakdown.
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuarterlySummary {
     pub year: i32,

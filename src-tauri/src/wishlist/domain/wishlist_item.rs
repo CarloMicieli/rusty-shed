@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// to its parent `Wishlist` as it is used as a value object inside the
 /// aggregate. Business operations that need the wishlist context should
 /// operate on the `Wishlist` aggregate.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WishlistItem {
     /// Stable identifier for this wishlist item.

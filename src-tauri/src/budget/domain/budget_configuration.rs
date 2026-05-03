@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Singleton aggregate - only one configuration exists per user.
 /// Controls the base budget amount and whether it's entered as yearly or monthly.
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BudgetConfiguration {
     pub id: BudgetConfigId,

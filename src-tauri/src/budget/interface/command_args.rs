@@ -1,5 +1,6 @@
 use crate::budget::domain::BudgetMode;
 use crate::budget::domain::validate_extra_budget_id;
+use crate::catalog::domain::railway_model::Category;
 use crate::core::domain::currency::validate_opt_currency_code;
 use crate::core::domain::{Currency, Month, Year};
 use garde::Validate;
@@ -135,7 +136,7 @@ pub struct MonthlyBudgetRecordDto {
 #[serde(rename_all = "camelCase")]
 pub struct BudgetBootstrapDto {
     pub config: Option<BudgetConfigDto>,
-    pub dashboard_summary: crate::budget::domain::dashboard::BudgetDashboardSummary,
+    pub dashboard_summary: BudgetDashboardSummary,
     pub monthly_records: Option<Vec<MonthlyBudgetRecordDto>>,
 }
 
@@ -151,4 +152,104 @@ pub struct ExtraBudgetDto {
     pub reason: Option<String>,
     pub created_at: String, // ISO 8601
     pub version: u32,
+}
+
+/// Quarter enum for quarterly summaries exposed at the interface boundary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+pub enum BudgetQuarter {
+    Q1,
+    Q2,
+    Q3,
+    Q4,
+}
+
+impl From<crate::budget::domain::dashboard::BudgetQuarter> for BudgetQuarter {
+    fn from(value: crate::budget::domain::dashboard::BudgetQuarter) -> Self {
+        match value {
+            crate::budget::domain::dashboard::BudgetQuarter::Q1 => Self::Q1,
+            crate::budget::domain::dashboard::BudgetQuarter::Q2 => Self::Q2,
+            crate::budget::domain::dashboard::BudgetQuarter::Q3 => Self::Q3,
+            crate::budget::domain::dashboard::BudgetQuarter::Q4 => Self::Q4,
+        }
+    }
+}
+
+/// Spending level for heatmap visualization exposed at the interface boundary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SpendingLevel {
+    None,
+    Low,
+    Medium,
+    High,
+}
+
+impl From<crate::budget::domain::dashboard::SpendingLevel> for SpendingLevel {
+    fn from(value: crate::budget::domain::dashboard::SpendingLevel) -> Self {
+        match value {
+            crate::budget::domain::dashboard::SpendingLevel::None => Self::None,
+            crate::budget::domain::dashboard::SpendingLevel::Low => Self::Low,
+            crate::budget::domain::dashboard::SpendingLevel::Medium => Self::Medium,
+            crate::budget::domain::dashboard::SpendingLevel::High => Self::High,
+        }
+    }
+}
+
+/// Monthly spending point for bar chart.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MonthlySpendingPoint {
+    pub month: u8,
+    pub amount: i64,
+    pub currency: Currency,
+}
+
+/// Quarterly activity point for heatmap.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct QuarterlyActivityPoint {
+    pub year: i32,
+    pub quarter: BudgetQuarter,
+    pub spending_level: SpendingLevel,
+    pub amount: i64,
+}
+
+/// Budget dashboard summary exposed to Tauri commands.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BudgetDashboardSummary {
+    pub remaining_amount: Option<i64>,
+    pub remaining_percentage: Option<f64>,
+    pub total_available: Option<i64>,
+    pub currency: Currency,
+    pub monthly_spending: Vec<MonthlySpendingPoint>,
+    pub monthly_goal: Option<i64>,
+    pub quarterly_activity: Vec<QuarterlyActivityPoint>,
+}
+
+/// Monetary amount DTO to avoid exposing domain monetary structs in transport contracts.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MonetaryAmountDto {
+    pub amount: i64,
+    pub currency: Currency,
+}
+
+/// Spending breakdown for a single category in a quarter.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CategorySpending {
+    pub category: Category,
+    pub amount: MonetaryAmountDto,
+    pub percentage: f64,
+}
+
+/// Summary of spending for a quarter with category breakdown.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct QuarterlySummary {
+    pub year: i32,
+    pub quarter: BudgetQuarter,
+    pub total_spending: MonetaryAmountDto,
+    pub category_breakdown: Vec<CategorySpending>,
 }

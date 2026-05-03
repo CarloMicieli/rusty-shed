@@ -9,9 +9,9 @@ use crate::dcc_inventory::application::{
     GetDigitalRollingStocksUseCase, GetDigitalSummaryUseCase, GetInstallableRollingStocksUseCase,
     InstallableRollingStockView, NewDigitalRollingStockUseCase,
 };
-use crate::dcc_inventory::domain::{DccAddress, Decoder, DigitalRollingStockId};
+use crate::dcc_inventory::domain::{DccAddress, DigitalRollingStockId};
 use crate::dcc_inventory::interface::command_args::{
-    ChangeDccAddressArgs, ChangeDecoderArgs, CheckDccAddressDuplicateArgs,
+    ChangeDccAddressArgs, ChangeDecoderArgs, CheckDccAddressDuplicateArgs, Decoder as DecoderDto,
     NewDigitalRollingStockArgs, ResponseNewDigitalRollingStock,
 };
 use crate::state::AppState;
@@ -78,11 +78,11 @@ pub async fn get_digital_summary_inner(state: &AppState) -> Result<DigitalSummar
     Ok(summary)
 }
 
-pub async fn get_decoders_inner(state: &AppState) -> Result<Vec<Decoder>, CommandError> {
+pub async fn get_decoders_inner(state: &AppState) -> Result<Vec<DecoderDto>, CommandError> {
     let mut unit_of_work = state.unit_of_work().await?;
     let decoders = GetDecodersUseCase::execute(&mut unit_of_work).await?;
     unit_of_work.commit().await?;
-    Ok(decoders)
+    Ok(decoders.into_iter().map(DecoderDto::from).collect())
 }
 
 pub async fn check_dcc_address_duplicate_inner(
@@ -169,7 +169,9 @@ pub async fn get_digital_summary(
 /// A command handler to get all available decoders.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_decoders(state: tauri::State<'_, AppState>) -> Result<Vec<Decoder>, CommandError> {
+pub async fn get_decoders(
+    state: tauri::State<'_, AppState>,
+) -> Result<Vec<DecoderDto>, CommandError> {
     info!("Getting decoders");
     get_decoders_inner(&state).await
 }

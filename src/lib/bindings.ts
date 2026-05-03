@@ -12,20 +12,11 @@ export const commands = {
 	getManufacturers: () => typedError<Manufacturer[], CommandError>(__TAURI_INVOKE("get_manufacturers")),
 	// Tauri command to retrieve a manufacturer by its identifier.
 	getManufacturerById: (manufacturerId: ManufacturerId) => typedError<{
-	// Unique identifier for the manufacturer.
 	id: ManufacturerId,
-	// The common name of the manufacturer (not null).
 	name: string,
-	// The legally registered company name (nullable).
 	registeredCompanyName: string | null,
-	/**
-	 *  The ISO 3166-1 alpha-2 country code where the company is registered
-	 *  (nullable). Example: `"IT"` for Italy.
-	 */
 	countryCode: string | null,
-	// The lifecycle status of the manufacturer. Defaults to `Active`.
 	status: ManufacturerStatus,
-	// Optional website URL for the manufacturer.
 	websiteUrl: string | null,
 } | null, CommandError>(__TAURI_INVOKE("get_manufacturer_by_id", { manufacturerId })),
 	// Tauri command to retrieve a railway model by its identifier.
@@ -1176,27 +1167,14 @@ export type BudgetConfigDto = {
 	version: number,
 };
 
-/**
- *  Budget dashboard summary - aggregates all dashboard widgets data.
- * 
- *  When no budget is configured, only spending data (monthly_spending and quarterly_activity)
- *  will be populated. Budget-specific fields (remaining_amount, remaining_percentage,
- *  total_available, monthly_goal) will be None.
- */
+// Budget dashboard summary exposed to Tauri commands.
 export type BudgetDashboardSummary = {
-	// Current month's remaining budget amount (None if no budget configured)
 	remainingAmount: number | null,
-	// Remaining as percentage (0.0 to 100.0+) (None if no budget configured)
 	remainingPercentage: number | null,
-	// Total available this month (base + extra + rollover) (None if no budget configured)
 	totalAvailable: number | null,
-	// Currency for all amounts
 	currency: Currency,
-	// Monthly spending for bar chart (12 data points)
 	monthlySpending: MonthlySpendingPoint[],
-	// Monthly budget goal line amount (None if no budget configured)
 	monthlyGoal: number | null,
-	// Quarterly activity for heatmap (up to 20 data points: 5 years × 4 quarters)
 	quarterlyActivity: QuarterlyActivityPoint[],
 };
 
@@ -1207,7 +1185,7 @@ export type BudgetMode =
 // Budget is configured as a monthly amount (multiplied by 12 for yearly).
 "MONTHLY";
 
-// Quarter enum for quarterly summaries.
+// Quarter enum for quarterly summaries exposed at the interface boundary.
 export type BudgetQuarter = "Q1" | "Q2" | "Q3" | "Q4";
 
 // Arguments for cancel_import_session command
@@ -1262,7 +1240,7 @@ export type Category =
 // Spending breakdown for a single category in a quarter.
 export type CategorySpending = {
 	category: Category,
-	amount: MonetaryAmount,
+	amount: MonetaryAmountDto,
 	percentage: number,
 };
 
@@ -1933,45 +1911,13 @@ export type DccInterface =
  */
 "MTC_21";
 
-/**
- *  A Decoder models a real-world model-railway decoder product.
- * 
- *  In the application domain a decoder is the canonical master record for a
- *  specific manufacturer product (for example an ESU LokPilot model). It
- *  captures the identity and capabilities of the physical module that can be
- *  installed into locomotives and other rolling stock.
- * 
- *  Important points for developers:
- *  - `Decoder` instances are stored centrally so many `OwnedRollingStock`
- *    records can reference the same decoder model via `installed_decoder_id`.
- *  - The `id` is a stable URN that identifies the product (example:
- *    `trn:decoder:esu:54621`). Use that URN when linking or displaying decoder
- *    information.
- * 
- *  Fields (plain language):
- *  - `id` — stable product identifier (URN) for the decoder model.
- *  - `manufacturer_id` — reference to the manufacturer entry.
- *  - `product_code` — human-facing product code or name from the manufacturer.
- *  - `decoder_type` — functional family (e.g. plain, sound).
- *  - `protocol` — digital protocol(s) the decoder supports (DCC, etc.).
- *  - `decoder_interface` — the physical DCC interface the decoder exposes.
- * 
- *  This struct is primarily used when recording which decoder model is
- *  installed into a piece of rolling stock and when presenting decoder details
- *  to the user (for example in an equipment detail view).
- */
+// Decoder transport contract.
 export type Decoder = {
-	// Unique identifier (URN) for this decoder.
 	id: DecoderId,
-	// Reference to the manufacturer (foreign key to `manufacturers.id`).
 	manufacturerId: ManufacturerId,
-	// Product code as provided by the manufacturer (human-readable).
 	productCode: string,
-	// The functional type of the decoder (plain, sound, etc.).
 	decoderType: DecoderType,
-	// The communication protocol implemented by this decoder.
 	protocol: DigitalProtocol,
-	// The physical DCC interface the decoder exposes (if any).
 	decoderInterface: DccInterface,
 };
 
@@ -2804,22 +2750,12 @@ export type MaintenanceType =
 // Any maintenance task not covered by the standard categories.
 "OTHER";
 
-// A manufacturer (maker of railway models).
 export type Manufacturer = {
-	// Unique identifier for the manufacturer.
 	id: ManufacturerId,
-	// The common name of the manufacturer (not null).
 	name: string,
-	// The legally registered company name (nullable).
 	registeredCompanyName: string | null,
-	/**
-	 *  The ISO 3166-1 alpha-2 country code where the company is registered
-	 *  (nullable). Example: `"IT"` for Italy.
-	 */
 	countryCode: string | null,
-	// The lifecycle status of the manufacturer. Defaults to `Active`.
 	status: ManufacturerStatus,
-	// Optional website URL for the manufacturer.
 	websiteUrl: string | null,
 };
 
@@ -2922,6 +2858,12 @@ export type MonetaryAmount = {
 	 */
 	amount: number,
 	// Currency of the amount.
+	currency: Currency,
+};
+
+// Monetary amount DTO to avoid exposing domain monetary structs in transport contracts.
+export type MonetaryAmountDto = {
+	amount: number,
 	currency: Currency,
 };
 
@@ -3402,7 +3344,7 @@ export type QuarterlyActivityPoint = {
 export type QuarterlySummary = {
 	year: number,
 	quarter: BudgetQuarter,
-	totalSpending: MonetaryAmount,
+	totalSpending: MonetaryAmountDto,
 	categoryBreakdown: CategorySpending[],
 };
 
@@ -4093,63 +4035,16 @@ export type SearchRailwayModelsArgs = {
 	query: string,
 };
 
-/**
- *  Represents a seller (a shop, private seller or distributor) in the system.
- * 
- *  This domain-level struct is used by application use-cases and persisted via
- *  the sellers repository.
- */
 export type Seller = {
-	// Strongly-typed seller identifier (format: `trn:seller:{slug}`).
 	id: SellerId,
-	// Human-readable seller name.
 	name: string,
-	// The category/type of the seller (Shop, Private, Marketplace, ...).
 	sellerType: SellerType,
-	// Optional contact email.
 	email: string | null,
-	// Optional contact phone number.
 	phone: string | null,
-	// Optional website URL (if available).
 	websiteUrl: string | null,
-	/**
-	 *  Optional postal address structured as an `Address` domain value.
-	 * 
-	 *  When present this contains street, (extended) house number, city, region,
-	 *  postal code and country as a single value object.
-	 */
 	address: Address | null,
-	// Metadata about the seller (creation date, last modified, version, etc.).
 	metadata: Metadata,
-	/**
-	 *  Events produced by operations on the aggregate that have not yet been
-	 *  persisted/handled by a repository or unit of work.
-	 */
-	pendingEvents: SellerEvent[],
 };
-
-// Domain events produced by the `Seller` aggregate.
-export type SellerEvent = ({ created: {
-	aggregate_id: SellerId,
-	name: string,
-	seller_type: SellerType,
-	email: string | null,
-	phone: string | null,
-	website_url: string | null,
-	address: Address | null,
-	metadata: Metadata,
-} }) & { deleted?: never; updated?: never } | ({ updated: {
-	aggregate_id: SellerId,
-	name: string,
-	seller_type: SellerType,
-	email: string | null,
-	phone: string | null,
-	website_url: string | null,
-	address: Address | null,
-	metadata: Metadata,
-} }) & { created?: never; deleted?: never } | ({ deleted: {
-	aggregate_id: SellerId,
-} }) & { created?: never; updated?: never };
 
 // Strongly-typed identifier for a seller. Format: `trn:seller:{slug}`.
 export type SellerId = string;
@@ -4325,7 +4220,7 @@ export type SoldInfo = {
 
 export type Source = "Collection" | "Wishlist";
 
-// Spending level for heatmap visualization.
+// Spending level for heatmap visualization exposed at the interface boundary.
 export type SpendingLevel = "NONE" | "LOW" | "MEDIUM" | "HIGH";
 
 // Sync operation status (for progress tracking)
@@ -4905,34 +4800,17 @@ export type ValidationStatus =
  */
 export type WishlistId = string;
 
-/**
- *  A single item within a `Wishlist`.
- * 
- *  `WishlistItem` models the user-facing properties of an item the user
- *  wants to track or acquire. It intentionally does not carry a reference
- *  to its parent `Wishlist` as it is used as a value object inside the
- *  aggregate. Business operations that need the wishlist context should
- *  operate on the `Wishlist` aggregate.
- */
+// Wishlist item contract for transport responses.
 export type WishlistItem = {
-	// Stable identifier for this wishlist item.
 	id: WishlistItemId,
-	// Identifier of the referenced railway model.
 	railwayModelId: RailwayModelId,
-	// The user's priority for this item.
 	priority: WishlistPriority,
-	// The current procurement/status lifecycle state for the item.
 	status: WishlistStatus,
-	// Date the item was added to the wishlist (YYYY-MM-DD).
 	addedDate: string,
-	// Optional date when the item was removed from the wishlist.
 	removedDate: string | null,
-	// Optional free-form notes attached to the item.
 	notes: string | null,
-	// Desired price the user is willing to pay for the item (in cents).
-	desiredPrice: MonetaryAmount | null,
-	// Actual purchased price if available (in cents).
-	purchasedPrice: MonetaryAmount | null,
+	desiredPrice: WishlistMonetaryAmountDto | null,
+	purchasedPrice: WishlistMonetaryAmountDto | null,
 };
 
 /**
@@ -4969,6 +4847,12 @@ export type WishlistItemView = {
 	desired_price: MonetaryAmount | null,
 	// Actual purchased price if available (monetary amount).
 	purchased_price: MonetaryAmount | null,
+};
+
+// Monetary amount exposed through wishlist command contracts.
+export type WishlistMonetaryAmountDto = {
+	amount: number,
+	currency: Currency,
 };
 
 /**

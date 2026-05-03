@@ -5,14 +5,14 @@ use crate::budget::application::remove_extra_budget::RemoveExtraBudgetUseCase;
 use crate::budget::application::set_budget::{SetBudgetInput, SetBudgetUseCase};
 use crate::budget::domain::BudgetUowExt;
 use crate::budget::domain::ExtraBudgetId;
-use crate::budget::domain::dashboard::BudgetDashboardSummary;
 use crate::budget::domain::monthly_budget_record::MonthStatus;
 use crate::budget::domain::monthly_budget_record::MonthlyBudgetRecord;
-use crate::budget::domain::quarterly_summary::QuarterlySummary;
 use crate::budget::interface::command_args::{
-    AddExtraBudgetArgs, BudgetBootstrapDto, BudgetConfigDto, ExtraBudgetDto,
-    GetBudgetBootstrapArgs, GetExtraBudgetsArgs, GetMonthlyBudgetRecordsArgs,
-    GetQuarterlySummariesArgs, MonthlyBudgetRecordDto, RemoveExtraBudgetArgs, SetBudgetConfigArgs,
+    AddExtraBudgetArgs, BudgetBootstrapDto, BudgetConfigDto, BudgetDashboardSummary,
+    CategorySpending, ExtraBudgetDto, GetBudgetBootstrapArgs, GetExtraBudgetsArgs,
+    GetMonthlyBudgetRecordsArgs, GetQuarterlySummariesArgs, MonetaryAmountDto,
+    MonthlyBudgetRecordDto, MonthlySpendingPoint, QuarterlyActivityPoint, QuarterlySummary,
+    RemoveExtraBudgetArgs, SetBudgetConfigArgs,
 };
 use crate::core::domain::Currency;
 use crate::core::domain::calendar::{Month, Year};
@@ -66,6 +66,62 @@ fn map_monthly_budget_record_dto(
         status: status_str,
         currency: record.currency,
     })
+}
+
+fn map_budget_dashboard_summary_dto(
+    summary: crate::budget::domain::dashboard::BudgetDashboardSummary,
+) -> BudgetDashboardSummary {
+    BudgetDashboardSummary {
+        remaining_amount: summary.remaining_amount,
+        remaining_percentage: summary.remaining_percentage,
+        total_available: summary.total_available,
+        currency: summary.currency,
+        monthly_spending: summary
+            .monthly_spending
+            .into_iter()
+            .map(|point| MonthlySpendingPoint {
+                month: point.month,
+                amount: point.amount,
+                currency: point.currency,
+            })
+            .collect(),
+        monthly_goal: summary.monthly_goal,
+        quarterly_activity: summary
+            .quarterly_activity
+            .into_iter()
+            .map(|point| QuarterlyActivityPoint {
+                year: point.year,
+                quarter: point.quarter.into(),
+                spending_level: point.spending_level.into(),
+                amount: point.amount,
+            })
+            .collect(),
+    }
+}
+
+fn map_quarterly_summary_dto(
+    summary: crate::budget::domain::quarterly_summary::QuarterlySummary,
+) -> QuarterlySummary {
+    QuarterlySummary {
+        year: summary.year,
+        quarter: summary.quarter.into(),
+        total_spending: MonetaryAmountDto {
+            amount: summary.total_spending.amount,
+            currency: summary.total_spending.currency,
+        },
+        category_breakdown: summary
+            .category_breakdown
+            .into_iter()
+            .map(|entry| CategorySpending {
+                category: entry.category,
+                amount: MonetaryAmountDto {
+                    amount: entry.amount.amount,
+                    currency: entry.amount.currency,
+                },
+                percentage: entry.percentage,
+            })
+            .collect(),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +200,7 @@ pub async fn get_budget_dashboard_inner(
 
     unit_of_work.commit().await?;
 
-    Ok(summary)
+    Ok(map_budget_dashboard_summary_dto(summary))
 }
 
 pub async fn get_budget_bootstrap_inner(
@@ -181,7 +237,7 @@ pub async fn get_budget_bootstrap_inner(
 
     Ok(BudgetBootstrapDto {
         config: bootstrap.config.map(map_budget_config_dto),
-        dashboard_summary: bootstrap.dashboard_summary,
+        dashboard_summary: map_budget_dashboard_summary_dto(bootstrap.dashboard_summary),
         monthly_records,
     })
 }
@@ -285,7 +341,10 @@ pub async fn get_quarterly_summaries_inner(
 
     unit_of_work.commit().await?;
 
-    Ok(summaries)
+    Ok(summaries
+        .into_iter()
+        .map(map_quarterly_summary_dto)
+        .collect())
 }
 
 // ---------------------------------------------------------------------------

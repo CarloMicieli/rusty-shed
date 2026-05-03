@@ -14,7 +14,54 @@ use crate::wishlist::domain::wishlist_priority::WishlistPriority;
 use crate::wishlist::domain::wishlist_status::WishlistStatus;
 use chrono::NaiveDate;
 use garde::Validate;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+
+/// Monetary amount exposed through wishlist command contracts.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct WishlistMonetaryAmountDto {
+    pub amount: i64,
+    pub currency: Currency,
+}
+
+/// Wishlist item contract for transport responses.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct WishlistItem {
+    pub id: WishlistItemId,
+    pub railway_model_id: RailwayModelId,
+    pub priority: WishlistPriority,
+    pub status: WishlistStatus,
+    pub added_date: NaiveDate,
+    pub removed_date: Option<NaiveDate>,
+    pub notes: Option<String>,
+    pub desired_price: Option<WishlistMonetaryAmountDto>,
+    pub purchased_price: Option<WishlistMonetaryAmountDto>,
+}
+
+impl From<crate::wishlist::domain::wishlist_item::WishlistItem> for WishlistItem {
+    fn from(value: crate::wishlist::domain::wishlist_item::WishlistItem) -> Self {
+        Self {
+            id: value.id,
+            railway_model_id: value.railway_model_id,
+            priority: value.priority,
+            status: value.status,
+            added_date: value.added_date,
+            removed_date: value.removed_date,
+            notes: value.notes,
+            desired_price: value.desired_price.map(|price| WishlistMonetaryAmountDto {
+                amount: price.amount,
+                currency: price.currency,
+            }),
+            purchased_price: value
+                .purchased_price
+                .map(|price| WishlistMonetaryAmountDto {
+                    amount: price.amount,
+                    currency: price.currency,
+                }),
+        }
+    }
+}
 
 /// Arguments structure for adding an item to a wishlist.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
