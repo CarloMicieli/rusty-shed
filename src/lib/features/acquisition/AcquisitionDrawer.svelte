@@ -179,6 +179,8 @@
   {/snippet}
 
   <form bind:this={formEl} use:enhance class="space-y-3">
+    <!-- Hidden submit button to enable Enter-to-submit keyboard navigability -->
+    <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
     {#if itemsErrors?._errors?.[0]}
       <div
         class="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"

@@ -21,7 +21,7 @@ use crate::collecting::interface::{
     UpdateCollectionItemArgs,
 };
 use crate::core::domain::domain_error::DomainError;
-use crate::core::domain::{Currency, MonetaryAmount};
+use crate::core::domain::{Currency, Language, MonetaryAmount};
 use crate::core::infrastructure::error::CommandError;
 use crate::core::infrastructure::runtime_id_provider::RuntimeIdProvider;
 use crate::sellers::domain::seller_id::SellerId;
@@ -30,6 +30,61 @@ use chrono::NaiveDate;
 use garde::Validate;
 use std::convert::TryFrom;
 use tracing::info;
+
+#[derive(serde::Serialize, specta::Type)]
+pub struct DetailedCollectionItemView {
+    pub model: Option<crate::catalog::domain::railway_model::RailwayModelView>,
+    pub image: Option<crate::media::interface::RailwayModelImageResponse>,
+    pub seller: Option<crate::sellers::application::seller_view::SellerView>,
+}
+
+pub async fn get_collection_item_details_inner(
+    state: &AppState,
+    railway_model_id: String,
+    seller_id: Option<String>,
+    lang: Language,
+) -> Result<DetailedCollectionItemView, CommandError> {
+    let r_id =
+        crate::catalog::domain::railway_model::RailwayModelId::try_from(railway_model_id.as_str())
+            .map_err(|_| CommandError::validation_field("railway_model_id", "invalid format"))?;
+
+    let model = crate::catalog::interface::command_handlers::get_railway_model_by_id_inner(
+        state,
+        r_id.clone(),
+        lang,
+    )
+    .await?;
+    let image =
+        crate::media::interface::command_handlers::get_railway_model_image_inner(state, r_id)
+            .await
+            .ok();
+
+    let seller = match seller_id {
+        Some(ref s) => {
+            let s_id = SellerId::try_from(s.as_str())
+                .map_err(|_| CommandError::validation_field("seller_id", "invalid format"))?;
+            crate::sellers::interface::command_handlers::get_seller_by_id_inner(state, s_id).await?
+        }
+        None => None,
+    };
+
+    Ok(DetailedCollectionItemView {
+        model,
+        image,
+        seller,
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_collection_item_details(
+    state: tauri::State<'_, AppState>,
+    railway_model_id: String,
+    seller_id: Option<String>,
+    lang: Language,
+) -> Result<DetailedCollectionItemView, CommandError> {
+    get_collection_item_details_inner(&state, railway_model_id, seller_id, lang).await
+}
 
 pub async fn get_collection_inner(state: &AppState) -> Result<CollectionView, CommandError> {
     info!("Fetching collection");

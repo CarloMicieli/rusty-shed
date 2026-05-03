@@ -162,6 +162,7 @@ export const commands = {
 	 *  - `Err(CommandError)` when the use-case returns an error.
 	 */
 	removeCollectionItem: (args: RemoveCollectionItemArgs) => typedError<CollectionItemId, CommandError>(__TAURI_INVOKE("remove_collection_item", { args })),
+	getCollectionItemDetails: (railwayModelId: string, sellerId: string | null, lang: Language) => typedError<DetailedCollectionItemView_Serialize, CommandError>(__TAURI_INVOKE("get_collection_item_details", { railwayModelId, sellerId, lang })),
 	// Simplified flow: save (merge) the railway model and add it to the default wishlist.
 	addRailwayModelToWishList: (args: AddRailwayModelToWishListArgs) => typedError<null, CommandError>(__TAURI_INVOKE("add_railway_model_to_wish_list", { args })),
 	/**
@@ -2043,6 +2044,20 @@ export type DepotRollingStockView = {
 export type DepotView = {
 	// A list of rolling stock entries currently associated with the depot.
 	rollingStocks: DepotRollingStockView[],
+};
+
+export type DetailedCollectionItemView = DetailedCollectionItemView_Serialize | DetailedCollectionItemView_Deserialize;
+
+export type DetailedCollectionItemView_Deserialize = {
+	model: RailwayModelView_Deserialize | null,
+	image: RailwayModelImageResponse | null,
+	seller: SellerView | null,
+};
+
+export type DetailedCollectionItemView_Serialize = {
+	model: RailwayModelView_Serialize | null,
+	image: RailwayModelImageResponse | null,
+	seller: SellerView | null,
 };
 
 // Digital communication protocols supported by decoders.

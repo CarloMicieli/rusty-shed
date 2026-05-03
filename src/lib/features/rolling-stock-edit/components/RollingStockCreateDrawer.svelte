@@ -384,6 +384,8 @@
   {/snippet}
 
   <form bind:this={formEl} use:enhance class="contents">
+    <!-- Hidden submit button to enable Enter-to-submit keyboard navigability -->
+    <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
     <div class="space-y-3">
       <!-- Category + Type row (no card) -->
       <div class="grid grid-cols-2 gap-3">

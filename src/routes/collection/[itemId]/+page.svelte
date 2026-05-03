@@ -62,17 +62,13 @@
       }
     })();
 
-    const [modelResult, imageResult, sellerResult] = await Promise.all([
-      commands.getRailwayModelById(railwayModelId, getLocale()),
-      commands.getRailwayModelImage(railwayModelId),
-      sellerId
-        ? commands.getSellerById(sellerId)
-        : Promise.resolve({ status: 'ok' as const, data: null })
-    ]);
+    const result = await commands.getCollectionItemDetails(railwayModelId, sellerId, getLocale());
 
-    if (modelResult.status === 'ok') model = modelResult.data;
-    if (imageResult.status === 'ok') imageResponse = imageResult.data;
-    if (sellerResult.status === 'ok') seller = sellerResult.data;
+    if (result.status === 'ok') {
+      model = result.data.model;
+      imageResponse = result.data.image;
+      seller = result.data.seller;
+    }
   }
 
   async function handleModelUpdated() {

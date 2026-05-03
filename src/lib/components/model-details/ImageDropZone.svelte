@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { Upload } from 'lucide-svelte';
   import { listen } from '@tauri-apps/api/event';
   import { readFile } from '@tauri-apps/plugin-fs';
@@ -31,8 +30,9 @@
 
   // Tauri native drag-drop: on Linux/Windows the OS-level file drop is intercepted
   // by the native layer and fires tauri://drag-drop instead of HTML5 ondrop.
-  onMount(() => {
+  $effect(() => {
     let unlisten: (() => void) | undefined;
+    let isDestroyed = false;
 
     listen<{ paths: string[]; position: unknown }>('tauri://drag-drop', async (event) => {
       dragCounter = 0;
@@ -58,10 +58,15 @@
       // Create a synthetic File so pendingFile is non-null (used to open the dialog)
       pendingFile = new File([bytes], filePath.split('/').pop() ?? 'image', { type: mime });
     }).then((fn) => {
-      unlisten = fn;
+      if (isDestroyed) {
+        fn();
+      } else {
+        unlisten = fn;
+      }
     });
 
     return () => {
+      isDestroyed = true;
       unlisten?.();
     };
   });

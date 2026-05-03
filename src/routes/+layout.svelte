@@ -118,16 +118,21 @@
   }
 
   let unlistenAcquisition: (() => void) | undefined;
+  let unlistenMaintenance: (() => void) | undefined;
 
   onDestroy(() => {
     unlistenAcquisition?.();
+    unlistenMaintenance?.();
   });
 
   onMount(async () => {
-    // Listen for global shortcut event to open acquisition drawer
+    // Listen for global shortcut events
     try {
       unlistenAcquisition = await listen('open-acquisition-drawer', () => {
         showAcquisitionDrawer = true;
+      });
+      unlistenMaintenance = await listen('open-maintenance-drawer', () => {
+        showLogMaintenanceDrawer = true;
       });
     } catch {
       // Tauri not available (e.g. test environment) — skip listener

@@ -57,8 +57,13 @@ export default class MaintenanceState {
    * Load maintenance dashboard (top 10 due/overdue cards).
    */
   async loadDashboard(): Promise<void> {
-    this.#isLoading = true;
     this.#error = null;
+
+    // In a local-first Tauri app, DB reads are often < 10ms.
+    // Defer the loading spinner to avoid flashing it for fast responses.
+    const loadingTimeout = setTimeout(() => {
+      this.#isLoading = true;
+    }, 100);
 
     try {
       this.#cards = await this.#service.getDashboard();
@@ -67,6 +72,7 @@ export default class MaintenanceState {
       this.#error = error.message;
       console.error('[MaintenanceState] Failed to load dashboard:', err);
     } finally {
+      clearTimeout(loadingTimeout);
       this.#isLoading = false;
     }
   }

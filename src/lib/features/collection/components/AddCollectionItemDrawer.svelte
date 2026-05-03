@@ -229,6 +229,8 @@
   {/snippet}
 
   <form bind:this={formEl} use:enhance class="space-y-6">
+    <!-- Hidden submit button to enable Enter-to-submit keyboard navigability -->
+    <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
     <ModelSearchSection
       bind:form={$form as AddModelFormState}
       {manufacturers}

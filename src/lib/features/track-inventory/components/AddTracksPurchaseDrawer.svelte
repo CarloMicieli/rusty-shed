@@ -160,6 +160,8 @@
     <PurchaseLoadingState />
   {:else}
     <form bind:this={formEl} use:enhance class="contents">
+      <!-- Hidden submit button to enable Enter-to-submit keyboard navigability -->
+      <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
       <PurchaseFormFields
         {products}
         {sellers}

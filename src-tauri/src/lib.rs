@@ -147,6 +147,7 @@ pub fn run() {
         collecting_command_handlers::record_acquisition,
         collecting_command_handlers::update_collection_item,
         collecting_command_handlers::remove_collection_item,
+        collecting_command_handlers::get_collection_item_details,
         wishlist_command_handlers::add_railway_model_to_wish_list,
         collecting_command_handlers::get_collection,
         collecting_command_handlers::get_depot,
@@ -350,6 +351,15 @@ pub fn run() {
                 .on_shortcut("CommandOrControl+N", |app, _shortcut, event| {
                     if event.state == ShortcutState::Pressed {
                         app.emit("open-acquisition-drawer", ()).ok();
+                    }
+                })
+                .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;
+
+            // Register Ctrl+L global shortcut to open the maintenance drawer
+            app.global_shortcut()
+                .on_shortcut("CommandOrControl+L", |app, _shortcut, event| {
+                    if event.state == ShortcutState::Pressed {
+                        app.emit("open-maintenance-drawer", ()).ok();
                     }
                 })
                 .map_err(|e| anyhow::anyhow!("Failed to register global shortcut: {e}"))?;

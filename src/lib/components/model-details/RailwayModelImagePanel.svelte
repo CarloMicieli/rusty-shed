@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { RailwayModel } from '$lib/types/railway-model';
   import { Button } from '$lib/components/ui/button';
   import { Upload, Box } from 'lucide-svelte';
@@ -70,22 +69,25 @@
   };
   const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-  onMount(() => {
+  $effect(() => {
     let unlistenEnter: (() => void) | undefined;
     let unlistenLeave: (() => void) | undefined;
     let unlistenDrop: (() => void) | undefined;
+    let isDestroyed = false;
 
     listen<{ paths: string[]; position: unknown }>('tauri://drag-enter', () => {
       if (!editable) return;
       dragState = true;
     }).then((fn) => {
-      unlistenEnter = fn;
+      if (isDestroyed) fn();
+      else unlistenEnter = fn;
     });
 
     listen<{ paths: string[]; position: unknown }>('tauri://drag-leave', () => {
       dragState = false;
     }).then((fn) => {
-      unlistenLeave = fn;
+      if (isDestroyed) fn();
+      else unlistenLeave = fn;
     });
 
     listen<{ paths: string[]; position: unknown }>('tauri://drag-drop', async (event) => {
@@ -113,10 +115,12 @@
         toaster.error(m.upload_error_unknown());
       }
     }).then((fn) => {
-      unlistenDrop = fn;
+      if (isDestroyed) fn();
+      else unlistenDrop = fn;
     });
 
     return () => {
+      isDestroyed = true;
       unlistenEnter?.();
       unlistenLeave?.();
       unlistenDrop?.();

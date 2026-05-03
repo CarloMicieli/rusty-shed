@@ -212,6 +212,9 @@
   {/snippet}
 
   <form bind:this={formEl} use:enhance class="space-y-5">
+    <!-- Hidden submit button to enable Enter-to-submit keyboard navigability -->
+    <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
+
     <!-- Subject-First Selector: single searchable combobox -->
     <div class="space-y-2">
       <label

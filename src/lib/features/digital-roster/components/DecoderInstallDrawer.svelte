@@ -247,6 +247,8 @@
     </div>
   {:else}
     <form id="install-decoder-form" bind:this={formEl} use:enhance class="space-y-6">
+      <!-- Hidden submit button to enable Enter-to-submit keyboard navigability -->
+      <button type="submit" class="hidden" aria-hidden="true" tabindex="-1"></button>
       <DecoderRollingStockPicker
         rollingStocks={installableRollingStocks}
         selectedId={$form.selectedRollingStockId}
