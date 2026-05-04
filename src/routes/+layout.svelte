@@ -187,10 +187,12 @@
       await Promise.all([
         collectionStore.fetch(),
         wishlistState.fetchWishlists(),
-        budgetState.load(),
-        budgetState.loadMonthlyRecords(initialFinanceYear),
         financeState.ensureLoaded()
       ]);
+
+      // Load budget config first; monthly records bail out while budget service is loading.
+      await budgetState.load();
+      await budgetState.loadMonthlyRecords(initialFinanceYear);
     } catch (err) {
       log.error(`Startup failed: ${String(err)}`);
       // Capture the error to show in the UI

@@ -16,7 +16,6 @@
     Button,
     Table,
     TableBody,
-    TableCell,
     TableHead,
     TableHeader,
     TableRow
@@ -36,13 +35,25 @@
     onAddExtra
   }: Props = $props();
 
+  interface EnrichedRecord extends MonthlyBudgetRecordDto {
+    monthName: string;
+    displayBaseBudget: string;
+    displayExtraBudget: string;
+    displayRolloverIn: string;
+    displayAvailable: string;
+    displayActualSpend: string;
+    displayRemaining: string;
+    displayRemainingPercentage: string;
+    displayRolloverOut: string;
+    remainingClass: string;
+    statusLabel: string;
+    statusVariant: 'default' | 'secondary' | 'outline';
+  }
+
   // Get localized month names using Intl.DateTimeFormat
   const monthNames = $derived.by(() => {
-    return Array.from({ length: 12 }, (_, i) =>
-      new Intl.DateTimeFormat(regionalManager.locale, { month: 'long' }).format(
-        new Date(2000, i, 1)
-      )
-    );
+    const formatter = new Intl.DateTimeFormat(regionalManager.locale, { month: 'long' });
+    return Array.from({ length: 12 }, (_, i) => formatter.format(new Date(2000, i, 1)));
   });
 
   function formatAmount(minorUnits: number, currencyCode: string): string {
@@ -84,6 +95,27 @@
   function handleAddExtra(year: number, month: number) {
     onAddExtra?.(year, month);
   }
+
+  const enrichedRecords = $derived.by<EnrichedRecord[]>(() =>
+    records.map((record) => ({
+      ...record,
+      monthName: monthNames[record.month - 1],
+      displayBaseBudget: formatAmount(record.baseBudget, record.currency),
+      displayExtraBudget:
+        record.extraBudget > 0 ? formatAmount(record.extraBudget, record.currency) : '—',
+      displayRolloverIn:
+        record.rolloverIn > 0 ? formatAmount(record.rolloverIn, record.currency) : '—',
+      displayAvailable: formatAmount(record.available, record.currency),
+      displayActualSpend: formatAmount(record.actualSpend, record.currency),
+      displayRemaining: formatAmount(record.remaining, record.currency),
+      displayRemainingPercentage: `${record.remainingPercentage.toFixed(1)}%`,
+      displayRolloverOut:
+        record.rolloverOut > 0 ? formatAmount(record.rolloverOut, record.currency) : '—',
+      remainingClass: getRemainingClass(record.remainingPercentage),
+      statusLabel: getStatusLabel(record.status),
+      statusVariant: getStatusBadgeVariant(record.status)
+    }))
+  );
 </script>
 
 <div class="budget-table-container">
@@ -105,56 +137,42 @@
         </TableRow>
       </TableHeader>
       <TableBody>
-        {#each records as record (record.month)}
+        {#each enrichedRecords as row (row.month)}
           <TableRow>
-            <TableCell class="font-semibold">{monthNames[record.month - 1]}</TableCell>
-            <TableCell class="text-right"
-              >{formatAmount(record.baseBudget, record.currency)}</TableCell
-            >
-            <TableCell class="text-right">
-              {record.extraBudget > 0 ? formatAmount(record.extraBudget, record.currency) : '—'}
-            </TableCell>
-            <TableCell class="text-right">
-              {record.rolloverIn > 0 ? formatAmount(record.rolloverIn, record.currency) : '—'}
-            </TableCell>
-            <TableCell class="text-right font-semibold"
-              >{formatAmount(record.available, record.currency)}</TableCell
-            >
-            <TableCell class="text-right"
-              >{formatAmount(record.actualSpend, record.currency)}</TableCell
-            >
-            <TableCell class="text-right {getRemainingClass(record.remainingPercentage)}">
-              {formatAmount(record.remaining, record.currency)}
-            </TableCell>
-            <TableCell class="text-right {getRemainingClass(record.remainingPercentage)}">
-              {record.remainingPercentage.toFixed(1)}%
-            </TableCell>
-            <TableCell class="text-right">
-              {record.rolloverOut > 0 ? formatAmount(record.rolloverOut, record.currency) : '—'}
-            </TableCell>
-            <TableCell>
-              <Badge variant={getStatusBadgeVariant(record.status)}>
-                {getStatusLabel(record.status)}
+            <td class="p-4 align-middle font-semibold">{row.monthName}</td>
+            <td class="p-4 text-right align-middle">{row.displayBaseBudget}</td>
+            <td class="p-4 text-right align-middle">{row.displayExtraBudget}</td>
+            <td class="p-4 text-right align-middle">{row.displayRolloverIn}</td>
+            <td class="p-4 text-right align-middle font-semibold">{row.displayAvailable}</td>
+            <td class="p-4 text-right align-middle">{row.displayActualSpend}</td>
+            <td class="p-4 text-right align-middle {row.remainingClass}">{row.displayRemaining}</td>
+            <td class="p-4 text-right align-middle {row.remainingClass}">
+              {row.displayRemainingPercentage}
+            </td>
+            <td class="p-4 text-right align-middle">{row.displayRolloverOut}</td>
+            <td class="p-4 align-middle">
+              <Badge variant={row.statusVariant}>
+                {row.statusLabel}
               </Badge>
-            </TableCell>
-            <TableCell>
+            </td>
+            <td class="p-4 align-middle">
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                onclick={() => handleAddExtra(record.year, record.month)}
+                onclick={() => handleAddExtra(row.year, row.month)}
               >
                 <Plus class="h-4 w-4" />
                 <span class="hidden sm:inline">Extra</span>
               </Button>
-            </TableCell>
+            </td>
           </TableRow>
         {/each}
       </TableBody>
     </Table>
   </div>
 
-  {#if records.length === 0}
+  {#if enrichedRecords.length === 0}
     <div class="py-8 text-center text-muted-foreground">No budget records available</div>
   {/if}
 </div>
