@@ -6,7 +6,8 @@ use crate::collecting::application::AddCollectionItemInput as DomainAddCollectio
 use crate::collecting::application::{
     AcquisitionItemInput, AddCollectionItem, GetCollection, GetDepot, RecordAcquisition,
     RecordAcquisitionInput, RemoveCollectionItem,
-    RemoveCollectionItemInput as DomainRemoveCollectionItemInput, UpdateCollectionItem,
+    RemoveCollectionItemInput as DomainRemoveCollectionItemInput, SellCollectionItem,
+    SellCollectionItemInput as DomainSellCollectionItemInput, UpdateCollectionItem,
 };
 use crate::collecting::domain::{
     BoxCondition, CollectionItemUpdate, ModelCondition, PurchaseCondition,
@@ -14,7 +15,7 @@ use crate::collecting::domain::{
 };
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
 use crate::collecting::interface::command_args::{
-    AddRailwayModelToCollectionArgs, RecordAcquisitionArgs,
+    AddRailwayModelToCollectionArgs, RecordAcquisitionArgs, SellCollectionItemArgs,
 };
 use crate::collecting::interface::{
     AddCollectionItemArgs, CollectionItemUpdateArgs, RemoveCollectionItemArgs,
@@ -203,6 +204,49 @@ pub async fn remove_collection_item(
     args: RemoveCollectionItemArgs,
 ) -> Result<CollectionItemId, CommandError> {
     remove_collection_item_inner(&state, args).await
+}
+
+pub async fn sell_collection_item_inner(
+    state: &AppState,
+    args: SellCollectionItemArgs,
+) -> Result<(), CommandError> {
+    info!("Selling collection item: {:?}", args);
+
+    args.validate().map_err(CommandError::from)?;
+
+    let collection_item_id = CollectionItemId::try_from(args.item_id)
+        .map_err(|_| CommandError::validation_field("item_id", "invalid"))?;
+
+    let sale_date = NaiveDate::parse_from_str(&args.sale_date, "%Y-%m-%d")
+        .map_err(|_| CommandError::validation_field("sale_date", "invalid"))?;
+
+    let currency = Currency::from_code(&args.currency)
+        .map_err(|_| CommandError::validation_field("currency", "invalid"))?;
+
+    let sale_price = MonetaryAmount::new(args.amount, currency);
+
+    let domain_input = DomainSellCollectionItemInput {
+        collection_item_id,
+        sale_date,
+        sale_price,
+        buyer_id: args.buyer_id,
+    };
+
+    let mut unit_of_work = state.unit_of_work().await?;
+    SellCollectionItem::execute(&mut unit_of_work, domain_input).await?;
+    unit_of_work.commit().await?;
+
+    Ok(())
+}
+
+/// Tauri command to sell an item from the collection.
+#[tauri::command]
+#[specta::specta]
+pub async fn sell_collection_item(
+    state: tauri::State<'_, AppState>,
+    args: SellCollectionItemArgs,
+) -> Result<(), CommandError> {
+    sell_collection_item_inner(&state, args).await
 }
 
 pub async fn update_collection_item_inner(

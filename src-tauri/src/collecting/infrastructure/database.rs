@@ -87,6 +87,43 @@ pub async fn get_collection_items(
     Ok(rows)
 }
 
+/// Fetch all collection items for a collection, including sold/removed ones.
+pub async fn get_collection_items_including_removed(
+    executor: &mut sqlx::SqliteConnection,
+    collection_id: &CollectionId,
+) -> Result<Vec<CollectionItemRow>, DomainError> {
+    let sql = r#"SELECT
+             ci.id,
+             ci.collection_id,
+             ci.railway_model_id,
+             ci.added_date,
+             ci.removed_date,
+             ci.purchase_condition,
+             ci.model_condition,
+             ci.box_condition,
+             ci.notes,
+             rm.category,
+             rm.product_code,
+             rm.scale,
+             rm.epoch,
+             COALESCE(t.description, '') AS description,
+             rm.power_method,
+             m.name AS manufacturer
+   FROM collection_items ci
+   JOIN railway_models rm ON rm.id = ci.railway_model_id
+   JOIN manufacturers m ON m.id = rm.manufacturer_id
+   LEFT JOIN railway_model_translations t ON t.railway_model_id = rm.id AND t.language_code = 'en'
+   WHERE ci.collection_id = ?1"#;
+
+    let rows = sqlx::query_as::<_, CollectionItemRow>(sql)
+        .bind(collection_id.to_string())
+        .fetch_all(executor)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+
+    Ok(rows)
+}
+
 /// Fetch a single owned rolling stock row by id.
 ///
 /// The function accepts the raw owned rolling stock id string and returns the
@@ -192,6 +229,54 @@ pub async fn get_owned_rolling_stocks(
     Ok(rows)
 }
 
+/// Fetch all owned rolling stocks belonging to a collection, including sold items.
+pub async fn get_owned_rolling_stocks_including_removed(
+    executor: &mut sqlx::SqliteConnection,
+    collection_id: &CollectionId,
+) -> Result<Vec<OwnedRollingStockRow>, DomainError> {
+    let sql = r#"SELECT
+             ors.id,
+             ors.collection_item_id,
+             ors.rolling_stock_id,
+             ors.notes,
+             ors.dcc_address,
+             ors.installed_decoder_id,
+             d.id AS decoder_id,
+             d.manufacturer_id AS decoder_manufacturer_id,
+             d.product_code AS decoder_product_code,
+             d.decoder_type AS decoder_type,
+             d.protocol AS decoder_protocol,
+             d.decoder_interface AS decoder_interface,
+             rs.series_code AS series,
+             rs.series AS series_name,
+             rs.road_number,
+             rs.livery,
+             rs.control,
+             rc.name AS railway_company_name,
+             rc.country_code,
+             rs.category,
+             COALESCE(rs.locomotive_type, rs.freight_car_type, rs.passenger_car_type, rs.electric_multiple_unit_type, rs.railcar_type) AS subcategory,
+             rs.depot,
+             rs.dcc_interface AS rs_dcc_interface,
+             rs.length_millimeters,
+             rs.length_inches,
+             ors.current_coupler_id
+   FROM owned_rolling_stocks AS ors
+   JOIN collection_items AS ci ON ci.id = ors.collection_item_id
+   LEFT JOIN rolling_stocks AS rs ON rs.id = ors.rolling_stock_id
+   LEFT JOIN railway_companies AS rc ON rc.id = rs.railway_company_id
+   LEFT JOIN decoders d ON d.id = ors.installed_decoder_id
+   WHERE ci.collection_id = ?1"#;
+
+    let rows = sqlx::query_as::<_, OwnedRollingStockRow>(sql)
+        .bind(collection_id.to_string())
+        .fetch_all(executor)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+
+    Ok(rows)
+}
+
 /// Fetch all purchase infos associated to a collection (via collection_items).
 ///
 /// Joins `purchase_infos` to `collection_items` and binds the collection id
@@ -221,6 +306,41 @@ pub async fn get_purchase_infos(
    JOIN collection_items ci ON ci.id = pi.collection_item_id
    WHERE ci.collection_id = ?1
      AND ci.removed_date IS NULL"#;
+
+    let rows = sqlx::query_as::<_, PurchaseInfoRow>(sql)
+        .bind(collection_id.to_string())
+        .fetch_all(executor)
+        .await
+        .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
+
+    Ok(rows)
+}
+
+/// Fetch purchase infos associated to a collection, including sold items.
+pub async fn get_purchase_infos_including_removed(
+    executor: &mut sqlx::SqliteConnection,
+    collection_id: &CollectionId,
+) -> Result<Vec<PurchaseInfoRow>, DomainError> {
+    let sql = r#"SELECT
+             pi.id,
+             pi.collection_item_id,
+             pi.purchase_type,
+             pi.purchase_date,
+             pi.seller_id,
+             pi.buyer_id,
+             pi.sale_date,
+             pi.purchased_price_amount,
+             pi.purchased_price_currency,
+             pi.sale_price_amount,
+             pi.sale_price_currency,
+             pi.deposit_amount,
+             pi.deposit_currency,
+             pi.preorder_total_amount,
+             pi.preorder_total_currency,
+             pi.expected_date
+   FROM purchase_infos pi
+   JOIN collection_items ci ON ci.id = pi.collection_item_id
+   WHERE ci.collection_id = ?1"#;
 
     let rows = sqlx::query_as::<_, PurchaseInfoRow>(sql)
         .bind(collection_id.to_string())

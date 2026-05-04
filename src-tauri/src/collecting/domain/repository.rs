@@ -1,11 +1,14 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::collecting::domain::UpdateCollectionItemInput;
 use crate::collecting::domain::collection_view::CollectionView;
 use crate::collecting::domain::depot_view::DepotView;
+use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
+use chrono::NaiveDate;
 
 /// A domain-agnostic interface for collection data access.
 ///
@@ -47,6 +50,15 @@ pub trait CollectionRepository: Send + Sync {
     /// Implementations should persist only the targeted field and keep
     /// collection metadata coherent after the mutation.
     async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError>;
+
+    /// Marks a collection item as sold and persists its sale financial data.
+    async fn sell_item(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        sale_date: NaiveDate,
+        sale_price: MonetaryAmount,
+        buyer_id: Option<String>,
+    ) -> Result<(), DomainError>;
 
     /// Creates an `owned_rolling_stocks` row for every active collection item
     /// that references `railway_model_id`.

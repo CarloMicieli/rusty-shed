@@ -44,6 +44,10 @@
     era: string | null;
     /** Purchase date (ISO 8601 format: "YYYY-MM-DD") */
     purchaseDate: string | null;
+    /** Sold date (ISO 8601 format: "YYYY-MM-DD") */
+    soldDate?: string | null;
+    /** Whether the collection item is sold */
+    isSold?: boolean;
     /** URL to model photo/image */
     photoUrl: string | null;
     /** Number of units in the set (e.g., 3 for a 3-car train set) */
@@ -117,6 +121,20 @@
       ? model.purchaseDate
       : parsedDate.toLocaleDateString(regionalManager.locale);
   });
+
+  const isSold = $derived(model.isSold ?? false);
+
+  const displaySoldDate = $derived.by((): string | null => {
+    if (!model.soldDate) return null;
+
+    const parsedDate = new Date(model.soldDate);
+    return Number.isNaN(parsedDate.getTime())
+      ? model.soldDate
+      : parsedDate.toLocaleDateString(regionalManager.locale);
+  });
+
+  const footerLabel = $derived(isSold ? m.components_soldDate() : m.components_purchaseDate());
+  const footerValue = $derived(isSold ? displaySoldDate : displayPurchaseDate);
 
   // Compact display label for power method badge
   const powerMethodLabel = $derived.by((): string => {
@@ -231,8 +249,9 @@
   Amber border becomes solid on hover; delete button fades in.
 -->
 <Card
-  class="group card relative rounded-2xl border-2 border-primary/35 shadow-xl transition-all duration-200 hover:border-primary hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {className ??
-    ''}"
+  class="group card relative rounded-2xl border-2 border-primary/35 shadow-xl transition-all duration-200 hover:border-primary hover:shadow-[0_0_10px_rgba(212,138,66,0.15)] {isSold
+    ? 'opacity-70 grayscale'
+    : ''} {className ?? ''}"
 >
   <CardHeader class="p-3 pb-2">
     <div class="flex items-start justify-between gap-2">
@@ -360,11 +379,11 @@
       </div>
     </div>
 
-    <div class="mt-2.5 text-center" class:invisible={!displayPurchaseDate}>
+    <div class="mt-2.5 text-center" class:invisible={!footerValue}>
       <span class="text-[10px] tracking-wider text-zinc-500 uppercase">
-        {m.components_purchaseDate()}
+        {footerLabel}
       </span>
-      <div class="mt-0.5 font-mono text-xs text-zinc-300">{displayPurchaseDate ?? ''}</div>
+      <div class="mt-0.5 font-mono text-xs text-zinc-300">{footerValue ?? ''}</div>
     </div>
   </CardContent>
 </Card>

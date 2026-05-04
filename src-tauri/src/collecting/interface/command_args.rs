@@ -35,6 +35,27 @@ pub struct RemoveCollectionItemArgs {
     pub removed_date: String,
 }
 
+/// Arguments structure for selling an owned item from the collection.
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SellCollectionItemArgs {
+    /// The ID of the collection item to sell.
+    #[garde(length(min = 1), custom(validate_collection_item_id))]
+    pub item_id: String,
+    /// The date the item was sold (YYYY-MM-DD).
+    #[garde(custom(validate_iso_date), custom(validate_not_future_iso_date))]
+    pub sale_date: String,
+    /// The sale amount in minor units (e.g. cents).
+    #[garde(range(min = 0))]
+    pub amount: i64,
+    /// The ISO-4217 currency code (e.g. EUR, USD).
+    #[garde(length(min = 3, max = 3), ascii, custom(validate_currency_code))]
+    pub currency: String,
+    /// Optional buyer identifier.
+    #[garde(skip)]
+    pub buyer_id: Option<String>,
+}
+
 /// Arguments structure for updating a single mutable field of a collection item.
 #[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
 #[serde(rename_all = "camelCase")]

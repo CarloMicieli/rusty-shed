@@ -335,6 +335,72 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         Ok(())
     }
 
+    async fn mark_collection_item_as_removed(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        removed_date: NaiveDate,
+    ) -> Result<(), DomainError> {
+        let result = sqlx::query(
+            "UPDATE collection_items SET removed_date = ?1 WHERE id = ?2 AND removed_date IS NULL",
+        )
+        .bind(removed_date)
+        .bind(collection_item_id)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error marking collection item as sold")?;
+
+        if result.rows_affected() > 0 {
+            return Ok(());
+        }
+
+        let existing_removed_date = sqlx::query_scalar::<_, Option<NaiveDate>>(
+            "SELECT removed_date FROM collection_items WHERE id = ?1",
+        )
+        .bind(collection_item_id)
+        .fetch_optional(&mut *self.executor)
+        .await
+        .with_domain_context("Error checking collection item sell state")?;
+
+        match existing_removed_date {
+            None => Err(DomainError::NotFound {
+                resource: "CollectionItem".to_string(),
+                identifier: collection_item_id.to_string(),
+            }),
+            Some(_) => Err(DomainError::BusinessRule(
+                "Collection item is already sold".to_string(),
+            )),
+        }
+    }
+
+    async fn update_purchase_info_sale(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        sale_date: NaiveDate,
+        sale_price: &MonetaryAmount,
+        buyer_id: Option<String>,
+    ) -> Result<(), DomainError> {
+        let result = sqlx::query(
+            "UPDATE purchase_infos SET purchase_type = 'SOLD', sale_date = ?1, sale_price_amount = ?2, sale_price_currency = ?3, buyer_id = ?4 WHERE collection_item_id = ?5",
+        )
+        .bind(sale_date)
+        .bind(sale_price.amount)
+        .bind(sale_price.currency)
+        .bind(buyer_id)
+        .bind(collection_item_id)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error updating purchase info sale fields")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "PurchaseInfo".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
     async fn recalculate_collection_total_value(
         &mut self,
         collection_id: &CollectionId,
@@ -364,6 +430,80 @@ impl<'conn> SqliteCollectionRepository<'conn> {
             .execute(&mut *self.executor)
             .await
             .with_domain_context("Error recalculating collection total value")?;
+
+        Ok(())
+    }
+
+    async fn recalculate_collection_summary(
+        &mut self,
+        collection_id: &CollectionId,
+    ) -> Result<(), DomainError> {
+        let sql = r#"
+                        UPDATE collections
+                             SET locomotives_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'LOCOMOTIVES'
+                                     ), 0),
+                                     passenger_cars_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'PASSENGER_CARS'
+                                     ), 0),
+                                     freight_cars_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'FREIGHT_CARS'
+                                     ), 0),
+                                     train_sets_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'TRAIN_SETS'
+                                     ), 0),
+                                     railcars_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'RAILCARS'
+                                     ), 0),
+                                     electric_multiple_units_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'ELECTRIC_MULTIPLE_UNITS'
+                                     ), 0),
+                                     starter_sets_count = COALESCE((
+                                             SELECT COUNT(*)
+                                                 FROM collection_items ci
+                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
+                                                WHERE ci.collection_id = ?1
+                                                    AND ci.removed_date IS NULL
+                                                    AND rm.category = 'STARTER_SETS'
+                                     ), 0)
+                         WHERE id = ?1;
+                "#;
+
+        sqlx::query(sql)
+            .bind(collection_id)
+            .execute(&mut *self.executor)
+            .await
+            .with_domain_context("Error recalculating collection summary")?;
 
         Ok(())
     }
@@ -398,8 +538,11 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         let collection_row =
             collection_row.expect("Expect collection row to be present after None check");
 
-        let owned_rolling_stock_rows =
-            database::get_owned_rolling_stocks(&mut *self.executor, &collection_row.id).await?;
+        let owned_rolling_stock_rows = database::get_owned_rolling_stocks_including_removed(
+            &mut *self.executor,
+            &collection_row.id,
+        )
+        .await?;
         let owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
             owned_rolling_stock_rows
                 .into_iter()
@@ -407,14 +550,18 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                 .into_group_map();
 
         let purchase_info_rows =
-            database::get_purchase_infos(&mut *self.executor, &collection_row.id).await?;
+            database::get_purchase_infos_including_removed(&mut *self.executor, &collection_row.id)
+                .await?;
         let purchase_info_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = purchase_info_rows
             .into_iter()
             .map(|purchase_info| (purchase_info.collection_item_id.clone(), purchase_info))
             .into_group_map();
 
-        let collection_item_rows =
-            database::get_collection_items(&mut *self.executor, &collection_row.id).await?;
+        let collection_item_rows = database::get_collection_items_including_removed(
+            &mut *self.executor,
+            &collection_row.id,
+        )
+        .await?;
         let mut collection_items = Vec::new();
         for collection_item_row in collection_item_rows {
             let item = CollectionMapper::row_to_collection_item(
@@ -637,6 +784,27 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         Ok(())
     }
 
+    async fn sell_item(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        sale_date: NaiveDate,
+        sale_price: MonetaryAmount,
+        buyer_id: Option<String>,
+    ) -> Result<(), DomainError> {
+        self.mark_collection_item_as_removed(collection_item_id, sale_date)
+            .await?;
+        self.update_purchase_info_sale(collection_item_id, sale_date, &sale_price, buyer_id)
+            .await?;
+        self.recalculate_collection_summary(&CollectionId::default())
+            .await?;
+        self.recalculate_collection_total_value(&CollectionId::default())
+            .await?;
+        self.update_collection_metadata(&CollectionId::default())
+            .await?;
+
+        Ok(())
+    }
+
     /// Retrieve a full `Collection` aggregate by id, returning `None` when
     /// no collection with the given id exists.
     async fn find_by_id(&mut self, id: &CollectionId) -> Result<Option<Collection>, DomainError> {
@@ -647,8 +815,11 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
 
         let collection_row = collection_row.expect("Expect collection row to be present");
 
-        let owned_rolling_stock_rows =
-            database::get_owned_rolling_stocks(&mut *self.executor, &collection_row.id).await?;
+        let owned_rolling_stock_rows = database::get_owned_rolling_stocks_including_removed(
+            &mut *self.executor,
+            &collection_row.id,
+        )
+        .await?;
         let owned_rolling_stocks_map: HashMap<CollectionItemId, Vec<OwnedRollingStockRow>> =
             owned_rolling_stock_rows
                 .into_iter()
@@ -656,14 +827,18 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
                 .into_group_map();
 
         let purchase_info_rows =
-            database::get_purchase_infos(&mut *self.executor, &collection_row.id).await?;
+            database::get_purchase_infos_including_removed(&mut *self.executor, &collection_row.id)
+                .await?;
         let purchase_info_map: HashMap<CollectionItemId, Vec<PurchaseInfoRow>> = purchase_info_rows
             .into_iter()
             .map(|purchase_info| (purchase_info.collection_item_id.clone(), purchase_info))
             .into_group_map();
 
-        let collection_item_rows =
-            database::get_collection_items(&mut *self.executor, &collection_row.id).await?;
+        let collection_item_rows = database::get_collection_items_including_removed(
+            &mut *self.executor,
+            &collection_row.id,
+        )
+        .await?;
 
         let mut collection_items: Vec<CollectionItem> = Vec::new();
         for collection_item_row in collection_item_rows {

@@ -14,10 +14,12 @@ use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::MockCollectionRepository;
 use crate::collecting::domain::UpdateCollectionItemInput;
 use crate::core::domain::Language;
+use crate::core::domain::MonetaryAmount;
 use crate::core::domain::domain_error::DomainError;
 use crate::wishlist::domain::MockWishlistRepository;
 use crate::wishlist::domain::repository::WishlistRepository;
 use crate::wishlist::domain::repository::WishlistUowExt;
+use chrono::NaiveDate;
 
 #[cfg(test)]
 #[derive(Default)]
@@ -151,6 +153,18 @@ impl<'a> CollectionRepository for CollectionRepoRef<'a> {
 
     async fn update_item(&mut self, input: &UpdateCollectionItemInput) -> Result<(), DomainError> {
         self.inner.update_item(input).await
+    }
+
+    async fn sell_item(
+        &mut self,
+        collection_item_id: &crate::collecting::domain::CollectionItemId,
+        sale_date: NaiveDate,
+        sale_price: MonetaryAmount,
+        buyer_id: Option<String>,
+    ) -> Result<(), DomainError> {
+        self.inner
+            .sell_item(collection_item_id, sale_date, sale_price, buyer_id)
+            .await
     }
 
     async fn add_owned_rolling_stock_for_collection_items(

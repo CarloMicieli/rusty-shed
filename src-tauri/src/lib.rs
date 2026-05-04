@@ -146,6 +146,7 @@ fn create_specta_builder() -> Builder<tauri::Wry> {
         collecting_command_handlers::record_acquisition,
         collecting_command_handlers::update_collection_item,
         collecting_command_handlers::remove_collection_item,
+        collecting_command_handlers::sell_collection_item,
         collecting_command_handlers::get_collection_item_details,
         wishlist_command_handlers::add_railway_model_to_wish_list,
         collecting_command_handlers::get_collection,

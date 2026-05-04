@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { CollectionItemView, Category } from '$lib/bindings';
+  import * as m from '$lib/paraglide/messages.js';
   import { Badge } from '$lib/components/ui/badge';
   import DepotThumbnail from '$lib/features/depot/components/DepotThumbnail.svelte';
 
@@ -40,6 +41,10 @@
       trix_express: 'TX'
     };
     return labels[pm.toLowerCase()] ?? pm.toUpperCase();
+  }
+
+  function isSold(item: CollectionItemView): boolean {
+    return item.removedDate !== null || item.purchaseInfo?.kind === 'sold';
   }
 </script>
 
@@ -153,7 +158,9 @@
           <td
             class="rounded-r-lg border-y border-r border-white/5 bg-white/5 px-4 py-2.5 group-hover:border-primary/30"
           >
-            {#if rm.powerMethod}
+            {#if isSold(item)}
+              <Badge variant="destructive">{m.collection_item_status_sold()}</Badge>
+            {:else if rm.powerMethod}
               <Badge
                 class="border-transparent bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground"
               >

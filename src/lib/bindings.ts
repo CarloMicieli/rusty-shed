@@ -162,6 +162,8 @@ export const commands = {
 	 *  - `Err(CommandError)` when the use-case returns an error.
 	 */
 	removeCollectionItem: (args: RemoveCollectionItemArgs) => typedError<CollectionItemId, CommandError>(__TAURI_INVOKE("remove_collection_item", { args })),
+	// Tauri command to sell an item from the collection.
+	sellCollectionItem: (args: SellCollectionItemArgs) => typedError<null, CommandError>(__TAURI_INVOKE("sell_collection_item", { args })),
 	getCollectionItemDetails: (railwayModelId: string, sellerId: string | null, lang: Language) => typedError<DetailedCollectionItemView_Serialize, CommandError>(__TAURI_INVOKE("get_collection_item_details", { railwayModelId, sellerId, lang })),
 	// Simplified flow: save (merge) the railway model and add it to the default wishlist.
 	addRailwayModelToWishList: (args: AddRailwayModelToWishListArgs) => typedError<null, CommandError>(__TAURI_INVOKE("add_railway_model_to_wish_list", { args })),
@@ -4048,6 +4050,20 @@ export type Scale =
 export type SearchRailwayModelsArgs = {
 	// Search query. Minimum 2 characters.
 	query: string,
+};
+
+// Arguments structure for selling an owned item from the collection.
+export type SellCollectionItemArgs = {
+	// The ID of the collection item to sell.
+	itemId: string,
+	// The date the item was sold (YYYY-MM-DD).
+	saleDate: string,
+	// The sale amount in minor units (e.g. cents).
+	amount: number,
+	// The ISO-4217 currency code (e.g. EUR, USD).
+	currency: string,
+	// Optional buyer identifier.
+	buyerId: string | null,
 };
 
 export type Seller = {
