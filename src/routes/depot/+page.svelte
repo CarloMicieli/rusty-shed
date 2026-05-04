@@ -77,14 +77,14 @@
   />
 {/snippet}
 
-<div class="flex flex-col">
+<div class="flex w-full max-w-none flex-col">
   <div
     class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
   >
     <PageHeader title={m.depot_title()} subtitle={m.app_depot()} description={m.depot_subtitle()} />
   </div>
 
-  <div class="space-y-8">
+  <div class="w-full max-w-none space-y-8">
     {#if !isDepotEmpty}
       <DepotControls bind:searchInput onClear={() => (searchInput = '')} />
     {/if}

@@ -53,7 +53,7 @@
   let sidebarCollapsed = $state(false);
   let { children } = $props();
 
-  const constrainedPagePrefixes = ['/dashboard', '/finance', '/depot'];
+  const constrainedPagePrefixes: string[] = [];
 
   const useConstrainedPageContent = $derived.by(() => {
     const pathname = $page.url.pathname;

@@ -341,7 +341,7 @@
   </Card>
 {/snippet}
 
-<div class="flex flex-col">
+<div class="flex w-full max-w-none flex-col">
   <div
     class="-mx-4 -mt-4 mb-6 border-b border-border bg-card/50 px-6 py-4 lg:-mx-8 lg:-mt-8 lg:mb-8"
   >
@@ -356,7 +356,7 @@
     </PageHeader>
   </div>
 
-  <div class="space-y-6">
+  <div class="w-full max-w-none space-y-6">
     {#if !initialized}
       <div class="space-y-6" aria-busy="true" aria-label={m.budget_loading()}>
         <div class="grid gap-4 lg:grid-cols-3">
