@@ -114,7 +114,8 @@ fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
 }
 
 fn create_specta_builder() -> Builder<tauri::Wry> {
-    let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
+    
+    Builder::<tauri::Wry>::new().commands(collect_commands![
         core_command_handlers::is_db_initialized,
         core_command_handlers::get_app_version,
         init_database,
@@ -240,8 +241,7 @@ fn create_specta_builder() -> Builder<tauri::Wry> {
         trains_command_handlers::create_custom_prototype,
         trains_command_handlers::get_formation_categories,
         trains_command_handlers::create_formation_category
-    ]);
-    builder
+    ])
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
