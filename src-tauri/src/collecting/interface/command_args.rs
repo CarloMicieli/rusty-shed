@@ -613,6 +613,56 @@ mod garde_tests {
             "{errors:?}"
         );
     }
+
+    // ── ReceivePreorderArgs ──────────────────────────────────────────────────
+
+    fn valid_receive_preorder() -> ReceivePreorderArgs {
+        ReceivePreorderArgs {
+            item_id: "trn:collection-item:11111111-1111-1111-1111-111111111111".to_string(),
+            received_date: "2025-06-01".to_string(),
+        }
+    }
+
+    #[test]
+    fn receive_preorder_valid_passes() {
+        assert!(valid_receive_preorder().validate().is_ok());
+    }
+
+    #[test]
+    fn receive_preorder_empty_item_id_fails() {
+        let args = ReceivePreorderArgs {
+            item_id: "".to_string(),
+            ..valid_receive_preorder()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn receive_preorder_invalid_item_id_trn_fails() {
+        let args = ReceivePreorderArgs {
+            item_id: "not-a-valid-trn".to_string(),
+            ..valid_receive_preorder()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn receive_preorder_future_date_fails() {
+        let args = ReceivePreorderArgs {
+            received_date: "2099-12-31".to_string(),
+            ..valid_receive_preorder()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn receive_preorder_bad_date_format_fails() {
+        let args = ReceivePreorderArgs {
+            received_date: "not-a-date".to_string(),
+            ..valid_receive_preorder()
+        };
+        assert!(args.validate().is_err());
+    }
 }
 
 // Reuse `SimplifiedRailwayModelArgs` from the `catalog::interface` module.

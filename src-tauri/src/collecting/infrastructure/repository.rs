@@ -1692,4 +1692,291 @@ mod tests {
 
         assert!(inserted_ids.is_empty());
     }
+
+    // ── receive_preorder ────────────────────────────────────────────────────
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn receive_preorder_converts_preorder_to_purchased(conn: sqlx::SqlitePool) {
+        // Arrange: patch the existing PURCHASED row to PREORDER with deposit data
+        let collection_item_id = "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730";
+        sqlx::query(
+            "UPDATE purchase_infos SET purchase_type = 'PREORDER', deposit_amount = 5000, deposit_currency = 'EUR', preorder_total_amount = 17500, preorder_total_currency = 'EUR', purchased_price_amount = NULL, purchased_price_currency = NULL WHERE collection_item_id = ?1",
+        )
+        .bind(collection_item_id)
+        .execute(&conn)
+        .await
+        .expect("patch to PREORDER");
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let item_id = CollectionItemId::try_from(collection_item_id).expect("valid id");
+        let received_date = NaiveDate::from_ymd_opt(2025, 6, 1).unwrap();
+
+        uow.collections_repository()
+            .receive_preorder(&item_id, received_date)
+            .await
+            .expect("receive_preorder should succeed");
+
+        uow.commit().await.expect("commit");
+
+        // Assert: purchase_type must be PURCHASED, purchase_date set, preorder fields cleared
+        let row: (String, Option<String>, Option<i64>, Option<String>) = sqlx::query_as(
+            "SELECT purchase_type, purchase_date, purchased_price_amount, purchased_price_currency FROM purchase_infos WHERE collection_item_id = ?1",
+        )
+        .bind(collection_item_id)
+        .fetch_one(&conn)
+        .await
+        .expect("fetch row");
+
+        assert_eq!(row.0, "PURCHASED");
+        assert_eq!(row.1.as_deref(), Some("2025-06-01"));
+        assert_eq!(row.2, Some(17500)); // preorder_total_amount promoted to purchased_price_amount
+        assert_eq!(row.3.as_deref(), Some("EUR"));
+
+        // Preorder fields must be cleared
+        let preorder_fields: (Option<i64>, Option<String>) = sqlx::query_as(
+            "SELECT deposit_amount, deposit_currency FROM purchase_infos WHERE collection_item_id = ?1",
+        )
+        .bind(collection_item_id)
+        .fetch_one(&conn)
+        .await
+        .expect("fetch preorder fields");
+
+        assert!(preorder_fields.0.is_none(), "deposit_amount should be NULL");
+        assert!(
+            preorder_fields.1.is_none(),
+            "deposit_currency should be NULL"
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn receive_preorder_returns_not_found_for_nonexistent_item(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let fake_id =
+            CollectionItemId::try_from("trn:collection-item:00000000-0000-0000-0000-000000000000")
+                .expect("valid id");
+        let received_date = NaiveDate::from_ymd_opt(2025, 6, 1).unwrap();
+
+        let result = uow
+            .collections_repository()
+            .receive_preorder(&fake_id, received_date)
+            .await;
+
+        assert!(
+            matches!(result, Err(DomainError::NotFound { .. })),
+            "expected NotFound, got: {result:?}"
+        );
+    }
+
+    // ── convert_to_preorder ─────────────────────────────────────────────────
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn convert_to_preorder_patches_purchase_info(conn: sqlx::SqlitePool) {
+        let collection_item_id = "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730";
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let item_id = CollectionItemId::try_from(collection_item_id).expect("valid id");
+        let expected_date = NaiveDate::from_ymd_opt(2026, 3, 1);
+
+        uow.collections_repository()
+            .convert_to_preorder(&item_id, 2000, "EUR", 19900, "EUR", expected_date)
+            .await
+            .expect("convert_to_preorder should succeed");
+
+        uow.commit().await.expect("commit");
+
+        // Assert: PREORDER fields set, purchased_price cleared
+        let row: (String, Option<i64>, Option<String>, Option<i64>, Option<String>) =
+            sqlx::query_as(
+                "SELECT purchase_type, deposit_amount, deposit_currency, preorder_total_amount, preorder_total_currency FROM purchase_infos WHERE collection_item_id = ?1",
+            )
+            .bind(collection_item_id)
+            .fetch_one(&conn)
+            .await
+            .expect("fetch row");
+
+        assert_eq!(row.0, "PREORDER");
+        assert_eq!(row.1, Some(2000));
+        assert_eq!(row.2.as_deref(), Some("EUR"));
+        assert_eq!(row.3, Some(19900));
+        assert_eq!(row.4.as_deref(), Some("EUR"));
+
+        // purchased_price should be cleared
+        let price_row: (Option<i64>, Option<String>) = sqlx::query_as(
+            "SELECT purchased_price_amount, purchased_price_currency FROM purchase_infos WHERE collection_item_id = ?1",
+        )
+        .bind(collection_item_id)
+        .fetch_one(&conn)
+        .await
+        .expect("fetch price row");
+
+        assert!(
+            price_row.0.is_none(),
+            "purchased_price_amount should be NULL"
+        );
+        assert!(
+            price_row.1.is_none(),
+            "purchased_price_currency should be NULL"
+        );
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn convert_to_preorder_returns_not_found_for_nonexistent_item(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let fake_id =
+            CollectionItemId::try_from("trn:collection-item:00000000-0000-0000-0000-000000000000")
+                .expect("valid id");
+
+        let result = uow
+            .collections_repository()
+            .convert_to_preorder(&fake_id, 1000, "EUR", 5000, "EUR", None)
+            .await;
+
+        assert!(
+            matches!(result, Err(DomainError::NotFound { .. })),
+            "expected NotFound, got: {result:?}"
+        );
+    }
+
+    // ── get_stats ───────────────────────────────────────────────────────────
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn get_stats_returns_zero_counts_for_empty_collection(conn: sqlx::SqlitePool) {
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        // Trigger collection creation by calling find_view (auto-creates default)
+        let _ = uow
+            .collections_repository()
+            .find_view()
+            .await
+            .expect("find_view");
+
+        let stats = uow
+            .collections_repository()
+            .get_stats()
+            .await
+            .expect("get_stats should succeed");
+
+        assert_eq!(stats.preordered_count, 0);
+        assert_eq!(stats.active_count, 0);
+        assert_eq!(stats.sold_count, 0);
+        assert_eq!(stats.investment_at_risk_amount, 0);
+        assert!(stats.investment_at_risk_currency.is_none());
+        assert_eq!(stats.realized_profit_amount, 0);
+        assert!(stats.realized_profit_currency.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn get_stats_counts_one_active_item(conn: sqlx::SqlitePool) {
+        // test_collection.sql has 1 PURCHASED (active) item
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let stats = uow
+            .collections_repository()
+            .get_stats()
+            .await
+            .expect("get_stats should succeed");
+
+        assert_eq!(stats.preordered_count, 0);
+        assert_eq!(stats.active_count, 1);
+        assert_eq!(stats.sold_count, 0);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn get_stats_counts_preorder_and_investment_at_risk(conn: sqlx::SqlitePool) {
+        let collection_item_id = "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730";
+
+        // Patch the PURCHASED item to PREORDER
+        sqlx::query(
+            "UPDATE purchase_infos SET purchase_type = 'PREORDER', deposit_amount = 3000, deposit_currency = 'EUR', purchased_price_amount = NULL, purchased_price_currency = NULL WHERE collection_item_id = ?1",
+        )
+        .bind(collection_item_id)
+        .execute(&conn)
+        .await
+        .expect("patch to PREORDER");
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let stats = uow
+            .collections_repository()
+            .get_stats()
+            .await
+            .expect("get_stats should succeed");
+
+        assert_eq!(stats.preordered_count, 1);
+        assert_eq!(stats.active_count, 0);
+        assert_eq!(stats.sold_count, 0);
+        assert_eq!(stats.investment_at_risk_amount, 3000);
+        assert_eq!(stats.investment_at_risk_currency.as_deref(), Some("EUR"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("../../../fixtures/test_collection.sql")
+    )]
+    async fn get_stats_counts_sold_item_and_realized_profit(conn: sqlx::SqlitePool) {
+        let collection_item_id = "trn:collection-item:d20a1a95-1ae4-4970-9e87-b4c84676e730";
+
+        // Mark item as sold: purchased_price_amount = 17500, sale_price_amount = 20000
+        sqlx::query(
+            "UPDATE purchase_infos SET purchase_type = 'SOLD', sale_date = '2026-01-01', sale_price_amount = 20000, sale_price_currency = 'EUR' WHERE collection_item_id = ?1",
+        )
+        .bind(collection_item_id)
+        .execute(&conn)
+        .await
+        .expect("patch to SOLD");
+
+        // Also set removed_date so the item is excluded from active counts
+        sqlx::query("UPDATE collection_items SET removed_date = '2026-01-01' WHERE id = ?1")
+            .bind(collection_item_id)
+            .execute(&conn)
+            .await
+            .expect("set removed_date");
+
+        let mut uow = SqliteUnitOfWork::new(&conn)
+            .await
+            .expect("should create unit of work");
+
+        let stats = uow
+            .collections_repository()
+            .get_stats()
+            .await
+            .expect("get_stats should succeed");
+
+        assert_eq!(stats.preordered_count, 0);
+        assert_eq!(stats.active_count, 0);
+        assert_eq!(stats.sold_count, 1);
+        // profit = sale_price(20000) - purchased_price(17500) = 2500
+        assert_eq!(stats.realized_profit_amount, 2500);
+        assert_eq!(stats.realized_profit_currency.as_deref(), Some("EUR"));
+    }
 }

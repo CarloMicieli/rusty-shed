@@ -30,7 +30,8 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   collection_toast_success: () => 'Success',
   collection_toast_error: () => 'Error occurred',
   collection_toast_retry: () => 'Retry',
-  add_model_success: () => 'Model added'
+  add_model_success: () => 'Model added',
+  collection_item_receive_action: () => 'Item received'
 }));
 
 import { invoke } from '@tauri-apps/api/core';
@@ -363,6 +364,141 @@ describe('CollectionState', () => {
         preorderTotalAmount: null,
         preorderTotalCurrency: null,
         expectedDate: null
+      });
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('setStatus and status filtering', () => {
+    function makePreorderedItem(id: string) {
+      return {
+        ...makeItem(id),
+        purchaseInfo: {
+          kind: 'preOrdered' as const,
+          data: {
+            id: `trn:purchase:${id}`,
+            orderDate: '2025-01-01',
+            deposit: { amount: 2000, currency: 'EUR' as const },
+            totalPrice: { amount: 19900, currency: 'EUR' as const },
+            seller: null,
+            expectedDate: null
+          }
+        }
+      };
+    }
+
+    function makeSoldItem(id: string) {
+      return {
+        ...makeItem(id),
+        removedDate: '2026-01-01',
+        purchaseInfo: {
+          kind: 'sold' as const,
+          data: {
+            id: `trn:purchase:${id}`,
+            purchaseDate: '2025-01-01',
+            purchasePrice: { amount: 5000, currency: 'EUR' as const },
+            saleDate: '2026-01-01',
+            salePrice: { amount: 7000, currency: 'EUR' as const },
+            seller: null,
+            buyer: null
+          }
+        }
+      };
+    }
+
+    it('setStatus updates filters.status', () => {
+      const state = createCollectionState();
+      flushSync(() => state.setStatus('preordered'));
+      expect(state.filters.status).toBe('preordered');
+    });
+
+    it('status defaults to active — excludes preordered items', async () => {
+      const items = [makeItem('active-1'), makePreorderedItem('pre-1')];
+      mockInvoke.mockResolvedValueOnce(makeCollection(items));
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      // default status is 'active'
+      expect(state.filters.status).toBe('active');
+      expect(state.filteredItems).toHaveLength(1);
+      expect(state.filteredItems[0].id).toBe('active-1');
+    });
+
+    it('setStatus("preordered") shows only preordered items', async () => {
+      const items = [makeItem('active-1'), makePreorderedItem('pre-1')];
+      mockInvoke.mockResolvedValueOnce(makeCollection(items));
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      flushSync(() => state.setStatus('preordered'));
+
+      expect(state.filteredItems).toHaveLength(1);
+      expect(state.filteredItems[0].id).toBe('pre-1');
+    });
+
+    it('setStatus("sold") shows only sold items', async () => {
+      const items = [makeItem('active-1'), makeSoldItem('sold-1')];
+      mockInvoke.mockResolvedValueOnce(makeCollection(items));
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      flushSync(() => state.setStatus('sold'));
+
+      expect(state.filteredItems).toHaveLength(1);
+      expect(state.filteredItems[0].id).toBe('sold-1');
+    });
+
+    it('setStatus("all") shows all items regardless of lifecycle state', async () => {
+      const items = [makeItem('active-1'), makePreorderedItem('pre-1'), makeSoldItem('sold-1')];
+      mockInvoke.mockResolvedValueOnce(makeCollection(items));
+      const state = createCollectionState();
+      await state.fetchCollection();
+
+      flushSync(() => state.setStatus('all'));
+
+      expect(state.filteredItems).toHaveLength(3);
+    });
+
+    it('clearFilters resets status to active', () => {
+      const state = createCollectionState();
+      flushSync(() => {
+        state.setStatus('all');
+        state.clearFilters();
+      });
+      expect(state.filters.status).toBe('active');
+    });
+
+    it('hasActiveFilters is true when status is not active', () => {
+      const state = createCollectionState();
+      flushSync(() => state.setStatus('preordered'));
+      expect(state.hasActiveFilters).toBe(true);
+    });
+  });
+
+  describe('receivePreorder', () => {
+    it('returns true and refreshes collection on success', async () => {
+      const collection = makeCollection([]);
+      mockInvoke.mockResolvedValueOnce(null); // receive_preorder
+      mockInvoke.mockResolvedValueOnce(collection); // get_collection (forceRefresh)
+
+      const state = createCollectionState();
+      const result = await state.receivePreorder({
+        itemId: 'trn:collection-item:11111111-1111-1111-1111-111111111111',
+        receivedDate: '2026-01-01'
+      });
+
+      expect(result).toBe(true);
+      expect(mockInvoke).toHaveBeenCalledWith('receive_preorder', expect.anything());
+    });
+
+    it('returns false when Tauri command fails', async () => {
+      mockInvoke.mockRejectedValueOnce({ NotFound: { resource: 'PreorderPurchaseInfo' } });
+
+      const state = createCollectionState();
+      const result = await state.receivePreorder({
+        itemId: 'trn:collection-item:11111111-1111-1111-1111-111111111111',
+        receivedDate: '2026-01-01'
       });
 
       expect(result).toBe(false);
