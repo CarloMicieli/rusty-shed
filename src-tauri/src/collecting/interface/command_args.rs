@@ -211,6 +211,58 @@ impl TryFrom<AddCollectionItemArgs> for AddCollectionItemInput {
 mod tests {
     use super::*;
 
+    fn valid_sell_args() -> SellCollectionItemArgs {
+        SellCollectionItemArgs {
+            item_id: "trn:collection-item:11111111-1111-1111-1111-111111111111".to_string(),
+            sale_date: "2025-01-15".to_string(),
+            amount: 5000,
+            currency: "EUR".to_string(),
+            buyer_id: None,
+        }
+    }
+
+    #[test]
+    fn sell_args_valid_passes_validation() {
+        let args = valid_sell_args();
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn sell_args_future_date_fails_validation() {
+        let args = SellCollectionItemArgs {
+            sale_date: "2099-12-31".to_string(),
+            ..valid_sell_args()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn sell_args_negative_amount_fails_validation() {
+        let args = SellCollectionItemArgs {
+            amount: -1,
+            ..valid_sell_args()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn sell_args_invalid_currency_fails_validation() {
+        let args = SellCollectionItemArgs {
+            currency: "XYZ".to_string(),
+            ..valid_sell_args()
+        };
+        assert!(args.validate().is_err());
+    }
+
+    #[test]
+    fn sell_args_empty_item_id_fails_validation() {
+        let args = SellCollectionItemArgs {
+            item_id: "".to_string(),
+            ..valid_sell_args()
+        };
+        assert!(args.validate().is_err());
+    }
+
     #[test]
     fn it_should_add_collection_item_try_from_valid() {
         let input = AddCollectionItemArgs {

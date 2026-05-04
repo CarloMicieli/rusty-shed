@@ -36,7 +36,7 @@ export function collectionItemToCardData(item: CollectionItemView): RailwayModel
   };
 }
 
-function isSoldItem(purchaseInfo: PurchaseInfo | null, removedDate: string | null): boolean {
+export function isSoldItem(purchaseInfo: PurchaseInfo | null, removedDate: string | null): boolean {
   return purchaseInfo?.kind === 'sold' || removedDate !== null;
 }
 
