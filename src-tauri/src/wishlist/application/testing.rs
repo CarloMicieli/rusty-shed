@@ -8,7 +8,9 @@ use crate::catalog::domain::railway_model::RailwayModelView;
 use crate::catalog::domain::railway_model::railway_model_translation::RailwayModelTranslations;
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
+use crate::collecting::domain::CollectionItemId;
 use crate::collecting::domain::CollectionRepository;
+use crate::collecting::domain::CollectionStats;
 use crate::collecting::domain::CollectionUowExt;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::MockCollectionRepository;
@@ -165,6 +167,41 @@ impl<'a> CollectionRepository for CollectionRepoRef<'a> {
         self.inner
             .sell_item(collection_item_id, sale_date, sale_price, buyer_id)
             .await
+    }
+
+    async fn receive_preorder(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        received_date: NaiveDate,
+    ) -> Result<(), DomainError> {
+        self.inner
+            .receive_preorder(collection_item_id, received_date)
+            .await
+    }
+
+    async fn convert_to_preorder(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        deposit_amount: i64,
+        deposit_currency: &str,
+        preorder_total_amount: i64,
+        preorder_total_currency: &str,
+        expected_date: Option<NaiveDate>,
+    ) -> Result<(), DomainError> {
+        self.inner
+            .convert_to_preorder(
+                collection_item_id,
+                deposit_amount,
+                deposit_currency,
+                preorder_total_amount,
+                preorder_total_currency,
+                expected_date,
+            )
+            .await
+    }
+
+    async fn get_stats(&mut self) -> Result<CollectionStats, DomainError> {
+        self.inner.get_stats().await
     }
 
     async fn add_owned_rolling_stock_for_collection_items(

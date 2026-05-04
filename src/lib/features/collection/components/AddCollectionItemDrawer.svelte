@@ -65,7 +65,13 @@
       modelCondition: null,
       boxCondition: null,
       notes: '',
-      purchaseDate: new Date().toISOString().split('T')[0]
+      purchaseDate: new Date().toISOString().split('T')[0],
+      purchaseType: 'STANDARD',
+      depositAmount: null,
+      depositCurrency: null,
+      preorderTotalAmount: null,
+      preorderTotalCurrency: null,
+      expectedDate: null
     };
   }
 
@@ -160,6 +166,7 @@
 
   function toAddRailwayModelArgs(formState: AddModelFormState): AddRailwayModelToCollectionArgs {
     const today = new Date().toISOString().split('T')[0];
+    const isPreorder = formState.purchase.purchaseType === 'PREORDER';
 
     // priceAmount is stored as integer cents in the form state
     const priceInCents = formState.purchase.priceAmount ?? 0;
@@ -189,7 +196,17 @@
       purchaseCondition: formState.purchase.purchaseCondition,
       modelCondition: formState.purchase.modelCondition,
       boxCondition: formState.purchase.boxCondition,
-      notes: formState.purchase.notes || null
+      notes: formState.purchase.notes || null,
+      purchaseType: formState.purchase.purchaseType,
+      depositAmount: isPreorder ? (formState.purchase.depositAmount ?? null) : null,
+      depositCurrency: isPreorder
+        ? (formState.purchase.depositCurrency ?? formState.purchase.priceCurrency)
+        : null,
+      preorderTotalAmount: isPreorder ? (formState.purchase.preorderTotalAmount ?? null) : null,
+      preorderTotalCurrency: isPreorder
+        ? (formState.purchase.preorderTotalCurrency ?? formState.purchase.priceCurrency)
+        : null,
+      expectedDate: isPreorder ? (formState.purchase.expectedDate ?? null) : null
     };
   }
 

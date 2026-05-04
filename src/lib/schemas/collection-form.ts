@@ -36,7 +36,13 @@ const purchaseSchema = z.object({
   modelCondition: z.string().nullable().default(null),
   boxCondition: z.string().nullable().default(null),
   notes: z.string().default(''),
-  purchaseDate: z.string().default('')
+  purchaseDate: z.string().default(''),
+  purchaseType: z.enum(['STANDARD', 'PREORDER']).default('STANDARD'),
+  depositAmount: z.number().nullable().default(null),
+  depositCurrency: z.string().nullable().default(null),
+  preorderTotalAmount: z.number().nullable().default(null),
+  preorderTotalCurrency: z.string().nullable().default(null),
+  expectedDate: z.string().nullable().default(null)
 });
 
 // ---------------------------------------------------------------------------

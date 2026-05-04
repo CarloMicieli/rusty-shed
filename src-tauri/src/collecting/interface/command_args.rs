@@ -319,6 +319,36 @@ pub struct AddRailwayModelToCollectionArgs {
     /// Additional notes about the item (optional).
     #[garde(length(max = 2000))]
     pub notes: Option<String>,
+    /// Purchase type: "STANDARD" (default) or "PREORDER".
+    #[garde(skip)]
+    pub purchase_type: Option<String>,
+    /// Deposit amount for preorders (minor units). Required when purchase_type == "PREORDER".
+    #[garde(range(min = 0))]
+    pub deposit_amount: Option<i64>,
+    /// Currency for the deposit. Required when purchase_type == "PREORDER".
+    #[garde(custom(validate_opt_currency_code))]
+    pub deposit_currency: Option<String>,
+    /// Total preorder amount in minor units.
+    #[garde(range(min = 0))]
+    pub preorder_total_amount: Option<i64>,
+    /// Currency for the preorder total.
+    #[garde(custom(validate_opt_currency_code))]
+    pub preorder_total_currency: Option<String>,
+    /// Expected delivery date for preorders (YYYY-MM-DD).
+    #[garde(skip)]
+    pub expected_date: Option<NaiveDate>,
+}
+
+/// Arguments to mark a preordered item as received (converting it to a purchased item).
+#[derive(Debug, Clone, Deserialize, specta::Type, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct ReceivePreorderArgs {
+    /// The ID of the collection item to convert from preorder to purchased.
+    #[garde(length(min = 1), custom(validate_collection_item_id))]
+    pub item_id: String,
+    /// The date the item was received (YYYY-MM-DD, not in the future).
+    #[garde(custom(validate_iso_date), custom(validate_not_future_iso_date))]
+    pub received_date: String,
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
-  import type { FilterState } from '$lib/features/collection/CollectionState.svelte';
+  import type { FilterState, StatusFilter } from '$lib/features/collection/CollectionState.svelte';
   import { categoryLabel as enumCategoryLabel } from '$lib/utils/enum-options';
   import type { Category } from '$lib/bindings';
 
@@ -21,6 +21,7 @@
     onToggleCompany?: (company: string) => void;
     onToggleCategory?: (category: string) => void;
     onToggleEpoch?: (epoch: string) => void;
+    onSetStatus?: (status: StatusFilter) => void;
     onClear?: () => void;
     onToggleSidebar?: () => void;
   }
@@ -36,6 +37,7 @@
     onToggleCompany,
     onToggleCategory,
     onToggleEpoch,
+    onSetStatus,
     onClear,
     onToggleSidebar
   }: Props = $props();
@@ -78,6 +80,26 @@
 
   <!-- Scrollable filter sections -->
   <div class="flex-1 overflow-y-auto">
+    <!-- Status -->
+    <section class="border-b border-layout-border px-4 py-3">
+      <h4 class="mb-2 text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
+        {m.collection_filter_status()}
+      </h4>
+      <div class="flex flex-col gap-1">
+        {#each [{ value: 'active' as StatusFilter, label: m.collection_filter_status_active() }, { value: 'preordered' as StatusFilter, label: m.collection_filter_status_preordered() }, { value: 'sold' as StatusFilter, label: m.collection_filter_status_sold() }, { value: 'all' as StatusFilter, label: m.collection_filter_status_all() }] as opt (opt.value)}
+          <button
+            type="button"
+            class="w-full cursor-pointer rounded px-2.5 py-1 text-left text-xs transition-colors
+              {filters.status === opt.value
+              ? 'bg-primary/15 font-medium text-primary'
+              : 'text-muted-foreground hover:bg-primary/10 hover:text-zinc-300'}"
+            onclick={() => onSetStatus?.(opt.value)}
+          >
+            {opt.label}
+          </button>
+        {/each}
+      </div>
+    </section>
     <!-- Scales -->
     {#if availableScales.length > 0}
       <section class="border-b border-layout-border px-4 py-3">

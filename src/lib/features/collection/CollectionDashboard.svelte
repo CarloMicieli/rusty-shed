@@ -4,12 +4,15 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { getCollectionContext, availableScales } from './CollectionState.svelte';
+  import type { StatusFilter } from './CollectionState.svelte';
   import { Button } from '$lib/components';
   import PageHeader from '$lib/components/PageHeader.svelte';
+  import { commands } from '$lib/bindings';
 
   const collectionService = getCollectionContext();
 
   import type {
+    CollectionStats,
     CollectionSummary as CollectionSummaryType,
     CollectionItemView
   } from '$lib/bindings';
@@ -87,7 +90,17 @@
     electricMultipleUnitsCount: 0,
     starterSetsCount: 0
   });
+  const defaultCollectionStats: CollectionStats = {
+    preorderedCount: 0,
+    activeCount: 0,
+    soldCount: 0,
+    investmentAtRiskAmount: 0,
+    investmentAtRiskCurrency: null,
+    realizedProfitAmount: 0,
+    realizedProfitCurrency: null
+  };
   const summaryData = $derived(collectionService.summary ?? defaultSummary);
+  let collectionStats = $state<CollectionStats>(defaultCollectionStats);
 
   const rawItems = $derived(collectionService.rawItems);
   const filteredItems = $derived(collectionService.filteredItems);
@@ -108,7 +121,15 @@
 
   onMount(() => {
     void collectionService.fetchCollection();
+    void loadCollectionStats();
   });
+
+  async function loadCollectionStats() {
+    const result = await commands.getCollectionStats();
+    if (result.status === 'ok') {
+      collectionStats = result.data;
+    }
+  }
 
   function handleSearch(query: string) {
     collectionService.setQuery(query);
@@ -132,6 +153,14 @@
 
   function handleToggleEpoch(epoch: string) {
     collectionService.toggleEpoch(epoch);
+  }
+
+  function handleSetStatus(status: StatusFilter) {
+    collectionService.setStatus(status);
+  }
+
+  function handleLifecycleChipClick(status: StatusFilter) {
+    collectionService.setStatus(status);
   }
 
   function handleTag(tag: string) {
@@ -221,6 +250,32 @@
     <div class="flex-1">
       <div class="px-4 py-6 sm:px-6">
         {#if !isCollectionEmpty && !isLoading}
+          <div class="mb-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="rounded-full border border-amber-500/30 bg-amber-500/8 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-500/14"
+              onclick={() => handleLifecycleChipClick('preordered')}
+            >
+              {collectionStats.preorderedCount}
+              {m.collection_stats_preordered()}
+            </button>
+            <button
+              type="button"
+              class="rounded-full border border-emerald-500/30 bg-emerald-500/8 px-3 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-emerald-500/14"
+              onclick={() => handleLifecycleChipClick('active')}
+            >
+              {collectionStats.activeCount}
+              {m.collection_stats_active()}
+            </button>
+            <button
+              type="button"
+              class="rounded-full border border-rose-500/30 bg-rose-500/8 px-3 py-1.5 text-xs font-medium text-rose-300 transition-colors hover:bg-rose-500/14"
+              onclick={() => handleLifecycleChipClick('sold')}
+            >
+              {collectionStats.soldCount}
+              {m.collection_stats_sold()}
+            </button>
+          </div>
           <div
             class="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 sm:grid-cols-3 lg:grid-cols-6"
           >
@@ -378,6 +433,7 @@
             onToggleCompany={handleToggleCompany}
             onToggleCategory={handleToggleCategory}
             onToggleEpoch={handleToggleEpoch}
+            onSetStatus={handleSetStatus}
             onClear={handleClear}
             onToggleSidebar={ui.toggleFilterSidebar}
           />
@@ -392,6 +448,7 @@
   onClose={ui.closeDrawer}
   onSuccess={() => {
     ui.closeDrawer();
+    void loadCollectionStats();
   }}
 />
 

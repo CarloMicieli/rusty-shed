@@ -2,6 +2,7 @@ use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
 use crate::collecting::domain::Collection;
 use crate::collecting::domain::CollectionId;
 use crate::collecting::domain::CollectionItemId;
+use crate::collecting::domain::CollectionStats;
 use crate::collecting::domain::OwnedRollingStockId;
 use crate::collecting::domain::UpdateCollectionItemInput;
 use crate::collecting::domain::collection_view::CollectionView;
@@ -59,6 +60,35 @@ pub trait CollectionRepository: Send + Sync {
         sale_price: MonetaryAmount,
         buyer_id: Option<String>,
     ) -> Result<(), DomainError>;
+
+    /// Marks a pre-ordered item as received (converts purchase_type PREORDER → PURCHASED).
+    ///
+    /// `received_date` is stored as the new `purchase_date`. The collection summary
+    /// is recalculated so the item is now included in active counts.
+    async fn receive_preorder(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        received_date: NaiveDate,
+    ) -> Result<(), DomainError>;
+
+    /// Converts an existing PURCHASED purchase_info row to PREORDER after creation.
+    ///
+    /// Called immediately after `AddCollectionItem::execute` when the caller
+    /// specified a Preorder purchase type. The deposit / total / expected_date
+    /// fields are set and `purchased_price_amount` is cleared (null).
+    #[allow(clippy::too_many_arguments)]
+    async fn convert_to_preorder(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        deposit_amount: i64,
+        deposit_currency: &str,
+        preorder_total_amount: i64,
+        preorder_total_currency: &str,
+        expected_date: Option<NaiveDate>,
+    ) -> Result<(), DomainError>;
+
+    /// Returns lifecycle stats (preordered / active / sold counts + financial aggregates).
+    async fn get_stats(&mut self) -> Result<CollectionStats, DomainError>;
 
     /// Creates an `owned_rolling_stocks` row for every active collection item
     /// that references `railway_model_id`.

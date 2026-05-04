@@ -78,6 +78,24 @@ export interface PurchaseFormState {
   /** Free-form notes */
   notes: string;
 
-  /** Date of purchase (YYYY-MM-DD) */
+  /** Date of purchase or preorder placement (YYYY-MM-DD) */
   purchaseDate: string;
+
+  /** Purchase type: "STANDARD" (default) or "PREORDER" */
+  purchaseType: 'STANDARD' | 'PREORDER';
+
+  /** Deposit amount paid for preorders (integer cents) */
+  depositAmount: number | null;
+
+  /** Currency code for the deposit */
+  depositCurrency: string | null;
+
+  /** Total preorder price in integer cents */
+  preorderTotalAmount: number | null;
+
+  /** Currency code for the total preorder price */
+  preorderTotalCurrency: string | null;
+
+  /** Expected delivery date for preorders (YYYY-MM-DD) */
+  expectedDate: string | null;
 }

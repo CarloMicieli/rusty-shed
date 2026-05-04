@@ -4,18 +4,19 @@ use crate::catalog::domain::railway_model::{Category, Epoch, PowerMethod};
 use crate::catalog::domain::scale::Scale;
 use crate::collecting::application::AddCollectionItemInput as DomainAddCollectionItemInput;
 use crate::collecting::application::{
-    AcquisitionItemInput, AddCollectionItem, GetCollection, GetDepot, RecordAcquisition,
-    RecordAcquisitionInput, RemoveCollectionItem,
+    AcquisitionItemInput, AddCollectionItem, GetCollection, GetDepot, ReceivePreorder,
+    ReceivePreorderInput, RecordAcquisition, RecordAcquisitionInput, RemoveCollectionItem,
     RemoveCollectionItemInput as DomainRemoveCollectionItemInput, SellCollectionItem,
     SellCollectionItemInput as DomainSellCollectionItemInput, UpdateCollectionItem,
 };
 use crate::collecting::domain::{
-    BoxCondition, CollectionItemUpdate, ModelCondition, PurchaseCondition,
+    BoxCondition, CollectionItemUpdate, CollectionStats, ModelCondition, PurchaseCondition,
     UpdateCollectionItemInput,
 };
 use crate::collecting::domain::{CollectionItemId, CollectionView, DepotView};
 use crate::collecting::interface::command_args::{
-    AddRailwayModelToCollectionArgs, RecordAcquisitionArgs, SellCollectionItemArgs,
+    AddRailwayModelToCollectionArgs, ReceivePreorderArgs, RecordAcquisitionArgs,
+    SellCollectionItemArgs,
 };
 use crate::collecting::interface::{
     AddCollectionItemArgs, CollectionItemUpdateArgs, RemoveCollectionItemArgs,
@@ -473,13 +474,40 @@ pub async fn add_railway_model_to_collection_inner(
     let id_provider = RuntimeIdProvider::new();
     let purchase_info_provider = RuntimeIdProvider::new();
 
-    AddCollectionItem::execute(
+    let item_id = AddCollectionItem::execute(
         &mut unit_of_work,
         id_provider,
         purchase_info_provider,
         add_input,
     )
     .await?;
+
+    // If the user added a preorder, patch the purchase_info row with preorder details
+    let purchase_type = args.purchase_type.as_deref().unwrap_or("STANDARD");
+    if purchase_type == "PREORDER" {
+        let deposit_amount = args.deposit_amount.unwrap_or(0);
+        let deposit_currency = args
+            .deposit_currency
+            .as_deref()
+            .unwrap_or(args.price_currency.as_str());
+        let preorder_total_amount = args.preorder_total_amount.unwrap_or(args.price_amount);
+        let preorder_total_currency = args
+            .preorder_total_currency
+            .as_deref()
+            .unwrap_or(args.price_currency.as_str());
+
+        unit_of_work
+            .collections_repository()
+            .convert_to_preorder(
+                &item_id,
+                deposit_amount,
+                deposit_currency,
+                preorder_total_amount,
+                preorder_total_currency,
+                args.expected_date,
+            )
+            .await?;
+    }
 
     unit_of_work.commit().await?;
 
@@ -494,6 +522,55 @@ pub async fn add_railway_model_to_collection(
     args: AddRailwayModelToCollectionArgs,
 ) -> Result<(), CommandError> {
     add_railway_model_to_collection_inner(&state, args).await
+}
+
+pub async fn get_collection_stats_inner(state: &AppState) -> Result<CollectionStats, CommandError> {
+    let mut unit_of_work = state.unit_of_work().await?;
+    let stats = unit_of_work.collections_repository().get_stats().await?;
+    unit_of_work.commit().await?;
+    Ok(stats)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_collection_stats(
+    state: tauri::State<'_, AppState>,
+) -> Result<CollectionStats, CommandError> {
+    get_collection_stats_inner(&state).await
+}
+
+pub async fn receive_preorder_inner(
+    state: &AppState,
+    args: ReceivePreorderArgs,
+) -> Result<(), CommandError> {
+    info!("receive_preorder (collecting): {:?}", args);
+    args.validate().map_err(CommandError::from)?;
+
+    let item_id = CollectionItemId::try_from(args.item_id.as_str())
+        .map_err(|_| CommandError::validation_field("item_id", "invalid"))?;
+    let received_date = NaiveDate::parse_from_str(&args.received_date, "%Y-%m-%d")
+        .map_err(|_| CommandError::validation_field("received_date", "invalid date format"))?;
+
+    let mut uow = state.unit_of_work().await?;
+    ReceivePreorder::execute(
+        &mut uow,
+        ReceivePreorderInput {
+            collection_item_id: item_id,
+            received_date,
+        },
+    )
+    .await?;
+    uow.commit().await?;
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn receive_preorder(
+    state: tauri::State<'_, AppState>,
+    args: ReceivePreorderArgs,
+) -> Result<(), CommandError> {
+    receive_preorder_inner(&state, args).await
 }
 
 pub async fn record_acquisition_inner(

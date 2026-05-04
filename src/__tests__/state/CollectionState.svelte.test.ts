@@ -321,7 +321,13 @@ describe('CollectionState', () => {
         purchaseCondition: null,
         modelCondition: null,
         boxCondition: null,
-        notes: null
+        notes: null,
+        purchaseType: 'STANDARD',
+        depositAmount: null,
+        depositCurrency: null,
+        preorderTotalAmount: null,
+        preorderTotalCurrency: null,
+        expectedDate: null
       });
 
       expect(result).toBe(true);
@@ -350,7 +356,13 @@ describe('CollectionState', () => {
         purchaseCondition: null,
         modelCondition: null,
         boxCondition: null,
-        notes: null
+        notes: null,
+        purchaseType: 'STANDARD',
+        depositAmount: null,
+        depositCurrency: null,
+        preorderTotalAmount: null,
+        preorderTotalCurrency: null,
+        expectedDate: null
       });
 
       expect(result).toBe(false);

@@ -165,6 +165,8 @@ export const commands = {
 	// Tauri command to sell an item from the collection.
 	sellCollectionItem: (args: SellCollectionItemArgs) => typedError<null, CommandError>(__TAURI_INVOKE("sell_collection_item", { args })),
 	getCollectionItemDetails: (railwayModelId: string, sellerId: string | null, lang: Language) => typedError<DetailedCollectionItemView_Serialize, CommandError>(__TAURI_INVOKE("get_collection_item_details", { railwayModelId, sellerId, lang })),
+	getCollectionStats: () => typedError<CollectionStats, CommandError>(__TAURI_INVOKE("get_collection_stats")),
+	receivePreorder: (args: ReceivePreorderArgs) => typedError<null, CommandError>(__TAURI_INVOKE("receive_preorder", { args })),
 	// Simplified flow: save (merge) the railway model and add it to the default wishlist.
 	addRailwayModelToWishList: (args: AddRailwayModelToWishListArgs) => typedError<null, CommandError>(__TAURI_INVOKE("add_railway_model_to_wish_list", { args })),
 	/**
@@ -916,6 +918,18 @@ export type AddRailwayModelToCollectionArgs = {
 	boxCondition: string | null,
 	// Additional notes about the item (optional).
 	notes: string | null,
+	// Purchase type: "STANDARD" (default) or "PREORDER".
+	purchaseType: string | null,
+	// Deposit amount for preorders (minor units). Required when purchase_type == "PREORDER".
+	depositAmount: number | null,
+	// Currency for the deposit. Required when purchase_type == "PREORDER".
+	depositCurrency: string | null,
+	// Total preorder amount in minor units.
+	preorderTotalAmount: number | null,
+	// Currency for the preorder total.
+	preorderTotalCurrency: string | null,
+	// Expected delivery date for preorders (YYYY-MM-DD).
+	expectedDate: string | null,
 };
 
 // Arguments for creating a simplified railway model and adding it to a wishlist.
@@ -1444,6 +1458,29 @@ export type CollectionRailwayModel = {
 	category: Category,
 	// The power method of the railway model (e.g. AC, DC, Trix Express).
 	powerMethod: PowerMethod,
+};
+
+/**
+ *  Lifecycle statistics for the model railway collection.
+ * 
+ *  Provides three distinct counts reflecting each lifecycle state, plus
+ *  financial aggregates useful for dashboard summaries.
+ */
+export type CollectionStats = {
+	// Number of items in 'PREORDER' state (not yet physically received).
+	preorderedCount: number,
+	// Number of physically owned active items (removed_date IS NULL, purchase_type = 'PURCHASED').
+	activeCount: number,
+	// Number of items that have been sold (purchase_type = 'SOLD').
+	soldCount: number,
+	// Sum of all deposit amounts for open preorders (in minor units).
+	investmentAtRiskAmount: number,
+	// Currency code for `investment_at_risk_amount` (e.g. "EUR"). Null when no preorders.
+	investmentAtRiskCurrency: string | null,
+	// Realized profit/loss for all sold items: sum(sale_price - purchase_price) in minor units.
+	realizedProfitAmount: number,
+	// Currency code for `realized_profit_amount`. Null when nothing has been sold.
+	realizedProfitCurrency: string | null,
 };
 
 /**
@@ -3583,6 +3620,14 @@ export type RailwayStatus =
 "INACTIVE" | 
 // The railway company has merged with another entity.
 "MERGED";
+
+// Arguments to mark a preordered item as received (converting it to a purchased item).
+export type ReceivePreorderArgs = {
+	// The ID of the collection item to convert from preorder to purchased.
+	itemId: string,
+	// The date the item was received (YYYY-MM-DD, not in the future).
+	receivedDate: string,
+};
 
 // Top-level args for the record_acquisition command.
 export type RecordAcquisitionArgs = {

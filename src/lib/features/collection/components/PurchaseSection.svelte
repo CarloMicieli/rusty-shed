@@ -110,16 +110,61 @@
           placeholder="-- {m.add_model_seller()} --"
         />
 
-        <!-- Purchase Date -->
+        <!-- Purchase Type toggle -->
+        <div>
+          <div class="mb-1 block">
+            {#if dark}
+              <span class="text-[10px] text-muted-foreground uppercase"
+                >{m.add_model_purchase_type()}</span
+              >
+            {:else}
+              <span class="text-sm text-muted-foreground">{m.add_model_purchase_type()}</span>
+            {/if}
+          </div>
+          <div class="flex gap-1 rounded-lg border border-border/60 p-0.5">
+            <button
+              type="button"
+              class="flex-1 rounded px-2 py-1 text-xs transition-colors {purchase.purchaseType ===
+              'STANDARD'
+                ? 'bg-primary/15 font-medium text-primary'
+                : 'text-muted-foreground hover:text-foreground'}"
+              onclick={() => {
+                purchase.purchaseType = 'STANDARD';
+              }}
+            >
+              {m.add_model_purchase_type_standard()}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded px-2 py-1 text-xs transition-colors {purchase.purchaseType ===
+              'PREORDER'
+                ? 'bg-primary/15 font-medium text-primary'
+                : 'text-muted-foreground hover:text-foreground'}"
+              onclick={() => {
+                purchase.purchaseType = 'PREORDER';
+              }}
+            >
+              {m.add_model_purchase_type_preorder()}
+            </button>
+          </div>
+        </div>
+
+        <!-- Purchase Date (label changes for preorders) -->
         <div>
           <label for="purchase-date" class="mb-1 block">
             {#if dark}
-              <span class="text-[10px] text-muted-foreground uppercase"
-                >{m.add_model_purchase_date()}</span
-              >
+              <span class="text-[10px] text-muted-foreground uppercase">
+                {purchase.purchaseType === 'PREORDER'
+                  ? m.add_model_preorder_date()
+                  : m.add_model_purchase_date()}
+              </span>
               <span class="ml-1 text-muted-foreground/50">(optional)</span>
             {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_purchase_date()}</span>
+              <span class="text-sm text-muted-foreground">
+                {purchase.purchaseType === 'PREORDER'
+                  ? m.add_model_preorder_date()
+                  : m.add_model_purchase_date()}
+              </span>
               <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
             {/if}
           </label>
@@ -127,31 +172,120 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-4">
-        <!-- Price Amount -->
+      {#if purchase.purchaseType === 'STANDARD'}
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Price Amount -->
+          <div>
+            <label for="price-amount" class="mb-1 block">
+              {#if dark}
+                <span class="text-[10px] text-muted-foreground uppercase"
+                  >{m.add_model_price()}</span
+                >
+                <span class="ml-1 text-muted-foreground/50">(optional)</span>
+              {:else}
+                <span class="text-sm text-muted-foreground">{m.add_model_price()}</span>
+                <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
+              {/if}
+            </label>
+            <CurrencyInput
+              id="price-amount"
+              bind:value={purchase.priceAmount}
+              symbol={regionalManager.getCurrencySymbol(purchase.priceCurrency)}
+              placeholder={m.placeholder_amount()}
+              class="w-full"
+              label={m.add_model_price()}
+              inputClass={dark
+                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
+                : ''}
+            />
+          </div>
+        </div>
+      {:else}
+        <!-- Preorder fields -->
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <!-- Deposit Amount -->
+          <div>
+            <label for="deposit-amount" class="mb-1 block">
+              {#if dark}
+                <span class="text-[10px] text-muted-foreground uppercase"
+                  >{m.add_model_deposit_amount()}</span
+                >
+              {:else}
+                <span class="text-sm text-muted-foreground">{m.add_model_deposit_amount()}</span>
+              {/if}
+            </label>
+            <CurrencyInput
+              id="deposit-amount"
+              bind:value={purchase.depositAmount}
+              symbol={regionalManager.getCurrencySymbol(
+                purchase.depositCurrency ?? purchase.priceCurrency
+              )}
+              placeholder={m.placeholder_amount()}
+              class="w-full"
+              label={m.add_model_deposit_amount()}
+              inputClass={dark
+                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
+                : ''}
+            />
+          </div>
+
+          <!-- Preorder Total Amount -->
+          <div>
+            <label for="preorder-total-amount" class="mb-1 block">
+              {#if dark}
+                <span class="text-[10px] text-muted-foreground uppercase"
+                  >{m.add_model_preorder_total()}</span
+                >
+              {:else}
+                <span class="text-sm text-muted-foreground">{m.add_model_preorder_total()}</span>
+              {/if}
+            </label>
+            <CurrencyInput
+              id="preorder-total-amount"
+              bind:value={purchase.preorderTotalAmount}
+              symbol={regionalManager.getCurrencySymbol(
+                purchase.preorderTotalCurrency ?? purchase.priceCurrency
+              )}
+              placeholder={m.placeholder_amount()}
+              class="w-full"
+              label={m.add_model_preorder_total()}
+              inputClass={dark
+                ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
+                : ''}
+            />
+          </div>
+        </div>
+
+        <!-- Remaining balance derived display -->
+        {#if (purchase.preorderTotalAmount ?? 0) > 0 || (purchase.depositAmount ?? 0) > 0}
+          {@const remaining = (purchase.preorderTotalAmount ?? 0) - (purchase.depositAmount ?? 0)}
+          <p class="text-xs text-muted-foreground">
+            {m.add_model_remaining_balance()}:
+            <span class:text-destructive={remaining < 0} class:text-primary={remaining >= 0}>
+              {regionalManager.formatCurrencyWith(
+                remaining,
+                purchase.preorderTotalCurrency ?? purchase.priceCurrency
+              )}
+            </span>
+          </p>
+        {/if}
+
+        <!-- Expected Delivery Date -->
         <div>
-          <label for="price-amount" class="mb-1 block">
+          <label for="expected-date" class="mb-1 block">
             {#if dark}
-              <span class="text-[10px] text-muted-foreground uppercase">{m.add_model_price()}</span>
+              <span class="text-[10px] text-muted-foreground uppercase"
+                >{m.add_model_expected_date()}</span
+              >
               <span class="ml-1 text-muted-foreground/50">(optional)</span>
             {:else}
-              <span class="text-sm text-muted-foreground">{m.add_model_price()}</span>
+              <span class="text-sm text-muted-foreground">{m.add_model_expected_date()}</span>
               <span class="ml-1 text-xs text-muted-foreground/60">(optional)</span>
             {/if}
           </label>
-          <CurrencyInput
-            id="price-amount"
-            bind:value={purchase.priceAmount}
-            symbol={regionalManager.getCurrencySymbol(purchase.priceCurrency)}
-            placeholder={m.placeholder_amount()}
-            class="w-full"
-            label={m.add_model_price()}
-            inputClass={dark
-              ? 'bg-transparent border-layout-border text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-primary/30'
-              : ''}
-          />
+          <DatePickerField id="expected-date" bind:value={purchase.expectedDate} />
         </div>
-      </div>
+      {/if}
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <!-- Purchase Condition -->

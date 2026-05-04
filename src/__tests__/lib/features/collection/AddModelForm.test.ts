@@ -51,7 +51,13 @@ function createDefaultPurchaseState(): PurchaseFormState {
     modelCondition: null,
     boxCondition: null,
     notes: '',
-    purchaseDate: new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    purchaseDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    purchaseType: 'STANDARD',
+    depositAmount: null,
+    depositCurrency: null,
+    preorderTotalAmount: null,
+    preorderTotalCurrency: null,
+    expectedDate: null
   };
 }
 
@@ -111,6 +117,7 @@ function validateForm(form: AddModelFormState): ValidationErrors {
  */
 function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollectionArgs {
   const today = new Date().toISOString().split('T')[0];
+  const isPreorder = form.purchase.purchaseType === 'PREORDER';
 
   // priceAmount is now stored as integer cents
   const priceInCents = form.purchase.priceAmount ?? 0;
@@ -140,7 +147,17 @@ function toAddRailwayModelArgs(form: AddModelFormState): AddRailwayModelToCollec
     purchaseCondition: form.purchase.purchaseCondition,
     modelCondition: form.purchase.modelCondition,
     boxCondition: form.purchase.boxCondition,
-    notes: form.purchase.notes || null
+    notes: form.purchase.notes || null,
+    purchaseType: form.purchase.purchaseType,
+    depositAmount: isPreorder ? (form.purchase.depositAmount ?? null) : null,
+    depositCurrency: isPreorder
+      ? (form.purchase.depositCurrency ?? form.purchase.priceCurrency)
+      : null,
+    preorderTotalAmount: isPreorder ? (form.purchase.preorderTotalAmount ?? null) : null,
+    preorderTotalCurrency: isPreorder
+      ? (form.purchase.preorderTotalCurrency ?? form.purchase.priceCurrency)
+      : null,
+    expectedDate: isPreorder ? (form.purchase.expectedDate ?? null) : null
   };
 }
 
@@ -174,6 +191,10 @@ describe('AddModelForm - Form State Initialization', () => {
     expect(purchase.boxCondition).toBeNull();
     expect(purchase.notes).toBe('');
     expect(purchase.purchaseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(purchase.purchaseType).toBe('STANDARD');
+    expect(purchase.depositAmount).toBeNull();
+    expect(purchase.preorderTotalAmount).toBeNull();
+    expect(purchase.expectedDate).toBeNull();
   });
 
   it('should generate unique UIDs for rolling stock entries', () => {

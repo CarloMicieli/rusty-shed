@@ -10,6 +10,7 @@
   import SellCollectionItemDialog from './SellCollectionItemDialog.svelte';
   import { regionalManager } from '$lib/features/settings/RegionalManager.svelte';
   import type { CollectionItemView, CollectionItemUpdateArgs, SellerView } from '$lib/bindings';
+  import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';
 
   interface Props {
     item: CollectionItemView;
@@ -18,6 +19,9 @@
   }
 
   let { item, seller, onItemUpdated }: Props = $props();
+
+  const collectionService = getCollectionContext();
+  let isReceiving = $state(false);
 
   let isPriceEditing = $state(false);
   let isSavingPrice = $state(false);
@@ -39,6 +43,10 @@
     item.purchaseInfo?.kind === 'purchased' ? item.purchaseInfo.data : null
   );
   const soldInfo = $derived(item.purchaseInfo?.kind === 'sold' ? item.purchaseInfo.data : null);
+  const preorderedInfo = $derived(
+    item.purchaseInfo?.kind === 'preOrdered' ? item.purchaseInfo.data : null
+  );
+  const isPreordered = $derived(item.purchaseInfo?.kind === 'preOrdered');
   const isSold = $derived(item.removedDate !== null || item.purchaseInfo?.kind === 'sold');
   const acquisitionPrice = $derived.by(() => {
     if (purchasedInfo?.price) return purchasedInfo.price;
@@ -49,6 +57,10 @@
     if (purchasedInfo?.purchaseDate) return purchasedInfo.purchaseDate;
     if (soldInfo?.purchaseDate) return soldInfo.purchaseDate;
     return null;
+  });
+  const preorderRemainingBalance = $derived.by(() => {
+    if (!preorderedInfo) return null;
+    return Number(preorderedInfo.totalPrice.amount) - Number(preorderedInfo.deposit.amount);
   });
 
   onMount(async () => {
@@ -159,6 +171,23 @@
     { value: '', label: m.collection_item_not_recorded() },
     ...sellers.map((s) => ({ value: s.id, label: s.name }))
   ]);
+
+  async function handleReceivePreorder() {
+    if (isReceiving) return;
+    isReceiving = true;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const success = await collectionService.receivePreorder({
+        itemId: item.id,
+        receivedDate: today
+      });
+      if (success && onItemUpdated) {
+        await onItemUpdated();
+      }
+    } finally {
+      isReceiving = false;
+    }
+  }
 </script>
 
 <div class="overflow-hidden rounded-lg border border-border bg-card">
@@ -169,6 +198,10 @@
       </h3>
       {#if isSold}
         <Badge variant="destructive">{m.collection_item_status_sold()}</Badge>
+      {:else if isPreordered}
+        <Badge variant="outline" class="border-amber-500/60 text-amber-400">
+          {m.collection_item_status_preordered()}
+        </Badge>
       {:else}
         <Badge variant="success">{m.collection_item_status_owned()}</Badge>
       {/if}
@@ -176,11 +209,66 @@
   </div>
 
   <div class="space-y-3 p-4">
-    {#if !isSold}
+    {#if !isSold && !isPreordered}
       <div class="flex justify-end">
         <Button variant="rusty" size="sm" onclick={() => (showSellDialog = true)}>
           {m.collection_item_sell_action()}
         </Button>
+      </div>
+    {/if}
+
+    {#if isPreordered && preorderedInfo}
+      <div class="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+        <div class="flex items-center justify-between">
+          <p class="text-[9px] font-semibold tracking-widest text-amber-400 uppercase">
+            {m.collection_item_status_preordered()}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-6 border-amber-500/40 px-2 text-xs text-amber-300 hover:bg-amber-500/10"
+            onclick={handleReceivePreorder}
+            disabled={isReceiving}
+          >
+            {isReceiving ? '...' : m.collection_item_receive_action()}
+          </Button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-0.5">
+            <p class="text-[9px] text-muted-foreground uppercase">
+              {m.collection_item_preorder_deposit()}
+            </p>
+            <p class="text-xs font-semibold text-foreground">
+              {formatPrice(preorderedInfo.deposit.amount, preorderedInfo.deposit.currency)}
+            </p>
+          </div>
+          <div class="space-y-0.5">
+            <p class="text-[9px] text-muted-foreground uppercase">
+              {m.collection_item_preorder_total()}
+            </p>
+            <p class="text-xs font-semibold text-foreground">
+              {formatPrice(preorderedInfo.totalPrice.amount, preorderedInfo.totalPrice.currency)}
+            </p>
+          </div>
+          {#if preorderedInfo.expectedDate}
+            <div class="space-y-0.5">
+              <p class="text-[9px] text-muted-foreground uppercase">
+                {m.collection_item_preorder_expected_date()}
+              </p>
+              <p class="font-mono text-xs text-foreground">{preorderedInfo.expectedDate}</p>
+            </div>
+          {/if}
+          {#if preorderRemainingBalance !== null && preorderRemainingBalance > 0}
+            <div class="space-y-0.5">
+              <p class="text-[9px] text-muted-foreground uppercase">
+                {m.collection_item_preorder_remaining_balance()}
+              </p>
+              <p class="text-xs font-semibold text-amber-300">
+                {formatPrice(preorderRemainingBalance, preorderedInfo.totalPrice.currency)}
+              </p>
+            </div>
+          {/if}
+        </div>
       </div>
     {/if}
 
@@ -308,6 +396,27 @@
             </p>
           </div>
         </div>
+      </div>
+    {/if}
+
+    {#if isSold && soldInfo?.salePrice && soldInfo?.purchasePrice}
+      {@const profitLoss =
+        Number(soldInfo.salePrice.amount) - Number(soldInfo.purchasePrice.amount)}
+      <div
+        class="space-y-1 rounded-lg border p-3 {profitLoss >= 0
+          ? 'border-green-500/30 bg-green-500/5'
+          : 'border-red-500/30 bg-red-500/5'}"
+      >
+        <p
+          class="text-[9px] font-semibold tracking-widest uppercase {profitLoss >= 0
+            ? 'text-green-400'
+            : 'text-red-400'}"
+        >
+          {m.collection_item_profit_loss_title()}
+        </p>
+        <p class="text-sm font-bold {profitLoss >= 0 ? 'text-green-300' : 'text-red-300'}">
+          {profitLoss >= 0 ? '+' : ''}{formatPrice(profitLoss, soldInfo.salePrice.currency)}
+        </p>
       </div>
     {/if}
   </div>

@@ -42,6 +42,7 @@ function makeFilters(overrides?: Partial<FilterState>): FilterState {
     categories: new SvelteSet<string>(),
     epochs: new SvelteSet<string>(),
     tags: new SvelteSet<string>(),
+    status: 'active',
     ...overrides
   };
 }

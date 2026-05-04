@@ -1,4 +1,5 @@
 use crate::catalog::domain::railway_model::{RailwayModelId, RollingStockId};
+use crate::collecting::domain::CollectionStats;
 use crate::collecting::domain::CollectionView;
 use crate::collecting::domain::{
     BoxCondition, Collection, CollectionEvent, CollectionId, CollectionItem, ModelCondition,
@@ -413,6 +414,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
                          JOIN collection_items ci ON ci.id = pi.collection_item_id
                         WHERE ci.collection_id = ?1
                           AND ci.removed_date IS NULL
+                          AND pi.purchase_type != 'PREORDER'
                    ), 0),
                    total_value_currency = COALESCE((
                        SELECT MAX(pi.purchased_price_currency)
@@ -420,6 +422,7 @@ impl<'conn> SqliteCollectionRepository<'conn> {
                          JOIN collection_items ci ON ci.id = pi.collection_item_id
                         WHERE ci.collection_id = ?1
                           AND ci.removed_date IS NULL
+                          AND pi.purchase_type != 'PREORDER'
                           AND pi.purchased_price_currency IS NOT NULL
                    ), total_value_currency)
              WHERE id = ?1;
@@ -438,66 +441,81 @@ impl<'conn> SqliteCollectionRepository<'conn> {
         &mut self,
         collection_id: &CollectionId,
     ) -> Result<(), DomainError> {
+        // Only count active items: removed_date IS NULL and purchase_type != 'PREORDER'
         let sql = r#"
-                        UPDATE collections
-                             SET locomotives_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'LOCOMOTIVES'
-                                     ), 0),
-                                     passenger_cars_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'PASSENGER_CARS'
-                                     ), 0),
-                                     freight_cars_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'FREIGHT_CARS'
-                                     ), 0),
-                                     train_sets_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'TRAIN_SETS'
-                                     ), 0),
-                                     railcars_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'RAILCARS'
-                                     ), 0),
-                                     electric_multiple_units_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'ELECTRIC_MULTIPLE_UNITS'
-                                     ), 0),
-                                     starter_sets_count = COALESCE((
-                                             SELECT COUNT(*)
-                                                 FROM collection_items ci
-                                                 JOIN railway_models rm ON rm.id = ci.railway_model_id
-                                                WHERE ci.collection_id = ?1
-                                                    AND ci.removed_date IS NULL
-                                                    AND rm.category = 'STARTER_SETS'
-                                     ), 0)
-                         WHERE id = ?1;
-                "#;
+            UPDATE collections
+               SET locomotives_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'LOCOMOTIVES'
+                   ), 0),
+                   passenger_cars_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'PASSENGER_CARS'
+                   ), 0),
+                   freight_cars_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'FREIGHT_CARS'
+                   ), 0),
+                   train_sets_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'TRAIN_SETS'
+                   ), 0),
+                   railcars_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'RAILCARS'
+                   ), 0),
+                   electric_multiple_units_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'ELECTRIC_MULTIPLE_UNITS'
+                   ), 0),
+                   starter_sets_count = COALESCE((
+                       SELECT COUNT(*)
+                         FROM collection_items ci
+                         JOIN railway_models rm ON rm.id = ci.railway_model_id
+                         LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+                        WHERE ci.collection_id = ?1
+                          AND ci.removed_date IS NULL
+                          AND (pi.purchase_type IS NULL OR pi.purchase_type != 'PREORDER')
+                          AND rm.category = 'STARTER_SETS'
+                   ), 0)
+             WHERE id = ?1;
+        "#;
 
         sqlx::query(sql)
             .bind(collection_id)
@@ -903,6 +921,136 @@ impl<'conn> CollectionRepository for SqliteCollectionRepository<'conn> {
         };
 
         Ok(Some(collection))
+    }
+
+    async fn receive_preorder(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        received_date: NaiveDate,
+    ) -> Result<(), DomainError> {
+        let result = sqlx::query(
+            r#"UPDATE purchase_infos
+                  SET purchase_type = 'PURCHASED',
+                      purchase_date = ?1,
+                      purchased_price_amount = COALESCE(preorder_total_amount, deposit_amount),
+                      purchased_price_currency = COALESCE(preorder_total_currency, deposit_currency),
+                      deposit_amount = NULL,
+                      deposit_currency = NULL,
+                      preorder_total_amount = NULL,
+                      preorder_total_currency = NULL,
+                      expected_date = NULL
+                WHERE collection_item_id = ?2
+                  AND purchase_type = 'PREORDER'"#,
+        )
+        .bind(received_date)
+        .bind(collection_item_id)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error converting preorder to purchased")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "PreorderPurchaseInfo".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        let collection_id = CollectionId::default();
+        self.recalculate_collection_summary(&collection_id).await?;
+        self.recalculate_collection_total_value(&collection_id)
+            .await?;
+        self.update_collection_metadata(&collection_id).await?;
+
+        Ok(())
+    }
+
+    async fn convert_to_preorder(
+        &mut self,
+        collection_item_id: &CollectionItemId,
+        deposit_amount: i64,
+        deposit_currency: &str,
+        preorder_total_amount: i64,
+        preorder_total_currency: &str,
+        expected_date: Option<NaiveDate>,
+    ) -> Result<(), DomainError> {
+        let result = sqlx::query(
+            r#"UPDATE purchase_infos
+                  SET purchase_type = 'PREORDER',
+                      deposit_amount = ?1,
+                      deposit_currency = ?2,
+                      preorder_total_amount = ?3,
+                      preorder_total_currency = ?4,
+                      expected_date = ?5,
+                      purchased_price_amount = NULL,
+                      purchased_price_currency = NULL
+                WHERE collection_item_id = ?6"#,
+        )
+        .bind(deposit_amount)
+        .bind(deposit_currency)
+        .bind(preorder_total_amount)
+        .bind(preorder_total_currency)
+        .bind(expected_date)
+        .bind(collection_item_id)
+        .execute(&mut *self.executor)
+        .await
+        .with_domain_context("Error converting purchase info to preorder")?;
+
+        if result.rows_affected() == 0 {
+            return Err(DomainError::NotFound {
+                resource: "PurchaseInfo".to_string(),
+                identifier: collection_item_id.to_string(),
+            });
+        }
+
+        // Recalculate — preorders are excluded from summary/value counts
+        let collection_id = CollectionId::default();
+        self.recalculate_collection_summary(&collection_id).await?;
+        self.recalculate_collection_total_value(&collection_id)
+            .await?;
+        self.update_collection_metadata(&collection_id).await?;
+
+        Ok(())
+    }
+
+    async fn get_stats(&mut self) -> Result<CollectionStats, DomainError> {
+        let sql = r#"
+            SELECT
+                COALESCE(SUM(CASE WHEN pi.purchase_type = 'PREORDER' AND ci.removed_date IS NULL THEN 1 ELSE 0 END), 0)
+                    AS preordered_count,
+                COALESCE(SUM(CASE WHEN pi.purchase_type = 'PURCHASED' AND ci.removed_date IS NULL THEN 1 ELSE 0 END), 0)
+                    AS active_count,
+                COALESCE(SUM(CASE WHEN pi.purchase_type = 'SOLD' THEN 1 ELSE 0 END), 0)
+                    AS sold_count,
+                COALESCE(SUM(CASE WHEN pi.purchase_type = 'PREORDER' AND ci.removed_date IS NULL THEN COALESCE(pi.deposit_amount, 0) ELSE 0 END), 0)
+                    AS investment_at_risk_amount,
+                MAX(CASE WHEN pi.purchase_type = 'PREORDER' AND ci.removed_date IS NULL THEN pi.deposit_currency ELSE NULL END)
+                    AS investment_at_risk_currency,
+                COALESCE(SUM(CASE WHEN pi.purchase_type = 'SOLD' THEN (COALESCE(pi.sale_price_amount, 0) - COALESCE(pi.purchased_price_amount, 0)) ELSE 0 END), 0)
+                    AS realized_profit_amount,
+                MAX(CASE WHEN pi.purchase_type = 'SOLD' THEN pi.sale_price_currency ELSE NULL END)
+                    AS realized_profit_currency
+            FROM collection_items ci
+            JOIN collections c ON c.id = ci.collection_id
+            LEFT JOIN purchase_infos pi ON pi.collection_item_id = ci.id
+            WHERE c.id = (SELECT id FROM collections LIMIT 1)
+        "#;
+
+        use sqlx::Row as _;
+        let row = sqlx::query(sql)
+            .fetch_one(&mut *self.executor)
+            .await
+            .with_domain_context("Error fetching collection stats")?;
+
+        Ok(CollectionStats {
+            preordered_count: row.get::<i64, _>("preordered_count"),
+            active_count: row.get::<i64, _>("active_count"),
+            sold_count: row.get::<i64, _>("sold_count"),
+            investment_at_risk_amount: row.get::<i64, _>("investment_at_risk_amount"),
+            investment_at_risk_currency: row
+                .get::<Option<String>, _>("investment_at_risk_currency"),
+            realized_profit_amount: row.get::<i64, _>("realized_profit_amount"),
+            realized_profit_currency: row.get::<Option<String>, _>("realized_profit_currency"),
+        })
     }
 
     async fn add_owned_rolling_stock_for_collection_items(

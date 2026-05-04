@@ -4,9 +4,15 @@ import * as m from '$lib/paraglide/messages.js';
 import scales from '$lib/data/constants/scales.json';
 import { FIXED_TAG_META, sortAvailableTags, tagIcon } from '$lib/config/tags';
 import { SvelteSet } from 'svelte/reactivity';
-import type { CollectionView, AddRailwayModelToCollectionArgs } from '$lib/bindings';
+import type {
+  CollectionView,
+  AddRailwayModelToCollectionArgs,
+  ReceivePreorderArgs
+} from '$lib/bindings';
 import { safeInvoke, getErrorMessage } from '$lib/services';
 import { collectionStore } from '$lib/state/collection.svelte';
+
+export type StatusFilter = 'active' | 'preordered' | 'sold' | 'all';
 
 export type FilterState = {
   query: string;
@@ -17,6 +23,7 @@ export type FilterState = {
   categories: SvelteSet<string>;
   epochs: SvelteSet<string>;
   tags: SvelteSet<string>;
+  status: StatusFilter;
 };
 
 export const availableScales = scales as { id: string; display: string }[];
@@ -47,7 +54,8 @@ export class CollectionState {
     companies: new SvelteSet(),
     categories: new SvelteSet(),
     epochs: new SvelteSet(),
-    tags: new SvelteSet()
+    tags: new SvelteSet(),
+    status: 'active'
   });
   #isLoading = $state(false);
 
@@ -110,16 +118,27 @@ export class CollectionState {
       f.companies.size > 0 ||
       f.categories.size > 0 ||
       f.epochs.size > 0 ||
-      f.tags.size > 0
+      f.tags.size > 0 ||
+      f.status !== 'active'
     );
   }
 
   filteredItems = $derived.by(() => {
     const items = this.#collection?.items ?? [];
-    const { query, scales, companies, categories, epochs } = this.#filters;
+    const { query, scales, companies, categories, epochs, status } = this.#filters;
     const q = query.trim().toLowerCase();
 
     return items.filter((item) => {
+      // Status filter
+      const isPreorder = item.purchaseInfo?.kind === 'preOrdered';
+      const isSold = item.removedDate !== null && item.purchaseInfo?.kind === 'sold';
+      const isActive = item.removedDate === null && !isPreorder;
+
+      if (status === 'active' && !isActive) return false;
+      if (status === 'preordered' && !isPreorder) return false;
+      if (status === 'sold' && !isSold) return false;
+      // 'all' passes every item through
+
       if (scales.size > 0 && !scales.has(item.railwayModel.scale)) return false;
       if (categories.size > 0 && !categories.has(item.railwayModel.category)) return false;
       if (epochs.size > 0 && !epochs.has(item.railwayModel.epoch)) return false;
@@ -246,8 +265,13 @@ export class CollectionState {
       companies: new SvelteSet(),
       categories: new SvelteSet(),
       epochs: new SvelteSet(),
-      tags: new SvelteSet()
+      tags: new SvelteSet(),
+      status: 'active'
     };
+  };
+
+  setStatus = (status: StatusFilter) => {
+    this.#filters.status = status;
   };
 
   /**
@@ -260,6 +284,24 @@ export class CollectionState {
 
     if (result.ok) {
       toaster.success(m.add_model_success(), { duration: 3000 });
+      await this.forceRefresh();
+      void collectionStore.refresh();
+      return true;
+    }
+
+    toastError(randomId(), getErrorMessage(result.error));
+    return false;
+  };
+
+  /**
+   * Mark a preorder item as received.
+   * @returns true if successful, false otherwise
+   */
+  receivePreorder = async (args: ReceivePreorderArgs): Promise<boolean> => {
+    const result = await safeInvoke('receive_preorder', { args });
+
+    if (result.ok) {
+      toaster.success(m.collection_item_receive_action(), { duration: 3000 });
       await this.forceRefresh();
       void collectionStore.refresh();
       return true;
