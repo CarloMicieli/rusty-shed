@@ -78,6 +78,18 @@ jobs:
         with:
           workspaces: 'src-tauri -> target'
 
+      - name: Run Specta Generation
+        run: cargo run --bin gen_types
+        working-directory: src-tauri
+
+      - name: Verify Bindings are up-to-date
+        run: |
+          if [ -n "$(git status --porcelain src/lib/bindings.ts)" ]; then
+            echo "::error::TypeScript bindings are out of sync! Please run 'pnpm specta:generate' locally and commit the changes."
+            git diff src/lib/bindings.ts
+            exit 1
+          fi
+
       - name: 🦀 Run rustfmt
         run: cargo fmt --all --check
         working-directory: src-tauri

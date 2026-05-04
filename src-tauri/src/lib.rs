@@ -113,8 +113,7 @@ fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
     Ok(())
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+fn create_specta_builder() -> Builder<tauri::Wry> {
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         core_command_handlers::is_db_initialized,
         core_command_handlers::get_app_version,
@@ -242,6 +241,12 @@ pub fn run() {
         trains_command_handlers::get_formation_categories,
         trains_command_handlers::create_formation_category
     ]);
+    builder
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let builder = create_specta_builder();
 
     #[allow(unused_variables)]
     let ts_config = Typescript::default();
@@ -376,6 +381,13 @@ pub fn run() {
     builder
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
+}
+
+pub fn generate_types() {
+    let builder = create_specta_builder();
+    builder
+        .export(Typescript::default(), "./src/lib/bindings.ts")
+        .expect("Failed to export typescript bindings");
 }
 
 const LOGO: &str = r#"

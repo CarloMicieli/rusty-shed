@@ -29,7 +29,7 @@ A task is **Complete** only when this sequence passes with **zero** errors/warni
    - **Backend**: Logic in Domain/Application before Infrastructure.
    - **Frontend**: Modular structure. Ensure shadcn components are Runes-compliant.
    - **i18n**: Add keys to messages/en.json and messages/it.json.
-3. **Sync Bindings**: If Rust types or commands change, run `pnpm tauri dev` and verify the `.ts` binding updates.
+3. **Sync Bindings**: If Rust types or commands change, run `pnpm specta:generate` and verify the `.ts` binding updates.
 4. **Format & Lint**: Run project formatters. **Clippy warnings are errors** (`cargo clippy -- -D warnings`).
 5. **Verify**: Run `pnpm svelte-check`, Vitest, and Cargo tests.
 
