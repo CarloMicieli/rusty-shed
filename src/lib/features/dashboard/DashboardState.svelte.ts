@@ -1,7 +1,8 @@
 import { setContext, getContext } from 'svelte';
 import { toaster } from '$lib/toaster';
 import { safeInvoke, getErrorMessage } from '$lib/services';
-import type { DashboardSummary, QueryCriteria, BudgetDashboardSummary } from '$lib/bindings';
+import type { DashboardSummary, QueryCriteria } from '$lib/bindings';
+import { financeState } from '$lib/state/finance.svelte';
 
 function toastError(message?: string) {
   toaster.error({
@@ -12,16 +13,12 @@ function toastError(message?: string) {
   });
 }
 
-// Shared across instances to prevent redundant IPC calls during rapid navigation or re-renders
-let sharedBudgetLoadInFlight: Promise<BudgetDashboardSummary | null> | null = null;
-
 /**
  * DashboardState loads dashboard data and handles state transitions
  */
 export class DashboardState {
   // 1. Reactive State
   #data = $state<DashboardSummary | null>(null);
-  #budgetData = $state<BudgetDashboardSummary | null>(null);
   #isLoading = $state(false);
   #error = $state<string | null>(null);
 
@@ -30,7 +27,7 @@ export class DashboardState {
     return this.#data;
   }
   get budgetData() {
-    return this.#budgetData;
+    return financeState.data;
   }
   get isLoading() {
     return this.#isLoading;
@@ -76,29 +73,7 @@ export class DashboardState {
    * Loads budget dashboard data
    */
   async loadBudget() {
-    if (sharedBudgetLoadInFlight) {
-      this.#budgetData = await sharedBudgetLoadInFlight;
-      return;
-    }
-
-    sharedBudgetLoadInFlight = (async () => {
-      console.debug('Invoking get_budget_dashboard');
-      const result = await safeInvoke<BudgetDashboardSummary>('get_budget_dashboard');
-
-      if (result.ok) {
-        return result.data;
-      } else {
-        const errorMsg = getErrorMessage(result.error);
-        console.warn('Budget Dashboard Error:', errorMsg, { raw: result.error });
-        return null;
-      }
-    })();
-
-    try {
-      this.#budgetData = await sharedBudgetLoadInFlight;
-    } finally {
-      sharedBudgetLoadInFlight = null;
-    }
+    await financeState.ensureLoaded();
   }
 
   /**
@@ -107,7 +82,7 @@ export class DashboardState {
   async retry() {
     this.#data = null; // Clear old data on manual retry to trigger skeletons
     await this.load();
-    await this.loadBudget();
+    await financeState.refresh();
   }
 }
 

@@ -44,6 +44,7 @@
   import AcquisitionDrawer from '$lib/features/acquisition/AcquisitionDrawer.svelte';
   import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
   import LogMaintenanceDrawer from '$lib/features/maintenance/components/LogMaintenanceDrawer.svelte';
+  import { financeState } from '$lib/state/finance.svelte';
 
   let loading = $state(true);
   let error = $state<string | null>(null);
@@ -123,6 +124,7 @@
   onDestroy(() => {
     unlistenAcquisition?.();
     unlistenMaintenance?.();
+    financeState.stopListening();
   });
 
   onMount(async () => {
@@ -147,6 +149,8 @@
 
     // 0a. Detect OS locale for regional formatting
     await regionalManager.init();
+
+    await financeState.startListening();
 
     // 1. Initialize theme from settings
     await themeState.initializeFromSettings();
@@ -179,10 +183,13 @@
       }
 
       // 5. Preload data (only if DB is ready)
+      const initialFinanceYear = getInitialFinanceYear();
       await Promise.all([
         collectionStore.fetch(),
         wishlistState.fetchWishlists(),
-        budgetState.loadBootstrap(getInitialFinanceYear())
+        budgetState.load(),
+        budgetState.loadMonthlyRecords(initialFinanceYear),
+        financeState.ensureLoaded()
       ]);
     } catch (err) {
       log.error(`Startup failed: ${String(err)}`);

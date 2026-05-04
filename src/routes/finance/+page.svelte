@@ -1,6 +1,5 @@
 <script lang="ts">
   import { browser } from '$app/environment';
-  import { onMount } from 'svelte';
   import { CalendarDays, Gauge, TrendingUp, Wallet } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog';
   import * as m from '$lib/paraglide/messages.js';
@@ -12,6 +11,7 @@
   import BudgetMonthRow from '$lib/features/budget/components/BudgetMonthRow.svelte';
   import ExtraBudgetModal from '$lib/features/budget/components/ExtraBudgetModal.svelte';
   import FinanceSettingsButton from '$lib/features/budget/components/FinanceSettingsButton.svelte';
+  import { financeState } from '$lib/state/finance.svelte';
 
   const SELECTED_YEAR_STORAGE_KEY = 'finance:selected-year';
   const gaugeRadius = 48;
@@ -59,10 +59,10 @@
   let configSheetOpen = $state(false);
   let extraBudgetDialogOpen = $state(false);
   let selectedExtraBudget = $state<{ year: number; month: number } | null>(null);
-  let initialized = $state(budgetState.hasWarmFinanceState(initialSelectedYear));
+  const initialized = $derived(financeState.hasFetched || financeState.error !== null);
 
   const financialSummary = $derived.by(() => {
-    const dashboardSummary = budgetState.dashboardSummary;
+    const dashboardSummary = financeState.data;
     const monthlyRecords = budgetState.monthlyRecords ?? [];
 
     const totalAvailable =
@@ -88,16 +88,6 @@
   const remainingGaugeOffset = $derived(
     gaugeCircumference - (financialSummary.remainingPercentage / 100) * gaugeCircumference
   );
-
-  onMount(async () => {
-    try {
-      await budgetState.loadBootstrap(selectedYear);
-    } catch (error) {
-      console.error('[finance] Failed to initialize budget page', error);
-    } finally {
-      initialized = true;
-    }
-  });
 
   $effect(() => {
     try {
@@ -474,11 +464,11 @@
   onsubmit={async (mode, amount) => {
     configSheetOpen = false;
     await budgetState.save(mode, amount, budgetState.currency);
-    await budgetState.loadDashboard();
+    await financeState.refresh();
     await budgetState.loadMonthlyRecords(selectedYear);
   }}
   onSave={async () => {
-    await budgetState.loadDashboard();
+    await financeState.refresh();
     await budgetState.loadMonthlyRecords(selectedYear);
   }}
 />

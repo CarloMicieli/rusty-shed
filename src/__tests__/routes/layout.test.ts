@@ -112,9 +112,17 @@ vi.mock('$lib/features/dashboard/DashboardState.svelte', () => ({
   getDashboardContext: vi.fn(() => ({}))
 }));
 
-const mockBudgetState = {
-  loadBootstrap: vi.fn().mockResolvedValue(undefined)
-};
+const { mockBudgetState, mockFinanceState } = vi.hoisted(() => ({
+  mockBudgetState: {
+    load: vi.fn().mockResolvedValue(undefined),
+    loadMonthlyRecords: vi.fn().mockResolvedValue(undefined)
+  },
+  mockFinanceState: {
+    ensureLoaded: vi.fn().mockResolvedValue(undefined),
+    startListening: vi.fn().mockResolvedValue(undefined),
+    stopListening: vi.fn()
+  }
+}));
 
 vi.mock('$lib/features/budget/services/BudgetService.svelte', () => ({
   createBudgetService: vi.fn(() => ({})),
@@ -124,6 +132,10 @@ vi.mock('$lib/features/budget/services/BudgetService.svelte', () => ({
 vi.mock('$lib/features/budget/BudgetState.svelte', () => ({
   createBudgetState: vi.fn(() => mockBudgetState),
   getBudgetState: vi.fn(() => mockBudgetState)
+}));
+
+vi.mock('$lib/state/finance.svelte', () => ({
+  financeState: mockFinanceState
 }));
 
 vi.mock('$lib/features/depot/DepotState.svelte', () => ({
@@ -193,6 +205,12 @@ describe('routes/+layout.svelte', () => {
     vi.clearAllMocks();
     // Remove any leftover #app-loading nodes
     document.getElementById('app-loading')?.remove();
+
+    mockBudgetState.load = vi.fn().mockResolvedValue(undefined);
+    mockBudgetState.loadMonthlyRecords = vi.fn().mockResolvedValue(undefined);
+    mockFinanceState.ensureLoaded = vi.fn().mockResolvedValue(undefined);
+    mockFinanceState.startListening = vi.fn().mockResolvedValue(undefined);
+    mockFinanceState.stopListening = vi.fn();
   });
 
   // A deferred promise that never resolves within the test lifetime, used to
