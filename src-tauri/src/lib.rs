@@ -114,7 +114,6 @@ fn show_main_window(window: tauri::Window) -> Result<(), CommandError> {
 }
 
 fn create_specta_builder() -> Builder<tauri::Wry> {
-    
     Builder::<tauri::Wry>::new().commands(collect_commands![
         core_command_handlers::is_db_initialized,
         core_command_handlers::get_app_version,
