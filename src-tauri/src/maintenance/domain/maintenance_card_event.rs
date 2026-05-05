@@ -7,6 +7,10 @@ use uuid::Uuid;
 /// This enum represents the immutable facts that occurred within the
 /// maintenance bounded context. Event-driven persistence stores these
 /// events and replays or projects them into read models.
+///
+/// Domain events carry pure business concepts; serialization for persistence
+/// (e.g., converting MaintenanceType to string) is handled exclusively in the
+/// infrastructure layer.
 #[derive(Debug, Clone)]
 pub enum MaintenanceCardEvent {
     /// A maintenance card aggregate was created.
@@ -23,30 +27,4 @@ pub enum MaintenanceCardEvent {
         maintenance_type: Option<MaintenanceType>,
         notes: Option<String>,
     },
-}
-
-impl MaintenanceCardEvent {
-    /// Helper to convert the domain event into a tuple useful for persistence.
-    pub fn as_persistence_tuple(&self) -> (Uuid, Uuid, NaiveDate, Option<String>, Option<String>) {
-        match self {
-            MaintenanceCardEvent::MaintenanceRecorded {
-                id,
-                maintenance_card_id,
-                date_performed,
-                maintenance_type,
-                notes,
-            } => (
-                *id,
-                *maintenance_card_id,
-                *date_performed,
-                maintenance_type.as_ref().map(|t| t.to_string()),
-                notes.clone(),
-            ),
-            MaintenanceCardEvent::Created {
-                id,
-                maintenance_card_id,
-                created_at,
-            } => (*id, *maintenance_card_id, *created_at, None, None),
-        }
-    }
 }

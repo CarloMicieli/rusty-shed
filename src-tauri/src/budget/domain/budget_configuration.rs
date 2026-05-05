@@ -1,8 +1,10 @@
 use crate::budget::domain::{
     BudgetConfigId, BudgetEvent, BudgetMode, ExtraBudgetEntry, ExtraBudgetId,
 };
+use crate::core::domain::calendar::Year;
+use crate::core::domain::metadata::Metadata;
 use crate::core::domain::monetary_amount::MonetaryAmount;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 /// Budget Configuration aggregate root.
@@ -15,10 +17,10 @@ pub struct BudgetConfiguration {
     pub id: BudgetConfigId,
     pub mode: BudgetMode,
     pub base_amount: MonetaryAmount,
-    pub last_reset_year: i32,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub version: u32,
+    pub last_reset_year: Year,
+
+    /// Resource metadata (created_at, updated_at, version).
+    pub metadata: Metadata,
 
     #[serde(skip)]
     pub(crate) pending_events: Vec<BudgetEvent>, // Made pub(crate) for infrastructure layer access
@@ -26,50 +28,56 @@ pub struct BudgetConfiguration {
 
 impl BudgetConfiguration {
     /// Create a new budget configuration.
-    pub fn new(mode: BudgetMode, base_amount: MonetaryAmount) -> Self {
+    pub fn new(mode: BudgetMode, base_amount: MonetaryAmount) -> Result<Self, String> {
         let now = Utc::now();
-        let current_year = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
+        let current_year_i32 = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
+        let current_year =
+            Year::try_from(current_year_i32).map_err(|e| format!("Invalid current year: {}", e))?;
+
+        let metadata = Metadata {
+            version: 0,
+            created_at: now,
+            updated_at: now,
+        };
 
         let mut config = Self {
             id: BudgetConfigId::singleton(),
             mode,
             base_amount: base_amount.clone(),
             last_reset_year: current_year,
-            created_at: now,
-            updated_at: now,
-            version: 0,
+            metadata,
             pending_events: Vec::new(),
         };
 
-        // Record the configuration event with all SQL-needed fields
+        // Record the configuration event with domain types (not DB-compatible strings)
         config.pending_events.push(BudgetEvent::BudgetConfigured {
             config_id: config.id,
-            mode: Self::mode_to_db_str(mode).to_string(),
+            mode,
             base_amount,
             last_reset_year: config.last_reset_year,
-            created_at: config.created_at,
-            version: config.version,
+            created_at: config.metadata.created_at,
+            version: config.metadata.version,
             timestamp: now,
         });
 
-        config
+        Ok(config)
     }
 
     /// Update the budget configuration.
     pub fn update(&mut self, mode: BudgetMode, base_amount: MonetaryAmount) {
         self.mode = mode;
         self.base_amount = base_amount.clone();
-        self.updated_at = Utc::now();
+        self.metadata.updated_at = Utc::now();
 
-        // Record the update event with all SQL-needed fields
+        // Record the update event with domain types (not DB-compatible strings)
         self.pending_events.push(BudgetEvent::BudgetConfigured {
             config_id: self.id,
-            mode: Self::mode_to_db_str(mode).to_string(),
+            mode,
             base_amount,
             last_reset_year: self.last_reset_year,
-            created_at: self.created_at,
-            version: self.version,
-            timestamp: self.updated_at,
+            created_at: self.metadata.created_at,
+            version: self.metadata.version,
+            timestamp: self.metadata.updated_at,
         });
     }
 
@@ -114,34 +122,33 @@ impl BudgetConfiguration {
         }
     }
 
-    /// Convert a `BudgetMode` to the DB-compatible string representation.
-    fn mode_to_db_str(mode: BudgetMode) -> &'static str {
-        match mode {
-            BudgetMode::Yearly => "YEARLY",
-            BudgetMode::Monthly => "MONTHLY",
-        }
-    }
-
     /// Check if annual reset is needed (year changed since last reset).
     pub fn needs_annual_reset(&self) -> bool {
         let now = Utc::now();
-        let current_year = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
-        current_year > self.last_reset_year
+        let current_year_i32 = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
+        let Ok(current_year) = Year::try_from(current_year_i32) else {
+            return false;
+        };
+        current_year.value() > self.last_reset_year.value()
     }
 
     /// Perform annual reset (update last_reset_year to current year).
-    pub fn perform_annual_reset(&mut self) {
+    pub fn perform_annual_reset(&mut self) -> Result<(), String> {
         let now = Utc::now();
-        let current_year = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
-        if current_year > self.last_reset_year {
+        let current_year_i32 = now.format("%Y").to_string().parse::<i32>().unwrap_or(2026);
+        let current_year =
+            Year::try_from(current_year_i32).map_err(|e| format!("Invalid current year: {}", e))?;
+
+        if current_year.value() > self.last_reset_year.value() {
             self.last_reset_year = current_year;
-            self.updated_at = Utc::now();
+            self.metadata.updated_at = Utc::now();
 
             self.pending_events.push(BudgetEvent::AnnualResetPerformed {
-                year: current_year,
-                timestamp: self.updated_at,
+                year: current_year.value(),
+                timestamp: self.metadata.updated_at,
             });
         }
+        Ok(())
     }
 
     /// Drain and return all pending domain events.
@@ -162,14 +169,14 @@ impl BudgetConfiguration {
 mod tests {
     use super::*;
     use crate::core::domain::currency::Currency;
-    use chrono::Datelike;
 
     #[test]
     fn test_monthly_amount_calculation() {
         let config = BudgetConfiguration::new(
             BudgetMode::Yearly,
             MonetaryAmount::new(120_000, Currency::USD), // $1,200/year
-        );
+        )
+        .unwrap();
         assert_eq!(config.monthly_amount(), 10_000); // $100/month
     }
 
@@ -178,7 +185,8 @@ mod tests {
         let config = BudgetConfiguration::new(
             BudgetMode::Monthly,
             MonetaryAmount::new(10_000, Currency::USD), // $100/month
-        );
+        )
+        .unwrap();
         assert_eq!(config.yearly_amount(), 120_000); // $1,200/year
     }
 
@@ -187,7 +195,8 @@ mod tests {
         let config = BudgetConfiguration::new(
             BudgetMode::Monthly,
             MonetaryAmount::new(10_000, Currency::USD),
-        );
+        )
+        .unwrap();
         assert_eq!(config.pending_events().len(), 1);
         assert_eq!(config.pending_events()[0].event_name(), "BUDGET_CONFIGURED");
     }
@@ -197,7 +206,8 @@ mod tests {
         let mut config = BudgetConfiguration::new(
             BudgetMode::Monthly,
             MonetaryAmount::new(10_000, Currency::USD),
-        );
+        )
+        .unwrap();
 
         config.update(
             BudgetMode::Yearly,
@@ -214,7 +224,8 @@ mod tests {
         let mut config = BudgetConfiguration::new(
             BudgetMode::Monthly,
             MonetaryAmount::new(10_000, Currency::USD),
-        );
+        )
+        .unwrap();
         config.update(
             BudgetMode::Monthly,
             MonetaryAmount::new(15_000, Currency::USD),
@@ -231,14 +242,20 @@ mod tests {
         let mut config = BudgetConfiguration::new(
             BudgetMode::Monthly,
             MonetaryAmount::new(10_000, Currency::USD),
-        );
+        )
+        .unwrap();
 
-        let old_year = Utc::now().year() - 1;
+        let old_year = Year::try_from(2025).unwrap();
         config.last_reset_year = old_year;
 
-        config.perform_annual_reset();
+        config.perform_annual_reset().unwrap();
 
-        assert_eq!(config.last_reset_year, Utc::now().year());
+        let current_year_i32 = Utc::now()
+            .format("%Y")
+            .to_string()
+            .parse::<i32>()
+            .unwrap_or(2026);
+        assert_eq!(config.last_reset_year.value(), current_year_i32);
         assert!(
             config
                 .pending_events()

@@ -539,13 +539,15 @@ mod tests {
         let config = crate::budget::domain::BudgetConfiguration::new(
             BudgetMode::Monthly,
             MonetaryAmount::new(100_000, Currency::EUR),
-        );
+        )
+        .expect("test: valid config");
 
         let mut mock_get = MockBudgetRepository::new();
+        let config_clone = config.clone();
         mock_get
             .expect_get_config()
             .once()
-            .returning(move || Ok(Some(config.clone())));
+            .returning(move || Ok(Some(config_clone.clone())));
 
         // January spending = 60_000 (month 1)
         let mut mock_spending = MockBudgetRepository::new();
@@ -652,7 +654,8 @@ mod tests {
             let user_currency = "USD";
 
             let amount = MonetaryAmount::new(1000, Currency::USD);
-            let config = BudgetConfiguration::new(BudgetMode::Monthly, amount);
+            let config =
+                BudgetConfiguration::new(BudgetMode::Monthly, amount).expect("test: valid config");
 
             let records = vec![MonthlyBudgetRecord {
                 month: 4,
@@ -694,7 +697,8 @@ mod tests {
             let now = Utc.with_ymd_and_hms(2026, 12, 1, 0, 0, 0).unwrap(); // December
 
             let amount = MonetaryAmount::new(1000, Currency::USD);
-            let config = BudgetConfiguration::new(BudgetMode::Monthly, amount);
+            let config =
+                BudgetConfiguration::new(BudgetMode::Monthly, amount).expect("test: valid config");
             let records = vec![]; // Empty records will fail the find() for month 12
 
             let result = get_budget_dashboard_with_context(

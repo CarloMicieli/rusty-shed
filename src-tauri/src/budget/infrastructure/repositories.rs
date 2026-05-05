@@ -24,6 +24,10 @@ impl<'conn> SqliteBudgetRepository<'conn> {
     ///
     /// The match is exhaustive: adding a new `BudgetEvent` variant forces the
     /// compiler to require a corresponding persistence branch here.
+    ///
+    /// Note: This method handles conversion of domain types to persistence format.
+    /// For example, BudgetMode enum is converted to DB-compatible string ("YEARLY"/"MONTHLY")
+    /// here, not in the domain layer.
     async fn handle_event(&mut self, event: &BudgetEvent) -> Result<(), DomainError> {
         match event {
             BudgetEvent::BudgetConfigured {
@@ -35,13 +39,19 @@ impl<'conn> SqliteBudgetRepository<'conn> {
                 version,
                 timestamp,
             } => {
+                // Convert domain enum to DB string only in infrastructure layer
+                let mode_str = match mode {
+                    crate::budget::domain::BudgetMode::Yearly => "YEARLY",
+                    crate::budget::domain::BudgetMode::Monthly => "MONTHLY",
+                };
+
                 database::save_budget_config(
                     self.executor,
                     config_id.value(),
-                    mode,
+                    mode_str,
                     base_amount.amount,
                     base_amount.currency.to_code(),
-                    *last_reset_year,
+                    last_reset_year.value(),
                     &created_at.to_rfc3339(),
                     &timestamp.to_rfc3339(),
                     *version as i32,
@@ -218,7 +228,8 @@ mod tests {
             let config = BudgetConfiguration::new(
                 BudgetMode::Monthly,
                 MonetaryAmount::new(120_000, Currency::EUR),
-            );
+            )
+            .expect("test: valid config");
 
             repo.save(config).await.expect("save should succeed");
         }

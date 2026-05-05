@@ -31,10 +31,10 @@ fn map_budget_config_dto(config: crate::budget::domain::BudgetConfiguration) -> 
         monthly_amount: config.monthly_amount(),
         yearly_amount: config.yearly_amount(),
         currency: config.base_amount.currency,
-        last_reset_year: config.last_reset_year,
-        created_at: config.created_at.to_rfc3339(),
-        updated_at: config.updated_at.to_rfc3339(),
-        version: config.version,
+        last_reset_year: config.last_reset_year.value(),
+        created_at: config.metadata.created_at.to_rfc3339(),
+        updated_at: config.metadata.updated_at.to_rfc3339(),
+        version: config.metadata.version as u32,
     }
 }
 

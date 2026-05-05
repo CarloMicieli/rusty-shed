@@ -50,6 +50,7 @@ pub fn sample_budget_config() -> BudgetConfiguration {
         BudgetMode::Monthly,
         MonetaryAmount::new(100_000, Currency::EUR),
     )
+    .expect("sample_budget_config: failed to create configuration")
 }
 
 /// Returns a valid `ExtraBudgetEntry` suitable for use in tests.

@@ -1,24 +1,25 @@
-use crate::budget::domain::{BudgetConfigId, ExtraBudgetId};
+use crate::budget::domain::{BudgetConfigId, BudgetMode, ExtraBudgetId};
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Domain events for budget tracking.
 ///
-/// Every variant carries all fields required for its SQL operation so that
-/// `handle_event` in the repository never reads aggregate fields directly.
+/// Every variant carries the domain concept (not DB-serialized strings).
+/// Serialization to persistence format (e.g., "YEARLY" string) happens exclusively
+/// in the infrastructure layer when persisting events.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum BudgetEvent {
     /// Budget configuration was created or updated.
     BudgetConfigured {
         config_id: BudgetConfigId,
-        /// DB-compatible mode string: "YEARLY" or "MONTHLY".
-        mode: String,
+        /// Domain enum, not DB-compatible string.
+        mode: BudgetMode,
         base_amount: MonetaryAmount,
-        last_reset_year: i32,
+        last_reset_year: crate::core::domain::calendar::Year,
         created_at: DateTime<Utc>,
-        version: u32,
+        version: u8,
         /// Equals `updated_at` for the config row.
         timestamp: DateTime<Utc>,
     },
@@ -66,16 +67,18 @@ impl BudgetEvent {
 mod tests {
     use super::*;
     use crate::core::domain::Currency;
+    use crate::core::domain::calendar::Year;
 
     #[test]
     fn it_should_return_expected_event_names() {
         let timestamp = Utc::now();
+        let year = Year::try_from(2026).unwrap();
 
         let configured = BudgetEvent::BudgetConfigured {
             config_id: BudgetConfigId::singleton(),
-            mode: "MONTHLY".to_string(),
+            mode: BudgetMode::Monthly,
             base_amount: MonetaryAmount::new(100_000, Currency::EUR),
-            last_reset_year: 2026,
+            last_reset_year: year,
             created_at: timestamp,
             version: 1,
             timestamp,

@@ -32,7 +32,8 @@ impl SetBudgetUseCase {
                 existing.update(input.mode, input.base_amount);
                 existing
             }
-            None => BudgetConfiguration::new(input.mode, input.base_amount),
+            None => BudgetConfiguration::new(input.mode, input.base_amount)
+                .map_err(DomainError::Validation)?,
         };
 
         {

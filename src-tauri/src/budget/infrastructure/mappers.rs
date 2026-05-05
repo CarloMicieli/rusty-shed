@@ -4,6 +4,7 @@ use crate::budget::domain::{
 use crate::budget::infrastructure::entities::{BudgetConfigRow, ExtraBudgetRow};
 use crate::core::domain::calendar::{Month, Year};
 use crate::core::domain::currency::Currency;
+use crate::core::domain::metadata::Metadata;
 use crate::core::domain::monetary_amount::MonetaryAmount;
 use chrono::{DateTime, Utc};
 use tracing::warn;
@@ -33,18 +34,25 @@ pub fn row_to_budget_config(row: BudgetConfigRow) -> Result<BudgetConfiguration,
     let currency =
         Currency::from_code(&row.currency).map_err(|e| format!("Invalid currency: {}", e))?;
 
+    let last_reset_year =
+        Year::try_from(row.last_reset_year).map_err(|e| format!("Invalid year: {}", e))?;
+
     let now = Utc::now();
     let created_at = parse_db_datetime_or_fallback("created_at", &row.created_at, now);
     let updated_at = parse_db_datetime_or_fallback("updated_at", &row.updated_at, created_at);
+
+    let metadata = Metadata {
+        version: row.version as u8,
+        created_at,
+        updated_at,
+    };
 
     Ok(BudgetConfiguration {
         id: BudgetConfigId::new(row.id),
         mode,
         base_amount: MonetaryAmount::new(row.base_amount, currency),
-        last_reset_year: row.last_reset_year,
-        created_at,
-        updated_at,
-        version: row.version as u32,
+        last_reset_year,
+        metadata,
         pending_events: Vec::new(), // Events are not persisted in DB, will be populated by domain logic
     })
 }
@@ -113,7 +121,7 @@ mod tests {
         };
 
         let config = row_to_budget_config(row).expect("budget config should still map");
-        assert_eq!(config.created_at, config.updated_at);
+        assert_eq!(config.metadata.created_at, config.metadata.updated_at);
     }
 
     #[test]
