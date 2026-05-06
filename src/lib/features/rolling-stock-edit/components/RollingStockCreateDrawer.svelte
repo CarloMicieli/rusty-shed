@@ -24,7 +24,7 @@
     getSubcategoryOptions
   } from '$lib/components/model-details/components/constants';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import { rollingStockCreateSchema } from '$lib/schemas/rolling-stock-form';
 
   interface Props {

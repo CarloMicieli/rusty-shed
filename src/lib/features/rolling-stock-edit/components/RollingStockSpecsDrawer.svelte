@@ -18,7 +18,7 @@
   import RollingStockTechnicalFields from './RollingStockTechnicalFields.svelte';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import {
     rollingStockSpecsSchema,
     type RollingStockSpecsFormData

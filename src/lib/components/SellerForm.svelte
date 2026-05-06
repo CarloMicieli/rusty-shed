@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { superForm } from 'sveltekit-superforms';
-  import { zodClient } from 'sveltekit-superforms/adapters';
+  import { zodClient } from '$lib/vendor/superforms-adapters';
   import { sellerSchema } from '$lib/schemas/seller';
   import * as Form from '$lib/components/ui/form';
   import type { ControlAttrs } from 'formsnap';

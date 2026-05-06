@@ -3,7 +3,7 @@
   import { Check } from 'lucide-svelte';
   import * as m from '$lib/paraglide/messages.js';
   import { superForm } from 'sveltekit-superforms';
-  import { zodClient } from 'sveltekit-superforms/adapters';
+  import { zodClient } from '$lib/vendor/superforms-adapters';
   import { settingsSchema } from '$lib/schemas/settings';
   import { Button } from '$lib/components/ui/button';
   import { Badge } from '$lib/components/ui/badge';

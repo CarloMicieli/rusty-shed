@@ -15,7 +15,7 @@
   import DecoderPicker from './DecoderPicker.svelte';
   import { DrawerShell, DrawerHeader, DigitalSection } from '$lib/components/drawer';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import { decoderInstallSchema } from '$lib/schemas/decoder-install-form';
 
   interface Props {

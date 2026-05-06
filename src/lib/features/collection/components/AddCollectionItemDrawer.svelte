@@ -2,7 +2,7 @@
   import * as m from '$lib/paraglide/messages.js';
   import { TrainFront } from 'lucide-svelte';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import { addCollectionSchema } from '$lib/schemas/collection-form';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import { getCollectionContext } from '$lib/features/collection/CollectionState.svelte';

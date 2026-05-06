@@ -16,7 +16,7 @@
   } from '$lib/components/drawer';
   import { onMount } from 'svelte';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import { wishlistFormSchema } from '$lib/schemas/wishlist-form';
 
   const wishlistService = getWishlistContext();

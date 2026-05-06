@@ -12,7 +12,7 @@
   import { toaster } from '$lib/toaster';
   import * as m from '$lib/paraglide/messages.js';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import { maintenanceSchema } from '$lib/schemas/maintenance-form';
   import { DrawerShell, DrawerHeader, DrawerFooter } from '$lib/components/drawer';
   import SearchableSelect from '$lib/components/SearchableSelect.svelte';

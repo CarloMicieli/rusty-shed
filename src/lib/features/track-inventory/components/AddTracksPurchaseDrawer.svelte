@@ -9,7 +9,7 @@
   import PurchaseFormFields from './PurchaseFormFields.svelte';
   import PurchaseLoadingState from './PurchaseLoadingState.svelte';
   import { superForm } from 'sveltekit-superforms';
-  import { zod4 as zod } from 'sveltekit-superforms/adapters';
+  import { zod } from '$lib/vendor/superforms-adapters';
   import { trackPurchaseSchema } from '$lib/schemas/track-purchase-form';
 
   interface Props {
