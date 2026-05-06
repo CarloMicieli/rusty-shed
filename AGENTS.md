@@ -31,7 +31,7 @@ A task is **Complete** only when this sequence passes with **zero** errors/warni
    - **Frontend**: Modular structure. Ensure shadcn components are Runes-compliant.
    - **i18n**: Add keys to messages/en.json and messages/it.json.
 3. **Sync Bindings**: If Rust types or commands change, run `deno task specta:generate` and verify the `.ts` binding updates.
-4. **Format & Lint**: 
+4. **Format & Lint**:
    - **Frontend**: Run `deno fmt` and `deno lint`.
    - **Backend**: **Clippy warnings are errors** (`cargo clippy -- -D warnings`).
 5. **Verify**: Run `deno task svelte-check`, `deno task test` (Vitest), and `cargo test`.
