@@ -35,6 +35,10 @@ export default defineConfig({
     sveltekit()
   ],
 
+  esbuild: {
+    tsconfigRaw: './deno.json'
+  },
+
   optimizeDeps: {
     // Avoid prebundling superforms adapter ecosystem; we import only zod4 via local wrapper.
     exclude: ['sveltekit-superforms']
@@ -80,6 +84,12 @@ export default defineConfig({
 
   test: {
     expect: { requireAssertions: true },
+
+    server: {
+      deps: {
+        inline: [/externals/, '@testing-library/svelte', '@testing-library/svelte-core']
+      }
+    },
 
     projects: [
       {

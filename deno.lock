@@ -45,6 +45,7 @@
     "npm:effect@^3.21.2": "3.21.2",
     "npm:eslint-config-prettier@^10.1.8": "10.1.8_eslint@9.39.4",
     "npm:eslint-plugin-svelte@^3.17.1": "3.17.1_eslint@9.39.4_svelte@5.55.5",
+    "npm:eslint@*": "9.39.4",
     "npm:eslint@^9.39.4": "9.39.4",
     "npm:formsnap@^2.0.1": "2.0.1_svelte@5.55.5_sveltekit-superforms@2.30.1__@sveltejs+kit@2.59.1___@sveltejs+vite-plugin-svelte@7.1.1____svelte@5.55.5____vite@8.0.10_____@types+node@25.6.0____@types+node@25.6.0___svelte@5.55.5___typescript@5.9.3___vite@8.0.10____@types+node@25.6.0___@types+node@25.6.0__effect@3.21.2__svelte@5.55.5__zod@4.4.3_effect@3.21.2",
     "npm:globals@^16.5.0": "16.5.0",
