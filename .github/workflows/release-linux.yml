@@ -5,6 +5,11 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3 or v1.2.3)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -48,14 +53,23 @@ jobs:
         with:
           workspaces: 'src-tauri -> target'
 
-      - name: 🔖 Sync version from tag to tauri.conf.json
+      - name: 🔖 Determine and Sync Version
+        id: version_handler # 🟢 Added ID to reference outputs downstream
         run: |
-          TAG_VERSION="${{ github.ref_name }}"
-          # Strip leading 'v' (e.g. v1.2.3 → 1.2.3)
-          APP_VERSION="${TAG_VERSION#v}"
+          # 1. Fallback logic: check input text first, then git reference tag name
+          RAW_VERSION="${{ inputs.version || github.ref_name }}"
+          
+          # 2. Strip leading 'v' safely regardless of where the string came from
+          APP_VERSION="${RAW_VERSION#v}"
+          TAG_VERSION="v${APP_VERSION}"
+          
+          # 3. Set structural step outputs for the GitHub Actions context layer
+          echo "tag_name=${TAG_VERSION}" >> $GITHUB_OUTPUT
+          
+          # 4. Write directly into tauri.conf.json
           jq --arg v "$APP_VERSION" '.version = $v' src-tauri/tauri.conf.json > /tmp/tauri.conf.json
           mv /tmp/tauri.conf.json src-tauri/tauri.conf.json
-          echo "Version set to ${APP_VERSION}"
+          echo "Version successfully set to ${APP_VERSION} (Tag: ${TAG_VERSION})"
 
       - name: 🎭 Run frontend build
         run: deno task build
@@ -65,8 +79,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseName: 'rusty-shed ${{ github.ref_name }}'
-          tagName: ${{ github.ref_name }}
+          # 🟢 Securely pull directly from our step output graph context
+          releaseName: 'rusty-shed ${{ steps.version_handler.outputs.tag_name }}'
+          tagName: ${{ steps.version_handler.outputs.tag_name }}
           prerelease: false
           includeUpdaterJson: false
           args: --target x86_64-unknown-linux-gnu
