@@ -25,9 +25,9 @@ jobs:
 
       - name: 🟢 Update Deno dependencies
         run: |
-          # Automatically checks and rewrites out-of-date npm: or jsr: specs in deno.json 
-          # and syncs the internal deno.lock file.
-          deno install --update
+          # Automatically checks for updates and rewrites out-of-date 
+          # npm: or jsr: specs directly in your deno.json and updates deno.lock
+          deno outdated --update
 
       - name: 🦀 Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
