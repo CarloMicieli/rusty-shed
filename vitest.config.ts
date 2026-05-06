@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
 export default defineConfig({
   plugins: [svelte()],
@@ -12,7 +12,17 @@ export default defineConfig({
     server: {
       deps: {
         // Ensure we use the browser build of Svelte in tests so lifecycle APIs are present
-        inline: ['svelte']
+        inline: [
+          'svelte',
+          '@testing-library/svelte',
+          '@testing-library/svelte-core',
+          'lucide-svelte',
+          '@lucide/svelte',
+          'bits-ui',
+          'runed',
+          'formsnap',
+          'mode-watcher'
+        ]
       }
     },
     coverage: {
