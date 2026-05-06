@@ -12,10 +12,11 @@ Rusty Shed helps model railway enthusiasts manage their collections, their wish 
 
 - Frontend: SvelteKit (Vite)
 - Backend: Tauri (Rust) — IPC via `invoke` between frontend and Rust
+- JavaScript/TypeScript runtime and task runner: Deno 2.x (`deno task ...`)
 
 ## Running on Ubuntu (prerequisites)
 
-You need Node (pnpm recommended), the Rust toolchain (`rustup`, `cargo`) and the Tauri CLI if you prefer to use it. On Ubuntu, this project required a few additional system packages to compile GTK / webview dependencies — install these before building:
+You need Deno 2.x, the Rust toolchain (`rustup`, `cargo`) and Linux webview dependencies. On Ubuntu, install these before building:
 
 ```bash
 sudo apt update
@@ -29,30 +30,46 @@ sudo apt install -y \
 
 ## Development
 
-1. Install JS and Rust deps:
+1. Install prerequisites:
 
 ```bash
-pnpm install
+deno --version
 rustup toolchain install stable
 ```
 
-2. Start the frontend dev server:
+If Deno is not installed yet, follow the official installer: https://docs.deno.com/runtime/getting_started/installation/
+
+2. Sync generated project files and run checks once:
 
 ```bash
-pnpm dev
+deno task check
 ```
 
-3. In a separate terminal run Tauri (launches the desktop app using the Vite dev server):
+3. Start the frontend dev server:
 
 ```bash
-pnpm tauri dev
+deno task dev
+```
+
+4. In a separate terminal run Tauri (launches the desktop app using the Vite dev server):
+
+```bash
+deno task tauri dev
+```
+
+Useful quality commands:
+
+```bash
+deno task lint
+deno task test
+deno task format:check
 ```
 
 ## Build (production)
 
 ```bash
-pnpm build
-pnpm tauri build
+deno task build
+deno task tauri build
 ```
 
 ## Committing
@@ -60,32 +77,32 @@ pnpm tauri build
 This repository follows Conventional Commits. Use the provided Commitizen config to compose messages that follow the project's commit rules:
 
 ```bash
-pnpm install
-pnpm commit
+deno install
+deno run -A npm:commitizen
 ```
 
 This will launch the interactive Commitizen prompt which enforces the allowed commit prefixes (eg. `feat`, `fix`, `docs`, `chore`, etc.).
 
 ## Rust Commands
 
-You can run common Cargo commands for the Tauri/Rust crate located in `src-tauri` using the `pnpm` scripts added to `package.json`.
+You can run common Cargo commands for the Tauri/Rust crate located in `src-tauri` using `deno task` entries from `deno.json`.
 
 Examples:
 
 ```bash
-pnpm run rust:fmt     # runs `cargo fmt --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
-pnpm run rust:clippy  # runs `cargo clippy --manifest-path src-tauri/Cargo.toml`
+deno task rust:fmt     # runs `cargo fmt --manifest-path src-tauri/Cargo.toml --all`
+deno task rust:build   # runs `cargo build --manifest-path src-tauri/Cargo.toml`
+deno task rust:run     # runs `cargo run --manifest-path src-tauri/Cargo.toml`
+deno task rust:test    # runs `cargo test --manifest-path src-tauri/Cargo.toml`
+deno task rust:clean   # runs `cargo clean --manifest-path src-tauri/Cargo.toml`
+deno task rust:clippy  # runs `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings`
 ```
 
 Pass extra Cargo flags after `--`, for example:
 
 ```bash
-pnpm run rust:build -- --release
-pnpm run rust:run -- --bin <binary-name>
+deno task rust:build -- --release
+deno task rust:run -- --bin <binary-name>
 ```
 
 These commands let you invoke Cargo for the `src-tauri` crate without changing directories.
