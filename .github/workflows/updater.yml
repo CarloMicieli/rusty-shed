@@ -25,7 +25,7 @@ jobs:
 
       - name: 🟢 Update Deno dependencies
         run: |
-          # Automatically checks for updates and rewrites out-of-date 
+          # Automatically checks for updates and rewrites out-of-date
           # npm: or jsr: specs directly in your deno.json and updates deno.lock
           deno outdated --update
 
@@ -46,7 +46,7 @@ jobs:
         working-directory: src-tauri
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore: weekly deno and cargo update'
