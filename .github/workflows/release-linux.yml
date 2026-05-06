@@ -60,22 +60,14 @@ jobs:
           mv /tmp/tauri.conf.json src-tauri/tauri.conf.json
           echo "Version set to ${APP_VERSION}"
 
-      - name: 🚀 Create GitHub release with changelog
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: 'rusty-shed ${{ github.ref_name }}'
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🏗️ Build Tauri app and upload Linux artifacts
+      - name: 🏗️ Build Tauri app and create GitHub release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ steps.create_release.outputs.id }}
+          releaseName: 'rusty-shed ${{ github.ref_name }}'
+          tagName: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
           includeUpdaterJson: false
           args: --target x86_64-unknown-linux-gnu
