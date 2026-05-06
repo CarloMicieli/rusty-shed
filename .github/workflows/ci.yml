@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/ci.yml'
-      - 'package.json'
+      - 'deno.json'
       - 'src-tauri/**'
       - 'src-tauri/Cargo.toml'
       - 'src/**'
@@ -13,7 +13,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/ci.yml'
-      - 'package.json'
+      - 'deno.json'
       - 'src-tauri/**'
       - 'src-tauri/Cargo.toml'
       - 'src/**'
@@ -41,32 +41,28 @@ jobs:
             libwebkit2gtk-4.1-dev \
             librsvg2-dev
 
-      - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v6
+      - name: 🦕 Setup Deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          deno-version: v2.x
 
       - name: 📦 Install frontend dependencies
-        run: pnpm install --frozen-lockfile
+        run: deno install
 
-      - name: 🎨 Check Formatting (Prettier)
-        run: pnpm format:check
+      - name: 🎨 Check Formatting (Deno Format)
+        run: deno fmt --check
 
-      - name: 🧹 Linting (ESLint)
-        run: pnpm lint
+      - name: 🧹 Linting (Deno Lint)
+        run: deno lint
 
-      - name: 🧪 Type Check (TypeScript)
-        run: pnpm check
+      - name: 🧪 Type Check (Svelte Check / TypeScript)
+        run: deno task svelte-check
 
       - name: 🎭 Run frontend build
-        run: pnpm build
+        run: deno task build
 
       - name: 🔬 Run frontend tests
-        run: pnpm test
+        run: deno task test
 
       - name: 🦀 Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -85,7 +81,7 @@ jobs:
       - name: Verify Bindings are up-to-date
         run: |
           if [ -n "$(git status --porcelain src/lib/bindings.ts)" ]; then
-            echo "::error::TypeScript bindings are out of sync! Please run 'pnpm specta:generate' locally and commit the changes."
+            echo "::error::TypeScript bindings are out of sync! Please run 'deno task specta:generate' locally and commit the changes."
             git diff src/lib/bindings.ts
             exit 1
           fi

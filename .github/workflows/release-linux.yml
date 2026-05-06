@@ -31,17 +31,13 @@ jobs:
             libappindicator3-dev \
             librsvg2-dev
 
-      - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v6
+      - name: 🦕 Setup Deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          deno-version: v2.x
 
       - name: 📦 Install frontend dependencies
-        run: pnpm install --frozen-lockfile
+        run: deno install
 
       - name: 🦀 Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -60,6 +56,9 @@ jobs:
           mv /tmp/tauri.conf.json src-tauri/tauri.conf.json
           echo "Version set to ${APP_VERSION}"
 
+      - name: 🎭 Run frontend build
+        run: deno task build
+
       - name: 🏗️ Build Tauri app and create GitHub release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -67,7 +66,6 @@ jobs:
         with:
           releaseName: 'rusty-shed ${{ github.ref_name }}'
           tagName: ${{ github.ref_name }}
-          draft: false
           prerelease: false
           includeUpdaterJson: false
           args: --target x86_64-unknown-linux-gnu

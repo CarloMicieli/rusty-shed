@@ -18,20 +18,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v6
+      - name: 🦕 Setup Deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          deno-version: v2.x
 
-      - name: 🟢 Update Node.js dependencies
+      - name: 🟢 Update Deno dependencies
         run: |
-          # pnpm update will refresh the pnpm-lock.yaml
-          # Use 'pnpm update --latest' if you want to ignore ranges in package.json
-          pnpm update
+          # Automatically checks and rewrites out-of-date npm: or jsr: specs in deno.json 
+          # and syncs the internal deno.lock file.
+          deno install --update
 
       - name: 🦀 Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -53,11 +49,11 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: weekly pnpm and cargo update'
-          title: 'chore: weekly pnpm and cargo update'
+          commit-message: 'chore: weekly deno and cargo update'
+          title: 'chore: weekly deno and cargo update'
           body: |
-            Automated weekly dependency updates for Tauri 2 project.
+            Automated weekly dependency updates for Tauri 2 + Deno project.
             - Updated `Cargo.lock`
-            - Updated `pnpm-lock.yaml`
+            - Updated `deno.lock`
           branch: automated-dep-update
           delete-branch: true
