@@ -49,6 +49,9 @@ jobs:
       - name: 📦 Install frontend dependencies
         run: deno install
 
+      - name: 🌐 Generate Paraglide artifacts
+        run: deno task prepare
+
       - name: 🎨 Check Formatting (Deno Format)
         run: deno task format --check
 
