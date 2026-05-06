@@ -50,10 +50,10 @@ jobs:
         run: deno install
 
       - name: 🎨 Check Formatting (Deno Format)
-        run: deno fmt --check
+        run: deno task format --check
 
       - name: 🧹 Linting (Deno Lint)
-        run: deno lint
+        run: deno task lint
 
       - name: 🧪 Type Check (Svelte Check / TypeScript)
         run: deno task svelte-check
