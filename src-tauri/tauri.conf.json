@@ -4,10 +4,10 @@
   "version": "0.2.0",
   "identifier": "io.github.carlomicieli.rustyshed",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "deno task dev",
+    "beforeBuildCommand": "deno task build",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
-    "frontendDist": "../build"
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [

@@ -5,6 +5,27 @@ import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 const host = typeof process !== 'undefined' ? process.env?.TAURI_DEV_HOST : undefined;
+const optionalValidationPackages = new Set([
+  '@exodus/schemasafe',
+  '@typeschema/class-validator',
+  '@vinejs/vine',
+  'arktype',
+  'class-validator',
+  'effect',
+  'joi',
+  'superstruct',
+  'typebox',
+  'valibot',
+  'yup'
+]);
+
+/** @param {string} id */
+function isOptionalValidationDependency(id) {
+  for (const pkg of optionalValidationPackages) {
+    if (id === pkg || id.startsWith(`${pkg}/`)) return true;
+  }
+  return false;
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -14,16 +35,19 @@ export default defineConfig({
     sveltekit()
   ],
 
+  optimizeDeps: {
+    // Avoid prebundling superforms adapter ecosystem; we import only zod4 via local wrapper.
+    exclude: ['sveltekit-superforms']
+  },
+
   // Optimize bundle size and loading
   build: {
     rolldownOptions: {
-      external: ['@vinejs/vine'],
+      external: (id) => isOptionalValidationDependency(id),
       output: {
-        // Split large icon library into separate chunk
         manualChunks: (id) => (id.includes('lucide-svelte') ? 'lucide' : undefined)
       }
     },
-    // Reduce chunk size warning threshold
     chunkSizeWarningLimit: 600
   },
 
