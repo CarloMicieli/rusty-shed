@@ -15,8 +15,6 @@
     "lint": "deno run -A npm:@sveltejs/kit sync && deno run -A npm:eslint .",
     "test:unit": "deno run -A npm:vitest --environment happy-dom",
     "test": "deno run -A npm:vitest --run --environment happy-dom",
-    "test:ci": "deno run -A npm:vitest --run --environment happy-dom",
-    "test:coverage": "deno run -A npm:vitest --run --environment happy-dom --coverage",
     "tauri": "deno run -A npm:@tauri-apps/cli",
     "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
     "rust:build": "cargo build --manifest-path src-tauri/Cargo.toml",
