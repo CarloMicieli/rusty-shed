@@ -122,6 +122,10 @@ import type { Manufacturer } from '$lib/bindings';
 
 const mockGetManufacturers = vi.mocked(commands.getManufacturers);
 
+function setupUser() {
+  return userEvent.setup({ pointerEventsCheck: 0 });
+}
+
 const wishlistFixtures: WishlistPreviewLite[] = [
   {
     id: 'wishlist-1',
@@ -216,7 +220,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should render modal with title, form fields, and available wishlists', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
 
     activeService = createServiceMock({
       wishlists: wishlistFixtures,
@@ -237,7 +241,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should show all validation errors in sequence (manufacturer → product code → description)', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     await renderDrawer();
 
     const saveButton = screen.getByRole('button', { name: /save/i });
@@ -255,7 +259,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should add model to existing wishlist', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onSaved = vi.fn();
     const onClose = vi.fn();
 
@@ -283,7 +287,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should create new wishlist and add model', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
 
     const mockCreatedWishlist: WishlistPreviewLite = {
       id: 'new-wishlist',
@@ -331,7 +335,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should show error when creating wishlist fails', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
 
     activeService = createServiceMock({
       wishlists: wishlistFixtures,
@@ -357,7 +361,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should show error when adding model fails', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
 
     activeService = createServiceMock({
       addRailwayModelToWishlist: vi.fn().mockResolvedValue(false)
@@ -379,7 +383,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should disable buttons while submitting', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
 
     let resolveSubmit!: (value: boolean) => void;
     const pendingSubmit = new Promise<boolean>((resolve) => {
@@ -412,7 +416,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should close drawer directly when no changes have been made', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onClose = vi.fn();
 
     await renderDrawer({
@@ -426,7 +430,7 @@ describe('AddWishlistItemDrawer', () => {
   });
 
   it('should show discard dialog when closing with unsaved changes', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onClose = vi.fn();
 
     await renderDrawer({

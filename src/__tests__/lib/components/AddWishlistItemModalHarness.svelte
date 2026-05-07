@@ -4,10 +4,12 @@
 
   let {
     open = false,
+    preselectedWishlistId = undefined,
     onClose = undefined,
     onSaved = undefined
   }: {
     open?: boolean;
+    preselectedWishlistId?: string;
     onClose?: () => void;
     onSaved?: () => void;
   } = $props();
@@ -18,5 +20,10 @@
 </script>
 
 <Tooltip.Provider>
-  <AddWishlistItemDrawer {open} onClose={handleClose} onSaved={handleSaved} />
+  <AddWishlistItemDrawer
+    {open}
+    {preselectedWishlistId}
+    onClose={handleClose}
+    onSaved={handleSaved}
+  />
 </Tooltip.Provider>
