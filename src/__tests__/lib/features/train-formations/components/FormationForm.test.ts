@@ -41,7 +41,9 @@ describe('FormationForm.svelte', () => {
     await waitFor(() => {
       expect(screen.getByDisplayValue('TEE Helvetia')).toBeInTheDocument();
       // EpochPicker renders pill buttons; the selected epoch has the primary highlight class
-      expect(screen.getByRole('button', { name: 'IV' }).className).toContain('border-primary');
+      // Note: Tooltip wraps buttons, so we get the inner button by selecting all and taking the last one
+      const buttons = screen.getAllByRole('button', { name: 'IV' });
+      expect(buttons[buttons.length - 1].className).toContain('border-primary');
       expect(screen.getByDisplayValue('1971')).toBeInTheDocument();
       expect(screen.getByDisplayValue('1979')).toBeInTheDocument();
       expect(screen.getByDisplayValue('International service')).toBeInTheDocument();
@@ -101,7 +103,9 @@ describe('FormationForm.svelte', () => {
     await fireEvent.input(screen.getByLabelText('Start year'), { target: { value: '1988' } });
     await fireEvent.input(screen.getByLabelText('End year'), { target: { value: '1991' } });
     // EpochPicker: click the "V" pill button to select it
-    await fireEvent.click(screen.getByRole('button', { name: 'V' }));
+    // Note: Tooltip wraps buttons, so we get the inner button by selecting all and taking the last one
+    const vButtons = screen.getAllByRole('button', { name: 'V' });
+    await fireEvent.click(vButtons[vButtons.length - 1]);
     await fireEvent.input(screen.getByLabelText('Notes'), {
       target: { value: '  Cross-border service  ' }
     });
