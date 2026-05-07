@@ -736,6 +736,7 @@
   "maintenance_type_detail_repair": "Detail Repair",
   "maintenance_type_weathering": "Weathering",
   "maintenance_type_general_inspection": "General Inspection",
+  "maintenance_health_status_pending": "Status: Schedule Pending",
   "log_maintenance_drawer_title": "Log Maintenance Event",
   "log_maintenance_drawer_subtitle": "Record a maintenance event for your rolling stock",
   "log_maintenance_mode_new_card": "New Card + Event",

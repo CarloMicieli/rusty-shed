@@ -722,6 +722,7 @@
   "maintenance_type_detail_repair": "Riparazione Dettagli",
   "maintenance_type_weathering": "Invecchiamento",
   "maintenance_type_general_inspection": "Ispezione Generale",
+  "maintenance_health_status_pending": "Stato: Pianificazione in sospeso",
   "log_maintenance_drawer_title": "Registra Manutenzione",
   "log_maintenance_drawer_subtitle": "Registra un evento di manutenzione per i tuoi rotabili",
   "log_maintenance_mode_new_card": "Nuova Scheda + Evento",

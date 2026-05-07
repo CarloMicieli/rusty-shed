@@ -77,11 +77,11 @@
       />
     </svg>
     <div class="absolute inset-0 flex flex-col items-center justify-center">
-      <div class="text-4xl font-bold {getColorClass(remainingPercentage)}">
-        {remainingPercentage.toFixed(1)}%
+      <div class="text-lg font-bold {getColorClass(remainingPercentage)}">
+        {formatAmount(remainingAmount, currency)}
       </div>
-      <div class="text-surface-600 mt-1 text-sm capitalize">
-        {m.budget_dashboard_donut_remaining()}
+      <div class="text-surface-600 mt-0.5 text-xs">
+        {remainingPercentage.toFixed(1)}%
       </div>
     </div>
   </div>

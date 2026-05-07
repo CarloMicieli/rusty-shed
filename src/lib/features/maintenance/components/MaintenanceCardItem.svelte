@@ -13,7 +13,8 @@
 
   // Calculate "Maintenance Health" based on time elapsed since last maintenance vs total interval
   const healthPercentage = $derived.by(() => {
-    if (!card.lastMaintenanceDate || !card.nextMaintenanceDate) return 100;
+    if (!card.nextMaintenanceDate) return null;
+    if (!card.lastMaintenanceDate) return 100;
 
     const last = new Date(card.lastMaintenanceDate).getTime();
     const next = new Date(card.nextMaintenanceDate).getTime();
@@ -30,10 +31,15 @@
   });
 
   const healthColor = $derived.by(() => {
+    if (healthPercentage === null) return 'bg-slate-500'; // Neutral/pending
     if (healthPercentage > 66) return 'bg-emerald-500';
     if (healthPercentage > 33) return 'bg-amber-500';
     return 'bg-red-500'; // Critical/Low health
   });
+
+  const statusLabel = $derived(
+    !card.nextMaintenanceDate ? m.maintenance_health_status_pending() : null
+  );
 
   // Format dates for display
   const formatDate = (dateStr: string | null): string => {
@@ -127,12 +133,16 @@
         <span class="bold text-[10px] tracking-widest text-zinc-500 uppercase"
           >Maintenance Health</span
         >
-        <span class="font-mono text-xs text-zinc-400">{Math.round(healthPercentage)}%</span>
+        {#if statusLabel}
+          <span class="font-mono text-xs text-zinc-400">{statusLabel}</span>
+        {:else}
+          <span class="font-mono text-xs text-zinc-400">{Math.round(healthPercentage ?? 0)}%</span>
+        {/if}
       </div>
       <div class="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
         <div
           class="h-full rounded-full transition-all duration-500 ease-out {healthColor}"
-          style="width: {healthPercentage}%"
+          style="width: {healthPercentage ?? 0}%"
         ></div>
       </div>
     </div>

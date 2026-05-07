@@ -5,7 +5,7 @@
   import { goto } from '$app/navigation';
   import { getCollectionContext, availableScales } from './CollectionState.svelte';
   import type { StatusFilter } from './CollectionState.svelte';
-  import { Button } from '$lib/components';
+  import { Button, Badge } from '$lib/components';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { commands } from '$lib/bindings';
 
@@ -297,6 +297,98 @@
         {:else if !isLoading && rawItems.length > 0 && filteredItems.length === 0}
           {@render NoResults()}
         {:else}
+          <!-- Filter Chips Row -->
+          {#if hasActiveFilters}
+            <div class="mb-4 flex flex-wrap gap-2">
+              <!-- Scale chips -->
+              {#if filters.scales.size > 0}
+                {#each Array.from(filters.scales) as scale (scale)}
+                  <Badge variant="default" class="flex items-center gap-1.5 pr-1 pl-2.5">
+                    <span class="text-xs"
+                      >{availableScales.find((s) => s.id === scale)?.display || scale}</span
+                    >
+                    <button
+                      type="button"
+                      onclick={() => collectionService.toggleScale(scale)}
+                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      aria-label={`Remove scale filter: ${scale}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                {/each}
+              {/if}
+
+              <!-- Epoch chips -->
+              {#if filters.epochs.size > 0}
+                {#each Array.from(filters.epochs) as epoch (epoch)}
+                  <Badge variant="default" class="flex items-center gap-1.5 pr-1 pl-2.5">
+                    <span class="text-xs">Epoch {epoch}</span>
+                    <button
+                      type="button"
+                      onclick={() => collectionService.toggleEpoch(epoch)}
+                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      aria-label={`Remove epoch filter: ${epoch}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                {/each}
+              {/if}
+
+              <!-- Category chips -->
+              {#if filters.categories.size > 0}
+                {#each Array.from(filters.categories) as category (category)}
+                  <Badge variant="default" class="flex items-center gap-1.5 pr-1 pl-2.5">
+                    <span class="text-xs">{category}</span>
+                    <button
+                      type="button"
+                      onclick={() => collectionService.toggleCategory(category)}
+                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      aria-label={`Remove category filter: ${category}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                {/each}
+              {/if}
+
+              <!-- Company chips -->
+              {#if filters.companies.size > 0}
+                {#each Array.from(filters.companies) as company (company)}
+                  <Badge variant="default" class="flex items-center gap-1.5 pr-1 pl-2.5">
+                    <span class="text-xs">{company}</span>
+                    <button
+                      type="button"
+                      onclick={() => collectionService.toggleCompany(company)}
+                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      aria-label={`Remove company filter: ${company}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                {/each}
+              {/if}
+
+              <!-- Tag chips -->
+              {#if filters.tags.size > 0}
+                {#each Array.from(filters.tags) as tag (tag)}
+                  <Badge variant="default" class="flex items-center gap-1.5 pr-1 pl-2.5">
+                    <span class="text-xs">{tag}</span>
+                    <button
+                      type="button"
+                      onclick={() => collectionService.toggleTag(tag)}
+                      class="rounded-sm p-0.5 transition-colors hover:bg-white/20"
+                      aria-label={`Remove tag filter: ${tag}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                {/each}
+              {/if}
+            </div>
+          {/if}
+
           <!-- View mode toolbar -->
           <div class="mb-4 flex items-center justify-end">
             <div class="flex items-center gap-1 rounded-lg border border-border/60 p-0.5">

@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import FormationForm from '$lib/features/train-formations/components/FormationForm.svelte';
+import FormationForm from './FormationFormHarness.svelte';
 import { makeCategory, makeDetail } from '../fixtures';
 
 vi.mock('$lib/paraglide/messages.js', () => ({

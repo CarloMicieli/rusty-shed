@@ -29,7 +29,7 @@ vi.mock('$lib/paraglide/messages.js', () => ({
   rolling_stock_select_category: () => '— Select category —'
 }));
 
-import ModelInfoSection from '$lib/components/drawer/sections/ModelInfoSection.svelte';
+import ModelInfoSection from './ModelInfoSectionHarness.svelte';
 import type { Manufacturer } from '$lib/bindings';
 
 const manufacturers: Manufacturer[] = [

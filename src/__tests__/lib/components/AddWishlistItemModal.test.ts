@@ -115,7 +115,7 @@ vi.mock('$lib/features/wishlists/WishlistState.svelte', async (importOriginal) =
   };
 });
 
-import AddWishlistItemDrawer from '$lib/features/wishlists/AddWishlistItemDrawer.svelte';
+import AddWishlistItemDrawer from './AddWishlistItemModalHarness.svelte';
 import { commands } from '$lib/bindings';
 import type { WishlistPreviewLite } from '$lib/features/wishlists/WishlistState.svelte';
 import type { Manufacturer } from '$lib/bindings';
