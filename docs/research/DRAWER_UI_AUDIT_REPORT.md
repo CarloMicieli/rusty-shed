@@ -122,28 +122,28 @@ Refactor opportunity: promote these shared fields into a reusable **ModelDetails
 
 ## Token Consistency Report (Hardcoded Drift)
 
-| File | Drift | Should be |
-|---|---|---|
-| `DrawerSectionBar.svelte` | `border-white/10`, `text-zinc-500`, `hover:bg-white/5` | `border-border`, `text-muted-foreground`, `hover:bg-muted` |
-| `FormBooleanSelect.svelte` | `text-zinc-400`, `border-layout-border`, `bg-layout-surface`, `text-zinc-500` | DS label + `border-border` + `bg-background` + `text-muted-foreground` |
-| `FormPrice.svelte` | `text-zinc-400` label style | DS label style (`text-[10px] ...`) |
-| `WishlistPickerSection.svelte` | `text-zinc-500`, `rounded-md` | `text-muted-foreground`, `rounded-sm` |
-| `WishlistPreferencesSection.svelte` | `rounded-md`, `border-layout-border` | `rounded-sm`, `border-border` |
-| `RollingStockSection.svelte` | `rounded-lg`, `border-white/10`, `text-zinc-500` | `rounded-sm`, `border-border`, `text-muted-foreground` |
-| `AddWishlistItemDrawer.svelte` | inline custom footer spacing/tokens | shared `DrawerFooter` |
+| File                                | Drift                                                                         | Should be                                                              |
+| ----------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `DrawerSectionBar.svelte`           | `border-white/10`, `text-zinc-500`, `hover:bg-white/5`                        | `border-border`, `text-muted-foreground`, `hover:bg-muted`             |
+| `FormBooleanSelect.svelte`          | `text-zinc-400`, `border-layout-border`, `bg-layout-surface`, `text-zinc-500` | DS label + `border-border` + `bg-background` + `text-muted-foreground` |
+| `FormPrice.svelte`                  | `text-zinc-400` label style                                                   | DS label style (`text-[10px] ...`)                                     |
+| `WishlistPickerSection.svelte`      | `text-zinc-500`, `rounded-md`                                                 | `text-muted-foreground`, `rounded-sm`                                  |
+| `WishlistPreferencesSection.svelte` | `rounded-md`, `border-layout-border`                                          | `rounded-sm`, `border-border`                                          |
+| `RollingStockSection.svelte`        | `rounded-lg`, `border-white/10`, `text-zinc-500`                              | `rounded-sm`, `border-border`, `text-muted-foreground`                 |
+| `AddWishlistItemDrawer.svelte`      | inline custom footer spacing/tokens                                           | shared `DrawerFooter`                                                  |
 
 ---
 
 ## Gap Analysis
 
-| Area | Current Implementation | Design System Standard | Gap |
-|---|---|---|---|
-| Footer composition | Wishlist drawer uses inline footer | All drawers use `DrawerFooter` | Inconsistent CTA architecture |
-| Section cards | Wrapper duplicated in multiple files | Shared section-card component | Repetition + drift risk |
-| Label typography | Mixed (`text-xs`, `zinc-*`) in some atoms | Standard uppercase micro-label style | Visual inconsistency |
-| Token system | Legacy `zinc-*`, `layout-*`, `white/*` remains | Semantic DS tokens (`border-border`, etc.) | Token drift |
-| Corner radius | `rounded-md`/`rounded-lg` in places | `rounded-sm` for mechanical precision | Shape inconsistency |
-| Manufacturer select | Inline custom select in model info | Use shared form atoms or dedicated reusable select | Atomicity break |
+| Area                | Current Implementation                         | Design System Standard                             | Gap                           |
+| ------------------- | ---------------------------------------------- | -------------------------------------------------- | ----------------------------- |
+| Footer composition  | Wishlist drawer uses inline footer             | All drawers use `DrawerFooter`                     | Inconsistent CTA architecture |
+| Section cards       | Wrapper duplicated in multiple files           | Shared section-card component                      | Repetition + drift risk       |
+| Label typography    | Mixed (`text-xs`, `zinc-*`) in some atoms      | Standard uppercase micro-label style               | Visual inconsistency          |
+| Token system        | Legacy `zinc-*`, `layout-*`, `white/*` remains | Semantic DS tokens (`border-border`, etc.)         | Token drift                   |
+| Corner radius       | `rounded-md`/`rounded-lg` in places            | `rounded-sm` for mechanical precision              | Shape inconsistency           |
+| Manufacturer select | Inline custom select in model info             | Use shared form atoms or dedicated reusable select | Atomicity break               |
 
 ---
 

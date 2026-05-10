@@ -62,6 +62,7 @@
       {currency}
       bind:notes
       {disabled}
+      showCard={false}
       errors={{ desiredPrice: errors.desiredPrice }}
     />
   {/if}

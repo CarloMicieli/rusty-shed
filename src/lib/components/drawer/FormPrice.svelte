@@ -18,7 +18,9 @@
 </script>
 
 <div class="space-y-1">
-  <span class="text-xs text-zinc-400">{label}{required ? ' *' : ''}</span>
+  <span class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
+    >{label}{required ? ' *' : ''}</span
+  >
   <CurrencyInput bind:value {label} {...rest} />
   {#if error}
     <p class="text-xs text-destructive">{error}</p>

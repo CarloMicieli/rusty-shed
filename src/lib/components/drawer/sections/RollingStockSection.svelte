@@ -36,8 +36,8 @@
 
   {#if expanded}
     {#if entries.length === 0}
-      <div class="rounded-lg border border-dashed border-white/10 p-4">
-        <p class="text-sm text-zinc-500">No rolling stocks added yet.</p>
+      <div class="rounded-sm border border-dashed border-border p-4">
+        <p class="text-sm text-muted-foreground">No rolling stocks added yet.</p>
       </div>
     {:else}
       {#each entries as entry, i (entry.id)}
