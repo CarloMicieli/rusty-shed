@@ -122,6 +122,7 @@
       <DrawerInput
         id="item-{item.uid}-product-code"
         type="text"
+        placeholder={m.acquisition_item_product_code_placeholder()}
         value={item.productCode}
         oninput={(e) =>
           onUpdate(item.uid, { productCode: (e.currentTarget as HTMLInputElement).value })}
@@ -143,6 +144,7 @@
       <DrawerInput
         id="item-{item.uid}-description"
         type="text"
+        placeholder={m.acquisition_item_description_placeholder()}
         value={item.description}
         oninput={(e) =>
           onUpdate(item.uid, { description: (e.currentTarget as HTMLInputElement).value })}
