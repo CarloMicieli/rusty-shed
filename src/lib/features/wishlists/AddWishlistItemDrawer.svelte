@@ -1,6 +1,5 @@
 <script lang="ts">
   import * as m from '$lib/paraglide/messages.js';
-  import { Button } from '$lib/components/ui/button';
   import { Heart } from 'lucide-svelte';
   import { getWishlistContext } from '$lib/features/wishlists/WishlistState.svelte';
   import { settingsState } from '$lib/features/settings/SettingsState.svelte';
@@ -10,6 +9,7 @@
   import {
     DrawerShell,
     DrawerHeader,
+    DrawerFooter,
     ModelInfoSection,
     WishlistPickerSection,
     WishlistPreferencesSection
@@ -228,44 +228,23 @@
       />
 
       <!-- Section 3: Wishlist Preferences -->
-      <div class="overflow-hidden rounded-sm border border-border bg-card p-4">
-        <section>
-          <p class="mb-4 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-            {m.drawer_section_wishlist()}
-          </p>
-          <WishlistPreferencesSection
-            bind:priority={$form.priority}
-            bind:desiredPrice={$form.desiredPrice}
-            {currency}
-            errors={mappedErrors}
-            disabled={isSubmitting}
-          />
-        </section>
-      </div>
+      <WishlistPreferencesSection
+        bind:priority={$form.priority}
+        bind:desiredPrice={$form.desiredPrice}
+        {currency}
+        errors={mappedErrors}
+        disabled={isSubmitting}
+      />
     </div>
   </form>
 
   {#snippet footer({ requestClose })}
-    <div class="flex items-center justify-end gap-2 p-4">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onclick={requestClose}
-        disabled={isSubmitting}
-      >
-        {m.wishlist_modal_cancel()}
-      </Button>
-      <Button
-        type="button"
-        variant="default"
-        size="sm"
-        class="variant-steampunk-lever rounded-sm bg-primary font-bebas font-bold text-primary-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:bg-primary/90"
-        onclick={handleSubmit}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? m.wishlist_modal_saving() : m.wishlist_modal_save()}
-      </Button>
-    </div>
+    <DrawerFooter
+      cancelLabel={m.wishlist_modal_cancel()}
+      submitLabel={isSubmitting ? m.wishlist_modal_saving() : m.wishlist_modal_save()}
+      onCancel={requestClose}
+      onSubmit={handleSubmit}
+      submitting={isSubmitting}
+    />
   {/snippet}
 </DrawerShell>

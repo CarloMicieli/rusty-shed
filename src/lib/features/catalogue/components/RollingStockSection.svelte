@@ -86,7 +86,7 @@
   </FormField>
 {/snippet}
 
-<div class="rounded-lg border border-border bg-card p-4">
+<div class="rounded-sm border border-border bg-card p-4">
   <div class="mb-4 flex items-center justify-between">
     <h4 class="h5">{resolveLabel(formLabels.rollingStock)} #{index + 1}</h4>
     <div class="flex gap-2">

@@ -88,13 +88,13 @@
     >
       <Select.Trigger
         id="acq-batch-scale"
-        class="w-full border-layout-border bg-layout-surface text-foreground"
+        class="h-10 w-full border-border bg-background text-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary data-[placeholder]:text-muted-foreground"
       >
         {batchDefaults.scale
           ? (SCALE_DISPLAY_MAP[batchDefaults.scale] ?? batchDefaults.scale)
           : '—'}
       </Select.Trigger>
-      <Select.Content>
+      <Select.Content class="border-border bg-background text-foreground">
         {#each scaleOptions() as opt (opt.value)}
           <Select.Item value={opt.value} label={opt.label} />
         {/each}
@@ -117,11 +117,11 @@
     >
       <Select.Trigger
         id="acq-batch-power"
-        class="w-full border-layout-border bg-layout-surface text-foreground"
+        class="h-10 w-full border-border bg-background text-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary data-[placeholder]:text-muted-foreground"
       >
         {batchDefaults.powerMethod ? powerMethodLabel(batchDefaults.powerMethod) : '—'}
       </Select.Trigger>
-      <Select.Content>
+      <Select.Content class="border-border bg-background text-foreground">
         {#each powerMethodOptions() as opt (opt.value)}
           <Select.Item value={opt.value} label={opt.label} />
         {/each}

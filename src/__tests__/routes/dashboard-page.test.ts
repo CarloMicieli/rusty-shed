@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 
 // ── Mocks ────────────────────────────────────────────────────
 
@@ -55,9 +55,6 @@ vi.mock('$lib/components/PageHeader.svelte', () => ({
 vi.mock('$lib/components/StatsCard.svelte', () => ({
   default: function StatsCardStub() {}
 }));
-vi.mock('$lib/components/QuickActionButtons.svelte', () => ({
-  default: function QuickActionButtonsStub() {}
-}));
 vi.mock('$lib/components/AddWishlistItemModal.svelte', () => ({
   default: function AddWishlistItemModalStub() {}
 }));
@@ -65,16 +62,13 @@ vi.mock('$lib/features/dashboard', () => ({
   DashboardCharts: function DashboardChartsStub() {},
   PurchaseGroupCard: function PurchaseGroupCardStub() {}
 }));
-vi.mock('$lib/features/dashboard/components/DashboardAction.svelte', () => ({
-  default: function DashboardActionStub() {}
-}));
 vi.mock('$lib/features/dashboard/components/DashboardSectionHeader.svelte', () => ({
   default: function DashboardSectionHeaderStub() {}
 }));
 
 // ── Test target ───────────────────────────────────────────────
 
-import DashboardPage from '../../routes/dashboard/+page.svelte';
+import DashboardPageHarness from './DashboardPageHarness.svelte';
 
 describe('routes/dashboard/+page.svelte', () => {
   beforeEach(() => {
@@ -85,12 +79,12 @@ describe('routes/dashboard/+page.svelte', () => {
   });
 
   it('renders without throwing', () => {
-    expect(() => render(DashboardPage)).not.toThrow();
+    expect(() => render(DashboardPageHarness)).not.toThrow();
   });
 
   it('shows a loading skeleton while isLoading is true', () => {
     mockDashboardState.isLoading = true;
-    const { container } = render(DashboardPage);
+    const { container } = render(DashboardPageHarness);
     // Loading state renders skeleton divs
     const skeletons = container.querySelectorAll('.skeleton, .animate-pulse, [class*="animate"]');
     expect(skeletons.length).toBeGreaterThan(0);
@@ -99,9 +93,33 @@ describe('routes/dashboard/+page.svelte', () => {
   it('shows empty-acquisitions message when data has no purchase groups', async () => {
     mockDashboardState.isLoading = false;
     mockDashboardState.data = { totals: null, purchaseGroups: [] };
-    render(DashboardPage);
+    render(DashboardPageHarness);
     await waitFor(() => {
       expect(screen.getByText('dashboard_empty_acquisitions')).toBeInTheDocument();
     });
+  });
+
+  it('opens acquisition drawer from command center action', async () => {
+    const openAcquisitionDrawer = vi.fn();
+
+    render(DashboardPageHarness, { openAcquisitionDrawer });
+
+    const buttons = screen.getAllByRole('button', { name: 'dashboard_action_new_acquisition' });
+    await fireEvent.click(buttons[0]);
+
+    expect(openAcquisitionDrawer).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens wishlist drawer and preloads wishlists when empty', async () => {
+    const openWishlistDrawer = vi.fn();
+    mockWishlistState.wishlists = [];
+
+    render(DashboardPageHarness, { openWishlistDrawer });
+
+    const buttons = screen.getAllByRole('button', { name: 'actions_add_wishlist_item' });
+    await fireEvent.click(buttons[0]);
+
+    expect(mockWishlistState.fetchWishlists).toHaveBeenCalledTimes(1);
+    expect(openWishlistDrawer).toHaveBeenCalledTimes(1);
   });
 });

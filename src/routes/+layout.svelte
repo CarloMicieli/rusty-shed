@@ -232,12 +232,12 @@
     </div>
   </div>
 {:else}
-  <div
-    class="flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"
-    style:background-color="var(--sidebar)"
-    in:fade={{ delay: 1 }}
-  >
-    <Tooltip.Provider>
+  <Tooltip.Provider>
+    <div
+      class="flex h-screen w-full flex-col overflow-hidden font-sans text-foreground lg:flex-row"
+      style:background-color="var(--sidebar)"
+      in:fade={{ delay: 1 }}
+    >
       <!-- Sidebar Left (Desktop) -->
       <div
         class="relative z-50 hidden h-full shrink-0 overflow-hidden lg:block"
@@ -305,28 +305,28 @@
         <BottomNavigation />
         <Toaster richColors position="top-right" />
       </div>
-    </Tooltip.Provider>
-  </div>
+    </div>
 
-  <AcquisitionDrawer
-    open={showAcquisitionDrawer}
-    onClose={() => (showAcquisitionDrawer = false)}
-    onSuccess={() => {
-      showAcquisitionDrawer = false;
-      void collectionStore.refresh();
-      void dashboardState.load();
-      void dashboardState.loadBudget();
-    }}
-  />
+    <AcquisitionDrawer
+      open={showAcquisitionDrawer}
+      onClose={() => (showAcquisitionDrawer = false)}
+      onSuccess={() => {
+        showAcquisitionDrawer = false;
+        void collectionStore.refresh();
+        void dashboardState.load();
+        void dashboardState.loadBudget();
+      }}
+    />
 
-  <AddWishlistItemDrawer
-    open={showWishlistDrawer}
-    onClose={() => (showWishlistDrawer = false)}
-    onSaved={() => (showWishlistDrawer = false)}
-  />
+    <AddWishlistItemDrawer
+      open={showWishlistDrawer}
+      onClose={() => (showWishlistDrawer = false)}
+      onSaved={() => (showWishlistDrawer = false)}
+    />
 
-  <LogMaintenanceDrawer
-    open={showLogMaintenanceDrawer}
-    onClose={() => (showLogMaintenanceDrawer = false)}
-  />
+    <LogMaintenanceDrawer
+      open={showLogMaintenanceDrawer}
+      onClose={() => (showLogMaintenanceDrawer = false)}
+    />
+  </Tooltip.Provider>
 {/if}
