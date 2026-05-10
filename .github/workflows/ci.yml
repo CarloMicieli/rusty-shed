@@ -53,21 +53,6 @@ jobs:
       - name: 📦 Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 🎨 Check Formatting (Prettier)
-        run: pnpm format:check
-
-      - name: 🧹 Linting (ESLint)
-        run: pnpm lint
-
-      - name: 🧪 Type Check (TypeScript)
-        run: pnpm check
-
-      - name: 🎭 Run frontend build
-        run: pnpm build
-
-      - name: 🔬 Run frontend tests
-        run: pnpm test
-
       - name: 🦀 Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -101,3 +86,18 @@ jobs:
       - name: 🦀 Run cargo tests
         run: cargo test --workspace --no-fail-fast
         working-directory: src-tauri
+
+      - name: 🎨 Check Formatting (Prettier)
+        run: pnpm format:check
+
+      - name: 🧹 Linting (ESLint)
+        run: pnpm lint
+
+      - name: 🧪 Type Check (TypeScript)
+        run: pnpm check
+
+      - name: 🎭 Run frontend build
+        run: pnpm build
+
+      - name: 🔬 Run frontend tests
+        run: pnpm test
