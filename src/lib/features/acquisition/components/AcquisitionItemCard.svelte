@@ -33,7 +33,7 @@
     onRemove
   }: Props = $props();
 
-  const LABEL_CLASS = 'ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase';
+  const LABEL_CLASS = 'text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase';
   const TRIGGER_CLASS =
     'h-10 w-full border-border bg-background text-foreground data-[placeholder]:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary';
   const TRIGGER_ERROR_CLASS =
@@ -48,7 +48,7 @@
 <div class="space-y-3 rounded-xl border border-white/10 bg-zinc-900/50 p-4">
   <!-- Top row: item title + action icons -->
   <div class="flex items-center justify-between">
-    <span class="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+    <span class="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
       Item {index + 1}
     </span>
     <div class="flex items-center gap-1">
@@ -96,7 +96,9 @@
           {#if selectedManufacturer}
             {selectedManufacturer.name}
           {:else}
-            <span class="text-zinc-500">—</span>
+            <span class="text-muted-foreground"
+              >{m.acquisition_item_manufacturer_placeholder()}</span
+            >
           {/if}
         </Select.Trigger>
         <Select.Content class={SELECT_CONTENT_CLASS}>
@@ -166,7 +168,7 @@
           {#if item.category}
             {categoryLabel(item.category)}
           {:else}
-            <span class="text-zinc-500">—</span>
+            <span class="text-muted-foreground">{m.acquisition_item_category_placeholder()}</span>
           {/if}
         </Select.Trigger>
         <Select.Content class={SELECT_CONTENT_CLASS}>
