@@ -25,11 +25,11 @@ pub struct WishlistView {
     /// Whether this wishlist is the default for the user.
     pub is_default: bool,
     /// Number of items contained in the wishlist (derived from `items` when present).
-    pub count: i64,
+    pub count: i32,
     /// Timestamp of the last update for the wishlist.
     pub updated_at: DateTime<Utc>,
     /// Summed monetary totals per currency for the wishlist items.
-    pub total_value: HashMap<Currency, i64>,
+    pub total_value: HashMap<Currency, i32>,
     /// Optional detailed items for the wishlist. This is `None` for list views and
     /// `Some(vec!)` for single-wishlist views returned by the `get_wishlist_by_id` query.
     pub items: Option<Vec<WishlistItemView>>,
@@ -42,14 +42,25 @@ pub struct WishlistView {
 impl From<WishlistPreview> for WishlistView {
     fn from(p: WishlistPreview) -> Self {
         let updated_at = DateTime::from_naive_utc_and_offset(p.updated_at, Utc);
+        let count = p.count.clamp(0, i32::MAX as i64) as i32;
+        let total_value = p
+            .total_value
+            .into_iter()
+            .map(|(currency, amount)| {
+                (
+                    currency,
+                    amount.clamp(i32::MIN as i64, i32::MAX as i64) as i32,
+                )
+            })
+            .collect();
         WishlistView {
             id: p.id,
             name: p.name,
             notes: p.notes,
             is_default: p.is_default,
-            count: p.count,
+            count,
             updated_at,
-            total_value: p.total_value,
+            total_value,
             items: None,
         }
     }
@@ -78,7 +89,7 @@ impl From<Wishlist> for WishlistView {
         );
 
         let count = match &items {
-            Some(v) => v.len() as i64,
+            Some(v) => i32::try_from(v.len()).unwrap_or(i32::MAX),
             None => 0,
         };
 
