@@ -10,7 +10,9 @@
 
   let { summary = null, loading = false }: Props = $props();
 
-  const formattedPercentage = $derived(summary ? summary.percentage.toFixed(1) + '%' : '—');
+  const formattedPercentage = $derived(
+    summary?.percentage != null ? summary.percentage.toFixed(1) + '%' : '—'
+  );
   const totalFleet = $derived(loading ? '—' : String(summary?.total_non_dummy ?? 0));
   const activeDecoders = $derived(loading ? '—' : String(summary?.digital_count ?? 0));
 </script>
