@@ -34,9 +34,11 @@
   }: Props = $props();
 
   const LABEL_CLASS = 'ml-1 text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase';
-  const TRIGGER_CLASS = 'w-full border-border bg-card text-foreground';
+  const TRIGGER_CLASS =
+    'h-10 w-full border-border bg-background text-foreground data-[placeholder]:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary';
   const TRIGGER_ERROR_CLASS =
-    'w-full border-destructive bg-card text-foreground ring-1 ring-destructive';
+    'h-10 w-full border-destructive bg-background text-foreground ring-1 ring-destructive';
+  const SELECT_CONTENT_CLASS = 'border-border bg-background text-foreground';
 
   const selectedManufacturer = $derived(
     manufacturers.find((mfg) => mfg.id === item.manufacturerId)
@@ -72,9 +74,9 @@
   </div>
 
   <!-- Fields in 2-column grid -->
-  <div class="grid grid-cols-2 gap-3">
+  <div class="grid grid-cols-2 items-start gap-3">
     <!-- Manufacturer -->
-    <div class="space-y-1">
+    <div class="min-w-0 space-y-1">
       <label for="item-{item.uid}-manufacturer" class={LABEL_CLASS}>
         {m.acquisition_item_manufacturer_label()}
       </label>
@@ -97,7 +99,7 @@
             <span class="text-zinc-500">—</span>
           {/if}
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content class={SELECT_CONTENT_CLASS}>
           {#each manufacturers as mfg (mfg.id)}
             <Select.Item value={mfg.id} label={mfg.name} />
           {/each}
@@ -111,7 +113,7 @@
     </div>
 
     <!-- Product Code -->
-    <div class="space-y-1">
+    <div class="min-w-0 space-y-1">
       <label for="item-{item.uid}-product-code" class={LABEL_CLASS}>
         {m.acquisition_item_product_code_label()}
       </label>
@@ -167,7 +169,7 @@
             <span class="text-zinc-500">—</span>
           {/if}
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content class={SELECT_CONTENT_CLASS}>
           {#each categoryOptions() as opt (opt.value)}
             <Select.Item value={opt.value} label={opt.label} />
           {/each}
@@ -199,7 +201,7 @@
         value={item.priceAmount}
         symbol={regionalManager.getCurrencySymbol(currency)}
         label={m.acquisition_item_price_label()}
-        inputClass="bg-card border-border rounded-[8px] text-foreground placeholder:text-muted-foreground"
+        inputClass="h-10 rounded-sm border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary"
         onchange={(val) => onUpdate(item.uid, { priceAmount: val })}
       />
     </div>
