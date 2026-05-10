@@ -33,6 +33,8 @@
 
   const selected = $derived(value ? value.split('/').filter(Boolean) : []);
 
+  const tooltipId = (epoch: string) => `epoch-tooltip-${epoch.toLowerCase()}`;
+
   function toggle(epoch: string) {
     const next = selected.includes(epoch)
       ? selected.filter((e) => e !== epoch)
@@ -46,6 +48,19 @@
   <span class="text-[10px] font-bold text-muted-foreground uppercase"
     >{label}{required ? ' *' : ''}</span
   >
+
+  {#snippet epochTooltip(epoch: (typeof BASE_EPOCHS)[number])}
+    <div class="space-y-1.5">
+      <div class="text-sm font-bold text-orange-500">Epoch {epoch}</div>
+      <div class="font-mono text-xs text-zinc-300">
+        {EPOCH_RANGES[epoch].start}–{EPOCH_RANGES[epoch].end}
+      </div>
+      <p class="text-xs leading-snug text-zinc-400">
+        {EPOCH_RANGES[epoch].context}
+      </p>
+    </div>
+  {/snippet}
+
   <div class="flex flex-wrap gap-1.5 pt-0.5">
     {#each BASE_EPOCHS as epoch (epoch)}
       <Tooltip.Root>
@@ -53,6 +68,7 @@
           <button
             type="button"
             {disabled}
+            aria-describedby={tooltipId(epoch)}
             class="rounded-sm border px-3 py-1 text-xs font-semibold transition-colors
               {selected.includes(epoch)
               ? 'border-primary bg-primary text-primary-foreground'
@@ -63,19 +79,19 @@
             {epoch}
           </button>
         </Tooltip.Trigger>
-        <Tooltip.Content class="max-w-xs">
-          <div class="space-y-1">
-            <div class="text-sm font-semibold">Epoch {epoch}</div>
-            <div class="font-mono text-xs">
-              {EPOCH_RANGES[epoch as keyof typeof EPOCH_RANGES].start}–{EPOCH_RANGES[
-                epoch as keyof typeof EPOCH_RANGES
-              ].end}
-            </div>
-            <div class="text-xs text-muted-foreground">
-              {EPOCH_RANGES[epoch as keyof typeof EPOCH_RANGES].context}
-            </div>
-          </div>
-        </Tooltip.Content>
+        <Tooltip.Portal to="body">
+          <Tooltip.Content
+            id={tooltipId(epoch)}
+            role="tooltip"
+            side="top"
+            align="center"
+            sideOffset={8}
+            class="z-[1200] max-w-xs rounded-md border border-zinc-800 bg-zinc-900 p-3 shadow-xl"
+          >
+            {@render epochTooltip(epoch)}
+            <Tooltip.Arrow class="fill-zinc-900 stroke-zinc-800" />
+          </Tooltip.Content>
+        </Tooltip.Portal>
       </Tooltip.Root>
     {/each}
   </div>
