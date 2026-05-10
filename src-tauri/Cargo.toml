@@ -20,7 +20,7 @@ name = "rusty_shed_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build                  = { version = "2.6.0", features = [] }
+tauri-build                  = { version = "2.6.1", features = [] }
 
 [dependencies]
 anyhow                       = "1.0.102"
@@ -42,20 +42,20 @@ parking_lot                  = "0.12.5"
 online                       = { version = "4.0.2", default-features = false, features = ["tokio", "tokio-runtime"] }
 regex                        = "1.12.3"
 reqwest                      = { version = "0.13.3", default-features = false, features = ["json", "rustls", "query", "form"] }
-rust_decimal                 = { version = "1.41.0", features = ["serde-with-float"] }
+rust_decimal                 = { version = "1.42.0", features = ["serde-with-float"] }
 rust_decimal_macros          = "1.40.0"
 secrecy                      = { version = "0.10", features = ["serde"] }
 serde                        = { version = "1.0.228", features = ["derive"] }
 serde_json                   = "1.0.149"
 sha2                         = "0.11.0"
 slug                         = "0.1.6"
-specta                       = { version = "=2.0.0-rc.24", features = ["derive", "chrono", "rust_decimal", "uuid", "url"] }
-specta-typescript            = "=0.0.11"
+specta                       = { version = "=2.0.0-rc.25", features = ["derive", "chrono", "rust_decimal", "uuid", "url"] }
+specta-typescript            = "=0.0.12"
 sqlx                         = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls", "macros", "chrono", "uuid", "rust_decimal"] }
 strum                        = "0.28.0"
 strum_macros                 = "0.28.0"
 tar                          = "0.4.45"
-tauri                        = { version = "2.11.0", features = ["protocol-asset", "image-png"] }
+tauri                        = { version = "2.11.1", features = ["protocol-asset", "image-png"] }
 tauri-plugin-deep-link       = "2.4.9"
 tauri-plugin-global-shortcut = "2.3.1"
 tauri-plugin-dialog          = "2.7.1"
@@ -69,9 +69,9 @@ tauri-plugin-os              = "2.3.2"
 tauri-plugin-store           = "2.4.3"
 tauri-plugin-stronghold      = "2.3.1"
 tauri-plugin-window-state    = "2.4.1"
-tauri-specta                 = { version = "2.0.0-rc.24", features = ["typescript"] }
+tauri-specta                 = { version = "2.0.0-rc.25", features = ["typescript"] }
 thiserror                    = "2.0.18"
-tokio                        = { version = "1.52.1", features = ["rt-multi-thread", "macros", "fs"] }
+tokio                        = { version = "1.52.3", features = ["rt-multi-thread", "macros", "fs"] }
 tracing                      = { version = "0.1.44", features = ["log"] }
 tracing-subscriber           = { version = "0.3.23", features = ["env-filter", "fmt"] }
 url                          = { version = "2.5.8", features = ["serde"] }

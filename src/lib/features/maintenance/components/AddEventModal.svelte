@@ -199,7 +199,7 @@
           rows={3}
           placeholder={m.maintenance_add_event_notes_placeholder()}
           bind:value={notes}
-          class="scrollbar-thin scrollbar-track-zinc-900 scrollbar-thumb-zinc-700 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          class="w-full resize-none scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 ring-offset-black transition-all placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
         ></textarea>
       </div>
 
