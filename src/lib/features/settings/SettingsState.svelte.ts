@@ -5,11 +5,11 @@
  */
 
 import { safeInvoke } from '$lib/services';
-import type { UserSettings, UpdateSettingsInput } from '$lib/bindings';
+import type { UpdateSettingsInput, UserSettings_Serialize } from '$lib/bindings';
 import { log } from '$lib/tauri-logger';
 
 export class SettingsState {
-  settings = $state<UserSettings>({
+  settings = $state<UserSettings_Serialize>({
     currency: 'EUR',
     language: 'en',
     theme: 'steampunk-dark',
@@ -32,7 +32,7 @@ export class SettingsState {
 
     try {
       log.debug('SettingsState: Calling get_settings command...');
-      const result = await safeInvoke<UserSettings>('get_settings');
+      const result = await safeInvoke<UserSettings_Serialize>('get_settings');
       if (result.ok) {
         log.debug('SettingsState: Settings received');
         this.settings = result.data;
@@ -56,7 +56,7 @@ export class SettingsState {
 
     try {
       log.debug('SettingsState: Calling update_settings command...');
-      const result = await safeInvoke<UserSettings>('update_settings', {
+      const result = await safeInvoke<UserSettings_Serialize>('update_settings', {
         input
       } as Record<string, unknown>);
       if (result.ok) {
@@ -76,7 +76,7 @@ export class SettingsState {
    * Initialize settings on first run
    */
   async initialize(): Promise<void> {
-    const result = await safeInvoke<UserSettings>('initialize_settings');
+    const result = await safeInvoke<UserSettings_Serialize>('initialize_settings');
     if (result.ok) {
       this.settings = result.data;
     } else {
